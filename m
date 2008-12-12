@@ -1,62 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60817 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751114AbYLUT5e (ORCPT
+Received: from pool-71-115-147-71.gdrpmi.dsl-w.verizon.net ([71.115.147.71]:48841
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752702AbYLLXs7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 14:57:34 -0500
-Subject: Re: [PATCH 2/2] p54: enable proper frame injection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-In-Reply-To: <200812212055.04707.chunkeey@web.de> (sfid-20081221_205514_615160_EFD85DCA)
-References: <200812212055.04707.chunkeey@web.de>
-	 (sfid-20081221_205514_615160_EFD85DCA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oRXbUIL9ouejsJYSFY+F"
-Date: Sun, 21 Dec 2008 20:57:31 +0100
-Message-Id: <1229889451.3050.12.camel@johannes> (sfid-20081221_205737_768895_C6843854)
-Mime-Version: 1.0
+	Fri, 12 Dec 2008 18:48:59 -0500
+Message-ID: <4942F867.5020203@erley.org> (sfid-20081213_004911_172894_1F4E2C80)
+Date: Fri, 12 Dec 2008 18:48:55 -0500
+From: pat-lkml <pat-lkml@erley.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Userspace tools: Roadmap?
+References: <1228692546.8826.1288759933@webmail.messagingengine.com>	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>	 <1228778295.10662.1288975589@webmail.messagingengine.com>	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org>	 <1228780960.22164.162.camel@johannes.berg>  <4941EF69.5040108@erley.org>	 <1229099080.14423.15.camel@dv> <1229119118.3572.6.camel@johannes.berg>	 <4942E7A4.3050206@erley.org> <1229121535.3565.4.camel@johannes.berg>
+In-Reply-To: <1229121535.3565.4.camel@johannes.berg>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This converts iw to use libnl-2, and adds compatibility with libnl-1.
+There is not currently a good way to detect the libnl version during
+compilation, as the versioning in the netlink/version.h is defined as a
+string "2.0" rather than a major and a minor number, so we must detect
+it in the Makefile.
 
---=-oRXbUIL9ouejsJYSFY+F
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Pat Erley <pat-lkml@erley.org>
 
-On Sun, 2008-12-21 at 20:55 +0100, Christian Lamparter wrote:
+---
 
-> @@ -2145,6 +2188,7 @@ struct ieee80211_hw *p54_init_common(siz
-> =20
->  	dev->wiphy->interface_modes =3D BIT(NL80211_IFTYPE_STATION) |
->  				      BIT(NL80211_IFTYPE_ADHOC) |
-> +				      BIT(NL80211_IFTYPE_MONITOR) |
+I'm still not very familiar with Makefile magic, so if there's a better
+way to do what I'm doing in the Makefile, just let me know.  Also, I'm
+preparing a similar patch for crda.  I'm not 100% certain on the
+libnl-1.1 compatibility part as I can't get iw to build with libnl-1.1
+on my system.  However, with and without this patch error out in an
+identical manner
 
-that's pointless, mac80211 adds that anyway.
+---
 
-johannes
+diff --git a/Makefile b/Makefile
+index df59b51..5b359f3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -10,14 +10,28 @@ MKDIR ?= mkdir -p
+ INSTALL ?= install
+ CC ?= "gcc"
 
---=-oRXbUIL9ouejsJYSFY+F
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+-CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
+-fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
+`pkg-config --cflags libnl-1`
++CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
+-fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
+ CFLAGS += -O2 -g
+-LDFLAGS += `pkg-config --libs libnl-1`
+-NLVERSION = 1.0
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+ OBJS = iw.o info.o phy.o interface.o station.o util.o mpath.o reg.o
+mesh.o genl.o
+ ALL = iw
 
-iQIcBAABAgAGBQJJTp+oAAoJEKVg1VMiehFY4KYP/R9UMCzIg10nuCdcWlrax/q8
-ASfnp9EOvT8Z0S2gGWumz+kg2dm4IsMri1oz30N6Gr6oG6cC5kiFQ95uQop4XnDr
-EzqNJIcMhzDaTndqplcE7+hdge2YVxJ7VBWfWTDE5lWZ9gCQk5VxRTSPGzS+SFp4
-ypirouiB75FMadcg3QvRzhOc67lHIgP6onLnUiC2Wx0jiPAb8R7hAF5XN4eHypr4
-t2sc0oSehvk4pU8/+Ud4Dsz/NveCP8l3hRq/vUUR9dlxUSVIblOoX/UBu7JtM0tN
-BCSKb7NRhl4MaAuckGcMRq2jAnl+PViIK7mylr7MzGsq1BXSesF5MyNqBxsg7wvz
-tURwddW1x0POU9O2os1vZjBmNLkidmaOjHo45BLAfWn/vXx/f10hi8WgLnTYXrLl
-BhpA2EZ5lrUBZodEfMI/Cn+ZLQMENUbk7zuqFAOaNdwrb6I5ZxugXX7soUbNV2Sp
-9f45nVQJQFHZMG86vwBBO7naqZX/y4e5BIHsws9gcOFar7lj9x8RaKLhLMxMP5xk
-oCOuY5dcRUCtuuSaQOBY1hLK/LiIQMHmVegNn9oI2IH5xb9w3mm0Jn5L26A9GTaF
-k5FC16cb9FPZRYsw2eGqgp7O0vCDAz9aeeOpxztPbanrh7mgkD08UTbVflTTfL3y
-kTw77JawhdfYHUOOKzxZ
-=1xzU
------END PGP SIGNATURE-----
++NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
++NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
++
++ifeq ($(NL1FOUND),Y)
++NLLIBNAME = libnl-1
++endif
++
++ifeq ($(NL2FOUND),Y)
++CFLAGS += -DCONFIG_LIBNL20
++LIBS += -lnl-genl
++NLLIBNAME = libnl-2.0
++endif
++
++LDFLAGS += `pkg-config --libs $(NLLIBNAME)`
++CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
++
+ ifeq ($(V),1)
+ Q=
+ NQ=true
+@@ -29,8 +43,15 @@ endif
+ all: version_check $(ALL)
 
---=-oRXbUIL9ouejsJYSFY+F--
+ version_check:
+-	@if ! pkg-config --atleast-version=$(NLVERSION) libnl-1; then echo
+"You need at least libnl version $(NLVERSION)"; exit 1; fi
+-
++ifeq ($(NL2FOUND),Y)
++	@echo "Found libnl-2.0"
++else
++ifeq ($(NL1FOUND),Y)
++	@echo "Found libnl-1"
++else
++	$(error No libnl found)
++endif
++endif
 
+ version.h: version.sh
+ 	@$(NQ) ' GEN  version.h'
+@@ -42,7 +63,7 @@ version.h: version.sh
+
+ iw:	$(OBJS)
+ 	@$(NQ) ' CC  ' iw
+-	$(Q)$(CC) $(LDFLAGS) $(OBJS) -o iw
++	$(Q)$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o iw
+
+ check:
+ 	$(Q)$(MAKE) all CC="REAL_CC=$(CC) CHECK=\"sparse -Wall\" cgcc"
+diff --git a/iw.c b/iw.c
+index afae643..e9cc7f6 100644
+--- a/iw.c
++++ b/iw.c
+@@ -23,13 +23,24 @@
+ #include "iw.h"
+ #include "version.h"
+
++#ifndef CONFIG_LIBNL20
++/* libnl 2.0 compatibility code */
++
++#define nl_socket_alloc(_h) nl_handle_alloc(_h)
++#define nl_socket_free(_h)  nl_handle_destroy(_h)
++#define compat_genl_ctrl_alloc_cache(_nl_handle, _nl_cache) \
++        (_nl_cache = genl_ctrl_alloc_cache(_nl_handle)) == NULL
++
++#define genl_ctrl_alloc_cache(_h,_i) compat_genl_ctrl_alloc_cache(_h,_i)
++#endif /* CONFIG_LIBNL20 */
++
+ static int debug = 0;
+
+ static int nl80211_init(struct nl80211_state *state)
+ {
+ 	int err;
+
+-	state->nl_handle = nl_handle_alloc();
++	state->nl_handle = nl_socket_alloc();
+ 	if (!state->nl_handle) {
+ 		fprintf(stderr, "Failed to allocate netlink handle.\n");
+ 		return -ENOMEM;
+@@ -41,8 +52,7 @@ static int nl80211_init(struct nl80211_state *state)
+ 		goto out_handle_destroy;
+ 	}
+
+-	state->nl_cache = genl_ctrl_alloc_cache(state->nl_handle);
+-	if (!state->nl_cache) {
++	if (genl_ctrl_alloc_cache(state->nl_handle, &(state->nl_cache))) {
+ 		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
+ 		err = -ENOMEM;
+ 		goto out_handle_destroy;
+@@ -60,7 +70,7 @@ static int nl80211_init(struct nl80211_state *state)
+  out_cache_free:
+ 	nl_cache_free(state->nl_cache);
+  out_handle_destroy:
+-	nl_handle_destroy(state->nl_handle);
++	nl_socket_free(state->nl_handle);
+ 	return err;
+ }
+
+@@ -68,7 +78,7 @@ static void nl80211_cleanup(struct nl80211_state *state)
+ {
+ 	genl_family_put(state->nl80211);
+ 	nl_cache_free(state->nl_cache);
+-	nl_handle_destroy(state->nl_handle);
++	nl_socket_free(state->nl_handle);
+ }
+
+ __COMMAND(NULL, NULL, NULL, 0, 0, 0, CIB_NONE, NULL);
