@@ -1,82 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18556 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756529AbYLDWsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 17:48:12 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] mac80211: remove WARN_ON() from ieee80211_hw_config
-Date: Thu,  4 Dec 2008 14:49:08 -0800
-Message-Id: <1228430948-25509-1-git-send-email-reinette.chatre@intel.com> (sfid-20081204_234815_917846_CE3F184C)
-In-Reply-To: <>
-References: <>
+Received: from fg-out-1718.google.com ([72.14.220.159]:42280 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669AbYLLTkx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Dec 2008 14:40:53 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so771328fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2008 11:40:51 -0800 (PST)
+Subject: Re: Bugs in ath5k on aspire one (AR2425)
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <492712D9.7080004@gmail.com>
+References: <492712D9.7080004@gmail.com>
+Content-Type: text/plain
+Date: Fri, 12 Dec 2008 21:40:42 +0200
+Message-Id: <1229110842.14247.27.camel@maxim-laptop> (sfid-20081212_204059_291025_C7712DD3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_hw_config can return an error when the hardware
-has rfkill enabled. A WARN_ON() is too harsh for this
-failure as it is a valid scenario. Only comment this warning
-as we would like to have it back when rfkill is integrated into
-mac80211.
+On Fri, 2008-11-21 at 21:58 +0200, Maxim Levitsky wrote:
+> Hi,
+> 
+> I captured few errors in dmesg, will post them here.
+> If I see more errors, I add them to this thread.
+> 
+> 
+> [   69.516498] ath5k phy0: gain calibration timeout (2412MHz)
+> [   69.516509] ath5k phy0: can't reset hardware (-11)
+> [   69.516516] phy0: failed to restore operational channel after scan
+> [   69.628572] ath5k phy0: noise floor calibration failed (2412MHz)
+> [   69.686894] ath5k phy0: noise floor calibration failed (2417MHz)
+> [   69.770067] ath5k phy0: noise floor calibration failed (2417MHz)
+> [   70.419785] ath5k phy0: gain calibration timeout (2422MHz)
+> [   70.419800] ath5k phy0: can't reset hardware (-11)
+> [   70.419809] phy0: failed to set freq to 2422 MHz for scan
+> [   71.356436] ath5k phy0: gain calibration timeout (2427MHz)
+> [   71.356450] ath5k phy0: can't reset hardware (-11)
+> [   71.356458] phy0: failed to set freq to 2427 MHz for scan
+> [   72.119219] ath5k phy0: gain calibration timeout (2432MHz)
+> [   72.119234] phy0: failed to set freq to 2432 MHz for scan
+> [   72.764447] phy0: failed to set freq to 2437 MHz for scan
+> [   73.410438] phy0: failed to set freq to 2442 MHz for scan
+> [   74.027807] phy0: failed to set freq to 2447 MHz for scan
+> [   74.640495] __ratelimit: 7 callbacks suppressed
+> [   74.640504] ath5k phy0: gain calibration timeout (2452MHz)
+> [   74.640511] ath5k phy0: can't reset hardware (-11)
+> [   74.640517] phy0: failed to set freq to 2452 MHz for scan
+> [   75.256551] ath5k phy0: gain calibration timeout (2457MHz)
+> [   75.256565] ath5k phy0: can't reset hardware (-11)
+> [   75.256573] phy0: failed to set freq to 2457 MHz for scan
+> [   75.874414] ath5k phy0: gain calibration timeout (2462MHz)
+> [   75.874424] ath5k phy0: can't reset hardware (-11)
+> [   75.874430] phy0: failed to set freq to 2462 MHz for scan
+> [   76.488436] ath5k phy0: gain calibration timeout (2412MHz)
+> [   76.488447] ath5k phy0: can't reset hardware (-11)
+> [   76.488452] phy0: failed to restore operational channel after scan
+> [   76.488543] wlan0: authenticate with AP 00:1b:9e:d8:77:02
+> [   76.688125] wlan0: authenticate with AP 00:1b:9e:d8:77:02
+> [   76.889098] wlan0: authenticate with AP 00:1b:9e:d8:77:02
+> [   77.088122] wlan0: authentication with AP 00:1b:9e:d8:77:02 timed out
+> [   78.415786] ath5k phy0: noise floor calibration timeout (2417MHz)
+> [   78.810771] ath5k phy0: gain calibration timeout (2417MHz)
+> [   78.810782] phy0: failed to set freq to 2417 MHz for scan
+> [   79.427510] phy0: failed to set freq to 2422 MHz for scan
+> [   80.056900] __ratelimit: 3 callbacks suppressed
+> [   80.056910] ath5k phy0: gain calibration timeout (2427MHz)
+> [   80.056919] ath5k phy0: can't reset hardware (-11)
+> [   80.056925] phy0: failed to set freq to 2427 MHz for scan
+> [   80.670529] ath5k phy0: gain calibration timeout (2432MHz)
+> [   80.670540] ath5k phy0: can't reset hardware (-11)
+> [   80.670546] phy0: failed to set freq to 2432 MHz for scan
+> [   81.285272] ath5k phy0: gain calibration timeout (2437MHz)
+> [   81.285285] ath5k phy0: can't reset hardware (-11)
+> [   81.285294] phy0: failed to set freq to 2437 MHz for scan
+> [   81.911449] ath5k phy0: gain calibration timeout (2442MHz)
+> [   81.911461] ath5k phy0: can't reset hardware (-11)
+> [   81.911470] phy0: failed to set freq to 2442 MHz for scan
+> [   82.526023] ath5k phy0: gain calibration timeout (2447MHz)
+> [   82.526034] ath5k phy0: can't reset hardware (-11)
+> [   82.526040] phy0: failed to set freq to 2447 MHz for scan
+> [   83.141962] phy0: failed to set freq to 2452 MHz for scan
+> [   83.759025] phy0: failed to set freq to 2457 MHz for scan
+> [   84.373688] phy0: failed to set freq to 2462 MHz for scan
+> [   84.990322] phy0: failed to restore operational channel after scan
+> [   89.419876] __ratelimit: 8 callbacks suppressed
+> [   89.419890] ath5k phy0: noise floor calibration timeout (2412MHz)
+> [   90.087509] ath5k phy0: gain calibration timeout (2417MHz)
+> [   90.087519] ath5k phy0: can't reset hardware (-11)
+> [   90.087525] phy0: failed to set freq to 2417 MHz for scan
+> [   90.700892] ath5k phy0: gain calibration timeout (2422MHz)
+> [   90.700903] ath5k phy0: can't reset hardware (-11)
+> [   90.700909] phy0: failed to set freq to 2422 MHz for scan
+> [   91.315752] ath5k phy0: gain calibration timeout (2427MHz)
+> [   91.315763] ath5k phy0: can't reset hardware (-11)
+> [   91.315770] phy0: failed to set freq to 2427 MHz for scan
+> [   91.935144] ath5k phy0: gain calibration timeout (2432MHz)
+> [   91.935155] ath5k phy0: can't reset hardware (-11)
+> [   91.935161] phy0: failed to set freq to 2432 MHz for scan
+> [   92.550491] ath5k phy0: gain calibration timeout (2437MHz)
+> [   92.550505] phy0: failed to set freq to 2437 MHz for scan
+> [   93.220305] phy0: failed to set freq to 2442 MHz for scan
+> [   93.837228] phy0: failed to set freq to 2447 MHz for scan
+> [   94.450800] phy0: failed to set freq to 2452 MHz for scan
+> [   95.069019] phy0: failed to set freq to 2457 MHz for scan
+> [   95.690239] __ratelimit: 9 callbacks suppressed
+> [   95.690251] ath5k phy0: gain calibration timeout (2462MHz)
+> [   95.690261] ath5k phy0: can't reset hardware (-11)
+> [   95.690269] phy0: failed to set freq to 2462 MHz for scan
+> [   96.305163] ath5k phy0: gain calibration timeout (2412MHz)
+> [   96.305173] ath5k phy0: can't reset hardware (-11)
+> [   96.305179] phy0: failed to restore operational channel after scan
+> [  100.084643] ath5k phy0: noise floor calibration failed (2412MHz)
+> [  100.689317] ath5k phy0: gain calibration timeout (2417MHz)
+> [  100.689328] ath5k phy0: can't reset hardware (-11)
+> [  100.689334] phy0: failed to set freq to 2417 MHz for scan
+> [  101.308123] ath5k phy0: gain calibration timeout (2422MHz)
+> [  101.308134] ath5k phy0: can't reset hardware (-11)
+> [  101.308140] phy0: failed to set freq to 2422 MHz for scan
+> [  101.923409] ath5k phy0: gain calibration timeout (2427MHz)
+> [  101.923419] ath5k phy0: can't reset hardware (-11)
+> [  101.923425] phy0: failed to set freq to 2427 MHz for scan
+> [  102.536898] ath5k phy0: gain calibration timeout (2432MHz)
+> [  102.536911] ath5k phy0: can't reset hardware (-11)
+> [  102.536920] phy0: failed to set freq to 2432 MHz for scan
+> [  103.153227] ath5k phy0: gain calibration timeout (2437MHz)
+> [  103.153238] ath5k phy0: can't reset hardware (-11)
+> [  103.153244] phy0: failed to set freq to 2437 MHz for scan
+> [  103.766742] ath5k phy0: gain calibration timeout (2442MHz)
+> [  103.766753] ath5k phy0: can't reset hardware (-11)
+> [  103.766759] phy0: failed to set freq to 2442 MHz for scan
+> [  104.382792] phy0: failed to set freq to 2447 MHz for scan
+> [  104.998713] phy0: failed to set freq to 2452 MHz for scan
+> [  105.612695] phy0: failed to set freq to 2457 MHz for scan
+> [  106.227980] phy0: failed to set freq to 2462 MHz for scan
+> [  106.846579] __ratelimit: 8 callbacks suppressed
+> [  106.846591] ath5k phy0: gain calibration timeout (2412MHz)
+> [  106.846601] ath5k phy0: can't reset hardware (-11)
+> [  106.846609] phy0: failed to restore operational channel after scan
+> [  111.388603] ath5k phy0: noise floor calibration failed (2412MHz)
+> [  112.002756] ath5k phy0: gain calibration timeout (2417MHz)
+> [  112.002769] ath5k phy0: can't reset hardware (-11)
+> [  112.002776] phy0: failed to set freq to 2417 MHz for scan
+> [  112.618112] ath5k phy0: gain calibration timeout (2422MHz)
+> [  112.618123] ath5k phy0: can't reset hardware (-11)
+> [  112.618129] phy0: failed to set freq to 2422 MHz for scan
+> [  113.234943] ath5k phy0: gain calibration timeout (2427MHz)
+> [  113.234957] ath5k phy0: can't reset hardware (-11)
+> [  113.234965] phy0: failed to set freq to 2427 MHz for scan
+> [  113.855231] ath5k phy0: gain calibration timeout (2432MHz)
+> [  113.855242] ath5k phy0: can't reset hardware (-11)
+> [  113.855248] phy0: failed to set freq to 2432 MHz for scan
+> 
+> Happened on boot, and card stopped working.
+> Only a reboot helped.
 
-Also reintroduce propagation of error if ieee80211_hw_config fails
-in ieee80211_config_beacon.
+I still see that error.
 
-This patch partially reverts patch:
-5f0387fc3337ca26f0745f945f550f0c3734960f
-"mac80211: clean up ieee80211_hw_config errors"
+It sometimes happen on resume from ram.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- net/mac80211/cfg.c  |    6 ++++--
- net/mac80211/main.c |   12 +++++++++++-
- 2 files changed, 15 insertions(+), 3 deletions(-)
+It is NOT noise calibration, but a gain calibration timeout
+Only fix is to reboot the system, as module reload doesn't help.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7a7a6c1..7912eb1 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -396,8 +396,10 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
- 	 */
- 	if (params->interval) {
- 		sdata->local->hw.conf.beacon_int = params->interval;
--		ieee80211_hw_config(sdata->local,
--				    IEEE80211_CONF_CHANGE_BEACON_INTERVAL);
-+		err = ieee80211_hw_config(sdata->local,
-+					IEEE80211_CONF_CHANGE_BEACON_INTERVAL);
-+		if (err < 0)
-+			return err;
- 		/*
- 		 * We updated some parameter so if below bails out
- 		 * it's not an error.
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 29c3ecf..df7e9a8 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -243,10 +243,20 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 	if (changed && local->open_count) {
- 		ret = local->ops->config(local_to_hw(local), changed);
- 		/*
-+		 * Goal:
- 		 * HW reconfiguration should never fail, the driver has told
- 		 * us what it can support so it should live up to that promise.
-+		 *
-+		 * Current status:
-+		 * rfkill is not integrated with mac80211 and a
-+		 * configuration command can thus fail if hardware rfkill
-+		 * is enabled
-+		 *
-+		 * FIXME: integrate rfkill with mac80211 and then add this
-+		 * WARN_ON() back
-+		 *
- 		 */
--		WARN_ON(ret);
-+		/* WARN_ON(ret); */
- 	}
- 
- 	return ret;
--- 
-1.5.4.3
+Best regards,
+	Maxim Levitsky
 
