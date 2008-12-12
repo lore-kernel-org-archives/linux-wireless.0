@@ -1,86 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:58179 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069AbYLNSSN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47977 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753446AbYLLWhy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Dec 2008 13:18:13 -0500
-Date: Sun, 14 Dec 2008 12:18:09 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8187: Fix crash on unload when using SLUB debug
-Message-ID: <49454de1.nqVNMn5dd1fg/Vjg%Larry.Finger@lwfinger.net> (sfid-20081214_191822_977828_75FDEE0E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 12 Dec 2008 17:37:54 -0500
+Subject: Re: [RFC 0/3] cfg80211, mac80211: Introduce radiotap flags for
+	finer userspace control of injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <69e28c910812121432k1e8732bcma77e489d247ecdf4@mail.gmail.com> (sfid-20081212_233239_864570_76D3B7E9)
+References: <69e28c910812121432k1e8732bcma77e489d247ecdf4@mail.gmail.com>
+	 (sfid-20081212_233239_864570_76D3B7E9)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ny+vrxRdGg5SnGYvEPOv"
+Date: Fri, 12 Dec 2008 23:37:46 +0100
+Message-Id: <1229121467.3565.2.camel@johannes.berg> (sfid-20081212_233757_413993_469C6010)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Reported-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-After the code was modified to use urb anchors ("rtl8187: Use usb anchor
-facilities to manage urbs"), rtl8187 began generating an intermittent GPF
-on shutdown when using SLUB with debugging enabled. Furthermore, rebooting
-the system with a ping running caused a GPF every time. There are two problems:
-(1) incorrect locking in the rtl8187_rx_cb() routine, a pre-existing bug that
-apparently had not been triggered before, and (2) duplicate freeing of receive
-skbs that was probably introduced with the change to anchors.
+--=-ny+vrxRdGg5SnGYvEPOv
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
----
+On Fri, 2008-12-12 at 23:32 +0100, Stefanik G=C3=A1bor wrote:
+> Userspace packet injector applications might want to transmit packets
+> that are, by design, not supposed to be acked. In other cases, an
+> injector application may need to control the sequence number of the
+> packets it transmits. Introduce 2 new flags in the "TX flags" Radiotap
+> fields, controlling these 2 behaviors.
+>=20
+> The new fields are as follows:
+>=20
+>  * IEEE80211_RADIOTAP_TX_FLAGS
+>=20
+>    IEEE80211_RADIOTAP_F_TX_NO_ACK: Transmit the packet once with no waiti=
+ng for
+> 				   an ACK and no retrying if no ACK received
+>    IEEE80211_RADIOTAP_F_TX_NO_SEQ: Use the sequence number already presen=
+t in
+> 				   the 802.11 header, do not generate a new one
+> 				   in the driver/stack. Useful when injecting
+> 				   fragments with the same sequence number.
 
-John,
+Umm, these aren't really defined by radiotap yet. Does all of this have
+to be NOW?
 
-As the patch that exposed the first bug will be in 2.6.29, this one needs to be
-in 2.6.29 as well.
+johannes
 
-Larry
----
+--=-ny+vrxRdGg5SnGYvEPOv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -294,15 +294,16 @@ static void rtl8187_rx_cb(struct urb *ur
- 	int rate, signal;
- 	u32 flags;
- 	u32 quality;
-+	unsigned long f;
- 
--	spin_lock(&priv->rx_queue.lock);
-+	spin_lock_irqsave(&priv->rx_queue.lock, f);
- 	if (skb->next)
- 		__skb_unlink(skb, &priv->rx_queue);
- 	else {
--		spin_unlock(&priv->rx_queue.lock);
-+		spin_unlock_irqrestore(&priv->rx_queue.lock, f);
- 		return;
- 	}
--	spin_unlock(&priv->rx_queue.lock);
-+	spin_unlock_irqrestore(&priv->rx_queue.lock, f);
- 	skb_put(skb, urb->actual_length);
- 
- 	if (unlikely(urb->status)) {
-@@ -942,7 +943,6 @@ static int rtl8187_start(struct ieee8021
- static void rtl8187_stop(struct ieee80211_hw *dev)
- {
- 	struct rtl8187_priv *priv = dev->priv;
--	struct rtl8187_rx_info *info;
- 	struct sk_buff *skb;
- 	u32 reg;
- 
-@@ -961,10 +961,6 @@ static void rtl8187_stop(struct ieee8021
- 	rtl818x_iowrite8(priv, &priv->map->CONFIG4, reg | RTL818X_CONFIG4_VCOOFF);
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD, RTL818X_EEPROM_CMD_NORMAL);
- 
--	while ((skb = skb_dequeue(&priv->rx_queue))) {
--		info = (struct rtl8187_rx_info *)skb->cb;
--		kfree_skb(skb);
--	}
- 	while ((skb = skb_dequeue(&priv->b_tx_status.queue)))
- 		dev_kfree_skb_any(skb);
- 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQue3AAoJEKVg1VMiehFYYf4P/R1nA9eHLSlHp+DW/PXz/L2N
+8NBLPJkNd8exLhIz2I73bT6Fxxj5aFQ67W0ATgfnk4hQbbAc6ZU9tjpIDp+y84XD
+CO51F8RhwCnizbbe/KssIgs7hM/RyTR9wv2o8ZeaYQw28YLYVPAcHsO87J3hzcOf
+HE8cbEJwllaLrdCUqTw4db9PSbr7WLK0cjLUIS0eaXKxuJ6TbTzd62N8EtdDP00r
+Ms9Al0kznh8sFRt5Py4ykWJIH32oyXujF5AB+fda5VhSM7fZNhGakzahNHpH2c3X
+EkV6bRseobe3U8R06c/3r/ph3Ou09LTGY936G3LXMclV7FZSm8hCHw/1lnGyWPsc
+23x8BDmnls7tLGL4/fD/GQjpQJSJZKWlaa+taTnRTKvf5CLX2jety1MkRusxLRtB
+ywXyG4EKp+/jDIMALclmO5Y+YpGCdz0D6tMSz9rqkPZkqDSpxJpSmqdK/NRjz/iP
+EDH0N7wRghl0PhgTjq96r8b2fdLm+uCGPEAalQGONZUNCzHgnFtV6hz8uqohxN9T
+GwNVYr7oRE7Nz4hLL+5zK//3DtzUhkcgffCSA+H56Q9I4B2bcoOUM+eT/egmDozd
+bRfmfzMH3KVqnbCJQdV5UJr5ZSuDXyXvvBG/f6qDUwQn05yrmCplZefqYG6AIm3Z
+0HUKtE7r3fl2PTuRC7+i
+=Ej4k
+-----END PGP SIGNATURE-----
+
+--=-ny+vrxRdGg5SnGYvEPOv--
+
