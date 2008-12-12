@@ -1,123 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38382 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555AbYLDIss (ORCPT
+Received: from pool-71-115-147-71.gdrpmi.dsl-w.verizon.net ([71.115.147.71]:37639
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbYLLXm0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 03:48:48 -0500
-Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <rogge@fgan.de>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Henning Rogge <hrogge@googlemail.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812031131.34936.rogge@fgan.de> (sfid-20081203_113144_858816_75A3A646)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812022146.12363.hrogge@googlemail.com> <20081203014430.GH9351@tesla>
-	 <200812031131.34936.rogge@fgan.de> (sfid-20081203_113144_858816_75A3A646)
-Content-Type: text/plain
-Date: Thu, 04 Dec 2008 09:47:52 +0100
-Message-Id: <1228380472.3197.5.camel@Friederike-PC.hoffi> (sfid-20081204_094852_279343_606FB589)
-Mime-Version: 1.0
+	Fri, 12 Dec 2008 18:42:26 -0500
+Message-ID: <4942F6DE.5010004@erley.org> (sfid-20081213_004234_270908_4D25F632)
+Date: Fri, 12 Dec 2008 18:42:22 -0500
+From: pat-lkml <pat-lkml@erley.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Userspace tools: Roadmap?
+References: <1228692546.8826.1288759933@webmail.messagingengine.com>	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>	 <1228778295.10662.1288975589@webmail.messagingengine.com>	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org>	 <1228780960.22164.162.camel@johannes.berg>  <4941EF69.5040108@erley.org>	 <1229099080.14423.15.camel@dv> <1229119118.3572.6.camel@johannes.berg>	 <4942E7A4.3050206@erley.org> <1229121535.3565.4.camel@johannes.berg> <4942F59B.1060605@erley.org>
+In-Reply-To: <4942F59B.1060605@erley.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-03 at 11:31 +0100, Henning Rogge wrote:
+Crap, please ignore, attached the wrong patch.
 
-> What do you think about the idea to export the 802.11n transmission rate 
-> through the old WExt interface, so iwconfig will show the correct rate too ? 
-> But for this the "mcs to bitrate" tables would have to be moved to some other 
-> file, so wext.c can access them too (which one ?).
-
-No, that can't possibly work right, sorry.
-
-> + * @NL80211_STA_INFO_SIGNAL: signal strength of last received package (u8, 
-> dBm)
-
-s8? should be signed, no?
-
-> + * @NL80211_STA_INFO_RX_BITRATE: bitrate of last received unicast packet
-> + *  (u16, 100 kbit/s)
-
-I don't really like this. I know we cannot report the real information
-yet because we don't even have the driver/mac80211 api but let's add rx
-rate reporting when we have the HT information too.
-
-> + * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate (u16, 100 kbit/s)
-> + * @NL80211_STA_INFO_TX_BITRATE_40_MHZ: dual channel transmission (flag)
-> + * @NL80211_STA_INFO_TX_BITRATE_MCS: 802.11n MCS index of tx rate (u8)
-> + * @NL80211_STA_INFO_TX_BITRATE_SHORT_GI: 802.11n with 400ns GI, 800ns
-> + *  otherwise, should be ignored if TX_BITRATE_MCS is not set (flag)
-
-I'm not sure I like the bitrate being used as prefix and final name, can
-we have maybe TXRATE_ as prefix and use TXRATE_RATE, TXRATE_40, ...?
-
-> +/* bitrate of 802.11n ht20 connections with 800ns guard interval in 100kbit/s 
-> */
-> +const u16 ieee80211n_ht20_gi800[] = {
-> +    65, 130, 195, 260, 390, 520, 585, 650,
-> +    130, 260, 390, 520, 780, 1040, 1170, 1300,
-> +    195, 390, 585, 780, 1170, 1560, 1755, 1950,
-> +    260, 520, 780, 1040, 1560, 2080, 2340, 2600
-> +};
+pat-lkml wrote:
+> This converts iw to use libnl-2, and adds compatibility with libnl-1.
+> There is not currently a good way to detect the libnl version during
+> compilation, as the versioning in the netlink/version.h is defined as a
+> string "2.0" rather than a major and a minor number, so we must detect
+> it in the Makefile.
+> 
+> Signed-off-by: Pat Erley <pat-lkml@erley.org>
+> 
+> ---
+> 
+> I'm still not very familiar with Makefile magic, so if there's a better
+> way to do what I'm doing in the Makefile, just let me know.  Also, I'm
+> preparing a similar patch for crda.
+> 
+> ---
+> 
+> diff --git a/Makefile b/Makefile
+> index df59b51..a87e9a0 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -10,14 +10,28 @@ MKDIR ?= mkdir -p
+>  INSTALL ?= install
+>  CC ?= "gcc"
+> 
+> -CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
+> -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
+> `pkg-config --cflags libnl-1`
+> +CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
+> -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
+>  CFLAGS += -O2 -g
+> -LDFLAGS += `pkg-config --libs libnl-1`
+> -NLVERSION = 1.0
+> 
+>  OBJS = iw.o info.o phy.o interface.o station.o util.o mpath.o reg.o
+> mesh.o genl.o
+>  ALL = iw
+> 
+> +NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
+> +NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
 > +
-> +/* bitrate of 802.11n ht20 connections with 400ns guard interval
-> + * in 100kbit/s per spatial stream */
-> +const u16 ieee80211n_ht20_gi400[] = {
-> +    72, 144, 217, 289, 433, 578, 650, 722,
-> +    144, 289, 433, 578, 867, 1156, 1300, 1440,
-> +    217, 433, 650, 867, 1300, 1733, 1950, 2167,
-> +    289, 578, 867, 1157, 1733, 2311, 2600, 2889
-> +};
+> +ifeq ($(NL1FOUND),Y)
+> +NLLIBNAME = libnl-1
+> +endif
 > +
-> +/* bitrate of 802.11n ht40 connections with 800ns guard interval
-> + * in 100kbit/s per spatial stream */
-> +const u16 ieee80211n_ht40_gi800[] = {
-> +    135, 270, 405, 540, 810, 1080, 1215, 1350,
-> +    270, 540, 810, 1080, 1620, 2160, 2430, 2700,
-> +    405, 810, 1215, 1620, 2430, 3240, 3645, 4050,
-> +    540, 1080, 1620, 2160, 3240, 4320, 4860, 5400
-> +};
+> +ifeq ($(NL2FOUND),Y)
+> +CFLAGS += -DCONFIG_LIBNL20
+> +LIBS += -lnl-genl
+> +NLLIBNAME = libnl-2.0
+> +endif
 > +
-> +/* bitrate of 802.11n ht40 connections with 400ns guard interval
-> + * in 100kbit/s per spatial stream */
-> +const u16 ieee80211n_ht40_gi400[] = {
-> +    150, 300, 450, 600, 900, 1200, 1350, 1500,
-> +    300, 600, 900, 1200, 1800, 2400, 2700, 3000,
-> +    450, 900, 1350, 1800, 2700, 3600, 4050, 4500,
-> +    600, 1200, 1800, 2400, 3600, 4800, 5400, 6000
-> +};
-
-I definitely don't like this, ick, please put that into userspace.
-
-> +	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
-> +		sinfo->filled |= STATION_INFO_SIGNAL;
-> +		sinfo->signal = sta->last_signal;
-> +	}
-
-Good plan to report only when dBm are available, I like that.
-
-> +	sinfo->rx_bitrate = sta->last_rxrate_unicast;
+> +LDFLAGS += `pkg-config --libs $(NLLIBNAME)`
+> +CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
 > +
-> +	sinfo->tx_bitrate_flags = sta->last_tx_rate.flags &
-> +	    (IEEE80211_TX_RC_MCS |
-> +	     IEEE80211_TX_RC_40_MHZ_WIDTH |
-> +	     IEEE80211_TX_RC_SHORT_GI);
-
-That looks very odd. Are you sure it's using the same rate flags? And if
-it is, that's wrong, because cfg80211 must not rely on mac80211 flags.
-
-> +	if (!(sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)) {
-> +		struct ieee80211_supported_band *sband;
-> +		sband = sta->local->hw.wiphy->bands[sta->local->hw.conf.channel->band];
-> +		sinfo->tx_bitrate = sband->bitrates[sta->last_tx_rate.idx].bitrate;
-> +		sinfo->tx_bitrate_mcs = 0;
-
-I don't think you should initialise mcs here.
-
-Some places also need work on the coding style.
-
-johannes
+>  ifeq ($(V),1)
+>  Q=
+>  NQ=true
+> @@ -29,8 +43,15 @@ endif
+>  all: version_check $(ALL)
+> 
+>  version_check:
+> -	@if ! pkg-config --atleast-version=$(NLVERSION) libnl-1; then echo
+> "You need at least libnl version $(NLVERSION)"; exit 1; fi
+> -
+> +ifeq ($(NL2FOUND),Y)
+> +	@echo "Found libnl-2.0"
+> +else
+> +ifeq ($(NL1FOUND),Y)
+> +        @echo "Found libnl-1"
+> +else
+> +	$(error No libnl found)
+> +endif
+> +endif
+> 
+>  version.h: version.sh
+>  	@$(NQ) ' GEN  version.h'
+> @@ -42,7 +63,7 @@ version.h: version.sh
+> 
+>  iw:	$(OBJS)
+>  	@$(NQ) ' CC  ' iw
+> -	$(Q)$(CC) $(LDFLAGS) $(OBJS) -o iw
+> +	$(Q)$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o iw
+> 
+>  check:
+>  	$(Q)$(MAKE) all CC="REAL_CC=$(CC) CHECK=\"sparse -Wall\" cgcc"
+> diff --git a/iw.c b/iw.c
+> index afae643..03ffbb9 100644
+> --- a/iw.c
+> +++ b/iw.c
+> @@ -23,13 +23,24 @@
+>  #include "iw.h"
+>  #include "version.h"
+> 
+> +#ifndef CONFIG_LIBNL20
+> +/* libnl 2.0 compatibility code */
+> +
+> +#define nl_socket_alloc(_h) nl_handle_alloc(_h)
+> +#define nl_socket_free(_h)  nl_handle_destroy(_h)
+> +#define compat_genl_ctrl_alloc_cache(_nl_handle, _nl_cache) \
+> +        return (_nl_cache = genl_ctrl_alloc_cache(_nl_handle)) == null
+> +
+> +#define genl_ctrl_alloc_cache(_h) compat_genl_ctrl_alloc_cache(_h)
+> +#endif /* CONFIG_LIBNL20 */
+> +
+>  static int debug = 0;
+> 
+>  static int nl80211_init(struct nl80211_state *state)
+>  {
+>  	int err;
+> 
+> -	state->nl_handle = nl_handle_alloc();
+> +	state->nl_handle = nl_socket_alloc();
+>  	if (!state->nl_handle) {
+>  		fprintf(stderr, "Failed to allocate netlink handle.\n");
+>  		return -ENOMEM;
+> @@ -41,8 +52,7 @@ static int nl80211_init(struct nl80211_state *state)
+>  		goto out_handle_destroy;
+>  	}
+> 
+> -	state->nl_cache = genl_ctrl_alloc_cache(state->nl_handle);
+> -	if (!state->nl_cache) {
+> +	if (genl_ctrl_alloc_cache(state->nl_handle, &(state->nl_cache))) {
+>  		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
+>  		err = -ENOMEM;
+>  		goto out_handle_destroy;
+> @@ -60,7 +70,7 @@ static int nl80211_init(struct nl80211_state *state)
+>   out_cache_free:
+>  	nl_cache_free(state->nl_cache);
+>   out_handle_destroy:
+> -	nl_handle_destroy(state->nl_handle);
+> +	nl_socket_free(state->nl_handle);
+>  	return err;
+>  }
+> 
+> @@ -68,7 +78,7 @@ static void nl80211_cleanup(struct nl80211_state *state)
+>  {
+>  	genl_family_put(state->nl80211);
+>  	nl_cache_free(state->nl_cache);
+> -	nl_handle_destroy(state->nl_handle);
+> +	nl_socket_free(state->nl_handle);
+>  }
+> 
+>  __COMMAND(NULL, NULL, NULL, 0, 0, 0, CIB_NONE, NULL);
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
