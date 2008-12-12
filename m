@@ -1,161 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46669 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756736AbYLaPmI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49124 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223AbYLLXu3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 10:42:08 -0500
-Message-Id: <20081231154159.677496781@w1.fi> (sfid-20081231_164220_141043_40CB79F5)
-References: <20081231153834.840526845@w1.fi>
-Date: Wed, 31 Dec 2008 17:38:35 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [RFC 01/11] mac80211: 802.11w - STA flag for MFP
+	Fri, 12 Dec 2008 18:50:29 -0500
+Subject: Re: Userspace tools: Roadmap?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: pat-lkml <pat-lkml@erley.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4942F6DE.5010004@erley.org>
+References: <1228692546.8826.1288759933@webmail.messagingengine.com>
+	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>
+	 <1228778295.10662.1288975589@webmail.messagingengine.com>
+	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org>
+	 <1228780960.22164.162.camel@johannes.berg>  <4941EF69.5040108@erley.org>
+	 <1229099080.14423.15.camel@dv> <1229119118.3572.6.camel@johannes.berg>
+	 <4942E7A4.3050206@erley.org> <1229121535.3565.4.camel@johannes.berg>
+	 <4942F59B.1060605@erley.org>  <4942F6DE.5010004@erley.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nIWlG5iKDqEHavUucxGl"
+Date: Sat, 13 Dec 2008 00:50:23 +0100
+Message-Id: <1229125823.3565.28.camel@johannes.berg> (sfid-20081213_005032_977616_EC4E5641)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add flags for setting STA entries and struct ieee80211_if_sta to
-indicate whether management frame protection (MFP) is used.
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+--=-nIWlG5iKDqEHavUucxGl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 2008-12-12 at 18:42 -0500, pat-lkml wrote:
+> Crap, please ignore, attached the wrong patch.
 
----
- include/linux/nl80211.h    |    2 ++
- include/net/cfg80211.h     |    2 ++
- net/mac80211/cfg.c         |    4 ++++
- net/mac80211/debugfs_sta.c |    5 +++--
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    7 +++++--
- net/mac80211/sta_info.h    |    2 ++
- 7 files changed, 19 insertions(+), 4 deletions(-)
+That looked pretty good to me, except that it's on top of your previous
+patch. :)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2008-12-31 16:47:22.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2008-12-31 16:48:01.000000000 +0200
-@@ -1,6 +1,6 @@
- /*
-  * BSS client mode implementation
-- * Copyright 2003, Jouni Malinen <jkmaline@cc.hut.fi>
-+ * Copyright 2003-2008, Jouni Malinen <j@w1.fi>
-  * Copyright 2004, Instant802 Networks, Inc.
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-@@ -472,7 +472,7 @@ static void ieee80211_send_deauth_disass
- 	/* u.deauth.reason_code == u.disassoc.reason_code */
- 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
- 
--	ieee80211_tx_skb(sdata, skb, 0);
-+	ieee80211_tx_skb(sdata, skb, ifsta->flags & IEEE80211_STA_MFP_ENABLED);
- }
- 
- /* MLME */
-@@ -1421,6 +1421,9 @@ static void ieee80211_rx_mgmt_assoc_resp
- 
- 	rate_control_rate_init(sta);
- 
-+	if (ifsta->flags & IEEE80211_STA_MFP_ENABLED)
-+		set_sta_flags(sta, WLAN_STA_MFP);
-+
- 	if (elems.wmm_param)
- 		set_sta_flags(sta, WLAN_STA_WME);
- 
---- wireless-testing.orig/include/linux/nl80211.h	2008-12-31 16:47:22.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2008-12-31 16:48:01.000000000 +0200
-@@ -412,12 +412,14 @@ enum nl80211_iftype {
-  * @NL80211_STA_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
-  *	with short barker preamble
-  * @NL80211_STA_FLAG_WME: station is WME/QoS capable
-+ * @NL80211_STA_FLAG_MFP: station uses management frame protection
-  */
- enum nl80211_sta_flags {
- 	__NL80211_STA_FLAG_INVALID,
- 	NL80211_STA_FLAG_AUTHORIZED,
- 	NL80211_STA_FLAG_SHORT_PREAMBLE,
- 	NL80211_STA_FLAG_WME,
-+	NL80211_STA_FLAG_MFP,
- 
- 	/* keep last */
- 	__NL80211_STA_FLAG_AFTER_LAST,
---- wireless-testing.orig/include/net/cfg80211.h	2008-12-31 16:47:22.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2008-12-31 16:48:01.000000000 +0200
-@@ -112,12 +112,14 @@ struct beacon_parameters {
-  * @STATION_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
-  *	with short preambles
-  * @STATION_FLAG_WME: station is WME/QoS capable
-+ * @STATION_FLAG_MFP: station uses management frame protection
-  */
- enum station_flags {
- 	STATION_FLAG_CHANGED		= 1<<0,
- 	STATION_FLAG_AUTHORIZED		= 1<<NL80211_STA_FLAG_AUTHORIZED,
- 	STATION_FLAG_SHORT_PREAMBLE	= 1<<NL80211_STA_FLAG_SHORT_PREAMBLE,
- 	STATION_FLAG_WME		= 1<<NL80211_STA_FLAG_WME,
-+	STATION_FLAG_MFP		= 1<<NL80211_STA_FLAG_MFP,
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/cfg.c	2008-12-31 16:47:22.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2008-12-31 16:48:01.000000000 +0200
-@@ -630,6 +630,10 @@ static void sta_apply_parameters(struct 
- 		sta->flags &= ~WLAN_STA_WME;
- 		if (params->station_flags & STATION_FLAG_WME)
- 			sta->flags |= WLAN_STA_WME;
-+
-+		sta->flags &= ~WLAN_STA_MFP;
-+		if (params->station_flags & STATION_FLAG_MFP)
-+			sta->flags |= WLAN_STA_MFP;
- 		spin_unlock_bh(&sta->lock);
- 	}
- 
---- wireless-testing.orig/net/mac80211/debugfs_sta.c	2008-12-31 16:47:22.000000000 +0200
-+++ wireless-testing/net/mac80211/debugfs_sta.c	2008-12-31 16:48:01.000000000 +0200
-@@ -67,14 +67,15 @@ static ssize_t sta_flags_read(struct fil
- 	char buf[100];
- 	struct sta_info *sta = file->private_data;
- 	u32 staflags = get_sta_flags(sta);
--	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s",
-+	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s%s",
- 		staflags & WLAN_STA_AUTH ? "AUTH\n" : "",
- 		staflags & WLAN_STA_ASSOC ? "ASSOC\n" : "",
- 		staflags & WLAN_STA_PS ? "PS\n" : "",
- 		staflags & WLAN_STA_AUTHORIZED ? "AUTHORIZED\n" : "",
- 		staflags & WLAN_STA_SHORT_PREAMBLE ? "SHORT PREAMBLE\n" : "",
- 		staflags & WLAN_STA_WME ? "WME\n" : "",
--		staflags & WLAN_STA_WDS ? "WDS\n" : "");
-+		staflags & WLAN_STA_WDS ? "WDS\n" : "",
-+		staflags & WLAN_STA_MFP ? "MFP\n" : "");
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
- STA_OPS(flags);
---- wireless-testing.orig/net/mac80211/sta_info.h	2008-12-31 16:47:22.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2008-12-31 16:48:01.000000000 +0200
-@@ -34,6 +34,7 @@
-  * @WLAN_STA_CLEAR_PS_FILT: Clear PS filter in hardware (using the
-  *	IEEE80211_TX_CTL_CLEAR_PS_FILT control flag) when the next
-  *	frame to this station is transmitted.
-+ * @WLAN_STA_MFP: Management frame protection is used with this STA.
-  */
- enum ieee80211_sta_info_flags {
- 	WLAN_STA_AUTH		= 1<<0,
-@@ -46,6 +47,7 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_WDS		= 1<<7,
- 	WLAN_STA_PSPOLL		= 1<<8,
- 	WLAN_STA_CLEAR_PS_FILT	= 1<<9,
-+	WLAN_STA_MFP		= 1<<10,
- };
- 
- #define STA_TID_NUM 16
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2008-12-31 16:47:22.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2008-12-31 16:48:01.000000000 +0200
-@@ -259,6 +259,7 @@ struct mesh_preq_queue {
- #define IEEE80211_STA_AUTO_CHANNEL_SEL	BIT(12)
- #define IEEE80211_STA_PRIVACY_INVOKED	BIT(13)
- #define IEEE80211_STA_TKIP_WEP_USED	BIT(14)
-+#define IEEE80211_STA_MFP_ENABLED	BIT(15)
- /* flags for MLME request */
- #define IEEE80211_STA_REQ_SCAN 0
- #define IEEE80211_STA_REQ_DIRECT_PROBE 1
+johannes
 
--- 
+--=-nIWlG5iKDqEHavUucxGl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQvi8AAoJEKVg1VMiehFYt7gP/ibZk/5ODo0KQWORkZs/eRpf
+UiEZ5JuaAsnzX4ojySug70RO8xiH+L5nzJGP3JtM5ih6AoXP1bFTWd7yzRX11x20
+x2nmXm9klb6yFdcTbZNCDyS/n6xgUEm/YSLfrwAK2JZ71Mw2HiZPRy1GPpG/MRjG
+vN/uOP/Fh5LwrRUkIbTjoyjr+jucAjYikT7eNGifo1/bNjHJeuqqyeIIKWULs2/O
+rHrcCcCHGjjmme7yT/wspKlGzz0YZt6ecQvCY5qlkBp0GdvXLGrGLq592T1g6ApD
+aSqcW5bFLqMcBUo5BrGftqoRVD6j2948+bWHMfxyrqIlK7X7QJSJL6E8WBaVuYn7
+5kK4dshIVxmhI9obSVXWH2pLoxZS3LnwP1EQpWHcX9wmb/lmCzsXQJe1Z8NSm5gh
+vYfqwt7DoZKD1+2dvgF1oRBRR0SOOzGTz7HO8OA+izQetMvH1N6GgBDo8EIsAC91
+3JWlRBbncmQUnCluPUxtVid3irAuM1KwOE/wCd6c2HRE/R4t0tRQukVrdFUR+GbW
+s9djucf3NWi2x8YbBSpUUF+86T5tHBGqEWMIv9g7GomVlELopl4HsiE5UMjWIq/g
+sAnhdj2cPA3QBsDLpPoedu2VANvp8tHjTz4jaLrMW92RsC3socHNiyRcYucGhTyf
++p7+9beZLWhXOqKF/2ni
+=Kkj4
+-----END PGP SIGNATURE-----
+
+--=-nIWlG5iKDqEHavUucxGl--
+
