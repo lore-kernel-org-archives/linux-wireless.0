@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:61995 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751118AbYLWMOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 07:14:42 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 04:14:42 -0800
-Date: Tue, 23 Dec 2008 04:14:34 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Davide Pesavento <davidepesa@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH] crda: use strerror() to report error code verbosely
-Message-ID: <20081223121434.GA27316@tesla> (sfid-20081223_131449_052187_54E64DB2)
-References: <20081223050006.3710.98311.stgit@ct.roinet.com> <43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com> <20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net> <43e72e890812222157s5d410d39ye9ac0840eef5331a@mail.gmail.com> <20081223012037.otw1xe4tc084coc8-cebfxv@webmail.spamcop.net> <2da21fe50812230041q1d844215o589c79c351966e50@mail.gmail.com>
+Received: from cavan.codon.org.uk ([93.93.128.6]:38856 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944AbYLMR54 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Dec 2008 12:57:56 -0500
+Date: Sat, 13 Dec 2008 17:57:45 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Tony Vroon <tony@linx.net>, Len Brown <lenb@kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
+	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
+Subject: Re: Fuijtsu Lifebook RFKILL support
+Message-ID: <20081213175745.GA6825@srcf.ucam.org> (sfid-20081213_185805_425142_1A44889F)
+References: <1228957506.4045.11.camel@localhost> <20081211165247.GA4844@khazad-dum.debian.net> <1229016827.6446.6.camel@localhost> <20081211194734.GA18132@khazad-dum.debian.net> <1229046602.4030.13.camel@localhost> <20081212195331.GA12679@khazad-dum.debian.net> <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain> <1229172465.4010.11.camel@localhost> <20081213132857.GA11428@khazad-dum.debian.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <2da21fe50812230041q1d844215o589c79c351966e50@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20081213132857.GA11428@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 23, 2008 at 12:41:21AM -0800, Davide Pesavento wrote:
-> On Tue, Dec 23, 2008 at 07:20, Pavel Roskin <proski@gnu.org> wrote:
-> > Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
-> >
-> >> You don't need to build this unless you want to define your own rules.
-> >
-> > I see.
-> >
-> >> And if you do and want to use the signature stuff you need to copy the
-> >> RSA public key into pubkeys/ directory of CRDA. Did you try that?
-> >
-> > No, I just wanted to install the most current regulatory database.  Perhaps
-> > the error message should be more clear.
-> >
-> > With both CONFIG_CFG80211_REG_DEBUG, CONFIG_WIRELESS_OLD_REGULATORY enabled
-> > and modular mac80211 and cfg80211, regdomain is set correctly from udev:
-> >
-> > [    7.642548] cfg80211: Using static regulatory domain info
-> > [    7.642551] cfg80211: Regulatory domain: US
-> > [    8.697261] cfg80211: Regulatory domain changed to country: US
-> >
-> > However, changing it to anything doesn't work:
-> >
-> > [root@ct proski]# COUNTRY=00 crda
-> > Failed to set regulatory domain: -22
-> > [root@ct proski]# COUNTRY=US crda
-> > Failed to set regulatory domain: -22
-> > [root@ct proski]# COUNTRY=DE crda
-> > Failed to set regulatory domain: -22
-> > [root@ct proski]#
-> >
-> > Maybe it can only be set once?  But then -EBUSY would be more reasonable.
-> >
+On Sat, Dec 13, 2008 at 11:28:57AM -0200, Henrique de Moraes Holschuh wrote:
+> > Len, I would still like to export the 3 values learned about in this
+> > event to userspace. Is it alright for me to create 3 read-only files on
+> > the platform device? (docked, lid, radios)
+> > It would if anything simplify the code.
 > 
-> AFAIK, you have to use `iw reg set <country>` to manually change it.
+> FWIW, I think this is also the way to go.  It is much easier for
+> userspace to deal with sysfs attributes.  HAL can deal with more
+> complex stuff, but shell script writers often don't know how to, nor
+> care to, deal with HAL.
 
-Affirmative, or you can use wpa_supplicant from the git tree and add to your conf:
+I feel like I'm missing something here, but surely what we're talking 
+about is simply a single rfkill device that affects all radios and as 
+such should have a new RFKILL_TYPE_ALL type associated with it? I'd read 
+this as there being a software control that affected all radios. If 
+there's no software control at all then I agree that providing an rfkill 
+class here isn't appropriate.
 
-COUNTRY=US
-
-  Luis
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
