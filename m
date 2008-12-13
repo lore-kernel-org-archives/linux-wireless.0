@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:47181 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752048AbYLPUaJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 15:30:09 -0500
-To: "Bob Copeland" <bcopeland@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath5k + AP mode?
-References: <m3skopuq6t.fsf@maximus.localdomain>
-	<b6c5339f0812160933q1670f646iab25dff161450ef9@mail.gmail.com>
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Date: Tue, 16 Dec 2008 20:47:45 +0100
-In-Reply-To: <b6c5339f0812160933q1670f646iab25dff161450ef9@mail.gmail.com> (Bob Copeland's message of "Tue\, 16 Dec 2008 12\:33\:27 -0500")
-Message-ID: <m3wsdz297i.fsf@maximus.localdomain> (sfid-20081216_213017_863399_CEA32418)
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:56776 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbYLMTdP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Dec 2008 14:33:15 -0500
+Date: Sat, 13 Dec 2008 21:33:13 +0200 (EET)
+From: "=?ISO-8859-1?Q?Ilpo_J=E4rvinen?=" <ilpo.jarvinen@helsinki.fi>
+To: dcbw@redhat.com
+cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: [PATCH] libertas: use roundup instead of opencoding
+Message-ID: <Pine.LNX.4.64.0812132130550.4160@wrl-59.cs.helsinki.fi> (sfid-20081213_203318_937153_70D1B48D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: MULTIPART/MIXED; BOUNDARY="-696208474-1081507156-1229196793=:4160"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Bob Copeland" <bcopeland@gmail.com> writes:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
->> Failed to set interface wlan0 to master mode.
->> nl80211 driver initialization failed.
->> wlan0: Unable to setup interface.
->
-> It's probably worth taking a look at hostapd to see what exactly is failing.
-> We should be able to create an IFTYPE_AP interface with your above patch
-> applied.  No telling whether the rest works.
+---696208474-1081507156-1229196793=:4160
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
 
-Well, it seems nl80211_set_master_mode() calls send_and_recv_msgs()
-and then nl_recvmsgs(0x58cf0, 0x5b2f8) fails with -95 (-EOPNOTSUPP).
 
-sendmsg(4, {msg_name(12)={sa_family=AF_NETLINK, pid=0, groups=00000000},
- msg_iov(1)=[{"\x24\x00\x00\x00\x11\x00\x05\x00\x2f\xf5\x47\x49\xd0\x01\x00\x00\x06\x00\x00\x00\x08\x00\x03\x00\x03\x00\x00\x00\x08\x00\x05\x00\x03\x00\x00\x00"..., 36}],
- msg_controllen=0, msg_flags=0}, 0) = 36
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@helsinki.fi>
+---
+ drivers/net/wireless/libertas/if_sdio.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-recvmsg(4, {msg_name(12)={sa_family=AF_NETLINK, pid=0, groups=00000000},
- msg_iov(1)=[{"\x24\x00\x00\x00\x02\x00\x00\x00\x5d\xf6\x47\x49\xd7\x01\x00\x00\xa1\xff\xff\xff\x24\x00\x00\x00\x11\x00\x05\x00\x5d\xf6\x47\x49\xd7\x01\x00\x00"..., 4096}],
-msg_controllen=0, msg_flags=0}, 0) = 36
-
-$ grep -lr -- -EOPNOTSUPP drivers/net/wireless/ath5k
-drivers/net/wireless/ath5k/base.c
-drivers/net/wireless/ath5k/pcu.c
-but it doesn't seem it's one of those.
-
-Request:
-24 00 00 00	len
-11 00		type = genl_family_get_id(drv->nl80211)
-05 00		flags = NLM_F_REQUEST | NLM_F_ACK
-2f f5 47 49	seq
-d0 01 00 00	pid
-
-06 00 00 00	NL80211_CMD_SET_INTERFACE
-
-08 00		len
-03 00		NL80211_ATTR_IFINDEX
-03 00 00 00	if_nametoindex(ifname)
-
-08 00		len
-05 00		NL80211_ATTR_IFTYPE
-03 00 00 00	NL80211_IFTYPE_AP
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index b54e2ea..4519d73 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -26,6 +26,7 @@
+  * if_sdio_card_to_host() to pad the data.
+  */
+ 
++#include <linux/kernel.h>
+ #include <linux/moduleparam.h>
+ #include <linux/firmware.h>
+ #include <linux/netdevice.h>
+@@ -581,7 +582,7 @@ static int if_sdio_prog_real(struct if_sdio_card *card)
+ 				chunk_size, (chunk_size + 31) / 32 * 32);
+ */
+ 			ret = sdio_writesb(card->func, card->ioport,
+-				chunk_buffer, (chunk_size + 31) / 32 * 32);
++				chunk_buffer, roundup(chunk_size, 32));
+ 			if (ret)
+ 				goto release;
+ 
 -- 
-Krzysztof Halasa
+1.5.2.2
+
+---696208474-1081507156-1229196793=:4160--
