@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:2133 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbYLWF5L (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58123 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751585AbYLMAFc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 00:57:11 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so818054yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 21:57:10 -0800 (PST)
-Message-ID: <43e72e890812222157s5d410d39ye9ac0840eef5331a@mail.gmail.com> (sfid-20081223_065715_676711_6A2EBBD5)
-Date: Mon, 22 Dec 2008 21:57:10 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Pavel Roskin" <proski@gnu.org>
-Subject: Re: [PATCH] crda: use strerror() to report error code verbosely
-Cc: linux-wireless@vger.kernel.org,
-	"John W Linville" <linville@tuxdriver.com>
-In-Reply-To: <20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20081223050006.3710.98311.stgit@ct.roinet.com>
-	 <43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com>
-	 <20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net>
+	Fri, 12 Dec 2008 19:05:32 -0500
+Subject: Re: Userspace tools: Roadmap?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: pat-lkml <pat-lkml@erley.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4942F867.5020203@erley.org>
+References: <1228692546.8826.1288759933@webmail.messagingengine.com>
+	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>
+	 <1228778295.10662.1288975589@webmail.messagingengine.com>
+	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org>
+	 <1228780960.22164.162.camel@johannes.berg>  <4941EF69.5040108@erley.org>
+	 <1229099080.14423.15.camel@dv> <1229119118.3572.6.camel@johannes.berg>
+	 <4942E7A4.3050206@erley.org> <1229121535.3565.4.camel@johannes.berg>
+	 <4942F867.5020203@erley.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eU/9CuISkx99iwO4c9B7"
+Date: Sat, 13 Dec 2008 01:05:25 +0100
+Message-Id: <1229126725.3565.30.camel@johannes.berg> (sfid-20081213_010541_346842_A0AE7048)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 22, 2008 at 9:49 PM, Pavel Roskin <proski@gnu.org> wrote:
-> Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
->
->> I've been trying to avoid string.h on crda.c, granted it only
->> increases the final crda binary by about 30 bytes, but do we really
->> need it? In fact it'd be nice to further trim crda further to save
->> even more space. Thoughts?
->
-> OK, maybe we don't need this patch if CDRA works correctly.  I'm having bad
-> luck with it.
->
-> First of all, I cannot generate regulatory.bin that crda would accept.
->
-> [proski@dv wireless-regdb]$ make
-> ./db2bin.py regulatory.bin db.txt key.priv.pem
-> openssl rsa -in key.priv.pem -out key.pub.pem -pubout -outform PEM
-> writing RSA key
 
-You don't need to build this unless you want to define your own rules.
+--=-eU/9CuISkx99iwO4c9B7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> [proski@dv crda]$ make
->  GEN  keys-gcrypt.c
->  CC   reglib.o
->  CC   crda.o
->  LD   crda
->  CC   intersect.o
->  CC   print-regdom.o
->  LD   intersect
->  CC   regdbdump.o
->  LD   regdbdump
->  CHK  /home/proski/src/wireless-regdb/regulatory.bin
-> Database signature verification failed.
-> make: *** [verify] Error 234
+On Fri, 2008-12-12 at 18:48 -0500, pat-lkml wrote:
+> This converts iw to use libnl-2, and adds compatibility with libnl-1.
+> There is not currently a good way to detect the libnl version during
+> compilation, as the versioning in the netlink/version.h is defined as
+> a
+> string "2.0" rather than a major and a minor number, so we must detect
+> it in the Makefile.
+>=20
+> Signed-off-by: Pat Erley <pat-lkml@erley.org>
 
-And if you do and want to use the signature stuff you need to copy the
-RSA public key into pubkeys/ directory of CRDA. Did you try that?
+Ok, I've committed a slightly different version of this (corrected the
+type, and made the compat code static inlines), can you verify it still
+works against 2.0?
 
-  Luis
+johannes
+
+--=-eU/9CuISkx99iwO4c9B7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJQvxCAAoJEKVg1VMiehFYoLoP/j2XbJKgu7H6zxV+zJa5BeKL
+ci6KAuFlCe+v6DcbRRq9GkiK1ro2RrrHPVv2bM9OoJRRZ+e1ixAZa5A4uxWIMufM
++sCJJ647/8eidWA4qHhCdfBVID9hftLg8ugjuuKEg1f4yS6jgnGupOPkLq4p0Mdi
+lMWo/5XBpMafZ41Irz5d4Zy6oK/V2X1H7gq7+Hi143QZ3vQKMXY6EXXdyZ5tJG6g
+m8Vfv+ztV/fSzYuEWSnJu9gaB0m5a0EWbc5/MiTD5uJH+5F8dvG17uwSYazBKCN2
+rQRGKUQg83g/As0Rx3SqYvg6W5fZyaYoJ6H1OH/VjFN/3epMFCklCXuVvcyYrgAE
+VgA2u6DgTViEk742XgpFvp6CX/uqeZQtKsdJfoSnzwH2zbOaYJD2SI8UA0jYYfMB
+NhHzp1hQpOMJiMqbY1eR+Ctkaw3IEFoTHtKE0+5z3TkDX0OYp+RnLGjMWnXyIUdq
+hwUxToqJoGhovZ65rouL2ajzSVJEjMAlJOb1d5D3l+6f/IhCw4vzVZ/qBsxYj3Fo
+1JzjZZGFNbzrj1vodHLI2yrmymKMf7GdXr6NwBExSKQwYlanAVJyfABAbb9+XiaA
+TZTDKH/IkqD6D39yDBiV7l05FiQ/IFt6GAPCfCAGS7E4/Sa95/tpul5Qx0D5HmYf
+C5/pzKyvWjRqNjzgZyYv
+=kaDt
+-----END PGP SIGNATURE-----
+
+--=-eU/9CuISkx99iwO4c9B7--
+
