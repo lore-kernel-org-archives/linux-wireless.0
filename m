@@ -1,86 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:43869 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750763AbYLBUD6 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:29236 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506AbYLNIao (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 15:03:58 -0500
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx03.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mB2K3qBk007929
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Dec 2008 22:03:55 +0200
-Received: from [127.0.1.1] (essapo-nirac253161.europe.nokia.com [10.162.253.161])
-	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mB2K3pP3027142
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Dec 2008 22:03:52 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [RFC PATCH v4 0/5] mac80211 dynamic power save
-To: linux-wireless@vger.kernel.org
-Date: Tue, 02 Dec 2008 22:03:51 +0200
-Message-ID: <20081202200219.5507.83250.stgit@tikku> (sfid-20081202_210402_396981_3F1ED037)
+	Sun, 14 Dec 2008 03:30:44 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so1007142wah.21
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Dec 2008 00:30:44 -0800 (PST)
+Message-ID: <4944C430.8080602@gmail.com> (sfid-20081214_093057_193157_E42A9372)
+Date: Sun, 14 Dec 2008 00:30:40 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Jaswinder Singh <jaswinderlinux@gmail.com>
+CC: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	lrodriguez@atheros.com, jmalinen@atheros.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: BUG - ath9k keep on disconnecting in 2.6.28-rc8
+References: <3f9a31f40812132354k6f9e7b80o30d3236687dffba0@mail.gmail.com>
+In-Reply-To: <3f9a31f40812132354k6f9e7b80o30d3236687dffba0@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is v4 of my dynamic powersave patches. I have tested them only
-with stlc45xx on Nokia N810. I'm also working with iwl3945 and iwlagn
-patches based on these patches, but I haven't finished them yet.
+Jaswinder Singh wrote:
+> Hello all,
+>
+> I am facing problem with 2.6.28-rc8, ath9k keep on disconnecting.
+>
+> dmesg :
+> ath9k: 0.1
+> ath9k 0000:08:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> ath9k 0000:08:00.0: setting latency timer to 64
+> phy0: Selected rate control algorithm 'ath9k_rate_control'
+> Registered led device: ath9k-phy0:radio
+> Registered led device: ath9k-phy0:assoc
+> Registered led device: ath9k-phy0:tx
+> Registered led device: ath9k-phy0:rx
+> phy0: Atheros 9280: mem=0xffffc20006200000, irq=17
+>
+> /sbin/lspci -vv :
+> 08:00.0 Network controller: Atheros Communications Inc. Device 002a (rev 01)
+> 	Subsystem: Hewlett-Packard Company Device 1381
+> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+> Stepping- SERR- FastB2B- DisINTx-
+> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+> 	Latency: 0, Cache Line Size: 128 bytes
+> 	Interrupt: pin A routed to IRQ 17
+> 	Region 0: Memory at d1100000 (64-bit, non-prefetchable) [size=64K]
+> 	Capabilities: [40] Power Management version 2
+> 		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+> 	Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Count=1/1 Enable-
+> 		Address: 00000000  Data: 0000
+> 	Capabilities: [60] Express (v1) Legacy Endpoint, MSI 00
+> 		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+> 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
+> 		DevSta:	CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+> 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM unknown, Latency L0
+> <512ns, L1 <64us
+> 			ClockPM- Suprise- LLActRep- BwNot-
+> 		LnkCtl:	ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk+
+> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
+> BWMgmt- ABWMgmt-
+> 	Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
+> 		Vector table: BAR=0 offset=00000000
+> 		PBA: BAR=0 offset=00000000
+> 	Capabilities: [100] Advanced Error Reporting
+> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+> MalfTLP- ECRC- UnsupReq+ ACSVoil-
+> 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+> MalfTLP- ECRC- UnsupReq- ACSVoil-
+> 		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
+> MalfTLP+ ECRC- UnsupReq- ACSVoil-
+> 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> 		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+> 	Capabilities: [140] Virtual Channel <?>
+> 	Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
+> 	Kernel driver in use: ath9k
+> 	Kernel modules: ath9k
+>
+> Here are kernel messages telling disconnecting info :
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> ForceXPAon: 0
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> ForceXPAon: 0
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> ForceXPAon: 0
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> ForceXPAon: 0
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> wlan0: authenticate with AP 00:11:95:9e:df:f6
+> wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
+> wlan0: direct probe to AP 00:11:95:9e:df:f6 try 1
+> ForceXPAon: 0
+>
+> If you need more information please let me know.
+>
+> Thank you,
+>
+> Jaswinder Singh.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+>   
+I'm seeing:
+ Capabilities: [140] Virtual Channel <?>
+in you're post, leading me to believe, you're
+missing a capability?
+from what I understand, if you're using
+NetworkManager you need to
+adduser "name" netdev
+then have NetworkManager load
+wpa_supplicant at the right time.
+under the right circumstances..
 
-These are RFC patches, not yet to be applied.
+regards;
 
-Patch 3 contains a new flag IEEE80211_HW_NO_DYNAMIC_PS. So all drivers
-which firmware doesn't support dynamic power save should use this flag
-to enable the feature in mac80211. This is a separate patch just for
-easier review. If it's ok, I'll fold it to patch 2.
-
-Patch 4 moves the dynamic_ps_timeout to ieee80211_conf struct. That
-way the drivers which have dynamic power save support in firmware can
-use the same timeout provided by user space. If this ok I'll fold this
-to patch 2.
-
-Patch 5 contains internal interface mac80211 to enable and disable
-queues. The original idea and design is from Johannes Berg, I just did
-the implementation based on those. All the bugs are mine, of course.
-
-changes in v4:
-o add check for station interface to siwpower()
-o call hw_config() also for dynamic timeout changes
-o add dynamic_ prefix to workqueues
-o test for IEEE80211_HW_NO_DYNAMIC_PS in siwpower()
-o wrote documentation for IEEE80211_HW_NO_DYNAMIC_PS
-o wrote documentation for conf->dynamic_ps_timeout
-
-changes in v3:
-o add a hw flag to notify that driver doesn't support dynamic power save and
-  which will enable mac80211 implementation
-o delete dynamic_ps_timer and cancel ps_enable_work during
-  association, hopefully it's race free now
-o provide timeout value to the drivers, for example iwlwifi should use
-  it (example patch under works)
-o fix a bad bug in testing IEEE80211_STA_ASSOCIATED flag with && operator
-
-TODO:
-o test with iwlwifi (only in-tree driver using IEEE80211_CONF_PS)
-
-Power save related features which I'll implement later:
-o disable power save when software scanning
-o beacon period (wakeup period) to the drivers, can be set from user
-  space but otherwise is bss's DTIM value
-
----
-
-Kalle Valo (5):
-      mac80211: track master queue status
-      mac80211: move dynamic_ps_timeout to hw.conf
-      mac80211: add IEEE80211_HW_NO_DYNAMIC_PS flag
-      mac80211: implement dynamic power save
-      mac80211: enable IEEE80211_CONF_PS only when associated
+Justin P. Mattock
 
 
- include/net/mac80211.h     |   10 +++++++
- net/mac80211/ieee80211_i.h |   22 +++++++++++++++-
- net/mac80211/main.c        |    9 +++++++
- net/mac80211/mlme.c        |   60 +++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/tx.c          |   13 ++++++++++
- net/mac80211/util.c        |   60 ++++++++++++++++++++++++++++++++++++++++----
- net/mac80211/wext.c        |   46 ++++++++++++++++++++++++++++------
- 7 files changed, 203 insertions(+), 17 deletions(-)
+
+
 
