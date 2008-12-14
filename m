@@ -1,33 +1,338 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41822 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751597AbYL3SJu (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:57890 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753080AbYLNOFp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 13:09:50 -0500
-Message-ID: <495A63E2.1050806@lwfinger.net> (sfid-20081230_190954_789550_0851E235)
-Date: Tue, 30 Dec 2008 12:09:38 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 14 Dec 2008 09:05:45 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] p54: remove free_on_tx parameter
+Date: Sun, 14 Dec 2008 15:05:42 +0100
+Cc: John W Linville <linville@tuxdriver.com>
 MIME-Version: 1.0
-To: Oliver Neukum <oliver@neukum.org>
-CC: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-References: <Pine.LNX.4.44L0.0812301220090.2386-100000@iolanthe.rowland.org> <495A5AE5.1040902@tuffmail.co.uk> <495A5FEC.5070608@lwfinger.net> <200812301905.46215.oliver@neukum.org>
-In-Reply-To: <200812301905.46215.oliver@neukum.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200812141505.42730.chunkeey@web.de> (sfid-20081214_150552_292532_5C09C7C0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oliver Neukum wrote:
-> Did you test STD or STR?
+This patch simplifies the tx code a bit and will be necessary for
+the upcoming stlc45xx<->p54 port.
 
-STD. My machine gets a dbus error whenever I try STR even with no
-wireless drivers loaded.
+In detail: we no longer have to tell all back-end drivers directly,
+if we want to free a frame right after it was send to the firmware,
+or if we do it in the library callback later.
 
-Larry
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+Oops, Sorry!
+I just noticed that [this] patch was not mailed out yesterday.
+
+And John,
+I think it's the best if you keep the all stlc45xx<->p54 port in wireless-testing
+until sometime after 2.6.29-rc1.
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-12-13 23:06:53.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2008-12-14 14:49:03.000000000 +0100
+@@ -684,7 +684,7 @@ void p54_free_skb(struct ieee80211_hw *d
+ 		freed = priv->rx_end - last_addr;
+ 	__skb_unlink(skb, &priv->tx_queue);
+ 	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+-	kfree_skb(skb);
++	dev_kfree_skb_any(skb);
+ 
+ 	if (freed >= priv->headroom + sizeof(struct p54_hdr) + 48 +
+ 		     IEEE80211_MAX_RTS_THRESHOLD + priv->tailroom)
+@@ -1089,7 +1089,7 @@ int p54_read_eeprom(struct ieee80211_hw 
+ 			eeprom_hdr->v2.magic2 = 0xf;
+ 			memcpy(eeprom_hdr->v2.magic, (const char *)"LOCK", 4);
+ 		}
+-		priv->tx(dev, skb, 0);
++		priv->tx(dev, skb);
+ 
+ 		if (!wait_for_completion_interruptible_timeout(&priv->eeprom_comp, HZ)) {
+ 			printk(KERN_ERR "%s: device does not respond!\n",
+@@ -1130,7 +1130,7 @@ static int p54_set_tim(struct ieee80211_
+ 	tim = (struct p54_tim *) skb_put(skb, sizeof(*tim));
+ 	tim->count = 1;
+ 	tim->entry[0] = cpu_to_le16(set ? (sta->aid | 0x8000) : sta->aid);
+-	priv->tx(dev, skb, 1);
++	priv->tx(dev, skb);
+ 	return 0;
+ }
+ 
+@@ -1148,7 +1148,7 @@ static int p54_sta_unlock(struct ieee802
+ 
+ 	sta = (struct p54_sta_unlock *)skb_put(skb, sizeof(*sta));
+ 	memcpy(sta->addr, addr, ETH_ALEN);
+-	priv->tx(dev, skb, 1);
++	priv->tx(dev, skb);
+ 	return 0;
+ }
+ 
+@@ -1191,7 +1191,7 @@ static int p54_tx_cancel(struct ieee8021
+ 	hdr = (void *)entry->data;
+ 	cancel = (struct p54_txcancel *)skb_put(skb, sizeof(*cancel));
+ 	cancel->req_id = hdr->req_id;
+-	priv->tx(dev, skb, 1);
++	priv->tx(dev, skb);
+ 	return 0;
+ }
+ 
+@@ -1420,7 +1420,7 @@ static int p54_tx(struct ieee80211_hw *d
+ 	/* modifies skb->cb and with it info, so must be last! */
+ 	if (unlikely(p54_assign_address(dev, skb, hdr, skb->len + tim_len)))
+ 		goto err;
+-	priv->tx(dev, skb, 0);
++	priv->tx(dev, skb);
+ 
+ 	queue_delayed_work(dev->workqueue, &priv->work,
+ 			   msecs_to_jiffies(P54_TX_FRAME_LIFETIME));
+@@ -1499,7 +1499,7 @@ static int p54_setup_mac(struct ieee8021
+ 		setup->v2.lpf_bandwidth = cpu_to_le16(65535);
+ 		setup->v2.osc_start_delay = cpu_to_le16(65535);
+ 	}
+-	priv->tx(dev, skb, 1);
++	priv->tx(dev, skb);
+ 	return 0;
+ }
+ 
+@@ -1580,7 +1580,7 @@ static int p54_scan(struct ieee80211_hw 
+ 		chan->v2.basic_rate_mask = cpu_to_le32(priv->basic_rate_mask);
+ 		memset(chan->v2.rts_rates, 0, 8);
+ 	}
+-	priv->tx(dev, skb, 1);
++	priv->tx(dev, skb);
+ 	return 0;
+ 
+  err:
+@@ -1606,7 +1606,7 @@ static int p54_set_leds(struct ieee80211
+ 	led->led_permanent = cpu_to_le16(link);
+ 	led->led_temporary = cpu_to_le16(act);
+ 	led->duration = cpu_to_le16(1000);
+-	priv->tx(dev, skb, 1);
++	priv->tx(dev, skb);
+ 	return 0;
+ }
+ 
+@@ -1646,7 +1646,7 @@ static int p54_set_edcf(struct ieee80211
+ 	edcf->flags = 0;
+ 	memset(edcf->mapping, 0, sizeof(edcf->mapping));
+ 	memcpy(edcf->queue, priv->qos_params, sizeof(edcf->queue));
+-	priv->tx(dev, skb, 1);
++	priv->tx(dev, skb);
+ 	return 0;
+ }
+ 
+@@ -1937,7 +1937,7 @@ static int p54_init_xbow_synth(struct ie
+ 	xbow->magic2 = cpu_to_le16(0x2);
+ 	xbow->freq = cpu_to_le16(5390);
+ 	memset(xbow->padding, 0, sizeof(xbow->padding));
+-	priv->tx(dev, skb, 1);
++	priv->tx(dev, skb);
+ 	return 0;
+ }
+ 
+@@ -1963,7 +1963,7 @@ static void p54_work(struct work_struct 
+ 	if (!skb)
+ 		return ;
+ 
+-	priv->tx(dev, skb, 0);
++	priv->tx(dev, skb);
+ }
+ 
+ static int p54_get_stats(struct ieee80211_hw *dev,
+@@ -2095,7 +2095,7 @@ static int p54_set_key(struct ieee80211_
+ 			[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY]), 8);
+ 	}
+ 
+-	priv->tx(dev, skb, 1);
++	priv->tx(dev, skb);
+ 	mutex_unlock(&priv->conf_mutex);
+ 	return 0;
+ }
+diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
+--- a/drivers/net/wireless/p54/p54common.h	2008-12-13 23:00:30.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.h	2008-12-14 14:48:23.000000000 +0100
+@@ -84,9 +84,6 @@ struct bootrec_desc {
+ #define BR_CODE_END_OF_BRA		0xFF0000FF
+ #define LEGACY_BR_CODE_END_OF_BRA	0xFFFFFFFF
+ 
+-#define P54_HDR_FLAG_CONTROL		BIT(15)
+-#define P54_HDR_FLAG_CONTROL_OPSET	(BIT(15) + BIT(0))
+-
+ #define P54_HDR_FLAG_DATA_ALIGN		BIT(14)
+ #define P54_HDR_FLAG_DATA_OUT_PROMISC	BIT(0)
+ #define P54_HDR_FLAG_DATA_OUT_TIMESTAMP BIT(1)
+diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+--- a/drivers/net/wireless/p54/p54.h	2008-12-13 23:01:29.000000000 +0100
++++ b/drivers/net/wireless/p54/p54.h	2008-12-14 14:48:23.000000000 +0100
+@@ -44,6 +44,9 @@ enum p54_control_frame_types {
+ 	P54_CONTROL_TYPE_BT_OPTIONS = 35
+ };
+ 
++#define P54_HDR_FLAG_CONTROL		BIT(15)
++#define P54_HDR_FLAG_CONTROL_OPSET	(BIT(15) + BIT(0))
++
+ struct p54_hdr {
+ 	__le16 flags;
+ 	__le16 len;
+@@ -54,6 +57,10 @@ struct p54_hdr {
+ 	u8 data[0];
+ } __attribute__ ((packed));
+ 
++#define FREE_AFTER_TX(skb)						\
++	((((struct p54_hdr *) ((struct sk_buff *) skb)->data)->		\
++	flags) == cpu_to_le16(P54_HDR_FLAG_CONTROL_OPSET))
++
+ struct p54_edcf_queue_param {
+ 	__le16 aifs;
+ 	__le16 cwmin;
+@@ -82,8 +89,7 @@ struct p54_common {
+ 	u32 rx_start;
+ 	u32 rx_end;
+ 	struct sk_buff_head tx_queue;
+-	void (*tx)(struct ieee80211_hw *dev, struct sk_buff *skb,
+-		   int free_on_tx);
++	void (*tx)(struct ieee80211_hw *dev, struct sk_buff *skb);
+ 	int (*open)(struct ieee80211_hw *dev);
+ 	void (*stop)(struct ieee80211_hw *dev);
+ 	int mode;
+diff -Nurp a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+--- a/drivers/net/wireless/p54/p54pci.c	2008-12-13 22:00:11.000000000 +0100
++++ b/drivers/net/wireless/p54/p54pci.c	2008-12-14 14:48:23.000000000 +0100
+@@ -227,7 +227,9 @@ static void p54p_check_tx_ring(struct ie
+ 
+ 	while (i != idx) {
+ 		desc = &ring[i];
+-		p54_free_skb(dev, tx_buf[i]);
++		if (tx_buf[i])
++			if (FREE_AFTER_TX((struct sk_buff *) tx_buf[i]))
++				p54_free_skb(dev, tx_buf[i]);
+ 		tx_buf[i] = NULL;
+ 
+ 		pci_unmap_single(priv->pdev, le32_to_cpu(desc->host_addr),
+@@ -298,8 +300,7 @@ static irqreturn_t p54p_interrupt(int ir
+ 	return reg ? IRQ_HANDLED : IRQ_NONE;
+ }
+ 
+-static void p54p_tx(struct ieee80211_hw *dev, struct sk_buff *skb,
+-		    int free_on_tx)
++static void p54p_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct p54p_priv *priv = dev->priv;
+ 	struct p54p_ring_control *ring_control = priv->ring_control;
+@@ -314,6 +315,7 @@ static void p54p_tx(struct ieee80211_hw 
+ 	idx = le32_to_cpu(ring_control->host_idx[1]);
+ 	i = idx % ARRAY_SIZE(ring_control->tx_data);
+ 
++	priv->tx_buf_data[i] = skb;
+ 	mapping = pci_map_single(priv->pdev, skb->data, skb->len,
+ 				 PCI_DMA_TODEVICE);
+ 	desc = &ring_control->tx_data[i];
+@@ -324,10 +326,6 @@ static void p54p_tx(struct ieee80211_hw 
+ 
+ 	wmb();
+ 	ring_control->host_idx[1] = cpu_to_le32(idx + 1);
+-
+-	if (free_on_tx)
+-		priv->tx_buf_data[i] = skb;
+-
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
+diff -Nurp a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+--- a/drivers/net/wireless/p54/p54usb.c	2008-12-13 22:00:11.000000000 +0100
++++ b/drivers/net/wireless/p54/p54usb.c	2008-12-14 14:48:23.000000000 +0100
+@@ -138,22 +138,16 @@ static void p54u_rx_cb(struct urb *urb)
+ 	}
+ }
+ 
+-static void p54u_tx_reuse_skb_cb(struct urb *urb)
+-{
+-	struct sk_buff *skb = urb->context;
+-	struct p54u_priv *priv = (struct p54u_priv *)((struct ieee80211_hw *)
+-		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0)))->priv;
+-
+-	skb_pull(skb, priv->common.tx_hdr_len);
+-}
+-
+-static void p54u_tx_free_skb_cb(struct urb *urb)
++static void p54u_tx_cb(struct urb *urb)
+ {
+ 	struct sk_buff *skb = urb->context;
+ 	struct ieee80211_hw *dev = (struct ieee80211_hw *)
+ 		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
++	struct p54u_priv *priv = dev->priv;
+ 
+-	p54_free_skb(dev, skb);
++	skb_pull(skb, priv->common.tx_hdr_len);
++	if (FREE_AFTER_TX(skb))
++		p54_free_skb(dev, skb);
+ }
+ 
+ static void p54u_tx_dummy_cb(struct urb *urb) { }
+@@ -213,8 +207,7 @@ static int p54u_init_urbs(struct ieee802
+ 	return ret;
+ }
+ 
+-static void p54u_tx_3887(struct ieee80211_hw *dev, struct sk_buff *skb,
+-			 int free_on_tx)
++static void p54u_tx_3887(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct p54u_priv *priv = dev->priv;
+ 	struct urb *addr_urb, *data_urb;
+@@ -236,9 +229,7 @@ static void p54u_tx_3887(struct ieee8021
+ 			  p54u_tx_dummy_cb, dev);
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
+-			  skb->data, skb->len,
+-			  free_on_tx ? p54u_tx_free_skb_cb :
+-				       p54u_tx_reuse_skb_cb, skb);
++			  skb->data, skb->len, p54u_tx_cb, skb);
+ 
+ 	usb_anchor_urb(addr_urb, &priv->submitted);
+ 	err = usb_submit_urb(addr_urb, GFP_ATOMIC);
+@@ -273,8 +264,7 @@ static __le32 p54u_lm87_chksum(const __l
+ 	return cpu_to_le32(chk);
+ }
+ 
+-static void p54u_tx_lm87(struct ieee80211_hw *dev, struct sk_buff *skb,
+-			 int free_on_tx)
++static void p54u_tx_lm87(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct p54u_priv *priv = dev->priv;
+ 	struct urb *data_urb;
+@@ -293,9 +283,7 @@ static void p54u_tx_lm87(struct ieee8021
+ 
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
+-			  skb->data, skb->len,
+-			  free_on_tx ? p54u_tx_free_skb_cb :
+-				       p54u_tx_reuse_skb_cb, skb);
++			  skb->data, skb->len, p54u_tx_cb, skb);
+ 
+ 	usb_anchor_urb(data_urb, &priv->submitted);
+ 	if (usb_submit_urb(data_urb, GFP_ATOMIC)) {
+@@ -306,8 +294,7 @@ static void p54u_tx_lm87(struct ieee8021
+ 	usb_free_urb(data_urb);
+ }
+ 
+-static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb,
+-			    int free_on_tx)
++static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct p54u_priv *priv = dev->priv;
+ 	struct urb *int_urb, *data_urb;
+@@ -354,9 +341,7 @@ static void p54u_tx_net2280(struct ieee8
+ 
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
+-			  skb->data, skb->len,
+-			  free_on_tx ? p54u_tx_free_skb_cb :
+-				       p54u_tx_reuse_skb_cb, skb);
++			  skb->data, skb->len, p54u_tx_cb, skb);
+ 
+ 	usb_anchor_urb(int_urb, &priv->submitted);
+ 	err = usb_submit_urb(int_urb, GFP_ATOMIC);
