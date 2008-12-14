@@ -1,164 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-147-71.gdrpmi.dsl-w.verizon.net ([71.115.147.71]:40967
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544AbYLLXhD (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.178]:27610 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755510AbYLNIOQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 18:37:03 -0500
-Message-ID: <4942F59B.1060605@erley.org> (sfid-20081213_003713_986580_24895355)
-Date: Fri, 12 Dec 2008 18:36:59 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Sun, 14 Dec 2008 03:14:16 -0500
+Message-ID: <3f9a31f40812140014p7df48c4csc820ce1f0a4e65ee@mail.gmail.com> (sfid-20081214_091423_991518_AE8E9AEB)
+Date: Sun, 14 Dec 2008 13:44:15 +0530
+From: "Jaswinder Singh" <jaswinderlinux@gmail.com>
+To: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	lrodriguez@atheros.com, jmalinen@atheros.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: BUG - ath9k keep on disconnecting in 2.6.28-rc8-tip
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Userspace tools: Roadmap?
-References: <1228692546.8826.1288759933@webmail.messagingengine.com>	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>	 <1228778295.10662.1288975589@webmail.messagingengine.com>	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org>	 <1228780960.22164.162.camel@johannes.berg>  <4941EF69.5040108@erley.org>	 <1229099080.14423.15.camel@dv> <1229119118.3572.6.camel@johannes.berg>	 <4942E7A4.3050206@erley.org> <1229121535.3565.4.camel@johannes.berg>
-In-Reply-To: <1229121535.3565.4.camel@johannes.berg>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This converts iw to use libnl-2, and adds compatibility with libnl-1.
-There is not currently a good way to detect the libnl version during
-compilation, as the versioning in the netlink/version.h is defined as a
-string "2.0" rather than a major and a minor number, so we must detect
-it in the Makefile.
+Hello all,
 
-Signed-off-by: Pat Erley <pat-lkml@erley.org>
+I also tested with 2.6.28-rc8-tip also have ath9k disconnecting problem.
 
----
+This seems to be more useful to debug the problem :
 
-I'm still not very familiar with Makefile magic, so if there's a better
-way to do what I'm doing in the Makefile, just let me know.  Also, I'm
-preparing a similar patch for crda.
-
----
-
-diff --git a/Makefile b/Makefile
-index df59b51..a87e9a0 100644
---- a/Makefile
-+++ b/Makefile
-@@ -10,14 +10,28 @@ MKDIR ?= mkdir -p
- INSTALL ?= install
- CC ?= "gcc"
-
--CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
--fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
-`pkg-config --cflags libnl-1`
-+CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
--fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
- CFLAGS += -O2 -g
--LDFLAGS += `pkg-config --libs libnl-1`
--NLVERSION = 1.0
-
- OBJS = iw.o info.o phy.o interface.o station.o util.o mpath.o reg.o
-mesh.o genl.o
- ALL = iw
-
-+NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
-+NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
-+
-+ifeq ($(NL1FOUND),Y)
-+NLLIBNAME = libnl-1
-+endif
-+
-+ifeq ($(NL2FOUND),Y)
-+CFLAGS += -DCONFIG_LIBNL20
-+LIBS += -lnl-genl
-+NLLIBNAME = libnl-2.0
-+endif
-+
-+LDFLAGS += `pkg-config --libs $(NLLIBNAME)`
-+CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
-+
- ifeq ($(V),1)
- Q=
- NQ=true
-@@ -29,8 +43,15 @@ endif
- all: version_check $(ALL)
-
- version_check:
--	@if ! pkg-config --atleast-version=$(NLVERSION) libnl-1; then echo
-"You need at least libnl version $(NLVERSION)"; exit 1; fi
--
-+ifeq ($(NL2FOUND),Y)
-+	@echo "Found libnl-2.0"
-+else
-+ifeq ($(NL1FOUND),Y)
-+        @echo "Found libnl-1"
-+else
-+	$(error No libnl found)
-+endif
-+endif
-
- version.h: version.sh
- 	@$(NQ) ' GEN  version.h'
-@@ -42,7 +63,7 @@ version.h: version.sh
-
- iw:	$(OBJS)
- 	@$(NQ) ' CC  ' iw
--	$(Q)$(CC) $(LDFLAGS) $(OBJS) -o iw
-+	$(Q)$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o iw
-
- check:
- 	$(Q)$(MAKE) all CC="REAL_CC=$(CC) CHECK=\"sparse -Wall\" cgcc"
-diff --git a/iw.c b/iw.c
-index afae643..03ffbb9 100644
---- a/iw.c
-+++ b/iw.c
-@@ -23,13 +23,24 @@
- #include "iw.h"
- #include "version.h"
-
-+#ifndef CONFIG_LIBNL20
-+/* libnl 2.0 compatibility code */
-+
-+#define nl_socket_alloc(_h) nl_handle_alloc(_h)
-+#define nl_socket_free(_h)  nl_handle_destroy(_h)
-+#define compat_genl_ctrl_alloc_cache(_nl_handle, _nl_cache) \
-+        return (_nl_cache = genl_ctrl_alloc_cache(_nl_handle)) == null
-+
-+#define genl_ctrl_alloc_cache(_h) compat_genl_ctrl_alloc_cache(_h)
-+#endif /* CONFIG_LIBNL20 */
-+
- static int debug = 0;
-
- static int nl80211_init(struct nl80211_state *state)
- {
- 	int err;
-
--	state->nl_handle = nl_handle_alloc();
-+	state->nl_handle = nl_socket_alloc();
- 	if (!state->nl_handle) {
- 		fprintf(stderr, "Failed to allocate netlink handle.\n");
- 		return -ENOMEM;
-@@ -41,8 +52,7 @@ static int nl80211_init(struct nl80211_state *state)
- 		goto out_handle_destroy;
- 	}
-
--	state->nl_cache = genl_ctrl_alloc_cache(state->nl_handle);
--	if (!state->nl_cache) {
-+	if (genl_ctrl_alloc_cache(state->nl_handle, &(state->nl_cache))) {
- 		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
- 		err = -ENOMEM;
- 		goto out_handle_destroy;
-@@ -60,7 +70,7 @@ static int nl80211_init(struct nl80211_state *state)
-  out_cache_free:
- 	nl_cache_free(state->nl_cache);
-  out_handle_destroy:
--	nl_handle_destroy(state->nl_handle);
-+	nl_socket_free(state->nl_handle);
- 	return err;
- }
-
-@@ -68,7 +78,7 @@ static void nl80211_cleanup(struct nl80211_state *state)
- {
- 	genl_family_put(state->nl80211);
- 	nl_cache_free(state->nl_cache);
--	nl_handle_destroy(state->nl_handle);
-+	nl_socket_free(state->nl_handle);
- }
-
- __COMMAND(NULL, NULL, NULL, 0, 0, 0, CIB_NONE, NULL);
+dmesg :
+[    7.823228] ath9k: 0.1
+[    7.823289] vendor=1022 device=9605
+[    7.823289] ath9k 0000:08:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[    7.823289] ath9k 0000:08:00.0: setting latency timer to 64
+..
+[    8.272013] phy0: Selected rate control algorithm 'ath9k_rate_control'
+[    8.273900] Registered led device: ath9k-phy0:radio
+[    8.273940] Registered led device: ath9k-phy0:assoc
+[    8.273974] Registered led device: ath9k-phy0:tx
+[    8.274012] Registered led device: ath9k-phy0:rx
+..
+[  230.478536] ForceXPAon: 0
+[  230.549160] ForceXPAon: 0
+[  230.620332] ForceXPAon: 0
+[  230.626153] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[  230.627662] wlan0: authenticated
+[  230.627686] wlan0: associate with AP 00:11:95:9e:df:f6
+[  230.649736] wlan0: RX AssocResp from 00:11:95:9e:df:f6 (capab=0x471
+status=0 aid=1)
+[  230.649757] wlan0: associated
+[  230.660043] ForceXPAon: 0
+[  230.684015] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[  240.875098] wlan0: no IPv6 routers present
+..
+[  515.696289] ForceXPAon: 0
+[  515.767289] ForceXPAon: 0
+[  515.838264] ForceXPAon: 0
+[  515.909289] ForceXPAon: 0
+[  515.980224] ForceXPAon: 0
+[  516.051155] ForceXPAon: 0
+[  516.123144] ForceXPAon: 0
+[  516.194270] ForceXPAon: 0
+[  516.265157] ForceXPAon: 0
+[  516.337423] ForceXPAon: 0
+[  614.483083] wlan0: No ProbeResp from current AP 00:11:95:9e:df:f6 -
+assume out of range
+[  614.624223] ForceXPAon: 0
+[  614.888494] ForceXPAon: 0
+[  615.087193] ForceXPAon: 0
+[  615.357035] ForceXPAon: 0
+[  615.428348] ForceXPAon: 0
+..
+[  616.138293] ForceXPAon: 0
+[  616.209130] ForceXPAon: 0
+[  616.280380] ForceXPAon: 0
+[  616.284050] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[  616.285429] wlan0: authenticated
+[  616.285453] wlan0: associate with AP 00:11:95:9e:df:f6
+[  616.302631] wlan0: RX ReassocResp from 00:11:95:9e:df:f6
+(capab=0x471 status=0 aid=1)
+[  616.302652] wlan0: associated
+[  616.313046] ForceXPAon: 0
+[  633.435220] ForceXPAon: 0
+..
+[  995.686461] ForceXPAon: 0
+[ 1009.687679] wlan0: No ProbeResp from current AP 00:11:95:9e:df:f6 -
+assume out of range
+[ 1009.830299] ForceXPAon: 0
+[ 1010.093330] ForceXPAon: 0
+[ 1010.292264] ForceXPAon: 0
+..
+[ 1011.341277] ForceXPAon: 0
+[ 1011.412116] ForceXPAon: 0
+[ 1011.483325] ForceXPAon: 0
+[ 1011.489343] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[ 1011.490862] wlan0: authenticated
+[ 1011.490886] wlan0: associate with AP 00:11:95:9e:df:f6
+[ 1011.504588] wlan0: RX ReassocResp from 00:11:95:9e:df:f6
+(capab=0x471 status=0 aid=1)
+[ 1011.504609] wlan0: associated
+[ 1011.515043] ForceXPAon: 0
+..
+[ 1174.552258] ForceXPAon: 0
+[ 1174.623299] ForceXPAon: 0
+[ 1174.694583] ForceXPAon: 0
+[ 1174.698288] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[ 1174.699682] wlan0: authenticated
+[ 1174.699688] wlan0: associate with AP 00:11:95:9e:df:f6
+[ 1174.715849] wlan0: RX ReassocResp from 00:11:95:9e:df:f6
+(capab=0x471 status=0 aid=1)
+[ 1174.715854] wlan0: associated
+[ 1174.726289] ForceXPAon: 0
+[ 1188.726172] wlan0: No ProbeResp from current AP 00:11:95:9e:df:f6 -
+assume out of range
+[ 1188.867281] ForceXPAon: 0
+[ 1189.128292] ForceXPAon: 0
+[ 1189.326291] ForceXPAon: 0
+[ 1189.589292] ForceXPAon: 0
+[ 1189.661285] ForceXPAon: 0
+[ 1189.732414] ForceXPAon: 0
+[ 1189.803263] ForceXPAon: 0
+[ 1189.874291] ForceXPAon: 0
+[ 1189.945258] ForceXPAon: 0
+[ 1190.016292] ForceXPAon: 0
+[ 1190.087258] ForceXPAon: 0
+[ 1190.158292] ForceXPAon: 0
+[ 1190.229292] ForceXPAon: 0
+[ 1190.300292] ForceXPAon: 0
+[ 1190.371293] ForceXPAon: 0
+[ 1190.442292] ForceXPAon: 0
+[ 1190.513753] ForceXPAon: 0
+[ 1190.518198] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[ 1190.525032] ForceXPAon: 0
+[ 1190.529337] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[ 1190.729110] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[ 1190.929264] wlan0: authenticate with AP 00:11:95:9e:df:f6
+[ 1191.129109] wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
+[ 1204.184769] ForceXPAon: 0
+[ 1204.196292] ForceXPAon: 0
+[ 1204.459395] ForceXPAon: 0
 
 
+
+/sbin/lspci -vv :
+08:00.0 Network controller: Atheros Communications Inc. Device 002a (rev 01)
+	Subsystem: Hewlett-Packard Company Device 1381
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 128 bytes
+	Interrupt: pin A routed to IRQ 17
+	Region 0: Memory at d1100000 (64-bit, non-prefetchable) [size=64K]
+	Capabilities: [40] Power Management version 2
+		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Count=1/1 Enable-
+		Address: 00000000  Data: 0000
+	Capabilities: [60] Express (v1) Legacy Endpoint, MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM unknown, Latency L0
+<512ns, L1 <64us
+			ClockPM- Suprise- LLActRep- BwNot-
+		LnkCtl:	ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
+BWMgmt- ABWMgmt-
+	Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
+		Vector table: BAR=0 offset=00000000
+		PBA: BAR=0 offset=00000000
+	Capabilities: [100] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq+ ACSVoil-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq- ACSVoil-
+		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
+MalfTLP+ ECRC- UnsupReq- ACSVoil-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Capabilities: [140] Virtual Channel <?>
+	Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
+	Kernel driver in use: ath9k
+	Kernel modules: ath9k
+
+If you need more information, Please let me know.
+
+Thank you,
+
+Jaswinder Singh.
