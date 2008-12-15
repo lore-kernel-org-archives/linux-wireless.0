@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:57203 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397AbYL3Kvs (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:37226 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751869AbYLOXYc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 05:51:48 -0500
-Message-ID: <4959FD3F.1060306@tuffmail.co.uk> (sfid-20081230_115207_477849_E3989915)
-Date: Tue, 30 Dec 2008 10:51:43 +0000
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+	Mon, 15 Dec 2008 18:24:32 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Artur Skawina <art.08.09@gmail.com>
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+Date: Tue, 16 Dec 2008 00:24:27 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+References: <494698AF.4020204@gmail.com> <4946BC0C.3040701@gmail.com> <4946E24E.1020504@gmail.com>
+In-Reply-To: <4946E24E.1020504@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>
-Subject: rtl8187 usb wifi adaptor causes suspend hang
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812160024.27451.chunkeey@web.de> (sfid-20081216_002437_304385_CBA5AB9B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[lsusb: ID 0bda:8187 Realtek Semiconductor Corp]
+On Tuesday 16 December 2008 00:03:42 Artur Skawina wrote:
+> Artur Skawina wrote:
+> > Christian Lamparter wrote:
+> >> On Monday 15 December 2008 19:41:13 Larry Finger wrote:
+> >>> Artur Skawina wrote:
+> >>>> I have a sinus 154 data usb adapter, which used to work w/ p54 in 2.6.27:
+> >>> Can you bisect this problem?
+> >> Naa I guess its "p54: fix memory management".
 
+> Done:
+> 78e74789bf2dab82f9539cd46e7f7583ff9516c1 is first bad commit
+> commit 78e74789bf2dab82f9539cd46e7f7583ff9516c1
+> Author: Christian Lamparter <chunkeey@web.de>
+> Date:   Wed Oct 15 04:07:16 2008 +0200
+> 
+>     p54: fix memory management
 
-I'd like to use this wireless adaptor I have, but the driver doesn't
-play nice with suspend.  It hangs after switching to the console,
-without printing anything.  This happens even if I haven't used the
-adaptor (i.e. ifconfig shows 0 bytes rx/tx).  Interestingly the numlock
-key on my USB keyboard still works.
+ahh, well there went the 100% chance...
 
-I tried "no_console_suspend nmi_watchdog=1", but it didn't show any more
-output.  (I waited 3 minutes for the watchdog to trigger).
+Anyway can you fire up usbmon
+(see Linux-Source/Documentation/usb/usbmon.txt ,
+or right there: http://www.mjmwired.net/kernel/Documentation/usb/usbmon.txt)
+and capture the frames which are sent to the device?
+for the p54usb in 2.6.27 and the not working one in the git tree?
 
-However, I can insert panic() calls, and see whether I hit the hang
-first, or go into a panic with flashing keyboard LEDs.  I used this to
-confirm that the hang happens inside the rtl8187_disconnect() function.
-
-There's a good chance I can track this down myself, using panic()
-again.  Before I start, does anyone have an idea what might be happening?
-
-Ta
-Alan
+Regards,
+	Chr 
