@@ -1,81 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep18-int.chello.at ([213.46.255.22]:3807 "EHLO
-	viefep18-int.chello.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbYLBU7s (ORCPT
+Received: from LNeuilly-152-21-11-6.w193-253.abo.wanadoo.fr ([193.253.42.6]:48699
+	"EHLO luceor-laptop" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751595AbYLOOfH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 15:59:48 -0500
-Received: from gollum.odi.ch ([77.56.180.60]) by viefep27-int.chello.at
-          (InterMail vM.7.09.01.00 201-2219-108-20080618) with ESMTP
-          id <20081202205933.CCAH26032.viefep27-int.chello.at@gollum.odi.ch>
-          for <linux-wireless@vger.kernel.org>;
-          Tue, 2 Dec 2008 21:59:33 +0100
-Received: from [192.168.111.10] (mithril [192.168.111.10])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by gollum.odi.ch (Postfix) with ESMTPSA id EEF72100C6
-	for <linux-wireless@vger.kernel.org>; Tue,  2 Dec 2008 21:59:31 +0100 (CET)
-Message-ID: <4935A1B3.1090906@odi.ch> (sfid-20081202_215953_296698_F030BA08)
-Date: Tue, 02 Dec 2008 21:59:31 +0100
-From: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: WARNING: at net/mac80211/mlme.c:2249
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 15 Dec 2008 09:35:07 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>
+Subject: [PATCH] ath5k: Updated padding stuff for the RX and TX side. TX side has been 100%
+Date: Mon, 15 Dec 2008 15:34:58 +0100
+Message-Id: <1229351698-21116-1-git-send-email-benoit.papillault@free.fr> (sfid-20081215_153514_690697_D25E6962)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 
-Just played around with 2.6.28-rc7 and this warning showed up right after
-connecting to my AP. It's a MacBook Pro with an Atheros AR5008. Hope that means
-something to you.
+This patch is close to the original code except that
+ieee80211_get_hdrlen_from_skb() has been replaced by
+ath5k_hw_get_hdrlen_from_skb() which is specific to Atheros hardware. The same
+probably applies to ath9k as well.
 
-Cheers,
+Sign-off-by: Benoit Papillault <benoit.papillault@free.fr>
+---
+ drivers/net/wireless/ath5k/base.c |   33 ++++++++++++++++-----------------
+ drivers/net/wireless/ath5k/base.h |   34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 50 insertions(+), 17 deletions(-)
 
-Ortwin
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 9d2c597..ac17960 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1192,7 +1192,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 		pktlen += info->control.hw_key->icv_len;
+ 	}
+ 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
+-		ieee80211_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
++		ath5k_hw_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
+ 		(sc->power_level * 2),
+ 		ieee80211_get_tx_rate(sc->hw, info)->hw_value,
+ 		info->control.rates[0].count, keyidx, 0, flags, 0, 0);
+@@ -1667,7 +1667,7 @@ ath5k_tasklet_rx(unsigned long data)
+ 	struct ath5k_desc *ds;
+ 	int ret;
+ 	int hdrlen;
+-	int padsize;
++	int pad;
+ 
+ 	spin_lock(&sc->rxbuflock);
+ 	if (list_empty(&sc->rxbuf)) {
+@@ -1760,11 +1760,11 @@ accept:
+ 		 * bytes and we can optimize this a bit. In addition, we must
+ 		 * not try to remove padding from short control frames that do
+ 		 * not have payload. */
+-		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+-		padsize = hdrlen & 3;
+-		if (padsize && hdrlen >= 24) {
+-			memmove(skb->data + padsize, skb->data, hdrlen);
+-			skb_pull(skb, padsize);
++		hdrlen = ath5k_hw_get_hdrlen_from_skb(skb);
++		if (hdrlen & 3) {
++			pad = hdrlen & 3;
++			memmove(skb->data + pad, skb->data, hdrlen);
++			skb_pull(skb, pad);
+ 		}
+ 
+ 		/*
+@@ -1965,7 +1965,7 @@ ath5k_beacon_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 
+ 	ds->ds_data = bf->skbaddr;
+ 	ret = ah->ah_setup_tx_desc(ah, ds, skb->len,
+-			ieee80211_get_hdrlen_from_skb(skb),
++			ath5k_hw_get_hdrlen_from_skb(skb),
+ 			AR5K_PKT_TYPE_BEACON, (sc->power_level * 2),
+ 			ieee80211_get_tx_rate(sc->hw, info)->hw_value,
+ 			1, AR5K_TXKEYIX_INVALID,
+@@ -2625,7 +2625,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	struct ath5k_buf *bf;
+ 	unsigned long flags;
+ 	int hdrlen;
+-	int padsize;
++	int pad;
+ 
+ 	ath5k_debug_dump_skb(sc, skb, "TX  ", 1);
+ 
+@@ -2636,17 +2636,16 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 * the hardware expects the header padded to 4 byte boundaries
+ 	 * if this is not the case we add the padding after the header
+ 	 */
+-	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+-	padsize = hdrlen & 3;
+-	if (padsize && hdrlen >= 24) {
+-
+-		if (skb_headroom(skb) < padsize) {
++	hdrlen = ath5k_hw_get_hdrlen_from_skb(skb);
++	if (hdrlen & 3) {
++		pad = hdrlen & 3;
++		if (skb_headroom(skb) < pad) {
+ 			ATH5K_ERR(sc, "tx hdrlen not %%4: %d not enough"
+-				  " headroom to pad %d\n", hdrlen, padsize);
++				" headroom to pad %d\n", hdrlen, pad);
+ 			return -1;
+ 		}
+-		skb_push(skb, padsize);
+-		memmove(skb->data, skb->data+padsize, hdrlen);
++		skb_push(skb, pad);
++		memmove(skb->data, skb->data+pad, hdrlen);
+ 	}
+ 
+ 	spin_lock_irqsave(&sc->txbuflock, flags);
+diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
+index facc60d..85ff036 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -187,4 +187,38 @@ struct ath5k_softc {
+ #define ath5k_hw_hasveol(_ah) \
+ 	(ath5k_hw_get_capability(_ah, AR5K_CAP_VEOL, 0, NULL) == 0)
+ 
++/* This formula returns the header length and is specific to Atheros hardware
++ * and differs from 802.11 standards. It has been tested using an AR5212
++ * hardware. */
++
++static inline unsigned int ath5k_hw_get_hdrlen_from_skb(
++	const struct sk_buff *skb)
++{
++	const struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	unsigned int hdrlen;
++
++	/* Since we need to read Frame Control field, we first check that the
++	 * frames contains at least 2 bytes */
++	if (unlikely(skb->len < 2))
++		return 0;
++
++	hdrlen = 24;
++
++	/* ToDS=1 FromDS=1 frames have an additionnal Address4 field */
++	if (ieee80211_has_a4(hdr->frame_control)) {
++		hdrlen += 6; /* IEEE80211_ADDR_LEN */
++	}
++	
++	/* QoS data frames have an additionnal QoS Control field */
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
++		hdrlen += IEEE80211_QOS_CTL_LEN;
++	}
++
++	/* check that skb already contains at least hdrlen bytes */
++	if (unlikely(hdrlen > skb->len))
++		return 0;
++
++	return hdrlen;
++}
++
+ #endif
+-- 
+1.5.6.5
 
-Dec  2 21:49:19 mithril wlan0: direct probe to AP 00:09:5b:69:af:da try 1
-Dec  2 21:49:19 mithril wlan0 direct probe responded
-Dec  2 21:49:19 mithril wlan0: authenticate with AP 00:09:5b:69:af:da
-Dec  2 21:49:19 mithril wlan0: authenticate with AP 00:09:5b:69:af:da
-Dec  2 21:49:19 mithril wlan0: authenticated
-Dec  2 21:49:19 mithril wlan0: associate with AP 00:09:5b:69:af:da
-Dec  2 21:49:19 mithril wlan0: RX AssocResp from 00:09:5b:69:af:da (capab=0x411
-status=0 aid=1)
-Dec  2 21:49:19 mithril wlan0: associated
-Dec  2 21:49:19 mithril ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-Dec  2 20:49:20 mithril avahi-daemon[7430]: Registering new address record for
-fe80::217:f2ff:feee:59ce on wlan0.*.
-Dec  2 21:49:23 mithril ------------[ cut here ]------------
-Dec  2 21:49:23 mithril WARNING: at net/mac80211/mlme.c:2249
-ieee80211_sta_work+0xee7/0x1000()
-Dec  2 21:49:23 mithril Modules linked in: rfcomm ip6t_LOG nf_conntrack_ipv6
-ip6table_filter ip6_tables ipv6 snd_hda_intel ohci1394 uvcvideo compat_ioctl32
-videodev v4l1_compat appletouch
-Dec  2 21:49:23 mithril Pid: 954, comm: ath9k Not tainted 2.6.28-rc7 #4
-Dec  2 21:49:23 mithril Call Trace:
-Dec  2 21:49:23 mithril [<c012d8a4>] warn_on_slowpath+0x54/0x70
-Dec  2 21:49:23 mithril [<c038f5b0>] ? dev_queue_xmit+0xc0/0x4f0
-Dec  2 21:49:23 mithril [<c0136d95>] ? lock_timer_base+0x25/0x50
-Dec  2 21:49:23 mithril [<c0136ee2>] ? __mod_timer+0xa2/0xc0
-Dec  2 21:49:23 mithril [<c042eac7>] ? _spin_unlock_bh+0x17/0x20
-Dec  2 21:49:23 mithril [<c040a65a>] ? ieee80211_rx_bss_get+0x8a/0xa0
-Dec  2 21:49:23 mithril [<c040a708>] ? ieee80211_rx_bss_put+0x98/0xb0
-Dec  2 21:49:23 mithril [<c040c1c9>] ? ieee80211_privacy_mismatch+0x89/0xb0
-Dec  2 21:49:23 mithril [<c0410127>] ieee80211_sta_work+0xee7/0x1000
-Dec  2 21:49:23 mithril [<c0232009>] ? __delay+0x9/0x10
-Dec  2 21:49:23 mithril [<c011fbf1>] ? update_curr+0x91/0x110
-Dec  2 21:49:23 mithril [<c012105e>] ? hrtick_update+0x2e/0x30
-Dec  2 21:49:23 mithril [<c012958c>] ? dequeue_task_fair+0x3c/0x50
-Dec  2 21:49:23 mithril [<c011f60c>] ? dequeue_task+0xdc/0x140
-Dec  2 21:49:23 mithril [<c0124a5d>] ? finish_task_switch+0x2d/0x90
-Dec  2 21:49:23 mithril [<c042cbfb>] ? schedule+0x3fb/0x9a0
-Dec  2 21:49:23 mithril [<c013d65e>] run_workqueue+0x7e/0x120
-Dec  2 21:49:23 mithril [<c040f240>] ? ieee80211_sta_work+0x0/0x1000
-Dec  2 21:49:23 mithril [<c013e079>] worker_thread+0x99/0xf0
-Dec  2 21:49:23 mithril [<c0140e30>] ? autoremove_wake_function+0x0/0x50
-Dec  2 21:49:23 mithril [<c013dfe0>] ? worker_thread+0x0/0xf0
-Dec  2 21:49:23 mithril [<c0140b12>] kthread+0x42/0x70
-Dec  2 21:49:23 mithril [<c0140ad0>] ? kthread+0x0/0x70
-Dec  2 21:49:23 mithril [<c010401f>] kernel_thread_helper+0x7/0x18
-Dec  2 21:49:23 mithril ---[ end trace 815970fc36fc4a24 ]---
