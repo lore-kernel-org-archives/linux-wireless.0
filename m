@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:59064 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750775AbYLOPU2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 10:20:28 -0500
-Subject: Re: Fuijtsu Lifebook RFKILL support
-From: Dan Williams <dcbw@redhat.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Tony Vroon <tony@linx.net>, Len Brown <lenb@kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
-	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
-In-Reply-To: <20081215115336.GD17648@khazad-dum.debian.net>
-References: <1228957506.4045.11.camel@localhost>
-	 <20081211165247.GA4844@khazad-dum.debian.net>
-	 <1229016827.6446.6.camel@localhost>
-	 <20081211194734.GA18132@khazad-dum.debian.net>
-	 <1229046602.4030.13.camel@localhost>
-	 <20081212195331.GA12679@khazad-dum.debian.net>
-	 <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain>
-	 <1229172465.4010.11.camel@localhost>
-	 <20081213132857.GA11428@khazad-dum.debian.net>
-	 <1229274343.6775.15.camel@localhost.localdomain>
-	 <20081215115336.GD17648@khazad-dum.debian.net>
-Content-Type: text/plain
-Date: Mon, 15 Dec 2008 10:19:08 -0500
-Message-Id: <1229354348.12163.20.camel@localhost.localdomain> (sfid-20081215_162033_724567_91DE6963)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.228]:21376 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbYLOWZl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 17:25:41 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so2693443rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 14:25:41 -0800 (PST)
+Message-ID: <69e28c910812151425x6e2cea07k81ecfaf457d3c144@mail.gmail.com> (sfid-20081215_232547_272335_8D9D695B)
+Date: Mon, 15 Dec 2008 23:25:41 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Jason Self" <jason.self@gmail.com>
+Subject: Re: Realtek wireless 8187se
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <b76df900812151414n21e21876q47c858f1c417a667@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <b76df900812151329x4309b264u7a017e4b4c2d8451@mail.gmail.com>
+	 <69e28c910812151355l6549e8c2mea381a12663c7cb5@mail.gmail.com>
+	 <b76df900812151413u32cdca95qd7122ca688a8a8d8@mail.gmail.com>
+	 <b76df900812151414n21e21876q47c858f1c417a667@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-12-15 at 09:53 -0200, Henrique de Moraes Holschuh wrote:
-> On Sun, 14 Dec 2008, Dan Williams wrote:
-> > On Sat, 2008-12-13 at 11:28 -0200, Henrique de Moraes Holschuh wrote:
-> > > On Sat, 13 Dec 2008, Tony Vroon wrote:
-> > > > > What is the WLAN driver involved? Is it rfkill-aware?
-> > > > 
-> > > > The driver is iwlagn, which does indeed notice that it is killed.
-> > > > This information does not reach NetworkManager. Relevant log
-> > > > entries: Dec 12 00:59:01 amalthea iwlagn: Radio Frequency Kill
-> > > > Switch is On: Dec 12 00:59:01 amalthea Kill switch must be turned
-> > > > off for wireless networking to work.
-> > > 
-> > > Then, it is just a matter of time for it to be working correctly.  In
-> > > fact, it might already be if you use wireless-testing and latest
-> > > network manager.
-> > 
-> > If HAL's killswitch support doesn't know about the kernel killswitch
-> > device, or it cannot get the state of the killswitch, then certainly
-> > NetworkManager isn't going to know about it.
-> 
-> I see.  I have added "up-to-date HAL also required" to my mental list of
-> stuff needed in userspace.
+On Mon, Dec 15, 2008 at 11:14 PM, Jason Self <jason.self@gmail.com> wro=
+te:
+> On Mon, Dec 15, 2008 at 2:13 PM, Jason Self <jason.self@gmail.com> wr=
+ote:
+>> On Mon, Dec 15, 2008 at 1:55 PM, Stefanik G=E1bor <netrolller.3d@gma=
+il.com> wrote:
+>>>
+>>> Looks like this is a MiniPCIE card, so the chip is essentially an
+>>> RTL8187 or RTL8187B with the USB communication part replaced with a
+>>> PCI Express one. Given the existence of this open-source driver,
+>>> adding support for it into rtl818x should not really be a problem.
+>>
+>> That sounds wonderful. Would it still be helpful if I opened the
+>> laptop to determine what is printed on the chip itself?
 
-I plan to beat the shit out of the hal killswitch support pretty soon.
-AFAIK it still doesn't know about softblock, which is part of the whole
-reason for the rfkill rewrite in 2.6.26 anyway.  It also doesn't yet
-(AFAIK) support uevents from killswitches either, which sucks.
+No, it is not needed anymore, as the driver you posted confirms that
+it is indeed a new device.
 
-Dan
-
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
