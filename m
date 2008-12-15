@@ -1,359 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47020 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750746AbYLRTfx (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42026 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751078AbYLONRd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 14:35:53 -0500
-Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081216025542.GO18056@xi.wantstofly.org> (sfid-20081216_041438_420262_E83C7397)
-References: <20081216025542.GO18056@xi.wantstofly.org>
-	 (sfid-20081216_041438_420262_E83C7397)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4e0rg+2OVG9r/PQ1jCZZ"
-Date: Thu, 18 Dec 2008 20:35:50 +0100
-Message-Id: <1229628950.3601.43.camel@johannes.berg> (sfid-20081218_203558_636924_FA668A4D)
-Mime-Version: 1.0
+	Mon, 15 Dec 2008 08:17:33 -0500
+Received: from jm (a91-155-82-88.elisa-laajakaista.fi [91.155.82.88])
+	(authenticated bits=0)
+	by jmalinen.user.openhosting.com (8.13.8/8.13.8) with ESMTP id mBFDHSgM014944
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 08:17:29 -0500
+Date: Mon, 15 Dec 2008 15:17:27 +0200
+From: Jouni Malinen <j@w1.fi>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: Add per-rate TX/RX statistics into debugfs
+Message-ID: <20081215131727.GA14738@jm.kir.nu> (sfid-20081215_141742_229569_159AA1EA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-4e0rg+2OVG9r/PQ1jCZZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2008-12-16 at 03:55 +0100, Lennert Buytenhek wrote:
-
-> +static DEFINE_PCI_DEVICE_TABLE(mwl8k_table) =3D {
-> +	{ PCI_VDEVICE(MARVELL, 0x2a2b) },		/* 88w8687 */
-> +	{ PCI_VDEVICE(MARVELL, 0x2a30) },		/* 88w8687 */
-> +	{ }
-> +};
-
-
-> +/* Translate PCI device ID to device number */
-> +static u32 mwl8k_get_partnum(u16 pci_id)
-> +{
-> +	switch (pci_id) {
-> +	case 0x2a2b:
-> +	case 0x2a30:
-> +		return 8687;
-> +	default:
-> +		return 0;
-> +	}
-> +}
-
-It might make sense to do this with pci driver data in the device table
-instead?
-
-
-> +/* HT control fields for firmware */
-> +struct ewc_ht_info {
-> +	__u16	control1;
-> +	__u16	control2;
-> +	__u16	control3;
-> +} __attribute__((packed));
-
-Does the firmware support endian swapping? Or should this be annotated?
-
-> +struct peer_capability_info {
-> +	/* Peer type - AP vs. STA.  */
-> +	__u8	peer_type;
-> +
-> +	/* Basic 802.11 capabilities from assoc resp.  */
-> +	__u16	basic_caps;
-> +
-> +	/* Set if peer supports 802.11n high throughput (HT).  */
-> +	__u8	ht_support;
-> +
-> +	/* Valid if HT is supported.  */
-> +	__u16	ht_caps;
-> +	__u8	extended_ht_caps;
-> +	struct ewc_ht_info	ewc_info;
-> +
-> +	/* Legacy rate table. Intersection of our rates and peer rates.  */
-> +	__u8	legacy_rates[MWL8K_IEEE_LEGACY_DATA_RATES];
-> +
-> +	/* HT rate table. Intersection of our rates and peer rates.  */
-> +	__u8	ht_rates[MWL8K_MCS_BITMAP_SIZE];
-> +	__u8	pad[pad_size];
-> +
-> +	/* If set, interoperability mode, no proprietary extensions.  */
-> +	__u8	interop;
-> +	__u8	pad2;
-> +	__u8	station_id;
-> +	__u16	amsdu_enabled;
-> +} __attribute__((packed));
-
-Same here, packed but no endian annotations?
-
-> +static inline int mwl8k_get_frametype(__le16 fc)
-> +{
-> +	if (ieee80211_is_data(fc))
-> +		return IEEE80211_FTYPE_DATA;
-> +
-> +	if (ieee80211_is_mgmt(fc))
-> +		return IEEE80211_FTYPE_MGMT;
-> +
-> +	if (ieee80211_is_ctl(fc))
-> +		return IEEE80211_FTYPE_CTL;
-> +
-> +	return 0;
-> +}
-
-That seems a little odd?
-
-> +/* Inline functions to manipulate QoS field in data descriptor.  */
-> +static inline u16 mwl8k_qos_setbit_tid(u16 qos, u8 tid)
-
-> +static inline u16 mwl8k_qos_setbit_eosp(u16 qos)
-
-> +static inline u16 mwl8k_qos_setbit_ack(u16 qos, u8 ack_policy)
-
-> +static inline u16 mwl8k_qos_setbit_amsdu(u16 qos)
-
-> +static inline u16 mwl8k_qos_setbit_qlen(u16 qos, u8 len)
-
-Why do you need to work with the QoS header?
-
-> +/* DMA header used by firmware and hardware.  */
-> +struct mwl8k_dma_data {
-> +	__u16 fwlen;
-> +	struct ieee80211_hdr wh;
-> +} __attribute__((packed));
-
-endianness? Ok, I'm starting to suspect you program the endianness into
-the firmware. Is that really a good idea? Firmware bugs might lurk that
-way, and are harder to fix this way?
-
-> +	/*
-> +	 * Skb data is changed when DMA header is added.
-> +	 * Unshare/Unclone skb.
-> +	 */
-> +	if (skb_cloned(skb))
-> +		skb =3D skb_unshare(skb, GFP_ATOMIC);
-> +	else if (skb_shared(skb))
-> +		skb =3D skb_share_check(skb, GFP_ATOMIC);
-
-That won't ever happen with mac80211 since it has modified the header
-already anyway.
-
-> +	/*
-> +	 * Copy up/down the 802.11 header; the firmware requires
-> +	 * we present a 2-byte payload length followed by a
-> +	 * 4-address header (w/o QoS), followed (optionally) by
-> +	 * any WEP/ExtIV header (but only filled in for CCMP).
-> +	 */
-> +	if (hdrlen < sizeof(struct mwl8k_dma_data)) {
-
-That comparison seems slightly odd to me
-
-> +		const int space =3D sizeof(struct mwl8k_dma_data) - hdrlen;
-> +		u32 headroom =3D skb_headroom(skb);
-> +
-> +		if (headroom < space) {
-> +			/* NB: should never happen */
-> +			printk(KERN_ERR "Not enough headroom, need %d, "
-> +					"found %d, len %d\n", space,
-> +					headroom, skb->len);
-> +			return NULL;
-> +		}
-> +		skb_push(skb, space);
-
-maybe just remove the check then, it'll be done in skb_push and panic()
-
-> +	/* Clear addr4 */
-> +	memset(tr->wh.addr4, 0, IEEE80211_ADDR_LEN);
-
-?
-
-> +/*
-> + * Scan a list of BSSIDs to process for finalize join.
-> + * Allows for extension to process multiple BSSIDs.
-> + */
-
-Can you explain why you need to do this much BSSID stuff? Maybe we can
-extend mac80211 a little instead?
-
-> +		if (rx_desc->rx_status &
-> +			MWL8K_RX_CTRL_DECRYPT_ERROR)
-> +				status.flag |=3D RX_FLAG_MMIC_ERROR;
-
-This seems inappropriate for, say, ccmp. Unless the hw flag is misnamed?
-
-> +/* Function sleeps, cannot be called from atomic context.  */
-> +static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw, u32 delay_ms)
-> +{
-
-just stick in might_sleep() instead?
-
-> +			printk(KERN_ERR
-> +			"%s: Error removing DMA header from tx skb 0x%p.\n",
-> +			priv->name, skb);
-
-That looks a bit odd, and I think you're allowed to go > 80 cols for
-printks now.
-
-> +		/* Convert firmware status stuff into tx_status */
-> +		if (MWL8K_TXD_SUCCESS(status)) {
-> +			/* Transmit OK */
-> +			info->flags |=3D IEEE80211_TX_STAT_ACK;
-> +		} else if (MWL8K_TXD_FAIL_RETRY(status)) {
-> +			info->status.excessive_retries =3D 1;
-> +		}
-
-Against which kernel is this? :)
-
-> +		if (force)
-> +			ieee80211_tx_status(hw, skb);
-> +		else
-> +			ieee80211_tx_status_irqsafe(hw, skb);
-
-That's a little odd. You should only ever use one of them to avoid
-ordering issues.
-
-> +		/*
-> +		 * Tell firmware to not send EAPOL pkts in an
-> +		 * aggregate.  Verify against mac80211 tx path.  If
-> +		 * stack turns off AMPDU for an EAPOL frame this
-> +		 * check will be removed.
-> +		 */
-
-Can you elaborate how aggregation will work? Not relevant for this
-patch, but for mac80211 ampdu work I am going to do.
-
-> +	struct mwl8k_priv *priv =3D hw->priv;
-> +
-> +	if (hw =3D=3D NULL || hw->priv =3D=3D NULL)
-> +		return -EINVAL;
-
-That'll give coverity some fodder ;)
-
-> +#define MWL8K_SUPPORTED_IF_FLAGS	FIF_BCN_PRBRESP_PROMISC
-
-Not more? That's not very nice as a monitor then :)
-
-> +mwl8k_configure_filter_exit:
-> +	return rc;
-
-Generally, I think your labels are a tad too verbose. But I can't say I
-care much.
-
-> +static int mwl8k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
-> +{
-> +	int rc;
-> +	struct mwl8k_set_rts_threshold_worker *worker;
-> +	struct mwl8k_priv *priv =3D hw->priv;
-> +
-> +	worker =3D kzalloc(sizeof(*worker), GFP_KERNEL);
-> +	if (worker =3D=3D NULL)
-> +		return -ENOMEM;
-> +
-> +	worker->value =3D value;
-> +
-> +	rc =3D mwl8k_queue_work(hw, &worker->header,
-> +			      priv->config_wq,
-> +			      mwl8k_set_rts_threshold_wt);
-> +	kfree(worker);
-> +
-> +	if (rc =3D=3D -ETIMEDOUT) {
-> +		printk(KERN_ERR "%s() timed out\n", __func__);
-> +		rc =3D -EINVAL;
-> +	}
-> +
-> +	return rc;
-> +}
-
-Does that really need to be atomic? That seems odd and easy to change.
-
-> +static void
-> +mwl8k_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-> +		 enum sta_notify_cmd cmd, const u8 *addr)
-> +{
-> +}
-
-No need to, just leave the function pointer NULL.
-
-> +static int mwl8k_conf_tx(struct ieee80211_hw *hw, u16 queue,
-> +			 const struct ieee80211_tx_queue_params *params)
-> +{
-> +	int rc;
-> +	struct mwl8k_conf_tx_worker *worker;
-> +	struct mwl8k_priv *priv =3D hw->priv;
-> +
-> +	worker =3D kzalloc(sizeof(*worker), GFP_KERNEL);
-> +	if (worker =3D=3D NULL)
-> +		return -ENOMEM;
-> +
-> +	worker->queue =3D queue;
-> +	worker->params =3D params;
-> +	rc =3D mwl8k_queue_work(hw, &worker->header,
-> +			      priv->config_wq, mwl8k_conf_tx_wt);
-> +	kfree(worker);
-> +	if (rc =3D=3D -ETIMEDOUT) {
-> +		printk(KERN_ERR "%s() timed out\n", __func__);
-> +		rc =3D -EINVAL;
-> +	}
-> +	return rc;
-> +}
-
-Are you sure this needs to be deferred to the wq? I'm not exactly sure
-but I thought conf_tx wasn't under a spinlock?
-
-> +static int mwl8k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-> +			 const u8 *local_address, const u8 *address,
-> +			 struct ieee80211_key_conf *key)
-> +{
-> +	int rc;
-> +	struct mwl8k_set_key_worker *worker;
-> +	struct mwl8k_priv *priv =3D hw->priv;
-> +
-> +	worker =3D kzalloc(sizeof(*worker), GFP_KERNEL);
-> +	if (worker =3D=3D NULL)
-> +		return -ENOMEM;
-> +
-> +	worker->cmd =3D cmd;
-> +	worker->local_address =3D local_address;
-> +	worker->address =3D address;
-> +	worker->key =3D key;
-> +	rc =3D mwl8k_queue_work(hw, &worker->header,
-> +			      priv->config_wq, mwl8k_set_key_wt);
-> +	kfree(worker);
-> +	if (rc =3D=3D -ETIMEDOUT) {
-> +		printk(KERN_ERR "%s() timed out\n", __func__);
-> +		rc =3D -EINVAL;
-> +	}
-> +	return rc;
-> +}
-
-set_key can sleep for sure, no need to queue it off to the wq.
-
-Can you rebase onto wireless-testing with the API changes there?
-
-johannes
-
---=-4e0rg+2OVG9r/PQ1jCZZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJSqYTAAoJEKVg1VMiehFYxU8QAJ/SLB8VyL8Fq+r2t57xUoh+
-1XKCwavlrQr97i6foTJCZYiRX7uNyNrFxkwuZyGGQxloz5FvEPPjKwrdSLD/ey28
-JeKWG1QF1HpuO/jPj2XoZJxx3dD337tyafFqt0RlPDjy9HWck81Jf26xWbOxTLl9
-61RT/UPh0LnhnMcgXAURZI4N3I9TuEYsZoFUu9GZOBc+5M+qarazgKdLao4e3rLx
-hYV0mdvFBTY/+rxCDu5HGjzzbFt/TtgEzVvpfTwfuDdr//7pMnoDs+nLWit10ljH
-ADDeNNSyR2Tntvjh8rN0VbWBowkYLekXQBAV8lfG+6+Q5NjAtN+wVkAj7m2dG32X
-J/z8Q152DcAXE5Hej8EfO4GTfpfMGgr9jfcvGKRUQVXG3enSfcs9Y259BnpbHXfP
-IAy2e1z9D8JASir6cWE1yC5HNezQUYbHv8p2XcebrixVLz7g1Ydzkrf4noIKMuRh
-Z9eszEM8CYh6jCvxdlxq1XPk9E+3nVP0uTjXoJ3QIjCkdWpeT+larmkRbSBRgftR
-nYjHHLdAt+Yl3poEZRfweZUtNvJo/778cyMpRlfBNe6DZ41zg9KtHOKkbueKWBzC
-OW4boJonfS7dzuq7Sav88hu7vTNIASkJBORNY6u22eE5GwfSdlGKFXWKzUo7Xjyn
-oEsqfms/nIDy5Nf3i7gH
-=sgmp
------END PGP SIGNATURE-----
-
---=-4e0rg+2OVG9r/PQ1jCZZ--
-
+Collect per-rate statistics about TX/RX frames for each STA if
+mac80211 debug counters are enabled and make this information
+available in debugfs.
+
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+---
+ net/mac80211/debugfs_sta.c |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/main.c        |   20 ++++++++++++++++++++
+ net/mac80211/rx.c          |   15 +++++++++++++++
+ net/mac80211/sta_info.h    |   18 ++++++++++++++++++
+ 4 files changed, 98 insertions(+)
+
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2008-12-04 12:52:40.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2008-12-15 15:11:10.000000000 +0200
+@@ -163,6 +163,45 @@ static ssize_t sta_agg_status_read(struc
+ }
+ STA_OPS(agg_status);
+ 
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++static ssize_t sta_txrx_read(struct file *file, char __user *userbuf,
++			     size_t count, loff_t *ppos)
++{
++	char buf[500], *p = buf;
++	struct sta_info *sta = file->private_data;
++	int i;
++
++	p += scnprintf(p, sizeof(buf) - (p - buf),
++		       "rate\tRX\tTX\texc\tretries\n");
++	for (i = 0; i < NUM_STATS_RATES; i++) {
++		if (sta->rx_frames[i] == 0 &&
++		    sta->tx_frames[i] == 0 &&
++		    sta->tx_exc_retries[i] == 0 &&
++		    sta->tx_retries[i] == 0)
++			continue;
++		p += scnprintf(p, sizeof(buf) - (p - buf),
++			       "%d\t%lu\t%lu\t%lu\t%lu\n",
++			       i, sta->rx_frames[i], sta->tx_frames[i],
++			       sta->tx_exc_retries[i], sta->tx_retries[i]);
++	}
++	for (i = 0; i < NUM_STATS_MCS; i++) {
++		if (sta->rx_frames_mcs[i] == 0 &&
++		    sta->tx_frames_mcs[i] == 0 &&
++		    sta->tx_exc_retries_mcs[i] == 0 &&
++		    sta->tx_retries_mcs[i] == 0)
++			continue;
++		p += scnprintf(p, sizeof(buf) - (p - buf),
++			       "MCS%d\t%lu\t%lu\t%lu\t%lu\n",
++			       i, sta->rx_frames_mcs[i], sta->tx_frames_mcs[i],
++			       sta->tx_exc_retries_mcs[i],
++			       sta->tx_retries_mcs[i]);
++	}
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
++}
++STA_OPS(txrx);
++#endif
++
+ #define DEBUGFS_ADD(name) \
+ 	sta->debugfs.name = debugfs_create_file(#name, 0400, \
+ 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
+@@ -203,6 +242,9 @@ void ieee80211_sta_debugfs_add(struct st
+ 	DEBUGFS_ADD(inactive_ms);
+ 	DEBUGFS_ADD(last_seq_ctrl);
+ 	DEBUGFS_ADD(agg_status);
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++	DEBUGFS_ADD(txrx);
++#endif
+ }
+ 
+ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+@@ -212,6 +254,9 @@ void ieee80211_sta_debugfs_remove(struct
+ 	DEBUGFS_DEL(inactive_ms);
+ 	DEBUGFS_DEL(last_seq_ctrl);
+ 	DEBUGFS_DEL(agg_status);
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++	DEBUGFS_DEL(txrx);
++#endif
+ 
+ 	debugfs_remove(sta->debugfs.dir);
+ 	sta->debugfs.dir = NULL;
+--- wireless-testing.orig/net/mac80211/rx.c	2008-12-15 13:22:50.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2008-12-15 13:39:17.000000000 +0200
+@@ -2252,6 +2252,21 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 	 */
+ 	rcu_read_lock();
+ 
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++	if (skb->len >= 16) {
++		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++		struct sta_info *sta = sta_info_get(local, hdr->addr2);
++		if (sta) {
++			if (status->flag & RX_FLAG_HT &&
++			    status->rate_idx < NUM_STATS_MCS)
++				sta->rx_frames_mcs[status->rate_idx]++;
++			if (!(status->flag & RX_FLAG_HT) &&
++			    status->rate_idx < NUM_STATS_RATES)
++				sta->rx_frames[status->rate_idx]++;
++		}
++	}
++#endif
++
+ 	/*
+ 	 * Frames with failed FCS/PLCP checksum are not returned,
+ 	 * all other frames are returned without radiotap header
+--- wireless-testing.orig/net/mac80211/sta_info.h	2008-12-04 12:52:40.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2008-12-15 15:03:34.000000000 +0200
+@@ -151,6 +151,9 @@ struct sta_ampdu_mlme {
+ #define STA_INFO_PIN_STAT_PINNED	1
+ #define STA_INFO_PIN_STAT_DESTROY	2
+ 
++#define NUM_STATS_RATES 20
++#define NUM_STATS_MCS 76
++
+ /**
+  * struct sta_info - STA information
+  *
+@@ -255,6 +258,10 @@ struct sta_info {
+ 	int last_qual;
+ 	int last_noise;
+ 	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES];
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++	unsigned long rx_frames[NUM_STATS_RATES];
++	unsigned long rx_frames_mcs[NUM_STATS_MCS];
++#endif
+ 
+ 	/* Updated from TX status path only, no locking requirements */
+ 	unsigned long tx_filtered_count;
+@@ -268,6 +275,14 @@ struct sta_info {
+ 	unsigned long tx_fragments;
+ 	struct ieee80211_tx_rate last_tx_rate;
+ 	u16 tid_seq[IEEE80211_QOS_CTL_TID_MASK + 1];
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++	unsigned long tx_frames[NUM_STATS_RATES];
++	unsigned long tx_retries[NUM_STATS_RATES];
++	unsigned long tx_exc_retries[NUM_STATS_RATES];
++	unsigned long tx_frames_mcs[NUM_STATS_MCS];
++	unsigned long tx_retries_mcs[NUM_STATS_MCS];
++	unsigned long tx_exc_retries_mcs[NUM_STATS_MCS];
++#endif
+ 
+ 	/*
+ 	 * Aggregation information, locked with lock.
+@@ -298,6 +313,9 @@ struct sta_info {
+ 		struct dentry *num_ps_buf_frames;
+ 		struct dentry *inactive_ms;
+ 		struct dentry *last_seq_ctrl;
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++		struct dentry *txrx;
++#endif
+ 		struct dentry *agg_status;
+ 		bool add_has_run;
+ 	} debugfs;
+--- wireless-testing.orig/net/mac80211/main.c	2008-12-15 10:08:12.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2008-12-15 15:10:48.000000000 +0200
+@@ -501,6 +501,26 @@ void ieee80211_tx_status(struct ieee8021
+ 	sta = sta_info_get(local, hdr->addr1);
+ 
+ 	if (sta) {
++#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
++		int idx = info->status.rates[0].idx;
++		if (info->status.rates[0].flags & IEEE80211_TX_RC_MCS) {
++			if (idx >= 0 && idx < NUM_STATS_MCS) {
++				sta->tx_frames_mcs[idx]++;
++				sta->tx_retries_mcs[idx] +=
++					info->status.rates[0].count;
++				if (!(info->flags & (IEEE80211_TX_CTL_NO_ACK |
++						     IEEE80211_TX_STAT_ACK)))
++					sta->tx_exc_retries_mcs[idx]++;
++			}
++		} else if (idx >= 0 && idx < NUM_STATS_RATES) {
++			sta->tx_frames[idx]++;
++			sta->tx_retries[idx] += info->status.rates[0].count;
++			if (!(info->flags & (IEEE80211_TX_CTL_NO_ACK |
++					     IEEE80211_TX_STAT_ACK)))
++				sta->tx_exc_retries[idx]++;
++		}
++#endif
++
+ 		if (!(info->flags & IEEE80211_TX_STAT_ACK) &&
+ 		    test_sta_flags(sta, WLAN_STA_PS)) {
+ 			/*
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
