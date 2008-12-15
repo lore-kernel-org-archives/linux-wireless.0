@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway07.websitewelcome.com ([67.18.80.17]:57334 "HELO
-	gateway07.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752321AbYL2NRo (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:40183 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752340AbYLOXEJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 08:17:44 -0500
-Received: from 96-26-251-53.sea.clearwire-dns.net ([96.26.251.53]:48630 helo=Hydra.darkmatter.org)
-	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <Info@delphi-real-estate.com>)
-	id 1LHHtd-0002NT-QN
-	for linux-wireless@vger.kernel.org; Mon, 29 Dec 2008 07:11:02 -0600
-From: Delphi Real Estate <Info@delphi-real-estate.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Setting 'n' or 'a' Mode, and WPA2?
-Date: Mon, 29 Dec 2008 05:11:01 -0800
-References: <200812270706.56478.Info@delphi-real-estate.com>
-In-Reply-To: <200812270706.56478.Info@delphi-real-estate.com>
+	Mon, 15 Dec 2008 18:04:09 -0500
+Received: by ewy10 with SMTP id 10so3360713ewy.13
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 15:04:07 -0800 (PST)
+Message-ID: <4946E24E.1020504@gmail.com> (sfid-20081216_000413_440749_1E4DB23B)
+Date: Tue, 16 Dec 2008 00:03:42 +0100
+From: Artur Skawina <art.08.09@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812290511.01527.Info@delphi-real-estate.com> (sfid-20081229_141748_202246_77C534AF)
+To: Christian Lamparter <chunkeey@web.de>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+References: <494698AF.4020204@gmail.com> <4946A4C9.7040304@lwfinger.net> <200812152043.21971.chunkeey@web.de> <4946BC0C.3040701@gmail.com>
+In-Reply-To: <4946BC0C.3040701@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Artur Skawina wrote:
+> Christian Lamparter wrote:
+>> On Monday 15 December 2008 19:41:13 Larry Finger wrote:
+>>> Artur Skawina wrote:
+>>>> I have a sinus 154 data usb adapter, which used to work w/ p54 in 2.6.27:
+>>> Can you bisect this problem?
+>> Naa I guess its "p54: fix memory management".
+>> 872037115977dc07ae05e4b6b769bf8726da4e87
+>>
+>> so tell us if this patch works.
+> 
+> Nope, the attached patch did not improve things, as the log below shows.
+> I'll try bisecting.
 
-Wow, surely this is not unknown by some of you guys.  Isn't anyone using 'a' mode or 5GHz 'n' mode?  WPA2?
+Done:
+78e74789bf2dab82f9539cd46e7f7583ff9516c1 is first bad commit
+commit 78e74789bf2dab82f9539cd46e7f7583ff9516c1
+Author: Christian Lamparter <chunkeey@web.de>
+Date:   Wed Oct 15 04:07:16 2008 +0200
 
-Will you please advise?
+    p54: fix memory management
 
-
-On Saturday 27 December 2008 7:06:56 Delphi Real Estate wrote:
-> 
-> I want to switch to 802.11a for streaming media, so I'm not polluting everyone else's bandwidth.  Does anyone know how I set the 4965 to 'a' or 'n' only?  Is there any way to set it to dual-band for the new routers which send normal traffic on 'g' and stream on 'a'?  How do I set it to WPA2 only?  
-> 
-> IOW, how do I control this card?  Instructions are nowhere to be found.
-> 
-> Currently my /etc/network/interfaces file is set thus and works (Network Manager is uninstalled and I don't trust it):
-> iface wlan0 inet static
-> pre-up /sbin/iwconfig wlan0 txpower 5
-> pre-up ip link set wlan0 up
-> address 192.168.1.1
-> netmask 255.255.255.0
-> gateway 192.168.1.5
-> wireless-essid Hex
-> wpa-scan-ssid 0
-> wpa-ap-scan 1
-> wpa-ssid Hex
-> wpa-psk Freeasinfreedom
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-
-
+artur 
