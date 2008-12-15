@@ -1,31 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40384 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335AbYLWVpM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 16:45:12 -0500
-Date: Tue, 23 Dec 2008 16:37:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH] Revert "iwl3945: remove iwl-3945-led.[ch]"
-Message-ID: <20081223213734.GB12572@tuxdriver.com> (sfid-20081223_224517_191682_E6D2630E)
-References: <1230000441-15977-1-git-send-email-yi.zhu@intel.com>
+Received: from mail.atheros.com ([12.36.123.2]:40791 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754605AbYLORPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 12:15:24 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 09:15:24 -0800
+Date: Mon, 15 Dec 2008 01:15:43 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ionut Radu <ionut.radu@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: The latest archive is missing ath5k driver
+Message-ID: <20081215091543.GD6162@tesla> (sfid-20081215_181527_474685_E705EC62)
+References: <99a2c9180812131604v41109e2ckc5c76f8f415ae8c9@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1230000441-15977-1-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <99a2c9180812131604v41109e2ckc5c76f8f415ae8c9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 23, 2008 at 10:47:21AM +0800, Zhu Yi wrote:
-> This reverts commit b3489137ec7dabe4531c4344347270857301e209. This
-> fixes the iwl3945 scan regression reported by Kalle Valo.
+On Sat, Dec 13, 2008 at 04:04:26PM -0800, Ionut Radu wrote:
+> Hi,
+> 
+> I have installed the compat-wireless-2008-12-11, but I couldn't find
+> the ath5k driver :
+> 
+> ionut@mendol:~/compat-wireless-2008-12-11$ sudo modprobe ath5k
+> FATAL: Module ath5k not found.
+> ionut@mendol:~/compat-wireless-2008-12-11$ sudo athload ath5k
+> Module ath_pci not detected -- this is fine
+> FATAL: Module ath5k not found.
+> ionut@mendol:~/compat-wireless-2008-12-11$
+> 
+> 
+> What's wrong?
 
-Would it be best if I just didn't apply that patch in the first place?
+Did the compile go through fine? Did you sudo make install?
 
-Thanks,
+modprobe -l ath5k
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+  Luis
