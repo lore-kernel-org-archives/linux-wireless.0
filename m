@@ -1,72 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60522 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753278AbYLIADW (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2023 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900AbYLODun (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 19:03:22 -0500
-Subject: Re: Userspace tools: Roadmap?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: pat-lkml <pat-lkml@erley.org>
-Cc: Dan E <trg_info@mailhaven.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <493DB351.6000103@erley.org>
-References: <1228692546.8826.1288759933@webmail.messagingengine.com>
-	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>
-	 <1228778295.10662.1288975589@webmail.messagingengine.com>
-	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/6eVLzumRw56hRHr6buP"
-Date: Tue, 09 Dec 2008 01:02:40 +0100
-Message-Id: <1228780960.22164.162.camel@johannes.berg> (sfid-20081209_010325_600288_EEEBCF9B)
-Mime-Version: 1.0
+	Sun, 14 Dec 2008 22:50:43 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mabbaswireless@gmail.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH v2 1/3] cfg80211: add PM hooks
+Date: Sun, 14 Dec 2008 22:50:37 -0500
+Message-Id: <1229313039-5544-2-git-send-email-me@bobcopeland.com> (sfid-20081215_045052_167136_6B695C2E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
 
---=-/6eVLzumRw56hRHr6buP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This should help implement suspend/resume in mac80211, these
+hooks will be run before the device is suspended and after it
+resumes. Therefore, they can touch the hardware as much as
+they want to.
 
-On Mon, 2008-12-08 at 18:52 -0500, pat-lkml wrote:
-> Johannes Berg wrote:
-> > On Mon, 2008-12-08 at 18:18 -0500, Dan E wrote:
-> > There's libnl 1.2 and 2.0? That's news to me! Patches welcome. Sorry, I
-> > guess it needs 1.0 or 1.1, will fix the page.
-> >=20
-> following is a patch that gets iw working with the development versions
-> of libnl.  I keep it uptodate at: http://wireless.erley.org/
->=20
-> The Makefile changes may not be the 'best' way to do it, but it works
-> for me.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h |    6 ++++++
+ net/wireless/sysfs.c   |   30 ++++++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 0 deletions(-)
 
-Thanks, I think you even sent me that once before already, but that
-breaks with distro versions of libnl. I guess distros will end up
-shipping 1.1 as libnl1 like debian does for a while?
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 23c0ab7..0432eb6 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -450,6 +450,9 @@ struct ieee80211_channel;
+  * wireless extensions but this is subject to reevaluation as soon as this
+  * code is used more widely and we have a first user without wext.
+  *
++ * @suspend: wiphy device needs to be suspended
++ * @resume: wiphy device needs to be resumed
++ *
+  * @add_virtual_intf: create a new virtual interface with the given name,
+  *	must set the struct wireless_dev's iftype.
+  *
+@@ -499,6 +502,9 @@ struct ieee80211_channel;
+  * @set_channel: Set channel
+  */
+ struct cfg80211_ops {
++	int	(*suspend)(struct wiphy *wiphy);
++	int	(*resume)(struct wiphy *wiphy);
++
+ 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
+ 				    enum nl80211_iftype type, u32 *flags,
+ 				    struct vif_params *params);
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 29f820e..021cda6 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -60,6 +60,34 @@ static int wiphy_uevent(struct device *dev, struct kobj_uevent_env *env)
+ }
+ #endif
+ 
++static int wiphy_suspend(struct device *dev, pm_message_t state)
++{
++	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
++	int ret = 0;
++
++	if (rdev->ops->suspend) {
++		rtnl_lock();
++		ret = rdev->ops->suspend(&rdev->wiphy);
++		rtnl_unlock();
++	}
++
++	return ret;
++}
++
++static int wiphy_resume(struct device *dev)
++{
++	struct cfg80211_registered_device *rdev = dev_to_rdev(dev);
++	int ret = 0;
++
++	if (rdev->ops->resume) {
++		rtnl_lock();
++		ret = rdev->ops->resume(&rdev->wiphy);
++		rtnl_unlock();
++	}
++
++	return ret;
++}
++
+ struct class ieee80211_class = {
+ 	.name = "ieee80211",
+ 	.owner = THIS_MODULE,
+@@ -68,6 +96,8 @@ struct class ieee80211_class = {
+ #ifdef CONFIG_HOTPLUG
+ 	.dev_uevent = wiphy_uevent,
+ #endif
++	.suspend = wiphy_suspend,
++	.resume = wiphy_resume,
+ };
+ 
+ int wiphy_sysfs_init(void)
+-- 
+1.6.0.4
 
-Is there any particular reason you need libnl from git? You could just
-check out 1.1, no?
-
-johannes
-
---=-/6eVLzumRw56hRHr6buP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJPbWcAAoJEKVg1VMiehFYfUcQALTXvtqFpHKIgaLf1vIoNYkH
-QwYUtqaH/V0HU3ogttGSVxB4bxNCYO3c+3lK8cM8+4tWPCt1eLM0k+Ywn8laRviV
-oxsw+KES+5WL8qJryvUkCGBppYOZDAtn9TQu3wP76A2eC0FDC9TdceC6Gj5lIjGp
-Pl/z/oFnGSMzhetE4qRF1R1xciS3IYB/yK5Du42Wjtc2NTaySHFXDFy/KelPOr9J
-axNM23Y6b96H+3lGpl2N01Mn0xGLOSVe4Sq6l7xnjXH8nHcVwBoRjqThy2vNDKFa
-AlLY3i/azkDRbJKDGLmt+au0ZJQx/eJHiSoVETGVIIMdc69Uumg9vXwYI3k+Rxxy
-7SYfeH2PLKT6YzC5dbLUrAzk38y3pt44qeIKfZ5hwE5rg+AF8YH8yToCLUT/XHMz
-k2vKloUVBtN1Kpwg6o/zAbrLKipvejvonyE7jJavj334mZHeWnxEVMrEsMuKYfNM
-NyzRa4P9G4W/3t2KxeJ5kIGds0XAtaqG8vVYzw3Mw02nRuRGkmmUdNKW83/0hsBf
-qUx/Ns88Di1MN2ENzy1B+pk4AtJ9X3o2A/2HfFf0O8Vtu/ABtH+DS72komvULF/Y
-0tfwskKSnLJ4VyFzcL55tx0TCZgkQMZqp7XfF4b6G2QyXyGq7v9CLkACr9zI/Y8R
-ITnETlTIIePbtxL/yLNH
-=2TIq
------END PGP SIGNATURE-----
-
---=-/6eVLzumRw56hRHr6buP--
 
