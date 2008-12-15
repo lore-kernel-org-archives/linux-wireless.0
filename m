@@ -1,77 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:36262 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbYLAUap (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:59855 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400AbYLOHA1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 15:30:45 -0500
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC v3 4/4] mac80211: move dynamic_ps_timeout to hw.conf
-References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
-	<1227901784-5325-5-git-send-email-kalle.valo@nokia.com>
-	<43e72e890812011111h53553a18x2d17c9cf267331dd@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 01 Dec 2008 22:30:37 +0200
-In-Reply-To: <43e72e890812011111h53553a18x2d17c9cf267331dd@mail.gmail.com> (ext Luis R. Rodriguez's message of "Mon\, 1 Dec 2008 11\:11\:48 -0800")
-Message-ID: <87hc5nbpua.fsf@nokia.com> (sfid-20081201_213049_564735_9CB91ECB)
+	Mon, 15 Dec 2008 02:00:27 -0500
+Received: by ewy10 with SMTP id 10so2850569ewy.13
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Dec 2008 23:00:25 -0800 (PST)
+Message-ID: <eb3ff54b0812142300w211f08ek51dc24de85e7c85@mail.gmail.com> (sfid-20081215_080031_058557_FCE81346)
+Date: Mon, 15 Dec 2008 09:00:25 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH 1/2] iwlwifi: misc cleanups.
+Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <mcgrof@gmail.com> writes:
+This patch removes unused parameters in methods in iwl-tx.c:
 
-> On Fri, Nov 28, 2008 at 11:49 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
->
->> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
->> index b3ee0dc..95455d0 100644
->> --- a/net/mac80211/wext.c
->> +++ b/net/mac80211/wext.c
->> @@ -962,7 +962,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
->>
->>        if (wrq->disabled) {
->>                ps = false;
->> -               local->dynamic_ps_timeout = 0;
->> +               local->hw.conf.dynamic_ps_timeout = 0;
->>                goto set;
->>        }
->>
->> @@ -977,7 +977,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
->>        }
->>
->>        if (wrq->flags & IW_POWER_TIMEOUT)
->> -               local->dynamic_ps_timeout = wrq->value / 1000;
->> +               local->hw.conf.dynamic_ps_timeout = wrq->value / 1000;
->>
->>        if (ps == local->powersave)
->>                return ret;
->> @@ -986,9 +986,9 @@ set:
->>        local->powersave = ps;
->>
->>        if (ifsta->flags & IEEE80211_STA_ASSOCIATED) {
->> -               if (local->dynamic_ps_timeout > 0)
->> +               if (conf->dynamic_ps_timeout > 0)
->>                        mod_timer(&local->dynamic_ps_timer, jiffies +
->> -                                 msecs_to_jiffies(local->dynamic_ps_timeout));
->> +                                 msecs_to_jiffies(conf->dynamic_ps_timeout));
->>                else {
->>                        if (local->powersave)
->>                                conf->flags |= IEEE80211_CONF_PS;
->
-> Would it be too much trouble to add this via cfg80211/nl80211 instead
-> or at least add both? The more we can push in that direction the
-> better.
+- remove a parameter (is_unicast) from iwl_tx_cmd_build_basic()
+- remove a parameter (sta_id) from iwl_tx_cmd_build_rate()
+- remove two parameters (sta_id and priv) from iwl_tx_cmd_build_hwcrypto()
 
-I definitely would like to see nl80211 support for power save. For
-example, I think currently there's no way for the user space to know
-dtim period of the bss. (If I'm wrong here, please let me know). We
-definitely should fix that in nl80211 to make it easier for the user
-space decide on correct power save settings.
+(wireless-testing).
 
-Let's start to work on nl80211 after client power save features in
-mac80211 are in better shape. At that time we also have a better
-understanding of what's needed for the user space interface. Now
-things are a bit sketchy still.
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c
+b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 3cb4363..ffede8b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -645,7 +645,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
+ 				  struct iwl_tx_cmd *tx_cmd,
+ 				  struct ieee80211_tx_info *info,
+ 				  struct ieee80211_hdr *hdr,
+-				  int is_unicast, u8 std_id)
++				  u8 std_id)
+ {
+ 	__le16 fc = hdr->frame_control;
+ 	__le32 tx_flags = tx_cmd->tx_flags;
+@@ -705,7 +705,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
+ static void iwl_tx_cmd_build_rate(struct iwl_priv *priv,
+ 			      struct iwl_tx_cmd *tx_cmd,
+ 			      struct ieee80211_tx_info *info,
+-			      __le16 fc, int sta_id,
++			      __le16 fc,
+ 			      int is_hcca)
+ {
+ 	u32 rate_flags = 0;
+@@ -764,11 +764,10 @@ static void iwl_tx_cmd_build_rate(struct iwl_priv *priv,
+ 	tx_cmd->rate_n_flags = iwl_hw_set_rate_n_flags(rate_plcp, rate_flags);
+ }
+
+-static void iwl_tx_cmd_build_hwcrypto(struct iwl_priv *priv,
+-				      struct ieee80211_tx_info *info,
++static void iwl_tx_cmd_build_hwcrypto(struct ieee80211_tx_info *info,
+ 				      struct iwl_tx_cmd *tx_cmd,
+-				      struct sk_buff *skb_frag,
+-				      int sta_id)
++				      struct sk_buff *skb_frag)
++				
+ {
+ 	struct ieee80211_key_conf *keyconf = info->control.hw_key;
+
+@@ -834,7 +833,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	u16 len, len_org;
+ 	u16 seq_number = 0;
+ 	__le16 fc;
+-	u8 hdr_len, unicast;
++	u8 hdr_len;
+ 	u8 sta_id;
+ 	u8 wait_write_ptr = 0;
+ 	u8 tid = 0;
+@@ -854,8 +853,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 		goto drop_unlock;
+ 	}
+
+-	unicast = !is_multicast_ether_addr(hdr->addr1);
+-
++	
+ 	fc = hdr->frame_control;
+
+ #ifdef CONFIG_IWLWIFI_DEBUG
+@@ -977,7 +975,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	iwl_hw_txq_attach_buf_to_tfd(priv, tfd, txcmd_phys, len);
+
+ 	if (info->control.hw_key)
+-		iwl_tx_cmd_build_hwcrypto(priv, info, tx_cmd, skb, sta_id);
++		iwl_tx_cmd_build_hwcrypto(info, tx_cmd, skb);
+
+ 	/* Set up TFD's 2nd entry to point directly to remainder of skb,
+ 	 * if any (802.11 null frames have no payload). */
+@@ -996,10 +994,10 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	len = (u16)skb->len;
+ 	tx_cmd->len = cpu_to_le16(len);
+ 	/* TODO need this for burst mode later on */
+-	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, unicast, sta_id);
++	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, sta_id);
+
+ 	/* set is_hcca to 0; it probably will never be implemented */
+-	iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, sta_id, 0);
++	iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, 0);
+
+ 	iwl_update_tx_stats(priv, le16_to_cpu(fc), len);
