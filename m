@@ -1,92 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34894 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753291AbYLVLCI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 06:02:08 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 03:02:08 -0800
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH] ath9k: Fix incorrect sequence numbering for unaggregated QoS Frame.
-Date: Mon, 22 Dec 2008 16:31:58 +0530
-Message-ID: <1229943718-5461-1-git-send-email-senthilkumar@atheros.com> (sfid-20081222_120214_000416_9AD78048)
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47458 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752627AbYLOOCL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 09:02:11 -0500
+Date: Mon, 15 Dec 2008 16:02:04 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Remove MAC header pad before reporting TX status
+Message-ID: <20081215140204.GA16197@jm.kir.nu> (sfid-20081215_150215_444374_BD750901)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an issue with the sequence numbers of unaggregated
-QoS frames, because of which the frames are handled in a different order
-at the AP and resulted in MLME REPLAYFAILURE.
+Remove the possible MAC header pad before reporting TX status to
+mac80211. This pad is hardware specific operation and should not be
+exposed outside the driver. This fixes the frame body in monitor
+interfaces that could be used to check on TX status for transmitted
+frames.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 ---
- drivers/net/wireless/ath9k/xmit.c |   38 ++++++++++++++++--------------------
- 1 files changed, 17 insertions(+), 21 deletions(-)
+ drivers/net/wireless/ath9k/xmit.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 3bfc3b9..1ea9428 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -264,25 +264,22 @@ static void assign_aggr_tid_seqno(struct sk_buff *skb,
+(the context in the patch depends on the previous ath9k: Fix TX status
+reporting for retries and MCS index patch, but other than that, this is
+an independent change)
+
+--- wireless-testing.orig/drivers/net/wireless/ath9k/xmit.c	2008-12-15 15:48:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/xmit.c	2008-12-15 15:54:37.000000000 +0200
+@@ -106,6 +106,7 @@ static void ath_tx_complete(struct ath_s
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ath_tx_info_priv *tx_info_priv = ATH_TX_INFO_PRIV(tx_info);
++	int hdrlen, padsize;
+ 
+ 	DPRINTF(sc, ATH_DBG_XMIT, "TX complete: skb: %p\n", skb);
+ 
+@@ -135,6 +136,17 @@ static void ath_tx_complete(struct ath_s
+ 				rate_table->info[idx].ratecode & 0x7f;
  	}
  
- 	/* Get seqno */
--
--	if (ieee80211_is_data(fc) && !is_pae(skb)) {
--		/* For HT capable stations, we save tidno for later use.
--		 * We also override seqno set by upper layer with the one
--		 * in tx aggregation state.
--		 *
--		 * If fragmentation is on, the sequence number is
--		 * not overridden, since it has been
--		 * incremented by the fragmentation routine.
--		 *
--		 * FIXME: check if the fragmentation threshold exceeds
--		 * IEEE80211 max.
--		 */
--		tid = ATH_AN_2_TID(an, bf->bf_tidno);
--		hdr->seq_ctrl = cpu_to_le16(tid->seq_next <<
--					    IEEE80211_SEQ_SEQ_SHIFT);
--		bf->bf_seqno = tid->seq_next;
--		INCR(tid->seq_next, IEEE80211_SEQ_MAX);
--	}
-+	/* For HT capable stations, we save tidno for later use.
-+	 * We also override seqno set by upper layer with the one
-+	 * in tx aggregation state.
-+	 *
-+	 * If fragmentation is on, the sequence number is
-+	 * not overridden, since it has been
-+	 * incremented by the fragmentation routine.
-+	 *
-+	 * FIXME: check if the fragmentation threshold exceeds
-+	 * IEEE80211 max.
-+	 */
-+	tid = ATH_AN_2_TID(an, bf->bf_tidno);
-+	hdr->seq_ctrl = cpu_to_le16(tid->seq_next <<
-+			IEEE80211_SEQ_SEQ_SHIFT);
-+	bf->bf_seqno = tid->seq_next;
-+	INCR(tid->seq_next, IEEE80211_SEQ_MAX);
++	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++	padsize = hdrlen & 3;
++	if (padsize && hdrlen >= 24) {
++		/*
++		 * Remove MAC header padding before giving the frame back to
++		 * mac80211.
++		 */
++		memmove(skb->data + padsize, skb->data, hdrlen);
++		skb_pull(skb, padsize);
++	}
++
+ 	ieee80211_tx_status(hw, skb);
  }
  
- static int setup_tx_flags(struct ath_softc *sc, struct sk_buff *skb,
-@@ -1718,11 +1715,10 @@ static int ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
- 
- 	/* Assign seqno, tidno */
- 
--	if (bf_isht(bf) && (sc->sc_flags & SC_OP_TXAGGR))
-+	if (ieee80211_is_data_qos(fc) && (sc->sc_flags & SC_OP_TXAGGR))
- 		assign_aggr_tid_seqno(skb, bf);
- 
- 	/* DMA setup */
--
- 	bf->bf_mpdu = skb;
- 
- 	bf->bf_dmacontext = pci_map_single(sc->pdev, skb->data,
--- 
-1.6.0.4
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
