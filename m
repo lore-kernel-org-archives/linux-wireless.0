@@ -1,77 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f18.google.com ([209.85.217.18]:59163 "EHLO
-	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbYLAT0q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 14:26:46 -0500
-Received: by gxk11 with SMTP id 11so90929gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 11:26:44 -0800 (PST)
-Message-ID: <43e72e890812011126sd65799fvf478e08e2b82dfe9@mail.gmail.com> (sfid-20081201_202650_188043_9A64FED6)
-Date: Mon, 1 Dec 2008 11:26:43 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Vince Barwinski" <vince.barwinski@gmail.com>
-Subject: Re: Build problem with "compat-wireless-2.6-old"
-Cc: linux-wireless@vger.kernel.org,
-	"Tim Gardner" <tim.gardner@canonical.com>
-In-Reply-To: <d5b9d7c80811300048l22b99fe3v27b65e5e4962a54b@mail.gmail.com>
+Received: from smtp6-g19.free.fr ([212.27.42.36]:35142 "EHLO smtp6-g19.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751691AbYLOWvH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 17:51:07 -0500
+Message-ID: <4946C6D9.1060101@free.fr> (sfid-20081215_235114_041612_DB3C9745)
+Date: Mon, 15 Dec 2008 22:06:33 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <d5b9d7c80811300048l22b99fe3v27b65e5e4962a54b@mail.gmail.com>
+To: Jouni Malinen <j@w1.fi>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath5k: Updated padding stuff for the RX and TX side.
+ TX side has been 100%
+References: <1229351698-21116-1-git-send-email-benoit.papillault@free.fr> <20081215170613.GA22627@jm.kir.nu>
+In-Reply-To: <20081215170613.GA22627@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 30, 2008 at 12:48 AM, Vince Barwinski
-<vince.barwinski@gmail.com> wrote:
-> Hi there
->
-> I just downloaded compat-wireless-old.tar.bz2 and then after
-> extracting it I tried to build it by executing the 'make' command. I
-> made sure that I had the kernel headers and kernel source installed
-> before running 'make'. I downloaded and installed them with 'apt-get'.
-> My machine is an ACER Travelmate 230 Laptop with the Operating System
-> being 'Simply Mepis Linux version 7.0' with kernel version
-> '2.6.22-1-mepis-smp'. My USB wireless adapter is a 'Lemel LM-WLG600U
-> 802.11g'. The old story: I am able to get it to work in Microsloth
-> Windows XP with the driver CD, but the real problem of course is
-> getting it to run in Linux.
->
-> At first the build seemed to be running OK, but after a minute or so
-> it failed with the following output:
->
-> root@laptop:/home/vince/downloads/compat-wireless-2.6-old# make
-> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-> make -C /lib/modules/2.6.22-1-mepis-smp/build
-> M=/home/vince/downloads/compat-wireless-2.6-old modules
-> make[1]: Entering directory `/usr/src/linux-headers-2.6.22-1-mepis-smp'
->  CC [M]  /home/vince/downloads/compat-wireless-2.6-old/drivers/misc/eeprom_93cx6.o
->  CC [M]  /home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.o
-> In file included from
-> /home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c:34:
-> /home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.h:361:
-> error: field 'napi' has incomplete type
-> /home/vince/downloads/compat-wireless-2.6-old/drivers/net/b44.c: In
-> function 'b44_poll':
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-seems b44 needs backporting of napi stuff. I have it b44 disabled if
-you are not on > 2.6.22 but your kernel config is still respected so
-it fails. You can simply remove it from being compile be removing the
-line indicated below:
+Jouni Malinen a =E9crit :
+> On Mon, Dec 15, 2008 at 03:34:58PM +0100, Benoit Papillault wrote:
+>> This patch is close to the original code except that
+>> ieee80211_get_hdrlen_from_skb() has been replaced by
+>> ath5k_hw_get_hdrlen_from_skb() which is specific to Atheros hardware=
+=2E The same
+>> probably applies to ath9k as well.
+>=20
+> Most of this is changes on how unspecified frames are handled (e.g.,
+> frames that are not used in IEEE 802.11). What is the use case that
+> justifies this type of extra complexity to be added into the driver?
+> Please note that there are no guarantees that all hardware revisions
+> behave the same as far as undocumented functionality is concerned. Th=
+e
+> only clear case when padding is required is data frames with non-empt=
+y
+> frame body.
+>=20
 
-diff --git a/Makefile b/Makefile
-index e1cd54e..a1d1e59 100644
---- a/Makefile
-+++ b/Makefile
-@@ -21,7 +21,6 @@ ifeq ($(ONLY_CORE),)
- obj-y += net/ieee80211/ \
-        drivers/ssb/ \
-        drivers/misc/ \
--       drivers/net/ \
-        drivers/net/usb/ \
-        drivers/net/wireless/
- endif
+Agreed. In fact, I wanted to know how the hardware behaves in the
+general case to better understand it in the particular case of 802.11
+frames. To me, the bug we have seen when receiving a ACK frame in
+monitor mode was not because "ACK is a small control frame", it was
+because the header length we computed was smaller than what the hardwar=
+e
+considered.
 
+Another point is that we have to deal with anything on the RX side, be
+it later classified as invalid or not.
 
-A patch to backport napi stuff to get this to compile correctly on
-2.6.22 is welcomed though.
+As far as the hardware is concerned, I'm not working for Atheros, but I
+bet that hardware guys did the same thing for all their chipsets. I
+could test it on AR5416 and AR9160 if needed.
 
-  Luis
+To reply to Bob as well, we need to compute the number of padded bytes =
++
+the position at which the padding occurs, so proper "header" length is
+required.
+
+Just my 2 cents.
+
+Benoit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFJRsbZOR6EySwP7oIRArWVAJ0fjqY01Xi3qTH7DIJBE9D+c099pQCgp/u5
+pHHZiKOzsU83CEecamnuZpY=3D
+=3Dw10J
+-----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
