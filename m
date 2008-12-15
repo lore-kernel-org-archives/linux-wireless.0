@@ -1,105 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from LNeuilly-152-21-11-6.w193-253.abo.wanadoo.fr ([193.253.42.6]:34517
-	"EHLO luceor-laptop" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752494AbYLLOw2 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:51685 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755751AbYLOUUd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 09:52:28 -0500
-From: Benoit Papillault <benoit.papillault@free.fr>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>
-Subject: [PATCH] ath5k: fix 802.11 header padding on RX, unpadding on TX
-Date: Fri, 12 Dec 2008 15:29:58 +0100
-Message-Id: <1229092198-21136-1-git-send-email-benoit.papillault@free.fr> (sfid-20081212_155232_013741_EDC142B6)
+	Mon, 15 Dec 2008 15:20:33 -0500
+Received: by ey-out-2122.google.com with SMTP id 6so403645eyi.37
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 12:20:31 -0800 (PST)
+Message-ID: <4946BC0C.3040701@gmail.com> (sfid-20081215_212043_711476_6BD37700)
+Date: Mon, 15 Dec 2008 21:20:28 +0100
+From: Artur Skawina <art.08.09@gmail.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+References: <494698AF.4020204@gmail.com> <4946A4C9.7040304@lwfinger.net> <200812152043.21971.chunkeey@web.de>
+In-Reply-To: <200812152043.21971.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Christian Lamparter wrote:
+> On Monday 15 December 2008 19:41:13 Larry Finger wrote:
+>> Artur Skawina wrote:
+>>> I have a sinus 154 data usb adapter, which used to work w/ p54 in 2.6.27:
+>> Can you bisect this problem?
+> Naa I guess its "p54: fix memory management".
+> 872037115977dc07ae05e4b6b769bf8726da4e87
+> 
+> so tell us if this patch works.
 
-Padding the 802.11 header to a multiple of 4 bytes needs to be done only for
-frames with a body. This fixes a bug where 2 bytes were missing in monitor
-mode for ACK frames. Inspired by a patch from Jouni Malinen on ath9k.
+Nope, the attached patch did not improve things, as the log below shows.
+I'll try bisecting.
 
-Ref: http://bugzilla.kernel.org/show_bug.cgi?id=12101 :
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
----
- drivers/net/wireless/ath5k/base.c |   38 ++++++++++++++++++++----------------
- 1 files changed, 21 insertions(+), 17 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index bfb0c49..9d2c597 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1667,7 +1667,7 @@ ath5k_tasklet_rx(unsigned long data)
- 	struct ath5k_desc *ds;
- 	int ret;
- 	int hdrlen;
--	int pad;
-+	int padsize;
- 
- 	spin_lock(&sc->rxbuflock);
- 	if (list_empty(&sc->rxbuf)) {
-@@ -1752,16 +1752,19 @@ accept:
- 
- 		skb_put(skb, rs.rs_datalen);
- 
--		/*
--		 * the hardware adds a padding to 4 byte boundaries between
--		 * the header and the payload data if the header length is
--		 * not multiples of 4 - remove it
--		 */
-+		/* The MAC header is padded to have 32-bit boundary if the
-+		 * packet payload is non-zero. The general calculation for
-+		 * padsize would take into account odd header lengths:
-+		 * padsize = (4 - hdrlen % 4) % 4; However, since only
-+		 * even-length headers are used, padding can only be 0 or 2
-+		 * bytes and we can optimize this a bit. In addition, we must
-+		 * not try to remove padding from short control frames that do
-+		 * not have payload. */
- 		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
--		if (hdrlen & 3) {
--			pad = hdrlen % 4;
--			memmove(skb->data + pad, skb->data, hdrlen);
--			skb_pull(skb, pad);
-+		padsize = hdrlen & 3;
-+		if (padsize && hdrlen >= 24) {
-+			memmove(skb->data + padsize, skb->data, hdrlen);
-+			skb_pull(skb, padsize);
- 		}
- 
- 		/*
-@@ -2622,7 +2625,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	struct ath5k_buf *bf;
- 	unsigned long flags;
- 	int hdrlen;
--	int pad;
-+	int padsize;
- 
- 	ath5k_debug_dump_skb(sc, skb, "TX  ", 1);
- 
-@@ -2634,15 +2637,16 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * if this is not the case we add the padding after the header
- 	 */
- 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
--	if (hdrlen & 3) {
--		pad = hdrlen % 4;
--		if (skb_headroom(skb) < pad) {
-+	padsize = hdrlen & 3;
-+	if (padsize && hdrlen >= 24) {
-+
-+		if (skb_headroom(skb) < padsize) {
- 			ATH5K_ERR(sc, "tx hdrlen not %%4: %d not enough"
--				" headroom to pad %d\n", hdrlen, pad);
-+				  " headroom to pad %d\n", hdrlen, padsize);
- 			return -1;
- 		}
--		skb_push(skb, pad);
--		memmove(skb->data, skb->data+pad, hdrlen);
-+		skb_push(skb, padsize);
-+		memmove(skb->data, skb->data+padsize, hdrlen);
- 	}
- 
- 	spin_lock_irqsave(&sc->txbuflock, flags);
--- 
-1.5.6.5
+artur
 
+> Dec 15 21:11:08 kernel: usb 1-7: new high speed USB device using ehci_hcd and address 12
+> Dec 15 21:11:09 kernel: usb 1-7: configuration #1 chosen from 1 choice
+> Dec 15 21:11:09 kernel: cfg80211: Using static regulatory domain info
+> Dec 15 21:11:09 kernel: cfg80211: Regulatory domain: US
+> Dec 15 21:11:09 kernel: ^I(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> Dec 15 21:11:09 kernel: ^I(2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+> Dec 15 21:11:09 kernel: ^I(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> Dec 15 21:11:09 kernel: ^I(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> Dec 15 21:11:09 kernel: ^I(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> Dec 15 21:11:09 kernel: ^I(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> Dec 15 21:11:09 kernel: ^I(5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+> Dec 15 21:11:09 kernel: cfg80211: Calling CRDA for country: US
+> Dec 15 21:11:09 kernel: usb 1-7: New USB device found, idVendor=0846, idProduct=4200
+> Dec 15 21:11:09 kernel: usb 1-7: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+> Dec 15 21:11:09 kernel: usb 1-7: firmware: requesting isl3886usb
+> Dec 15 21:11:09 kernel: phy0: p54 detected a LM86 firmware
+> Dec 15 21:11:09 kernel: phy0: FW rev 2.5.6.0 - Softmac protocol 3.0
+> Dec 15 21:11:09 kernel: phy0: you are using an obsolete firmware. visit http://wireless.kernel.org/en/users/Drivers/p54 and grab one for "kernel >= 2.6.28"!
+> Dec 15 21:11:09 kernel: phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:no
+> Dec 15 21:11:12 kernel: phy0: device does not respond!
+> Dec 15 21:11:12 kernel: p54usb: probe of 1-7:1.0 failed with error -16
+> Dec 15 21:11:12 kernel: usbcore: registered new interface driver p54usb
