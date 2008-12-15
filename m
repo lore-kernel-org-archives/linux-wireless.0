@@ -1,67 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:55642 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752607AbYLJUHs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 15:07:48 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [RFC] b43: rework rfkill code
-Date: Wed, 10 Dec 2008 21:07:08 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	hmh@hmh.eng.br
-References: <20081210150935.GA10927@srcf.ucam.org> <1228932343.15837.57.camel@johannes.berg> <1228933790.28590.29.camel@localhost.localdomain>
-In-Reply-To: <1228933790.28590.29.camel@localhost.localdomain>
+Received: from yw-out-2324.google.com ([74.125.46.29]:48336 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754446AbYLORQi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 12:16:38 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so1146839ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 09:16:37 -0800 (PST)
+Message-ID: <b6c5339f0812150916k521fa7a4l4fc3aa560d08c1db@mail.gmail.com> (sfid-20081215_181643_278900_C938CEB4)
+Date: Mon, 15 Dec 2008 12:16:37 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in add_interface
+Cc: "Dan Williams" <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net
+In-Reply-To: <69e28c910812150812h4a316327u67aad1b225262816@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812102107.09568.mb@bu3sch.de> (sfid-20081210_210751_529747_21B3D08D)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081118044037.GA18983@hash.localnet>
+	 <69e28c910812150747j60cf17d9nc2e24aabb991d2a9@mail.gmail.com>
+	 <1229357080.12163.47.camel@localhost.localdomain>
+	 <69e28c910812150812h4a316327u67aad1b225262816@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 10 December 2008 19:29:50 Dan Williams wrote:
-> On Wed, 2008-12-10 at 19:05 +0100, Johannes Berg wrote:
-> > On Wed, 2008-12-10 at 17:51 +0000, Matthew Garrett wrote:
-> > 
-> > > They may not be physical buttons, but we can often control this anyway. 
-> > > For instance, my HP has a button that will perform a hardware disable of 
-> > > the wifi card. However, I can control that button's state through 
-> > > software with the hp-wmi driver. 
-> > 
-> > That's indeed a complication I wasn't aware of.
-> > 
-> > > The way we currently handle that (and, 
-> > > I think, the only way we *can* handle that) is to provide two separate 
-> > > rfkill interfaces - one tied to the wireless device, one tied to the 
-> > > platform device.
-> > 
-> > Yes, but how do we currently do this?
-> > 
-> > Does the wireless driver get the notification about this from the
-> > hardware, like it would if this was a real physical switch? Then it's
-> > probably pretty simple: provide a rfkill struct from the driver that
-> > updates hard-kill and provide a second rfkill struct for the platform
-> > device that doesn't get hard-killed, but also provide a soft-kill input
-> > form the platform device. That way, you can toggle that button, but you
-> > can also software-enable the platform rfkill device and that in turn
-> > re-enables the wifi-rfkill "hw" switch device.
-> 
-> This sort of sucks for userspace, because we see the actual wifi card as
-> hardblocked, but some other random button as softblocked.  There's no
-> indication that changing the softblock one will affect the hardblocked
-> one.  What are userspace processes supposed to do here, assume that if a
-> non-radio-associated softblocked switch exists, that it can re-enable a
-> hardblocked radio of some random wifi card?
+On Mon, Dec 15, 2008 at 11:12 AM, Stefanik G=E1bor
+<netrolller.3d@gmail.com> wrote:
+> That is not the problem - aireplay-ng operates on a monitor interface
+> that is already up. Likely this patch somehow misses monitor
+> interfaces.
 
-I don't see the problem.
-If userspace wants to enable wifi, it should simply _try_ to do so:
-Userspace sees hw-block and sw-block state:
-- Unblock the sw state
-- Re-fetch hw-block and sw-block state
-- If either one is blocked, we can't enable the radio.
-- Notify user.
+Agreed, that is probably the case.  Reverting that hunk makes it come u=
+p
+with the eeprom mac without adding any interface.  Looking at the
+add_interface() code, it 'should' program the mac for monitor interface=
+s
+too, so offhand I'm not sure, will take a look tonight.
 
--- 
-Greetings, Michael.
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
