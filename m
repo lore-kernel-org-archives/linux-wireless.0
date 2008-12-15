@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:54770 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751863AbYLSRou (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 12:44:50 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: [PATCH] b43: Suspend MAC while killing the radio
-Date: Fri, 19 Dec 2008 18:40:00 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Received: from adelphi.physics.adelaide.edu.au ([129.127.102.1]:52736 "EHLO
+	adelphi.physics.adelaide.edu.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753909AbYLPACB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 19:02:01 -0500
+From: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
+Message-Id: <200812152342.mBFNgQJj028844@sprite.physics.adelaide.edu.au> (sfid-20081216_010206_944721_0BF937A8)
+Subject: Re: Fuijtsu Lifebook RFKILL support
+To: tony@linx.net
+Date: Tue, 16 Dec 2008 10:12:26 +1030 (CST)
+Cc: dcbw@redhat.com (Dan Williams),
+	hmh@hmh.eng.br (Henrique de Moraes Holschuh),
+	lenb@kernel.org (Len Brown), ivdoorn@gmail.com (Ivo van Doorn),
+	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
+	nokos@gmx.net (Peter Gruber), linux-wireless@vger.kernel.org
+In-Reply-To: <1229361241.13400.1.camel@localhost> from "Tony Vroon" at Dec 15, 2008 05:14:01 PM
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812191840.00731.mb@bu3sch.de> (sfid-20081219_184453_685697_B43975FF)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should suspend the MAC, before we kill the radio. This gives
-the MAC a chance to leave any TX/RX state and it avoids races on
-the PHY/RADIO registers.
+Hi Tony
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> On Mon, 2008-12-15 at 10:19 -0500, Dan Williams wrote:
+> > I plan to beat the .... out of the hal killswitch support pretty soon.
+> > AFAIK it still doesn't know about softblock, which is part of the whole
+> > reason for the rfkill rewrite in 2.6.26 anyway.  It also doesn't yet
+> > (AFAIK) support uevents from killswitches either, which sucks.
+> 
+> Could you let me know when you've committed this code so I have another
+> shot at implementing rfkill reporting in fujitsu-laptop?
 
----
+This is to let you know that I'm still following this discussion but haven't
+had anything sensible to add to the basic infrastructure issues being worked
+through at present.  It's probably sensible for me to pick up on the next
+version of your patch.
 
-For 2.6.29
+Also, over the Christmas period (ie: after this week) my responses are
+likely to be slow due to intermittant network access in that time.
 
-Index: wireless-testing/drivers/net/wireless/b43/phy_common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_common.c	2008-12-19 18:32:33.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/phy_common.c	2008-12-19 18:35:49.000000000 +0100
-@@ -293,14 +293,16 @@ void b43_software_rfkill(struct b43_wlde
- 
- 	if (state == RFKILL_STATE_HARD_BLOCKED) {
- 		/* We cannot hardware-block the device */
- 		state = RFKILL_STATE_SOFT_BLOCKED;
- 	}
- 
-+	b43_mac_suspend(dev);
- 	phy->ops->software_rfkill(dev, state);
- 	phy->radio_on = (state == RFKILL_STATE_UNBLOCKED);
-+	b43_mac_enable(dev);
- }
- 
- /**
-  * b43_phy_txpower_adjust_work - TX power workqueue.
-  *
-  * Workqueue for updating the TX power parameters in hardware.
+I also haven't forgotten about getting you the DSDT from the S7020 - I just
+haven't had a chance to get to that yet.  I hope to get to this before the
+end of the week.
 
--- 
-Greetings, Michael.
+Regards
+  jonathan
