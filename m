@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32077 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:56019 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752551AbYLTFzj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2008 00:55:39 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 21:55:39 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
-	<johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<kalle.valo@nokia.com>
-Subject: [PATCH 05/16] wireless: allow for private channel area
-Date: Fri, 19 Dec 2008 21:55:11 -0800
-Message-ID: <1229752522-1917-6-git-send-email-lrodriguez@atheros.com> (sfid-20081220_065605_625660_6912E235)
-In-Reply-To: <1229752522-1917-5-git-send-email-lrodriguez@atheros.com>
-References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-3-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-4-git-send-email-lrodriguez@atheros.com>
- <1229752522-1917-5-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1751456AbYLOSBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 13:01:04 -0500
+Subject: Re: Fuijtsu Lifebook RFKILL support
+From: Dan Williams <dcbw@redhat.com>
+To: tony@linx.net
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Len Brown <lenb@kernel.org>, Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
+	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
+In-Reply-To: <1229361241.13400.1.camel@localhost>
+References: <1228957506.4045.11.camel@localhost>
+	 <20081211165247.GA4844@khazad-dum.debian.net>
+	 <1229016827.6446.6.camel@localhost>
+	 <20081211194734.GA18132@khazad-dum.debian.net>
+	 <1229046602.4030.13.camel@localhost>
+	 <20081212195331.GA12679@khazad-dum.debian.net>
+	 <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain>
+	 <1229172465.4010.11.camel@localhost>
+	 <20081213132857.GA11428@khazad-dum.debian.net>
+	 <1229274343.6775.15.camel@localhost.localdomain>
+	 <20081215115336.GD17648@khazad-dum.debian.net>
+	 <1229354348.12163.20.camel@localhost.localdomain>
+	 <1229361241.13400.1.camel@localhost>
 Content-Type: text/plain
+Date: Mon, 15 Dec 2008 12:59:44 -0500
+Message-Id: <1229363984.12163.114.camel@localhost.localdomain> (sfid-20081215_190109_958887_3179D2C6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless drivers tend to require calibration or noise floor
-checks. Some of these operations are channel specific. Instead
-of forcing each driver to keep a separate map for these values
-per channel allow for a private area on the ieee80211_channel to
-reduce code overhead and size.
+On Mon, 2008-12-15 at 17:14 +0000, Tony Vroon wrote:
+> On Mon, 2008-12-15 at 10:19 -0500, Dan Williams wrote:
+> > I plan to beat the shit out of the hal killswitch support pretty soon.
+> > AFAIK it still doesn't know about softblock, which is part of the whole
+> > reason for the rfkill rewrite in 2.6.26 anyway.  It also doesn't yet
+> > (AFAIK) support uevents from killswitches either, which sucks.
+> 
+> Thanks Dan.
+> Could you let me know when you've committed this code so I have another
+> shot at implementing rfkill reporting in fujitsu-laptop?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/wireless.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Yeah, though the HAL support will be coded to the kernel rfkill devices,
+so if the platform or the wifi driver supports the kernel rfkill
+interface, the HAL bits should work.
 
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index aedefa5..ecb5cf1 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -71,6 +71,8 @@ enum ieee80211_channel_flags {
-  * @max_power: maximum transmission power (in dBm)
-  * @orig_mag: internal use
-  * @orig_mpwr: internal use
-+ * @priv: used by the driver for any of its own needs,
-+ * 	could be used for example for calibration data.
-  */
- struct ieee80211_channel {
- 	enum ieee80211_band band;
-@@ -82,6 +84,7 @@ struct ieee80211_channel {
- 	int max_power;
- 	u32 orig_flags;
- 	int orig_mag, orig_mpwr;
-+	void *priv;
- };
- 
- /**
--- 
-1.5.6.rc2.15.g457bb.dirty
+> P.S. Did you get my e-mail about the Sierra Wireless MC8790?
+
+Yes; it's hal-info commit 8912ec2b5d0a221a74156c047b18a26b2d916e13.
+
+Dan
+
 
