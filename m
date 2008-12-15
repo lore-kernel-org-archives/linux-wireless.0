@@ -1,76 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40383 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752087AbYLOTpQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 14:45:16 -0500
-Date: Mon, 15 Dec 2008 14:35:49 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: htl10@users.sourceforge.net,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Improve wireless statistics for RTL8187
-Message-ID: <20081215193549.GD3519@tuxdriver.com> (sfid-20081215_204520_117358_2FCF9DD5)
-References: <27385.37285.qm@web23104.mail.ird.yahoo.com> <49374C8E.6010500@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:32671 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751010AbYLOPMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 10:12:53 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 07:12:53 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Synchronize DMA transfer with CPU at right place
+Date: Mon, 15 Dec 2008 20:40:46 +0530
+Message-ID: <1229353846-6531-2-git-send-email-vasanth@atheros.com> (sfid-20081215_161303_128673_5F8E545D)
+In-Reply-To: <1229353846-6531-1-git-send-email-vasanth@atheros.com>
+References: <1229353846-6531-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <49374C8E.6010500@lwfinger.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 03, 2008 at 09:20:46PM -0600, Larry Finger wrote:
-> Hin-Tak Leung wrote:
-> > --- On Thu, 4/12/08, Larry Finger <Larry.Finger@lwfinger.net> wrote=
-:
-> >=20
-> >> The current wireless statistics for the RTL8187 poorly
-> >> indicate the signal
-> >> strength and quality. With testing, I found that the AGC
-> >> value is inversely
-> >> correlated with the strength as in the RTL8187B. By
-> >> implementing a similar
-> >> calculation, much more code becomes common to the two
-> >> devices.
-> >>
-> >> Signed-off-by: Larry Finger
-> >> <Larry.Finger@lwfinger.net>
-> >> Tested by: Mart=EDn Ernesto Barreyro
-> >> <barreyromartin@gmail.com>
-> >> ---
-> > Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-> >=20
-> > Acually eveything to do with "quality" can be moved out of the if/t=
-hen.
-> >=20
-> > I mean these 3 lines:
-> >=20
-> > +		if (quality > 100)
-> > +			quality =3D 100;
-> > +		....
-> > +		rx_status.qual =3D quality;
-> >=20
-> > You have removed "rx_status.qual =3D quality;" from the "then" part=
-, but didn't put it back in the common portion afterwards?
-> >=20
-> > Also, what happened to "dev->max_signal =3D 65;" at the end?
->=20
-> Thanks for the comments. I'll fix up the code and resubmit.
->=20
-> The dev->max_signal is only needed if the IEEE80211_HW_SIGNAL_UNSPEC =
-flag is
-> used. Once we switch to IEEE80211_HW_SIGNAL_DBM, then the maximum is =
-known.
+This patch does pci_dma_sync_single_for_cpu() before accessing
+the header of the frame and queueing the same buffer into h/w.
 
-I'm dropping this patch from my mailbox.  Is a new version of this
-still coming?
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath9k/recv.c |   14 ++++++++++----
+ 1 files changed, 10 insertions(+), 4 deletions(-)
 
-John
---=20
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 6a91d04..6f81feb 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -525,6 +525,15 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 			continue;
+ 
+ 		/*
++		 * Synchronize the DMA transfer with CPU before
++		 * 1. accessing the frame
++		 * 2. requeueing the same buffer to h/w
++		 */
++		pci_dma_sync_single_for_cpu(sc->pdev, bf->bf_buf_addr,
++				sc->rx.bufsize,
++				PCI_DMA_FROMDEVICE);
++
++		/*
+ 		 * If we're asked to flush receive queue, directly
+ 		 * chain it back at the queue without processing it.
+ 		 */
+@@ -558,10 +567,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		if (!requeue_skb)
+ 			goto requeue;
+ 
+-		/* Sync and unmap the frame */
+-		pci_dma_sync_single_for_cpu(sc->pdev, bf->bf_buf_addr,
+-					    sc->rx.bufsize,
+-					    PCI_DMA_FROMDEVICE);
++		/* Unmap the frame */
+ 		pci_unmap_single(sc->pdev, bf->bf_buf_addr,
+ 				 sc->rx.bufsize,
+ 				 PCI_DMA_FROMDEVICE);
+-- 
+1.5.5.1
+
