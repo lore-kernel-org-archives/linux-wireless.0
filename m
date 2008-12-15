@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.brikks.com ([82.209.166.4]:13976 "EHLO smtp.bredband2.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751585AbYLFRFo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 12:05:44 -0500
-Date: Sat, 6 Dec 2008 18:05:37 +0100
-From: Mats Johannesson <spamcan1@abrasax.se>
-To: Sujith <m.sujith@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
- root
-Message-ID: <20081206180537.717d1791@loke.fish.not> (sfid-20081206_180548_605262_1C5C8A12)
-In-Reply-To: <18746.37273.989918.333164@localhost.localdomain>
-References: <20081206113406.734f1d94@loke.fish.not>
-	<18746.37273.989918.333164@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37027 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753216AbYLOUPO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 15:15:14 -0500
+Date: Mon, 15 Dec 2008 15:10:11 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: htl10@users.sourceforge.net,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Improve wireless statistics for RTL8187
+Message-ID: <20081215201011.GE3519@tuxdriver.com> (sfid-20081215_211518_836159_B7A85C71)
+References: <27385.37285.qm@web23104.mail.ird.yahoo.com> <49374C8E.6010500@lwfinger.net> <20081215193549.GD3519@tuxdriver.com> <4946B78F.30006@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4946B78F.30006@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 6 Dec 2008 20:22:09 +0530 Sujith wrote:
-> Mats Johannesson wrote:
-> > As the subject says, 2.6.28-rc7-wl git pulled Dec 6 exhibits a
-> > kernel panic when doing "iwlist ath0 scan" as root under the ath9k
-> > driver. Machine dead, panic LED blinking.
+On Mon, Dec 15, 2008 at 02:01:19PM -0600, Larry Finger wrote:
+> John W. Linville wrote:
+> > On Wed, Dec 03, 2008 at 09:20:46PM -0600, Larry Finger wrote:
+
+> >> Thanks for the comments. I'll fix up the code and resubmit.
+> >>
+> >> The dev->max_signal is only needed if the IEEE80211_HW_SIGNAL_UNSPEC flag is
+> >> used. Once we switch to IEEE80211_HW_SIGNAL_DBM, then the maximum is known.
 > > 
-> > Scan as normal user is OK.
-> > 
+> > I'm dropping this patch from my mailbox.  Is a new version of this
+> > still coming?
 > 
-> Can you check if this makes any difference ? Thanks.
-[patch snipped]
+> It is already in wireless-testing as commit b95e4bc3da1167bba718bc5. It was sent
+> to you as "[PATCH V2] rtl8187: Improve wireless statistics for RTL8187" on Dec
+> 3. The original should be dropped.
 
-It fixes the kernel panic with root "iwlist ath0 scan" but after that
-the network dies without a sign of any kind (iwlist, ifconfig etc is
-normal, nothing in logs). Tried several times. Boot -> ping local and
-remote machine OK -> "iwlist ath0 scan" -> ping nonfunctional: 'no
-route to host' or some such message.
+Ah, good...thanks!
 
-Sending you a picture of the panic in a personal letter. Don't know if
-it will do any good since only the last part is visible on screen.
-Taken outside of X in plain terminal. Tried to snap from inside X in
-both an xterm and a kterm but the panic message never reaches that
-high in the chain. Instant death!
-
-/Mats
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
