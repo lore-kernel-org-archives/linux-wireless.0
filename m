@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38772 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360AbYLJOaN (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34456 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754039AbYLORGg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 09:30:13 -0500
-Date: Wed, 10 Dec 2008 09:22:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: siamer <siamer@interia.pl>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: b43 phy0 error
-Message-ID: <20081210142257.GB5168@tuxdriver.com> (sfid-20081210_153019_345578_82392EB8)
-References: <20081210003948.24694199B271@f14.poczta.interia.pl>
+	Mon, 15 Dec 2008 12:06:36 -0500
+Date: Mon, 15 Dec 2008 19:06:13 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath5k: Updated padding stuff for the RX and TX side.
+	TX side has been 100%
+Message-ID: <20081215170613.GA22627@jm.kir.nu> (sfid-20081215_180640_452909_B5498C81)
+References: <1229351698-21116-1-git-send-email-benoit.papillault@free.fr>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081210003948.24694199B271@f14.poczta.interia.pl>
+In-Reply-To: <1229351698-21116-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 10, 2008 at 01:39:47AM +0100, siamer wrote:
-> Hi i have broadcom 4318 wireless card (laptop asus a6km) when i'm
-> using firmware from linuxwiereless.com (4.150.10.5) then internet is
-> working but when i'm starting download something than is disconnecting
-> me. dmesg show : b43 phy0 error
-> I tryed that on few different distros and on different kernels
-> (2.6.25 2.6.26 2.6.27 wireless-testing and compact-wireless) is the
-> same... PLEASE HELP ME... Why is like that ?
+On Mon, Dec 15, 2008 at 03:34:58PM +0100, Benoit Papillault wrote:
+> This patch is close to the original code except that
+> ieee80211_get_hdrlen_from_skb() has been replaced by
+> ath5k_hw_get_hdrlen_from_skb() which is specific to Atheros hardware. The same
+> probably applies to ath9k as well.
 
-This is one of the nagging mysteries of the BCM43xx hardware -- we
-don't know what causes it.  Can you reliably recreate the problem?
-If so, perhaps you can use wireshark with another wireless device in
-monitor mode to capture a trace of what is happening?
+Most of this is changes on how unspecified frames are handled (e.g.,
+frames that are not used in IEEE 802.11). What is the use case that
+justifies this type of extra complexity to be added into the driver?
+Please note that there are no guarantees that all hardware revisions
+behave the same as far as undocumented functionality is concerned. The
+only clear case when padding is required is data frames with non-empty
+frame body.
 
-John
-
-P.S.  You probably should be sending stuff to
-linux-wireless@vger.kernel.org instead.
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Jouni Malinen                                            PGP id EFC895FA
