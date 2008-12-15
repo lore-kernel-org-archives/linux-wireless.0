@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36558 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751309AbYLHToN (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2020 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751972AbYLODuq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 14:44:13 -0500
-Subject: [RFT] ath9k: remove fragmentation workaround again
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 08 Dec 2008 17:19:48 +0100
-Message-Id: <1228753189.22164.86.camel@johannes.berg> (sfid-20081208_204417_251976_E60102B9)
-Mime-Version: 1.0
+	Sun, 14 Dec 2008 22:50:46 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mabbaswireless@gmail.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH v2 0/3] mac80211 suspend/resume
+Date: Sun, 14 Dec 2008 22:50:36 -0500
+Message-Id: <1229313039-5544-1-git-send-email-me@bobcopeland.com> (sfid-20081215_045052_004012_72F7C56D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looking at the RC algorithm this no longer seems to be necessary.
+Here's version 2 of the suspend/resume for mac80211, including
+Johannes Berg's patch for the cfg80211 hooks.  
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/ath9k/main.c |    6 ------
- 1 file changed, 6 deletions(-)
+Changes since last time:
 
---- everything.orig/drivers/net/wireless/ath9k/main.c	2008-12-08 17:16:57.000000000 +0100
-+++ everything/drivers/net/wireless/ath9k/main.c	2008-12-08 17:17:03.000000000 +0100
-@@ -2427,11 +2427,6 @@ static int ath9k_ampdu_action(struct iee
- 	return ret;
- }
- 
--static int ath9k_no_fragmentation(struct ieee80211_hw *hw, u32 value)
--{
--	return -EOPNOTSUPP;
--}
--
- static struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2448,7 +2443,6 @@ static struct ieee80211_ops ath9k_ops = 
- 	.get_tsf 	    = ath9k_get_tsf,
- 	.reset_tsf 	    = ath9k_reset_tsf,
- 	.ampdu_action       = ath9k_ampdu_action,
--	.set_frag_threshold = ath9k_no_fragmentation,
- };
- 
- static struct {
+ - fixed broken conditional for monitor & ap vlan checking
+ - removed pm.h
+ - removed frag threshold setting since that's gone now
+ - the call to ieee80211_sta_tear_down_BA_sessions was locking up so 
+   I just dropped it for now in the interest of getting a stable base
+
+I also tracked down the disappearing interface problem.. turns out this 
+was just gnome-power-manager or HAL.  (I do not have 'network_sleep' set 
+in gconf, but I didn't bother pinning it down otherwise...)  Using 
+'echo mem > /sys/power/state' to suspend keeps the interface up across
+suspend.
+
+This seems to work ok for me but can use a lot of testing.
 
 
