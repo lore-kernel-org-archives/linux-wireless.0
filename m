@@ -1,78 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:55869 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754258AbYLFLNA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 06:13:00 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so160090eyi.37
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Dec 2008 03:12:58 -0800 (PST)
-From: Henning Rogge <hrogge@googlemail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:45631 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751337AbYLOPYX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 10:24:23 -0500
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+From: Dan Williams <dcbw@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
-Date: Sat, 6 Dec 2008 12:12:50 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200811252131.30161.hrogge@googlemail.com> <200812060026.50636.hrogge@googlemail.com> <1228554920.15939.2.camel@johannes.berg>
-In-Reply-To: <1228554920.15939.2.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart122860125.EtH9Ki5sAP";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200812061212.55491.hrogge@googlemail.com> (sfid-20081206_121313_522809_2C5882DF)
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	mabbaswireless@gmail.com
+In-Reply-To: <1229336057.4471.9.camel@johannes.berg>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <1229336057.4471.9.camel@johannes.berg>
+Content-Type: text/plain
+Date: Mon, 15 Dec 2008 10:22:12 -0500
+Message-Id: <1229354532.12163.24.camel@localhost.localdomain> (sfid-20081215_162425_994978_CD683B80)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart122860125.EtH9Ki5sAP
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Mon, 2008-12-15 at 11:14 +0100, Johannes Berg wrote:
+> Sorry, heh, was reading mail in the wrong order I guess.
+> 
+> >  - the call to ieee80211_sta_tear_down_BA_sessions was locking up so 
+> >    I just dropped it for now in the interest of getting a stable base
+> 
+> Probably due to transmitting again? We'll have to look and add it, but I
+> agree that we can work on that later.
+> 
+> > I also tracked down the disappearing interface problem.. turns out this 
+> > was just gnome-power-manager or HAL.  (I do not have 'network_sleep' set 
+> > in gconf, but I didn't bother pinning it down otherwise...)  Using 
+> > 'echo mem > /sys/power/state' to suspend keeps the interface up across
+> > suspend.
+> 
+> Oh ok, that explains things.
 
-On Saturday 06 December 2008 10:15:20 Johannes Berg wrote:
-> Yes, well, depending on which values you used you might have run into
-> the fact that the values from the tables were already rounded.
-Both  errors happen for 20 Mhz channels... one of them is definitely a typo=
- in=20
-the wiki.
+Could be udev event ordering?  We do need to track this down, otherwise
+stuff simply won't work when we come back.  The best thing to do here is
+run the udev monitoring tool (whatever that is, I forget) and see what
+events get emitted from the kernel, then run 'lshal --monitor' and see
+what HAL thinks is going on, which it gets from consuming udev events
+and inspecting sysfs.  Stuff like this is sometimes caused by
+mis-ordered kernel events or drivers/subsystems that don't create their
+sysfs directories at the right times, leading to race conditions between
+the kernel and HAL.  A possibility.
 
-I get 144.4 MBit/s (wiki says 144.0) for MCS 15 (long GI)
-and 115.6 MBit/s (wiki says 173.3, which is a typo !) for MCS 27(short GI).
-
-in pseudocode:
-=2D----------------
-
-int modulation =3D mcs & 7;
-int streams =3D mcs / 8;
-
-int bitrate =3D (flags & 40MHZ) ? 13500000 : 6500000;
-
-if (modulation < 4)
-    bitrate *=3D (modulation + 1);
-else if (modulation =3D=3D 4)
-    bitrate *=3D (modulation + 2);
-else
-    bitrate *=3D (modulation + 3);
-
-bitrate *=3D streams;
-
-if (flags & SHORT_GI)
-    bitrate =3D (bitrate * 10) / 9;
-
-return (bitrate + 50000) / 100000; // do NOT just round down
-
-Henning
+Dan
 
 
---nextPart122860125.EtH9Ki5sAP
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkk6XjcACgkQcenvcwAcHWczQwCgiwMouQqpfni5bbTxcN49G3SI
-HsgAn0VOiLObtbqtdW4LNl9EcCfzEHlT
-=Baak
------END PGP SIGNATURE-----
-
---nextPart122860125.EtH9Ki5sAP--
