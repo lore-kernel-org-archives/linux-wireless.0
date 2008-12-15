@@ -1,108 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25150 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:45096 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752465AbYLVSVR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 13:21:17 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:21:17 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v2 12/18] mac80211: no need for ht.enabled
-Date: Mon, 22 Dec 2008 10:20:33 -0800
-Message-ID: <1229970039-10561-13-git-send-email-lrodriguez@atheros.com> (sfid-20081222_193906_503167_F2A7D825)
-In-Reply-To: <1229970039-10561-12-git-send-email-lrodriguez@atheros.com>
-References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-4-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-6-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-7-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-8-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-9-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-10-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-11-git-send-email-lrodriguez@atheros.com>
- <1229970039-10561-12-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752946AbYLOQGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Dec 2008 11:06:19 -0500
+Subject: Re: [PATCH] ath5k: set mac address in add_interface
+From: Dan Williams <dcbw@redhat.com>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, maximlevitsky@gmail.com,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910812150747j60cf17d9nc2e24aabb991d2a9@mail.gmail.com>
+References: <20081118044037.GA18983@hash.localnet>
+	 <69e28c910812150747j60cf17d9nc2e24aabb991d2a9@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Date: Mon, 15 Dec 2008 11:04:40 -0500
+Message-Id: <1229357080.12163.47.camel@localhost.localdomain> (sfid-20081215_170628_081924_51DF0E35)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can simply use conf_is_ht() check where needed.
+On Mon, 2008-12-15 at 16:47 +0100, Stefanik G=C3=A1bor wrote:
+> This patch regressed support for aireplay-ng's "fragmentation attack"=
+ feature!
+>=20
+> Prior to the landing of this patch (as commit
+> caeb36d73b23b52a0ea2a8368502ef8230fa67b3), applying the patch @
+> http://patches.aircrack-ng.org/mac80211_2.6.28-rc4-wl_frag+ack_v2.pat=
+ch
+> allowed aireplay-ng's fragmentation attack to work with almost all
+> mac80211 drivers, including ath5k. After the landing of this patch,
+> the attack fails with "No answer, repeating...". (Regression found
+> using git bisect, and verified by local backout of commit
+> caeb36d73b23b52a0ea2a8368502ef8230fa67b3.)
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/mac80211.h |    1 -
- net/mac80211/ht.c      |    3 +--
- net/mac80211/main.c    |   10 ----------
- net/mac80211/mlme.c    |    1 -
- 4 files changed, 1 insertions(+), 14 deletions(-)
+Unless I misunderstand...  but not all drivers will report their MAC
+address until they have opened the device (ie, add_interface time),
+because not all devices load firmware until the interface is opened, an=
+d
+thus some cannot read their MAC address until that time.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ee2b75e..b51caab 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -509,7 +509,6 @@ static inline int __deprecated __IEEE80211_CONF_SHORT_SLOT_TIME(void)
- #define IEEE80211_CONF_SHORT_SLOT_TIME (__IEEE80211_CONF_SHORT_SLOT_TIME())
- 
- struct ieee80211_ht_conf {
--	bool enabled;
- 	enum nl80211_channel_type channel_type;
- };
- 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 55bfe48..6314289 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -130,11 +130,10 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
--	ht_changed = local->hw.conf.ht.enabled != enable_ht ||
-+	ht_changed = conf_is_ht(&local->hw.conf) != enable_ht ||
- 		     channel_type != local->hw.conf.ht.channel_type;
- 
- 	local->oper_channel_type = channel_type;
--	local->hw.conf.ht.enabled = enable_ht;
- 
- 	if (ht_changed)
- 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_HT);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 24b1436..a6cb480 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -211,16 +211,6 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 	    channel_type != local->hw.conf.ht.channel_type) {
- 		local->hw.conf.channel = chan;
- 		local->hw.conf.ht.channel_type = channel_type;
--		switch (channel_type) {
--		case NL80211_CHAN_NO_HT:
--			local->hw.conf.ht.enabled = false;
--			break;
--		case NL80211_CHAN_HT20:
--		case NL80211_CHAN_HT40MINUS:
--		case NL80211_CHAN_HT40PLUS:
--			local->hw.conf.ht.enabled = true;
--			break;
--		}
- 		changed |= IEEE80211_CONF_CHANGE_CHANNEL;
- 	}
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c75d0ea..6558209 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -874,7 +874,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	rcu_read_unlock();
- 
--	local->hw.conf.ht.enabled = false;
- 	local->oper_channel_type = NL80211_CHAN_NO_HT;
- 	config_changed |= IEEE80211_CONF_CHANGE_HT;
- 
--- 
-1.6.1.rc3.51.g5832d
+So aireplay-ng is broken if it relies on the device having a valid mac
+address before the device is opened.
 
+Dan
+
+> On Tue, Nov 18, 2008 at 5:40 AM, Bob Copeland <me@bobcopeland.com> wr=
+ote:
+> > Hi Maxim,
+> >
+> > Please try this patch.  I didn't have a problem changing the mac ad=
+dress
+> > after it was set to something else.  I did kick it to re-associate =
+with
+> > the AP, though.
+> >
+> > Subject: [PATCH] ath5k: set mac address in add_interface
+> >
+> > Configure the mac address in add_interface and clear it in
+> > remove_interface so that users can change the mac address
+> > to something other than the one in the eeprom.  Also avoid
+> > setting it at attach time so that we won't ack packets
+> > until fully set up.
+> >
+> > Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> > ---
+> >  drivers/net/wireless/ath5k/attach.c |   12 +++---------
+> >  drivers/net/wireless/ath5k/base.c   |   13 +++++++++++--
+> >  2 files changed, 14 insertions(+), 11 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath5k/attach.c b/drivers/net/wire=
+less/ath5k/attach.c
+> > index 51d5698..49d82d7 100644
+> > --- a/drivers/net/wireless/ath5k/attach.c
+> > +++ b/drivers/net/wireless/ath5k/attach.c
+> > @@ -106,7 +106,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_s=
+oftc *sc, u8 mac_version)
+> >  {
+> >        struct ath5k_hw *ah;
+> >        struct pci_dev *pdev =3D sc->pdev;
+> > -       u8 mac[ETH_ALEN];
+> > +       u8 mac[ETH_ALEN] =3D {};
+> >        int ret;
+> >        u32 srev;
+> >
+> > @@ -317,15 +317,9 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_=
+softc *sc, u8 mac_version)
+> >                goto err_free;
+> >        }
+> >
+> > -       /* Set MAC address */
+> > -       ret =3D ath5k_eeprom_read_mac(ah, mac);
+> > -       if (ret) {
+> > -               ATH5K_ERR(sc, "unable to read address from EEPROM: =
+0x%04x\n",
+> > -                       sc->pdev->device);
+> > -               goto err_free;
+> > -       }
+> > -
+> > +       /* MAC address is cleared until add_interface */
+> >        ath5k_hw_set_lladdr(ah, mac);
+> > +
+> >        /* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
+> >        memset(ah->ah_bssid, 0xff, ETH_ALEN);
+> >        ath5k_hw_set_associd(ah, ah->ah_bssid, 0);
+> > diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wirele=
+ss/ath5k/base.c
+> > index 34cd1a4..d5bf62a 100644
+> > --- a/drivers/net/wireless/ath5k/base.c
+> > +++ b/drivers/net/wireless/ath5k/base.c
+> > @@ -707,7 +707,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee8=
+0211_hw *hw)
+> >  {
+> >        struct ath5k_softc *sc =3D hw->priv;
+> >        struct ath5k_hw *ah =3D sc->ah;
+> > -       u8 mac[ETH_ALEN];
+> > +       u8 mac[ETH_ALEN] =3D {};
+> >        int ret;
+> >
+> >        ATH5K_DBG(sc, ATH5K_DEBUG_ANY, "devid 0x%x\n", pdev->device)=
+;
+> > @@ -777,7 +777,13 @@ ath5k_attach(struct pci_dev *pdev, struct ieee=
+80211_hw *hw)
+> >        tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long=
+)sc);
+> >        setup_timer(&sc->calib_tim, ath5k_calibrate, (unsigned long)=
+sc);
+> >
+> > -       ath5k_hw_get_lladdr(ah, mac);
+> > +       ret =3D ath5k_eeprom_read_mac(ah, mac);
+> > +       if (ret) {
+> > +               ATH5K_ERR(sc, "unable to read address from EEPROM: =
+0x%04x\n",
+> > +                       sc->pdev->device);
+> > +               goto err_queues;
+> > +       }
+> > +
+> >        SET_IEEE80211_PERM_ADDR(hw, mac);
+> >        /* All MAC address bits matter for ACKs */
+> >        memset(sc->bssidmask, 0xff, ETH_ALEN);
+> > @@ -2765,6 +2771,7 @@ static int ath5k_add_interface(struct ieee802=
+11_hw *hw,
+> >        /* Set to a reasonable value. Note that this will
+> >         * be set to mac80211's value at ath5k_config(). */
+> >        sc->bintval =3D 1000;
+> > +       ath5k_hw_set_lladdr(sc->ah, conf->mac_addr);
+> >
+> >        ret =3D 0;
+> >  end:
+> > @@ -2777,11 +2784,13 @@ ath5k_remove_interface(struct ieee80211_hw =
+*hw,
+> >                        struct ieee80211_if_init_conf *conf)
+> >  {
+> >        struct ath5k_softc *sc =3D hw->priv;
+> > +       u8 mac[ETH_ALEN] =3D {};
+> >
+> >        mutex_lock(&sc->lock);
+> >        if (sc->vif !=3D conf->vif)
+> >                goto end;
+> >
+> > +       ath5k_hw_set_lladdr(sc->ah, mac);
+> >        sc->vif =3D NULL;
+> >  end:
+> >        mutex_unlock(&sc->lock);
+> > --
+> > 1.5.4.2.182.gb3092
+> >
+> > --
+> > Bob Copeland %% www.bobcopeland.com
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wir=
+eless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+>=20
+>=20
+>=20
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
