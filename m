@@ -1,36 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:37076 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752882AbYLQMDP (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:54805 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752136AbYLOTnU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 07:03:15 -0500
-Date: Wed, 17 Dec 2008 14:02:50 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Fix a NULL pointer dereference in ath_rate_get
-Message-ID: <20081217120250.GA19453@jm.kir.nu> (sfid-20081217_130326_354011_E7F573AA)
-References: <20081217113031.GA18060@jm.kir.nu> <1229513456.4566.2.camel@localhost>
+	Mon, 15 Dec 2008 14:43:20 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+Date: Mon, 15 Dec 2008 20:43:21 +0100
+Cc: Artur Skawina <art.08.09@gmail.com>, linux-wireless@vger.kernel.org
+References: <494698AF.4020204@gmail.com> <4946A4C9.7040304@lwfinger.net>
+In-Reply-To: <4946A4C9.7040304@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1229513456.4566.2.camel@localhost>
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_ZNrRJOiGzExbS1J"
+Message-Id: <200812152043.21971.chunkeey@web.de> (sfid-20081215_204324_237422_7B0AB202)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 17, 2008 at 12:30:56PM +0100, Johannes Berg wrote:
-> On Wed, 2008-12-17 at 13:30 +0200, Jouni Malinen wrote:
-> > It looks like mac80211 may try to send unicast frames to a STA that
-> > does not have a STA entry. We need to make sure that that is caught in
-> > the rate control code before dereferencing STA data.
+--Boundary-00=_ZNrRJOiGzExbS1J
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+On Monday 15 December 2008 19:41:13 Larry Finger wrote:
+> Artur Skawina wrote:
+> > I have a sinus 154 data usb adapter, which used to work w/ p54 in 2.6.27:
 > 
-> This should only happen for injected packets, can you verify? OTOH, AP
-> mode obviously has injected packets (auth response, ...)
+> Can you bisect this problem?
+Naa I guess its "p54: fix memory management".
+872037115977dc07ae05e4b6b769bf8726da4e87
 
-I did not check what the exact frame was, but this was indeed in AP mode
-and the frame was most likely from hostapd and as such, an injected
-packet.
+so tell us if this patch works.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Regards,
+	Chr
+
+--Boundary-00=_ZNrRJOiGzExbS1J
+Content-Type: text/x-diff;
+  charset="iso 8859-15";
+  name="p54usb.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="p54usb.patch"
+
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 9c2c651..3951ce2 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -314,6 +314,7 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 	struct net2280_tx_hdr *hdr;
+ 	struct net2280_reg_write *reg;
+ 	int err = 0;
++	struct p54_hdr *pkg_hdr = (struct p54_hdr *) skb->data;
+ 
+ 	reg = kmalloc(sizeof(*reg), GFP_ATOMIC);
+ 	if (!reg)
+@@ -336,10 +337,11 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb,
+ 	reg->addr = cpu_to_le32(P54U_DEV_BASE);
+ 	reg->val = cpu_to_le32(ISL38XX_DEV_INT_DATA);
+ 
++	
+ 	hdr = (void *)skb_push(skb, sizeof(*hdr));
+ 	memset(hdr, 0, sizeof(*hdr));
+-	hdr->device_addr = ((struct p54_hdr *)skb->data)->req_id;
+-	hdr->len = cpu_to_le16(skb->len + sizeof(struct p54_hdr));
++	hdr->device_addr = pkg_hdr->req_id;
++	hdr->len = cpu_to_le16(skb->len);
+ 
+ 	usb_fill_bulk_urb(int_urb, priv->udev,
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DEV), reg, sizeof(*reg),
+
+--Boundary-00=_ZNrRJOiGzExbS1J--
