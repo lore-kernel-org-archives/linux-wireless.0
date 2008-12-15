@@ -1,82 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ganesha.gnumonks.org ([213.95.27.120]:33680 "EHLO
-	ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238AbYLSQKH (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.30]:33441 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754733AbYLOJIL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 11:10:07 -0500
-Date: Fri, 19 Dec 2008 17:08:36 +0100
-From: Harald Welte <laforge@gnumonks.org>
-To: Colin McCabe <colin@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	Stefan Schmidt <stefan@datenfreihafen.org>
-Subject: Re: [PATCH 3/3] libertas: if_spi, driver for libertas GSPI devices
-Message-ID: <20081219160836.GQ9285@prithivi.gnumonks.org> (sfid-20081219_171012_631138_6CEB2029)
-References: <1229398052-27465-1-git-send-email-colin@cozybit.com> <1229398052-27465-2-git-send-email-colin@cozybit.com> <1229398052-27465-3-git-send-email-colin@cozybit.com> <1229398052-27465-4-git-send-email-colin@cozybit.com>
+	Mon, 15 Dec 2008 04:08:11 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so1065054ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 01:08:10 -0800 (PST)
+Message-ID: <dac45060812150108j2220722fwb344095734b3e9ee@mail.gmail.com> (sfid-20081215_100828_775010_89DF7154)
+Date: Mon, 15 Dec 2008 11:08:09 +0200
+From: "Mark Ryden" <markryde@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: power saving in mac80211
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GlnCQLZWzqLRJED8"
-In-Reply-To: <1229398052-27465-4-git-send-email-colin@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
---GlnCQLZWzqLRJED8
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I have two short questions about power saving in mac80211:
 
-Hi Colin,
+1) Is there support in the linux kernel for power saving when in AdHoc mode ?
 
-thanks a lot for your patch, it is greatly appreciated.
+According to the docs, announcement messages called ATIM
+(announcement traffic indication messages) should be sent.
+Yet, grepping under net/wireless/mac for atim does not find anything
+(except one comment line in mlme.c).
 
-Stefan Schmidt (see Cc) and myself are currently working on using a 8686
-attached t o SPI of a S3C2442 SoC.
+2) As I find out from the docs, there should be no buffering for ordered frames.
+When we handle multicast frames, there is a check for oredring;
+In ieee80211_tx_h_multicast_ps_buf() there is a call to ieee80211_has_order()
+and we do not buffer the packet when there is ordering.
+On the other hand , when we handle unicast packets, there is no check
+for ordering (see: ieee80211_tx_h_unicast_ps_buf()).
 
-Let me make some comments on the actual code:
+My question is: shouldn't we check ordering also for unicast packets?
 
-On Mon, Dec 15, 2008 at 07:27:32PM -0800, Colin McCabe wrote:
-
-> +struct libertas_spi_platform_data {
-> +	u16 host_irq_num;
-> +
-> +	u16 gpio_cs;
-> +};
-
-> +	gpio_set_value(card->gpio_cs, 0); /* assert CS */
-> +	gpio_set_value(card->gpio_cs, 1); /* drop CS */
-
-Typically, in the Linux SPI framework, it is the SPI host controller
-driver that exercises the chipselect GPIO, not the client (device) driver.
-
-Also, the host_irq_num is typically passed by the '.irq' member of
-spi_board_info structure, since it is board specific data (see e.g.
-arch/arm/mach-pxa/spitz.c)
-
-Unless there is a specific reason that I'm missing, it would probably be a
-good idea to follow the general conventions on this.
-
-Cheers,
---=20
-- Harald Welte <laforge@gnumonks.org>           http://laforge.gnumonks.org/
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
-"Privacy in residential applications is a desirable marketing option."
-                                                  (ETSI EN 300 175-7 Ch. A6)
-
---GlnCQLZWzqLRJED8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iD8DBQFJS8cEXaXGVTD0i/8RArLqAJ9/P1suQJqfpGmKjHBQ8vr7a1jYwACfc9Aj
-f31T0rhK/ajOYPgJQKdXm6Q=
-=HRmB
------END PGP SIGNATURE-----
-
---GlnCQLZWzqLRJED8--
+Regards,
+Mark
