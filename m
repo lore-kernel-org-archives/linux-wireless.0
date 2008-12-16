@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:50443 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756828AbYLCUTZ (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:49385 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751609AbYLPDA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 15:19:25 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so1545437yxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 12:19:23 -0800 (PST)
-Message-ID: <43e72e890812031219t6a8c0d57hf54f376730a0655c@mail.gmail.com> (sfid-20081203_211941_084027_3D3FFF83)
-Date: Wed, 3 Dec 2008 12:19:22 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [stable] [PATCH 1/3] ath9k: Handle -ENOMEM on RX gracefully
-Cc: sfr@canb.auug.org.au, ath9k-devel@venema.h4ckr.net,
-	"Greg KH" <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@kernel.org
-In-Reply-To: <20081203002404.GA22789@tuxdriver.com>
+	Mon, 15 Dec 2008 22:00:28 -0500
+Message-ID: <494719C4.3020507@lwfinger.net> (sfid-20081216_040031_698377_0D45303A)
+Date: Mon, 15 Dec 2008 21:00:20 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
-	 <1228251082-11677-2-git-send-email-lrodriguez@atheros.com>
-	 <1228251082-11677-3-git-send-email-lrodriguez@atheros.com>
-	 <1228251082-11677-4-git-send-email-lrodriguez@atheros.com>
-	 <20081203001253.GC14943@kroah.com>
-	 <43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com>
-	 <20081203002404.GA22789@tuxdriver.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>,
+	Jason Self <jason.self@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>
+Subject: Re: Realtek wireless 8187se
+References: <b76df900812151329x4309b264u7a017e4b4c2d8451@mail.gmail.com> <69e28c910812151355l6549e8c2mea381a12663c7cb5@mail.gmail.com> <20081216012603.GA27773@tuxdriver.com>
+In-Reply-To: <20081216012603.GA27773@tuxdriver.com>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 2, 2008 at 4:24 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Tue, Dec 02, 2008 at 04:20:32PM -0800, Luis R. Rodriguez wrote:
->> On Tue, Dec 2, 2008 at 4:12 PM, Greg KH <greg@kroah.com> wrote:
->> > I don't see this patch upstream in Linus's tree.  Am I just missing it
->> > and if so, do you know the git commit id?
->>
->> Nope sorry, John has yet to send his pending-fixes branch to davem and
->> so forth, which would contain it AFAICT. Please correct me if I'm
->> wrong John.
->
-> It has been sent, and Dave sent his pull request to Linus today
-> (or maybe yesterday).  I'll try to dig-up the commit IDs tomorrow.
+John W. Linville wrote:
+> On Mon, Dec 15, 2008 at 10:55:29PM +0100, Stefanik G=E1bor wrote:
+>=20
+> Clearly you haven't looked at the driver from the vendor... :-)
 
-Greg, I see two of these patches in 2.6.27-stable review patch but the
-one in this subject was not applied, any specific reason or was it
-just missed?
+I have and I know what you face.
 
-  Luis
+> I have acquired an MSI Wind equipped with this device, I have
+> multiple variations of the vendor driver to support the hardware, and
+> I have a datasheet the covers at least some of the hardware involved.
+> I'm working on it...
+
+When you get ready for testers, add Bernhard Schiffner
+<bernhard@schiffner-limbach.de> to your list. I helped him get the vend=
+or driver
+(release 1014) running on his hardware, and I was working on incorporat=
+ing it
+into the native code, but I'm glad to abandon that project. I hadn't re=
+ally
+gotten very far, and debugging would have been awful without the hardwa=
+re.
+
+Larry
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
