@@ -1,210 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:29236 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506AbYLNIao (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:50177 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752996AbYLPHhJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Dec 2008 03:30:44 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1007142wah.21
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Dec 2008 00:30:44 -0800 (PST)
-Message-ID: <4944C430.8080602@gmail.com> (sfid-20081214_093057_193157_E42A9372)
-Date: Sun, 14 Dec 2008 00:30:40 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Tue, 16 Dec 2008 02:37:09 -0500
+Received: by ewy10 with SMTP id 10so3508441ewy.13
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 23:37:07 -0800 (PST)
+Message-ID: <eb3ff54b0812152337m6157d035sde23f0a913da67ab@mail.gmail.com> (sfid-20081216_083725_992364_AA6FDB14)
+Date: Tue, 16 Dec 2008 09:37:07 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH] [v2] iwlwifi: remove a parameter (dest) from *_fill_beacon_frame() methods.
+Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
 MIME-Version: 1.0
-To: Jaswinder Singh <jaswinderlinux@gmail.com>
-CC: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	lrodriguez@atheros.com, jmalinen@atheros.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: BUG - ath9k keep on disconnecting in 2.6.28-rc8
-References: <3f9a31f40812132354k6f9e7b80o30d3236687dffba0@mail.gmail.com>
-In-Reply-To: <3f9a31f40812132354k6f9e7b80o30d3236687dffba0@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jaswinder Singh wrote:
-> Hello all,
->
-> I am facing problem with 2.6.28-rc8, ath9k keep on disconnecting.
->
-> dmesg :
-> ath9k: 0.1
-> ath9k 0000:08:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> ath9k 0000:08:00.0: setting latency timer to 64
-> phy0: Selected rate control algorithm 'ath9k_rate_control'
-> Registered led device: ath9k-phy0:radio
-> Registered led device: ath9k-phy0:assoc
-> Registered led device: ath9k-phy0:tx
-> Registered led device: ath9k-phy0:rx
-> phy0: Atheros 9280: mem=0xffffc20006200000, irq=17
->
-> /sbin/lspci -vv :
-> 08:00.0 Network controller: Atheros Communications Inc. Device 002a (rev 01)
-> 	Subsystem: Hewlett-Packard Company Device 1381
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-> Stepping- SERR- FastB2B- DisINTx-
-> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 0, Cache Line Size: 128 bytes
-> 	Interrupt: pin A routed to IRQ 17
-> 	Region 0: Memory at d1100000 (64-bit, non-prefetchable) [size=64K]
-> 	Capabilities: [40] Power Management version 2
-> 		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
-> 		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-> 	Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Count=1/1 Enable-
-> 		Address: 00000000  Data: 0000
-> 	Capabilities: [60] Express (v1) Legacy Endpoint, MSI 00
-> 		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-> 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
-> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
-> 		DevSta:	CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
-> 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM unknown, Latency L0
-> <512ns, L1 <64us
-> 			ClockPM- Suprise- LLActRep- BwNot-
-> 		LnkCtl:	ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk+
-> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
-> BWMgmt- ABWMgmt-
-> 	Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
-> 		Vector table: BAR=0 offset=00000000
-> 		PBA: BAR=0 offset=00000000
-> 	Capabilities: [100] Advanced Error Reporting
-> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-> MalfTLP- ECRC- UnsupReq+ ACSVoil-
-> 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
-> MalfTLP- ECRC- UnsupReq- ACSVoil-
-> 		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
-> MalfTLP+ ECRC- UnsupReq- ACSVoil-
-> 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-> 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-> 		AERCap:	First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
-> 	Capabilities: [140] Virtual Channel <?>
-> 	Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
-> 	Kernel driver in use: ath9k
-> 	Kernel modules: ath9k
->
-> Here are kernel messages telling disconnecting info :
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> ForceXPAon: 0
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> ForceXPAon: 0
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> ForceXPAon: 0
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> ForceXPAon: 0
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> wlan0: authenticate with AP 00:11:95:9e:df:f6
-> wlan0: authentication with AP 00:11:95:9e:df:f6 timed out
-> wlan0: direct probe to AP 00:11:95:9e:df:f6 try 1
-> ForceXPAon: 0
->
-> If you need more information please let me know.
->
-> Thank you,
->
-> Jaswinder Singh.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
->   
-I'm seeing:
- Capabilities: [140] Virtual Channel <?>
-in you're post, leading me to believe, you're
-missing a capability?
-from what I understand, if you're using
-NetworkManager you need to
-adduser "name" netdev
-then have NetworkManager load
-wpa_supplicant at the right time.
-under the right circumstances..
+This patch removes a parameter (dest) from iwl_fill_beacon_frame() (iwl-agn.c)
+ and from iwl3945_fill_beacon_frame(). (iwl-3945.c,iwl-3945.h)
 
-regards;
+(wireless-testing).
 
-Justin P. Mattock
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c
+b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index f2f2d8f..2327dd2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2483,7 +2483,6 @@ unsigned int iwl3945_hw_get_beacon_cmd(struct
+iwl3945_priv *priv,
 
+ 	frame_size = iwl3945_fill_beacon_frame(priv,
+ 				tx_beacon_cmd->frame,
+-				iwl3945_broadcast_addr,
+ 				sizeof(frame->u) - sizeof(*tx_beacon_cmd));
 
+ 	BUG_ON(frame_size > MAX_MPDU_SIZE);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h
+b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index ec6084c..ffe5a8d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -590,8 +590,7 @@ extern int iwl3945_send_cmd_pdu(struct
+iwl3945_priv *priv, u8 id, u16 len,
+ extern int __must_check iwl3945_send_cmd(struct iwl3945_priv *priv,
+ 		struct iwl3945_host_cmd *cmd);
+ extern unsigned int iwl3945_fill_beacon_frame(struct iwl3945_priv *priv,
+-					struct ieee80211_hdr *hdr,
+-					const u8 *dest, int left);
++					struct ieee80211_hdr *hdr,int left);
+ extern int iwl3945_rx_queue_update_write_ptr(struct iwl3945_priv *priv,
+ 					 struct iwl3945_rx_queue *q);
+ extern int iwl3945_send_statistics_request(struct iwl3945_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c
+b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 9d50fad..ecf19b3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -372,7 +372,7 @@ static void iwl_free_frame(struct iwl_priv *priv,
+struct iwl_frame *frame)
 
+ static unsigned int iwl_fill_beacon_frame(struct iwl_priv *priv,
+ 					  struct ieee80211_hdr *hdr,
+-					  const u8 *dest, int left)
++					  int left)
+ {
+ 	if (!iwl_is_associated(priv) || !priv->ibss_beacon ||
+ 	    ((priv->iw_mode != NL80211_IFTYPE_ADHOC) &&
+@@ -425,7 +425,6 @@ static unsigned int iwl_hw_get_beacon_cmd(struct
+iwl_priv *priv,
+ 	tx_beacon_cmd->tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
 
+ 	frame_size = iwl_fill_beacon_frame(priv, tx_beacon_cmd->frame,
+-				iwl_bcast_addr,
+ 				sizeof(frame->u) - sizeof(*tx_beacon_cmd));
+
+ 	BUG_ON(frame_size > MAX_MPDU_SIZE);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 161d812..1af0420 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1404,7 +1404,7 @@ static void iwl3945_free_frame(struct
+iwl3945_priv *priv, struct iwl3945_frame *
+
+ unsigned int iwl3945_fill_beacon_frame(struct iwl3945_priv *priv,
+ 				struct ieee80211_hdr *hdr,
+-				const u8 *dest, int left)
++				int left)
+ {
+
+ 	if (!iwl3945_is_associated(priv) || !priv->ibss_beacon ||
