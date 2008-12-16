@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aa001msb.fastweb.it ([85.18.95.80]:36962 "EHLO
-	aa001msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753622AbYL2MSx (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.169]:58856 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756068AbYLPUic (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 07:18:53 -0500
-Received: from [192.168.1.101] (39.234.158.229) by aa001msb.fastweb.it (8.0.013.8)
-        id 4946859B02AA1D5D for linux-wireless@vger.kernel.org; Mon, 29 Dec 2008 13:18:51 +0100
-Message-ID: <4958C029.7000407@techemia.com> (sfid-20081229_131857_891751_B4C65E32)
-Date: Mon, 29 Dec 2008 13:18:49 +0100
-From: techmin <info@techemia.com>
+	Tue, 16 Dec 2008 15:38:32 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so304033ugf.37
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 12:38:31 -0800 (PST)
+Message-ID: <eb3ff54b0812161238y1ffdff2blf383e5354fdd5232@mail.gmail.com> (sfid-20081216_213837_081698_0C74E741)
+Date: Tue, 16 Dec 2008 22:38:29 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH] mac80211: fix an error in ieee80211_send_assoc() method.
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: problem on gelic ps3 driver 2.25.2 kernel (used with psubuntu)
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If i configure network with tool, the icon show 100% connection (and it 
-is not possible, maximum is 50% cause the distance to acces point), 
-wireless is protect (i use wep) but the led not blinck, simply is on. 
-But ping not work, and is not possible to navigate on the web.
-If i configure directly from /etc/network/interfaces (with all 
-network-manager disabled) same problem.
-If i use simple script to manually pass the iwconfig and ifconfig 
-command same proble.
-If i not use protection same problem.
+This patch fixes an error in ieee80211_send_assoc(), net/mac80211/mlme.c.
 
-If i set manage mode:
-managed mode is not set, operation not permitted
+The error is usage of a wrong member when building
+the ie80211 management frame (it should be assoc_req, and not reassoc_req).
 
-iwlist scan work.
-Note: in iwconfig not appear the channel and if i add manually the 
-channel with iwconfig wlan0 channel numder i have error: operation not 
-permitted.
+This error is due to commit ea95bba41e69c616bb1512cf59d22f33266b8568,
+which dealt with configuring a listen interval , from Jul 18, 2008.
 
-syslog don't have any entry
-only error is this:
-gelic_eurus_sync_cmd_worker: cmd issue failed
+(wireless-testing)
 
-gelic use bss, is possible a problem on set the mode and the channel?
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 9a06905..829cdf8 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -309,7 +309,7 @@ static void ieee80211_send_assoc(struct
+ieee80211_sub_if_data *sdata,
+ 		mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 						  IEEE80211_STYPE_ASSOC_REQ);
+ 		mgmt->u.assoc_req.capab_info = cpu_to_le16(capab);
+-		mgmt->u.reassoc_req.listen_interval =
++		mgmt->u.assoc_req.listen_interval =
+ 				cpu_to_le16(local->hw.conf.listen_interval);
+ 	}
