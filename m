@@ -1,75 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:45799 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050AbYLHNIf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 08:08:35 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Manuel Lauss <mano@roarinelk.homelinux.net>
-Subject: Re: [p54]: oops in p54_rx
-Date: Mon, 8 Dec 2008 14:08:36 +0100
+Received: from khc.piap.pl ([195.187.100.11]:56210 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751762AbYLPUaJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Dec 2008 15:30:09 -0500
+To: "Bob Copeland" <bcopeland@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-References: <20081208074904.GA28269@roarinelk.homelinux.net>
-In-Reply-To: <20081208074904.GA28269@roarinelk.homelinux.net>
+Subject: Re: ath5k + AP mode?
+References: <m3skopuq6t.fsf@maximus.localdomain>
+	<b6c5339f0812160933q1670f646iab25dff161450ef9@mail.gmail.com>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Date: Tue, 16 Dec 2008 21:27:40 +0100
+In-Reply-To: <b6c5339f0812160933q1670f646iab25dff161450ef9@mail.gmail.com> (Bob Copeland's message of "Tue\, 16 Dec 2008 12\:33\:27 -0500")
+Message-ID: <m3skon27cz.fsf@maximus.localdomain> (sfid-20081216_213014_549365_D8A76083)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812081408.36621.chunkeey@web.de> (sfid-20081208_140839_346242_958DEA80)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 December 2008 08:49:04 Manuel Lauss wrote:
-> Hello,
+"Bob Copeland" <bcopeland@gmail.com> writes:
 
-Hello!
+> It's probably worth taking a look at hostapd to see what exactly is failing.
+> We should be able to create an IFTYPE_AP interface with your above patch
+> applied.  No telling whether the rest works.
 
-> The following oops occurs when udev loads p54pci driver (device is an early
-> SM2802W V2 PCI with the isl3886 "softmac" chip;  2.6.28-rc7, firmware
-> 2.13.1.0.arm).  This is transcribed from a rather bad photo (please see
->  http://mlau.at/pix/p54oops.jpg ):
-> 
-> BUG: Unable to handle kernel NULL pointer dereference at 0000000000000000
-> IP: [<ffffffffa0016b66>] p54_rx+0xc6/0x490 [p54common]
-> PGD 12e433067 PUD 12e46f067 PMD 0
-> Oops: 0000 [#1] PREEMPT SMP
-> last sysfs file: /sys/devices/pci0000:00/0000:00:1f.2/host0/target0:0:0:0/....
-> CPU 0
-> Modules linked in: usb_storage ohci1394(+) ieee1394 p54pci(+) p54common ahci...
-> Pid: 0, comm: swapper Not tainted 2.6.28-rc7-00091-gf6f7b52 #1
-> RIP: 0010:[<ffffffffa0016b66>]  [<ffffffffa0016b66>] p54_rx+0xc6/0x490 [p54common]
-> RSP: 0018:ffffffff80ab3df0  EFLAGS: 00010207
-> RAX: 0000000074e9fed0 RBX: ffff08012e4f1940 RCX: 0000000000002e10
-> RDX: 0000000000000000 RSI: 00000000000000f1 RDI: ffff80012e4f0000
-> RBP: ffff80012e077010 R08: ffff80012e077000 R09: ffff80012e04?000
-> R10: 0000000000000001 R11: ffffffff00221320 R12: ffff80012e4f1900
-> R13: ffff80012e4f0300 R14: 000000000000732e R15: ffff80012e4f19??
-> 
-> (gdb) list *p54_rx+0xc6                                                                                                                                                                                                                      
-> 0x1b66 is in p54_rx (/usr/src/linux-2.6.git/drivers/net/wireless/p54/p54common.c:502).                                                                                                                                                       
-> 497                                                                                                                                                                                                                                          
-> 498             rx_status.signal = p54_rssi_to_dbm(dev, hdr->rssi);                                                                                                                                                                          
-> 499             rx_status.noise = priv->noise;                                                                                                                                                                                               
-> 500             /* XX correct? */                                                                                                                                                                                                            
-> 501             rx_status.qual = (100 * hdr->rssi) / 127;                                                                                                                                                                                    
-> 502             rx_status.rate_idx = (dev->conf.channel->band == IEEE80211_BAND_2GHZ ?                                                                                                                                                       
-> 503                             hdr->rate : (hdr->rate - 4)) & 0xf;                                                                                                                                                                          
-That's right, dev->conf.channel isn't set at the time we're reading the eeprom.
-But, then we didn't initialize the radio, dcf and mac/bb yet, so where did the data frames came
-from?
- 
-> Loading the module manually gets a bit further:
-> 
-> p54pci 0000:05:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> p54pci 0000:05:01.0: firmware: requesting isl3886
-> p54: LM86 firmware
-> p54: FW rev 2.13.1.0 - Softmac protocol 5.5
-> phy2: device does not respond!
---- no, this time it just doesn't respond at all => crashed
-> p54pci 0000:05:01.0: PCI INT A disabled
-> p54pci: probe of 0000:05:01.0 failed with error -16
+So the problem is:
+- hostapd requests master mode on "wlan0" using netlink,
+- it gets to nl80211_set_interface(), drv->ops->change_virtual_intf(),
+  ieee80211_change_iface() and then to ieee80211_if_change_type().
 
-Did it work with an older firmware? (and then which one?)
-Or do you have >= 4GB Ram/iommu etc.?
+Then it fails with -EOPNOTSUPP.
 
-Regards,
-	Chr
+int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+			     enum nl80211_iftype type)
+{
+	ASSERT_RTNL();
+
+	if (type == sdata->vif.type)
+		return 0;
+
+	/* Setting ad-hoc mode on non-IBSS channel is not supported. */
+	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS)
+		return -EOPNOTSUPP;
+                ^^^^^^^^^^^^^^^^^^^
+
+The flags are set to 6 = IEEE80211_CHAN_NO_IBSS |
+                         IEEE80211_CHAN_PASSIVE_SCAN
+
+Unfortunately I don't know what does the above mean, except that
+I don't want ad-hoc mode, I want AP instead.
+
+Ideas?
+-- 
+Krzysztof Halasa
