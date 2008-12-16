@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36503 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751188AbYLYAI3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 19:08:29 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] b43/ssb: Add SPROM8 extraction and LP-PHY detection
-Date: Thu, 25 Dec 2008 01:07:55 +0100
-Cc: linville@tuxdriver.com, Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <200812250039.28824.mb@bu3sch.de> <1230162724.3162.3.camel@johannes>
-In-Reply-To: <1230162724.3162.3.camel@johannes>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43210 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752113AbYLPOPK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Dec 2008 09:15:10 -0500
+Date: Tue, 16 Dec 2008 09:02:22 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jason Self <jason.self@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Realtek wireless 8187se
+Message-ID: <20081216140222.GA3636@tuxdriver.com> (sfid-20081216_151515_124598_A04255F0)
+References: <9EFEF18C-02C1-4E22-B712-9E5C582E4DEB@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812250107.55584.mb@bu3sch.de> (sfid-20081225_010833_178093_A5A2E113)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9EFEF18C-02C1-4E22-B712-9E5C582E4DEB@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 25 December 2008 00:52:04 Johannes Berg wrote:
-> On Thu, 2008-12-25 at 00:39 +0100, Michael Buesch wrote:
-> > This adds detection code for the LP-PHY and SPROM
-> > extraction code for version 8, which is needed by the LP-PHY and
-> > newer N-PHY.
-> 
-> I still get mac address ff:ff:ff:ff:ff:ff with this, but it might just
-> be that we need to use a different address or something, will double
-> check. We can fix that, so don't take this as a nack, the patch lays the
-> foundation, and the devices aren't supported anyway.
+On Mon, Dec 15, 2008 at 06:41:01PM -0800, Jason Self wrote:
+> On Dec 15, 2008, at 5:26 PM, "John W. Linville" <linville@tuxdriver.com> 
+> wrote:
+>
+>> Clearly you haven't looked at the driver from the vendor... :-)
+>>
+>> I have acquired an MSI Wind equipped with this device, I have
+>> multiple variations of the vendor driver to support the hardware, and
+>> I have a datasheet the covers at least some of the hardware involved.
+>> I'm working on it...
+>
+> Why not share your work?
 
-Yep, this patch doesn't break anything that currently works.
-So we can fix this later with another patch.
+What I have (which is barely anything) is on the "linville" branch
+of wireless-testing...
 
+John
 -- 
-Greetings, Michael.
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
