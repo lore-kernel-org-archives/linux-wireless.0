@@ -1,218 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37081 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752206AbYLVDir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 22:38:47 -0500
-From: Zhu Yi <yi.zhu@intel.com>
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:46140 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751694AbYLPHfZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Dec 2008 02:35:25 -0500
+Received: by ewy10 with SMTP id 10so3507929ewy.13
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 23:35:24 -0800 (PST)
+Message-ID: <eb3ff54b0812152335p6f768aa4r7ad68b33e62bd20b@mail.gmail.com> (sfid-20081216_083528_441215_59DA681A)
+Date: Tue, 16 Dec 2008 09:35:23 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 06/10] iwl3945: use iwl3945_tx_cmd instead of iwl_tx_cmd
-Date: Mon, 22 Dec 2008 11:31:19 +0800
-Message-Id: <1229916683-9772-7-git-send-email-yi.zhu@intel.com> (sfid-20081222_043856_782227_1A12532E)
-In-Reply-To: <1229916683-9772-6-git-send-email-yi.zhu@intel.com>
-References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-3-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-4-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-5-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-6-git-send-email-yi.zhu@intel.com>
+Subject: [PATCH] [v2] iwlwifi: iwl-tx.c cleanup (remove unused parameters).
+Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+This patch removes unused parameters in methods in iwl-tx.c:
 
-The patch replaces iwl_tx_cmd with iwl3945_tx_cmd to complete
-transitions introduced by commit
-77cb4db173d72d1a8c6c89015784a815bfd85221 "iwlwifi: use iwl_cmd instead
-of iwl3945_cmd"
+- remove a parameter (is_unicast) from iwl_tx_cmd_build_basic()
+- remove a parameter (sta_id) from iwl_tx_cmd_build_rate()
+- remove two parameters (sta_id and priv) from iwl_tx_cmd_build_hwcrypto()
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   64 ++++++++++++++-------------
- 1 files changed, 33 insertions(+), 31 deletions(-)
+(wireless-testing).
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 7cace6d..32cfc8f 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2047,36 +2047,37 @@ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
- 				      struct sk_buff *skb_frag,
- 				      int last_frag)
- {
-+	struct iwl3945_tx_cmd *tx = (struct iwl3945_tx_cmd *)cmd->cmd.payload;
- 	struct iwl3945_hw_key *keyinfo =
- 	    &priv->stations_39[info->control.hw_key->hw_key_idx].keyinfo;
- 
- 	switch (keyinfo->alg) {
- 	case ALG_CCMP:
--		cmd->cmd.tx.sec_ctl = TX_CMD_SEC_CCM;
--		memcpy(cmd->cmd.tx.key, keyinfo->key, keyinfo->keylen);
-+		tx->sec_ctl = TX_CMD_SEC_CCM;
-+		memcpy(tx->key, keyinfo->key, keyinfo->keylen);
- 		IWL_DEBUG_TX("tx_cmd with AES hwcrypto\n");
- 		break;
- 
- 	case ALG_TKIP:
- #if 0
--		cmd->cmd.tx.sec_ctl = TX_CMD_SEC_TKIP;
-+		tx->sec_ctl = TX_CMD_SEC_TKIP;
- 
- 		if (last_frag)
--			memcpy(cmd->cmd.tx.tkip_mic.byte, skb_frag->tail - 8,
-+			memcpy(tx->tkip_mic.byte, skb_frag->tail - 8,
- 			       8);
- 		else
--			memset(cmd->cmd.tx.tkip_mic.byte, 0, 8);
-+			memset(tx->tkip_mic.byte, 0, 8);
- #endif
- 		break;
- 
- 	case ALG_WEP:
--		cmd->cmd.tx.sec_ctl = TX_CMD_SEC_WEP |
-+		tx->sec_ctl = TX_CMD_SEC_WEP |
- 		    (info->control.hw_key->hw_key_idx & TX_CMD_SEC_MSK) << TX_CMD_SEC_SHIFT;
- 
- 		if (keyinfo->keylen == 13)
--			cmd->cmd.tx.sec_ctl |= TX_CMD_SEC_KEY128;
-+			tx->sec_ctl |= TX_CMD_SEC_KEY128;
- 
--		memcpy(&cmd->cmd.tx.key[3], keyinfo->key, keyinfo->keylen);
-+		memcpy(&tx->key[3], keyinfo->key, keyinfo->keylen);
- 
- 		IWL_DEBUG_TX("Configuring packet for WEP encryption "
- 			     "with key %d\n", info->control.hw_key->hw_key_idx);
-@@ -2094,14 +2095,14 @@ static void iwl3945_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
- static void iwl3945_build_tx_cmd_basic(struct iwl_priv *priv,
- 				  struct iwl_cmd *cmd,
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c
+b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 3cb4363..1d72a19 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -645,7 +645,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
+ 				  struct iwl_tx_cmd *tx_cmd,
  				  struct ieee80211_tx_info *info,
--				  struct ieee80211_hdr *hdr,
+ 				  struct ieee80211_hdr *hdr,
 -				  int is_unicast, u8 std_id)
-+				  struct ieee80211_hdr *hdr, u8 std_id)
++				  u8 std_id)
  {
-+	struct iwl3945_tx_cmd *tx = (struct iwl3945_tx_cmd *)cmd->cmd.payload;
-+	__le32 tx_flags = tx->tx_flags;
  	__le16 fc = hdr->frame_control;
--	__le32 tx_flags = cmd->cmd.tx.tx_flags;
- 	u8 rc_flags = info->control.rates[0].flags;
- 
--	cmd->cmd.tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
-+	tx->stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
- 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
- 		tx_flags |= TX_CMD_FLG_ACK_MSK;
- 		if (ieee80211_is_mgmt(fc))
-@@ -2114,13 +2115,13 @@ static void iwl3945_build_tx_cmd_basic(struct iwl_priv *priv,
- 		tx_flags |= TX_CMD_FLG_SEQ_CTL_MSK;
- 	}
- 
--	cmd->cmd.tx.sta_id = std_id;
-+	tx->sta_id = std_id;
- 	if (ieee80211_has_morefrags(fc))
- 		tx_flags |= TX_CMD_FLG_MORE_FRAG_MSK;
- 
- 	if (ieee80211_is_data_qos(fc)) {
- 		u8 *qc = ieee80211_get_qos_ctl(hdr);
--		cmd->cmd.tx.tid_tspec = qc[0] & 0xf;
-+		tx->tid_tspec = qc[0] & 0xf;
- 		tx_flags &= ~TX_CMD_FLG_SEQ_CTL_MSK;
- 	} else {
- 		tx_flags |= TX_CMD_FLG_SEQ_CTL_MSK;
-@@ -2140,16 +2141,16 @@ static void iwl3945_build_tx_cmd_basic(struct iwl_priv *priv,
- 	tx_flags &= ~(TX_CMD_FLG_ANT_SEL_MSK);
- 	if (ieee80211_is_mgmt(fc)) {
- 		if (ieee80211_is_assoc_req(fc) || ieee80211_is_reassoc_req(fc))
--			cmd->cmd.tx.timeout.pm_frame_timeout = cpu_to_le16(3);
-+			tx->timeout.pm_frame_timeout = cpu_to_le16(3);
- 		else
--			cmd->cmd.tx.timeout.pm_frame_timeout = cpu_to_le16(2);
-+			tx->timeout.pm_frame_timeout = cpu_to_le16(2);
- 	} else {
--		cmd->cmd.tx.timeout.pm_frame_timeout = 0;
-+		tx->timeout.pm_frame_timeout = 0;
- 	}
- 
--	cmd->cmd.tx.driver_txop = 0;
--	cmd->cmd.tx.tx_flags = tx_flags;
--	cmd->cmd.tx.next_frame_len = 0;
-+	tx->driver_txop = 0;
-+	tx->tx_flags = tx_flags;
-+	tx->next_frame_len = 0;
+ 	__le32 tx_flags = tx_cmd->tx_flags;
+@@ -705,7 +705,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
+ static void iwl_tx_cmd_build_rate(struct iwl_priv *priv,
+ 			      struct iwl_tx_cmd *tx_cmd,
+ 			      struct ieee80211_tx_info *info,
+-			      __le16 fc, int sta_id,
++			      __le16 fc,
+ 			      int is_hcca)
+ {
+ 	u32 rate_flags = 0;
+@@ -764,11 +764,10 @@ static void iwl_tx_cmd_build_rate(struct iwl_priv *priv,
+ 	tx_cmd->rate_n_flags = iwl_hw_set_rate_n_flags(rate_plcp, rate_flags);
  }
- 
- /**
-@@ -2220,12 +2221,13 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct iwl3945_tfd *tfd;
--	int txq_id = skb_get_queue_mapping(skb);
-+	struct iwl3945_tx_cmd *tx;
- 	struct iwl_tx_queue *txq = NULL;
- 	struct iwl_queue *q = NULL;
-+	struct iwl_cmd *out_cmd = NULL;
- 	dma_addr_t phys_addr;
- 	dma_addr_t txcmd_phys;
--	struct iwl_cmd *out_cmd = NULL;
-+	int txq_id = skb_get_queue_mapping(skb);
- 	u16 len, idx, len_org, hdr_len;
- 	u8 id;
- 	u8 unicast;
-@@ -2316,8 +2318,9 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	/* Init first empty entry in queue's array of Tx/cmd buffers */
- 	out_cmd = txq->cmd[idx];
-+	tx = (struct iwl3945_tx_cmd *)out_cmd->cmd.payload;
- 	memset(&out_cmd->hdr, 0, sizeof(out_cmd->hdr));
--	memset(&out_cmd->cmd.tx, 0, sizeof(out_cmd->cmd.tx));
-+	memset(tx, 0, sizeof(*tx));
- 
- 	/*
- 	 * Set up the Tx-command (not MAC!) header.
-@@ -2330,7 +2333,7 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 				INDEX_TO_SEQ(q->write_ptr)));
- 
- 	/* Copy MAC header from skb into command buffer */
--	memcpy(out_cmd->cmd.tx.hdr, hdr, hdr_len);
-+	memcpy(tx->hdr, hdr, hdr_len);
- 
- 	/*
- 	 * Use the first empty entry in this queue's command buffer array
-@@ -2390,16 +2393,16 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	/* Total # bytes to be transmitted */
- 	len = (u16)skb->len;
--	out_cmd->cmd.tx.len = cpu_to_le16(len);
-+	tx->len = cpu_to_le16(len);
- 
- 	/* TODO need this for burst mode later on */
--	iwl3945_build_tx_cmd_basic(priv, out_cmd, info, hdr, unicast, sta_id);
-+	iwl3945_build_tx_cmd_basic(priv, out_cmd, info, hdr, sta_id);
- 
- 	/* set is_hcca to 0; it probably will never be implemented */
- 	iwl3945_hw_build_tx_cmd_rate(priv, out_cmd, info, hdr, sta_id, 0);
- 
--	out_cmd->cmd.tx.tx_flags &= ~TX_CMD_FLG_ANT_A_MSK;
--	out_cmd->cmd.tx.tx_flags &= ~TX_CMD_FLG_ANT_B_MSK;
-+	tx->tx_flags &= ~TX_CMD_FLG_ANT_A_MSK;
-+	tx->tx_flags &= ~TX_CMD_FLG_ANT_B_MSK;
- 
- 	if (!ieee80211_has_morefrags(hdr->frame_control)) {
- 		txq->need_update = 1;
-@@ -2410,10 +2413,9 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 		txq->need_update = 0;
- 	}
- 
--	iwl_print_hex_dump(priv, IWL_DL_TX, out_cmd->cmd.payload,
--			   sizeof(out_cmd->cmd.tx));
-+	iwl_print_hex_dump(priv, IWL_DL_TX, tx, sizeof(*tx));
- 
--	iwl_print_hex_dump(priv, IWL_DL_TX, (u8 *)out_cmd->cmd.tx.hdr,
-+	iwl_print_hex_dump(priv, IWL_DL_TX, (u8 *)tx->hdr,
- 			   ieee80211_hdrlen(fc));
- 
- 	/* Tell device the write index *just past* this latest filled TFD */
--- 
-1.5.3.6
 
+-static void iwl_tx_cmd_build_hwcrypto(struct iwl_priv *priv,
+-				      struct ieee80211_tx_info *info,
++static void iwl_tx_cmd_build_hwcrypto(struct ieee80211_tx_info *info,
+ 				      struct iwl_tx_cmd *tx_cmd,
+-				      struct sk_buff *skb_frag,
+-				      int sta_id)
++				      struct sk_buff *skb_frag)
++
+ {
+ 	struct ieee80211_key_conf *keyconf = info->control.hw_key;
+
+@@ -834,7 +833,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	u16 len, len_org;
+ 	u16 seq_number = 0;
+ 	__le16 fc;
+-	u8 hdr_len, unicast;
++	u8 hdr_len;
+ 	u8 sta_id;
+ 	u8 wait_write_ptr = 0;
+ 	u8 tid = 0;
+@@ -854,7 +853,6 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 		goto drop_unlock;
+ 	}
+
+-	unicast = !is_multicast_ether_addr(hdr->addr1);
+
+ 	fc = hdr->frame_control;
+
+@@ -977,7 +975,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	iwl_hw_txq_attach_buf_to_tfd(priv, tfd, txcmd_phys, len);
+
+ 	if (info->control.hw_key)
+-		iwl_tx_cmd_build_hwcrypto(priv, info, tx_cmd, skb, sta_id);
++		iwl_tx_cmd_build_hwcrypto(info, tx_cmd, skb);
+
+ 	/* Set up TFD's 2nd entry to point directly to remainder of skb,
+ 	 * if any (802.11 null frames have no payload). */
+@@ -996,10 +994,10 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	len = (u16)skb->len;
+ 	tx_cmd->len = cpu_to_le16(len);
+ 	/* TODO need this for burst mode later on */
+-	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, unicast, sta_id);
++	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, sta_id);
+
+ 	/* set is_hcca to 0; it probably will never be implemented */
+-	iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, sta_id, 0);
++	iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, 0);
+
+ 	iwl_update_tx_stats(priv, le16_to_cpu(fc), len);
