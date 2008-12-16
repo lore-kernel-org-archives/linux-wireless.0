@@ -1,173 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39996 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751897AbYL3Myv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 07:54:51 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2008 04:54:51 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [RFC] mac80211: Handle power constraint level advertised in 11d+h beacon
-Date: Tue, 30 Dec 2008 18:22:35 +0530
-Message-ID: <1230641555-13425-1-git-send-email-vasanth@atheros.com> (sfid-20081230_135455_057863_A29C82CC)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:36020 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755756AbYLPPBj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Dec 2008 10:01:39 -0500
+Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in add_interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <b6c5339f0812160658y5ed2ceb4qdbb4b2ddf1fe07a5@mail.gmail.com> (sfid-20081216_155826_911157_CE1A0E9E)
+References: <20081118044037.GA18983@hash.localnet>
+	 <69e28c910812150747j60cf17d9nc2e24aabb991d2a9@mail.gmail.com>
+	 <1229357080.12163.47.camel@localhost.localdomain>
+	 <69e28c910812150812h4a316327u67aad1b225262816@mail.gmail.com>
+	 <b6c5339f0812150916k521fa7a4l4fc3aa560d08c1db@mail.gmail.com>
+	 <b6c5339f0812160658y5ed2ceb4qdbb4b2ddf1fe07a5@mail.gmail.com>
+	 (sfid-20081216_155826_911157_CE1A0E9E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-E9u5+sF9lXHfyztjA+OM"
+Date: Tue, 16 Dec 2008 16:01:09 +0100
+Message-Id: <1229439670.4471.41.camel@johannes.berg> (sfid-20081216_160143_242157_2D2CC840)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses power constraint level while determining the maximum
-transmit power, there by it makes sure that any power mitigation
-requirement for the channel in the current regulatory domain is met.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- include/net/mac80211.h     |    2 ++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/main.c        |   10 ++++++++--
- net/mac80211/mlme.c        |   20 +++++++++++++++++++-
- net/mac80211/spectmgmt.c   |   22 ++++++++++++++++++++++
- 5 files changed, 54 insertions(+), 3 deletions(-)
+--=-E9u5+sF9lXHfyztjA+OM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 153a8d1..a1126d3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -549,6 +549,7 @@ enum ieee80211_conf_changed {
-  * @flags: configuration flags defined above
-  * @power_level: requested transmit power (in dBm)
-  * @user_power_level: User configured transmit power (in dBm)
-+ * @power_constr_level: Power constraint level advertised in 11h beacon (in dBm)
-  * @channel: the channel to tune to
-  * @ht: the HT configuration for the device
-  * @long_frame_max_tx_count: Maximum number of transmissions for a "long" frame
-@@ -563,6 +564,7 @@ struct ieee80211_conf {
- 	u32 flags;
- 	int power_level;
- 	int user_power_level;
-+	int power_constr_level;
- 
- 	u16 listen_interval;
- 	bool radio_enabled;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 117718b..1abe96e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -964,6 +964,9 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_mgmt *mgmt,
- 				       size_t len);
-+void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
-+				 u16 capab_info, u8 *pwr_constr_elem,
-+				 u8 pwr_constr_elem_len);
- 
- /* utility functions/constants */
- extern void *mac80211_wiphy_privid; /* for wiphy privid */
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 8831e87..66108f6 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -224,10 +224,16 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 		changed |= IEEE80211_CONF_CHANGE_CHANNEL;
- 	}
- 
--	if (!local->hw.conf.user_power_level)
-+	if (local->sw_scanning)
- 		power = chan->max_power;
- 	else
--		power = min(chan->max_power, local->hw.conf.user_power_level);
-+		power = local->hw.conf.power_constr_level ?
-+			(chan->max_power - local->hw.conf.power_constr_level) :
-+			chan->max_power;
-+
-+	if (local->hw.conf.user_power_level)
-+		power = min(power, local->hw.conf.user_power_level);
-+
- 	if (local->hw.conf.power_level != power) {
- 		changed |= IEEE80211_CONF_CHANGE_POWER;
- 		local->hw.conf.power_level = power;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e317c6d..f193ba4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -911,6 +911,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	local->oper_channel_type = NL80211_CHAN_NO_HT;
- 	config_changed |= IEEE80211_CONF_CHANGE_HT;
- 
-+	local->hw.conf.power_constr_level = 0;
-+
- 	del_timer_sync(&local->dynamic_ps_timer);
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
- 
-@@ -1719,7 +1721,6 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_rx_bss_put(local, bss);
- }
- 
--
- static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_mgmt *mgmt,
- 					 size_t len,
-@@ -1748,6 +1749,16 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 		       sdata->dev->name);
- 		ieee80211_authenticate(sdata, ifsta);
- 	}
-+
-+	/* TODO: for IBSS */
-+	if ((sdata->vif.type == NL80211_IFTYPE_STATION) &&
-+	    (ifsta->flags & IEEE80211_STA_ASSOCIATED) &&
-+	    (memcmp(ifsta->bssid, mgmt->bssid, ETH_ALEN) == 0) &&
-+	    elems.pwr_constr_elem)
-+		ieee80211_handle_pwr_constr(sdata,
-+				le16_to_cpu(mgmt->u.probe_resp.capab_info),
-+				elems.pwr_constr_elem,
-+				elems.pwr_constr_elem_len);
- }
- 
- 
-@@ -1841,6 +1852,13 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 			elems.country_elem, elems.country_elem_len);
- 	}
- 
-+	/* TODO: IBSS also needs this */
-+	if (elems.pwr_constr_elem)
-+		ieee80211_handle_pwr_constr(sdata,
-+				le16_to_cpu(mgmt->u.probe_resp.capab_info),
-+				elems.pwr_constr_elem,
-+				elems.pwr_constr_elem_len);
-+
- 	ieee80211_bss_info_change_notify(sdata, changed);
- }
- 
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index f72bad6..f7ffec1 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -84,3 +84,25 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 			mgmt->sa, mgmt->bssid,
- 			mgmt->u.action.u.measurement.dialog_token);
- }
-+
-+void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
-+				 u16 capab_info, u8 *pwr_constr_elem,
-+				 u8 pwr_constr_elem_len)
-+{
-+	struct ieee80211_conf *conf = &sdata->local->hw.conf;
-+
-+	if ((conf->channel->band != IEEE80211_BAND_5GHZ) ||
-+	    !(capab_info & WLAN_CAPABILITY_SPECTRUM_MGMT))
-+		return;
-+
-+	/* Power constraint IE length should be 1 octet */
-+	if (pwr_constr_elem_len != 1)
-+		return;
-+
-+	if ((*pwr_constr_elem <= conf->channel->max_power) &&
-+	    (*pwr_constr_elem != conf->power_constr_level)) {
-+		conf->power_constr_level = *pwr_constr_elem;
-+		ieee80211_hw_config(sdata->local, 0);
-+	}
-+}
-+
--- 
-1.5.5.1
+On Tue, 2008-12-16 at 09:58 -0500, Bob Copeland wrote:
+
+> The code, for mac address setting at least, looks to be working as
+> designed: the mac address is only set up at add_interface time to avoid
+> automatically acking packets before an interface is brought up (see the
+> kerneldoc comments in mac80211 on add/remove_interface).
+>=20
+> The ath5k rx filter for unicast frames requires mac addresses to match in
+> order to accept or ack frames.  However, in monitor mode, mac80211 will
+> never call add_interface().  Instead, it should configure the filter to
+> put the card in promiscuous mode which then should enable all packets
+> to be passed back to the host.
+
+FWIW, this is as designed, if you need to have ACKs then you need to
+bring up a monitor as well as a regular interface. Stefanik, please do
+that and report whether it works.
+
+johannes
+
+--=-E9u5+sF9lXHfyztjA+OM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJR8KyAAoJEKVg1VMiehFYMF0P/3MYgcOVjSa+ckbT9E8uNkWf
+9i8E4Eo6nHNoeZ8aVLSti4ab2stz3vaYU8CfHwBmwPM1O75rACLSsScW8oXGMmHZ
+W2MsUcSiJlCI2uEmY7vTkwjPY15i5gBSOpw2JC7tpTPSe198RDeC/7/YLwmv8UVf
+6Dsd8WdxO3OaL63ap/O1Im3Fw8bFrCZbnZaI1abNnaZeeKwuh7m/X5TCUtQ6fX+m
+AVyD82aKRLmR2HSjXtr7MNntEP0se9MGuxABj4NvUWggG6sdXr4CrLYtVsl6kCIK
+ptuVo+GTaFBOUJaCPR1GTt9nEi3gBg3xCe0iOk9ybbHbZwndAc2Cxy4qDUGCisIn
+B2uQnRhxNZWOrRpsc73tY7TnNHp8amX691oNITgF5ax8bY1bWoauv237E7mnDFGt
+dm9bMzogYeEFP+2auvD1s4cw1wTjqMkEDVxVhCUeB7iIFpQBtuBf1qZ7w5SMIbdw
+Rb/EqvHBsoIFenoZx3cYP8QPof4+WOlf5dBbGn8HkAtMmWOSxRlgGSzHbQEQ/akg
+uHBCdRefYQSzaoUjaiqVLsrmG1gVlIWTKphh1wF1u8alLCzZ1DjQeSk4Cmo6DdIz
+n648YdZ2XRmm4wxBnHwiIom4qOdHi5gxj8IOBznOKvrpuuvQqIxUuuO+v03EBjqE
+lu3v3az3ZFKTwsvw5jJR
+=YaJE
+-----END PGP SIGNATURE-----
+
+--=-E9u5+sF9lXHfyztjA+OM--
 
