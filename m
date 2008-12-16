@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:58542 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751280AbYLRHFV (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.227]:52435 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752857AbYLPDbr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 02:05:21 -0500
-Date: Thu, 18 Dec 2008 09:05:08 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Sujith <m.sujith@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	mcgrof@gmail.com, jouni.malinen@atheros.com
-Subject: Re: [RFC] Handle Channel Switch Announcement
-Message-ID: <20081218070508.GA15803@jm.kir.nu> (sfid-20081218_080525_800504_59F879BD)
-References: <18761.4838.509784.281821@localhost.localdomain> <20081217162017.GA28712@jm.kir.nu> <18761.43079.702658.733757@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <18761.43079.702658.733757@localhost.localdomain>
+	Mon, 15 Dec 2008 22:31:47 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so2798398rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 19:31:46 -0800 (PST)
+From: Colin McCabe <colin@cozybit.com>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	Colin McCabe <colin@cozybit.com>
+Subject: [PATCH 2/3] libertas: Update libertas core with GSPI constants
+Date: Mon, 15 Dec 2008 19:27:31 -0800
+Message-Id: <1229398052-27465-3-git-send-email-colin@cozybit.com> (sfid-20081216_043155_395415_2116E00D)
+In-Reply-To: <1229398052-27465-2-git-send-email-colin@cozybit.com>
+References: <1229398052-27465-1-git-send-email-colin@cozybit.com>
+ <1229398052-27465-2-git-send-email-colin@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 18, 2008 at 07:02:55AM +0530, Sujith wrote:
+Add GSPI constants to libertas core.
 
-> But after receiving a CSA on the current frequency, and having moved to the new
-> advertised frequency, can the STA send out probe requests in the earlier frequency ?
-> (In case of a scan run or something)
+Fix misleading comment in lbs_setup_firmware.
 
-As far as IEEE 802.11 standard is concerned, yes, that would be allowed.
-There are not even explicit limits on doing that (if it is a broadcast
-probe request, not unicast to the current BSS) before the channel move.
-The only thing that the STA has to do immediately (if mode=1) is to
-cease to send anything to the current BSS before the channel switch.
-When receiving the CSA, the STA needs to decide whether it wants to
-follow the AP or not. If not, it could start scanning immediately for
-another AP.. The standard even has a following statement about channel
-switch: "It should also be stressed that the channel switch process is
-distinct from the regulatory requirement to cease transmission on a
-particular channel in the presence of radar."
+Signed-off-by: Colin McCabe <colin@cozybit.com>
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+---
+ drivers/net/wireless/libertas/host.h    |    1 +
+ drivers/net/wireless/libertas/hostcmd.h |    8 ++++++++
+ drivers/net/wireless/libertas/main.c    |    5 ++---
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-However, the STA must discontinue operation on the channel if it detects
-a radar operating in the channel or learns this from another STA. The
-regulatory rules on how quickly this must be done (and how much airtime
-may be used after the radar has been detected) may be quire strict, so
-doing an active scan on the previous channel immediately after having
-received a CSA may not be that good of an idea. Then again, channels
-that require radar detection should not really allow active scanning on
-them in the first place. In that way it would be enough for the non-AP
-STA to just stop using the current BSS because any other AP on the same
-channel should stop Beaconing, too, when a radar is detected and as
-such, the non-AP STA should not end up using the channel anymore.
-
+diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+index a17b778..b2b617f 100644
+--- a/drivers/net/wireless/libertas/host.h
++++ b/drivers/net/wireless/libertas/host.h
+@@ -66,6 +66,7 @@
+ #define CMD_802_11_LED_GPIO_CTRL		0x004e
+ #define CMD_802_11_EEPROM_ACCESS		0x0059
+ #define CMD_802_11_BAND_CONFIG			0x0058
++#define CMD_GSPI_BUS_CONFIG			0x005a
+ #define CMD_802_11D_DOMAIN_INFO			0x005b
+ #define CMD_802_11_KEY_MATERIAL			0x005e
+ #define CMD_802_11_SLEEP_PARAMS			0x0066
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index c6d5771..3c15611 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -221,6 +221,14 @@ struct cmd_ds_mac_multicast_adr {
+ 	u8 maclist[ETH_ALEN * MRVDRV_MAX_MULTICAST_LIST_SIZE];
+ } __attribute__ ((packed));
+ 
++struct cmd_ds_gspi_bus_config {
++	struct cmd_header hdr;
++	__le16 action;
++	__le16 bus_delay_mode;
++	__le16 host_time_delay_to_read_port;
++	__le16 host_time_delay_to_read_register;
++} __attribute__ ((packed));
++
+ struct cmd_ds_802_11_authenticate {
+ 	u8 macaddr[ETH_ALEN];
+ 	u8 authtype;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index a00d232..cc36a54 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -951,9 +951,8 @@ void lbs_resume(struct lbs_private *priv)
+ EXPORT_SYMBOL_GPL(lbs_resume);
+ 
+ /**
+- *  @brief This function downloads firmware image, gets
+- *  HW spec from firmware and set basic parameters to
+- *  firmware.
++ * @brief This function gets the HW spec from the firmware and sets
++ *        some basic parameters.
+  *
+  *  @param priv    A pointer to struct lbs_private structure
+  *  @return 	   0 or -1
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.6.3
+
