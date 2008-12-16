@@ -1,198 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:41552 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755356AbYLJRkS (ORCPT
+Received: from mail-gx0-f16.google.com ([209.85.217.16]:55575 "EHLO
+	mail-gx0-f16.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671AbYLPSOH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 12:40:18 -0500
-Received: by mail-ew0-f17.google.com with SMTP id 10so878182ewy.13
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 09:40:17 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] rfkill: strip pointless notifier chain
-Date: Wed, 10 Dec 2008 18:40:13 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1228927728.15837.10.camel@johannes.berg>
-In-Reply-To: <1228927728.15837.10.camel@johannes.berg>
+	Tue, 16 Dec 2008 13:14:07 -0500
+Received: by gxk9 with SMTP id 9so5160507gxk.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 10:14:04 -0800 (PST)
+Message-ID: <45e8e6c40812161008t3c0e04adge22382dd4b6f13f9@mail.gmail.com> (sfid-20081216_191411_067878_EC97A579)
+Date: Tue, 16 Dec 2008 10:08:39 -0800
+From: "Andrey Yurovsky" <andrey@cozybit.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH 3/3] libertas: if_spi, driver for libertas GSPI devices
+Cc: "Angel Roman" <angel.roman@mdesystems.com>,
+	"Colin McCabe" <colin@cozybit.com>, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1229449129.7307.51.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200812101840.13977.IvDoorn@gmail.com> (sfid-20081210_184023_219499_BD8DADAC)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1229398052-27465-1-git-send-email-colin@cozybit.com>
+	 <1229398052-27465-2-git-send-email-colin@cozybit.com>
+	 <1229398052-27465-3-git-send-email-colin@cozybit.com>
+	 <1229398052-27465-4-git-send-email-colin@cozybit.com>
+	 <4947241F.10305@mdesystems.com>
+	 <1229449129.7307.51.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 10 December 2008, Johannes Berg wrote:
-> No users, so no reason to have it.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Tue, Dec 16, 2008 at 9:38 AM, Dan Williams <dcbw@redhat.com> wrote:
+> On Mon, 2008-12-15 at 22:44 -0500, Angel Roman wrote:
+>> Hi Colin,
+>>
+>> I have support for the gspi as well. I've been trying to get in contact
+>> with Dan Williams in order to contribute it to the list.
+>
+> Sorry about that... it's in my queue and I'll try to get to do some
+> review in the next few days.  Doing the new interface isn't a ton of
+> code, and I'd expect both yours and Colin's drivers to be quite similar
+> as there's only a few ways this thing can be done :)
+>
+> The submission process is basically just like Colin did; generate a
+> series of patches of your latest code (split into independent patches if
+> possible) based on a kernel version (ideally the latest kernel version
+> or better yet, wireless-testing.git) and then post it to linux-wireless
+> and maybe cc libertas-dev as well.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+We've been working/testing against a kernel that's pretty close to
+upstream and then also against wireless-testing to make this driver
+upstream-friendly and hopefully easy to merge.  If you have access to
+a Blackfin development board, you can also clone our tree with the
+driver integrated:
+http://git.cozybit.com/
+however it should be simple enough to build for other embedded platforms.
 
-> ---
->  include/linux/rfkill.h |    7 ----
->  net/rfkill/rfkill.c    |   83 ++-----------------------------------------------
->  2 files changed, 5 insertions(+), 85 deletions(-)
-> 
-> --- everything.orig/include/linux/rfkill.h	2008-12-10 17:30:35.000000000 +0100
-> +++ everything/include/linux/rfkill.h	2008-12-10 17:30:39.000000000 +0100
-> @@ -149,11 +149,4 @@ static inline char *rfkill_get_led_name(
->  #endif
->  }
->  
-> -/* rfkill notification chain */
-> -#define RFKILL_STATE_CHANGED		0x0001	/* state of a normal rfkill
-> -						   switch has changed */
-> -
-> -int register_rfkill_notifier(struct notifier_block *nb);
-> -int unregister_rfkill_notifier(struct notifier_block *nb);
-> -
->  #endif /* RFKILL_H */
-> --- everything.orig/net/rfkill/rfkill.c	2008-12-10 17:32:17.000000000 +0100
-> +++ everything/net/rfkill/rfkill.c	2008-12-10 17:35:38.000000000 +0100
-> @@ -53,51 +53,6 @@ static struct rfkill_gsw_state rfkill_gl
->  static unsigned long rfkill_states_lockdflt[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
->  static bool rfkill_epo_lock_active;
->  
-> -static BLOCKING_NOTIFIER_HEAD(rfkill_notifier_list);
-> -
-> -
-> -/**
-> - * register_rfkill_notifier - Add notifier to rfkill notifier chain
-> - * @nb: pointer to the new entry to add to the chain
-> - *
-> - * See blocking_notifier_chain_register() for return value and further
-> - * observations.
-> - *
-> - * Adds a notifier to the rfkill notifier chain.  The chain will be
-> - * called with a pointer to the relevant rfkill structure as a parameter,
-> - * refer to include/linux/rfkill.h for the possible events.
-> - *
-> - * Notifiers added to this chain are to always return NOTIFY_DONE.  This
-> - * chain is a blocking notifier chain: notifiers can sleep.
-> - *
-> - * Calls to this chain may have been done through a workqueue.  One must
-> - * assume unordered asynchronous behaviour, there is no way to know if
-> - * actions related to the event that generated the notification have been
-> - * carried out already.
-> - */
-> -int register_rfkill_notifier(struct notifier_block *nb)
-> -{
-> -	BUG_ON(!nb);
-> -	return blocking_notifier_chain_register(&rfkill_notifier_list, nb);
-> -}
-> -EXPORT_SYMBOL_GPL(register_rfkill_notifier);
-> -
-> -/**
-> - * unregister_rfkill_notifier - remove notifier from rfkill notifier chain
-> - * @nb: pointer to the entry to remove from the chain
-> - *
-> - * See blocking_notifier_chain_unregister() for return value and further
-> - * observations.
-> - *
-> - * Removes a notifier from the rfkill notifier chain.
-> - */
-> -int unregister_rfkill_notifier(struct notifier_block *nb)
-> -{
-> -	BUG_ON(!nb);
-> -	return blocking_notifier_chain_unregister(&rfkill_notifier_list, nb);
-> -}
-> -EXPORT_SYMBOL_GPL(unregister_rfkill_notifier);
-> -
->  
->  static void rfkill_led_trigger(struct rfkill *rfkill,
->  			       enum rfkill_state state)
-> @@ -124,12 +79,9 @@ static void rfkill_led_trigger_activate(
->  }
->  #endif /* CONFIG_RFKILL_LEDS */
->  
-> -static void notify_rfkill_state_change(struct rfkill *rfkill)
-> +static void rfkill_uevent(struct rfkill *rfkill)
->  {
-> -	rfkill_led_trigger(rfkill, rfkill->state);
-> -	blocking_notifier_call_chain(&rfkill_notifier_list,
-> -			RFKILL_STATE_CHANGED,
-> -			rfkill);
-> +	kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
->  }
->  
->  static void update_rfkill_state(struct rfkill *rfkill)
-> @@ -142,7 +94,7 @@ static void update_rfkill_state(struct r
->  			oldstate = rfkill->state;
->  			rfkill->state = newstate;
->  			if (oldstate != newstate)
-> -				notify_rfkill_state_change(rfkill);
-> +				rfkill_uevent(rfkill);
->  		}
->  		mutex_unlock(&rfkill->mutex);
->  	}
-> @@ -220,7 +172,7 @@ static int rfkill_toggle_radio(struct rf
->  	}
->  
->  	if (force || rfkill->state != oldstate)
-> -		notify_rfkill_state_change(rfkill);
-> +		rfkill_uevent(rfkill);
->  
->  	return retval;
->  }
-> @@ -405,7 +357,7 @@ int rfkill_force_state(struct rfkill *rf
->  	rfkill->state = state;
->  
->  	if (state != oldstate)
-> -		notify_rfkill_state_change(rfkill);
-> +		rfkill_uevent(rfkill);
->  
->  	mutex_unlock(&rfkill->mutex);
->  
-> @@ -618,28 +570,6 @@ static int rfkill_resume(struct device *
->  #define rfkill_resume NULL
->  #endif
->  
-> -static int rfkill_blocking_uevent_notifier(struct notifier_block *nb,
-> -					unsigned long eventid,
-> -					void *data)
-> -{
-> -	struct rfkill *rfkill = (struct rfkill *)data;
-> -
-> -	switch (eventid) {
-> -	case RFKILL_STATE_CHANGED:
-> -		kobject_uevent(&rfkill->dev.kobj, KOBJ_CHANGE);
-> -		break;
-> -	default:
-> -		break;
-> -	}
-> -
-> -	return NOTIFY_DONE;
-> -}
-> -
-> -static struct notifier_block rfkill_blocking_uevent_nb = {
-> -	.notifier_call	= rfkill_blocking_uevent_notifier,
-> -	.priority	= 0,
-> -};
-> -
->  static int rfkill_dev_uevent(struct device *dev, struct kobj_uevent_env *env)
->  {
->  	struct rfkill *rfkill = to_rfkill(dev);
-> @@ -943,14 +873,11 @@ static int __init rfkill_init(void)
->  		return error;
->  	}
->  
-> -	register_rfkill_notifier(&rfkill_blocking_uevent_nb);
-> -
->  	return 0;
->  }
->  
->  static void __exit rfkill_exit(void)
->  {
-> -	unregister_rfkill_notifier(&rfkill_blocking_uevent_nb);
->  	class_unregister(&rfkill_class);
->  }
->  
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Is there a generic SPI layer that could be used for the board-specific
+> bits too, rather than putting that stuff in the libertas tree?  I assume
+> that the SPI bus is more or less generic on your hardware (ie you could
+> put something else on the other end instead of the 8686), and thus it
+> would be better if we could figure out way not to put some much board
+> specific logic into the libertas driver itself.
 
+The exception is the GPIO-based chip select signal that the '8686
+requires, we otherwise use the generic SPI layer.  The protocol
+requires the host to assert the CS# line and then hold it low for the
+entire transaction (which can be of arbitrary length).  Most SPI host
+controllers cannot do this and therefore a plain GPIO is used.  The
+board-specific config for this is not much different from configuring
+your SPI chips in your mach-xxxx/board.c
 
+-- 
+Andrey Yurovsky
+cozybit Inc.
