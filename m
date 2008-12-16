@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45745 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755575AbYLFOaM (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:38289 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbYLPOKG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 09:30:12 -0500
-Date: Sat, 6 Dec 2008 09:25:17 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mats Johannesson <spamcan1@abrasax.se>
+	Tue, 16 Dec 2008 09:10:06 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Artur Skawina <art.08.09@gmail.com>
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+Date: Tue, 16 Dec 2008 15:10:09 +0100
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
-	root
-Message-ID: <20081206142517.GA26624@tuxdriver.com> (sfid-20081206_153023_594042_B25F7106)
-References: <20081206113406.734f1d94@loke.fish.not> <20081206134542.05cd9664@loke.fish.not>
+References: <494698AF.4020204@gmail.com> <200812161415.09365.chunkeey@web.de> <4947B1E3.4080008@gmail.com>
+In-Reply-To: <4947B1E3.4080008@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081206134542.05cd9664@loke.fish.not>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812161510.09499.chunkeey@web.de> (sfid-20081216_151011_458063_33709C68)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 06, 2008 at 01:45:42PM +0100, Mats Johannesson wrote:
-> On Sat, 6 Dec 2008 11:34:06 +0100 Mats Johannesson wrote:
-> > 
-> > As the subject says, 2.6.28-rc7-wl git pulled Dec 6 exhibits a kernel
-> > panic when doing "iwlist ath0 scan" as root under the ath9k driver.
-> > Machine dead, panic LED blinking.
-> > 
-> > Scan as normal user is OK.
+On Tuesday 16 December 2008 14:49:23 Artur Skawina wrote:
 > 
-> Ick! Panic as normal user as well when using the graphical "Wicd
-> Manager" to Refresh (ie scan). Possibly it does its thing as root?
+> I've looked at that commit more closely in the mean time;
+> this patch makes the card reappear:
+
+> -	hdr->len = cpu_to_le16(skb->len + sizeof(struct p54_hdr));
+> +	hdr->len = cpu_to_le16(skb->len - sizeof(*hdr));
+
+right.
+
+> > Dec 16 14:32:44 kernel: usb 1-7: new high speed USB device using ehci_hcd and address 14
+> > Dec 16 14:32:44 kernel: usb 1-7: configuration #1 chosen from 1 choice
+> > Dec 16 14:32:44 kernel: usb 1-7: firmware: requesting isl3886usb
+> > Dec 16 14:32:44 kernel: usb 1-7: New USB device found, idVendor=0846, idProduct=4200
+> > Dec 16 14:32:44 kernel: usb 1-7: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+> > Dec 16 14:32:44 kernel: phy1: p54 detected a LM86 firmware
+> > Dec 16 14:32:44 kernel: phy1: FW rev 2.5.6.0 - Softmac protocol 3.0
+> > Dec 16 14:32:44 kernel: phy1: you are using an obsolete firmware. visit http://wireless.kernel.org/en/users/Drivers/p54 and grab one for "kernel >= 2.6.28"!
+> > Dec 16 14:32:44 kernel: phy1: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:no
+> > Dec 16 14:32:47 kernel: phy1: hwaddr 00:30:f1:12:34:56, MAC:isl3886 RF:Frisbee
+> > Dec 16 14:32:47 kernel: phy1: Selected rate control algorithm 'minstrel'
+> > Dec 16 14:32:47 kernel: usbcore: registered new interface driver p54usb
+> > Dec 16 14:32:47 kernel: udev: renamed network interface wlan0 to wlan1
 > 
-> First panic was as root on a fresh kernel without any graphics driver
-> (plain terminal). Second try was as a normal user in said plain
-> terminal - was OK. Logged out and in as root to scan -> panic.
+> Did not do any further testing yet.
+
+Do the new firmwares work as well?
+Because I'll dropping support for the old firmwares in the future.
+The reason are bugs which can be triggered remotely...
+(e.g.: frames with a "special" length etc...)
+
+> > Can you please revert it and add this one?
+> > it adds a few printks that should help.
 > 
-> Installed graphics driver and ran as normal user under X. Wicd handles
-> the wpa_supplicant etc. Scanning in an xterm as myself was OK. Later
-> tried the Wicd Manager Refresh thing out of curiosity. Panic.
+> I assume this is no longer needed, but i'll be happy test any p54usb/2280 related patches.
+> 
+while you're on it, can you please enable slub/slab debug (e.g: slub_debug=ZUPF )
+and check if the device still works, or if you pc freeze/crash/burn ?
 
-It would be helpful if you could capture the oops messages using a
-serial console, netconsole, or even with a digital camera.  You may
-also want to open a bug at bugzilla.kernel.org.
-
-Thanks!
-
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Regards,
+	Chr
