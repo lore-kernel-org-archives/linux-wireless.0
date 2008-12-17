@@ -1,35 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:55414 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760558AbYLKTtz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53586 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751391AbYLQPpS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 14:49:55 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so547069yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 11:49:54 -0800 (PST)
-Message-ID: <b6c5339f0812111149h6f243682t9a34691f80b4cfe5@mail.gmail.com> (sfid-20081211_205006_865046_91FC1717)
-Date: Thu, 11 Dec 2008 14:49:53 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Jouni Malinen" <jouni.malinen@atheros.com>
-Subject: Re: [PATCH] ath9k: Do not remove header padding on RX from short frames
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	"Patrick McHardy" <kaber@trash.net>
-In-Reply-To: <20081211162213.GA28193@jm.kir.nu>
+	Wed, 17 Dec 2008 10:45:18 -0500
+Date: Wed, 17 Dec 2008 10:35:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	mabbaswireless@gmail.com
+Subject: Re: [PATCH v2 1/3] cfg80211: add PM hooks
+Message-ID: <20081217153524.GA3539@tuxdriver.com> (sfid-20081217_164524_845516_CF574A4F)
+References: <1229313039-5544-2-git-send-email-me@bobcopeland.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081211162213.GA28193@jm.kir.nu>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1229313039-5544-2-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 11, 2008 at 11:22 AM, Jouni Malinen
-<jouni.malinen@atheros.com> wrote:
-> The 802.11 header is only padded to 32-bit boundary when the frame has
-> a non-zero length payload. In other words, control frames (e.g., ACK)
-> do not have a padding and we should not try to remove it. This fixes
-> monitor mode for short control frames.
+On Sun, Dec 14, 2008 at 10:50:37PM -0500, Bob Copeland wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> 
+> This should help implement suspend/resume in mac80211, these
+> hooks will be run before the device is suspended and after it
+> resumes. Therefore, they can touch the hardware as much as
+> they want to.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Thanks Jouni, that clears up the question of the same code in ath5k
-(http://marc.info/?l=linux-wireless&m=122888546315200&w=2).
+Is cfg80211 the right place for these?  Is it likely that any
+non-mac80211 users of cfg80211 will ever want to use these hooks?
 
+John
 -- 
-Bob Copeland %% www.bobcopeland.com
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
