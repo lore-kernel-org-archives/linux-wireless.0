@@ -1,162 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22660 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:26637 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751310AbYLWX7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 18:59:05 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 15:59:05 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v3 02/16] ath9k: use hw->conf on ath_setcurmode()
-Date: Tue, 23 Dec 2008 15:58:37 -0800
-Message-ID: <1230076731-22946-3-git-send-email-lrodriguez@atheros.com> (sfid-20081224_005909_591459_423B03E4)
-In-Reply-To: <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
-References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754341AbYLQI7p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2008 03:59:45 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Wu, Fengguang" <fengguang.wu@intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 4/8] iwlwifi: use type uint for module param debug
+Date: Wed, 17 Dec 2008 16:52:30 +0800
+Message-Id: <1229503954-30347-5-git-send-email-yi.zhu@intel.com> (sfid-20081217_095949_358966_6F0EA230)
+In-Reply-To: <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
+References: <1229503954-30347-1-git-send-email-yi.zhu@intel.com>
+ <1229503954-30347-2-git-send-email-yi.zhu@intel.com>
+ <1229503954-30347-3-git-send-email-yi.zhu@intel.com>
+ <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't need to use our own mode for setting the
-the routine tries to do, in fact lets remove ath_chan2mode() now as
-we can simply use the currently set band and the HT configuration
-provided by mac80211 through the ieee80211_conf. This works on
-changing channels as well as the internal ath9k_channel we use is
-based on the ieee80211_channel in the config.
+From: Wu, Fengguang <fengguang.wu@intel.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+This enables one to change the debug level at bit 31.
+
+Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/ath9k/main.c |   72 ++++++++++++++++++++----------------
- 1 files changed, 40 insertions(+), 32 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 70affb7..2bf2b3f 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -59,41 +59,47 @@ static void bus_read_cachesize(struct ath_softc *sc, int *csz)
- 		*csz = DEFAULT_CACHELINE >> 2;   /* Use the default size */
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index a7e6e32..3a78d86 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2354,7 +2354,7 @@ module_param_named(disable, iwl4965_mod_params.disable, int, 0444);
+ MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
+ module_param_named(swcrypto, iwl4965_mod_params.sw_crypto, int, 0444);
+ MODULE_PARM_DESC(swcrypto, "using crypto in software (default 0 [hardware])");
+-module_param_named(debug, iwl4965_mod_params.debug, int, 0444);
++module_param_named(debug, iwl4965_mod_params.debug, uint, 0444);
+ MODULE_PARM_DESC(debug, "debug output mask");
+ module_param_named(
+ 	disable_hw_scan, iwl4965_mod_params.disable_hw_scan, int, 0444);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 2344de9..7f3a921 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1623,7 +1623,7 @@ MODULE_PARM_DESC(disable50,
+ module_param_named(swcrypto50, iwl50_mod_params.sw_crypto, bool, 0444);
+ MODULE_PARM_DESC(swcrypto50,
+ 		  "using software crypto engine (default 0 [hardware])\n");
+-module_param_named(debug50, iwl50_mod_params.debug, int, 0444);
++module_param_named(debug50, iwl50_mod_params.debug, uint, 0444);
+ MODULE_PARM_DESC(debug50, "50XX debug output mask");
+ module_param_named(queues_num50, iwl50_mod_params.num_of_queues, int, 0444);
+ MODULE_PARM_DESC(queues_num50, "number of hw queues in 50xx series");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 08b842f..7c3a20a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -154,7 +154,7 @@ struct iwl_ops {
+ struct iwl_mod_params {
+ 	int disable;		/* def: 0 = enable radio */
+ 	int sw_crypto;		/* def: 0 = using hardware encryption */
+-	int debug;		/* def: 0 = minimal debug log messages */
++	u32 debug;		/* def: 0 = minimal debug log messages */
+ 	int disable_hw_scan;	/* def: 0 = use h/w scan */
+ 	int num_of_queues;	/* def: HW dependent */
+ 	int num_of_ampdu_queues;/* def: HW dependent */
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 161d812..dad8e6d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -65,7 +65,7 @@ static int iwl3945_tx_queue_update_write_ptr(struct iwl3945_priv *priv,
  
--static void ath_setcurmode(struct ath_softc *sc, enum wireless_mode mode)
-+static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
- {
--	sc->cur_rate_table = sc->hw_rate_table[mode];
- 	/*
- 	 * All protection frames are transmited at 2Mb/s for
- 	 * 11g, otherwise at 1Mb/s.
- 	 * XXX select protection rate index from rate table.
- 	 */
--	sc->sc_protrix = (mode == ATH9K_MODE_11G ? 1 : 0);
--}
--
--static enum wireless_mode ath_chan2mode(struct ath9k_channel *chan)
--{
--	if (chan->chanmode == CHANNEL_A)
--		return ATH9K_MODE_11A;
--	else if (chan->chanmode == CHANNEL_G)
--		return ATH9K_MODE_11G;
--	else if (chan->chanmode == CHANNEL_B)
--		return ATH9K_MODE_11B;
--	else if (chan->chanmode == CHANNEL_A_HT20)
--		return ATH9K_MODE_11NA_HT20;
--	else if (chan->chanmode == CHANNEL_G_HT20)
--		return ATH9K_MODE_11NG_HT20;
--	else if (chan->chanmode == CHANNEL_A_HT40PLUS)
--		return ATH9K_MODE_11NA_HT40PLUS;
--	else if (chan->chanmode == CHANNEL_A_HT40MINUS)
--		return ATH9K_MODE_11NA_HT40MINUS;
--	else if (chan->chanmode == CHANNEL_G_HT40PLUS)
--		return ATH9K_MODE_11NG_HT40PLUS;
--	else if (chan->chanmode == CHANNEL_G_HT40MINUS)
--		return ATH9K_MODE_11NG_HT40MINUS;
--
--	WARN_ON(1); /* should not get here */
--
--	return ATH9K_MODE_11B;
-+	sc->sc_protrix = 0;
-+	switch (conf->channel->band) {
-+	case IEEE80211_BAND_2GHZ:
-+		if (conf_is_ht20(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NG_HT20];
-+		else if (conf_is_ht40_minus(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NG_HT40MINUS];
-+		else if (conf_is_ht40_plus(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NG_HT40PLUS];
-+		else {
-+			sc->sc_protrix = 1;
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11G];
-+		}
-+		break;
-+	case IEEE80211_BAND_5GHZ:
-+		if (conf_is_ht20(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NA_HT20];
-+		else if (conf_is_ht40_minus(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NA_HT40MINUS];
-+		else if (conf_is_ht40_plus(conf))
-+			sc->cur_rate_table =
-+			  sc->hw_rate_table[ATH9K_MODE_11NA_HT40PLUS];
-+		else
-+			sc->cur_rate_table = sc->hw_rate_table[ATH9K_MODE_11A];
-+		break;
-+	default:
-+		break;
-+	}
- }
- 
- static void ath_update_txpow(struct ath_softc *sc)
-@@ -258,6 +264,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
- {
- 	struct ath_hal *ah = sc->sc_ah;
- 	bool fastcc = true, stopped;
-+	struct ieee80211_hw *hw = sc->hw;
- 
- 	if (sc->sc_flags & SC_OP_INVALID)
- 		return -EIO;
-@@ -316,7 +323,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
- 			return -EIO;
- 		}
- 
--		ath_setcurmode(sc, ath_chan2mode(hchan));
-+		ath_setcurmode(sc, &hw->conf);
- 		ath_update_txpow(sc);
- 		ath9k_hw_set_interrupts(ah, sc->sc_imask);
- 	}
-@@ -1621,6 +1628,7 @@ detach:
- int ath_reset(struct ath_softc *sc, bool retry_tx)
- {
- 	struct ath_hal *ah = sc->sc_ah;
-+	struct ieee80211_hw *hw = sc->hw;
- 	int status;
- 	int error = 0;
- 
-@@ -1648,7 +1656,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	 * that changes the channel so update any state that
- 	 * might change as a result.
- 	 */
--	ath_setcurmode(sc, ath_chan2mode(sc->sc_ah->ah_curchan));
-+	ath_setcurmode(sc, &hw->conf);
- 
- 	ath_update_txpow(sc);
- 
-@@ -1945,7 +1953,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	    !sc->sc_config.swBeaconProcess)
- 		sc->sc_imask |= ATH9K_INT_TIM;
- 
--	ath_setcurmode(sc, ath_chan2mode(init_channel));
-+	ath_setcurmode(sc, &hw->conf);
- 
- 	sc->sc_flags &= ~SC_OP_INVALID;
- 
+ /* module parameters */
+ static int iwl3945_param_disable_hw_scan; /* def: 0 = use 3945's h/w scan */
+-static int iwl3945_param_debug;    /* def: 0 = minimal debug log messages */
++static u32 iwl3945_param_debug;    /* def: 0 = minimal debug log messages */
+ static int iwl3945_param_disable;  /* def: 0 = enable radio */
+ static int iwl3945_param_antenna;  /* def: 0 = both antennas (use diversity) */
+ int iwl3945_param_hwcrypto;        /* def: 0 = use software encryption */
+@@ -8361,7 +8361,7 @@ MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
+ module_param_named(hwcrypto, iwl3945_param_hwcrypto, int, 0444);
+ MODULE_PARM_DESC(hwcrypto,
+ 		 "using hardware crypto engine (default 0 [software])\n");
+-module_param_named(debug, iwl3945_param_debug, int, 0444);
++module_param_named(debug, iwl3945_param_debug, uint, 0444);
+ MODULE_PARM_DESC(debug, "debug output mask");
+ module_param_named(disable_hw_scan, iwl3945_param_disable_hw_scan, int, 0444);
+ MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
 -- 
-1.6.1.rc3.51.g5832d
+1.5.3.6
 
