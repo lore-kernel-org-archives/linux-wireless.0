@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46314 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752998AbYL2MN7 (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.190]:47379 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751229AbYLQQwj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 07:13:59 -0500
-Subject: Re: [PATCH] ath9k: Enable dynamic power save in ath9k.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1230552660.3116.33.camel@johannes> (sfid-20081229_131046_790819_4EFBD29E)
-References: <20081229235300.GA8458@myhost.users.atheros.com>
-	 (sfid-20081229_112105_235618_A8D12202)  <1230552660.3116.33.camel@johannes>
-	 (sfid-20081229_131046_790819_4EFBD29E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-aCvABm0Hs8nxAMxqEhSg"
-Date: Mon, 29 Dec 2008 13:14:21 +0100
-Message-Id: <1230552861.3116.34.camel@johannes> (sfid-20081229_131406_901595_3870840D)
-Mime-Version: 1.0
+	Wed, 17 Dec 2008 11:52:39 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so3063427rnd.17
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2008 08:52:38 -0800 (PST)
+Message-ID: <40f31dec0812170852l63c3f2efl5e1bf41252c03c73@mail.gmail.com> (sfid-20081217_175243_871998_15C743C1)
+Date: Wed, 17 Dec 2008 18:52:38 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Patrick McHardy" <kaber@trash.net>
+Subject: Re: [RFC]: ath5k: enable TXOK IRQ
+Cc: linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	mcgrof@gmail.com, me@bobcopeland.com
+In-Reply-To: <493F5010.7030500@trash.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <493F5010.7030500@trash.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2008/12/10 Patrick McHardy <kaber@trash.net>:
+> I tried to use ath5k in AP mode with hostapd, but hostapd never
+> added the authenticated and associated stations to the kernel.
+> The reason is that ath5k didn't invoke the tx tasklet, so it
+> did not call the ieee80211_tx_status() function and userspace
+> didn't receive the radiotap message indicating success.
+>
+> The root cause appears to be that the TXOK interrupt is not
+> enabled, so the tasklet is never scheduled. I'm not sure whether
+> TXOK is really the correct one to handle ! IEEE80211_TX_CTL_NO_ACK,
+> but it fixes the problem for me.
+>
 
---=-aCvABm0Hs8nxAMxqEhSg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Can you put a simple printk on get_isr to see what interrupts are you getting ?
 
-On Mon, 2008-12-29 at 13:11 +0100, Johannes Berg wrote:
-> On Mon, 2008-12-29 at 15:53 -0800, Vivek Natarajan wrote:
->=20
-> > +#define ATH9K_PS_WAKEUP(sc)						      \
-> > +	do {								      \
-> > +		if (!atomic_read(&sc->ps_usecount) && 			      \
-> > +		   (ah->ah_powerMode !=3D  ATH9K_PM_AWAKE)) {		      \
-> > +			ah->ah_restoreMode =3D ah->ah_powerMode;		      \
-> > +			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);	      \
-> > +		}							      \
-> > +		atomic_inc(&sc->ps_usecount);				      \
-> > +	} while (0);
+Your patch sets TXOK interrupt on the secondary interrupt mask
+register but if you don't enable
+TXOK on the primary imr you won't get any...
 
-Also, this seems racy, shouldn't it use something like if
-(atomic_inc_return() =3D=3D 1) ?
+2236         sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
+2237                 AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
+2238                 AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
 
-johannes
+...so this is weird, you shouldn't get any txok interrupt even with
+your patch. Txdesc/txeol should be enough.
 
---=-aCvABm0Hs8nxAMxqEhSg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJWL8bAAoJEKVg1VMiehFYRFkP/3AlbA9x/i0R9dfRby+1Nucv
-FKmfQ0pL0hhRy5NSSbkTv1uvdWhz8TzBbZFFamGHZRNQSsF8Ua8RZspyAuzV1d7b
-eCXamJScKN1qCeARIVSDUJMuPZgZKHaEOwC5DSwjBoYiorlnXdxp2+XbGdQE4DHZ
-y8jhFV0aGpsgNd2cLf63n/J9ldP7LSDuK0ywXkdP9xK5ty+zSYDmyA0n7FoVrkxZ
-L5PFtKJTDeclsnQno2RBDeXma6RvJw+xS6MDvWBM9NFfWb7u4n+9zXG6bikXXTAV
-2zp2olcjcx46j/Bl/lxm0Swg8p7t6lpn8p1q3TlSiQKcEj1z9gPKPvm4/w26Frzv
-yZY5M1QfqKdWpRa6iAR+ROCqL+AlAmAeSmwehIDsLNDrj7N04s1L30owbR8TMkuz
-1ARoPJeKeSfXvWyIdOectY7VFnr5RK/MASTIlzTLdMd5mqYzcjw4WoTx9KrkNGOf
-MfQfOaas4CuJ48CUztTurtWqqQFUBHGz1AV+9jiGGqSuw+Qei7mUwBN+yRpqLzoi
-70FvMqHznKngye9kyCO6nJtlSGo2AAPLWYgeUAUVTSj1NGf5fIL1BamEEC7qB+6B
-9zHEdlhhO5bBCr/N+WhiIrDSx8Vo54spgjkTHAfFiobprIntE/1gwAcbgyJMOtaY
-0bs4VtDCf0t/NKZ/DVRo
-=g0gp
------END PGP SIGNATURE-----
-
---=-aCvABm0Hs8nxAMxqEhSg--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
