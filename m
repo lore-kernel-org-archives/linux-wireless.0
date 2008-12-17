@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:27961 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755791AbYLVVjh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 16:39:37 -0500
-Subject: [PATCH] mac80211: allow mode change if IBSS is not allowed
-To: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Mon, 22 Dec 2008 16:39:36 -0500
-Message-ID: <20081222213935.26129.4212.stgit@dv.roinet.com> (sfid-20081222_223953_952557_F52B06C5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from xc.sipsolutions.net ([83.246.72.84]:37023 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890AbYLQSZn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2008 13:25:43 -0500
+Subject: Re: [PATCH v2 1/3] cfg80211: add PM hooks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	mabbaswireless@gmail.com
+In-Reply-To: <20081217153524.GA3539@tuxdriver.com>
+References: <1229313039-5544-2-git-send-email-me@bobcopeland.com>
+	 <20081217153524.GA3539@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 17 Dec 2008 19:10:49 +0100
+Message-Id: <1229537449.4268.10.camel@localhost> (sfid-20081217_192546_086837_D1335A46)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changing mode on an interface is not allowed if IBSS is disabled for the
-current channel.  That restriction should only apply when switching to
-the ad-hoc mode, as it was prior to db17d8c4.
+On Wed, 2008-12-17 at 10:35 -0500, John W. Linville wrote:
+> On Sun, Dec 14, 2008 at 10:50:37PM -0500, Bob Copeland wrote:
+> > From: Johannes Berg <johannes@sipsolutions.net>
+> > 
+> > This should help implement suspend/resume in mac80211, these
+> > hooks will be run before the device is suspended and after it
+> > resumes. Therefore, they can touch the hardware as much as
+> > they want to.
+> > 
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> Is cfg80211 the right place for these?  Is it likely that any
+> non-mac80211 users of cfg80211 will ever want to use these hooks?
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- net/mac80211/iface.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+That's a good question. But even if non-mac80211 won't use this, I don't
+see how to get notifications in mac80211 w/o involving cfg80211, since
+mac80211 doesn't really have a way to get at the ops there without this,
+does it?
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 5abbc3f..b907482 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -699,7 +699,8 @@ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
- 		return 0;
- 
- 	/* Setting ad-hoc mode on non-IBSS channel is not supported. */
--	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS)
-+	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS &&
-+	    type == NL80211_IFTYPE_ADHOC)
- 		return -EOPNOTSUPP;
- 
- 	/*
+johannes
+
