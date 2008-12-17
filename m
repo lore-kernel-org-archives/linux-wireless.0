@@ -1,31 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:10849 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751959AbYLJPNq (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53585 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751331AbYLQPpS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 10:13:46 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so155278qwe.37
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 07:13:45 -0800 (PST)
-Message-ID: <e27b78a40812100713l588e5cfch952c3d909c1dea19@mail.gmail.com> (sfid-20081210_161349_313917_9BFFAA0F)
-Date: Wed, 10 Dec 2008 15:13:45 +0000
-From: Keir <keirlawson@gmail.com>
-To: "Andrey Yurovsky" <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Subject: Listing established mesh connections
+	Wed, 17 Dec 2008 10:45:18 -0500
+Date: Wed, 17 Dec 2008 10:38:29 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Patrick McHardy <kaber@trash.net>
+Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	mickflemm@gmail.com, mcgrof@gmail.com, me@bobcopeland.com
+Subject: Re: [RFC]: ath5k: enable TXOK IRQ
+Message-ID: <20081217153829.GB3539@tuxdriver.com> (sfid-20081217_164523_222194_085A0751)
+References: <493F5010.7030500@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <493F5010.7030500@trash.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Dec 10, 2008 at 06:13:52AM +0100, Patrick McHardy wrote:
+> I tried to use ath5k in AP mode with hostapd, but hostapd never
+> added the authenticated and associated stations to the kernel.
+> The reason is that ath5k didn't invoke the tx tasklet, so it
+> did not call the ieee80211_tx_status() function and userspace
+> didn't receive the radiotap message indicating success.
+>
+> The root cause appears to be that the TXOK interrupt is not
+> enabled, so the tasklet is never scheduled. I'm not sure whether
+> TXOK is really the correct one to handle ! IEEE80211_TX_CTL_NO_ACK,
+> but it fixes the problem for me.
 
-I was wondering if there was an efficient way to get a list of
-established mesh connections for a given mesh network?  I'm working on
-a custom link metric (Packet pair) for the o11s stack and want to
-unicast a packet to each established connection.  I have been reading
-through the HWMP code, but it doesn't seem clear to me how this code
-gets a list of its neighbors.
+Any comments from the ath5k "usual suspects" on this one?
 
-Cheers
-
-Keir
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
