@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:43803 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801AbYLRVsx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 16:48:53 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so672607wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 13:48:51 -0800 (PST)
-Message-ID: <b6c5339f0812181348x49e5c68bia827d9feb4ef0e6c@mail.gmail.com> (sfid-20081218_224857_256476_E31F8751)
-Date: Thu, 18 Dec 2008 16:48:51 -0500
-From: "Bob Copeland" <bcopeland@gmail.com>
-To: sbrown@cortland.com
-Subject: Re: Mesh now completely broken on ath5k, latest git
-Cc: Keir <keirlawson@gmail.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>,
-	"Andrey Yurovsky" <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org, javier@cozybit.com
-In-Reply-To: <494ABA6D.8070002@cortland.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <e27b78a40812160405h2241e1acqa0dc8e593d6ebfad@mail.gmail.com>
-	 <4947ABAF.9060205@cortland.com>
-	 <e27b78a40812160807j7549e1a5hf3bee474b31c29b7@mail.gmail.com>
-	 <45e8e6c40812161030x1f7fb374qd4a386ef9022a853@mail.gmail.com>
-	 <40f31dec0812170906vd8e4445q9920c66905064df8@mail.gmail.com>
-	 <e27b78a40812171004r3a8d424dk7c390aaf7c757665@mail.gmail.com>
-	 <494A578A.7070803@cortland.com>
-	 <b6c5339f0812181138s1ba134a6qeff21eb063a87e08@mail.gmail.com>
-	 <494ABA6D.8070002@cortland.com>
+Received: from mx2.redhat.com ([66.187.237.31]:54281 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751237AbYLQVcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2008 16:32:24 -0500
+Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: mohamed salim abbas <mabbaswireless@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	yi.zhu@intel.com, reinette.chatre@intel.com
+In-Reply-To: <20081217202943.GB3516@tuxdriver.com>
+References: <200812161307.07193.helmut.schaa@gmail.com>
+	 <b3153e950812171210n7247bevc9470fa47942ce92@mail.gmail.com>
+	 <20081217202943.GB3516@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 17 Dec 2008 16:31:25 -0500
+Message-Id: <1229549485.26406.12.camel@localhost.localdomain> (sfid-20081217_223228_510362_2087909C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 18, 2008 at 4:02 PM, Steve Brown <sbrown@cortland.com> wrote:
-> Lots of these however:
-> Dec 18 15:53:20 fl-ws kernel: ath5k phy23: beacon queue 7 didn't stop?
+On Wed, 2008-12-17 at 15:29 -0500, John W. Linville wrote:
+> On Wed, Dec 17, 2008 at 12:10:11PM -0800, mohamed salim abbas wrote:
+> > the interrupt moved from pci_probe to mac_start for power saving. once
+> > the interface is up the driver will read some register to know rfkill
+> > status, if the interface in down the driver don't care to keep track
+> > of rfkill switch. I wonder what the purpose of changing this behavior?
+> 
+> I think it still isn't settled in everyone's minds whether rfkill
+> only matters if the device is "up" or if it is something that
+> e.g. NetworkManager might want to monitor as a clue to bring the
+> device up or down in response to rfkill changes.
 
-Can you change the if statement that prints that in ath5k_beacon_send() in
-base.c to capture the return value?  i.e.:
+The question is:  does NetworkManager just always keep the device 'up'
+irregardless of whether it's supposed to be associated with anything
+just so we can get rfkill events?
 
-int err;
-...
+We have to keep ethernet devices up because some don't report carrier
+status unless they are up (when the PHY is powered on).  Yeah, that
+consumes a trivial amount of power.  But lots better to get
+notifications of ethernet carrier events dynamically than having to
+either (a) poll the carrier by IFF_UP every 5 seconds or (b) not getting
+carrier events at all.
 
-err = ath5k_hw_stop_tx_dma(ah, sc->bhalq);
-if (unlikely(err)) {
-    ATH5K_WARN(... "...didn't stop? %d\n", sc->bhalq, err);
-}
+I guess I'll treat rfkill the same as ethernet carrier.  If we cannot
+rely on rfkill notifications when the device is down (we already can't,
+since iwl3945 simply can't do it) then I guess we just have to keep the
+wifi device up all the time, even when it's rfkilled, and set the tx
+power off when wireless is supposed to be disabled.
 
-> If I make the same change to the current git, still no beacons. But, the
-> "queue 7" msgs persist.
+It is simply a hard requirement to be able to get rfkill events when the
+switch gets flipped, irrespective of whether some blocks of the silicon
+are still powered or not (which I assume is the motivation for
+completely unloading the firmware in the first place).  We're not going
+to special-case a certain chips in NetworkManager; if there are quirks
+for devices, those quirks need to live in the driver, not worked around
+in userspace.
 
-Not sure, I was about to blame ath5k_configure_filter() but I see it does
-turn on the beacons for mesh.
+Dan
 
--- 
-Bob Copeland %% www.bobcopeland.com
+
