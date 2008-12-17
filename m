@@ -1,100 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:34331 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194AbYLZUuj (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44428 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758651AbYLQMgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2008 15:50:39 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: regulatory domain hints
-Date: Fri, 26 Dec 2008 21:50:33 +0100
-Cc: John W Linville <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812262150.33455.chunkeey@web.de> (sfid-20081226_215058_617203_00A63722)
+	Wed, 17 Dec 2008 07:36:04 -0500
+Subject: Re: [PATCH] ath9k: Fix a NULL pointer dereference in ath_rate_get
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Jouni Malinen <j@w1.fi>, Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200812171325.26310.chunkeey@web.de>
+References: <20081217113031.GA18060@jm.kir.nu>
+	 <1229513456.4566.2.camel@localhost> <20081217120250.GA19453@jm.kir.nu>
+	 <200812171325.26310.chunkeey@web.de>
+Content-Type: text/plain
+Date: Wed, 17 Dec 2008 13:21:04 +0100
+Message-Id: <1229516464.5175.2.camel@localhost> (sfid-20081217_133629_579349_E234F9DF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a sub-routine that parses the default country eeprom entry
-and forwards the obtained Alpha2 identifier to the regulatory sub-system.
+On Wed, 2008-12-17 at 13:25 +0100, Christian Lamparter wrote:
 
-Note: I dropped the p54 specific regdomain<->alpha2 conversion code for now.
-But it will be added as soon as there's the common library function is ready.
+> hostapd: wlan1: STA XX:XX:XX:XX:0d IEEE 802.11: authenticated
+> kernel: [ 3130.431067] ------------[ cut here ]------------
+> kernel: [ 3130.431076] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0xb8/0x320 [mac80211]()
+> kernel: [ 3130.431081] Modules linked in: p54usb p54pci p54common [...]
+> kernel: [ 3130.431300] Pid: 16961, comm: hostapd2 Tainted: P           2.6.28-rc7-wl #3
+> [ 3130.431305] Call Trace:
+> [ 3130.431318]  [<ffffffff802343c1>] warn_on_slowpath+0x51/0x75
+> [ 3130.431329]  [<ffffffff803d74b0>] rb_insert_color+0xba/0xe2
+> [ 3130.431338]  [<ffffffff802480ef>] __remove_hrtimer+0x7c/0x88
+> [ 3130.431375]  [<ffffffffa00bd30e>] minstrel_rate_init+0xb8/0x320 [mac80211]
+> [ 3130.431417]  [<ffffffffa00ae713>] ieee80211_add_station+0x145/0x17d [mac80211]
+> hostapd: wlan1: STA XX:XX:XX:XX:0d IEEE 802.11: associated (aid 1, accounting session 494187DD-00000000)
+> kernel: [ 3130.431440]  [<ffffffffa00897af>] nl80211_new_station+0x1b3/0x20b [cfg80211]
+> kernel: [ 3130.431450]  [<ffffffff80595691>] mutex_lock+0xd/0x1e
+> kernel: [ 3130.431459]  [<ffffffff804f6f86>] nla_parse+0x4b/0xb2
+> 
+> yup, the Warning just happend right between auth and assoc
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-12-26 17:54:47.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-12-26 21:17:42.000000000 +0100
-@@ -365,6 +365,36 @@ static void p54_parse_rssical(struct iee
- 	}
- }
- 
-+static void p54_parse_default_country(struct ieee80211_hw *dev,
-+				      void *data, int len)
-+{
-+	struct pda_country *country;
-+
-+	if (len != sizeof(*country)) {
-+		printk(KERN_ERR "%s: found possible invalid default country "
-+				"eeprom entry. (entry size: %d)\n",
-+		       wiphy_name(dev->wiphy), len);
-+
-+		print_hex_dump_bytes("country:", DUMP_PREFIX_NONE,
-+				     data, len);
-+
-+		printk(KERN_ERR "%s: please report this issue.\n",
-+			wiphy_name(dev->wiphy));
-+		return;
-+	}
-+
-+	country = (struct pda_country *) data;
-+	if (country->flags == PDR_COUNTRY_CERT_CODE_PSEUDO)
-+		regulatory_hint(dev->wiphy, country->alpha2);
-+	else {
-+		/* TODO:
-+		 * write a shared/common function that converts
-+		 * "Regulatory domain codes" (802.11-2007 14.8.2.2)
-+		 * into ISO/IEC 3166-1 alpha2 for regulatory_hint.
-+		 */
-+	}
-+}
-+
- static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- {
- 	struct p54_common *priv = dev->priv;
-@@ -453,6 +483,9 @@ static int p54_parse_eeprom(struct ieee8
- 			memcpy(priv->iq_autocal, entry->data, data_len);
- 			priv->iq_autocal_len = data_len / sizeof(struct pda_iq_autocal_entry);
- 			break;
-+		case PDR_DEFAULT_COUNTRY:
-+			p54_parse_default_country(dev, entry->data, data_len);
-+			break;
- 		case PDR_INTERFACE_LIST:
- 			tmp = entry->data;
- 			while ((u8 *)tmp < entry->data + data_len) {
-@@ -487,7 +520,6 @@ static int p54_parse_eeprom(struct ieee8
- 		case PDR_UTF8_OEM_NAME:
- 		case PDR_UTF8_PRODUCT_NAME:
- 		case PDR_COUNTRY_LIST:
--		case PDR_DEFAULT_COUNTRY:
- 		case PDR_ANTENNA_GAIN:
- 		case PDR_PRISM_INDIGO_PA_CALIBRATION_DATA:
- 		case PDR_REGULATORY_POWER_LIMITS:
-diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
---- a/drivers/net/wireless/p54/p54common.h	2008-12-26 17:54:34.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.h	2008-12-26 21:19:13.000000000 +0100
-@@ -180,6 +180,12 @@ struct pda_rssi_cal_entry {
- 	__le16 add;
- } __attribute__ ((packed));
- 
-+struct pda_country {
-+	u8 regdomain;
-+	u8 alpha2[2];
-+	u8 flags;
-+} __attribute__ ((packed));
-+
- /*
-  * this defines the PDR codes used to build PDAs as defined in document
-  * number 553155. The current implementation mirrors version 1.1 of the
+This, umm, seems totally unrelated since Jouni was fixing something in
+ath9k's RC algorithm.
+
+johannes
+
