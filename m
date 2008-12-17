@@ -1,194 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.230]:43781 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755274AbYL1Wod (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49007 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbYLQSah (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2008 17:44:33 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so4164308rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2008 14:44:32 -0800 (PST)
-Message-ID: <efe7343f0812281444x66ead26aq3fb75090d3ede971@mail.gmail.com> (sfid-20081228_234451_966061_D65A3823)
-Date: Sun, 28 Dec 2008 22:44:32 +0000
-From: "Luis Correia" <luis.f.correia@gmail.com>
-To: "Ivo van Doorn" <ivdoorn@gmail.com>
-Subject: Re: rt2500usb vs rt73usb
-Cc: "Pavel Roskin" <proski@gnu.org>,
-	"Piter PUNK" <piterpunk@unitednerds.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200812282332.20721.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_106365_11352493.1230504272575"
-References: <49571E29.8060204@unitednerds.org>
-	 <200812281034.07373.IvDoorn@gmail.com> <1230502494.25726.26.camel@dv>
-	 <200812282332.20721.IvDoorn@gmail.com>
+	Wed, 17 Dec 2008 13:30:37 -0500
+Subject: Re: [RFC] mac80211: Print unknown packet type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <494944AD.7020204@lwfinger.net>
+References: <494944AD.7020204@lwfinger.net>
+Content-Type: text/plain
+Date: Wed, 17 Dec 2008 19:15:46 +0100
+Message-Id: <1229537746.4268.13.camel@localhost> (sfid-20081217_193040_947464_0E0C32F4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------=_Part_106365_11352493.1230504272575
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Wed, 2008-12-17 at 12:27 -0600, Larry Finger wrote:
+> Johannes,
+> 
+> I'm trying to find a problem with p54usb that causes it to go belly-up under
+> stress testing. In one of my runs, I hit the WARN_ON in
+> ieee80211_tasklet_handler(). Unfortunately, I got no indication of what was in
+> skb->pkt_type, just that it was not one of the expected types.
 
-Hi all,
+That really points to memory corruption somewhere.
 
-for completeness sake, here's the output of my devices as well.
+> Do you think that adding the printk below would be worthwhile?
+> 
+> Thanks,
+> 
+> Larry
+> ---
+> 
+> Index: wireless-testing/net/mac80211/main.c
+> ===================================================================
+> --- wireless-testing.orig/net/mac80211/main.c
+> +++ wireless-testing/net/mac80211/main.c
+> @@ -341,6 +341,8 @@ static void ieee80211_tasklet_handler(un
+>  			dev_kfree_skb(skb);
+>  			break ;
+>  		default:
+> +			printk(KERN_INFO "mac80211: Packet is of unknown type"
+> +					 " %d\n", skb->pkt_type);
+>  			WARN_ON(1);
 
-Luis Correia
-rt2x00 project admin
+Seems reasonable to me. I'd do
 
++	WARN(1, "mac80211: ...", skb->pkt_type);
+-	WARN_ON(1);
 
+instead.
 
+johannes
 
-On Sun, Dec 28, 2008 at 22:32, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Sunday 28 December 2008, Pavel Roskin wrote:
->> On Sun, 2008-12-28 at 10:34 +0100, Ivo van Doorn wrote:
->> > On Sunday 28 December 2008, Piter PUNK wrote:
->>
->> > > If the those 148f:2573 USB devices doesn't exists or
->> > > if they exists and works fine with rt73usb, can we
->> > > remove 148f:2573 from rt2500usb?
->> >
->> > No we can't, you can blame manufacturers for shipping
->> > USB sticks with different chipsets but the exact same USB ID.
->>
->> Maybe there are some hints on the USB level that would make it possible
->> to distinguish between the devices without loading the driver?
->> Something like the number of endpoints?  Then we could ask USB
->> developers to provide a way to specify them in the USB devece table.
->
-> Number of endpoints varies, your rt73usb device only has 2 endpoints, while
-> mine appears to have 5.
-> The only thing the driver is doing now is reading the EEPROM and double checking
-> the first 2 bytes to see which device has been loaded.
->
->> I have a device that works with rt73usb, but not rt2500usb.  I'm
->> attaching the output of "lsusb -v" for the device.  If we look at
->> similar information for other devices, we could find out how to
->> distinguish them.
->
-> Please note that some manufacturers (most notorious example Linksys) managed
-> to get 5 different chipsets under a single USB ID. chipsets came from Broadcom,
-> Ralink and Prism.
->
-> For what it is worth, I am attaching the lsusb -v output from my hardware
-> (both rt73usb as well as rt2500usb).
->
-> Ivo
->
-
-------=_Part_106365_11352493.1230504272575
-Content-Type: application/octet-stream; name=usb.rt2500usb
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fpaafgtc2
-Content-Disposition: attachment; filename=usb.rt2500usb
-
-QnVzIDAwMiBEZXZpY2UgMDAyOiBJRCAxNDhmOjI1NzAgUmFsaW5rIFRlY2hub2xvZ3ksIENvcnAu
-IDgwMi4xMWcgV2lGaQpEZXZpY2UgRGVzY3JpcHRvcjoKICBiTGVuZ3RoICAgICAgICAgICAgICAg
-IDE4CiAgYkRlc2NyaXB0b3JUeXBlICAgICAgICAgMQogIGJjZFVTQiAgICAgICAgICAgICAgIDIu
-MDAKICBiRGV2aWNlQ2xhc3MgICAgICAgICAgICAwIChEZWZpbmVkIGF0IEludGVyZmFjZSBsZXZl
-bCkKICBiRGV2aWNlU3ViQ2xhc3MgICAgICAgICAwIAogIGJEZXZpY2VQcm90b2NvbCAgICAgICAg
-IDAgCiAgYk1heFBhY2tldFNpemUwICAgICAgICA2NAogIGlkVmVuZG9yICAgICAgICAgICAweDE0
-OGYgUmFsaW5rIFRlY2hub2xvZ3ksIENvcnAuCiAgaWRQcm9kdWN0ICAgICAgICAgIDB4MjU3MCA4
-MDIuMTFnIFdpRmkKICBiY2REZXZpY2UgICAgICAgICAgICAwLjAxCiAgaU1hbnVmYWN0dXJlciAg
-ICAgICAgICAgMSBSYWxpbmsKICBpUHJvZHVjdCAgICAgICAgICAgICAgICAyIDgwMi4xMWcgV0xB
-TiArIFBlbiBEcml2ZQogIGlTZXJpYWwgICAgICAgICAgICAgICAgIDAgCiAgYk51bUNvbmZpZ3Vy
-YXRpb25zICAgICAgMQogIENvbmZpZ3VyYXRpb24gRGVzY3JpcHRvcjoKICAgIGJMZW5ndGggICAg
-ICAgICAgICAgICAgIDkKICAgIGJEZXNjcmlwdG9yVHlwZSAgICAgICAgIDIKICAgIHdUb3RhbExl
-bmd0aCAgICAgICAgICAgMzIKICAgIGJOdW1JbnRlcmZhY2VzICAgICAgICAgIDEKICAgIGJDb25m
-aWd1cmF0aW9uVmFsdWUgICAgIDEKICAgIGlDb25maWd1cmF0aW9uICAgICAgICAgIDAgCiAgICBi
-bUF0dHJpYnV0ZXMgICAgICAgICAweDgwCiAgICAgIChCdXMgUG93ZXJlZCkKICAgIE1heFBvd2Vy
-ICAgICAgICAgICAgICAzMDBtQQogICAgSW50ZXJmYWNlIERlc2NyaXB0b3I6CiAgICAgIGJMZW5n
-dGggICAgICAgICAgICAgICAgIDkKICAgICAgYkRlc2NyaXB0b3JUeXBlICAgICAgICAgNAogICAg
-ICBiSW50ZXJmYWNlTnVtYmVyICAgICAgICAwCiAgICAgIGJBbHRlcm5hdGVTZXR0aW5nICAgICAg
-IDAKICAgICAgYk51bUVuZHBvaW50cyAgICAgICAgICAgMgogICAgICBiSW50ZXJmYWNlQ2xhc3Mg
-ICAgICAgMjU1IFZlbmRvciBTcGVjaWZpYyBDbGFzcwogICAgICBiSW50ZXJmYWNlU3ViQ2xhc3Mg
-ICAgMjU1IFZlbmRvciBTcGVjaWZpYyBTdWJjbGFzcwogICAgICBiSW50ZXJmYWNlUHJvdG9jb2wg
-ICAgMjU1IFZlbmRvciBTcGVjaWZpYyBQcm90b2NvbAogICAgICBpSW50ZXJmYWNlICAgICAgICAg
-ICAgICAwIAogICAgICBFbmRwb2ludCBEZXNjcmlwdG9yOgogICAgICAgIGJMZW5ndGggICAgICAg
-ICAgICAgICAgIDcKICAgICAgICBiRGVzY3JpcHRvclR5cGUgICAgICAgICA1CiAgICAgICAgYkVu
-ZHBvaW50QWRkcmVzcyAgICAgMHg4MSAgRVAgMSBJTgogICAgICAgIGJtQXR0cmlidXRlcyAgICAg
-ICAgICAgIDIKICAgICAgICAgIFRyYW5zZmVyIFR5cGUgICAgICAgICAgICBCdWxrCiAgICAgICAg
-ICBTeW5jaCBUeXBlICAgICAgICAgICAgICAgTm9uZQogICAgICAgICAgVXNhZ2UgVHlwZSAgICAg
-ICAgICAgICAgIERhdGEKICAgICAgICB3TWF4UGFja2V0U2l6ZSAgICAgMHgwMjAwICAxeCA1MTIg
-Ynl0ZXMKICAgICAgICBiSW50ZXJ2YWwgICAgICAgICAgICAgICAwCiAgICAgIEVuZHBvaW50IERl
-c2NyaXB0b3I6CiAgICAgICAgYkxlbmd0aCAgICAgICAgICAgICAgICAgNwogICAgICAgIGJEZXNj
-cmlwdG9yVHlwZSAgICAgICAgIDUKICAgICAgICBiRW5kcG9pbnRBZGRyZXNzICAgICAweDAxICBF
-UCAxIE9VVAogICAgICAgIGJtQXR0cmlidXRlcyAgICAgICAgICAgIDIKICAgICAgICAgIFRyYW5z
-ZmVyIFR5cGUgICAgICAgICAgICBCdWxrCiAgICAgICAgICBTeW5jaCBUeXBlICAgICAgICAgICAg
-ICAgTm9uZQogICAgICAgICAgVXNhZ2UgVHlwZSAgICAgICAgICAgICAgIERhdGEKICAgICAgICB3
-TWF4UGFja2V0U2l6ZSAgICAgMHgwMjAwICAxeCA1MTIgYnl0ZXMKICAgICAgICBiSW50ZXJ2YWwg
-ICAgICAgICAgICAgICAwCkRldmljZSBRdWFsaWZpZXIgKGZvciBvdGhlciBkZXZpY2Ugc3BlZWQp
-OgogIGJMZW5ndGggICAgICAgICAgICAgICAgMTAKICBiRGVzY3JpcHRvclR5cGUgICAgICAgICA2
-CiAgYmNkVVNCICAgICAgICAgICAgICAgMi4wMAogIGJEZXZpY2VDbGFzcyAgICAgICAgICAgIDAg
-KERlZmluZWQgYXQgSW50ZXJmYWNlIGxldmVsKQogIGJEZXZpY2VTdWJDbGFzcyAgICAgICAgIDAg
-CiAgYkRldmljZVByb3RvY29sICAgICAgICAgMCAKICBiTWF4UGFja2V0U2l6ZTAgICAgICAgIDY0
-CiAgYk51bUNvbmZpZ3VyYXRpb25zICAgICAgMQpEZXZpY2UgU3RhdHVzOiAgICAgMHgwMDAwCiAg
-KEJ1cyBQb3dlcmVkKQoK
-------=_Part_106365_11352493.1230504272575
-Content-Type: application/octet-stream; name=usb.rt73usb
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fpaafslk3
-Content-Disposition: attachment; filename=usb.rt73usb
-
-QnVzIDAwMiBEZXZpY2UgMDAzOiBJRCAxMDQ0OjgwMDggQ2h1IFl1ZW4gRW50ZXJwcmlzZSBDby4s
-IEx0ZCBHTi1XQjAxR1MKRGV2aWNlIERlc2NyaXB0b3I6CiAgYkxlbmd0aCAgICAgICAgICAgICAg
-ICAxOAogIGJEZXNjcmlwdG9yVHlwZSAgICAgICAgIDEKICBiY2RVU0IgICAgICAgICAgICAgICAy
-LjAwCiAgYkRldmljZUNsYXNzICAgICAgICAgICAgMCAoRGVmaW5lZCBhdCBJbnRlcmZhY2UgbGV2
-ZWwpCiAgYkRldmljZVN1YkNsYXNzICAgICAgICAgMCAKICBiRGV2aWNlUHJvdG9jb2wgICAgICAg
-ICAwIAogIGJNYXhQYWNrZXRTaXplMCAgICAgICAgNjQKICBpZFZlbmRvciAgICAgICAgICAgMHgx
-MDQ0IENodSBZdWVuIEVudGVycHJpc2UgQ28uLCBMdGQKICBpZFByb2R1Y3QgICAgICAgICAgMHg4
-MDA4IEdOLVdCMDFHUwogIGJjZERldmljZSAgICAgICAgICAgIDAuMDEKICBpTWFudWZhY3R1cmVy
-ICAgICAgICAgICAxIFJhbGluawogIGlQcm9kdWN0ICAgICAgICAgICAgICAgIDIgODAyLjExIGJn
-IFdMQU4KICBpU2VyaWFsICAgICAgICAgICAgICAgICAwIAogIGJOdW1Db25maWd1cmF0aW9ucyAg
-ICAgIDEKICBDb25maWd1cmF0aW9uIERlc2NyaXB0b3I6CiAgICBiTGVuZ3RoICAgICAgICAgICAg
-ICAgICA5CiAgICBiRGVzY3JpcHRvclR5cGUgICAgICAgICAyCiAgICB3VG90YWxMZW5ndGggICAg
-ICAgICAgIDUzCiAgICBiTnVtSW50ZXJmYWNlcyAgICAgICAgICAxCiAgICBiQ29uZmlndXJhdGlv
-blZhbHVlICAgICAxCiAgICBpQ29uZmlndXJhdGlvbiAgICAgICAgICA0IAogICAgYm1BdHRyaWJ1
-dGVzICAgICAgICAgMHg4MAogICAgICAoQnVzIFBvd2VyZWQpCiAgICBNYXhQb3dlciAgICAgICAg
-ICAgICAgMzAwbUEKICAgIEludGVyZmFjZSBEZXNjcmlwdG9yOgogICAgICBiTGVuZ3RoICAgICAg
-ICAgICAgICAgICA5CiAgICAgIGJEZXNjcmlwdG9yVHlwZSAgICAgICAgIDQKICAgICAgYkludGVy
-ZmFjZU51bWJlciAgICAgICAgMAogICAgICBiQWx0ZXJuYXRlU2V0dGluZyAgICAgICAwCiAgICAg
-IGJOdW1FbmRwb2ludHMgICAgICAgICAgIDUKICAgICAgYkludGVyZmFjZUNsYXNzICAgICAgIDI1
-NSBWZW5kb3IgU3BlY2lmaWMgQ2xhc3MKICAgICAgYkludGVyZmFjZVN1YkNsYXNzICAgIDI1NSBW
-ZW5kb3IgU3BlY2lmaWMgU3ViY2xhc3MKICAgICAgYkludGVyZmFjZVByb3RvY29sICAgIDI1NSBW
-ZW5kb3IgU3BlY2lmaWMgUHJvdG9jb2wKICAgICAgaUludGVyZmFjZSAgICAgICAgICAgICAgNSAK
-ICAgICAgRW5kcG9pbnQgRGVzY3JpcHRvcjoKICAgICAgICBiTGVuZ3RoICAgICAgICAgICAgICAg
-ICA3CiAgICAgICAgYkRlc2NyaXB0b3JUeXBlICAgICAgICAgNQogICAgICAgIGJFbmRwb2ludEFk
-ZHJlc3MgICAgIDB4ODEgIEVQIDEgSU4KICAgICAgICBibUF0dHJpYnV0ZXMgICAgICAgICAgICAy
-CiAgICAgICAgICBUcmFuc2ZlciBUeXBlICAgICAgICAgICAgQnVsawogICAgICAgICAgU3luY2gg
-VHlwZSAgICAgICAgICAgICAgIE5vbmUKICAgICAgICAgIFVzYWdlIFR5cGUgICAgICAgICAgICAg
-ICBEYXRhCiAgICAgICAgd01heFBhY2tldFNpemUgICAgIDB4MDIwMCAgMXggNTEyIGJ5dGVzCiAg
-ICAgICAgYkludGVydmFsICAgICAgICAgICAgICAgMAogICAgICBFbmRwb2ludCBEZXNjcmlwdG9y
-OgogICAgICAgIGJMZW5ndGggICAgICAgICAgICAgICAgIDcKICAgICAgICBiRGVzY3JpcHRvclR5
-cGUgICAgICAgICA1CiAgICAgICAgYkVuZHBvaW50QWRkcmVzcyAgICAgMHgwMSAgRVAgMSBPVVQK
-ICAgICAgICBibUF0dHJpYnV0ZXMgICAgICAgICAgICAyCiAgICAgICAgICBUcmFuc2ZlciBUeXBl
-ICAgICAgICAgICAgQnVsawogICAgICAgICAgU3luY2ggVHlwZSAgICAgICAgICAgICAgIE5vbmUK
-ICAgICAgICAgIFVzYWdlIFR5cGUgICAgICAgICAgICAgICBEYXRhCiAgICAgICAgd01heFBhY2tl
-dFNpemUgICAgIDB4MDIwMCAgMXggNTEyIGJ5dGVzCiAgICAgICAgYkludGVydmFsICAgICAgICAg
-ICAgICAgMAogICAgICBFbmRwb2ludCBEZXNjcmlwdG9yOgogICAgICAgIGJMZW5ndGggICAgICAg
-ICAgICAgICAgIDcKICAgICAgICBiRGVzY3JpcHRvclR5cGUgICAgICAgICA1CiAgICAgICAgYkVu
-ZHBvaW50QWRkcmVzcyAgICAgMHgwMiAgRVAgMiBPVVQKICAgICAgICBibUF0dHJpYnV0ZXMgICAg
-ICAgICAgICAyCiAgICAgICAgICBUcmFuc2ZlciBUeXBlICAgICAgICAgICAgQnVsawogICAgICAg
-ICAgU3luY2ggVHlwZSAgICAgICAgICAgICAgIE5vbmUKICAgICAgICAgIFVzYWdlIFR5cGUgICAg
-ICAgICAgICAgICBEYXRhCiAgICAgICAgd01heFBhY2tldFNpemUgICAgIDB4MDIwMCAgMXggNTEy
-IGJ5dGVzCiAgICAgICAgYkludGVydmFsICAgICAgICAgICAgICAgMAogICAgICBFbmRwb2ludCBE
-ZXNjcmlwdG9yOgogICAgICAgIGJMZW5ndGggICAgICAgICAgICAgICAgIDcKICAgICAgICBiRGVz
-Y3JpcHRvclR5cGUgICAgICAgICA1CiAgICAgICAgYkVuZHBvaW50QWRkcmVzcyAgICAgMHgwMyAg
-RVAgMyBPVVQKICAgICAgICBibUF0dHJpYnV0ZXMgICAgICAgICAgICAyCiAgICAgICAgICBUcmFu
-c2ZlciBUeXBlICAgICAgICAgICAgQnVsawogICAgICAgICAgU3luY2ggVHlwZSAgICAgICAgICAg
-ICAgIE5vbmUKICAgICAgICAgIFVzYWdlIFR5cGUgICAgICAgICAgICAgICBEYXRhCiAgICAgICAg
-d01heFBhY2tldFNpemUgICAgIDB4MDIwMCAgMXggNTEyIGJ5dGVzCiAgICAgICAgYkludGVydmFs
-ICAgICAgICAgICAgICAgMAogICAgICBFbmRwb2ludCBEZXNjcmlwdG9yOgogICAgICAgIGJMZW5n
-dGggICAgICAgICAgICAgICAgIDcKICAgICAgICBiRGVzY3JpcHRvclR5cGUgICAgICAgICA1CiAg
-ICAgICAgYkVuZHBvaW50QWRkcmVzcyAgICAgMHgwNCAgRVAgNCBPVVQKICAgICAgICBibUF0dHJp
-YnV0ZXMgICAgICAgICAgICAyCiAgICAgICAgICBUcmFuc2ZlciBUeXBlICAgICAgICAgICAgQnVs
-awogICAgICAgICAgU3luY2ggVHlwZSAgICAgICAgICAgICAgIE5vbmUKICAgICAgICAgIFVzYWdl
-IFR5cGUgICAgICAgICAgICAgICBEYXRhCiAgICAgICAgd01heFBhY2tldFNpemUgICAgIDB4MDIw
-MCAgMXggNTEyIGJ5dGVzCiAgICAgICAgYkludGVydmFsICAgICAgICAgICAgICAgMApEZXZpY2Ug
-UXVhbGlmaWVyIChmb3Igb3RoZXIgZGV2aWNlIHNwZWVkKToKICBiTGVuZ3RoICAgICAgICAgICAg
-ICAgIDEwCiAgYkRlc2NyaXB0b3JUeXBlICAgICAgICAgNgogIGJjZFVTQiAgICAgICAgICAgICAg
-IDIuMDAKICBiRGV2aWNlQ2xhc3MgICAgICAgICAgICAwIChEZWZpbmVkIGF0IEludGVyZmFjZSBs
-ZXZlbCkKICBiRGV2aWNlU3ViQ2xhc3MgICAgICAgICAwIAogIGJEZXZpY2VQcm90b2NvbCAgICAg
-ICAgIDAgCiAgYk1heFBhY2tldFNpemUwICAgICAgICA2NAogIGJOdW1Db25maWd1cmF0aW9ucyAg
-ICAgIDEKRGV2aWNlIFN0YXR1czogICAgIDB4MDAwMAogIChCdXMgUG93ZXJlZCkKCg==
-------=_Part_106365_11352493.1230504272575--
