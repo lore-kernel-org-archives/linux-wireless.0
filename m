@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from balanced.mail.policyd.dreamhost.com ([208.97.132.119]:55720
-	"EHLO spunkymail-a12.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752443AbYLGJaL (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53219 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbYLQSWu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2008 04:30:11 -0500
-From: Yuval Hager <yuval@avramzon.net>
-To: Peter Stuge <peter@stuge.se>
-Subject: Re: BCM4312 Fails when xdm is started
-Date: Sun, 7 Dec 2008 11:29:27 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-References: <200811151801.02369.yuval@avramzon.net> <200811250745.22487.yuval@avramzon.net> <20081125071818.9256.qmail@stuge.se>
-In-Reply-To: <20081125071818.9256.qmail@stuge.se>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4664892.LXOuEnOpdx";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200812071129.32113.yuval@avramzon.net> (sfid-20081207_103036_623509_1167832B)
+	Wed, 17 Dec 2008 13:22:50 -0500
+Subject: Re: [RFC] Handle Channel Switch Announcement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
+	jouni.malinen@atheros.com
+In-Reply-To: <18761.4838.509784.281821@localhost.localdomain> (sfid-20081217_155745_335359_22B180E6)
+References: <18761.4838.509784.281821@localhost.localdomain>
+	 (sfid-20081217_155745_335359_22B180E6)
+Content-Type: text/plain
+Date: Wed, 17 Dec 2008 19:07:52 +0100
+Message-Id: <1229537272.4268.7.camel@localhost> (sfid-20081217_192253_754908_A8F4FCCC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4664892.LXOuEnOpdx
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Wed, 2008-12-17 at 20:25 +0530, Sujith wrote:
 
-On Tuesday 25 November 2008, Peter Stuge wrote:
-> Yuval Hager wrote:
-> > I played around with different video drivers and the results are:
-> > * If using the 'via' driver, I lose the PCIe card immediately upon
-> >   initialization
-> > * Using the 'openchrome' (trunk version), It works well in the
-> >   beginning.
-> >   After first blanking the register reads are all 1's, and then
-> >   when the screen is blank I get a different read (some registers
-> >   are correct, some are wrong), and when the screen is unblanked, I
-> >   get 0xff's again. Very consistent and predictabe (same read every
-> >   time).
-> > * Using the 'vesa' driver I could not recreate the problem. I could
-> >   not get the screen to blank for some reason, but closing the lid,
-> >   going on standby/hibernate, restarting X - all didn't matter much
-> >   to the PCI and the wireless card kept on working.
->
-> Good work! You have beyond any doubt established that the X graphics
-> driver can cause this problem.
->
+> + * @IEEE80211_CHAN_CSA_DISABLED: Disabled because a
+> +	Channel Switch Announcement was received on this channel.
 
-This issue has been tracked down to be at the openchrome driver. It appears=
-=20
-that somehow it corrupted the PCI bus, and damaged the device right after t=
-he=20
-video card - the wireless card.=20
+I agree with Jouni, this is probably not a good idea, especially since
+this flag would be shared between hardware for those drivers that have
+the channel structs allocated statically. We should probably just stick
+a struct ieee80211_channel *switch_from; pointer somewhere into the
+sdata struct or so.
 
-The current workaround for this is here -=20
-http://wiki.openchrome.org/pipermail/openchrome-devel/2008-November/000139.=
-html -=20
-but this is just a quick hack, not a fix, although it works great for me. T=
-he=20
-openchrome team is working on a patch based on this.
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1612,6 +1612,13 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+>  				return RX_DROP_MONITOR;
+>  			ieee80211_process_measurement_req(sdata, mgmt, len);
+>  			break;
+> +		case WLAN_ACTION_SPCT_CHL_SWITCH:
+> +			if (len < (IEEE80211_MIN_ACTION_SIZE +
+> +				   sizeof(mgmt->u.action.u.chan_switch)))
+> +				return RX_DROP_MONITOR;
+> +			ieee80211_process_chanswitch(sdata,
+> +				     &mgmt->u.action.u.chan_switch.sw_elem);
 
-Thanks for all the help - I am a very happy HP2133 user, and a very happy=20
-community member. This was an amazing opensource support experience, which=
-=20
-I'll remember for a long time. Thank you all!
+I think I'd like to have them dropped to monitor for !station here,
+instead of silently in the processing function.
 
-Cheers,
+> +
+> +void ieee80211_chswitch_timer(unsigned long data)
+> +{
+> +	struct ieee80211_bss *bss;
+> +	struct ieee80211_sub_if_data *sdata =
+> +		(struct ieee80211_sub_if_data *) data;
+> +	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+> +
+> +	printk("expire\n");
 
-=2D-=20
-Yuval Hager
-[@] yuval@avramzon.net
+That should probably be removed or be more specific & protected by some
+debug #ifdef.
 
---nextPart4664892.LXOuEnOpdx
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+> +void ieee80211_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+> +				  struct ieee80211_channel_sw_ie *sw_elem)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
 
-iEYEABECAAYFAkk7l3wACgkQl7qmwPqEj9/YZgCaA52S5eURCyNoRQZWKSgL4dXD
-1M4AnR1Dcr/XB0c2qfLRZR0anmb9r7K4
-=Y056
------END PGP SIGNATURE-----
+> +	} else {
+> +		ieee80211_stop_queues(&sdata->local->hw);
 
---nextPart4664892.LXOuEnOpdx--
+Can you rebase this on top of Kalle's patch that adds the "stop reasons"
+for each queue? As it is now, the driver could wake up the queues again
+if one was full.
+
+johannes
+
