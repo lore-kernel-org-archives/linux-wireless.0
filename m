@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway07.websitewelcome.com ([67.18.34.4]:37115 "HELO
-	gateway07.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752621AbYL2Wk2 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:37076 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752882AbYLQMDP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 17:40:28 -0500
-Received: from 96-26-251-53.sea.clearwire-dns.net ([96.26.251.53]:59723 helo=Hydra.darkmatter.org)
-	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <Info@delphi-real-estate.com>)
-	id 1LHQgE-0004nB-KC
-	for linux-wireless@vger.kernel.org; Mon, 29 Dec 2008 16:33:46 -0600
-From: Delphi Real Estate <Info@delphi-real-estate.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Setting 'n' or 'a' Mode, and WPA2?
-Date: Mon, 29 Dec 2008 14:33:46 -0800
-References: <200812270706.56478.Info@delphi-real-estate.com> <200812291010.25373.Info@delphi-real-estate.com> <1ba2fa240812291359r68325b34ycfaad8f51d922a4b@mail.gmail.com>
-In-Reply-To: <1ba2fa240812291359r68325b34ycfaad8f51d922a4b@mail.gmail.com>
+	Wed, 17 Dec 2008 07:03:15 -0500
+Date: Wed, 17 Dec 2008 14:02:50 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Fix a NULL pointer dereference in ath_rate_get
+Message-ID: <20081217120250.GA19453@jm.kir.nu> (sfid-20081217_130326_354011_E7F573AA)
+References: <20081217113031.GA18060@jm.kir.nu> <1229513456.4566.2.camel@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812291433.46427.Info@delphi-real-estate.com> (sfid-20081229_234046_605024_06F8F07C)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1229513456.4566.2.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Monday 29 December 2008 13:59:19 Tomas Winkler wrote:
-> > How do you set only 5GHz 'n' mode?  WPA2?
+On Wed, Dec 17, 2008 at 12:30:56PM +0100, Johannes Berg wrote:
+> On Wed, 2008-12-17 at 13:30 +0200, Jouni Malinen wrote:
+> > It looks like mac80211 may try to send unicast frames to a STA that
+> > does not have a STA entry. We need to make sure that that is caught in
+> > the rate control code before dereferencing STA data.
 > 
-> Just connect to 11n access point configured with WPA2 on 5GHz band.
+> This should only happen for injected packets, can you verify? OTOH, AP
+> mode obviously has injected packets (auth response, ...)
 
-Of course, why didn't I think of that.  That's like saying, "To make pancakes, make pancakes."
+I did not check what the exact frame was, but this was indeed in AP mode
+and the frame was most likely from hostapd and as such, an injected
+packet.
 
-My goal is to set /etc/network/interfaces to specifically configure the 4965AGN card for 5GHz 'n' mode *only* and WPA2.  I can't find any documentation on setting 'n' mode, nor WPA2 specifically.
-
-I'd like no broadcast of SSID, which I have working now on 'g' but don't know whether it's possible in 5GHz 'n'.  And I'd like cloaked traffic and as little handshake traffic as possible, although much of this seems impossible now with as little as is known about configuration.
-
-I'd just be happy with 5GHz 'n' mode and WPA2.  Isn't there any documentation?
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
