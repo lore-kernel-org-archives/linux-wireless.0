@@ -1,65 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:55749 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753877AbYLLWvE convert rfc822-to-8bit (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.251]:64032 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750742AbYLQSDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 17:51:04 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so1584601rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2008 14:51:02 -0800 (PST)
-Message-ID: <69e28c910812121451u25713c82o229a56006089edd6@mail.gmail.com> (sfid-20081212_235107_586324_47D1D8D9)
-Date: Fri, 12 Dec 2008 23:51:02 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [RFC 2/3] mac80211: Make use of the new F_TX_NOACK and F_TX_NOSEQ Radiotap TX flags
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1229121947.3565.13.camel@johannes.berg>
+	Wed, 17 Dec 2008 13:03:32 -0500
+Received: by an-out-0708.google.com with SMTP id d40so8525and.1
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2008 10:03:30 -0800 (PST)
+Message-ID: <e27b78a40812171003qb4627aeye051b76302c9b0a@mail.gmail.com> (sfid-20081217_190337_591798_91BACE01)
+Date: Wed, 17 Dec 2008 18:03:30 +0000
+From: Keir <keirlawson@gmail.com>
+To: "Andrey Yurovsky" <andrey@cozybit.com>
+Subject: Re: Mesh now completely broken on ath5k, latest git
+Cc: sbrown@cortland.com, linux-wireless@vger.kernel.org,
+	javier@cozybit.com
+In-Reply-To: <e27b78a40812170256o6949875dq9849f1a838f68ce2@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-References: <69e28c910812121432n6e84de41s94a887110051a1dd@mail.gmail.com>
-	 <1229121558.3565.6.camel@johannes.berg>
-	 <69e28c910812121443h1fae52e6uc88749d7e9baf529@mail.gmail.com>
-	 <1229121947.3565.13.camel@johannes.berg>
+References: <e27b78a40812160405h2241e1acqa0dc8e593d6ebfad@mail.gmail.com>
+	 <4947ABAF.9060205@cortland.com>
+	 <e27b78a40812160807j7549e1a5hf3bee474b31c29b7@mail.gmail.com>
+	 <45e8e6c40812161030x1f7fb374qd4a386ef9022a853@mail.gmail.com>
+	 <e27b78a40812170256o6949875dq9849f1a838f68ce2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 12, 2008 at 11:45 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2008-12-12 at 23:43 +0100, Stefanik G=E1bor wrote:
->
->> I tried, but for some reason setting IEEE80211_TX_CTL_NO_ACK directl=
-y
->> in __ieee80211_parse_tx_radiotap resulted in an oops upon unloading
->> the driver module.
->
-> Huh? That doesn't make sense. Do you have more information on that?
->
->> Note that IEEE80211_TX_MON_NO_ACK is not equivalent to
->> !(IEEE80211_TX_CTL_ASSIGN_SEQ), as it also disables mac80211's built
->> in sequence numbering.
->
-> Ah. But there's precedence for just doing
->
-> if (unlikely(!(info->flags & ASSIGN_SEQ)))
->        return;
->
-> in the handler that assigns the seq, and I prefer that over adding a =
-new
-> flag.
->
-> johannes
->
+I am getting good results with revision
+5b6a96d870aea85ae5ef3f775a8403a9f40f8747 however after pinging a few
+times my system completely locks up :-(
 
-But if we redefine !ASSIGN_SEQ to mean "use the sequence number
-supplied by userspace", we will need a new flag to distinguish between
-driver-level vs. stack-level sequence number assignments, which is
-essentially the same as this patch. There is no way to switch between
-3 states (control in driver, stack or userspace) using only one bit.
+I'm getting frustratingly close to having this working!
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers
+
+Keir
+
+2008/12/17 Keir <keirlawson@gmail.com>:
+> Hu Andrey,
+>
+> I'm using Netgear WG311TGE PCI cards, lspci says:
+>
+> Atheros Communications Inc. AR5212/AR5213 Multiprotocol MAC/baseband
+> processor (rev 01)
+>
+> There is only one bit to plug in an antenna, so I've only had one
+> plugged in, there isnt a place to plug in a second.  After the commit
+> in question I get no beaconing, before I get beaconing, but the PLINK
+> state keeps flipping between OPEN_SNT and LISTEN, implying that for
+> some reason it isnt receiving any PLINK packets.
+>
+> That said, I havent tried directly after the PCU commit, so I will try
+> that now... but as I dont have an aux connector surely it shouldnt
+> effect me?
+>
+> Cheers
+>
+> Keir
+>
+> 2008/12/16 Andrey Yurovsky <andrey@cozybit.com>:
+>> Hi Keir.  What type of Atheros-based card are you using?  How many
+>> antennas do you have connected?  If I understand things correctly, the
+>> PCU code regression (with respect to mesh and maybe AP and IBSS) has
+>> to do with having one antenna hooked up when your hardware also has an
+>> AUX antenna connector.  If you have only one antenna, can you please
+>> plug in a second one and try again (before and after the commit in
+>> question)?  I will try to do the same test here.  More details from
+>> Nick were posted here:
+>> http://marc.info/?l=linux-wireless&m=122771338021489&w=2
+>>
+>> On Tue, Dec 16, 2008 at 8:07 AM, Keir <keirlawson@gmail.com> wrote:
+>>> I've been working on the commit previous to the PCU code breakage
+>>> (8485b7f773a8e9883e0165273940f16a086eba2b), but I'm still having
+>>> problems (beaconing is working, but links are rarely established, most
+>>> of the time to packets get through).
+>>>
+>>> Cheers
+>>>
+>>> Keir
+>>>
+>>> 2008/12/16 Steve Brown <sbrown@cortland.com>:
+>>>> Keir wrote:
+>>>>>
+>>>>> Having has no luck with an old rc6 version (basically all plink
+>>>>> packets were getting lost), I upgraded to the newest git (rc8) however
+>>>>> now when I run iw dev mesh0 station sump I don't see a single other
+>>>>> mesh point.  This would imply that presumably beaconing is broken?
+>>>>>
+>>>>> Does anyone know a revision for which ath5k is properly working? I am
+>>>>> yet to find one that works on my system.
+>>>>>
+>>>>> Cheers
+>>>>>
+>>>>> Keir
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>>>>> in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>
+>>>>
+>>>> Beaconing seems broken by Update PCU code
+>>>> dd1c9abd167de9bb9457a57694a1ab5e5801a0c1. After this patch, beacon debug
+>>>> says beacons sent, but sniffer sees none.
+>>>>
+>>>> A snapshot of ath5k prior to this and git 12/10
+>>>> (b6d06c9669f27db31a0317fc98fedc8ff1ba4822) works for me with hostapd/wpa.
+>>>> It's been running for the past few days.
+>>>>
+>>>> Mesh beaconing also works. I didn't test two nodes; I only sniffed the
+>>>> beacons.
+>>>>
+>>>> I had to comment out 5GHz in caps.c because of too many channels. It's a
+>>>> nl80211 buffer size problem that's been discussed.
+>>>>
+>>>> Steve
+>>>>
+>>>>
+>>>>
+>>>
+>>
+>>
+>>
+>> --
+>> Andrey Yurovsky
+>> cozybit Inc.
+>>
+>
