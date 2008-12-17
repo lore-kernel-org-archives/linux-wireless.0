@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-133-90.gdrpmi.dsl-w.verizon.net ([71.115.133.90]:55223
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753461AbYLIAII (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53763 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751358AbYLQLai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 19:08:08 -0500
-Message-ID: <493DB6E0.20004@erley.org> (sfid-20081209_010813_519046_D13039FC)
-Date: Mon, 08 Dec 2008 19:08:00 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Wed, 17 Dec 2008 06:30:38 -0500
+Date: Wed, 17 Dec 2008 13:30:31 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Fix a NULL pointer dereference in ath_rate_get
+Message-ID: <20081217113031.GA18060@jm.kir.nu> (sfid-20081217_123042_383830_2EACC437)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Userspace tools: Roadmap?
-References: <1228692546.8826.1288759933@webmail.messagingengine.com>	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>	 <1228778295.10662.1288975589@webmail.messagingengine.com>	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org> <1228780960.22164.162.camel@johannes.berg>
-In-Reply-To: <1228780960.22164.162.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2008-12-08 at 18:52 -0500, pat-lkml wrote:
->> Johannes Berg wrote:
->>> On Mon, 2008-12-08 at 18:18 -0500, Dan E wrote:
->>> There's libnl 1.2 and 2.0? That's news to me! Patches welcome. Sorry, I
->>> guess it needs 1.0 or 1.1, will fix the page.
->>>
->> following is a patch that gets iw working with the development versions
->> of libnl.  I keep it uptodate at: http://wireless.erley.org/
->>
->> The Makefile changes may not be the 'best' way to do it, but it works
->> for me.
-> 
-> Thanks, I think you even sent me that once before already, but that
-> breaks with distro versions of libnl. I guess distros will end up
-> shipping 1.1 as libnl1 like debian does for a while?
-> 
-> Is there any particular reason you need libnl from git? You could just
-> check out 1.1, no?
-The reason I'm using git for everything in there is just because I have
-it working.  Once master mode is in a released mainline, and stable
-packages are released for all of the packages involved, I'll take the
-time to revise a new copy of the document that links to 'good' versions,
-and get it hosted on something more capable/dependable than my home dsl
-line.  Also, someone else may have pushed a similar patch to you, as I
-have not sent one upstream.
+It looks like mac80211 may try to send unicast frames to a STA that
+does not have a STA entry. We need to make sure that that is caught in
+the rate control code before dereferencing STA data.
 
-As far as distros bundling libnl, I know gentoo is shipping 1.1, and am
-guessing it will be the version standardized on.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+---
+ drivers/net/wireless/ath9k/rc.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Pat
+--- wireless-testing.orig/drivers/net/wireless/ath9k/rc.c	2008-12-17 12:37:50.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/rc.c	2008-12-17 13:00:38.000000000 +0200
+@@ -1498,7 +1498,8 @@ static void ath_get_rate(void *priv, str
+ 	__le16 fc = hdr->frame_control;
+ 
+ 	/* lowest rate for management and multicast/broadcast frames */
+-	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1)) {
++	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
++	    !sta) {
+ 		tx_info->control.rates[0].idx = rate_lowest_index(sband, sta);
+ 		tx_info->control.rates[0].count =
+ 			is_multicast_ether_addr(hdr->addr1) ? 1 : ATH_MGT_TXMAXTRY;
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
