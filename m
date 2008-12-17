@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51015 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbYLDPaN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 10:30:13 -0500
-Date: Thu, 4 Dec 2008 10:22:25 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
+Received: from mga01.intel.com ([192.55.52.88]:55837 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754195AbYLQI7r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2008 03:59:47 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>,
-	Luis Rodriguez <lrodriguez@atheros.com>
-Subject: Re: [PATCH] wireless: Incorrect LEAP authentication algorithm
-	identifier.
-Message-ID: <20081204152224.GA4989@tuxdriver.com> (sfid-20081204_163018_436408_8989FBA9)
-References: <20081204150813.GA7816@senthil-lnx.users.atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081204150813.GA7816@senthil-lnx.users.atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	"Wu, Fengguang" <fengguang.wu@intel.com>, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 6/8] iwlwifi: use meaningful vars in _iwl_poll_bit()
+Date: Wed, 17 Dec 2008 16:52:32 +0800
+Message-Id: <1229503954-30347-7-git-send-email-yi.zhu@intel.com> (sfid-20081217_095952_363346_3ED3EBE4)
+In-Reply-To: <1229503954-30347-6-git-send-email-yi.zhu@intel.com>
+References: <1229503954-30347-1-git-send-email-yi.zhu@intel.com>
+ <1229503954-30347-2-git-send-email-yi.zhu@intel.com>
+ <1229503954-30347-3-git-send-email-yi.zhu@intel.com>
+ <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
+ <1229503954-30347-5-git-send-email-yi.zhu@intel.com>
+ <1229503954-30347-6-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 04, 2008 at 08:38:13PM +0530, Senthil Balasubramanian wrote:
-> This patch fixes a regression introduced by
-> "wireless: avoid some net/ieee80211.h vs. linux/ieee80211.h conflicts"
-> LEAP authentication algorithm identifier should be 128.
-> 
-> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-> ---
->  include/linux/ieee80211.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> index a6ec928..c4e6ca1 100644
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -836,7 +836,7 @@ struct ieee80211_ht_info {
->  /* Authentication algorithms */
->  #define WLAN_AUTH_OPEN 0
->  #define WLAN_AUTH_SHARED_KEY 1
-> -#define WLAN_AUTH_LEAP 2
-> +#define WLAN_AUTH_LEAP 128
->  
->  #define WLAN_AUTH_CHALLENGE_LEN 128
+From: Wu, Fengguang <fengguang.wu@intel.com>
 
-What is the regression?  What problem does this cause?
+Rename vars in _iwl_poll_bit() to better reflect the truth.
 
-AFAICT this value is only used internally, so it shouldn't matter
-what the actual value is.
+Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-io.h |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index 998ac19..0a92e74 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -87,17 +87,18 @@ static inline u32 __iwl_read32(char *f, u32 l, struct iwl_priv *priv, u32 ofs)
+ #define iwl_read32(p, o) _iwl_read32(p, o)
+ #endif
+ 
++#define IWL_POLL_INTERVAL 10	/* microseconds */
+ static inline int _iwl_poll_bit(struct iwl_priv *priv, u32 addr,
+ 				u32 bits, u32 mask, int timeout)
+ {
+-	int i = 0;
++	int t = 0;
+ 
+ 	do {
+ 		if ((_iwl_read32(priv, addr) & mask) == (bits & mask))
+-			return i;
+-		udelay(10);
+-		i += 10;
+-	} while (i < timeout);
++			return t;
++		udelay(IWL_POLL_INTERVAL);
++		t += IWL_POLL_INTERVAL;
++	} while (t < timeout);
+ 
+ 	return -ETIMEDOUT;
+ }
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+1.5.3.6
+
