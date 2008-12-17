@@ -1,240 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41990 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbYLFOvf (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:27274 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745AbYLQE3T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 09:51:35 -0500
-Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@googlemail.com>
-Cc: Henning Rogge <rogge@fgan.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812061511.05473.hrogge@googlemail.com> (sfid-20081206_151109_960673_B582FE4D)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812050934.07182.rogge@fgan.de> <1228470310.3970.13.camel@johannes.berg>
-	 <200812061511.05473.hrogge@googlemail.com>
-	 (sfid-20081206_151109_960673_B582FE4D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OJJNru4sMqJTpXud1U1N"
-Date: Sat, 06 Dec 2008 15:51:20 +0100
-Message-Id: <1228575081.16752.8.camel@johannes.berg> (sfid-20081206_155142_029949_18E10365)
-Mime-Version: 1.0
+	Tue, 16 Dec 2008 23:29:19 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so3581005wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 20:29:18 -0800 (PST)
+Message-ID: <919fe2b30812162029w62a550dcs90ad1ed68eb9e1a7@mail.gmail.com> (sfid-20081217_052926_214060_9F077B8E)
+Date: Tue, 16 Dec 2008 23:29:18 -0500
+From: "Mark Asselstine" <asselsm@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: [Rt2400-devel] rt2860/wpa dev status
+Cc: rt2400-devel@lists.sourceforge.net,
+	"Mattias Nissler" <mattias.nissler@gmx.de>,
+	"Felix Fietkau" <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200812101448.08990.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <919fe2b30810020637n2c9e857ak4ce55bcbf8a50ccb@mail.gmail.com>
+	 <200812101448.08990.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Dec 10, 2008 at 8:48 AM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> Hi,
+>
+> Ralink has provided a new driver for the rt2860 hardware,
+> I haven't tested it yet but it deserves the attention for one simple reason:
+> it hooks into mac80211.
+> It doesn't hook into rt2x00lib yet, and neither does it support everything
+> mac80211 could do, but it can be used as base for further developing
+> the rt2800pci drivers by filling the last remaining gaps.
+>
+> The driver can be found here:
+> http://kernel.org/pub/linux/kernel/people/ivd/RT28xx_Linux_mac80211_20081203_V2.0-GPL.tgz
+>
+> Mark, Matthias and Felix you offered/provided help with the rt2800 developers
+> before. I would really appreciate if you could help me with merging this drivers
+> into the rt2800pci/rt2800usb drivers. :)
+> (Other developers are off course welcome as well!)
+>
 
---=-OJJNru4sMqJTpXud1U1N
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks for doing some of the initial legwork. I have finally managed
+to get workflow in place and attempt to do some useful work. I can get
+a reproducible kernel oops by simply doing a 'ifconfig wlan0 up'
+followed by a 'iwlist wlan0 scanning'. I do plan on digging into this
+but here is the oops:
 
-On Sat, 2008-12-06 at 15:10 +0100, Henning Rogge wrote:
-> Okay, here is v6 of my patch... feel free to rip it apart. ;)
+BUG: unable to handle kernel NULL pointer dereference at 0000001c
+IP: [<f80e9720>] rt2x00ht_create_tx_descriptor+0x20/0xc0 [rt2x00lib]
+Oops: 0000 [#1]
+last sysfs file:
+/sys/devices/pci0000:00/0000:00:1c.3/0000:01:00.0/firmware/0000:01:00.0/loading
+Modules linked in: rt2800pci rt2x00pci rt2x00lib crc_ccitt
+eeprom_93cx6 netconsole ipv6 [last unloaded: eeprom_93cx6]
 
-Heh. Please inline patches, makes it much easier.
-
->  /**
-> + * enum nl80211_sta_info_rate - station information about bitrate
-> + *
-> + * These attribute types are used with %NL80211_STA_INFO_TXRATE
-> + * when getting information about the bitrate of a station.
-> + *
-> + * @__NL80211_STA_INFO_RATE_INVALID: attribute number 0 is reserved
-> + * @NL80211_STA_INFO_RATE_TOTAL: total bitrate (u16, 100kbit/s)
-> + * @NL80211_STA_INFO_RATE_MCS: mcs index for 802.11n (u8)
-> + * @NL80211_STA_INFO_RATE_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
-> + * @NL80211_STA_INFO_RATE_SHORT_GI: 400ns guard interval
-> + */
-> +enum nl80211_sta_info_rate {
-> +       __NL80211_STA_INFO_RATE_INVALID,
-> +       NL80211_STA_INFO_RATE_TOTAL,
-> +       NL80211_STA_INFO_RATE_MCS,
-> +       NL80211_STA_INFO_RATE_40_MHZ_WIDTH,
-> +       NL80211_STA_INFO_RATE_SHORT_GI,
-> +
-> +       /* keep last */
-> +       __NL80211_STA_INFO_RATE_AFTER_LAST,
-> +       NL80211_STA_INFO_RATE_MAX =3D __NL80211_STA_INFO_RATE_AFTER_LAST =
-- 1
-> +};
-
-I'd drop the _STA_ part from these and do RATE_INFO_... since we may end
-up using these for other things potentially. Not sure we will, but who
-knows. I could imagine using it to fix a transmit rate, for example, and
-then it wouldn't necessarily be per station.
-
-> + * @NL80211_STA_INFO_SIGNAL: signal strength of last received package (u=
-8, dBm)
-
-packet, or, more accurately, PPDU I guess
-
-> + * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribu=
-te
-> + *  containing info as possible, see &enum nl80211_sta_info_txrate.
-
-Please indent with a tab here
-
-> + * @STATION_INFO_RX_BITRATE: @rx_bitrate filled
-> + * @STATION_INFO_TX_BITRATE: @tx_bitrate fields are filled
-> + *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
->   */
->  enum station_info_flags {
->         STATION_INFO_INACTIVE_TIME      =3D 1<<0,
-> @@ -177,6 +181,25 @@ enum station_info_flags {
->         STATION_INFO_LLID               =3D 1<<3,
->         STATION_INFO_PLID               =3D 1<<4,
->         STATION_INFO_PLINK_STATE        =3D 1<<5,
-> +       STATION_INFO_SIGNAL             =3D 1<<6,
-> +       STATION_INFO_RX_BITRATE         =3D 1<<7,
-
-RX bitrate?
-
-> +/**
-> + * enum station_info_rate_flags - station transmission rate flags
-> + *
-> + * Used by the driver to indicate the specific rate transmission
-> + * type for 802.11n transmissions.
-> + *
-> + * @STATION_INFO_BITRATE_MCS: @tx_bitrate_mcs filled
-> + * @STATION_INFO_BITRATE_40_MHZ_WIDTH: 40 Mhz width transmission
-> + * @STATION_INFO_BITRATE_SHORT_GI: 400ns guard interval
-> + */
-> +enum station_info_rate_flags {
-> +       STATION_INFO_BITRATE_MCS                =3D 1<<0,
-> +       STATION_INFO_BITRATE_40_MHZ_WIDTH       =3D 1<<1,
-> +       STATION_INFO_BITRATE_SHORT_GI           =3D 1<<2,
->  };
-
-Same here as the first comment, this is rate specific, so I'd call these
-BITRATE_* or something like that.
-=20
->  /**
-> @@ -191,6 +214,11 @@ enum station_info_flags {
->   * @llid: mesh local link id
->   * @plid: mesh peer link id
->   * @plink_state: mesh peer link state
-> + * @signal: signal strength of last received package in dBm
-> + * @txrate_total: current unicast bitrate to this station in 100 kbit/se=
-c
-> + * @txrate_flags: bitflag of flags from &enum station_info_bitrate_flags
-> + * @txrate_mcs: MCS index of a 802.11n transmission, see
-> + *  &enum station_info_bitrate_flags
->   */
->  struct station_info {
->         u32 filled;
-> @@ -200,6 +228,10 @@ struct station_info {
->         u16 llid;
->         u16 plid;
->         u8 plink_state;
-> +       u8 signal;
-> +       u16 txrate_total;
-> +       u8 txrate_flags;
-> +       u8 txrate_mcs;
-
-can you please move the rate parts into a new struct, so we can use
-tx.flags, tx.mcs etc. and later just need to add a second instance of
-the struct for rx
-=20
-> +static u16 sta_get_80211n_bitrate(struct ieee80211_tx_rate *rate)
-> +{
-> +       int modulation =3D rate->idx & 7;
-> +       int streams =3D rate->idx >> 3;
-> +
-> +       int bitrate =3D (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) ? 13=
-500000 : 6500000;
-> +
-> +       if (modulation < 4)
-> +               bitrate *=3D (modulation + 1);
-> +       else if (modulation =3D=3D 4)
-> +               bitrate *=3D (modulation + 2);
-> +       else
-> +               bitrate *=3D (modulation + 3);
-> +
-> +       bitrate *=3D streams;
-> +
-> +       if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
-> +               bitrate =3D (bitrate * 10) / 9;
-> +
-> +       return (bitrate + 50000) / 100000; // do NOT just round down
-> +}
-
-Don't use // comments please, see Documentation/CodingStyle.
-
-Also, if we really really need this information (I still don't see why
-the kernel has to calculate it) then it should be in cfg80211 not
-mac80211 so other drivers could potentially make use of it. Personally,
-I'd just leave it out though.
-
->         sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
->                         STATION_INFO_RX_BYTES |
-> -                       STATION_INFO_TX_BYTES;
-> +                       STATION_INFO_TX_BYTES |
-> +                       STATION_INFO_RX_BITRATE |
-> +                       STATION_INFO_TX_BITRATE;
-
-RX?
-
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -727,8 +727,9 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *=
-rx)
->         if (rx->sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC) {
->                 u8 *bssid =3D ieee80211_get_bssid(hdr, rx->skb->len,
->                                                 NL80211_IFTYPE_ADHOC);
-> -               if (compare_ether_addr(bssid, rx->sdata->u.sta.bssid) =3D=
-=3D 0)
-> +               if (compare_ether_addr(bssid, rx->sdata->u.sta.bssid) =3D=
-=3D 0) {
->                         sta->last_rx =3D jiffies;
-> +               }
->         } else
->         if (!is_multicast_ether_addr(hdr->addr1) ||
->             rx->sdata->vif.type =3D=3D NL80211_IFTYPE_STATION) {
-
-That looks unintended
-
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 9caee60..197dc4d 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -16,6 +16,7 @@
->  #include <linux/netlink.h>
->  #include <net/genetlink.h>
->  #include <net/cfg80211.h>
-> +#include <net/mac80211.h>
-
-Ahem. Please observe the layering, cfg80211 and nl80211 are strictly
-below mac80211.
+Pid: 1803, comm: phy2 Not tainted (2.6.28-rc7-wl #12) 1000H
+EIP: 0060:[<f80e9720>] EFLAGS: 00010286 CPU: 0
+EIP is at rt2x00ht_create_tx_descriptor+0x20/0xc0 [rt2x00lib]
+EAX: 00000000 EBX: f69e9e00 ECX: f7307b40 EDX: 00000000
+ESI: f7307260 EDI: f7307240 EBP: f7307260 ESP: f69e9da0
+ DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
+Process phy2 (pid: 1803, ti=f69e8000 task=f71267c0 task.ti=f69e8000)
+Stack:
+ f69e9e00 f6959c00 f80e9800 f80e84ed f7307240 f6964c60 f6a06420 f7307b40
+ 0000002e f690b42c f7307240 f69641a0 f6959c00 f80e885a f69e9f40 c17ecac0
+ 00000000 f69eb100 f7307260 3f656025 00000000 f7307240 00000000 f6a26b00
+Call Trace:
+ [<f80e84ed>] rt2x00queue_create_tx_descriptor+0x23d/0x360 [rt2x00lib]
+ [<f80e885a>] rt2x00queue_write_tx_frame+0x4a/0x190 [rt2x00lib]
+ [<f80e762f>] rt2x00mac_tx+0x7f/0x300 [rt2x00lib]
+ [<c036c831>] __ieee80211_tx+0x41/0xf0
+ [<c036e85f>] ieee80211_master_start_xmit+0x1df/0x400
+ [<c0378cd4>] schedule_timeout+0x54/0xb0
+ [<c02e4a02>] dev_hard_start_xmit+0x232/0x2c0
+ [<c02f2f3b>] __qdisc_run+0x19b/0x1f0
+ [<c02e4e87>] dev_queue_xmit+0x2e7/0x500
+ [<c035f3b8>] ieee80211_scan_work+0xe8/0x1a0
+ [<c035f2d0>] ieee80211_scan_work+0x0/0x1a0
+ [<c012b2da>] run_workqueue+0x4a/0xf0
+ [<c037887c>] schedule+0x18c/0x2f0
+ [<c012b70f>] worker_thread+0x7f/0xe0
+ [<c012e920>] autoremove_wake_function+0x0/0x50
+ [<c012b690>] worker_thread+0x0/0xe0
+ [<c012e547>] kthread+0x37/0x70
+ [<c012e510>] kthread+0x0/0x70
+ [<c0103eab>] kernel_thread_helper+0x7/0x1c
+Code: ff ff 90 90 90 90 90 90 90 90 90 83 ec 0c 89 1c 24 89 d3 0f b6
+51 06 89 74 24 04 89 7c 24 08 8b 78 08 8d 14 92 8d 77 20 8b 46 20 <0f>
+b6 40 1c 66 c7 43 14 00 00 66 c7 43 12 00 00 66 89 43 18 0f
+EIP: [<f80e9720>] rt2x00ht_create_tx_descriptor+0x20/0xc0 [rt2x00lib]
+SS:ESP 0068:f69e9da0
+Kernel panic - not syncing: Fatal exception in interrupt
 
 
-I'd rename _TOTAL to _LEGACY and remove the calculation for MCS rates,
-that way it's obviously clear what you're getting in userland.
+Dump of assembler code for function rt2x00ht_create_tx_descriptor:
+0x00003730 <rt2x00ht_create_tx_descriptor+0>:   sub    $0xc,%esp
+0x00003733 <rt2x00ht_create_tx_descriptor+3>:   mov    %ebx,(%esp)
+0x00003736 <rt2x00ht_create_tx_descriptor+6>:   mov    %edx,%ebx
+0x00003738 <rt2x00ht_create_tx_descriptor+8>:   movzbl 0x6(%ecx),%edx
+0x0000373c <rt2x00ht_create_tx_descriptor+12>:  mov    %esi,0x4(%esp)
+0x00003740 <rt2x00ht_create_tx_descriptor+16>:  mov    %edi,0x8(%esp)
+0x00003744 <rt2x00ht_create_tx_descriptor+20>:  mov    0x8(%eax),%edi
+0x00003747 <rt2x00ht_create_tx_descriptor+23>:  lea
+(%edx,%edx,4),%edx
+0x0000374a <rt2x00ht_create_tx_descriptor+26>:  lea    0x20(%edi),%esi
+0x0000374d <rt2x00ht_create_tx_descriptor+29>:  mov    0x20(%esi),%eax
+0x00003750 <rt2x00ht_create_tx_descriptor+32>:  movzbl 0x1c(%eax),%eax
+0x00003754 <rt2x00ht_create_tx_descriptor+36>:  movw   $0x0,0x14(%ebx)
+0x0000375a <rt2x00ht_create_tx_descriptor+42>:  movw   $0x0,0x12(%ebx)
+0x00003760 <rt2x00ht_create_tx_descriptor+48>:  mov    %ax,0x18(%ebx)
+0x00003764 <rt2x00ht_create_tx_descriptor+52>:  movzbl 0x8(%edx,%edx,1),%eax
+0x0000376c <rt2x00ht_create_tx_descriptor+60>:  mov    %ax,0x10(%ebx)
+0x00003770 <rt2x00ht_create_tx_descriptor+64>:  mov    %eax,%edx
+0x00003772 <rt2x00ht_create_tx_descriptor+66>:  testw  $0xff00,0x6(%ecx)
+0x00003778 <rt2x00ht_create_tx_descriptor+72>:  je     0x3781
+<rt2x00ht_create_tx_descriptor+81>
+0x0000377a <rt2x00ht_create_tx_descriptor+74>:  or     $0x8,%edx
+0x0000377d <rt2x00ht_create_tx_descriptor+77>:  mov    %dx,0x10(%ebx)
+0x00003781 <rt2x00ht_create_tx_descriptor+81>:  testb  $0x40,0x20(%edi)
+0x00003785 <rt2x00ht_create_tx_descriptor+85>:  je     0x378b
+<rt2x00ht_create_tx_descriptor+91>
+0x00003787 <rt2x00ht_create_tx_descriptor+87>:  btsl   $0xe,(%ebx)
+0x0000378b <rt2x00ht_create_tx_descriptor+91>:  movzbl 0xa(%esi),%edx
+0x0000378f <rt2x00ht_create_tx_descriptor+95>:  movzbl %dl,%eax
+0x00003792 <rt2x00ht_create_tx_descriptor+98>:  test   $0x8,%al
+0x00003794 <rt2x00ht_create_tx_descriptor+100>: je     0x37a3
+<rt2x00ht_create_tx_descriptor+115>
+0x00003796 <rt2x00ht_create_tx_descriptor+102>: movw   $0x2,0x16(%ebx)
+0x0000379c <rt2x00ht_create_tx_descriptor+108>: movzbl 0xa(%esi),%edx
+0x000037a0 <rt2x00ht_create_tx_descriptor+112>: movzbl %dl,%eax
+0x000037a3 <rt2x00ht_create_tx_descriptor+115>: test   $0x10,%al
+0x000037a5 <rt2x00ht_create_tx_descriptor+117>: je     0x37b4
+0x000037a7 <rt2x00ht_create_tx_descriptor+119>: movw   $0x3,0x16(%ebx)
+0x000037ad:     movzbl 0xa(%esi),%edx
+0x000037b1:     movzbl %dl,%eax
+0x000037b4:     test   $0x20,%al
+0x000037b6:     je     0x37c0
+0x000037b8:     btsl   $0xf,(%ebx)
+---Type <return> to continue, or q <return> to quit---
+0x000037bc:     movzbl 0xa(%esi),%edx
+0x000037c0:     test   %dl,%dl
+0x000037c2:     jns    0x37c8
+0x000037c4:     btsl   $0x10,(%ebx)
+0x000037c8:     mov    (%esp),%ebx
+0x000037cb:     mov    0x4(%esp),%esi
+0x000037cf:     mov    0x8(%esp),%edi
+0x000037d3:     add    $0xc,%esp
+0x000037d6:     ret
+End of assembler dump.
 
-johannes
+This could easily be my setup but I thought I would send it out to let
+you know your email did not go unnoticed and secondly in case you had
+some hints as to what I might be doing incorrectly.
 
---=-OJJNru4sMqJTpXud1U1N
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Mark
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJOpFlAAoJEKVg1VMiehFYraUP/0JAb6EmEMGgP5LUYcVTRrlL
-1fvDcFGxuif/qvUOq+PbcZuVn/GbfwJonwOgGZBBSweu1TQnyIpAfpnqH8N32DjL
-HVvd9fh17lcmcfvKRvDGgC4oSP+u5+vuqEgai71kjtNhAY85OcPLj5cfDsOySNQv
-Azxo/TK8QW5xIRHBbWzGts/BVF7164UqHgtV3Z7XrlaissphjvMCFucXsiCUosyJ
-QOLtjVqEtoeSvgPhp8MQHr+SzO85e90iGb1zG7UgQVuUSO3VbkCgbc0Skr0tap1f
-67/d8I5e3BXX8rFVw0+bykf8V5LnDF7RGqgS3+0gGUhLcWu1bI5SeTAud9+pY/ve
-Z17lYz/xYkdgXJkxC7KjbGMwX0yrHvGl2L5jYC5N2mDKIHeTGEdm+NWyRZoZuxIS
-bcUpvtjz4B0Mwy9fae19g0MePqWVilxND/3V3eP21NgZUn5vDdISlig/8lY8HLwo
-KARtM+yAg+LDc8oqdErKmoDd371QRfBiMqM8L4j/vKYrCnlcfhzqMoZVlxkh3u1f
-24cCpgXRO/k8TaqAs0Eh1lR0k28H6uuz1DNy8t4sEKAKp4h5qqf4cpAM2k54cdNq
-S572O44aaHHDv04+xda2cRRkoJospwlUHgBpuwEecOi9lur64HH5XNLWhDdW1To/
-6q+li9S1Hcsd+b6SU/vT
-=U1WY
------END PGP SIGNATURE-----
-
---=-OJJNru4sMqJTpXud1U1N--
-
+> Ivo
+>
+> On Thursday 02 October 2008, Mark Asselstine wrote:
+>> Hello,
+>>
+>> I have some free cycles and would love to help out in getting support
+>> for rt2860 and wpa support into this project. I can see that such
+>> support was discussed some at the last development meeting as well as
+>> in Bug 10754. I have cloned the tree and am ready to go, anyone have
+>> any pointers to areas I can help out with?
+>>
+>> Regards,
+>> Mark
+>>
+>> -------------------------------------------------------------------------
+>> This SF.Net email is sponsored by the Moblin Your Move Developer's challenge
+>> Build the coolest Linux based applications with Moblin SDK & win great prizes
+>> Grand prize is a trip for two to an Open Source event anywhere in the world
+>> http://moblin-contest.org/redirect.php?banner_id=100&url=/
+>> _______________________________________________
+>> Rt2400-devel mailing list
+>> Rt2400-devel@lists.sourceforge.net
+>> https://lists.sourceforge.net/lists/listinfo/rt2400-devel
+>>
+>
+>
+>
