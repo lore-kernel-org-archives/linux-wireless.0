@@ -1,74 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46164 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752214AbYLPKhB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 05:37:01 -0500
-Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081216031325.GD21476@xi.wantstofly.org> (sfid-20081216_041336_592667_E12521BC)
-References: <20081216025542.GO18056@xi.wantstofly.org>
-	 <20081216031325.GD21476@xi.wantstofly.org>
-	 (sfid-20081216_041336_592667_E12521BC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tvrzRaWs9mgYqpIb3rim"
-Date: Tue, 16 Dec 2008 11:36:59 +0100
-Message-Id: <1229423819.4471.35.camel@johannes.berg> (sfid-20081216_113707_633804_84E23EBE)
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:36220 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751021AbYLQKyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2008 05:54:09 -0500
+Date: Wed, 17 Dec 2008 18:53:17 +0800
+From: Wu Fengguang <fengguang.wu@intel.com>
+To: "Zhu, Yi" <yi.zhu@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [PATCH 3/8] iwlwifi: update comments on the debug interface
+Message-ID: <20081217105317.GA20663@localhost> (sfid-20081217_115413_340422_A58842EC)
+References: <1229503954-30347-1-git-send-email-yi.zhu@intel.com> <1229503954-30347-2-git-send-email-yi.zhu@intel.com> <1229503954-30347-3-git-send-email-yi.zhu@intel.com> <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Dec 17, 2008 at 10:52:29AM +0200, Zhu, Yi wrote:
+> From: Wu, Fengguang <fengguang.wu@intel.com>
+> 
+> Bring up-to-date some comments on the location of debug files.
+> 
+> Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
+> Acked-by: Tomas Winkler <tomas.winkler@intel.com>
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c   |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-debug.h |   17 +++++++----------
+>  2 files changed, 8 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index 9d50fad..d0fb7a3 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -3354,7 +3354,7 @@ static int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  
+>  /*
+>   * The following adds a new attribute to the sysfs representation
+> - * of this device driver (i.e. a new file in /sys/bus/pci/drivers/iwl/)
+> + * of this device driver (i.e. a new file in /sys/class/net/wlan0/device/)
+>   * used for controlling the debug level.
+>   *
+>   * See the level definitions in iwl for details.
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+> index e4c264b..56c13b4 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-debug.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+> @@ -96,28 +96,25 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+>  #endif				/* CONFIG_IWLWIFI_DEBUGFS */
+>  
+>  /*
+> - * To use the debug system;
+> + * To use the debug system:
+>   *
+>   * If you are defining a new debug classification, simply add it to the #define
+> - * list here in the form of:
+> + * list here in the form of
+>   *
+>   * #define IWL_DL_xxxx VALUE
+>   *
+> - * shifting value to the left one bit from the previous entry.  xxxx should be
+> - * the name of the classification (for example, WEP)
+> + * where xxxx should be the name of the classification (for example, WEP).
+>   *
+>   * You then need to either add a IWL_xxxx_DEBUG() macro definition for your
+>   * classification, or use IWL_DEBUG(IWL_DL_xxxx, ...) whenever you want
+>   * to send output to that classification.
+>   *
+> - * To add your debug level to the list of levels seen when you perform
+> + * The active debug levels can be accessed via files
+>   *
+> - * % cat /sys/class/net/wlanX/device/debug_level
+> + * 	/sys/module/iwlagn/parameters/debug{50}
+> + * 	/sys/class/net/wlan0/device/debug_level
+>   *
+> - * you simply need to add your entry to the iwl_debug_levels array.
+> - *
+> - * If you do not see debug_level in  /sys/class/net/wlanX/device/debug_level
+> - * then you do not have CONFIG_IWLWIFI_DEBUG defined in your kernel config file
+> + * when CONFIG_IWLWIFI_DEBUG=y.
+>   */
 
---=-tvrzRaWs9mgYqpIb3rim
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hi Yi,
 
-On Tue, 2008-12-16 at 04:13 +0100, Lennert Buytenhek wrote:
-> On Tue, Dec 16, 2008 at 03:55:42AM +0100, Lennert Buytenhek wrote:
->=20
-> > Attached is an initial version of the mwl8k driver for Marvell 88w8xxx
-> > PCI/PCIe wireless parts (against 2.6.27.1).  This version was written
-> > and tested against the 88w8687 (802.11b/g), but it shouldn't be hard to
-> > extend the support to other parts in the 8xxx series, since the firmwar=
-e
-> > interface is very similar between parts.
-> >=20
-> > There's an occasional timeout warning with mwl8k_stop(), and hardware
-> > crypto is still a work-in-progress, but other than that it looks pretty
-> > stable.
-> >=20
-> > Feedback appreciated!
->=20
-> I suppose the mail got eaten because the attachment trips the list's
-> post size limit, so I've uploaded a copy of the patch to:
+This was my prepared version:
 
-I got it here, but it may have taken longer than expected. I'll review
-it at the end of the week if I can, or after Christmas.
+ * The debug levels can be activated by the "debug" module parameter("debug50"
+ * for 5000), and be runtime accessed via file
+ *
+ *     /sys/class/net/wlan0/device/debug_level
+ *
+ * when CONFIG_IWLWIFI_DEBUG=y.
 
-johannes
+It's not really an obviously better writing though, and can be safely ignored.
 
---=-tvrzRaWs9mgYqpIb3rim
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJR4THAAoJEKVg1VMiehFYKSUQAMCvRD38VPgHBnxWodH7a4cN
-4Gjc0j03yAY0HH4AV867u3v0Jg2YoxVonLorhPPShII5jwLyyYycifzgTY2uHmkN
-lffPgg6NMU9mpVO1Hq4upQ4oGSnqo/YZmy+uTVIpyBbCrW6HfgdhgFlh3s0YEBeK
-1PtXqVm6yTJrAkY8/mjHHLxiuq/IpT0qoXEqPTKTjKteukUDDoXAlexC9Hmlq33w
-W5pkiR7K+krCAPau+cOLO2YZXf/mFUcGmFKq3Qd8vLZp6qpZOvtaRd3qLtKFtn2u
-Efe7m24QQqaZsTXpWCFzeJ6rYLdhDYQDaATjCy7n6565oOHpcGv+gZS3TAOLu+zj
-fbSMvf6e2C/GhTnykcUQf40oJNymgXNdK5lkiRyEoc+YVMjhQzDX5wshA+JTMDeT
-jKRDthwLeD9RL5ZqMvvwdAVJbhHP6N5A6+7b3FeM3Ec1zQ05L9YZn9mzFLcfrRa+
-Ns6ny1cKjuDU54fCrYeJ9nOnlmJh0WtJj3Gs65hodoUEJzysMq1vp2hwb74enu+q
-h7Td01hW6CJeWnY28+tGr2597ndeGssw/V+AdBj7q6Kn/szPFm7duWFr0A1yuEbc
-IfhlFrYkQjTOP3n0MFk61nsyycAjl/5r5RvaRjwrKA4vCHjXDqxcIEFh11hv4yr/
-Z7lFQTfxgBOMsVrpenzx
-=4i1M
------END PGP SIGNATURE-----
-
---=-tvrzRaWs9mgYqpIb3rim--
+Thanks,
+Fengguang
 
