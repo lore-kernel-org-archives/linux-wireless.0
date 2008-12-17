@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:59976 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbYLNAE1 (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51445 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752047AbYLQQBO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Dec 2008 19:04:27 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so492975qwe.37
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Dec 2008 16:04:26 -0800 (PST)
-Message-ID: <99a2c9180812131604v41109e2ckc5c76f8f415ae8c9@mail.gmail.com> (sfid-20081214_010504_643057_3BD56F0F)
-Date: Sun, 14 Dec 2008 02:04:26 +0200
-From: "Ionut Radu" <ionut.radu@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: The latest archive is missing ath5k driver
+	Wed, 17 Dec 2008 11:01:14 -0500
+Message-ID: <49492245.9010500@lwfinger.net> (sfid-20081217_170118_043957_F8DE53FA)
+Date: Wed, 17 Dec 2008 10:01:09 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+To: Christian Lamparter <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Memory errors from p54usb
+References: <49466F56.6060805@lwfinger.net> <200812162256.36605.chunkeey@web.de> <49487038.5090404@lwfinger.net> <200812171520.40104.chunkeey@web.de>
+In-Reply-To: <200812171520.40104.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Christian Lamparter wrote:
+> Ohh, it always gets better. ;)
+> Anyway, I'll see what I can do tomorrow. 
+> 
+> In the meantime, I remembered that I put a heat sink on my chip a while ago,
+> but I'm not sure if this had any effect here... But back in the summer, it allowed me
+> fix the iperf stalls I had, but that was after days with 60Gb traffic...
 
-I have installed the compat-wireless-2008-12-11, but I couldn't find
-the ath5k driver :
+That would be a good idea; however, it is winter in my hemisphere (I don't care
+what the calender says.), and the room is cool. In addition, my device is a Dell
+Wireless 1450, which comes with a pretty hefty heat sink on its own.
 
-ionut@mendol:~/compat-wireless-2008-12-11$ sudo modprobe ath5k
-FATAL: Module ath5k not found.
-ionut@mendol:~/compat-wireless-2008-12-11$ sudo athload ath5k
-Module ath_pci not detected -- this is fine
-FATAL: Module ath5k not found.
-ionut@mendol:~/compat-wireless-2008-12-11$
+I'll throw printk's into every place I can think of and try to provide more info.
 
+Larry
 
-What's wrong?
-
-thanks,
-Ionut Radu.
