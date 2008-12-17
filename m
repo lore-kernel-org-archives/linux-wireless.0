@@ -1,57 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:18682 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751183AbYLWUdq (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:60228 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750847AbYLQNCL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 15:33:46 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so1021711fgg.17
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 12:33:44 -0800 (PST)
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: Enhancements to dynamic power save.
-References: <20081223044424.GC11534@myhost.users.atheros.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 23 Dec 2008 22:33:41 +0200
-In-Reply-To: <20081223044424.GC11534@myhost.users.atheros.com> (Vivek Natarajan's message of "Mon\, 22 Dec 2008 20\:44\:24 -0800")
-Message-ID: <873aged42i.fsf@litku.valot.fi> (sfid-20081223_213349_008920_31AAACCA)
+	Wed, 17 Dec 2008 08:02:11 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] ath9k: Fix a NULL pointer dereference in ath_rate_get
+Date: Wed, 17 Dec 2008 14:02:00 +0100
+Cc: Jouni Malinen <j@w1.fi>, Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20081217113031.GA18060@jm.kir.nu> <200812171325.26310.chunkeey@web.de> <1229516464.5175.2.camel@localhost>
+In-Reply-To: <1229516464.5175.2.camel@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812171402.00354.chunkeey@web.de> (sfid-20081217_140222_089463_129E8FC5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan <vivek.natraj@gmail.com> writes:
+On Wednesday 17 December 2008 13:21:04 Johannes Berg wrote:
+> On Wed, 2008-12-17 at 13:25 +0100, Christian Lamparter wrote:
+> 
+> > hostapd: wlan1: STA XX:XX:XX:XX:0d IEEE 802.11: authenticated
+> > kernel: [ 3130.431067] ------------[ cut here ]------------
+> > kernel: [ 3130.431076] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0xb8/0x320 [mac80211]()
+> > kernel: [ 3130.431081] Modules linked in: p54usb p54pci p54common [...]
+> > kernel: [ 3130.431300] Pid: 16961, comm: hostapd2 Tainted: P           2.6.28-rc7-wl #3
+> > [ 3130.431305] Call Trace:
+> > [ 3130.431318]  [<ffffffff802343c1>] warn_on_slowpath+0x51/0x75
+> > [ 3130.431329]  [<ffffffff803d74b0>] rb_insert_color+0xba/0xe2
+> > [ 3130.431338]  [<ffffffff802480ef>] __remove_hrtimer+0x7c/0x88
+> > [ 3130.431375]  [<ffffffffa00bd30e>] minstrel_rate_init+0xb8/0x320 [mac80211]
+> > [ 3130.431417]  [<ffffffffa00ae713>] ieee80211_add_station+0x145/0x17d [mac80211]
+> > hostapd: wlan1: STA XX:XX:XX:XX:0d IEEE 802.11: associated (aid 1, accounting session 494187DD-00000000)
+> > kernel: [ 3130.431440]  [<ffffffffa00897af>] nl80211_new_station+0x1b3/0x20b [cfg80211]
+> > kernel: [ 3130.431450]  [<ffffffff80595691>] mutex_lock+0xd/0x1e
+> > kernel: [ 3130.431459]  [<ffffffff804f6f86>] nla_parse+0x4b/0xb2
+> > 
+> > yup, the Warning just happend right between auth and assoc
+> 
+> This, umm, seems totally unrelated since Jouni was fixing something in
+> ath9k's RC algorithm.
+> 
+hmm, I wanted to point out that not only ath9k's RC algorithm has problems with
+uninitialized/dereferenced sta... as he said in his patch description:
 
-> This patch enables mac80211 to send a null frame and also to
-> check for tim in the beacon if power save is enabled.
+"It looks like mac80211 may try to send unicast frames to a STA that does not have a STA entry. "
 
-I would like to see a separate hw flag for disabling this feature. Not
-all drivers need this, for example iwlwifi.
+But if this is a unrelated problem... Sorry!!!
 
-> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-> index 673c5d7..6470614 100644
-> --- a/net/mac80211/wext.c
-> +++ b/net/mac80211/wext.c
-> @@ -871,12 +871,17 @@ set:
->  			mod_timer(&local->dynamic_ps_timer, jiffies +
->  				  msecs_to_jiffies(local->dynamic_ps_timeout));
->  		else {
-> -			if (local->powersave)
-> +			if (local->powersave) {
-> +				ieee80211_send_nullfunc(local, sdata, 1);
->  				conf->flags |= IEEE80211_CONF_PS;
-> -			else
-> +				ret = ieee80211_hw_config(local,
-> +						IEEE80211_CONF_CHANGE_PS);
-> +			} else {
->  				conf->flags &= ~IEEE80211_CONF_PS;
-> -			ret = ieee80211_hw_config(local,
-> -					IEEE80211_CONF_CHANGE_PS);
-> +				ret = ieee80211_hw_config(local,
-> +						IEEE80211_CONF_CHANGE_PS);
-> +				ieee80211_send_nullfunc(local, sdata, 0);
-
-Maybe add a helper function for checking the new flag I proposed and
-sending the null frame?
-
--- 
-Kalle Valo
+Regards,
+	Chr
