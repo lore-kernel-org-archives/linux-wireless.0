@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:38140 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756119AbYL1VgD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2008 16:36:03 -0500
-Subject: Re: [PATCH] mac80211: add declarations for
- wake/stop_queue_by_reason()
-From: Pavel Roskin <proski@gnu.org>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081228185414.6204.97451.stgit@tikku>
-References: <20081228185414.6204.97451.stgit@tikku>
-Content-Type: text/plain
-Date: Sun, 28 Dec 2008 16:36:00 -0500
-Message-Id: <1230500160.25726.7.camel@dv> (sfid-20081228_223608_409416_3D6A5C39)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37960 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260AbYLQQAV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Dec 2008 11:00:21 -0500
+Date: Wed, 17 Dec 2008 10:55:34 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <bcopeland@gmail.com>
+Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath5k: Updated padding stuff for the RX and TX side.
+	TX side has been 100%
+Message-ID: <20081217155533.GB12679@tuxdriver.com> (sfid-20081217_170026_870988_1C5B69A7)
+References: <1229351698-21116-1-git-send-email-benoit.papillault@free.fr> <20081215170613.GA22627@jm.kir.nu> <4946C6D9.1060101@free.fr> <b6c5339f0812160722nab8516cj1ed4e6d397060d9d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b6c5339f0812160722nab8516cj1ed4e6d397060d9d@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2008-12-28 at 20:54 +0200, Kalle Valo wrote:
-> Fixes sparse warnings:
+On Tue, Dec 16, 2008 at 10:22:39AM -0500, Bob Copeland wrote:
+> On Mon, Dec 15, 2008 at 4:06 PM, Benoit PAPILLAULT
+> <benoit.papillault@free.fr> wrote:
 > 
-> net/mac80211/util.c:355:6: warning: symbol 
->   'ieee80211_wake_queue_by_reason' was not declared. Should it be static?
-> net/mac80211/util.c:385:6: warning: symbol 
->   'ieee80211_stop_queue_by_reason' was not declared. Should it be static?
+> > frames. To me, the bug we have seen when receiving a ACK frame in
+> > monitor mode was not because "ACK is a small control frame", it was
+> > because the header length we computed was smaller than what the hardware
+> > considered.
+> 
+> It's because data frames have a payload and ACKs do not.
+> 
+> > To reply to Bob as well, we need to compute the number of padded bytes +
+> > the position at which the padding occurs, so proper "header" length is
+> > required.
+> 
+> Well, anyway John already picked up your earlier (better, IMHO) patch.
+> Now we just need to fix the tx descriptors :)
 
-...
- 
-> +void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
-> +				    enum queue_stop_reason reason);
-> +void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
-> +				    enum queue_stop_reason reason);
+Based on that comment, I'm dropping this version of the patch.
+Feel free to submit additional patches to implement whatever might
+be missing now.
 
-What's the point in declaring functions that are not used elsewhere?
-Why not make them static as sparse suggests?  And if those function are
-going to be used by other modules, maybe they should be exported?
-
+John
 -- 
-Regards,
-Pavel Roskin
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
