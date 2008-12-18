@@ -1,112 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway01.websitewelcome.com ([69.56.184.19]:48894 "HELO
-	gateway01.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751143AbYLYH3A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Dec 2008 02:29:00 -0500
-Received: from 75-92-136-219.sea.clearwire-dns.net ([75.92.136.219]:45811 helo=[192.168.111.2])
-	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <Info@delphi-real-estate.com>)
-	id 1LFY3m-0003Sm-JF
-	for linux-wireless@vger.kernel.org; Wed, 24 Dec 2008 12:02:18 -0600
-From: Delphi Real Estate <Info@delphi-real-estate.com>
-To: linux-wireless@vger.kernel.org
-Subject: 4965AGN Not Associating
-Date: Wed, 24 Dec 2008 10:02:12 -0800
+Received: from mgw1.diku.dk ([130.225.96.91]:45000 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750958AbYLRRLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 12:11:20 -0500
+Date: Thu, 18 Dec 2008 18:11:15 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: lrodriguez@atheros.com, jmalinen@atheros.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 7/11] drivers/net/wireless/ath9k: Move a dereference
+ below a NULL test
+In-Reply-To: <20081218155042.GF4121@tuxdriver.com>
+Message-ID: <Pine.LNX.4.64.0812181807330.23988@ask.diku.dk> (sfid-20081218_181124_757731_CA250B93)
+References: <Pine.LNX.4.64.0812161613510.20444@pc-004.diku.dk>
+ <20081218155042.GF4121@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812241002.12787.Info@delphi-real-estate.com> (sfid-20081225_082922_561576_5B6E1F6E)
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 18 Dec 2008, John W. Linville wrote:
 
-I was running the iwl4965 git driver successfully from 6 June up until two days ago, when I decided to be a smart-aleck and try to get 802.11n working.  After two 12 hour days of struggle, I now have no wifi.
+> On Tue, Dec 16, 2008 at 04:14:28PM +0100, Julia Lawall wrote:
+> > From: Julia Lawall <julia@diku.dk>
+> > 
+> > In each case, if the NULL test is necessary, then the dereference should be
+> > moved below the NULL test.
+> > 
+> > The semantic patch that makes this change is as follows:
+> > (http://www.emn.fr/x-info/coccinelle/)
+> > 
+> > // <smpl>
+> > @@
+> > type T;
+> > expression E;
+> > identifier i,fld;
+> > statement S;
+> > @@
+> > 
+> > - T i = E->fld;
+> > + T i;
+> >   ... when != E
+> >       when != i
+> >   if (E == NULL) S
+> > + i = E->fld;
+> > // </smpl>
+> > 
+> > Signed-off-by: Julia Lawall <julia@diku.dk>
+> > 
+> > ---
+> >  drivers/net/wireless/ath9k/hw.c     |    3 ++-
+> >  1 files changed, 2 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+> > index 98bc25c..7d1dac6 100644
+> > --- a/drivers/net/wireless/ath9k/hw.c
+> > +++ b/drivers/net/wireless/ath9k/hw.c
+> > @@ -5581,11 +5581,12 @@ static inline bool ath9k_hw_run_init_cals(struct ath_hal *ah,
+> >  	struct ath9k_channel ichan;
+> >  	bool isCalDone;
+> >  	struct hal_cal_list *currCal = ahp->ah_cal_list_curr;
+> > -	const struct hal_percal_data *calData = currCal->calData;
+> > +	const struct hal_percal_data *calData;
+> >  	int i;
+> >  
+> >  	if (currCal == NULL)
+> >  		return false;
+> > +	calData = currCal->calData;
+> >  
+> >  	ichan.CalValid = 0;
+> 
+> This patch doesn't seem to apply.  I don't see this code anywhere.
+> Perhaps this is against some older version?
 
-Running Kubuntu Hardy and typically compile a custom kernel.  First I downloaded and compiled compat-wireless-old.tar.bz2 and compiled it to my kernel 2.6.24.  Driver loaded fine and the wlan0 interface came up, but would no longer associate as the old driver did.  Rebooted, but a second or so after the blue wireless light came on, the kernel crashed with an Aieeee!  No way to see exactly where or why, as it'd scrolled off the screen and there's nothing in the logs.
+I used the following version of linux-next, which indeed a bit out of 
+date:
 
-So I tried just compiling kernels 2.6.27 and .28 to test their iwlagn functionality, but unfortunately no version of .27 or .28 will compile on my laptop.  .27 does compile on my HTPC, but not where it counts:
-  OFFSETS arch/x86/boot/offsets.h
-  OBJCOPY arch/x86/boot/vmlinux.bin
-  AS      arch/x86/boot/header.o
-  LD      arch/x86/boot/setup.elf
-  OBJCOPY arch/x86/boot/setup.bin
-  BUILD   arch/x86/boot/bzImage
-Root device is (8, 1)
-Setup is 11916 bytes (padded to 12288 bytes).
-System is 2904 kB
-CRC 30db084d
-Kernel: arch/x86/boot/bzImage is ready  (#1)
-ERROR: "snd_hwdep_new" [ubuntu/misc/media/snd-bt-sco.ko] undefined!
-WARNING: modpost: Found 4 section mismatch(es).
-To see full details build your kernel with:
-'make CONFIG_DEBUG_SECTION_MISMATCH=y'
-make[1]: *** [__modpost] Error 1
-make: *** [modules] Error 2
-#
-
-So I gave up on a new kernel and compiled 2.6.22, booted, and compiled compat-wireless-old.tar.bz2 to it, which went fine.  I even get a blue light for the radio switch now.  But it will not associate.  I am using the exact same interfaces file as before.  I tried network manager, but it doesn't even recognize this as a wireless device.
-
- # iwconfig
-wlan0     IEEE 802.11abgn  ESSID:"Hex"
-          Mode:Managed  Frequency:2.462 GHz  Access Point: Not-Associated
-          Tx-Power=14 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Encryption key:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-# iwpriv
-wlan0     no private ioctls.
-
-# iwpriv wlan0 network_type g
-wlan0     no private ioctls.
-
-# iwlist wlan0 auth
-wlan0     Authentication capabilities :
-                WPA
-                WPA2
-                CIPHER-TKIP
-                CIPHER-CCMP
-          Current Authentication algorithm :
-                open
-
-So for some reason it is not recognizing my WPA commands in /etc/network/interfaces (which worked before).  Or maybe it's in 'n' or 'a' mode, rather than g.  I've searched everywhere and can not find how to set it to g mode now that it has no private ioctls.
-
-/etc/network/interfaces:
-iface wlan0 inet static
-pre-up /sbin/iwpriv wlan0 network_type g
-pre-up ip link set wlan0 up
-address 192.168.1.1
-netmask 255.255.255.0
-gateway 192.168.1.5
-wireless-essid Hex
-wpa-scan-ssid 0
-wpa-ap-scan 1
-wpa-ssid Hex
-wpa-psk Freeasinfreedom
+commit feaf3848a813a106f163013af6fcf6c4bfec92d9
+Merge: a771132... 0e435ac...
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Wed Dec 3 16:45:56 2008 -0800
 
 
+But I see the same code in the following version of linux-2.6
 
+commit 1bda71282ded6a2e09a2db7c8884542fb46bfd4f
+Merge: 7a62b17... 25a41b2...
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue Dec 16 09:49:10 2008 -0800
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+julia
