@@ -1,37 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:60440 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742AbYLRMzN (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39283 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751395AbYLRMdF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 07:55:13 -0500
-Received: by bwz14 with SMTP id 14so1476351bwz.13
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 04:55:11 -0800 (PST)
+	Thu, 18 Dec 2008 07:33:05 -0500
+Date: Thu, 18 Dec 2008 14:33:00 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
-Date: Thu, 18 Dec 2008 13:54:45 +0100
-Cc: mohamed salim abbas <mabbaswireless@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
-	yi.zhu@intel.com, reinette.chatre@intel.com
-References: <200812161307.07193.helmut.schaa@gmail.com> <b3153e950812171210n7247bevc9470fa47942ce92@mail.gmail.com> <20081217202943.GB3516@tuxdriver.com>
-In-Reply-To: <20081217202943.GB3516@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Fixed RX decryption status reporting
+Message-ID: <20081218123300.GB32267@jm.kir.nu> (sfid-20081218_133309_294392_ECFF980C)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812181354.45839.helmut.schaa@gmail.com> (sfid-20081218_135519_146370_DAE47DDF)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 17. Dezember 2008 schrieb John W. Linville:
-> I think it still isn't settled in everyone's minds whether rfkill
-> only matters if the device is "up" or if it is something that
-> e.g. NetworkManager might want to monitor as a clue to bring the
-> device up or down in response to rfkill changes.
+The RX code in ath9k uses sc_keymap to figure out whether a default
+key was used. However, the default key entries in sc_keymap were
+always set and as such, frames could have been claimed to be decrypted
+by hardware when they were not. This can cause problems especially
+with TKIP since mac80211 is validating the Michael MIC in the frame
+and this will result in MIC failure and potentially TKIP
+countermeasures if the frame was not decrypted correctly.
 
-I guess we need a concrete definition if the rfkill state is bound to
-iface up/down or not. However I think it's somwhat awkward to expose an
-(maybe) incorrect rfkill state if the interface is down. Either the state
-should be correct or not exposed at all.
+Change key cache slot allocation to mark only the keys that really
+have been used in sc_keymap to avoid the issue. The key cache slot
+selection routines are now internally avoiding the slots that may be
+needed for TKIP group keys.
 
-Helmut
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   26 ++++++++++++--------------
+ 1 file changed, 12 insertions(+), 14 deletions(-)
+
+--- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2008-12-18 13:22:57.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/main.c	2008-12-18 13:23:05.000000000 +0200
+@@ -776,6 +776,18 @@ static int ath_reserve_key_cache_slot(st
+ 
+ 	/* No partially used TKIP slots, pick any available slot */
+ 	for (i = IEEE80211_WEP_NKID; i < sc->sc_keymax; i++) {
++		/* Do not allow slots that could be needed for TKIP group keys
++		 * to be used. This limitation could be removed if we know that
++		 * TKIP will not be used. */
++		if (i >= 64 && i < 64 + IEEE80211_WEP_NKID)
++			continue;
++		if (sc->sc_splitmic) {
++			if (i >= 32 && i < 32 + IEEE80211_WEP_NKID)
++				continue;
++			if (i >= 64 + 32 && i < 64 + 32 + IEEE80211_WEP_NKID)
++				continue;
++		}
++
+ 		if (!test_bit(i, sc->sc_keymap))
+ 			return i; /* Found a free slot for a key */
+ 	}
+@@ -1363,20 +1375,6 @@ static int ath_init(u16 devid, struct at
+ 	 */
+ 	for (i = 0; i < sc->sc_keymax; i++)
+ 		ath9k_hw_keyreset(ah, (u16) i);
+-	/*
+-	 * Mark key cache slots associated with global keys
+-	 * as in use.  If we knew TKIP was not to be used we
+-	 * could leave the +32, +64, and +32+64 slots free.
+-	 */
+-	for (i = 0; i < IEEE80211_WEP_NKID; i++) {
+-		set_bit(i, sc->sc_keymap);
+-		set_bit(i + 64, sc->sc_keymap);
+-		if (ath9k_hw_getcapability(ah, ATH9K_CAP_TKIP_SPLIT,
+-					   0, NULL)) {
+-			set_bit(i + 32, sc->sc_keymap);
+-			set_bit(i + 32 + 64, sc->sc_keymap);
+-		}
+-	}
+ 
+ 	/* Collect the channel list using the default country code */
+ 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
