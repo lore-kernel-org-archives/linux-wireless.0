@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36998 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751305AbYLCTfT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 14:35:19 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 11:35:19 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v3 0/2] ath9k: few memory fixes
-Date: Wed, 3 Dec 2008 03:35:28 -0800
-Message-ID: <1228304130-11337-1-git-send-email-lrodriguez@atheros.com> (sfid-20081203_203524_585146_0FE0D144)
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:60440 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742AbYLRMzN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 07:55:13 -0500
+Received: by bwz14 with SMTP id 14so1476351bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 04:55:11 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
+Date: Thu, 18 Dec 2008 13:54:45 +0100
+Cc: mohamed salim abbas <mabbaswireless@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	yi.zhu@intel.com, reinette.chatre@intel.com
+References: <200812161307.07193.helmut.schaa@gmail.com> <b3153e950812171210n7247bevc9470fa47942ce92@mail.gmail.com> <20081217202943.GB3516@tuxdriver.com>
+In-Reply-To: <20081217202943.GB3516@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200812181354.45839.helmut.schaa@gmail.com> (sfid-20081218_135519_146370_DAE47DDF)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series addresses some memory issues present on ath9k
-regarding allocation and not handling failed DMA maps.
+Am Mittwoch, 17. Dezember 2008 schrieb John W. Linville:
+> I think it still isn't settled in everyone's minds whether rfkill
+> only matters if the device is "up" or if it is something that
+> e.g. NetworkManager might want to monitor as a clue to bring the
+> device up or down in response to rfkill changes.
 
-This v3 gets the txq from the txctl and sprinkles some more
-unlikely()s where appropriate.
+I guess we need a concrete definition if the rfkill state is bound to
+iface up/down or not. However I think it's somwhat awkward to expose an
+(maybe) incorrect rfkill state if the interface is down. Either the state
+should be correct or not exposed at all.
 
-  Luis
-
-Luis R. Rodriguez (2):
-  ath9k: Check for pci_map_single() errors
-  ath9k: Use GFP_ATOMIC when allocating TX private area
-
- drivers/net/wireless/ath9k/beacon.c |   16 ++++++++++++-
- drivers/net/wireless/ath9k/recv.c   |   17 +++++++++++++
- drivers/net/wireless/ath9k/xmit.c   |   43 ++++++++++++++++++++++++++++++++--
- 3 files changed, 72 insertions(+), 4 deletions(-)
-
+Helmut
