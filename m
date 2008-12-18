@@ -1,81 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50182 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757196AbYLJSeg (ORCPT
+Received: from pool-71-115-147-71.gdrpmi.dsl-w.verizon.net ([71.115.147.71]:35935
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbYLRXvq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 13:34:36 -0500
-Subject: Re: [RFC] b43: rework rfkill code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	hmh@hmh.eng.br
-In-Reply-To: <1228933790.28590.29.camel@localhost.localdomain>
-References: <20081210150935.GA10927@srcf.ucam.org>
-	 <1228929529.15837.34.camel@johannes.berg>
-	 <1228929820.15837.40.camel@johannes.berg> <200812101831.13526.mb@bu3sch.de>
-	 <1228930643.15837.48.camel@johannes.berg>
-	 <20081210175102.GA14282@srcf.ucam.org>
-	 <1228932343.15837.57.camel@johannes.berg>
-	 <1228933790.28590.29.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P+jaxV4WTFt9e1sY1kHZ"
-Date: Wed, 10 Dec 2008 19:33:59 +0100
-Message-Id: <1228934039.15837.59.camel@johannes.berg> (sfid-20081210_193505_986993_76D1F0F9)
-Mime-Version: 1.0
+	Thu, 18 Dec 2008 18:51:46 -0500
+Message-ID: <494AE20D.2010709@erley.org> (sfid-20081219_005151_648805_11D62814)
+Date: Thu, 18 Dec 2008 18:51:41 -0500
+From: pat-lkml <pat-lkml@erley.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [patch] Allow CRDA to use new libnl
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch updates CRDA to use the new libnl-2 interface, and adds
+backwards compatability with libnl-1.  It follows the same pattern that
+the patch included into iw uses.
 
---=-P+jaxV4WTFt9e1sY1kHZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Pat Erley <pat-lkml@erley.org>
+---
+diff --git a/Makefile b/Makefile
+index ab1de94..f0d3925 100644
+--- a/Makefile
++++ b/Makefile
+@@ -25,6 +25,22 @@ endif
+ MKDIR ?= mkdir -p
+ INSTALL ?= install
 
-On Wed, 2008-12-10 at 13:29 -0500, Dan Williams wrote:
++NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
++NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
++
++ifeq ($(NL1FOUND),Y)
++NLLIBNAME = libnl-1
++endif
++
++ifeq ($(NL2FOUND),Y)
++CFLAGS += -DCONFIG_LIBNL20
++LIBS += -lnl-genl
++NLLIBNAME = libnl-2.0
++endif
++
++LIBS += `pkg-config --libs $(NLLIBNAME)`
++CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
++
+ ifeq ($(V),1)
+ Q=
+ NQ=@true
+@@ -43,7 +59,7 @@ keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
 
-> > Does the wireless driver get the notification about this from the
-> > hardware, like it would if this was a real physical switch? Then it's
-> > probably pretty simple: provide a rfkill struct from the driver that
-> > updates hard-kill and provide a second rfkill struct for the platform
-> > device that doesn't get hard-killed, but also provide a soft-kill input
-> > form the platform device. That way, you can toggle that button, but you
-> > can also software-enable the platform rfkill device and that in turn
-> > re-enables the wifi-rfkill "hw" switch device.
->=20
-> This sort of sucks for userspace, because we see the actual wifi card as
-> hardblocked, but some other random button as softblocked.  There's no
-> indication that changing the softblock one will affect the hardblocked
-> one.  What are userspace processes supposed to do here, assume that if a
-> non-radio-associated softblocked switch exists, that it can re-enable a
-> hardblocked radio of some random wifi card?
+ crda: reglib.o crda.o
+ 	$(NQ) '  LD  ' $@
+-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ `pkg-config --libs libnl-1`
+$(LDLIBS)
++	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@ $^ $(LDLIBS)
 
-The other question is whether we actually care? So what if the hardware
-can only be enabled with the button, why does that matter?
+ regdbdump: reglib.o regdbdump.o print-regdom.o
+ 	$(NQ) '  LD  ' $@
+diff --git a/crda.c b/crda.c
+index 52b8ca1..afc5df1 100644
+--- a/crda.c
++++ b/crda.c
+@@ -21,6 +21,30 @@
+ #include "regdb.h"
+ #include "reglib.h"
 
-johannes
++#ifndef CONFIG_LIBNL20
++/* libnl 2.0 compatibility code */
++static inline struct nl_handle *nl_socket_alloc(void)
++{
++       return nl_handle_alloc();
++}
++
++static inline void nl_socket_free(struct nl_handle *h)
++{
++       nl_handle_destroy(h);
++}
++
++static inline int __genl_ctrl_alloc_cache(struct nl_handle *h, struct
+nl_cache **cache)
++{
++       struct nl_cache *tmp = genl_ctrl_alloc_cache(h);
++       if (!tmp)
++               return -ENOMEM;
++       *cache = tmp;
++       return 0;
++}
++
++#define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
++#endif /* CONFIG_LIBNL20 */
++
+ struct nl80211_state {
+ 	struct nl_handle *nl_handle;
+ 	struct nl_cache *nl_cache;
+@@ -31,7 +55,7 @@ static int nl80211_init(struct nl80211_state *state)
+ {
+ 	int err;
 
---=-P+jaxV4WTFt9e1sY1kHZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+-	state->nl_handle = nl_handle_alloc();
++	state->nl_handle = nl_socket_alloc();
+ 	if (!state->nl_handle) {
+ 		fprintf(stderr, "Failed to allocate netlink handle.\n");
+ 		return -ENOMEM;
+@@ -43,8 +67,7 @@ static int nl80211_init(struct nl80211_state *state)
+ 		goto out_handle_destroy;
+ 	}
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+-	state->nl_cache = genl_ctrl_alloc_cache(state->nl_handle);
+-	if (!state->nl_cache) {
++	if (genl_ctrl_alloc_cache(state->nl_handle, &state->nl_cache)) {
+ 		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
+ 		err = -ENOMEM;
+ 		goto out_handle_destroy;
+@@ -62,7 +85,7 @@ static int nl80211_init(struct nl80211_state *state)
+  out_cache_free:
+ 	nl_cache_free(state->nl_cache);
+  out_handle_destroy:
+-	nl_handle_destroy(state->nl_handle);
++	nl_socket_free(state->nl_handle);
+ 	return err;
+ }
 
-iQIcBAABAgAGBQJJQAuPAAoJEKVg1VMiehFYe3AP/2gTuRWKwJK6ZGcIK+uDLo80
-4ahWZS8p95oPVgMU3ylfEK7kDQ7aZNbSPt1jNRC2boS72t/D8G+Hq5ymxanbVgM8
-4RKBPOAwjuP+YSsT+PjS7WKAO7vSGavSs11BmluMw84O3KQQEogWSgyA+gx4UJoz
-S22jQpIeFnU901xVkjg/JYm4iw8kneCiiF5FXiVmnK4q8FG2yr9UNgbJr9spG+5S
-IhdidJJpwGvwEq251mPXDuvg45vMQXZcPhSH7OdLk4Ssuqkmn4Nb9B3XtSl8ewnA
-+FiWgA3GsZIg/3U+CQ4uHrFOLDhov45jBihG/HgprM6ggFpwVBPAlNF6aYJqExeG
-kYrADWAPLXhZsOKUkQniJYm2X/c0sugTAtW6ekWsnlJZ4C6olw5Bb4AtLsTi13mm
-TJHB6LmpOtrtHKBh/pUqCSohH2dmnuNE4N332qhZvPj2B1IK1YVzKNs0DhcKEB2p
-Rr4YHbUf4xqnYZVzIDQWFT9E166Vc3Jf+b1dUBoaxkXuxE7/C0gReBuYGb5gj7pB
-rqcvgFMSP5W9U4APC7hRO+gff7I2rV4UMzuTHeYX7jt55BRO6FL0kXqxv7fU68fb
-t68zFw5G1q8/i6M6RxxXyxw0wJJDXTiXAf6URXcqDz4ggaBPMbJ7kCjjPw5WUQxx
-She+vxfqU105yXX+AUSo
-=CNB3
------END PGP SIGNATURE-----
+@@ -70,7 +93,7 @@ static void nl80211_cleanup(struct nl80211_state *state)
+ {
+ 	genl_family_put(state->nl80211);
+ 	nl_cache_free(state->nl_cache);
+-	nl_handle_destroy(state->nl_handle);
++	nl_socket_free(state->nl_handle);
+ }
 
---=-P+jaxV4WTFt9e1sY1kHZ--
-
+ static int reg_handler(struct nl_msg __attribute__((unused)) *msg,
