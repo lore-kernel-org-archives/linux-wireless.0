@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55837 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755338AbYLQI7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 03:59:49 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 8/8] iwlwifi: indicate txpower is off in sysfs
-Date: Wed, 17 Dec 2008 16:52:34 +0800
-Message-Id: <1229503954-30347-9-git-send-email-yi.zhu@intel.com> (sfid-20081217_095955_972928_BA24017C)
-In-Reply-To: <1229503954-30347-8-git-send-email-yi.zhu@intel.com>
-References: <1229503954-30347-1-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-2-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-3-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-5-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-6-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-7-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-8-git-send-email-yi.zhu@intel.com>
+Received: from wf-out-1314.google.com ([209.85.200.168]:43803 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751801AbYLRVsx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 16:48:53 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so672607wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 13:48:51 -0800 (PST)
+Message-ID: <b6c5339f0812181348x49e5c68bia827d9feb4ef0e6c@mail.gmail.com> (sfid-20081218_224857_256476_E31F8751)
+Date: Thu, 18 Dec 2008 16:48:51 -0500
+From: "Bob Copeland" <bcopeland@gmail.com>
+To: sbrown@cortland.com
+Subject: Re: Mesh now completely broken on ath5k, latest git
+Cc: Keir <keirlawson@gmail.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	"Andrey Yurovsky" <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org, javier@cozybit.com
+In-Reply-To: <494ABA6D.8070002@cortland.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <e27b78a40812160405h2241e1acqa0dc8e593d6ebfad@mail.gmail.com>
+	 <4947ABAF.9060205@cortland.com>
+	 <e27b78a40812160807j7549e1a5hf3bee474b31c29b7@mail.gmail.com>
+	 <45e8e6c40812161030x1f7fb374qd4a386ef9022a853@mail.gmail.com>
+	 <40f31dec0812170906vd8e4445q9920c66905064df8@mail.gmail.com>
+	 <e27b78a40812171004r3a8d424dk7c390aaf7c757665@mail.gmail.com>
+	 <494A578A.7070803@cortland.com>
+	 <b6c5339f0812181138s1ba134a6qeff21eb063a87e08@mail.gmail.com>
+	 <494ABA6D.8070002@cortland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+On Thu, Dec 18, 2008 at 4:02 PM, Steve Brown <sbrown@cortland.com> wrote:
+> Lots of these however:
+> Dec 18 15:53:20 fl-ws kernel: ath5k phy23: beacon queue 7 didn't stop?
 
-The patch checks if the radio is disabled before displaying the tx power
-level. Previously when the txpower was set off show_tx_power still
-returned the prior power level. Now it will indicate the power has been
-turned off.
+Can you change the if statement that prints that in ath5k_beacon_send() in
+base.c to capture the return value?  i.e.:
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+int err;
+...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 8102815..b6c74a1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3430,7 +3430,11 @@ static ssize_t show_tx_power(struct device *d,
- 			     struct device_attribute *attr, char *buf)
- {
- 	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
--	return sprintf(buf, "%d\n", priv->tx_power_user_lmt);
-+
-+	if (!iwl_is_ready_rf(priv))
-+		return sprintf(buf, "off\n");
-+	else
-+		return sprintf(buf, "%d\n", priv->tx_power_user_lmt);
- }
- 
- static ssize_t store_tx_power(struct device *d,
+err = ath5k_hw_stop_tx_dma(ah, sc->bhalq);
+if (unlikely(err)) {
+    ATH5K_WARN(... "...didn't stop? %d\n", sc->bhalq, err);
+}
+
+> If I make the same change to the current git, still no beacons. But, the
+> "queue 7" msgs persist.
+
+Not sure, I was about to blame ath5k_configure_filter() but I see it does
+turn on the beacons for mesh.
+
 -- 
-1.5.3.6
-
+Bob Copeland %% www.bobcopeland.com
