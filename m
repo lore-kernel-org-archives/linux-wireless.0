@@ -1,109 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26230 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752372AbYLSCo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 21:44:56 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/43] iwlwifi: 3945 remove current_rate from station entry.
-Date: Fri, 19 Dec 2008 10:37:03 +0800
-Message-Id: <1229654263-21454-4-git-send-email-yi.zhu@intel.com> (sfid-20081219_034501_738860_A257920E)
-In-Reply-To: <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
-References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
- <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:61458 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892AbYLRQ1U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 11:27:20 -0500
+Received: by bwz14 with SMTP id 14so1906548bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 08:27:18 -0800 (PST)
+Message-ID: <1ba2fa240812180827nf1c27d1jb20ee8b0b1f04b62@mail.gmail.com> (sfid-20081218_172725_363773_6D4AF583)
+Date: Thu, 18 Dec 2008 18:27:17 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Rami Rosen" <ramirose@gmail.com>
+Subject: Re: [PATCH] [v4] iwlwifi: iwl-tx.c cleanup (remove unused parameter and unused local variable).
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, reinette.chatre@intel.com
+In-Reply-To: <eb3ff54b0812180804i3a782509oa009ff138e3f055c@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <eb3ff54b0812180804i3a782509oa009ff138e3f055c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+On Thu, Dec 18, 2008 at 6:04 PM, Rami Rosen <ramirose@gmail.com> wrote:
+> This patch removes unused parameter and unused local variable in
+> methods in iwl-tx.c:
+>
+> - Remove a parameter (is_unicast) from iwl_tx_cmd_build_basic().
+>
+> - Remove an unused variable name unicast from iwl_tx_skb().
+>
+> (wireless-testing).
+>
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+Ack
+Tomas
 
-This patch removes current_rate from station_entry it was write only
-variable
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |   13 -------------
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    7 -------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 --
- 3 files changed, 0 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 4690b93..1874422 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -832,7 +832,6 @@ void iwl3945_hw_build_tx_cmd_rate(struct iwl3945_priv *priv,
- 			      struct ieee80211_tx_info *info,
- 			      struct ieee80211_hdr *hdr, int sta_id, int tx_id)
- {
--	unsigned long flags;
- 	u16 hw_value = ieee80211_get_tx_rate(priv->hw, info)->hw_value;
- 	u16 rate_index = min(hw_value & 0xffff, IWL_RATE_COUNT - 1);
- 	u16 rate_mask;
-@@ -849,17 +848,6 @@ void iwl3945_hw_build_tx_cmd_rate(struct iwl3945_priv *priv,
- 	 * in this running context */
- 	rate_mask = IWL_RATES_MASK;
- 
--	spin_lock_irqsave(&priv->sta_lock, flags);
--
--	priv->stations[sta_id].current_rate.rate_n_flags = rate;
--
--	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) &&
--	    (sta_id != priv->hw_setting.bcast_sta_id) &&
--		(sta_id != IWL_MULTICAST_ID))
--		priv->stations[IWL_STA_ID].current_rate.rate_n_flags = rate;
--
--	spin_unlock_irqrestore(&priv->sta_lock, flags);
--
- 	if (tx_id >= IWL_CMD_QUEUE_NUM)
- 		rts_retry_limit = 3;
- 	else
-@@ -922,7 +910,6 @@ u8 iwl3945_sync_sta(struct iwl3945_priv *priv, int sta_id, u16 tx_rate, u8 flags
- 
- 	station->sta.sta.modify_mask = STA_MODIFY_TX_RATE_MSK;
- 	station->sta.rate_n_flags = cpu_to_le16(tx_rate);
--	station->current_rate.rate_n_flags = tx_rate;
- 	station->sta.mode = STA_CONTROL_MODIFY_MSK;
- 
- 	spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index d8f40bd..d07aafe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -481,13 +481,6 @@ struct iwl3945_qos_info {
- struct iwl3945_station_entry {
- 	struct iwl3945_addsta_cmd sta;
- 	struct iwl3945_tid_data tid[MAX_TID_COUNT];
--	union {
--		struct {
--			u8 rate;
--			u8 flags;
--		} s;
--		u16 rate_n_flags;
--	} current_rate;
- 	u8 used;
- 	u8 ps_status;
- 	struct iwl3945_hw_key keyinfo;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 17b8f52..5c09995 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -463,8 +463,6 @@ u8 iwl3945_add_station(struct iwl3945_priv *priv, const u8 *addr, int is_ap, u8
- 	/* Turn on both antennas for the station... */
- 	station->sta.rate_n_flags =
- 			iwl3945_hw_set_rate_n_flags(rate, RATE_MCS_ANT_AB_MSK);
--	station->current_rate.rate_n_flags =
--			le16_to_cpu(station->sta.rate_n_flags);
- 
- 	spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
- 
--- 
-1.5.3.6
-
+>
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c
+> b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> index 3cb4363..43dcfe3 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> @@ -645,7 +645,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
+>                                  struct iwl_tx_cmd *tx_cmd,
+>                                  struct ieee80211_tx_info *info,
+>                                  struct ieee80211_hdr *hdr,
+> -                                 int is_unicast, u8 std_id)
+> +                                 u8 std_id)
+>  {
+>        __le16 fc = hdr->frame_control;
+>        __le32 tx_flags = tx_cmd->tx_flags;
+> @@ -834,7 +834,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+>        u16 len, len_org;
+>        u16 seq_number = 0;
+>        __le16 fc;
+> -       u8 hdr_len, unicast;
+> +       u8 hdr_len;
+>        u8 sta_id;
+>        u8 wait_write_ptr = 0;
+>        u8 tid = 0;
+> @@ -854,8 +854,6 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+>                goto drop_unlock;
+>        }
+>
+> -       unicast = !is_multicast_ether_addr(hdr->addr1);
+> -
+>        fc = hdr->frame_control;
+>
+>  #ifdef CONFIG_IWLWIFI_DEBUG
+> @@ -996,7 +994,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+>        len = (u16)skb->len;
+>        tx_cmd->len = cpu_to_le16(len);
+>        /* TODO need this for burst mode later on */
+> -       iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, unicast, sta_id);
+> +       iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, sta_id);
+>
+>        /* set is_hcca to 0; it probably will never be implemented */
+>        iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, sta_id, 0);
+>
+>
+> On Thu, Dec 18, 2008 at 5:31 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> On Thu, Dec 18, 2008 at 12:42:37AM +0200, Tomas Winkler wrote:
+>>> On Wed, Dec 17, 2008 at 11:51 PM, Rami Rosen <ramirose@gmail.com> wrote:
+>>> > This patch removes unused parameters in methods in iwl-tx.c:
+>>> > remove a parameter (is_unicast) from iwl_tx_cmd_build_basic()
+>>> > remove a parameter (sta_id) from iwl_tx_cmd_build_rate()
+>>> > remove a parameter (sta_id ) from iwl_tx_cmd_build_hwcrypto()
+>>>
+>>> Unicast can go sta_id has to stay, we need it for merging 3945 back
+>>
+>> OK, I'll drop this patch and wait for a new submission.
+>>
+>> John
+>> --
+>> John W. Linville                Linux should be at the core
+>> linville@tuxdriver.com                  of your literate lifestyle.
+>>
+>
