@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp239.poczta.interia.pl ([217.74.64.239]:29327 "EHLO
-	smtp239.poczta.interia.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753614AbYLGAGK convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:58542 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751280AbYLRHFV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 19:06:10 -0500
-Received: from f16.poczta.interia.pl (f16.poczta.interia.pl [10.217.2.16])
-	by smtp239.poczta.interia.pl (INTERIA.PL) with ESMTP id C60AA3D638E
-	for <linux-wireless@vger.kernel.org>; Sun,  7 Dec 2008 01:06:07 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by f16.poczta.interia.pl (Postfix) with ESMTP id 06FC2E714A0
-	for <linux-wireless@vger.kernel.org>; Sun,  7 Dec 2008 01:06:07 +0100 (CET)
-Date: 07 Dec 2008 01:06:07 +0100
-From: siamer <siamer@interia.pl>
-Subject: b43 b43-phy0 error
-To: linux-wireless@vger.kernel.org
+	Thu, 18 Dec 2008 02:05:21 -0500
+Date: Thu, 18 Dec 2008 09:05:08 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	mcgrof@gmail.com, jouni.malinen@atheros.com
+Subject: Re: [RFC] Handle Channel Switch Announcement
+Message-ID: <20081218070508.GA15803@jm.kir.nu> (sfid-20081218_080525_800504_59F879BD)
+References: <18761.4838.509784.281821@localhost.localdomain> <20081217162017.GA28712@jm.kir.nu> <18761.43079.702658.733757@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: TEXT/plain; CHARSET=UTF-8
-Message-Id: <20081207000607.06FC2E714A0@f16.poczta.interia.pl> (sfid-20081207_010618_530377_7EAB8305)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <18761.43079.702658.733757@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi. I have 00:09.0 Network controller: Broadcom Corporation BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller (rev 02)
-when i'm using firmware 4.150.10.5 internet is disconnecting me when i'm downloading something...
-This firmware ftp://ftp.linksys.com/opensourcecode/wrt610n/1.00.00.018/wrt610n_v1.00.00.018_us.tgz is working but still i'm getting a lot of b43-phy0 ERROR: PHY transmission error 
-Can You help me with this ? please
+On Thu, Dec 18, 2008 at 07:02:55AM +0530, Sujith wrote:
 
-siamer
+> But after receiving a CSA on the current frequency, and having moved to the new
+> advertised frequency, can the STA send out probe requests in the earlier frequency ?
+> (In case of a scan run or something)
 
-----------------------------------------------------------------------
-Wygraj telefon komorkowy!
-Sprawdz >>  http://link.interia.pl/f1fc0
+As far as IEEE 802.11 standard is concerned, yes, that would be allowed.
+There are not even explicit limits on doing that (if it is a broadcast
+probe request, not unicast to the current BSS) before the channel move.
+The only thing that the STA has to do immediately (if mode=1) is to
+cease to send anything to the current BSS before the channel switch.
+When receiving the CSA, the STA needs to decide whether it wants to
+follow the AP or not. If not, it could start scanning immediately for
+another AP.. The standard even has a following statement about channel
+switch: "It should also be stressed that the channel switch process is
+distinct from the regulatory requirement to cease transmission on a
+particular channel in the presence of radar."
 
+However, the STA must discontinue operation on the channel if it detects
+a radar operating in the channel or learns this from another STA. The
+regulatory rules on how quickly this must be done (and how much airtime
+may be used after the radar has been detected) may be quire strict, so
+doing an active scan on the previous channel immediately after having
+received a CSA may not be that good of an idea. Then again, channels
+that require radar detection should not really allow active scanning on
+them in the first place. In that way it would be enough for the non-AP
+STA to just stop using the current BSS because any other AP on the same
+channel should stop Beaconing, too, when a radar is detected and as
+such, the non-AP STA should not end up using the channel anymore.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
