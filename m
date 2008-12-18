@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44667 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752511AbYL3Ppc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51157 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbYLRPpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 10:45:32 -0500
-Date: Tue, 30 Dec 2008 10:45:30 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-cc: linux-wireless@vger.kernel.org,
-	<linux-pm@lists.linux-foundation.org>,
-	USB list <linux-usb@vger.kernel.org>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-In-Reply-To: <495A1DC8.1050609@tuffmail.co.uk>
-Message-ID: <Pine.LNX.4.44L0.0812301043290.2292-100000@iolanthe.rowland.org> (sfid-20081230_164542_151666_5A5F9AE7)
+	Thu, 18 Dec 2008 10:45:13 -0500
+Date: Thu, 18 Dec 2008 10:31:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Rami Rosen <ramirose@gmail.com>, linux-wireless@vger.kernel.org,
+	reinette.chatre@intel.com
+Subject: Re: [PATCH] [v3] iwlwifi: iwl-tx.c cleanup (remove unused
+	parameters).
+Message-ID: <20081218153149.GE4121@tuxdriver.com> (sfid-20081218_164518_437786_8A8524BD)
+References: <eb3ff54b0812152335p6f768aa4r7ad68b33e62bd20b@mail.gmail.com> <20081217163908.GD12679@tuxdriver.com> <eb3ff54b0812171351r50de6af0td15bf29d7e863212@mail.gmail.com> <1ba2fa240812171442i2a348e91paf3434d6b975642e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240812171442i2a348e91paf3434d6b975642e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 30 Dec 2008, Alan Jenkins wrote:
+On Thu, Dec 18, 2008 at 12:42:37AM +0200, Tomas Winkler wrote:
+> On Wed, Dec 17, 2008 at 11:51 PM, Rami Rosen <ramirose@gmail.com> wrote:
+> > This patch removes unused parameters in methods in iwl-tx.c:
+> > remove a parameter (is_unicast) from iwl_tx_cmd_build_basic()
+> > remove a parameter (sta_id) from iwl_tx_cmd_build_rate()
+> > remove a parameter (sta_id ) from iwl_tx_cmd_build_hwcrypto()
+> 
+> Unicast can go sta_id has to stay, we need it for merging 3945 back
 
-> Ok, I think I got it.
-> 
-> The hang is in ieee80211_unregister_hw(), on this line:
-> 
-> destroy_workqueue(local->hw.workqueue);
-> 
-> 
-> local->hw.workqueue is created using create_freezeable_workqueue().  So
-> presumably destroy_workqueue() deadlocks because the workqueue has
-> already been frozen.
-> 
-> Is it possible to fix this without suspend support in mac80211?  If not,
-> I vote we change rtl8187 (and zd_usb) to prevent suspend.  I.e. set USB
-> suspend callbacks which return an error.
+OK, I'll drop this patch and wait for a new submission.
 
-It certainly should be possible to fix this.  For instance, why 
-unregister anything during suspend?  If ieee80211_unregister_hw() 
-weren't called then this problem would go away, right?
-
-Alan Stern
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
