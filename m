@@ -1,78 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49617 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555AbYLMALC (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:36679 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751255AbYLRQEx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 19:11:02 -0500
-Subject: Re: Userspace tools: Roadmap?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: pat-lkml <pat-lkml@erley.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4942FD59.8020401@erley.org>
-References: <1228692546.8826.1288759933@webmail.messagingengine.com>
-	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>
-	 <1228778295.10662.1288975589@webmail.messagingengine.com>
-	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org>
-	 <1228780960.22164.162.camel@johannes.berg>  <4941EF69.5040108@erley.org>
-	 <1229099080.14423.15.camel@dv> <1229119118.3572.6.camel@johannes.berg>
-	 <4942E7A4.3050206@erley.org> <1229121535.3565.4.camel@johannes.berg>
-	 <4942F867.5020203@erley.org> <1229126725.3565.30.camel@johannes.berg>
-	 <4942FD59.8020401@erley.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eWOSQs1dUtjbU65is66O"
-Date: Sat, 13 Dec 2008 01:10:57 +0100
-Message-Id: <1229127057.3565.34.camel@johannes.berg> (sfid-20081213_011107_606531_13BB063A)
-Mime-Version: 1.0
+	Thu, 18 Dec 2008 11:04:53 -0500
+Received: by ewy10 with SMTP id 10so552498ewy.13
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 08:04:51 -0800 (PST)
+Message-ID: <eb3ff54b0812180804i3a782509oa009ff138e3f055c@mail.gmail.com> (sfid-20081218_170457_077765_CA95F78A)
+Date: Thu, 18 Dec 2008 18:04:51 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] [v4] iwlwifi: iwl-tx.c cleanup (remove unused parameter and unused local variable).
+Cc: "Tomas Winkler" <tomasw@gmail.com>, linux-wireless@vger.kernel.org,
+	reinette.chatre@intel.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch removes unused parameter and unused local variable in
+methods in iwl-tx.c:
 
---=-eWOSQs1dUtjbU65is66O
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+- Remove a parameter (is_unicast) from iwl_tx_cmd_build_basic().
 
-On Fri, 2008-12-12 at 19:10 -0500, pat-lkml wrote:
-> Johannes Berg wrote:
-> > On Fri, 2008-12-12 at 18:48 -0500, pat-lkml wrote:
-> >> This converts iw to use libnl-2, and adds compatibility with libnl-1.
-> >> There is not currently a good way to detect the libnl version during
-> >> compilation, as the versioning in the netlink/version.h is defined as
-> >> a
-> >> string "2.0" rather than a major and a minor number, so we must detect
-> >> it in the Makefile.
-> >>
-> >> Signed-off-by: Pat Erley <pat-lkml@erley.org>
-> >=20
-> > Ok, I've committed a slightly different version of this (corrected the
-> > type, and made the compat code static inlines), can you verify it still
-> > works against 2.0?
+- Remove an unused variable name unicast from iwl_tx_skb().
 
-> Yep, works fine with 2.0
+(wireless-testing).
 
-Alright, thanks for the patch and testing!
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c
+b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 3cb4363..43dcfe3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -645,7 +645,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
+ 				  struct iwl_tx_cmd *tx_cmd,
+ 				  struct ieee80211_tx_info *info,
+ 				  struct ieee80211_hdr *hdr,
+-				  int is_unicast, u8 std_id)
++				  u8 std_id)
+ {
+ 	__le16 fc = hdr->frame_control;
+ 	__le32 tx_flags = tx_cmd->tx_flags;
+@@ -834,7 +834,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	u16 len, len_org;
+ 	u16 seq_number = 0;
+ 	__le16 fc;
+-	u8 hdr_len, unicast;
++	u8 hdr_len;
+ 	u8 sta_id;
+ 	u8 wait_write_ptr = 0;
+ 	u8 tid = 0;
+@@ -854,8 +854,6 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 		goto drop_unlock;
+ 	}
 
---=-eWOSQs1dUtjbU65is66O
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+-	unicast = !is_multicast_ether_addr(hdr->addr1);
+-
+ 	fc = hdr->frame_control;
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+ #ifdef CONFIG_IWLWIFI_DEBUG
+@@ -996,7 +994,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	len = (u16)skb->len;
+ 	tx_cmd->len = cpu_to_le16(len);
+ 	/* TODO need this for burst mode later on */
+-	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, unicast, sta_id);
++	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, sta_id);
 
-iQIcBAABAgAGBQJJQv2NAAoJEKVg1VMiehFYka4QAIGRE+D3YVo/OXZC8Kt8BQIN
-tYYUnhvPVF1OOYC/7HX3Vmhknl3tcXx1Bv2NfX59sjtm/4PFXEy5IWTlwMVTcn7A
-F4avSP10EF833W5I+2WGiG4z1UupQViQeCLcThaS6vNyA6xomW7kvtYWMyFh/Ys3
-5YG7qJY24YdV711V9P2XAM8VuDBIs2hH6Z7DgsUk9S87E1n2MvGIKNiZ0RD9Q1wp
-CVZ2sRcRuht2GAtTwh4y+OdKKrZFhZ0cdc5nsxH4jdBXA1hUu8WOntMu9gWRitBX
-bw5jZF2em35B7qxYpR9hRNLota2Xc5LCPP1JKvP5cTvt0RWwghgb5i1+G49sINLT
-SWFF7/YsvLrpYbMwMMBlmfW0pQN7wTqDI9O9EJBi84MtOVCEKpGcS93vkcFxr+5K
-r9H/iEkYDH06PDTa0QweVMW/vYVwyKREc0tzMx9bGI+Dsje8vQnFHGOv1ulN6C3S
-TN1bBRFe9AeCaK9WBiw9nFAJDK3XvcZJMyrGrY4BJzNtWqqKf4Arc+6DlSbbP40f
-t8CoH234T85zy9+SNaQQf6oUod7sRNCW85Kcrc5bersMZQcCe8KLkAlNYOqukwRs
-HTAtwPla9sWRKPETzDegzqqO1c8CobWC0Z00sqTbFiEwStq/7sKFCAQSpuqKB+ae
-nxLt0g5ShJFsjQsaHWwl
-=7Vnd
------END PGP SIGNATURE-----
+ 	/* set is_hcca to 0; it probably will never be implemented */
+ 	iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, sta_id, 0);
 
---=-eWOSQs1dUtjbU65is66O--
 
+On Thu, Dec 18, 2008 at 5:31 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Thu, Dec 18, 2008 at 12:42:37AM +0200, Tomas Winkler wrote:
+>> On Wed, Dec 17, 2008 at 11:51 PM, Rami Rosen <ramirose@gmail.com> wrote:
+>> > This patch removes unused parameters in methods in iwl-tx.c:
+>> > remove a parameter (is_unicast) from iwl_tx_cmd_build_basic()
+>> > remove a parameter (sta_id) from iwl_tx_cmd_build_rate()
+>> > remove a parameter (sta_id ) from iwl_tx_cmd_build_hwcrypto()
+>>
+>> Unicast can go sta_id has to stay, we need it for merging 3945 back
+>
+> OK, I'll drop this patch and wait for a new submission.
+>
+> John
+> --
+> John W. Linville                Linux should be at the core
+> linville@tuxdriver.com                  of your literate lifestyle.
+>
