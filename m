@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:36549 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751010AbYLQMGN (ORCPT
+Received: from mail.openmoko.org ([88.198.124.205]:54548 "EHLO
+	mail.openmoko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126AbYLRWFT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 07:06:13 -0500
-Date: Wed, 17 Dec 2008 14:05:59 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Key cache allocation for AP mode
-Message-ID: <20081217120559.GB19453@jm.kir.nu> (sfid-20081217_130616_477506_97D32422)
-References: <20081217113217.GB18060@jm.kir.nu> <1229513411.4566.0.camel@localhost>
+	Thu, 18 Dec 2008 17:05:19 -0500
+Received: from ol194-228.fibertel.com.ar ([24.232.228.194] helo=ws)
+	by mail.openmoko.org with esmtpsa (TLS-1.0:DHE_RSA_AES_128_CBC_SHA1:16)
+	(Exim 4.63)
+	(envelope-from <werner@openmoko.org>)
+	id 1LDQPZ-0008VW-Hh
+	for linux-wireless@vger.kernel.org; Thu, 18 Dec 2008 21:28:03 +0000
+Date: Thu, 18 Dec 2008 19:22:34 -0200
+From: Werner Almesberger <werner@openmoko.org>
+To: linux-wireless@vger.kernel.org
+Subject: AR6k: to rfkill or not to rfkill ?
+Message-ID: <20081218212234.GI5019@almesberger.net> (sfid-20081218_230524_169647_EE51F075)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1229513411.4566.0.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 17, 2008 at 12:30:11PM +0100, Johannes Berg wrote:
-> On Wed, 2008-12-17 at 13:32 +0200, Jouni Malinen wrote:
-> > +		if (vif->type != NL80211_IFTYPE_AP) {
-> > +			/* Only keyidx 0 should be used with unicast key, but
-> > +			 * allow this for client mode for now. */
-> > +			idx = key->keyidx;
-> 
-> Hey, good point, should we make the check in mac80211 stricter as well?
-> I know we accept non-zero pairwise key idx for some broken pairwise WEP
-> implementations, but that's only relevant for STA as you note.
+In Openmoko, we're wondering whether we should make the Atheros AR6k
+driver register as an rfkill controller or not, and if we do it,
+what semantics this should have. I'm looking for advice here.
 
-Doing that in non-Managed modes in mac80211 sounds reasonable. I don't
-see any point in making it easier for people to make APs that do such a
-silly thing with WEP ;-). I did not look at more details here from the
-mac80211 view point, I just knew it would break the key cache changes I
-was working on for ath9k.
+The issue is that there's no real rfkill hardware in the sense of a
+simple switch that cuts power to the transmitter. At least nothing
+like this is visible from the kernel. Instead, there is a "fat" and
+opaque firmware in the module that decides on such low-level actions
+on its own.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+There are currently two mechanisms which would fall into the domain
+of WLAN APIs that control three operations:
+
+- the possible operations are
+  1) associate/de-associate with access point
+  2) scan for access points
+  3) return -EIO when attempting WLAN ioctls
+
+- when 1) and 2) are applied together, the transmitter is supposed
+  to be silent
+
+- the mechanisms present so far are
+  1) SIOCSIWTXPOW
+  2) an Atheros-specific ioctl (AR6000_IOCTL_EXTENDED, sub-function
+     AR6000_XIOCTRL_WMI_SET_WLAN_STATE)
+
+- both mechanisms de-associate and stop scanning
+- in the case of SIOCSIWTXPOW, setting the ESSID will re-associate
+- in the case of AR6000_XIOCTRL_WMI_SET_WLAN_STATE, most ioctls will
+  return -EIO until another AR6000_XIOCTRL_WMI_SET_WLAN_STATE is
+  issued that re-enables WLAN
+
+So, first of all, given that TX power is controlled only indirectly
+anyway, should we implement rfkill control or not ? There is no kill
+switch, so there would be no rfkill input.
+
+If the answer is "yes", would the following semantics be right for
+the disabled state ?
+
+- we de-associate
+- we stop scanning
+- all ioctls still work as usual, but they have no effect on
+  association and scanning until rfkill re-enables the device
+
+Thanks,
+- Werner
