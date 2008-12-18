@@ -1,102 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44394 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440AbYLVRS3 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:38071 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752011AbYLRMlB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 12:18:29 -0500
-Subject: Re: [ath9k-devel] How to enable Monitor mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: yyhymmh@yahoo.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20081222121621.66jxpzr6lt8okk4o-cebfxv@webmail.spamcop.net> (sfid-20081222_181621_767424_496AEE78)
-References: <690453.5943.qm@web80505.mail.mud.yahoo.com>
-	 <20081222121621.66jxpzr6lt8okk4o-cebfxv@webmail.spamcop.net>
-	 (sfid-20081222_181621_767424_496AEE78)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-akU01NAgA0DFeaR3GbVv"
-Date: Mon, 22 Dec 2008 18:18:28 +0100
-Message-Id: <1229966308.4406.4.camel@johannes> (sfid-20081222_181832_870022_34D80DBE)
-Mime-Version: 1.0
+	Thu, 18 Dec 2008 07:41:01 -0500
+Received: from jm (a91-155-82-88.elisa-laajakaista.fi [91.155.82.88])
+	(authenticated bits=0)
+	by jmalinen.user.openhosting.com (8.13.8/8.13.8) with ESMTP id mBICevIK013445
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 07:40:58 -0500
+Date: Thu, 18 Dec 2008 14:40:57 +0200
+From: Jouni Malinen <j@w1.fi>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: Add an RX flag to skip Michael MIC verification
+Message-ID: <20081218124057.GC32267@jm.kir.nu> (sfid-20081218_134107_532732_2FB720A4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+mac80211 used to allow drivers to indicate that Michael MIC has already
+been verified in received frames to allow the somewhat heavy operation
+of validating this in software to be avoided. This disappeared as part
+of hardware crypto flag rework (commit
+7848ba7d7a010ccb265617fc2bc053e2bdf06f48). The changes below propose a
+bit different mechanism for achieving the same benefit for host CPU with
+wlan designs that can verify Michael MIC for unfragmented frames in
+hardware.
 
---=-akU01NAgA0DFeaR3GbVv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm also including a patch to ath9k to start using this new mechanism
+and move Michael MIC processing to hardware for both TX and RX whenever
+possible. It seems to work based on minimal testing, but I do not want
+to submit it to be merged before more thorough testing has taken place.
 
-On Mon, 2008-12-22 at 12:16 -0500, Pavel Roskin wrote:
-> Quoting hwang <yyhymmh@yahoo.com>:
->=20
-> > I am first time use ath9k driver. I like to change the card to  =20
-> > Monitor mode. Can anyone tell which command does it?
-> >
-> > I tried to use iwconfig, but failed.
->=20
-> Moving discussion from ath9k-devel@lists.ath9k.org to =20
-> linux-wireless@vger.kernel.org, as it's a common problem for all =20
-> mac80211 based drivers.
->=20
-> Following code in net/mac80211/iface.c, ieee80211_if_change_type() =20
-> prevents setting monitor mode:
->=20
->          /* Setting ad-hoc mode on non-IBSS channel is not supported. */
->          if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS)
->                  return -EOPNOTSUPP;
->=20
-> The effect of the code exceeds the effect described by the comment, so =20
-> something must be wrong.  I'm not running crda, so I guess I'm in the =20
-> "world" domain that doesn't prermit IBSS.  But it should not disable =20
-> monitor mode.
->=20
-> A simple fix would be:
->=20
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index 5abbc3f..b907482 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -699,7 +699,8 @@ int ieee80211_if_change_type(struct =20
-> ieee80211_sub_if_data *sdata,
->   		return 0;
->=20
->   	/* Setting ad-hoc mode on non-IBSS channel is not supported. */
-> -	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS)
-> +	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS &&
-> +	    type =3D=3D NL80211_IFTYPE_ADHOC)
->   		return -EOPNOTSUPP;
->=20
->   	/*
->=20
-> I've tested it, and it actually enables monitor mode.  I remember Luis =20
-> mentioning that IEEE80211_CHAN_NO_IBSS means no beacons, so maybe =20
-> other modes need to be disabled (AP, maybe mesh), but there are no =20
-> beacons sent in the monitor mode.
 
-I haven't gotten around, but that patch is correct. That's how it was
-before I moved that code, when I accidentally lost the check.
+Some hardware acceleration designs for TKIP take care of Michael MIC
+verification in received frames (well, at least for frames that were
+not fragmented). Add an RX status flag to allow the expensive software
+validation of the Michael MIC to be skipped in cases where it has
+already been verified in hardware.
 
-johannes
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
---=-akU01NAgA0DFeaR3GbVv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---
+ include/net/mac80211.h |    3 +++
+ net/mac80211/wpa.c     |    4 ++++
+ 2 files changed, 7 insertions(+)
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--- wireless-testing.orig/include/net/mac80211.h	2008-12-18 13:48:45.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2008-12-18 13:49:08.000000000 +0200
+@@ -439,6 +439,8 @@ ieee80211_tx_info_clear_status(struct ie
+  * @RX_FLAG_HT: HT MCS was used and rate_idx is MCS index
+  * @RX_FLAG_40MHZ: HT40 (40 MHz) was used
+  * @RX_FLAG_SHORT_GI: Short guard interval was used
++ * @RX_FLAG_MMIC_VERIFIED: the hardware has verified the Michael MIC, but the
++ *	MIC has not been stripped off this frame.
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR	= 1<<0,
+@@ -453,6 +455,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_HT		= 1<<9,
+ 	RX_FLAG_40MHZ		= 1<<10,
+ 	RX_FLAG_SHORT_GI	= 1<<11,
++	RX_FLAG_MMIC_VERIFIED	= 1<<12,
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/wpa.c	2008-12-18 13:48:45.000000000 +0200
++++ wireless-testing/net/mac80211/wpa.c	2008-12-18 13:49:08.000000000 +0200
+@@ -99,6 +99,9 @@ ieee80211_rx_h_michael_mic_verify(struct
+ 	    !ieee80211_is_data_present(hdr->frame_control))
+ 		return RX_CONTINUE;
+ 
++	if (rx->status->flag & RX_FLAG_MMIC_VERIFIED)
++		goto remove_mic;
++
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	if (skb->len < hdrlen + MICHAEL_MIC_LEN)
+ 		return RX_DROP_UNUSABLE;
+@@ -125,6 +128,7 @@ ieee80211_rx_h_michael_mic_verify(struct
+ 		return RX_DROP_UNUSABLE;
+ 	}
+ 
++remove_mic:
+ 	/* remove Michael MIC from payload */
+ 	skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
+ 
 
-iQIcBAABAgAGBQJJT8vgAAoJEKVg1VMiehFYQa8P/2PAHvmXFWVenj9uiOpYN3zC
-HYik8YwbHSMLGsk2tepTESW8JbnMOvttv6ZZBmqI5gGlDxF2ksntW/SXlveFQysr
-O4KNdHzm0D/Bx9SQNAHTlLdygPYphsvOokqCoebA1jMAOTUzvm3lmUFI/WokN74C
-nVur5A5niw+Ren9MzUyarjt01yMv08GZf9gpfHaqTe4D8RL5kVxMFYE3wprV/FQ0
-VmI0JrTVlhvoHu5n/zcp0Pt4dah/Nmc5UK8CaOv9hhbZzDNrr4VpaGGLihsClH+7
-nUwEsqAlCY9oIZE8E4GbDokriBJhWdYN8adYyCclZNearH9UeYvkkokX/fwXIZI4
-Nvh6cmy9h825Fycaf+p2g/FB3SyeIMQ+AH8f5LnNpOK4Psb00Uea+3xuZhUiF++q
-jnxMOatkEmq8HifTUnkF8sH+TP8QBfuxcfuARxwWD7tTAKAVDIY6LMZwBa3P54EH
-yQVLG3VpHwITu974KANmp60+HdcyXeO2bgwk7aWZhKrKdqF8eGJBVHnKIN6sS66Y
-BUHOEu/edyf3xr0LuBX2d+6f5KqFr6RiE4uMD0uCLhrWiglBOsPpQfymqaK31cx4
-mfNHAPKLvsr8mgD/B72pLM1j7WXqnFQZtTLaz8hr43XMdhCzn+Qny5Xm4+zUVeBG
-TlaBCaOZek2CUNp8RYSl
-=pyen
------END PGP SIGNATURE-----
 
---=-akU01NAgA0DFeaR3GbVv--
 
+ath9k: Michael MIC in hardware
+
+Remove request for mac80211 to calculate Michael MIC when TKIP is used
+since that is not needed with any hardware revisions supported by
+ath9k. Only fragmented frames need Michael MIC processing in the stack
+and that will be taken care of automatically without driver
+request. Mark received frames that that hardware decrypted to have
+passed Michael MIC verification if they were not fragmented
+(fragmented frames will continue to be verified in mac80211).
+
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |    3 ---
+ drivers/net/wireless/ath9k/recv.c |   11 +++++++++++
+ drivers/net/wireless/ath9k/xmit.c |    8 ++++++++
+ 3 files changed, 19 insertions(+), 3 deletions(-)
+
+--- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2008-12-18 14:12:57.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/main.c	2008-12-18 14:13:01.000000000 +0200
+@@ -2366,10 +2366,7 @@ static int ath9k_set_key(struct ieee8021
+ 		ret = ath_key_config(sc, addr, key);
+ 		if (ret >= 0) {
+ 			key->hw_key_idx = ret;
+-			/* push IV and Michael MIC generation to stack */
+ 			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+-			if (key->alg == ALG_TKIP)
+-				key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+ 			ret = 0;
+ 		}
+ 		break;
+--- wireless-testing.orig/drivers/net/wireless/ath9k/recv.c	2008-12-18 14:12:57.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/recv.c	2008-12-18 14:13:01.000000000 +0200
+@@ -594,6 +594,17 @@ int ath_rx_tasklet(struct ath_softc *sc,
+ 				rx_status.flag |= RX_FLAG_DECRYPTED;
+ 		}
+ 
++		if (rx_status.flag & RX_FLAG_DECRYPTED) {
++			/* Hardware verifies Michael MIC in unfragmented
++			 * frames, so there is no need to do software
++			 * verification for them. */
++			__le16 fc = hdr->frame_control;
++			u16 sc = le16_to_cpu(hdr->seq_ctrl);
++			if (!ieee80211_has_morefrags(fc) &&
++			    (sc & IEEE80211_SCTL_FRAG) == 0)
++				rx_status.flag |= RX_FLAG_MMIC_VERIFIED;
++		}
++
+ 		/* Send the frame to mac80211 */
+ 		__ieee80211_rx(sc->hw, skb, &rx_status);
+ 
+--- wireless-testing.orig/drivers/net/wireless/ath9k/xmit.c	2008-12-18 14:13:11.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/xmit.c	2008-12-18 14:23:23.000000000 +0200
+@@ -1711,6 +1711,14 @@ static int ath_tx_setup_buffer(struct at
+ 
+ 	if (bf->bf_keytype != ATH9K_KEY_TYPE_CLEAR) {
+ 		bf->bf_frmlen += tx_info->control.hw_key->icv_len;
++		if (bf->bf_keytype == ATH9K_KEY_TYPE_TKIP &&
++		    !ieee80211_has_morefrags(fc)) {
++			u16 sc = le16_to_cpu(hdr->seq_ctrl);
++			if ((sc & IEEE80211_SCTL_FRAG) == 0) {
++				 /* Michael MIC in hardware */
++				bf->bf_frmlen += 8;
++			}
++		}
+ 		bf->bf_keyix = tx_info->control.hw_key->hw_key_idx;
+ 	} else {
+ 		bf->bf_keyix = ATH9K_TXKEYIX_INVALID;
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
