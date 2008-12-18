@@ -1,53 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:52245 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630AbYLSJVw (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:40327 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753932AbYLRVgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 04:21:52 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so324352yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 01:21:51 -0800 (PST)
-Message-ID: <a32f33a40812190121t5d669e9ao93c971494dd529a1@mail.gmail.com> (sfid-20081219_102159_296608_B62E6E13)
-Date: Fri, 19 Dec 2008 10:21:50 +0100
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: [PATCH v6 3/3] mac80211: implement dynamic power save
-Cc: "Vivek Natarajan" <vivek.natraj@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <87myesy5ey.fsf@nokia.com>
+	Thu, 18 Dec 2008 16:36:32 -0500
+Received: from esebh107.NOE.Nokia.com (esebh107.ntc.nokia.com [172.21.143.143])
+	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mBILZR7c013230
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 15:36:29 -0600
+Received: from [127.0.1.1] (essapo-nirac25252.europe.nokia.com [10.162.252.52])
+	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mBILZ7Ia028675
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 23:35:07 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH v6 0/3] mac80211 dynamic power save
+To: linux-wireless@vger.kernel.org
+Date: Thu, 18 Dec 2008 23:35:06 +0200
+Message-ID: <20081218213306.7248.64398.stgit@tikku> (sfid-20081218_223647_038092_06E155B0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081218213306.7248.64398.stgit@tikku>
-	 <20081218213527.7248.65697.stgit@tikku>
-	 <8e92b4100812182217q6f8e6014s3f28ab79c5bc2ba3@mail.gmail.com>
-	 <87myesy5ey.fsf@nokia.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HI,
+Here is v5 of my dynamic powersave patches. I have tested them with
+stlc45xx on Nokia N810.
 
->> I need your thoughts on having null frame being sent from mac80211(
->> the RFC I submitted earlier). Do you feel a state machine is
->> necessary to go to power save? ( like awake, sleep, pending_sleep if
->> the AP hasn't acked the null frame with a timer or a work queue to
->> send null frame periodically in the pending state).
->
-> I haven't thinked much about this yet, but your proposal of having a
-> state machine most probably is the best option. It's just that earlier
-> Johannes mentioned that it's not currently possible to know if null
-> frame has been acked:
->
-> http://www.spinics.net/lists/linux-wireless/msg21212.html
->
-> We would have to solve that before implementing the state machine.
->
->> Or altogether you want that to be part of the driver and not in
->> mac80211?
->
-> I think this needs to be in mac80211 because there are three drivers
-> which need it (p54/stlc45xx, ath5/9k and b43).
+I think (and hope) that the patches are close to inclusion now. Please
+review.
 
-You can add the rt2x00 family to that list as well, I have already a patch
-which implements power saving in rt2x00 but it will need this patch to get
-it working correctly.
+changes in v6:
 
-Ivo
+o use IEEE80211_CONF_CHANGE_PS in ieee80211_set_disassoc()
+
+changes in v5:
+
+o check STA interface earlier in siwpower()
+o moved queue track patch before dynamic power save patch
+o add new functions ieee80211_wake_queues_by_reason() and
+  ieee80211_stop_queues_by_reason() for optimised locking
+o dropped "move dynamic_ps_timeout to hw.conf" for now, will resubmit
+  it later when I have example driver implementation
+o renamed the hw flag to IEEE80211_HW_NO_STACK_DYNAMIC_PS and inverted
+  it's functionality, now drivers need to explicitly disable the feature
+o folded hw flag patch to the main dynamic power save patch
+
+changes in v4:
+o add check for station interface to siwpower()
+o call hw_config() also for dynamic timeout changes
+o add dynamic_ prefix to workqueues
+o test for IEEE80211_HW_NO_DYNAMIC_PS in siwpower()
+o wrote documentation for IEEE80211_HW_NO_DYNAMIC_PS
+o wrote documentation for conf->dynamic_ps_timeout
+
+changes in v3:
+o add a hw flag to notify that driver doesn't support dynamic power save and
+  which will enable mac80211 implementation
+o delete dynamic_ps_timer and cancel ps_enable_work during
+  association, hopefully it's race free now
+o provide timeout value to the drivers, for example iwlwifi should use
+  it (example patch under works)
+o fix a bad bug in testing IEEE80211_STA_ASSOCIATED flag with && operator
+
+Power save related features which I'll implement later:
+o disable power save when software scanning
+o move dynamic_ps_timeout to hw.conf so that drivers can use it in
+  case they need to
+o beacon period (wakeup period) to the drivers, can be set from user
+  space but otherwise is bss's DTIM value
+
+---
+
+Kalle Valo (3):
+      mac80211: implement dynamic power save
+      mac80211: track master queue status
+      mac80211: enable IEEE80211_CONF_PS only when associated
+
+
+ include/net/mac80211.h     |    6 +++
+ net/mac80211/ieee80211_i.h |   23 +++++++++++-
+ net/mac80211/main.c        |    9 +++++
+ net/mac80211/mlme.c        |   60 ++++++++++++++++++++++++++++++-
+ net/mac80211/tx.c          |   13 +++++++
+ net/mac80211/util.c        |   86 +++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/wext.c        |   46 +++++++++++++++++++-----
+ 7 files changed, 226 insertions(+), 17 deletions(-)
+
