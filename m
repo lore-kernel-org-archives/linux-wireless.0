@@ -1,72 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56651 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751241AbYL2QFR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 11:05:17 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: Hostapd doesn't like crda
-Date: Mon, 29 Dec 2008 17:04:27 +0100
-Cc: Dan E <trg_info@mailhaven.com>, Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <200812272208.20153.mb@bu3sch.de> <200812291128.00512.mb@bu3sch.de> <20081229155613.GR5944@tesla>
-In-Reply-To: <20081229155613.GR5944@tesla>
+Received: from smtp.nokia.com ([192.100.122.233]:56808 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469AbYLRVRQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 16:17:16 -0500
+Received: from esebh107.NOE.Nokia.com (esebh107.ntc.nokia.com [172.21.143.143])
+	by mgw-mx06.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mBILHCbC030268
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 23:17:12 +0200
+Received: from [127.0.1.1] (essapo-nirac25252.europe.nokia.com [10.162.252.52])
+	by mgw-int02.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mBILH5Mo001575
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 23:17:06 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH v5 2/3] mac80211: track master queue status
+To: linux-wireless@vger.kernel.org
+Date: Thu, 18 Dec 2008 23:17:05 +0200
+Message-ID: <20081218211705.6842.84538.stgit@tikku> (sfid-20081218_221726_933579_333715AC)
+In-Reply-To: <20081218211532.6842.88104.stgit@tikku>
+References: <20081218211532.6842.88104.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812291704.28163.mb@bu3sch.de> (sfid-20081229_170524_270822_F8231832)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 29 December 2008 16:56:13 Luis R. Rodriguez wrote:
-> On Mon, Dec 29, 2008 at 02:28:00AM -0800, Michael Buesch wrote:
-> > On Monday 29 December 2008 04:45:22 Dan E wrote:
-> > >
-> > > On Sun, 28 Dec 2008 00:08:14 +0200, "Jouni Malinen" <j@w1.fi> said:
-> > > > On Sat, Dec 27, 2008 at 10:08:20PM +0100, Michael Buesch wrote:
-> > > > > Please take a look at the following log:
-> > > > > http://bu3sch.de/misc/crda.JPG
-> > > > >
-> > > > > Note the ordering of the events.
-> > > > > Hostapd starts up and tells the kernel what country we're in.
-> > > > > Then the kernel calls CRDA, _but_ hostapd goes on with its business
-> > > > > before CRDA has finished its work.
-> > > >
-> > > > Yes, because the netlink message was completed and hostapd assumes
-> > > > everything is ready at that point. Ignoring the complexity in the kernel
-> > > > (+ CRDA as a helper), this looks like reasonable expectation to make for
-> > > > NL80211_CMD_REQ_SET_REG operation. There is no other mechanism that
-> > > > would notify hostapd (or any other program setting country for that
-> > > > matter) when the operation was actually fully completed and polling for
-> > > > channel changes up to a timeout is not very appealing either.
-> > > >
-> > > > Unfortunately, I don't see an easy fix for this.
-> > >
-> > > This sounds like it's broken by design.  Hostapd should not send
-> > > NL80211_CMD_REQ_SET_REG if it is unable to evaluate the result.  If it's
-> > > necessary to do "iw reg set foobar" in a script prior to invoking
-> > > hostapd, then why does hostapd even bother?
-> > >
-> > 
-> > hostapd isn't broken. The CMD_REQ_SET_REG should block until regulatory
-> > settings are done. It currently doesn't, because that's hard to implement (probably
-> > by design).
-> 
-> It means adding a timer and picking a reasonable value for the timeout,
-> then waiting for a response through nl80211 and disabling the timer from there and
-> then finally sending the reply back. This seems rather hackish but we can implement
-> if its desirable. I suppose the worst case scenerio would be CRDA and the
-> regulatory db in an NFS mount or something like that.
+This is a preparation for the dynamic power save support. In future there are
+two paths to stop the master queues and we need to track this properly to
+avoid starting queues incorrectly. Implement this by adding a status
+array for each queue.
 
-I think this wouldn't be hackish, but do we actually _know_ when crda has finished
-uploading regulatory information? Does it do it all in one step?
+The original idea and design is from Johannes Berg, I just did
+the implementation based on his notes. All the bugs are mine, of course.
 
-> An alternative would be for us to add a netlink event once the regultory rule is
-> set in place. If the first approach is the better path to take then this secondary
-> netlink event can be sent anyway as informational.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-Would also be OK, but would also require knowledge about "did we finish already".
-Do we have this knowledge?
+ net/mac80211/ieee80211_i.h |   12 ++++++
+ net/mac80211/main.c        |    2 +
+ net/mac80211/util.c        |   86 +++++++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 93 insertions(+), 7 deletions(-)
 
--- 
-Greetings, Michael.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 18b9160..a74d673 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -538,6 +538,10 @@ enum {
+ 	IEEE80211_ADDBA_MSG	= 4,
+ };
+ 
++enum queue_stop_reason {
++	IEEE80211_QUEUE_STOP_REASON_DRIVER,
++};
++
+ /* maximum number of hardware queues we support. */
+ #define QD_MAX_QUEUES (IEEE80211_MAX_AMPDU_QUEUES + IEEE80211_MAX_QUEUES)
+ 
+@@ -554,7 +558,8 @@ struct ieee80211_local {
+ 	const struct ieee80211_ops *ops;
+ 
+ 	unsigned long queue_pool[BITS_TO_LONGS(QD_MAX_QUEUES)];
+-
++	unsigned long queue_stop_reasons[IEEE80211_MAX_QUEUES];
++	spinlock_t queue_stop_reason_lock;
+ 	struct net_device *mdev; /* wmaster# - "master" 802.11 device */
+ 	int open_count;
+ 	int monitors, cooked_mntrs;
+@@ -972,6 +977,11 @@ int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
+ u64 ieee80211_mandatory_rates(struct ieee80211_local *local,
+ 			      enum ieee80211_band band);
+ 
++void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
++				     enum queue_stop_reason reason);
++void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
++				     enum queue_stop_reason reason);
++
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+ #else
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index a0371ca..7c6e90a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -724,6 +724,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 
+ 	spin_lock_init(&local->key_lock);
+ 
++	spin_lock_init(&local->queue_stop_reason_lock);
++
+ 	INIT_DELAYED_WORK(&local->scan_work, ieee80211_scan_work);
+ 
+ 	sta_info_init(local);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 71a8391..fb89e1d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -330,10 +330,20 @@ __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_ctstoself_duration);
+ 
+-void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
++static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
++				   enum queue_stop_reason reason)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
++	/* we don't need to track ampdu queues */
++	if (queue < ieee80211_num_regular_queues(hw)) {
++		__clear_bit(reason, &local->queue_stop_reasons[queue]);
++
++		if (local->queue_stop_reasons[queue] != 0)
++			/* someone still has this queue stopped */
++			return;
++	}
++
+ 	if (test_bit(queue, local->queues_pending)) {
+ 		set_bit(queue, local->queues_pending_run);
+ 		tasklet_schedule(&local->tx_pending_tasklet);
+@@ -341,22 +351,74 @@ void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
+ 		netif_wake_subqueue(local->mdev, queue);
+ 	}
+ }
++
++void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
++				    enum queue_stop_reason reason)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	unsigned long flags;
++
++	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++	__ieee80211_wake_queue(hw, queue, reason);
++	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++}
++
++void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
++{
++	ieee80211_wake_queue_by_reason(hw, queue,
++				       IEEE80211_QUEUE_STOP_REASON_DRIVER);
++}
+ EXPORT_SYMBOL(ieee80211_wake_queue);
+ 
+-void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue)
++static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
++				   enum queue_stop_reason reason)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
++	/* we don't need to track ampdu queues */
++	if (queue < ieee80211_num_regular_queues(hw))
++		__set_bit(reason, &local->queue_stop_reasons[queue]);
++
+ 	netif_stop_subqueue(local->mdev, queue);
+ }
++
++void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
++				    enum queue_stop_reason reason)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	unsigned long flags;
++
++	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++	__ieee80211_stop_queue(hw, queue, reason);
++	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++}
++
++void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue)
++{
++	ieee80211_stop_queue_by_reason(hw, queue,
++				       IEEE80211_QUEUE_STOP_REASON_DRIVER);
++}
+ EXPORT_SYMBOL(ieee80211_stop_queue);
+ 
+-void ieee80211_stop_queues(struct ieee80211_hw *hw)
++void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
++				    enum queue_stop_reason reason)
+ {
++	struct ieee80211_local *local = hw_to_local(hw);
++	unsigned long flags;
+ 	int i;
+ 
++	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++
+ 	for (i = 0; i < ieee80211_num_queues(hw); i++)
+-		ieee80211_stop_queue(hw, i);
++		__ieee80211_stop_queue(hw, i, reason);
++
++	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++}
++
++void ieee80211_stop_queues(struct ieee80211_hw *hw)
++{
++	ieee80211_stop_queues_by_reason(hw,
++					IEEE80211_QUEUE_STOP_REASON_DRIVER);
+ }
+ EXPORT_SYMBOL(ieee80211_stop_queues);
+ 
+@@ -367,12 +429,24 @@ int ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue)
+ }
+ EXPORT_SYMBOL(ieee80211_queue_stopped);
+ 
+-void ieee80211_wake_queues(struct ieee80211_hw *hw)
++void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
++				     enum queue_stop_reason reason)
+ {
++	struct ieee80211_local *local = hw_to_local(hw);
++	unsigned long flags;
+ 	int i;
+ 
++	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++
+ 	for (i = 0; i < hw->queues + hw->ampdu_queues; i++)
+-		ieee80211_wake_queue(hw, i);
++		__ieee80211_wake_queue(hw, i, reason);
++
++	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++}
++
++void ieee80211_wake_queues(struct ieee80211_hw *hw)
++{
++	ieee80211_wake_queues_by_reason(hw, IEEE80211_QUEUE_STOP_REASON_DRIVER);
+ }
+ EXPORT_SYMBOL(ieee80211_wake_queues);
+ 
+
