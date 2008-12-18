@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26886 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752041AbYLICdM convert rfc822-to-8bit (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.177]:31372 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696AbYLRBe5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 21:33:12 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2008 18:33:12 -0800
-Date: Mon, 8 Dec 2008 10:33:27 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Norbert Preining <preining@logic.at>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: compat-wireless-2008-12-06 =?utf-8?Q?a?=
-	=?utf-8?Q?nd_no_member_named_=E2=80=98requeue=E2=80=99?=
-Message-ID: <20081208183327.GC6035@tesla> (sfid-20081209_033325_981564_5949E34F)
-References: <20081207110349.GA11803@gandalf.dynalias.org>
+	Wed, 17 Dec 2008 20:34:57 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so102698wah.21
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2008 17:34:56 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20081207110349.GA11803@gandalf.dynalias.org>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18761.43079.702658.733757@localhost.localdomain> (sfid-20081218_023505_825678_AA4AAF64)
+Date: Thu, 18 Dec 2008 07:02:55 +0530
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	mcgrof@gmail.com, jouni.malinen@atheros.com
+Subject: Re: [RFC] Handle Channel Switch Announcement
+In-Reply-To: <20081217162017.GA28712@jm.kir.nu>
+References: <18761.4838.509784.281821@localhost.localdomain>
+	<20081217162017.GA28712@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 07, 2008 at 03:03:49AM -0800, Norbert Preining wrote:
-> Hi all,
->=20
-> (please Cc)
->=20
-> I am trying to compile compat-wireless for 2.6.28-rc7, but it bails o=
-ut
-> with:
->   CC [M]  /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.o
->   /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.c: In functi=
-on =E2=80=98ieee80211_handle_filtered_frame=E2=80=99:
->   /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.c:449: error=
-: =E2=80=98struct sk_buff=E2=80=99 has no member named =E2=80=98requeue=
-=E2=80=99
->   /src/wlan/compat-wireless-2008-12-06/net/mac80211/main.c:451: error=
-: =E2=80=98struct sk_buff=E2=80=99 has no member named =E2=80=98requeue=
-=E2=80=99
->   make[3]: *** [/src/wlan/compat-wireless-2008-12-06/net/mac80211/mai=
-n.o] Error
->=20
->=20
-> Is there a way to fix that? Thanks
+Jouni Malinen wrote:
+> Why is this flag needed? Or well, the better question: Why is the
+> channel disabled? CSA may request the STA to stop transmitting _within
+> the BSS_ until the AP has changed channels (i.e., it could be possible
+> to use other BSSes even on the same channel). This notification can be
+> used for other things than just reporting a radar on the channel (e.g.,
+> the AP could move to a channel that has less traffic on it).
+> 
 
-Thanks for reporting it, its now fixed.
-=20
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ok, agreed. I'll remove this flag.
+
+But after receiving a CSA on the current frequency, and having moved to the new
+advertised frequency, can the STA send out probe requests in the earlier frequency ?
+(In case of a scan run or something)
+
+Sujith
