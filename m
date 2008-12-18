@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:52498 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751418AbYLEFw0 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50325 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752689AbYLRRw4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2008 00:52:26 -0500
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v4 5/5] mac80211: track master queue status
-References: <20081202200219.5507.83250.stgit@tikku>
-	<20081202200426.5507.44042.stgit@tikku>
-	<1228412076.5692.25.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Fri, 05 Dec 2008 07:51:56 +0200
-In-Reply-To: <1228412076.5692.25.camel@johannes.berg> (ext Johannes Berg's message of "Thu\, 04 Dec 2008 18\:34\:35 +0100")
-Message-ID: <87r64ni2yr.fsf@nokia.com> (sfid-20081205_065229_578895_076E21BE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 18 Dec 2008 12:52:56 -0500
+Subject: Re: [PATCH v2 1/3] cfg80211: add PM hooks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	mabbaswireless@gmail.com
+In-Reply-To: <20081218153042.GD4121@tuxdriver.com>
+References: <1229313039-5544-2-git-send-email-me@bobcopeland.com>
+	 <20081217153524.GA3539@tuxdriver.com> <1229537449.4268.10.camel@localhost>
+	 <20081218153042.GD4121@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uCEz+nmm4qabessf7mb6"
+Date: Thu, 18 Dec 2008 18:52:51 +0100
+Message-Id: <1229622771.3601.26.camel@johannes.berg> (sfid-20081218_185313_340156_C9CA527F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> I wonder if we should optimise the spinlock here?
+--=-uCEz+nmm4qabessf7mb6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-That would be nice, but how to do that?
+On Thu, 2008-12-18 at 10:30 -0500, John W. Linville wrote:
 
-> Also, I'd prefer to first add this with just a single DRIVER reason
-> first, and then add the PS patches that add and use the second reason.
+> I'm not too familiar with the internals of the PM stuff.  Is there
+> any guarantee that the cfg80211 suspend stuff will run before the
+> bus-specific suspend stuff?  Is this a concern?
 
-Yes, that's clean way to do it. I'll change it.
+Yes, it is a concern, but yes, it is guaranteed that the suspend() runs
+before the hw suspend, and resume() afterward the hw resume.
 
-> Other than that, it looks good to me, thanks!
+johannes
 
-Thank you for all the help with this, much appreciated.
+--=-uCEz+nmm4qabessf7mb6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-I'll send v5 of my patches later this week.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
--- 
-Kalle Valo
+iQIcBAABAgAGBQJJSo3vAAoJEKVg1VMiehFYyQsQAIX4ZZYLc66/jXXB5hLa01Lx
+5IhzrHx7IIREFBMM0lTReVPXPG/XZR8YWF8LuBnhjoGZUHOiyqiKwZaykbo6/HPn
+shsMVerEII6URXpZWeJckrENBVPacIHtIWKDsHoogZR8VH6qdNSxR/VqavlEJ6N7
+XBu8UQ4gxQ24ne9obujmh7o3S2GKPsi2YkKBIusjjm5gA6je996vDeR2Hcm1KzhV
+OoKVEmZ6Gghy6nb0wbQcD0IffTl/m/A9gIcGXJlHWS6wIwgFiSdjHL14L5yr5nt0
+JszRr55egQ/ss9RWagk3XHljNvegS5A9HHXeqFt63PsMWY/IjRjTRtIVRZEvkzwf
+9Db7u8yUwL8Blu1JO70jbdCx/J49YjKIv2N11U87Yu+zdLX5EyssYXgf1mLvkBOF
+E/ohiQ2J13VcS+g7qkTmiTmv13MGI5piyoysCs8UVXKUJgmVwo8j9ee38eROkQF8
+haKmlXZWqc5ryiPtripVTT5ciLek/Ygny2qaQQCn05iX8ibDXmJR7B/VOF+47KtX
+fhY2vWRsugie6npnxs1DaLhuaEKBoNhxhKrDnJo+NminMHNE9b8kggtYgaZ9hhGC
+crqskXYm9kvtzMTPuO2zjDmHVTRds3KtA9avb/DT0Z6ia9zHI0/Nl5SW4E36lgal
+4gw60fC9+io0BjU8zfxq
+=/bso
+-----END PGP SIGNATURE-----
+
+--=-uCEz+nmm4qabessf7mb6--
+
