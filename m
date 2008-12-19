@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blaine.gmane.org ([80.91.229.8]:39460 "EHLO hugh.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755785AbYLMGUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Dec 2008 01:20:35 -0500
-Received: from public by hugh.gmane.org with local (Exim 4.63)
-	(envelope-from <public@hugh.gmane.org>)
-	id 1LBNrc-0001GI-RU
-	for linux-wireless@vger.kernel.org; Sat, 13 Dec 2008 07:20:32 +0100
-Message-ID: <c072ca310812120323r2c92420di5a138ae6265d567f@mail.gmail.com> (sfid-20081213_072109_337226_5AC17EF9)
-Date: Fri, 12 Dec 2008 16:23:49 +0500
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: "Zdenek Kabelac" <zkabelac@redhat.com>
-Subject: Re: iwlagn interrupt problem
-Cc: "reinette chatre"
-	<public-reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@hugh.gmane.org>,
-	"linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org"
-	<public-linux-kernel-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
-	"linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org"
-	<public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>
-In-Reply-To: <49424419.1090103@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com>
-	 <c072ca310812100710o58c38a27rba16ad2318a1cb95@mail.gmail.com>
-	 <1228929548.18730.21.camel@rc-desk>
-	 <c072ca310812110548s64612ac7icd6e9187aa4af75a@mail.gmail.com>
-	 <49424419.1090103@redhat.com>
+Received: from fg-out-1718.google.com ([72.14.220.159]:43623 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752719AbYLSVI3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2008 16:08:29 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so465035fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 13:08:27 -0800 (PST)
+Subject: Re: [ipw3945-devel] [PATCH 00/43] iwl3945 merges into iwlagn (Dec
+ 19)
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
+References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain
+Date: Fri, 19 Dec 2008 23:08:22 +0200
+Message-Id: <1229720902.14021.10.camel@maxim-laptop> (sfid-20081219_220847_744300_59E6EAAA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-12-19 at 10:37 +0800, Zhu Yi wrote:
+> Hi John,
+> 
+> Here is the first batch for the iwl3945 -> iwlagn merge. This is for
+> post .29 kernel.
+> 
+> Thanks,
+> -yi
+> 
 
+This is very exiting.
+There are some unpleasent bugs in iwl3945, like led code that stops
+working in monitor mode, and monitor mode enabled forever, and speed
+drops like I explained, so it would be nice to have single driver, as
+most effor is put into 4965.
 
+Also, want to ask same thing, how about to rename the driver to iwlwifi?
 
-2008/12/12 Zdenek Kabelac <zkabelac@redhat.com>:
-> I assume that this backtrace I've got with 2.6.28-rc7 is the same issue ?
+I assume that you will completely merge both drivers into single module,
+right?
 
-No, this is different. My issue is with unacceptable latency when
-bringing the interface down. In your dmesg, the interface was never
-brought up or down.
+Currently only headers are merged.
 
--- 
-Alexander E. Patrakov
-
+Thanks, and best regards,
+	Maxim Levitsky
 
