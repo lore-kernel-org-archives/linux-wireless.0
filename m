@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f11.google.com ([209.85.221.11]:64958 "EHLO
-	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123AbYLDMvt (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:47058 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806AbYLSOwz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 07:51:49 -0500
-Received: by qyk4 with SMTP id 4so4878103qyk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 04:51:48 -0800 (PST)
-Message-ID: <69e28c910812040451p231b41e1t63893d23f373bf0c@mail.gmail.com> (sfid-20081204_135154_289400_F2C44626)
-Date: Thu, 4 Dec 2008 13:51:48 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: Looking for a 802.11n card
-Cc: pat-lkml <pat-lkml@erley.org>,
-	"Henning Rogge" <hrogge@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20081204023512.GU6522@tesla>
+	Fri, 19 Dec 2008 09:52:55 -0500
+Received: by ewy10 with SMTP id 10so1100587ewy.13
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 06:52:53 -0800 (PST)
+Message-ID: <494BB53C.9050401@gmail.com> (sfid-20081219_155259_255340_3401C896)
+Date: Fri, 19 Dec 2008 09:52:44 -0500
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200812032129.16740.hrogge@googlemail.com>
-	 <45e8e6c40812031609h50926100xfa616a5bdb9be93e@mail.gmail.com>
-	 <49372568.2070404@erley.org> <20081204023512.GU6522@tesla>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>
+Subject: Re: [PATCH] [RFC] mac80211: Disable HT negotiation with TKIP/WEP
+ as pairwise cipher
+References: <1229692235-21734-1-git-send-email-vasanth@atheros.com> <20081219142822.GA4041@tuxdriver.com> <494BB0BE.3030705@atheros.com> <20081219144256.GB4041@tuxdriver.com>
+In-Reply-To: <20081219144256.GB4041@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 4, 2008 at 3:35 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> First some alphabet soup for you (this is on the wiki now):
+John W. Linville wrote:
+> On Fri, Dec 19, 2008 at 08:03:34PM +0530, Vasanthakumar Thiagarajan wrote:
+>   
+>> John W. Linville wrote:
+>>     
+>>> On Fri, Dec 19, 2008 at 06:40:35PM +0530, Vasanthakumar Thiagarajan wrote:
+>>>       
+>>>> IEEE802.11n does not allow TKIP/WEP as pairwise cipher in HT mode.
+>>>> Connect in non-ht mode if either of these ciphers is cofigured as
+>>>> pairwise.
+>>>>
+>>>> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+>>>>         
+>>> Are there perhaps any broken APs out there that support such a
+>>> configuration?  I would hate to prevent users from connecting simply
+>>> out of blind obedience to the standard.
+>>>       
+>> This particular configuration is not allowed in the latest 11n draft (7.0).
+>> Yes, we have quite a few AP's around which support this configuration. 
+>>     
 >
-> HB: PCIe Half MiniCard
-> XB: PCIe Full MiniCard
-> MB: Mini PCI card
-> CB: PCI Cardbus card
-> SB: Single band, 1x1, 1x2, 2x2 configuration
-> DB: Dual band, 2x2 configuration
+> Honestly, as a STA I would rather violate the standard and connect
+> to the coffee shop's broken/misconfigured pre-draft7 .11n AP than stand
+> on principle and have to fall back on my cell phone's data plan or sip
+> my latte in internet silence... :-)
 >
-> We do have DB HB, HB92/AR9280. HP, Toshiba, Dell, FJ ships with it, and
-> product name is under ath9K site as mentioned above. Also,
-> XB72 (Owl/Fowl, AR5218+AR5133) is dual band XB (see the site).
+>   
+ACKED-BY: Rick Farina
 
-Hennig is looking for a card usable in a desktop (not a laptop). These
-are all laptop cards.
+I think as a station we should support connecting to the AP unless it is 
+against the law.  If you want to stand on principle in master or IBSS 
+then that is fair, but please give the stations a bit more wiggle room.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+thanks,
+Rick Farina
+> John
+>   
+
