@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55895 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948AbYLHNB1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44053 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753289AbYLSOpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 08:01:27 -0500
-Subject: Re: [RFC v2] mac80211: fix HT channel selection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni.Malinen@Atheros.com, Luis.Rodriguez@Atheros.com,
-	tomas.winkler@intel.com
-In-Reply-To: <18748.62215.331271.141163@gargle.gargle.HOWL>
-References: <18748.62215.331271.141163@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z+nKUV4d21HMgrEmrvz7"
-Date: Mon, 08 Dec 2008 14:01:08 +0100
-Message-Id: <1228741268.22164.78.camel@johannes.berg> (sfid-20081208_140129_422971_0B29689B)
-Mime-Version: 1.0
+	Fri, 19 Dec 2008 09:45:12 -0500
+Date: Fri, 19 Dec 2008 09:42:56 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>
+Subject: Re: [PATCH] [RFC] mac80211: Disable HT negotiation with TKIP/WEP
+	as pairwise cipher
+Message-ID: <20081219144256.GB4041@tuxdriver.com> (sfid-20081219_154530_033418_2087BF52)
+References: <1229692235-21734-1-git-send-email-vasanth@atheros.com> <20081219142822.GA4041@tuxdriver.com> <494BB0BE.3030705@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <494BB0BE.3030705@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Dec 19, 2008 at 08:03:34PM +0530, Vasanthakumar Thiagarajan wrote:
+> John W. Linville wrote:
+> > On Fri, Dec 19, 2008 at 06:40:35PM +0530, Vasanthakumar Thiagarajan wrote:
+> >> IEEE802.11n does not allow TKIP/WEP as pairwise cipher in HT mode.
+> >> Connect in non-ht mode if either of these ciphers is cofigured as
+> >> pairwise.
+> >>
+> >> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> > 
+> > Are there perhaps any broken APs out there that support such a
+> > configuration?  I would hate to prevent users from connecting simply
+> > out of blind obedience to the standard.
+> 
+> This particular configuration is not allowed in the latest 11n draft (7.0).
+> Yes, we have quite a few AP's around which support this configuration. 
 
---=-z+nKUV4d21HMgrEmrvz7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Honestly, as a STA I would rather violate the standard and connect
+to the coffee shop's broken/misconfigured pre-draft7 .11n AP than stand
+on principle and have to fall back on my cell phone's data plan or sip
+my latte in internet silence... :-)
 
-On Mon, 2008-12-08 at 15:42 +0530, Sujith wrote:
->=20
-> HT management is done differently for AP and STA modes, unify
-> to just the ->config() callback since HT is fundamentally a
-> PHY property and cannot be per-BSS.
->=20
-> Add a new NL80211 attribute to enable/disable HT (NL80211_ATTR_WIPHY_HT).
-> NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET now has only the secondary channel
-> offsets.
-
-Why do this?
-
-johannes
-
---=-z+nKUV4d21HMgrEmrvz7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJPRqQAAoJEKVg1VMiehFYoZUP/isoR1p/9zjaXElzjUtAHX+H
-HtV8Zf2WqLB4+NFKFgavMSMuSrfhmIoj29Gyh1XyP0Q/Nz9kF/p++v3v7jWAham0
-BzjSvSzj3zTLl0QPF0t8pP27uDBBdO10SEssRO9nO2wGIioTN5L318SaCFR0pvW9
-vqLJxPnOJEEdPv/5AA9XxQq0QYOo9ejRJ5wL4XQHlRzQdN/2qBKNEKnhTwa5ris9
-SxvfbzxwTvWW7bZ2PT0y3lBus+GJbUamvETAkmrogHU14WIHK61SdXoyg5yC0SPb
-81INqlK//Sp3fmcNIIuiR6BVw1POV1EntwWqj0PzqeD2v6B+ifEW+dQtl8f7ABBK
-q/v3aCkBU/MbctQ+ovlfZJIxS8t1KwK7qAIyRjvuDp6l8k9OmJDyqaougXEMesHP
-RT4ucErDtB7yE1H0goXVDngRojk3fuKeaNVtqgdS/hAWd/Liku47OQESkFbIZ5y8
-lOLJ+Ey+qQEvBcbULJkJetEY40whyI1FsydompJMocj8bYVGPrCBcKbaBqqM3P2A
-Gst5qPFEoA8AGSRxezUQYEXakDHG9iOl8H67/F4c4nkgNMUpzI85diiivEltFfx+
-oSbQm4MPemzzieKKpMqVDezMOvkEU21FEw65RHtlUaqaGFZ7ckHNQe6OkZDa5kCW
-S0m78rQXCpQncd1jR3Q5
-=UdKw
------END PGP SIGNATURE-----
-
---=-z+nKUV4d21HMgrEmrvz7--
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
