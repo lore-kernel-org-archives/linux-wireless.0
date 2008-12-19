@@ -1,80 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:43592 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbYL3Mtz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37882 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753098AbYLSNRh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 07:49:55 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] p54: enable rx/tx antenna diversity by eeprom bits
-Date: Tue, 30 Dec 2008 13:48:19 +0100
-Cc: John W Linville <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812301348.19849.chunkeey@web.de> (sfid-20081230_135007_627230_DBDBEB0E)
+	Fri, 19 Dec 2008 08:17:37 -0500
+Subject: Re: [PATCH] [RFC] mac80211: Disable HT negotiation with TKIP/WEP
+	as pairwise cipher
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linux-wireless@vger.kernel.org, Jouni.Malinen@atheros.com
+In-Reply-To: <1229692235-21734-1-git-send-email-vasanth@atheros.com> (sfid-20081219_141244_167603_2DBD43AD)
+References: <1229692235-21734-1-git-send-email-vasanth@atheros.com>
+	 (sfid-20081219_141244_167603_2DBD43AD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zq6OKF6efyUp5WnrzKdS"
+Date: Fri, 19 Dec 2008 14:17:34 +0100
+Message-Id: <1229692655.3601.74.camel@johannes.berg> (sfid-20081219_141741_272077_E1D25CC2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Respect all documented bits in the eeprom about the device diversity features.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-12-26 21:17:42.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-12-27 00:27:49.000000000 +0100
-@@ -553,6 +553,10 @@ static int p54_parse_eeprom(struct ieee8
- 		dev->wiphy->bands[IEEE80211_BAND_2GHZ] = &band_2GHz;
- 	if (!(synth & PDR_SYNTH_5_GHZ_DISABLED))
- 		dev->wiphy->bands[IEEE80211_BAND_5GHZ] = &band_5GHz;
-+	if ((synth & PDR_SYNTH_RX_DIV_MASK) == PDR_SYNTH_RX_DIV_SUPPORTED)
-+		priv->rx_diversity_mask = 3;
-+	if ((synth & PDR_SYNTH_TX_DIV_MASK) == PDR_SYNTH_TX_DIV_SUPPORTED)
-+		priv->tx_diversity_mask = 3;
- 
- 	if (!is_valid_ether_addr(dev->wiphy->perm_addr)) {
- 		u8 perm_addr[ETH_ALEN];
-@@ -1488,8 +1492,8 @@ static int p54_tx(struct ieee80211_hw *d
- 	txhdr->hw_queue = queue;
- 	txhdr->backlog = current_queue->len;
- 	memset(txhdr->durations, 0, sizeof(txhdr->durations));
--	txhdr->tx_antenna = (info->antenna_sel_tx == 0) ?
--		2 : info->antenna_sel_tx - 1;
-+	txhdr->tx_antenna = ((info->antenna_sel_tx == 0) ?
-+		2 : info->antenna_sel_tx - 1) & priv->tx_diversity_mask;
- 	txhdr->output_power = priv->output_power;
- 	txhdr->cts_rate = cts_rate;
- 	if (padding)
-@@ -1560,7 +1564,7 @@ static int p54_setup_mac(struct ieee8021
- 	setup->mac_mode = cpu_to_le16(mode);
- 	memcpy(setup->mac_addr, priv->mac_addr, ETH_ALEN);
- 	memcpy(setup->bssid, priv->bssid, ETH_ALEN);
--	setup->rx_antenna = 2; /* automatic */
-+	setup->rx_antenna = 2 & priv->rx_diversity_mask; /* automatic */
- 	setup->rx_align = 0;
- 	if (priv->fw_var < 0x500) {
- 		setup->v1.basic_rate_mask = cpu_to_le32(priv->basic_rate_mask);
-diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
---- a/drivers/net/wireless/p54/p54common.h	2008-12-26 21:19:13.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.h	2008-12-27 00:28:07.000000000 +0100
-@@ -31,7 +31,7 @@ struct bootrec {
- #define PDR_SYNTH_IQ_CAL_DISABLED	0x0008
- #define PDR_SYNTH_IQ_CAL_ZIF		0x0010
- #define PDR_SYNTH_FAA_SWITCH_MASK	0x0020
--#define PDR_SYNTH_FAA_SWITCH_ENABLED	0x0001
-+#define PDR_SYNTH_FAA_SWITCH_ENABLED	0x0020
- #define PDR_SYNTH_24_GHZ_MASK		0x0040
- #define PDR_SYNTH_24_GHZ_DISABLED	0x0040
- #define PDR_SYNTH_5_GHZ_MASK		0x0080
-diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
---- a/drivers/net/wireless/p54/p54.h	2008-12-26 21:06:10.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54.h	2008-12-26 22:26:22.000000000 +0100
-@@ -99,6 +99,8 @@ struct p54_common {
- 	struct mutex conf_mutex;
- 	u8 mac_addr[ETH_ALEN];
- 	u8 bssid[ETH_ALEN];
-+	u8 rx_diversity_mask;
-+	u8 tx_diversity_mask;
- 	struct pda_iq_autocal_entry *iq_autocal;
- 	unsigned int iq_autocal_len;
- 	struct pda_channel_output_limit *output_limit;
+--=-zq6OKF6efyUp5WnrzKdS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2008-12-19 at 18:40 +0530, Vasanthakumar Thiagarajan wrote:
+> IEEE802.11n does not allow TKIP/WEP as pairwise cipher in HT mode.
+> Connect in non-ht mode if either of these ciphers is cofigured as
+> pairwise.
+>=20
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+>  net/mac80211/ieee80211_i.h |    1 +
+>  net/mac80211/mlme.c        |    9 ++++++++-
+>  net/mac80211/wext.c        |    5 ++++-
+>  3 files changed, 13 insertions(+), 2 deletions(-)
+
+Needs to touch cfg.c too, I think? I'd also prefer to avoid using the
+wext constants throughout mac80211.
+
+johannes
+
+--=-zq6OKF6efyUp5WnrzKdS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJS57rAAoJEKVg1VMiehFYXooP+wdEKUXqYTEB+w2qBY1g+iQn
+E/yR6E0AexvI57Y+oRfc3KQK3VTMQlpL/I9ZnjbYzFwC2WQcUz/5FOAizeB1TZMX
+ORTFztFZpJWOgtSD4qPUcQU+VhbhihZQACdosNkx1+GtQFzDiYpITaAl1AtIT3kH
+E7ucZy3KV8vw8i8H1XSJPlI8a0xRfN9nG6qAiNaxEZACLg0r+xIorlT/o2yWs+oV
+fzvEnVLadd9yV13n27xRrTaqLx6kn+tK5SA19vEZZdXgONuMtnPaRLEqWLElM/Ms
+FPB+6UkBR2/rt6nKmU1lxrtH/l87vi7L/icWrO9y86ezw8S/ToISm4dEFQEB374L
+ER2SeKojdC8jim0ldGDmyb9Gk3NSq7Fd6DxBKILLo1fC9E0iON2V1EL206gN8Re1
+3Oou9joshGO8TbWsplbE/e8y4+FWvnfpWfvf/NjxYpRy6TF08hL/vG3DZ8Erh4iU
+vcXAu8lFXI0y2+WJZYHPlqMxb5bnb9gyNrnwuAGqqVtaZSrzFYs7FzwUvW3P2qNI
+8KuWV1ZmD1qs9L5eHv1G8qSad+HqCn61B53AqX3nybnJY/Jxjcm5YGLJByNWLffa
+nGnB2V1Ku15UxYAdFkj1Y6ez7lycn/nEuH61wJKJEE0YhH5Gl8VEGX0hOvx9Q/nZ
+se+c6rBgimRqZ/7xokUy
+=yXPY
+-----END PGP SIGNATURE-----
+
+--=-zq6OKF6efyUp5WnrzKdS--
+
