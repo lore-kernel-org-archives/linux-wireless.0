@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:37873 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174AbYLWUW0 (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:52245 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630AbYLSJVw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 15:22:26 -0500
-Received: by ewy10 with SMTP id 10so2924267ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 12:22:24 -0800 (PST)
-Message-ID: <49514874.8060605@gmail.com> (sfid-20081223_212231_173439_580D4D0C)
-Date: Tue, 23 Dec 2008 20:22:12 +0000
+	Fri, 19 Dec 2008 04:21:52 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so324352yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 01:21:51 -0800 (PST)
+Message-ID: <a32f33a40812190121t5d669e9ao93c971494dd529a1@mail.gmail.com> (sfid-20081219_102159_296608_B62E6E13)
+Date: Fri, 19 Dec 2008 10:21:50 +0100
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: [PATCH v6 3/3] mac80211: implement dynamic power save
+Cc: "Vivek Natarajan" <vivek.natraj@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <87myesy5ey.fsf@nokia.com>
 MIME-Version: 1.0
-To: Richard Farina <sidhayn@gmail.com>
-CC: linux-wireless@vger.kernel.org, simon@thekelleys.org.uk,
-	jussi.kivilinna@mbnet.fi, acme@ghostprotocols.net, pe1rxq@amsat.org
-Subject: Re: [PATCH] wireless: Add channel/frequency conversions to ieee80211.h
-References: <1230041018-13341-1-git-send-email-kilroyd@googlemail.com> <49510D4F.7060102@gmail.com>
-In-Reply-To: <49510D4F.7060102@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
-From: Dave <kilroyd@googlemail.com>
+References: <20081218213306.7248.64398.stgit@tikku>
+	 <20081218213527.7248.65697.stgit@tikku>
+	 <8e92b4100812182217q6f8e6014s3f28ab79c5bc2ba3@mail.gmail.com>
+	 <87myesy5ey.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Richard Farina wrote:
-> David Kilroy wrote:
->> Added mappings for FHSS, DSSS and OFDM channels - with macros to point
->> HR DSSS and ERP to the DSSS mappings. Currently just static inline
->> functions.
+HI,
 
->> +/**
->> + * ieee80211_ofdm_chan_to_freq - get channel center frequency
->> + * @s_freq: starting frequency == (dotChannelStartingFactor/2) MHz
->> + * @channel: the OFDM channel
->> + *
->> + * Convert IEEE802.11 OFDM channel to center frequency (MHz)
->> + * Ref IEEE 802.11-2007 section 17.3.8.3.2
->> + */
->> +static inline int ieee80211_ofdm_chan_to_freq(int s_freq, int channel)
->> +{
->> +	if ((channel > 0) && (channel <= 200) &&
->> +	    (s_freq >= 4000))
->> +		return s_freq + (channel * 5);
->> +	else
->> +		return -1;
->> +}
+>> I need your thoughts on having null frame being sent from mac80211(
+>> the RFC I submitted earlier). Do you feel a state machine is
+>> necessary to go to power save? ( like awake, sleep, pending_sleep if
+>> the AP hasn't acked the null frame with a timer or a work queue to
+>> send null frame periodically in the pending state).
+>
+> I haven't thinked much about this yet, but your proposal of having a
+> state machine most probably is the best option. It's just that earlier
+> Johannes mentioned that it's not currently possible to know if null
+> frame has been acked:
+>
+> http://www.spinics.net/lists/linux-wireless/msg21212.html
+>
+> We would have to solve that before implementing the state machine.
+>
+>> Or altogether you want that to be part of the driver and not in
+>> mac80211?
+>
+> I think this needs to be in mac80211 because there are three drivers
+> which need it (p54/stlc45xx, ath5/9k and b43).
 
-> Any desire to make 184-196 work? These are the 4.9 GHz channels.
+You can add the rt2x00 family to that list as well, I have already a patch
+which implements power saving in rt2x00 but it will need this patch to get
+it working correctly.
 
-Do you see a reason why these channels wouldn't work with these
-conversion routines? Or are you asking about corresponding driver support?
-
->From the ack I assume the latter. My main motivation is to put the
-frequency conversions in a common place. In this case for old drivers
-which only use the 2.4 GHz band. The 5GHz conversions are just for
-completeness.
-
-If drivers don't currently support those channels, I suspect there's a
-more significant issue to be addressed first.
-
-> I checked this all out pretty specifically, seems to work well. As if 
-> anyone cares but:
-> 
-> ACKED-By: Rick Farina
-
-Thanks for having a look.
-
-
-
-Dave.
+Ivo
