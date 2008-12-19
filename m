@@ -1,81 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48189 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757005AbYLLPry (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 10:47:54 -0500
-Subject: Re: [PATCH 1/3] mac80211: Add HT rates into RX status reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20081212123910.704978781@atheros.com>
-References: <20081212123832.506588839@atheros.com>
-	 <20081212123910.704978781@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oS8bvGx85FQ28fqw7icq"
-Date: Fri, 12 Dec 2008 16:47:46 +0100
-Message-Id: <1229096866.3600.16.camel@johannes.berg> (sfid-20081212_164758_392650_CE034479)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:53494 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753517AbYLSCpo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 21:45:44 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 41/43] iwl3945: release resources before shutting down
+Date: Fri, 19 Dec 2008 10:37:41 +0800
+Message-Id: <1229654263-21454-42-git-send-email-yi.zhu@intel.com> (sfid-20081219_034636_586676_4882EEEA)
+In-Reply-To: <1229654263-21454-41-git-send-email-yi.zhu@intel.com>
+References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-4-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-5-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-7-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-8-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-9-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-10-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-11-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-12-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-13-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-14-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-15-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-16-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-17-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-18-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-19-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-20-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-21-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-22-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-23-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-24-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-25-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-26-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-27-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-28-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-29-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-30-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-31-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-32-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-33-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-34-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-35-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-36-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-37-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-38-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-39-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-40-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-41-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
 
---=-oS8bvGx85FQ28fqw7icq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Release resource before shutting down and notify upper stack.
 
-On Fri, 2008-12-12 at 14:38 +0200, Jouni Malinen wrote:
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-> --- wireless-testing.orig/net/mac80211/rx.c	2008-12-12 00:26:04.000000000=
- +0200
-> +++ wireless-testing/net/mac80211/rx.c	2008-12-12 14:09:52.000000000 +020=
-0
-> @@ -149,7 +149,17 @@ ieee80211_add_rx_radiotap_header(struct=20
->  	pos++;
-> =20
->  	/* IEEE80211_RADIOTAP_RATE */
-> -	*pos =3D rate->bitrate / 5;
-> +	if (status->flag & RX_FLAG_HT) {
-> +		/*
-> +		 * TODO: add following information into radiotap header once
-> +		 * suitable fields are defined for it:
-> +		 * - MCS index (status->rate_idx)
-> +		 * - HT40 (status->flag & RX_FLAG_40MHZ)
-> +		 * - short-GI (status->flag & RX_FLAG_SHORT_GI)
-> +		 */
-> +		*pos =3D 0;
-> +	} else
-> +		*pos =3D rate->bitrate / 5;
->  	pos++;
-
-I think we should also unset the 1<<IEEE80211_RADIOTAP_RATE bit in the
-HT case so the *pos =3D 0 will just be padding to dissectors. That's
-correct then because the field after this (channel) requires 2-byte
-alignment.
-
-johannes
-
---=-oS8bvGx85FQ28fqw7icq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQoefAAoJEKVg1VMiehFYYuAP/0XvpgrjwgelHe4j//s7OT0T
-3g0b3Uh1Ef5UiWeWtINZRvfusjoWgNSqqUoKMw9FEIsCq6ur5VVbTT9UR5kKZNc0
-t/xkYUkF3LJmRoj0Ulqgimeulh6vMNi6fRKAPepE2ZA07G8Utz5JrEOf8TrkLBIx
-GVMemJ3VkNsDlGE+NnlG0Ng9h+06uQ1cpUPdZNslyPQ5ddHLBEibzIIIzF5JF7eE
-WjT2AZTtRPFeE6xwOC/tiCu2xGsRZntdpYUanWBIMNN6pBKMKJ3UnvAQIfRG8jEu
-GEKz1wK0KDibAcVRPIERhpRWP89z/mYcHHNMV9a+hFFCCqanawTGrJRhF4hjKGUm
-EJrwb0iAIy/2Dh+sdW9xoRz+JOiKm/I/2OaSKajA/tao5LAQTkievrBQ2tbEEq3n
-gvGkQQX2vYM5kG/rpMTllm4ZRsuhN5pTqjqsAinuhOJIrAx52Cjox3MCcf3EhSA4
-A9gPTO5Lv/gdZ/+TNm0Dtda0l5s3j4YmOnNiSEXQ0aSmfdPwS4tHsa/DUBUcaznA
-D7vZGRTmoByHMeD6Wx0q6fCNMRN39e15ZRC51mcxLXUQq8iH0/Iy6TZg5p5zwalB
-n2RD0HBbAGeWyEVUpJyEemoOQfZG+feh3r8b1ybn7iFGN4VEwRRIgkd1N7u3anoF
-0EP4Rr7sFoh4sFmggtbi
-=5oVX
------END PGP SIGNATURE-----
-
---=-oS8bvGx85FQ28fqw7icq--
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 1d4a474..3305fa9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -7740,7 +7740,12 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 
+ 	set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+-	iwl3945_down(priv);
++	if (priv->mac80211_registered) {
++		ieee80211_unregister_hw(priv->hw);
++		priv->mac80211_registered = 0;
++	} else {
++		iwl3945_down(priv);
++	}
+ 
+ 	/* make sure we flush any pending irq or
+ 	 * tasklet for the driver
+@@ -7763,9 +7768,6 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 	iwl3945_unset_hw_params(priv);
+ 	iwl3945_clear_stations_table(priv);
+ 
+-	if (priv->mac80211_registered)
+-		ieee80211_unregister_hw(priv->hw);
+-
+ 	/*netif_stop_queue(dev); */
+ 	flush_workqueue(priv->workqueue);
+ 
+-- 
+1.5.3.6
 
