@@ -1,47 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34437 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751440AbYLLGcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 01:32:24 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 22:32:24 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from fg-out-1718.google.com ([72.14.220.157]:27343 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751519AbYLSTcy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2008 14:32:54 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so450702fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 11:32:53 -0800 (PST)
+Message-ID: <f6ca9fed0812191132h2f76ce40id20c52bdb6e0681c@mail.gmail.com> (sfid-20081219_203258_227537_0BC6BCF9)
+Date: Fri, 19 Dec 2008 20:32:53 +0100
+From: drago01 <drago01@gmail.com>
+To: "Zhu Yi" <yi.zhu@intel.com>
+Subject: Re: [PATCH 00/43] iwl3945 merges into iwlagn (Dec 19)
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18754.1203.949873.82961@gargle.gargle.HOWL> (sfid-20081212_073227_206873_C536E549)
-Date: Fri, 12 Dec 2008 11:59:07 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] ath9k: Do not use association state to update rate table
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that HT information is made available to the driver through
-config() callback, the channel type can be calculated whenever
-setting the channel. Update the rate table accordingly with the new
-channel type.
+On Fri, Dec 19, 2008 at 3:37 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> Hi John,
+>
+> Here is the first batch for the iwl3945 -> iwlagn merge. This is for
+> post .29 kernel.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index c39cfeb..ba04a11 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -61,8 +61,7 @@ static void bus_read_cachesize(struct ath_softc *sc, int *csz)
- 
- static void ath_setcurmode(struct ath_softc *sc, enum wireless_mode mode)
- {
--	if (!sc->sc_curaid)
--		sc->cur_rate_table = sc->hw_rate_table[mode];
-+	sc->cur_rate_table = sc->hw_rate_table[mode];
- 	/*
- 	 * All protection frames are transmited at 2Mb/s for
- 	 * 11g, otherwise at 1Mb/s.
--- 
-1.6.0.3
-
+Well it doesn't really matter but wouldn't it make sense to rename the
+driver back to iwlwifi ? (as 3945 does not support n mode)
