@@ -1,131 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60522 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:33262 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755238AbYLCBoc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 20:44:32 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 17:44:32 -0800
-Date: Tue, 2 Dec 2008 17:44:30 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Henning Rogge <hrogge@googlemail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Henning Rogge <rogge@fgan.de>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
-Message-ID: <20081203014430.GH9351@tesla> (sfid-20081203_024459_213328_71076EDF)
-References: <200811252131.30161.hrogge@googlemail.com> <200812021425.44488.rogge@fgan.de> <20081202202919.GC9351@tesla> <200812022146.12363.hrogge@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <200812022146.12363.hrogge@googlemail.com>
+	id S1752613AbYLSCpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 21:45:20 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 22/43] iwl3945: replace iwl3945_broadcast_addr with iwl_bcast_addr
+Date: Fri, 19 Dec 2008 10:37:22 +0800
+Message-Id: <1229654263-21454-23-git-send-email-yi.zhu@intel.com> (sfid-20081219_034608_378728_A71B3A2B)
+In-Reply-To: <1229654263-21454-22-git-send-email-yi.zhu@intel.com>
+References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-4-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-5-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-7-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-8-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-9-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-10-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-11-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-12-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-13-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-14-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-15-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-16-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-17-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-18-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-19-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-20-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-21-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-22-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 02, 2008 at 12:46:06PM -0800, Henning Rogge wrote:
-> > > @@ -404,6 +404,10 @@ enum nl80211_sta_flags {
-> > >   * @NL80211_STA_INFO_TX_BYTES: total transmitted bytes (u32, to =
-this
-> > > station) * @__NL80211_STA_INFO_AFTER_LAST: internal
-> > >   * @NL80211_STA_INFO_MAX: highest possible station info attribut=
-e
-> > > + * @NL80211_STA_INFO_SIGNAL: signal strength of last received pa=
-ckage
-> > > (u8, dBm)
-> > Shouldn't this be s8?
-> I did not find macros for nl80211 to add signed values... so its just=
- "say=20
-> it's signed, but use the unsigned macro" ? If yes I will change the=20
-> documentation.
+From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
 
-Ah no, nevermind me, netlink doesn't have singed values.
+The patch replaces iwl3945_broadcast_addr with iwl_bcast_addr for 3945.
 
-> > > diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> > > index 1d57835..cdf9433 100644
-> > > --- a/include/net/cfg80211.h
-> > > +++ b/include/net/cfg80211.h
-> > > @@ -167,6 +167,9 @@ struct station_parameters {
-> > >   * @STATION_INFO_LLID: @llid filled
-> > >   * @STATION_INFO_PLID: @plid filled
-> > >   * @STATION_INFO_PLINK_STATE: @plink_state filled
-> > > + * @STATION_INFO_SIGNAL: @signal filled
-> >
-> > Can you extend this to indicate drivers which enable this must
-> > pass the singal in dBm (IEEE80211_HW_SIGNAL_DBM for mac80211 driver=
-s)
-> > as that is what cfg80211 expects?
-> The flag is only set if the driver sets the IEEE80211_HW_SIGNAL_DBM f=
-lag.
-> cfg.c:
-> +=A0=A0=A0=A0=A0=A0=A0if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_=
-DBM) {
-> +=A0=A0=A0=A0=A0=A0=A0 =A0sinfo->filled |=3D STATION_INFO_SIGNAL;
-> +=A0=A0=A0=A0=A0=A0=A0 =A0sinfo->signal =3D sta->last_signal;
-> +=A0=A0=A0=A0=A0=A0=A0}
->=20
-> But it might be better to explain this in the documentation.
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   10 ++++------
+ 2 files changed, 4 insertions(+), 7 deletions(-)
 
-Right.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index 4f8e6b8..e794cd5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -358,7 +358,6 @@ extern int iwl3945_send_statistics_request(struct iwl3945_priv *priv);
+ extern void iwl3945_set_decrypted_flag(struct iwl3945_priv *priv, struct sk_buff *skb,
+ 				   u32 decrypt_res,
+ 				   struct ieee80211_rx_status *stats);
+-extern const u8 iwl3945_broadcast_addr[ETH_ALEN];
+ 
+ /*
+  * Currently used by iwl-3945-rs... look at restructuring so that it doesn't
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index e37a28f..44777fa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -303,8 +303,6 @@ void iwl3945_tx_queue_free(struct iwl3945_priv *priv, struct iwl3945_tx_queue *t
+ 	memset(txq, 0, sizeof(*txq));
+ }
+ 
+-const u8 iwl3945_broadcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+-
+ /*************** STATION TABLE MANAGEMENT ****
+  * mac80211 should be examined to determine if sta_info is duplicating
+  * the functionality provided here
+@@ -1034,7 +1032,7 @@ static int iwl3945_commit_rxon(struct iwl3945_priv *priv)
+ 	}
+ 
+ 	/* Add the broadcast address so we can send broadcast frames */
+-	if (iwl3945_add_station(priv, iwl3945_broadcast_addr, 0, 0) ==
++	if (iwl3945_add_station(priv, iwl_bcast_addr, 0, 0) ==
+ 	    IWL_INVALID_STATION) {
+ 		IWL_ERROR("Error adding BROADCAST address for transmit.\n");
+ 		return -EIO;
+@@ -1531,9 +1529,9 @@ static u16 iwl3945_fill_probe_req(struct iwl3945_priv *priv,
+ 	len += 24;
+ 
+ 	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
+-	memcpy(frame->da, iwl3945_broadcast_addr, ETH_ALEN);
++	memcpy(frame->da, iwl_bcast_addr, ETH_ALEN);
+ 	memcpy(frame->sa, priv->mac_addr, ETH_ALEN);
+-	memcpy(frame->bssid, iwl3945_broadcast_addr, ETH_ALEN);
++	memcpy(frame->bssid, iwl_bcast_addr, ETH_ALEN);
+ 	frame->seq_ctrl = 0;
+ 
+ 	/* fill in our indirect SSID IE */
+@@ -6653,7 +6651,7 @@ static void iwl3945_config_ap(struct iwl3945_priv *priv)
+ 		/* restore RXON assoc */
+ 		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
+ 		iwl3945_commit_rxon(priv);
+-		iwl3945_add_station(priv, iwl3945_broadcast_addr, 0, 0);
++		iwl3945_add_station(priv, iwl_bcast_addr, 0, 0);
+ 	}
+ 	iwl3945_send_beacon_cmd(priv);
+ 
+-- 
+1.5.3.6
 
-> > This is important as mac80211 drivers not using IEEE80211_HW_SIGNAL=
-_DBM
-> > will luck out of getting signal reports. This means these drivers w=
-on't
-> > get signal reports right now:
-> I know... (did search for the HW_SIGNAL flags in the drivers)
->=20
-> > I guess this is the iffy part... I'll see if zd1211rw can somehow u=
-se
-> > dBm though.
-> That would be good I think.
->=20
-> > Awesome stuff, now come to think of it, perhaps its best we let
-> > userspace do the calculation and we just give it the last RX/TX
-> > guard interval and the MCS index? Technically speaking it seems
-> > we don't have duplicate rates though so a reverse map is possible
-> > but it seems useful to just provide the information directly.
->  the problem of this approach would be that every userspace calculati=
-on would=20
-> have to do this calculation on it's own.
-
-True..
-
-> Whats about transmitting "basic=20
-> datarate"
-
-What's that?
-
-> , "number of spatial streams"
-
-No need for this one, the HT mode (ht20 or ht40) and MCS index would
-give us that.
-
-> and "flags" (short/long GI, 20/40 Mhz  width) to userspace ?
-
-Well... see below.
-
-> This way it would be just a multiplication to get the=20
-> total bandwith, but it still can easily be reverse mapped into MCS wi=
-th some=20
-> arithmetics.
-
-I believe to get the throughput you need a lot more info than this, hen=
-ce
-why the table is so big and why you have array index for each MCS index
-for each HT mode and guard interval.
-
-So... what if we pass the throughput as you have it but also pass the
-other stuff (flags, and MCS index) just so all userspace apps that
-want to get last TX/RX guard interval, HT20/HT40, and MCS index
-doesn't have to have a funky reverse map to get the flags and MCS index=
-?
-
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
