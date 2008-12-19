@@ -1,57 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39952 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752558AbYL2NTd (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:33603 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751280AbYLSPoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 08:19:33 -0500
-Subject: Re: Setting 'n' or 'a' Mode, and WPA2?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Delphi Real Estate <Info@delphi-real-estate.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <200812270706.56478.Info@delphi-real-estate.com> (sfid-20081227_161355_713404_4B664DF2)
-References: <200812270706.56478.Info@delphi-real-estate.com>
-	 (sfid-20081227_161355_713404_4B664DF2)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Apf7ZetOQqurGnBO10RW"
-Date: Mon, 29 Dec 2008 14:19:54 +0100
-Message-Id: <1230556794.3116.36.camel@johannes> (sfid-20081229_141937_151861_B0F8E1AF)
-Mime-Version: 1.0
+	Fri, 19 Dec 2008 10:44:54 -0500
+Message-ID: <494BC173.7060703@lwfinger.net> (sfid-20081219_164456_590440_F986E61E)
+Date: Fri, 19 Dec 2008 09:44:51 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: p54usb problems
+References: <200812190306.52254.chunkeey@web.de>
+In-Reply-To: <200812190306.52254.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Christian Lamparter wrote:
+> 
+> ooops... just a "hey, hold on a second" just came a minute too late.
+> 
 
---=-Apf7ZetOQqurGnBO10RW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The second version runs here. My impression was that the flood ping runs a bit
+more smoothly with fewer times that 6-8 dots are printed before it catches up.
 
-On Sat, 2008-12-27 at 07:06 -0800, Delphi Real Estate wrote:
-> Is there any way to set it to dual-band for the new routers which send
-> normal traffic on 'g' and stream on 'a'?
+My stress test still fails. I'm running firmware rev 2.13.1.0. Is there a better
+one to try?
 
-Umm, no. A single card can only be on one band at a time.
-
-johannes
-
---=-Apf7ZetOQqurGnBO10RW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJWM52AAoJEKVg1VMiehFYgKUQAMRb6ir6GOZjBm6QCwy4jI28
-HXrc51yj3DnwSUrEiSnfW9hK4NnVO2GnENtAJLHri5sNzjJL2PQgT3DzwZ4HrnwS
-25sVxsdY4vYgbybM3vsD85pm5nrq71gsR8alZXqY83g1mQrLRT1ymDEs9i9ZX8h8
-gP0w0lLs+2ntg50nIopJFGZdVQrZfsqXQI8fQPOkrVaDcoa2W1ao+bTS405g59Ri
-0Rof7FPgciow/VKnwLcZY74nMe2n7lhXvw4WGGwEaolG7TnaTJ9MLf7s785wFv2O
-aXiS58poB578YhZHLAgTOZhh834IKVnncv/UKSJuQpMzuXv8gMPZ0BPqBsbK6OGf
-OiXcj1EIRpC77/qkOV5/nXbUomI011T+KBm1WNbh3ST0SianZzmTCrBMezBVbNsq
-jYoh5PjgH7AuzVNpL/Yv1YR81Qhk7srS+1YSH7HPNKjfwlgqUvPhEOux4dNl7mm8
-ccPY46y639XwHqvTjKAAcQL5/wgrCY5mTKi+BCViGAKTgVM9ojJxGF2rb/0ZGJxT
-WAmGvJXk2gREhyHCoizYy09YSdLworDxmhohmhiDbZ8eR54DmAmP7jZkPVLPHmfx
-iN/IaCazLokEA6sYS/jF3ApOA6nZJiCzlyeDDKuDFNhmUN7CG1jSWb7+e0n18eRN
-D3KctvMWMkDMs0xARPRP
-=eq8F
------END PGP SIGNATURE-----
-
---=-Apf7ZetOQqurGnBO10RW--
+Larry
 
