@@ -1,94 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:51042 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754424AbYLBPD3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 10:03:29 -0500
-Date: Tue, 2 Dec 2008 13:03:23 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com
-Subject: Re: iwlwifi - rfkill only works if the interface is up
-Message-ID: <20081202150323.GF1668@khazad-dum.debian.net> (sfid-20081202_160334_414609_140C1548)
-References: <200812011311.17346.helmut.schaa@gmail.com> <1ba2fa240812010508hcb29699m8bd8b3b0ba8574cd@mail.gmail.com> <1228145453.31158.140.camel@violet.holtmann.net> <200812011634.37644.helmut.schaa@gmail.com> <1228147151.31158.142.camel@violet.holtmann.net> <20081202125959.GC1668@khazad-dum.debian.net> <1228223693.31158.240.camel@violet.holtmann.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1228223693.31158.240.camel@violet.holtmann.net>
+Received: from mga11.intel.com ([192.55.52.93]:33262 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752554AbYLSCpX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 21:45:23 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 25/43] iwl3945: use iwl_rx_queue in iwl3945
+Date: Fri, 19 Dec 2008 10:37:25 +0800
+Message-Id: <1229654263-21454-26-git-send-email-yi.zhu@intel.com> (sfid-20081219_034610_436991_D85DF2DB)
+In-Reply-To: <1229654263-21454-25-git-send-email-yi.zhu@intel.com>
+References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-4-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-5-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-7-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-8-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-9-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-10-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-11-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-12-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-13-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-14-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-15-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-16-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-17-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-18-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-19-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-20-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-21-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-22-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-23-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-24-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-25-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Marcel,
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-On Tue, 02 Dec 2008, Marcel Holtmann wrote:
-> > > if the hardware/firmware doesn't allow us to do so, we have no real
-> > > option. I think that nobody thought about this use case so far. I am not
-> > > sure if we should unregister it or just fix rfkill to add an invalid
-> > > state. It is also possible to tie rfkill with ifup/ifdown.
-> > 
-> > Please don't register/unregister rfkill classes like that, it is extremely
-> > broken from userspace's point-of-view, and it is not how the rfkill core
-> > subsystem expects things to be used either.    If there is no way to avoid
-> > register/unregister at interface up/down, it is better to never register any
-> > rfkill classes at all, and remove the functionality.
-> > 
-> > Now, I hate when people use the term "rfkill switch" when dealing with the
-> > kernel rfkill subsystem, because we can't really always be sure we
-> > understood what the person means, so please bear with me...
-> > 
-> > Are you talking about the hardware rfkill line (the input pin where one
-> > might have hooked an input device)?  Or about something else?
-> 
-> so this case is that we are not getting any updates about the rfkill
-> line status if the firmware is not loaded (happens at ifdown case). How
-> do you propose this should be handled?
+The patch replaces iwl3945_rx_queue with iwl_rx_queue.
 
-The hardware rfkill line?  If it is the hardware rfkill line,  I have some
-ideas.  Some are better for the user, but much harder to implement...
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |   33 ++------------------------
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++++------
+ 3 files changed, 13 insertions(+), 40 deletions(-)
 
-1. Poll it @1Hz or 0.5Hz while the firmware is down if it makes sense (i.e.
-if the whole process needed to poll (which might well mean start the
-firmware, poll, stop it) is not worse than keeping the firmware running all
-the time in the first place).
-
-2. Have a powersave firmware that you upload to the card instead of shutting
-it down, and have that firmware still report hardware rfkill line changes.
-This one is probably the ideal solution.
-
-3. Consider alternate ways of power saving.  E.g. you could soft-rfkill the
-radio (but you must HIDE this from the rfkill core!) every time no
-interfaces that can cause data transmission are open, if that would save
-power but still leave the firmware running to get events.
-
-4. Provide the user with a runtime tunable, which lets him disable the
-firmware shutdown when closed.  This is important for users of platforms
-where the ipw card is the only way to get the status of the input device
-driving hardware rfkill.
-
-I expect many users will be able to run with the opportunistic firmware
-shutdown optimization enabled without even noticing it much, as you often
-can read the input device responsible for driving platform-wide hardware
-rfkill lines from some other place (like vendor-specific ACPI nodes), and a
-platform driver will take care of it.
-
-Anyway, please make sure you manually poll and update the rfkill core state
-through a call to rfkill_force_state() as soon as possible after you start
-the firmware, if it was stopped for any reason and you might have lost
-hardware rfkill line state change events.
-
-I have also looked at the question from various povs, and my conclusion is
-that, if we cannot avoid it at all, it is probably going to be annoying as
-all heck to userspace but we may have to add a way for the rfkill core to
-return -EBUSY when the current rfkill state is unknown.
-
-I don't recommend adding a STATE_UKNOWN to rfkill.  It is useless for
-anything else, and it will get in the way everywhere in the rfkill core and
-userspace.  It is much better to just return a suitable error to userspace
-when it queries the rfkill state.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index bbba509..0192a88 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -962,7 +962,7 @@ static int iwl3945_nic_set_pwr_src(struct iwl3945_priv *priv, int pwr_max)
+ 	return rc;
+ }
+ 
+-static int iwl3945_rx_init(struct iwl3945_priv *priv, struct iwl3945_rx_queue *rxq)
++static int iwl3945_rx_init(struct iwl3945_priv *priv, struct iwl_rx_queue *rxq)
+ {
+ 	int rc;
+ 	unsigned long flags;
+@@ -1083,7 +1083,7 @@ int iwl3945_hw_nic_init(struct iwl3945_priv *priv)
+ 	u8 rev_id;
+ 	int rc;
+ 	unsigned long flags;
+-	struct iwl3945_rx_queue *rxq = &priv->rxq;
++	struct iwl_rx_queue *rxq = &priv->rxq;
+ 
+ 	iwl3945_power_init_handle(priv);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index 410a8bd..c4d56ef 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -213,33 +213,6 @@ struct iwl3945_host_cmd {
+ #define SUP_RATE_11B_MAX_NUM_CHANNELS  4
+ #define SUP_RATE_11G_MAX_NUM_CHANNELS  12
+ 
+-/**
+- * struct iwl3945_rx_queue - Rx queue
+- * @processed: Internal index to last handled Rx packet
+- * @read: Shared index to newest available Rx buffer
+- * @write: Shared index to oldest written Rx packet
+- * @free_count: Number of pre-allocated buffers in rx_free
+- * @rx_free: list of free SKBs for use
+- * @rx_used: List of Rx buffers with no SKB
+- * @need_update: flag to indicate we need to update read/write index
+- *
+- * NOTE:  rx_free and rx_used are used as a FIFO for iwl_rx_mem_buffers
+- */
+-struct iwl3945_rx_queue {
+-	__le32 *bd;
+-	dma_addr_t dma_addr;
+-	struct iwl_rx_mem_buffer pool[RX_QUEUE_SIZE + RX_FREE_BUFFERS];
+-	struct iwl_rx_mem_buffer *queue[RX_QUEUE_SIZE];
+-	u32 processed;
+-	u32 read;
+-	u32 write;
+-	u32 free_count;
+-	struct list_head rx_free;
+-	struct list_head rx_used;
+-	int need_update;
+-	spinlock_t lock;
+-};
+-
+ #define IWL_SUPPORTED_RATES_IE_LEN         8
+ 
+ #define SCAN_INTERVAL 100
+@@ -333,7 +306,7 @@ extern int iwl3945_power_init_handle(struct iwl3945_priv *priv);
+ extern int iwl3945_eeprom_init(struct iwl3945_priv *priv);
+ extern int iwl3945_rx_queue_alloc(struct iwl3945_priv *priv);
+ extern void iwl3945_rx_queue_reset(struct iwl3945_priv *priv,
+-			       struct iwl3945_rx_queue *rxq);
++			       struct iwl_rx_queue *rxq);
+ extern int iwl3945_calc_db_from_ratio(int sig_ratio);
+ extern int iwl3945_calc_sig_qual(int rssi_dbm, int noise_dbm);
+ extern int iwl3945_tx_queue_init(struct iwl3945_priv *priv,
+@@ -347,7 +320,7 @@ extern int __must_check iwl3945_send_cmd(struct iwl3945_priv *priv,
+ extern unsigned int iwl3945_fill_beacon_frame(struct iwl3945_priv *priv,
+ 					struct ieee80211_hdr *hdr,int left);
+ extern int iwl3945_rx_queue_update_write_ptr(struct iwl3945_priv *priv,
+-					 struct iwl3945_rx_queue *q);
++					 struct iwl_rx_queue *q);
+ extern int iwl3945_send_statistics_request(struct iwl3945_priv *priv);
+ extern void iwl3945_set_decrypted_flag(struct iwl3945_priv *priv, struct sk_buff *skb,
+ 				   u32 decrypt_res,
+@@ -564,7 +537,7 @@ struct iwl3945_priv {
+ 	int activity_timer_active;
+ 
+ 	/* Rx and Tx DMA processing queues */
+-	struct iwl3945_rx_queue rxq;
++	struct iwl_rx_queue rxq;
+ 	struct iwl3945_tx_queue txq[IWL39_MAX_NUM_QUEUES];
+ 
+ 	unsigned long status;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 73587fe..c3ffbec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3364,7 +3364,7 @@ static void iwl3945_tx_cmd_complete(struct iwl3945_priv *priv,
+ /**
+  * iwl3945_rx_queue_space - Return number of free slots available in queue.
+  */
+-static int iwl3945_rx_queue_space(const struct iwl3945_rx_queue *q)
++static int iwl3945_rx_queue_space(const struct iwl_rx_queue *q)
+ {
+ 	int s = q->read - q->write;
+ 	if (s <= 0)
+@@ -3379,7 +3379,7 @@ static int iwl3945_rx_queue_space(const struct iwl3945_rx_queue *q)
+ /**
+  * iwl3945_rx_queue_update_write_ptr - Update the write pointer for the RX queue
+  */
+-int iwl3945_rx_queue_update_write_ptr(struct iwl3945_priv *priv, struct iwl3945_rx_queue *q)
++int iwl3945_rx_queue_update_write_ptr(struct iwl3945_priv *priv, struct iwl_rx_queue *q)
+ {
+ 	u32 reg = 0;
+ 	int rc = 0;
+@@ -3444,7 +3444,7 @@ static inline __le32 iwl3945_dma_addr2rbd_ptr(struct iwl3945_priv *priv,
+  */
+ static int iwl3945_rx_queue_restock(struct iwl3945_priv *priv)
+ {
+-	struct iwl3945_rx_queue *rxq = &priv->rxq;
++	struct iwl_rx_queue *rxq = &priv->rxq;
+ 	struct list_head *element;
+ 	struct iwl_rx_mem_buffer *rxb;
+ 	unsigned long flags;
+@@ -3496,7 +3496,7 @@ static int iwl3945_rx_queue_restock(struct iwl3945_priv *priv)
+  */
+ static void iwl3945_rx_allocate(struct iwl3945_priv *priv)
+ {
+-	struct iwl3945_rx_queue *rxq = &priv->rxq;
++	struct iwl_rx_queue *rxq = &priv->rxq;
+ 	struct list_head *element;
+ 	struct iwl_rx_mem_buffer *rxb;
+ 	unsigned long flags;
+@@ -3568,7 +3568,7 @@ void iwl3945_rx_replenish(void *data)
+  * This free routine walks the list of POOL entries and if SKB is set to
+  * non NULL it is unmapped and freed
+  */
+-static void iwl3945_rx_queue_free(struct iwl3945_priv *priv, struct iwl3945_rx_queue *rxq)
++static void iwl3945_rx_queue_free(struct iwl3945_priv *priv, struct iwl_rx_queue *rxq)
+ {
+ 	int i;
+ 	for (i = 0; i < RX_QUEUE_SIZE + RX_FREE_BUFFERS; i++) {
+@@ -3587,7 +3587,7 @@ static void iwl3945_rx_queue_free(struct iwl3945_priv *priv, struct iwl3945_rx_q
+ 
+ int iwl3945_rx_queue_alloc(struct iwl3945_priv *priv)
+ {
+-	struct iwl3945_rx_queue *rxq = &priv->rxq;
++	struct iwl_rx_queue *rxq = &priv->rxq;
+ 	struct pci_dev *dev = priv->pci_dev;
+ 	int i;
+ 
+@@ -3612,7 +3612,7 @@ int iwl3945_rx_queue_alloc(struct iwl3945_priv *priv)
+ 	return 0;
+ }
+ 
+-void iwl3945_rx_queue_reset(struct iwl3945_priv *priv, struct iwl3945_rx_queue *rxq)
++void iwl3945_rx_queue_reset(struct iwl3945_priv *priv, struct iwl_rx_queue *rxq)
+ {
+ 	unsigned long flags;
+ 	int i;
+@@ -3730,7 +3730,7 @@ static void iwl3945_rx_handle(struct iwl3945_priv *priv)
+ {
+ 	struct iwl_rx_mem_buffer *rxb;
+ 	struct iwl_rx_packet *pkt;
+-	struct iwl3945_rx_queue *rxq = &priv->rxq;
++	struct iwl_rx_queue *rxq = &priv->rxq;
+ 	u32 r, i;
+ 	int reclaim;
+ 	unsigned long flags;
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.5.3.6
+
