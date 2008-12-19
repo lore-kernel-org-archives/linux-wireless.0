@@ -1,98 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26637 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:33262 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754341AbYLQI7p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 03:59:45 -0500
+	id S1752591AbYLSCpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 21:45:15 -0500
 From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
-	"Wu, Fengguang" <fengguang.wu@intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 4/8] iwlwifi: use type uint for module param debug
-Date: Wed, 17 Dec 2008 16:52:30 +0800
-Message-Id: <1229503954-30347-5-git-send-email-yi.zhu@intel.com> (sfid-20081217_095949_358966_6F0EA230)
-In-Reply-To: <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
-References: <1229503954-30347-1-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-2-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-3-git-send-email-yi.zhu@intel.com>
- <1229503954-30347-4-git-send-email-yi.zhu@intel.com>
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 18/43] iwl3945: include iwl-core.h
+Date: Fri, 19 Dec 2008 10:37:18 +0800
+Message-Id: <1229654263-21454-19-git-send-email-yi.zhu@intel.com> (sfid-20081219_034550_847478_99C41BAA)
+In-Reply-To: <1229654263-21454-18-git-send-email-yi.zhu@intel.com>
+References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-4-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-5-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-7-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-8-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-9-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-10-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-11-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-12-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-13-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-14-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-15-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-16-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-17-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-18-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wu, Fengguang <fengguang.wu@intel.com>
+From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
 
-This enables one to change the debug level at bit 31.
+Use iwl-core.h instead of iwl-3945-core.h.
 
-Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- 4 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945-core.h |  104 --------------------------
+ drivers/net/wireless/iwlwifi/iwl-3945.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h      |   30 ++++++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c  |   52 +-------------
+ 4 files changed, 32 insertions(+), 156 deletions(-)
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-core.h
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index a7e6e32..3a78d86 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2354,7 +2354,7 @@ module_param_named(disable, iwl4965_mod_params.disable, int, 0444);
- MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
- module_param_named(swcrypto, iwl4965_mod_params.sw_crypto, int, 0444);
- MODULE_PARM_DESC(swcrypto, "using crypto in software (default 0 [hardware])");
--module_param_named(debug, iwl4965_mod_params.debug, int, 0444);
-+module_param_named(debug, iwl4965_mod_params.debug, uint, 0444);
- MODULE_PARM_DESC(debug, "debug output mask");
- module_param_named(
- 	disable_hw_scan, iwl4965_mod_params.disable_hw_scan, int, 0444);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 2344de9..7f3a921 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -1623,7 +1623,7 @@ MODULE_PARM_DESC(disable50,
- module_param_named(swcrypto50, iwl50_mod_params.sw_crypto, bool, 0444);
- MODULE_PARM_DESC(swcrypto50,
- 		  "using software crypto engine (default 0 [hardware])\n");
--module_param_named(debug50, iwl50_mod_params.debug, int, 0444);
-+module_param_named(debug50, iwl50_mod_params.debug, uint, 0444);
- MODULE_PARM_DESC(debug50, "50XX debug output mask");
- module_param_named(queues_num50, iwl50_mod_params.num_of_queues, int, 0444);
- MODULE_PARM_DESC(queues_num50, "number of hw queues in 50xx series");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-core.h b/drivers/net/wireless/iwlwifi/iwl-3945-core.h
+deleted file mode 100644
+index 6f46355..0000000
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-core.h
++++ /dev/null
+@@ -1,104 +0,0 @@
+-/******************************************************************************
+- *
+- * This file is provided under a dual BSD/GPLv2 license.  When using or
+- * redistributing this file, you may do so under either license.
+- *
+- * GPL LICENSE SUMMARY
+- *
+- * Copyright(c) 2008 Intel Corporation. All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of version 2 of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
+- * USA
+- *
+- * The full GNU General Public License is included in this distribution
+- * in the file called LICENSE.GPL.
+- *
+- * Contact Information:
+- *  Intel Linux Wireless <ilw@linux.intel.com>
+- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+- *
+- * BSD LICENSE
+- *
+- * Copyright(c) 2005 - 2008 Intel Corporation. All rights reserved.
+- * All rights reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that the following conditions
+- * are met:
+- *
+- *  * Redistributions of source code must retain the above copyright
+- *    notice, this list of conditions and the following disclaimer.
+- *  * Redistributions in binary form must reproduce the above copyright
+- *    notice, this list of conditions and the following disclaimer in
+- *    the documentation and/or other materials provided with the
+- *    distribution.
+- *  * Neither the name Intel Corporation nor the names of its
+- *    contributors may be used to endorse or promote products derived
+- *    from this software without specific prior written permission.
+- *
+- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+- *****************************************************************************/
+-
+-#ifndef __iwl_3945_dev_h__
+-#define __iwl_3945_dev_h__
+-
+-#define IWL_PCI_DEVICE(dev, subdev, cfg) \
+-	.vendor = PCI_VENDOR_ID_INTEL,  .device = (dev), \
+-	.subvendor = PCI_ANY_ID, .subdevice = (subdev), \
+-	.driver_data = (kernel_ulong_t)&(cfg)
+-
+-#define IWL_SKU_G       0x1
+-#define IWL_SKU_A       0x2
+-
+-/**
+- * struct iwl_3945_cfg
+- * @fw_name_pre: Firmware filename prefix. The api version and extension
+- * 	(.ucode) will be added to filename before loading from disk. The
+- * 	filename is constructed as fw_name_pre<api>.ucode.
+- * @ucode_api_max: Highest version of uCode API supported by driver.
+- * @ucode_api_min: Lowest version of uCode API supported by driver.
+- *
+- * We enable the driver to be backward compatible wrt API version. The
+- * driver specifies which APIs it supports (with @ucode_api_max being the
+- * highest and @ucode_api_min the lowest). Firmware will only be loaded if
+- * it has a supported API version. The firmware's API version will be
+- * stored in @iwl_priv, enabling the driver to make runtime changes based
+- * on firmware version used.
+- *
+- * For example,
+- * if (IWL_UCODE_API(priv->ucode_ver) >= 2) {
+- * 	Driver interacts with Firmware API version >= 2.
+- * } else {
+- * 	Driver interacts with Firmware API version 1.
+- * }
+- */
+-struct iwl_3945_cfg {
+-	const char *name;
+-	const char *fw_name_pre;
+-	const unsigned int ucode_api_max;
+-	const unsigned int ucode_api_min;
+-	unsigned int sku;
+-};
+-
+-#endif /* __iwl_dev_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index d4f49fd..bb75eaf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -38,11 +38,11 @@
+ #include <asm/unaligned.h>
+ #include <net/mac80211.h>
+ 
+-#include "iwl-3945-core.h"
+ #include "iwl-3945-fh.h"
+ #include "iwl-commands.h"
+ #include "iwl-3945.h"
+ #include "iwl-helpers.h"
++#include "iwl-core.h"
+ #include "iwl-agn-rs.h"
+ 
+ #define IWL_DECLARE_RATE_INFO(r, ip, in, rp, rn, pp, np)    \
 diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 08b842f..7c3a20a 100644
+index 7c3a20a..a3cc43d 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-core.h
 +++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -154,7 +154,7 @@ struct iwl_ops {
- struct iwl_mod_params {
- 	int disable;		/* def: 0 = enable radio */
- 	int sw_crypto;		/* def: 0 = using hardware encryption */
--	int debug;		/* def: 0 = minimal debug log messages */
-+	u32 debug;		/* def: 0 = minimal debug log messages */
- 	int disable_hw_scan;	/* def: 0 = use h/w scan */
- 	int num_of_queues;	/* def: HW dependent */
- 	int num_of_ampdu_queues;/* def: HW dependent */
+@@ -205,6 +205,36 @@ struct iwl_cfg {
+ 	const struct iwl_mod_params *mod_params;
+ };
+ 
++/**
++ * struct iwl_3945_cfg
++ * @fw_name_pre: Firmware filename prefix. The api version and extension
++ * 	(.ucode) will be added to filename before loading from disk. The
++ * 	filename is constructed as fw_name_pre<api>.ucode.
++ * @ucode_api_max: Highest version of uCode API supported by driver.
++ * @ucode_api_min: Lowest version of uCode API supported by driver.
++ *
++ * We enable the driver to be backward compatible wrt API version. The
++ * driver specifies which APIs it supports (with @ucode_api_max being the
++ * highest and @ucode_api_min the lowest). Firmware will only be loaded if
++ * it has a supported API version. The firmware's API version will be
++ * stored in @iwl_priv, enabling the driver to make runtime changes based
++ * on firmware version used.
++ *
++ * For example,
++ * if (IWL_UCODE_API(priv->ucode_ver) >= 2) {
++ * 	Driver interacts with Firmware API version >= 2.
++ * } else {
++ * 	Driver interacts with Firmware API version 1.
++ * }
++ */
++struct iwl_3945_cfg {
++	const char *name;
++	const char *fw_name_pre;
++	const unsigned int ucode_api_max;
++	const unsigned int ucode_api_min;
++	unsigned int sku;
++};
++
+ /***************************
+  *   L i b                 *
+  ***************************/
 diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 161d812..dad8e6d 100644
+index f62fd6a..2f1d434 100644
 --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
 +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -65,7 +65,7 @@ static int iwl3945_tx_queue_update_write_ptr(struct iwl3945_priv *priv,
+@@ -48,11 +48,11 @@
  
- /* module parameters */
- static int iwl3945_param_disable_hw_scan; /* def: 0 = use 3945's h/w scan */
--static int iwl3945_param_debug;    /* def: 0 = minimal debug log messages */
-+static u32 iwl3945_param_debug;    /* def: 0 = minimal debug log messages */
- static int iwl3945_param_disable;  /* def: 0 = enable radio */
- static int iwl3945_param_antenna;  /* def: 0 = both antennas (use diversity) */
- int iwl3945_param_hwcrypto;        /* def: 0 = use software encryption */
-@@ -8361,7 +8361,7 @@ MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
- module_param_named(hwcrypto, iwl3945_param_hwcrypto, int, 0444);
- MODULE_PARM_DESC(hwcrypto,
- 		 "using hardware crypto engine (default 0 [software])\n");
--module_param_named(debug, iwl3945_param_debug, int, 0444);
-+module_param_named(debug, iwl3945_param_debug, uint, 0444);
- MODULE_PARM_DESC(debug, "debug output mask");
- module_param_named(disable_hw_scan, iwl3945_param_disable_hw_scan, int, 0444);
- MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
+ #define DRV_NAME	"iwl3945"
+ 
+-#include "iwl-3945-core.h"
+ #include "iwl-commands.h"
+ #include "iwl-3945.h"
+ #include "iwl-3945-fh.h"
+ #include "iwl-helpers.h"
++#include "iwl-core.h"
+ #include "iwl-dev.h"
+ 
+ static int iwl3945_tx_queue_update_write_ptr(struct iwl3945_priv *priv,
+@@ -492,56 +492,6 @@ static inline int iwl3945_is_ready_rf(struct iwl3945_priv *priv)
+ /*************** HOST COMMAND QUEUE FUNCTIONS   *****/
+ 
+ #define IWL_CMD(x) case x: return #x
+-
+-static const char *get_cmd_string(u8 cmd)
+-{
+-	switch (cmd) {
+-		IWL_CMD(REPLY_ALIVE);
+-		IWL_CMD(REPLY_ERROR);
+-		IWL_CMD(REPLY_RXON);
+-		IWL_CMD(REPLY_RXON_ASSOC);
+-		IWL_CMD(REPLY_QOS_PARAM);
+-		IWL_CMD(REPLY_RXON_TIMING);
+-		IWL_CMD(REPLY_ADD_STA);
+-		IWL_CMD(REPLY_REMOVE_STA);
+-		IWL_CMD(REPLY_REMOVE_ALL_STA);
+-		IWL_CMD(REPLY_3945_RX);
+-		IWL_CMD(REPLY_TX);
+-		IWL_CMD(REPLY_RATE_SCALE);
+-		IWL_CMD(REPLY_LEDS_CMD);
+-		IWL_CMD(REPLY_TX_LINK_QUALITY_CMD);
+-		IWL_CMD(RADAR_NOTIFICATION);
+-		IWL_CMD(REPLY_QUIET_CMD);
+-		IWL_CMD(REPLY_CHANNEL_SWITCH);
+-		IWL_CMD(CHANNEL_SWITCH_NOTIFICATION);
+-		IWL_CMD(REPLY_SPECTRUM_MEASUREMENT_CMD);
+-		IWL_CMD(SPECTRUM_MEASURE_NOTIFICATION);
+-		IWL_CMD(POWER_TABLE_CMD);
+-		IWL_CMD(PM_SLEEP_NOTIFICATION);
+-		IWL_CMD(PM_DEBUG_STATISTIC_NOTIFIC);
+-		IWL_CMD(REPLY_SCAN_CMD);
+-		IWL_CMD(REPLY_SCAN_ABORT_CMD);
+-		IWL_CMD(SCAN_START_NOTIFICATION);
+-		IWL_CMD(SCAN_RESULTS_NOTIFICATION);
+-		IWL_CMD(SCAN_COMPLETE_NOTIFICATION);
+-		IWL_CMD(BEACON_NOTIFICATION);
+-		IWL_CMD(REPLY_TX_BEACON);
+-		IWL_CMD(WHO_IS_AWAKE_NOTIFICATION);
+-		IWL_CMD(QUIET_NOTIFICATION);
+-		IWL_CMD(REPLY_TX_PWR_TABLE_CMD);
+-		IWL_CMD(MEASURE_ABORT_NOTIFICATION);
+-		IWL_CMD(REPLY_BT_CONFIG);
+-		IWL_CMD(REPLY_STATISTICS_CMD);
+-		IWL_CMD(STATISTICS_NOTIFICATION);
+-		IWL_CMD(REPLY_CARD_STATE_CMD);
+-		IWL_CMD(CARD_STATE_NOTIFICATION);
+-		IWL_CMD(MISSED_BEACONS_NOTIFICATION);
+-	default:
+-		return "UNKNOWN";
+-
+-	}
+-}
+-
+ #define HOST_COMPLETE_TIMEOUT (HZ / 2)
+ 
+ /**
 -- 
 1.5.3.6
 
