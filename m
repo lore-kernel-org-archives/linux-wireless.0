@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:36422 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755746AbYLJQdY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 11:33:24 -0500
-Received: by an-out-0708.google.com with SMTP id d40so263792and.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 08:33:22 -0800 (PST)
-Message-ID: <69e28c910812100833l2b2c94f1na701db1bbd0a0efd@mail.gmail.com> (sfid-20081210_173344_011102_DAE7BC22)
-Date: Wed, 10 Dec 2008 17:33:21 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: siamer <siamer@interia.pl>
-Subject: Re: b43 phy0 error and disconnecting
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081210162041.0D6EF7DC860@f20.poczta.interia.pl>
+Received: from mail.atheros.com ([12.36.123.2]:58442 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753116AbYLSOfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2008 09:35:32 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 06:35:32 -0800
+Message-ID: <494BB0BE.3030705@atheros.com> (sfid-20081219_153543_971511_4EBFDB75)
+Date: Fri, 19 Dec 2008 20:03:34 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081210162041.0D6EF7DC860@f20.poczta.interia.pl>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>
+Subject: Re: [PATCH] [RFC] mac80211: Disable HT negotiation with TKIP/WEP
+ as pairwise cipher
+References: <1229692235-21734-1-git-send-email-vasanth@atheros.com> <20081219142822.GA4041@tuxdriver.com>
+In-Reply-To: <20081219142822.GA4041@tuxdriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 10, 2008 at 5:20 PM, siamer <siamer@interia.pl> wrote:
->
->  > Hello.
->  > My situation is looking like that:
->  > when i'm just using internet than intetnet is not disconnecting me=
- and is
->  > not b43 phy0 error but it's starting when i'm starting download so=
-mething
->  > than dmesg show: b43 phy0 error ( i think speed of downloads is to=
-o high so
->  > it's disconnecting me ). And when i'm using the newest firmware
->  > ftp://ftp.linksys.com/opensourcecode/wrt610n/1.00.00.018/wrt610n_v=
-1.00.00.018_us.tgz
->  > (cd wrt610n_v1.00.00.018_us/release/src/wl/linux/ b43-fwcutter
->  > --unsupported -w /lib/firmware/ wl.o) than internet is not disconn=
-ecting me
->  > but i'm still getting b43 phy0 error... Maybe You can check this f=
-irmware
->  > and this from linuxwireless and see what is the difference ?
->  >
->  >
->  > PS. This is my topic on forum about it (maybe it will help You to =
-fix it)
->  > http://hack.mypclinuxos.com/index.php?topic=3D721.0
->  >
->  > siamer
->  >
->  >
->
->
-> Tysiace zabawnych wierszyk=F3w.Dodaj swoj
-> Sprawdz >>> http://link.interia.pl/f1fcd
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+John W. Linville wrote:
+> On Fri, Dec 19, 2008 at 06:40:35PM +0530, Vasanthakumar Thiagarajan wrote:
+>> IEEE802.11n does not allow TKIP/WEP as pairwise cipher in HT mode.
+>> Connect in non-ht mode if either of these ciphers is cofigured as
+>> pairwise.
+>>
+>> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> 
+> Are there perhaps any broken APs out there that support such a
+> configuration?  I would hate to prevent users from connecting simply
+> out of blind obedience to the standard.
 
-English, please!
+This particular configuration is not allowed in the latest 11n draft (7.0).
+Yes, we have quite a few AP's around which support this configuration. 
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Vasanth
