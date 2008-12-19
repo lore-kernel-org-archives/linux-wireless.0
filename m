@@ -1,78 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39052 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbYLRQAO (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:61556 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758AbYLSGSC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 11:00:14 -0500
-Date: Thu, 18 Dec 2008 10:50:42 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Julia Lawall <julia@diku.dk>
-Cc: lrodriguez@atheros.com, jmalinen@atheros.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 7/11] drivers/net/wireless/ath9k: Move a dereference
-	below a NULL test
-Message-ID: <20081218155042.GF4121@tuxdriver.com> (sfid-20081218_170020_266461_126F017D)
-References: <Pine.LNX.4.64.0812161613510.20444@pc-004.diku.dk>
+	Fri, 19 Dec 2008 01:18:02 -0500
+Received: by bwz14 with SMTP id 14so3075509bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 22:17:59 -0800 (PST)
+Message-ID: <8e92b4100812182217q6f8e6014s3f28ab79c5bc2ba3@mail.gmail.com> (sfid-20081219_071826_616352_BF25C29B)
+Date: Fri, 19 Dec 2008 11:47:59 +0530
+From: "Vivek Natarajan" <vivek.natraj@gmail.com>
+To: "Kalle Valo" <kalle.valo@nokia.com>
+Subject: Re: [PATCH v6 3/3] mac80211: implement dynamic power save
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081218213527.7248.65697.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.64.0812161613510.20444@pc-004.diku.dk>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081218213306.7248.64398.stgit@tikku>
+	 <20081218213527.7248.65697.stgit@tikku>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 16, 2008 at 04:14:28PM +0100, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> In each case, if the NULL test is necessary, then the dereference should be
-> moved below the NULL test.
-> 
-> The semantic patch that makes this change is as follows:
-> (http://www.emn.fr/x-info/coccinelle/)
-> 
-> // <smpl>
-> @@
-> type T;
-> expression E;
-> identifier i,fld;
-> statement S;
-> @@
-> 
-> - T i = E->fld;
-> + T i;
->   ... when != E
->       when != i
->   if (E == NULL) S
-> + i = E->fld;
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-> 
-> ---
->  drivers/net/wireless/ath9k/hw.c     |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-> index 98bc25c..7d1dac6 100644
-> --- a/drivers/net/wireless/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath9k/hw.c
-> @@ -5581,11 +5581,12 @@ static inline bool ath9k_hw_run_init_cals(struct ath_hal *ah,
->  	struct ath9k_channel ichan;
->  	bool isCalDone;
->  	struct hal_cal_list *currCal = ahp->ah_cal_list_curr;
-> -	const struct hal_percal_data *calData = currCal->calData;
-> +	const struct hal_percal_data *calData;
->  	int i;
->  
->  	if (currCal == NULL)
->  		return false;
-> +	calData = currCal->calData;
->  
->  	ichan.CalValid = 0;
+On Fri, Dec 19, 2008 at 3:05 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> @@ -872,6 +878,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+>        local->oper_channel_type = NL80211_CHAN_NO_HT;
+>        config_changed |= IEEE80211_CONF_CHANGE_HT;
+>
+> +       del_timer_sync(&local->dynamic_ps_timer);
+> +       cancel_work_sync(&local->dynamic_ps_enable_work);
 
-This patch doesn't seem to apply.  I don't see this code anywhere.
-Perhaps this is against some older version?
+In addition, shouldn't we have this 'cancel_work'  in ieee80211_stop
+or where ever in the stop/detach path since the ps timer may be
+triggered even after the interface is brought down.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+I need your thoughts on having null frame being sent from mac80211(
+the RFC I submitted earlier).
+Do you feel a state machine is necessary to go to power save? ( like
+awake, sleep, pending_sleep if the AP hasn't acked the null frame with
+a timer or a work queue to send null frame periodically in the pending
+state). Or altogether you want that to be part of the driver and not
+in mac80211?
+
+Thanks,
+Vivek.
