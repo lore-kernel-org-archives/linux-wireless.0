@@ -1,158 +1,367 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:38972 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752554AbYLRVRW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 16:17:22 -0500
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mBILFWdn027379
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 15:17:21 -0600
-Received: from [127.0.1.1] (essapo-nirac25252.europe.nokia.com [10.162.252.52])
-	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mBILGwxc008440
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 23:16:59 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH v5 1/3] mac80211: enable IEEE80211_CONF_PS only when associated
-To: linux-wireless@vger.kernel.org
-Date: Thu, 18 Dec 2008 23:16:58 +0200
-Message-ID: <20081218211658.6842.99133.stgit@tikku> (sfid-20081218_221728_472418_E1A72F13)
-In-Reply-To: <20081218211532.6842.88104.stgit@tikku>
-References: <20081218211532.6842.88104.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga11.intel.com ([192.55.52.93]:33262 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752547AbYLSCpL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 21:45:11 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/43] iwl3945: Have consistant and not redefined HW constants
+Date: Fri, 19 Dec 2008 10:37:11 +0800
+Message-Id: <1229654263-21454-12-git-send-email-yi.zhu@intel.com> (sfid-20081219_034531_680539_A380AC64)
+In-Reply-To: <1229654263-21454-11-git-send-email-yi.zhu@intel.com>
+References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-4-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-5-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-7-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-8-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-9-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-10-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-11-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also disable power save when disassociated. It makes no sense to have
-power save enabled while disassociated.
+From: Samuel Ortiz <sameo@linux.intel.com>
 
-iwlwifi seems to have this check in the driver, but it's better to do this
-in mac80211 instead.
+SRAM addresses are different for 3945, 4065, and 5000, let's give them
+different names.
+Also, the RSSI_OFFSET is different for 3945 and 4965, thus they should be
+named differently.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |   26 ++++++++++++++------------
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |   20 +++++++++++---------
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-5000-hw.h  |   10 ++++++++--
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    9 +++++----
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    5 +++--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   19 ++++++++++---------
+ 8 files changed, 55 insertions(+), 42 deletions(-)
 
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   15 +++++++++++++--
- net/mac80211/wext.c        |   32 ++++++++++++++++++++++++++------
- 3 files changed, 40 insertions(+), 8 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a7dabae..18b9160 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -688,6 +688,7 @@ struct ieee80211_local {
- 				*/
- 	int wifi_wme_noack_test;
- 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
-+	bool powersave;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+index b6145b0..1182e68 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+@@ -82,7 +82,7 @@
+ #define LONG_SLOT_TIME 20
  
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct local_debugfsdentries {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9a06905..96493e2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -746,6 +746,11 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	bss_info_changed |= BSS_CHANGED_BASIC_RATES;
- 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
+ /* RSSI to dBm */
+-#define IWL_RSSI_OFFSET	95
++#define IWL39_RSSI_OFFSET	95
  
-+	if (local->powersave) {
-+		local->hw.conf.flags |= IEEE80211_CONF_PS;
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	}
-+
- 	netif_tx_start_all_queues(sdata->dev);
- 	netif_carrier_on(sdata->dev);
+ /*
+  * EEPROM related constants, enums, and structures.
+@@ -276,27 +276,29 @@ struct iwl3945_eeprom {
  
-@@ -818,7 +823,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ /* Sizes and addresses for instruction and data memory (SRAM) in
+  * 3945's embedded processor.  Driver access is via HBUS_TARG_MEM_* regs. */
+-#define RTC_INST_LOWER_BOUND			(0x000000)
+-#define ALM_RTC_INST_UPPER_BOUND		(0x014000)
++#define IWL39_RTC_INST_LOWER_BOUND		(0x000000)
++#define IWL39_RTC_INST_UPPER_BOUND		(0x014000)
+ 
+-#define RTC_DATA_LOWER_BOUND			(0x800000)
+-#define ALM_RTC_DATA_UPPER_BOUND		(0x808000)
++#define IWL39_RTC_DATA_LOWER_BOUND		(0x800000)
++#define IWL39_RTC_DATA_UPPER_BOUND		(0x808000)
+ 
+-#define ALM_RTC_INST_SIZE (ALM_RTC_INST_UPPER_BOUND - RTC_INST_LOWER_BOUND)
+-#define ALM_RTC_DATA_SIZE (ALM_RTC_DATA_UPPER_BOUND - RTC_DATA_LOWER_BOUND)
++#define IWL39_RTC_INST_SIZE (IWL39_RTC_INST_UPPER_BOUND - \
++				IWL39_RTC_INST_LOWER_BOUND)
++#define IWL39_RTC_DATA_SIZE (IWL39_RTC_DATA_UPPER_BOUND - \
++				IWL39_RTC_DATA_LOWER_BOUND)
+ 
+-#define IWL_MAX_INST_SIZE ALM_RTC_INST_SIZE
+-#define IWL_MAX_DATA_SIZE ALM_RTC_DATA_SIZE
++#define IWL39_MAX_INST_SIZE IWL39_RTC_INST_SIZE
++#define IWL39_MAX_DATA_SIZE IWL39_RTC_DATA_SIZE
+ 
+ /* Size of uCode instruction memory in bootstrap state machine */
+-#define IWL_MAX_BSM_SIZE ALM_RTC_INST_SIZE
++#define IWL39_MAX_BSM_SIZE IWL39_RTC_INST_SIZE
+ 
+ #define IWL39_MAX_NUM_QUEUES	8
+ 
+ static inline int iwl3945_hw_valid_rtc_data_addr(u32 addr)
  {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
--	u32 changed = 0;
-+	u32 changed = 0, config_changed = 0;
+-	return (addr >= RTC_DATA_LOWER_BOUND) &&
+-	       (addr < ALM_RTC_DATA_UPPER_BOUND);
++	return (addr >= IWL39_RTC_DATA_LOWER_BOUND) &&
++	       (addr < IWL39_RTC_DATA_UPPER_BOUND);
+ }
  
- 	rcu_read_lock();
+ /* Base physical address of iwl3945_shared is provided to FH_TSSR_CBB_BASE
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 10d6537..4455475 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -661,7 +661,7 @@ static void iwl3945_rx_reply_rx(struct iwl3945_priv *priv,
  
-@@ -865,8 +870,14 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
  
- 	local->hw.conf.ht.enabled = false;
- 	local->oper_channel_type = NL80211_CHAN_NO_HT;
--	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_HT);
-+	config_changed |= IEEE80211_CONF_CHANGE_HT;
-+
-+	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-+		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-+		config_changed |= IEEE80211_CONF_PS;
-+	}
+ 	/* Convert 3945's rssi indicator to dBm */
+-	rx_status.signal = rx_stats->rssi - IWL_RSSI_OFFSET;
++	rx_status.signal = rx_stats->rssi - IWL39_RSSI_OFFSET;
  
-+	ieee80211_hw_config(local, config_changed);
- 	ieee80211_bss_info_change_notify(sdata, changed);
+ 	/* Set default noise value to -127 */
+ 	if (priv->last_rx_noise == 0)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+index 6649f7b..9330b5a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
+@@ -89,7 +89,7 @@
+ #define LONG_SLOT_TIME 20
  
- 	rcu_read_lock();
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 1542804..f6640d0 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -830,25 +830,46 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
- 				    struct iw_param *wrq,
- 				    char *extra)
+ /* RSSI to dBm */
+-#define IWL_RSSI_OFFSET	44
++#define IWL49_RSSI_OFFSET	44
+ 
+ 
+ 
+@@ -129,24 +129,26 @@
+ 
+ /* Sizes and addresses for instruction and data memory (SRAM) in
+  * 4965's embedded processor.  Driver access is via HBUS_TARG_MEM_* regs. */
+-#define RTC_INST_LOWER_BOUND			(0x000000)
++#define IWL49_RTC_INST_LOWER_BOUND		(0x000000)
+ #define IWL49_RTC_INST_UPPER_BOUND		(0x018000)
+ 
+-#define RTC_DATA_LOWER_BOUND			(0x800000)
++#define IWL49_RTC_DATA_LOWER_BOUND		(0x800000)
+ #define IWL49_RTC_DATA_UPPER_BOUND		(0x80A000)
+ 
+-#define IWL49_RTC_INST_SIZE  (IWL49_RTC_INST_UPPER_BOUND - RTC_INST_LOWER_BOUND)
+-#define IWL49_RTC_DATA_SIZE  (IWL49_RTC_DATA_UPPER_BOUND - RTC_DATA_LOWER_BOUND)
++#define IWL49_RTC_INST_SIZE  (IWL49_RTC_INST_UPPER_BOUND - \
++				IWL49_RTC_INST_LOWER_BOUND)
++#define IWL49_RTC_DATA_SIZE  (IWL49_RTC_DATA_UPPER_BOUND - \
++				IWL49_RTC_DATA_LOWER_BOUND)
+ 
+-#define IWL_MAX_INST_SIZE IWL49_RTC_INST_SIZE
+-#define IWL_MAX_DATA_SIZE IWL49_RTC_DATA_SIZE
++#define IWL49_MAX_INST_SIZE IWL49_RTC_INST_SIZE
++#define IWL49_MAX_DATA_SIZE IWL49_RTC_DATA_SIZE
+ 
+ /* Size of uCode instruction memory in bootstrap state machine */
+-#define IWL_MAX_BSM_SIZE BSM_SRAM_SIZE
++#define IWL49_MAX_BSM_SIZE BSM_SRAM_SIZE
+ 
+ static inline int iwl4965_hw_valid_rtc_data_addr(u32 addr)
  {
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_conf *conf = &local->hw.conf;
-+	int ret = 0;
-+	bool ps;
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return -EINVAL;
+-	return (addr >= RTC_DATA_LOWER_BOUND) &&
++	return (addr >= IWL49_RTC_DATA_LOWER_BOUND) &&
+ 	       (addr < IWL49_RTC_DATA_UPPER_BOUND);
+ }
  
- 	if (wrq->disabled) {
--		conf->flags &= ~IEEE80211_CONF_PS;
--		return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+		ps = false;
-+		goto set;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index bb96170..4822362 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -149,7 +149,7 @@ static int iwl4965_load_bsm(struct iwl_priv *priv)
+ 	priv->ucode_type = UCODE_RT;
  
- 	switch (wrq->flags & IW_POWER_MODE) {
- 	case IW_POWER_ON:       /* If not specified */
- 	case IW_POWER_MODE:     /* If set all mask */
- 	case IW_POWER_ALL_R:    /* If explicitely state all */
--		conf->flags |= IEEE80211_CONF_PS;
-+		ps = true;
- 		break;
- 	default:                /* Otherwise we don't support it */
+ 	/* make sure bootstrap program is no larger than BSM's SRAM size */
+-	if (len > IWL_MAX_BSM_SIZE)
++	if (len > IWL49_MAX_BSM_SIZE)
  		return -EINVAL;
+ 
+ 	/* Tell bootstrap uCode where to find the "Initialize" uCode
+@@ -186,7 +186,7 @@ static int iwl4965_load_bsm(struct iwl_priv *priv)
+ 
+ 	/* Tell BSM to copy from BSM SRAM into instruction SRAM, when asked */
+ 	iwl_write_prph(priv, BSM_WR_MEM_SRC_REG, 0x0);
+-	iwl_write_prph(priv, BSM_WR_MEM_DST_REG, RTC_INST_LOWER_BOUND);
++	iwl_write_prph(priv, BSM_WR_MEM_DST_REG, IWL49_RTC_INST_LOWER_BOUND);
+ 	iwl_write_prph(priv, BSM_WR_DWCOUNT_REG, len / sizeof(u32));
+ 
+ 	/* Load bootstrap code into instruction SRAM now,
+@@ -2246,7 +2246,7 @@ static int iwl4965_calc_rssi(struct iwl_priv *priv,
+ 
+ 	/* dBm = max_rssi dB - agc dB - constant.
+ 	 * Higher AGC (higher radio gain) means lower signal. */
+-	return max_rssi - agc - IWL_RSSI_OFFSET;
++	return max_rssi - agc - IWL49_RSSI_OFFSET;
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
+index 82c3859..d83e605 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
+@@ -68,10 +68,16 @@
+ #ifndef __iwl_5000_hw_h__
+ #define __iwl_5000_hw_h__
+ 
++#define IWL50_RTC_INST_LOWER_BOUND		(0x000000)
+ #define IWL50_RTC_INST_UPPER_BOUND		(0x020000)
++
++#define IWL50_RTC_DATA_LOWER_BOUND		(0x800000)
+ #define IWL50_RTC_DATA_UPPER_BOUND		(0x80C000)
+-#define IWL50_RTC_INST_SIZE (IWL50_RTC_INST_UPPER_BOUND - RTC_INST_LOWER_BOUND)
+-#define IWL50_RTC_DATA_SIZE (IWL50_RTC_DATA_UPPER_BOUND - RTC_DATA_LOWER_BOUND)
++
++#define IWL50_RTC_INST_SIZE (IWL50_RTC_INST_UPPER_BOUND - \
++				IWL50_RTC_INST_LOWER_BOUND)
++#define IWL50_RTC_DATA_SIZE (IWL50_RTC_DATA_UPPER_BOUND - \
++				IWL50_RTC_DATA_LOWER_BOUND)
+ 
+ /* EEPROM */
+ #define IWL_5000_EEPROM_IMG_SIZE			2048
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 66d053d..338444a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -580,7 +580,8 @@ static int iwl5000_load_given_ucode(struct iwl_priv *priv,
+ {
+ 	int ret = 0;
+ 
+-	ret = iwl5000_load_section(priv, inst_image, RTC_INST_LOWER_BOUND);
++	ret = iwl5000_load_section(priv, inst_image,
++				   IWL50_RTC_INST_LOWER_BOUND);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -600,7 +601,7 @@ static int iwl5000_load_given_ucode(struct iwl_priv *priv,
+ 	priv->ucode_write_complete = 0;
+ 
+ 	ret = iwl5000_load_section(
+-		priv, data_image, RTC_DATA_LOWER_BOUND);
++		priv, data_image, IWL50_RTC_DATA_LOWER_BOUND);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1356,7 +1357,7 @@ static void iwl5000_rx_handler_setup(struct iwl_priv *priv)
+ 
+ static int iwl5000_hw_valid_rtc_data_addr(u32 addr)
+ {
+-	return (addr >= RTC_DATA_LOWER_BOUND) &&
++	return (addr >= IWL50_RTC_DATA_LOWER_BOUND) &&
+ 		(addr < IWL50_RTC_DATA_UPPER_BOUND);
+ }
+ 
+@@ -1460,7 +1461,7 @@ static int iwl5000_calc_rssi(struct iwl_priv *priv,
+ 
+ 	/* dBm = max_rssi dB - agc dB - constant.
+ 	 * Higher AGC (higher radio gain) means lower signal. */
+-	return max_rssi - agc - IWL_RSSI_OFFSET;
++	return max_rssi - agc - IWL49_RSSI_OFFSET;
+ }
+ 
+ static struct iwl_hcmd_ops iwl5000_hcmd = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 32de3d3..6425943 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1020,7 +1020,7 @@ static int iwlcore_verify_inst_sparse(struct iwl_priv *priv, __le32 *image, u32
+ 		/* NOTE: Use the debugless read so we don't flood kernel log
+ 		 * if IWL_DL_IO is set */
+ 		iwl_write_direct32(priv, HBUS_TARG_MEM_RADDR,
+-			i + RTC_INST_LOWER_BOUND);
++			i + IWL49_RTC_INST_LOWER_BOUND);
+ 		val = _iwl_read_direct32(priv, HBUS_TARG_MEM_RDAT);
+ 		if (val != le32_to_cpu(*image)) {
+ 			ret = -EIO;
+@@ -1053,7 +1053,8 @@ static int iwl_verify_inst_full(struct iwl_priv *priv, __le32 *image,
+ 	if (ret)
+ 		return ret;
+ 
+-	iwl_write_direct32(priv, HBUS_TARG_MEM_RADDR, RTC_INST_LOWER_BOUND);
++	iwl_write_direct32(priv, HBUS_TARG_MEM_RADDR,
++			   IWL49_RTC_INST_LOWER_BOUND);
+ 
+ 	errcnt = 0;
+ 	for (; len > 0; len -= sizeof(u32), image++) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 49ac18f..8c2d30d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5028,7 +5028,8 @@ static int iwl3945_verify_inst_full(struct iwl3945_priv *priv, __le32 *image, u3
+ 	if (rc)
+ 		return rc;
+ 
+-	iwl3945_write_direct32(priv, HBUS_TARG_MEM_RADDR, RTC_INST_LOWER_BOUND);
++	iwl3945_write_direct32(priv, HBUS_TARG_MEM_RADDR,
++			       IWL39_RTC_INST_LOWER_BOUND);
+ 
+ 	errcnt = 0;
+ 	for (; len > 0; len -= sizeof(u32), image++) {
+@@ -5079,7 +5080,7 @@ static int iwl3945_verify_inst_sparse(struct iwl3945_priv *priv, __le32 *image,
+ 		/* NOTE: Use the debugless read so we don't flood kernel log
+ 		 * if IWL_DL_IO is set */
+ 		iwl3945_write_direct32(priv, HBUS_TARG_MEM_RADDR,
+-			i + RTC_INST_LOWER_BOUND);
++			i + IWL39_RTC_INST_LOWER_BOUND);
+ 		val = _iwl3945_read_direct32(priv, HBUS_TARG_MEM_RDAT);
+ 		if (val != le32_to_cpu(*image)) {
+ #if 0 /* Enable this if you want to see details */
+@@ -5229,7 +5230,7 @@ static int iwl3945_load_bsm(struct iwl3945_priv *priv)
+ 	IWL_DEBUG_INFO("Begin load bsm\n");
+ 
+ 	/* make sure bootstrap program is no larger than BSM's SRAM size */
+-	if (len > IWL_MAX_BSM_SIZE)
++	if (len > IWL39_MAX_BSM_SIZE)
+ 		return -EINVAL;
+ 
+ 	/* Tell bootstrap uCode where to find the "Initialize" uCode
+@@ -5267,7 +5268,7 @@ static int iwl3945_load_bsm(struct iwl3945_priv *priv)
+ 	/* Tell BSM to copy from BSM SRAM into instruction SRAM, when asked */
+ 	iwl3945_write_prph(priv, BSM_WR_MEM_SRC_REG, 0x0);
+ 	iwl3945_write_prph(priv, BSM_WR_MEM_DST_REG,
+-				 RTC_INST_LOWER_BOUND);
++				 IWL39_RTC_INST_LOWER_BOUND);
+ 	iwl3945_write_prph(priv, BSM_WR_DWCOUNT_REG, len / sizeof(u32));
+ 
+ 	/* Load bootstrap code into instruction SRAM now,
+@@ -5411,32 +5412,32 @@ static int iwl3945_read_ucode(struct iwl3945_priv *priv)
  	}
  
--	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	if (ps == local->powersave)
-+		return ret;
-+
-+set:
-+	local->powersave = ps;
-+
-+	if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
-+		if (local->powersave)
-+			conf->flags |= IEEE80211_CONF_PS;
-+		else
-+			conf->flags &= ~IEEE80211_CONF_PS;
-+
-+		ret = ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	}
-+
-+	return ret;
- }
+ 	/* Verify that uCode images will fit in card's SRAM */
+-	if (inst_size > IWL_MAX_INST_SIZE) {
++	if (inst_size > IWL39_MAX_INST_SIZE) {
+ 		IWL_DEBUG_INFO("uCode instr len %d too large to fit in\n",
+ 			       inst_size);
+ 		ret = -EINVAL;
+ 		goto err_release;
+ 	}
  
- static int ieee80211_ioctl_giwpower(struct net_device *dev,
-@@ -857,9 +878,8 @@ static int ieee80211_ioctl_giwpower(struct net_device *dev,
- 				    char *extra)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
--	struct ieee80211_conf *conf = &local->hw.conf;
- 
--	wrqu->power.disabled = !(conf->flags & IEEE80211_CONF_PS);
-+	wrqu->power.disabled = !local->powersave;
- 
- 	return 0;
- }
+-	if (data_size > IWL_MAX_DATA_SIZE) {
++	if (data_size > IWL39_MAX_DATA_SIZE) {
+ 		IWL_DEBUG_INFO("uCode data len %d too large to fit in\n",
+ 			       data_size);
+ 		ret = -EINVAL;
+ 		goto err_release;
+ 	}
+-	if (init_size > IWL_MAX_INST_SIZE) {
++	if (init_size > IWL39_MAX_INST_SIZE) {
+ 		IWL_DEBUG_INFO("uCode init instr len %d too large to fit in\n",
+ 				init_size);
+ 		ret = -EINVAL;
+ 		goto err_release;
+ 	}
+-	if (init_data_size > IWL_MAX_DATA_SIZE) {
++	if (init_data_size > IWL39_MAX_DATA_SIZE) {
+ 		IWL_DEBUG_INFO("uCode init data len %d too large to fit in\n",
+ 				init_data_size);
+ 		ret = -EINVAL;
+ 		goto err_release;
+ 	}
+-	if (boot_size > IWL_MAX_BSM_SIZE) {
++	if (boot_size > IWL39_MAX_BSM_SIZE) {
+ 		IWL_DEBUG_INFO("uCode boot instr len %d too large to fit in\n",
+ 				boot_size);
+ 		ret = -EINVAL;
+-- 
+1.5.3.6
 
