@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:52888 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751345AbYLCRJP (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:63066 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbYLSHhc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 12:09:15 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so1546434eyi.37
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 09:09:12 -0800 (PST)
-Subject: Re: Unusually low speeds with ath5k and iwl3945
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"wally@theblackmoor.net" <wally@theblackmoor.net>
-In-Reply-To: <1228323319.12006.3.camel@rc-desk>
-References: <492719ED.5000006@gmail.com>  <1228323319.12006.3.camel@rc-desk>
-Content-Type: text/plain
-Date: Wed, 03 Dec 2008 19:09:07 +0200
-Message-Id: <1228324148.23040.0.camel@maxim-laptop> (sfid-20081203_180920_134385_1A12BBF8)
-Mime-Version: 1.0
+	Fri, 19 Dec 2008 02:37:32 -0500
+To: "Vivek Natarajan" <vivek.natraj@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v6 3/3] mac80211: implement dynamic power save
+References: <20081218213306.7248.64398.stgit@tikku>
+	<20081218213527.7248.65697.stgit@tikku>
+	<8e92b4100812182217q6f8e6014s3f28ab79c5bc2ba3@mail.gmail.com>
+	<8e92b4100812182221n747661b5pe4d18e8c564f871b@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Fri, 19 Dec 2008 09:37:20 +0200
+In-Reply-To: <8e92b4100812182221n747661b5pe4d18e8c564f871b@mail.gmail.com> (ext Vivek Natarajan's message of "Fri\, 19 Dec 2008 11\:51\:24 +0530")
+Message-ID: <87r644y5sf.fsf@nokia.com> (sfid-20081219_083737_513372_3637B381)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-03 at 08:55 -0800, reinette chatre wrote:
-> On Fri, 2008-11-21 at 12:28 -0800, Maxim Levitsky wrote:
-> 
-> > sorry for cross-posting, but this issue really spans both iwl3945 and ath5k.
-> > 
-> > I have two laptops (acer 5720, and aspire one) and I see some strange speed issues.
-> > 
-> > I initially blamed iwl3945, then thought it got fixed, but now I have ath5k, and speeds are low
-> > and I suspect that both drivers has bugs regarding to speed.
-> 
-> We just posted some fixes to iwl3945 rate scaling. Could you please test
-> with http://marc.info/?l=linux-wireless&m=122824880823630&w=2 ?
-> 
-> Thank you
-> 
-> Reinette
-> 
-> 
-I''l test this, but for all my tests rate on iwl3945 was already 54M,
-could this still help?
+Vivek Natarajan <vivek.natraj@gmail.com> writes:
 
-Best regards,
-	Maxim Levitsky
+> On Fri, Dec 19, 2008 at 11:47 AM, Vivek Natarajan
+> <vivek.natraj@gmail.com> wrote:
+>> On Fri, Dec 19, 2008 at 3:05 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+>>> @@ -872,6 +878,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+>>>        local->oper_channel_type = NL80211_CHAN_NO_HT;
+>>>        config_changed |= IEEE80211_CONF_CHANGE_HT;
+>>>
+>>> +       del_timer_sync(&local->dynamic_ps_timer);
+>>> +       cancel_work_sync(&local->dynamic_ps_enable_work);
+>>
+>> In addition, shouldn't we have this 'cancel_work'  in ieee80211_stop
+>> or where ever in the stop/detach path since the ps timer may be
+>> triggered even after the interface is brought down.
+>
+> Sorry, ieee80211_set_disassoc is called from ieee80211_stop too...
 
+Yeah, I got lucky. John fixed this a while ago.
+
+-- 
+Kalle Valo
