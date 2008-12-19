@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:42658 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773AbYLIMgc (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:40349 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbYLSREU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 07:36:32 -0500
+	Fri, 19 Dec 2008 12:04:20 -0500
 From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFT] mac80211: clean up set_key callback
-Date: Tue, 9 Dec 2008 13:36:31 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Kalle Valo <kalle.valo@nokia.com>
-References: <1228757035.22164.94.camel@johannes.berg>
-In-Reply-To: <1228757035.22164.94.camel@johannes.berg>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: p54usb problems
+Date: Fri, 19 Dec 2008 18:03:58 +0100
+Cc: wireless <linux-wireless@vger.kernel.org>
+References: <200812190306.52254.chunkeey@web.de> <494BC173.7060703@lwfinger.net>
+In-Reply-To: <494BC173.7060703@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812091336.31889.chunkeey@web.de> (sfid-20081209_133637_917541_F2B51632)
+  charset="iso-8859-1"
+Message-Id: <200812191803.59129.chunkeey@web.de> (sfid-20081219_180423_777368_5B88E2F8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 December 2008 18:23:55 Johannes Berg wrote:
-> The set_key callback now seems rather odd, passing a MAC address
-> instead of a station struct, and a local address instead of a
-> vif struct. Change that.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-Acked-by: Christian Lamparter <chunkeey@web.de>
+On Friday 19 December 2008 16:44:51 Larry Finger wrote:
+> The second version runs here. My impression was that the flood ping runs a bit
+> more smoothly with fewer times that 6-8 dots are printed before it catches up.
+6-8 dots?
+It's 0 to 1 dot here. And it only goes up if I kill the connection. 
 
-> --- everything.orig/drivers/net/wireless/p54/p54common.c	2008-12-08 17:47:11.000000000 +0100
-> +++ everything/drivers/net/wireless/p54/p54common.c	2008-12-08 17:53:09.000000000 +0100
-> @@ -1938,7 +1938,7 @@ static void p54_bss_info_changed(struct 
->  }
->  
->  static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
-> -		       const u8 *local_address, const u8 *address,
-> +		       struct ieee80211_vif *vif, struct ieee80211_sta *sta,
->  		       struct ieee80211_key_conf *key)
->  {
->  	struct p54_common *priv = dev->priv;
-> @@ -2002,8 +2002,8 @@ static int p54_set_key(struct ieee80211_
->  	rxkey->entry = key->keyidx;
->  	rxkey->key_id = key->keyidx;
->  	rxkey->key_type = algo;
-> -	if (address)
-> -		memcpy(rxkey->mac, address, ETH_ALEN);
-> +	if (sta)
-> +		memcpy(rxkey->mac, sta->addr, ETH_ALEN);
->  	else
->  		memset(rxkey->mac, ~0, ETH_ALEN);
->  	if (key->alg != ALG_TKIP) {
+> My stress test still fails. I'm running firmware rev 2.13.1.0. Is there a better
+> one to try?
+by "stress test fails", do you mean the sudden stall or the warnings about page allocation?
+because can you please try: ping X.y.z -s 1400 and see if it stalls instantly?
+
+Well, there's:
+2.13.24.0 ( http://daemonizer.de/prism54/prism54-fw/fw-usb/2.13.24.0.lm87.arm )
+But, I bet that it won't do anything at all...
+
+Regards,
+	Chr
