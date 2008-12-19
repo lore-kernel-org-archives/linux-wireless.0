@@ -1,119 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-133-90.gdrpmi.dsl-w.verizon.net ([71.115.133.90]:44693
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752632AbYLHXwy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 18:52:54 -0500
-Message-ID: <493DB351.6000103@erley.org> (sfid-20081209_005259_453921_4B076CCD)
-Date: Mon, 08 Dec 2008 18:52:49 -0500
-From: pat-lkml <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Dan E <trg_info@mailhaven.com>, linux-wireless@vger.kernel.org
-Subject: Re: Userspace tools: Roadmap?
-References: <1228692546.8826.1288759933@webmail.messagingengine.com>	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>	 <1228778295.10662.1288975589@webmail.messagingengine.com> <1228778801.22164.156.camel@johannes.berg>
-In-Reply-To: <1228778801.22164.156.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:33262 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752621AbYLSCpV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2008 21:45:21 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wu Fengguang <fengguang.wu@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 23/43] iwlwifi: beautify code
+Date: Fri, 19 Dec 2008 10:37:23 +0800
+Message-Id: <1229654263-21454-24-git-send-email-yi.zhu@intel.com> (sfid-20081219_034609_006567_25116E60)
+In-Reply-To: <1229654263-21454-23-git-send-email-yi.zhu@intel.com>
+References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-2-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-3-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-4-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-5-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-6-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-7-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-8-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-9-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-10-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-11-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-12-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-13-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-14-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-15-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-16-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-17-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-18-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-19-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-20-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-21-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-22-git-send-email-yi.zhu@intel.com>
+ <1229654263-21454-23-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2008-12-08 at 18:18 -0500, Dan E wrote:
-> There's libnl 1.2 and 2.0? That's news to me! Patches welcome. Sorry, I
-> guess it needs 1.0 or 1.1, will fix the page.
-> 
-following is a patch that gets iw working with the development versions
-of libnl.  I keep it uptodate at: http://wireless.erley.org/
+From: Wu Fengguang <fengguang.wu@intel.com>
 
-The Makefile changes may not be the 'best' way to do it, but it works
-for me.
+This patch beautifies macros in iwl-debug.h.
 
-Pat Erley
-
+Signed-off-by: Wu Fengguang <fengguang.wu@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-debug.h |  167 +++++++++++++++---------------
+ 1 files changed, 85 insertions(+), 82 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index df59b51..1bc8310 100644
---- a/Makefile
-+++ b/Makefile
-@@ -10,10 +10,11 @@ MKDIR ?= mkdir -p
- INSTALL ?= install
- CC ?= "gcc"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index aa20d72..067bd8e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -32,15 +32,19 @@
+ struct iwl_priv;
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+-#define IWL_DEBUG(level, fmt, args...) \
+-do { if (priv->debug_level & (level)) \
+-  dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), "%c %s " fmt, \
+-	 in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
++#define IWL_DEBUG(level, fmt, args...)					    \
++do {									    \
++	if (priv->debug_level & (level))				    \
++		dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), "%c %s " fmt, \
++			   in_interrupt() ? 'I' : 'U', __func__ , ## args); \
++} while (0)
+ 
+-#define IWL_DEBUG_LIMIT(level, fmt, args...) \
+-do { if ((priv->debug_level & (level)) && net_ratelimit()) \
+-  dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), "%c %s " fmt, \
+-	 in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
++#define IWL_DEBUG_LIMIT(level, fmt, args...)				    \
++do {									    \
++	if ((priv->debug_level & (level)) && net_ratelimit())		    \
++		dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), "%c %s " fmt, \
++			   in_interrupt() ? 'I' : 'U', __func__ , ## args); \
++} while (0)
+ 
+ #define iwl_print_hex_dump(priv, level, p, len) 			\
+ do {                                            			\
+@@ -119,86 +123,85 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+  * when CONFIG_IWLWIFI_DEBUG=y.
+  */
+ 
++/* 0x0000000F - 0x00000001 */
+ #define IWL_DL_INFO		(1 << 0)
+ #define IWL_DL_MAC80211		(1 << 1)
+ #define IWL_DL_HCMD		(1 << 2)
+ #define IWL_DL_STATE		(1 << 3)
++/* 0x000000F0 - 0x00000010 */
+ #define IWL_DL_MACDUMP		(1 << 4)
+ #define IWL_DL_HCMD_DUMP	(1 << 5)
+-#define IWL_DL_RADIO         (1 << 7)
+-#define IWL_DL_POWER         (1 << 8)
+-#define IWL_DL_TEMP          (1 << 9)
+-
+-#define IWL_DL_NOTIF         (1 << 10)
+-#define IWL_DL_SCAN          (1 << 11)
+-#define IWL_DL_ASSOC         (1 << 12)
+-#define IWL_DL_DROP          (1 << 13)
+-
+-#define IWL_DL_TXPOWER       (1 << 14)
+-
+-#define IWL_DL_AP            (1 << 15)
+-
+-#define IWL_DL_FW            (1 << 16)
+-#define IWL_DL_RF_KILL       (1 << 17)
+-#define IWL_DL_FW_ERRORS     (1 << 18)
+-
+-#define IWL_DL_LED           (1 << 19)
+-
+-#define IWL_DL_RATE          (1 << 20)
+-
+-#define IWL_DL_CALIB         (1 << 21)
+-#define IWL_DL_WEP           (1 << 22)
+-#define IWL_DL_TX            (1 << 23)
+-#define IWL_DL_RX            (1 << 24)
+-#define IWL_DL_ISR           (1 << 25)
+-#define IWL_DL_HT            (1 << 26)
+-#define IWL_DL_IO            (1 << 27)
+-#define IWL_DL_11H           (1 << 28)
+-
+-#define IWL_DL_STATS         (1 << 29)
+-#define IWL_DL_TX_REPLY      (1 << 30)
+-#define IWL_DL_QOS           (1 << 31)
+-
+-#define IWL_ERROR(f, a...) dev_printk(KERN_ERR, \
+-			&(priv->hw->wiphy->dev), f, ## a)
+-#define IWL_WARNING(f, a...) dev_printk(KERN_WARNING, \
+-			&(priv->hw->wiphy->dev), f, ## a)
+-#define IWL_DEBUG_INFO(f, a...)    IWL_DEBUG(IWL_DL_INFO, f, ## a)
+-
+-#define IWL_DEBUG_MAC80211(f, a...)     IWL_DEBUG(IWL_DL_MAC80211, f, ## a)
+-#define IWL_DEBUG_MACDUMP(f, a...)     IWL_DEBUG(IWL_DL_MACDUMP, f, ## a)
+-#define IWL_DEBUG_TEMP(f, a...)   IWL_DEBUG(IWL_DL_TEMP, f, ## a)
+-#define IWL_DEBUG_SCAN(f, a...)   IWL_DEBUG(IWL_DL_SCAN, f, ## a)
+-#define IWL_DEBUG_RX(f, a...)     IWL_DEBUG(IWL_DL_RX, f, ## a)
+-#define IWL_DEBUG_TX(f, a...)     IWL_DEBUG(IWL_DL_TX, f, ## a)
+-#define IWL_DEBUG_ISR(f, a...)    IWL_DEBUG(IWL_DL_ISR, f, ## a)
+-#define IWL_DEBUG_LED(f, a...) IWL_DEBUG(IWL_DL_LED, f, ## a)
+-#define IWL_DEBUG_WEP(f, a...)    IWL_DEBUG(IWL_DL_WEP, f, ## a)
+-#define IWL_DEBUG_HC(f, a...) IWL_DEBUG(IWL_DL_HCMD, f, ## a)
+-#define IWL_DEBUG_HC_DUMP(f, a...) IWL_DEBUG(IWL_DL_HCMD_DUMP, f, ## a)
+-#define IWL_DEBUG_CALIB(f, a...) IWL_DEBUG(IWL_DL_CALIB, f, ## a)
+-#define IWL_DEBUG_FW(f, a...) IWL_DEBUG(IWL_DL_FW, f, ## a)
+-#define IWL_DEBUG_RF_KILL(f, a...) IWL_DEBUG(IWL_DL_RF_KILL, f, ## a)
+-#define IWL_DEBUG_DROP(f, a...) IWL_DEBUG(IWL_DL_DROP, f, ## a)
+-#define IWL_DEBUG_DROP_LIMIT(f, a...) IWL_DEBUG_LIMIT(IWL_DL_DROP, f, ## a)
+-#define IWL_DEBUG_AP(f, a...) IWL_DEBUG(IWL_DL_AP, f, ## a)
+-#define IWL_DEBUG_TXPOWER(f, a...) IWL_DEBUG(IWL_DL_TXPOWER, f, ## a)
+-#define IWL_DEBUG_IO(f, a...) IWL_DEBUG(IWL_DL_IO, f, ## a)
+-#define IWL_DEBUG_RATE(f, a...) IWL_DEBUG(IWL_DL_RATE, f, ## a)
+-#define IWL_DEBUG_RATE_LIMIT(f, a...) IWL_DEBUG_LIMIT(IWL_DL_RATE, f, ## a)
+-#define IWL_DEBUG_NOTIF(f, a...) IWL_DEBUG(IWL_DL_NOTIF, f, ## a)
+-#define IWL_DEBUG_ASSOC(f, a...) IWL_DEBUG(IWL_DL_ASSOC | IWL_DL_INFO, f, ## a)
+-#define IWL_DEBUG_ASSOC_LIMIT(f, a...) \
+-	IWL_DEBUG_LIMIT(IWL_DL_ASSOC | IWL_DL_INFO, f, ## a)
+-#define IWL_DEBUG_HT(f, a...) IWL_DEBUG(IWL_DL_HT, f, ## a)
+-#define IWL_DEBUG_STATS(f, a...) IWL_DEBUG(IWL_DL_STATS, f, ## a)
+-#define IWL_DEBUG_STATS_LIMIT(f, a...) IWL_DEBUG_LIMIT(IWL_DL_STATS, f, ## a)
+-#define IWL_DEBUG_TX_REPLY(f, a...) IWL_DEBUG(IWL_DL_TX_REPLY, f, ## a)
++#define IWL_DL_RADIO		(1 << 7)
++
++#define IWL_DL_POWER		(1 << 8)
++#define IWL_DL_TEMP		(1 << 9)
++#define IWL_DL_NOTIF		(1 << 10)
++#define IWL_DL_SCAN		(1 << 11)
++
++#define IWL_DL_ASSOC		(1 << 12)
++#define IWL_DL_DROP		(1 << 13)
++#define IWL_DL_TXPOWER		(1 << 14)
++#define IWL_DL_AP		(1 << 15)
++
++#define IWL_DL_FW		(1 << 16)
++#define IWL_DL_RF_KILL		(1 << 17)
++#define IWL_DL_FW_ERRORS	(1 << 18)
++#define IWL_DL_LED		(1 << 19)
++
++#define IWL_DL_RATE		(1 << 20)
++#define IWL_DL_CALIB		(1 << 21)
++#define IWL_DL_WEP		(1 << 22)
++#define IWL_DL_TX		(1 << 23)
++#define IWL_DL_RX		(1 << 24)
++#define IWL_DL_ISR		(1 << 25)
++#define IWL_DL_HT		(1 << 26)
++#define IWL_DL_IO		(1 << 27)
++#define IWL_DL_11H		(1 << 28)
++#define IWL_DL_STATS		(1 << 29)
++#define IWL_DL_TX_REPLY		(1 << 30)
++#define IWL_DL_QOS		(1 << 31)
++
++#define IWL_ERROR(f, a...)		\
++		dev_printk(KERN_ERR, &(priv->hw->wiphy->dev), f, ## a)
++#define IWL_WARNING(f, a...)		\
++		dev_printk(KERN_WARNING, &(priv->hw->wiphy->dev), f, ## a)
++
++#define IWL_DEBUG_INFO(f, a...)		IWL_DEBUG(IWL_DL_INFO, f, ## a)
++#define IWL_DEBUG_MAC80211(f, a...)	IWL_DEBUG(IWL_DL_MAC80211, f, ## a)
++#define IWL_DEBUG_MACDUMP(f, a...)	IWL_DEBUG(IWL_DL_MACDUMP, f, ## a)
++#define IWL_DEBUG_TEMP(f, a...)		IWL_DEBUG(IWL_DL_TEMP, f, ## a)
++#define IWL_DEBUG_SCAN(f, a...)		IWL_DEBUG(IWL_DL_SCAN, f, ## a)
++#define IWL_DEBUG_RX(f, a...)		IWL_DEBUG(IWL_DL_RX, f, ## a)
++#define IWL_DEBUG_TX(f, a...)		IWL_DEBUG(IWL_DL_TX, f, ## a)
++#define IWL_DEBUG_ISR(f, a...)		IWL_DEBUG(IWL_DL_ISR, f, ## a)
++#define IWL_DEBUG_LED(f, a...)		IWL_DEBUG(IWL_DL_LED, f, ## a)
++#define IWL_DEBUG_WEP(f, a...)		IWL_DEBUG(IWL_DL_WEP, f, ## a)
++#define IWL_DEBUG_HC(f, a...)		IWL_DEBUG(IWL_DL_HCMD, f, ## a)
++#define IWL_DEBUG_HC_DUMP(f, a...)	IWL_DEBUG(IWL_DL_HCMD_DUMP, f, ## a)
++#define IWL_DEBUG_CALIB(f, a...)	IWL_DEBUG(IWL_DL_CALIB, f, ## a)
++#define IWL_DEBUG_FW(f, a...)		IWL_DEBUG(IWL_DL_FW, f, ## a)
++#define IWL_DEBUG_RF_KILL(f, a...)	IWL_DEBUG(IWL_DL_RF_KILL, f, ## a)
++#define IWL_DEBUG_DROP(f, a...)		IWL_DEBUG(IWL_DL_DROP, f, ## a)
++#define IWL_DEBUG_DROP_LIMIT(f, a...)	IWL_DEBUG_LIMIT(IWL_DL_DROP, f, ## a)
++#define IWL_DEBUG_AP(f, a...)		IWL_DEBUG(IWL_DL_AP, f, ## a)
++#define IWL_DEBUG_TXPOWER(f, a...)	IWL_DEBUG(IWL_DL_TXPOWER, f, ## a)
++#define IWL_DEBUG_IO(f, a...)		IWL_DEBUG(IWL_DL_IO, f, ## a)
++#define IWL_DEBUG_RATE(f, a...)		IWL_DEBUG(IWL_DL_RATE, f, ## a)
++#define IWL_DEBUG_RATE_LIMIT(f, a...)	IWL_DEBUG_LIMIT(IWL_DL_RATE, f, ## a)
++#define IWL_DEBUG_NOTIF(f, a...)	IWL_DEBUG(IWL_DL_NOTIF, f, ## a)
++#define IWL_DEBUG_ASSOC(f, a...)	\
++		IWL_DEBUG(IWL_DL_ASSOC | IWL_DL_INFO, f, ## a)
++#define IWL_DEBUG_ASSOC_LIMIT(f, a...)	\
++		IWL_DEBUG_LIMIT(IWL_DL_ASSOC | IWL_DL_INFO, f, ## a)
++#define IWL_DEBUG_HT(f, a...)		IWL_DEBUG(IWL_DL_HT, f, ## a)
++#define IWL_DEBUG_STATS(f, a...)	IWL_DEBUG(IWL_DL_STATS, f, ## a)
++#define IWL_DEBUG_STATS_LIMIT(f, a...)	IWL_DEBUG_LIMIT(IWL_DL_STATS, f, ## a)
++#define IWL_DEBUG_TX_REPLY(f, a...)	IWL_DEBUG(IWL_DL_TX_REPLY, f, ## a)
+ #define IWL_DEBUG_TX_REPLY_LIMIT(f, a...) \
+-	IWL_DEBUG_LIMIT(IWL_DL_TX_REPLY, f, ## a)
+-#define IWL_DEBUG_QOS(f, a...)   IWL_DEBUG(IWL_DL_QOS, f, ## a)
+-#define IWL_DEBUG_RADIO(f, a...)  IWL_DEBUG(IWL_DL_RADIO, f, ## a)
+-#define IWL_DEBUG_POWER(f, a...)  IWL_DEBUG(IWL_DL_POWER, f, ## a)
+-#define IWL_DEBUG_11H(f, a...)  IWL_DEBUG(IWL_DL_11H, f, ## a)
++		IWL_DEBUG_LIMIT(IWL_DL_TX_REPLY, f, ## a)
++#define IWL_DEBUG_QOS(f, a...)		IWL_DEBUG(IWL_DL_QOS, f, ## a)
++#define IWL_DEBUG_RADIO(f, a...)	IWL_DEBUG(IWL_DL_RADIO, f, ## a)
++#define IWL_DEBUG_POWER(f, a...)	IWL_DEBUG(IWL_DL_POWER, f, ## a)
++#define IWL_DEBUG_11H(f, a...)		IWL_DEBUG(IWL_DL_11H, f, ## a)
+ 
+ #endif
+-- 
+1.5.3.6
 
--CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
--fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
-`pkg-config --cflags libnl-1`
-+NLVERSION = 2.0
-+CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
--fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
-`pkg-config --cflags libnl-$(NLVERSION)`
- CFLAGS += -O2 -g
--LDFLAGS += `pkg-config --libs libnl-1`
--NLVERSION = 1.0
-+LDFLAGS += `pkg-config --libs libnl-$(NLVERSION)`
-+LIBS += -lnl -lnl-genl -lnl-nf -lnl-route
-
- OBJS = iw.o info.o phy.o interface.o station.o util.o mpath.o reg.o
-mesh.o genl.o
- ALL = iw
-@@ -29,7 +30,7 @@ endif
- all: version_check $(ALL)
-
- version_check:
--	@if ! pkg-config --atleast-version=$(NLVERSION) libnl-1; then echo
-"You need at least libnl version $(NLVERSION)"; exit 1; fi
-+	@if ! pkg-config --atleast-version=$(NLVERSION) libnl-$(NLVERSION);
-then echo "You need at least libnl version $(NLVERSION)"; exit 1; fi
-
-
- version.h: version.sh
-@@ -42,7 +43,7 @@ version.h: version.sh
-
- iw:	$(OBJS)
- 	@$(NQ) ' CC  ' iw
--	$(Q)$(CC) $(LDFLAGS) $(OBJS) -o iw
-+	$(Q)$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o iw
-
- check:
- 	$(Q)$(MAKE) all CC="REAL_CC=$(CC) CHECK=\"sparse -Wall\" cgcc"
-diff --git a/iw.c b/iw.c
-index 5859180..11af7d6 100644
---- a/iw.c
-+++ b/iw.c
-@@ -29,7 +29,7 @@ static int nl80211_init(struct nl80211_state *state)
- {
- 	int err;
-
--	state->nl_handle = nl_handle_alloc();
-+	state->nl_handle = nl_socket_alloc();
- 	if (!state->nl_handle) {
- 		fprintf(stderr, "Failed to allocate netlink handle.\n");
- 		return -ENOMEM;
-@@ -41,8 +41,7 @@ static int nl80211_init(struct nl80211_state *state)
- 		goto out_handle_destroy;
- 	}
-
--	state->nl_cache = genl_ctrl_alloc_cache(state->nl_handle);
--	if (!state->nl_cache) {
-+	if (genl_ctrl_alloc_cache(state->nl_handle, &(state->nl_cache))) {
- 		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
- 		err = -ENOMEM;
- 		goto out_handle_destroy;
-@@ -60,7 +59,7 @@ static int nl80211_init(struct nl80211_state *state)
-  out_cache_free:
- 	nl_cache_free(state->nl_cache);
-  out_handle_destroy:
--	nl_handle_destroy(state->nl_handle);
-+	nl_socket_free(state->nl_handle);
- 	return err;
- }
-
-@@ -68,7 +67,7 @@ static void nl80211_cleanup(struct nl80211_state *state)
- {
- 	genl_family_put(state->nl80211);
- 	nl_cache_free(state->nl_cache);
--	nl_handle_destroy(state->nl_handle);
-+	nl_socket_free(state->nl_handle);
- }
-
- __COMMAND(NULL, NULL, NULL, 0, 0, 0, CIB_NONE, NULL);
