@@ -1,116 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:45641 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751350AbYLOPYf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 10:24:35 -0500
-Subject: Re: [PATCH 1/2] iwlwifi: misc cleanups.
-From: Dan Williams <dcbw@redhat.com>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	reinette.chatre@intel.com
-In-Reply-To: <eb3ff54b0812142300w211f08ek51dc24de85e7c85@mail.gmail.com>
-References: <eb3ff54b0812142300w211f08ek51dc24de85e7c85@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 15 Dec 2008 10:23:37 -0500
-Message-Id: <1229354617.12163.26.camel@localhost.localdomain> (sfid-20081215_162439_526238_A5EC2E98)
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([70.167.247.36]:2403 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750837AbYLSPR4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2008 10:17:56 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?UTF-8?Q?Stefanik_G=C3=A1bor_?= <netrolller.3d@gmail.com>,
+	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: set mac address in add_interface
+Date: Fri, 19 Dec 2008 10:15:16 -0500
+Message-Id: <20081219151036.M48373@bobcopeland.com> (sfid-20081219_161803_442916_CD84B65D)
+In-Reply-To: <1229439670.4471.41.camel@johannes.berg>
+References: <20081118044037.GA18983@hash.localnet> <69e28c910812150747j60cf17d9nc2e24aabb991d2a9@mail.gmail.com> <1229357080.12163.47.camel@localhost.localdomain> <69e28c910812150812h4a316327u67aad1b225262816@mail.gmail.com> <b6c5339f0812150916k521fa7a4l4fc3aa560d08c1db@mail.gmail.com> <b6c5339f0812160658y5ed2ceb4qdbb4b2ddf1fe07a5@mail.gmail.com> (sfid-20081216_155826_911157_CE1A0E9E) <1229439670.4471.41.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-12-15 at 09:00 +0200, Rami Rosen wrote:
-> This patch removes unused parameters in methods in iwl-tx.c:
+On Tue, 16 Dec 2008 16:01:09 +0100, Johannes Berg wrote
+> > The ath5k rx filter for unicast frames requires mac addresses to match in
+> > order to accept or ack frames.  However, in monitor mode, mac80211 will
+> > never call add_interface().  Instead, it should configure the filter to
+> > put the card in promiscuous mode which then should enable all packets
+> > to be passed back to the host.
 > 
-> - remove a parameter (is_unicast) from iwl_tx_cmd_build_basic()
-> - remove a parameter (sta_id) from iwl_tx_cmd_build_rate()
-> - remove two parameters (sta_id and priv) from iwl_tx_cmd_build_hwcrypto()
-> 
-> (wireless-testing).
-> 
-> Signed-off-by: Rami Rosen <ramirose@gmail.com>
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> index 3cb4363..ffede8b 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> @@ -645,7 +645,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
->  				  struct iwl_tx_cmd *tx_cmd,
->  				  struct ieee80211_tx_info *info,
->  				  struct ieee80211_hdr *hdr,
-> -				  int is_unicast, u8 std_id)
-> +				  u8 std_id)
->  {
->  	__le16 fc = hdr->frame_control;
->  	__le32 tx_flags = tx_cmd->tx_flags;
-> @@ -705,7 +705,7 @@ static void iwl_tx_cmd_build_basic(struct iwl_priv *priv,
->  static void iwl_tx_cmd_build_rate(struct iwl_priv *priv,
->  			      struct iwl_tx_cmd *tx_cmd,
->  			      struct ieee80211_tx_info *info,
-> -			      __le16 fc, int sta_id,
-> +			      __le16 fc,
->  			      int is_hcca)
->  {
->  	u32 rate_flags = 0;
-> @@ -764,11 +764,10 @@ static void iwl_tx_cmd_build_rate(struct iwl_priv *priv,
->  	tx_cmd->rate_n_flags = iwl_hw_set_rate_n_flags(rate_plcp, rate_flags);
->  }
-> 
-> -static void iwl_tx_cmd_build_hwcrypto(struct iwl_priv *priv,
-> -				      struct ieee80211_tx_info *info,
-> +static void iwl_tx_cmd_build_hwcrypto(struct ieee80211_tx_info *info,
->  				      struct iwl_tx_cmd *tx_cmd,
-> -				      struct sk_buff *skb_frag,
-> -				      int sta_id)
-> +				      struct sk_buff *skb_frag)
-> +				
+> FWIW, this is as designed, if you need to have ACKs then you need to
+> bring up a monitor as well as a regular interface. Stefanik, please do
+> that and report whether it works.
 
-^^^ inserted whitespace
+So in that case, ath5k definitely should not upload a mac until a normal
+interface is brought up, i.e. we should keep the current functionality?
 
->  {
->  	struct ieee80211_key_conf *keyconf = info->control.hw_key;
-> 
-> @@ -834,7 +833,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
->  	u16 len, len_org;
->  	u16 seq_number = 0;
->  	__le16 fc;
-> -	u8 hdr_len, unicast;
-> +	u8 hdr_len;
->  	u8 sta_id;
->  	u8 wait_write_ptr = 0;
->  	u8 tid = 0;
-> @@ -854,8 +853,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
->  		goto drop_unlock;
->  	}
-> 
-> -	unicast = !is_multicast_ether_addr(hdr->addr1);
-> -
-> +	
->  	fc = hdr->frame_control;
-> 
->  #ifdef CONFIG_IWLWIFI_DEBUG
-> @@ -977,7 +975,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
->  	iwl_hw_txq_attach_buf_to_tfd(priv, tfd, txcmd_phys, len);
-> 
->  	if (info->control.hw_key)
-> -		iwl_tx_cmd_build_hwcrypto(priv, info, tx_cmd, skb, sta_id);
-> +		iwl_tx_cmd_build_hwcrypto(info, tx_cmd, skb);
-> 
->  	/* Set up TFD's 2nd entry to point directly to remainder of skb,
->  	 * if any (802.11 null frames have no payload). */
-> @@ -996,10 +994,10 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
->  	len = (u16)skb->len;
->  	tx_cmd->len = cpu_to_le16(len);
->  	/* TODO need this for burst mode later on */
-> -	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, unicast, sta_id);
-> +	iwl_tx_cmd_build_basic(priv, tx_cmd, info, hdr, sta_id);
-> 
->  	/* set is_hcca to 0; it probably will never be implemented */
-> -	iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, sta_id, 0);
-> +	iwl_tx_cmd_build_rate(priv, tx_cmd, info, fc, 0);
-> 
->  	iwl_update_tx_stats(priv, le16_to_cpu(fc), len);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It's interesting that b43 works without a regular interface, by my reading of
+its code the mac is also loaded and cleared at add/remove interface time.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
 
