@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:18895 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751371AbYLHPfS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 10:35:18 -0500
-Received: by an-out-0708.google.com with SMTP id d40so474229and.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2008 07:35:16 -0800 (PST)
-Message-ID: <e27b78a40812080735n465186a0s8a43a40817789826@mail.gmail.com> (sfid-20081208_163523_480280_36244A10)
-Date: Mon, 8 Dec 2008 15:35:16 +0000
-From: Keir <keirlawson@gmail.com>
-To: "Andrey Yurovsky" <andrey@cozybit.com>
-Subject: Re: Problems with o11s
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <45e8e6c40812021127s4db52598n5541ea78f583013e@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:12994 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751736AbYLSUvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2008 15:51:33 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 12:51:33 -0800
+Date: Fri, 19 Dec 2008 12:51:29 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: drago01 <drago01@gmail.com>
+CC: Zhu Yi <yi.zhu@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [PATCH 00/43] iwl3945 merges into iwlagn (Dec 19)
+Message-ID: <20081219205129.GD15227@tesla> (sfid-20081219_215138_935975_59A4060A)
+References: <1229654263-21454-1-git-send-email-yi.zhu@intel.com> <f6ca9fed0812191132h2f76ce40id20c52bdb6e0681c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <e27b78a40812020752o396b2542kfc26b55caeade8df@mail.gmail.com>
-	 <45e8e6c40812021127s4db52598n5541ea78f583013e@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <f6ca9fed0812191132h2f76ce40id20c52bdb6e0681c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrey,
+On Fri, Dec 19, 2008 at 11:32:53AM -0800, drago01 wrote:
+> On Fri, Dec 19, 2008 at 3:37 AM, Zhu Yi <yi.zhu@intel.com> wrote:
+> > Hi John,
+> >
+> > Here is the first batch for the iwl3945 -> iwlagn merge. This is for
+> > post .29 kernel.
+> 
+> Well it doesn't really matter but wouldn't it make sense to rename the
+> driver back to iwlwifi ? (as 3945 does not support n mode)
 
-Using the commit directly before
-dc300b5c5291d779a53d83af960fdf9388bf0544 (I'm pretty sure).  Don't
-know how to test IBSS.  I'm guessing the problem  here is the
-plink_close messages arent getting through somehow?
+That would make compat-crap stuff difficult, at least I cannot think of an
+easy way to deal with it. See scripts/iwl-load, part of compat-wireless. This
+is used to simply rename iwl4965 to iwl4965.ignore and let iwlagn kick in
+if you are on an older kernel. If we move iwlagn to iwlwifi... umm.. wait did
+we ever have an "iwlwifi" driver?
 
-Cheers for all your help
-
-Keir
-
-2008/12/2 Andrey Yurovsky <andrey@cozybit.com>:
-> Hi Keir.  I believe you're using ath5k?  You can use, at this time, up
-> to (but not including) commit
-> dc300b5c5291d779a53d83af960fdf9388bf0544, where we have a regression
-> in the driver when the PCU-related code was updated.  Have you tried
-> testing IBSS mode in your setup?
->
->  -Andrey
->
-> On Tue, Dec 2, 2008 at 7:52 AM, Keir <keirlawson@gmail.com> wrote:
->> Hi,
->>
->> I've had o11s working for a while now, but I seem to get a strange problem
->> whereby pinging between MPs works for the first few pings, and then I start
->> getting packet loss (Destination Host Unreachable)  and nothing gets
->> through, despite the other station being listed as "ESTAB" by iw.  I'm not
->> sure if there is something strange about my setup, or this is a bug
->> somewhere, anyone got any ideas? I'm using revision
->> d059b2aed9e93cb94364e01374bca90ce3dc0ef9
->>
->> Cheers
->>
->> Keir
->>
->
+  Luis
