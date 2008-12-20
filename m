@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:9884 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbYLKM3H (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:54212 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757AbYLTBV6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 07:29:07 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so717817wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 04:29:06 -0800 (PST)
-Message-ID: <eb3ff54b0812110429y7d18e8cfx28a6da6637da23cf@mail.gmail.com> (sfid-20081211_132917_873951_2EF4E705)
-Date: Thu, 11 Dec 2008 14:29:06 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH ] iwlwifi: fix build warning (iwl-rx.c)
-Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
+	Fri, 19 Dec 2008 20:21:58 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] p54usb: fix random traffic stalls (LM87)
+Date: Sat, 20 Dec 2008 02:21:56 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200812200221.56534.chunkeey@web.de> (sfid-20081220_022200_806617_89C47468)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following build warning when CONFIG_IWLWIFI_DEBUG
-is not set.
+All LM87 firmwares need a explicit termination "packet",
+in oder to finish the pending transfer properly.
 
-/work/src/wireless-testing/drivers/net/wireless/iwlwifi/iwl-rx.c:758:
-warning: 'iwl_dbg_report_frame' defined but not used
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+Larry,
 
+Does your test case still fail with this one?
+---
+diff -Nurp a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+--- a/drivers/net/wireless/p54/p54usb.c	2008-12-20 00:26:35.000000000 +0100
++++ b/drivers/net/wireless/p54/p54usb.c	2008-12-20 01:09:45.000000000 +0100
+@@ -284,6 +284,7 @@ static void p54u_tx_lm87(struct ieee8021
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
+ 			  skb->data, skb->len, p54u_tx_cb, skb);
++	data_urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+ 	usb_anchor_urb(data_urb, &priv->submitted);
+ 	if (usb_submit_urb(data_urb, GFP_ATOMIC)) {
 
-(wireless-testing).
-
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c
-b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 0965232..71a2a51 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -751,12 +751,6 @@ static void iwl_dbg_report_frame(struct iwl_priv *priv,
- 	if (print_dump)
- 		iwl_print_hex_dump(priv, IWL_DL_RX, header, length);
- }
--#else
--static void iwl_dbg_report_frame(struct iwl_priv *priv,
--		      struct iwl_rx_phy_res *phy_res, u16 length,
--		      struct ieee80211_hdr *header, int group100)
--{
--}
- #endif
-
- static void iwl_update_rx_stats(struct iwl_priv *priv, u16 fc, u16 len)
