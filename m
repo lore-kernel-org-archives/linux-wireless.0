@@ -1,50 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:1305 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753241AbYLJNYp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 08:24:45 -0500
-Date: Wed, 10 Dec 2008 08:24:40 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Patrick McHardy <kaber@trash.net>
-Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	mickflemm@gmail.com, mcgrof@gmail.com
-Subject: Re: [RFC]: atk5k: fix FCS corruption for ACKs
-Message-ID: <20081210132440.GA12873@hash.localnet> (sfid-20081210_142450_421041_6465C830)
-References: <493F4DC5.9090801@trash.net>
+Received: from web23106.mail.ird.yahoo.com ([217.146.189.46]:29473 "HELO
+	web23106.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752267AbYLTBjQ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2008 20:39:16 -0500
+Date: Sat, 20 Dec 2008 01:32:34 +0000 (GMT)
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+Subject: throughput problem with rtl8187B within last few days (again)?
+To: herton@mandriva.com.br, Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <493F4DC5.9090801@trash.net>
+Content-Type: text/plain; charset=utf-8
+Message-ID: <692008.7538.qm@web23106.mail.ird.yahoo.com> (sfid-20081220_023921_205944_33C2B8D7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 10, 2008 at 06:04:05AM +0100, Patrick McHardy wrote:
-> This might not be fully correct or not handle other cases where
-> this can occur, but it doesn't seem too hackish and fixes the
-> problem for me :)
+Hi,
 
-> -		if (hdrlen & 3) {
-> +		if (hdrlen & 3 && hdrlen != rs.rs_datalen - FCS_LEN) {
->  			pad = hdrlen % 4;
->  			memmove(skb->data + pad, skb->data, hdrlen);
->  			skb_pull(skb, pad);
+I am using v2.6.28-rc8-8109-g6ec77a1 (about 3 days old, 2008-12-17/12-18 thereabouts) and transferring some files across and the throughput is back to about 50KB/s again - should be about 10x - and iwconfig stays at 1Mbit; doing iwconfig rate other numbers doesn't change anything.
 
-It seems very plausible to me.  Though, why doesn't ath9k also have this
-problem?  Luis, it looks like in that case ath9k could trim two extra
-bytes if ath9k hw behaves the same.
+I am tracking wireless testing quite regularly so if it breaks, the breakage hasn't been more than a week, I think; one thing I am not sure about is that I am running "mke2fs -c -c " on a USB disk on the same hub (it is a laptop so it is a "logical" hub) at the moment. So I am wondering if anything breaks in the last few days, or other USB activities can seriously affect the driver. 
 
-main.c:
+I'll try again and write again when the mke2fs -c -c finishes (about 30 hours for 250GB). Meanwhile, either of you want to say anything?
 
-   951          /* see if any padding is done by the hw and remove it */
-   952          if (hdrlen & 3) {
-   953                  padsize = hdrlen % 4;
-   954                  memmove(skb->data + padsize, skb->data, hdrlen);
-   955                  skb_pull(skb, padsize);
-   956          }
+Hin-Tak
 
-   957          /* remove FCS before passing up to protocol stack */
-   958          skb_trim(skb, (skb->len - FCS_LEN));
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+      
