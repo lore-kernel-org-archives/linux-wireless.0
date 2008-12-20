@@ -1,255 +1,459 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.185]:33759 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbYLQO5j (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:53948 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900AbYLTKBz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 09:57:39 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so2411969tic.23
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2008 06:57:37 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Sat, 20 Dec 2008 05:01:55 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so125886eye.37
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2008 02:01:54 -0800 (PST)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 3/15] rt2x00: Reduce calls to bbp_read()
+Date: Sat, 20 Dec 2008 10:54:22 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200812201052.00655.IvDoorn@gmail.com> <200812201052.43061.IvDoorn@gmail.com> <200812201053.29348.IvDoorn@gmail.com>
+In-Reply-To: <200812201053.29348.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18761.4838.509784.281821@localhost.localdomain> (sfid-20081217_155751_605014_21095C7F)
-Date: Wed, 17 Dec 2008 20:25:34 +0530
-To: linux-wireless@vger.kernel.org
-CC: johannes@sipsolutions.net, mcgrof@gmail.com,
-	jouni.malinen@atheros.com
-Subject: [RFC] Handle Channel Switch Announcement
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812201054.22904.IvDoorn@gmail.com> (sfid-20081220_110207_880186_CD7ACA5A)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an attempt to handle CSA elements from an AP and switch
-to the specified channel.
+The link_tuner() function will always call bbp_read()
+at the start of the function. Because this is an
+indirect register access has some costs attached
+to it (especially for USB hardware).
 
-Only mode 1 is handled, i.e, we just stop transmission on receiving a CSA element.
-User space notification is not handled yet.
+We already store the value read from the register
+into the vgc_level value inside the link structure.
+Instead of reading from the register we can read that
+field directly and base the tuner on that value.
 
-Please review.
+This reduces the time the registers are locked with
+the csr_mutex and speeds up the link_tuner processing.
 
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index aedefa5..701f597 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -44,6 +44,8 @@ enum ieee80211_band {
-  * 	is not permitted.
-  * @IEEE80211_CHAN_NO_FAT_BELOW: extension channel below this channel
-  * 	is not permitted.
-+ * @IEEE80211_CHAN_CSA_DISABLED: Disabled because a
-+	Channel Switch Announcement was received on this channel.
-  */
- enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_DISABLED		= 1<<0,
-@@ -52,6 +54,7 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_RADAR		= 1<<3,
- 	IEEE80211_CHAN_NO_FAT_ABOVE	= 1<<4,
- 	IEEE80211_CHAN_NO_FAT_BELOW	= 1<<5,
-+	IEEE80211_CHAN_CSA_DISABLED	= 1<<6
- };
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c |   27 ++++++++--------
+ drivers/net/wireless/rt2x00/rt2500pci.c |   50 +++++++++++++++---------------
+ drivers/net/wireless/rt2x00/rt2x00.h    |    9 ++++-
+ drivers/net/wireless/rt2x00/rt61pci.c   |   49 +++++++++++++----------------
+ drivers/net/wireless/rt2x00/rt73usb.c   |   52 ++++++++++++++----------------
+ 5 files changed, 92 insertions(+), 95 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 031cb0a..a186e4b 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -600,35 +600,36 @@ static void rt2400pci_link_stats(struct rt2x00_dev *rt2x00dev,
+ 	qual->false_cca = bbp;
+ }
  
- /**
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a7dabae..5ed227b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -282,6 +282,7 @@ enum ieee80211_sta_mlme_state {
++static inline void rt2400pci_set_vgc(struct rt2x00_dev *rt2x00dev, u8 vgc_level)
++{
++	rt2400pci_bbp_write(rt2x00dev, 13, vgc_level);
++	rt2x00dev->link.vgc_level = vgc_level;
++	rt2x00dev->link.vgc_level_reg = vgc_level;
++}
++
+ static void rt2400pci_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	rt2400pci_bbp_write(rt2x00dev, 13, 0x08);
+-	rt2x00dev->link.vgc_level = 0x08;
++	rt2400pci_set_vgc(rt2x00dev, 0x08);
+ }
  
- struct ieee80211_if_sta {
- 	struct timer_list timer;
-+	struct timer_list chswitch_timer;
- 	struct work_struct work;
- 	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
-@@ -951,6 +952,9 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_mgmt *mgmt,
- 				       size_t len);
-+void ieee80211_chswitch_timer(unsigned long data);
-+void ieee80211_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-+				  struct ieee80211_channel_sw_ie *sw_elem);
+ static void rt2400pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	u8 reg;
++	struct link *link = &rt2x00dev->link;
  
- /* utility functions/constants */
- extern void *mac80211_wiphy_privid; /* for wiphy privid */
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 5abbc3f..095ce36 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -441,6 +441,7 @@ static int ieee80211_stop(struct net_device *dev)
- 						WLAN_REASON_DEAUTH_LEAVING);
- 
- 		memset(sdata->u.sta.bssid, 0, ETH_ALEN);
-+		del_timer_sync(&sdata->u.sta.chswitch_timer);
- 		del_timer_sync(&sdata->u.sta.timer);
- 		/*
- 		 * If the timer fired while we waited for it, it will have
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9a06905..fe77046 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1592,6 +1592,12 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 	if (!bss)
+ 	/*
+ 	 * The link tuner should not run longer then 60 seconds,
+ 	 * and should run once every 2 seconds.
+ 	 */
+-	if (rt2x00dev->link.count > 60 || !(rt2x00dev->link.count & 1))
++	if (link->count > 60 || !(link->count & 1))
  		return;
  
-+	if (elems->ch_switch_elem && (elems->ch_switch_elem_len == 3)) {
-+		struct ieee80211_channel_sw_ie *sw_elem =
-+			(struct ieee80211_channel_sw_ie *)elems->ch_switch_elem;
-+		ieee80211_process_chanswitch(sdata, sw_elem);
-+	}
-+
- 	/* was just updated in ieee80211_bss_info_update */
- 	beacon_timestamp = bss->timestamp;
- 
-@@ -2384,6 +2390,8 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 	INIT_WORK(&ifsta->work, ieee80211_sta_work);
- 	setup_timer(&ifsta->timer, ieee80211_sta_timer,
- 		    (unsigned long) sdata);
-+	setup_timer(&ifsta->chswitch_timer, ieee80211_chswitch_timer,
-+		    (unsigned long) sdata);
- 	skb_queue_head_init(&ifsta->skb_queue);
- 
- 	ifsta->capab = WLAN_CAPABILITY_ESS;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 91b7c9f..7c371fe 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1612,6 +1612,13 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 				return RX_DROP_MONITOR;
- 			ieee80211_process_measurement_req(sdata, mgmt, len);
- 			break;
-+		case WLAN_ACTION_SPCT_CHL_SWITCH:
-+			if (len < (IEEE80211_MIN_ACTION_SIZE +
-+				   sizeof(mgmt->u.action.u.chan_switch)))
-+				return RX_DROP_MONITOR;
-+			ieee80211_process_chanswitch(sdata,
-+				     &mgmt->u.action.u.chan_switch.sw_elem);
-+			break;
- 		}
- 		break;
- 	default:
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index f5c7c33..7a8b96b 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -382,7 +382,8 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
- 
- 	channel = ieee80211_get_channel(sdata->local->hw.wiphy, freq);
- 
--	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
-+	if (!channel || channel->flags &
-+	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_CSA_DISABLED))
- 		return RX_DROP_MONITOR;
- 
- 	bss = ieee80211_bss_info_update(sdata->local, rx_status,
-@@ -538,7 +539,8 @@ void ieee80211_scan_work(struct work_struct *work)
- 		skip = 0;
- 		chan = &sband->channels[local->scan_channel_idx];
- 
--		if (chan->flags & IEEE80211_CHAN_DISABLED ||
-+		if (chan->flags &
-+		    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_CSA_DISABLED) ||
- 		    (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
- 		     chan->flags & IEEE80211_CHAN_NO_IBSS))
- 			skip = 1;
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index f72bad6..e85387e 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -84,3 +84,85 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 			mgmt->sa, mgmt->bssid,
- 			mgmt->u.action.u.measurement.dialog_token);
+ 	/*
+ 	 * Base r13 link tuning on the false cca count.
+ 	 */
+-	rt2400pci_bbp_read(rt2x00dev, 13, &reg);
+-
+-	if (rt2x00dev->link.qual.false_cca > 512 && reg < 0x20) {
+-		rt2400pci_bbp_write(rt2x00dev, 13, ++reg);
+-		rt2x00dev->link.vgc_level = reg;
+-	} else if (rt2x00dev->link.qual.false_cca < 100 && reg > 0x08) {
+-		rt2400pci_bbp_write(rt2x00dev, 13, --reg);
+-		rt2x00dev->link.vgc_level = reg;
+-	}
++	if ((link->qual.false_cca > 512) && (link->vgc_level < 0x20))
++		rt2400pci_set_vgc(rt2x00dev, ++link->vgc_level);
++	else if ((link->qual.false_cca < 100) && (link->vgc_level > 0x08))
++		rt2400pci_set_vgc(rt2x00dev, --link->vgc_level);
  }
-+
-+void ieee80211_chswitch_timer(unsigned long data)
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 780c96b..dd1f2c0 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -639,16 +639,23 @@ static void rt2500pci_link_stats(struct rt2x00_dev *rt2x00dev,
+ 	qual->false_cca = rt2x00_get_field32(reg, CNT3_FALSE_CCA);
+ }
+ 
++static inline void rt2500pci_set_vgc(struct rt2x00_dev *rt2x00dev, u8 vgc_level)
 +{
-+	struct ieee80211_bss *bss;
-+	struct ieee80211_sub_if_data *sdata =
-+		(struct ieee80211_sub_if_data *) data;
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+
-+	printk("expire\n");
-+
-+	if (!netif_running(sdata->dev))
-+		return;
-+
-+	bss = ieee80211_rx_bss_get(sdata->local, ifsta->bssid,
-+				   sdata->local->hw.conf.channel->center_freq,
-+				   ifsta->ssid, ifsta->ssid_len);
-+	if (!bss)
-+		goto exit;
-+
-+	if (!ieee80211_hw_config(sdata->local, IEEE80211_CONF_CHANGE_CHANNEL))
-+		bss->freq = sdata->local->oper_channel->center_freq;
-+
-+	ieee80211_rx_bss_put(sdata->local, bss);
-+exit:
-+	ieee80211_wake_queues(&sdata->local->hw);
-+}
-+
-+void ieee80211_process_chanswitch(struct ieee80211_sub_if_data *sdata,
-+				  struct ieee80211_channel_sw_ie *sw_elem)
-+{
-+	struct ieee80211_bss *bss;
-+	struct ieee80211_channel *new_ch, *cur_ch;
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+	int ret, exp;
-+	int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num);
-+
-+	/* FIXME: Handle ADHOC later */
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	if (ifsta->state != IEEE80211_STA_MLME_ASSOCIATED)
-+		return;
-+
-+	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
-+	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED)
-+		return;
-+
-+	bss = ieee80211_rx_bss_get(sdata->local, ifsta->bssid,
-+				   sdata->local->hw.conf.channel->center_freq,
-+				   ifsta->ssid, ifsta->ssid_len);
-+	if (!bss)
-+		return;
-+
-+	/* If the current channel has already been marked as CSA_DISABLED,
-+	   disregard further beacons until the channel moves when the timer expires */
-+
-+	cur_ch = ieee80211_get_channel(sdata->local->hw.wiphy,
-+			       sdata->local->hw.conf.channel->center_freq);
-+	if (cur_ch && cur_ch->flags & IEEE80211_CHAN_CSA_DISABLED)
-+		goto bss_put;
-+	else
-+		cur_ch->flags |= IEEE80211_CHAN_CSA_DISABLED;
-+
-+	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
-+		goto bss_put;
-+
-+	new_ch->flags &= ~IEEE80211_CHAN_CSA_DISABLED;
-+	sdata->local->oper_channel = new_ch;
-+
-+	if (sw_elem->count <= 1) {
-+		ret = ieee80211_hw_config(sdata->local,
-+					  IEEE80211_CONF_CHANGE_CHANNEL);
-+		if (!ret)
-+			bss->freq = new_freq;
-+	} else {
-+		ieee80211_stop_queues(&sdata->local->hw);
-+		exp = sw_elem->count * (1024 * bss->beacon_int / 1000 * HZ / 1000);
-+		mod_timer(&ifsta->chswitch_timer, jiffies + exp);
++	if (rt2x00dev->link.vgc_level_reg != vgc_level) {
++		rt2500pci_bbp_write(rt2x00dev, 17, vgc_level);
++		rt2x00dev->link.vgc_level_reg = vgc_level;
 +	}
-+bss_put:
-+	ieee80211_rx_bss_put(sdata->local, bss);
 +}
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 71a8391..b9693d8 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -636,7 +636,8 @@ int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freqMHz)
++
+ static void rt2500pci_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	rt2500pci_bbp_write(rt2x00dev, 17, 0x48);
+-	rt2x00dev->link.vgc_level = 0x48;
++	rt2500pci_set_vgc(rt2x00dev, 0x48);
+ }
  
- 	chan = ieee80211_get_channel(local->hw.wiphy, freqMHz);
+ static void rt2500pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	int rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
+-	u8 r17;
++	struct link *link = &rt2x00dev->link;
++	int rssi = rt2x00_get_link_rssi(link);
  
--	if (chan && !(chan->flags & IEEE80211_CHAN_DISABLED)) {
-+	if (chan && !(chan->flags & (IEEE80211_CHAN_DISABLED |
-+				     IEEE80211_CHAN_CSA_DISABLED))) {
- 		if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
- 		    chan->flags & IEEE80211_CHAN_NO_IBSS)
- 			return ret;
+ 	/*
+ 	 * To prevent collisions with MAC ASIC on chipsets
+@@ -656,12 +663,9 @@ static void rt2500pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * seconds while being associated.
+ 	 */
+ 	if (rt2x00_rev(&rt2x00dev->chip) < RT2560_VERSION_D &&
+-	    rt2x00dev->intf_associated &&
+-	    rt2x00dev->link.count > 20)
++	    rt2x00dev->intf_associated && link->count > 20)
+ 		return;
+ 
+-	rt2500pci_bbp_read(rt2x00dev, 17, &r17);
+-
+ 	/*
+ 	 * Chipset versions C and lower should directly continue
+ 	 * to the dynamic CCA tuning. Chipset version D and higher
+@@ -677,11 +681,9 @@ static void rt2500pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * then corrupt the R17 tuning. To remidy this the tuning should
+ 	 * be stopped (While making sure the R17 value will not exceed limits)
+ 	 */
+-	if (rssi < -80 && rt2x00dev->link.count > 20) {
+-		if (r17 >= 0x41) {
+-			r17 = rt2x00dev->link.vgc_level;
+-			rt2500pci_bbp_write(rt2x00dev, 17, r17);
+-		}
++	if (rssi < -80 && link->count > 20) {
++		if (link->vgc_level_reg >= 0x41)
++			rt2500pci_set_vgc(rt2x00dev, link->vgc_level);
+ 		return;
+ 	}
+ 
+@@ -689,8 +691,7 @@ static void rt2500pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special big-R17 for short distance
+ 	 */
+ 	if (rssi >= -58) {
+-		if (r17 != 0x50)
+-			rt2500pci_bbp_write(rt2x00dev, 17, 0x50);
++		rt2500pci_set_vgc(rt2x00dev, 0x50);
+ 		return;
+ 	}
+ 
+@@ -698,8 +699,7 @@ static void rt2500pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special mid-R17 for middle distance
+ 	 */
+ 	if (rssi >= -74) {
+-		if (r17 != 0x41)
+-			rt2500pci_bbp_write(rt2x00dev, 17, 0x41);
++		rt2500pci_set_vgc(rt2x00dev, 0x41);
+ 		return;
+ 	}
+ 
+@@ -707,8 +707,8 @@ static void rt2500pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Leave short or middle distance condition, restore r17
+ 	 * to the dynamic tuning range.
+ 	 */
+-	if (r17 >= 0x41) {
+-		rt2500pci_bbp_write(rt2x00dev, 17, rt2x00dev->link.vgc_level);
++	if (link->vgc_level_reg >= 0x41) {
++		rt2500pci_set_vgc(rt2x00dev, link->vgc_level);
+ 		return;
+ 	}
+ 
+@@ -718,12 +718,12 @@ dynamic_cca_tune:
+ 	 * R17 is inside the dynamic tuning range,
+ 	 * start tuning the link based on the false cca counter.
+ 	 */
+-	if (rt2x00dev->link.qual.false_cca > 512 && r17 < 0x40) {
+-		rt2500pci_bbp_write(rt2x00dev, 17, ++r17);
+-		rt2x00dev->link.vgc_level = r17;
+-	} else if (rt2x00dev->link.qual.false_cca < 100 && r17 > 0x32) {
+-		rt2500pci_bbp_write(rt2x00dev, 17, --r17);
+-		rt2x00dev->link.vgc_level = r17;
++	if (link->qual.false_cca > 512 && link->vgc_level_reg < 0x40) {
++		rt2500pci_set_vgc(rt2x00dev, ++link->vgc_level_reg);
++		link->vgc_level = link->vgc_level_reg;
++	} else if (link->qual.false_cca < 100 && link->vgc_level_reg > 0x32) {
++		rt2500pci_set_vgc(rt2x00dev, --link->vgc_level_reg);
++		link->vgc_level = link->vgc_level_reg;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 19c0687..8935f2c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -286,9 +286,14 @@ struct link {
+ 	struct link_ant ant;
+ 
+ 	/*
+-	 * Active VGC level
++	 * Active VGC level (for false cca tuning)
+ 	 */
+-	int vgc_level;
++	u8 vgc_level;
++
++	/*
++	 * VGC level as configured in register
++	 */
++	u8 vgc_level_reg;
+ 
+ 	/*
+ 	 * Work structure for scheduling periodic link tuning.
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 3f91a6e..abd7b43 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1046,21 +1046,27 @@ static void rt61pci_link_stats(struct rt2x00_dev *rt2x00dev,
+ 	qual->false_cca = rt2x00_get_field32(reg, STA_CSR1_FALSE_CCA_ERROR);
+ }
+ 
++static inline void rt61pci_set_vgc(struct rt2x00_dev *rt2x00dev, u8 vgc_level)
++{
++	if (rt2x00dev->link.vgc_level != vgc_level) {
++		rt61pci_bbp_write(rt2x00dev, 17, vgc_level);
++		rt2x00dev->link.vgc_level = vgc_level;
++		rt2x00dev->link.vgc_level_reg = vgc_level;
++	}
++}
++
+ static void rt61pci_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	rt61pci_bbp_write(rt2x00dev, 17, 0x20);
+-	rt2x00dev->link.vgc_level = 0x20;
++	rt61pci_set_vgc(rt2x00dev, 0x20);
+ }
+ 
+ static void rt61pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	int rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
+-	u8 r17;
++	struct link *link = &rt2x00dev->link;
++	int rssi = rt2x00_get_link_rssi(link);
+ 	u8 up_bound;
+ 	u8 low_bound;
+ 
+-	rt61pci_bbp_read(rt2x00dev, 17, &r17);
+-
+ 	/*
+ 	 * Determine r17 bounds.
+ 	 */
+@@ -1091,8 +1097,7 @@ static void rt61pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special big-R17 for very short distance
+ 	 */
+ 	if (rssi >= -35) {
+-		if (r17 != 0x60)
+-			rt61pci_bbp_write(rt2x00dev, 17, 0x60);
++		rt61pci_set_vgc(rt2x00dev, 0x60);
+ 		return;
+ 	}
+ 
+@@ -1100,8 +1105,7 @@ static void rt61pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special big-R17 for short distance
+ 	 */
+ 	if (rssi >= -58) {
+-		if (r17 != up_bound)
+-			rt61pci_bbp_write(rt2x00dev, 17, up_bound);
++		rt61pci_set_vgc(rt2x00dev, up_bound);
+ 		return;
+ 	}
+ 
+@@ -1109,9 +1113,7 @@ static void rt61pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special big-R17 for middle-short distance
+ 	 */
+ 	if (rssi >= -66) {
+-		low_bound += 0x10;
+-		if (r17 != low_bound)
+-			rt61pci_bbp_write(rt2x00dev, 17, low_bound);
++		rt61pci_set_vgc(rt2x00dev, low_bound + 0x10);
+ 		return;
+ 	}
+ 
+@@ -1119,9 +1121,7 @@ static void rt61pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special mid-R17 for middle distance
+ 	 */
+ 	if (rssi >= -74) {
+-		low_bound += 0x08;
+-		if (r17 != low_bound)
+-			rt61pci_bbp_write(rt2x00dev, 17, low_bound);
++		rt61pci_set_vgc(rt2x00dev, low_bound + 0x08);
+ 		return;
+ 	}
+ 
+@@ -1133,8 +1133,8 @@ static void rt61pci_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	if (low_bound > up_bound)
+ 		up_bound = low_bound;
+ 
+-	if (r17 > up_bound) {
+-		rt61pci_bbp_write(rt2x00dev, 17, up_bound);
++	if (link->vgc_level > up_bound) {
++		rt61pci_set_vgc(rt2x00dev, up_bound);
+ 		return;
+ 	}
+ 
+@@ -1144,15 +1144,10 @@ dynamic_cca_tune:
+ 	 * r17 does not yet exceed upper limit, continue and base
+ 	 * the r17 tuning on the false CCA count.
+ 	 */
+-	if (rt2x00dev->link.qual.false_cca > 512 && r17 < up_bound) {
+-		if (++r17 > up_bound)
+-			r17 = up_bound;
+-		rt61pci_bbp_write(rt2x00dev, 17, r17);
+-	} else if (rt2x00dev->link.qual.false_cca < 100 && r17 > low_bound) {
+-		if (--r17 < low_bound)
+-			r17 = low_bound;
+-		rt61pci_bbp_write(rt2x00dev, 17, r17);
+-	}
++	if ((link->qual.false_cca > 512) && (link->vgc_level < up_bound))
++		rt61pci_set_vgc(rt2x00dev, ++link->vgc_level);
++	else if ((link->qual.false_cca < 100) && (link->vgc_level > low_bound))
++		rt61pci_set_vgc(rt2x00dev, --link->vgc_level);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 8a365c9..49fd42a 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -924,21 +924,27 @@ static void rt73usb_link_stats(struct rt2x00_dev *rt2x00dev,
+ 	qual->false_cca = rt2x00_get_field32(reg, STA_CSR1_FALSE_CCA_ERROR);
+ }
+ 
++static inline void rt73usb_set_vgc(struct rt2x00_dev *rt2x00dev, u8 vgc_level)
++{
++	if (rt2x00dev->link.vgc_level != vgc_level) {
++		rt73usb_bbp_write(rt2x00dev, 17, vgc_level);
++		rt2x00dev->link.vgc_level = vgc_level;
++		rt2x00dev->link.vgc_level_reg = vgc_level;
++	}
++}
++
+ static void rt73usb_reset_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	rt73usb_bbp_write(rt2x00dev, 17, 0x20);
+-	rt2x00dev->link.vgc_level = 0x20;
++	rt73usb_set_vgc(rt2x00dev, 0x20);
+ }
+ 
+ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ {
+-	int rssi = rt2x00_get_link_rssi(&rt2x00dev->link);
+-	u8 r17;
++	struct link *link = &rt2x00dev->link;
++	int rssi = rt2x00_get_link_rssi(link);
+ 	u8 up_bound;
+ 	u8 low_bound;
+ 
+-	rt73usb_bbp_read(rt2x00dev, 17, &r17);
+-
+ 	/*
+ 	 * Determine r17 bounds.
+ 	 */
+@@ -979,8 +985,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special big-R17 for very short distance
+ 	 */
+ 	if (rssi > -35) {
+-		if (r17 != 0x60)
+-			rt73usb_bbp_write(rt2x00dev, 17, 0x60);
++		rt73usb_set_vgc(rt2x00dev, 0x60);
+ 		return;
+ 	}
+ 
+@@ -988,8 +993,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special big-R17 for short distance
+ 	 */
+ 	if (rssi >= -58) {
+-		if (r17 != up_bound)
+-			rt73usb_bbp_write(rt2x00dev, 17, up_bound);
++		rt73usb_set_vgc(rt2x00dev, up_bound);
+ 		return;
+ 	}
+ 
+@@ -997,9 +1001,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special big-R17 for middle-short distance
+ 	 */
+ 	if (rssi >= -66) {
+-		low_bound += 0x10;
+-		if (r17 != low_bound)
+-			rt73usb_bbp_write(rt2x00dev, 17, low_bound);
++		rt73usb_set_vgc(rt2x00dev, low_bound + 0x10);
+ 		return;
+ 	}
+ 
+@@ -1007,8 +1009,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	 * Special mid-R17 for middle distance
+ 	 */
+ 	if (rssi >= -74) {
+-		if (r17 != (low_bound + 0x10))
+-			rt73usb_bbp_write(rt2x00dev, 17, low_bound + 0x08);
++		rt73usb_set_vgc(rt2x00dev, low_bound + 0x08);
+ 		return;
+ 	}
+ 
+@@ -1020,8 +1021,8 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev)
+ 	if (low_bound > up_bound)
+ 		up_bound = low_bound;
+ 
+-	if (r17 > up_bound) {
+-		rt73usb_bbp_write(rt2x00dev, 17, up_bound);
++	if (link->vgc_level > up_bound) {
++		rt73usb_set_vgc(rt2x00dev, up_bound);
+ 		return;
+ 	}
+ 
+@@ -1031,17 +1032,12 @@ dynamic_cca_tune:
+ 	 * r17 does not yet exceed upper limit, continue and base
+ 	 * the r17 tuning on the false CCA count.
+ 	 */
+-	if (rt2x00dev->link.qual.false_cca > 512 && r17 < up_bound) {
+-		r17 += 4;
+-		if (r17 > up_bound)
+-			r17 = up_bound;
+-		rt73usb_bbp_write(rt2x00dev, 17, r17);
+-	} else if (rt2x00dev->link.qual.false_cca < 100 && r17 > low_bound) {
+-		r17 -= 4;
+-		if (r17 < low_bound)
+-			r17 = low_bound;
+-		rt73usb_bbp_write(rt2x00dev, 17, r17);
+-	}
++	if ((link->qual.false_cca > 512) && (link->vgc_level < up_bound))
++		rt73usb_set_vgc(rt2x00dev,
++				min_t(u8, link->vgc_level + 4, up_bound));
++	else if ((link->qual.false_cca < 100) && (link->vgc_level > low_bound))
++		rt73usb_set_vgc(rt2x00dev,
++				max_t(u8, link->vgc_level - 4, low_bound));
+ }
+ 
+ /*
+-- 
+1.5.6.1
+
