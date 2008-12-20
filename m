@@ -1,58 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:24353 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748AbYLDBLc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 20:11:32 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2653819fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 17:11:30 -0800 (PST)
-Message-ID: <45e8e6c40812031711w3e4fe31bh7228037014475300@mail.gmail.com> (sfid-20081204_021135_743265_82909B1F)
-Date: Wed, 3 Dec 2008 17:11:30 -0800
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Chanthearith HUON" <chanthearith.huon@telecom-sudparis.eu>
-Subject: Re: failed to create interface: -1
-Cc: linux-wireless@vger.kernel.org, Hakima.Chaouchi@it-sudparis.eu
-In-Reply-To: <49371FE4.2050507@telecom-sudparis.eu>
+Received: from mail.atheros.com ([12.36.123.2]:18317 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751437AbYLTF4G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Dec 2008 00:56:06 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 21:56:06 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 15/16] ath9k: remove superfluous check on changing channel
+Date: Fri, 19 Dec 2008 21:55:21 -0800
+Message-ID: <1229752522-1917-16-git-send-email-lrodriguez@atheros.com> (sfid-20081220_070900_970544_CE734DE8)
+In-Reply-To: <1229752522-1917-15-git-send-email-lrodriguez@atheros.com>
+References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-3-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-4-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-5-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-6-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-7-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-8-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-9-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-10-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-11-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-12-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-13-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-14-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-15-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <49371FE4.2050507@telecom-sudparis.eu>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hmm, that is a b43-supported card and that should work.  Have you
-installed the b43 firmware?  Are you using the actual b43 driver?
-Thanks,
+When we try to change the channel in ath9k its because
+either the configuration indicates we *have* changed
+channels or HT configuration has changed. In both cases
+we want to do a reset. Either way mac80211 will inform us
+when we want to actually change the channel so trust those
+calls.
 
-  -Andrey
+Although in the patch it may seem as I am doing more code
+changes I am not, all I am doing is removing the initial
+branch conditional and shifting the code to the left.
 
-On Wed, Dec 3, 2008 at 4:10 PM, Chanthearith HUON
-<chanthearith.huon@telecom-sudparis.eu> wrote:
-> Hi everyone,
->
-> # iw dev wlan0 interface add mesh type mp mesh_id 10
-> failed to create interface: -1
->
-> I searched the web and read the archives but that did not help.
->
-> Any ideas of what went wrong?
->
-> Environment:
-> Distribution: ubuntu 8.10 Intrepid Ibex with kernel 2.6.27
-> Wireless card: Linksys wmp54g pci with ssb driver (there should be no
-> problem as listed in http://linuxwireless.org/en/users/Devices/PCI)
->
-> Thanks,
-> Thierry
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |  101 +++++++++++++++++-------------------
+ 1 files changed, 48 insertions(+), 53 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 1385343..1f58d4b 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -270,63 +270,58 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_channel *c)
+ 
+ 	hchan = (struct ath9k_channel *) c->priv;
+ 
+-	if (hchan->channel != sc->sc_ah->ah_curchan->channel ||
+-	    hchan->channelFlags != sc->sc_ah->ah_curchan->channelFlags ||
+-	    (sc->sc_flags & SC_OP_CHAINMASK_UPDATE) ||
+-	    (sc->sc_flags & SC_OP_FULL_RESET)) {
+-		/*
+-		 * This is only performed if the channel settings have
+-		 * actually changed.
+-		 *
+-		 * To switch channels clear any pending DMA operations;
+-		 * wait long enough for the RX fifo to drain, reset the
+-		 * hardware at the new frequency, and then re-enable
+-		 * the relevant bits of the h/w.
+-		 */
+-		ath9k_hw_set_interrupts(ah, 0);
+-		ath_draintxq(sc, false);
+-		stopped = ath_stoprecv(sc);
++	/*
++	 * This is only performed if the channel settings have
++	 * actually changed.
++	 *
++	 * To switch channels clear any pending DMA operations;
++	 * wait long enough for the RX fifo to drain, reset the
++	 * hardware at the new frequency, and then re-enable
++	 * the relevant bits of the h/w.
++	 */
++	ath9k_hw_set_interrupts(ah, 0);
++	ath_draintxq(sc, false);
++	stopped = ath_stoprecv(sc);
+ 
+-		/* XXX: do not flush receive queue here. We don't want
+-		 * to flush data frames already in queue because of
+-		 * changing channel. */
++	/* XXX: do not flush receive queue here. We don't want
++	 * to flush data frames already in queue because of
++	 * changing channel. */
+ 
+-		if (!stopped || (sc->sc_flags & SC_OP_FULL_RESET))
+-			fastcc = false;
++	if (!stopped || (sc->sc_flags & SC_OP_FULL_RESET))
++		fastcc = false;
+ 
+-		DPRINTF(sc, ATH_DBG_CONFIG,
+-			"(%u MHz) -> (%u MHz), chanwidth: %d\n",
+-			sc->sc_ah->ah_curchan->channel,
+-			c->center_freq, sc->tx_chan_width);
++	DPRINTF(sc, ATH_DBG_CONFIG,
++		"(%u MHz) -> (%u MHz), chanwidth: %d\n",
++		sc->sc_ah->ah_curchan->channel,
++		c->center_freq, sc->tx_chan_width);
+ 
+-		spin_lock_bh(&sc->sc_resetlock);
++	spin_lock_bh(&sc->sc_resetlock);
+ 
+-		r = ath9k_hw_reset(ah, fastcc);
+-		if (r) {
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Unable to reset channel %u (%uMhz) "
+-				"hal status %u\n",
+-				ieee80211_frequency_to_channel(c->center_freq),
+-				c->center_freq,
+-				r);
+-			spin_unlock_bh(&sc->sc_resetlock);
+-			return r;
+-		}
++	r = ath9k_hw_reset(ah, fastcc);
++	if (r) {
++		DPRINTF(sc, ATH_DBG_FATAL,
++		  "Unable to reset channel %u (%uMhz) "
++		  "hal status %u\n",
++		  ieee80211_frequency_to_channel(c->center_freq),
++		  c->center_freq, r);
+ 		spin_unlock_bh(&sc->sc_resetlock);
++		return r;
++	}
++	spin_unlock_bh(&sc->sc_resetlock);
+ 
+-		sc->sc_flags &= ~SC_OP_CHAINMASK_UPDATE;
+-		sc->sc_flags &= ~SC_OP_FULL_RESET;
+-
+-		if (ath_startrecv(sc) != 0) {
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Unable to restart recv logic\n");
+-			return -EIO;
+-		}
++	sc->sc_flags &= ~SC_OP_CHAINMASK_UPDATE;
++	sc->sc_flags &= ~SC_OP_FULL_RESET;
+ 
+-		ath_cache_conf_rate(sc, &hw->conf);
+-		ath_update_txpow(sc);
+-		ath9k_hw_set_interrupts(ah, sc->sc_imask);
++	if (ath_startrecv(sc) != 0) {
++		DPRINTF(sc, ATH_DBG_FATAL,
++			"Unable to restart recv logic\n");
++		return -EIO;
+ 	}
++
++	ath_cache_conf_rate(sc, &hw->conf);
++	ath_update_txpow(sc);
++	ath9k_hw_set_interrupts(ah, sc->sc_imask);
++
+ 	return 0;
+ }
+ 
 -- 
-Andrey Yurovsky
-cozybit Inc.
+1.5.6.rc2.15.g457bb.dirty
+
