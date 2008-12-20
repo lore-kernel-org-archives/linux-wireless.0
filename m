@@ -1,36 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51157 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771AbYLRPpN (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:1910 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820AbYLTKCS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 10:45:13 -0500
-Date: Thu, 18 Dec 2008 10:31:49 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Rami Rosen <ramirose@gmail.com>, linux-wireless@vger.kernel.org,
-	reinette.chatre@intel.com
-Subject: Re: [PATCH] [v3] iwlwifi: iwl-tx.c cleanup (remove unused
-	parameters).
-Message-ID: <20081218153149.GE4121@tuxdriver.com> (sfid-20081218_164518_437786_8A8524BD)
-References: <eb3ff54b0812152335p6f768aa4r7ad68b33e62bd20b@mail.gmail.com> <20081217163908.GD12679@tuxdriver.com> <eb3ff54b0812171351r50de6af0td15bf29d7e863212@mail.gmail.com> <1ba2fa240812171442i2a348e91paf3434d6b975642e@mail.gmail.com>
+	Sat, 20 Dec 2008 05:02:18 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so189866nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2008 02:02:17 -0800 (PST)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 12/15] Allow drivers to pass the noise value during rxdone
+Date: Sat, 20 Dec 2008 10:59:29 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200812201052.00655.IvDoorn@gmail.com> <200812201058.33821.IvDoorn@gmail.com> <200812201059.02959.IvDoorn@gmail.com>
+In-Reply-To: <200812201059.02959.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240812171442i2a348e91paf3434d6b975642e@mail.gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812201059.30095.IvDoorn@gmail.com> (sfid-20081220_110905_007417_EC23AC93)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 18, 2008 at 12:42:37AM +0200, Tomas Winkler wrote:
-> On Wed, Dec 17, 2008 at 11:51 PM, Rami Rosen <ramirose@gmail.com> wrote:
-> > This patch removes unused parameters in methods in iwl-tx.c:
-> > remove a parameter (is_unicast) from iwl_tx_cmd_build_basic()
-> > remove a parameter (sta_id) from iwl_tx_cmd_build_rate()
-> > remove a parameter (sta_id ) from iwl_tx_cmd_build_hwcrypto()
-> 
-> Unicast can go sta_id has to stay, we need it for merging 3945 back
 
-OK, I'll drop this patch and wait for a new submission.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |    1 +
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 3cb417f..841879d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -407,6 +407,7 @@ void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
+ 	rx_status->rate_idx = idx;
+ 	rx_status->qual = rt2x00link_calculate_signal(rt2x00dev, rxdesc.rssi);
+ 	rx_status->signal = rxdesc.rssi;
++	rx_status->noise = rxdesc.noise;
+ 	rx_status->flag = rxdesc.flags;
+ 	rx_status->antenna = rt2x00dev->link.ant.active.rx;
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 5a9d2c3..1bd1a95 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -165,6 +165,7 @@ enum rxdone_entry_desc_flags {
+  * @timestamp: RX Timestamp
+  * @signal: Signal of the received frame.
+  * @rssi: RSSI of the received frame.
++ * @noise: Measured noise during frame reception.
+  * @size: Data size of the received frame.
+  * @flags: MAC80211 receive flags (See &enum mac80211_rx_flags).
+  * @dev_flags: Ralink receive flags (See &enum rxdone_entry_desc_flags).
+@@ -177,6 +178,7 @@ struct rxdone_entry_desc {
+ 	u64 timestamp;
+ 	int signal;
+ 	int rssi;
++	int noise;
+ 	int size;
+ 	int flags;
+ 	int dev_flags;
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+1.5.6.1
+
