@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sr02-02.mta.terra.com.br ([200.154.152.31]:41063 "EHLO
-	sr02-02.mta.terra.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbYLUVNy (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:53948 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751540AbYLTKCU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 16:13:54 -0500
-Message-ID: <494EB1A1.5080209@unitednerds.org> (sfid-20081221_221411_022493_C5AA2E8D)
-Date: Sun, 21 Dec 2008 19:14:09 -0200
-From: Piter PUNK <piterpunk@unitednerds.org>
+	Sat, 20 Dec 2008 05:02:20 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so125886eye.37
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2008 02:02:19 -0800 (PST)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 14/15] rt2x00: Fix segementation fault
+Date: Sat, 20 Dec 2008 11:00:23 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200812201052.00655.IvDoorn@gmail.com> <200812201059.30095.IvDoorn@gmail.com> <200812201059.55767.IvDoorn@gmail.com>
+In-Reply-To: <200812201059.55767.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Fabio Rossi <rossi.f@inwind.it>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: Re: rtl8180: the network interface is not anymore created
-References: <200812211710.23846.rossi.f@inwind.it> <494E852E.4070002@lwfinger.net>
-In-Reply-To: <494E852E.4070002@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812201100.24069.IvDoorn@gmail.com> (sfid-20081220_110904_831174_DE9B4256)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Fabio Rossi wrote:
->> I was using successfully the rtl8180 driver but after last git-pull the 
->> network interface (wlan0) is not anymore created.
-> 
-> Fabio,
-> 
-> Does this patch fix it for you?
+The queue_end() macro points to 1 position after the
+queue, which means that if we want to know if queue
+is at the end of the queue we should first increment
+the position and then check if it is a valid entry.
 
-I was with the same problem using linville branch (to test rtl8187se
-support). I thought the wlan0 missing was some problem with the
-rtl8187se support.
+This fixes a segmentation fault which only occurs when
+the device has enough endpoints to provide a dedicated
+endpoint for all TX queues (which likely won't happen
+for rt2500usb and rt73usb, but will happen for rt2800usb).
 
-I apply the patch and now I have an wlan0 interface! -:)
-I can't see now if the interface is really working, no AP near
-to test. But the wlan0 now is created
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
-> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
-> @@ -898,6 +898,7 @@ static int __devinit rtl8180_probe(struc
->  	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
->  		     IEEE80211_HW_RX_INCLUDES_FCS |
->  		     IEEE80211_HW_SIGNAL_UNSPEC;
-> +	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
->  	dev->queues = 1;
->  	dev->max_signal = 65;
-
-Thanks!
-
-Piter PUNK
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 83df312..0b29d76 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -434,11 +434,11 @@ static int rt2x00usb_find_endpoints(struct rt2x00_dev *rt2x00dev)
+ 
+ 		if (usb_endpoint_is_bulk_in(ep_desc)) {
+ 			rt2x00usb_assign_endpoint(rt2x00dev->rx, ep_desc);
+-		} else if (usb_endpoint_is_bulk_out(ep_desc)) {
++		} else if (usb_endpoint_is_bulk_out(ep_desc) &&
++			   (queue != queue_end(rt2x00dev))) {
+ 			rt2x00usb_assign_endpoint(queue, ep_desc);
++			queue = queue_next(queue);
+ 
+-			if (queue != queue_end(rt2x00dev))
+-				queue = queue_next(queue);
+ 			tx_ep_desc = ep_desc;
+ 		}
+ 	}
+-- 
+1.5.6.1
 
