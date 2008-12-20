@@ -1,45 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:58856 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756068AbYLPUic (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 15:38:32 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so304033ugf.37
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 12:38:31 -0800 (PST)
-Message-ID: <eb3ff54b0812161238y1ffdff2blf383e5354fdd5232@mail.gmail.com> (sfid-20081216_213837_081698_0C74E741)
-Date: Tue, 16 Dec 2008 22:38:29 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH] mac80211: fix an error in ieee80211_send_assoc() method.
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
+Received: from mail.atheros.com ([12.36.123.2]:32073 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751832AbYLTFz2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Dec 2008 00:55:28 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 21:55:28 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
+	<johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<buytenh@wantstofly.org>
+Subject: [PATCH 01/16] mac80211: add HT conf helpers
+Date: Fri, 19 Dec 2008 21:55:07 -0800
+Message-ID: <1229752522-1917-2-git-send-email-lrodriguez@atheros.com> (sfid-20081220_065537_568418_80618C3C)
+In-Reply-To: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
+References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an error in ieee80211_send_assoc(), net/mac80211/mlme.c.
+In HT capable drivers you often need to check if you
+are currently using HT20 or HT40. This adds a few small
+helpers to let drivers figure that out.
 
-The error is usage of a wrong member when building
-the ie80211 management frame (it should be assoc_req, and not reassoc_req).
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/mac80211.h |   40 ++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 40 insertions(+), 0 deletions(-)
 
-This error is due to commit ea95bba41e69c616bb1512cf59d22f33266b8568,
-which dealt with configuring a listen interval , from Jul 18, 2008.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b3bd00a..33891f9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1963,4 +1963,44 @@ rate_lowest_index(struct ieee80211_supported_band *sband,
+ int ieee80211_rate_control_register(struct rate_control_ops *ops);
+ void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
+ 
++static inline bool
++conf_is_ht20(struct ieee80211_conf *conf)
++{
++	if (conf->ht.channel_type == NL80211_CHAN_HT20)
++		return true;
++	return false;
++}
++
++static inline bool
++conf_is_ht40_minus(struct ieee80211_conf *conf)
++{
++	if (conf->ht.channel_type == NL80211_CHAN_HT40MINUS)
++		return true;
++	return false;
++}
++
++static inline bool
++conf_is_ht40_plus(struct ieee80211_conf *conf)
++{
++	if (conf->ht.channel_type == NL80211_CHAN_HT40PLUS)
++		return true;
++	return false;
++}
++
++static inline bool
++conf_is_ht40(struct ieee80211_conf *conf)
++{
++	if (conf_is_ht40_minus(conf) || conf_is_ht40_plus(conf))
++		return true;
++	return false;
++}
++
++static inline bool
++conf_is_ht(struct ieee80211_conf *conf)
++{
++	if (conf_is_ht20(conf) || conf_is_ht40(conf))
++		return true;
++	return false;
++}
++
+ #endif /* MAC80211_H */
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
-(wireless-testing)
-
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9a06905..829cdf8 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -309,7 +309,7 @@ static void ieee80211_send_assoc(struct
-ieee80211_sub_if_data *sdata,
- 		mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 						  IEEE80211_STYPE_ASSOC_REQ);
- 		mgmt->u.assoc_req.capab_info = cpu_to_le16(capab);
--		mgmt->u.reassoc_req.listen_interval =
-+		mgmt->u.assoc_req.listen_interval =
- 				cpu_to_le16(local->hw.conf.listen_interval);
- 	}
