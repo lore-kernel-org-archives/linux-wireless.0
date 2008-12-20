@@ -1,200 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22673 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:10380 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751479AbYLWX7S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 18:59:18 -0500
+	id S1751642AbYLTF4B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Dec 2008 00:56:01 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 15:59:18 -0800
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 21:56:00 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
 CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
 	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v3 07/16] ath9k: use ieee80211_conf on ath9k_hw_iscal_supported()
-Date: Tue, 23 Dec 2008 15:58:42 -0800
-Message-ID: <1230076731-22946-8-git-send-email-lrodriguez@atheros.com> (sfid-20081224_005921_943494_9D15556F)
-In-Reply-To: <1230076731-22946-7-git-send-email-lrodriguez@atheros.com>
-References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-5-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-6-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-7-git-send-email-lrodriguez@atheros.com>
+Subject: [PATCH 13/16] ath9k: remove ath9k_hw_chan2wmode()
+Date: Fri, 19 Dec 2008 21:55:19 -0800
+Message-ID: <1229752522-1917-14-git-send-email-lrodriguez@atheros.com> (sfid-20081220_065611_648635_52CB5EA4)
+In-Reply-To: <1229752522-1917-13-git-send-email-lrodriguez@atheros.com>
+References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-3-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-4-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-5-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-6-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-7-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-8-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-9-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-10-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-11-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-12-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-13-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_hw_iscal_supported() just needs to be aware of your band
-and if HT20 is being used so lets abandon our internal channel,
-HT appended values and internal mode values and use ieee80211_conf
-which already carries this information. This works as calibration
-is being done for the currently configured channel.
+The only left users are for timing for ACK timeout, slotime and
+CTS timeout. We currently use an array CLOCK_RATE to keep
+these values per mode and since as only will use A and G
+we can depend on the band to get the appropriate values.
+
+We note that we should be using a different clock rate value
+for CCK, we can do this in separate patch, currently this is
+being disregarded and should only affect when we want to
+change the default ACK/CTS timeout or slot time and stuck
+with using using 802.11b.
 
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath9k/ath9k.h |    3 +-
- drivers/net/wireless/ath9k/calib.c |   63 ++++++++++++++---------------------
- drivers/net/wireless/ath9k/main.c  |    3 +-
- 3 files changed, 27 insertions(+), 42 deletions(-)
+ drivers/net/wireless/ath9k/hw.c |   46 ++++++++++++++++----------------------
+ 1 files changed, 19 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index 78fffdf..adcd342 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -949,8 +949,7 @@ void ath9k_hw_ani_detach(struct ath_hal *ah);
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index eb0ec06..436fbc8 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -23,7 +23,9 @@
+ #include "phy.h"
+ #include "initvals.h"
  
- /* Calibration */
+-static const u8 CLOCK_RATE[] = { 40, 80, 22, 44, 88, 40 };
++#define ATH9K_CLOCK_RATE_CCK		22
++#define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
++#define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
  
--void ath9k_hw_reset_calvalid(struct ath_hal *ah, struct ath9k_channel *chan,
--			     bool *isCalDone);
-+bool ath9k_hw_reset_calvalid(struct ath_hal *ah);
- void ath9k_hw_start_nfcal(struct ath_hal *ah);
- void ath9k_hw_loadnf(struct ath_hal *ah, struct ath9k_channel *chan);
- int16_t ath9k_hw_getnf(struct ath_hal *ah,
-diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
-index 2a6b8a4..7072896 100644
---- a/drivers/net/wireless/ath9k/calib.c
-+++ b/drivers/net/wireless/ath9k/calib.c
-@@ -277,27 +277,24 @@ static void ath9k_hw_per_calibration(struct ath_hal *ah,
- 	}
- }
+ extern struct hal_percal_data iq_cal_multi_sample;
+ extern struct hal_percal_data iq_cal_single_sample;
+@@ -48,17 +50,18 @@ static void ath9k_hw_spur_mitigate(struct ath_hal *ah, struct ath9k_channel *cha
  
-+/* Assumes you are talking about the currently configured channel */
- static bool ath9k_hw_iscal_supported(struct ath_hal *ah,
--				     struct ath9k_channel *chan,
- 				     enum hal_cal_types calType)
+ static u32 ath9k_hw_mac_usec(struct ath_hal *ah, u32 clks)
  {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	bool retval = false;
+-	if (ah->ah_curchan != NULL)
+-		return clks / CLOCK_RATE[ath9k_hw_chan2wmode(ah, ah->ah_curchan)];
+-	else
+-		return clks / CLOCK_RATE[ATH9K_MODE_11B];
 +	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
- 
- 	switch (calType & ahp->ah_suppCals) {
--	case IQ_MISMATCH_CAL:
--		if (!IS_CHAN_B(chan))
--			retval = true;
--		break;
-+	case IQ_MISMATCH_CAL: /* Both 2 GHz and 5 GHz support OFDM */
-+		return true;
- 	case ADC_GAIN_CAL:
- 	case ADC_DC_CAL:
--		if (!IS_CHAN_B(chan)
--		    && !(IS_CHAN_2GHZ(chan) && IS_CHAN_HT20(chan)))
--			retval = true;
-+		if (conf->channel->band == IEEE80211_BAND_5GHZ &&
-+		  conf_is_ht20(conf))
-+			return true;
- 		break;
- 	}
--
--	return retval;
-+	return false;
++	if (!ah->ah_curchan) /* should really check for CCK instead */
++		return clks / ATH9K_CLOCK_RATE_CCK;
++	if (conf->channel->band == IEEE80211_BAND_2GHZ)
++		return clks / ATH9K_CLOCK_RATE_2GHZ_OFDM;
++	return clks / ATH9K_CLOCK_RATE_5GHZ_OFDM;
  }
  
- static void ath9k_hw_iqcal_collect(struct ath_hal *ah)
-@@ -565,50 +562,40 @@ static void ath9k_hw_adc_dccal_calibrate(struct ath_hal *ah, u8 numChains)
- 		  AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE);
- }
- 
--void ath9k_hw_reset_calvalid(struct ath_hal *ah, struct ath9k_channel *chan,
--			     bool *isCalDone)
-+/* This is done for the currently configured channel */
-+bool ath9k_hw_reset_calvalid(struct ath_hal *ah)
+ static u32 ath9k_hw_mac_to_usec(struct ath_hal *ah, u32 clks)
  {
- 	struct ath_hal_5416 *ahp = AH5416(ah);
--	struct ath9k_channel *ichan =
--		ath9k_regd_check_channel(ah, chan);
+-	struct ath9k_channel *chan = ah->ah_curchan;
+-
+-	if (chan && IS_CHAN_HT40(chan))
 +	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
- 	struct hal_cal_list *currCal = ahp->ah_cal_list_curr;
++	if (conf_is_ht40(conf))
+ 		return ath9k_hw_mac_usec(ah, clks) / 2;
+ 	else
+ 		return ath9k_hw_mac_usec(ah, clks);
+@@ -66,34 +69,23 @@ static u32 ath9k_hw_mac_to_usec(struct ath_hal *ah, u32 clks)
  
--	*isCalDone = true;
-+	if (!ah->ah_curchan)
-+		return true;
- 
- 	if (!AR_SREV_9100(ah) && !AR_SREV_9160_10_OR_LATER(ah))
--		return;
-+		return true;
- 
- 	if (currCal == NULL)
--		return;
--
--	if (ichan == NULL) {
--		DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
--			"invalid channel %u/0x%x; no mapping\n",
--			chan->channel, chan->channelFlags);
--		return;
--	}
--
-+		return true;
- 
- 	if (currCal->calState != CAL_DONE) {
- 		DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
- 			"Calibration state incorrect, %d\n",
- 			currCal->calState);
--		return;
-+		return true;
- 	}
- 
--
--	if (!ath9k_hw_iscal_supported(ah, chan, currCal->calData->calType))
--		return;
-+	if (!ath9k_hw_iscal_supported(ah, currCal->calData->calType))
-+		return true;
- 
- 	DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
--		"Resetting Cal %d state for channel %u/0x%x\n",
--		currCal->calData->calType, chan->channel,
--		chan->channelFlags);
-+		"Resetting Cal %d state for channel %u\n",
-+		currCal->calData->calType, conf->channel->center_freq);
- 
--	ichan->CalValid &= ~currCal->calData->calType;
-+	ah->ah_curchan->CalValid &= ~currCal->calData->calType;
- 	currCal->calState = CAL_WAITING;
- 
--	*isCalDone = false;
-+	return false;
+ static u32 ath9k_hw_mac_clks(struct ath_hal *ah, u32 usecs)
+ {
+-	if (ah->ah_curchan != NULL)
+-		return usecs * CLOCK_RATE[ath9k_hw_chan2wmode(ah,
+-			ah->ah_curchan)];
+-	else
+-		return usecs * CLOCK_RATE[ATH9K_MODE_11B];
++	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
++	if (!ah->ah_curchan) /* should really check for CCK instead */
++		return usecs *ATH9K_CLOCK_RATE_CCK;
++	if (conf->channel->band == IEEE80211_BAND_2GHZ)
++		return usecs *ATH9K_CLOCK_RATE_2GHZ_OFDM;
++	return usecs *ATH9K_CLOCK_RATE_5GHZ_OFDM;
  }
  
- void ath9k_hw_start_nfcal(struct ath_hal *ah)
-@@ -933,19 +920,19 @@ bool ath9k_hw_init_cal(struct ath_hal *ah,
- 	ahp->ah_cal_list = ahp->ah_cal_list_last = ahp->ah_cal_list_curr = NULL;
+ static u32 ath9k_hw_mac_to_clks(struct ath_hal *ah, u32 usecs)
+ {
+-	struct ath9k_channel *chan = ah->ah_curchan;
+-
+-	if (chan && IS_CHAN_HT40(chan))
++	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
++	if (conf_is_ht40(conf))
+ 		return ath9k_hw_mac_clks(ah, usecs) * 2;
+ 	else
+ 		return ath9k_hw_mac_clks(ah, usecs);
+ }
  
- 	if (AR_SREV_9100(ah) || AR_SREV_9160_10_OR_LATER(ah)) {
--		if (ath9k_hw_iscal_supported(ah, chan, ADC_GAIN_CAL)) {
-+		if (ath9k_hw_iscal_supported(ah, ADC_GAIN_CAL)) {
- 			INIT_CAL(&ahp->ah_adcGainCalData);
- 			INSERT_CAL(ahp, &ahp->ah_adcGainCalData);
- 			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
- 				"enabling ADC Gain Calibration.\n");
- 		}
--		if (ath9k_hw_iscal_supported(ah, chan, ADC_DC_CAL)) {
-+		if (ath9k_hw_iscal_supported(ah, ADC_DC_CAL)) {
- 			INIT_CAL(&ahp->ah_adcDcCalData);
- 			INSERT_CAL(ahp, &ahp->ah_adcDcCalData);
- 			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
- 				"enabling ADC DC Calibration.\n");
- 		}
--		if (ath9k_hw_iscal_supported(ah, chan, IQ_MISMATCH_CAL)) {
-+		if (ath9k_hw_iscal_supported(ah, IQ_MISMATCH_CAL)) {
- 			INIT_CAL(&ahp->ah_iqCalData);
- 			INSERT_CAL(ahp, &ahp->ah_iqCalData);
- 			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 7507d9a..5455d3c 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -372,8 +372,7 @@ static void ath_ani_calibrate(unsigned long data)
- 	} else {
- 		if ((timestamp - sc->sc_ani.sc_resetcal_timer) >=
- 		    ATH_RESTART_CALINTERVAL) {
--			ath9k_hw_reset_calvalid(ah, ah->ah_curchan,
--						&sc->sc_ani.sc_caldone);
-+			sc->sc_ani.sc_caldone = ath9k_hw_reset_calvalid(ah);
- 			if (sc->sc_ani.sc_caldone)
- 				sc->sc_ani.sc_resetcal_timer = timestamp;
- 		}
+-enum wireless_mode ath9k_hw_chan2wmode(struct ath_hal *ah,
+-			       const struct ath9k_channel *chan)
+-{
+-	if (IS_CHAN_B(chan))
+-		return ATH9K_MODE_11B;
+-	if (IS_CHAN_G(chan))
+-		return ATH9K_MODE_11G;
+-
+-	return ATH9K_MODE_11A;
+-}
+-
+ bool ath9k_hw_wait(struct ath_hal *ah, u32 reg, u32 mask, u32 val)
+ {
+ 	int i;
 -- 
-1.6.1.rc3.51.g5832d
+1.5.6.rc2.15.g457bb.dirty
 
