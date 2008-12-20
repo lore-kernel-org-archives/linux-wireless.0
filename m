@@ -1,222 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:56808 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752469AbYLRVRQ (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:41773 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750825AbYLTFx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 16:17:16 -0500
-Received: from esebh107.NOE.Nokia.com (esebh107.ntc.nokia.com [172.21.143.143])
-	by mgw-mx06.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mBILHCbC030268
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 23:17:12 +0200
-Received: from [127.0.1.1] (essapo-nirac25252.europe.nokia.com [10.162.252.52])
-	by mgw-int02.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mBILH5Mo001575
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 23:17:06 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH v5 2/3] mac80211: track master queue status
-To: linux-wireless@vger.kernel.org
-Date: Thu, 18 Dec 2008 23:17:05 +0200
-Message-ID: <20081218211705.6842.84538.stgit@tikku> (sfid-20081218_221726_933579_333715AC)
-In-Reply-To: <20081218211532.6842.88104.stgit@tikku>
-References: <20081218211532.6842.88104.stgit@tikku>
+	Sat, 20 Dec 2008 00:53:58 -0500
+Message-ID: <494C8874.7010101@lwfinger.net> (sfid-20081220_065424_619062_3487E357)
+Date: Fri, 19 Dec 2008 23:53:56 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Christian Lamparter <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/2] p54usb: fix random traffic stalls (LM87)
+References: <200812200221.56534.chunkeey@web.de> <494C8705.2030407@lwfinger.net>
+In-Reply-To: <494C8705.2030407@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a preparation for the dynamic power save support. In future there are
-two paths to stop the master queues and we need to track this properly to
-avoid starting queues incorrectly. Implement this by adding a status
-array for each queue.
+Larry Finger wrote:
+> 
+> When the connection failed, unloading the driver and reloading it yielded the lines
+> 
+> usb 1-5: (p54usb) reset failed! (-22)
+> p54usb: probe of 1-5:1.0 failed with error -22
 
-The original idea and design is from Johannes Berg, I just did
-the implementation based on his notes. All the bugs are mine, of course.
+I think this problem was thermal. After the device sat on the shelf for 20
+minutes, it worked fine. Maybe I need a better heat sink as well.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
-
- net/mac80211/ieee80211_i.h |   12 ++++++
- net/mac80211/main.c        |    2 +
- net/mac80211/util.c        |   86 +++++++++++++++++++++++++++++++++++++++++---
- 3 files changed, 93 insertions(+), 7 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 18b9160..a74d673 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -538,6 +538,10 @@ enum {
- 	IEEE80211_ADDBA_MSG	= 4,
- };
- 
-+enum queue_stop_reason {
-+	IEEE80211_QUEUE_STOP_REASON_DRIVER,
-+};
-+
- /* maximum number of hardware queues we support. */
- #define QD_MAX_QUEUES (IEEE80211_MAX_AMPDU_QUEUES + IEEE80211_MAX_QUEUES)
- 
-@@ -554,7 +558,8 @@ struct ieee80211_local {
- 	const struct ieee80211_ops *ops;
- 
- 	unsigned long queue_pool[BITS_TO_LONGS(QD_MAX_QUEUES)];
--
-+	unsigned long queue_stop_reasons[IEEE80211_MAX_QUEUES];
-+	spinlock_t queue_stop_reason_lock;
- 	struct net_device *mdev; /* wmaster# - "master" 802.11 device */
- 	int open_count;
- 	int monitors, cooked_mntrs;
-@@ -972,6 +977,11 @@ int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
- u64 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 			      enum ieee80211_band band);
- 
-+void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
-+				     enum queue_stop_reason reason);
-+void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
-+				     enum queue_stop_reason reason);
-+
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
- #else
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index a0371ca..7c6e90a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -724,6 +724,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 
- 	spin_lock_init(&local->key_lock);
- 
-+	spin_lock_init(&local->queue_stop_reason_lock);
-+
- 	INIT_DELAYED_WORK(&local->scan_work, ieee80211_scan_work);
- 
- 	sta_info_init(local);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 71a8391..fb89e1d 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -330,10 +330,20 @@ __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_ctstoself_duration);
- 
--void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
-+static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
-+				   enum queue_stop_reason reason)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 
-+	/* we don't need to track ampdu queues */
-+	if (queue < ieee80211_num_regular_queues(hw)) {
-+		__clear_bit(reason, &local->queue_stop_reasons[queue]);
-+
-+		if (local->queue_stop_reasons[queue] != 0)
-+			/* someone still has this queue stopped */
-+			return;
-+	}
-+
- 	if (test_bit(queue, local->queues_pending)) {
- 		set_bit(queue, local->queues_pending_run);
- 		tasklet_schedule(&local->tx_pending_tasklet);
-@@ -341,22 +351,74 @@ void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
- 		netif_wake_subqueue(local->mdev, queue);
- 	}
- }
-+
-+void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
-+				    enum queue_stop_reason reason)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-+	__ieee80211_wake_queue(hw, queue, reason);
-+	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+}
-+
-+void ieee80211_wake_queue(struct ieee80211_hw *hw, int queue)
-+{
-+	ieee80211_wake_queue_by_reason(hw, queue,
-+				       IEEE80211_QUEUE_STOP_REASON_DRIVER);
-+}
- EXPORT_SYMBOL(ieee80211_wake_queue);
- 
--void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue)
-+static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
-+				   enum queue_stop_reason reason)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 
-+	/* we don't need to track ampdu queues */
-+	if (queue < ieee80211_num_regular_queues(hw))
-+		__set_bit(reason, &local->queue_stop_reasons[queue]);
-+
- 	netif_stop_subqueue(local->mdev, queue);
- }
-+
-+void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
-+				    enum queue_stop_reason reason)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-+	__ieee80211_stop_queue(hw, queue, reason);
-+	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+}
-+
-+void ieee80211_stop_queue(struct ieee80211_hw *hw, int queue)
-+{
-+	ieee80211_stop_queue_by_reason(hw, queue,
-+				       IEEE80211_QUEUE_STOP_REASON_DRIVER);
-+}
- EXPORT_SYMBOL(ieee80211_stop_queue);
- 
--void ieee80211_stop_queues(struct ieee80211_hw *hw)
-+void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
-+				    enum queue_stop_reason reason)
- {
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	unsigned long flags;
- 	int i;
- 
-+	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-+
- 	for (i = 0; i < ieee80211_num_queues(hw); i++)
--		ieee80211_stop_queue(hw, i);
-+		__ieee80211_stop_queue(hw, i, reason);
-+
-+	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+}
-+
-+void ieee80211_stop_queues(struct ieee80211_hw *hw)
-+{
-+	ieee80211_stop_queues_by_reason(hw,
-+					IEEE80211_QUEUE_STOP_REASON_DRIVER);
- }
- EXPORT_SYMBOL(ieee80211_stop_queues);
- 
-@@ -367,12 +429,24 @@ int ieee80211_queue_stopped(struct ieee80211_hw *hw, int queue)
- }
- EXPORT_SYMBOL(ieee80211_queue_stopped);
- 
--void ieee80211_wake_queues(struct ieee80211_hw *hw)
-+void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
-+				     enum queue_stop_reason reason)
- {
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	unsigned long flags;
- 	int i;
- 
-+	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-+
- 	for (i = 0; i < hw->queues + hw->ampdu_queues; i++)
--		ieee80211_wake_queue(hw, i);
-+		__ieee80211_wake_queue(hw, i, reason);
-+
-+	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+}
-+
-+void ieee80211_wake_queues(struct ieee80211_hw *hw)
-+{
-+	ieee80211_wake_queues_by_reason(hw, IEEE80211_QUEUE_STOP_REASON_DRIVER);
- }
- EXPORT_SYMBOL(ieee80211_wake_queues);
- 
-
+Larry
