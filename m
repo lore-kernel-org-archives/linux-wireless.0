@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:38284 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754171AbYL1NRt (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:52039 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017AbYLTSxa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2008 08:17:49 -0500
-Date: Sun, 28 Dec 2008 13:17:45 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5 3/3] mac80211: implement dynamic power save
-Message-ID: <20081228131745.GA9554@srcf.ucam.org> (sfid-20081228_141759_323221_3842E353)
-References: <20081218211532.6842.88104.stgit@tikku> <20081218211712.6842.98402.stgit@tikku> <20081224132432.GA27658@srcf.ucam.org> <87wsdkmp54.fsf@nokia.com> <20081228130650.GA9083@srcf.ucam.org> <87sko8mohv.fsf@nokia.com>
+	Sat, 20 Dec 2008 13:53:30 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so529921yxm.1
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2008 10:53:29 -0800 (PST)
+Message-ID: <cef1c9520812201053m670a892am5980bfdfc1a746c7@mail.gmail.com> (sfid-20081220_195335_011254_58A3A7BC)
+Date: Sat, 20 Dec 2008 10:53:29 -0800
+From: "Daniel Wu" <dyqith@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] iwlwifi: Fix typo in iwl-commands.h for CCK rate bit range.
+Cc: "Tomas Winkler" <tomasw@gmail.com>,
+	"reinette chatre" <reinette.chatre@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87sko8mohv.fsf@nokia.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 28, 2008 at 03:13:32PM +0200, Kalle Valo wrote:
-> Matthew Garrett <mjg59@srcf.ucam.org> writes:
-> > It allows userspace applications to register their latency requirements. 
-> > There's a notifier chain that then allows drivers (or subsystems) to be 
-> > notified of the current requirements, the idea being that they can then 
-> > limit their deepest power saving mode to one that still satisfies the 
-> > userspace constraints.
-> 
-> Do these constrainsts also include network latency? Do you have any
-> suggestions for bedtime reading? :)
+My first (minor) patch, hopefully this is correct.
 
-Yes, one of the chains is network latency. It's documented in 
-Documentation/power/pm_qos_interface.txt.
 
+Fix a typo in iwl-commands.h for CCK rates which needs 7 bits and not 4.
+
+ Signed-off-by: Daniel Wu <dyqith@gmail.com>
+
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h
+b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 56f9a24..6a2445d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -294,7 +294,7 @@ struct iwl3945_power_per_rate {
+  *        0x3)  54 Mbps
+  *
+  * Legacy CCK rate format for bits 7:0 (bit 8 must be "0", bit 9 "1"):
+- *  3-0:   10)  1 Mbps
++ *  6-0:   10)  1 Mbps
+  *         20)  2 Mbps
+  *         55)  5.5 Mbps
+  *        110)  11 Mbps
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.5.4.3
