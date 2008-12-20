@@ -1,40 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:62511 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946AbYLAQRZ (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:43317 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbYLTKCE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 11:17:25 -0500
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>,
-	linux-wireless@vger.kernel.org, Tomas Winkler <tomasw@gmail.com>
-Subject: Re: [RFC] mac80211: Enhancements to dynamic power save.
-References: <20081202011754.GA9382@myhost.users.atheros.com>
-	<1228133121.3478.27.camel@johannes.berg>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 01 Dec 2008 18:17:10 +0200
-In-Reply-To: <1228133121.3478.27.camel@johannes.berg> (ext Johannes Berg's message of "Mon\, 01 Dec 2008 13\:05\:21 +0100")
-Message-ID: <873ah76fax.fsf@nokia.com> (sfid-20081201_171727_417620_CB3C8F8B)
+	Sat, 20 Dec 2008 05:02:04 -0500
+Received: by mail-ew0-f17.google.com with SMTP id 10so1457082ewy.13
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2008 02:02:03 -0800 (PST)
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 9/15] rt2x00: Split EEPROM_NIC_TX_RX_FIXED
+Date: Sat, 20 Dec 2008 10:57:47 +0100
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2400-devel@lists.sourceforge.net
+References: <200812201052.00655.IvDoorn@gmail.com> <200812201056.36218.IvDoorn@gmail.com> <200812201057.02583.IvDoorn@gmail.com>
+In-Reply-To: <200812201057.02583.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812201057.47712.IvDoorn@gmail.com> (sfid-20081220_110215_762633_4FE23D9F)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+The 2 bits in EEPROM_NIC_TX_RX_FIXED each influence
+a different antenna. We might as well split the
+definition and directly read the correct bit.
 
-> On Mon, 2008-12-01 at 17:17 -0800, Vivek Natarajan wrote:
->> This patch is based on Kalle's initial RFC patches on dynamic power save.
->> Since ath9k/ath5k,stlc45xx and b43 need the driver to send the null
->> frame, it is appropriate to do it from mac80211. 
->> This patch enables mac80211 to send a null frame and also to
->> check for tim in the beacon if power save is enabled.
->
-> One thing I forgot, do we need a special iwlwifi flag to turn this off?
-> Or can iwlwifi be programmed to let the host handle this (*), which
-> might be beneficial for interoperability and uniformity purposes?
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |   25 ++++++-------------------
+ drivers/net/wireless/rt2x00/rt61pci.h |    3 ++-
+ 2 files changed, 8 insertions(+), 20 deletions(-)
 
-Having the null frame handling in firmware is faster and we might get
-some power savings from that. But is the saving observable, that's an
-another question :)
-
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 2b72010..875acb3 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2232,7 +2232,8 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	if (word == 0xffff) {
+ 		rt2x00_set_field16(&word, EEPROM_NIC_ENABLE_DIVERSITY, 0);
+ 		rt2x00_set_field16(&word, EEPROM_NIC_TX_DIVERSITY, 0);
+-		rt2x00_set_field16(&word, EEPROM_NIC_TX_RX_FIXED, 0);
++		rt2x00_set_field16(&word, EEPROM_NIC_RX_FIXED, 0);
++		rt2x00_set_field16(&word, EEPROM_NIC_TX_FIXED, 0);
+ 		rt2x00_set_field16(&word, EEPROM_NIC_EXTERNAL_LNA_BG, 0);
+ 		rt2x00_set_field16(&word, EEPROM_NIC_CARDBUS_ACCEL, 0);
+ 		rt2x00_set_field16(&word, EEPROM_NIC_EXTERNAL_LNA_A, 0);
+@@ -2376,24 +2377,10 @@ static int rt61pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	if (rt2x00_rf(&rt2x00dev->chip, RF2529) &&
+ 	    !test_bit(CONFIG_DOUBLE_ANTENNA, &rt2x00dev->flags)) {
+-		switch (rt2x00_get_field16(eeprom, EEPROM_NIC_TX_RX_FIXED)) {
+-		case 0:
+-			rt2x00dev->default_ant.tx = ANTENNA_B;
+-			rt2x00dev->default_ant.rx = ANTENNA_A;
+-			break;
+-		case 1:
+-			rt2x00dev->default_ant.tx = ANTENNA_B;
+-			rt2x00dev->default_ant.rx = ANTENNA_B;
+-			break;
+-		case 2:
+-			rt2x00dev->default_ant.tx = ANTENNA_A;
+-			rt2x00dev->default_ant.rx = ANTENNA_A;
+-			break;
+-		case 3:
+-			rt2x00dev->default_ant.tx = ANTENNA_A;
+-			rt2x00dev->default_ant.rx = ANTENNA_B;
+-			break;
+-		}
++		rt2x00dev->default_ant.rx =
++		    ANTENNA_A + rt2x00_get_field16(eeprom, EEPROM_NIC_RX_FIXED);
++		rt2x00dev->default_ant.tx =
++		    ANTENNA_B - rt2x00_get_field16(eeprom, EEPROM_NIC_TX_FIXED);
+ 
+ 		if (rt2x00_get_field16(eeprom, EEPROM_NIC_TX_DIVERSITY))
+ 			rt2x00dev->default_ant.tx = ANTENNA_SW_DIVERSITY;
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
+index 86590c6..cd86def 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.h
++++ b/drivers/net/wireless/rt2x00/rt61pci.h
+@@ -1190,7 +1190,8 @@ struct hw_pairwise_ta_entry {
+ #define EEPROM_NIC			0x0011
+ #define EEPROM_NIC_ENABLE_DIVERSITY	FIELD16(0x0001)
+ #define EEPROM_NIC_TX_DIVERSITY		FIELD16(0x0002)
+-#define EEPROM_NIC_TX_RX_FIXED		FIELD16(0x000c)
++#define EEPROM_NIC_RX_FIXED		FIELD16(0x0004)
++#define EEPROM_NIC_TX_FIXED		FIELD16(0x0008)
+ #define EEPROM_NIC_EXTERNAL_LNA_BG	FIELD16(0x0010)
+ #define EEPROM_NIC_CARDBUS_ACCEL	FIELD16(0x0020)
+ #define EEPROM_NIC_EXTERNAL_LNA_A	FIELD16(0x0040)
 -- 
-Kalle Valo
+1.5.6.1
+
