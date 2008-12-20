@@ -1,96 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47332 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754116AbYLKSPZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 13:15:25 -0500
-Subject: Re: [Patch] nl80211: Add signal strength and bandwith to
-	nl80211station info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@googlemail.com>
-Cc: Henning Rogge <rogge@fgan.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812111902.24289.hrogge@googlemail.com> (sfid-20081211_190616_777198_C22FC159)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812111807.24168.hrogge@googlemail.com>
-	 <1229016248.8081.44.camel@johannes.berg>
-	 <200812111902.24289.hrogge@googlemail.com>
-	 (sfid-20081211_190616_777198_C22FC159)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-u8bb17tF9yYS94yK4p5H"
-Date: Thu, 11 Dec 2008 19:14:47 +0100
-Message-Id: <1229019287.8081.49.camel@johannes.berg> (sfid-20081211_191529_398601_57E03141)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:32074 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752077AbYLTFzb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Dec 2008 00:55:31 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 21:55:30 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 02/16] ath9k: use hw->conf on ath_setcurmode()
+Date: Fri, 19 Dec 2008 21:55:08 -0800
+Message-ID: <1229752522-1917-3-git-send-email-lrodriguez@atheros.com> (sfid-20081220_065538_287618_AEDD70C5)
+In-Reply-To: <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
+References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
+ <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We don't need to use our own mode for setting the
+the routine tries to do, in fact lets remove ath_chan2mode() now as
+we can simply use the currently set band and the HT configuration
+provided by mac80211 through the ieee80211_conf. This works on
+changing channels as well as the internal ath9k_channel we use is
+based on the ieee80211_channel in the config.
 
---=-u8bb17tF9yYS94yK4p5H
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   70 ++++++++++++++++++++-----------------
+ 1 files changed, 38 insertions(+), 32 deletions(-)
 
-On Thu, 2008-12-11 at 19:02 +0100, Henning Rogge wrote:
-
-> Okay... I have included a casting to s8 into cfg.c so everyone is warned.=
-..=20
-> the original signal field in the sta_info struct is an int, but this stru=
-cture=20
-> is used by the drivers so I don't want to touch it.
-
-Right, not sure what happens when it's not in dBm anyway.
-
-> > Can you also send me the corresponding iw patch?
-> Have to write a modified one, I will post it later this evening I think.
-
-Ok. I noticed a few more things, sorry:
-
-> + * enum nl80211_rate_info - bitrate information
-> + *
-> + * These attribute types are used with %NL80211_STA_INFO_TXRATE
-> + * when getting information about the bitrate of a station.
-> + *
-> + * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
-> + * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
-> + * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
-> + * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
-> + * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
-
-This needs documentation for __...after_last and ..._max too, I think,
-or kernel-doc will complain, and then I get email on the next daily git
-update and complain ;)
-
-Other than that,
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-so feel free to add that into the patch when you resend.
-
-johannes
-
---=-u8bb17tF9yYS94yK4p5H
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQViRAAoJEKVg1VMiehFYqRgP/1Ol4corZrHnDBeM3c+R+6PQ
-WC0OzZRmHIlMlqqkzs1wXOejYBQEiSxBzraK/FSXB0hu5vAVA6Op2+H/8vFG4enW
-tsSig47KW6E+BlbnHbVfGyEZBTorjuwx+kKRYUe5Rt5od4PVz1c/JCJ+fbNDeVWZ
-58tTf4VBN2vxltneb/de2TDTRzI7BZOzWysgtAaXsSKZiveSriPwkTwzVAoOMxdr
-4XkIIDqaMJocTMwI/7VYxcQ+I544XQbWfIqyl/zbmp37V8Hfdlrqg9Y0M4bJvYOL
-YSjKOMYGM0cRQd0jENfWCynF27vHmSfe+9n0jOW3OcsoeWprSvwqH97UjkHSE1e+
-ipzcbhml2BH0CLWsk3usWQjpJFCRjMo8aQLHxtRloB64D6IBxQywFlOPQlhT70CS
-7nObw7Ay7xGWVmEww33121IcXB/SUOvSpLDQrY1FzLrfuCFPrUKFEyNoHt6ADcVL
-AXazyG7iPuUcwU5Qe36csCifMZ+F5hrzQTlkNOELAgEwJ1cP0rrgMY4/FOVJAXPx
-2sBEWN1GdcFOE+hqnhA6/jpBhQNky19tH5+nFEar3ArbppZipHuT947G2g1l2ro8
-siQnCNu5dQgq8syVIHjMyuTdYmL26s5w3HpdWfvBJeUKPpi0wNJNfPShV8rpGPg0
-wFjk/81BjKr7oZaqgNbz
-=v94u
------END PGP SIGNATURE-----
-
---=-u8bb17tF9yYS94yK4p5H--
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 70affb7..a1bd611 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -59,41 +59,45 @@ static void bus_read_cachesize(struct ath_softc *sc, int *csz)
+ 		*csz = DEFAULT_CACHELINE >> 2;   /* Use the default size */
+ }
+ 
+-static void ath_setcurmode(struct ath_softc *sc, enum wireless_mode mode)
++static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
+ {
+-	sc->cur_rate_table = sc->hw_rate_table[mode];
+ 	/*
+ 	 * All protection frames are transmited at 2Mb/s for
+ 	 * 11g, otherwise at 1Mb/s.
+ 	 * XXX select protection rate index from rate table.
+ 	 */
+-	sc->sc_protrix = (mode == ATH9K_MODE_11G ? 1 : 0);
+-}
+-
+-static enum wireless_mode ath_chan2mode(struct ath9k_channel *chan)
+-{
+-	if (chan->chanmode == CHANNEL_A)
+-		return ATH9K_MODE_11A;
+-	else if (chan->chanmode == CHANNEL_G)
+-		return ATH9K_MODE_11G;
+-	else if (chan->chanmode == CHANNEL_B)
+-		return ATH9K_MODE_11B;
+-	else if (chan->chanmode == CHANNEL_A_HT20)
+-		return ATH9K_MODE_11NA_HT20;
+-	else if (chan->chanmode == CHANNEL_G_HT20)
+-		return ATH9K_MODE_11NG_HT20;
+-	else if (chan->chanmode == CHANNEL_A_HT40PLUS)
+-		return ATH9K_MODE_11NA_HT40PLUS;
+-	else if (chan->chanmode == CHANNEL_A_HT40MINUS)
+-		return ATH9K_MODE_11NA_HT40MINUS;
+-	else if (chan->chanmode == CHANNEL_G_HT40PLUS)
+-		return ATH9K_MODE_11NG_HT40PLUS;
+-	else if (chan->chanmode == CHANNEL_G_HT40MINUS)
+-		return ATH9K_MODE_11NG_HT40MINUS;
+-
+-	WARN_ON(1); /* should not get here */
+-
+-	return ATH9K_MODE_11B;
++	sc->sc_protrix = 0;
++	switch (conf->channel->band) {
++	case IEEE80211_BAND_2GHZ:
++		/* If the IEEE ends up deciding to support HT40 on 2 GHz
++		 * then we can map the HT40+ or HT40- to the appropriate rate
++		 * table then. For now only HT20 is only supported by
++		 * mac80211 */
++		if (conf_is_ht20(conf))
++			sc->cur_rate_table =
++			  sc->hw_rate_table[ATH9K_MODE_11NG_HT20];
++		else {
++			sc->sc_protrix = 1;
++			sc->cur_rate_table =
++			  sc->hw_rate_table[ATH9K_MODE_11G];
++		}
++		break;
++	case IEEE80211_BAND_5GHZ:
++		if (conf_is_ht20(conf))
++			sc->cur_rate_table =
++			  sc->hw_rate_table[ATH9K_MODE_11NA_HT20];
++		else if (conf_is_ht40_minus(conf))
++			sc->cur_rate_table =
++			  sc->hw_rate_table[ATH9K_MODE_11NA_HT40MINUS];
++		else if (conf_is_ht40_plus(conf))
++			sc->cur_rate_table =
++			  sc->hw_rate_table[ATH9K_MODE_11NG_HT40PLUS];
++		else
++			sc->cur_rate_table = sc->hw_rate_table[ATH9K_MODE_11A];
++		break;
++	default:
++		break;
++	}
+ }
+ 
+ static void ath_update_txpow(struct ath_softc *sc)
+@@ -258,6 +262,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ {
+ 	struct ath_hal *ah = sc->sc_ah;
+ 	bool fastcc = true, stopped;
++	struct ieee80211_hw *hw = sc->hw;
+ 
+ 	if (sc->sc_flags & SC_OP_INVALID)
+ 		return -EIO;
+@@ -316,7 +321,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 			return -EIO;
+ 		}
+ 
+-		ath_setcurmode(sc, ath_chan2mode(hchan));
++		ath_setcurmode(sc, &hw->conf);
+ 		ath_update_txpow(sc);
+ 		ath9k_hw_set_interrupts(ah, sc->sc_imask);
+ 	}
+@@ -1621,6 +1626,7 @@ detach:
+ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ {
+ 	struct ath_hal *ah = sc->sc_ah;
++	struct ieee80211_hw *hw = sc->hw;
+ 	int status;
+ 	int error = 0;
+ 
+@@ -1648,7 +1654,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	 * that changes the channel so update any state that
+ 	 * might change as a result.
+ 	 */
+-	ath_setcurmode(sc, ath_chan2mode(sc->sc_ah->ah_curchan));
++	ath_setcurmode(sc, &hw->conf);
+ 
+ 	ath_update_txpow(sc);
+ 
+@@ -1945,7 +1951,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	    !sc->sc_config.swBeaconProcess)
+ 		sc->sc_imask |= ATH9K_INT_TIM;
+ 
+-	ath_setcurmode(sc, ath_chan2mode(init_channel));
++	ath_setcurmode(sc, &hw->conf);
+ 
+ 	sc->sc_flags &= ~SC_OP_INVALID;
+ 
+-- 
+1.5.6.rc2.15.g457bb.dirty
 
