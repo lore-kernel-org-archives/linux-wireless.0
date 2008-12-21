@@ -1,59 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway14.websitewelcome.com ([69.93.164.18]:39941 "HELO
-	gateway14.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751598AbYLYUA1 (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:32803 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751082AbYLUXRx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Dec 2008 15:00:27 -0500
-Received: from 75-92-136-219.sea.clearwire-dns.net ([75.92.136.219]:59423 helo=Hydra.darkmatter.org)
-	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <Info@delphi-real-estate.com>)
-	id 1LFsdO-0007MD-As
-	for linux-wireless@vger.kernel.org; Thu, 25 Dec 2008 10:00:26 -0600
-From: Delphi Real Estate <Info@delphi-real-estate.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 4965AGN Not Associating
-Date: Thu, 25 Dec 2008 08:00:26 -0800
-References: <200812241158.29493.Info@delphi-real-estate.com> <1230166611.2688.3.camel@debian.sh.intel.com>
-In-Reply-To: <1230166611.2688.3.camel@debian.sh.intel.com>
+	Sun, 21 Dec 2008 18:17:53 -0500
+Message-ID: <494ECE9E.9020100@lwfinger.net> (sfid-20081222_001757_409296_2D33B252)
+Date: Sun, 21 Dec 2008 17:17:50 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812250800.26394.Info@delphi-real-estate.com> (sfid-20081225_210046_735327_5A057F9B)
+To: Christian Lamparter <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [RFC/RFT] p54: regulatory domain hint
+References: <200812212336.31267.chunkeey@web.de>
+In-Reply-To: <200812212336.31267.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Christian Lamparter wrote:
+> This patch adds a sub-routine that parses the default country eeprom entry
+> and forwards the obtained Alpha2 identifier to the regulatory sub-system.
 
-On Wednesday 24 December 2008 16:56:51 Zhu Yi wrote:
-> CONFIG_SND_HWDEP?
+My p54usb now recognizes that the US domain should be used, not the world value.
 
-Actually, it turned out to need snd-emu10k1 enabled, amazingly.  Then it compiled fine, but crashed on boot when it was time to pivot to /dev/sda1.  Found the problem was the disk controller driver needed to be compiled in, not a module.
+ACK.
 
-So I now have kernel 2.6.27-11.22 running and the nice little blue wifi light which I'd never had before, and it twinkles, apparently with network access.  iwconfig, and indeed it is associated as it should be, showing 54Mb/s. No need for the external driver compile.  
-
-All right, so the kernel iwl modules are working with this kernel, good enough for me... although iwconfig shows, "Encryption key:AM32-52G0-50D6-130B-6AF0-201D-9450-H978 [2]   Security mode:open".  
-
-'Open'?  Homey don't think so.  The AP us set to WPA AES.  Why would it say it's open?
-
-Also, I want to switch to 802.11a for streaming media, so I'm not polluting everyone else's bandwidth.  How do I set this card to 'a' or 'n'?  Is there any way to set it to dual-band for the new routers which send normal traffic on 'g' and stream on 'a'?  How do I set it to WPA2?  
-
-IOW, how do I control this card?  Instructions are nowhere to be found.
-
-Currently my /etc/network/interfaces file is set thus and works (Network Manager is uninstalled and I don't trust it):
-iface wlan0 inet static
-pre-up /sbin/iwconfig wlan0 txpower 5
-pre-up ip link set wlan0 up
-address 192.168.1.1
-netmask 255.255.255.0
-gateway 192.168.1.5
-wireless-essid Hex
-wpa-scan-ssid 0
-wpa-ap-scan 1
-wpa-ssid Hex
-wpa-psk Freeasinfreedom
-
-
-
-
-
+Larry
 
