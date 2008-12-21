@@ -1,127 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37081 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752221AbYLVDip (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 22:38:45 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Samuel Ortiz <samuel.ortiz@intel.com>,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 05/10] iwl3945: switch to the iwl-core send_card_state routine
-Date: Mon, 22 Dec 2008 11:31:18 +0800
-Message-Id: <1229916683-9772-6-git-send-email-yi.zhu@intel.com> (sfid-20081222_043855_360272_B8E5F20D)
-In-Reply-To: <1229916683-9772-5-git-send-email-yi.zhu@intel.com>
-References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-3-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-4-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-5-git-send-email-yi.zhu@intel.com>
+Received: from sr02-02.mta.terra.com.br ([200.154.152.31]:41063 "EHLO
+	sr02-02.mta.terra.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193AbYLUVNy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2008 16:13:54 -0500
+Message-ID: <494EB1A1.5080209@unitednerds.org> (sfid-20081221_221411_022493_C5AA2E8D)
+Date: Sun, 21 Dec 2008 19:14:09 -0200
+From: Piter PUNK <piterpunk@unitednerds.org>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Fabio Rossi <rossi.f@inwind.it>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: Re: rtl8180: the network interface is not anymore created
+References: <200812211710.23846.rossi.f@inwind.it> <494E852E.4070002@lwfinger.net>
+In-Reply-To: <494E852E.4070002@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <samuel.ortiz@intel.com>
+Larry Finger wrote:
+> Fabio Rossi wrote:
+>> I was using successfully the rtl8180 driver but after last git-pull the 
+>> network interface (wlan0) is not anymore created.
+> 
+> Fabio,
+> 
+> Does this patch fix it for you?
 
-Switch iwl3945 to use iwl-core:send_card_state routine.
+I was with the same problem using linville branch (to test rtl8187se
+support). I thought the wlan0 missing was some problem with the
+rtl8187se support.
 
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c     |    3 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    3 ++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   34 +--------------------------
- 3 files changed, 6 insertions(+), 34 deletions(-)
+I apply the patch and now I have an wlan0 interface! -:)
+I can't see now if the interface is really working, no AP near
+to test. But the wlan0 now is created
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d3bcbba..eaae79b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1370,7 +1370,7 @@ EXPORT_SYMBOL(iwl_rf_kill_ct_config);
-  * When in the 'halt' state, the card is shut down and must be fully
-  * restarted to come back on.
-  */
--static int iwl_send_card_state(struct iwl_priv *priv, u32 flags, u8 meta_flag)
-+int iwl_send_card_state(struct iwl_priv *priv, u32 flags, u8 meta_flag)
- {
- 	struct iwl_host_cmd cmd = {
- 		.id = REPLY_CARD_STATE_CMD,
-@@ -1381,6 +1381,7 @@ static int iwl_send_card_state(struct iwl_priv *priv, u32 flags, u8 meta_flag)
- 
- 	return iwl_send_cmd(priv, &cmd);
- }
-+EXPORT_SYMBOL(iwl_send_card_state);
- 
- void iwl_radio_kill_sw_disable_radio(struct iwl_priv *priv)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 7c3a20a..2abda89 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -342,6 +342,9 @@ int iwl_send_cmd_pdu_async(struct iwl_priv *priv, u8 id, u16 len,
- 
- int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
- 
-+int iwl_send_card_state(struct iwl_priv *priv, u32 flags,
-+			u8 meta_flag);
-+
- /*****************************************************
-  * PCI						     *
-  *****************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 408a6d0..7cace6d 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1078,38 +1078,6 @@ static int iwl3945_send_scan_abort(struct iwl_priv *priv)
- 	return rc;
- }
- 
--static int iwl3945_card_state_sync_callback(struct iwl_priv *priv,
--					struct iwl_cmd *cmd,
--					struct sk_buff *skb)
--{
--	return 1;
--}
--
--/*
-- * CARD_STATE_CMD
-- *
-- * Use: Sets the device's internal card state to enable, disable, or halt
-- *
-- * When in the 'enable' state the card operates as normal.
-- * When in the 'disable' state, the card enters into a low power mode.
-- * When in the 'halt' state, the card is shut down and must be fully
-- * restarted to come back on.
-- */
--static int iwl3945_send_card_state(struct iwl_priv *priv, u32 flags, u8 meta_flag)
--{
--	struct iwl_host_cmd cmd = {
--		.id = REPLY_CARD_STATE_CMD,
--		.len = sizeof(u32),
--		.data = &flags,
--		.meta.flags = meta_flag,
--	};
--
--	if (meta_flag & CMD_ASYNC)
--		cmd.meta.u.callback = iwl3945_card_state_sync_callback;
--
--	return iwl3945_send_cmd(priv, &cmd);
--}
--
- static int iwl3945_add_sta_sync_callback(struct iwl_priv *priv,
- 				     struct iwl_cmd *cmd, struct sk_buff *skb)
- {
-@@ -2548,7 +2516,7 @@ static void iwl3945_radio_kill_sw(struct iwl_priv *priv, int disable_radio)
- 			iwl_write32(priv, CSR_UCODE_DRV_GP1_SET,
- 				    CSR_UCODE_SW_BIT_RFKILL);
- 			spin_unlock_irqrestore(&priv->lock, flags);
--			iwl3945_send_card_state(priv, CARD_STATE_CMD_DISABLE, 0);
-+			iwl_send_card_state(priv, CARD_STATE_CMD_DISABLE, 0);
- 			set_bit(STATUS_RF_KILL_SW, &priv->status);
- 		}
- 		return;
--- 
-1.5.3.6
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> @@ -898,6 +898,7 @@ static int __devinit rtl8180_probe(struc
+>  	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+>  		     IEEE80211_HW_RX_INCLUDES_FCS |
+>  		     IEEE80211_HW_SIGNAL_UNSPEC;
+> +	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+>  	dev->queues = 1;
+>  	dev->max_signal = 65;
+
+Thanks!
+
+Piter PUNK
+
 
