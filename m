@@ -1,45 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:46339 "EHLO
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:40820 "EHLO
 	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751156AbYLZSt5 (ORCPT
+	by vger.kernel.org with ESMTP id S1750825AbYLUSEd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2008 13:49:57 -0500
-Message-ID: <4955274D.30600@lwfinger.net> (sfid-20081226_195002_643687_2602A1A9)
-Date: Fri, 26 Dec 2008 12:49:49 -0600
+	Sun, 21 Dec 2008 13:04:33 -0500
+Message-ID: <494E852E.4070002@lwfinger.net> (sfid-20081221_190448_385691_AF830A3F)
+Date: Sun, 21 Dec 2008 12:04:30 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 3/3] p54: fix WARN_ON at line 2247 of net/mac80211/rx.c
-References: <200812261909.46094.chunkeey@web.de>
-In-Reply-To: <200812261909.46094.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Fabio Rossi <rossi.f@inwind.it>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+Subject: Re: rtl8180: the network interface is not anymore created
+References: <200812211710.23846.rossi.f@inwind.it>
+In-Reply-To: <200812211710.23846.rossi.f@inwind.it>
+Content-Type: multipart/mixed;
+ boundary="------------030507070608090304060304"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> This patch hopefully fixes a mac80211<->p54 interaction problem, which was
-> described by Larry Finger (ref: http://marc.info/?l=linux-wireless&m=123009889327707 )
-> 
-> I guess the warning was triggered by pending frames in the receive queue,
-> while we're doing a band change 5GHz.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> Larry,
-> 
-> Are you still hammering your p54usb, or have you finished testing p54(usb)'s stability?
-> Because I'm waiting for your confirmation for this one. hohohoho.
+This is a multi-part message in MIME format.
+--------------030507070608090304060304
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Merry Christmas (belated). Yes, this patch stopped the warnings, which started
-as a result of using the US, rather than world, regdom.
+Fabio Rossi wrote:
+> I was using successfully the rtl8180 driver but after last git-pull the 
+> network interface (wlan0) is not anymore created.
+> 
+> I have discovered the problem: there has been a change in mac80211, commit 
+> 3fc7826b95521e40cf53f63437a5fdcc24e54ac4. The problem is that the bit 
+> NL80211_IFTYPE_STATION is not set during the hardware initialization.
+> 
+> I guess that the problem might be solved inserting the following line of code
+> 
+>     dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+> 
+> somewhere in rtl8180_dev.c but I don't know which is the right point to do so.
 
-There are some things p54usb cannot handle such as a simultaneous git pull and
-full kernel compilation with the source volumes mounted with NFS. That could be
-thermal, although I'm still worried about the O(1) allocations of skb's on
-machines with 4K page size. Should I prepare a patch to reduce rx_mtu in the
-critical cases?
+Fabio,
 
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Does this patch fix it for you?
+
+Larry
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+@@ -898,6 +898,7 @@ static int __devinit rtl8180_probe(struc
+ 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 		     IEEE80211_HW_RX_INCLUDES_FCS |
+ 		     IEEE80211_HW_SIGNAL_UNSPEC;
++	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 	dev->queues = 1;
+ 	dev->max_signal = 65;
+
+
+
+--------------030507070608090304060304
+Content-Type: text/plain;
+ name="rtl8180_STA_init"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="rtl8180_STA_init"
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+@@ -898,6 +898,7 @@ static int __devinit rtl8180_probe(struc
+ 	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 		     IEEE80211_HW_RX_INCLUDES_FCS |
+ 		     IEEE80211_HW_SIGNAL_UNSPEC;
++	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 	dev->queues = 1;
+ 	dev->max_signal = 65;
+ 
+
+
+--------------030507070608090304060304--
