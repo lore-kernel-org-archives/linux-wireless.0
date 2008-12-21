@@ -1,76 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53247 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:36824 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751457AbYLJUqQ (ORCPT
+	with ESMTP id S1751628AbYLUKei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 15:46:16 -0500
-Subject: Re: [PATCH 1/2] Add signal strength and bandwith to nl80211station
-	info
+	Sun, 21 Dec 2008 05:34:38 -0500
+Subject: Re: [PATCH 05/16] wireless: allow for private channel area
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@googlemail.com>
-Cc: Henning Rogge <rogge@fgan.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812101840.32146.hrogge@googlemail.com> (sfid-20081210_184036_166802_3C0157B0)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812100753.58590.rogge@fgan.de> <1228899950.1029.33.camel@johannes.berg>
-	 <200812101840.32146.hrogge@googlemail.com>
-	 (sfid-20081210_184036_166802_3C0157B0)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6ltLO3pavlw5+UntCCyv"
-Date: Wed, 10 Dec 2008 21:45:37 +0100
-Message-Id: <1228941937.15837.71.camel@johannes.berg> (sfid-20081210_214620_597346_A5350AA0)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, kalle.valo@nokia.com
+In-Reply-To: <1229752522-1917-6-git-send-email-lrodriguez@atheros.com> (sfid-20081220_065605_625660_6912E235)
+References: <1229752522-1917-1-git-send-email-lrodriguez@atheros.com>
+	 <1229752522-1917-2-git-send-email-lrodriguez@atheros.com>
+	 <1229752522-1917-3-git-send-email-lrodriguez@atheros.com>
+	 <1229752522-1917-4-git-send-email-lrodriguez@atheros.com>
+	 <1229752522-1917-5-git-send-email-lrodriguez@atheros.com>
+	 <1229752522-1917-6-git-send-email-lrodriguez@atheros.com>
+	 (sfid-20081220_065605_625660_6912E235)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1MC/TFe1pOcpzaPEKyvd"
+Date: Sun, 21 Dec 2008 11:34:35 +0100
+Message-Id: <1229855675.4953.6.camel@johannes> (sfid-20081221_113448_629971_A2902FB7)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-6ltLO3pavlw5+UntCCyv
+--=-1MC/TFe1pOcpzaPEKyvd
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-12-10 at 18:40 +0100, Henning Rogge wrote:
-> On Wednesday 10 December 2008 10:05:50 Johannes Berg wrote:
-> > Uh huh, it's a huge table, and very irregular. Not very inclined to cop=
-y
-> > that right now. What's wrong with deferring it until somebody actually
-> > implements these rates?
+On Fri, 2008-12-19 at 21:55 -0800, Luis R. Rodriguez wrote:
+> Wireless drivers tend to require calibration or noise floor
+> checks. Some of these operations are channel specific. Instead
+> of forcing each driver to keep a separate map for these values
+> per channel allow for a private area on the ieee80211_channel to
+> reduce code overhead and size.
 >=20
-> Okay... I will try to implement a complete version of the function when I=
- get=20
-> access to the table... here is a modified patch with two warnings about t=
-he=20
-> missing datarates. It will return 0 for mcs >=3D 32.
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Can you do what I asked for instead and not include the attribute when
-it has a bogus value?
+I don't like this much. This is prone to abuse, it'll only be right when
+you have allocated channel arrays statically.
 
-Thanks,
-Johannes
+Can't you do something like I do in ar9170 and put the other information
+into a table that is indexed by hw_key_idx? That even reduces the memory
+usage :)
 
---=-6ltLO3pavlw5+UntCCyv
+johannes
+
+--=-1MC/TFe1pOcpzaPEKyvd
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJQCptAAoJEKVg1VMiehFYI50QAI34EV6zwqoyXuhSv4nPxWqJ
-/IYNi9Yiq916ma8enyLdS86XJMa/X8oNoV+yeTzmil5VLvAPVLjOC5bBeDbJN+2j
-MKznznotnEq7E5AhrBVdAle5ID5XpTaJ4m5QfYKS3jTBIm1x2T4ggagpFEeSMooa
-ZfuwE++2mx11iN0EuhO5Nesyxh+B6sfKr0vxL3hReRfxdTQ+1YoZu3isZpbJfMmz
-a/EPt9gVNWFZV4bzD9iGH5jDJjWVRWyWW8j0EnhhTn8A9UPTL93Vf8P2oaSo7ekl
-tfsUdqOlA5CyVnSQFNyYv9UszXe/rEOGOzkk5GUIec4ZwqaR6L+NE1eQE5GnrNeE
-qJ9Sgh3NCTJnx1rDkJ4fhIswWtOyAF9scsdo7SOo7DHKMS/OZNmlp9myLCdEBLgM
-iswrrsZOwCI6vlHkiR8YoAueHGJq7UFdh8uWtaJP+sx7Fi0cokWdulHCd25wCJOG
-Wce6mHmcyczT7vQjF1V4/34zFszGPFaYGpKDemtcEmao8X/boPqMO510R5yyL7ur
-Gu85SH/1dREx4ywg3ZGqYMoisiP3fCiYnP/wya4pj/Jni2GvJXGGdMw/4QhnOITy
-zA67DpoGk96smRwn2QJwfX+A3ffORaDy03pRyJrun1RrTKUFes7ORZ4Af87EAKsh
-pWY1Hh7b41mcmD66E6zY
-=rJOo
+iQIcBAABAgAGBQJJThu5AAoJEKVg1VMiehFYaicP/RdMEFHKCcwYI9ghpcy5ZdTB
+hoOYAAAQl36FDn6cE5rUaAfKUe2oBGiTN1K2PuIHv+6oWATkaKR2Iivd1rtpvAya
+krUh/DEzdJ2A0hjLiROYZ0tRH+OhXmlIQeFEyf/+8nOA1rxyYfOBR+lOEjhlSxZ5
+v0hEN1UXhw8DiZM2DQoucuiqHyS3ZlZpl5NaneNUlVzbDBULhgMGgnpC4SZuNf2k
+xtlfHFfSLAuniEF2u2EmmQL8oUr6StsNsgh15DCWtLMWmUZIXZNfx6iwtlOdNI8o
+UXaqztMGsv6p0KApgc6urJJxvRViGRe9V07V64tAKcJhwghz9Jt3a0fq3Prd2i+U
+dFYwB51wF5smW+Iwnb07B2/7NbgC3UKiUXqucsv66k5K9OfYM2RLZ4c6eVPIBJZR
+99HhQ2wbnFM/LweY5WUFlqr9fRgD6XN2XaALmvjv7fSMtubvYMFk1AYbSnDCw1p2
+L0dPW5MyFcJiS5oq8VE96iYz5uRzfr+oihkTR7pYSyG2llMG29H9twf/mhAXmzcR
+M7wHpFGm7BJx2MXltr5Mvw3AUQ6oY9+s6uR24kXXKqMcjMXMzjOZeRTWImg6O9vy
+zY/saYHF2ZsL6enWsw5o5HH/SwlOhkdGC6+gkwc90cVG+e4YyTC0jmesaqSPqmca
+aiZCKQxwKRaeEirsmDgd
+=NFv0
 -----END PGP SIGNATURE-----
 
---=-6ltLO3pavlw5+UntCCyv--
+--=-1MC/TFe1pOcpzaPEKyvd--
 
