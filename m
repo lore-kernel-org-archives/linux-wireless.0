@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42965 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751549AbYLXKHq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 05:07:46 -0500
-Date: Wed, 24 Dec 2008 12:07:41 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "W. van den Akker" <listsrv@wilsoft.nl>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
-Message-ID: <20081224100741.GA30523@jm.kir.nu> (sfid-20081224_110821_061759_7FEC4613)
-References: <200812241040.39056.listsrv@wilsoft.nl>
+Received: from nbd.name ([88.198.39.176]:49429 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751349AbYLUMBi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2008 07:01:38 -0500
+Message-ID: <494E301B.7090906@openwrt.org> (sfid-20081221_130209_364170_DDD4B4A2)
+Date: Sun, 21 Dec 2008 13:01:31 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200812241040.39056.listsrv@wilsoft.nl>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	me@bobcopeland.com, nbd@openwrt.org
+Subject: Re: [PATCH] ath5k: Update EEPROM code
+References: <20081221024739.GA13665@makis>
+In-Reply-To: <20081221024739.GA13665@makis>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 24, 2008 at 10:40:38AM +0100, W. van den Akker wrote:
-
-> I have tested with the latest kernel 2.6.27.10 and compat-wireless 22-12-2008.
-> I have a dual core system (Intel(R) Pentium(R) 4 CPU 3.00GHz) and use hostapd 
-> 0.6.6.
-
-I've never tested this with compat-wireless, but the wireless-testing
-version seems to be working fine in my tests.
-
-> I have build the kernel, compiled the compat-wireless and did a make install.
-> Make unload didnt work because some drivers were in use (mac80211).
-> First problem arises, a rmmod ath9k hangs the kernel. No message of what so 
-> ever in the log or to stdout.
-
-Would you happen to have another host available for storing the logs? I
-have been able to receive debug messages from most crashes with
-netconsole (see Documentation/networking/netconsole.txt).
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Nick Kossifidis wrote:
+>  *Read misc2...6 values from eeprom since we want to use them (fixes wrong power calibration info offset on RF2413+ chips)
+>  *Initialize num_piers to 0 for RF2413 chips (note that we read 2GHz frequency piers while
+>   reading mode sections, we have to ignore them -usualy they are 0xff anyway but during
+>   my tests i got a 1 on b mode with no data- and use the newer eemap.
+>  *Add some more comments (please forgive my poor English ;-( ) and some minor code cleanup
+>  *Tested on 2425 and 2112 and has the same data with ath_info (i wrote some debug code
+>   on debug.c to print everything like ath_info but i haven't tested it yet on 5111 and it's
+>   full of > 80 col lines, if anyone wants to play with it let me know).
+> 
+>  Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+Acked-by: Felix Fietkau <nbd@openwrt.org>
