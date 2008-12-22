@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.185]:21251 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbYLRBiu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 20:38:50 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so63084tic.23
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2008 17:38:48 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:23537 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754516AbYLVPzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 10:55:45 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 07:55:45 -0800
+Date: Mon, 22 Dec 2008 07:55:38 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Christian Lamparter <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [RFC/RFT] p54: regulatory domain hint
+Message-ID: <20081222155538.GE11083@tesla> (sfid-20081222_165550_792915_B1187D4E)
+References: <200812212336.31267.chunkeey@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18761.43312.692142.691266@localhost.localdomain> (sfid-20081218_023854_369275_3D83E369)
-Date: Thu, 18 Dec 2008 07:06:48 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
-	jouni.malinen@atheros.com
-Subject: Re: [RFC] Handle Channel Switch Announcement
-In-Reply-To: <1229537272.4268.7.camel@localhost>
-References: <18761.4838.509784.281821@localhost.localdomain>
-	<1229537272.4268.7.camel@localhost>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <200812212336.31267.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> I agree with Jouni, this is probably not a good idea, especially since
-> this flag would be shared between hardware for those drivers that have
-> the channel structs allocated statically. We should probably just stick
-> a struct ieee80211_channel *switch_from; pointer somewhere into the
-> sdata struct or so.
+On Sun, Dec 21, 2008 at 02:36:30PM -0800, Christian Lamparter wrote:
+> This patch adds a sub-routine that parses the default country eeprom entry
+> and forwards the obtained Alpha2 identifier to the regulatory sub-system.
+> 
+> Luis,
+> 
+> I've a question about the regulatory domain numbers. (ref: 802.11-2007 14.8.2.2)
+> As far as I can see zd1211rw driver (zd_mac.c) uses them to determine the country as well.
+> So, how should I/we deal with this?
 
-Ok.
+Since two drivers are using the same maps I'd say go ahead and consolidate the maps.
+Keep in mind that 802.11-2007 14.8.2.2 is not complete and for the rest of the countries
+vendors have used different values. Special values like 0x41 maybe be standard amongst a
+few vendors but then what alpha2 do we map this to? Do we make an exception, create a J2
+in the regulatory db? I'd be inclined that we only add special codes for things for which
+we are sure we can be used in a country. An alternative is to use the reg_notifier() in
+those drivers so that if 0x41 was used, after cfg80211 is done updating the channels we
+can override the settings and disable channel 14. ETSI is another special case -- are we
+OK to always use "DE" for it?
 
-> I think I'd like to have them dropped to monitor for !station here,
-> instead of silently in the processing function.
+> Would you support a common helper function with a fixed list - like the one in zd_mac.c (or in this patch) -
+> which takes regDomain values and converts them into alpha2?
 
-Ok.
+That seems to make sense since > 1 driver is using it. In fact I think bcm can use this too?
 
-> That should probably be removed or be more specific & protected by some
-> debug #ifdef.
+I know ath5k/ath9k can use it too but we have a lot more country codes too so we will need a
+larger map table for all the other values. We can probably still make use of it in ath5k/ath9k
+and if there is no match then use our internal table for a larger set.
 
-That just slipped through, I'll remove it.
+> Or do you have a secret plan instead?
 
-> Can you rebase this on top of Kalle's patch that adds the "stop reasons"
-> for each queue? As it is now, the driver could wake up the queues again
-> if one was full.
+Heh why would it be secret?
 
-Ok, I will.
-
-Sujith
+  Luis
