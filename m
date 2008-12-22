@@ -1,96 +1,255 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19332 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:25163 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755840AbYLKScp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 13:32:45 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 6/6] iwlwifi: add contact email to MODULE_AUTHOR
-Date: Thu, 11 Dec 2008 10:33:41 -0800
-Message-Id: <1229020421-4823-7-git-send-email-reinette.chatre@intel.com> (sfid-20081211_193253_427392_EDA3E040)
-In-Reply-To: <1229020421-4823-6-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1229020421-4823-1-git-send-email-reinette.chatre@intel.com>
- <1229020421-4823-2-git-send-email-reinette.chatre@intel.com>
- <1229020421-4823-3-git-send-email-reinette.chatre@intel.com>
- <1229020421-4823-4-git-send-email-reinette.chatre@intel.com>
- <1229020421-4823-5-git-send-email-reinette.chatre@intel.com>
- <1229020421-4823-6-git-send-email-reinette.chatre@intel.com>
+	id S1751803AbYLVSVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 13:21:33 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:21:33 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2 18/18] ath9k: fix sparse warnings
+Date: Mon, 22 Dec 2008 10:20:39 -0800
+Message-ID: <1229970039-10561-19-git-send-email-lrodriguez@atheros.com> (sfid-20081222_193905_569691_362560FA)
+In-Reply-To: <1229970039-10561-18-git-send-email-lrodriguez@atheros.com>
+References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-4-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-6-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-7-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-8-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-9-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-10-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-11-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-12-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-13-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-14-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-15-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-16-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-17-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-18-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Fix sparse warnings:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+drivers/net/wireless/ath9k/hw.c:1850:17: warning: symbol 'tmp' shadows an earlier one
+drivers/net/wireless/ath9k/hw.c:1713:6: originally declared here
+drivers/net/wireless/ath9k/hw.c:2051:17: warning: symbol 'tmp' shadows an earlier one
+drivers/net/wireless/ath9k/hw.c:1961:6: originally declared here
+
+drivers/net/wireless/ath9k/eeprom.c:195:6: warning: symbol 'ath9k_fill_eeprom' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:463:5: warning: symbol 'ath9k_check_eeprom' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:1219:6: warning: symbol 'ath9k_hw_set_def_power_per_rate_table' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:1510:6: warning: symbol 'ath9k_hw_set_4k_power_per_rate_table' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2007:5: warning: symbol 'ath9k_set_txpower' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2106:6: warning: symbol 'ath9k_set_addac' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2543:6: warning: symbol 'ath9k_eeprom_set_board_values' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2606:5: warning: symbol 'ath9k_get_eeprom_antenna_cfg' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2622:4: warning: symbol 'ath9k_hw_get_4k_num_ant_config' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2628:4: warning: symbol 'ath9k_hw_get_def_num_ant_config' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2647:4: warning: symbol 'ath9k_get_num_ant_config' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2790:5: warning: symbol 'ath9k_get_eeprom' was not declared. Should it be static?
+
+drivers/net/wireless/ath9k/calib.c:962:30: warning: symbol 'iq_cal_multi_sample' was not declared. Should it be static?
+drivers/net/wireless/ath9k/calib.c:969:30: warning: symbol 'iq_cal_single_sample' was not declared. Should it be static?
+drivers/net/wireless/ath9k/calib.c:976:30: warning: symbol 'adc_gain_cal_multi_sample' was not declared. Should it be static?
+drivers/net/wireless/ath9k/calib.c:983:30: warning: symbol 'adc_gain_cal_single_sample' was not declared. Should it be static?
+drivers/net/wireless/ath9k/calib.c:990:30: warning: symbol 'adc_dc_cal_multi_sample' was not declared. Should it be static?
+drivers/net/wireless/ath9k/calib.c:997:30: warning: symbol 'adc_dc_cal_single_sample' was not declared. Should it be static?
+drivers/net/wireless/ath9k/calib.c:1004:30: warning: symbol 'adc_init_dc_cal' was not declared. Should it be static?
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
- 4 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath9k/eeprom.c |   30 ++++++++++++++++--------------
+ drivers/net/wireless/ath9k/hw.c     |   16 ++++------------
+ drivers/net/wireless/ath9k/hw.h     |    8 ++++++++
+ 3 files changed, 28 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3680570..47aecf7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -83,7 +83,7 @@
+diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
+index 14f8d40..ccf57c3 100644
+--- a/drivers/net/wireless/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath9k/eeprom.c
+@@ -192,7 +192,7 @@ static bool ath9k_hw_fill_def_eeprom(struct ath_hal *ah)
+ #undef SIZE_EEPROM_DEF
+ }
  
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
- MODULE_VERSION(DRV_VERSION);
--MODULE_AUTHOR(DRV_COPYRIGHT);
-+MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
- MODULE_ALIAS("iwl4965");
+-bool (*ath9k_fill_eeprom[]) (struct ath_hal *) = {
++static bool (*ath9k_fill_eeprom[]) (struct ath_hal *) = {
+ 	ath9k_hw_fill_def_eeprom,
+ 	ath9k_hw_fill_4k_eeprom
+ };
+@@ -460,7 +460,7 @@ static int ath9k_hw_check_4k_eeprom(struct ath_hal *ah)
+ #undef EEPROM_4K_SIZE
+ }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index a3b9605..67fd6e1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -42,7 +42,7 @@
+-int (*ath9k_check_eeprom[]) (struct ath_hal *) = {
++static int (*ath9k_check_eeprom[]) (struct ath_hal *) = {
+ 	ath9k_hw_check_def_eeprom,
+ 	ath9k_hw_check_4k_eeprom
+ };
+@@ -1216,7 +1216,7 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hal *ah,
+ 	return true;
+ }
  
- MODULE_DESCRIPTION("iwl core");
- MODULE_VERSION(IWLWIFI_VERSION);
--MODULE_AUTHOR(DRV_COPYRIGHT);
-+MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
+-bool ath9k_hw_set_def_power_per_rate_table(struct ath_hal *ah,
++static bool ath9k_hw_set_def_power_per_rate_table(struct ath_hal *ah,
+ 				       struct ath9k_channel *chan,
+ 				       int16_t *ratesArray,
+ 				       u16 cfgCtl,
+@@ -1507,7 +1507,7 @@ bool ath9k_hw_set_def_power_per_rate_table(struct ath_hal *ah,
+ 	return true;
+ }
  
- #define IWL_DECLARE_RATE_INFO(r, s, ip, in, rp, rn, pp, np)    \
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 72f82ec..08b842f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -72,6 +72,7 @@ struct iwl_cmd;
+-bool ath9k_hw_set_4k_power_per_rate_table(struct ath_hal *ah,
++static bool ath9k_hw_set_4k_power_per_rate_table(struct ath_hal *ah,
+ 				       struct ath9k_channel *chan,
+ 				       int16_t *ratesArray,
+ 				       u16 cfgCtl,
+@@ -2004,7 +2004,7 @@ static int ath9k_hw_4k_set_txpower(struct ath_hal *ah,
+ 	return 0;
+ }
  
- #define IWLWIFI_VERSION "1.3.27k"
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2008 Intel Corporation"
-+#define DRV_AUTHOR     "<ilw@linux.intel.com>"
+-int (*ath9k_set_txpower[]) (struct ath_hal *,
++static int (*ath9k_set_txpower[]) (struct ath_hal *,
+ 			    struct ath9k_channel *,
+ 			    u16, u8, u8, u8) = {
+ 	ath9k_hw_def_set_txpower,
+@@ -2103,7 +2103,7 @@ static void ath9k_hw_set_4k_addac(struct ath_hal *ah,
+ 	}
+ }
  
- #define IWL_PCI_DEVICE(dev, subdev, cfg) \
- 	.vendor = PCI_VENDOR_ID_INTEL,  .device = (dev), \
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3f41836..161d812 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -93,12 +93,13 @@ int iwl3945_param_queues_num = IWL39_MAX_NUM_QUEUES; /* def: 8 Tx queues */
+-void (*ath9k_set_addac[]) (struct ath_hal *, struct ath9k_channel *) = {
++static void (*ath9k_set_addac[]) (struct ath_hal *, struct ath9k_channel *) = {
+ 	ath9k_hw_set_def_addac,
+ 	ath9k_hw_set_4k_addac
+ };
+@@ -2540,7 +2540,7 @@ static bool ath9k_hw_eeprom_set_4k_board_values(struct ath_hal *ah,
+ 	return true;
+ }
  
- #define IWLWIFI_VERSION "1.2.26k" VD VS
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2008 Intel Corporation"
-+#define DRV_AUTHOR     "<ilw@linux.intel.com>"
- #define DRV_VERSION     IWLWIFI_VERSION
+-bool (*ath9k_eeprom_set_board_values[])(struct ath_hal *,
++static bool (*ath9k_eeprom_set_board_values[])(struct ath_hal *,
+ 					struct ath9k_channel *) = {
+ 	ath9k_hw_eeprom_set_def_board_values,
+ 	ath9k_hw_eeprom_set_4k_board_values
+@@ -2603,7 +2603,8 @@ static int ath9k_hw_get_4k_eeprom_antenna_cfg(struct ath_hal *ah,
+ 	return -EINVAL;
+ }
  
+-int (*ath9k_get_eeprom_antenna_cfg[])(struct ath_hal *, struct ath9k_channel *,
++static int (*ath9k_get_eeprom_antenna_cfg[])(struct ath_hal *,
++				      struct ath9k_channel *,
+ 				      u8, u16 *) = {
+ 	ath9k_hw_get_def_eeprom_antenna_cfg,
+ 	ath9k_hw_get_4k_eeprom_antenna_cfg
+@@ -2619,13 +2620,13 @@ int ath9k_hw_get_eeprom_antenna_cfg(struct ath_hal *ah,
+ 							     index, config);
+ }
  
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
- MODULE_VERSION(DRV_VERSION);
--MODULE_AUTHOR(DRV_COPYRIGHT);
-+MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
+-u8 ath9k_hw_get_4k_num_ant_config(struct ath_hal *ah,
++static u8 ath9k_hw_get_4k_num_ant_config(struct ath_hal *ah,
+ 			       enum ieee80211_band freq_band)
+ {
+ 	return 1;
+ }
  
- static const struct ieee80211_supported_band *iwl3945_get_band(
+-u8 ath9k_hw_get_def_num_ant_config(struct ath_hal *ah,
++static u8 ath9k_hw_get_def_num_ant_config(struct ath_hal *ah,
+ 			       enum ieee80211_band freq_band)
+ {
+ 	struct ath_hal_5416 *ahp = AH5416(ah);
+@@ -2644,9 +2645,10 @@ u8 ath9k_hw_get_def_num_ant_config(struct ath_hal *ah,
+ 	return num_ant_config;
+ }
+ 
+-u8 (*ath9k_get_num_ant_config[])(struct ath_hal *, enum ieee80211_band) = {
+-	ath9k_hw_get_def_num_ant_config,
+-	ath9k_hw_get_4k_num_ant_config
++static u8 (*ath9k_get_num_ant_config[])(struct ath_hal *,
++	enum ieee80211_band) = {
++	  ath9k_hw_get_def_num_ant_config,
++	  ath9k_hw_get_4k_num_ant_config
+ };
+ 
+ u8 ath9k_hw_get_num_ant_config(struct ath_hal *ah,
+@@ -2787,7 +2789,7 @@ static u32 ath9k_hw_get_eeprom_def(struct ath_hal *ah,
+ 	}
+ }
+ 
+-u32 (*ath9k_get_eeprom[])(struct ath_hal *, enum eeprom_param) = {
++static u32 (*ath9k_get_eeprom[])(struct ath_hal *, enum eeprom_param) = {
+ 	ath9k_hw_get_eeprom_def,
+ 	ath9k_hw_get_eeprom_4k
+ };
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 7d5ca81..75ab052 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -27,14 +27,6 @@
+ #define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
+ #define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
+ 
+-extern struct hal_percal_data iq_cal_multi_sample;
+-extern struct hal_percal_data iq_cal_single_sample;
+-extern struct hal_percal_data adc_gain_cal_multi_sample;
+-extern struct hal_percal_data adc_gain_cal_single_sample;
+-extern struct hal_percal_data adc_dc_cal_multi_sample;
+-extern struct hal_percal_data adc_dc_cal_single_sample;
+-extern struct hal_percal_data adc_init_dc_cal;
+-
+ static bool ath9k_hw_set_reset_reg(struct ath_hal *ah, u32 type);
+ static void ath9k_hw_set_regs(struct ath_hal *ah, struct ath9k_channel *chan,
+ 			      enum ath9k_ht_macmode macmode);
+@@ -1847,9 +1839,9 @@ static void ath9k_hw_9280_spur_mitigate(struct ath_hal *ah, struct ath9k_channel
+ 		if ((cur_vit_mask > lower) && (cur_vit_mask < upper)) {
+ 
+ 			/* workaround for gcc bug #37014 */
+-			volatile int tmp = abs(cur_vit_mask - bin);
++			volatile int tmp_v = abs(cur_vit_mask - bin);
+ 
+-			if (tmp < 75)
++			if (tmp_v < 75)
+ 				mask_amt = 1;
+ 			else
+ 				mask_amt = 0;
+@@ -2048,9 +2040,9 @@ static void ath9k_hw_spur_mitigate(struct ath_hal *ah, struct ath9k_channel *cha
+ 		if ((cur_vit_mask > lower) && (cur_vit_mask < upper)) {
+ 
+ 			/* workaround for gcc bug #37014 */
+-			volatile int tmp = abs(cur_vit_mask - bin);
++			volatile int tmp_v = abs(cur_vit_mask - bin);
+ 
+-			if (tmp < 75)
++			if (tmp_v < 75)
+ 				mask_amt = 1;
+ 			else
+ 				mask_amt = 0;
+diff --git a/drivers/net/wireless/ath9k/hw.h b/drivers/net/wireless/ath9k/hw.h
+index 91d8f59..3ae3b88 100644
+--- a/drivers/net/wireless/ath9k/hw.h
++++ b/drivers/net/wireless/ath9k/hw.h
+@@ -20,6 +20,14 @@
+ #include <linux/if_ether.h>
+ #include <linux/delay.h>
+ 
++extern const struct hal_percal_data iq_cal_multi_sample;
++extern const struct hal_percal_data iq_cal_single_sample;
++extern const struct hal_percal_data adc_gain_cal_multi_sample;
++extern const struct hal_percal_data adc_gain_cal_single_sample;
++extern const struct hal_percal_data adc_dc_cal_multi_sample;
++extern const struct hal_percal_data adc_dc_cal_single_sample;
++extern const struct hal_percal_data adc_init_dc_cal;
++
+ struct ar5416_desc {
+ 	u32 ds_link;
+ 	u32 ds_data;
 -- 
-1.5.4.3
+1.6.1.rc3.51.g5832d
 
