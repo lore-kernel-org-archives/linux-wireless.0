@@ -1,41 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fnoeppeil48.netpark.at ([217.175.205.176]:47516 "EHLO
-	roarinelk.homelinux.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750AbYLHPgH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 10:36:07 -0500
-Date: Mon, 8 Dec 2008 16:32:08 +0100
-From: Manuel Lauss <mano@roarinelk.homelinux.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [p54]: oops in p54_rx
-Message-ID: <20081208153208.GC4221@roarinelk.homelinux.net> (sfid-20081208_163610_101667_F2F9BCEF)
-References: <20081208074904.GA28269@roarinelk.homelinux.net> <200812081548.32362.chunkeey@web.de> <20081208144727.GB4221@roarinelk.homelinux.net> <200812081624.21964.chunkeey@web.de>
+Received: from mail.atheros.com ([12.36.123.2]:25156 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752603AbYLVSVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 13:21:22 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:21:22 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2 14/18] ath9k: remove mode specific default noise floor values
+Date: Mon, 22 Dec 2008 10:20:35 -0800
+Message-ID: <1229970039-10561-15-git-send-email-lrodriguez@atheros.com> (sfid-20081222_193906_320775_C2ED4DE4)
+In-Reply-To: <1229970039-10561-14-git-send-email-lrodriguez@atheros.com>
+References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-4-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-6-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-7-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-8-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-9-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-10-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-11-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-12-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-13-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-14-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200812081624.21964.chunkeey@web.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 08, 2008 at 04:24:21PM +0100, Christian Lamparter wrote:
-> On Monday 08 December 2008 15:47:27 Manuel Lauss wrote:
-> [...]
-> > > > But what I can do is to stop the driver from oopsing...
-> > > >  
-> > > > I guess a check to see if the device mode is set to something else than 
-> > > > "NL80211_IFTYPE_UNSPECIFIED" and in p54_rx(_data) should prevent the oops.
-> > > > maybe we I should add a hex_dump as well.
-> > > 
-> > > patch attached... tell me what it does on your dev.
-> > 
-> > Thank you,  but I think the card is faulty... it doesn't work even on winxp
-> > ("device cannot be started Code 10"-error).  Do you still want me to test
-> > the patch?
-> Did you try the card in the same system with 4Gb and with the original SMC driver?
-> Well, either way... you could "confirm" that doesn't crash anymore ;-).
+The NOISE_FLOOR array we have is mode specific, and the only
+possible indexed values are A, B and G. The mode routine only
+can return G or A, so this is band specific. Then since the
+values for A and G (5ghz or 2ghz) are the same (-96) we simply
+remove the array and use a static value.
 
-Tested on another machine with 1gb ram. It doesn't crash anymore.  If you're
-still interested, the log output is here  http://mlau.at/files/p54log
+If we later determine we want to use special values for
+HT configurations we can use the new mac80211 conf_is_ht*()
+helpers.
 
-Thanks!
-	Manuel Lauss
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/calib.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
+index 74369c1..f82554b 100644
+--- a/drivers/net/wireless/ath9k/calib.c
++++ b/drivers/net/wireless/ath9k/calib.c
+@@ -19,8 +19,6 @@
+ #include "reg.h"
+ #include "phy.h"
+ 
+-static const int16_t NOISE_FLOOR[] = { -96, -93, -98, -96, -93, -96 };
+-
+ /* We can tune this as we go by monitoring really low values */
+ #define ATH9K_NF_TOO_LOW	-60
+ 
+@@ -752,10 +750,9 @@ s16 ath9k_hw_getchan_noise(struct ath_hal *ah, struct ath9k_channel *chan)
+ 			chan->channel, chan->channelFlags);
+ 		return ATH_DEFAULT_NOISE_FLOOR;
+ 	}
+-	if (ichan->rawNoiseFloor == 0) {
+-		enum wireless_mode mode = ath9k_hw_chan2wmode(ah, chan);
+-		nf = NOISE_FLOOR[mode];
+-	} else
++	if (ichan->rawNoiseFloor == 0)
++		nf = -96;
++	else
+ 		nf = ichan->rawNoiseFloor;
+ 
+ 	if (!ath9k_hw_nf_in_range(ah, nf))
+-- 
+1.6.1.rc3.51.g5832d
+
