@@ -1,34 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:50583 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755312AbYLJQpC (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:51442 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751370AbYLVHez (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 11:45:02 -0500
-Message-ID: <493FF20C.5070607@lwfinger.net> (sfid-20081210_174507_900922_9B8B2EAB)
-Date: Wed, 10 Dec 2008 10:45:00 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 22 Dec 2008 02:34:55 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/15] rt2x00: Implement Powersaving
+Date: Mon, 22 Dec 2008 08:34:43 +0100
+Cc: "David Shwatrz" <dshwatrz@gmail.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	"John Linville" <linville@tuxdriver.com>,
+	rt2400-devel@lists.sourceforge.net
+References: <200812201052.00655.IvDoorn@gmail.com> <200812201052.43061.IvDoorn@gmail.com> <31436f4a0812210953r3b715989vd76b907fe6e4fe8d@mail.gmail.com>
+In-Reply-To: <31436f4a0812210953r3b715989vd76b907fe6e4fe8d@mail.gmail.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix sparse warnings
-References: <493f552d.zivnzjivWDMPej+O%Larry.Finger@lwfinger.net> <200812101133.54173.mb@bu3sch.de>
-In-Reply-To: <200812101133.54173.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200812220834.43412.hs4233@mail.mn-solutions.de> (sfid-20081222_083459_016687_7C51CB28)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Wednesday 10 December 2008 06:35:41 Larry Finger wrote:
->>   CHECK   drivers/net/wireless/b43legacy/debugfs.c
->> drivers/net/wireless/b43legacy/debugfs.c:243:9: warning: memset with byte count of 131072
-> 
-> I know about this error and I think it's a damn stupid error.
-> There is a reason why the value was so high in b43. I don't know about b43legacy.
-> Did you check if all callbacks still work properly?
+> Hi,
+> Great new ! It seems to me that this is the first **usb**
+> wireless device with power save support (and please correct me
+> if I am wrong).
 
-Yes. AFAIK, everything works correctly. BTW, I chose 16 KiB because that is the
-number in b43, and I expected the two drivers to need about the same amount of
-buffer space. Was that a bad assumption?
-
-Larry
+The libertas device as used in the OLPC ?
+It's a non-mac80211 device, but uses powersave nethertheless.
