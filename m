@@ -1,34 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pqueuea.post.tele.dk ([193.162.153.9]:38903 "EHLO
-	pqueuea.post.tele.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251AbYLIMMj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 07:12:39 -0500
-Received: from pfepb.post.tele.dk (pfepb.post.tele.dk [195.41.46.236])
-	by pqueuea.post.tele.dk (Postfix) with ESMTP id 5FA84DC0AB
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Dec 2008 13:12:35 +0100 (CET)
-Date: Tue, 9 Dec 2008 13:12:31 +0100
-From: Sam Ravnborg <sam@ravnborg.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211/cfg80211: check endianness in sparse runs
-Message-ID: <20081209121231.GA3578@uranus.ravnborg.org> (sfid-20081209_131243_731654_C9251A4E)
-References: <1228822793.22164.210.camel@johannes.berg>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1228822793.22164.210.camel@johannes.berg>
+Received: from mga09.intel.com ([134.134.136.24]:37081 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752135AbYLVDil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2008 22:38:41 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 02/10] iwl3945: adding utils ops
+Date: Mon, 22 Dec 2008 11:31:15 +0800
+Message-Id: <1229916683-9772-3-git-send-email-yi.zhu@intel.com> (sfid-20081222_043853_401694_4D88A9AE)
+In-Reply-To: <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
+References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 09, 2008 at 12:39:52PM +0100, Johannes Berg wrote:
-> Make sure sparse checks endianness when run on mac80211/cfg80211.
-> 
+From: Kolekar, Abhijeet <abhijeet.kolekar@intel.com>
 
-How far are we from being able to do this kernel wide?
-Some effort has been put into lower the noise level I think.
+The patch implements iwl_hcmd_utils_ops for 3945.
 
-So I prefer to see it generally enabled but if this is too soon
-then I'm fine with this patch.
+Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
 
-	Sam
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 24cdc5c..a0aea81 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2377,6 +2377,19 @@ int iwl3945_hw_tx_queue_init(struct iwl_priv *priv, struct iwl3945_tx_queue *txq
+ 	return 0;
+ }
+ 
++/*
++ * HCMD utils
++ */
++static u16 iwl3945_get_hcmd_size(u8 cmd_id, u16 len)
++{
++	switch (cmd_id) {
++	case REPLY_RXON:
++		return (u16) sizeof(struct iwl3945_rxon_cmd);
++	default:
++		return len;
++	}
++}
++
+ /**
+  * iwl3945_init_hw_rate_table - Initialize the hardware rate fallback table
+  */
+@@ -2694,8 +2707,13 @@ static struct iwl_lib_ops iwl3945_lib = {
+ 	},
+ };
+ 
++static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
++	.get_hcmd_size = iwl3945_get_hcmd_size,
++};
++
+ static struct iwl_ops iwl3945_ops = {
+ 	.lib = &iwl3945_lib,
++	.utils = &iwl3945_hcmd_utils,
+ };
+ 
+ static struct iwl_cfg iwl3945_bg_cfg = {
+-- 
+1.5.3.6
+
