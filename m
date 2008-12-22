@@ -1,48 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44428 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758651AbYLQMgE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 07:36:04 -0500
-Subject: Re: [PATCH] ath9k: Fix a NULL pointer dereference in ath_rate_get
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: Jouni Malinen <j@w1.fi>, Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200812171325.26310.chunkeey@web.de>
-References: <20081217113031.GA18060@jm.kir.nu>
-	 <1229513456.4566.2.camel@localhost> <20081217120250.GA19453@jm.kir.nu>
-	 <200812171325.26310.chunkeey@web.de>
-Content-Type: text/plain
-Date: Wed, 17 Dec 2008 13:21:04 +0100
-Message-Id: <1229516464.5175.2.camel@localhost> (sfid-20081217_133629_579349_E234F9DF)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:37081 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752203AbYLVDit (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2008 22:38:49 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 08/10] iwlwifi: kill retry_rate sysfs for iwlagn
+Date: Mon, 22 Dec 2008 11:31:21 +0800
+Message-Id: <1229916683-9772-9-git-send-email-yi.zhu@intel.com> (sfid-20081222_043857_492228_E745AF2E)
+In-Reply-To: <1229916683-9772-8-git-send-email-yi.zhu@intel.com>
+References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-3-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-4-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-5-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-6-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-7-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-8-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-17 at 13:25 +0100, Christian Lamparter wrote:
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-> hostapd: wlan1: STA XX:XX:XX:XX:0d IEEE 802.11: authenticated
-> kernel: [ 3130.431067] ------------[ cut here ]------------
-> kernel: [ 3130.431076] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0xb8/0x320 [mac80211]()
-> kernel: [ 3130.431081] Modules linked in: p54usb p54pci p54common [...]
-> kernel: [ 3130.431300] Pid: 16961, comm: hostapd2 Tainted: P           2.6.28-rc7-wl #3
-> [ 3130.431305] Call Trace:
-> [ 3130.431318]  [<ffffffff802343c1>] warn_on_slowpath+0x51/0x75
-> [ 3130.431329]  [<ffffffff803d74b0>] rb_insert_color+0xba/0xe2
-> [ 3130.431338]  [<ffffffff802480ef>] __remove_hrtimer+0x7c/0x88
-> [ 3130.431375]  [<ffffffffa00bd30e>] minstrel_rate_init+0xb8/0x320 [mac80211]
-> [ 3130.431417]  [<ffffffffa00ae713>] ieee80211_add_station+0x145/0x17d [mac80211]
-> hostapd: wlan1: STA XX:XX:XX:XX:0d IEEE 802.11: associated (aid 1, accounting session 494187DD-00000000)
-> kernel: [ 3130.431440]  [<ffffffffa00897af>] nl80211_new_station+0x1b3/0x20b [cfg80211]
-> kernel: [ 3130.431450]  [<ffffffff80595691>] mutex_lock+0xd/0x1e
-> kernel: [ 3130.431459]  [<ffffffff804f6f86>] nla_parse+0x4b/0xb2
-> 
-> yup, the Warning just happend right between auth and assoc
+This patch kills retry_rate in sysfs for iwlagn. It's not used.
 
-This, umm, seems totally unrelated since Jouni was fixing something in
-ath9k's RC algorithm.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   26 --------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.c |    1 -
+ 2 files changed, 0 insertions(+), 27 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ecf8141..002a151 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3540,31 +3540,6 @@ static ssize_t store_filter_flags(struct device *d,
+ static DEVICE_ATTR(filter_flags, S_IWUSR | S_IRUGO, show_filter_flags,
+ 		   store_filter_flags);
+ 
+-static ssize_t store_retry_rate(struct device *d,
+-				struct device_attribute *attr,
+-				const char *buf, size_t count)
+-{
+-	struct iwl_priv *priv = dev_get_drvdata(d);
+-	long val;
+-	int ret  = strict_strtol(buf, 10, &val);
+-	if (!ret)
+-		return ret;
+-
+-	priv->retry_rate = (val > 0) ? val : 1;
+-
+-	return count;
+-}
+-
+-static ssize_t show_retry_rate(struct device *d,
+-			       struct device_attribute *attr, char *buf)
+-{
+-	struct iwl_priv *priv = dev_get_drvdata(d);
+-	return sprintf(buf, "%d", priv->retry_rate);
+-}
+-
+-static DEVICE_ATTR(retry_rate, S_IWUSR | S_IRUSR, show_retry_rate,
+-		   store_retry_rate);
+-
+ static ssize_t store_power_level(struct device *d,
+ 				 struct device_attribute *attr,
+ 				 const char *buf, size_t count)
+@@ -3720,7 +3695,6 @@ static struct attribute *iwl_sysfs_entries[] = {
+ 	&dev_attr_flags.attr,
+ 	&dev_attr_filter_flags.attr,
+ 	&dev_attr_power_level.attr,
+-	&dev_attr_retry_rate.attr,
+ 	&dev_attr_statistics.attr,
+ 	&dev_attr_temperature.attr,
+ 	&dev_attr_tx_power.attr,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index eaae79b..44e27fd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -863,7 +863,6 @@ int iwl_init_drv(struct iwl_priv *priv)
+ {
+ 	int ret;
+ 
+-	priv->retry_rate = 1;
+ 	priv->ibss_beacon = NULL;
+ 
+ 	spin_lock_init(&priv->lock);
+-- 
+1.5.3.6
 
