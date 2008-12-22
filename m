@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:50127 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbYLJFN5 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.236]:25521 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845AbYLVWkX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 00:13:57 -0500
-Message-ID: <493F5010.7030500@trash.net> (sfid-20081210_061401_587920_C283DF2C)
-Date: Wed, 10 Dec 2008 06:13:52 +0100
-From: Patrick McHardy <kaber@trash.net>
+	Mon, 22 Dec 2008 17:40:23 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so2112886rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 14:40:22 -0800 (PST)
+Message-ID: <b6c5339f0812221440h50d92891x621ea58c71e440fa@mail.gmail.com> (sfid-20081222_234027_333777_3000F219)
+Date: Mon, 22 Dec 2008 17:40:22 -0500
+From: "Bob Copeland" <bcopeland@gmail.com>
+To: sbrown@cortland.com
+Subject: Re: Mesh now completely broken on ath5k, latest git
+Cc: Keir <keirlawson@gmail.com>,
+	"Nick Kossifidis" <mickflemm@gmail.com>,
+	"Andrey Yurovsky" <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org, javier@cozybit.com
+In-Reply-To: <495014BF.1030602@cortland.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Jiri Slaby <jirislaby@gmail.com>, mickflemm@gmail.com,
-	mcgrof@gmail.com, me@bobcopeland.com
-Subject: [RFC]: ath5k: enable TXOK IRQ
-Content-Type: multipart/mixed;
- boundary="------------030808060902030109070106"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <e27b78a40812160405h2241e1acqa0dc8e593d6ebfad@mail.gmail.com>
+	 <40f31dec0812170906vd8e4445q9920c66905064df8@mail.gmail.com>
+	 <e27b78a40812171004r3a8d424dk7c390aaf7c757665@mail.gmail.com>
+	 <494A578A.7070803@cortland.com>
+	 <b6c5339f0812181138s1ba134a6qeff21eb063a87e08@mail.gmail.com>
+	 <494ABA6D.8070002@cortland.com>
+	 <b6c5339f0812181348x49e5c68bia827d9feb4ef0e6c@mail.gmail.com>
+	 <494C0181.8050008@cortland.com>
+	 <b6c5339f0812191241q3f2ff8aas5d538568552aca16@mail.gmail.com>
+	 <495014BF.1030602@cortland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030808060902030109070106
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+On Mon, Dec 22, 2008 at 5:29 PM, Steve Brown <sbrown@cortland.com> wrote:
+> Should I submit a patch for the AR5K_CFG_ADHOC enable/disable bug? With it
+> fixed, at least the ap and mesh problems are exposed. Maybe somebody can see
+> what's wrong.
 
-I tried to use ath5k in AP mode with hostapd, but hostapd never
-added the authenticated and associated stations to the kernel.
-The reason is that ath5k didn't invoke the tx tasklet, so it
-did not call the ieee80211_tx_status() function and userspace
-didn't receive the radiotap message indicating success.
+Yeah, if you don't mind putting together a patch for that part, that'd be
+great.  I doubt anyone would disagree with it.
 
-The root cause appears to be that the TXOK interrupt is not
-enabled, so the tasklet is never scheduled. I'm not sure whether
-TXOK is really the correct one to handle ! IEEE80211_TX_CTL_NO_ACK,
-but it fixes the problem for me.
-
-
-
---------------030808060902030109070106
-Content-Type: text/x-patch;
- name="02.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="02.diff"
-
-commit 5ecbb104a7202a6ed9bcfa8b8ef46474d1003600
-Author: Patrick McHardy <kaber@trash.net>
-Date:   Tue Dec 9 21:54:51 2008 +0100
-
-    ath5k: enable TXOK IRQ
-    
-    Without the IRQ, the tx tasklet is not scheduled, which is necessary
-    to invoke ieee80211_tx_status() to notify userspace of successfully
-    sent frames.
-    
-    Signed-off-by: Patrick McHardy <kaber@trash.net>
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 940c724..291a334 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1348,7 +1348,8 @@ ath5k_txq_setup(struct ath5k_softc *sc,
- 	 * up in which case the top half of the kernel may backup
- 	 * due to a lack of tx descriptors.
- 	 */
--	qi.tqi_flags = AR5K_TXQ_FLAG_TXEOLINT_ENABLE |
-+	qi.tqi_flags = AR5K_TXQ_FLAG_TXOKINT_ENABLE |
-+				AR5K_TXQ_FLAG_TXEOLINT_ENABLE |
- 				AR5K_TXQ_FLAG_TXDESCINT_ENABLE;
- 	qnum = ath5k_hw_setup_tx_queue(ah, qtype, &qi);
- 	if (qnum < 0) {
-
---------------030808060902030109070106--
+-- 
+Bob Copeland %% www.bobcopeland.com
