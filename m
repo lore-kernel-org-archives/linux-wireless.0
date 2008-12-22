@@ -1,65 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:50506 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751158AbYLXPYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 10:24:08 -0500
-Date: Wed, 24 Dec 2008 16:24:05 +0100 (CET)
-From: Julia Lawall <julia@diku.dk>
-To: gregkh@suse.de, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 3/3] drivers/staging/rt2860,rt2870: Correct use of ! and &
-Message-ID: <Pine.LNX.4.64.0812241623380.5475@ask.diku.dk> (sfid-20081224_162415_491198_E894D52F)
+Received: from yx-out-2324.google.com ([74.125.44.30]:61666 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753317AbYLVSsX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 13:48:23 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so750725yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:48:22 -0800 (PST)
+Message-ID: <43e72e890812221048w6862b8f9p2c46ebe080818625@mail.gmail.com> (sfid-20081222_194827_718890_CCE82814)
+Date: Mon, 22 Dec 2008 10:48:21 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: pat-lkml <pat-lkml@erley.org>
+Subject: Re: [patch] Allow CRDA to use new libnl
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <494AE20D.2010709@erley.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+References: <494AE20D.2010709@erley.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Thu, Dec 18, 2008 at 3:51 PM, pat-lkml <pat-lkml@erley.org> wrote:
+> This patch updates CRDA to use the new libnl-2 interface, and adds
+> backwards compatability with libnl-1.  It follows the same pattern that
+> the patch included into iw uses.
+>
+> Signed-off-by: Pat Erley <pat-lkml@erley.org>
 
-IW_ENCODE_MODE is 0xF000 and thus !erq->flags & IW_ENCODE_MODE is always 0.
-I assume that !(erq->flags & IW_ENCODE_MODE) was intended.
+Thanks, applied.
 
-The semantic patch that makes this change is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
-
-// <smpl>
-@@ expression E; constant C; @@
-(
-  !E & !C
-|
-- !E & C
-+ !(E & C)
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/staging/rt2860/sta_ioctl.c |    2 +-
- drivers/staging/rt2870/sta_ioctl.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff -u -p a/drivers/staging/rt2860/sta_ioctl.c b/drivers/staging/rt2860/sta_ioctl.c
---- a/drivers/staging/rt2860/sta_ioctl.c
-+++ b/drivers/staging/rt2860/sta_ioctl.c
-@@ -1756,7 +1756,7 @@ int rt_ioctl_siwencode(struct net_device
-             }
-         else
- 			/* Don't complain if only change the mode */
--			if(!erq->flags & IW_ENCODE_MODE) {
-+			if (!(erq->flags & IW_ENCODE_MODE)) {
- 				return -EINVAL;
- 		}
- 	}
-diff -u -p a/drivers/staging/rt2870/sta_ioctl.c b/drivers/staging/rt2870/sta_ioctl.c
---- a/drivers/staging/rt2870/sta_ioctl.c
-+++ b/drivers/staging/rt2870/sta_ioctl.c
-@@ -1776,7 +1776,7 @@ int rt_ioctl_siwencode(struct net_device
-             }
-         else
- 			/* Don't complain if only change the mode */
--			if(!erq->flags & IW_ENCODE_MODE) {
-+			if (!(erq->flags & IW_ENCODE_MODE)) {
- 				return -EINVAL;
- 		}
- 	}
+  Luis
