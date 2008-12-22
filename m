@@ -1,95 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:4829 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753526AbYLGEPJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 23:15:09 -0500
-Date: Sat, 6 Dec 2008 23:15:06 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-cc: Christian Lamparter <chunkeey@web.de>, Greg KH <gregkh@suse.de>,
-	<linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>,
-	<linux-usb@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC][PATCH] p54usb: rewriting rx/tx routines to make use of
- usb_anchor's facilities
-In-Reply-To: <493AF2EE.20605@lwfinger.net>
-Message-ID: <Pine.LNX.4.44L0.0812061919480.16554-100000@netrider.rowland.org> (sfid-20081207_051538_420258_EC013D2B)
+Received: from mail.atheros.com ([12.36.123.2]:25161 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752950AbYLVSVa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 13:21:30 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:21:30 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2 17/18] ath9k: remove superfluous check on changing channel
+Date: Mon, 22 Dec 2008 10:20:38 -0800
+Message-ID: <1229970039-10561-18-git-send-email-lrodriguez@atheros.com> (sfid-20081222_193901_059177_BCB0413B)
+In-Reply-To: <1229970039-10561-17-git-send-email-lrodriguez@atheros.com>
+References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-4-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-6-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-7-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-8-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-9-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-10-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-11-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-12-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-13-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-14-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-15-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-16-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-17-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 6 Dec 2008, Larry Finger wrote:
+When we try to change the channel in ath9k its because
+either the configuration indicates we *have* changed
+channels or HT configuration has changed. In both cases
+we want to do a reset. Either way mac80211 will inform us
+when we want to actually change the channel so trust those
+calls.
 
-> Christian Lamparter wrote:
-> > 
-> > Alan, I've got a question about:
-> > "Create and initialize a usb_anchor structure, and each time you create
-> > a new URB, call usb_anchor_urb().  Then you can free the URB as soon as
-> > it is submitted; the anchor will keep it pinned until it completes, and
-> > it is automatically removed from the anchor when the completion routine
-> > is called."
-> > 
-> > Do we have to call usb_free_urb again, if we're resubmitting the urb in the
-> > complete callback? (the code what I'm referring to is p54u_rx_cb in p54usb.c)
-> 
-> I am very interested in the answer to this question. My interpretation is that
-> you cannot resubmit the urb after it has been posted to usb_anchor_usb() because
-> the USB core will have deleted it, and that the callback routine will have to
-> allocate a new urb, anchor it, and then free it as well.
+Although in the patch it may seem as I am doing more code
+changes I am not, all I am doing is removing the initial
+branch conditional and shifting the code to the left.
 
-I looked quickly at your new code.  It seems basically right, but there
-are few things that still need attention.  For instance, you removed a
-line to free an URB's transfer buffer.  The USB core will automatically
-call kfree(urb->transfer_buffer) for you when the URB is deallocated,
-but only if you have set the URB_FREE_BUFFER bit in
-urb->transfer_flags.  I didn't check to see whether the driver does 
-this.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |  101 +++++++++++++++++-------------------
+ 1 files changed, 48 insertions(+), 53 deletions(-)
 
-To answer your questions about anchors...  The main idea is simple
-enough.  When you create an URB, its refcount is 1.  Each call to
-usb_get_urb() increments the refcount and each call to usb_put_urb()  
-or usb_free_urb() decrements it; when the refcount reaches 0 the URB is
-deallocated.  When you successfully submit an URB, the core increments
-its refcount; the refcount is then decremented when the completion
-routine returns.
-
-When you add an URB to an anchor, its refcount is incremented.  When it
-is removed from the anchor, the refcount is decremented again.  An
-anchored URB is automatically removed from its anchor just before the
-completion routine is called.  So if your completion routine wants to
-resubmit an URB, it has to add the URB back to the anchor.  And if
-the submission fails then you have to decide what to do (usually you 
-would unanchor the URB, which would cause it to be deallocated later).
-
-As a sketch: (1) Initially:
-
-	usb_alloc_urb			=> refcount = 1
-	usb_anchor_urb			=> refcount = 2
-	usb_submit_urb			=> refcount = 3
-	usb_free_urb			=> refcount = 2
-
-(2) Later on:
-
-	URB completes
-	URB is removed from anchor	=> refcount = 1
-	Completion routine is called
-
-(3a) If the completion routine doesn't resubmit:
-
-	Completion routine returns	=> refcount = 0,
-					URB is deallocated
-
-(3b) If the completion routine does resubmit:
-
-	usb_anchor_urb			=> refcount = 2
-	usb_submit_urb			=> refcount = 3
-	Completion routine returns	=> refcount = 2
-	Go back to (2)...
-
-Hopefully this clarifies things.
-
-Alan Stern
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 1299f52..1d916db 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -273,63 +273,58 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_channel *c)
+ 
+ 	hchan = (struct ath9k_channel *) c->priv;
+ 
+-	if (hchan->channel != sc->sc_ah->ah_curchan->channel ||
+-	    hchan->channelFlags != sc->sc_ah->ah_curchan->channelFlags ||
+-	    (sc->sc_flags & SC_OP_CHAINMASK_UPDATE) ||
+-	    (sc->sc_flags & SC_OP_FULL_RESET)) {
+-		/*
+-		 * This is only performed if the channel settings have
+-		 * actually changed.
+-		 *
+-		 * To switch channels clear any pending DMA operations;
+-		 * wait long enough for the RX fifo to drain, reset the
+-		 * hardware at the new frequency, and then re-enable
+-		 * the relevant bits of the h/w.
+-		 */
+-		ath9k_hw_set_interrupts(ah, 0);
+-		ath_draintxq(sc, false);
+-		stopped = ath_stoprecv(sc);
++	/*
++	 * This is only performed if the channel settings have
++	 * actually changed.
++	 *
++	 * To switch channels clear any pending DMA operations;
++	 * wait long enough for the RX fifo to drain, reset the
++	 * hardware at the new frequency, and then re-enable
++	 * the relevant bits of the h/w.
++	 */
++	ath9k_hw_set_interrupts(ah, 0);
++	ath_draintxq(sc, false);
++	stopped = ath_stoprecv(sc);
+ 
+-		/* XXX: do not flush receive queue here. We don't want
+-		 * to flush data frames already in queue because of
+-		 * changing channel. */
++	/* XXX: do not flush receive queue here. We don't want
++	 * to flush data frames already in queue because of
++	 * changing channel. */
+ 
+-		if (!stopped || (sc->sc_flags & SC_OP_FULL_RESET))
+-			fastcc = false;
++	if (!stopped || (sc->sc_flags & SC_OP_FULL_RESET))
++		fastcc = false;
+ 
+-		DPRINTF(sc, ATH_DBG_CONFIG,
+-			"(%u MHz) -> (%u MHz), chanwidth: %d\n",
+-			sc->sc_ah->ah_curchan->channel,
+-			c->center_freq, sc->tx_chan_width);
++	DPRINTF(sc, ATH_DBG_CONFIG,
++		"(%u MHz) -> (%u MHz), chanwidth: %d\n",
++		sc->sc_ah->ah_curchan->channel,
++		c->center_freq, sc->tx_chan_width);
+ 
+-		spin_lock_bh(&sc->sc_resetlock);
++	spin_lock_bh(&sc->sc_resetlock);
+ 
+-		r = ath9k_hw_reset(ah, fastcc);
+-		if (r) {
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Unable to reset channel %u (%uMhz) "
+-				"hal status %u\n",
+-				ieee80211_frequency_to_channel(c->center_freq),
+-				c->center_freq,
+-				r);
+-			spin_unlock_bh(&sc->sc_resetlock);
+-			return r;
+-		}
++	r = ath9k_hw_reset(ah, fastcc);
++	if (r) {
++		DPRINTF(sc, ATH_DBG_FATAL,
++		  "Unable to reset channel %u (%uMhz) "
++		  "hal status %u\n",
++		  ieee80211_frequency_to_channel(c->center_freq),
++		  c->center_freq, r);
+ 		spin_unlock_bh(&sc->sc_resetlock);
++		return r;
++	}
++	spin_unlock_bh(&sc->sc_resetlock);
+ 
+-		sc->sc_flags &= ~SC_OP_CHAINMASK_UPDATE;
+-		sc->sc_flags &= ~SC_OP_FULL_RESET;
+-
+-		if (ath_startrecv(sc) != 0) {
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Unable to restart recv logic\n");
+-			return -EIO;
+-		}
++	sc->sc_flags &= ~SC_OP_CHAINMASK_UPDATE;
++	sc->sc_flags &= ~SC_OP_FULL_RESET;
+ 
+-		ath_cache_conf_rate(sc, &hw->conf);
+-		ath_update_txpow(sc);
+-		ath9k_hw_set_interrupts(ah, sc->sc_imask);
++	if (ath_startrecv(sc) != 0) {
++		DPRINTF(sc, ATH_DBG_FATAL,
++			"Unable to restart recv logic\n");
++		return -EIO;
+ 	}
++
++	ath_cache_conf_rate(sc, &hw->conf);
++	ath_update_txpow(sc);
++	ath9k_hw_set_interrupts(ah, sc->sc_imask);
++
+ 	return 0;
+ }
+ 
+-- 
+1.6.1.rc3.51.g5832d
 
