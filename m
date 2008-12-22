@@ -1,52 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.brikks.com ([82.209.166.4]:7421 "EHLO smtp.bredband2.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754234AbYLGQaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2008 11:30:07 -0500
-Date: Sun, 7 Dec 2008 17:29:58 +0100
-From: Mats Johannesson <spamcan1@abrasax.se>
-To: Sujith <m.sujith@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
- root
-Message-ID: <20081207172958.333e88e4@loke.fish.not> (sfid-20081207_173022_495784_CD329A0B)
-In-Reply-To: <18747.60039.401701.441103@localhost.localdomain>
-References: <20081206113406.734f1d94@loke.fish.not>
-	<18746.37273.989918.333164@localhost.localdomain>
-	<20081206180537.717d1791@loke.fish.not>
-	<18746.48068.593834.660064@localhost.localdomain>
-	<20081206202237.578b3783@loke.fish.not>
-	<18747.15541.811292.500184@localhost.localdomain>
-	<20081207150420.0f688772@loke.fish.not>
-	<18747.60039.401701.441103@localhost.localdomain>
+Received: from xc.sipsolutions.net ([83.246.72.84]:34084 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751682AbYLVG4k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 01:56:40 -0500
+Subject: Re: [PATCH] rtl8180: Fix to add STA mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <494eb7d1.t197ktKMLMlIer8t%Larry.Finger@lwfinger.net> (sfid-20081221_224041_525205_B0C21FE7)
+References: <494eb7d1.t197ktKMLMlIer8t%Larry.Finger@lwfinger.net>
+	 (sfid-20081221_224041_525205_B0C21FE7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Zowgo2igcgZ4m1CHT3gF"
+Date: Mon, 22 Dec 2008 07:56:36 +0100
+Message-Id: <1229928996.3087.3.camel@johannes> (sfid-20081222_075657_561165_6B8B2F15)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 7 Dec 2008 20:53:51 +0530 Sujith wrote:
-[...]
-["This" snipped since I couldn't identify the line/lines doing it]
 
-> This indicates that HT40 has been chosen.
-> 
-> The problem is this:
-> 
-> After association, ath9k has to set the appropriate channel width on
-> doing a scan and mac80211 comes back to the home channel. Currently
-> there is no such means to do that, and this why pinging fails.
-> 
-> We'll work on a solution, but until then you would have to choose
-> HT20 in your AP.
+--=-Zowgo2igcgZ4m1CHT3gF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-All protocols are affected ping, whatever lies below telnet and http
-through lynx was dead as well.
+On Sun, 2008-12-21 at 15:40 -0600, Larry Finger wrote:
+> To be compatible with mac80211 following commit 3fc7826b95521 (mac80211:
+> only create default STA interface if supported), rtl8180 needs to set
+> NL80211_IFTYPE_STATION in interface_modes.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Reported-by: Fabio Rossi <rossi.f@inwind.it>
+> Tested-by: Piter PUNK <piterpunk@unitednerds.org>
 
-Ok, I'll try this version out a bit first with heavy p2p-transfers. If
-it survives I might stick with it (2.6.28-rc6-wl died after awhile)
-otherwise I'll go back to my all time favourite 2.6.27-rc5.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Wicd manager seems to keep a static list of APs in the environment I've
-already scanned, so the issue is normally of no concern.
+obviously. I didn't know we'd missed an in-tree driver when adding the
+interface_modes thing, thanks.
 
-/Mats
+> ---
+>=20
+> John,
+>=20
+> This patch should be included with the 2.6.29 material.
+>=20
+> Larry
+> ---
+>=20
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> @@ -898,6 +898,7 @@ static int __devinit rtl8180_probe(struc
+>  	dev->flags =3D IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+>  		     IEEE80211_HW_RX_INCLUDES_FCS |
+>  		     IEEE80211_HW_SIGNAL_UNSPEC;
+> +	dev->wiphy->interface_modes =3D BIT(NL80211_IFTYPE_STATION);
+>  	dev->queues =3D 1;
+>  	dev->max_signal =3D 65;
+> =20
+> ---
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+--=-Zowgo2igcgZ4m1CHT3gF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJTzohAAoJEKVg1VMiehFYAh8P/1uPhxJRPJ7pIvkLWDoZNK4y
+yOfn54OzLbtVyOxG1HVgynp2b+6j1KHjCoVsGXDHdrYIqcYZA56VHlxkxnuDoYTw
+aEFnbWJbi1r7mfrQybSWuXBG9aILiT4XHoJ4c4PWyYH+/CV2rrcZW0xcZJFof+Nm
+VIM7U9qdf3atmy9uQNoYlsmBEk3bgTgWd/U+A/JDjSohvu3UknfRfPYElEHnoMTE
+xzm8azNpBMabGVHxWwCsNFXNdB7jPJlPczOLdiA26ra5a2x7W2enXOVFb/xHJPQa
+tMg96ePTrpL3XOmDflb/6kyd8jqIrgcOm07ITDLozOnKLIY09RV1b+4l0qlG8ezY
+WUkZIWJwiSnh89pRTp9yoEeCuOJOBYkYyNN8iYiCjlf+cYoVvHSgIWQaKqU5R3ZT
+q1CLuT9h6h+5QE42o767PnpYsSQXi190DI6AOQBLqGv5hLxmSc9KhP7OMVi9JAEY
+lJzzlDT+hCDm/3j1uxvIunyxl8zXHNe0pMlJYnmMe7KkuzH2vjkcFaOO1BFLRmD/
+NvfJgrjhLcNQCdDzv2ybr2Sxxt+JaCgfbCQrp7eO3SZUyYrBate8/YC0hbKgNnJ1
+N/zcsr8Hc5aY+tFqYsbWtMMas6CUg04ITATGLh2r3ZxaJqS/PI35YGuG82SrJaa0
+deQSmbHm4grPah58EMvC
+=tLFB
+-----END PGP SIGNATURE-----
+
+--=-Zowgo2igcgZ4m1CHT3gF--
+
