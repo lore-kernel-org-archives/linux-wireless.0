@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:61556 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758AbYLSGSC (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43808 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755719AbYLVTSZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 01:18:02 -0500
-Received: by bwz14 with SMTP id 14so3075509bwz.13
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 22:17:59 -0800 (PST)
-Message-ID: <8e92b4100812182217q6f8e6014s3f28ab79c5bc2ba3@mail.gmail.com> (sfid-20081219_071826_616352_BF25C29B)
-Date: Fri, 19 Dec 2008 11:47:59 +0530
-From: "Vivek Natarajan" <vivek.natraj@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: [PATCH v6 3/3] mac80211: implement dynamic power save
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081218213527.7248.65697.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081218213306.7248.64398.stgit@tikku>
-	 <20081218213527.7248.65697.stgit@tikku>
+	Mon, 22 Dec 2008 14:18:25 -0500
+Subject: Re: [PATCH] mac80211_hwsim: configfs support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Igor Trindade Oliveira <igor_trindade@yahoo.com.br>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20081222085146.GC5732@jm.kir.nu>
+References: <700428.4819.qm@web59316.mail.re1.yahoo.com>
+	 <20081222085146.GC5732@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jo90/OfMei1acnkk+71Z"
+Date: Mon, 22 Dec 2008 20:18:24 +0100
+Message-Id: <1229973504.4406.22.camel@johannes> (sfid-20081222_201838_348477_9C3F5E0E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 19, 2008 at 3:05 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> @@ -872,6 +878,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
->        local->oper_channel_type = NL80211_CHAN_NO_HT;
->        config_changed |= IEEE80211_CONF_CHANGE_HT;
->
-> +       del_timer_sync(&local->dynamic_ps_timer);
-> +       cancel_work_sync(&local->dynamic_ps_enable_work);
 
-In addition, shouldn't we have this 'cancel_work'  in ieee80211_stop
-or where ever in the stop/detach path since the ps timer may be
-triggered even after the interface is brought down.
+--=-jo90/OfMei1acnkk+71Z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I need your thoughts on having null frame being sent from mac80211(
-the RFC I submitted earlier).
-Do you feel a state machine is necessary to go to power save? ( like
-awake, sleep, pending_sleep if the AP hasn't acked the null frame with
-a timer or a work queue to send null frame periodically in the pending
-state). Or altogether you want that to be part of the driver and not
-in mac80211?
+On Mon, 2008-12-22 at 10:51 +0200, Jouni Malinen wrote:
 
-Thanks,
-Vivek.
+> Hmm.. The addition of support to add interfaces dynamically with mkdir
+> sounds reasonable, but I'm not sure whether I really like the part of
+> removing debugfs support.. mac80211_hwsim is a developer tool and I want
+> to be able to have an undocumented and free for changes interface
+> (debugfs) that does not have so strict requirement on kernel-userspace
+> interface. This patch seems to also be moving the PS testing parameter
+> to use configfs. If this means that it will be more difficult to change
+> that mechanism or add new parameters in the future, I'm not sure I would
+> support that part of the change.
+
+As has been argued elsewhere, a few interfaces in debugfs have also
+become "stable" to a point that they can't be changed much any more... I
+think since this is a development tool even configfs could be declared
+an in-development API?
+
+johannes
+
+--=-jo90/OfMei1acnkk+71Z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJT+f9AAoJEKVg1VMiehFY/48P/0d2S9MQSwJ7I2AL6kByrfyG
+eELltg7WUY+HXKJmaWNDDv9ESNyzRidtHVrTUjz7CGuBjFevla8B3iaE672aGWGc
+wtST1Ze79toAe7duX9sVoKVnMJ3s2SlGT7sf62meGdP8e9/alb+oj3UWRPHIJFWz
+TDaDiykEk6QbeTmDlYwC84H062ozeG/tMDVbNecBuyyeMFf75heLlvVaX26uIvVt
+sXyHyohrskUUb83XrpGG+sq5V7NsF8MkjfzFUf716Fh51rO+80E+2pQtXref2Kjr
+FeR5c2vOFb8xP9/wffCa/4ws9LGd93MKd1DMbtjNv8gxFpXaQRDygH4rf8HsML+X
+1agYCaUNocqSRW6GfD4B+2PTp5cp9WfLngHjK+1pnDV3UOCVfap7G4phnF9wtjOb
+l44hEAB+jt0MS8h2/uenaZo5K+Xa6lMtUkDhXCtTUSAsl0v9KBtUXgYmpRAV3GEy
+/QF/UrYGnN0uJo3+nlme1DLSbNiwccPqutwIuvyQyHBLOpIMjXKmFrG3GnqwyT/D
+iNiw/ADMZQKgA2TyzFoWEUiwCtHnT2+8anYXj4hhgXjoF8us0ih4K5cpSmpqbUC6
+Rp6og6wtdVwjjIcCbqVSGu7C/dGtmRxnrrqxlBjr1Yrwi2e7BFMXuvYKHOXjuoEw
+kxRVfe4UZlq2ZFNI6Fzg
+=RJ47
+-----END PGP SIGNATURE-----
+
+--=-jo90/OfMei1acnkk+71Z--
+
