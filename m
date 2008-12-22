@@ -1,86 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22666 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751370AbYLWX7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 18:59:10 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 15:59:10 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v3 04/16] ath9k: Rename ath_setcurmode() to ath_cache_conf_rate()
-Date: Tue, 23 Dec 2008 15:58:39 -0800
-Message-ID: <1230076731-22946-5-git-send-email-lrodriguez@atheros.com> (sfid-20081224_005914_714782_8D9CD70A)
-In-Reply-To: <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
-References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
- <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
+Received: from rv-out-0506.google.com ([209.85.198.225]:24569 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755175AbYLVVss (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 16:48:48 -0500
+Message-ID: <b6c5339f0812221348o411c4fabse2d0138acfb4f87f@mail.gmail.com> (sfid-20081222_224854_212524_C2F693B3)
+Date: Mon, 22 Dec 2008 16:48:47 -0500
+From: "Bob Copeland" <bcopeland@gmail.com>
+To: "Jiri Slaby" <jirislaby@gmail.com>
+Subject: Re: [ath5k-devel] ath5k_pci: gain calibration timeout / unable to reset hardware -11
+Cc: "Andrew Morton" <akpm@linux-foundation.org>,
+	"Soeren Sonnenburg" <kernel@nn7.de>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <49500906.70309@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1229923913.3886.7.camel@localhost>
+	 <20081222125819.7353d172.akpm@linux-foundation.org>
+	 <4950087E.3080505@gmail.com> <49500906.70309@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_setcurmode() is a bit misleading, all we are doing is
-caching the rate for the corresponding configuration we
-are using.
+On Mon, Dec 22, 2008 at 4:39 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
+>>
+>> Does the _HW lockup_ happen even with 2.6.28? The lockup should be gone there
+>> (with the messages still present).
+>
+> I see Bob already replied, ignore me, he knows better.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+I thought Felix's patch had gone into .28, but in fact it hasn't.
+We should probably get it in or queue it for .28.1 -- it's a two
+liner that will fix a lot of people's setups.
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 28d9de1..8127257 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -59,7 +59,8 @@ static void bus_read_cachesize(struct ath_softc *sc, int *csz)
- 		*csz = DEFAULT_CACHELINE >> 2;   /* Use the default size */
- }
- 
--static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
-+static void ath_cache_conf_rate(struct ath_softc *sc,
-+				struct ieee80211_conf *conf)
- {
- 	switch (conf->channel->band) {
- 	case IEEE80211_BAND_2GHZ:
-@@ -91,6 +92,7 @@ static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
- 			  sc->hw_rate_table[ATH9K_MODE_11A];
- 		break;
- 	default:
-+		BUG_ON(1);
- 		break;
- 	}
- }
-@@ -316,7 +318,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
- 			return -EIO;
- 		}
- 
--		ath_setcurmode(sc, &hw->conf);
-+		ath_cache_conf_rate(sc, &hw->conf);
- 		ath_update_txpow(sc);
- 		ath9k_hw_set_interrupts(ah, sc->sc_imask);
- 	}
-@@ -1649,7 +1651,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	 * that changes the channel so update any state that
- 	 * might change as a result.
- 	 */
--	ath_setcurmode(sc, &hw->conf);
-+	ath_cache_conf_rate(sc, &hw->conf);
- 
- 	ath_update_txpow(sc);
- 
-@@ -1946,7 +1948,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	    !sc->sc_config.swBeaconProcess)
- 		sc->sc_imask |= ATH9K_INT_TIM;
- 
--	ath_setcurmode(sc, &hw->conf);
-+	ath_cache_conf_rate(sc, &hw->conf);
- 
- 	sc->sc_flags &= ~SC_OP_INVALID;
- 
+John, if you're reading, that's 23c401574b16cb2b6d2231ba405ebf85b8c87de5
+in wireless-testing.
+
+The lockup can still occur, but it's a lot less frequent with his patch.
+
 -- 
-1.6.1.rc3.51.g5832d
-
+Bob Copeland %% www.bobcopeland.com
