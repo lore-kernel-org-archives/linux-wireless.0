@@ -1,86 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:52546 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751446AbYL3Rw7 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:47145 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754082AbYLVVjX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 12:52:59 -0500
-Message-ID: <495A5FEC.5070608@lwfinger.net> (sfid-20081230_185306_380281_8ED22973)
-Date: Tue, 30 Dec 2008 11:52:44 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 22 Dec 2008 16:39:23 -0500
+Message-ID: <49500906.70309@gmail.com> (sfid-20081222_223927_722697_26A18F27)
+Date: Mon, 22 Dec 2008 22:39:18 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-CC: Alan Stern <stern@rowland.harvard.edu>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-References: <Pine.LNX.4.44L0.0812301220090.2386-100000@iolanthe.rowland.org> <495A5AE5.1040902@tuffmail.co.uk>
-In-Reply-To: <495A5AE5.1040902@tuffmail.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: Soeren Sonnenburg <kernel@nn7.de>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: Re: ath5k_pci: gain calibration timeout / unable to reset hardware
+ -11
+References: <1229923913.3886.7.camel@localhost> <20081222125819.7353d172.akpm@linux-foundation.org> <4950087E.3080505@gmail.com>
+In-Reply-To: <4950087E.3080505@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Jenkins wrote:
-> That won't fix hibernation though.  The disconnect method can still get
-> called in resume from hibernation, before the workqueue gets unfrozen. 
-> To be honest, I'm far more interested in suspend-to-disk than
-> suspend-to-ram.
+On 12/22/2008 10:37 PM, Jiri Slaby wrote:
+> On 12/22/2008 09:58 PM, Andrew Morton wrote:
+>> (cc linux-wireless)
+>>
+>> On Mon, 22 Dec 2008 06:31:53 +0100
+>> Soeren Sonnenburg <kernel@nn7.de> wrote:
+>>
+>>> Hi,
+>>>
+>>> I was using the ath5k_pci driver on a macbook pro 1,1 and it is working
+>>> for some time but then suddenly messages like the ones below appear and
+>>> I have to *turn off* the machine to get it back working (even booting to
+>>> osx is not sufficient - osx won't have network when things go wrong as
+>>> they do after a couple of hours). Note that this happens with both
+>>> 2.6.27 and .28.
+> 
+> Does the _HW lockup_ happen even with 2.6.28? The lockup should be gone there
+> (with the messages still present).
 
-Does this patch fix your problem? It works here, but I only did one
-test. The patch is for wireless-testing.
-
-Larry
-
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -1464,6 +1464,32 @@ static int __devinit rtl8187_probe(struc
- 	return err;
- }
-
-+#ifdef CONFIG_PM
-+
-+static int rtl8187_suspend(struct usb_interface *intf, pm_message_t
-state)
-+{
-+	struct ieee80211_hw *dev = usb_get_intfdata(intf);
-+	struct rtl8187_priv *priv;
-+        int time;
-+
-+	if (!dev)
-+		return 0;
-+
-+	priv = dev->priv;
-+
-+	time = usb_wait_anchor_empty_timeout(&priv->anchored, 1000);
-+	if (!time)
-+		usb_kill_anchored_urbs(&priv->anchored);
-+	return 0;
-+}
-+
-+static int rtl8187_resume(struct usb_interface *intf)
-+{
-+	return 0;
-+}
-+
-+#endif /* CONFIG_PM */
-+
- static void __devexit rtl8187_disconnect(struct usb_interface *intf)
- {
- 	struct ieee80211_hw *dev = usb_get_intfdata(intf);
-@@ -1484,6 +1510,10 @@ static struct usb_driver rtl8187_driver
- 	.id_table	= rtl8187_table,
- 	.probe		= rtl8187_probe,
- 	.disconnect	= __devexit_p(rtl8187_disconnect),
-+#ifdef CONFIG_PM
-+	.suspend	= rtl8187_suspend,
-+	.resume		= rtl8187_resume,
-+#endif /* CONFIG_PM */
- };
-
- static int __init rtl8187_init(void)
+I see Bob already replied, ignore me, he knows better.
