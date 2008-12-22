@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:44793 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260AbYLQOUk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 09:20:40 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Memory errors from p54usb
-Date: Wed, 17 Dec 2008 15:20:40 +0100
-Cc: wireless <linux-wireless@vger.kernel.org>
-References: <49466F56.6060805@lwfinger.net> <200812162256.36605.chunkeey@web.de> <49487038.5090404@lwfinger.net>
-In-Reply-To: <49487038.5090404@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:25125 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751983AbYLVSU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 13:20:58 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:20:58 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2 05/18] wireless: allow for private channel area
+Date: Mon, 22 Dec 2008 10:20:26 -0800
+Message-ID: <1229970039-10561-6-git-send-email-lrodriguez@atheros.com> (sfid-20081222_192101_399448_1D6FAB89)
+In-Reply-To: <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
+References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-4-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812171520.40104.chunkeey@web.de> (sfid-20081217_152045_019858_48FD6542)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 17 December 2008 04:21:28 Larry Finger wrote:
-> Christian Lamparter wrote:
-> > well, looks like TKIP countermeasures after all....
-> > 
-> > The question is how to "debug" it...
-> > 
-> > jm, are you aware of any compatibility problems or
-> > regression between broadcom APs and wpa_supplicant
-> > with WPA TKIP?
-> 
-> Unfortunately (?) the problem still occurs with an unencrypted network. I hauled
-> out my 801.11b AP/router, and the same problem occurs even when wpa_supplicant
-> is not in the equation.
-> 
-Ohh, it always gets better. ;)
-Anyway, I'll see what I can do tomorrow. 
+Wireless drivers tend to require calibration or noise floor
+checks. Some of these operations are channel specific. Instead
+of forcing each driver to keep a separate map for these values
+per channel allow for a private area on the ieee80211_channel to
+reduce code overhead and size.
 
-In the meantime, I remembered that I put a heat sink on my chip a while ago,
-but I'm not sure if this had any effect here... But back in the summer, it allowed me
-fix the iperf stalls I had, but that was after days with 60Gb traffic...
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/wireless.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-Regards,
-	Chr
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index aedefa5..ecb5cf1 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -71,6 +71,8 @@ enum ieee80211_channel_flags {
+  * @max_power: maximum transmission power (in dBm)
+  * @orig_mag: internal use
+  * @orig_mpwr: internal use
++ * @priv: used by the driver for any of its own needs,
++ * 	could be used for example for calibration data.
+  */
+ struct ieee80211_channel {
+ 	enum ieee80211_band band;
+@@ -82,6 +84,7 @@ struct ieee80211_channel {
+ 	int max_power;
+ 	u32 orig_flags;
+ 	int orig_mag, orig_mpwr;
++	void *priv;
+ };
+ 
+ /**
+-- 
+1.6.1.rc3.51.g5832d
+
