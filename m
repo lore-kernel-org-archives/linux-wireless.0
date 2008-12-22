@@ -1,706 +1,427 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:29654 "EHLO mga03.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:25128 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754462AbYLIT2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 14:28:00 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/4] iwlwifi: change email contact information
-Date: Tue,  9 Dec 2008 11:28:58 -0800
-Message-Id: <1228850941-16677-2-git-send-email-reinette.chatre@intel.com> (sfid-20081209_202807_978184_A1D8F8D1)
-In-Reply-To: <1228850941-16677-1-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1228850941-16677-1-git-send-email-reinette.chatre@intel.com>
+	id S1752049AbYLVSVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 13:21:01 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 10:21:01 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2 06/18] ath9k: start making use of channel->priv
+Date: Mon, 22 Dec 2008 10:20:27 -0800
+Message-ID: <1229970039-10561-7-git-send-email-lrodriguez@atheros.com> (sfid-20081222_192107_401751_4F74FF64)
+In-Reply-To: <1229970039-10561-6-git-send-email-lrodriguez@atheros.com>
+References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-3-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-4-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-5-git-send-email-lrodriguez@atheros.com>
+ <1229970039-10561-6-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+We start consolidating our internal channel by linking
+it to the standard ieee80211_channel in the private area.
+We can now slowly start removing redundant data.
 
-This patch replaces personal emails with hopefully
-always valid Intel Linux Wireless, which will be routed
-to a current maintainer
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945-commands.h  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-core.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-debug.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-io.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-led.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-led.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd-check.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-calib.c          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-calib.h          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-csr.h            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-fh.h             |    2 +-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-helpers.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-io.h             |    2 +-
- drivers/net/wireless/iwlwifi/iwl-led.c            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-led.h            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.c          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.h          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-rfkill.c         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-rfkill.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c             |    2 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-spectrum.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-spectrum.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.h            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c             |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c       |    2 +-
- 48 files changed, 48 insertions(+), 48 deletions(-)
+ drivers/net/wireless/ath9k/ath9k.h |    2 +-
+ drivers/net/wireless/ath9k/hw.c    |   50 +++--------------
+ drivers/net/wireless/ath9k/main.c  |  106 ++++++++++++++++--------------------
+ drivers/net/wireless/ath9k/xmit.c  |    2 +-
+ 4 files changed, 59 insertions(+), 101 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-index daf99ea..c6f4eb5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-commands.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-core.h b/drivers/net/wireless/iwlwifi/iwl-3945-core.h
-index edac6c6..6f46355 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-core.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-debug.h b/drivers/net/wireless/iwlwifi/iwl-3945-debug.h
-index 33016fb..85eb778 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-debug.h
-@@ -21,7 +21,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-index f0f7dc7..15570e6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-io.h b/drivers/net/wireless/iwlwifi/iwl-3945-io.h
-index d381b82..2440fd6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-io.h
-@@ -21,7 +21,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.c b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-index 705c65b..4c63890 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-led.h b/drivers/net/wireless/iwlwifi/iwl-3945-led.h
-index 2fbd126..749ac03 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-led.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-led.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index 0ecf9d8..3861a3b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.h b/drivers/net/wireless/iwlwifi/iwl-3945-rs.h
-index 98b17ae..b5a6613 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index cbb8b0f..f2f2d8f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 05640a8..b7e366e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index fb0fd77..9873613 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 324825e..3afecf8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-index c6595e8..82c3859 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000-hw.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd-check.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd-check.c
-index c50494a..b8137ee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd-check.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd-check.c
-@@ -22,7 +22,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
+diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+index d278135..cd11eaf 100644
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -843,7 +843,7 @@ void ath9k_hw_rfdetach(struct ath_hal *ah);
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index c1cfb87..1fdf5f4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-index adcbf53..78ee83a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index fc4e7e4..e6a82b7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
-index 25f4658..7956e08 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.h b/drivers/net/wireless/iwlwifi/iwl-calib.h
-index 94c8e31..1abe84b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 45656f2..0ba325d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 1b021ca..3ef3c57 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -22,7 +22,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
+ /* HW Reset */
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 81ddca0..983042b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 84f56a2..b834e21 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index a115dc6..e4c264b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -21,7 +21,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 84053d8..feb4091 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -22,7 +22,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
+-bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
++bool ath9k_hw_reset(struct ath_hal *ah, struct ieee80211_channel *channel,
+ 		    enum ath9k_ht_macmode macmode,
+ 		    u8 txchainmask, u8 rxchainmask,
+ 		    enum ath9k_ht_extprotspacing extprotspacing,
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index d2b0ecf..d9f810a 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -199,46 +199,6 @@ u16 ath9k_hw_computetxtime(struct ath_hal *ah,
+ 	return txTime;
+ }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 25e8714..c32012e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index ae04327..a47fa38 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 8f6b05f..4b9de7a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index c3dadb0..2ff9434 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-index 0008a35..01a2169 100644
---- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-@@ -22,7 +22,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
+-u32 ath9k_hw_mhz2ieee(struct ath_hal *ah, u32 freq, u32 flags)
+-{
+-	if (flags & CHANNEL_2GHZ) {
+-		if (freq == 2484)
+-			return 14;
+-		if (freq < 2484)
+-			return (freq - 2407) / 5;
+-		else
+-			return 15 + ((freq - 2512) / 20);
+-	} else if (flags & CHANNEL_5GHZ) {
+-		if (ath9k_regd_is_public_safety_sku(ah) &&
+-		    IS_CHAN_IN_PUBLIC_SAFETY_BAND(freq)) {
+-			return ((freq * 10) +
+-				(((freq % 5) == 2) ? 5 : 0) - 49400) / 5;
+-		} else if ((flags & CHANNEL_A) && (freq <= 5000)) {
+-			return (freq - 4000) / 5;
+-		} else {
+-			return (freq - 5000) / 5;
+-		}
+-	} else {
+-		if (freq == 2484)
+-			return 14;
+-		if (freq < 2484)
+-			return (freq - 2407) / 5;
+-		if (freq < 5000) {
+-			if (ath9k_regd_is_public_safety_sku(ah)
+-			    && IS_CHAN_IN_PUBLIC_SAFETY_BAND(freq)) {
+-				return ((freq * 10) +
+-					(((freq % 5) ==
+-					  2) ? 5 : 0) - 49400) / 5;
+-			} else if (freq > 4900) {
+-				return (freq - 4000) / 5;
+-			} else {
+-				return 15 + ((freq - 2512) / 20);
+-			}
+-		}
+-		return (freq - 5000) / 5;
+-	}
+-}
+-
+ void ath9k_hw_get_channel_centers(struct ath_hal *ah,
+ 				  struct ath9k_channel *chan,
+ 				  struct chan_centers *centers)
+@@ -2223,7 +2183,7 @@ static void ath9k_hw_spur_mitigate(struct ath_hal *ah, struct ath9k_channel *cha
+ 	REG_WRITE(ah, AR_PHY_MASK2_P_61_45, tmp_mask);
+ }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-index 4f0fa21..d4d2829 100644
---- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-index 10ca032..998ac19 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-@@ -21,7 +21,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index ffb428a..e8ce188 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.h b/drivers/net/wireless/iwlwifi/iwl-led.h
-index 588c9ad..021e00b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.h
-@@ -19,7 +19,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index b429daa..be8eb95 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
+-bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
++bool ath9k_hw_reset(struct ath_hal *ah, struct ieee80211_channel *channel,
+ 		    enum ath9k_ht_macmode macmode,
+ 		    u8 txchainmask, u8 rxchainmask,
+ 		    enum ath9k_ht_extprotspacing extprotspacing,
+@@ -2232,11 +2192,19 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
+ 	u32 saveLedState;
+ 	struct ath_hal_5416 *ahp = AH5416(ah);
+ 	struct ath9k_channel *curchan = ah->ah_curchan;
++	struct ath9k_channel *chan;
+ 	u32 saveDefAntenna;
+ 	u32 macStaId1;
+ 	int ecode;
+ 	int i, rx_chainmask;
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.h b/drivers/net/wireless/iwlwifi/iwl-power.h
-index df484a9..fa098d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.h
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
- #ifndef __iwl_power_setting_h__
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index b0ffb89..b7a5f23 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -25,7 +25,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-index 618841a..7894f2d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
- #include <linux/kernel.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.h b/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-index 402fd4c..86dc055 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.h
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
- #ifndef __iwl_rf_kill_h__
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 1938e6d..58d339e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index c4b9030..3c803f6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -22,7 +22,7 @@
-  * in the file called LICENSE.GPL.
-  *
-  * Contact Information:
-- * Tomas Winkler <tomas.winkler@intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *****************************************************************************/
- #include <linux/types.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-spectrum.c b/drivers/net/wireless/iwlwifi/iwl-spectrum.c
-index ad319a1..a9a1897 100644
---- a/drivers/net/wireless/iwlwifi/iwl-spectrum.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-spectrum.c
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-spectrum.h b/drivers/net/wireless/iwlwifi/iwl-spectrum.h
-index fa990a1..b7d7943 100644
---- a/drivers/net/wireless/iwlwifi/iwl-spectrum.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-spectrum.h
-@@ -21,7 +21,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index a644a50..06e1808 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 7b98ea4..9bb7cef 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 661a4e3..3cb4363 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 5fdda51..f789cb8 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -22,7 +22,7 @@
-  * file called LICENSE.
-  *
-  * Contact Information:
-- * James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
++	if (!channel->priv) {
++		ecode = -EINVAL;
++		goto bad;
++	}
++
++	chan = (struct ath9k_channel *) channel->priv;
++
+ 	ahp->ah_extprotspacing = extprotspacing;
+ 	ahp->ah_txchainmask = txchainmask;
+ 	ahp->ah_rxchainmask = rxchainmask;
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 8127257..bffd181 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -218,6 +218,7 @@ static int ath_setup_channels(struct ath_softc *sc)
+ 			chan_2ghz[a].band = IEEE80211_BAND_2GHZ;
+ 			chan_2ghz[a].center_freq = c->channel;
+ 			chan_2ghz[a].max_power = c->maxTxPower;
++			chan_2ghz[a].priv = c;
+ 
+ 			if (c->privFlags & CHANNEL_DISALLOW_ADHOC)
+ 				chan_2ghz[a].flags |= IEEE80211_CHAN_NO_IBSS;
+@@ -226,13 +227,13 @@ static int ath_setup_channels(struct ath_softc *sc)
+ 
+ 			band_2ghz->n_channels = ++a;
+ 
+-			DPRINTF(sc, ATH_DBG_CONFIG, "2MHz channel: %d, "
+-				"channelFlags: 0x%x\n",
+-				c->channel, c->channelFlags);
++			DPRINTF(sc, ATH_DBG_CONFIG, "2MHz channel: %d\n",
++				chan_2ghz[a].center_freq);
+ 		} else if (IS_CHAN_5GHZ(c)) {
+ 			chan_5ghz[b].band = IEEE80211_BAND_5GHZ;
+ 			chan_5ghz[b].center_freq = c->channel;
+ 			chan_5ghz[b].max_power = c->maxTxPower;
++			chan_5ghz[b].priv = c;
+ 
+ 			if (c->privFlags & CHANNEL_DISALLOW_ADHOC)
+ 				chan_5ghz[b].flags |= IEEE80211_CHAN_NO_IBSS;
+@@ -241,9 +242,8 @@ static int ath_setup_channels(struct ath_softc *sc)
+ 
+ 			band_5ghz->n_channels = ++b;
+ 
+-			DPRINTF(sc, ATH_DBG_CONFIG, "5MHz channel: %d, "
+-				"channelFlags: 0x%x\n",
+-				c->channel, c->channelFlags);
++			DPRINTF(sc, ATH_DBG_CONFIG, "5MHz channel: %d\n",
++				chan_5ghz[b].center_freq);
+ 		}
+ 	}
+ 
+@@ -255,15 +255,21 @@ static int ath_setup_channels(struct ath_softc *sc)
+  * by reseting the chip.  To accomplish this we must first cleanup any pending
+  * DMA, then restart stuff.
+ */
+-static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
++static int ath_set_channel(struct ath_softc *sc, struct ieee80211_channel *c)
+ {
+ 	struct ath_hal *ah = sc->sc_ah;
+ 	bool fastcc = true, stopped;
+ 	struct ieee80211_hw *hw = sc->hw;
++	struct ath9k_channel *hchan;
+ 
+ 	if (sc->sc_flags & SC_OP_INVALID)
+ 		return -EIO;
+ 
++	if (!c->priv)
++		return -EINVAL;
++
++	hchan = (struct ath9k_channel *) c->priv;
++
+ 	if (hchan->channel != sc->sc_ah->ah_curchan->channel ||
+ 	    hchan->channelFlags != sc->sc_ah->ah_curchan->channelFlags ||
+ 	    (sc->sc_flags & SC_OP_CHAINMASK_UPDATE) ||
+@@ -290,20 +296,20 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 			fastcc = false;
+ 
+ 		DPRINTF(sc, ATH_DBG_CONFIG,
+-			"(%u MHz) -> (%u MHz), cflags:%x, chanwidth: %d\n",
++			"(%u MHz) -> (%u MHz), chanwidth: %d\n",
+ 			sc->sc_ah->ah_curchan->channel,
+-			hchan->channel, hchan->channelFlags, sc->tx_chan_width);
++			c->center_freq, sc->tx_chan_width);
+ 
+ 		spin_lock_bh(&sc->sc_resetlock);
+-		if (!ath9k_hw_reset(ah, hchan, sc->tx_chan_width,
++		if (!ath9k_hw_reset(ah, c, sc->tx_chan_width,
+ 				    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
+ 				    sc->sc_ht_extprotspacing, fastcc, &status)) {
+ 			DPRINTF(sc, ATH_DBG_FATAL,
+ 				"Unable to reset channel %u (%uMhz) "
+-				"flags 0x%x hal status %u\n",
+-				ath9k_hw_mhz2ieee(ah, hchan->channel,
+-						  hchan->channelFlags),
+-				hchan->channel, hchan->channelFlags, status);
++				"hal status %u\n",
++				ieee80211_frequency_to_channel(c->center_freq),
++				c->center_freq,
++				status);
+ 			spin_unlock_bh(&sc->sc_resetlock);
+ 			return -EIO;
+ 		}
+@@ -611,19 +617,6 @@ static irqreturn_t ath_isr(int irq, void *dev)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int ath_get_channel(struct ath_softc *sc,
+-			   struct ieee80211_channel *chan)
+-{
+-	int i;
+-
+-	for (i = 0; i < sc->sc_ah->ah_nchan; i++) {
+-		if (sc->sc_ah->ah_channels[i].channel == chan->center_freq)
+-			return i;
+-	}
+-
+-	return -1;
+-}
+-
+ static u32 ath_get_extchanmode(struct ath_softc *sc,
+ 			       struct ieee80211_channel *chan,
+ 			       enum nl80211_channel_type channel_type)
+@@ -1071,10 +1064,11 @@ fail:
+ static void ath_radio_enable(struct ath_softc *sc)
+ {
+ 	struct ath_hal *ah = sc->sc_ah;
++	struct ieee80211_channel *c = sc->hw->conf.channel;
+ 	int status;
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+-	if (!ath9k_hw_reset(ah, ah->ah_curchan,
++	if (!ath9k_hw_reset(ah, c,
+ 			    sc->tx_chan_width,
+ 			    sc->sc_tx_chainmask,
+ 			    sc->sc_rx_chainmask,
+@@ -1082,12 +1076,10 @@ static void ath_radio_enable(struct ath_softc *sc)
+ 			    false, &status)) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"Unable to reset channel %u (%uMhz) "
+-			"flags 0x%x hal status %u\n",
+-			ath9k_hw_mhz2ieee(ah,
+-					  ah->ah_curchan->channel,
+-					  ah->ah_curchan->channelFlags),
+-			ah->ah_curchan->channel,
+-			ah->ah_curchan->channelFlags, status);
++			"hal status %u\n",
++			ieee80211_frequency_to_channel(c->center_freq),
++			c->center_freq,
++			status);
+ 	}
+ 	spin_unlock_bh(&sc->sc_resetlock);
+ 
+@@ -1115,9 +1107,10 @@ static void ath_radio_enable(struct ath_softc *sc)
+ static void ath_radio_disable(struct ath_softc *sc)
+ {
+ 	struct ath_hal *ah = sc->sc_ah;
++	struct ieee80211_conf *conf = &sc->hw->conf;
++	struct ieee80211_channel *c = conf->channel;
+ 	int status;
+ 
+-
+ 	ieee80211_stop_queues(sc->hw);
+ 
+ 	/* Disable LED */
+@@ -1132,7 +1125,7 @@ static void ath_radio_disable(struct ath_softc *sc)
+ 	ath_flushrecv(sc);		/* flush recv queue */
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+-	if (!ath9k_hw_reset(ah, ah->ah_curchan,
++	if (!ath9k_hw_reset(ah, c,
+ 			    sc->tx_chan_width,
+ 			    sc->sc_tx_chainmask,
+ 			    sc->sc_rx_chainmask,
+@@ -1140,12 +1133,10 @@ static void ath_radio_disable(struct ath_softc *sc)
+ 			    false, &status)) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"Unable to reset channel %u (%uMhz) "
+-			"flags 0x%x hal status %u\n",
+-			ath9k_hw_mhz2ieee(ah,
+-				ah->ah_curchan->channel,
+-				ah->ah_curchan->channelFlags),
+-			ah->ah_curchan->channel,
+-			ah->ah_curchan->channelFlags, status);
++			"hal status %u\n",
++			ieee80211_frequency_to_channel(c->center_freq),
++			c->center_freq,
++			status);
+ 	}
+ 	spin_unlock_bh(&sc->sc_resetlock);
+ 
+@@ -1633,7 +1624,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	ath_flushrecv(sc);
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+-	if (!ath9k_hw_reset(ah, sc->sc_ah->ah_curchan,
++	if (!ath9k_hw_reset(ah, hw->conf.channel,
+ 			    sc->tx_chan_width,
+ 			    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
+ 			    sc->sc_ht_extprotspacing, false, &status)) {
+@@ -1854,24 +1845,23 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ieee80211_channel *curchan = hw->conf.channel;
+ 	struct ath9k_channel *init_channel;
+-	int error = 0, pos, status;
++	int error = 0, status;
+ 
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "Starting driver with "
+ 		"initial channel: %d MHz\n", curchan->center_freq);
+ 
+ 	/* setup initial channel */
+ 
+-	pos = ath_get_channel(sc, curchan);
+-	if (pos == -1) {
++	if (!curchan->priv) {
+ 		DPRINTF(sc, ATH_DBG_FATAL, "Invalid channel: %d\n", curchan->center_freq);
+ 		error = -EINVAL;
+ 		goto error;
+ 	}
+ 
+ 	sc->tx_chan_width = ATH9K_HT_MACMODE_20;
+-	sc->sc_ah->ah_channels[pos].chanmode =
++	init_channel = (struct ath9k_channel *) curchan->priv;
++	init_channel->chanmode =
+ 		(curchan->band == IEEE80211_BAND_2GHZ) ? CHANNEL_G : CHANNEL_A;
+-	init_channel = &sc->sc_ah->ah_channels[pos];
+ 
+ 	/* Reset SERDES registers */
+ 	ath9k_hw_configpcipowersave(sc->sc_ah, 0);
+@@ -1884,14 +1874,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	 * and then setup of the interrupt mask.
+ 	 */
+ 	spin_lock_bh(&sc->sc_resetlock);
+-	if (!ath9k_hw_reset(sc->sc_ah, init_channel,
++	if (!ath9k_hw_reset(sc->sc_ah, curchan,
+ 			    sc->tx_chan_width,
+ 			    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
+ 			    sc->sc_ht_extprotspacing, false, &status)) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"Unable to reset hardware; hal status %u "
+-			"(freq %u flags 0x%x)\n", status,
+-			init_channel->channel, init_channel->channelFlags);
++			"(freq %u)\n", status,
++			curchan->center_freq);
+ 		error = -EIO;
+ 		spin_unlock_bh(&sc->sc_resetlock);
+ 		goto error;
+@@ -2140,14 +2130,14 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_lock(&sc->mutex);
+ 	if (changed & (IEEE80211_CONF_CHANGE_CHANNEL |
+ 		       IEEE80211_CONF_CHANGE_HT)) {
+-		struct ieee80211_channel *curchan = hw->conf.channel;
+-		int pos;
++		struct ieee80211_channel *curchan = conf->channel;
++		struct ath9k_channel *priv_channel;
+ 
+ 		DPRINTF(sc, ATH_DBG_CONFIG, "Set channel: %d MHz\n",
+ 			curchan->center_freq);
+ 
+-		pos = ath_get_channel(sc, curchan);
+-		if (pos == -1) {
++		priv_channel = (struct ath9k_channel *) curchan->priv;
++		if (!priv_channel) {
+ 			DPRINTF(sc, ATH_DBG_FATAL, "Invalid channel: %d\n",
+ 				curchan->center_freq);
+ 			mutex_unlock(&sc->mutex);
+@@ -2155,7 +2145,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		}
+ 
+ 		sc->tx_chan_width = ATH9K_HT_MACMODE_20;
+-		sc->sc_ah->ah_channels[pos].chanmode =
++		priv_channel->chanmode =
+ 			(curchan->band == IEEE80211_BAND_2GHZ) ?
+ 			CHANNEL_G : CHANNEL_A;
+ 
+@@ -2164,12 +2154,12 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 			    conf->ht.channel_type == NL80211_CHAN_HT40MINUS)
+ 				sc->tx_chan_width = ATH9K_HT_MACMODE_2040;
+ 
+-			sc->sc_ah->ah_channels[pos].chanmode =
++			priv_channel->chanmode =
+ 				ath_get_extchanmode(sc, curchan,
+ 						    conf->ht.channel_type);
+ 		}
+ 
+-		if (ath_set_channel(sc, &sc->sc_ah->ah_channels[pos]) < 0) {
++		if (ath_set_channel(sc, curchan) < 0) {
+ 			DPRINTF(sc, ATH_DBG_FATAL, "Unable to set channel\n");
+ 			mutex_unlock(&sc->mutex);
+ 			return -EINVAL;
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index b724ca2..249a8e5 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -1171,7 +1171,7 @@ static void ath_drain_txdataq(struct ath_softc *sc, bool retry_tx)
+ 
+ 		spin_lock_bh(&sc->sc_resetlock);
+ 		if (!ath9k_hw_reset(ah,
+-				    sc->sc_ah->ah_curchan,
++				    sc->hw->conf.channel,
+ 				    sc->tx_chan_width,
+ 				    sc->sc_tx_chainmask, sc->sc_rx_chainmask,
+ 				    sc->sc_ht_extprotspacing, true, &status)) {
 -- 
-1.5.4.3
+1.6.1.rc3.51.g5832d
 
