@@ -1,35 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:37689 "EHLO venema.h4ckr.net"
+Received: from c60.cesmail.net ([216.154.195.49]:22497 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751547AbYLQLVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 06:21:04 -0500
-Message-ID: <4772.194.45.26.221.1229512858.squirrel@webmail.madwifi-project.org> (sfid-20081217_122109_525243_08BEA360)
-In-Reply-To: <e27b78a40812170256o6949875dq9849f1a838f68ce2@mail.gmail.com>
-References: <e27b78a40812160405h2241e1acqa0dc8e593d6ebfad@mail.gmail.com>
-    <4947ABAF.9060205@cortland.com>
-    <e27b78a40812160807j7549e1a5hf3bee474b31c29b7@mail.gmail.com>
-    <45e8e6c40812161030x1f7fb374qd4a386ef9022a853@mail.gmail.com>
-    <e27b78a40812170256o6949875dq9849f1a838f68ce2@mail.gmail.com>
-Date: Wed, 17 Dec 2008 12:20:58 +0100 (CET)
-Subject: Re: Mesh now completely broken on ath5k, latest git
-From: "Michael Renzmann" <mrenzmann@madwifi-project.org>
-To: "Keir" <keirlawson@gmail.com>
-Cc: "Andrey Yurovsky" <andrey@cozybit.com>, sbrown@cortland.com,
-	linux-wireless@vger.kernel.org, javier@cozybit.com
+	id S1753536AbYLVRQO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 12:16:14 -0500
+Message-ID: <20081222121621.66jxpzr6lt8okk4o-cebfxv@webmail.spamcop.net> (sfid-20081222_181621_767424_496AEE78)
+Date: Mon, 22 Dec 2008 12:16:21 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: yyhymmh@yahoo.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] How to enable Monitor mode?
+References: <690453.5943.qm@web80505.mail.mud.yahoo.com>
+In-Reply-To: <690453.5943.qm@web80505.mail.mud.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+Quoting hwang <yyhymmh@yahoo.com>:
 
-Keir wrote:
-> I'm using Netgear WG311TGE PCI cards,
+> I am first time use ath9k driver. I like to change the card to   
+> Monitor mode. Can anyone tell which command does it?
+>
+> I tried to use iwconfig, but failed.
 
-Those models I know of this card are just PCI-to-MiniPCI carrier cards, 
-with a MiniPCI card sitting inside the metal shield. Very likely Netgear
-just attached a single pigtail (which then allows to attach an antenna
-from the outside of the PC case) to one of the antenna connectors on that
-MiniPCI card and left the other(s) empty.
+Moving discussion from ath9k-devel@lists.ath9k.org to  
+linux-wireless@vger.kernel.org, as it's a common problem for all  
+mac80211 based drivers.
 
-Bye, Mike
+Following code in net/mac80211/iface.c, ieee80211_if_change_type()  
+prevents setting monitor mode:
+
+         /* Setting ad-hoc mode on non-IBSS channel is not supported. */
+         if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS)
+                 return -EOPNOTSUPP;
+
+The effect of the code exceeds the effect described by the comment, so  
+something must be wrong.  I'm not running crda, so I guess I'm in the  
+"world" domain that doesn't prermit IBSS.  But it should not disable  
+monitor mode.
+
+A simple fix would be:
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 5abbc3f..b907482 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -699,7 +699,8 @@ int ieee80211_if_change_type(struct  
+ieee80211_sub_if_data *sdata,
+  		return 0;
+
+  	/* Setting ad-hoc mode on non-IBSS channel is not supported. */
+-	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS)
++	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS &&
++	    type == NL80211_IFTYPE_ADHOC)
+  		return -EOPNOTSUPP;
+
+  	/*
+
+I've tested it, and it actually enables monitor mode.  I remember Luis  
+mentioning that IEEE80211_CHAN_NO_IBSS means no beacons, so maybe  
+other modes need to be disabled (AP, maybe mesh), but there are no  
+beacons sent in the monitor mode.
+
+-- 
+Regards,
+Pavel Roskin
