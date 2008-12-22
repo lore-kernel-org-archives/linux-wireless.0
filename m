@@ -1,57 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:6346 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbYLAQRM (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:57365 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754169AbYLVOfe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 11:17:12 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so964589ywe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 08:17:10 -0800 (PST)
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Subject: Re: iwlwifi - rfkill only works if the interface is up
-Date: Mon, 1 Dec 2008 17:16:41 +0100
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Tomas Winkler <tomasw@gmail.com>,
-	linux-wireless@vger.kernel.org, yi.zhu@intel.com
-References: <200812011311.17346.helmut.schaa@gmail.com> <200812011634.37644.helmut.schaa@gmail.com> <1228147151.31158.142.camel@violet.holtmann.net>
-In-Reply-To: <1228147151.31158.142.camel@violet.holtmann.net>
+	Mon, 22 Dec 2008 09:35:34 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] minstrel: fix warning if lowest supported rate index is not 0
+Date: Mon, 22 Dec 2008 15:35:31 +0100
+Cc: nbd@openwrt.org, John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812011716.43486.helmut.schaa@gmail.com> (sfid-20081201_171715_090645_F647A680)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+  charset="us-ascii"
+Message-Id: <200812221535.32032.chunkeey@web.de> (sfid-20081222_153539_198406_8A13BF07)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 1. Dezember 2008 schrieb Marcel Holtmann:
-> Hi Helmut,
-> 
-> > > > > Nevertheless, I'm wondering if the current behaviour (even with the patch above)
-> > > > > makes much sense. I mean, the user space cannot rely on the rfkill state
-> > > > > unless an appropriate interface is up. As the device is able to report the
-> > > > > killswitch state without firmware being loaded the following approach could
-> > > > > be feasible:
-> > > > > - iwl_pci_probe enables the device and enables the interrupts
-> > > > > - iwl_mac_start just loads the firmware
-> > > > > - iwl_mac_stop just releases the firmware but leaves the interrupts enabled
-> > > > 
-> > > > In 3495  rfkill interrupt is not available and rfkill state is
-> > > > delivered only when firmware is loaded, therefore this is not
-> > > > possible to bring device down and also expect rfill switch event.
-> > > > There were few threads about this subject.
-> > > > In 4965 and 5000 this will work
-> > > 
-> > > do we unregister the rfkill switch when bringing the adapter down.
-> > 
-> > No.
-> > 
-> > > If not, then we might should do that. I don't see a point in exposing a
-> > > rfkill switch if we can't do anything with it.
-> > 
-> > Either that, or make the rfkill usable even when the interface is down.
-> 
-> if the hardware/firmware doesn't allow us to do so, we have no real
-> option.
+This patch fixes the following WARNING (caused by rix_to_ndx): "
+>WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0xd2/0x33a [mac80211]()
+>[...]
+>Call Trace:
+> warn_on_slowpath+0x51/0x75
+> _format_mac_addr+0x4c/0x88
+> minstrel_rate_init+0xd2/0x33a [mac80211]
+> print_mac+0x16/0x1b
+> schedule_hrtimeout_range+0xdc/0x107
+> ieee80211_add_station+0x158/0x1bd [mac80211]
+> nl80211_new_station+0x1b3/0x20b [cfg80211]
 
-Ah, you're talking about 3945. Missed that.
+The reason is that I'm experimenting with "g" only mode on a 802.11 b/g card.
 
-Helmut
+Therefore rate_lowest_index returns 4 (= 6Mbit, instead of usual 0 = 1Mbit).
+Since mi->r array is initialized with zeros in minstrel_alloc_sta,
+rix_to_ndx has a hard time to find the 6Mbit entry and will trigged the WARNING.
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+nbd?
+
+Is this the correct? or should we initialize mi->r array in minstrel_alloc_sta?
+---
+Johannes,
+
+yeah, this fixes the problems I described in 
+"[PATCH] ath9k: Fix a NULL pointer dereference in ath_rate_get".
+sorry for the noise!
+---
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 2b3b490..3824990 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -395,13 +395,15 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ {
+ 	struct minstrel_sta_info *mi = priv_sta;
+ 	struct minstrel_priv *mp = priv;
+-	struct minstrel_rate *mr_ctl;
++	struct ieee80211_local *local = hw_to_local(mp->hw);
++	struct ieee80211_rate *ctl_rate;
+ 	unsigned int i, n = 0;
+ 	unsigned int t_slot = 9; /* FIXME: get real slot time */
+ 
+ 	mi->lowest_rix = rate_lowest_index(sband, sta);
+-	mr_ctl = &mi->r[rix_to_ndx(mi, mi->lowest_rix)];
+-	mi->sp_ack_dur = mr_ctl->ack_time;
++	ctl_rate = &sband->bitrates[mi->lowest_rix];
++	mi->sp_ack_dur = ieee80211_frame_duration(local, 10, ctl_rate->bitrate,
++				!!(ctl_rate->flags & IEEE80211_RATE_ERP_G), 1);
+ 
+ 	for (i = 0; i < sband->n_bitrates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[n];
+@@ -416,7 +418,7 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 
+ 		mr->rix = i;
+ 		mr->bitrate = sband->bitrates[i].bitrate / 5;
+-		calc_rate_durations(mi, hw_to_local(mp->hw), mr,
++		calc_rate_durations(mi, local, mr,
+ 				&sband->bitrates[i]);
+ 
+ 		/* calculate maximum number of retransmissions before
