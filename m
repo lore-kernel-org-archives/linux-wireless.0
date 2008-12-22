@@ -1,47 +1,436 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38946 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817AbYLXO0c (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47835 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754108AbYLVU6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 09:26:32 -0500
-Subject: [PATCH] b43: detect N PHY revision/radio
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Content-Type: text/plain
-Date: Wed, 24 Dec 2008 15:26:40 +0100
-Message-Id: <1230128800.4566.3.camel@johannes> (sfid-20081224_152652_395984_5C636D77)
+	Mon, 22 Dec 2008 15:58:55 -0500
+Date: Mon, 22 Dec 2008 12:58:19 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Soeren Sonnenburg <kernel@nn7.de>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: ath5k_pci: gain calibration timeout / unable to reset hardware
+ -11
+Message-Id: <20081222125819.7353d172.akpm@linux-foundation.org> (sfid-20081222_215901_400763_12D30EE5)
+In-Reply-To: <1229923913.3886.7.camel@localhost>
+References: <1229923913.3886.7.camel@localhost>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Does nothing unless you enable the hidden N PHY config.
+(cc linux-wireless)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/b43/main.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Mon, 22 Dec 2008 06:31:53 +0100
+Soeren Sonnenburg <kernel@nn7.de> wrote:
 
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-12-24 15:00:50.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-12-24 15:25:03.000000000 +0100
-@@ -3758,7 +3758,7 @@ static int b43_phy_versioning(struct b43
- 		break;
- #ifdef CONFIG_B43_NPHY
- 	case B43_PHYTYPE_N:
--		if (phy_rev > 1)
-+		if (phy_rev > 4)
- 			unsupported = 1;
- 		break;
- #endif
-@@ -3811,7 +3811,7 @@ static int b43_phy_versioning(struct b43
- 			unsupported = 1;
- 		break;
- 	case B43_PHYTYPE_N:
--		if (radio_ver != 0x2055)
-+		if (radio_ver != 0x2055 && radio_ver != 0x2056)
- 			unsupported = 1;
- 		break;
- 	default:
-
+> Hi,
+> 
+> I was using the ath5k_pci driver on a macbook pro 1,1 and it is working
+> for some time but then suddenly messages like the ones below appear and
+> I have to *turn off* the machine to get it back working (even booting to
+> osx is not sufficient - osx won't have network when things go wrong as
+> they do after a couple of hours). Note that this happens with both
+> 2.6.27 and .28.
+> 
+> Soeren
+> 
+> 
+> (things were working at first and then not and then the symptom occured)
+> 
+> $ dmesg | grep ath5k 
+> 
+> ath5k_pci 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> ath5k_pci 0000:03:00.0: setting latency timer to 64
+> ath5k_pci 0000:03:00.0: registered as 'phy0'
+> ath5k phy0: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
+> ath5k_pci 0000:03:00.0: PCI INT A disabled
+> ath5k_pci 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> ath5k_pci 0000:03:00.0: setting latency timer to 64
+> ath5k_pci 0000:03:00.0: registered as 'phy0'
+> ath5k phy0: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
+> ath5k_pci 0000:03:00.0: PCI INT A disabled
+> ath5k_pci 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> ath5k_pci 0000:03:00.0: setting latency timer to 64
+> ath5k_pci 0000:03:00.0: registered as 'phy0'
+> ath5k phy0: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: can't reset hardware (-11)
+> ath5k phy0: gain calibration timeout (2417MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> ath5k phy0: gain calibration timeout (2422MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> ath5k phy0: gain calibration timeout (2427MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> ath5k phy0: gain calibration timeout (2432MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> ath5k phy0: gain calibration timeout (2437MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2437 Mhz)
+> ath5k phy0: gain calibration timeout (5250MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5250 Mhz)
+> ath5k phy0: gain calibration timeout (5255MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5255 Mhz)
+> ath5k phy0: gain calibration timeout (5260MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5260 Mhz)
+> ath5k phy0: gain calibration timeout (5265MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5265 Mhz)
+> ath5k phy0: gain calibration timeout (5270MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5270 Mhz)
+> ath5k phy0: gain calibration timeout (5745MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5745 Mhz)
+> ath5k phy0: gain calibration timeout (5750MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5750 Mhz)
+> ath5k phy0: gain calibration timeout (5755MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5755 Mhz)
+> ath5k phy0: gain calibration timeout (5760MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5760 Mhz)
+> ath5k phy0: gain calibration timeout (5765MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5765 Mhz)
+> ath5k phy0: gain calibration timeout (5820MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5820 Mhz)
+> ath5k phy0: gain calibration timeout (5825MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5825 Mhz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: can't reset hardware (-11)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: gain calibration timeout (2417MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> ath5k phy0: gain calibration timeout (2422MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> ath5k phy0: gain calibration timeout (2427MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> ath5k phy0: gain calibration timeout (2432MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> ath5k phy0: gain calibration timeout (2437MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2437 Mhz)
+> ath5k phy0: gain calibration timeout (5250MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5250 Mhz)
+> ath5k phy0: gain calibration timeout (5255MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5255 Mhz)
+> ath5k phy0: gain calibration timeout (5260MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5260 Mhz)
+> ath5k phy0: gain calibration timeout (5265MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5265 Mhz)
+> ath5k phy0: gain calibration timeout (5270MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5270 Mhz)
+> ath5k phy0: gain calibration timeout (5745MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5745 Mhz)
+> ath5k phy0: gain calibration timeout (5750MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5750 Mhz)
+> ath5k phy0: gain calibration timeout (5755MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5755 Mhz)
+> ath5k phy0: gain calibration timeout (5760MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5760 Mhz)
+> ath5k phy0: gain calibration timeout (5765MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5765 Mhz)
+> ath5k phy0: gain calibration timeout (5820MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5820 Mhz)
+> ath5k phy0: gain calibration timeout (5825MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5825 Mhz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration failed (2412MHz)
+> ath5k phy0: gain calibration timeout (2417MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> ath5k phy0: gain calibration timeout (2422MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> ath5k phy0: gain calibration timeout (2427MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> ath5k phy0: gain calibration timeout (2432MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> ath5k phy0: gain calibration timeout (5245MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5245 Mhz)
+> ath5k phy0: gain calibration timeout (5250MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5250 Mhz)
+> ath5k phy0: gain calibration timeout (5255MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5255 Mhz)
+> ath5k phy0: gain calibration timeout (5260MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5260 Mhz)
+> ath5k phy0: gain calibration timeout (5265MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5265 Mhz)
+> ath5k phy0: gain calibration timeout (5320MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5320 Mhz)
+> ath5k phy0: gain calibration timeout (5745MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5745 Mhz)
+> ath5k phy0: noise floor calibration failed (5745MHz)
+> ath5k phy0: gain calibration timeout (5750MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5750 Mhz)
+> ath5k phy0: gain calibration timeout (5755MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5755 Mhz)
+> ath5k phy0: gain calibration timeout (5760MHz)
+> ath5k phy0: gain calibration timeout (5815MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5815 Mhz)
+> ath5k phy0: gain calibration timeout (5820MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5820 Mhz)
+> ath5k phy0: gain calibration timeout (5825MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5825 Mhz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: gain calibration timeout (2417MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> ath5k phy0: gain calibration timeout (2422MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> ath5k phy0: gain calibration timeout (2427MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> ath5k phy0: gain calibration timeout (2432MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> ath5k phy0: gain calibration timeout (2437MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2437 Mhz)
+> ath5k_pci 0000:03:00.0: PCI INT A disabled
+> ath5k_pci 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> ath5k_pci 0000:03:00.0: setting latency timer to 64
+> ath5k_pci 0000:03:00.0: registered as 'phy0'
+> ath5k phy0: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: can't reset hardware (-11)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: gain calibration timeout (2417MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> ath5k phy0: gain calibration timeout (2422MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> ath5k phy0: gain calibration timeout (2427MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> ath5k phy0: gain calibration timeout (2432MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> ath5k phy0: gain calibration timeout (2437MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2437 Mhz)
+> ath5k phy0: gain calibration timeout (5250MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5250 Mhz)
+> ath5k phy0: gain calibration timeout (5255MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5255 Mhz)
+> ath5k phy0: gain calibration timeout (5260MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5260 Mhz)
+> ath5k phy0: gain calibration timeout (5265MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5265 Mhz)
+> ath5k phy0: gain calibration timeout (5270MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5270 Mhz)
+> ath5k phy0: gain calibration timeout (5320MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5320 Mhz)
+> ath5k phy0: gain calibration timeout (5745MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5745 Mhz)
+> ath5k phy0: gain calibration timeout (5750MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5750 Mhz)
+> ath5k phy0: gain calibration timeout (5755MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5755 Mhz)
+> ath5k phy0: gain calibration timeout (5760MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5760 Mhz)
+> ath5k phy0: gain calibration timeout (5815MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5815 Mhz)
+> ath5k phy0: gain calibration timeout (5820MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5820 Mhz)
+> ath5k phy0: gain calibration timeout (5825MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5825 Mhz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: gain calibration timeout (2417MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> ath5k phy0: gain calibration timeout (2422MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> ath5k phy0: gain calibration timeout (2427MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> ath5k phy0: gain calibration timeout (2432MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> ath5k phy0: gain calibration timeout (2437MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2437 Mhz)
+> ath5k phy0: gain calibration timeout (5245MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5245 Mhz)
+> ath5k phy0: gain calibration timeout (5250MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5250 Mhz)
+> ath5k phy0: gain calibration timeout (5255MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5255 Mhz)
+> ath5k phy0: gain calibration timeout (5260MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5260 Mhz)
+> ath5k phy0: gain calibration timeout (5265MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5265 Mhz)
+> ath5k phy0: gain calibration timeout (5320MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5320 Mhz)
+> ath5k phy0: gain calibration timeout (5745MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5745 Mhz)
+> ath5k phy0: gain calibration timeout (5750MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5750 Mhz)
+> ath5k phy0: gain calibration timeout (5755MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5755 Mhz)
+> ath5k phy0: gain calibration timeout (5760MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5760 Mhz)
+> ath5k phy0: noise floor calibration timeout (5815MHz)
+> ath5k phy0: gain calibration timeout (5815MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5815 Mhz)
+> ath5k phy0: gain calibration timeout (5820MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5820 Mhz)
+> ath5k phy0: gain calibration timeout (5825MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5825 Mhz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> ath5k phy0: gain calibration timeout (2417MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> ath5k phy0: gain calibration timeout (2422MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> ath5k phy0: gain calibration timeout (2427MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> ath5k phy0: gain calibration timeout (2432MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> ath5k phy0: gain calibration timeout (2437MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2437 Mhz)
+> ath5k phy0: gain calibration timeout (5245MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5245 Mhz)
+> ath5k phy0: gain calibration timeout (5250MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5250 Mhz)
+> ath5k phy0: gain calibration timeout (5255MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5255 Mhz)
+> ath5k phy0: gain calibration timeout (5260MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5260 Mhz)
+> ath5k phy0: gain calibration timeout (5265MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5265 Mhz)
+> ath5k phy0: gain calibration timeout (5320MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5320 Mhz)
+> ath5k phy0: gain calibration timeout (5745MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5745 Mhz)
+> ath5k phy0: gain calibration timeout (5750MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5750 Mhz)
+> ath5k phy0: gain calibration timeout (5755MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5755 Mhz)
+> ath5k phy0: gain calibration timeout (5760MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5760 Mhz)
+> ath5k phy0: noise floor calibration timeout (5815MHz)
+> ath5k phy0: gain calibration timeout (5815MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5815 Mhz)
+> ath5k phy0: gain calibration timeout (5820MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5820 Mhz)
+> ath5k phy0: gain calibration timeout (5825MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5825 Mhz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: can't reset hardware (-11)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: gain calibration timeout (2417MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> ath5k phy0: gain calibration timeout (2422MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> ath5k phy0: gain calibration timeout (2427MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> ath5k phy0: gain calibration timeout (2432MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> ath5k phy0: gain calibration timeout (5240MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5240 Mhz)
+> ath5k phy0: gain calibration timeout (5245MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5245 Mhz)
+> ath5k phy0: gain calibration timeout (5250MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5250 Mhz)
+> ath5k phy0: gain calibration timeout (5255MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5255 Mhz)
+> ath5k phy0: gain calibration timeout (5260MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5260 Mhz)
+> ath5k phy0: gain calibration timeout (5315MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5315 Mhz)
+> ath5k phy0: noise floor calibration timeout (5320MHz)
+> ath5k phy0: gain calibration timeout (5320MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5320 Mhz)
+> ath5k phy0: gain calibration timeout (5745MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5745 Mhz)
+> ath5k phy0: gain calibration timeout (5750MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5750 Mhz)
+> ath5k phy0: gain calibration timeout (5755MHz)
+> ath5k phy0: gain calibration timeout (5805MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5805 Mhz)
+> ath5k phy0: gain calibration timeout (5810MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5810 Mhz)
+> ath5k phy0: gain calibration timeout (5815MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5815 Mhz)
+> ath5k phy0: gain calibration timeout (5820MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5820 Mhz)
+> ath5k phy0: gain calibration timeout (5825MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5825 Mhz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: gain calibration timeout (2417MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2417 Mhz)
+> ath5k phy0: gain calibration timeout (2422MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2422 Mhz)
+> ath5k phy0: gain calibration timeout (2427MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2427 Mhz)
+> ath5k phy0: gain calibration timeout (2432MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2432 Mhz)
+> ath5k phy0: gain calibration timeout (2437MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2437 Mhz)
+> ath5k phy0: gain calibration timeout (5245MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5245 Mhz)
+> ath5k phy0: gain calibration timeout (5250MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5250 Mhz)
+> ath5k phy0: gain calibration timeout (5255MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5255 Mhz)
+> ath5k phy0: gain calibration timeout (5260MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5260 Mhz)
+> ath5k phy0: gain calibration timeout (5265MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5265 Mhz)
+> ath5k phy0: gain calibration timeout (5320MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5320 Mhz)
+> ath5k phy0: gain calibration timeout (5745MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5745 Mhz)
+> ath5k phy0: gain calibration timeout (5750MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5750 Mhz)
+> ath5k phy0: gain calibration timeout (5755MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5755 Mhz)
+> ath5k phy0: gain calibration timeout (5760MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5760 Mhz)
+> ath5k phy0: gain calibration timeout (5810MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5810 Mhz)
+> ath5k phy0: gain calibration timeout (5815MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5815 Mhz)
+> ath5k phy0: gain calibration timeout (5820MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5820 Mhz)
+> ath5k phy0: gain calibration timeout (5825MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (5825 Mhz)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: ath5k_chan_set: unable to reset channel (2412 Mhz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> ath5k phy0: noise floor calibration timeout (2412MHz)
+> 
+> 
+> after a fresh reboot
+> 
+> $ dmesg | grep ath
+> 
+> ath5k_pci 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> ath5k_pci 0000:03:00.0: setting latency timer to 64
+> ath5k_pci 0000:03:00.0: registered as 'phy0'
+> ath5k phy0: Atheros AR5424 chip found (MAC: 0xa3, PHY: 0x61)
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: unable to reset hardware: -11
+> ath5k phy0: gain calibration timeout (2412MHz)
+> ath5k phy0: unable to reset hardware: -11
+> 
 
