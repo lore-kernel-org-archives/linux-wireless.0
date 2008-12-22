@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10530 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752921AbYLVIWh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 03:22:37 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 00:22:37 -0800
-Date: Mon, 22 Dec 2008 13:40:50 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] [RFC v2] mac80211: Scale down to non-HT association
-	with TKIP/WEP as pairwise cipher
-Message-ID: <20081222081050.GA3500@localhost.localdomain> (sfid-20081222_092306_032800_9A5F4F79)
-References: <1229927497-30923-1-git-send-email-vasanth@atheros.com> <1229928585.3087.1.camel@johannes>
+Received: from cp-out12.libero.it ([212.52.84.112]:46496 "EHLO
+	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753283AbYLVIwu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 03:52:50 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: rtl8180: the network interface is not anymore created
+Date: Mon, 22 Dec 2008 09:52:35 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+References: <200812211710.23846.rossi.f@inwind.it> <494E852E.4070002@lwfinger.net>
+In-Reply-To: <494E852E.4070002@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1229928585.3087.1.camel@johannes>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200812220952.36063.rossi.f@inwind.it> (sfid-20081222_095253_109482_6BA03E12)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 22, 2008 at 12:19:45PM +0530, Johannes Berg wrote:
-> > +	case IW_AUTH_CIPHER_PAIRWISE:
-> > +		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-> > +			if (data->value & (IW_AUTH_CIPHER_WEP40 |
-> > +			    IW_AUTH_CIPHER_WEP104 | IW_AUTH_CIPHER_TKIP))
-> > +				sdata->u.sta.flags |=
-> > +					IEEE80211_STA_TKIP_WEP_USED;
-> > +			else
-> > +				sdata->u.sta.flags &=
-> > +					~IEEE80211_STA_TKIP_WEP_USED;
-> > +		}
-> > +		break;
-> 
-> Can't we check
-> the key algorithm for the pairwise key associated with the AP's sta_info
-> directly in _send_assoc?
+Thanks Larry, now it works again!
 
-AP's sta_info will not have the negotiated pirwise cipher before association.
+Fabio
 
-Vasanth
+On Sunday 21 December 2008, Larry Finger wrote:
 
-
+> Fabio Rossi wrote:
+> > I was using successfully the rtl8180 driver but after last git-pull the
+> > network interface (wlan0) is not anymore created.
+> >
+> > I have discovered the problem: there has been a change in mac80211,
+> > commit 3fc7826b95521e40cf53f63437a5fdcc24e54ac4. The problem is that the
+> > bit NL80211_IFTYPE_STATION is not set during the hardware initialization.
+> >
+> > I guess that the problem might be solved inserting the following line of
+> > code
+> >
+> >     dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+> >
+> > somewhere in rtl8180_dev.c but I don't know which is the right point to
+> > do so.
+>
+> Fabio,
+>
+> Does this patch fix it for you?
+>
+> Larry
+>
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> @@ -898,6 +898,7 @@ static int __devinit rtl8180_probe(struc
+>  	dev->flags = IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+>  		     IEEE80211_HW_RX_INCLUDES_FCS |
+>  		     IEEE80211_HW_SIGNAL_UNSPEC;
+> +	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+>  	dev->queues = 1;
+>  	dev->max_signal = 65;
 
 
