@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:55837 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752566AbYLDHYD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 02:24:03 -0500
-To: "Reinette Chatre" <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+Received: from mga09.intel.com ([134.134.136.24]:37081 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752245AbYLVDiv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2008 22:38:51 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
-	"Abbas\, Mohamed" <mohamed.abbas@intel.com>
-Subject: Re: [PATCH 07/11] iwl3945: Fix iwl3945 rate scaling.
-References: <1228248847-10424-1-git-send-email-reinette.chatre@intel.com>
-	<1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
-	<1228248847-10424-3-git-send-email-reinette.chatre@intel.com>
-	<1228248847-10424-4-git-send-email-reinette.chatre@intel.com>
-	<1228248847-10424-5-git-send-email-reinette.chatre@intel.com>
-	<1228248847-10424-6-git-send-email-reinette.chatre@intel.com>
-	<1228248847-10424-7-git-send-email-reinette.chatre@intel.com>
-	<1228248847-10424-8-git-send-email-reinette.chatre@intel.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Thu, 04 Dec 2008 09:23:14 +0200
-In-Reply-To: <1228248847-10424-8-git-send-email-reinette.chatre@intel.com> (ext Reinette Chatre's message of "Tue\,  2 Dec 2008 12\:14\:03 -0800")
-Message-ID: <874p1kpfod.fsf@nokia.com> (sfid-20081204_082413_771164_F8F3AC93)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 09/10] iwlwifi: fix warning 'Should it be static'
+Date: Mon, 22 Dec 2008 11:31:22 +0800
+Message-Id: <1229916683-9772-10-git-send-email-yi.zhu@intel.com> (sfid-20081222_043858_238295_CB302BF9)
+In-Reply-To: <1229916683-9772-9-git-send-email-yi.zhu@intel.com>
+References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-3-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-4-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-5-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-6-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-7-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-8-git-send-email-yi.zhu@intel.com>
+ <1229916683-9772-9-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reinette Chatre <reinette.chatre@intel.com> writes:
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-> From: Abbas, Mohamed <mohamed.abbas@intel.com>
->
-> 3945 rate scaling was broken in recent tree. This patch fix the following:
-> 	1- Get TX response info and update rates window.
-> 	2- Rate scaling selection.
-> 	3- Flush window timer.
->
-> Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+This patch adds static for functions iwl3945_apm_reset() and
+iwl3945_init_drv(). It fixes compile warnings.
 
-I just updated to latest wireless-testing (commit e81dc4db9) and it
-contains this patch. Now rate control is working and iwconfig shows 54
-Mbit/s rate when I'm close to AP. Thanks for fixing this.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index ae68f2b..fb2c2db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1315,7 +1315,7 @@ static void iwl3945_apm_stop(struct iwl_priv *priv)
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+-int iwl3945_apm_reset(struct iwl_priv *priv)
++static int iwl3945_apm_reset(struct iwl_priv *priv)
+ {
+ 	int rc;
+ 	unsigned long flags;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 32cfc8f..2e5c4d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -7423,7 +7423,7 @@ static struct ieee80211_ops iwl3945_hw_ops = {
+ 	.hw_scan = iwl3945_mac_hw_scan
+ };
+ 
+-int iwl3945_init_drv(struct iwl_priv *priv)
++static int iwl3945_init_drv(struct iwl_priv *priv)
+ {
+ 	int ret;
+ 
 -- 
-Kalle Valo
+1.5.3.6
+
