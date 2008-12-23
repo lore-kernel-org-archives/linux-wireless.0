@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.186]:55969 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185AbYLRTiP (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:37873 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751174AbYLWUW0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 14:38:15 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so477207rnd.17
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2008 11:38:13 -0800 (PST)
-Message-ID: <b6c5339f0812181138s1ba134a6qeff21eb063a87e08@mail.gmail.com> (sfid-20081218_203819_741860_DB7D928C)
-Date: Thu, 18 Dec 2008 14:38:13 -0500
-From: "Bob Copeland" <bcopeland@gmail.com>
-To: sbrown@cortland.com
-Subject: Re: Mesh now completely broken on ath5k, latest git
-Cc: Keir <keirlawson@gmail.com>,
-	"Nick Kossifidis" <mickflemm@gmail.com>,
-	"Andrey Yurovsky" <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org, javier@cozybit.com
-In-Reply-To: <494A578A.7070803@cortland.com>
+	Tue, 23 Dec 2008 15:22:26 -0500
+Received: by ewy10 with SMTP id 10so2924267ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 12:22:24 -0800 (PST)
+Message-ID: <49514874.8060605@gmail.com> (sfid-20081223_212231_173439_580D4D0C)
+Date: Tue, 23 Dec 2008 20:22:12 +0000
 MIME-Version: 1.0
+To: Richard Farina <sidhayn@gmail.com>
+CC: linux-wireless@vger.kernel.org, simon@thekelleys.org.uk,
+	jussi.kivilinna@mbnet.fi, acme@ghostprotocols.net, pe1rxq@amsat.org
+Subject: Re: [PATCH] wireless: Add channel/frequency conversions to ieee80211.h
+References: <1230041018-13341-1-git-send-email-kilroyd@googlemail.com> <49510D4F.7060102@gmail.com>
+In-Reply-To: <49510D4F.7060102@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <e27b78a40812160405h2241e1acqa0dc8e593d6ebfad@mail.gmail.com>
-	 <4947ABAF.9060205@cortland.com>
-	 <e27b78a40812160807j7549e1a5hf3bee474b31c29b7@mail.gmail.com>
-	 <45e8e6c40812161030x1f7fb374qd4a386ef9022a853@mail.gmail.com>
-	 <40f31dec0812170906vd8e4445q9920c66905064df8@mail.gmail.com>
-	 <e27b78a40812171004r3a8d424dk7c390aaf7c757665@mail.gmail.com>
-	 <494A578A.7070803@cortland.com>
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 18, 2008 at 9:00 AM, Steve Brown <sbrown@cortland.com> wrote:
-> I did a binary chop on the pcu patch. Reverting this part of the patch
-> restores ap and mesh beaconing. I've no idea why.
->
-> 77: +               else
-> 78: +                       AR5K_REG_ENABLE_BITS(ah, AR5K_CFG,
-> AR5K_CFG_ADHOC);
+Richard Farina wrote:
+> David Kilroy wrote:
+>> Added mappings for FHSS, DSSS and OFDM channels - with macros to point
+>> HR DSSS and ERP to the DSSS mappings. Currently just static inline
+>> functions.
 
-Hmm, that looks exactly backwards, shouldn't it be DISABLE_BITS
-(and ENABLE_BITS in the adhoc case?)
+>> +/**
+>> + * ieee80211_ofdm_chan_to_freq - get channel center frequency
+>> + * @s_freq: starting frequency == (dotChannelStartingFactor/2) MHz
+>> + * @channel: the OFDM channel
+>> + *
+>> + * Convert IEEE802.11 OFDM channel to center frequency (MHz)
+>> + * Ref IEEE 802.11-2007 section 17.3.8.3.2
+>> + */
+>> +static inline int ieee80211_ofdm_chan_to_freq(int s_freq, int channel)
+>> +{
+>> +	if ((channel > 0) && (channel <= 200) &&
+>> +	    (s_freq >= 4000))
+>> +		return s_freq + (channel * 5);
+>> +	else
+>> +		return -1;
+>> +}
 
-I think it's supposed to be 0 for AP/STA and 1 for IBSS.
+> Any desire to make 184-196 work? These are the 4.9 GHz channels.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Do you see a reason why these channels wouldn't work with these
+conversion routines? Or are you asking about corresponding driver support?
+
+>From the ack I assume the latter. My main motivation is to put the
+frequency conversions in a common place. In this case for old drivers
+which only use the 2.4 GHz band. The 5GHz conversions are just for
+completeness.
+
+If drivers don't currently support those channels, I suspect there's a
+more significant issue to be addressed first.
+
+> I checked this all out pretty specifically, seems to work well. As if 
+> anyone cares but:
+> 
+> ACKED-By: Rick Farina
+
+Thanks for having a look.
+
+
+
+Dave.
