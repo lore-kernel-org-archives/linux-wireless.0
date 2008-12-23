@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:10964 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253AbYLBMiw (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:52338 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982AbYLWMuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 07:38:52 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2121624fgg.17
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 04:38:51 -0800 (PST)
-Message-ID: <2c6c0b0812020438y7712844ah6b2238b8ef1500b4@mail.gmail.com> (sfid-20081202_133857_145597_CEC53637)
-Date: Tue, 2 Dec 2008 12:38:50 +0000
-From: "=?ISO-8859-1?Q?Zolt=E1n_Balogh?=" <baloghmail@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: iwl3945 bug-report
+	Tue, 23 Dec 2008 07:50:39 -0500
+Received: by bwz14 with SMTP id 14so9736554bwz.13
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 04:50:37 -0800 (PST)
+Message-ID: <8e92b4100812230450w4693fb37tb11b852eddc66a6f@mail.gmail.com> (sfid-20081223_135045_247475_C711485F)
+Date: Tue, 23 Dec 2008 18:20:37 +0530
+From: "Vivek Natarajan" <vivek.natraj@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: Enhancements to dynamic power save.
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1229965970.4406.2.camel@johannes>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+References: <20081223044424.GC11534@myhost.users.atheros.com>
+	 <1229965970.4406.2.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, Dec 22, 2008 at 10:42 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-12-22 at 20:44 -0800, Vivek Natarajan wrote:
+>> This patch enables mac80211 to send a null frame and also to
+>> check for tim in the beacon if power save is enabled.
+>>
+>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>
+> Looks good to me, to be sure, this is all dependent on !NO_STACK_PS,
+> right?
 
-I had just set up Fedora 10 (from scratch) on my laptop and I
-experienced strange kernel panics when working from my university.
-After I made some research, I realised that the defect most likely
-originates from the iwl3945 driver packed with Fedora.
+Yes, it all depends on that flag. I will send these RFCs as patches.
 
-Have a look at my bugreport at the Fedora bugzilla and please see if
-you can help me determining the exact source of the error. Please read
-all of my comments as they contain vital information. I'm trying to
-obfuscate my link as it is
-
-http://bugzilla.redhat.com/show_bug.cgi?id=473507
-
-Thank you very much for your time and efforts.
-
-
-Regards,
-
-Zoltan Balogh
+Thanks,
+Vivek.
