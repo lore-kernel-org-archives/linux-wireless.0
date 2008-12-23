@@ -1,42 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:8964 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487AbYLCC0h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 21:26:37 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so1358740ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 18:26:36 -0800 (PST)
-Message-ID: <43e72e890812021826w1820004chae7c245a8999c22f@mail.gmail.com> (sfid-20081203_032640_284030_5E1FB483)
-Date: Tue, 2 Dec 2008 18:26:36 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Subject: Re: [PATCH] ath9k: Use GFP_ATOMIC when allocating private area
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni.Malinen@atheros.com, Luis.Rodriguez@atheros.com,
-	Senthilkumar.Balasubramanian@atheros.com
-In-Reply-To: <18741.60148.86455.854634@localhost.localdomain>
+Received: from mail.atheros.com ([12.36.123.2]:22685 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751684AbYLWX7c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 18:59:32 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 15:59:32 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v3 12/16] ath9k: remove mode specific default noise floor values
+Date: Tue, 23 Dec 2008 15:58:47 -0800
+Message-ID: <1230076731-22946-13-git-send-email-lrodriguez@atheros.com> (sfid-20081224_010846_475492_94A60EAC)
+In-Reply-To: <1230076731-22946-12-git-send-email-lrodriguez@atheros.com>
+References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-5-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-6-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-7-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-8-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-9-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-10-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-11-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-12-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <18741.12999.753996.233483@gargle.gargle.HOWL>
-	 <43e72e890812021614i103235few3a19721c6ca1d0cc@mail.gmail.com>
-	 <18741.59362.77483.600612@localhost.localdomain>
-	 <43e72e890812021809h3bc371d0t23e1c14d79a36617@mail.gmail.com>
-	 <18741.60148.86455.854634@localhost.localdomain>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 2, 2008 at 6:12 PM, Sujith <m.sujith@gmail.com> wrote:
-> Luis R. Rodriguez wrote:
->> Interesting, I hadn't thought about stopping the queues, when would
->> they be resumed then though, or rather who? I'll a rework of this
->> ontop of more DMA fun, let me know what you think. I just tested this.
->>
->
-> In TX completion, when we see that a queue is stopped, we wake up that queue
-> if the depth is less than a threshold.
+The NOISE_FLOOR array we have is mode specific, and the only
+possible indexed values are A, B and G. The mode routine only
+can return G or A, so this is band specific. Then since the
+values for A and G (5ghz or 2ghz) are the same (-96) we simply
+remove the array and use a static value.
 
-Ah yeah I see that now, so this will wake it up but only if we're
-processing the txq on completion. So technically speaking if we ran
-out of memory on the first attempted skb, wouldn't we never resume it?
+If we later determine we want to use special values for
+HT configurations we can use the new mac80211 conf_is_ht*()
+helpers.
 
-  Luis
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/calib.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
+index 7072896..8e073d6 100644
+--- a/drivers/net/wireless/ath9k/calib.c
++++ b/drivers/net/wireless/ath9k/calib.c
+@@ -19,8 +19,6 @@
+ #include "reg.h"
+ #include "phy.h"
+ 
+-static const int16_t NOISE_FLOOR[] = { -96, -93, -98, -96, -93, -96 };
+-
+ /* We can tune this as we go by monitoring really low values */
+ #define ATH9K_NF_TOO_LOW	-60
+ 
+@@ -740,10 +738,9 @@ s16 ath9k_hw_getchan_noise(struct ath_hal *ah, struct ath9k_channel *chan)
+ 			chan->channel, chan->channelFlags);
+ 		return ATH_DEFAULT_NOISE_FLOOR;
+ 	}
+-	if (ichan->rawNoiseFloor == 0) {
+-		enum wireless_mode mode = ath9k_hw_chan2wmode(ah, chan);
+-		nf = NOISE_FLOOR[mode];
+-	} else
++	if (ichan->rawNoiseFloor == 0)
++		nf = -96;
++	else
+ 		nf = ichan->rawNoiseFloor;
+ 
+ 	if (!ath9k_hw_nf_in_range(ah, nf))
+-- 
+1.6.1.rc3.51.g5832d
+
