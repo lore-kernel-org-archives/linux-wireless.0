@@ -1,285 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:44866 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbYLJFea (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 00:34:30 -0500
-Date: Tue, 09 Dec 2008 23:34:27 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH V2] rtl8187: Use usb anchor facilities to manage urbs
-Message-ID: <493f54e3.DCzkNtSKCn2eI7V6%Larry.Finger@lwfinger.net> (sfid-20081210_063439_459056_63E9F17A)
+Received: from mail.atheros.com ([12.36.123.2]:17966 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750782AbYLWQC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 11:02:57 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 08:02:57 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Scale down to non-HT association with TKIP/WEP as pairwise cipher
+Date: Tue, 23 Dec 2008 21:30:50 +0530
+Message-ID: <1230048051-4522-1-git-send-email-vasanth@atheros.com> (sfid-20081223_170302_986885_CDE99298)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When SLUB debugging is enabled in the kernel, and the boot command includes
-the option "slub_debug=P", rtl8187 encounters a GPF due to a read-after-free
-of a urb.
+As TKIP is not updated to new security needs which arise when
+TKIP is used to encrypt A-MPDU aggregated data frames, IEEE802.11n
+does not allow any cipher other than CCMP (Which has new extensions
+defined) as pairwise cipher between HT peers.
 
-Following the example of changes in p54usb to fix the same problem, the code
-has been modified to use the usb_anchor_urb() method. With this change, the
-USB core handles the freeing of urb's.
+When such configuration (TKIP/WEP in HT) is forced, we still
+associate in non-HT mode (11a/b/g).
 
-This patch fixes the problem reported in Kernel Bugzilla #12185
-(http://bugzilla.kernel.org/show_bug.cgi?id=12185).
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net> 
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/iface.c       |    3 ++-
+ net/mac80211/mlme.c        |    9 ++++++++-
+ net/mac80211/wext.c        |   12 +++++++++++-
+ 4 files changed, 22 insertions(+), 3 deletions(-)
 
-John,
-
-This problem has been in rtl8187 since its inclusion in mainline. As such,
-it probably doesn't matter when if gets included - 2.6.29 would be best,
-but if you would prefer more testing, then 2.6.30 is OK. It does take special
-settings to trigger it.
-
-The relocation of the files for this driver to the drivers/net/wireless/rtl818x
-directory means that backporting this fix to stable would require a different
-patch and is probably not worth the effort, but I'll leave that call to you.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-@@ -99,6 +99,7 @@ struct rtl8187_priv {
- 	struct ieee80211_supported_band band;
- 	struct usb_device *udev;
- 	u32 rx_conf;
-+	struct usb_anchor anchored;
- 	u16 txpwr_base;
- 	u8 asic_rev;
- 	u8 is_rtl8187b;
-@@ -115,7 +116,6 @@ struct rtl8187_priv {
- 	u8 aifsn[4];
- 	struct {
- 		__le64 buf;
--		struct urb *urb;
- 		struct sk_buff_head queue;
- 	} b_tx_status;
- };
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -99,7 +99,6 @@ static const struct ieee80211_channel rt
- static void rtl8187_iowrite_async_cb(struct urb *urb)
- {
- 	kfree(urb->context);
--	usb_free_urb(urb);
- }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f3eec98..5f8ad88 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -258,6 +258,7 @@ struct mesh_preq_queue {
+ #define IEEE80211_STA_AUTO_BSSID_SEL	BIT(11)
+ #define IEEE80211_STA_AUTO_CHANNEL_SEL	BIT(12)
+ #define IEEE80211_STA_PRIVACY_INVOKED	BIT(13)
++#define IEEE80211_STA_TKIP_WEP_USED	BIT(14)
+ /* flags for MLME request */
+ #define IEEE80211_STA_REQ_SCAN 0
+ #define IEEE80211_STA_REQ_DIRECT_PROBE 1
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 5abbc3f..19cfc0a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -459,7 +459,8 @@ static int ieee80211_stop(struct net_device *dev)
+ 		synchronize_rcu();
+ 		skb_queue_purge(&sdata->u.sta.skb_queue);
  
- static void rtl8187_iowrite_async(struct rtl8187_priv *priv, __le16 addr,
-@@ -136,11 +135,13 @@ static void rtl8187_iowrite_async(struct
- 	usb_fill_control_urb(urb, priv->udev, usb_sndctrlpipe(priv->udev, 0),
- 			     (unsigned char *)dr, buf, len,
- 			     rtl8187_iowrite_async_cb, buf);
-+	usb_anchor_urb(urb, &priv->anchored);
- 	rc = usb_submit_urb(urb, GFP_ATOMIC);
- 	if (rc < 0) {
- 		kfree(buf);
--		usb_free_urb(urb);
-+		usb_unanchor_urb(urb);
- 	}
-+	usb_free_urb(urb);
- }
- 
- static inline void rtl818x_iowrite32_async(struct rtl8187_priv *priv,
-@@ -172,7 +173,6 @@ static void rtl8187_tx_cb(struct urb *ur
- 	struct ieee80211_hw *hw = info->rate_driver_data[0];
- 	struct rtl8187_priv *priv = hw->priv;
- 
--	usb_free_urb(info->rate_driver_data[1]);
- 	skb_pull(skb, priv->is_rtl8187b ? sizeof(struct rtl8187b_tx_hdr) :
- 					  sizeof(struct rtl8187_tx_hdr));
- 	ieee80211_tx_info_clear_status(info);
-@@ -273,11 +273,13 @@ static int rtl8187_tx(struct ieee80211_h
- 
- 	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, ep),
- 			  buf, skb->len, rtl8187_tx_cb, skb);
-+	usb_anchor_urb(urb, &priv->anchored);
- 	rc = usb_submit_urb(urb, GFP_ATOMIC);
- 	if (rc < 0) {
--		usb_free_urb(urb);
-+		usb_unanchor_urb(urb);
- 		kfree_skb(skb);
- 	}
-+	usb_free_urb(urb);
- 
- 	return 0;
- }
-@@ -301,14 +303,13 @@ static void rtl8187_rx_cb(struct urb *ur
- 		return;
- 	}
- 	spin_unlock(&priv->rx_queue.lock);
-+	skb_put(skb, urb->actual_length);
- 
- 	if (unlikely(urb->status)) {
--		usb_free_urb(urb);
- 		dev_kfree_skb_irq(skb);
- 		return;
+-		sdata->u.sta.flags &= ~IEEE80211_STA_PRIVACY_INVOKED;
++		sdata->u.sta.flags &= ~(IEEE80211_STA_PRIVACY_INVOKED |
++					IEEE80211_STA_TKIP_WEP_USED);
+ 		kfree(sdata->u.sta.extra_ie);
+ 		sdata->u.sta.extra_ie = NULL;
+ 		sdata->u.sta.extra_ie_len = 0;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c75d0ea..4998dc5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -391,10 +391,17 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
  	}
  
--	skb_put(skb, urb->actual_length);
- 	if (!priv->is_rtl8187b) {
- 		struct rtl8187_rx_hdr *hdr =
- 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
-@@ -360,11 +361,9 @@ static void rtl8187_rx_cb(struct urb *ur
- 	ieee80211_rx_irqsafe(dev, skb, &rx_status);
+ 	/* wmm support is a must to HT */
++	/*
++	 * IEEE802.11n does not allow TKIP/WEP as pairwise
++	 * ciphers in HT mode. We still associate in non-ht
++	 * mode (11a/b/g) if any one of these ciphers is
++	 * configured as pairwise.
++	 */
+ 	if (wmm && (ifsta->flags & IEEE80211_STA_WMM_ENABLED) &&
+ 	    sband->ht_cap.ht_supported &&
+ 	    (ht_ie = ieee80211_bss_get_ie(bss, WLAN_EID_HT_INFORMATION)) &&
+-	    ht_ie[1] >= sizeof(struct ieee80211_ht_info)) {
++	    ht_ie[1] >= sizeof(struct ieee80211_ht_info) &&
++	    (!(ifsta->flags & IEEE80211_STA_TKIP_WEP_USED))) {
+ 		struct ieee80211_ht_info *ht_info =
+ 			(struct ieee80211_ht_info *)(ht_ie + 2);
+ 		u16 cap = sband->ht_cap.cap;
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 7162d58..011592f 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -903,12 +903,22 @@ static int ieee80211_ioctl_siwauth(struct net_device *dev,
  
- 	skb = dev_alloc_skb(RTL8187_MAX_RX);
--	if (unlikely(!skb)) {
--		usb_free_urb(urb);
-+	if (unlikely(!skb))
- 		/* TODO check rx queue length and refill *somewhere* */
- 		return;
--	}
- 
- 	info = (struct rtl8187_rx_info *)skb->cb;
- 	info->urb = urb;
-@@ -373,24 +372,32 @@ static void rtl8187_rx_cb(struct urb *ur
- 	urb->context = skb;
- 	skb_queue_tail(&priv->rx_queue, skb);
- 
--	usb_submit_urb(urb, GFP_ATOMIC);
-+	usb_anchor_urb(urb, &priv->anchored);
-+	if (usb_submit_urb(urb, GFP_ATOMIC)) {
-+		usb_unanchor_urb(urb);
-+		skb_unlink(skb, &priv->rx_queue);
-+		dev_kfree_skb_irq(skb);
-+	}
- }
- 
- static int rtl8187_init_urbs(struct ieee80211_hw *dev)
- {
- 	struct rtl8187_priv *priv = dev->priv;
--	struct urb *entry;
-+	struct urb *entry = NULL;
- 	struct sk_buff *skb;
- 	struct rtl8187_rx_info *info;
-+	int ret = 0;
- 
- 	while (skb_queue_len(&priv->rx_queue) < 8) {
- 		skb = __dev_alloc_skb(RTL8187_MAX_RX, GFP_KERNEL);
--		if (!skb)
--			break;
-+		if (!skb) {
-+			ret = -ENOMEM;
-+			goto err;
+ 	switch (data->flags & IW_AUTH_INDEX) {
+ 	case IW_AUTH_WPA_VERSION:
+-	case IW_AUTH_CIPHER_PAIRWISE:
+ 	case IW_AUTH_CIPHER_GROUP:
+ 	case IW_AUTH_WPA_ENABLED:
+ 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
+ 	case IW_AUTH_KEY_MGMT:
+ 		break;
++	case IW_AUTH_CIPHER_PAIRWISE:
++		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++			if (data->value & (IW_AUTH_CIPHER_WEP40 |
++			    IW_AUTH_CIPHER_WEP104 | IW_AUTH_CIPHER_TKIP))
++				sdata->u.sta.flags |=
++					IEEE80211_STA_TKIP_WEP_USED;
++			else
++				sdata->u.sta.flags &=
++					~IEEE80211_STA_TKIP_WEP_USED;
 +		}
- 		entry = usb_alloc_urb(0, GFP_KERNEL);
- 		if (!entry) {
--			kfree_skb(skb);
--			break;
-+			ret = -ENOMEM;
-+			goto err;
- 		}
- 		usb_fill_bulk_urb(entry, priv->udev,
- 				  usb_rcvbulkpipe(priv->udev,
-@@ -401,10 +408,22 @@ static int rtl8187_init_urbs(struct ieee
- 		info->urb = entry;
- 		info->dev = dev;
- 		skb_queue_tail(&priv->rx_queue, skb);
--		usb_submit_urb(entry, GFP_KERNEL);
-+		usb_anchor_urb(entry, &priv->anchored);
-+		ret = usb_submit_urb(entry, GFP_KERNEL);
-+		if (ret) {
-+			skb_unlink(skb, &priv->rx_queue);
-+			usb_unanchor_urb(entry);
-+			goto err;
-+		}
-+		usb_free_urb(entry);
- 	}
-+	return ret;
- 
--	return 0;
-+err:
-+	usb_free_urb(entry);
-+	kfree_skb(skb);
-+	usb_kill_anchored_urbs(&priv->anchored);
-+	return ret;
- }
- 
- static void rtl8187b_status_cb(struct urb *urb)
-@@ -414,10 +433,8 @@ static void rtl8187b_status_cb(struct ur
- 	u64 val;
- 	unsigned int cmd_type;
- 
--	if (unlikely(urb->status)) {
--		usb_free_urb(urb);
-+	if (unlikely(urb->status))
- 		return;
--	}
- 
- 	/*
- 	 * Read from status buffer:
-@@ -488,26 +505,32 @@ static void rtl8187b_status_cb(struct ur
- 		spin_unlock_irqrestore(&priv->b_tx_status.queue.lock, flags);
- 	}
- 
--	usb_submit_urb(urb, GFP_ATOMIC);
-+	usb_anchor_urb(urb, &priv->anchored);
-+	if (usb_submit_urb(urb, GFP_ATOMIC))
-+		usb_unanchor_urb(urb);
- }
- 
- static int rtl8187b_init_status_urb(struct ieee80211_hw *dev)
- {
- 	struct rtl8187_priv *priv = dev->priv;
- 	struct urb *entry;
-+	int ret = 0;
- 
- 	entry = usb_alloc_urb(0, GFP_KERNEL);
- 	if (!entry)
- 		return -ENOMEM;
--	priv->b_tx_status.urb = entry;
- 
- 	usb_fill_bulk_urb(entry, priv->udev, usb_rcvbulkpipe(priv->udev, 9),
- 			  &priv->b_tx_status.buf, sizeof(priv->b_tx_status.buf),
- 			  rtl8187b_status_cb, dev);
- 
--	usb_submit_urb(entry, GFP_KERNEL);
-+	usb_anchor_urb(entry, &priv->anchored);
-+	ret = usb_submit_urb(entry, GFP_KERNEL);
-+	if (ret)
-+		usb_unanchor_urb(entry);
-+	usb_free_urb(entry);
- 
--	return 0;
-+	return ret;
- }
- 
- static int rtl8187_cmd_reset(struct ieee80211_hw *dev)
-@@ -841,6 +864,9 @@ static int rtl8187_start(struct ieee8021
- 		return ret;
- 
- 	mutex_lock(&priv->conf_mutex);
-+
-+	init_usb_anchor(&priv->anchored);
-+
- 	if (priv->is_rtl8187b) {
- 		reg = RTL818X_RX_CONF_MGMT |
- 		      RTL818X_RX_CONF_DATA |
-@@ -936,12 +962,12 @@ static void rtl8187_stop(struct ieee8021
- 
- 	while ((skb = skb_dequeue(&priv->rx_queue))) {
- 		info = (struct rtl8187_rx_info *)skb->cb;
--		usb_kill_urb(info->urb);
- 		kfree_skb(skb);
- 	}
- 	while ((skb = skb_dequeue(&priv->b_tx_status.queue)))
- 		dev_kfree_skb_any(skb);
--	usb_kill_urb(priv->b_tx_status.urb);
-+
-+	usb_kill_anchored_urbs(&priv->anchored);
- 	mutex_unlock(&priv->conf_mutex);
- }
- 
++		break;
+ 	case IW_AUTH_DROP_UNENCRYPTED:
+ 		sdata->drop_unencrypted = !!data->value;
+ 		break;
+-- 
+1.5.5.1
+
