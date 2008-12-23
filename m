@@ -1,58 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:44100 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbYLZSJs (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:15409 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598AbYLWWrZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2008 13:09:48 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] p54: fix WARN_ON at line 2247 of net/mac80211/rx.c
-Date: Fri, 26 Dec 2008 19:09:45 +0100
-Cc: John W Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 23 Dec 2008 17:47:25 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so364661nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 14:47:23 -0800 (PST)
+Message-ID: <49516A78.9020402@gmail.com> (sfid-20081223_234734_711200_43B52A82)
+Date: Tue, 23 Dec 2008 22:47:20 +0000
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812261909.46094.chunkeey@web.de> (sfid-20081226_190950_890561_092ABECE)
+To: Richard Farina <sidhayn@gmail.com>
+CC: linux-wireless@vger.kernel.org, simon@thekelleys.org.uk,
+	jussi.kivilinna@mbnet.fi, acme@ghostprotocols.net, pe1rxq@amsat.org
+Subject: Re: [PATCH] wireless: Add channel/frequency conversions to ieee80211.h
+References: <1230041018-13341-1-git-send-email-kilroyd@googlemail.com> <49510D4F.7060102@gmail.com> <49514874.8060605@gmail.com> <495163C8.60003@gmail.com>
+In-Reply-To: <495163C8.60003@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+From: Dave <kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch hopefully fixes a mac80211<->p54 interaction problem, which was
-described by Larry Finger (ref: http://marc.info/?l=linux-wireless&m=123009889327707 )
+Richard Farina wrote:
+> Dave wrote:
+>> Richard Farina wrote:
+>>> David Kilroy wrote:
+>>>> Added mappings for FHSS, DSSS and OFDM channels - with macros to point
+>>>> HR DSSS and ERP to the DSSS mappings. Currently just static inline
+>>>> functions.
 
-I guess the warning was triggered by pending frames in the receive queue,
-while we're doing a band change 5GHz.
+>>>> +static inline int ieee80211_ofdm_chan_to_freq(int s_freq, int channel)
+>>>> +{
+>>>> +	if ((channel > 0) && (channel <= 200) &&
+>>>> +	    (s_freq >= 4000))
+>>>> +		return s_freq + (channel * 5);
+>>>> +	else
+>>>> +		return -1;
+>>>> +}
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-Larry,
+>>> Any desire to make 184-196 work? These are the 4.9 GHz channels.
 
-Are you still hammering your p54usb, or have you finished testing p54(usb)'s stability?
-Because I'm waiting for your confirmation for this one. hohohoho.
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2008-12-26 17:33:58.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2008-12-26 17:54:47.000000000 +0100
-@@ -576,6 +576,7 @@ static int p54_rx_data(struct ieee80211_
- 	u16 freq = le16_to_cpu(hdr->freq);
- 	size_t header_len = sizeof(*hdr);
- 	u32 tsf32;
-+	u8 rate = hdr->rate & 0xf;
- 
- 	/*
- 	 * If the device is in a unspecified state we have to
-@@ -604,8 +605,11 @@ static int p54_rx_data(struct ieee80211_
- 	rx_status.qual = (100 * hdr->rssi) / 127;
- 	if (hdr->rate & 0x10)
- 		rx_status.flag |= RX_FLAG_SHORTPRE;
--	rx_status.rate_idx = (dev->conf.channel->band == IEEE80211_BAND_2GHZ ?
--			hdr->rate : (hdr->rate - 4)) & 0xf;
-+	if (dev->conf.channel->band == IEEE80211_BAND_5GHZ)
-+		rx_status.rate_idx = (rate < 4) ? 0 : rate - 4;
-+	else
-+		rx_status.rate_idx = rate;
-+
- 	rx_status.freq = freq;
- 	rx_status.band =  dev->conf.channel->band;
- 	rx_status.antenna = hdr->antenna;
+>> Do you see a reason why these channels wouldn't work with these
+>> conversion routines? Or are you asking about corresponding driver support?
+
+> Channel 165 freq is 5825MHz
+> Channel 183 freq is 4915MHz
+> 
+> Since your method is linear and 183 is greater than 165, it will output 
+> a higher frequency for 183 than for 165 when converting from channel to 
+> freq.
+
+I suspect you're talking about US regulatory class 5 which names channel
+165 with a starting frequency of 5GHz, and Japans regulatory class 16-20
+ naming channel 183 with starting frequency 4GHz. These are accounted
+for in the conversion routines by the s_freq parameter:
+
+ieee80211_ofdm_chan_to_freq(5000, 165) ==> 5825
+ieee80211_ofdm_chan_to_freq(4000, 183) ==> 4915
+
+It means the caller must know the starting frequency when converting
+OFDM channels and frequencies. I expect that this number will come from
+the regulatory work that is underway (though I haven't been keeping
+track of that).
+
+
+Regards,
+
+Dave.
+
+>> If drivers don't currently support those channels, I suspect there's a
+>> more significant issue to be addressed first.
+
+> No drivers support these channels at the moment AFAIK but I'd be happy 
+> to submit a patch that enables tuning if someone else could submit a 
+> patch to support half/quarter clocked channels.  Japan is the only place 
+> in the world that supports the 4.9GHz realm unlicensed, and I've already 
+> been told that patches that enabled licensed only features will not be 
+> accepted so I have not bothered to submit support as I lack the skill to 
+> add support for half/quarter clock channels and hence it wouldn't be 
+> unlicensed.
+> 
+> Thanks,
+> Rick Farina
 
