@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f11.google.com ([209.85.221.11]:54405 "EHLO
-	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754011AbYLDNOM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 08:14:12 -0500
-Received: by qyk4 with SMTP id 4so4888844qyk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2008 05:14:10 -0800 (PST)
-Message-ID: <69e28c910812040514l2d325eeekef3decbcce2520b2@mail.gmail.com> (sfid-20081204_141415_478820_D6B37128)
-Date: Thu, 4 Dec 2008 14:14:10 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Christian Lamparter" <chunkeey@web.de>
-Subject: Re: [PATCH V2] rtl8187: Improve wireless statistics for RTL8187
-Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	"John W Linville" <linville@tuxdriver.com>,
-	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>,
-	"Hin-Tak Leung" <htl10@users.sourceforge.net>,
-	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
-In-Reply-To: <200812041357.00103.chunkeey@web.de>
+Received: from c60.cesmail.net ([216.154.195.49]:13574 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751050AbYLWOlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 09:41:20 -0500
+Message-ID: <20081223094138.jlokt6sr40w448o0-cebfxv@webmail.spamcop.net> (sfid-20081223_154125_334719_45E901D0)
+Date: Tue, 23 Dec 2008 09:41:38 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: Davide Pesavento <davidepesa@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] crda: use strerror() to report error code verbosely
+References: <20081223050006.3710.98311.stgit@ct.roinet.com>
+	<43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com>
+	<20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net>
+	<43e72e890812222157s5d410d39ye9ac0840eef5331a@mail.gmail.com>
+	<20081223012037.otw1xe4tc084coc8-cebfxv@webmail.spamcop.net>
+	<2da21fe50812230041q1d844215o589c79c351966e50@mail.gmail.com>
+In-Reply-To: <2da21fe50812230041q1d844215o589c79c351966e50@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <49375ac0.z1uZDBLv3IxmmMgD%Larry.Finger@lwfinger.net>
-	 <69e28c910812040444l5d76632ah288078bd3db172d4@mail.gmail.com>
-	 <200812041357.00103.chunkeey@web.de>
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 4, 2008 at 1:57 PM, Christian Lamparter <chunkeey@web.de> w=
-rote:
-> On Thursday 04 December 2008 13:44:09 Stefanik G=E1bor wrote:
->
->> BTW using RTL8187B's scaling constants for RTL8187L also work well
->> with this patch - I get almost identical readings from my BCM4318 an=
-d
->> my RTL8187L. (I haven't yet submitted my version of the patch becaus=
-e
->> it's pretty messy, with #if 0'd code and such.) I wonder whether b43
->> or p54usb is more correct... However, it looks like the same algorit=
-hm
->> is applicable for both RTL8187 variants.
+Quoting Davide Pesavento <davidepesa@gmail.com>:
+
+>> [root@ct proski]# COUNTRY=00 crda
+>> Failed to set regulatory domain: -22
+>> [root@ct proski]# COUNTRY=US crda
+>> Failed to set regulatory domain: -22
+>> [root@ct proski]# COUNTRY=DE crda
+>> Failed to set regulatory domain: -22
+>> [root@ct proski]#
 >>
-> probably b43. p54usb uses static scaling constants to calculate
-> signal & noise dbm, instead of finding the correct values from the de=
-vice eeprom
-> (Note: Link Quality doesn't substract the noise so it could be off ev=
-en more).
+>> Maybe it can only be set once?  But then -EBUSY would be more reasonable.
+>>
 >
-> However, in my testing it was only a few +/- dbm(s), what's your read=
-ing?
->
+> AFAIK, you have to use `iw reg set <country>` to manually change it.
 
-=46rom an AP ~5M from my antenna, both cards report around -45dBm. I
-haven't tested the p54usb-based algorithm yet.
+That works.  As I understand now, crda should never be run manually.   
+It should only run by the kernel through udev.  If that is correct, it  
+should be written clearly in the crda README.
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Regards,
+Pavel Roskin
