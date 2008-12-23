@@ -1,139 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9103 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750951AbYLBUNN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 15:13:13 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 04/11] iwlwifi: move disable/enable interrupts to iwl-core.c
-Date: Tue,  2 Dec 2008 12:14:00 -0800
-Message-Id: <1228248847-10424-5-git-send-email-reinette.chatre@intel.com> (sfid-20081202_211321_825953_BD47AA10)
-In-Reply-To: <1228248847-10424-4-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1228248847-10424-1-git-send-email-reinette.chatre@intel.com>
- <1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
- <1228248847-10424-3-git-send-email-reinette.chatre@intel.com>
- <1228248847-10424-4-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48592 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbYLWUag (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 15:30:36 -0500
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	mabbaswireless@gmail.com
+In-Reply-To: <20081217174244.M36761@bobcopeland.com>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <1229336057.4471.9.camel@johannes.berg>
+	 <1229354532.12163.24.camel@localhost.localdomain>
+	 <20081217174244.M36761@bobcopeland.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ergYgXb5KP8LVtI+kz9h"
+Date: Tue, 23 Dec 2008 21:30:16 +0100
+Message-Id: <1230064216.31228.46.camel@johannes> (sfid-20081223_213039_150741_3B12BD9A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
 
-This patch moves iwl_enable_interrupts and iwl_disable_interrupts
-functions to iwl-core.c
+--=-ergYgXb5KP8LVtI+kz9h
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |   22 ----------------------
- drivers/net/wireless/iwlwifi/iwl-core.c |   25 +++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h |    6 ++++++
- 3 files changed, 31 insertions(+), 22 deletions(-)
+On Wed, 2008-12-17 at 13:21 -0500, Bob Copeland wrote:
+> On Mon, 15 Dec 2008 10:22:12 -0500, Dan Williams wrote
+> > Could be udev event ordering?  We do need to track this down, otherwise
+> > stuff simply won't work when we come back. =20
+>=20
+> Sorry for not following up on this so far; I don't usually have a lot
+> of time on weeknights.  I haven't done any exhaustive testing yet but
+> so far, I don't see anything having to do with networking in udev=20
+> monitor, just input, cpus, and virtual consoles.
+>=20
+> logs here: http://bobcopeland.com/kernel/wl/ {udev,dbus,hal}.log
+>=20
+> Running pm-suspend from pm-utils directly also triggers the problem,=20
+> so that would seem to excuse gnome-power-manager at least.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index de1ec54..9e1d57f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1259,13 +1259,6 @@ static void iwl_print_rx_config_cmd(struct iwl_priv *priv)
- }
- #endif
- 
--static void iwl_enable_interrupts(struct iwl_priv *priv)
--{
--	IWL_DEBUG_ISR("Enabling interrupts\n");
--	set_bit(STATUS_INT_ENABLED, &priv->status);
--	iwl_write32(priv, CSR_INT_MASK, CSR_INI_SET_MASK);
--}
--
- /* call this function to flush any scheduled tasklet */
- static inline void iwl_synchronize_irq(struct iwl_priv *priv)
- {
-@@ -1274,21 +1267,6 @@ static inline void iwl_synchronize_irq(struct iwl_priv *priv)
- 	tasklet_kill(&priv->irq_tasklet);
- }
- 
--static inline void iwl_disable_interrupts(struct iwl_priv *priv)
--{
--	clear_bit(STATUS_INT_ENABLED, &priv->status);
--
--	/* disable interrupts from uCode/NIC to host */
--	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
--
--	/* acknowledge/clear/reset any interrupts still pending
--	 * from uCode or flow handler (Rx/Tx DMA) */
--	iwl_write32(priv, CSR_INT, 0xffffffff);
--	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
--	IWL_DEBUG_ISR("Disabled interrupts\n");
--}
--
--
- /**
-  * iwl_irq_handle_error - called for HW or SW error interrupt from card
-  */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 6aa332b..78d1ba7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -962,6 +962,30 @@ void iwl_uninit_drv(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_uninit_drv);
- 
-+
-+void iwl_disable_interrupts(struct iwl_priv *priv)
-+{
-+	clear_bit(STATUS_INT_ENABLED, &priv->status);
-+
-+	/* disable interrupts from uCode/NIC to host */
-+	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
-+
-+	/* acknowledge/clear/reset any interrupts still pending
-+	 * from uCode or flow handler (Rx/Tx DMA) */
-+	iwl_write32(priv, CSR_INT, 0xffffffff);
-+	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
-+	IWL_DEBUG_ISR("Disabled interrupts\n");
-+}
-+EXPORT_SYMBOL(iwl_disable_interrupts);
-+
-+void iwl_enable_interrupts(struct iwl_priv *priv)
-+{
-+	IWL_DEBUG_ISR("Enabling interrupts\n");
-+	set_bit(STATUS_INT_ENABLED, &priv->status);
-+	iwl_write32(priv, CSR_INT_MASK, CSR_INI_SET_MASK);
-+}
-+EXPORT_SYMBOL(iwl_enable_interrupts);
-+
- int iwl_send_statistics_request(struct iwl_priv *priv, u8 flags)
- {
- 	u32 stat_flags = 0;
-@@ -1337,6 +1361,7 @@ void iwl_rf_kill_ct_config(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_rf_kill_ct_config);
- 
-+
- /*
-  * CARD_STATE_CMD
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 82bf263..f68883b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -313,6 +313,12 @@ int iwl_send_cmd_pdu_async(struct iwl_priv *priv, u8 id, u16 len,
- int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
- 
- /*****************************************************
-+ * PCI						     *
-+ *****************************************************/
-+void iwl_disable_interrupts(struct iwl_priv *priv);
-+void iwl_enable_interrupts(struct iwl_priv *priv);
-+
-+/*****************************************************
- *  Error Handling Debugging
- ******************************************************/
- void iwl_dump_nic_error_log(struct iwl_priv *priv);
--- 
-1.5.4.3
+What's the status of this? Should I look into things a bit?
+
+johannes
+
+--=-ergYgXb5KP8LVtI+kz9h
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJUUpVAAoJEKVg1VMiehFYD1QQALr9JgHXF8lV8dmPlbxLCpxH
+8vumhnh/nJRw+CLYpYCUslCQmhRnZ8+VPMxeyg6ii8DuvFLNPz636sGHMUTEEumT
+COEZY6BReALHm0lfrzsOtOT7xXo1xaJJ0rJoCWV+mqgzkg+ib0nIfmwOJZImnuZJ
+cD+5179rZXd1qqk4+Ib/nZ2dqSAq217MQFHzIladVppj/Bw2HFDMEkRa9obz30WN
+OOeJXAmIHwLGH5u890US7nukdaXiO2XW9hbzBoyB+ZBERtxq+Mkz2UrKwXPMsOW2
+Gd4a3/4i25O3Vep4N9FM12Rc6DQJzUxV1ekFoFaoSXTm2rOBXGjkrOuc7gvLLoFQ
++7tJSwuATWnzs/X37ugvYWMg+C7CU2SKlu5rFt/OP+o8PCT9QwmIV4yhz0EViU6d
+gHCXu838aVq1DZUpua5pH2LrK+gUSrtNGneJFRqNUirYS0n3lgocQTRE7hP5XMHH
+C9FoQHjBodWNEv18Uf1hcmnTTI5kH4y9nQ9w25BuR0yis/WKm26J7e+qY8EKLLz7
++gHlpqfC3MmTicE9qy0nGx6LaY1AaGx6H6Dzs3yG4DWF/DnhrtLCob88W/EVtfUO
+wx4+q6dkjFtyJu2wPI1Gw5JMIIWj6LQ+ZVJQvBZ9ITYsf/EU8ol2cjykVUPC3xDZ
+DYWhx38tik4bK6YAT5tx
+=cH4Y
+-----END PGP SIGNATURE-----
+
+--=-ergYgXb5KP8LVtI+kz9h--
 
