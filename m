@@ -1,236 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:1422 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753957AbYLGSVq (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:16903 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016AbYLWTov (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2008 13:21:46 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so380210nfc.21
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Dec 2008 10:21:44 -0800 (PST)
-From: Henning Rogge <hrogge@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 2/2] Add signal strength and bandwith to nl80211station info
-Date: Sun, 7 Dec 2008 19:19:01 +0100
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Henning Rogge <rogge@fgan.de>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-References: <200811252131.30161.hrogge@googlemail.com> <200812071832.20533.hrogge@googlemail.com> <1228671578.22164.48.camel@johannes.berg>
-In-Reply-To: <1228671578.22164.48.camel@johannes.berg>
+	Tue, 23 Dec 2008 14:44:51 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so1015100fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 11:44:49 -0800 (PST)
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: A couple of fixes to dynamic power save.
+References: <20081223025735.GB11534@myhost.users.atheros.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 23 Dec 2008 21:44:44 +0200
+In-Reply-To: <20081223025735.GB11534@myhost.users.atheros.com> (Vivek Natarajan's message of "Mon\, 22 Dec 2008 18\:57\:35 -0800")
+Message-ID: <873agevfpv.fsf@litku.valot.fi> (sfid-20081223_204456_332404_F7AD0ED9)
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1912631.2fcsvss6Cj";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200812071919.07680.hrogge@googlemail.com> (sfid-20081207_192157_837395_FB0672A7)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1912631.2fcsvss6Cj
-Content-Type: multipart/mixed;
-  boundary="Boundary-01=_WOBPJzwEa3QnK8k"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Vivek Natarajan <vivek.natraj@gmail.com> writes:
 
---Boundary-01=_WOBPJzwEa3QnK8k
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+> a) hw_config() should not be called from siwpower() for the drivers which do not support
+>    dynamic powersave.
 
-This patch adds the total transmission bitrate for adhoc station even for=20
-802.11n transmissions. It must be applied after the first patch of this=20
-series.
+I disagree. How else would we enable power save, for example for
+iwlwifi? Power save should be enabled similarly for all drivers, I
+have strong dislike of any sysfs hacks like iwlwifi has.
 
-=2D------------------------
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 56450b4..b5abe36 100644
-=2D-- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -431,14 +431,14 @@ enum nl80211_sta_flags {
-  * when getting information about the bitrate of a station.
-  *
-  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
-=2D * @NL80211_RATE_INFO_LEGACY: bitrate for 802.11abg (u16, 100kbit/s)
-+ * @NL80211_RATE_INFO_TOTAL: total bitrate (u16, 100kbit/s)
-  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
-  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
-  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
-  */
- enum nl80211_rate_info {
- 	__NL80211_RATE_INFO_INVALID,
-=2D	NL80211_RATE_INFO_LEGACY,
-+	NL80211_RATE_INFO_TOTAL,
- 	NL80211_RATE_INFO_MCS,
- 	NL80211_RATE_INFO_40_MHZ_WIDTH,
- 	NL80211_RATE_INFO_SHORT_GI,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c9268b2..8689744 100644
-=2D-- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1080,6 +1080,35 @@ static int parse_station_flags(struct nlattr *nla, u=
-32=20
-*staflags)
- 	return 0;
- }
-=20
-+static u16 nl80211_calculate_bitrate(struct rate_info *rate)
-+{
-+	int modulation, streams, bitrate;
-+
-+	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
-+		return rate->legacy;
-+
-+	modulation =3D rate->mcs & 7;
-+	streams =3D rate->mcs >> 3;
-+
-+	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
-+			13500000 : 6500000;
-+
-+	if (modulation < 4)
-+		bitrate *=3D (modulation + 1);
-+	else if (modulation =3D=3D 4)
-+		bitrate *=3D (modulation + 2);
-+	else
-+		bitrate *=3D (modulation + 3);
-+
-+	bitrate *=3D streams;
-+
-+	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
-+		bitrate =3D (bitrate * 10) / 9;
-+
-+	/* do NOT round down here */
-+	return (bitrate + 50000) / 100000;
-+}
-+
- static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 				int flags, struct net_device *dev,
- 				u8 *mac_addr, struct station_info *sinfo)
-@@ -1123,13 +1152,12 @@ static int nl80211_send_station(struct sk_buff *msg=
-,=20
-u32 pid, u32 seq,
- 		if (!txrate)
- 			goto nla_put_failure;
-=20
-=2D
-=2D		if (!(sinfo->txrate.flags & RATE_INFO_FLAGS_MCS))
-=2D			NLA_PUT_U16(msg, NL80211_RATE_INFO_LEGACY,
-=2D				    sinfo->txrate.legacy);
-=2D		else
-+		NLA_PUT_U16(msg, NL80211_RATE_INFO_TOTAL,
-+				nl80211_calculate_bitrate(&sinfo->txrate));
-+		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
- 			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
- 				    sinfo->txrate.mcs);
-+
- 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
- 			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
- 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
+(Yes, I'm going to post patches about how iwlwifi should do it.)
+
+> b) IEEE80211_HW_NO_STACK_DYNAMIC_PS needs to be verified in set_associated() also before
+>    enabling the power save timers.
+
+You are disabling more than timers here. More comments below.
+
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+>  net/mac80211/mlme.c |    3 ++-
+>  net/mac80211/wext.c |    9 +++++----
+>  2 files changed, 7 insertions(+), 5 deletions(-)
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index c75d0ea..b23e62b 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -746,7 +746,8 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+>  	bss_info_changed |= BSS_CHANGED_BASIC_RATES;
+>  	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
+>  
+> -	if (local->powersave) {
+> +	if (local->powersave &&
+> +			!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS)) {
+>  		if (local->dynamic_ps_timeout > 0)
+>  			mod_timer(&local->dynamic_ps_timer, jiffies +
+>  				  msecs_to_jiffies(local->dynamic_ps_timeout));
+
+The test for IEEE80211_HW_NO_STACK_DYNAMIC_PS should be lower, we do
+want to enable power save even if IEEE80211_HW_NO_STACK_DYNAMIC_PS is
+set.
+
+It should be something like this:
+
+	if (local->powersave) {
+		if ((local->dynamic_ps_timeout > 0) &&
+			!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS))
+			mod_timer(&local->dynamic_ps_timer, jiffies +
+				  msecs_to_jiffies(local->dynamic_ps_timeout));
+		else {
+			conf->flags |= IEEE80211_CONF_PS;
+			ieee80211_hw_config(local,
+					    IEEE80211_CONF_CHANGE_PS);
+		}
+	}
 
 
---Boundary-01=_WOBPJzwEa3QnK8k
-Content-Type: text/x-patch;
-  charset="ISO-8859-15";
-  name="nl80211ext_v8_2.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="nl80211ext_v8_2.patch"
+Your patch breaks the logic I was planning to have in mac80211.
+Dynamic power save here basically means the timer running either in
+mac80211 or in firmware, nothing else. If the firmware has such timer,
+the driver can disable mac80211 timer with
+IEEE80211_HW_NO_STACK_DYNAMIC_PS. For example, I'm planning to add
+that flag to iwlwifi, it seems that Intel's firmware has this
+functionality.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 56450b4..b5abe36 100644
-=2D-- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -431,14 +431,14 @@ enum nl80211_sta_flags {
-  * when getting information about the bitrate of a station.
-  *
-  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
-=2D * @NL80211_RATE_INFO_LEGACY: bitrate for 802.11abg (u16, 100kbit/s)
-+ * @NL80211_RATE_INFO_TOTAL: total bitrate (u16, 100kbit/s)
-  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
-  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
-  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
-  */
- enum nl80211_rate_info {
- 	__NL80211_RATE_INFO_INVALID,
-=2D	NL80211_RATE_INFO_LEGACY,
-+	NL80211_RATE_INFO_TOTAL,
- 	NL80211_RATE_INFO_MCS,
- 	NL80211_RATE_INFO_40_MHZ_WIDTH,
- 	NL80211_RATE_INFO_SHORT_GI,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c9268b2..8689744 100644
-=2D-- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1080,6 +1080,35 @@ static int parse_station_flags(struct nlattr *nla, u=
-32 *staflags)
- 	return 0;
- }
-=20
-+static u16 nl80211_calculate_bitrate(struct rate_info *rate)
-+{
-+	int modulation, streams, bitrate;
-+
-+	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
-+		return rate->legacy;
-+
-+	modulation =3D rate->mcs & 7;
-+	streams =3D rate->mcs >> 3;
-+
-+	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
-+			13500000 : 6500000;
-+
-+	if (modulation < 4)
-+		bitrate *=3D (modulation + 1);
-+	else if (modulation =3D=3D 4)
-+		bitrate *=3D (modulation + 2);
-+	else
-+		bitrate *=3D (modulation + 3);
-+
-+	bitrate *=3D streams;
-+
-+	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
-+		bitrate =3D (bitrate * 10) / 9;
-+
-+	/* do NOT round down here */
-+	return (bitrate + 50000) / 100000;
-+}
-+
- static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 				int flags, struct net_device *dev,
- 				u8 *mac_addr, struct station_info *sinfo)
-@@ -1123,13 +1152,12 @@ static int nl80211_send_station(struct sk_buff *msg=
-, u32 pid, u32 seq,
- 		if (!txrate)
- 			goto nla_put_failure;
-=20
-=2D
-=2D		if (!(sinfo->txrate.flags & RATE_INFO_FLAGS_MCS))
-=2D			NLA_PUT_U16(msg, NL80211_RATE_INFO_LEGACY,
-=2D				    sinfo->txrate.legacy);
-=2D		else
-+		NLA_PUT_U16(msg, NL80211_RATE_INFO_TOTAL,
-+				nl80211_calculate_bitrate(&sinfo->txrate));
-+		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
- 			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
- 				    sinfo->txrate.mcs);
-+
- 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
- 			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
- 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
+But having IEEE80211_HW_NO_STACK_DYNAMIC_PS set doesn't mean that the
+driver does all power management itself. I have seen in iwlwifi checks
+for association status before it enables power save, so it's better
+that mac80211 enables IEEE80211_CONF_PS only after associated, despite
+if IEEE80211_HW_NO_STACK_DYNAMIC_PS is set or not.
 
---Boundary-01=_WOBPJzwEa3QnK8k--
+> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+> index 7162d58..673c5d7 100644
+> --- a/net/mac80211/wext.c
+> +++ b/net/mac80211/wext.c
+> @@ -865,9 +865,9 @@ set:
+>  	local->powersave = ps;
+>  	local->dynamic_ps_timeout = timeout;
+>  
+> -	if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
+> -		if (!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS) &&
+> -		    local->dynamic_ps_timeout > 0)
+> +	if (!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS) &&
+> +			(sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)) {
+> +		if (local->dynamic_ps_timeout > 0)
+>  			mod_timer(&local->dynamic_ps_timer, jiffies +
+>  				  msecs_to_jiffies(local->dynamic_ps_timeout));
+>  		else {
+> @@ -875,8 +875,9 @@ set:
+>  				conf->flags |= IEEE80211_CONF_PS;
+>  			else
+>  				conf->flags &= ~IEEE80211_CONF_PS;
+> +			ret = ieee80211_hw_config(local,
+> +					IEEE80211_CONF_CHANGE_PS);
+>  		}
+> -		ret = ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+>  	}
 
---nextPart1912631.2fcsvss6Cj
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Looking at these changes it looks to me that widen the meaning of
+IEEE80211_HW_NO_STACK_DYNAMIC_PS flag. I'm sorry, but I don't think
+that's the correct way.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+First, let's summarise what kind of power save implementations we
+have:
 
-iEYEABECAAYFAkk8E5sACgkQcenvcwAcHWcV8ACfQJN+bMAv5u2kNUsci6JzFfiD
-w94AoIUmpgvVBUtgxiyXyj5vrC06pKo3
-=4Twl
------END PGP SIGNATURE-----
+1) null frame creation, dynamic timer and TIM parsing in mac80211:
+   stlc45xx/p54, ath5/9k
 
---nextPart1912631.2fcsvss6Cj--
+2) null frame creation, dynamic timer and TIM parsing in firmware: iwlwifi
+
+3) null frame creation and TIM parsing in firmware, dynamic timer in
+   mac80211: I have heard about these :)
+
+As you can see from above, dynamic power save should not mean anything
+else than just about the timer. We should add a new flag which enables
+mac80211 to create null frames and parse TIM values.
+
+Oh yeah, there's also the multicast frames. ath5/9k requires host
+disable power save for receiving the multicast frames, but
+stlc45xx/p54 does this automatically without any host interaction.
+Man, this is getting complicated :)
+
+-- 
+Kalle Valo
