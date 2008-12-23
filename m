@@ -1,69 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43808 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755719AbYLVTSZ (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:60616 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753213AbYLWIlX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 14:18:25 -0500
-Subject: Re: [PATCH] mac80211_hwsim: configfs support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Igor Trindade Oliveira <igor_trindade@yahoo.com.br>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20081222085146.GC5732@jm.kir.nu>
-References: <700428.4819.qm@web59316.mail.re1.yahoo.com>
-	 <20081222085146.GC5732@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jo90/OfMei1acnkk+71Z"
-Date: Mon, 22 Dec 2008 20:18:24 +0100
-Message-Id: <1229973504.4406.22.camel@johannes> (sfid-20081222_201838_348477_9C3F5E0E)
-Mime-Version: 1.0
+	Tue, 23 Dec 2008 03:41:23 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so920338fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 00:41:21 -0800 (PST)
+Message-ID: <2da21fe50812230041q1d844215o589c79c351966e50@mail.gmail.com> (sfid-20081223_094127_616031_372BBAC3)
+Date: Tue, 23 Dec 2008 09:41:21 +0100
+From: "Davide Pesavento" <davidepesa@gmail.com>
+To: "Pavel Roskin" <proski@gnu.org>
+Subject: Re: [PATCH] crda: use strerror() to report error code verbosely
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W Linville" <linville@tuxdriver.com>
+In-Reply-To: <20081223012037.otw1xe4tc084coc8-cebfxv@webmail.spamcop.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <20081223050006.3710.98311.stgit@ct.roinet.com>
+	 <43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com>
+	 <20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net>
+	 <43e72e890812222157s5d410d39ye9ac0840eef5331a@mail.gmail.com>
+	 <20081223012037.otw1xe4tc084coc8-cebfxv@webmail.spamcop.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Dec 23, 2008 at 07:20, Pavel Roskin <proski@gnu.org> wrote:
+> Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
+>
+>> You don't need to build this unless you want to define your own rules.
+>
+> I see.
+>
+>> And if you do and want to use the signature stuff you need to copy the
+>> RSA public key into pubkeys/ directory of CRDA. Did you try that?
+>
+> No, I just wanted to install the most current regulatory database.  Perhaps
+> the error message should be more clear.
+>
+> With both CONFIG_CFG80211_REG_DEBUG, CONFIG_WIRELESS_OLD_REGULATORY enabled
+> and modular mac80211 and cfg80211, regdomain is set correctly from udev:
+>
+> [    7.642548] cfg80211: Using static regulatory domain info
+> [    7.642551] cfg80211: Regulatory domain: US
+> [    8.697261] cfg80211: Regulatory domain changed to country: US
+>
+> However, changing it to anything doesn't work:
+>
+> [root@ct proski]# COUNTRY=00 crda
+> Failed to set regulatory domain: -22
+> [root@ct proski]# COUNTRY=US crda
+> Failed to set regulatory domain: -22
+> [root@ct proski]# COUNTRY=DE crda
+> Failed to set regulatory domain: -22
+> [root@ct proski]#
+>
+> Maybe it can only be set once?  But then -EBUSY would be more reasonable.
+>
 
---=-jo90/OfMei1acnkk+71Z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+AFAIK, you have to use `iw reg set <country>` to manually change it.
 
-On Mon, 2008-12-22 at 10:51 +0200, Jouni Malinen wrote:
+Regards,
+Davide Pesavento
 
-> Hmm.. The addition of support to add interfaces dynamically with mkdir
-> sounds reasonable, but I'm not sure whether I really like the part of
-> removing debugfs support.. mac80211_hwsim is a developer tool and I want
-> to be able to have an undocumented and free for changes interface
-> (debugfs) that does not have so strict requirement on kernel-userspace
-> interface. This patch seems to also be moving the PS testing parameter
-> to use configfs. If this means that it will be more difficult to change
-> that mechanism or add new parameters in the future, I'm not sure I would
-> support that part of the change.
-
-As has been argued elsewhere, a few interfaces in debugfs have also
-become "stable" to a point that they can't be changed much any more... I
-think since this is a development tool even configfs could be declared
-an in-development API?
-
-johannes
-
---=-jo90/OfMei1acnkk+71Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJT+f9AAoJEKVg1VMiehFY/48P/0d2S9MQSwJ7I2AL6kByrfyG
-eELltg7WUY+HXKJmaWNDDv9ESNyzRidtHVrTUjz7CGuBjFevla8B3iaE672aGWGc
-wtST1Ze79toAe7duX9sVoKVnMJ3s2SlGT7sf62meGdP8e9/alb+oj3UWRPHIJFWz
-TDaDiykEk6QbeTmDlYwC84H062ozeG/tMDVbNecBuyyeMFf75heLlvVaX26uIvVt
-sXyHyohrskUUb83XrpGG+sq5V7NsF8MkjfzFUf716Fh51rO+80E+2pQtXref2Kjr
-FeR5c2vOFb8xP9/wffCa/4ws9LGd93MKd1DMbtjNv8gxFpXaQRDygH4rf8HsML+X
-1agYCaUNocqSRW6GfD4B+2PTp5cp9WfLngHjK+1pnDV3UOCVfap7G4phnF9wtjOb
-l44hEAB+jt0MS8h2/uenaZo5K+Xa6lMtUkDhXCtTUSAsl0v9KBtUXgYmpRAV3GEy
-/QF/UrYGnN0uJo3+nlme1DLSbNiwccPqutwIuvyQyHBLOpIMjXKmFrG3GnqwyT/D
-iNiw/ADMZQKgA2TyzFoWEUiwCtHnT2+8anYXj4hhgXjoF8us0ih4K5cpSmpqbUC6
-Rp6og6wtdVwjjIcCbqVSGu7C/dGtmRxnrrqxlBjr1Yrwi2e7BFMXuvYKHOXjuoEw
-kxRVfe4UZlq2ZFNI6Fzg
-=RJ47
------END PGP SIGNATURE-----
-
---=-jo90/OfMei1acnkk+71Z--
-
+> --
+> Regards,
+> Pavel Roskin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
