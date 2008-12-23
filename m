@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:2104 "EHLO mga03.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:61995 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752758AbYLBAbb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 19:31:31 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/5] iwlwifi: 5150 enable LO, TXIQ and BB calibrations
-Date: Mon,  1 Dec 2008 16:32:22 -0800
-Message-Id: <1228177942-25137-6-git-send-email-reinette.chatre@intel.com> (sfid-20081202_013137_350084_0CABBFEF)
-In-Reply-To: <1228177942-25137-5-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1228177942-25137-1-git-send-email-reinette.chatre@intel.com>
- <1228177942-25137-2-git-send-email-reinette.chatre@intel.com>
- <1228177942-25137-3-git-send-email-reinette.chatre@intel.com>
- <1228177942-25137-4-git-send-email-reinette.chatre@intel.com>
- <1228177942-25137-5-git-send-email-reinette.chatre@intel.com>
+	id S1751118AbYLWMOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 07:14:42 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 04:14:42 -0800
+Date: Tue, 23 Dec 2008 04:14:34 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Davide Pesavento <davidepesa@gmail.com>
+CC: Pavel Roskin <proski@gnu.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] crda: use strerror() to report error code verbosely
+Message-ID: <20081223121434.GA27316@tesla> (sfid-20081223_131449_052187_54E64DB2)
+References: <20081223050006.3710.98311.stgit@ct.roinet.com> <43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com> <20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net> <43e72e890812222157s5d410d39ye9ac0840eef5331a@mail.gmail.com> <20081223012037.otw1xe4tc084coc8-cebfxv@webmail.spamcop.net> <2da21fe50812230041q1d844215o589c79c351966e50@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2da21fe50812230041q1d844215o589c79c351966e50@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+On Tue, Dec 23, 2008 at 12:41:21AM -0800, Davide Pesavento wrote:
+> On Tue, Dec 23, 2008 at 07:20, Pavel Roskin <proski@gnu.org> wrote:
+> > Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
+> >
+> >> You don't need to build this unless you want to define your own rules.
+> >
+> > I see.
+> >
+> >> And if you do and want to use the signature stuff you need to copy the
+> >> RSA public key into pubkeys/ directory of CRDA. Did you try that?
+> >
+> > No, I just wanted to install the most current regulatory database.  Perhaps
+> > the error message should be more clear.
+> >
+> > With both CONFIG_CFG80211_REG_DEBUG, CONFIG_WIRELESS_OLD_REGULATORY enabled
+> > and modular mac80211 and cfg80211, regdomain is set correctly from udev:
+> >
+> > [    7.642548] cfg80211: Using static regulatory domain info
+> > [    7.642551] cfg80211: Regulatory domain: US
+> > [    8.697261] cfg80211: Regulatory domain changed to country: US
+> >
+> > However, changing it to anything doesn't work:
+> >
+> > [root@ct proski]# COUNTRY=00 crda
+> > Failed to set regulatory domain: -22
+> > [root@ct proski]# COUNTRY=US crda
+> > Failed to set regulatory domain: -22
+> > [root@ct proski]# COUNTRY=DE crda
+> > Failed to set regulatory domain: -22
+> > [root@ct proski]#
+> >
+> > Maybe it can only be set once?  But then -EBUSY would be more reasonable.
+> >
+> 
+> AFAIK, you have to use `iw reg set <country>` to manually change it.
 
-This patch enables LO, TXIQ, and BB calibrations for 5150
+Affirmative, or you can use wpa_supplicant from the git tree and add to your conf:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+COUNTRY=US
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 488b580..b6c57cb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -888,7 +888,10 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 		break;
- 	case CSR_HW_REV_TYPE_5150:
- 		priv->hw_params.calib_init_cfg =
--			BIT(IWL_CALIB_DC);
-+			BIT(IWL_CALIB_DC)		|
-+			BIT(IWL_CALIB_LO)		|
-+			BIT(IWL_CALIB_TX_IQ) 		|
-+			BIT(IWL_CALIB_BASE_BAND);
- 
- 		break;
- 	}
--- 
-1.5.4.3
-
+  Luis
