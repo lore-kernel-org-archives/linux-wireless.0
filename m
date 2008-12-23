@@ -1,58 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:34880 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:22690 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755654AbYLJTAO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 14:00:14 -0500
-Subject: Re: [RFC] b43: rework rfkill code
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	hmh@hmh.eng.br
-In-Reply-To: <1228934039.15837.59.camel@johannes.berg>
-References: <20081210150935.GA10927@srcf.ucam.org>
-	 <1228929529.15837.34.camel@johannes.berg>
-	 <1228929820.15837.40.camel@johannes.berg> <200812101831.13526.mb@bu3sch.de>
-	 <1228930643.15837.48.camel@johannes.berg>
-	 <20081210175102.GA14282@srcf.ucam.org>
-	 <1228932343.15837.57.camel@johannes.berg>
-	 <1228933790.28590.29.camel@localhost.localdomain>
-	 <1228934039.15837.59.camel@johannes.berg>
+	id S1751712AbYLWX7e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 18:59:34 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 15:59:34 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v3 13/16] ath9k: remove ath9k_hw_chan2wmode()
+Date: Tue, 23 Dec 2008 15:58:48 -0800
+Message-ID: <1230076731-22946-14-git-send-email-lrodriguez@atheros.com> (sfid-20081224_010842_196291_723903AD)
+In-Reply-To: <1230076731-22946-13-git-send-email-lrodriguez@atheros.com>
+References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-5-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-6-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-7-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-8-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-9-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-10-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-11-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-12-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-13-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Wed, 10 Dec 2008 13:59:05 -0500
-Message-Id: <1228935546.28590.37.camel@localhost.localdomain> (sfid-20081210_200028_622948_BFE36DBE)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-10 at 19:33 +0100, Johannes Berg wrote:
-> On Wed, 2008-12-10 at 13:29 -0500, Dan Williams wrote:
-> 
-> > > Does the wireless driver get the notification about this from the
-> > > hardware, like it would if this was a real physical switch? Then it's
-> > > probably pretty simple: provide a rfkill struct from the driver that
-> > > updates hard-kill and provide a second rfkill struct for the platform
-> > > device that doesn't get hard-killed, but also provide a soft-kill input
-> > > form the platform device. That way, you can toggle that button, but you
-> > > can also software-enable the platform rfkill device and that in turn
-> > > re-enables the wifi-rfkill "hw" switch device.
-> > 
-> > This sort of sucks for userspace, because we see the actual wifi card as
-> > hardblocked, but some other random button as softblocked.  There's no
-> > indication that changing the softblock one will affect the hardblocked
-> > one.  What are userspace processes supposed to do here, assume that if a
-> > non-radio-associated softblocked switch exists, that it can re-enable a
-> > hardblocked radio of some random wifi card?
-> 
-> The other question is whether we actually care? So what if the hardware
-> can only be enabled with the button, why does that matter?
+The only left users are for timing for ACK timeout, slotime and
+CTS timeout. We currently use an array CLOCK_RATE to keep
+these values per mode and since as only will use A and G
+we can depend on the band to get the appropriate values.
 
-I guess it doesn't, as long as in Matthew's case, the actual radio
-rfkill state is only ever softblocked, because it actually *can* be
-re-enabled with the platform button or something.
+We note that we should be using a different clock rate value
+for CCK, we can do this in separate patch, currently this is
+being disregarded and should only affect when we want to
+change the default ACK/CTS timeout or slot time and stuck
+with using using 802.11b.
 
-Dan
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |   46 ++++++++++++++++----------------------
+ 1 files changed, 19 insertions(+), 27 deletions(-)
 
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 85da799..3b61bfa 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -23,7 +23,9 @@
+ #include "phy.h"
+ #include "initvals.h"
+ 
+-static const u8 CLOCK_RATE[] = { 40, 80, 22, 44, 88, 40 };
++#define ATH9K_CLOCK_RATE_CCK		22
++#define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
++#define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
+ 
+ extern struct hal_percal_data iq_cal_multi_sample;
+ extern struct hal_percal_data iq_cal_single_sample;
+@@ -48,17 +50,18 @@ static void ath9k_hw_spur_mitigate(struct ath_hal *ah, struct ath9k_channel *cha
+ 
+ static u32 ath9k_hw_mac_usec(struct ath_hal *ah, u32 clks)
+ {
+-	if (ah->ah_curchan != NULL)
+-		return clks / CLOCK_RATE[ath9k_hw_chan2wmode(ah, ah->ah_curchan)];
+-	else
+-		return clks / CLOCK_RATE[ATH9K_MODE_11B];
++	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
++	if (!ah->ah_curchan) /* should really check for CCK instead */
++		return clks / ATH9K_CLOCK_RATE_CCK;
++	if (conf->channel->band == IEEE80211_BAND_2GHZ)
++		return clks / ATH9K_CLOCK_RATE_2GHZ_OFDM;
++	return clks / ATH9K_CLOCK_RATE_5GHZ_OFDM;
+ }
+ 
+ static u32 ath9k_hw_mac_to_usec(struct ath_hal *ah, u32 clks)
+ {
+-	struct ath9k_channel *chan = ah->ah_curchan;
+-
+-	if (chan && IS_CHAN_HT40(chan))
++	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
++	if (conf_is_ht40(conf))
+ 		return ath9k_hw_mac_usec(ah, clks) / 2;
+ 	else
+ 		return ath9k_hw_mac_usec(ah, clks);
+@@ -66,34 +69,23 @@ static u32 ath9k_hw_mac_to_usec(struct ath_hal *ah, u32 clks)
+ 
+ static u32 ath9k_hw_mac_clks(struct ath_hal *ah, u32 usecs)
+ {
+-	if (ah->ah_curchan != NULL)
+-		return usecs * CLOCK_RATE[ath9k_hw_chan2wmode(ah,
+-			ah->ah_curchan)];
+-	else
+-		return usecs * CLOCK_RATE[ATH9K_MODE_11B];
++	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
++	if (!ah->ah_curchan) /* should really check for CCK instead */
++		return usecs *ATH9K_CLOCK_RATE_CCK;
++	if (conf->channel->band == IEEE80211_BAND_2GHZ)
++		return usecs *ATH9K_CLOCK_RATE_2GHZ_OFDM;
++	return usecs *ATH9K_CLOCK_RATE_5GHZ_OFDM;
+ }
+ 
+ static u32 ath9k_hw_mac_to_clks(struct ath_hal *ah, u32 usecs)
+ {
+-	struct ath9k_channel *chan = ah->ah_curchan;
+-
+-	if (chan && IS_CHAN_HT40(chan))
++	struct ieee80211_conf *conf = &ah->ah_sc->hw->conf;
++	if (conf_is_ht40(conf))
+ 		return ath9k_hw_mac_clks(ah, usecs) * 2;
+ 	else
+ 		return ath9k_hw_mac_clks(ah, usecs);
+ }
+ 
+-enum wireless_mode ath9k_hw_chan2wmode(struct ath_hal *ah,
+-			       const struct ath9k_channel *chan)
+-{
+-	if (IS_CHAN_B(chan))
+-		return ATH9K_MODE_11B;
+-	if (IS_CHAN_G(chan))
+-		return ATH9K_MODE_11G;
+-
+-	return ATH9K_MODE_11A;
+-}
+-
+ bool ath9k_hw_wait(struct ath_hal *ah, u32 reg, u32 mask, u32 val)
+ {
+ 	int i;
+-- 
+1.6.1.rc3.51.g5832d
 
