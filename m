@@ -1,38 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:21861 "EHLO mga03.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:22680 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751826AbYLIGmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 01:42:50 -0500
-Subject: Re: [PATCH ] iwlwifi: fix build error (iwl-rx.c).
-From: reinette chatre <reinette.chatre@intel.com>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"m.sujith@gmail.com" <m.sujith@gmail.com>
-In-Reply-To: <eb3ff54b0812082237v35bdd49jbce0ad59c218bc26@mail.gmail.com>
-References: <eb3ff54b0812082237v35bdd49jbce0ad59c218bc26@mail.gmail.com>
+	id S1751588AbYLWX70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 18:59:26 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 15:59:26 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v3 10/16] mac80211: no need for ht.enabled
+Date: Tue, 23 Dec 2008 15:58:45 -0800
+Message-ID: <1230076731-22946-11-git-send-email-lrodriguez@atheros.com> (sfid-20081224_010846_874121_4ED844F9)
+In-Reply-To: <1230076731-22946-10-git-send-email-lrodriguez@atheros.com>
+References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-5-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-6-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-7-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-8-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-9-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-10-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Mon, 08 Dec 2008 22:43:51 -0800
-Message-Id: <1228805031.30670.11.camel@rc-desk> (sfid-20081209_074253_876327_BBD04494)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-12-08 at 22:37 -0800, Rami Rosen wrote:
-> This patch adds #ifdef CONFIG_IWLWIFI_DEBUG in iwl_rx_reply_rx() method
-> in iwlwifi/iwl-rx.c) to avoid build error.
-> ,caused by commit c778f6d6b339bb4981d5d2dd8716286f756b8474.
-> 
-> (wireless-testing tree.)
-> 
-> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+We can simply use conf_is_ht() check where needed.
 
-This fix works also. 
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |    1 -
+ net/mac80211/ht.c      |    3 +--
+ net/mac80211/main.c    |   10 ----------
+ net/mac80211/mlme.c    |    1 -
+ 4 files changed, 1 insertions(+), 14 deletions(-)
 
-Thank you very much
-
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-
-Reinette
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ee2b75e..b51caab 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -509,7 +509,6 @@ static inline int __deprecated __IEEE80211_CONF_SHORT_SLOT_TIME(void)
+ #define IEEE80211_CONF_SHORT_SLOT_TIME (__IEEE80211_CONF_SHORT_SLOT_TIME())
+ 
+ struct ieee80211_ht_conf {
+-	bool enabled;
+ 	enum nl80211_channel_type channel_type;
+ };
+ 
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 55bfe48..6314289 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -130,11 +130,10 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
+-	ht_changed = local->hw.conf.ht.enabled != enable_ht ||
++	ht_changed = conf_is_ht(&local->hw.conf) != enable_ht ||
+ 		     channel_type != local->hw.conf.ht.channel_type;
+ 
+ 	local->oper_channel_type = channel_type;
+-	local->hw.conf.ht.enabled = enable_ht;
+ 
+ 	if (ht_changed)
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_HT);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 24b1436..a6cb480 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -211,16 +211,6 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ 	    channel_type != local->hw.conf.ht.channel_type) {
+ 		local->hw.conf.channel = chan;
+ 		local->hw.conf.ht.channel_type = channel_type;
+-		switch (channel_type) {
+-		case NL80211_CHAN_NO_HT:
+-			local->hw.conf.ht.enabled = false;
+-			break;
+-		case NL80211_CHAN_HT20:
+-		case NL80211_CHAN_HT40MINUS:
+-		case NL80211_CHAN_HT40PLUS:
+-			local->hw.conf.ht.enabled = true;
+-			break;
+-		}
+ 		changed |= IEEE80211_CONF_CHANGE_CHANNEL;
+ 	}
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e317c6d..d108c12 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -907,7 +907,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	rcu_read_unlock();
+ 
+-	local->hw.conf.ht.enabled = false;
+ 	local->oper_channel_type = NL80211_CHAN_NO_HT;
+ 	config_changed |= IEEE80211_CONF_CHANGE_HT;
+ 
+-- 
+1.6.1.rc3.51.g5832d
 
