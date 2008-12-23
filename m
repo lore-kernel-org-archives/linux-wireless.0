@@ -1,53 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65408 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753386AbYLSO1s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 09:27:48 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2008 06:27:48 -0800
-Date: Fri, 19 Dec 2008 19:55:49 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>
-Subject: Re: [PATCH] [RFC] mac80211: Disable HT negotiation with TKIP/WEP as
-	pairwise cipher
-Message-ID: <20081219142549.GA22031@vasanth-lnx.users.atheros.com> (sfid-20081219_152752_453632_3878D052)
-References: <1229692235-21734-1-git-send-email-vasanth@atheros.com> <1229692655.3601.74.camel@johannes.berg>
+Received: from cp-out8.libero.it ([212.52.84.108]:58185 "EHLO
+	cp-out8.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbYLWAcs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 19:32:48 -0500
+Received: from [192.168.1.102] (151.48.31.222) by cp-out8.libero.it (8.5.016.1)
+        id 4946B30E0100C8EF for linux-wireless@vger.kernel.org; Tue, 23 Dec 2008 01:32:46 +0100
+From: Fabio Rossi <rossi.f@inwind.it>
+To: linux-wireless@vger.kernel.org
+Subject: p54: ad-hoc mode doesn't work
+Date: Tue, 23 Dec 2008 01:32:21 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1229692655.3601.74.camel@johannes.berg>
+Message-Id: <200812230132.21839.rossi.f@inwind.it> (sfid-20081223_013252_632570_21B6AE47)
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 19, 2008 at 06:47:34PM +0530, Johannes Berg wrote:
-> On Fri, 2008-12-19 at 18:40 +0530, Vasanthakumar Thiagarajan wrote:
-> > IEEE802.11n does not allow TKIP/WEP as pairwise cipher in HT mode.
-> > Connect in non-ht mode if either of these ciphers is cofigured as
-> > pairwise.
+I was trying to test the ad-hoc mode with my wireless nic (p54 driver, latest 
+wireless-testing git) but I get the following error result:
 
-> >  net/mac80211/ieee80211_i.h |    1 +
-> >  net/mac80211/mlme.c        |    9 ++++++++-
-> >  net/mac80211/wext.c        |    5 ++++-
-> >  3 files changed, 13 insertions(+), 2 deletions(-)
-> 
-> Needs to touch cfg.c too, I think? 
+# iwconfig wlan0 mode ad-hoc
+Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlan0 ; Operation not supported.
 
-I think you are referring to populating ucast_cipher in 
-add_key() hook in cfg.c but we need the pairwise cipher before
-starting the association in HT mode.
+The documentation page on linuxwireless.org states that the ad-hoc mode should 
+be supported: what's wrong?
 
->I'd also prefer to avoid using the
-> wext constants throughout mac80211.
-
-ok.
-> 
-> johannes
-
-Thanks for your comments.
-
-Vasanth
-
-
+Thank you,
+Fabio
