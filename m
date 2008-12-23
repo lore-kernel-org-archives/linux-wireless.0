@@ -1,45 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:47907 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752017AbYLJSJX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 13:09:23 -0500
-Date: Wed, 10 Dec 2008 18:09:18 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	hmh@hmh.eng.br
-Subject: Re: [RFC] b43: rework rfkill code
-Message-ID: <20081210180918.GA14782@srcf.ucam.org> (sfid-20081210_190926_668063_F283BFF1)
-References: <20081210150935.GA10927@srcf.ucam.org> <1228929529.15837.34.camel@johannes.berg> <1228929820.15837.40.camel@johannes.berg> <200812101831.13526.mb@bu3sch.de> <1228930643.15837.48.camel@johannes.berg> <20081210175102.GA14282@srcf.ucam.org> <1228932343.15837.57.camel@johannes.berg>
+Received: from mail.atheros.com ([12.36.123.2]:22666 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751370AbYLWX7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 18:59:10 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 15:59:10 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v3 04/16] ath9k: Rename ath_setcurmode() to ath_cache_conf_rate()
+Date: Tue, 23 Dec 2008 15:58:39 -0800
+Message-ID: <1230076731-22946-5-git-send-email-lrodriguez@atheros.com> (sfid-20081224_005914_714782_8D9CD70A)
+In-Reply-To: <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
+References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1228932343.15837.57.camel@johannes.berg>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 10, 2008 at 07:05:43PM +0100, Johannes Berg wrote:
+ath_setcurmode() is a bit misleading, all we are doing is
+caching the rate for the corresponding configuration we
+are using.
 
-> Does the wireless driver get the notification about this from the
-> hardware, like it would if this was a real physical switch?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-Yes.
-
-> Then it's probably pretty simple: provide a rfkill struct from the 
-> driver that updates hard-kill and provide a second rfkill struct for 
-> the platform device that doesn't get hard-killed, but also provide a 
-> soft-kill input form the platform device. That way, you can toggle 
-> that button, but you can also software-enable the platform rfkill 
-> device and that in turn re-enables the wifi-rfkill "hw" switch device.
-
-Right. That's prety close to the current situation.
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 28d9de1..8127257 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -59,7 +59,8 @@ static void bus_read_cachesize(struct ath_softc *sc, int *csz)
+ 		*csz = DEFAULT_CACHELINE >> 2;   /* Use the default size */
+ }
  
-> If we need to tie them together in software it gets more complicated
-> though.
-
-I think we can avoid that, thankfully.
-
+-static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
++static void ath_cache_conf_rate(struct ath_softc *sc,
++				struct ieee80211_conf *conf)
+ {
+ 	switch (conf->channel->band) {
+ 	case IEEE80211_BAND_2GHZ:
+@@ -91,6 +92,7 @@ static void ath_setcurmode(struct ath_softc *sc, struct ieee80211_conf *conf)
+ 			  sc->hw_rate_table[ATH9K_MODE_11A];
+ 		break;
+ 	default:
++		BUG_ON(1);
+ 		break;
+ 	}
+ }
+@@ -316,7 +318,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 			return -EIO;
+ 		}
+ 
+-		ath_setcurmode(sc, &hw->conf);
++		ath_cache_conf_rate(sc, &hw->conf);
+ 		ath_update_txpow(sc);
+ 		ath9k_hw_set_interrupts(ah, sc->sc_imask);
+ 	}
+@@ -1649,7 +1651,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	 * that changes the channel so update any state that
+ 	 * might change as a result.
+ 	 */
+-	ath_setcurmode(sc, &hw->conf);
++	ath_cache_conf_rate(sc, &hw->conf);
+ 
+ 	ath_update_txpow(sc);
+ 
+@@ -1946,7 +1948,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	    !sc->sc_config.swBeaconProcess)
+ 		sc->sc_imask |= ATH9K_INT_TIM;
+ 
+-	ath_setcurmode(sc, &hw->conf);
++	ath_cache_conf_rate(sc, &hw->conf);
+ 
+ 	sc->sc_flags &= ~SC_OP_INVALID;
+ 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.6.1.rc3.51.g5832d
+
