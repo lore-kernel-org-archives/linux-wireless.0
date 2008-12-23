@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:63933 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752895AbYLNPOE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Dec 2008 10:14:04 -0500
-Message-ID: <3f9a31f40812140714n7e58e0efgbe0f5bdc40214edf@mail.gmail.com> (sfid-20081214_161411_745872_93005475)
-Date: Sun, 14 Dec 2008 20:44:02 +0530
-From: "Jaswinder Singh" <jaswinderlinux@gmail.com>
-To: Sujith <m.sujith@gmail.com>
-Subject: Re: BUG - ath9k keep on disconnecting in 2.6.28-rc8
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	lrodriguez@atheros.com, jmalinen@atheros.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-In-Reply-To: <18756.48950.20615.440764@localhost.localdomain>
+Received: from c60.cesmail.net ([216.154.195.49]:61312 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750732AbYLWFAL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 00:00:11 -0500
+Subject: [PATCH] crda: use strerror() to report error code verbosely
+To: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Tue, 23 Dec 2008 00:00:07 -0500
+Message-ID: <20081223050006.3710.98311.stgit@ct.roinet.com> (sfid-20081223_060018_312821_FD12EA72)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <3f9a31f40812132354k6f9e7b80o30d3236687dffba0@mail.gmail.com>
-	 <18756.48950.20615.440764@localhost.localdomain>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Sujith,
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ crda.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-On Sun, Dec 14, 2008 at 1:39 PM, Sujith <m.sujith@gmail.com> wrote:
->
-> A number of updates have gone into the wireless-testing tree.
-> You can use that tree or compat-wireless to get the latest driver
-> and check if the problem persists.
->
-
-It seems wireless-testing tree fixed my ath9k problem, I am quite
-happy with it :-)
-
-I am still checking ath9k by using wireless-testing tree with
-different ways and let you know If I face more problems.
-
-Thanks for your help.
-
-Jaswinder Singh.
+diff --git a/crda.c b/crda.c
+index afc5df1..fe2766b 100644
+--- a/crda.c
++++ b/crda.c
+@@ -6,6 +6,7 @@
+ 
+ #include <errno.h>
+ #include <stdio.h>
++#include <string.h>
+ #include <sys/mman.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
+@@ -297,7 +298,8 @@ int main(int argc, char **argv)
+ 	r = nl_send_auto_complete(nlstate.nl_handle, msg);
+ 
+ 	if (r < 0) {
+-		fprintf(stderr, "Failed to send regulatory request: %d\n", r);
++		fprintf(stderr, "Failed to send regulatory request: %s\n",
++			strerror(-r));
+ 		goto cb_out;
+ 	}
+ 
+@@ -309,7 +311,7 @@ int main(int argc, char **argv)
+ 		r = nl_wait_for_ack(nlstate.nl_handle);
+ 		if (r < 0) {
+ 			fprintf(stderr, "Failed to set regulatory domain: "
+-				"%d\n", r);
++				"%s\n", strerror(-r));
+ 			goto cb_out;
+ 		}
+ 	}
