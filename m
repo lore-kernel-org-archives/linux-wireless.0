@@ -1,36 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-147-71.gdrpmi.dsl-w.verizon.net ([71.115.147.71]:42205
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751700AbYLMAKI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 19:10:08 -0500
-Message-ID: <4942FD59.8020401@erley.org> (sfid-20081213_011012_201934_47206B25)
-Date: Fri, 12 Dec 2008 19:10:01 -0500
-From: pat-lkml <pat-lkml@erley.org>
+Received: from mail.atheros.com ([12.36.123.2]:22694 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751740AbYLWX7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 18:59:39 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 15:59:39 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v3 15/16] ath9k: remove superfluous check on changing channel
+Date: Tue, 23 Dec 2008 15:58:50 -0800
+Message-ID: <1230076731-22946-16-git-send-email-lrodriguez@atheros.com> (sfid-20081224_010846_259738_6EC63E0A)
+In-Reply-To: <1230076731-22946-15-git-send-email-lrodriguez@atheros.com>
+References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-5-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-6-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-7-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-8-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-9-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-10-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-11-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-12-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-13-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-14-git-send-email-lrodriguez@atheros.com>
+ <1230076731-22946-15-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Userspace tools: Roadmap?
-References: <1228692546.8826.1288759933@webmail.messagingengine.com>	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>	 <1228778295.10662.1288975589@webmail.messagingengine.com>	 <1228778801.22164.156.camel@johannes.berg>  <493DB351.6000103@erley.org>	 <1228780960.22164.162.camel@johannes.berg>  <4941EF69.5040108@erley.org>	 <1229099080.14423.15.camel@dv> <1229119118.3572.6.camel@johannes.berg>	 <4942E7A4.3050206@erley.org> <1229121535.3565.4.camel@johannes.berg>	 <4942F867.5020203@erley.org> <1229126725.3565.30.camel@johannes.berg>
-In-Reply-To: <1229126725.3565.30.camel@johannes.berg>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Fri, 2008-12-12 at 18:48 -0500, pat-lkml wrote:
->> This converts iw to use libnl-2, and adds compatibility with libnl-1.
->> There is not currently a good way to detect the libnl version during
->> compilation, as the versioning in the netlink/version.h is defined as
->> a
->> string "2.0" rather than a major and a minor number, so we must detect
->> it in the Makefile.
->>
->> Signed-off-by: Pat Erley <pat-lkml@erley.org>
-> 
-> Ok, I've committed a slightly different version of this (corrected the
-> type, and made the compat code static inlines), can you verify it still
-> works against 2.0?
-> 
-> johannes
-Yep, works fine with 2.0
+When we try to change the channel in ath9k its because
+either the configuration indicates we *have* changed
+channels or HT configuration has changed. In both cases
+we want to do a reset. Either way mac80211 will inform us
+when we want to actually change the channel so trust those
+calls.
+
+Although in the patch it may seem as I am doing more code
+changes I am not, all I am doing is removing the initial
+branch conditional and shifting the code to the left.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   97 +++++++++++++++++-------------------
+ 1 files changed, 46 insertions(+), 51 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 99de021..6d1a1c2 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -268,61 +268,56 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 	if (sc->sc_flags & SC_OP_INVALID)
+ 		return -EIO;
+ 
+-	if (hchan->channel != sc->sc_ah->ah_curchan->channel ||
+-	    hchan->channelFlags != sc->sc_ah->ah_curchan->channelFlags ||
+-	    (sc->sc_flags & SC_OP_CHAINMASK_UPDATE) ||
+-	    (sc->sc_flags & SC_OP_FULL_RESET)) {
+-		/*
+-		 * This is only performed if the channel settings have
+-		 * actually changed.
+-		 *
+-		 * To switch channels clear any pending DMA operations;
+-		 * wait long enough for the RX fifo to drain, reset the
+-		 * hardware at the new frequency, and then re-enable
+-		 * the relevant bits of the h/w.
+-		 */
+-		ath9k_hw_set_interrupts(ah, 0);
+-		ath_draintxq(sc, false);
+-		stopped = ath_stoprecv(sc);
++	/*
++	 * This is only performed if the channel settings have
++	 * actually changed.
++	 *
++	 * To switch channels clear any pending DMA operations;
++	 * wait long enough for the RX fifo to drain, reset the
++	 * hardware at the new frequency, and then re-enable
++	 * the relevant bits of the h/w.
++	 */
++	ath9k_hw_set_interrupts(ah, 0);
++	ath_draintxq(sc, false);
++	stopped = ath_stoprecv(sc);
+ 
+-		/* XXX: do not flush receive queue here. We don't want
+-		 * to flush data frames already in queue because of
+-		 * changing channel. */
++	/* XXX: do not flush receive queue here. We don't want
++	 * to flush data frames already in queue because of
++	 * changing channel. */
+ 
+-		if (!stopped || (sc->sc_flags & SC_OP_FULL_RESET))
+-			fastcc = false;
++	if (!stopped || (sc->sc_flags & SC_OP_FULL_RESET))
++		fastcc = false;
+ 
+-		DPRINTF(sc, ATH_DBG_CONFIG,
+-			"(%u MHz) -> (%u MHz), chanwidth: %d\n",
+-			sc->sc_ah->ah_curchan->channel,
+-			channel->center_freq, sc->tx_chan_width);
++	DPRINTF(sc, ATH_DBG_CONFIG,
++		"(%u MHz) -> (%u MHz), chanwidth: %d\n",
++		sc->sc_ah->ah_curchan->channel,
++		channel->center_freq, sc->tx_chan_width);
+ 
+-		spin_lock_bh(&sc->sc_resetlock);
++	spin_lock_bh(&sc->sc_resetlock);
+ 
+-		r = ath9k_hw_reset(ah, hchan, fastcc);
+-		if (r) {
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Unable to reset channel (%u Mhz) "
+-				"reset status %u\n",
+-				channel->center_freq, r);
+-			spin_unlock_bh(&sc->sc_resetlock);
+-			return r;
+-		}
++	r = ath9k_hw_reset(ah, hchan, fastcc);
++	if (r) {
++		DPRINTF(sc, ATH_DBG_FATAL,
++			"Unable to reset channel (%u Mhz) "
++			"reset status %u\n",
++			channel->center_freq, r);
+ 		spin_unlock_bh(&sc->sc_resetlock);
++		return r;
++	}
++	spin_unlock_bh(&sc->sc_resetlock);
+ 
+-		sc->sc_flags &= ~SC_OP_CHAINMASK_UPDATE;
+-		sc->sc_flags &= ~SC_OP_FULL_RESET;
+-
+-		if (ath_startrecv(sc) != 0) {
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Unable to restart recv logic\n");
+-			return -EIO;
+-		}
++	sc->sc_flags &= ~SC_OP_CHAINMASK_UPDATE;
++	sc->sc_flags &= ~SC_OP_FULL_RESET;
+ 
+-		ath_cache_conf_rate(sc, &hw->conf);
+-		ath_update_txpow(sc);
+-		ath9k_hw_set_interrupts(ah, sc->sc_imask);
++	if (ath_startrecv(sc) != 0) {
++		DPRINTF(sc, ATH_DBG_FATAL,
++			"Unable to restart recv logic\n");
++		return -EIO;
+ 	}
++
++	ath_cache_conf_rate(sc, &hw->conf);
++	ath_update_txpow(sc);
++	ath9k_hw_set_interrupts(ah, sc->sc_imask);
+ 	return 0;
+ }
+ 
+-- 
+1.6.1.rc3.51.g5832d
+
