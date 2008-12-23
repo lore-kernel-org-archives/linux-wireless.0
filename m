@@ -1,106 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26942 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752688AbYLJFvb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 00:51:31 -0500
-Subject: Re: [Ipw2100-devel] [PATCH] ipw2200: rework scan handling while
-	associated
-From: Zhu Yi <yi.zhu@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>
-In-Reply-To: <1228296794.2558.324.camel@debian.sh.intel.com>
-References: <200811261805.39953.helmut.schaa@gmail.com>
-	 <200811281031.04996.helmut.schaa@gmail.com>
-	 <1228100318.2558.152.camel@debian.sh.intel.com>
-	 <200812011110.02974.helmut.schaa@gmail.com>
-	 <1228296794.2558.324.camel@debian.sh.intel.com>
-Content-Type: text/plain
-Date: Wed, 10 Dec 2008 13:51:29 +0800
-Message-Id: <1228888289.2558.585.camel@debian.sh.intel.com> (sfid-20081210_065135_585868_6329C27D)
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.225]:55022 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750847AbYLVPKz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2008 10:10:55 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so1943872rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2008 07:10:54 -0800 (PST)
+Date: Mon, 22 Dec 2008 20:44:24 -0800
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: Enhancements to dynamic power save.
+Message-ID: <20081223044424.GC11534@myhost.users.atheros.com> (sfid-20081222_161107_710545_E957B4A1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-03 at 17:33 +0800, Zhu Yi wrote:
-> On Mon, 2008-12-01 at 18:10 +0800, Helmut Schaa wrote:
-> > That only happens while associated. Scanning while not associated
-> > works like
-> > a charm.
-> > 
-> > Here are some more informations:
-> > If I load the unmodified module with debug=0x3FFF I get the following
-> > log
-> > when triggering a scan while associated:
-> > 
-> > ipw2200: U ipw_wx_set_scan Start scan
-> > 00000000 03 00 00 00 0D 24 28 2C  30 34 38 3C 40 95 99 9D   .....$(,
-> > 048<@...
-> > 00000010 A1 A5 4A 02 03 04 05 06  07 08 09 0A 0B 00 00
-> > 00   ..J..... ........
-> > 00000020 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00
-> > 00   ........ ........
-> > 00000030 00 00 00 00 00 00 00 00  00 00 03 33 31 11 13
-> > 33   ........ ...31..3
-> > 00000040 33 03 33 33 33 33 30 00  00 00 00 00 00 00 00 00
-> > 3.33330. ........
-> > 00000050 00 00 00 00 00 00 00 00  78 00 14 00 14 00 14 00   ........
-> > x.......
-> > martian source 255.255.255.255 from 149.44.170.156, on dev eth1
-> > ll header: ff:ff:ff:ff:ff:ff:00:19:99:28:58:5b:08:00
-> > ipw2200: I ipw_rx_notification type = 12 (46 bytes)
-> > ipw2200: I ipw_rx_notification Scan result for channel 36
-> > ipw2200: I ipw_rx_notification type = 12 (46 bytes)
-> > ipw2200: I ipw_rx_notification Scan result for channel 40
-> > ipw2200: I ipw_rx_notification type = 12 (46 bytes)
-> > ipw2200: I ipw_rx_notification Scan result for channel 44
-> > ipw2200: I ipw_rx_notification type = 25 (4 bytes)
-> > ipw2200: I ipw_rx_notification type = 12 (46 bytes)
-> > ipw2200: I ipw_rx_notification Scan result for channel 48
-> > 
-> > The channels 36-48 are active 11a channels. The next channel would be
-> > 52 which
-> > is a passive channel.
-> > 
-> > martian source 255.255.255.255 from 149.44.170.66, on dev eth1
-> > ll header: ff:ff:ff:ff:ff:ff:00:0e:0c:aa:5c:c5:08:00
-> > ipw2200: I ipw_rx_notification type = 25 (4 bytes)
-> > ipw2200: I ipw_rx_notification type = 25 (4 bytes)
-> > ipw2200: I ipw_rx_notification type = 25 (4 bytes)
-> > ipw2200: I ipw_rx_notification type = 25 (4 bytes)
-> > ipw2200: I ipw_rx_notification type = 25 (4 bytes)
-> > ipw2200: I ipw_rx_notification type = 25 (4 bytes)
-> > ipw2200: I ipw_rx_notification type = 17 (8 bytes)
-> > ipw2200: I ipw_handle_missed_beacon Aborting scan with missed beacon.
-> > ipw2200: I ipw_handle_missed_beacon Missed beacon: 1
-> > 
-> > Aha, the firmware noticed a beacon miss before the scan watchdog
-> > restarts the firmware (the log is without timestamps, sorry).
-> > 
-> > ipw2200: I ipw_rx_notification type = 13 (4 bytes)
-> > ipw2200: I ipw_rx_notification Scan completed: type 1, 5 channels, 2
-> > status
-> > 
-> > Status 2 -> Scan aborted.
-> 
-> We will look at this.
+This patch enables mac80211 to send a null frame and also to
+check for tim in the beacon if power save is enabled.
 
-Sorry for the late reply.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/mlme.c        |   41 ++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/scan.c        |    2 +-
+ net/mac80211/wext.c        |   13 +++++++++----
+ 4 files changed, 53 insertions(+), 6 deletions(-)
 
-We look at the firmware. If the dwell time is set longer than the time
-remaining for firmware to switch back before DTIM TBTT, the firmware
-will discard this request without feeding back any notifications. So if
-we set passive dwell to 120, it is possible the scan request is ignored
-by firmware (assume beacon interval is 100, DTIM for every other
-beacon). But the firmware is not stuck in this case, it just won't send
-us scan notifications any more.
-
-So your patch is correct. Can you please remove the scan watchdog part
-and resend it?
-
-Thanks,
--yi
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f3eec98..2038498 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -986,6 +986,9 @@ u64 ieee80211_mandatory_rates(struct ieee80211_local *local,
+ void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
+ void ieee80211_dynamic_ps_disable_work(struct work_struct *work);
+ void ieee80211_dynamic_ps_timer(unsigned long data);
++void ieee80211_send_nullfunc(struct ieee80211_local *local,
++			     struct ieee80211_sub_if_data *sdata,
++			     int powersave);
+ 
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 				     enum queue_stop_reason reason);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b23e62b..ca22718 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -568,6 +568,30 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 	}
+ }
+ 
++static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
++{
++	u8 mask;
++	u8 index, indexn1, indexn2;
++	struct ieee80211_tim_ie *tim = (struct ieee80211_tim_ie *) elems->tim;
++
++	aid &= 0x3fff;
++	index = aid / 8;
++	mask  = 1 << (aid & 7);
++
++	if (tim->bitmap_ctrl & 0x01)
++		*is_mc = true;
++
++	indexn1 = tim->bitmap_ctrl & 0xfe;
++	indexn2 = elems->tim_len + indexn1 - 4;
++
++	if (index < indexn1 || index > indexn2)
++		return false;
++
++	index -= indexn1;
++
++	return !!(tim->virtual_map[index] & mask);
++}
++
+ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+ 					   u16 capab, bool erp_valid, u8 erp)
+ {
+@@ -752,6 +776,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+ 				  msecs_to_jiffies(local->dynamic_ps_timeout));
+ 		else {
++			ieee80211_send_nullfunc(local, sdata, 1);
+ 			conf->flags |= IEEE80211_CONF_PS;
+ 			ieee80211_hw_config(local,
+ 					    IEEE80211_CONF_CHANGE_PS);
+@@ -1729,7 +1754,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee802_11_elems elems;
+ 	struct ieee80211_local *local = sdata->local;
+ 	u32 changed = 0;
+-	bool erp_valid;
++	bool erp_valid, directed_tim, is_mc = false;
+ 	u8 erp_value = 0;
+ 
+ 	/* Process beacon from the current BSS */
+@@ -1752,6 +1777,18 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_sta_wmm_params(local, ifsta, elems.wmm_param,
+ 				 elems.wmm_param_len);
+ 
++	if (!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS)) {
++		directed_tim = check_tim(&elems, ifsta->aid, &is_mc);
++
++		if (directed_tim || is_mc) {
++			if (local->hw.conf.flags && IEEE80211_CONF_PS) {
++				local->hw.conf.flags &= ~IEEE80211_CONF_PS;
++				ieee80211_hw_config(local,
++						IEEE80211_CONF_CHANGE_PS);
++				ieee80211_send_nullfunc(local, sdata, 0);
++			}
++		}
++	}
+ 
+ 	if (elems.erp_info && elems.erp_info_len >= 1) {
+ 		erp_valid = true;
+@@ -2651,10 +2688,12 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local,
+ 			     dynamic_ps_enable_work);
++	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
+ 
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS)
+ 		return;
+ 
++	ieee80211_send_nullfunc(local, sdata, 1);
+ 	local->hw.conf.flags |= IEEE80211_CONF_PS;
+ 
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index f5c7c33..a2caeed 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -395,7 +395,7 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
+ 	return RX_QUEUED;
+ }
+ 
+-static void ieee80211_send_nullfunc(struct ieee80211_local *local,
++void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 				    struct ieee80211_sub_if_data *sdata,
+ 				    int powersave)
+ {
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 673c5d7..6470614 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -871,12 +871,17 @@ set:
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+ 				  msecs_to_jiffies(local->dynamic_ps_timeout));
+ 		else {
+-			if (local->powersave)
++			if (local->powersave) {
++				ieee80211_send_nullfunc(local, sdata, 1);
+ 				conf->flags |= IEEE80211_CONF_PS;
+-			else
++				ret = ieee80211_hw_config(local,
++						IEEE80211_CONF_CHANGE_PS);
++			} else {
+ 				conf->flags &= ~IEEE80211_CONF_PS;
+-			ret = ieee80211_hw_config(local,
+-					IEEE80211_CONF_CHANGE_PS);
++				ret = ieee80211_hw_config(local,
++						IEEE80211_CONF_CHANGE_PS);
++				ieee80211_send_nullfunc(local, sdata, 0);
++			}
+ 		}
+ 	}
+ 
+-- 
+1.6.0.1
 
