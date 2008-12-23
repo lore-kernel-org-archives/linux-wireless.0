@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:17041 "EHLO mga01.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:9658 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750900AbYLWC5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 21:57:08 -0500
-Subject: Re: [PATCH 10/10] iwl3945: use rx queue management infrastructure
-	from iwlcore
-From: Zhu Yi <yi.zhu@intel.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-In-Reply-To: <87r640s3ph.fsf@litku.valot.fi>
-References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-3-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-4-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-5-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-6-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-7-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-8-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-9-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-10-git-send-email-yi.zhu@intel.com>
-	 <1229916683-9772-11-git-send-email-yi.zhu@intel.com>
-	 <87r640s3ph.fsf@litku.valot.fi>
-Content-Type: text/plain
-Date: Tue, 23 Dec 2008 10:58:37 +0800
-Message-Id: <1230001118.2570.35.camel@debian.sh.intel.com> (sfid-20081223_035712_934818_23F45DB0)
-Mime-Version: 1.0
+	id S1751648AbYLWGUV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 01:20:21 -0500
+Message-ID: <20081223012037.otw1xe4tc084coc8-cebfxv@webmail.spamcop.net> (sfid-20081223_072033_345576_AF58A0A0)
+Date: Tue, 23 Dec 2008 01:20:37 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] crda: use strerror() to report error code verbosely
+References: <20081223050006.3710.98311.stgit@ct.roinet.com>
+	<43e72e890812222127k60ade0f1u21263800f9374f52@mail.gmail.com>
+	<20081223004945.3437vudqtc0ogcsk-cebfxv@webmail.spamcop.net>
+	<43e72e890812222157s5d410d39ye9ac0840eef5331a@mail.gmail.com>
+In-Reply-To: <43e72e890812222157s5d410d39ye9ac0840eef5331a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-12-22 at 22:07 +0800, Kalle Valo wrote:
-> Yes, ifconfig up works but now iwlist wlan0 scan crashes. I just
-> tested this once due to lack of time.
-> 
-> I hope I get my wifi working before Christmas ;)
+Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
 
-http://marc.info/?l=linux-wireless&m=123000088608330&w=2 should fix the
-problem. Thanks a lot for your testing.
+> You don't need to build this unless you want to define your own rules.
 
-Thanks,
--yi
+I see.
 
+> And if you do and want to use the signature stuff you need to copy the
+> RSA public key into pubkeys/ directory of CRDA. Did you try that?
+
+No, I just wanted to install the most current regulatory database.   
+Perhaps the error message should be more clear.
+
+With both CONFIG_CFG80211_REG_DEBUG, CONFIG_WIRELESS_OLD_REGULATORY  
+enabled and modular mac80211 and cfg80211, regdomain is set correctly  
+from udev:
+
+[    7.642548] cfg80211: Using static regulatory domain info
+[    7.642551] cfg80211: Regulatory domain: US
+[    8.697261] cfg80211: Regulatory domain changed to country: US
+
+However, changing it to anything doesn't work:
+
+[root@ct proski]# COUNTRY=00 crda
+Failed to set regulatory domain: -22
+[root@ct proski]# COUNTRY=US crda
+Failed to set regulatory domain: -22
+[root@ct proski]# COUNTRY=DE crda
+Failed to set regulatory domain: -22
+[root@ct proski]#
+
+Maybe it can only be set once?  But then -EBUSY would be more reasonable.
+
+-- 
+Regards,
+Pavel Roskin
