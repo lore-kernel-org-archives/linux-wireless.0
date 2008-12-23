@@ -1,117 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934AbYLHNBX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 08:01:23 -0500
-Subject: [PATCH] cfg80211: fix nl80211 frequency handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 08 Dec 2008 12:39:04 +0100
-Message-Id: <1228736344.22164.76.camel@johannes.berg> (sfid-20081208_140126_023286_1FCBCC4C)
-Mime-Version: 1.0
+Received: from mx2.redhat.com ([66.187.237.31]:39957 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751041AbYLWOMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 09:12:07 -0500
+Date: Tue, 23 Dec 2008 12:11:55 -0200
+From: Arnaldo Carvalho de Melo <acme@redhat.com>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, simon@thekelleys.org.uk,
+	jussi.kivilinna@mbnet.fi, pe1rxq@amsat.org
+Subject: Re: [PATCH] wireless: Add channel/frequency conversions to
+	ieee80211.h
+Message-ID: <20081223141155.GB6981@ghostprotocols.net> (sfid-20081223_151213_909169_A72AF7BF)
+References: <1230041018-13341-1-git-send-email-kilroyd@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1230041018-13341-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix two small bugs with HT frequency setting:
- * HT is accepted even when the driver is incapable
- * HT40 is accepted when the driver cannot do 40 MHz
- (both on the selected band)
+Em Tue, Dec 23, 2008 at 02:03:38PM +0000, David Kilroy escreveu:
+> Added mappings for FHSS, DSSS and OFDM channels - with macros to point
+> HR DSSS and ERP to the DSSS mappings. Currently just static inline
+> functions.
+> 
+> Use the new functions in the older fullmac drivers. This eliminates a
+> number of const static buffers and removes a couple of range checks that
+> are now redundant.
+> 
+> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 
-Also simplify the code a little.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/nl80211.c |   40 ++++++++++++++++++++++++++--------------
- 1 file changed, 26 insertions(+), 14 deletions(-)
-
---- everything.orig/net/wireless/nl80211.c	2008-12-08 12:20:26.000000000 +0100
-+++ everything/net/wireless/nl80211.c	2008-12-08 12:38:11.000000000 +0100
-@@ -365,6 +365,7 @@ static int nl80211_set_wiphy(struct sk_b
- 		enum nl80211_sec_chan_offset sec_chan_offset =
- 			NL80211_SEC_CHAN_NO_HT;
- 		struct ieee80211_channel *chan;
-+		struct ieee80211_sta_ht_cap *ht_cap;
- 		u32 freq, sec_freq;
- 
- 		if (!rdev->ops->set_channel) {
-@@ -372,26 +373,25 @@ static int nl80211_set_wiphy(struct sk_b
- 			goto bad_res;
- 		}
- 
-+		result = -EINVAL;
-+
- 		if (info->attrs[NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET]) {
--			sec_chan_offset = nla_get_u32(
--				info->attrs[
-+			sec_chan_offset = nla_get_u32(info->attrs[
- 					NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET]);
- 			if (sec_chan_offset != NL80211_SEC_CHAN_NO_HT &&
- 			    sec_chan_offset != NL80211_SEC_CHAN_DISABLED &&
- 			    sec_chan_offset != NL80211_SEC_CHAN_BELOW &&
--			    sec_chan_offset != NL80211_SEC_CHAN_ABOVE) {
--				result = -EINVAL;
-+			    sec_chan_offset != NL80211_SEC_CHAN_ABOVE)
- 				goto bad_res;
--			}
- 		}
- 
- 		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
- 		chan = ieee80211_get_channel(&rdev->wiphy, freq);
--		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED) {
--			/* Primary channel not allowed */
--			result = -EINVAL;
-+
-+		/* Primary channel not allowed */
-+		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
- 			goto bad_res;
--		}
-+
- 		if (sec_chan_offset == NL80211_SEC_CHAN_BELOW)
- 			sec_freq = freq - 20;
- 		else if (sec_chan_offset == NL80211_SEC_CHAN_ABOVE)
-@@ -399,14 +399,26 @@ static int nl80211_set_wiphy(struct sk_b
- 		else
- 			sec_freq = 0;
- 
-+		ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
-+
-+		/* no HT capabilities */
-+		if (sec_chan_offset != NL80211_SEC_CHAN_NO_HT &&
-+		    !ht_cap->ht_supported)
-+			goto bad_res;
-+
- 		if (sec_freq) {
- 			struct ieee80211_channel *schan;
-+
-+			/* no 40 MHz capabilities */
-+			if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
-+			    (ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT))
-+				goto bad_res;
-+
- 			schan = ieee80211_get_channel(&rdev->wiphy, sec_freq);
--			if (!schan || schan->flags & IEEE80211_CHAN_DISABLED) {
--				/* Secondary channel not allowed */
--				result = -EINVAL;
-+
-+			/* Secondary channel not allowed */
-+			if (!schan || schan->flags & IEEE80211_CHAN_DISABLED)
- 				goto bad_res;
--			}
- 		}
- 
- 		result = rdev->ops->set_channel(&rdev->wiphy, chan,
-@@ -416,7 +428,7 @@ static int nl80211_set_wiphy(struct sk_b
- 	}
- 
- 
--bad_res:
-+ bad_res:
- 	cfg80211_put_dev(rdev);
- 	return result;
- }
-
-
+Acked-by: Arnaldo Carvalho de Melo <acme@redhat.com>
