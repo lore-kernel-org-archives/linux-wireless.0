@@ -1,66 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43840 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756353AbYLKRDg (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:44277 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbYLWUZn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 12:03:36 -0500
-Subject: Re: [PATCH 1/2] mac80211: misc cleanups
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Vladimir Koutny <vlado@ksp.sk>
-In-Reply-To: <eb3ff54b0812110400y2305c5abp9955a325b3372215@mail.gmail.com> (sfid-20081211_130026_587546_9D11E66D)
-References: <eb3ff54b0812110400y2305c5abp9955a325b3372215@mail.gmail.com>
-	 (sfid-20081211_130026_587546_9D11E66D)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Jrnie/sTZN0MoY3z+9G1"
-Date: Thu, 11 Dec 2008 15:28:23 +0100
-Message-Id: <1229005703.8081.12.camel@johannes.berg> (sfid-20081211_180339_897731_F9B98626)
-Mime-Version: 1.0
+	Tue, 23 Dec 2008 15:25:43 -0500
+Received: by bwz14 with SMTP id 14so10498501bwz.13
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 12:25:40 -0800 (PST)
+Message-ID: <314b98fa0812231225x2bf6f3faudeedfa65adbc1cb0@mail.gmail.com> (sfid-20081223_212547_007635_C0F92DC9)
+Date: Tue, 23 Dec 2008 12:25:40 -0800
+From: "Colin McCabe" <colin@cozybit.com>
+To: "Peter Wippich" <pewi@gw-instruments.de>
+Subject: Re: [PATCH 3/3] libertas: if_spi, driver for libertas GSPI devices
+Cc: "Andrey Yurovsky" <andrey@cozybit.com>,
+	"Harald Welte" <laforge@gnumonks.org>,
+	linux-wireless@vger.kernel.org,
+	"Stefan Schmidt" <stefan@datenfreihafen.org>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <Pine.LNX.4.63.0812191745460.18864@redbean.intranet.gw-instruments.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1229398052-27465-1-git-send-email-colin@cozybit.com>
+	 <1229398052-27465-2-git-send-email-colin@cozybit.com>
+	 <1229398052-27465-3-git-send-email-colin@cozybit.com>
+	 <1229398052-27465-4-git-send-email-colin@cozybit.com>
+	 <20081219160836.GQ9285@prithivi.gnumonks.org>
+	 <45e8e6c40812190831k7796e240w55c47d7ca6417437@mail.gmail.com>
+	 <Pine.LNX.4.63.0812191745460.18864@redbean.intranet.gw-instruments.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Peter,
 
---=-Jrnie/sTZN0MoY3z+9G1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If you look in include/linux/spi/spi.h, there is a comment that says:
+/*
+ * likely need more hooks for more protocol options affecting how
+ * the controller talks to each chip, like:
+ *  - memory packing (12 bit samples into low bits, others zeroed)
+ *  - priority
+ *  - drop chipselect after each word
+ *  - chipselect delays
+ *  - ...
+ */
 
-On Thu, 2008-12-11 at 14:00 +0200, Rami Rosen wrote:
+So the chip select features that our hardware needs (don't drop
+chipselect after each word, busy-waits during the transaction) are not
+yet part of the generic SPI layer. But they are "TBD."
 
-> -			rx->sta =3D ieee80211_ibss_add_sta(sdata, rx->skb,
-> -						bssid, hdr->addr2,
-> -						BIT(rx->status->rate_idx));
-> +			rx->sta =3D ieee80211_ibss_add_sta(sdata, bssid, hdr->addr2,
-> +				BIT(rx->status->rate_idx));
+I agree that we should move them into the generic SPI layer. Maybe
+I'll come up with a patch to the SPI layer itself to do exactly that,
+once I get back from vacation.
 
-Unrelated to this patch (it's good), shouldn't we take into account the
-mandatory rate set here? If, for instance, we're receiving an 11MBit
-frame then we can be sure the sender supports 1 and 11, and if we're
-receiving a 48 MBit frame then we know already it supports [1, 2, 5.5,
-11 if 2.4 GHz], 6, 12, 24 and 48.
+cheers,
+Colin.
 
-johannes
 
---=-Jrnie/sTZN0MoY3z+9G1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQSODAAoJEKVg1VMiehFYfyMQAMOFRFXi4JVoOemNqq84y3Ql
-bq5z+QaVvN4TcAnfvxxzes04eKNEBG7StFlr9Vfsd3ZP7P8nz0GS0EwRe9EUQqA3
-g4iF65QGHkk8eT5CGB7kPKra7Bc/rqmfvuzbK5NwycYAzvv3JZXedCrYRAOhcFLp
-6R0eQQMJgK8DZp5mdQB4y+XPnP5rgbx8Gl5yzvLLSrtJjigVcsKzeqMaO8Q2junU
-o3EKVZV9ZvSfqFz4/tpi8B2tvcvp6Tvoa/csl6rqNK2h1OEKx8H5cWHEZsCuPZ5a
-IlutkvFkFWKty80w3gNmgOmO1aByLKZ17Gud4rYEV2OYVPFrtHvcA03XlSJP3c7g
-u3zQ3KdOjP74O/VVvw57nTCGSbez1FKwOsVME95zTRKhdgamEzhacZyR9QKKUE7z
-yvf6r/kVjqo9AaHer98Iuli17xHc6ACBxUTZ2/qO4hbTW47fw/CdiASMiKojzAhS
-AMrRYX3rtvtrQ0d7Q6N+A1ppFucJmTfzyF8dfXfKBTO6uhY8ztLfXen+NYtH6+3Q
-qPh7jD3aZBfQTs8XfiZCuV9E9iXmOOppJl3rOFZFKlxBNM7xvOs3ZY47a0pZKsmS
-NmN3c5oa4RdbX0BsHAmR8YtAYK8RzML1ELDS5QKVpSaEsCdGcWZzEBlZAQQfE01I
-KVt4fkYdTkLz9+f07Ctw
-=0Pux
------END PGP SIGNATURE-----
-
---=-Jrnie/sTZN0MoY3z+9G1--
-
+On Fri, Dec 19, 2008 at 8:57 AM, Peter Wippich <pewi@gw-instruments.de> wrote:
+>
+> Hi Andrey,
+>
+>> The '8686 requires us to assert CS# and then hold it asserted for the
+>> entire transaction.  The transaction is an arbitrary number of SPI
+>> transfers.  Most host controllers cannot do this (they'll toggle CS#
+>> between individual transactions) and therefore we chose to not use the
+>> controller CS# line and use a GPIO.  Can you suggest a different way
+>> to do this given the current SPI framework?
+>
+> This can be handled by the SPI driver. See pxa2xx_spi.c as an example.
+> Look for cs_control() to get the picture.....
+> Perhaps this should go to the general driver and not be handled by the
+> chip specific code. Seems a problem general enough.
+>
+> Chears,
+>
+> Peter
+>
