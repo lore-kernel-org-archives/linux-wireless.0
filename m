@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:63541 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835AbYL2RwU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 12:52:20 -0500
-Received: by bwz14 with SMTP id 14so16446738bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 09:52:18 -0800 (PST)
-Message-ID: <69e28c910812290944j10d4477fsab61acdfc79d8c15@mail.gmail.com> (sfid-20081229_185225_177475_B59B1AEB)
-Date: Mon, 29 Dec 2008 18:44:58 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Delphi Real Estate" <Info@delphi-real-estate.com>
-Subject: Re: Setting 'n' or 'a' Mode, and WPA2?
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <200812290531.47379.Info@delphi-real-estate.com>
+Received: from bu3sch.de ([62.75.166.246]:34803 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751394AbYLXOby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2008 09:31:54 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] b43: detect N PHY revision/radio
+Date: Wed, 24 Dec 2008 15:30:52 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1230128800.4566.3.camel@johannes>
+In-Reply-To: <1230128800.4566.3.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200812270706.56478.Info@delphi-real-estate.com>
-	 <1230556794.3116.36.camel@johannes>
-	 <200812290531.47379.Info@delphi-real-estate.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812241530.52838.mb@bu3sch.de> (sfid-20081224_153206_432088_195B256B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 29, 2008 at 2:31 PM, Delphi Real Estate
-<Info@delphi-real-estate.com> wrote:
->
-> On Monday 29 December 2008 5:19:54 Johannes Berg wrote:
->> Umm, no. A single card can only be on one band at a time.
->
-> OK, so you're saying that only the 'n' Draft2 routers can do that?  That this firmware for the 4965AGN does not have Draft2 features?
->
-> Does it have Draft1 features?
->
-> How do you set only 5GHz 'n' mode?  WPA2?
+On Wednesday 24 December 2008 15:26:40 Johannes Berg wrote:
+> Does nothing unless you enable the hidden N PHY config.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  drivers/net/wireless/b43/main.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-No. An access point can operate on both bands at the same time, but
-not a wireless client - a client must choose _one_ band from the
-several ones offered by the AP and operate on that band.
+ACK, please apply to 2.6.29
+
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-12-24 15:00:50.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/b43/main.c	2008-12-24 15:25:03.000000000 +0100
+> @@ -3758,7 +3758,7 @@ static int b43_phy_versioning(struct b43
+>  		break;
+>  #ifdef CONFIG_B43_NPHY
+>  	case B43_PHYTYPE_N:
+> -		if (phy_rev > 1)
+> +		if (phy_rev > 4)
+>  			unsupported = 1;
+>  		break;
+>  #endif
+> @@ -3811,7 +3811,7 @@ static int b43_phy_versioning(struct b43
+>  			unsupported = 1;
+>  		break;
+>  	case B43_PHYTYPE_N:
+> -		if (radio_ver != 0x2055)
+> +		if (radio_ver != 0x2055 && radio_ver != 0x2056)
+>  			unsupported = 1;
+>  		break;
+>  	default:
+> 
+> 
+> 
+> 
+
+
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Greetings, Michael.
