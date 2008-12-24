@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:48310 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751530AbYL3QPl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 11:15:41 -0500
-Cc: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
-	berlin@berlin.freifunk.net
-Content-Type: text/plain; charset=iso-8859-1
-Date: Tue, 30 Dec 2008 17:15:39 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <20081230113714.GA31451@jm.kir.nu>
-Message-ID: <20081230161539.184750@gmx.net> (sfid-20081230_171546_161437_5C87B929)
+Received: from rv-out-0506.google.com ([209.85.198.238]:25213 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012AbYLWMzQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2008 07:55:16 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so2358283rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 04:55:15 -0800 (PST)
+Date: Tue, 23 Dec 2008 18:28:34 -0800
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: A couple of fixes to dynamic power save.
+Message-ID: <20081224022834.GB5225@myhost.users.atheros.com> (sfid-20081223_135521_844993_73842A99)
 MIME-Version: 1.0
-References: <20081230025651.6500@gmx.net> <20081230113714.GA31451@jm.kir.nu>
-Subject: Re: mac80211 (ath9k, ath5k, etc.) set BSSID Patch
-To: Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Jouni!
+a) hw_config() should not be called from siwpower() for the drivers which do not support
+   dynamic powersave.
+b) IEEE80211_HW_NO_STACK_DYNAMIC_PS needs to be verified in set_associated() also before
+   enabling the power save timers.
 
-> This is not how IEEE 802.11 IBSS is supposed to work. If there are
-> issues in IBSS splits, merges, or timesync, I would consider fixes to
-> those to be preferred over hacks that hide the issues and cause
-> interoperability issues with standard compliant IBSS implementations.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/mlme.c |    3 ++-
+ net/mac80211/wext.c |    9 +++++----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-This breaks nothing. I think if you set your BSSID manually, you really=
- don't want that the driver changed it back. If you want this behavior,=
- you don't set it.
-Handle BSSID splits in a mile width city mesh network with 500 or more =
-nodes is impossible in a other way, I think. The standard was never wri=
-tten for that dimensions.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c75d0ea..b23e62b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -746,7 +746,8 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	bss_info_changed |= BSS_CHANGED_BASIC_RATES;
+ 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
+ 
+-	if (local->powersave) {
++	if (local->powersave &&
++			!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS)) {
+ 		if (local->dynamic_ps_timeout > 0)
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+ 				  msecs_to_jiffies(local->dynamic_ps_timeout));
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 7162d58..673c5d7 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -865,9 +865,9 @@ set:
+ 	local->powersave = ps;
+ 	local->dynamic_ps_timeout = timeout;
+ 
+-	if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
+-		if (!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS) &&
+-		    local->dynamic_ps_timeout > 0)
++	if (!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS) &&
++			(sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED)) {
++		if (local->dynamic_ps_timeout > 0)
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+ 				  msecs_to_jiffies(local->dynamic_ps_timeout));
+ 		else {
+@@ -875,8 +875,9 @@ set:
+ 				conf->flags |= IEEE80211_CONF_PS;
+ 			else
+ 				conf->flags &= ~IEEE80211_CONF_PS;
++			ret = ieee80211_hw_config(local,
++					IEEE80211_CONF_CHANGE_PS);
+ 		}
+-		ret = ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 	}
+ 
+ 	return ret;
+-- 
+1.6.0.1
 
-Besides it fixes a bug that driver want to try to merge with the same B=
-SSID, which is unnecessary and causes problems.
-
-See:
-http://wiki.villagetelco.org/index.php/Information_about_cell-id_splitt=
-ing%2C_stuck_beacons%2C_and_failed_IBSS_merges!#The_phenomenon_of_IBSS-=
-ID_cell_splits
-
-> Anyway, since I don't really care that much about IBSS
-
-We need it much here in the "Freifunk" mesh network of Berlin.
-
-> to actually start
-> using lots of time to fix problems there, I would not object to this
-> type of change as long it does not change the default behavior (i.e.,=
- by
-> default, mac80211 should operate in standard compliant manner) and th=
-e
-> users are not mislead to enable such a hack while still believing tha=
-t
-> their devices are operating in a standard IBSS.
-
-ACK
-
-Regards
-Alina
-
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
