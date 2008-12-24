@@ -1,162 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46833 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755929AbYLaPmi (ORCPT
+Received: from cp-out8.libero.it ([212.52.84.108]:58292 "EHLO
+	cp-out8.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193AbYLXR3U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 10:42:38 -0500
-Message-Id: <20081231154228.927953929@w1.fi> (sfid-20081231_164240_779905_F7A6AB2F)
-References: <20081231153834.840526845@w1.fi>
-Date: Wed, 31 Dec 2008 17:38:42 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [RFC 08/11] mac80211: 802.11w - SA Query processing
+	Wed, 24 Dec 2008 12:29:20 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: p54: ad-hoc mode doesn't work
+Date: Wed, 24 Dec 2008 18:28:49 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200812230132.21839.rossi.f@inwind.it> <1230072758.5692.2.camel@dv>
+In-Reply-To: <1230072758.5692.2.camel@dv>
+MIME-Version: 1.0
+Message-Id: <200812241828.49679.rossi.f@inwind.it> (sfid-20081224_182929_094717_66D4541B)
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Process SA Query Requests for client mode in mac80211. AP side
-processing of SA Query Response frames is in user space (hostapd).
+It seems strange to me, on the other PC I'm using the ath5k driver with a PCI 
+wireless NIC and the interface enters in ad-hoc mode without complaining 
+(CRDA is not installed).
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+I'll try to install also CRDA to see if something changes, maybe there is a 
+difference between the ath5k and p54 drivers.
 
+Thanks,
+Fabio
 
----
- include/linux/ieee80211.h |   14 +++++++++
- net/mac80211/rx.c         |   69 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 83 insertions(+)
+On Tuesday 23 December 2008, Pavel Roskin wrote:
 
---- wireless-testing.orig/include/linux/ieee80211.h	2008-12-31 17:04:36.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2008-12-31 17:15:01.000000000 +0200
-@@ -527,6 +527,8 @@ struct ieee80211_tim_ie {
- 	u8 virtual_map[0];
- } __attribute__ ((packed));
- 
-+#define WLAN_SA_QUERY_TR_ID_LEN 16
-+
- struct ieee80211_mgmt {
- 	__le16 frame_control;
- 	__le16 duration;
-@@ -646,6 +648,10 @@ struct ieee80211_mgmt {
- 					u8 action_code;
- 					u8 variable[0];
- 				} __attribute__((packed)) mesh_action;
-+				struct {
-+					u8 action;
-+					u8 trans_id[WLAN_SA_QUERY_TR_ID_LEN];
-+				} __attribute__ ((packed)) sa_query;
- 			} u;
- 		} __attribute__ ((packed)) action;
- 	} u;
-@@ -1041,6 +1047,7 @@ enum ieee80211_category {
- 	WLAN_CATEGORY_DLS = 2,
- 	WLAN_CATEGORY_BACK = 3,
- 	WLAN_CATEGORY_PUBLIC = 4,
-+	WLAN_CATEGORY_SA_QUERY = 8,
- 	WLAN_CATEGORY_WMM = 17,
- };
- 
-@@ -1129,6 +1136,13 @@ enum ieee80211_back_parties {
- 	WLAN_BACK_TIMER = 2,
- };
- 
-+/* SA Query action */
-+enum ieee80211_sa_query_action {
-+	WLAN_ACTION_SA_QUERY_REQUEST = 0,
-+	WLAN_ACTION_SA_QUERY_RESPONSE = 1,
-+};
-+
-+
- /* A-MSDU 802.11n */
- #define IEEE80211_QOS_CONTROL_A_MSDU_PRESENT 0x0080
- 
---- wireless-testing.orig/net/mac80211/rx.c	2008-12-31 17:06:31.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2008-12-31 17:17:04.000000000 +0200
-@@ -1635,6 +1635,57 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
- 	return RX_CONTINUE;
- }
- 
-+void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
-+				    struct ieee80211_mgmt *mgmt,
-+				    size_t len)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sk_buff *skb;
-+	struct ieee80211_mgmt *resp;
-+
-+	if (compare_ether_addr(mgmt->da, sdata->dev->dev_addr) != 0) {
-+		/* Not to own unicast address */
-+		return;
-+	}
-+
-+	if (compare_ether_addr(mgmt->sa, sdata->u.sta.bssid) != 0 ||
-+	    compare_ether_addr(mgmt->bssid, sdata->u.sta.bssid) != 0) {
-+		/* Not from the current AP. */
-+		return;
-+	}
-+
-+	if (sdata->u.sta.state == IEEE80211_STA_MLME_ASSOCIATE) {
-+		/* Association in progress; ignore SA Query */
-+		return;
-+	}
-+
-+	if (len < 24 + 1 + sizeof(resp->u.action.u.sa_query)) {
-+		/* Too short SA Query request frame */
-+		return;
-+	}
-+
-+	skb = dev_alloc_skb(sizeof(*resp) + local->hw.extra_tx_headroom);
-+	if (skb == NULL)
-+		return;
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+	resp = (struct ieee80211_mgmt *) skb_put(skb, 24);
-+	memset(resp, 0, 24);
-+	memcpy(resp->da, mgmt->sa, ETH_ALEN);
-+	memcpy(resp->sa, sdata->dev->dev_addr, ETH_ALEN);
-+	memcpy(resp->bssid, sdata->u.sta.bssid, ETH_ALEN);
-+	resp->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
-+	skb_put(skb, 1 + sizeof(resp->u.action.u.sa_query));
-+	resp->u.action.category = WLAN_CATEGORY_SA_QUERY;
-+	resp->u.action.u.sa_query.action = WLAN_ACTION_SA_QUERY_RESPONSE;
-+	memcpy(resp->u.action.u.sa_query.trans_id,
-+	       mgmt->u.action.u.sa_query.trans_id,
-+	       WLAN_SA_QUERY_TR_ID_LEN);
-+
-+	ieee80211_tx_skb(sdata, skb, 1);
-+}
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- {
-@@ -1691,6 +1742,24 @@ ieee80211_rx_h_action(struct ieee80211_r
- 			break;
- 		}
- 		break;
-+	case WLAN_CATEGORY_SA_QUERY:
-+		if (len < (IEEE80211_MIN_ACTION_SIZE +
-+			   sizeof(mgmt->u.action.u.sa_query)))
-+			return RX_DROP_MONITOR;
-+		switch (mgmt->u.action.u.sa_query.action) {
-+		case WLAN_ACTION_SA_QUERY_REQUEST:
-+			if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+				return RX_DROP_MONITOR;
-+			ieee80211_process_sa_query_req(sdata, mgmt, len);
-+			break;
-+		case WLAN_ACTION_SA_QUERY_RESPONSE:
-+			/*
-+			 * SA Query response is currently only used in AP mode
-+			 * and it is processed in user space.
-+			 */
-+			return RX_CONTINUE;
-+		}
-+		break;
- 	default:
- 		return RX_CONTINUE;
- 	}
-
--- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> Once CRDA is installed, use "iw" to set your regulatory domain.  Without
+> CRDA, the kernel uses very conservative rules that don't allow beaconing
+> and thus the ad-hoc mode.
