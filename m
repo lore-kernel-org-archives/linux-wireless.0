@@ -1,27 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:59788 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751463AbYLQQ7m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 11:59:42 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] p54usb: bring first generation devices back to life
-Date: Wed, 17 Dec 2008 17:59:41 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200812171204.43946.chunkeey@web.de> <20081217161805.GC12679@tuxdriver.com>
-In-Reply-To: <20081217161805.GC12679@tuxdriver.com>
+Received: from mgw1.diku.dk ([130.225.96.91]:50506 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751158AbYLXPYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2008 10:24:08 -0500
+Date: Wed, 24 Dec 2008 16:24:05 +0100 (CET)
+From: Julia Lawall <julia@diku.dk>
+To: gregkh@suse.de, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 3/3] drivers/staging/rt2860,rt2870: Correct use of ! and &
+Message-ID: <Pine.LNX.4.64.0812241623380.5475@ask.diku.dk> (sfid-20081224_162415_491198_E894D52F)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812171759.42066.chunkeey@web.de> (sfid-20081217_175945_834007_F70427EB)
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 17 December 2008 17:18:05 John W. Linville wrote:
-> AFAICT, the "p54: fix memory management" is not in wireless-2.6.
-> Perhaps you meant wireless-next-2.6?
+From: Julia Lawall <julia@diku.dk>
 
-and you're right! That said, maybe a few more days and we might see a new release
-and everything moves up.
+IW_ENCODE_MODE is 0xF000 and thus !erq->flags & IW_ENCODE_MODE is always 0.
+I assume that !(erq->flags & IW_ENCODE_MODE) was intended.
 
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
+
+// <smpl>
+@@ expression E; constant C; @@
+(
+  !E & !C
+|
+- !E & C
++ !(E & C)
+)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/staging/rt2860/sta_ioctl.c |    2 +-
+ drivers/staging/rt2870/sta_ioctl.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff -u -p a/drivers/staging/rt2860/sta_ioctl.c b/drivers/staging/rt2860/sta_ioctl.c
+--- a/drivers/staging/rt2860/sta_ioctl.c
++++ b/drivers/staging/rt2860/sta_ioctl.c
+@@ -1756,7 +1756,7 @@ int rt_ioctl_siwencode(struct net_device
+             }
+         else
+ 			/* Don't complain if only change the mode */
+-			if(!erq->flags & IW_ENCODE_MODE) {
++			if (!(erq->flags & IW_ENCODE_MODE)) {
+ 				return -EINVAL;
+ 		}
+ 	}
+diff -u -p a/drivers/staging/rt2870/sta_ioctl.c b/drivers/staging/rt2870/sta_ioctl.c
+--- a/drivers/staging/rt2870/sta_ioctl.c
++++ b/drivers/staging/rt2870/sta_ioctl.c
+@@ -1776,7 +1776,7 @@ int rt_ioctl_siwencode(struct net_device
+             }
+         else
+ 			/* Don't complain if only change the mode */
+-			if(!erq->flags & IW_ENCODE_MODE) {
++			if (!(erq->flags & IW_ENCODE_MODE)) {
+ 				return -EINVAL;
+ 		}
+ 	}
