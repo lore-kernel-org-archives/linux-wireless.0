@@ -1,253 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:49213 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752787AbYLHWNd (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:24849 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843AbYLWNFp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 17:13:33 -0500
-Date: Mon, 08 Dec 2008 16:13:26 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
+	Tue, 23 Dec 2008 08:05:45 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so2361965rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 05:05:44 -0800 (PST)
+Date: Tue, 23 Dec 2008 18:39:02 -0800
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Subject: [RFC/RFT] rtl8187: Use usb anchor facilities to manage urbs
-Message-ID: <493d9c06.XJn1gNkms3JqErgr%Larry.Finger@lwfinger.net> (sfid-20081208_231340_624314_D3A845FF)
+Subject: [PATCH] mac80211: Enhancements to dynamic power save.
+Message-ID: <20081224023902.GC5225@myhost.users.atheros.com> (sfid-20081223_140549_273317_2E9B2A40)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When SLUB debugging is enabled in the kernel, and the boot command includes
-the option "slub_debug=P", rtl8187 encounters a GPF due to a read-after-free
-of a urb.
+This patch enables mac80211 to send a null frame and also to
+check for tim in the beacon if dynamic power save is enabled.
 
-Following the example of changes in p54usb to fix the same problem, the code
-has been modified to use the usb_anchor_urb() method, which avoids the problem.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 ---
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/mlme.c        |   41 ++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/scan.c        |    2 +-
+ net/mac80211/wext.c        |   13 +++++++++----
+ 4 files changed, 53 insertions(+), 6 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-@@ -99,6 +99,7 @@ struct rtl8187_priv {
- 	struct ieee80211_supported_band band;
- 	struct usb_device *udev;
- 	u32 rx_conf;
-+	struct usb_anchor anchored;
- 	u16 txpwr_base;
- 	u8 asic_rev;
- 	u8 is_rtl8187b;
-@@ -115,7 +116,6 @@ struct rtl8187_priv {
- 	u8 aifsn[4];
- 	struct {
- 		__le64 buf;
--		struct urb *urb;
- 		struct sk_buff_head queue;
- 	} b_tx_status;
- };
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -99,7 +99,6 @@ static const struct ieee80211_channel rt
- static void rtl8187_iowrite_async_cb(struct urb *urb)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f3eec98..2038498 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -986,6 +986,9 @@ u64 ieee80211_mandatory_rates(struct ieee80211_local *local,
+ void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
+ void ieee80211_dynamic_ps_disable_work(struct work_struct *work);
+ void ieee80211_dynamic_ps_timer(unsigned long data);
++void ieee80211_send_nullfunc(struct ieee80211_local *local,
++			     struct ieee80211_sub_if_data *sdata,
++			     int powersave);
+ 
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 				     enum queue_stop_reason reason);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b23e62b..ca22718 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -568,6 +568,30 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 	}
+ }
+ 
++static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
++{
++	u8 mask;
++	u8 index, indexn1, indexn2;
++	struct ieee80211_tim_ie *tim = (struct ieee80211_tim_ie *) elems->tim;
++
++	aid &= 0x3fff;
++	index = aid / 8;
++	mask  = 1 << (aid & 7);
++
++	if (tim->bitmap_ctrl & 0x01)
++		*is_mc = true;
++
++	indexn1 = tim->bitmap_ctrl & 0xfe;
++	indexn2 = elems->tim_len + indexn1 - 4;
++
++	if (index < indexn1 || index > indexn2)
++		return false;
++
++	index -= indexn1;
++
++	return !!(tim->virtual_map[index] & mask);
++}
++
+ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+ 					   u16 capab, bool erp_valid, u8 erp)
  {
- 	kfree(urb->context);
--	usb_free_urb(urb);
- }
+@@ -752,6 +776,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+ 				  msecs_to_jiffies(local->dynamic_ps_timeout));
+ 		else {
++			ieee80211_send_nullfunc(local, sdata, 1);
+ 			conf->flags |= IEEE80211_CONF_PS;
+ 			ieee80211_hw_config(local,
+ 					    IEEE80211_CONF_CHANGE_PS);
+@@ -1729,7 +1754,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee802_11_elems elems;
+ 	struct ieee80211_local *local = sdata->local;
+ 	u32 changed = 0;
+-	bool erp_valid;
++	bool erp_valid, directed_tim, is_mc = false;
+ 	u8 erp_value = 0;
  
- static void rtl8187_iowrite_async(struct rtl8187_priv *priv, __le16 addr,
-@@ -136,11 +135,13 @@ static void rtl8187_iowrite_async(struct
- 	usb_fill_control_urb(urb, priv->udev, usb_sndctrlpipe(priv->udev, 0),
- 			     (unsigned char *)dr, buf, len,
- 			     rtl8187_iowrite_async_cb, buf);
-+	usb_anchor_urb(urb, &priv->anchored);
- 	rc = usb_submit_urb(urb, GFP_ATOMIC);
- 	if (rc < 0) {
- 		kfree(buf);
--		usb_free_urb(urb);
-+		usb_unanchor_urb(urb);
- 	}
-+	usb_free_urb(urb);
- }
+ 	/* Process beacon from the current BSS */
+@@ -1752,6 +1777,18 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_sta_wmm_params(local, ifsta, elems.wmm_param,
+ 				 elems.wmm_param_len);
  
- static inline void rtl818x_iowrite32_async(struct rtl8187_priv *priv,
-@@ -172,7 +173,6 @@ static void rtl8187_tx_cb(struct urb *ur
- 	struct ieee80211_hw *hw = info->rate_driver_data[0];
- 	struct rtl8187_priv *priv = hw->priv;
- 
--	usb_free_urb(info->rate_driver_data[1]);
- 	skb_pull(skb, priv->is_rtl8187b ? sizeof(struct rtl8187b_tx_hdr) :
- 					  sizeof(struct rtl8187_tx_hdr));
- 	ieee80211_tx_info_clear_status(info);
-@@ -273,11 +273,13 @@ static int rtl8187_tx(struct ieee80211_h
- 
- 	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, ep),
- 			  buf, skb->len, rtl8187_tx_cb, skb);
-+	usb_anchor_urb(urb, &priv->anchored);
- 	rc = usb_submit_urb(urb, GFP_ATOMIC);
- 	if (rc < 0) {
--		usb_free_urb(urb);
-+		usb_unanchor_urb(urb);
- 		kfree_skb(skb);
- 	}
-+	usb_free_urb(urb);
- 
- 	return 0;
- }
-@@ -301,14 +303,13 @@ static void rtl8187_rx_cb(struct urb *ur
- 		return;
- 	}
- 	spin_unlock(&priv->rx_queue.lock);
-+	skb_put(skb, urb->actual_length);
- 
- 	if (unlikely(urb->status)) {
--		usb_free_urb(urb);
- 		dev_kfree_skb_irq(skb);
- 		return;
- 	}
- 
--	skb_put(skb, urb->actual_length);
- 	if (!priv->is_rtl8187b) {
- 		struct rtl8187_rx_hdr *hdr =
- 			(typeof(hdr))(skb_tail_pointer(skb) - sizeof(*hdr));
-@@ -361,7 +362,6 @@ static void rtl8187_rx_cb(struct urb *ur
- 
- 	skb = dev_alloc_skb(RTL8187_MAX_RX);
- 	if (unlikely(!skb)) {
--		usb_free_urb(urb);
- 		/* TODO check rx queue length and refill *somewhere* */
- 		return;
- 	}
-@@ -373,24 +373,30 @@ static void rtl8187_rx_cb(struct urb *ur
- 	urb->context = skb;
- 	skb_queue_tail(&priv->rx_queue, skb);
- 
--	usb_submit_urb(urb, GFP_ATOMIC);
-+	usb_anchor_urb(urb, &priv->anchored);
-+	if (usb_submit_urb(urb, GFP_ATOMIC))
-+		usb_unanchor_urb(urb);
- }
- 
- static int rtl8187_init_urbs(struct ieee80211_hw *dev)
- {
- 	struct rtl8187_priv *priv = dev->priv;
--	struct urb *entry;
-+	struct urb *entry = NULL;
- 	struct sk_buff *skb;
- 	struct rtl8187_rx_info *info;
-+	int ret = 0;
- 
- 	while (skb_queue_len(&priv->rx_queue) < 8) {
- 		skb = __dev_alloc_skb(RTL8187_MAX_RX, GFP_KERNEL);
--		if (!skb)
--			break;
-+		if (!skb) {
-+			ret = -ENOMEM;
-+			goto err;
++	if (!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS)) {
++		directed_tim = check_tim(&elems, ifsta->aid, &is_mc);
++
++		if (directed_tim || is_mc) {
++			if (local->hw.conf.flags && IEEE80211_CONF_PS) {
++				local->hw.conf.flags &= ~IEEE80211_CONF_PS;
++				ieee80211_hw_config(local,
++						IEEE80211_CONF_CHANGE_PS);
++				ieee80211_send_nullfunc(local, sdata, 0);
++			}
 +		}
- 		entry = usb_alloc_urb(0, GFP_KERNEL);
- 		if (!entry) {
- 			kfree_skb(skb);
--			break;
-+			ret = -ENOMEM;
-+			goto err;
++	}
+ 
+ 	if (elems.erp_info && elems.erp_info_len >= 1) {
+ 		erp_valid = true;
+@@ -2651,10 +2688,12 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local,
+ 			     dynamic_ps_enable_work);
++	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
+ 
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS)
+ 		return;
+ 
++	ieee80211_send_nullfunc(local, sdata, 1);
+ 	local->hw.conf.flags |= IEEE80211_CONF_PS;
+ 
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index f5c7c33..a2caeed 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -395,7 +395,7 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
+ 	return RX_QUEUED;
+ }
+ 
+-static void ieee80211_send_nullfunc(struct ieee80211_local *local,
++void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 				    struct ieee80211_sub_if_data *sdata,
+ 				    int powersave)
+ {
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 673c5d7..6470614 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -871,12 +871,17 @@ set:
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+ 				  msecs_to_jiffies(local->dynamic_ps_timeout));
+ 		else {
+-			if (local->powersave)
++			if (local->powersave) {
++				ieee80211_send_nullfunc(local, sdata, 1);
+ 				conf->flags |= IEEE80211_CONF_PS;
+-			else
++				ret = ieee80211_hw_config(local,
++						IEEE80211_CONF_CHANGE_PS);
++			} else {
+ 				conf->flags &= ~IEEE80211_CONF_PS;
+-			ret = ieee80211_hw_config(local,
+-					IEEE80211_CONF_CHANGE_PS);
++				ret = ieee80211_hw_config(local,
++						IEEE80211_CONF_CHANGE_PS);
++				ieee80211_send_nullfunc(local, sdata, 0);
++			}
  		}
- 		usb_fill_bulk_urb(entry, priv->udev,
- 				  usb_rcvbulkpipe(priv->udev,
-@@ -401,10 +407,22 @@ static int rtl8187_init_urbs(struct ieee
- 		info->urb = entry;
- 		info->dev = dev;
- 		skb_queue_tail(&priv->rx_queue, skb);
--		usb_submit_urb(entry, GFP_KERNEL);
-+		usb_anchor_urb(entry, &priv->anchored);
-+		ret = usb_submit_urb(entry, GFP_KERNEL);
-+		if (ret) {
-+			skb_unlink(skb, &priv->rx_queue);
-+			usb_unanchor_urb(entry);
-+			goto err;
-+		}
-+		usb_free_urb(entry);
- 	}
-+	return ret;
- 
--	return 0;
-+err:
-+	usb_free_urb(entry);
-+	kfree_skb(skb);
-+	usb_kill_anchored_urbs(&priv->anchored);
-+	return ret;
- }
- 
- static void rtl8187b_status_cb(struct urb *urb)
-@@ -415,7 +433,6 @@ static void rtl8187b_status_cb(struct ur
- 	unsigned int cmd_type;
- 
- 	if (unlikely(urb->status)) {
--		usb_free_urb(urb);
- 		return;
  	}
  
-@@ -488,26 +505,32 @@ static void rtl8187b_status_cb(struct ur
- 		spin_unlock_irqrestore(&priv->b_tx_status.queue.lock, flags);
- 	}
- 
--	usb_submit_urb(urb, GFP_ATOMIC);
-+	usb_anchor_urb(urb, &priv->anchored);
-+	if (usb_submit_urb(urb, GFP_ATOMIC))
-+		usb_unanchor_urb(urb);
- }
- 
- static int rtl8187b_init_status_urb(struct ieee80211_hw *dev)
- {
- 	struct rtl8187_priv *priv = dev->priv;
- 	struct urb *entry;
-+	int ret = 0;
- 
- 	entry = usb_alloc_urb(0, GFP_KERNEL);
- 	if (!entry)
- 		return -ENOMEM;
--	priv->b_tx_status.urb = entry;
- 
- 	usb_fill_bulk_urb(entry, priv->udev, usb_rcvbulkpipe(priv->udev, 9),
- 			  &priv->b_tx_status.buf, sizeof(priv->b_tx_status.buf),
- 			  rtl8187b_status_cb, dev);
- 
--	usb_submit_urb(entry, GFP_KERNEL);
-+	usb_anchor_urb(entry, &priv->anchored);
-+	ret = usb_submit_urb(entry, GFP_KERNEL);
-+	if (ret)
-+		usb_unanchor_urb(entry);
-+	usb_free_urb(entry);
- 
--	return 0;
-+	return ret;
- }
- 
- static int rtl8187_cmd_reset(struct ieee80211_hw *dev)
-@@ -841,6 +864,9 @@ static int rtl8187_start(struct ieee8021
- 		return ret;
- 
- 	mutex_lock(&priv->conf_mutex);
-+
-+	init_usb_anchor(&priv->anchored);
-+
- 	if (priv->is_rtl8187b) {
- 		reg = RTL818X_RX_CONF_MGMT |
- 		      RTL818X_RX_CONF_DATA |
-@@ -936,12 +962,12 @@ static void rtl8187_stop(struct ieee8021
- 
- 	while ((skb = skb_dequeue(&priv->rx_queue))) {
- 		info = (struct rtl8187_rx_info *)skb->cb;
--		usb_kill_urb(info->urb);
- 		kfree_skb(skb);
- 	}
- 	while ((skb = skb_dequeue(&priv->b_tx_status.queue)))
- 		dev_kfree_skb_any(skb);
--	usb_kill_urb(priv->b_tx_status.urb);
-+
-+	usb_kill_anchored_urbs(&priv->anchored);
- 	mutex_unlock(&priv->conf_mutex);
- }
- 
+-- 
+1.6.0.1
+
