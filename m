@@ -1,157 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48124 "EHLO vs166246.vserver.de"
+Received: from mail.atheros.com ([12.36.123.2]:17158 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754601AbYLSV4E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 16:56:04 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: [PATCH] b43: Use 64bit atomic register access for TSF
-Date: Fri, 19 Dec 2008 22:51:57 +0100
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+	id S1751251AbYLXIZS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2008 03:25:18 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Dec 2008 00:25:18 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Fix tx power setting
+Date: Wed, 24 Dec 2008 13:53:11 +0530
+Message-ID: <1230106991-2972-1-git-send-email-vasanth@atheros.com> (sfid-20081224_092536_733825_D5B51B37)
 MIME-Version: 1.0
-Message-Id: <200812192251.57673.mb@bu3sch.de> (sfid-20081219_225622_592066_0BB31D6B)
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On modern b43 devices with core rev >=3, the hardware guarantees us an
-atomic 64bit read/write of the TSF, if we access the lower 32bits first.
+power_level in ieee80211_conf is being used for more than one
+purpose. It being used as user configured power limit and the
+final power limit given to the driver. By doing so, except very
+first time, the tx power limit is taken from min(chan->max_power,
+local->hw.conf.power_level) which is not what we want. This patch
+defines a new memeber in ieee80211_conf which is meant only for
+user configured power limit.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
+ include/net/mac80211.h |    2 ++
+ net/mac80211/main.c    |    4 ++--
+ net/mac80211/wext.c    |    5 ++---
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-For 2.6.29
-
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-12-19 21:17:44.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2008-12-19 22:19:22.000000000 +0100
-@@ -523,58 +523,26 @@ void b43_hf_write(struct b43_wldev *dev,
- 	hi = (value & 0xFFFF00000000ULL) >> 32;
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFLO, lo);
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFMI, mi);
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_HOSTFHI, hi);
- }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b3bd00a..153a8d1 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -548,6 +548,7 @@ enum ieee80211_conf_changed {
+  * @listen_interval: listen interval in units of beacon interval
+  * @flags: configuration flags defined above
+  * @power_level: requested transmit power (in dBm)
++ * @user_power_level: User configured transmit power (in dBm)
+  * @channel: the channel to tune to
+  * @ht: the HT configuration for the device
+  * @long_frame_max_tx_count: Maximum number of transmissions for a "long" frame
+@@ -561,6 +562,7 @@ struct ieee80211_conf {
+ 	int beacon_int;
+ 	u32 flags;
+ 	int power_level;
++	int user_power_level;
  
--void b43_tsf_read(struct b43_wldev *dev, u64 * tsf)
-+void b43_tsf_read(struct b43_wldev *dev, u64 *tsf)
- {
--	/* We need to be careful. As we read the TSF from multiple
--	 * registers, we should take care of register overflows.
--	 * In theory, the whole tsf read process should be atomic.
--	 * We try to be atomic here, by restaring the read process,
--	 * if any of the high registers changed (overflew).
--	 */
--	if (dev->dev->id.revision >= 3) {
--		u32 low, high, high2;
-+	u32 low, high;
+ 	u16 listen_interval;
+ 	bool radio_enabled;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 24b1436..8831e87 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -224,10 +224,10 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ 		changed |= IEEE80211_CONF_CHANGE_CHANNEL;
+ 	}
  
--		do {
--			high = b43_read32(dev, B43_MMIO_REV3PLUS_TSF_HIGH);
--			low = b43_read32(dev, B43_MMIO_REV3PLUS_TSF_LOW);
--			high2 = b43_read32(dev, B43_MMIO_REV3PLUS_TSF_HIGH);
--		} while (unlikely(high != high2));
--
--		*tsf = high;
--		*tsf <<= 32;
--		*tsf |= low;
--	} else {
--		u64 tmp;
--		u16 v0, v1, v2, v3;
--		u16 test1, test2, test3;
--
--		do {
--			v3 = b43_read16(dev, B43_MMIO_TSF_3);
--			v2 = b43_read16(dev, B43_MMIO_TSF_2);
--			v1 = b43_read16(dev, B43_MMIO_TSF_1);
--			v0 = b43_read16(dev, B43_MMIO_TSF_0);
--
--			test3 = b43_read16(dev, B43_MMIO_TSF_3);
--			test2 = b43_read16(dev, B43_MMIO_TSF_2);
--			test1 = b43_read16(dev, B43_MMIO_TSF_1);
--		} while (v3 != test3 || v2 != test2 || v1 != test1);
--
--		*tsf = v3;
--		*tsf <<= 48;
--		tmp = v2;
--		tmp <<= 32;
--		*tsf |= tmp;
--		tmp = v1;
--		tmp <<= 16;
--		*tsf |= tmp;
--		*tsf |= v0;
+-	if (!local->hw.conf.power_level)
++	if (!local->hw.conf.user_power_level)
+ 		power = chan->max_power;
+ 	else
+-		power = min(chan->max_power, local->hw.conf.power_level);
++		power = min(chan->max_power, local->hw.conf.user_power_level);
+ 	if (local->hw.conf.power_level != power) {
+ 		changed |= IEEE80211_CONF_CHANGE_POWER;
+ 		local->hw.conf.power_level = power;
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 48fc6b9..654041b 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -549,10 +549,9 @@ static int ieee80211_ioctl_siwtxpower(struct net_device *dev,
+ 	else /* Automatic power level setting */
+ 		new_power_level = chan->max_power;
+ 
+-	if (local->hw.conf.power_level != new_power_level) {
+-		local->hw.conf.power_level = new_power_level;
++	local->hw.conf.user_power_level = new_power_level;
++	if (local->hw.conf.power_level != new_power_level)
+ 		reconf_flags |= IEEE80211_CONF_CHANGE_POWER;
 -	}
-+	B43_WARN_ON(dev->dev->id.revision < 3);
-+
-+	/* The hardware guarantees us an atomic read, if we
-+	 * read the low register first. */
-+	low = b43_read32(dev, B43_MMIO_REV3PLUS_TSF_LOW);
-+	high = b43_read32(dev, B43_MMIO_REV3PLUS_TSF_HIGH);
-+
-+	*tsf = high;
-+	*tsf <<= 32;
-+	*tsf |= low;
- }
  
- static void b43_time_lock(struct b43_wldev *dev)
- {
- 	u32 macctl;
- 
-@@ -595,41 +563,24 @@ static void b43_time_unlock(struct b43_w
- 	/* Commit the write */
- 	b43_read32(dev, B43_MMIO_MACCTL);
- }
- 
- static void b43_tsf_write_locked(struct b43_wldev *dev, u64 tsf)
- {
--	/* Be careful with the in-progress timer.
--	 * First zero out the low register, so we have a full
--	 * register-overflow duration to complete the operation.
--	 */
--	if (dev->dev->id.revision >= 3) {
--		u32 lo = (tsf & 0x00000000FFFFFFFFULL);
--		u32 hi = (tsf & 0xFFFFFFFF00000000ULL) >> 32;
-+	u32 low, high;
- 
--		b43_write32(dev, B43_MMIO_REV3PLUS_TSF_LOW, 0);
--		mmiowb();
--		b43_write32(dev, B43_MMIO_REV3PLUS_TSF_HIGH, hi);
--		mmiowb();
--		b43_write32(dev, B43_MMIO_REV3PLUS_TSF_LOW, lo);
--	} else {
--		u16 v0 = (tsf & 0x000000000000FFFFULL);
--		u16 v1 = (tsf & 0x00000000FFFF0000ULL) >> 16;
--		u16 v2 = (tsf & 0x0000FFFF00000000ULL) >> 32;
--		u16 v3 = (tsf & 0xFFFF000000000000ULL) >> 48;
-+	B43_WARN_ON(dev->dev->id.revision < 3);
- 
--		b43_write16(dev, B43_MMIO_TSF_0, 0);
--		mmiowb();
--		b43_write16(dev, B43_MMIO_TSF_3, v3);
--		mmiowb();
--		b43_write16(dev, B43_MMIO_TSF_2, v2);
--		mmiowb();
--		b43_write16(dev, B43_MMIO_TSF_1, v1);
--		mmiowb();
--		b43_write16(dev, B43_MMIO_TSF_0, v0);
--	}
-+	low = tsf;
-+	high = (tsf >> 32);
-+	/* The hardware guarantees us an atomic write, if we
-+	 * write the low register first. */
-+	b43_write32(dev, B43_MMIO_REV3PLUS_TSF_LOW, low);
-+	mmiowb();
-+	b43_write32(dev, B43_MMIO_REV3PLUS_TSF_HIGH, high);
-+	mmiowb();
- }
- 
- void b43_tsf_write(struct b43_wldev *dev, u64 tsf)
- {
- 	b43_time_lock(dev);
- 	b43_tsf_write_locked(dev, tsf);
-
+ 	if (local->hw.conf.radio_enabled != !(data->txpower.disabled)) {
+ 		local->hw.conf.radio_enabled = !(data->txpower.disabled);
 -- 
-Greetings, Michael.
+1.5.5.1
+
