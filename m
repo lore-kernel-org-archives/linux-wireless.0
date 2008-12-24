@@ -1,63 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38428 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754377AbYLJRUo (ORCPT
+Received: from cp-out12.libero.it ([212.52.84.112]:34871 "EHLO
+	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbYLXVEu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 12:20:44 -0500
-Subject: Re: [PATCH] rfkill: strip pointless notifier chain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200812101801.35735.IvDoorn@gmail.com> (sfid-20081210_180139_130277_7A89B7B4)
-References: <1228927728.15837.10.camel@johannes.berg>
-	 <200812101801.35735.IvDoorn@gmail.com>
-	 (sfid-20081210_180139_130277_7A89B7B4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-evFmBbvvBXxNOBkdfla1"
-Date: Wed, 10 Dec 2008 18:20:09 +0100
-Message-Id: <1228929609.15837.36.camel@johannes.berg> (sfid-20081210_182046_981759_46ACF6C2)
-Mime-Version: 1.0
+	Wed, 24 Dec 2008 16:04:50 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: p54: ad-hoc mode doesn't work
+Date: Wed, 24 Dec 2008 22:03:22 +0100
+Cc: "Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
+References: <200812230132.21839.rossi.f@inwind.it> <200812241828.49679.rossi.f@inwind.it> <43e72e890812240940oa599bdds7db3682bfbf95a49@mail.gmail.com>
+In-Reply-To: <43e72e890812240940oa599bdds7db3682bfbf95a49@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <200812242203.22987.rossi.f@inwind.it> (sfid-20081224_220457_555311_C5E9675E)
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 24 December 2008, Luis R. Rodriguez wrote:
 
---=-evFmBbvvBXxNOBkdfla1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Most distributions are using >= 2.6.28 kernels with
+> CONFIG_WIRELESS_OLD_REGULATORY which means the US is the default
+> regulatory domain and its built statically into the kernel so the
+> values are used CRDA does not have to be queried. If CRDA is present
+> the regulatory domain is just updated with
+> CONFIG_WIRELESS_OLD_REGULATORY.
 
-On Wed, 2008-12-10 at 18:01 +0100, Ivo van Doorn wrote:
-> On Wednesday 10 December 2008, Johannes Berg wrote:
-> > No users, so no reason to have it.
->=20
-> Henrique, you introduced the notifier chain, are there any upcoming
-> users for it or can it indeed be removed?
+Thank you for the explanation! Now I have disabled 
+CONFIG_WIRELESS_OLD_REGULATORY and I have installed CRDA and iw. After 
+setting the country I'm able to create the ad-hoc IBSS between the two PCs.
 
-It can be added back with the users when needed.
+According to my opinion the error message posted in the original message of 
+this thread might be misleading for the user: the network card doesn't enter 
+in ad-hoc mode because the country for the CRDA is not set while the error 
+says that the ad-hoc mode is not supported. What do you think about?
 
-johannes
-
---=-evFmBbvvBXxNOBkdfla1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJP/pFAAoJEKVg1VMiehFYHI0P/ivaS3tFHad3xNzqq7suMEN8
-Sy8vXln2h4PDvEdDpye+yZ0VIE0GNdbi9SDpiWTyT0n99fUGVd+lT3YVsCNWXCaB
-Ubx8XAsxYclv1EqnCcCBMPQa9DFycAcXABQ7XsvHaDN5uDvnuVvMlb7cvbIyAd1F
-jSEpZLyDcMc3pe1M6lnxSn1NS7LZuiIwkasqQI2hrK32/vqYTX6hpUCO9hhGOfS/
-zmDD9zGPFFLnIou/Ler+kAaPk0We2eI7A7M3fgf+EW5MtTkA2Uk91zvg42W06NZG
-sB0031wGb5kSrXzHASisJs2Lzw3DBCspdsa2j87EHelKFPFvT64FvioyaochQ4EW
-Krk76xHT8XY9qp8cu/kbrshZYwBK9XkG8n4SjuwDReZ2PVq6oVEuY+DUbY3K4rC7
-R/YR89ElbGsGB4nzLWs1PE+3nJIQ7oarikrsQEteVS162z8C6kTgwnVGJAeAs0h9
-ft+QKekbhq+Wo8Xogd000gwNCVrmmGrqjlaM92/Z7MXT0fW5wDWsPRw9SXeXAMLS
-VQPHErb7cz4u4St7oX0PnXmN7H5F3t8up1RHvsNVUf9B7YsTw24+0qAVE+bSQ+dd
-mf7Ogo9gZBxdUk65avE4/JZx6f1T8Tcx71/r7GU6SsuMHUbM99TaCAzDACaiuiLM
-0egFyX5KYTfaoCHT9a6a
-=wUg3
------END PGP SIGNATURE-----
-
---=-evFmBbvvBXxNOBkdfla1--
-
+Regards,
+Fabio
