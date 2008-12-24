@@ -1,50 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f18.google.com ([209.85.217.18]:47285 "EHLO
-	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752730AbYLCWOR (ORCPT
+Received: from gateway01.websitewelcome.com ([69.56.184.19]:48894 "HELO
+	gateway01.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751143AbYLYH3A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 17:14:17 -0500
-Received: by gxk11 with SMTP id 11so935339gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 14:14:15 -0800 (PST)
-Message-ID: <43e72e890812031414m6a5782e7ga8eed8d91fe056b2@mail.gmail.com> (sfid-20081203_231421_804863_562C970C)
-Date: Wed, 3 Dec 2008 14:14:14 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [stable] [PATCH 1/3] ath9k: Handle -ENOMEM on RX gracefully
-Cc: sfr@canb.auug.org.au, ath9k-devel@venema.h4ckr.net,
-	"Greg KH" <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@kernel.org
-In-Reply-To: <20081203212255.GB4263@tuxdriver.com>
+	Thu, 25 Dec 2008 02:29:00 -0500
+Received: from 75-92-136-219.sea.clearwire-dns.net ([75.92.136.219]:45811 helo=[192.168.111.2])
+	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.68)
+	(envelope-from <Info@delphi-real-estate.com>)
+	id 1LFY3m-0003Sm-JF
+	for linux-wireless@vger.kernel.org; Wed, 24 Dec 2008 12:02:18 -0600
+From: Delphi Real Estate <Info@delphi-real-estate.com>
+To: linux-wireless@vger.kernel.org
+Subject: 4965AGN Not Associating
+Date: Wed, 24 Dec 2008 10:02:12 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
-	 <1228251082-11677-2-git-send-email-lrodriguez@atheros.com>
-	 <1228251082-11677-3-git-send-email-lrodriguez@atheros.com>
-	 <1228251082-11677-4-git-send-email-lrodriguez@atheros.com>
-	 <20081203001253.GC14943@kroah.com>
-	 <43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com>
-	 <20081203002404.GA22789@tuxdriver.com>
-	 <20081203212255.GB4263@tuxdriver.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812241002.12787.Info@delphi-real-estate.com> (sfid-20081225_082922_561576_5B6E1F6E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 3, 2008 at 1:22 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Tue, Dec 02, 2008 at 07:24:04PM -0500, John W. Linville wrote:
->> On Tue, Dec 02, 2008 at 04:20:32PM -0800, Luis R. Rodriguez wrote:
->> > On Tue, Dec 2, 2008 at 4:12 PM, Greg KH <greg@kroah.com> wrote:
->> > > I don't see this patch upstream in Linus's tree.  Am I just missing it
->> > > and if so, do you know the git commit id?
->> >
->> > Nope sorry, John has yet to send his pending-fixes branch to davem and
->> > so forth, which would contain it AFAICT. Please correct me if I'm
->> > wrong John.
->>
->> It has been sent, and Dave sent his pull request to Linus today
->> (or maybe yesterday).  I'll try to dig-up the commit IDs tomorrow.
->
-> Hmmm...I seem to have sent this to -next instead.  Since it fixes an
-> Oops, I guess I can requeue for 2.6.28.
 
-Pretty please :)
+I was running the iwl4965 git driver successfully from 6 June up until two days ago, when I decided to be a smart-aleck and try to get 802.11n working.  After two 12 hour days of struggle, I now have no wifi.
 
- Luis
+Running Kubuntu Hardy and typically compile a custom kernel.  First I downloaded and compiled compat-wireless-old.tar.bz2 and compiled it to my kernel 2.6.24.  Driver loaded fine and the wlan0 interface came up, but would no longer associate as the old driver did.  Rebooted, but a second or so after the blue wireless light came on, the kernel crashed with an Aieeee!  No way to see exactly where or why, as it'd scrolled off the screen and there's nothing in the logs.
+
+So I tried just compiling kernels 2.6.27 and .28 to test their iwlagn functionality, but unfortunately no version of .27 or .28 will compile on my laptop.  .27 does compile on my HTPC, but not where it counts:
+  OFFSETS arch/x86/boot/offsets.h
+  OBJCOPY arch/x86/boot/vmlinux.bin
+  AS      arch/x86/boot/header.o
+  LD      arch/x86/boot/setup.elf
+  OBJCOPY arch/x86/boot/setup.bin
+  BUILD   arch/x86/boot/bzImage
+Root device is (8, 1)
+Setup is 11916 bytes (padded to 12288 bytes).
+System is 2904 kB
+CRC 30db084d
+Kernel: arch/x86/boot/bzImage is ready  (#1)
+ERROR: "snd_hwdep_new" [ubuntu/misc/media/snd-bt-sco.ko] undefined!
+WARNING: modpost: Found 4 section mismatch(es).
+To see full details build your kernel with:
+'make CONFIG_DEBUG_SECTION_MISMATCH=y'
+make[1]: *** [__modpost] Error 1
+make: *** [modules] Error 2
+#
+
+So I gave up on a new kernel and compiled 2.6.22, booted, and compiled compat-wireless-old.tar.bz2 to it, which went fine.  I even get a blue light for the radio switch now.  But it will not associate.  I am using the exact same interfaces file as before.  I tried network manager, but it doesn't even recognize this as a wireless device.
+
+ # iwconfig
+wlan0     IEEE 802.11abgn  ESSID:"Hex"
+          Mode:Managed  Frequency:2.462 GHz  Access Point: Not-Associated
+          Tx-Power=14 dBm
+          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+          Encryption key:off
+          Power Management:off
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+# iwpriv
+wlan0     no private ioctls.
+
+# iwpriv wlan0 network_type g
+wlan0     no private ioctls.
+
+# iwlist wlan0 auth
+wlan0     Authentication capabilities :
+                WPA
+                WPA2
+                CIPHER-TKIP
+                CIPHER-CCMP
+          Current Authentication algorithm :
+                open
+
+So for some reason it is not recognizing my WPA commands in /etc/network/interfaces (which worked before).  Or maybe it's in 'n' or 'a' mode, rather than g.  I've searched everywhere and can not find how to set it to g mode now that it has no private ioctls.
+
+/etc/network/interfaces:
+iface wlan0 inet static
+pre-up /sbin/iwpriv wlan0 network_type g
+pre-up ip link set wlan0 up
+address 192.168.1.1
+netmask 255.255.255.0
+gateway 192.168.1.5
+wireless-essid Hex
+wpa-scan-ssid 0
+wpa-ap-scan 1
+wpa-ssid Hex
+wpa-psk Freeasinfreedom
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
