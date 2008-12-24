@@ -1,170 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.228]:24849 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbYLWNFp (ORCPT
+Received: from gateway06.websitewelcome.com ([67.18.125.13]:38505 "HELO
+	gateway06.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751042AbYLXUZQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2008 08:05:45 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so2361965rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2008 05:05:44 -0800 (PST)
-Date: Tue, 23 Dec 2008 18:39:02 -0800
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Enhancements to dynamic power save.
-Message-ID: <20081224023902.GC5225@myhost.users.atheros.com> (sfid-20081223_140549_273317_2E9B2A40)
+	Wed, 24 Dec 2008 15:25:16 -0500
+Received: from 75-92-136-219.sea.clearwire-dns.net ([75.92.136.219]:58259 helo=[192.168.111.2])
+	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.68)
+	(envelope-from <Info@delphi-real-estate.com>)
+	id 1LFZsJ-0004rr-Bn
+	for linux-wireless@vger.kernel.org; Wed, 24 Dec 2008 13:58:35 -0600
+From: Delphi Real Estate <Info@delphi-real-estate.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: 4965AGN Not Associating
+Date: Wed, 24 Dec 2008 11:58:29 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812241158.29493.Info@delphi-real-estate.com> (sfid-20081224_212522_750445_E8AD7456)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables mac80211 to send a null frame and also to
-check for tim in the beacon if dynamic power save is enabled.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/mlme.c        |   41 ++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/scan.c        |    2 +-
- net/mac80211/wext.c        |   13 +++++++++----
- 4 files changed, 53 insertions(+), 6 deletions(-)
+I was running the iwl4965 git driver successfully from 6 June up until two days ago, when I decided to be a smart-aleck and try to get 802.11n working.  After two 12 hour days of struggle, I now have no wifi.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f3eec98..2038498 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -986,6 +986,9 @@ u64 ieee80211_mandatory_rates(struct ieee80211_local *local,
- void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
- void ieee80211_dynamic_ps_disable_work(struct work_struct *work);
- void ieee80211_dynamic_ps_timer(unsigned long data);
-+void ieee80211_send_nullfunc(struct ieee80211_local *local,
-+			     struct ieee80211_sub_if_data *sdata,
-+			     int powersave);
- 
- void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
- 				     enum queue_stop_reason reason);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b23e62b..ca22718 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -568,6 +568,30 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 	}
- }
- 
-+static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
-+{
-+	u8 mask;
-+	u8 index, indexn1, indexn2;
-+	struct ieee80211_tim_ie *tim = (struct ieee80211_tim_ie *) elems->tim;
-+
-+	aid &= 0x3fff;
-+	index = aid / 8;
-+	mask  = 1 << (aid & 7);
-+
-+	if (tim->bitmap_ctrl & 0x01)
-+		*is_mc = true;
-+
-+	indexn1 = tim->bitmap_ctrl & 0xfe;
-+	indexn2 = elems->tim_len + indexn1 - 4;
-+
-+	if (index < indexn1 || index > indexn2)
-+		return false;
-+
-+	index -= indexn1;
-+
-+	return !!(tim->virtual_map[index] & mask);
-+}
-+
- static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
- 					   u16 capab, bool erp_valid, u8 erp)
- {
-@@ -752,6 +776,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
- 				  msecs_to_jiffies(local->dynamic_ps_timeout));
- 		else {
-+			ieee80211_send_nullfunc(local, sdata, 1);
- 			conf->flags |= IEEE80211_CONF_PS;
- 			ieee80211_hw_config(local,
- 					    IEEE80211_CONF_CHANGE_PS);
-@@ -1729,7 +1754,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_local *local = sdata->local;
- 	u32 changed = 0;
--	bool erp_valid;
-+	bool erp_valid, directed_tim, is_mc = false;
- 	u8 erp_value = 0;
- 
- 	/* Process beacon from the current BSS */
-@@ -1752,6 +1777,18 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_sta_wmm_params(local, ifsta, elems.wmm_param,
- 				 elems.wmm_param_len);
- 
-+	if (!(local->hw.flags & IEEE80211_HW_NO_STACK_DYNAMIC_PS)) {
-+		directed_tim = check_tim(&elems, ifsta->aid, &is_mc);
-+
-+		if (directed_tim || is_mc) {
-+			if (local->hw.conf.flags && IEEE80211_CONF_PS) {
-+				local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-+				ieee80211_hw_config(local,
-+						IEEE80211_CONF_CHANGE_PS);
-+				ieee80211_send_nullfunc(local, sdata, 0);
-+			}
-+		}
-+	}
- 
- 	if (elems.erp_info && elems.erp_info_len >= 1) {
- 		erp_valid = true;
-@@ -2651,10 +2688,12 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 	struct ieee80211_local *local =
- 		container_of(work, struct ieee80211_local,
- 			     dynamic_ps_enable_work);
-+	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
- 
- 	if (local->hw.conf.flags & IEEE80211_CONF_PS)
- 		return;
- 
-+	ieee80211_send_nullfunc(local, sdata, 1);
- 	local->hw.conf.flags |= IEEE80211_CONF_PS;
- 
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index f5c7c33..a2caeed 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -395,7 +395,7 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
- 	return RX_QUEUED;
- }
- 
--static void ieee80211_send_nullfunc(struct ieee80211_local *local,
-+void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 				    struct ieee80211_sub_if_data *sdata,
- 				    int powersave)
- {
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 673c5d7..6470614 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -871,12 +871,17 @@ set:
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
- 				  msecs_to_jiffies(local->dynamic_ps_timeout));
- 		else {
--			if (local->powersave)
-+			if (local->powersave) {
-+				ieee80211_send_nullfunc(local, sdata, 1);
- 				conf->flags |= IEEE80211_CONF_PS;
--			else
-+				ret = ieee80211_hw_config(local,
-+						IEEE80211_CONF_CHANGE_PS);
-+			} else {
- 				conf->flags &= ~IEEE80211_CONF_PS;
--			ret = ieee80211_hw_config(local,
--					IEEE80211_CONF_CHANGE_PS);
-+				ret = ieee80211_hw_config(local,
-+						IEEE80211_CONF_CHANGE_PS);
-+				ieee80211_send_nullfunc(local, sdata, 0);
-+			}
- 		}
- 	}
- 
--- 
-1.6.0.1
+Running Kubuntu Hardy and typically compile a custom kernel.  First I downloaded and compiled compat-wireless-old.tar.bz2 and compiled it to my kernel 2.6.24.  Driver loaded fine and the wlan0 interface came up, but would no longer associate as the old driver did.  Rebooted, but a second or so after the blue wireless light came on, the kernel crashed with an Aieeee!  No way to see exactly where or why, as it'd scrolled off the screen and there's nothing in the logs.
 
+So I tried just compiling kernels 2.6.27 and .28 to test their iwlagn functionality, but unfortunately no version of .27 or .28 will compile on my laptop.  .27 does compile on my HTPC, but not where it counts:
+  OFFSETS arch/x86/boot/offsets.h
+  OBJCOPY arch/x86/boot/vmlinux.bin
+  AS      arch/x86/boot/header.o
+  LD      arch/x86/boot/setup.elf
+  OBJCOPY arch/x86/boot/setup.bin
+  BUILD   arch/x86/boot/bzImage
+Root device is (8, 1)
+Setup is 11916 bytes (padded to 12288 bytes).
+System is 2904 kB
+CRC 30db084d
+Kernel: arch/x86/boot/bzImage is ready  (#1)
+ERROR: "snd_hwdep_new" [ubuntu/misc/media/snd-bt-sco.ko] undefined!
+WARNING: modpost: Found 4 section mismatch(es).
+To see full details build your kernel with:
+'make CONFIG_DEBUG_SECTION_MISMATCH=y'
+make[1]: *** [__modpost] Error 1
+make: *** [modules] Error 2
+#
+
+So I gave up on a new kernel and compiled 2.6.22, booted, and compiled compat-wireless-old.tar.bz2 to it, which went fine.  I even get a blue light for the radio switch now.  But it will not associate.  I am using the exact same interfaces file as before.  I tried network manager, but it doesn't even recognize this as a wireless device.
+
+ # iwconfig
+wlan0     IEEE 802.11abgn  ESSID:"Hex"
+          Mode:Managed  Frequency:2.462 GHz  Access Point: Not-Associated
+          Tx-Power=14 dBm
+          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+          Encryption key:off
+          Power Management:off
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+# iwpriv
+wlan0     no private ioctls.
+
+# iwpriv wlan0 network_type g
+wlan0     no private ioctls.
+
+# iwlist wlan0 auth
+wlan0     Authentication capabilities :
+                WPA
+                WPA2
+                CIPHER-TKIP
+                CIPHER-CCMP
+          Current Authentication algorithm :
+                open
+
+So for some reason it is not recognizing my WPA commands in /etc/network/interfaces (which worked before).  Or maybe it's in 'n' or 'a' mode, rather than g.  I've searched everywhere and can not find how to set it to g mode now that it has no private ioctls.
+
+/etc/network/interfaces:
+iface wlan0 inet static
+pre-up /sbin/iwpriv wlan0 network_type g
+pre-up ip link set wlan0 up
+address 192.168.1.1
+netmask 255.255.255.0
+gateway 192.168.1.5
+wireless-essid Hex
+wpa-scan-ssid 0
+wpa-ap-scan 1
+wpa-ssid Hex
+wpa-psk Freeasinfreedom
