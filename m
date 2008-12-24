@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:42784 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750855AbYLOLxk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 06:53:40 -0500
-Date: Mon, 15 Dec 2008 09:53:36 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Tony Vroon <tony@linx.net>, Len Brown <lenb@kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
-	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
-Subject: Re: Fuijtsu Lifebook RFKILL support
-Message-ID: <20081215115336.GD17648@khazad-dum.debian.net> (sfid-20081215_125346_876876_ACE1C7C0)
-References: <1228957506.4045.11.camel@localhost> <20081211165247.GA4844@khazad-dum.debian.net> <1229016827.6446.6.camel@localhost> <20081211194734.GA18132@khazad-dum.debian.net> <1229046602.4030.13.camel@localhost> <20081212195331.GA12679@khazad-dum.debian.net> <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain> <1229172465.4010.11.camel@localhost> <20081213132857.GA11428@khazad-dum.debian.net> <1229274343.6775.15.camel@localhost.localdomain>
+Received: from bu3sch.de ([62.75.166.246]:32829 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751494AbYLXMKC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2008 07:10:02 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] ssb/b43: add new N PHY device
+Date: Wed, 24 Dec 2008 13:09:26 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1230119049.4566.1.camel@johannes>
+In-Reply-To: <1230119049.4566.1.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1229274343.6775.15.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812241309.27072.mb@bu3sch.de> (sfid-20081224_131011_366428_F14D43E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 14 Dec 2008, Dan Williams wrote:
-> On Sat, 2008-12-13 at 11:28 -0200, Henrique de Moraes Holschuh wrote:
-> > On Sat, 13 Dec 2008, Tony Vroon wrote:
-> > > > What is the WLAN driver involved? Is it rfkill-aware?
-> > > 
-> > > The driver is iwlagn, which does indeed notice that it is killed.
-> > > This information does not reach NetworkManager. Relevant log
-> > > entries: Dec 12 00:59:01 amalthea iwlagn: Radio Frequency Kill
-> > > Switch is On: Dec 12 00:59:01 amalthea Kill switch must be turned
-> > > off for wireless networking to work.
-> > 
-> > Then, it is just a matter of time for it to be working correctly.  In
-> > fact, it might already be if you use wireless-testing and latest
-> > network manager.
+On Wednesday 24 December 2008 12:44:09 Johannes Berg wrote:
+> This is used on my macbook. N PHY, obviously nothing works
+> yet, but we can detect the chip with this patch.
 > 
-> If HAL's killswitch support doesn't know about the kernel killswitch
-> device, or it cannot get the state of the killswitch, then certainly
-> NetworkManager isn't going to know about it.
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-I see.  I have added "up-to-date HAL also required" to my mental list of
-stuff needed in userspace.
+ACK. Please queue for 2.6.29
 
-Thanks, Dan.
+> ---
+>  drivers/net/wireless/b43/main.c |    1 +
+>  drivers/ssb/b43_pci_bridge.c    |    1 +
+>  2 files changed, 2 insertions(+)
+> 
+> --- wireless-testing.orig/drivers/ssb/b43_pci_bridge.c	2008-12-24 12:33:23.000000000 +0100
+> +++ wireless-testing/drivers/ssb/b43_pci_bridge.c	2008-12-24 12:34:41.000000000 +0100
+> @@ -29,6 +29,7 @@ static const struct pci_device_id b43_pc
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4325) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4328) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4329) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x432b) },
+>  	{ 0, },
+>  };
+>  MODULE_DEVICE_TABLE(pci, b43_pci_bridge_tbl);
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2008-12-24 12:43:09.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/b43/main.c	2008-12-24 12:43:18.000000000 +0100
+> @@ -97,6 +97,7 @@ static const struct ssb_device_id b43_ss
+>  	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 10),
+>  	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 11),
+>  	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 13),
+> +	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 16),
+>  	SSB_DEVTABLE_END
+>  };
+>  
+> 
+> 
+> 
+> 
+
+
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Greetings, Michael.
