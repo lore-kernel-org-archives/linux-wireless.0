@@ -1,124 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32803 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753863AbYLGN5r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2008 08:57:47 -0500
-Subject: Re: mac80211 user space
-From: Johannes Berg <johannes@sipsolutions.net>
-To: igor_trindade@yahoo.com.br
-Cc: Jouni Malinen <j@w1.fi>, Andrey Yurovsky <andrey@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <456087.50493.qm@web59308.mail.re1.yahoo.com>
-References: <456087.50493.qm@web59308.mail.re1.yahoo.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-YYzkkey6BEKbam1KM23F"
-Date: Sun, 07 Dec 2008 14:57:40 +0100
-Message-Id: <1228658260.22164.41.camel@johannes.berg> (sfid-20081207_145835_458650_89284B50)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:51552 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751063AbYLXTVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2008 14:21:42 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Dec 2008 11:21:42 -0800
+Date: Wed, 24 Dec 2008 11:21:32 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mmotm 2008-12-24-01-20 uploaded (ath9k)
+Message-ID: <20081224192132.GO5944@tesla> (sfid-20081224_202156_122830_5DC017C9)
+References: <200812240930.mBO9U3e6030301@imap1.linux-foundation.org> <495279BB.1090703@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <495279BB.1090703@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Dec 24, 2008 at 10:04:43AM -0800, Randy Dunlap wrote:
+> akpm@linux-foundation.org wrote:
+> > The mm-of-the-moment snapshot 2008-12-24-01-20 has been uploaded to
+> >
+> >    http://userweb.kernel.org/~akpm/mmotm/
+> >
+> > and will soon be available at
+> >
+> >    git://git.zen-sources.org/zen/mmotm.git
+> 
+> 
+> ath9k build fails with:
+> 
+> drivers/built-in.o: In function `ath_detach':
+> main.c:(.text+0xee655): undefined reference to `rfkill_unregister'
+> drivers/built-in.o: In function `ath_rfkill_poll':
+> main.c:(.text+0xeedfa): undefined reference to `rfkill_force_state'
+> drivers/built-in.o: In function `ath9k_start':
+> main.c:(.text+0xefe79): undefined reference to `rfkill_register'
+> main.c:(.text+0xeff20): undefined reference to `rfkill_free'
+> drivers/built-in.o: In function `ath_pci_probe':
+> main.c:(.text+0xf0f73): undefined reference to `rfkill_allocate'
+> 
+> when ath9k is built-in and CONFIG_RFKILL=m.
+> 
+> config attached.
 
---=-YYzkkey6BEKbam1KM23F
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+<-- snip -->
 
-[CC'ing more people for a wider discussion]
+> # CONFIG_MAC80211_DEBUGFS is not set
+> # CONFIG_MAC80211_DEBUG_MENU is not set
+> CONFIG_RFKILL=m
+> CONFIG_RFKILL_INPUT=m
+> CONFIG_RFKILL_LEDS=y
 
-On Sat, 2008-12-06 at 07:26 -0800, Igor Trindade Oliveira wrote:
-> i was seeing your description about mac80211 hwsim in kernelnewbies
-> and i see something about mac80211 userspace API.
-> you can explain your idea?
+Try this (already merged into wireless-testing):
 
-I think the userspace API idea is probably not a good idea as is, it
-makes it very complicated to program things, I guess hwsim should be
-extended instead.
+commit bb2476392c584a769f88421fcc9de3408656d05d
+Author: Senthil Balasubramanian <senthilkumar@atheros.com>
+Date:   Thu Nov 13 18:00:02 2008 +0530
 
-One thing I was especially looking for is, instead of having "virtual
-air" inside the kernel, have "virtual air" in userspace.
+    ath9k: Build RFKILL feature even when RFKILL subsystem is a MODULE
+    
+    Currently, ath9k builds RFKILL feature only when the RFKILL subsystem
+    is built part of the kernel. Build RFKILL feature regardless of whether
+    RFKILL subsystem is built as a MODULE or part of the kernel.
+    
+    Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-For example, consider this scenario with three mesh points:
-
-MP1 ---- MP2 ---- MP3
-
-where MP1 and MP3 cannot directly communicate because they are too far
-apart, physically. It isn't possible to test such a scenario with hwsim
-because hwsim has no concept of distance.
-
-One easy solution to this would be to introduce "air groups", each just
-a number. In mac80211_hwsim_tx_frame, we have:
-
-        list_for_each_entry(data2, &hwsim_radios, list) {
-                struct sk_buff *nskb;
-
-                if (data =3D=3D data2)
-                        continue;
-
-                if (!data2->started || !data2->radio_enabled ||
-                    !hwsim_ps_rx_ok(data2, skb) ||
-                    data->channel->center_freq !=3D data2->channel->center_=
-freq)
-                        continue;
-
-The easiest way to do "air groups" would be to add:
-
-		if (!(data->airgroups & data2->airgroups))
-			continue;
-
-and have the "airgroups" value be a u32 (or u64?) which can be modified
-in configfs and defaults to 1. That way, you can have up to 32 (64)
-groups (each bit being a group) and the above picture would become:
-
-virtual device:  MP1 ---- MP2 ---- MP3
-airgroups:        1        3        2
-
-Does that make sense? Do you think it's flexible enough? Should we maybe
-use a u64 so we have more flexibility? It should be fairly easy to do
-this, I think.
-
-
-Of course, this isn't as general as it could be. I suppose some testing
-scenarios will require simulating packet loss and similar, so we'll want
-to have userspace make the decision about which packets get to which
-radios. For this, you'd want to have a radiotap interface per virtual
-hardware, which shows all frames transmitted by this virtual hardware
-and, when frames are sent into that interface, the frame is given to
-mac80211.
-
-That would be the most generic way, but since it's also a lot more
-complex I think there still is value in having the "airgroups" above,
-especially since if we implement this idea then we still need a way to
-decouple the virtual radios from the "virtual air" that's implemented in
-the kernel, which perfectly fits with setting all "airgroups" to zero
-which makes the "virtual air" in the kernel that I quoted above do
-nothing.
-
-Thoughts?
-
-johannes
-
---=-YYzkkey6BEKbam1KM23F
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJO9ZQAAoJEKVg1VMiehFYsu8QAJHkEm+jcuoxiZVgnPY/nMWv
-GTASbxGZ7NfO6O096+RQ00CzxKT15770byjKx0XrfYlN5z+sXIbCsWxMbpI7XVtV
-wCLrnUqehWJ/q8bFgOkNxDNF5yJiBTXgtJ0lPhsR7scIXpDOasyTRydPNNrVWONw
-Jwc6FOzYzd7lEABipcDMPrJrINWPgYFQIrydnuw3v6vSbd7qp2GpjCN7aMVZWw0W
-qnjaZ/H8wcQIIGo5wfA05wv8WpzqVCRNSY9Pt+SutLc72axyW48pa/Qtjt7H/8tk
-jzqpHXH4OH2Z7j1nwPWSmsdhaOmsgvUN+tgqkqE7JbxTUpM8CayFsudbJWa+Z+Ov
-Pi6qk4+Rptcvyh3YdBkvC/lgNZPmyFg5d3cKfhnPNFnmZFp++RPst5WfiTDbZw4a
-p2eHnk6HrWKIWTnyvg428+56UHEfqIJjPjMH0wc6y+4tg7A4iBwxYnFOBaLYWy11
-5T3ZqDLYzzSvEdRsiu04CqfIGM+uJI+/Kr+q4fZ0NCnv3bcuJgQcJwrJWKSATE2B
-7+rsT3EIB+2ol6X5JyarKRf8s01GpcNsALAkbVHi1pVrb1SehDe83xhNjRDCs/kU
-bgDEW158goLgM/epIgUKS09MxAsDsKEQUsfXkdufyydoQSzSvvF6E9iGrataIv6+
-UN5WfEBuJzErDmymoVct
-=xvux
------END PGP SIGNATURE-----
-
---=-YYzkkey6BEKbam1KM23F--
-
+diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+index 3a180ce..6be2b94 100644
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -904,7 +904,7 @@ u32 ath9k_hw_gpio_get(struct ath_hal *ah, u32 gpio);
+ void ath9k_hw_cfg_output(struct ath_hal *ah, u32 gpio,
+ 			 u32 ah_signal_type);
+ void ath9k_hw_set_gpio(struct ath_hal *ah, u32 gpio, u32 val);
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ void ath9k_enable_rfkill(struct ath_hal *ah);
+ #endif
+ int ath9k_hw_select_antconfig(struct ath_hal *ah, u32 cfg);
+diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
+index 5f5184a..3e94dab 100644
+--- a/drivers/net/wireless/ath9k/core.c
++++ b/drivers/net/wireless/ath9k/core.c
+@@ -705,7 +705,7 @@ void ath_stop(struct ath_softc *sc)
+ 	} else
+ 		sc->sc_rxlink = NULL;
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
+ 		cancel_delayed_work_sync(&sc->rf_kill.rfkill_poll);
+ #endif
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 7ca2efa..dc30703 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -2341,7 +2341,7 @@ bool ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
+ 	ath9k_hw_init_interrupt_masks(ah, ah->ah_opmode);
+ 	ath9k_hw_init_qos(ah);
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 	if (ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
+ 		ath9k_enable_rfkill(ah);
+ #endif
+@@ -3516,7 +3516,7 @@ bool ath9k_hw_fill_cap_info(struct ath_hal *ah)
+ 
+ 	pCap->hw_caps |= ATH9K_HW_CAP_ENHANCEDPM;
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 	ah->ah_rfsilent = ath9k_hw_get_eeprom(ah, EEP_RF_SILENT);
+ 	if (ah->ah_rfsilent & EEP_RFSILENT_ENABLED) {
+ 		ah->ah_rfkill_gpio =
+@@ -3773,7 +3773,7 @@ void ath9k_hw_set_gpio(struct ath_hal *ah, u32 gpio, u32 val)
+ 		AR_GPIO_BIT(gpio));
+ }
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ void ath9k_enable_rfkill(struct ath_hal *ah)
+ {
+ 	REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL,
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 04342ec..97f0b47 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -595,7 +595,7 @@ fail:
+ 	ath_deinit_leds(sc);
+ }
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 
+ /*******************/
+ /*	Rfkill	   */
+@@ -839,7 +839,7 @@ static void ath_detach(struct ath_softc *sc)
+ 
+ 	ath_deinit_leds(sc);
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 	ath_deinit_rfkill(sc);
+ #endif
+ 	ath_rate_control_unregister();
+@@ -922,7 +922,7 @@ static int ath_attach(u16 devid, struct ath_softc *sc)
+ 	/* Initialize LED control */
+ 	ath_init_leds(sc);
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 	/* Initialze h/w Rfkill */
+ 	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
+ 		INIT_DELAYED_WORK(&sc->rf_kill.rfkill_poll, ath_rfkill_poll);
+@@ -979,7 +979,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		goto exit;
+ 	}
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 	error = ath_start_rfkill_poll(sc);
+ #endif
+ 
+@@ -1724,7 +1724,7 @@ static int ath_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 
+ 	ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN, 1);
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
+ 		cancel_delayed_work_sync(&sc->rf_kill.rfkill_poll);
+ #endif
+@@ -1761,7 +1761,7 @@ static int ath_pci_resume(struct pci_dev *pdev)
+ 			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 	ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN, 1);
+ 
+-#ifdef CONFIG_RFKILL
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+ 	/*
+ 	 * check the h/w rfkill state on resume
+ 	 * and start the rfkill poll timer
