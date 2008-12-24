@@ -1,100 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:45947 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753235AbYLIUos (ORCPT
+Received: from mail-gx0-f13.google.com ([209.85.217.13]:34217 "EHLO
+	mail-gx0-f13.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbYLXRkl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2008 15:44:48 -0500
-Received: by ewy10 with SMTP id 10so202727ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Dec 2008 12:44:46 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: remove fragmentation offload functionality
-Date: Tue, 9 Dec 2008 21:36:56 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Dan E <trg_info@mailhaven.com>
-References: <1228822203.22164.204.camel@johannes.berg>
-In-Reply-To: <1228822203.22164.204.camel@johannes.berg>
+	Wed, 24 Dec 2008 12:40:41 -0500
+Received: by gxk6 with SMTP id 6so2637000gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Dec 2008 09:40:40 -0800 (PST)
+Message-ID: <43e72e890812240940oa599bdds7db3682bfbf95a49@mail.gmail.com> (sfid-20081224_184054_628824_2509FC7F)
+Date: Wed, 24 Dec 2008 09:40:40 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Fabio Rossi" <rossi.f@inwind.it>
+Subject: Re: p54: ad-hoc mode doesn't work
+Cc: "Pavel Roskin" <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <200812241828.49679.rossi.f@inwind.it>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200812092136.56768.IvDoorn@gmail.com> (sfid-20081209_214453_063855_60CE19F7)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <200812230132.21839.rossi.f@inwind.it> <1230072758.5692.2.camel@dv>
+	 <200812241828.49679.rossi.f@inwind.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 09 December 2008, Johannes Berg wrote:
-> There's no driver that actually does fragmentation on the
-> device, and the callback is buggy (when it returns an error,
-> mac80211's fragmentation status is changed so reading the
-> frag threshold from userspace reads the new value despite
-> the error). Let's just remove it, if we really find some
-> hardware supporting it we can add it back later.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> Unless anybody knows a work-in-progress driver that needs this, in which
-> case we should fix it? Speak up now if you do.
+On Wed, Dec 24, 2008 at 9:28 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
+> It seems strange to me, on the other PC I'm using the ath5k driver with a PCI
+> wireless NIC and the interface enters in ad-hoc mode without complaining
+> (CRDA is not installed).
+>
+> I'll try to install also CRDA to see if something changes, maybe there is a
+> difference between the ath5k and p54 drivers.
 
-For rt2800{pci,usb} the set_frag_threshold is not implemented, so it won't
-provide problems with those drivers.
+Most distributions are using >= 2.6.28 kernels with
+CONFIG_WIRELESS_OLD_REGULATORY which means the US is the default
+regulatory domain and its built statically into the kernel so the
+values are used CRDA does not have to be queried. If CRDA is present
+the regulatory domain is just updated with
+CONFIG_WIRELESS_OLD_REGULATORY.
 
-Ivo
+To find out the details of your channel configuration install iw and
+then do: iw list
 
->  include/net/mac80211.h |    5 -----
->  net/mac80211/tx.c      |    1 -
->  net/mac80211/wext.c    |    8 --------
->  3 files changed, 14 deletions(-)
-> 
-> --- everything.orig/include/net/mac80211.h	2008-12-08 21:54:08.000000000 +0100
-> +++ everything/include/net/mac80211.h	2008-12-08 21:54:21.000000000 +0100
-> @@ -1253,10 +1253,6 @@ enum ieee80211_ampdu_mlme_action {
->   *
->   * @set_rts_threshold: Configuration of RTS threshold (if device needs it)
->   *
-> - * @set_frag_threshold: Configuration of fragmentation threshold. Assign this if
-> - *	the device does fragmentation by itself; if this method is assigned then
-> - *	the stack will not do fragmentation.
-> - *
->   * @sta_notify: Notifies low level driver about addition or removal of an
->   *	associated station, AP, IBSS/WDS/mesh peer etc. Must be atomic.
->   *
-> @@ -1326,7 +1322,6 @@ struct ieee80211_ops {
->  	void (*get_tkip_seq)(struct ieee80211_hw *hw, u8 hw_key_idx,
->  			     u32 *iv32, u16 *iv16);
->  	int (*set_rts_threshold)(struct ieee80211_hw *hw, u32 value);
-> -	int (*set_frag_threshold)(struct ieee80211_hw *hw, u32 value);
->  	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->  			enum sta_notify_cmd, struct ieee80211_sta *sta);
->  	void (*sta_notify_ps)(struct ieee80211_hw *hw,
-> --- everything.orig/net/mac80211/tx.c	2008-12-08 21:52:57.000000000 +0100
-> +++ everything/net/mac80211/tx.c	2008-12-08 21:54:21.000000000 +0100
-> @@ -1003,7 +1003,6 @@ __ieee80211_tx_prepare(struct ieee80211_
->  	if (tx->flags & IEEE80211_TX_FRAGMENTED) {
->  		if ((tx->flags & IEEE80211_TX_UNICAST) &&
->  		    skb->len + FCS_LEN > local->fragmentation_threshold &&
-> -		    !local->ops->set_frag_threshold &&
->  		    !(info->flags & IEEE80211_TX_CTL_AMPDU))
->  			tx->flags |= IEEE80211_TX_FRAGMENTED;
->  		else
-> --- everything.orig/net/mac80211/wext.c	2008-12-08 21:52:57.000000000 +0100
-> +++ everything/net/mac80211/wext.c	2008-12-08 21:54:21.000000000 +0100
-> @@ -639,14 +639,6 @@ static int ieee80211_ioctl_siwfrag(struc
->  		local->fragmentation_threshold = frag->value & ~0x1;
->  	}
->  
-> -	/* If the wlan card performs fragmentation in hardware/firmware,
-> -	 * configure it here */
-> -
-> -	if (local->ops->set_frag_threshold)
-> -		return local->ops->set_frag_threshold(
-> -			local_to_hw(local),
-> -			local->fragmentation_threshold);
-> -
->  	return 0;
->  }
->  
-> 
-> 
-> 
+http://wireless.kernel.org/en/users/Documentation/iw
 
+For example for my dual band card I get (after running iw reg set US
+though) for the frequencies:
 
+                Frequencies:
+                        * 2412 MHz
+                        * 2417 MHz
+                        * 2422 MHz
+                        * 2427 MHz
+                        * 2432 MHz
+                        * 2437 MHz
+                        * 2442 MHz
+                        * 2447 MHz
+                        * 2452 MHz
+                        * 2457 MHz
+                        * 2462 MHz
+                        * 2467 MHz (disabled)
+                        * 2472 MHz (disabled)
+                        * 2484 MHz (disabled)
+                Frequencies:
+                        * 5180 MHz
+                        * 5200 MHz
+                        * 5220 MHz
+                        * 5240 MHz
+                        * 5260 MHz (radar detection)
+                        * 5280 MHz (radar detection)
+                        * 5300 MHz (radar detection)
+                        * 5320 MHz (radar detection)
+                        * 5500 MHz (radar detection)
+                        * 5520 MHz (radar detection)
+                        * 5540 MHz (radar detection)
+                        * 5560 MHz (radar detection)
+                        * 5580 MHz (radar detection)
+                        * 5600 MHz (radar detection)
+                        * 5620 MHz (radar detection)
+                        * 5640 MHz (radar detection)
+                        * 5660 MHz (radar detection)
+                        * 5680 MHz (radar detection)
+                        * 5700 MHz (radar detection)
+                        * 5745 MHz
+                        * 5765 MHz
+                        * 5785 MHz
+                        * 5805 MHz
+                        * 5825 MHz
+
+  Luis
