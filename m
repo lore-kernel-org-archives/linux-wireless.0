@@ -1,89 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54526 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758258AbYLFPsN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 10:48:13 -0500
-Subject: Re: RFC Patch v2: Add signal strength to nl80211station info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@googlemail.com>
-Cc: Henning Rogge <rogge@fgan.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-In-Reply-To: <200812061603.21930.hrogge@googlemail.com> (sfid-20081206_160326_185011_DE170A7B)
-References: <200811252131.30161.hrogge@googlemail.com>
-	 <200812061511.05473.hrogge@googlemail.com>
-	 <1228575081.16752.8.camel@johannes.berg>
-	 <200812061603.21930.hrogge@googlemail.com>
-	 (sfid-20081206_160326_185011_DE170A7B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mFb3HJ4LWJL93Aeg6y4b"
-Date: Sat, 06 Dec 2008 16:48:07 +0100
-Message-Id: <1228578487.16752.12.camel@johannes.berg> (sfid-20081206_164827_665688_BD1C3A58)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:37996 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751459AbYLYAQU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2008 19:16:20 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: Broadcom 11n implementation
+Date: Thu, 25 Dec 2008 01:15:45 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1230163530.3162.10.camel@johannes>
+In-Reply-To: <1230163530.3162.10.camel@johannes>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812250115.45283.mb@bu3sch.de> (sfid-20081225_011624_677829_1456D638)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 25 December 2008 01:05:30 Johannes Berg wrote:
+> Hey,
+> 
+> I hope those of you who got their presents today enjoyed that. Here's
+> one from me for the poor souls like myself who have a Broadcom 11n chip:
+> 
+> I've been publishing specifications for things we have reverse
+> engineered, is anyone interested in implementing this? If so, go wild,
+> but synchronise on the list if there are multiple people. John, I think
+> you had somebody who was interested, but I can't find the email right
+> now.
+> 
+> Michael has said that he might be able to help a bit (review maybe), but
+> won't implement the bulk of it. And I actually need this code ASAP since
+> I failed to replace the wireless card in my new MacBook (I couldn't even
+> find it).
 
---=-mFb3HJ4LWJL93Aeg6y4b
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Of course, I will always be available to give advise and help on the technical details.
+With the recent merge of the PHY abstraction in b43 it shouldn't be that hard
+anymore to understand the basics of the code. I think stuff is clearly modulised now
+and fairly easy to understand, after you once understood the basics of the device.
 
-On Sat, 2008-12-06 at 16:03 +0100, Henning Rogge wrote:
+So for implementing N-PHY, you'll basically work inside of the phy_n.c and
+phy_n.h files only (maybe 98% of the work will be there).
 
-> > can you please move the rate parts into a new struct, so we can use
-> > tx.flags, tx.mcs etc. and later just need to add a second instance of
-> > the struct for rx
->=20
-> struct bitrate_info ?
-> or maybe
-> struct cfg80211_bitrate_info ?
+So, you could probably look into phy_g.c to get an idea of how this could probably
+look like.
 
-Either one is fine I guess.
+Please contact us before you start writing patches, so we can give some additional
+advise on coding conventions used in the driver.
 
-> > Also, if we really really need this information (I still don't see why
-> > the kernel has to calculate it) then it should be in cfg80211 not
-> > mac80211 so other drivers could potentially make use of it. Personally,
-> > I'd just leave it out though.
-
-> Hmm... is "cfg.c" not part of cfg80211 ?
-
-No, cfg.c is part of mac80211, it's mac80211's code to interact with
-cfg80211, it won't be called for non-mac80211 drivers.
-
-> We need the "total bitrate" for 802.11abg rates. They have no mcs rates.
-> The "legacy index" for non 802.11n bitrates points to a hw specific "band=
-"=20
-> array, so I don't think we can export it to userspace as an index.
-
-But we can name it _legacy and put the bitrate there in units of
-100kbps, and leave it out for MCS rates then.
-
-johannes
-
---=-mFb3HJ4LWJL93Aeg6y4b
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJOp6zAAoJEKVg1VMiehFYxHEP/1roC+qkxGvJ87bGFU6ql2FK
-dbaqDu9n3iKeWhTkKm3XW4ctSOERM+fjbI64YyUMlepcPO5Cok+LNdOMprzNZBcl
-Lcghoz+7vt8uRm3VXBf3SqLWJV/3Or4b6WzM2jVkmlLLYqqZfQxkXV0nphcTxKZf
-+Abw5Gww4Oqo47vkxynEdKUVG2OWu6mavyfmBWePOudqmeAoIw4+Jx65Fpi7pJ76
-bwQRxpnNJfppiIe1kH2tqfJTF6JSaE9GIAknkucgRaHLtGQX2feAdSCL3JyTWUXr
-cDadh/M0ygX02ssavkfGbPKhiMQy6LOPXWydlvtXb8wRhYHDeRyNdY7jC1DpzJ82
-8woJQzKl3vnyEkQch+tKqetEj2Ptop+ihT0nAedFvURAjn2rkDl6hdWanZh0ESUl
-n/cV+JewIfItJptrYXz04yGN5V40TXlB2WSxhI2Sxl8eZEgxTbNkSPETU+fkS3iv
-ELrytpKl5uczZuRJlOvdv5IYF2eT5b9moVZm/NaYjnwSFS7v2MCnzJHkoBXhJfpf
-5cadDmwojOJoFop5Y3QxkK5PfN5HT1vb3a37zEoEm0uQLHgP63Mgqv6gDLoyvbK/
-KO+uEtyiJSzf+qeN0jXDlzyLikJ8CX6kTV7jSo1+rXa2cKI4C5ahAur/xoJDFTN7
-du49DsR5iuE8oXP2OcdI
-=8ZNJ
------END PGP SIGNATURE-----
-
---=-mFb3HJ4LWJL93Aeg6y4b--
-
+-- 
+Greetings, Michael.
