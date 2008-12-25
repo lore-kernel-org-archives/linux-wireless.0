@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:49126 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751087AbYLNDNc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Dec 2008 22:13:32 -0500
-Date: Sun, 14 Dec 2008 01:13:27 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Tony Vroon <tony@linx.net>, Len Brown <lenb@kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
-	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
-Subject: Re: Fuijtsu Lifebook RFKILL support
-Message-ID: <20081214031326.GA16087@khazad-dum.debian.net> (sfid-20081214_041343_786077_BEB06F2A)
-References: <1228957506.4045.11.camel@localhost> <20081211165247.GA4844@khazad-dum.debian.net> <1229016827.6446.6.camel@localhost> <20081211194734.GA18132@khazad-dum.debian.net> <1229046602.4030.13.camel@localhost> <20081212195331.GA12679@khazad-dum.debian.net> <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain> <1229172465.4010.11.camel@localhost> <20081213132857.GA11428@khazad-dum.debian.net> <20081213175745.GA6825@srcf.ucam.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081213175745.GA6825@srcf.ucam.org>
+Received: from mga11.intel.com ([192.55.52.93]:19422 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751479AbYLYAzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2008 19:55:23 -0500
+Subject: Re: 4965AGN Not Associating
+From: Zhu Yi <yi.zhu@intel.com>
+To: Delphi Real Estate <Info@delphi-real-estate.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <200812241158.29493.Info@delphi-real-estate.com>
+References: <200812241158.29493.Info@delphi-real-estate.com>
+Content-Type: text/plain
+Date: Thu, 25 Dec 2008 08:56:51 +0800
+Message-Id: <1230166611.2688.3.camel@debian.sh.intel.com> (sfid-20081225_015529_626997_6941B69F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 13 Dec 2008, Matthew Garrett wrote:
-> On Sat, Dec 13, 2008 at 11:28:57AM -0200, Henrique de Moraes Holschuh wrote:
-> > > Len, I would still like to export the 3 values learned about in this
-> > > event to userspace. Is it alright for me to create 3 read-only files on
-> > > the platform device? (docked, lid, radios)
-> > > It would if anything simplify the code.
-> > 
-> > FWIW, I think this is also the way to go.  It is much easier for
-> > userspace to deal with sysfs attributes.  HAL can deal with more
-> > complex stuff, but shell script writers often don't know how to, nor
-> > care to, deal with HAL.
-> 
-> I feel like I'm missing something here, but surely what we're talking 
-> about is simply a single rfkill device that affects all radios and as 
-> such should have a new RFKILL_TYPE_ALL type associated with it? I'd read 
-> this as there being a software control that affected all radios. If 
-> there's no software control at all then I agree that providing an rfkill 
-> class here isn't appropriate.
+On Thu, 2008-12-25 at 03:58 +0800, Delphi Real Estate wrote:
+> Running Kubuntu Hardy and typically compile a custom kernel.  First I
+> downloaded and compiled compat-wireless-old.tar.bz2 and compiled it to
+> my kernel 2.6.24.  Driver loaded fine and the wlan0 interface came up,
+> but would no longer associate as the old driver did.  Rebooted, but a
+> second or so after the blue wireless light came on, the kernel crashed
+> with an Aieeee!  No way to see exactly where or why, as it'd scrolled
+> off the screen and there's nothing in the logs.
 
-There isn't a "type all" rfkill class.  I have patches that export the
-rfkill core global states, and one of the global states looks like an
-"all switch" indeed (the Emergency Power Off global state).
+You can either use fb to make your console show more lines and take a
+picture for it or use netconsole to capture the log.
 
-I did try an "one rfkill class for each type, and a master rfkill
-class" approach a few months ago, and it didn't fly.  I think I even
-deleted it because it was too ugly to see the light of the day, or
-something.
+> So I tried just compiling kernels 2.6.27 and .28 to test their iwlagn
+> functionality, but unfortunately no version of .27 or .28 will compile
+> on my laptop.  .27 does compile on my HTPC, but not where it counts:
+>   OFFSETS arch/x86/boot/offsets.h
+>   OBJCOPY arch/x86/boot/vmlinux.bin
+>   AS      arch/x86/boot/header.o
+>   LD      arch/x86/boot/setup.elf
+>   OBJCOPY arch/x86/boot/setup.bin
+>   BUILD   arch/x86/boot/bzImage
+> Root device is (8, 1)
+> Setup is 11916 bytes (padded to 12288 bytes).
+> System is 2904 kB
+> CRC 30db084d
+> Kernel: arch/x86/boot/bzImage is ready  (#1)
+> ERROR: "snd_hwdep_new" [ubuntu/misc/media/snd-bt-sco.ko] undefined!
+> WARNING: modpost: Found 4 section mismatch(es).
+> To see full details build your kernel with:
+> 'make CONFIG_DEBUG_SECTION_MISMATCH=y'
+> make[1]: *** [__modpost] Error 1
+> make: *** [modules] Error 2
 
-I will post what I have soon. I am not happy with it, but it might be
-interesting to see if someone can come up with a better approach.
+CONFIG_SND_HWDEP?
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Also make sure you get the correct firmware.
+
+Thanks,
+-yi
+
