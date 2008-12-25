@@ -1,78 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:15679 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754966AbYLaOdx (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:2082 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbYLYOXG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 09:33:53 -0500
-Message-ID: <495B82CB.6050205@tuffmail.co.uk> (sfid-20081231_153411_950713_34DE3FEE)
-Date: Wed, 31 Dec 2008 14:33:47 +0000
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+	Thu, 25 Dec 2008 09:23:06 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so1262404fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Dec 2008 06:23:04 -0800 (PST)
+Message-ID: <69e28c910812250623q477fc792k3b34b80fe5f3168d@mail.gmail.com> (sfid-20081225_152325_931219_FF085E53)
+Date: Thu, 25 Dec 2008 15:23:03 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: Michael <mwhite7819@eircom.net>
+Subject: Re: You've got a Merry Christmas E-card
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081225035435.5050708@eircom.net>
 MIME-Version: 1.0
-To: htl10@users.sourceforge.net
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-References: <348894.23448.qm@web23108.mail.ird.yahoo.com>
-In-Reply-To: <348894.23448.qm@web23108.mail.ird.yahoo.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081225035435.5050708@eircom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> --- On Tue, 30/12/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->   
->> Alan Jenkins wrote:
->>     
->>> That won't fix hibernation though.  The disconnect
->>>       
->> method can still get
->>     
->>> called in resume from hibernation, before the
->>>       
->> workqueue gets unfrozen. 
->>     
->>> To be honest, I'm far more interested in
->>>       
->> suspend-to-disk than
->>     
->>> suspend-to-ram.
->>>       
->> Does this patch fix your problem? It works here, but I only
->> did one
->> test. The patch is for wireless-testing.
->>
->> Larry
->>     
+WARNING! THIS IS A VIRUS!
+
+On Thu, Dec 25, 2008 at 9:54 AM, Michael <mwhite7819@eircom.net> wrote:
+> Michael has just sent a Christmas Postcard.
+> You may pick-up your card by clicking the following link:
+> http://christmaslightsnow.com/?cardid=c707e10d6bd79621d
+> The greeting card will be stored for you for 14 days.
 >
-> My test is that STD works alright, but STR still does not work. I haven't tried STD for a long time - I mostly use STR with SUSPEND_MODULES -, so I have no idea if STD works before the patch or not. With the patch, I can suspend to RAM (removing my SUSPEND_MODULES workaround temporarily), but it would not "defrost - this is similiar to  my failed attempt at fixing this - adding some skeleton _suspend()/_resume() routines can get the driver to STR, but it won't defrost. Without any _suspend()/_resume() routines, it won't even suspend, but just spend ages trying to suspend.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> I'll post your patch to http://bugzilla.kernel.org/show_bug.cgi?id=11887  as a work-in-progress...
->
-> Hin-Tak
 
-Thanks for the patch.  I tested STD too, and it doesn't seem to hang
-anymore.  I even tested removing the adaptor while the system was
-hibernated.  However, after resume the interface is useless.
 
-I get a kernel error message, which repeats regularly (something like
-every 5 or 10 seconds):
 
-    phy0: Reset timeout!
-
-and it doesn't work:
-
-    # iwlist wlan0 scan
-    wlan0     Interface doesn't support scanning : Network is down
-
-    # ifconfig wlan0 up
-    SIOCSIFFLAGS: Connection timed out
-
-I have to re-plug the adaptor, and then it works again.
-
-Regards
-"Alan J"
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
