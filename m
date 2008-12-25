@@ -1,74 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from stinky.trash.net ([213.144.137.162]:49944 "EHLO
-	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1749667AbYLJFEK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37417 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbYLYAFV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 00:04:10 -0500
-Message-ID: <493F4DC5.9090801@trash.net> (sfid-20081210_060414_951498_875D97D4)
-Date: Wed, 10 Dec 2008 06:04:05 +0100
-From: Patrick McHardy <kaber@trash.net>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Jiri Slaby <jirislaby@gmail.com>, mickflemm@gmail.com,
-	mcgrof@gmail.com, me@bobcopeland.com
-Subject: [RFC]: atk5k: fix FCS corruption for ACKs
-Content-Type: multipart/mixed;
- boundary="------------050603010209020501060100"
+	Wed, 24 Dec 2008 19:05:21 -0500
+Subject: Broadcom 11n implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: bcm43xx-dev@lists.berlios.de
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nitaguSIvohwOfTN3scA"
+Date: Thu, 25 Dec 2008 01:05:30 +0100
+Message-Id: <1230163530.3162.10.camel@johannes> (sfid-20081225_010540_916490_9979B527)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------050603010209020501060100
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
 
-When running a monitor interface with ath5k, the FCS of ACK
-frames is two bytes short. The reason is that unlike the
-payload, the FCS doesn't seem to aligned to a 4 byte boundary
-by the chip, the attempt to remove the padding corrupts it.
+--=-nitaguSIvohwOfTN3scA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This patch checks whether there actually is any payload after
-the header (besides the FCS) before removing the padding.
+Hey,
 
-This might not be fully correct or not handle other cases where
-this can occur, but it doesn't seem too hackish and fixes the
-problem for me :)
+I hope those of you who got their presents today enjoyed that. Here's
+one from me for the poor souls like myself who have a Broadcom 11n chip:
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12101
+I've been publishing specifications for things we have reverse
+engineered, is anyone interested in implementing this? If so, go wild,
+but synchronise on the list if there are multiple people. John, I think
+you had somebody who was interested, but I can't find the email right
+now.
 
+Michael has said that he might be able to help a bit (review maybe), but
+won't implement the bulk of it. And I actually need this code ASAP since
+I failed to replace the wireless card in my new MacBook (I couldn't even
+find it).
 
---------------050603010209020501060100
-Content-Type: text/x-patch;
- name="01.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="01.diff"
+johannes
 
-commit 8c1d598338077d397aed25fe4840e4d4b51ba79c
-Author: Patrick McHardy <kaber@trash.net>
-Date:   Tue Dec 9 21:52:00 2008 +0100
+--=-nitaguSIvohwOfTN3scA
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-    atk5k: fix FCS corruption for ACKs
-    
-    The trailing FCS value is not aliged when no payload is present. Don't try
-    to remove padding to avoid corrupting it.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-    Kernel Bugzilla #12101
-    
-    Signed-off-by: Patrick McHardy <kaber@trash.net>
+iQIcBAABAgAGBQJJUs5GAAoJEKVg1VMiehFYFJkQAIWe6B1Gz3LSliglcyUXDREC
+0BV9lv6sz0WP6g0Vu5ez6MZZOHY6gjTzKfXTvdzbz6NSTQWk14ogHEYGc0aOpVeL
+32TNLxguMBNkKSd9kMhQrcrXcAkAITm8K3wND7brRkVLcujTT7rIUS7cmau1I/xv
+Tfqq2B8iwCDyXrN6XqTbsnm4Y/T/qvVyMi72iEmZ3dydTwNa97mBNwePcAwnjwyf
+MvPRt7fWA5I4TU4hX5nk2kNoBLEHoStdXVz/JxAWDgpklVOZChpAD6Y2kGwxgjQO
+kF5GaJgqfStUsEkhqpz9o8sCq0W4B934GOT/IIV8wf+jw62Th/B9bS9MY1of56Qt
+EDQtGe3boaUpKy9Vu5IKK1N2vG10YlhyHphW3Ccgh3sUTys+gEcSVyieDonbBO2h
+FegbfX5OK+BOZs144OljdJGnkYJ6oqT2PSGCFtwt3REW3lY0C48NGXOtfD3fvDWM
+30+5ac/RH43B4eUa96850ANi+26oAOtNYCoc0PSnEA8Zv4253feYcdez3fP7cpCc
+BjJD+iRke3Ra131nKCs05U9k5GmU/EyWBbqhJ7cc0g579OxD6Rb/YBkOjPxRSUix
+UElodeQ0yscrNBiTR5RlqdXN7Y+8x0L+575G6MHqYsHC2SUzdqZ5LId5ZhLAHZND
+0jx0uQg4Kb/Y7WxHrUWm
+=Aaso
+-----END PGP SIGNATURE-----
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index d9e1980..940c724 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1752,7 +1752,7 @@ accept:
- 		 * not multiples of 4 - remove it
- 		 */
- 		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
--		if (hdrlen & 3) {
-+		if (hdrlen & 3 && hdrlen != rs.rs_datalen - FCS_LEN) {
- 			pad = hdrlen % 4;
- 			memmove(skb->data + pad, skb->data, hdrlen);
- 			skb_pull(skb, pad);
+--=-nitaguSIvohwOfTN3scA--
 
---------------050603010209020501060100--
