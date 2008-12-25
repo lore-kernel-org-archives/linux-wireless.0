@@ -1,170 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:37008 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751387AbYLCTfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 14:35:20 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2008 11:35:20 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v3 1/2] ath9k: Check for pci_map_single() errors
-Date: Wed, 3 Dec 2008 03:35:29 -0800
-Message-ID: <1228304130-11337-2-git-send-email-lrodriguez@atheros.com> (sfid-20081203_203527_022571_C299CF19)
-In-Reply-To: <1228304130-11337-1-git-send-email-lrodriguez@atheros.com>
-References: <1228304130-11337-1-git-send-email-lrodriguez@atheros.com>
+Received: from wf-out-1314.google.com ([209.85.200.172]:64308 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751473AbYLYCfc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2008 21:35:32 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so3398738wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Dec 2008 18:35:31 -0800 (PST)
+Message-ID: <1197ff4c0812241835u70bb55e3i713103946148c2f1@mail.gmail.com> (sfid-20081225_033633_345484_3233E24A)
+Date: Thu, 25 Dec 2008 10:35:31 +0800
+From: YanBo <dreamfly281@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: Broadcom 11n implementation
+Cc: bcm43xx-dev@lists.berlios.de,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200812250115.45283.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+References: <1230163530.3162.10.camel@johannes>
+	 <200812250115.45283.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pci_map_single() can fail so detect those errors with
-pci_dma_mapping_error() and deal with them accordingly.
+On 12/25/08, Michael Buesch <mb@bu3sch.de> wrote:
+> On Thursday 25 December 2008 01:05:30 Johannes Berg wrote:
+>> Hey,
+>>
+>> I hope those of you who got their presents today enjoyed that. Here's
+>> one from me for the poor souls like myself who have a Broadcom 11n chip:
+>>
+>> I've been publishing specifications for things we have reverse
+>> engineered, is anyone interested in implementing this? If so, go wild,
+>> but synchronise on the list if there are multiple people. John, I think
+>> you had somebody who was interested, but I can't find the email right
+>> now.
+>>
+>> Michael has said that he might be able to help a bit (review maybe), but
+>> won't implement the bulk of it. And I actually need this code ASAP since
+>> I failed to replace the wireless card in my new MacBook (I couldn't even
+>> find it).
+>
+> Of course, I will always be available to give advise and help on the
+> technical details.
+> With the recent merge of the PHY abstraction in b43 it shouldn't be that
+> hard
+> anymore to understand the basics of the code. I think stuff is clearly
+> modulised now
+> and fairly easy to understand, after you once understood the basics of the
+> device.
+>
+> So for implementing N-PHY, you'll basically work inside of the phy_n.c and
+> phy_n.h files only (maybe 98% of the work will be there).
+>
+> So, you could probably look into phy_g.c to get an idea of how this could
+> probably
+> look like.
+>
+> Please contact us before you start writing patches, so we can give some
+> additional
+> advise on coding conventions used in the driver.
+>
+Consider the currently AGNX project in logjam cause lack of some RF
+specs detail,  I think I have some time to do this. or with other guys
+who also interesting with it.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/beacon.c |   16 +++++++++++++++-
- drivers/net/wireless/ath9k/recv.c   |   17 +++++++++++++++++
- drivers/net/wireless/ath9k/xmit.c   |   23 +++++++++++++++++++++--
- 3 files changed, 53 insertions(+), 3 deletions(-)
+Merry Christmas to everybody! :)
 
-diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
-index e80d9b9..bc75f64 100644
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -192,6 +192,13 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
- 		pci_map_single(sc->pdev, skb->data,
- 			       skb->len,
- 			       PCI_DMA_TODEVICE);
-+	if (unlikely(pci_dma_mapping_error(sc->pdev, bf->bf_buf_addr))) {
-+		dev_kfree_skb_any(skb);
-+		bf->bf_mpdu = NULL;
-+		DPRINTF(sc, ATH_DBG_CONFIG,
-+			"pci_dma_mapping_error() on beaconing\n");
-+		return NULL;
-+	}
- 
- 	skb = ieee80211_get_buffered_bc(sc->hw, vif);
- 
-@@ -396,11 +403,18 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
- 		memcpy(&hdr[1], &val, sizeof(val));
- 	}
- 
-+	bf->bf_mpdu = skb;
- 	bf->bf_buf_addr = bf->bf_dmacontext =
- 		pci_map_single(sc->pdev, skb->data,
- 			       skb->len,
- 			       PCI_DMA_TODEVICE);
--	bf->bf_mpdu = skb;
-+	if (unlikely(pci_dma_mapping_error(sc->pdev, bf->bf_buf_addr))) {
-+		dev_kfree_skb_any(skb);
-+		bf->bf_mpdu = NULL;
-+		DPRINTF(sc, ATH_DBG_CONFIG,
-+			"pci_dma_mapping_error() on beacon alloc\n");
-+		return -ENOMEM;
-+	}
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index ba6194a..35ab3bb 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -309,6 +309,15 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 			bf->bf_buf_addr = pci_map_single(sc->pdev, skb->data,
- 					 sc->sc_rxbufsize,
- 					 PCI_DMA_FROMDEVICE);
-+			if (unlikely(pci_dma_mapping_error(sc->pdev,
-+				  bf->bf_buf_addr))) {
-+				dev_kfree_skb_any(skb);
-+				bf->bf_mpdu = NULL;
-+				DPRINTF(sc, ATH_DBG_CONFIG,
-+					"pci_dma_mapping_error() on RX init\n");
-+				error = -ENOMEM;
-+				break;
-+			}
- 			bf->bf_dmacontext = bf->bf_buf_addr;
- 		}
- 		sc->sc_rxlink = NULL;
-@@ -594,6 +603,14 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		bf->bf_buf_addr = pci_map_single(sc->pdev, requeue_skb->data,
- 					 sc->sc_rxbufsize,
- 					 PCI_DMA_FROMDEVICE);
-+		if (unlikely(pci_dma_mapping_error(sc->pdev,
-+			  bf->bf_buf_addr))) {
-+			dev_kfree_skb_any(requeue_skb);
-+			bf->bf_mpdu = NULL;
-+			DPRINTF(sc, ATH_DBG_CONFIG,
-+				"pci_dma_mapping_error() on RX\n");
-+			break;
-+		}
- 		bf->bf_dmacontext = bf->bf_buf_addr;
- 
- 		/*
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 413fbdd..f98a795 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -1653,7 +1653,7 @@ static void ath_txq_drain_pending_buffers(struct ath_softc *sc,
- 	}
- }
- 
--static void ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
-+static int ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
- 				struct sk_buff *skb,
- 				struct ath_tx_control *txctl)
- {
-@@ -1712,9 +1712,18 @@ static void ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
- 	/* DMA setup */
- 
- 	bf->bf_mpdu = skb;
-+
- 	bf->bf_dmacontext = pci_map_single(sc->pdev, skb->data,
- 					   skb->len, PCI_DMA_TODEVICE);
-+	if (unlikely(pci_dma_mapping_error(sc->pdev, bf->bf_dmacontext))) {
-+		bf->bf_mpdu = NULL;
-+		DPRINTF(sc, ATH_DBG_CONFIG,
-+			"pci_dma_mapping_error() on TX\n");
-+		return -ENOMEM;
-+	}
-+
- 	bf->bf_buf_addr = bf->bf_dmacontext;
-+	return 0;
- }
- 
- /* FIXME: tx power */
-@@ -1786,10 +1795,12 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 	spin_unlock_bh(&txctl->txq->axq_lock);
- }
- 
-+/* Upon failure caller should free skb */
- int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb,
- 		 struct ath_tx_control *txctl)
- {
- 	struct ath_buf *bf;
-+	int r;
- 
- 	/* Check if a tx buffer is available */
- 
-@@ -1800,7 +1811,15 @@ int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb,
- 		return -1;
- 	}
- 
--	ath_tx_setup_buffer(sc, bf, skb, txctl);
-+	r = ath_tx_setup_buffer(sc, bf, skb, txctl);
-+	if (unlikely(r)) {
-+		spin_lock_bh(&sc->sc_txbuflock);
-+		DPRINTF(sc, ATH_DBG_FATAL, "TX mem alloc failure\n");
-+		list_add_tail(&bf->list, &sc->sc_txbuf);
-+		spin_unlock_bh(&sc->sc_txbuflock);
-+		return r;
-+	}
-+
- 	ath_tx_start_dma(sc, bf, txctl);
- 
- 	return 0;
--- 
-1.5.6.rc2.15.g457bb.dirty
-
+BR
+Yanbo
