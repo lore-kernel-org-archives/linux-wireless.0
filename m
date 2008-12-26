@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.177]:41995 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689AbYLPRvt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 12:51:49 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so1575546wah.21
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2008 09:51:48 -0800 (PST)
-Message-ID: <69e28c910812160951v300fb356w46e637b210253179@mail.gmail.com> (sfid-20081216_185153_740774_D47EC566)
-Date: Tue, 16 Dec 2008 18:51:48 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Lennert Buytenhek" <buytenh@wantstofly.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1229449041.7307.49.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20081216025542.GO18056@xi.wantstofly.org>
-	 <1229443806.7307.34.camel@localhost.localdomain>
-	 <20081216161658.GC3636@tuxdriver.com>
-	 <1229449041.7307.49.camel@localhost.localdomain>
+Received: from c60.cesmail.net ([216.154.195.49]:65061 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752160AbYLZBUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Dec 2008 20:20:07 -0500
+Subject: Re: 4965AGN Not Associating
+From: Pavel Roskin <proski@gnu.org>
+To: Delphi Real Estate <Info@delphi-real-estate.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <200812250800.26394.Info@delphi-real-estate.com>
+References: <200812241158.29493.Info@delphi-real-estate.com>
+	 <1230166611.2688.3.camel@debian.sh.intel.com>
+	 <200812250800.26394.Info@delphi-real-estate.com>
+Content-Type: text/plain
+Date: Thu, 25 Dec 2008 20:20:05 -0500
+Message-Id: <1230254405.17014.26.camel@dv> (sfid-20081226_022013_748663_3EB50FD3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 16, 2008 at 6:37 PM, Dan Williams <dcbw@redhat.com> wrote:
->
-> Marvell recently changed the license terms on
-> at least some of their firmware to be comparable to other freely
-> available firmware (like Intel's).
+On Thu, 2008-12-25 at 08:00 -0800, Delphi Real Estate wrote:
 
-When will Broadcom do the same...?! Seriously, they are getting
-outdone even by Marvell!
+> All right, so the kernel iwl modules are working with this kernel,
+> good enough for me... although iwconfig shows, "Encryption
+> key:AM32-52G0-50D6-130B-6AF0-201D-9450-H978 [2]   Security
+> mode:open".  
+> 
+> 'Open'?  Homey don't think so.  The AP us set to WPA AES.  Why would
+> it say it's open?
+
+It means "open system authentication", as opposed to "shared key"
+authentication, which can only be used with WEP.
+
+If iwconfig was smarter, it would show "WPA" there, but it's not so
+smart.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Regards,
+Pavel Roskin
