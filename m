@@ -1,261 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:63383 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250AbYLJRkh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 12:40:37 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so113800eyi.37
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2008 09:40:35 -0800 (PST)
-From: Henning Rogge <hrogge@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/2] Add signal strength and bandwith to nl80211station info
-Date: Wed, 10 Dec 2008 18:40:26 +0100
-Cc: Henning Rogge <rogge@fgan.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-References: <200811252131.30161.hrogge@googlemail.com> <200812100753.58590.rogge@fgan.de> <1228899950.1029.33.camel@johannes.berg>
-In-Reply-To: <1228899950.1029.33.camel@johannes.berg>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4086583.cNSQcMZ8l4";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200812101840.32146.hrogge@googlemail.com> (sfid-20081210_184043_874913_D18162C0)
+Received: from c60.cesmail.net ([216.154.195.49]:44598 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752337AbYLZBAk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Dec 2008 20:00:40 -0500
+Subject: Re: 4965AGN Not Associating
+From: Pavel Roskin <proski@gnu.org>
+To: Delphi Real Estate <Info@delphi-real-estate.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200812241002.12787.Info@delphi-real-estate.com>
+References: <200812241002.12787.Info@delphi-real-estate.com>
+Content-Type: text/plain
+Date: Thu, 25 Dec 2008 20:00:38 -0500
+Message-Id: <1230253238.17014.18.camel@dv> (sfid-20081226_020044_417131_99CE09C1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4086583.cNSQcMZ8l4
-Content-Type: multipart/mixed;
-  boundary="Boundary-01=_L8/PJurgp5+NzHj"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Wed, 2008-12-24 at 10:02 -0800, Delphi Real Estate wrote:
+> I was running the iwl4965 git driver successfully from 6 June up until
+> two days ago, when I decided to be a smart-aleck and try to get
+> 802.11n working.  After two 12 hour days of struggle, I now have no
+> wifi.
+> 
+> Running Kubuntu Hardy and typically compile a custom kernel.  First I
+> downloaded and compiled compat-wireless-old.tar.bz2 and compiled it to
+> my kernel 2.6.24.  Driver loaded fine and the wlan0 interface came up,
+> but would no longer associate as the old driver did.  Rebooted, but a
+> second or so after the blue wireless light came on, the kernel crashed
+> with an Aieeee!  No way to see exactly where or why, as it'd scrolled
+> off the screen and there's nothing in the logs.
 
---Boundary-01=_L8/PJurgp5+NzHj
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Capturing kernel messages is described in Documentation/oops-tracing.txt
+in the kernel sources.
 
-On Wednesday 10 December 2008 10:05:50 Johannes Berg wrote:
-> Uh huh, it's a huge table, and very irregular. Not very inclined to copy
-> that right now. What's wrong with deferring it until somebody actually
-> implements these rates?
+> So I tried just compiling kernels 2.6.27 and .28 to test their iwlagn
+> functionality, but unfortunately no version of .27 or .28 will compile
+> on my laptop.  .27 does compile on my HTPC, but not where it counts:
+>   OFFSETS arch/x86/boot/offsets.h
+>   OBJCOPY arch/x86/boot/vmlinux.bin
+>   AS      arch/x86/boot/header.o
+>   LD      arch/x86/boot/setup.elf
+>   OBJCOPY arch/x86/boot/setup.bin
+>   BUILD   arch/x86/boot/bzImage
+> Root device is (8, 1)
+> Setup is 11916 bytes (padded to 12288 bytes).
+> System is 2904 kB
+> CRC 30db084d
+> Kernel: arch/x86/boot/bzImage is ready  (#1)
+> ERROR: "snd_hwdep_new" [ubuntu/misc/media/snd-bt-sco.ko] undefined!
+> WARNING: modpost: Found 4 section mismatch(es).
+> To see full details build your kernel with:
+> 'make CONFIG_DEBUG_SECTION_MISMATCH=y'
+> make[1]: *** [__modpost] Error 1
+> make: *** [modules] Error 2
 
-Okay... I will try to implement a complete version of the function when I g=
-et=20
-access to the table... here is a modified patch with two warnings about the=
-=20
-missing datarates. It will return 0 for mcs >=3D 32.
+You must be compiling kernel sources patched by Ubuntu.  There is an
+unresolved symbol in on of the sound driver provided by Ubuntu.  You can
+disable that driver or enable sound option that would provide
+"snd_hwdep_new".  I think you can even ignore this error.  It should not
+prevent wireless drivers from working.
 
-Just a question, did someone with 802.11n hardware test this patches ? I ho=
-pe=20
-I will have some hardware myself at the end of the year, but at the moment=
-=20
-it's untested.
+> So I gave up on a new kernel and compiled 2.6.22, booted, and compiled
+> compat-wireless-old.tar.bz2 to it, which went fine.
 
-Henning
+IMHO it's a major overkill to downgrade the kernel so much because of
+some external sound module, especially when the userspace is not exactly
+conservative!
 
-=2D-------------------------
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 56450b4..cc93e7a 100644
-=2D-- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -431,14 +431,14 @@ enum nl80211_sta_flags {
-  * when getting information about the bitrate of a station.
-  *
-  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
-=2D * @NL80211_RATE_INFO_LEGACY: bitrate for 802.11abg (u16, 100kbit/s)
-+ * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
-  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
-  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
-  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
-  */
- enum nl80211_rate_info {
- 	__NL80211_RATE_INFO_INVALID,
-=2D	NL80211_RATE_INFO_LEGACY,
-+	NL80211_RATE_INFO_BITRATE,
- 	NL80211_RATE_INFO_MCS,
- 	NL80211_RATE_INFO_40_MHZ_WIDTH,
- 	NL80211_RATE_INFO_SHORT_GI,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 3f13928..643dcc1 100644
-=2D-- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1079,6 +1079,39 @@ static int parse_station_flags(struct nlattr *nla, u=
-32=20
-*staflags)
- 	return 0;
- }
-=20
-+static u16 nl80211_calculate_bitrate(struct rate_info *rate)
-+{
-+	int modulation, streams, bitrate;
-+
-+	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
-+		return rate->legacy;
-+
-+	/* the formula below does only work for MCS values smaller than 32 */
-+	if (rate->mcs >=3D 32)
-+		return 0;
-+
-+	modulation =3D rate->mcs & 7;
-+	streams =3D (rate->mcs >> 3) + 1;
-+
-+	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
-+			13500000 : 6500000;
-+
-+	if (modulation < 4)
-+		bitrate *=3D (modulation + 1);
-+	else if (modulation =3D=3D 4)
-+		bitrate *=3D (modulation + 2);
-+	else
-+		bitrate *=3D (modulation + 3);
-+
-+	bitrate *=3D streams;
-+
-+	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
-+		bitrate =3D (bitrate / 9) * 10;
-+
-+	/* do NOT round down here */
-+	return (bitrate + 50000) / 100000;
-+}
-+
- static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 				int flags, struct net_device *dev,
- 				u8 *mac_addr, struct station_info *sinfo)
-@@ -1122,13 +1155,13 @@ static int nl80211_send_station(struct sk_buff *msg=
-,=20
-u32 pid, u32 seq,
- 		if (!txrate)
- 			goto nla_put_failure;
-=20
-=2D
-=2D		if (!(sinfo->txrate.flags & RATE_INFO_FLAGS_MCS))
-=2D			NLA_PUT_U16(msg, NL80211_RATE_INFO_LEGACY,
-=2D				    sinfo->txrate.legacy);
-=2D		else
-+		/* nl80211_calculate_bitrate will return 0 for mcs >=3D 32 */
-+		NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE,
-+				nl80211_calculate_bitrate(&sinfo->txrate));
-+		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
- 			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
- 				    sinfo->txrate.mcs);
-+
- 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
- 			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
- 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
+>   I even get a blue light for the radio switch now.  But it will not
+> associate.  I am using the exact same interfaces file as before.  I
+> tried network manager, but it doesn't even recognize this as a
+> wireless device.
+> 
+>  # iwconfig
+> wlan0     IEEE 802.11abgn  ESSID:"Hex"
+>           Mode:Managed  Frequency:2.462 GHz  Access Point: Not-Associated
+>           Tx-Power=14 dBm
+>           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+>           Encryption key:off
 
+It looks like WPA is not being used.
 
---Boundary-01=_L8/PJurgp5+NzHj
-Content-Type: text/x-patch;
-  charset="ISO-8859-15";
-  name="nl80211ext_v10_2.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="nl80211ext_v10_2.patch"
+>           Power Management:off
+>           Link Quality:0  Signal level:0  Noise level:0
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+> 
+> # iwpriv
+> wlan0     no private ioctls.
+> 
+> # iwpriv wlan0 network_type g
+> wlan0     no private ioctls.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 56450b4..cc93e7a 100644
-=2D-- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -431,14 +431,14 @@ enum nl80211_sta_flags {
-  * when getting information about the bitrate of a station.
-  *
-  * @__NL80211_RATE_INFO_INVALID: attribute number 0 is reserved
-=2D * @NL80211_RATE_INFO_LEGACY: bitrate for 802.11abg (u16, 100kbit/s)
-+ * @NL80211_RATE_INFO_BITRATE: total bitrate (u16, 100kbit/s)
-  * @NL80211_RATE_INFO_MCS: mcs index for 802.11n (u8)
-  * @NL80211_RATE_INFO_40_MHZ_WIDTH: 40 Mhz dualchannel bitrate
-  * @NL80211_RATE_INFO_SHORT_GI: 400ns guard interval
-  */
- enum nl80211_rate_info {
- 	__NL80211_RATE_INFO_INVALID,
-=2D	NL80211_RATE_INFO_LEGACY,
-+	NL80211_RATE_INFO_BITRATE,
- 	NL80211_RATE_INFO_MCS,
- 	NL80211_RATE_INFO_40_MHZ_WIDTH,
- 	NL80211_RATE_INFO_SHORT_GI,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 3f13928..643dcc1 100644
-=2D-- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1079,6 +1079,39 @@ static int parse_station_flags(struct nlattr *nla, u=
-32 *staflags)
- 	return 0;
- }
-=20
-+static u16 nl80211_calculate_bitrate(struct rate_info *rate)
-+{
-+	int modulation, streams, bitrate;
-+
-+	if (!(rate->flags & RATE_INFO_FLAGS_MCS))
-+		return rate->legacy;
-+
-+	/* the formula below does only work for MCS values smaller than 32 */
-+	if (rate->mcs >=3D 32)
-+		return 0;
-+
-+	modulation =3D rate->mcs & 7;
-+	streams =3D (rate->mcs >> 3) + 1;
-+
-+	bitrate =3D (rate->flags & RATE_INFO_FLAGS_40_MHZ_WIDTH) ?
-+			13500000 : 6500000;
-+
-+	if (modulation < 4)
-+		bitrate *=3D (modulation + 1);
-+	else if (modulation =3D=3D 4)
-+		bitrate *=3D (modulation + 2);
-+	else
-+		bitrate *=3D (modulation + 3);
-+
-+	bitrate *=3D streams;
-+
-+	if (rate->flags & RATE_INFO_FLAGS_SHORT_GI)
-+		bitrate =3D (bitrate / 9) * 10;
-+
-+	/* do NOT round down here */
-+	return (bitrate + 50000) / 100000;
-+}
-+
- static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 				int flags, struct net_device *dev,
- 				u8 *mac_addr, struct station_info *sinfo)
-@@ -1122,13 +1155,13 @@ static int nl80211_send_station(struct sk_buff *msg=
-, u32 pid, u32 seq,
- 		if (!txrate)
- 			goto nla_put_failure;
-=20
-=2D
-=2D		if (!(sinfo->txrate.flags & RATE_INFO_FLAGS_MCS))
-=2D			NLA_PUT_U16(msg, NL80211_RATE_INFO_LEGACY,
-=2D				    sinfo->txrate.legacy);
-=2D		else
-+		/* nl80211_calculate_bitrate will return 0 for mcs >=3D 32 */
-+		NLA_PUT_U16(msg, NL80211_RATE_INFO_BITRATE,
-+				nl80211_calculate_bitrate(&sinfo->txrate));
-+		if (sinfo->txrate.flags & RATE_INFO_FLAGS_MCS)
- 			NLA_PUT_U8(msg, NL80211_RATE_INFO_MCS,
- 				    sinfo->txrate.mcs);
-+
- 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_40_MHZ_WIDTH)
- 			NLA_PUT_FLAG(msg, NL80211_RATE_INFO_40_MHZ_WIDTH);
- 		if (sinfo->txrate.flags & RATE_INFO_FLAGS_SHORT_GI)
+I don't think it's supposed to work.
 
---Boundary-01=_L8/PJurgp5+NzHj--
+> # iwlist wlan0 auth
+> wlan0     Authentication capabilities :
+>                 WPA
+>                 WPA2
+>                 CIPHER-TKIP
+>                 CIPHER-CCMP
+>           Current Authentication algorithm :
+>                 open
+> 
+> So for some reason it is not recognizing my WPA commands
+> in /etc/network/interfaces (which worked before).  Or maybe it's in
+> 'n' or 'a' mode, rather than g.  I've searched everywhere and can not
+> find how to set it to g mode now that it has no private ioctls.
 
---nextPart4086583.cNSQcMZ8l4
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+I don't think you need to do anything like that.  Try scanning to see if
+the card sees the AP.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+I don't know much about Ubuntu (or Debian) specific network
+configuration, but I suggest that you try running wpa_supplicant
+manually.  Upgrading to a recent kernel may help too.  If you want to
+try the bleeding edge 802.11n support, perhaps you should check out the
+wireless-testing branch from git.
 
-iEYEABECAAYFAkk//xAACgkQcenvcwAcHWc/8wCfbXfZkHN1IC4j2AEwy4Z35Qmy
-sMAAn2o9+h1CRaaSXHqHZsDefrAKz70r
-=f2z7
------END PGP SIGNATURE-----
-
---nextPart4086583.cNSQcMZ8l4--
+-- 
+Regards,
+Pavel Roskin
