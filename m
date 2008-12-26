@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelphi.physics.adelaide.edu.au ([129.127.102.1]:52761 "EHLO
-	adelphi.physics.adelaide.edu.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754039AbYLPADe (ORCPT
+Received: from cp-out12.libero.it ([212.52.84.112]:41751 "EHLO
+	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752598AbYLZMqb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 19:03:34 -0500
-From: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
-Message-Id: <200812160002.mBG02q2L029504@sprite.physics.adelaide.edu.au> (sfid-20081216_010338_814792_E7E05934)
-Subject: Re: Fuijtsu Lifebook RFKILL support
-To: tony@linx.net
-Date: Tue, 16 Dec 2008 10:32:52 +1030 (CST)
-Cc: jwoithe@physics.adelaide.edu.au (Jonathan Woithe),
-	dcbw@redhat.com (Dan Williams),
-	hmh@hmh.eng.br (Henrique de Moraes Holschuh),
-	lenb@kernel.org (Len Brown), ivdoorn@gmail.com (Ivo van Doorn),
-	linux-acpi@vger.kernel.org, nokos@gmx.net (Peter Gruber),
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1229384919.3983.1.camel@localhost> from "Tony Vroon" at Dec 15, 2008 11:48:39 PM
+	Fri, 26 Dec 2008 07:46:31 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
+To: Meelis Roos <mroos@ut.ee>
+Subject: Re: RT2500 scan problem in 2.6.28
+Date: Fri, 26 Dec 2008 13:42:43 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <Pine.SOC.4.64.0812261259030.13693@math.ut.ee>
+In-Reply-To: <Pine.SOC.4.64.0812261259030.13693@math.ut.ee>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200812261342.43875.rossi.f@inwind.it> (sfid-20081226_134634_733441_122FCD4F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Tue, 2008-12-16 at 10:12 +1030, Jonathan Woithe wrote:
-> > It's probably sensible for me to pick up on the next
-> > version of your patch.
-> 
-> There won't be a next version for a while. Please test the attached
-> version that uses simple platform files.
+On Friday 26 December 2008, Meelis Roos wrote:
 
-Ok, I'll see if I can get to this before the end of this week.
+> Hello,
+>
+> I finally found a network where rt2x00 driver works reliably (using
+> 2.6.27). However, it does not work anymore with 2.6.28.
+>
+> The network uses hidden SSID so wpa_supplicant is configured with
+> ap_scan to find it. This works fine in 2.6.27 but the scan fails with
+> 2.6.28. Rugging wpa_supplicant in debug mode tells the scan finds a
+> network with ssid='' and it does not match.
+>
+> How can I debug it some more? I'm here with the network today and
+> tomorrow, then I will leav for home.
 
-Regards
-  jonathan
+Hi Meelis,
+are you using the official kernel release or wireless-testing? In 
+wireless-testing there's included a patch for associating to hidden networks 
+when SSID=''. You can see the SSID value with iwlist <if> scanning.
+
+Fabio
