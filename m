@@ -1,93 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:45000 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750958AbYLRRLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 12:11:20 -0500
-Date: Thu, 18 Dec 2008 18:11:15 +0100 (CET)
-From: Julia Lawall <julia@diku.dk>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: lrodriguez@atheros.com, jmalinen@atheros.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 7/11] drivers/net/wireless/ath9k: Move a dereference
- below a NULL test
-In-Reply-To: <20081218155042.GF4121@tuxdriver.com>
-Message-ID: <Pine.LNX.4.64.0812181807330.23988@ask.diku.dk> (sfid-20081218_181124_757731_CA250B93)
-References: <Pine.LNX.4.64.0812161613510.20444@pc-004.diku.dk>
- <20081218155042.GF4121@tuxdriver.com>
+Received: from aa002msb.fastweb.it ([85.18.95.81]:39899 "EHLO
+	aa002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752614AbYLZRHZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Dec 2008 12:07:25 -0500
+Received: from [192.168.1.101] (39.234.158.229) by aa002msb.fastweb.it (8.0.013.8)
+        id 493752D30515BDAF for linux-wireless@vger.kernel.org; Fri, 26 Dec 2008 18:07:24 +0100
+Message-ID: <49550F4B.8010304@techemia.com> (sfid-20081226_180731_208177_58A5411F)
+Date: Fri, 26 Dec 2008 18:07:23 +0100
+From: techmin <info@techemia.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: 4965agn disassociating by local choice (reason=3)
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Dec 2008, John W. Linville wrote:
+Please note:
+Problem on kernel 2.6.27-7/9/10
+with compat wireless 2008-12-11 and last compat wireless 2008-12-26
+i use wep.
 
-> On Tue, Dec 16, 2008 at 04:14:28PM +0100, Julia Lawall wrote:
-> > From: Julia Lawall <julia@diku.dk>
-> > 
-> > In each case, if the NULL test is necessary, then the dereference should be
-> > moved below the NULL test.
-> > 
-> > The semantic patch that makes this change is as follows:
-> > (http://www.emn.fr/x-info/coccinelle/)
-> > 
-> > // <smpl>
-> > @@
-> > type T;
-> > expression E;
-> > identifier i,fld;
-> > statement S;
-> > @@
-> > 
-> > - T i = E->fld;
-> > + T i;
-> >   ... when != E
-> >       when != i
-> >   if (E == NULL) S
-> > + i = E->fld;
-> > // </smpl>
-> > 
-> > Signed-off-by: Julia Lawall <julia@diku.dk>
-> > 
-> > ---
-> >  drivers/net/wireless/ath9k/hw.c     |    3 ++-
-> >  1 files changed, 2 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-> > index 98bc25c..7d1dac6 100644
-> > --- a/drivers/net/wireless/ath9k/hw.c
-> > +++ b/drivers/net/wireless/ath9k/hw.c
-> > @@ -5581,11 +5581,12 @@ static inline bool ath9k_hw_run_init_cals(struct ath_hal *ah,
-> >  	struct ath9k_channel ichan;
-> >  	bool isCalDone;
-> >  	struct hal_cal_list *currCal = ahp->ah_cal_list_curr;
-> > -	const struct hal_percal_data *calData = currCal->calData;
-> > +	const struct hal_percal_data *calData;
-> >  	int i;
-> >  
-> >  	if (currCal == NULL)
-> >  		return false;
-> > +	calData = currCal->calData;
-> >  
-> >  	ichan.CalValid = 0;
-> 
-> This patch doesn't seem to apply.  I don't see this code anywhere.
-> Perhaps this is against some older version?
+[ 2807.093457] wlan0: direct probe to AP XX:XX:4b:15:a5:a0 try 
+1                                                       [ 2807.095392] 
+wlan0 direct probe 
+responded                                                                             
 
-I used the following version of linux-next, which indeed a bit out of 
-date:
+[ 2807.095403] wlan0: authenticate with AP 
+XX:XX:4b:15:a5:a0                                                            
 
-commit feaf3848a813a106f163013af6fcf6c4bfec92d9
-Merge: a771132... 0e435ac...
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Wed Dec 3 16:45:56 2008 -0800
+[ 2807.097198] wlan0: 
+authenticated                                                                                     
 
+[ 2807.097208] wlan0: associate with AP 
+XX:XX:4b:15:a5:a0                                                               
 
-But I see the same code in the following version of linux-2.6
+[ 2807.099484] wlan0: RX AssocResp from XX:XX:4b:15:a5:a0 (capab=0x431 
+status=0 aid=3)                                 [ 2807.099493] wlan0: 
+associated                                                                                        
 
-commit 1bda71282ded6a2e09a2db7c8884542fb46bfd4f
-Merge: 7a62b17... 25a41b2...
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Tue Dec 16 09:49:10 2008 -0800
+[ 2807.120643] wlan0: disassociating by local choice (reason=3)
 
-julia
+and wireless not work (ping ap non working and connection is down).
+
+iwlist wlan0 scan found the wireless network.
