@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gold.linx.net ([195.66.232.40]:37365 "EHLO gold.linx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751328AbYLMUz4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Dec 2008 15:55:56 -0500
-Subject: Re: Fuijtsu Lifebook RFKILL support
-From: Tony Vroon <tony@linx.net>
-Reply-To: tony@linx.net
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Len Brown <lenb@kernel.org>, Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-acpi@vger.kernel.org, jwoithe@physics.adelaide.edu.au,
-	Peter Gruber <nokos@gmx.net>, linux-wireless@vger.kernel.org
-In-Reply-To: <20081213175745.GA6825@srcf.ucam.org>
-References: <1228957506.4045.11.camel@localhost>
-	 <20081211165247.GA4844@khazad-dum.debian.net>
-	 <1229016827.6446.6.camel@localhost>
-	 <20081211194734.GA18132@khazad-dum.debian.net>
-	 <1229046602.4030.13.camel@localhost>
-	 <20081212195331.GA12679@khazad-dum.debian.net>
-	 <alpine.LFD.2.00.0812121532580.4064@localhost.localdomain>
-	 <1229172465.4010.11.camel@localhost>
-	 <20081213132857.GA11428@khazad-dum.debian.net>
-	 <20081213175745.GA6825@srcf.ucam.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gscMO4jifkd6Uy60jCQ1"
-Date: Sat, 13 Dec 2008 20:55:13 +0000
-Message-Id: <1229201713.26333.3.camel@localhost> (sfid-20081213_215609_205038_4D37807B)
-Mime-Version: 1.0
+Received: from rn-out-0910.google.com ([64.233.170.185]:7581 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751085AbYLZSv1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Dec 2008 13:51:27 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so2642567rnd.17
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2008 10:51:25 -0800 (PST)
+Message-ID: <fd38e5150812261051y29851b18sf5638c57e355d6f2@mail.gmail.com> (sfid-20081226_195129_757498_650DEE93)
+Date: Sat, 27 Dec 2008 00:21:25 +0530
+From: "rajith pr" <rajithpr@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: How to install Ath5 driver?
+In-Reply-To: <1230245303.16253.8.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <fd38e5150812251125n62086e63y64584282fbe9dbe4@mail.gmail.com>
+	 <1230245303.16253.8.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Pavel,
 
---=-gscMO4jifkd6Uy60jCQ1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I intend to work on the ath5k driver only. Iam actually stuck with the
+Enabling ath5k section of
+http://wireless.kernel.org/en/users/Drivers/ath5k. May be a trivial
+think but i dont have an option but ask :-)
 
-On Sat, 2008-12-13 at 17:57 +0000, Matthew Garrett wrote:
-> If there's no software control at all then I agree that providing an
-> rfkill class here isn't appropriate.
+Enabling ath5k section talks about some configuration but i dont know
+where to configure these. Should i run some configuration tool and
+follow the steps ??
 
-Okay, thanks Matthew. For now that's where things stand, no software
-control over the radios.
-
-There is actually a beautiful radio control device advertised in the
-DSDT as HID FUJ02E1 (internal name CMBT). Unfortunately this device does
-not actually appear to be present in the ACPI device list (while FUJ02B1
-and FUJ02E3 are, even without a driver loaded).
-
-I can get you the DSDT if it interests you.
+Thanks in advance,
 
 Regards,
-Tony V.
+Rajith.
 
---=-gscMO4jifkd6Uy60jCQ1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAklEITEACgkQp5vW4rUFj5qxuACfZs0guAGWgYqq7XqNWPhSp8+k
-gPkAoKlB/FxPPYuY1RDAUwIj5UQ6LXj5
-=Uy9V
------END PGP SIGNATURE-----
-
---=-gscMO4jifkd6Uy60jCQ1--
-
+On Fri, Dec 26, 2008 at 4:18 AM, Pavel Roskin <proski@gnu.org> wrote:
+> On Fri, 2008-12-26 at 02:25 +0700, rajith pr wrote:
+>> Hi all,
+>>
+>> Iam a wireless LAN developer over 4 Yrs of experience. Have worked on
+>> wireless LAN AP, Routers and switches.
+>> Have a passion to work on linux but never had the chance to do so. So,
+>> i though this would be the rite time to start working on it. WLAN
+>> being something i have expertise in i would like to do some feature
+>> development on madwifi drivers.
+>
+> MadWifi is not the same thing as ath5k.  If you want to work on MadWifi,
+> please look at https://madwifi-project.org/ and write to
+> madwifi-devel@lists.sourceforge.net if you have any questions.
+>
+>> After reading the developer notes from wiki i have been able to
+>> download the sources. Now i want to build the sources, install the
+>> driver and try it on wireless card.
+>
+> Please be specific want you read, what you downloaded (including the
+> version) and what kind of problems you have with the code.
+>
+>> Can anyone guide me on this.
+>
+> It would be better if you follow the existing documentation and ask only
+> about thing that are unclear or about problems that are not described in
+> the documentation.  Asking for guidance is an "open-ended question".
+> More details here:
+>
+> http://www.catb.org/~esr/faqs/smart-questions.html#explicit
+>
+> --
+> Regards,
+> Pavel Roskin
+>
