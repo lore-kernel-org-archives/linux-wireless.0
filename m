@@ -1,59 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47308 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750756AbYLaF1P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 00:27:15 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2008 21:27:15 -0800
-Date: Wed, 31 Dec 2008 10:45:29 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Tomas Winkler <tomasw@gmail.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: Handle power constraint level advertised in
-	11d+h beacon
-Message-ID: <20081231051529.GB9080@localhost.localdomain> (sfid-20081231_062723_158624_CF9CEE3A)
-References: <1230641555-13425-1-git-send-email-vasanth@atheros.com> <1ba2fa240812300708o40717c87x13697c180be19913@mail.gmail.com>
+Received: from nat-warsl417-01.aon.at ([195.3.96.119]:35557 "EHLO email.aon.at"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751938AbYL0U6p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Dec 2008 15:58:45 -0500
+Received: from smarthub92.highway.telekom.at (HELO email.aon.at) ([172.18.5.231])
+          (envelope-sender <der.claudio@aon.at>)
+          by fallback43.highway.telekom.at (qmail-ldap-1.03) with SMTP
+          for <linux-wireless@vger.kernel.org>; 27 Dec 2008 20:52:03 -0000
+To: linux-wireless@vger.kernel.org
+Subject: status of at76-usb driver
+Message-ID: <1230411118.4956956ecb911@webmail.aon.at> (sfid-20081227_215850_986184_066EB103)
+Date: Sat, 27 Dec 2008 21:51:58 +0100 (CET)
+From: Claudio <der.claudio@aon.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1ba2fa240812300708o40717c87x13697c180be19913@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 30, 2008 at 08:38:15PM +0530, Tomas Winkler wrote:
-> > +       /* TODO: for IBSS */
-> 
-> IIRC this particular feature of 11h is not supported in IBSS
-> 
+Hi!
 
-No, this is supported in IBSS also. See 11.8.2 of IEEE802.11-2007.pdf. 
+Since my hardware stopped working properly due to a distro (ubuntu btw) upgrade and I was not able to quickly fix it, I started investigating (again) in \"the case of at76-usb\" and read through this mailing-list, the wiki and had a look at the changes in the git tree. I am not sure if I understood everything correctly.
 
-> > +       if ((conf->channel->band != IEEE80211_BAND_5GHZ) ||
-> > +           !(capab_info & WLAN_CAPABILITY_SPECTRUM_MGMT))
-> > +               return;
-> 
-> I think our original patch removed need of IEEE80211_BAND_5GHZ as
-> WLAN_CAPABILITY_SPECTRUM_MGMT
-> is sufficient condition.
-> 
+Can anyone sum up what the current state for users of at76-usb devices is please?
 
-Thats right, spectrum management is only for 5Ghz, will remove that
-redundant check, thanks. 
+It seems like the working code has been removed from the kernel in order to rewrite it anywhere in the future and adapt it to this new mac80211 thing. Which means that currently users (like me) have to use an old version of linux (like 2.4.22) to make use of their devices. Hopefully I am wrong...
 
-> > +       /* Power constraint IE length should be 1 octet */
-> > +       if (pwr_constr_elem_len != 1)
-> > +               return;
-> > +
-> > +       if ((*pwr_constr_elem <= conf->channel->max_power) &&
-> > +           (*pwr_constr_elem != conf->power_constr_level)) {
-> 
-> This is defined only when you receive country IE, how do you check for it?
+Kalle, Milan, Dan, <else>?
 
-The thing is AP should not send power constraint without country
-element :), yeah, check is needed for the APs which dont do 11d + h
-properly. 
+Regards,
 
-
-Vasanth
-
+Claudio
