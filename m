@@ -1,72 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41862 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522AbYLLW4n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 17:56:43 -0500
-Subject: Re: [RFC 2/3] mac80211: Make use of the new F_TX_NOACK and
-	F_TX_NOSEQ Radiotap TX flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <69e28c910812121451u25713c82o229a56006089edd6@mail.gmail.com> (sfid-20081212_235104_744345_FF8EB7B3)
-References: <69e28c910812121432n6e84de41s94a887110051a1dd@mail.gmail.com>
-	 <1229121558.3565.6.camel@johannes.berg>
-	 <69e28c910812121443h1fae52e6uc88749d7e9baf529@mail.gmail.com>
-	 <1229121947.3565.13.camel@johannes.berg>
-	 <69e28c910812121451u25713c82o229a56006089edd6@mail.gmail.com>
-	 (sfid-20081212_235104_744345_FF8EB7B3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WzzlH8rJGsrLBtWuuUX8"
-Date: Fri, 12 Dec 2008 23:56:38 +0100
-Message-Id: <1229122598.3565.22.camel@johannes.berg> (sfid-20081212_235645_513973_F6FBD2B8)
+Received: from c60.cesmail.net ([216.154.195.49]:41720 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750768AbYL0Gm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Dec 2008 01:42:58 -0500
+Subject: Re: [PATCH] wireless-regdb: Add install target to Makefile
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Luis Rodriguez <mcgrof@gmail.com>
+In-Reply-To: <200812262342.57675.mb@bu3sch.de>
+References: <200812262342.57675.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Sat, 27 Dec 2008 01:42:54 -0500
+Message-Id: <1230360174.2633.15.camel@dv> (sfid-20081227_074303_655356_4CCBDC94)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2008-12-26 at 23:42 +0100, Michael Buesch wrote:
+> +install:
+> +	-install -o 0 -g 0 -m 644 regulatory.bin $(PREFIX)/lib/crda/regulatory.bin
 
---=-WzzlH8rJGsrLBtWuuUX8
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+The directory should be created first.  Most likely it doesn't exist.
 
-On Fri, 2008-12-12 at 23:51 +0100, Stefanik G=C3=A1bor wrote:
+Also, the minus in front of the "install" command is harmful.  Errors
+should not be ignored.  If the file is not installed, "make install"
+should fail.
 
-> But if we redefine !ASSIGN_SEQ to mean "use the sequence number
-> supplied by userspace", we will need a new flag to distinguish between
-> driver-level vs. stack-level sequence number assignments, which is
-> essentially the same as this patch. There is no way to switch between
-> 3 states (control in driver, stack or userspace) using only one bit.
+"install -D" is not widely used in makefiles, so let's do it in two
+steps.  $(PREFIX)/lib/crda/ could be abstracted as another variable.
 
-No, wait, that's not true. We just have to make the bit be set to 1 by
-default, and let radiotap or the stack clear it. Then if it's clear
-after radiotap, the stack won't assign a seqno, and if it's still set
-then the stack checks and assigns seq and/or clears it.
+Here's my take:
 
-Might be easier to use the other bit though instead.
+wireless-regdb: Add install target to Makefile
 
-johannes
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 
---=-WzzlH8rJGsrLBtWuuUX8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+diff --git a/Makefile b/Makefile
+index 1d8ff2a..56881a7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,4 +1,8 @@
+-.PHONY: all clean
++# Install prefix
++PREFIX = /usr
++CDRA_PATH = $(PREFIX)/lib/crda
++
++.PHONY: all clean install
+ 
+ all: regulatory.bin key.pub.pem
+ 
+@@ -13,3 +17,7 @@ key.pub.pem: key.priv.pem
+ 
+ key.priv.pem:
+ 	openssl genrsa -out key.priv.pem 2048
++
++install:
++	install -o 0 -g 0 -m 755 -d $(CDRA_PATH)
++	install -o 0 -g 0 -m 644 regulatory.bin $(CDRA_PATH)/regulatory.bin
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJQuwiAAoJEKVg1VMiehFYTT0QAJ1VCaDxY/s8PVqYlXlPSFbo
-Yfu/oBxXX8xNC0jnF5toQEgQOvMMkPngX/+9e4efETC6vBQrhBMAKBFhsQ+ABDkR
-rv9wC4fhDptNbTfwf0u1czKFzoNUBSZK0Ta/kAgYSifGevJ7owHHQ8o1T0WyljQJ
-KB5CXfRLrdwGXcCOvV5DWkapCt6Bd0+0zdA+RPFVaxN9jpIZ7bRWQiljiVHMGw/P
-2c0ndfIlhSMVr0U/8O3HyGBDJgOsXTKP7B9qECunA/7V0qklnbvJXy+MMA8LJVs5
-r1PaOaSex2eJn6wxjO+urfQx0ACRk/HgMqVh7kHepmB5mWasM7E8GboCPf0ycKGe
-0Ifc4cm4osM223kA440xHox6AoAxdAxhfSv5aKaUjMVHhG/MxwigxVOhK+jbfvCB
-NuUI+wgontZJLJbwxEqkJogOCU6dlJsYFWe1B3qj5jGgGjUDYRyeBEh5AaAz8NJf
-xN0VxQWfLPMrXKHHqWPx8go26lFNPxMNdgTo9YJlUlXPtcvHx4GMSXrquapUO+u6
-bm/KAcuYwn2ESLXTYmKDDHMPKvxsVsHrLIt4r4gj0gVAeV/CVd5wrgmgyPo95+ig
-WvPOdMRHTFDIN0726IrLFXoOYGqvxRjdo1MU3UEFJI2jEqrk1PkB2QM7RzuIsLXf
-4hsBnJePHDIdz1ztiarK
-=xqCH
------END PGP SIGNATURE-----
-
---=-WzzlH8rJGsrLBtWuuUX8--
-
+-- 
+Regards,
+Pavel Roskin
