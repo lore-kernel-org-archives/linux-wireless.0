@@ -1,90 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:18024 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753567AbYLJRS1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 12:18:27 -0500
-Subject: Re: iwlagn interrupt problem
-From: reinette chatre <reinette.chatre@intel.com>
-To: "Alexander E. Patrakov" <patrakov@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <c072ca310812100710o58c38a27rba16ad2318a1cb95@mail.gmail.com>
-References: <c072ca310812100638k6c15473brb89632a9c175a028@mail.gmail.com>
-	 <c072ca310812100710o58c38a27rba16ad2318a1cb95@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 10 Dec 2008 09:19:08 -0800
-Message-Id: <1228929548.18730.21.camel@rc-desk> (sfid-20081210_181832_902632_18A3C9AC)
-Mime-Version: 1.0
+Received: from fmmailgate01.web.de ([217.72.192.221]:56038 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732AbYL0VTw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Dec 2008 16:19:52 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: initialize RC data for all mesh links upon allocation
+Date: Sat, 27 Dec 2008 22:19:49 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>, andrey@cozybit.com,
+	John W Linville <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200812272219.49555.chunkeey@web.de> (sfid-20081227_221956_584396_AA65702F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-10 at 07:10 -0800, Alexander E. Patrakov wrote:
-> [linux-wireless: sorry for the duplicate, I didn't use the correct
-> address for LKML, as this is my first LKML post from work]
-> 
-> Hello. My kernel is 2.6.27.6, and at work, I sit in a place with
-> unreliable wireless connection. The problematic piece of dmesg looks
-> like this:
-> 
-> [17454.155855] wlan0: deauthenticated
-> [17456.509322] iwlagn 0000:0c:00.0: PCI INT A disabled
-> [17456.557701] iwlagn 0000:0c:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> [17456.557814] iwlagn 0000:0c:00.0: restoring config space at offset
-> 0x1 (was 0x100102, writing 0x100106)
-> [17456.756926] Registered led device: iwl-phy0:radio
-> [17456.756976] Registered led device: iwl-phy0:assoc
-> [17456.757028] Registered led device: iwl-phy0:RX
-> [17456.757065] Registered led device: iwl-phy0:TX
-> [17456.766141] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [17460.329937] wlan0: authenticate with AP 00:19:5b:ba:53:b7
-> [17460.335391] wlan0: authenticated
-> [17460.335401] wlan0: associate with AP 00:19:5b:ba:53:b7
-> [17460.532088] wlan0: associate with AP 00:19:5b:ba:53:b7
-> [17460.534523] wlan0: RX AssocResp from 00:19:5b:ba:53:b7 (capab=0x431
-> status=0 aid=2)
-> [17460.534533] wlan0: associated
-> [17460.541523] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [17471.476059] wlan0: no IPv6 routers present
-> [17821.193753] wlan0: deauthenticated
-> [17823.550303] iwlagn 0000:0c:00.0: PCI INT A disabled
-> [17823.612978] iwlagn 0000:0c:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> [17823.613110] iwlagn 0000:0c:00.0: restoring config space at offset
-> 0x1 (was 0x100102, writing 0x100106)
-> [17823.812945] Registered led device: iwl-phy0:radio
-> [17823.812995] Registered led device: iwl-phy0:assoc
-> [17823.813048] Registered led device: iwl-phy0:RX
-> [17823.813085] Registered led device: iwl-phy0:TX
-> [17823.823450] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [17827.380770] wlan0: authenticate with AP 00:19:5b:ba:53:b7
-> [17827.382603] wlan0: authenticated
-> [17827.382613] wlan0: associate with AP 00:19:5b:ba:53:b7
-> [17827.581037] wlan0: associate with AP 00:19:5b:ba:53:b7
-> [17827.583418] wlan0: RX AssocResp from 00:19:5b:ba:53:b7 (capab=0x431
-> status=0 aid=2)
-> [17827.583429] wlan0: associated
-> [17827.591080] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [17838.392089] wlan0: no IPv6 routers present
-> 
-> Prevois kernels panicked in this place, see description and photo at
-> http://patrakov.blogspot.com/2008/09/kernel-panic.html
-> 
-> The messages about "PCI INT A" are still a problem, because at this
-> time, the audio loops and the mouse is unresponsive (i.e., the system
-> locks up for a brief period of time, but eventually recovers). Here is
-> /proc/interrupts:
+This patch fixes a panic that might occur, if the device is part of a mesh
+and tries to send with a higher rate index than "0".
 
-The messages you refer to are printed because a user space app
-(wpa_supplicant or network manager) brings the wireless interface down
-and up. Interrupts are disabled when interface is brought down and
-reenabled when interface is brought up.
+kernel BUG at net/mac80211/rate.c:239! 
+invalid opcode: 0000 [#1] SMP 
+[...]
+ Call Trace:
+ <IRQ> <0> ? invoke_tx_handlers+0x474/0xb57 [mac80211]
+ ? __ieee80211_tx_prepare+0x260/0x2a8 [mac80211]
+ ? ieee80211_master_start_xmit+0x300/0x43a [mac80211]
+ ? __qdisc_run+0xde/0x1da
+ ? net_tx_action+0xb4/0x102
+ Kernel panic - not syncing: Fatal exception in interrupt
 
-The unresponsiveness is due to a bug that was fixed recently. The
-patches have been merged into wireless-testing repo and will be included
-in 2.6.29. If you want to try 
-the individual patches, please try:
-http://marc.info/?l=linux-wireless&m=122824886623698&w=2
-http://marc.info/?l=linux-wireless&m=122849275528102&w=2
-
-
-Reinette
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+I'm not sure if we need a rate_control_rate_init in mesh_neighbour_update as well.
+So, there's one patch[1] with and another one[2] without rate_control_rate_init in
+mesh_neighbour_update...
+---
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index faac101..1c1474d 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -107,6 +107,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sta->flags = WLAN_STA_AUTHORIZED;
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
++	rate_control_rate_init(sta);
+ 
+ 	return sta;
+ }
+@@ -244,6 +245,7 @@ void mesh_neighbour_update(u8 *hw_addr, u64 rates, struct ieee80211_sub_if_data
+ 
+ 	sta->last_rx = jiffies;
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
++	rate_control_rate_init(sta);
+ 	if (peer_accepting_plinks && sta->plink_state == PLINK_LISTEN &&
+ 			sdata->u.mesh.accepting_plinks &&
+ 			sdata->u.mesh.mshcfg.auto_open_plinks)
+---
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index faac101..a540ab8 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -107,6 +107,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sta->flags = WLAN_STA_AUTHORIZED;
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
++	rate_control_rate_init(sta);
+ 
+ 	return sta;
+ }
