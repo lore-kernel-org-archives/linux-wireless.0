@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40791 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754605AbYLORPY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 12:15:24 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2008 09:15:24 -0800
-Date: Mon, 15 Dec 2008 01:15:43 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Ionut Radu <ionut.radu@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: The latest archive is missing ath5k driver
-Message-ID: <20081215091543.GD6162@tesla> (sfid-20081215_181527_474685_E705EC62)
-References: <99a2c9180812131604v41109e2ckc5c76f8f415ae8c9@mail.gmail.com>
+Received: from gateway01.websitewelcome.com ([67.18.65.19]:44417 "HELO
+	gateway01.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753959AbYL0PNi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Dec 2008 10:13:38 -0500
+Received: from 96-26-251-53.sea.clearwire-dns.net ([96.26.251.53]:39932 helo=Hydra.darkmatter.org)
+	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.68)
+	(envelope-from <Info@delphi-real-estate.com>)
+	id 1LGaki-0000fV-GH
+	for linux-wireless@vger.kernel.org; Sat, 27 Dec 2008 09:06:56 -0600
+From: Delphi Real Estate <Info@delphi-real-estate.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Setting 'n' or 'a' Mode, and WPA2?
+Date: Sat, 27 Dec 2008 07:06:56 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <99a2c9180812131604v41109e2ckc5c76f8f415ae8c9@mail.gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812270706.56478.Info@delphi-real-estate.com> (sfid-20081227_161355_713404_4B664DF2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 13, 2008 at 04:04:26PM -0800, Ionut Radu wrote:
-> Hi,
-> 
-> I have installed the compat-wireless-2008-12-11, but I couldn't find
-> the ath5k driver :
-> 
-> ionut@mendol:~/compat-wireless-2008-12-11$ sudo modprobe ath5k
-> FATAL: Module ath5k not found.
-> ionut@mendol:~/compat-wireless-2008-12-11$ sudo athload ath5k
-> Module ath_pci not detected -- this is fine
-> FATAL: Module ath5k not found.
-> ionut@mendol:~/compat-wireless-2008-12-11$
-> 
-> 
-> What's wrong?
 
-Did the compile go through fine? Did you sudo make install?
+I want to switch to 802.11a for streaming media, so I'm not polluting everyone else's bandwidth.  Does anyone know how I set the 4965 to 'a' or 'n' only?  Is there any way to set it to dual-band for the new routers which send normal traffic on 'g' and stream on 'a'?  How do I set it to WPA2 only?  
 
-modprobe -l ath5k
+IOW, how do I control this card?  Instructions are nowhere to be found.
 
-  Luis
+Currently my /etc/network/interfaces file is set thus and works (Network Manager is uninstalled and I don't trust it):
+iface wlan0 inet static
+pre-up /sbin/iwconfig wlan0 txpower 5
+pre-up ip link set wlan0 up
+address 192.168.1.1
+netmask 255.255.255.0
+gateway 192.168.1.5
+wireless-essid Hex
+wpa-scan-ssid 0
+wpa-ap-scan 1
+wpa-ssid Hex
+wpa-psk Freeasinfreedom
+
+
