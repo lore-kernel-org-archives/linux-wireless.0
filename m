@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:51445 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752047AbYLQQBO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2008 11:01:14 -0500
-Message-ID: <49492245.9010500@lwfinger.net> (sfid-20081217_170118_043957_F8DE53FA)
-Date: Wed, 17 Dec 2008 10:01:09 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Memory errors from p54usb
-References: <49466F56.6060805@lwfinger.net> <200812162256.36605.chunkeey@web.de> <49487038.5090404@lwfinger.net> <200812171520.40104.chunkeey@web.de>
-In-Reply-To: <200812171520.40104.chunkeey@web.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:30892 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755900AbYL1V2I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Dec 2008 16:28:08 -0500
+Subject: Re: status of at76-usb driver
+From: Pavel Roskin <proski@gnu.org>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Claudio <der.claudio@aon.at>, linux-wireless@vger.kernel.org,
+	Greg KH <gregkh@suse.de>
+In-Reply-To: <87fxk8o2g0.fsf@litku.valot.fi>
+References: <1230411118.4956956ecb911@webmail.aon.at>
+	 <87fxk8o2g0.fsf@litku.valot.fi>
+Content-Type: text/plain
+Date: Sun, 28 Dec 2008 16:28:03 -0500
+Message-Id: <1230499683.25726.4.camel@dv> (sfid-20081228_222814_879299_4F3C46F3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> Ohh, it always gets better. ;)
-> Anyway, I'll see what I can do tomorrow. 
-> 
-> In the meantime, I remembered that I put a heat sink on my chip a while ago,
-> but I'm not sure if this had any effect here... But back in the summer, it allowed me
-> fix the iperf stalls I had, but that was after days with 60Gb traffic...
+On Sun, 2008-12-28 at 15:26 +0200, Kalle Valo wrote:
 
-That would be a good idea; however, it is winter in my hemisphere (I don't care
-what the calender says.), and the room is cool. In addition, my device is a Dell
-Wireless 1450, which comes with a pretty hefty heat sink on its own.
+> Also I'm going to rename the mac80211 port to something else for just
+> to avoid the confusion with the original driver. Last thing I want to
+> see is having two in-tree drivers with identical names.
 
-I'll throw printk's into every place I can think of and try to provide more info.
+I asked to rename the driver that was imported into the staging tree,
+but my request was ignored.  I guess nobody really cares about the name
+conflict.  I'll appreciate if we avoid further renames.  Once the
+mac80211 port is working properly, it should be included in to the next
+kernel release, and the driver from the staging tree should be removed
+in the same kernel release.
 
-Larry
-
+-- 
+Regards,
+Pavel Roskin
