@@ -1,137 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:31651 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920AbYLBUEc (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.191]:44623 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424AbYL1T3w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 15:04:32 -0500
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx06.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id mB2K4LMt018832
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Dec 2008 22:04:30 +0200
-Received: from [127.0.1.1] (essapo-nirac253161.europe.nokia.com [10.162.253.161])
-	by mgw-int01.ntc.nokia.com (Switch-3.2.5/Switch-3.2.5) with ESMTP id mB2K4KLI027669
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Dec 2008 22:04:20 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [RFC PATCH v4 4/5] mac80211: move dynamic_ps_timeout to hw.conf
+	Sun, 28 Dec 2008 14:29:52 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so3066215rnd.17
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2008 11:29:51 -0800 (PST)
+Message-ID: <fd38e5150812281129g204a757dyc543190f2a58f6ae@mail.gmail.com> (sfid-20081228_202956_855549_ABD3677B)
+Date: Mon, 29 Dec 2008 02:29:51 +0700
+From: "rajith pr" <rajithpr@gmail.com>
 To: linux-wireless@vger.kernel.org
-Date: Tue, 02 Dec 2008 22:04:19 +0200
-Message-ID: <20081202200419.5507.44562.stgit@tikku> (sfid-20081202_210435_267286_2C376CB4)
-In-Reply-To: <20081202200219.5507.83250.stgit@tikku>
-References: <20081202200219.5507.83250.stgit@tikku>
+Subject: Re: How to install Ath5 driver?
+In-Reply-To: <fd38e5150812280754pb11f846k984e9aa7dcc1a56c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
+References: <fd38e5150812251125n62086e63y64584282fbe9dbe4@mail.gmail.com>
+	 <1230245303.16253.8.camel@dv>
+	 <fd38e5150812261051y29851b18sf5638c57e355d6f2@mail.gmail.com>
+	 <1230363499.2633.54.camel@dv>
+	 <fd38e5150812280754pb11f846k984e9aa7dcc1a56c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+Hi all,
 
- include/net/mac80211.h     |    5 +++++
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |    4 ++--
- net/mac80211/tx.c          |    4 ++--
- net/mac80211/wext.c        |    8 ++++----
- 5 files changed, 13 insertions(+), 9 deletions(-)
+The problem is solved, the issue was with the initrd. I think 2.6.27
+cannot init 2.6.28. After creating a 2.6.28 initrd using mkinitramfs
+command, iam able to
+boot my new kernel and modprobe ath5k.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 89affd8..047b20d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -546,6 +546,10 @@ enum ieee80211_conf_changed {
-  * @power_level: requested transmit power (in dBm)
-  * @channel: the channel to tune to
-  * @ht: the HT configuration for the device
-+ * @dynamic_ps_timeout: Length of the tranmission idle period after the
-+ *    power save mode should be enabled. The timeout should be enabled only
-+ *    when %IEEE80211_CONF_PS is enabled. If zero, there should be no timeout.
-+ *    Unit is millisecond.
-  * @long_frame_max_tx_count: Maximum number of transmissions for a "long" frame
-  *    (a frame not RTS protected), called "dot11LongRetryLimit" in 802.11,
-  *    but actually means the number of transmissions not the number of retries
-@@ -560,6 +564,7 @@ struct ieee80211_conf {
- 
- 	u16 listen_interval;
- 	bool radio_enabled;
-+	int dynamic_ps_timeout;
- 
- 	u8 long_frame_max_tx_count, short_frame_max_tx_count;
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 83b4b08..f03261b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -690,7 +690,6 @@ struct ieee80211_local {
- 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
- 
- 	bool powersave;
--	int dynamic_ps_timeout;
- 	struct work_struct dynamic_ps_enable_work;
- 	struct work_struct dynamic_ps_disable_work;
- 	struct timer_list dynamic_ps_timer;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ee71b12..add3553 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -747,9 +747,9 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
- 
- 	if (local->powersave) {
--		if (local->dynamic_ps_timeout > 0)
-+		if (local->hw.conf.dynamic_ps_timeout > 0)
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
--				  msecs_to_jiffies(local->dynamic_ps_timeout));
-+				  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 		else {
- 			conf->flags |= IEEE80211_CONF_PS;
- 			ieee80211_hw_config(local,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 9444a06..de3283b 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1477,7 +1477,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	}
- 
- 	if ((local->hw.flags & IEEE80211_HW_NO_DYNAMIC_PS) &&
--	    local->dynamic_ps_timeout > 0) {
-+	    local->hw.conf.dynamic_ps_timeout > 0) {
- 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 			netif_tx_stop_all_queues(local->mdev);
- 			queue_work(local->hw.workqueue,
-@@ -1485,7 +1485,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		}
- 
- 		mod_timer(&local->dynamic_ps_timer, jiffies +
--			  msecs_to_jiffies(local->dynamic_ps_timeout));
-+			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 	}
- 
- 	nh_pos = skb_network_header(skb) - skb->data;
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index a666ced..c4319cc 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -979,20 +979,20 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
- 		timeout = wrq->value / 1000;
- 
- set:
--	if (ps == local->powersave && timeout == local->dynamic_ps_timeout)
-+	if (ps == local->powersave && timeout == conf->dynamic_ps_timeout)
- 		return ret;
- 
- 	local->powersave = ps;
--	local->dynamic_ps_timeout = timeout;
-+	conf->dynamic_ps_timeout = timeout;
- 
- 	if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 		return ret;
- 
- 	if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
- 		if ((local->hw.flags & IEEE80211_HW_NO_DYNAMIC_PS) &&
--		    local->dynamic_ps_timeout > 0)
-+		    conf->dynamic_ps_timeout > 0)
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
--				  msecs_to_jiffies(local->dynamic_ps_timeout));
-+				  msecs_to_jiffies(conf->dynamic_ps_timeout));
- 		else {
- 			if (local->powersave)
- 				conf->flags |= IEEE80211_CONF_PS;
+Thanks,
+Rajith.
 
+On Sun, Dec 28, 2008 at 10:54 PM, rajith pr <rajithpr@gmail.com> wrote:
+> Hi Pavel,
+>
+> Thanks for the explanation. Now, i understand enabling the Ath5 driver
+> requires installation of a configured kernel and installation of
+> driver.
+>
+> I have been able to build both the configured kernel and the drivers.
+> But when i boot the kernel i get a run time errr: Coudnt open
+> directory /lib/modules/2.6.28-rc9-wl but i have confirmed the the
+> directory exists.
+>
+> google search is not giving me any result to fix the issue on ubuntu.
+> I have pasted my menu.lst for my grub loader.  My Ubuntu 8.10, kernel
+> 2.6 is my new kernel.
+>
+> title           Ubuntu 8.10, kernel 2.6.27-7-generic
+> root            ()/ubuntu/disks
+> kernel          /boot/vmlinuz-2.6.27-7-generic
+> root=UUID=F8B8EED2B8EE8E86 loop=/ubuntu/disks/root.disk ro
+> ROOTFLAGS=syncio quiet splash
+> initrd          /boot/initrd.img-2.6.27-7-generic
+>
+> title           Ubuntu 8.10, kernel 2.6.27-7-generic (recovery mode)
+> root            ()/ubuntu/disks
+> kernel          /boot/vmlinuz-2.6.27-7-generic
+> root=UUID=F8B8EED2B8EE8E86 loop=/ubuntu/disks/root.disk ro
+> ROOTFLAGS=syncio  single
+> initrd          /boot/initrd.img-2.6.27-7-generic
+>
+> title           Ubuntu 8.10, memtest86+
+> root            ()/ubuntu/disks
+> kernel          /boot/memtest86+.bin
+>
+> title           My Ubuntu 8.10, kernel 2.6
+> root            ()/ubuntu/disks
+> kernel          /boot/mylinux root=UUID=F8B8EED2B8EE8E86
+> loop=/ubuntu/disks/root.disk ro ROOTFLAGS=syncio quiet splash
+> initrd          /boot/initrd.img-2.6.27-7-generic
+>
+> Any idea wht is the issue or pointers to resolve this?
+>
+> Thanks,
+> Rajith
+>
+> On Sat, Dec 27, 2008 at 2:38 PM, Pavel Roskin <proski@gnu.org> wrote:
+>> On Sat, 2008-12-27 at 00:21 +0530, rajith pr wrote:
+>>> Hi Pavel,
+>>>
+>>> I intend to work on the ath5k driver only. Iam actually stuck with the
+>>> Enabling ath5k section of
+>>> http://wireless.kernel.org/en/users/Drivers/ath5k. May be a trivial
+>>> think but i dont have an option but ask :-)
+>>>
+>>> Enabling ath5k section talks about some configuration but i dont know
+>>> where to configure these. Should i run some configuration tool and
+>>> follow the steps ??
+>>
+>> I've edited that text slightly to mention kernel configuration in the
+>> beginning.  It's mentioned later in the text.
+>>
+>> The kernel configuration is described in the README file in the Linux
+>> sources.  There are several ways to configure the kernel, such as "make
+>> menuconfig" and "make xconfig", but they all edit the ".config" file in
+>> the directory where the kernel is going to be compiled.
+>>
+>> In my opinion, "make menuconfig" is more intuitive that the X based
+>> configuration tools.
+>>
+>> To enable ath5k, you need "CONFIG_ATH5K=m" or "CONFIG_ATH5K=y" to appear
+>> in .config along with the required dependencies of the driver.  "m" is
+>> for compiling ath5k as a module, "y" is for compiling into the kernel.
+>> I think compiling as module is more convenient in most cases.
+>>
+>> I don't know any automatic way to enable a particular option and its
+>> dependencies, so you'll need to go through the configuration and enable
+>> the dependencies manually.  The link you referred to tells you what
+>> options to enable.
+>>
+>> Actually, that page is becoming obsolete.  SoftMAC is gone from the
+>> current git repository.  ath5k has other dependencies, such as PCI.  But
+>> I was reluctant to edit that text, as some users may be compiling older
+>> kernel, where SoftMAC is present.  As for PCI and some other
+>> dependencies, they are most likely already enabled, so mentioning them
+>> could confuse some users.
+>>
+>> --
+>> Regards,
+>> Pavel Roskin
+>>
+>
