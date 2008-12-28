@@ -1,68 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:30081 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755480AbYLKNv3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 08:51:29 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so459936fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 05:51:27 -0800 (PST)
-Message-ID: <c6e12a010812110551o2ba3dc86j41cb911f13c2f12@mail.gmail.com> (sfid-20081211_145133_271892_26DF2ED9)
-Date: Thu, 11 Dec 2008 14:51:27 +0100
-From: "=?ISO-8859-1?Q?G=E1bor_Moln=E1r?=" <csirkus@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: rt2x00 vs hostapd
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:55528 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756538AbYL1WO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Dec 2008 17:14:56 -0500
+Subject: Re: rt2500usb vs rt73usb
+From: Pavel Roskin <proski@gnu.org>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Piter PUNK <piterpunk@unitednerds.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200812281034.07373.IvDoorn@gmail.com>
+References: <49571E29.8060204@unitednerds.org>
+	 <200812281034.07373.IvDoorn@gmail.com>
+Content-Type: multipart/mixed; boundary="=-MLyIz4pdIBjMQ80TKarG"
+Date: Sun, 28 Dec 2008 17:14:54 -0500
+Message-Id: <1230502494.25726.26.camel@dv> (sfid-20081228_231501_720223_4FC9CDB8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-I am not a developer, just an user, but i have a problem that has to
-be solved in a higher level than the rt2x00 driver or hostapd, maybe
-in the new common wifi stack.
 
-So the problem: I wanted to use my rt73-based usb dongle as an AP,
-with hostapd. Therefore i checked out the rt2x00 git tree, and built a
-custom kernel, with the newest rt2x00 driver. Then i compiled the
-newest hostapd (v0.6.5) with nl80211 support. When i start the hostapd
-(with verbose debugging), it drops the following debug message:
-"wlan1: STA 00:14:a5:29:e0:98 IEEE 802.11: did not acknowledge
-association response". The client associates and everything seems to
-be fine, but when i try to send packages, ping or anything, the
-hostapd drops messages that say that the client reassociates and
-reassociates again, and it repeats. The problem like in this mail on
-the hostapd mailing list:
-http://readlist.com/lists/shmoo.com/hostap/1/5106.html .
+--=-MLyIz4pdIBjMQ80TKarG
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-The hostapd side of the story:
-The hostapd wants to receive an acknowledge of the association frames
-from the rt2x00 driver. They say that it must be handled by the
-driver.
+On Sun, 2008-12-28 at 10:34 +0100, Ivo van Doorn wrote:
+> On Sunday 28 December 2008, Piter PUNK wrote:
 
-The rt2x00 side of the story:
-They say, that the driver cannot acknowledge these frames because of
-limitations of the hardware, and therefore it returns TXDONE_UNKNOWN
-instead of TXDONE_SUCCESS. So the driver cant say that the operation
-suceeded, but it cant say that it didnt succeeded.
+> > If the those 148f:2573 USB devices doesn't exists or
+> > if they exists and works fine with rt73usb, can we
+> > remove 148f:2573 from rt2500usb?
+> 
+> No we can't, you can blame manufacturers for shipping
+> USB sticks with different chipsets but the exact same USB ID.
 
-As a workaround i patched the hostapd to bypass checking the return
-value of this function. The other workaround is to change the driver
-to give a TXDONE_SUCCESS return value instead of TXDONE_UNKNOWN. Both
-solution works, and the hostapd does its job very well, i tested it
-with WPA2 etc... But the problem should be solved somehow, because now
-the hostapd people say they dont want to handle this issue, its the
-responsibility of the driver, and rt2x00 team says it should be
-handled in userspace by hostapd (see this thread:
-http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=3D5&t=3D4790&p=3D3=
-0366
--> the first discussed patch is the interesting one, it wasnt
-accepted). So what is the solution? Any idea? Who is responsible for
-the problem and solution?
+Maybe there are some hints on the USB level that would make it possible
+to distinguish between the devices without loading the driver?
+Something like the number of endpoints?  Then we could ask USB
+developers to provide a way to specify them in the USB devece table.
 
-regards,
-   G=E1bor Moln=E1r
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I have a device that works with rt73usb, but not rt2500usb.  I'm
+attaching the output of "lsusb -v" for the device.  If we look at
+similar information for other devices, we could find out how to
+distinguish them.
+
+-- 
+Regards,
+Pavel Roskin
+
+--=-MLyIz4pdIBjMQ80TKarG
+Content-Disposition: attachment; filename="rt73"
+Content-Type: text/plain; name="rt73"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Bus 001 Device 004: ID 148f:2573 Ralink Technology, Corp. RT2501USB Wireless Adapter
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0        64
+  idVendor           0x148f Ralink Technology, Corp.
+  idProduct          0x2573 RT2501USB Wireless Adapter
+  bcdDevice            0.01
+  iManufacturer           1 Ralink
+  iProduct                2 802.11 bg WLAN
+  iSerial                 0 
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength           32
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0 
+    bmAttributes         0x80
+      (Bus Powered)
+    MaxPower              300mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           2
+      bInterfaceClass       255 Vendor Specific Class
+      bInterfaceSubClass    255 Vendor Specific Subclass
+      bInterfaceProtocol    255 Vendor Specific Protocol
+      iInterface              0 
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x01  EP 1 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+Device Qualifier (for other device speed):
+  bLength                10
+  bDescriptorType         6
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0        64
+  bNumConfigurations      1
+Device Status:     0x0000
+  (Bus Powered)
+
+--=-MLyIz4pdIBjMQ80TKarG--
