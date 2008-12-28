@@ -1,109 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:43393 "EHLO
-	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbYLXJks (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:43781 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755274AbYL1Wod (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2008 04:40:48 -0500
-Received: from hp4000.wilsoft.nl ([192.168.4.5])
-	by linux.wilsoft.nl with esmtp (Exim 4.69)
-	(envelope-from <listsrv@wilsoft.nl>)
-	id 1LFQEJ-0001S6-QT
-	for linux-wireless@vger.kernel.org; Wed, 24 Dec 2008 10:40:39 +0100
-From: "W. van den Akker" <listsrv@wilsoft.nl>
-To: linux-wireless@vger.kernel.org
-Subject: Still problems to get ath9k in accessmode. Kernel hangs
-Date: Wed, 24 Dec 2008 10:40:38 +0100
+	Sun, 28 Dec 2008 17:44:33 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so4164308rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2008 14:44:32 -0800 (PST)
+Message-ID: <efe7343f0812281444x66ead26aq3fb75090d3ede971@mail.gmail.com> (sfid-20081228_234451_966061_D65A3823)
+Date: Sun, 28 Dec 2008 22:44:32 +0000
+From: "Luis Correia" <luis.f.correia@gmail.com>
+To: "Ivo van Doorn" <ivdoorn@gmail.com>
+Subject: Re: rt2500usb vs rt73usb
+Cc: "Pavel Roskin" <proski@gnu.org>,
+	"Piter PUNK" <piterpunk@unitednerds.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200812282332.20721.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812241040.39056.listsrv@wilsoft.nl> (sfid-20081224_104109_378213_F5888A0D)
+Content-Type: multipart/mixed;
+	boundary="----=_Part_106365_11352493.1230504272575"
+References: <49571E29.8060204@unitednerds.org>
+	 <200812281034.07373.IvDoorn@gmail.com> <1230502494.25726.26.camel@dv>
+	 <200812282332.20721.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+------=_Part_106365_11352493.1230504272575
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-I have tested with the latest kernel 2.6.27.10 and compat-wireless 22-12-2008.
-I have a dual core system (Intel(R) Pentium(R) 4 CPU 3.00GHz) and use hostapd 
-0.6.6.
+Hi all,
 
-I have build the kernel, compiled the compat-wireless and did a make install.
-Make unload didnt work because some drivers were in use (mac80211).
-First problem arises, a rmmod ath9k hangs the kernel. No message of what so 
-ever in the log or to stdout.
+for completeness sake, here's the output of my devices as well.
 
-Rebooted the system (hostapd still disabled). Iwconfig shows:
-wlan0     IEEE 802.11bgn  ESSID:""
-          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated
-          Tx-Power=27 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Encryption key:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-If I start hostapd (by hand or from init.d) the kernel hangs with no trace of 
-such thing. Hostapd shows in stdout (with -dd):
-Configuration file: /etc/hostapd/hostapd.conf
-ctrl_interface_group=0
-Opening raw packet socket for ifindex 1688
-BSS count 1, BSSID mask ff:ff:ff:ff:ff:ff (0 bits)
-SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
-Allowed channel: mode=1 chan=1 freq=2412 MHz
-Allowed channel: mode=1 chan=2 freq=2417 MHz
-Allowed channel: mode=1 chan=3 freq=2422 MHz
-Allowed channel: mode=1 chan=4 freq=2427 MHz
-Allowed channel: mode=1 chan=5 freq=2432 MHz
-Allowed channel: mode=1 chan=6 freq=2437 MHz
-Allowed channel: mode=1 chan=7 freq=2442 MHz
-Allowed channel: mode=1 chan=8 freq=2447 MHz
-Allowed channel: mode=1 chan=9 freq=2452 MHz
-Allowed channel: mode=1 chan=10 freq=2457 MHz
-Allowed channel: mode=1 chan=11 freq=2462 MHz
-Failed to update rate sets in kernel module
-RATE[0] rate=10 flags=0x2
-RATE[1] rate=20 flags=0x2
-RATE[2] rate=55 flags=0x2
-RATE[3] rate=110 flags=0x2
-RATE[4] rate=60 flags=0x0
-RATE[5] rate=90 flags=0x0
-RATE[6] rate=120 flags=0x0
-RATE[7] rate=180 flags=0x0
-RATE[8] rate=240 flags=0x0
-RATE[9] rate=360 flags=0x0
-RATE[10] rate=480 flags=0x0
-RATE[11] rate=540 flags=0x0
-Passive scanning not supported
-Flushing old station entries
-
-I have tried in the past several kernelversions and compat-wireless versions 
-and all give the same problem.
-So I think it is hardware (system) related and ap-mode.
-How can I trace the problem? Default I get no entries in any log.
-
-lspci -vv shows 
-04:08.0 Network controller: Atheros Communications Inc. AR5416 802.11abgn 
-Wireless PCI Adapter (rev 01)
-        Subsystem: Linksys Device 0061
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+ 
-Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 168, Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 21
-        Region 0: Memory at d0310000 (32-bit, non-prefetchable) [size=64K]
-        Capabilities: [40] #80 [0000]
-        Kernel driver in use: ath9k
-        Kernel modules: ath9k
+Luis Correia
+rt2x00 project admin
 
 
-Can somebody provide some help. I am struggeling to get the card into ap mode.
 
-TIA,
-Willem
 
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+On Sun, Dec 28, 2008 at 22:32, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Sunday 28 December 2008, Pavel Roskin wrote:
+>> On Sun, 2008-12-28 at 10:34 +0100, Ivo van Doorn wrote:
+>> > On Sunday 28 December 2008, Piter PUNK wrote:
+>>
+>> > > If the those 148f:2573 USB devices doesn't exists or
+>> > > if they exists and works fine with rt73usb, can we
+>> > > remove 148f:2573 from rt2500usb?
+>> >
+>> > No we can't, you can blame manufacturers for shipping
+>> > USB sticks with different chipsets but the exact same USB ID.
+>>
+>> Maybe there are some hints on the USB level that would make it possible
+>> to distinguish between the devices without loading the driver?
+>> Something like the number of endpoints?  Then we could ask USB
+>> developers to provide a way to specify them in the USB devece table.
+>
+> Number of endpoints varies, your rt73usb device only has 2 endpoints, while
+> mine appears to have 5.
+> The only thing the driver is doing now is reading the EEPROM and double checking
+> the first 2 bytes to see which device has been loaded.
+>
+>> I have a device that works with rt73usb, but not rt2500usb.  I'm
+>> attaching the output of "lsusb -v" for the device.  If we look at
+>> similar information for other devices, we could find out how to
+>> distinguish them.
+>
+> Please note that some manufacturers (most notorious example Linksys) managed
+> to get 5 different chipsets under a single USB ID. chipsets came from Broadcom,
+> Ralink and Prism.
+>
+> For what it is worth, I am attaching the lsusb -v output from my hardware
+> (both rt73usb as well as rt2500usb).
+>
+> Ivo
+>
 
+------=_Part_106365_11352493.1230504272575
+Content-Type: application/octet-stream; name=usb.rt2500usb
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fpaafgtc2
+Content-Disposition: attachment; filename=usb.rt2500usb
+
+QnVzIDAwMiBEZXZpY2UgMDAyOiBJRCAxNDhmOjI1NzAgUmFsaW5rIFRlY2hub2xvZ3ksIENvcnAu
+IDgwMi4xMWcgV2lGaQpEZXZpY2UgRGVzY3JpcHRvcjoKICBiTGVuZ3RoICAgICAgICAgICAgICAg
+IDE4CiAgYkRlc2NyaXB0b3JUeXBlICAgICAgICAgMQogIGJjZFVTQiAgICAgICAgICAgICAgIDIu
+MDAKICBiRGV2aWNlQ2xhc3MgICAgICAgICAgICAwIChEZWZpbmVkIGF0IEludGVyZmFjZSBsZXZl
+bCkKICBiRGV2aWNlU3ViQ2xhc3MgICAgICAgICAwIAogIGJEZXZpY2VQcm90b2NvbCAgICAgICAg
+IDAgCiAgYk1heFBhY2tldFNpemUwICAgICAgICA2NAogIGlkVmVuZG9yICAgICAgICAgICAweDE0
+OGYgUmFsaW5rIFRlY2hub2xvZ3ksIENvcnAuCiAgaWRQcm9kdWN0ICAgICAgICAgIDB4MjU3MCA4
+MDIuMTFnIFdpRmkKICBiY2REZXZpY2UgICAgICAgICAgICAwLjAxCiAgaU1hbnVmYWN0dXJlciAg
+ICAgICAgICAgMSBSYWxpbmsKICBpUHJvZHVjdCAgICAgICAgICAgICAgICAyIDgwMi4xMWcgV0xB
+TiArIFBlbiBEcml2ZQogIGlTZXJpYWwgICAgICAgICAgICAgICAgIDAgCiAgYk51bUNvbmZpZ3Vy
+YXRpb25zICAgICAgMQogIENvbmZpZ3VyYXRpb24gRGVzY3JpcHRvcjoKICAgIGJMZW5ndGggICAg
+ICAgICAgICAgICAgIDkKICAgIGJEZXNjcmlwdG9yVHlwZSAgICAgICAgIDIKICAgIHdUb3RhbExl
+bmd0aCAgICAgICAgICAgMzIKICAgIGJOdW1JbnRlcmZhY2VzICAgICAgICAgIDEKICAgIGJDb25m
+aWd1cmF0aW9uVmFsdWUgICAgIDEKICAgIGlDb25maWd1cmF0aW9uICAgICAgICAgIDAgCiAgICBi
+bUF0dHJpYnV0ZXMgICAgICAgICAweDgwCiAgICAgIChCdXMgUG93ZXJlZCkKICAgIE1heFBvd2Vy
+ICAgICAgICAgICAgICAzMDBtQQogICAgSW50ZXJmYWNlIERlc2NyaXB0b3I6CiAgICAgIGJMZW5n
+dGggICAgICAgICAgICAgICAgIDkKICAgICAgYkRlc2NyaXB0b3JUeXBlICAgICAgICAgNAogICAg
+ICBiSW50ZXJmYWNlTnVtYmVyICAgICAgICAwCiAgICAgIGJBbHRlcm5hdGVTZXR0aW5nICAgICAg
+IDAKICAgICAgYk51bUVuZHBvaW50cyAgICAgICAgICAgMgogICAgICBiSW50ZXJmYWNlQ2xhc3Mg
+ICAgICAgMjU1IFZlbmRvciBTcGVjaWZpYyBDbGFzcwogICAgICBiSW50ZXJmYWNlU3ViQ2xhc3Mg
+ICAgMjU1IFZlbmRvciBTcGVjaWZpYyBTdWJjbGFzcwogICAgICBiSW50ZXJmYWNlUHJvdG9jb2wg
+ICAgMjU1IFZlbmRvciBTcGVjaWZpYyBQcm90b2NvbAogICAgICBpSW50ZXJmYWNlICAgICAgICAg
+ICAgICAwIAogICAgICBFbmRwb2ludCBEZXNjcmlwdG9yOgogICAgICAgIGJMZW5ndGggICAgICAg
+ICAgICAgICAgIDcKICAgICAgICBiRGVzY3JpcHRvclR5cGUgICAgICAgICA1CiAgICAgICAgYkVu
+ZHBvaW50QWRkcmVzcyAgICAgMHg4MSAgRVAgMSBJTgogICAgICAgIGJtQXR0cmlidXRlcyAgICAg
+ICAgICAgIDIKICAgICAgICAgIFRyYW5zZmVyIFR5cGUgICAgICAgICAgICBCdWxrCiAgICAgICAg
+ICBTeW5jaCBUeXBlICAgICAgICAgICAgICAgTm9uZQogICAgICAgICAgVXNhZ2UgVHlwZSAgICAg
+ICAgICAgICAgIERhdGEKICAgICAgICB3TWF4UGFja2V0U2l6ZSAgICAgMHgwMjAwICAxeCA1MTIg
+Ynl0ZXMKICAgICAgICBiSW50ZXJ2YWwgICAgICAgICAgICAgICAwCiAgICAgIEVuZHBvaW50IERl
+c2NyaXB0b3I6CiAgICAgICAgYkxlbmd0aCAgICAgICAgICAgICAgICAgNwogICAgICAgIGJEZXNj
+cmlwdG9yVHlwZSAgICAgICAgIDUKICAgICAgICBiRW5kcG9pbnRBZGRyZXNzICAgICAweDAxICBF
+UCAxIE9VVAogICAgICAgIGJtQXR0cmlidXRlcyAgICAgICAgICAgIDIKICAgICAgICAgIFRyYW5z
+ZmVyIFR5cGUgICAgICAgICAgICBCdWxrCiAgICAgICAgICBTeW5jaCBUeXBlICAgICAgICAgICAg
+ICAgTm9uZQogICAgICAgICAgVXNhZ2UgVHlwZSAgICAgICAgICAgICAgIERhdGEKICAgICAgICB3
+TWF4UGFja2V0U2l6ZSAgICAgMHgwMjAwICAxeCA1MTIgYnl0ZXMKICAgICAgICBiSW50ZXJ2YWwg
+ICAgICAgICAgICAgICAwCkRldmljZSBRdWFsaWZpZXIgKGZvciBvdGhlciBkZXZpY2Ugc3BlZWQp
+OgogIGJMZW5ndGggICAgICAgICAgICAgICAgMTAKICBiRGVzY3JpcHRvclR5cGUgICAgICAgICA2
+CiAgYmNkVVNCICAgICAgICAgICAgICAgMi4wMAogIGJEZXZpY2VDbGFzcyAgICAgICAgICAgIDAg
+KERlZmluZWQgYXQgSW50ZXJmYWNlIGxldmVsKQogIGJEZXZpY2VTdWJDbGFzcyAgICAgICAgIDAg
+CiAgYkRldmljZVByb3RvY29sICAgICAgICAgMCAKICBiTWF4UGFja2V0U2l6ZTAgICAgICAgIDY0
+CiAgYk51bUNvbmZpZ3VyYXRpb25zICAgICAgMQpEZXZpY2UgU3RhdHVzOiAgICAgMHgwMDAwCiAg
+KEJ1cyBQb3dlcmVkKQoK
+------=_Part_106365_11352493.1230504272575
+Content-Type: application/octet-stream; name=usb.rt73usb
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fpaafslk3
+Content-Disposition: attachment; filename=usb.rt73usb
+
+QnVzIDAwMiBEZXZpY2UgMDAzOiBJRCAxMDQ0OjgwMDggQ2h1IFl1ZW4gRW50ZXJwcmlzZSBDby4s
+IEx0ZCBHTi1XQjAxR1MKRGV2aWNlIERlc2NyaXB0b3I6CiAgYkxlbmd0aCAgICAgICAgICAgICAg
+ICAxOAogIGJEZXNjcmlwdG9yVHlwZSAgICAgICAgIDEKICBiY2RVU0IgICAgICAgICAgICAgICAy
+LjAwCiAgYkRldmljZUNsYXNzICAgICAgICAgICAgMCAoRGVmaW5lZCBhdCBJbnRlcmZhY2UgbGV2
+ZWwpCiAgYkRldmljZVN1YkNsYXNzICAgICAgICAgMCAKICBiRGV2aWNlUHJvdG9jb2wgICAgICAg
+ICAwIAogIGJNYXhQYWNrZXRTaXplMCAgICAgICAgNjQKICBpZFZlbmRvciAgICAgICAgICAgMHgx
+MDQ0IENodSBZdWVuIEVudGVycHJpc2UgQ28uLCBMdGQKICBpZFByb2R1Y3QgICAgICAgICAgMHg4
+MDA4IEdOLVdCMDFHUwogIGJjZERldmljZSAgICAgICAgICAgIDAuMDEKICBpTWFudWZhY3R1cmVy
+ICAgICAgICAgICAxIFJhbGluawogIGlQcm9kdWN0ICAgICAgICAgICAgICAgIDIgODAyLjExIGJn
+IFdMQU4KICBpU2VyaWFsICAgICAgICAgICAgICAgICAwIAogIGJOdW1Db25maWd1cmF0aW9ucyAg
+ICAgIDEKICBDb25maWd1cmF0aW9uIERlc2NyaXB0b3I6CiAgICBiTGVuZ3RoICAgICAgICAgICAg
+ICAgICA5CiAgICBiRGVzY3JpcHRvclR5cGUgICAgICAgICAyCiAgICB3VG90YWxMZW5ndGggICAg
+ICAgICAgIDUzCiAgICBiTnVtSW50ZXJmYWNlcyAgICAgICAgICAxCiAgICBiQ29uZmlndXJhdGlv
+blZhbHVlICAgICAxCiAgICBpQ29uZmlndXJhdGlvbiAgICAgICAgICA0IAogICAgYm1BdHRyaWJ1
+dGVzICAgICAgICAgMHg4MAogICAgICAoQnVzIFBvd2VyZWQpCiAgICBNYXhQb3dlciAgICAgICAg
+ICAgICAgMzAwbUEKICAgIEludGVyZmFjZSBEZXNjcmlwdG9yOgogICAgICBiTGVuZ3RoICAgICAg
+ICAgICAgICAgICA5CiAgICAgIGJEZXNjcmlwdG9yVHlwZSAgICAgICAgIDQKICAgICAgYkludGVy
+ZmFjZU51bWJlciAgICAgICAgMAogICAgICBiQWx0ZXJuYXRlU2V0dGluZyAgICAgICAwCiAgICAg
+IGJOdW1FbmRwb2ludHMgICAgICAgICAgIDUKICAgICAgYkludGVyZmFjZUNsYXNzICAgICAgIDI1
+NSBWZW5kb3IgU3BlY2lmaWMgQ2xhc3MKICAgICAgYkludGVyZmFjZVN1YkNsYXNzICAgIDI1NSBW
+ZW5kb3IgU3BlY2lmaWMgU3ViY2xhc3MKICAgICAgYkludGVyZmFjZVByb3RvY29sICAgIDI1NSBW
+ZW5kb3IgU3BlY2lmaWMgUHJvdG9jb2wKICAgICAgaUludGVyZmFjZSAgICAgICAgICAgICAgNSAK
+ICAgICAgRW5kcG9pbnQgRGVzY3JpcHRvcjoKICAgICAgICBiTGVuZ3RoICAgICAgICAgICAgICAg
+ICA3CiAgICAgICAgYkRlc2NyaXB0b3JUeXBlICAgICAgICAgNQogICAgICAgIGJFbmRwb2ludEFk
+ZHJlc3MgICAgIDB4ODEgIEVQIDEgSU4KICAgICAgICBibUF0dHJpYnV0ZXMgICAgICAgICAgICAy
+CiAgICAgICAgICBUcmFuc2ZlciBUeXBlICAgICAgICAgICAgQnVsawogICAgICAgICAgU3luY2gg
+VHlwZSAgICAgICAgICAgICAgIE5vbmUKICAgICAgICAgIFVzYWdlIFR5cGUgICAgICAgICAgICAg
+ICBEYXRhCiAgICAgICAgd01heFBhY2tldFNpemUgICAgIDB4MDIwMCAgMXggNTEyIGJ5dGVzCiAg
+ICAgICAgYkludGVydmFsICAgICAgICAgICAgICAgMAogICAgICBFbmRwb2ludCBEZXNjcmlwdG9y
+OgogICAgICAgIGJMZW5ndGggICAgICAgICAgICAgICAgIDcKICAgICAgICBiRGVzY3JpcHRvclR5
+cGUgICAgICAgICA1CiAgICAgICAgYkVuZHBvaW50QWRkcmVzcyAgICAgMHgwMSAgRVAgMSBPVVQK
+ICAgICAgICBibUF0dHJpYnV0ZXMgICAgICAgICAgICAyCiAgICAgICAgICBUcmFuc2ZlciBUeXBl
+ICAgICAgICAgICAgQnVsawogICAgICAgICAgU3luY2ggVHlwZSAgICAgICAgICAgICAgIE5vbmUK
+ICAgICAgICAgIFVzYWdlIFR5cGUgICAgICAgICAgICAgICBEYXRhCiAgICAgICAgd01heFBhY2tl
+dFNpemUgICAgIDB4MDIwMCAgMXggNTEyIGJ5dGVzCiAgICAgICAgYkludGVydmFsICAgICAgICAg
+ICAgICAgMAogICAgICBFbmRwb2ludCBEZXNjcmlwdG9yOgogICAgICAgIGJMZW5ndGggICAgICAg
+ICAgICAgICAgIDcKICAgICAgICBiRGVzY3JpcHRvclR5cGUgICAgICAgICA1CiAgICAgICAgYkVu
+ZHBvaW50QWRkcmVzcyAgICAgMHgwMiAgRVAgMiBPVVQKICAgICAgICBibUF0dHJpYnV0ZXMgICAg
+ICAgICAgICAyCiAgICAgICAgICBUcmFuc2ZlciBUeXBlICAgICAgICAgICAgQnVsawogICAgICAg
+ICAgU3luY2ggVHlwZSAgICAgICAgICAgICAgIE5vbmUKICAgICAgICAgIFVzYWdlIFR5cGUgICAg
+ICAgICAgICAgICBEYXRhCiAgICAgICAgd01heFBhY2tldFNpemUgICAgIDB4MDIwMCAgMXggNTEy
+IGJ5dGVzCiAgICAgICAgYkludGVydmFsICAgICAgICAgICAgICAgMAogICAgICBFbmRwb2ludCBE
+ZXNjcmlwdG9yOgogICAgICAgIGJMZW5ndGggICAgICAgICAgICAgICAgIDcKICAgICAgICBiRGVz
+Y3JpcHRvclR5cGUgICAgICAgICA1CiAgICAgICAgYkVuZHBvaW50QWRkcmVzcyAgICAgMHgwMyAg
+RVAgMyBPVVQKICAgICAgICBibUF0dHJpYnV0ZXMgICAgICAgICAgICAyCiAgICAgICAgICBUcmFu
+c2ZlciBUeXBlICAgICAgICAgICAgQnVsawogICAgICAgICAgU3luY2ggVHlwZSAgICAgICAgICAg
+ICAgIE5vbmUKICAgICAgICAgIFVzYWdlIFR5cGUgICAgICAgICAgICAgICBEYXRhCiAgICAgICAg
+d01heFBhY2tldFNpemUgICAgIDB4MDIwMCAgMXggNTEyIGJ5dGVzCiAgICAgICAgYkludGVydmFs
+ICAgICAgICAgICAgICAgMAogICAgICBFbmRwb2ludCBEZXNjcmlwdG9yOgogICAgICAgIGJMZW5n
+dGggICAgICAgICAgICAgICAgIDcKICAgICAgICBiRGVzY3JpcHRvclR5cGUgICAgICAgICA1CiAg
+ICAgICAgYkVuZHBvaW50QWRkcmVzcyAgICAgMHgwNCAgRVAgNCBPVVQKICAgICAgICBibUF0dHJp
+YnV0ZXMgICAgICAgICAgICAyCiAgICAgICAgICBUcmFuc2ZlciBUeXBlICAgICAgICAgICAgQnVs
+awogICAgICAgICAgU3luY2ggVHlwZSAgICAgICAgICAgICAgIE5vbmUKICAgICAgICAgIFVzYWdl
+IFR5cGUgICAgICAgICAgICAgICBEYXRhCiAgICAgICAgd01heFBhY2tldFNpemUgICAgIDB4MDIw
+MCAgMXggNTEyIGJ5dGVzCiAgICAgICAgYkludGVydmFsICAgICAgICAgICAgICAgMApEZXZpY2Ug
+UXVhbGlmaWVyIChmb3Igb3RoZXIgZGV2aWNlIHNwZWVkKToKICBiTGVuZ3RoICAgICAgICAgICAg
+ICAgIDEwCiAgYkRlc2NyaXB0b3JUeXBlICAgICAgICAgNgogIGJjZFVTQiAgICAgICAgICAgICAg
+IDIuMDAKICBiRGV2aWNlQ2xhc3MgICAgICAgICAgICAwIChEZWZpbmVkIGF0IEludGVyZmFjZSBs
+ZXZlbCkKICBiRGV2aWNlU3ViQ2xhc3MgICAgICAgICAwIAogIGJEZXZpY2VQcm90b2NvbCAgICAg
+ICAgIDAgCiAgYk1heFBhY2tldFNpemUwICAgICAgICA2NAogIGJOdW1Db25maWd1cmF0aW9ucyAg
+ICAgIDEKRGV2aWNlIFN0YXR1czogICAgIDB4MDAwMAogIChCdXMgUG93ZXJlZCkKCg==
+------=_Part_106365_11352493.1230504272575--
