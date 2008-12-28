@@ -1,134 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f18.google.com ([209.85.217.18]:42070 "EHLO
-	mail-gx0-f18.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbYLATLu (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:45965 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754850AbYL1PyU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 14:11:50 -0500
-Received: by gxk11 with SMTP id 11so71693gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 11:11:49 -0800 (PST)
-Message-ID: <43e72e890812011111h53553a18x2d17c9cf267331dd@mail.gmail.com> (sfid-20081201_201155_333110_CAA04EB2)
-Date: Mon, 1 Dec 2008 11:11:48 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Kalle Valo" <kalle.valo@nokia.com>
-Subject: Re: [RFC v3 4/4] mac80211: move dynamic_ps_timeout to hw.conf
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1227901784-5325-5-git-send-email-kalle.valo@nokia.com>
+	Sun, 28 Dec 2008 10:54:20 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so1413710yxm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2008 07:54:19 -0800 (PST)
+Message-ID: <fd38e5150812280754pb11f846k984e9aa7dcc1a56c@mail.gmail.com> (sfid-20081228_165426_449790_86FCC03C)
+Date: Sun, 28 Dec 2008 22:54:19 +0700
+From: "rajith pr" <rajithpr@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: How to install Ath5 driver?
+In-Reply-To: <1230363499.2633.54.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1227901784-5325-1-git-send-email-kalle.valo@nokia.com>
-	 <1227901784-5325-5-git-send-email-kalle.valo@nokia.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <fd38e5150812251125n62086e63y64584282fbe9dbe4@mail.gmail.com>
+	 <1230245303.16253.8.camel@dv>
+	 <fd38e5150812261051y29851b18sf5638c57e355d6f2@mail.gmail.com>
+	 <1230363499.2633.54.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 28, 2008 at 11:49 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-> ---
->  include/net/mac80211.h     |    1 +
->  net/mac80211/ieee80211_i.h |    1 -
->  net/mac80211/mlme.c        |    4 ++--
->  net/mac80211/tx.c          |    4 ++--
->  net/mac80211/wext.c        |    8 ++++----
->  5 files changed, 9 insertions(+), 9 deletions(-)
->
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 53a0dc5..aae8991 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -560,6 +560,7 @@ struct ieee80211_conf {
->
->        u16 listen_interval;
->        bool radio_enabled;
-> +       int dynamic_ps_timeout;
->
->        u8 long_frame_max_tx_count, short_frame_max_tx_count;
->
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index ab0e2df..1317c7a 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -690,7 +690,6 @@ struct ieee80211_local {
->        unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
->
->        bool powersave;
-> -       int dynamic_ps_timeout;
->        struct work_struct ps_enable_work;
->        struct work_struct ps_disable_work;
->        struct timer_list dynamic_ps_timer;
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 1d3c72b..52b2239 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -747,9 +747,9 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
->        ieee80211_bss_info_change_notify(sdata, bss_info_changed);
->
->        if (local->powersave) {
-> -               if (local->dynamic_ps_timeout > 0)
-> +               if (local->hw.conf.dynamic_ps_timeout > 0)
->                        mod_timer(&local->dynamic_ps_timer, jiffies +
-> -                                 msecs_to_jiffies(local->dynamic_ps_timeout));
-> +                                 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
->                else {
->                        conf->flags |= IEEE80211_CONF_PS;
->                        ieee80211_hw_config(local,
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 1d7ef18..12256bd 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1477,7 +1477,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
->        }
->
->        if (local->hw.flags & IEEE80211_HW_NO_DYNAMIC_PS &&
-> -           local->dynamic_ps_timeout > 0) {
-> +           local->hw.conf.dynamic_ps_timeout > 0) {
->                if (local->hw.conf.flags & IEEE80211_CONF_PS) {
->                        netif_tx_stop_all_queues(local->mdev);
->                        queue_work(local->hw.workqueue,
-> @@ -1485,7 +1485,7 @@ int ieee80211_subif_start_xmit(struct sk_buff *skb,
->                }
->
->                mod_timer(&local->dynamic_ps_timer, jiffies +
-> -                         msecs_to_jiffies(local->dynamic_ps_timeout));
-> +                         msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
->        }
->
->        nh_pos = skb_network_header(skb) - skb->data;
-> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-> index b3ee0dc..95455d0 100644
-> --- a/net/mac80211/wext.c
-> +++ b/net/mac80211/wext.c
-> @@ -962,7 +962,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
->
->        if (wrq->disabled) {
->                ps = false;
-> -               local->dynamic_ps_timeout = 0;
-> +               local->hw.conf.dynamic_ps_timeout = 0;
->                goto set;
->        }
->
-> @@ -977,7 +977,7 @@ static int ieee80211_ioctl_siwpower(struct net_device *dev,
->        }
->
->        if (wrq->flags & IW_POWER_TIMEOUT)
-> -               local->dynamic_ps_timeout = wrq->value / 1000;
-> +               local->hw.conf.dynamic_ps_timeout = wrq->value / 1000;
->
->        if (ps == local->powersave)
->                return ret;
-> @@ -986,9 +986,9 @@ set:
->        local->powersave = ps;
->
->        if (ifsta->flags & IEEE80211_STA_ASSOCIATED) {
-> -               if (local->dynamic_ps_timeout > 0)
-> +               if (conf->dynamic_ps_timeout > 0)
->                        mod_timer(&local->dynamic_ps_timer, jiffies +
-> -                                 msecs_to_jiffies(local->dynamic_ps_timeout));
-> +                                 msecs_to_jiffies(conf->dynamic_ps_timeout));
->                else {
->                        if (local->powersave)
->                                conf->flags |= IEEE80211_CONF_PS;
+Hi Pavel,
 
-Would it be too much trouble to add this via cfg80211/nl80211 instead
-or at least add both? The more we can push in that direction the
-better.
+Thanks for the explanation. Now, i understand enabling the Ath5 driver
+requires installation of a configured kernel and installation of
+driver.
 
-  Luis
+I have been able to build both the configured kernel and the drivers.
+But when i boot the kernel i get a run time errr: Coudnt open
+directory /lib/modules/2.6.28-rc9-wl but i have confirmed the the
+directory exists.
+
+google search is not giving me any result to fix the issue on ubuntu.
+I have pasted my menu.lst for my grub loader.  My Ubuntu 8.10, kernel
+2.6 is my new kernel.
+
+title           Ubuntu 8.10, kernel 2.6.27-7-generic
+root            ()/ubuntu/disks
+kernel          /boot/vmlinuz-2.6.27-7-generic
+root=UUID=F8B8EED2B8EE8E86 loop=/ubuntu/disks/root.disk ro
+ROOTFLAGS=syncio quiet splash
+initrd          /boot/initrd.img-2.6.27-7-generic
+
+title           Ubuntu 8.10, kernel 2.6.27-7-generic (recovery mode)
+root            ()/ubuntu/disks
+kernel          /boot/vmlinuz-2.6.27-7-generic
+root=UUID=F8B8EED2B8EE8E86 loop=/ubuntu/disks/root.disk ro
+ROOTFLAGS=syncio  single
+initrd          /boot/initrd.img-2.6.27-7-generic
+
+title           Ubuntu 8.10, memtest86+
+root            ()/ubuntu/disks
+kernel          /boot/memtest86+.bin
+
+title           My Ubuntu 8.10, kernel 2.6
+root            ()/ubuntu/disks
+kernel          /boot/mylinux root=UUID=F8B8EED2B8EE8E86
+loop=/ubuntu/disks/root.disk ro ROOTFLAGS=syncio quiet splash
+initrd          /boot/initrd.img-2.6.27-7-generic
+
+Any idea wht is the issue or pointers to resolve this?
+
+Thanks,
+Rajith
+
+On Sat, Dec 27, 2008 at 2:38 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Sat, 2008-12-27 at 00:21 +0530, rajith pr wrote:
+>> Hi Pavel,
+>>
+>> I intend to work on the ath5k driver only. Iam actually stuck with the
+>> Enabling ath5k section of
+>> http://wireless.kernel.org/en/users/Drivers/ath5k. May be a trivial
+>> think but i dont have an option but ask :-)
+>>
+>> Enabling ath5k section talks about some configuration but i dont know
+>> where to configure these. Should i run some configuration tool and
+>> follow the steps ??
+>
+> I've edited that text slightly to mention kernel configuration in the
+> beginning.  It's mentioned later in the text.
+>
+> The kernel configuration is described in the README file in the Linux
+> sources.  There are several ways to configure the kernel, such as "make
+> menuconfig" and "make xconfig", but they all edit the ".config" file in
+> the directory where the kernel is going to be compiled.
+>
+> In my opinion, "make menuconfig" is more intuitive that the X based
+> configuration tools.
+>
+> To enable ath5k, you need "CONFIG_ATH5K=m" or "CONFIG_ATH5K=y" to appear
+> in .config along with the required dependencies of the driver.  "m" is
+> for compiling ath5k as a module, "y" is for compiling into the kernel.
+> I think compiling as module is more convenient in most cases.
+>
+> I don't know any automatic way to enable a particular option and its
+> dependencies, so you'll need to go through the configuration and enable
+> the dependencies manually.  The link you referred to tells you what
+> options to enable.
+>
+> Actually, that page is becoming obsolete.  SoftMAC is gone from the
+> current git repository.  ath5k has other dependencies, such as PCI.  But
+> I was reluctant to edit that text, as some users may be compiling older
+> kernel, where SoftMAC is present.  As for PCI and some other
+> dependencies, they are most likely already enabled, so mentioning them
+> could confuse some users.
+>
+> --
+> Regards,
+> Pavel Roskin
+>
