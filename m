@@ -1,95 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:59855 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751868AbYLOHAr (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:46162 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752774AbYL1SnV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 02:00:47 -0500
-Received: by mail-ew0-f17.google.com with SMTP id 10so2850569ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Dec 2008 23:00:46 -0800 (PST)
-Message-ID: <eb3ff54b0812142300w3cc1e66di5bd8c115dd0f8b85@mail.gmail.com> (sfid-20081215_080049_635658_E23EBC60)
-Date: Mon, 15 Dec 2008 09:00:45 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH 2/2] iwlwifi: misc cleanups.
-Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
+	Sun, 28 Dec 2008 13:43:21 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH] at76_usb: mention mac80211 port in TODO file
+To: gregkh@suse.de
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 28 Dec 2008 20:32:33 +0200
+Message-ID: <20081228183233.15512.10965.stgit@tikku> (sfid-20081228_194324_788473_579B3FB9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes a parameter (dest) from iwl_fill_beacon_frame() (iwl-agn.c)
- and from iwl3945_fill_beacon_frame(). (iwl-3945.c,iwl-3945.h)
+at76_usb has actually been already ported to use mac80211. Update the TODO
+file to reflect this.
 
-(wireless-testing).
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+---
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+ drivers/staging/at76_usb/TODO |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c
-b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index f2f2d8f..2327dd2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2483,7 +2483,6 @@ unsigned int iwl3945_hw_get_beacon_cmd(struct
-iwl3945_priv *priv,
+diff --git a/drivers/staging/at76_usb/TODO b/drivers/staging/at76_usb/TODO
+index 6911ca7..0c7ed21 100644
+--- a/drivers/staging/at76_usb/TODO
++++ b/drivers/staging/at76_usb/TODO
+@@ -1,2 +1,7 @@
+-rewrite the driver to use the proper in-kernel wireless stack
+-instead of using its own.
++Fix the mac80211 port of at76_usb (the proper in-kernel wireless
++stack) and get it included to the mainline. Patches available here:
++
++http://git.kernel.org/?p=linux/kernel/git/linville/wireless-legacy.git;a=shortlog;h=at76
++
++Contact Kalle Valo <kalle.valo@iki.fi> and linux-wireless list
++<linux-wireless@vger.kernel.org> for more information.
 
- 	frame_size = iwl3945_fill_beacon_frame(priv,
- 				tx_beacon_cmd->frame,
--				iwl3945_broadcast_addr,
- 				sizeof(frame->u) - sizeof(*tx_beacon_cmd));
-
- 	BUG_ON(frame_size > MAX_MPDU_SIZE);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h
-b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index ec6084c..ffe5a8d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -590,8 +590,7 @@ extern int iwl3945_send_cmd_pdu(struct
-iwl3945_priv *priv, u8 id, u16 len,
- extern int __must_check iwl3945_send_cmd(struct iwl3945_priv *priv,
- 		struct iwl3945_host_cmd *cmd);
- extern unsigned int iwl3945_fill_beacon_frame(struct iwl3945_priv *priv,
--					struct ieee80211_hdr *hdr,
--					const u8 *dest, int left);
-+					struct ieee80211_hdr *hdr,int left);
- extern int iwl3945_rx_queue_update_write_ptr(struct iwl3945_priv *priv,
- 					 struct iwl3945_rx_queue *q);
- extern int iwl3945_send_statistics_request(struct iwl3945_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c
-b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 9d50fad..ecf19b3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -372,7 +372,7 @@ static void iwl_free_frame(struct iwl_priv *priv,
-struct iwl_frame *frame)
-
- static unsigned int iwl_fill_beacon_frame(struct iwl_priv *priv,
- 					  struct ieee80211_hdr *hdr,
--					  const u8 *dest, int left)
-+					  int left)
- {
- 	if (!iwl_is_associated(priv) || !priv->ibss_beacon ||
- 	    ((priv->iw_mode != NL80211_IFTYPE_ADHOC) &&
-@@ -425,7 +425,6 @@ static unsigned int iwl_hw_get_beacon_cmd(struct
-iwl_priv *priv,
- 	tx_beacon_cmd->tx.stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
-
- 	frame_size = iwl_fill_beacon_frame(priv, tx_beacon_cmd->frame,
--				iwl_bcast_addr,
- 				sizeof(frame->u) - sizeof(*tx_beacon_cmd));
-
- 	BUG_ON(frame_size > MAX_MPDU_SIZE);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 161d812..1af0420 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1404,7 +1404,7 @@ static void iwl3945_free_frame(struct
-iwl3945_priv *priv, struct iwl3945_frame *
-
- unsigned int iwl3945_fill_beacon_frame(struct iwl3945_priv *priv,
- 				struct ieee80211_hdr *hdr,
--				const u8 *dest, int left)
-+				int left)
- {
-
- 	if (!iwl3945_is_associated(priv) || !priv->ibss_beacon ||
