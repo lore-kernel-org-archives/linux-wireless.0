@@ -1,42 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:34690 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756980AbYLEP60 (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.186]:33263 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753151AbYL2WRS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2008 10:58:26 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] p54usb: fix usb_kill_urb hang with slub_debug=P
-Date: Fri, 5 Dec 2008 16:58:22 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-usb@vger.kernel.org, gregkh@suse.de,
-	linux-kernel@vger.kernel.org
-References: <200812051547.45790.chunkeey@web.de> <49394541.30404@lwfinger.net>
-In-Reply-To: <49394541.30404@lwfinger.net>
+	Mon, 29 Dec 2008 17:17:18 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so2543196fkq.5
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 14:17:16 -0800 (PST)
+Message-ID: <1ba2fa240812291417w6e99dd17t3ffc2973774ed824@mail.gmail.com> (sfid-20081229_231722_761439_6C2CDFE9)
+Date: Tue, 30 Dec 2008 00:17:16 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: clean up set_key callback
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1230551709.3116.30.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812051658.23452.chunkeey@web.de> (sfid-20081205_165847_501036_0FDB83EE)
+Content-Type: text/plain; charset=UTF-8
+References: <1230551709.3116.30.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 05 December 2008 16:14:09 Larry Finger wrote:
-> Christian Lamparter wrote:
-> > This patch fixes a problem identified by Johannes Berg.
-> > 
-> > It looks like this is a classic case of "use-after-freed". 
-> > A module which should reproduce the problem on
-> > any other USB device can be found right here:
-> > http://kerneltrap.org/mailarchive/linux-usb/2008/12/4/4317064
- 
-> I didn't find either the code nor a link to it in the above link. What did I miss?
-> 
-Sorry... kerneltrap doesn't like attachments.
+>  static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+> -                          const u8 *local_addr, const u8 *addr,
+> +                          struct ieee80211_vif *vif,
+> +                          struct ieee80211_sta *sta,
+>                           struct ieee80211_key_conf *key)
+>  {
+>        struct iwl_priv *priv = hw->priv;
+> @@ -3038,6 +3039,9 @@ static int iwl_mac_set_key(struct ieee80
+>        int ret = 0;
+>        u8 sta_id = IWL_INVALID_STATION;
+>        u8 is_default_wep_key = 0;
+> +       static const u8 bcast_addr[ETH_ALEN] =
+> +               { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, };
+> +       static const u8 *addr;
 
-http://marc.info/?l=linux-usb&m=122843263217096&w=2
-has it.
+>        IWL_DEBUG_MAC80211("enter\n");
+>
+> @@ -3046,9 +3050,7 @@ static int iwl_mac_set_key(struct ieee80
+>                return -EOPNOTSUPP;
+>        }
+>
+> -       if (is_zero_ether_addr(addr))
+> -               /* only support pairwise keys */
+> -               return -EOPNOTSUPP;
+> +       addr = sta ? sta->addr : bcast_addr;
+>
 
-Regards, 
-	Chr
+Please use this code instead in both iwlwifi drivers.
+
++sta_id = sta ? iwl_find_station(priv, sta->addr) :
+priv->hw_params.bcast_sta_id;
+- sta_id = iwl_find_station(priv, addr);
+
+
+
+>        if (sta_id == IWL_INVALID_STATION) {
+> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c   2008-12-24 12:03:05.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl3945-base.c        2008-12-24 12:25:51.000000000 +0100
+> @@ -6561,12 +6561,16 @@ out_unlock:
+>  }
+>
+>  static int iwl3945_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+> -                          const u8 *local_addr, const u8 *addr,
+> -                          struct ieee80211_key_conf *key)
+> +                              struct ieee80211_vif *vif,
+> +                              struct ieee80211_sta *sta,
+> +                              struct ieee80211_key_conf *key)
+>  {
+>        struct iwl_priv *priv = hw->priv;
+> +       const u8 *addr;
+>        int rc = 0;
+>        u8 sta_id;
+> +       static const u8 bcast_addr[ETH_ALEN] =
+> +               { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+>
+>        IWL_DEBUG_MAC80211("enter\n");
+>
+> @@ -6575,9 +6579,7 @@ static int iwl3945_mac_set_key(struct ie
+>                return -EOPNOTSUPP;
+>        }
+>
+> -       if (is_zero_ether_addr(addr))
+> -               /* only support pairwise keys */
+> -               return -EOPNOTSUPP;
+> +       addr = sta ? sta->addr : bcast_addr;
+>
+>        sta_id = iwl3945_hw_find_station(priv, addr);
+>        if (sta_id == IWL_INVALID_STATION) {
+> --- wireless-testing.orig/drivers/net/wireless/p54/p54common.c  2008-12-24 12:03:05.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/p54/p54common.c       2008-12-24 12:03:17.000000000 +0100
+> @@ -2067,7 +2067,7 @@ static void p54_bss_info_changed(struct
+>  }
+
+Thanks
+Tomas
