@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58081 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755194AbYLDW3X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 17:29:23 -0500
-Subject: Re: [RFC] mac80211: remove WARN_ON() from ieee80211_hw_config
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1228429462.28477.77.camel@rc-desk>
-References: <> <1228425905-15666-1-git-send-email-reinette.chatre@intel.com>
-	 <1228427824.5692.52.camel@johannes.berg>
-	 <1228429462.28477.77.camel@rc-desk>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MnprGQhVaWvbMo1ndUAd"
-Date: Thu, 04 Dec 2008 23:29:20 +0100
-Message-Id: <1228429761.5692.54.camel@johannes.berg> (sfid-20081204_232926_992753_CF9F2D90)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:24429 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751548AbYL2P42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Dec 2008 10:56:28 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 07:56:28 -0800
+Date: Mon, 29 Dec 2008 07:56:13 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Dan E <trg_info@mailhaven.com>, Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Hostapd doesn't like crda
+Message-ID: <20081229155613.GR5944@tesla> (sfid-20081229_165635_449246_B2E9F727)
+References: <200812272208.20153.mb@bu3sch.de> <20081227220814.GA15229@jm.kir.nu> <1230522322.28489.1292098677@webmail.messagingengine.com> <200812291128.00512.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <200812291128.00512.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Dec 29, 2008 at 02:28:00AM -0800, Michael Buesch wrote:
+> On Monday 29 December 2008 04:45:22 Dan E wrote:
+> >
+> > On Sun, 28 Dec 2008 00:08:14 +0200, "Jouni Malinen" <j@w1.fi> said:
+> > > On Sat, Dec 27, 2008 at 10:08:20PM +0100, Michael Buesch wrote:
+> > > > Please take a look at the following log:
+> > > > http://bu3sch.de/misc/crda.JPG
+> > > >
+> > > > Note the ordering of the events.
+> > > > Hostapd starts up and tells the kernel what country we're in.
+> > > > Then the kernel calls CRDA, _but_ hostapd goes on with its business
+> > > > before CRDA has finished its work.
+> > >
+> > > Yes, because the netlink message was completed and hostapd assumes
+> > > everything is ready at that point. Ignoring the complexity in the kernel
+> > > (+ CRDA as a helper), this looks like reasonable expectation to make for
+> > > NL80211_CMD_REQ_SET_REG operation. There is no other mechanism that
+> > > would notify hostapd (or any other program setting country for that
+> > > matter) when the operation was actually fully completed and polling for
+> > > channel changes up to a timeout is not very appealing either.
+> > >
+> > > Unfortunately, I don't see an easy fix for this.
+> >
+> > This sounds like it's broken by design.  Hostapd should not send
+> > NL80211_CMD_REQ_SET_REG if it is unable to evaluate the result.  If it's
+> > necessary to do "iw reg set foobar" in a script prior to invoking
+> > hostapd, then why does hostapd even bother?
+> >
+> 
+> hostapd isn't broken. The CMD_REQ_SET_REG should block until regulatory
+> settings are done. It currently doesn't, because that's hard to implement (probably
+> by design).
 
---=-MnprGQhVaWvbMo1ndUAd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It means adding a timer and picking a reasonable value for the timeout,
+then waiting for a response through nl80211 and disabling the timer from there and
+then finally sending the reply back. This seems rather hackish but we can implement
+if its desirable. I suppose the worst case scenerio would be CRDA and the
+regulatory db in an NFS mount or something like that.
 
-On Thu, 2008-12-04 at 14:24 -0800, reinette chatre wrote:
+An alternative would be for us to add a netlink event once the regultory rule is
+set in place. If the first approach is the better path to take then this secondary
+netlink event can be sent anyway as informational.
 
-> > I suppose the probability of the beacon interval changing is rather low=
-,
-> > but should we propagate the error in that case rather than just using
-> > -EINVAL?
->=20
-> I do not understand. By returning -EINVAL the error is propagated up to
-> nl80211 from where the call came.
+Thoughts?
 
-Ah, but the error code is lost, the driver might have returned -EBUSY or
-something. I'm not sure we want to pass that up, it might be better not
-to, not sure.
-
-johannes
-
---=-MnprGQhVaWvbMo1ndUAd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJOFm8AAoJEKVg1VMiehFYqS8P/0Jzy0nSFqItkiwnP9cjx0bh
-JD4Pt9t3+3lDDYVU5vi0kSb4sVbazBO8DKMuaP+1M/2zI8AjY0MUhcacQaG062WV
-MEIF06xM5S0tciqtUH3JjuQaSfbR/dRclWFE01RtiZdSp8cOs3jOSXIJcPhBsCy0
-KCd4ajMpmkG3/SQFAXrb1NLGAjTXGRdTi2YIUlomQP8cslq4wzbDK+jXjl+vX8Vj
-FAjjps5zccMepV1oS+DG1aKWzE/8KXPPjEHCelRtWYHxSomc4/+CxRqzqTI1fLrb
-1nYeV9nSiCHB3RXW602hdSGX1fG/6ClnvU8Jk/3qF369lupJTOApOWJyu+iUiYpj
-+aMRHdnUpbdnuVv6N1OtEwTlSh7rLTBsjhoJllF1Lj14JfDjQrircWl1aTB7BOSw
-L9Lvfd7vId+1VoQTligIhluMkpldkU2jTi8z1CYrD1VNoWlmQI+TtTrnxSL7Pez2
-/q7CJ98FkTlPEANCRBU6Icxb5DuObIvI+o3YQwNM5u4eQh+bogkjZRrllC6FRDKb
-CFh/M1TRJdsT+EoZ4CIfX18go5Uxh1XYGuvVWe0+qajkkNd2ADtFV6TTC6peiN/M
-eZ946hmn0IJ4JFq76a9tvZ6fNZOwnQUGnR51DhrrRvGye1cJQBuNF809mw2RbCLa
-vJF/gYbJZYBEjxvlOFWn
-=9Fsh
------END PGP SIGNATURE-----
-
---=-MnprGQhVaWvbMo1ndUAd--
-
+  Luis
