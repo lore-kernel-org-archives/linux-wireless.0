@@ -1,76 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:34333 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751404AbYLZSJh (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:35795 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752914AbYL2Nho (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2008 13:09:37 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] p54: prevent upload of wrong firmwares
-Date: Fri, 26 Dec 2008 19:09:34 +0100
-Cc: John W Linville <linville@tuxdriver.com>,
-	Artur Skawina <art.08.09@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 29 Dec 2008 08:37:44 -0500
+Received: by bwz14 with SMTP id 14so16148575bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 05:37:41 -0800 (PST)
+Message-ID: <8e92b4100812290537q7605b39dg382fe5d42963c65a@mail.gmail.com> (sfid-20081229_143754_185410_C21A0648)
+Date: Mon, 29 Dec 2008 19:07:41 +0530
+From: "Vivek Natarajan" <vivek.natraj@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] ath9k: Enable dynamic power save in ath9k.
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1230552660.3116.33.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812261909.34823.chunkeey@web.de> (sfid-20081226_190939_672460_79A34FE1)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081229235300.GA8458@myhost.users.atheros.com>
+	 <1230552660.3116.33.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch will prevent anyone to upload a firmware which was not designed for his device.
+On Mon, Dec 29, 2008 at 5:41 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2008-12-29 at 15:53 -0800, Vivek Natarajan wrote:
+>
+>> +#define ATH9K_PS_WAKEUP(sc)                                                \
+>> +     do {                                                                  \
+>> +             if (!atomic_read(&sc->ps_usecount) &&                         \
+>> +                (ah->ah_powerMode !=  ATH9K_PM_AWAKE)) {                   \
+>> +                     ah->ah_restoreMode = ah->ah_powerMode;                \
+>> +                     ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);         \
+>> +             }                                                             \
+>> +             atomic_inc(&sc->ps_usecount);                                 \
+>> +     } while (0);
+>> +
+>> +#define ATH9K_PS_RESTORE(sc)                                               \
+>> +     do {                                                                  \
+>> +             if (atomic_dec_and_test(&sc->ps_usecount) &&                  \
+>> +                (sc->hw->conf.flags & IEEE80211_CONF_PS))                  \
+>> +                     ath9k_hw_setpower(sc->sc_ah, ah->ah_restoreMode);     \
+>> +     } while (0);
+>
+> I think those would be better as static inlines rather than macros.
+>
+> johannes
 
-There's still a catch:
-There is no easy way to detect if a firmware is for PCI or for USB (1st Gen),
-because they all share the same LM86 identifier.
+Thanks Johannes. I'll change them.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
---- a/drivers/net/wireless/p54/p54pci.c	2008-12-26 13:33:37.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54pci.c	2008-12-26 17:43:25.000000000 +0100
-@@ -79,6 +79,12 @@ static int p54p_upload_firmware(struct i
- 	if (err)
- 		return err;
- 
-+	if (priv->common.fw_interface != FW_LM86) {
-+		dev_err(&priv->pdev->dev, "wrong firmware, "
-+			"please get a LM86(PCI) firmware a try again.\n");
-+		return -EINVAL;
-+	}
-+
- 	data = (__le32 *) priv->firmware->data;
- 	remains = priv->firmware->size;
- 	device_addr = ISL38XX_DEV_FIRMWARE_ADDR;
-diff -Nurp a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
---- a/drivers/net/wireless/p54/p54usb.c	2008-12-26 17:47:54.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54usb.c	2008-12-26 17:49:12.000000000 +0100
-@@ -502,6 +502,13 @@ static int p54u_upload_firmware_3887(str
- 	if (err)
- 		goto err_upload_failed;
- 
-+	if (priv->common.fw_interface != FW_LM87) {
-+		dev_err(&priv->udev->dev, "wrong firmware, "
-+			"please get a LM87 firmware and try again.\n");
-+		err = -EINVAL;
-+		goto err_upload_failed;
-+	}
-+
- 	left = block_size = min((size_t)P54U_FW_BLOCK, fw_entry->size);
- 	strcpy(buf, p54u_firmware_upload_3887);
- 	left -= strlen(p54u_firmware_upload_3887);
-@@ -652,6 +659,14 @@ static int p54u_upload_firmware_net2280(
- 		return err;
- 	}
- 
-+	if (priv->common.fw_interface != FW_LM86) {
-+		dev_err(&priv->udev->dev, "wrong firmware, "
-+			"please get a LM86(USB) firmware and try again.\n");
-+		kfree(buf);
-+		release_firmware(fw_entry);
-+		return -EINVAL;
-+	}
-+
- #define P54U_WRITE(type, addr, data) \
- 	do {\
- 		err = p54u_write(priv, buf, type,\
+> Also, this seems racy, shouldn't it use something like if
+> (atomic_inc_return() == 1) ?
+
+Thanks.This seems much better.
+
+Vivek.
