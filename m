@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48951 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754533AbYLVOqH (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:59805 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391AbYL2ICw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 09:46:07 -0500
-Date: Mon, 22 Dec 2008 16:45:54 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Revert fix to TX status reporting for retries and
-	MCS index
-Message-ID: <20081222144554.GA16264@jm.kir.nu> (sfid-20081222_154617_864505_C2A50E07)
+	Mon, 29 Dec 2008 03:02:52 -0500
+Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
+	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id 64D178BDBD
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 10:02:50 +0200 (EET)
+Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh02.mail.saunalahti.fi (Postfix) with ESMTP id 4A37F2BD4F
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 10:02:49 +0200 (EET)
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH v2] mac80211: make wake/stop_queue_by_reason() functions static
+To: linux-wireless@vger.kernel.org
+Date: Mon, 29 Dec 2008 10:02:48 +0200
+Message-ID: <20081229080248.29905.35613.stgit@tikku> (sfid-20081229_090256_174706_F66F5E52)
+In-Reply-To: <87sko7ikls.fsf@litku.valot.fi>
+References: <87sko7ikls.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch reverts commit 17a0d0d402b9ea64c1097ef61b63250b7506669f
-because that change ended up breaking ath9k rate control. While the
-MCS index reporting to mac80211 was indeed fixed by the patch, it did
-not take into account that the ath9k rate control algorithm was
-updating private tables based on this index and the index comes
-through the rate control API call, i.e., based on mac80211 TX status
-call. In addition, it looks like the "fix" to remove +1 from TX status
-'count' field was not correct based on ieee80211_tx_status()
-implementation that counts the total of count values, but starting
-from -1, not 0.
+Fixes sparse warnings:
 
-The TX status reporting for frames using MCS needs to be fixed
-somehow, but it does not look like there is any easy fix for the ath9k
-rate control algorithm, so the best option now seems to be to revert the
-change and bring it back once the rate control code is cleaned up to
-handle this better.
+net/mac80211/util.c:355:6: warning: symbol
+  'ieee80211_wake_queue_by_reason' was not declared. Should it be static?
+net/mac80211/util.c:385:6: warning: symbol
+  'ieee80211_stop_queue_by_reason' was not declared. Should it be static?
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Thanks to Johannes Berg for reporting this.
+
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
 ---
- drivers/net/wireless/ath9k/xmit.c |   10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/xmit.c	2008-12-22 16:29:29.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/xmit.c	2008-12-22 16:29:33.000000000 +0200
-@@ -126,15 +126,7 @@ static void ath_tx_complete(struct ath_s
- 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
+ net/mac80211/util.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index fb89e1d..5cd4303 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -352,8 +352,8 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
  	}
+ }
  
--	tx_info->status.rates[0].count = tx_status->retries;
--	if (tx_info->status.rates[0].flags & IEEE80211_TX_RC_MCS) {
--		/* Change idx from internal table index to MCS index */
--		int idx = tx_info->status.rates[0].idx;
--		struct ath_rate_table *rate_table = sc->cur_rate_table;
--		if (idx >= 0 && idx < rate_table->rate_cnt)
--			tx_info->status.rates[0].idx =
--				rate_table->info[idx].ratecode & 0x7f;
--	}
-+	tx_info->status.rates[0].count = tx_status->retries + 1;
+-void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
+-				    enum queue_stop_reason reason)
++static void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
++					   enum queue_stop_reason reason)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	unsigned long flags;
+@@ -382,8 +382,8 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 	netif_stop_subqueue(local->mdev, queue);
+ }
  
- 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
- 	padsize = hdrlen & 3;
+-void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
+-				    enum queue_stop_reason reason)
++static void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
++					   enum queue_stop_reason reason)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	unsigned long flags;
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
