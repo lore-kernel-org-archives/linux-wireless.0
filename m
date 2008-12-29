@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:47292 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851AbYL3SDk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2008 13:03:40 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-Date: Tue, 30 Dec 2008 19:05:44 +0100
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>,
-	"Hin-Tak Leung" <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-References: <Pine.LNX.4.44L0.0812301220090.2386-100000@iolanthe.rowland.org> <495A5AE5.1040902@tuffmail.co.uk> <495A5FEC.5070608@lwfinger.net>
-In-Reply-To: <495A5FEC.5070608@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200812301905.46215.oliver@neukum.org> (sfid-20081230_190346_968311_94880991)
+Received: from c60.cesmail.net ([216.154.195.49]:47032 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751135AbYL2S1k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Dec 2008 13:27:40 -0500
+Subject: Re: Hostapd doesn't like crda
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Dan E <trg_info@mailhaven.com>, Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20081229161828.GT5944@tesla>
+References: <200812272208.20153.mb@bu3sch.de>
+	 <200812291128.00512.mb@bu3sch.de> <20081229155613.GR5944@tesla>
+	 <200812291704.28163.mb@bu3sch.de>  <20081229161828.GT5944@tesla>
+Content-Type: text/plain
+Date: Mon, 29 Dec 2008 13:27:36 -0500
+Message-Id: <1230575256.22537.3.camel@dv> (sfid-20081229_192743_597498_819BE2B5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 30. Dezember 2008 18:52:44 schrieb Larry Finger:
-> Alan Jenkins wrote:
-> > That won't fix hibernation though. =A0The disconnect method can sti=
-ll get
-> > called in resume from hibernation, before the workqueue gets unfroz=
-en.=20
-> > To be honest, I'm far more interested in suspend-to-disk than
-> > suspend-to-ram.
->=20
-> Does this patch fix your problem? It works here, but I only did one
-> test. The patch is for wireless-testing.
+On Mon, 2008-12-29 at 08:18 -0800, Luis R. Rodriguez wrote:
+> > I think this wouldn't be hackish, but do we actually _know_ when crda has finished
+> > uploading regulatory information? Does it do it all in one step?
+> 
+> It would go in through another nl80211 command, NL80211_CMD_SET_REG. nl80211 eventually
+> calls set_regdom() and this will set it, so if all goes well we can remove the timer
+> at the end if its active (other means can call CRDA like for 802.11d or the wireless core
+> upon initialization).
 
-Did you test STD or STR?
+Can we have a command to _get_ regulatory settings?  I think it would be
+useful.  Then hostapd could wait until the correct settings are active.
+If it doesn't happen after some time, hostapd should exit with an error.
 
-	Regards
-		Oliver
+It would be even better if hostapd could wait for an event notifying of
+the regulatory settings change.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Regards,
+Pavel Roskin
