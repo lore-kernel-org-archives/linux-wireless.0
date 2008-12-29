@@ -1,118 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:58094 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752822AbYLBVuh (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:51268 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751404AbYL2QZ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 16:50:37 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so1379623eyi.37
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 13:50:35 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Add RXDONE_CRYPTO_IV/ICV flags
-Date: Tue, 2 Dec 2008 22:50:33 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200812022250.33357.IvDoorn@gmail.com> (sfid-20081202_225052_212272_519A0FBC)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Mon, 29 Dec 2008 11:25:27 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so594832nfc.21
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 08:25:25 -0800 (PST)
+From: Ville Nuorvala <ville.nuorvala@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Ville Nuorvala <ville.nuorvala@gmail.com>
+Subject: [PATCH] mac80211: Add IWSPY support to mac80211 stack
+Date: Mon, 29 Dec 2008 18:25:20 +0200
+Message-Id: <1230567920-16623-1-git-send-email-ville.nuorvala@gmail.com> (sfid-20081229_172531_641216_0EFCA5CF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers should notify rt2x00lib when they provide
-the IV/ICV data. This adds some flexibility to drivers
-which can't provide all information.
-	* rt2500usb provides ICV inside the frame
-	* rt2800pci doesn't provide IV/ICV
-	* rt2800usb doesn't provide IV/ICV
+The IWSPY ioctls and netlink events were supported in the old ieee80211
+stack. This patch adds them to mac80211.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Ville Nuorvala <ville.nuorvala@gmail.com>
 ---
-John, this is on top of the merge request from earlier today.
----
- drivers/net/wireless/rt2x00/rt2500usb.c   |    2 ++
- drivers/net/wireless/rt2x00/rt2x00dev.c   |    3 ++-
- drivers/net/wireless/rt2x00/rt2x00queue.h |    4 ++++
- drivers/net/wireless/rt2x00/rt61pci.c     |    3 +++
- drivers/net/wireless/rt2x00/rt73usb.c     |    3 +++
- 5 files changed, 14 insertions(+), 1 deletions(-)
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/iface.c       |    3 +++
+ net/mac80211/rx.c          |   38 ++++++++++++++++++++++++++++++++++++++
+ net/mac80211/wext.c        |    8 ++++----
+ 4 files changed, 48 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 5f65b7e..d8c48fd 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1330,6 +1330,8 @@ static void rt2500usb_fill_rxdone(struct queue_entry *entry,
- 	if (rxdesc->cipher != CIPHER_NONE) {
- 		_rt2x00_desc_read(rxd, 2, &rxdesc->iv[0]);
- 		_rt2x00_desc_read(rxd, 3, &rxdesc->iv[1]);
-+		rxdesc->dev_flags |= RXDONE_CRYPTO_IV;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 117718b..cdfbea5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -431,6 +431,9 @@ struct ieee80211_sub_if_data {
+ 		u32 mntr_flags;
+ 	} u;
+ 
++	struct iw_public_data wireless_data;
++	struct iw_spy_data spy_data;
 +
- 		/* ICV is located at the end of frame */
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct dentry *debugfsdir;
+ 	union {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 2c7a87d..128e374 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -778,6 +778,9 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 	/* setup type-dependent data */
+ 	ieee80211_setup_sdata(sdata, type);
  
- 		/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 7fc1d76..6d92542 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -636,7 +636,8 @@ void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
- 	 * provided seperately (through hardware descriptor)
- 	 * in which case we should reinsert the data into the frame.
- 	 */
--	if ((rxdesc.flags & RX_FLAG_IV_STRIPPED)) {
-+	if ((rxdesc.dev_flags & RXDONE_CRYPTO_IV) &&
-+	    (rxdesc.flags & RX_FLAG_IV_STRIPPED)) {
- 		rt2x00crypto_rx_insert_iv(entry->skb, align,
- 					  header_length, &rxdesc);
- 	} else if (align) {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 7889f91..2829371 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -146,11 +146,15 @@ static inline struct skb_frame_desc* get_skb_frame_desc(struct sk_buff *skb)
-  * @RXDONE_SIGNAL_PLCP: Signal field contains the plcp value.
-  * @RXDONE_SIGNAL_BITRATE: Signal field contains the bitrate value.
-  * @RXDONE_MY_BSS: Does this frame originate from device's BSS.
-+ * @RXDONE_CRYPTO_IV: Driver provided IV/EIV data.
-+ * @RXDONE_CRYPTO_ICV: Driver provided ICV data.
-  */
- enum rxdone_entry_desc_flags {
- 	RXDONE_SIGNAL_PLCP = 1 << 0,
- 	RXDONE_SIGNAL_BITRATE = 1 << 1,
- 	RXDONE_MY_BSS = 1 << 2,
-+	RXDONE_CRYPTO_IV = 1 << 3,
-+	RXDONE_CRYPTO_ICV = 1 << 4,
- };
- 
- /**
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index ce0fde4..3b9015a 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1951,7 +1951,10 @@ static void rt61pci_fill_rxdone(struct queue_entry *entry,
- 	if (rxdesc->cipher != CIPHER_NONE) {
- 		_rt2x00_desc_read(entry_priv->desc, 2, &rxdesc->iv[0]);
- 		_rt2x00_desc_read(entry_priv->desc, 3, &rxdesc->iv[1]);
-+		rxdesc->dev_flags |= RXDONE_CRYPTO_IV;
++	sdata->wireless_data.spy_data = &sdata->spy_data;
++	ndev->wireless_data = &sdata->wireless_data;
 +
- 		_rt2x00_desc_read(entry_priv->desc, 4, &rxdesc->icv);
-+		rxdesc->dev_flags |= RXDONE_CRYPTO_ICV;
+ 	ret = register_netdevice(ndev);
+ 	if (ret)
+ 		goto fail;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 384cb3b..f73e245 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1926,6 +1926,41 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+ 	return 1;
+ }
  
- 		/*
- 		 * Hardware has stripped IV/EIV data from 802.11 frame during
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 79475a8..563be0b 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1620,7 +1620,10 @@ static void rt73usb_fill_rxdone(struct queue_entry *entry,
- 	if (rxdesc->cipher != CIPHER_NONE) {
- 		_rt2x00_desc_read(rxd, 2, &rxdesc->iv[0]);
- 		_rt2x00_desc_read(rxd, 3, &rxdesc->iv[1]);
-+		rxdesc->dev_flags |= RXDONE_CRYPTO_IV;
++static void ieee80211_rx_qual_report(struct ieee80211_sub_if_data *sdata,
++				     struct ieee80211_hdr *hdr,
++				     struct ieee80211_rx_status *status)
 +
- 		_rt2x00_desc_read(rxd, 4, &rxdesc->icv);
-+		rxdesc->dev_flags |= RXDONE_CRYPTO_ICV;
++{
++#ifdef IW_WIRELESS_SPY		/* defined in iw_handler.h */
++	/* If spy monitoring on */
++	if (sdata->spy_data.spy_number > 0) {
++		struct iw_quality wstats;
++
++		wstats.updated = 0;
++		if (status->signal != 0) {
++			wstats.level = status->signal;
++			wstats.updated |= IW_QUAL_LEVEL_UPDATED;
++		} else
++			wstats.updated |= IW_QUAL_LEVEL_INVALID;
++
++		if (status->noise != 0) {
++			wstats.noise = status->noise;
++			wstats.updated |= IW_QUAL_NOISE_UPDATED;
++		} else
++			wstats.updated |= IW_QUAL_NOISE_INVALID;
++
++		if (status->qual != 0) {
++			wstats.qual = status->qual;
++			wstats.updated |= IW_QUAL_QUAL_UPDATED;
++		} else
++			wstats.updated |= IW_QUAL_QUAL_INVALID;
++
++		/* Update spy records */
++		wireless_spy_update(sdata->dev, hdr->addr2, &wstats);
++	}
++#endif				/* IW_WIRELESS_SPY */
++}
++
+ /*
+  * This is the actual Rx frames handler. as it blongs to Rx path it must
+  * be called with rcu_read_lock protection.
+@@ -1988,6 +2023,9 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 		if (!prepares)
+ 			continue;
  
++		/* update signal quality parameters */
++		ieee80211_rx_qual_report(sdata, hdr, status);
++
  		/*
- 		 * Hardware has stripped IV/EIV data from 802.11 frame during
+ 		 * frame is destined for this interface, but if it's not
+ 		 * also for the previous one we handle that after the
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 48fc6b9..8056fdd 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -1084,10 +1084,10 @@ static const iw_handler ieee80211_handler[] =
+ 	(iw_handler) NULL /* kernel code */,		/* SIOCGIWPRIV */
+ 	(iw_handler) NULL /* not used */,		/* SIOCSIWSTATS */
+ 	(iw_handler) NULL /* kernel code */,		/* SIOCGIWSTATS */
+-	(iw_handler) NULL,				/* SIOCSIWSPY */
+-	(iw_handler) NULL,				/* SIOCGIWSPY */
+-	(iw_handler) NULL,				/* SIOCSIWTHRSPY */
+-	(iw_handler) NULL,				/* SIOCGIWTHRSPY */
++	(iw_handler) iw_handler_set_spy,		/* SIOCSIWSPY */
++	(iw_handler) iw_handler_get_spy,		/* SIOCGIWSPY */
++	(iw_handler) iw_handler_set_thrspy,		/* SIOCSIWTHRSPY */
++	(iw_handler) iw_handler_get_thrspy,		/* SIOCGIWTHRSPY */
+ 	(iw_handler) ieee80211_ioctl_siwap,		/* SIOCSIWAP */
+ 	(iw_handler) ieee80211_ioctl_giwap,		/* SIOCGIWAP */
+ 	(iw_handler) ieee80211_ioctl_siwmlme,		/* SIOCSIWMLME */
 -- 
-1.5.6.1
+1.6.0.6
 
