@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:18967 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753836AbYLAUwH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 15:52:07 -0500
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>, dcbw@redhat.com
-Subject: Re: [PATCH] mac80211: deauth when interface is marked down
-References: <1228161724-19771-1-git-send-email-linville@tuxdriver.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Mon, 01 Dec 2008 22:51:14 +0200
-In-Reply-To: <1228161724-19771-1-git-send-email-linville@tuxdriver.com> (ext John W. Linville's message of "Mon\,  1 Dec 2008 15\:02\:04 -0500")
-Message-ID: <87d4gbbovx.fsf@nokia.com> (sfid-20081201_215213_371875_C76BA5DE)
+Received: from mail.atheros.com ([12.36.123.2]:31898 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751846AbYL2SnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Dec 2008 13:43:16 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 10:43:16 -0800
+Date: Mon, 29 Dec 2008 10:43:01 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Michael Buesch <mb@bu3sch.de>, Dan E <trg_info@mailhaven.com>,
+	Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Hostapd doesn't like crda
+Message-ID: <20081229184301.GW5944@tesla> (sfid-20081229_194334_626627_3C9FA8CD)
+References: <200812272208.20153.mb@bu3sch.de> <200812291128.00512.mb@bu3sch.de> <20081229155613.GR5944@tesla> <200812291704.28163.mb@bu3sch.de> <20081229161828.GT5944@tesla> <1230575256.22537.3.camel@dv>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1230575256.22537.3.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville <linville@tuxdriver.com> writes:
+On Mon, Dec 29, 2008 at 10:27:36AM -0800, Pavel Roskin wrote:
+> On Mon, 2008-12-29 at 08:18 -0800, Luis R. Rodriguez wrote:
+> > > I think this wouldn't be hackish, but do we actually _know_ when crda has finished
+> > > uploading regulatory information? Does it do it all in one step?
+> >
+> > It would go in through another nl80211 command, NL80211_CMD_SET_REG. nl80211 eventually
+> > calls set_regdom() and this will set it, so if all goes well we can remove the timer
+> > at the end if its active (other means can call CRDA like for 802.11d or the wireless core
+> > upon initialization).
+> 
+> Can we have a command to _get_ regulatory settings?  I think it would be
+> useful.  Then hostapd could wait until the correct settings are active.
+> If it doesn't happen after some time, hostapd should exit with an error.
 
-> It seems like proper etiquette to let other stations know when we are
-> going down in either STA or IBSS mode.  This also notifies userland, so
-> wpa_supplicant doesn't get confused.
+Yeah, I've been meaning to get to that but haven't yet, we should have
+a nl80211 command which lets userspace get the entire rd structure, and maybe
+some info from last_request.
 
-I noticed a problem while I was testing my dynamic power save patches,
-power save settings were not correctly sent to the driver because
-ieee80211_stop() didn't notify mlme. I think this patch will fix this
-but I didn't test it, yet.
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  net/mac80211/iface.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index 4608212..b557250 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -435,6 +435,9 @@ static int ieee80211_stop(struct net_device *dev)
->  		break;
->  	case NL80211_IFTYPE_STATION:
->  	case NL80211_IFTYPE_ADHOC:
-> +		/* Announce that we are leaving the network. */
-> +		ieee80211_sta_deauthenticate(dev, WLAN_REASON_DEAUTH_LEAVING);
-> +
->  		sdata->u.sta.state = IEEE80211_STA_MLME_DISABLED;
+> It would be even better if hostapd could wait for an event notifying of
+> the regulatory settings change.
 
-I think manually setting u.sta.state can be removed now because
-ieee80211_sta_deauthenticate() calls ieee80211_set_disassoc() which
-again has this:
+Whatever works. But as can be seen this just requires a bit of work.
 
-	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT)
-		ifsta->state = IEEE80211_STA_MLME_DISABLED;
-
--- 
-Kalle Valo
+  Luis
