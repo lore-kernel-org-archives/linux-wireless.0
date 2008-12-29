@@ -1,94 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:2728 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824AbYLAL45 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46199 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752750AbYL2MKj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 06:56:57 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so1269845nfc.21
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 03:56:55 -0800 (PST)
-Message-ID: <eb3ff54b0812010356g1b11c68fkbbfce711313894d8@mail.gmail.com> (sfid-20081201_125700_838390_31A1BC93)
-Date: Mon, 1 Dec 2008 13:56:55 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH ] mac80211: tx module cleanup.
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 29 Dec 2008 07:10:39 -0500
+Subject: Re: [PATCH] ath9k: Enable dynamic power save in ath9k.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20081229235300.GA8458@myhost.users.atheros.com> (sfid-20081229_112105_235618_A8D12202)
+References: <20081229235300.GA8458@myhost.users.atheros.com>
+	 (sfid-20081229_112105_235618_A8D12202)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0ugj3aYNEmJyUHS3hNux"
+Date: Mon, 29 Dec 2008 13:11:00 +0100
+Message-Id: <1230552660.3116.33.camel@johannes> (sfid-20081229_131046_790819_4EFBD29E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unnecessary parameter in ieee80211_beacon_add_tim() and
-removes unneeded definition and assignment for bdev (instance of net_device) in
-ieee80211_beacon_get() and in ieee80211_get_buffered_bc()
-(all in tx.c).
 
-(this patch was prepared in wireless-testing tree).
+--=-0ugj3aYNEmJyUHS3hNux
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+On Mon, 2008-12-29 at 15:53 -0800, Vivek Natarajan wrote:
 
+> +#define ATH9K_PS_WAKEUP(sc)						      \
+> +	do {								      \
+> +		if (!atomic_read(&sc->ps_usecount) && 			      \
+> +		   (ah->ah_powerMode !=3D  ATH9K_PM_AWAKE)) {		      \
+> +			ah->ah_restoreMode =3D ah->ah_powerMode;		      \
+> +			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);	      \
+> +		}							      \
+> +		atomic_inc(&sc->ps_usecount);				      \
+> +	} while (0);
+> +
+> +#define ATH9K_PS_RESTORE(sc)						      \
+> +	do {								      \
+> +		if (atomic_dec_and_test(&sc->ps_usecount) &&  		      \
+> +		   (sc->hw->conf.flags & IEEE80211_CONF_PS))		      \
+> +			ath9k_hw_setpower(sc->sc_ah, ah->ah_restoreMode);     \
+> +	} while (0);
 
+I think those would be better as static inlines rather than macros.
 
+johannes
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 0855cac..3f55138 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1783,8 +1783,7 @@ void ieee80211_tx_pending(unsigned long data)
+PS: Your clock seems to be off by 12.5 hours or so?
 
- /* functions for drivers to get certain frames */
+--=-0ugj3aYNEmJyUHS3hNux
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--static void ieee80211_beacon_add_tim(struct ieee80211_local *local,
--				     struct ieee80211_if_ap *bss,
-+static void ieee80211_beacon_add_tim(struct ieee80211_if_ap *bss,
- 				     struct sk_buff *skb,
- 				     struct beacon_data *beacon)
- {
-@@ -1852,7 +1851,6 @@ struct sk_buff *ieee80211_beacon_get(struct
-ieee80211_hw *hw,
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct sk_buff *skb = NULL;
- 	struct ieee80211_tx_info *info;
--	struct net_device *bdev;
- 	struct ieee80211_sub_if_data *sdata = NULL;
- 	struct ieee80211_if_ap *ap = NULL;
- 	struct ieee80211_if_sta *ifsta = NULL;
-@@ -1865,7 +1863,6 @@ struct sk_buff *ieee80211_beacon_get(struct
-ieee80211_hw *hw,
- 	rcu_read_lock();
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
- 	sdata = vif_to_sdata(vif);
--	bdev = sdata->dev;
+iQIcBAABAgAGBQJJWL5SAAoJEKVg1VMiehFYmOoP/jDO692DtQlQGZYonYMgVdmG
+PE4VTQe5c0HHsgaDANbV3De8IidI0LbX5b94zdjCRn15+mJkYhnHxzmcmHaYCki6
+Py5rOMaBKJGVvfnOVo4M8fft7YM4Gei3F0wWuOUlR38WDtLMvqbE5RtxXqCCA4Fn
+eoty4ObUJOVrQXDzTPpD6pxXMWpOseS07Z5uS+dy8oCXFDShaAkz5IpVbklG+HF7
+mFtIf6HMFy3iMOP/Zc6NdFzx8WPLbYhxgskXlVxvoUU+1t9phFQ0g/2rQNYmJhN2
+WbbhcDzTaW2h5sYyr4TuGBxGsrYH+xpfbaD40ncFC497lwrr4olHkk32N1cMHBRp
+juho/Awl5gtYdA+4QE6QfV2mWHzD26f0+YuZJCeO+5x887xpKqAJLHHpf0F5BGm4
+OqVTKLaZLKUW24U6KdT/gUxC+VxT8hL8M2yaYf1pRwmrvvIRW0o/VUxNWP+dsrJ2
+vgWZKhkHW11AUi1hzcR1Mq7g1J6syHr2GSCkoZanwOe3nVa/kfQ0EUa06LhkzeKd
+FpeVwx++c8epu/eeonVMA2v71sWNXsSpImliTJtpWZwMRAj2TsFN2YvS6W6OBKa9
+nU4YGr5ilG50Gt02z10CGUrjwD1U97N2WBd2obXJcUJjjRpR+VrnGWkNcuVQLLK6
+rJer/Shx2zYMNdv7l3nT
+=Uaq1
+-----END PGP SIGNATURE-----
 
- 	if (sdata->vif.type == NL80211_IFTYPE_AP) {
- 		ap = &sdata->u.ap;
-@@ -1893,12 +1890,12 @@ struct sk_buff *ieee80211_beacon_get(struct
-ieee80211_hw *hw,
- 			 * of the tim bitmap in mac80211 and the driver.
- 			 */
- 			if (local->tim_in_locked_section) {
--				ieee80211_beacon_add_tim(local, ap, skb, beacon);
-+				ieee80211_beacon_add_tim(ap, skb, beacon);
- 			} else {
- 				unsigned long flags;
+--=-0ugj3aYNEmJyUHS3hNux--
 
- 				spin_lock_irqsave(&local->sta_lock, flags);
--				ieee80211_beacon_add_tim(local, ap, skb, beacon);
-+				ieee80211_beacon_add_tim(ap, skb, beacon);
- 				spin_unlock_irqrestore(&local->sta_lock, flags);
- 			}
-
-@@ -2020,14 +2017,12 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 	struct sk_buff *skb = NULL;
- 	struct sta_info *sta;
- 	struct ieee80211_tx_data tx;
--	struct net_device *bdev;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_if_ap *bss = NULL;
- 	struct beacon_data *beacon;
- 	struct ieee80211_tx_info *info;
-
- 	sdata = vif_to_sdata(vif);
--	bdev = sdata->dev;
- 	bss = &sdata->u.ap;
-
- 	if (!bss)
