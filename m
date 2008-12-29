@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37010 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751090AbYLBUNN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 15:13:13 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/11] iwl3945: Select correct sta ID from find_station()
-Date: Tue,  2 Dec 2008 12:13:59 -0800
-Message-Id: <1228248847-10424-4-git-send-email-reinette.chatre@intel.com> (sfid-20081202_211319_834749_2C4F8D93)
-In-Reply-To: <1228248847-10424-3-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1228248847-10424-1-git-send-email-reinette.chatre@intel.com>
- <1228248847-10424-2-git-send-email-reinette.chatre@intel.com>
- <1228248847-10424-3-git-send-email-reinette.chatre@intel.com>
+Received: from fg-out-1718.google.com ([72.14.220.156]:34543 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbYL2GNe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Dec 2008 01:13:34 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so1673796fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2008 22:13:32 -0800 (PST)
+To: Greg KH <gregkh@suse.de>
+Cc: Pavel Roskin <proski@gnu.org>, Claudio <der.claudio@aon.at>,
+	linux-wireless@vger.kernel.org
+Subject: Re: status of at76-usb driver
+References: <1230411118.4956956ecb911@webmail.aon.at>
+	<87fxk8o2g0.fsf@litku.valot.fi> <1230499683.25726.4.camel@dv>
+	<20081229003321.GA7426@suse.de>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 29 Dec 2008 08:13:28 +0200
+In-Reply-To: <20081229003321.GA7426@suse.de> (Greg KH's message of "Sun\, 28 Dec 2008 16\:33\:21 -0800")
+Message-ID: <87y6xzqzjr.fsf@litku.valot.fi> (sfid-20081229_071338_704128_023623D0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <sameo@linux.intel.com>
+Greg KH <gregkh@suse.de> writes:
 
-The find_station routine needs to look at the IWL_AP_ID entry if we're a STA.
-Currently, it only looks for STA entries which causes HW crypto to fail.
+> On Sun, Dec 28, 2008 at 04:28:03PM -0500, Pavel Roskin wrote:
+>> On Sun, 2008-12-28 at 15:26 +0200, Kalle Valo wrote:
+>> 
+>> > Also I'm going to rename the mac80211 port to something else for just
+>> > to avoid the confusion with the original driver. Last thing I want to
+>> > see is having two in-tree drivers with identical names.
+>> 
+>> I asked to rename the driver that was imported into the staging tree,
+>> but my request was ignored.
+>
+> You did?  I don't see that in my email archives, sorry, did you cc: me?
+>
+>> I guess nobody really cares about the name conflict.
+>
+> What name conflict?  Is there in in-kernel with this same name for a
+> module?
 
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-Acked-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+Not yet, but there will be once I manage to get the mac80211 port
+usable.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index fb5d295..96824e8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -809,13 +809,20 @@ int iwl3945_hw_txq_free_tfd(struct iwl3945_priv *priv, struct iwl3945_tx_queue *
- 
- u8 iwl3945_hw_find_station(struct iwl3945_priv *priv, const u8 *addr)
- {
--	int i;
-+	int i, start = IWL_AP_ID;
- 	int ret = IWL_INVALID_STATION;
- 	unsigned long flags;
- 	DECLARE_MAC_BUF(mac);
- 
-+	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) ||
-+	    (priv->iw_mode == NL80211_IFTYPE_AP))
-+		start = IWL_STA_ID;
-+
-+	if (is_broadcast_ether_addr(addr))
-+		return priv->hw_setting.bcast_sta_id;
-+
- 	spin_lock_irqsave(&priv->sta_lock, flags);
--	for (i = IWL_STA_ID; i < priv->hw_setting.max_stations; i++)
-+	for (i = start; i < priv->hw_setting.max_stations; i++)
- 		if ((priv->stations[i].used) &&
- 		    (!compare_ether_addr
- 		     (priv->stations[i].sta.sta.addr, addr))) {
+> If so, let me know and I'll be glad to rename the staging one.
+
+I can rename the mac80211 port, it's less confusing for the users.
+Please don't rename the staging driver.
+
+>> Once the mac80211 port is working properly, it should be included in
+>> to the next kernel release, and the driver from the staging tree
+>> should be removed in the same kernel release.
+>
+> When a "real" driver is included, I will be glad to delete the staging
+> driver.  Just let me know.
+
+I have to disagree with Pavel here. We should have a proper transition
+period, because I'm sure that there will be problems with the new
+driver. The staging driver doesn't create any harm, quite the opposite
+actually.
+
+Greg, I'll let you know when I think the staging driver can be
+removed.
+
 -- 
-1.5.4.3
-
+Kalle Valo
