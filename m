@@ -1,98 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59827 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758961AbYLDReh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 12:34:37 -0500
-Subject: Re: [RFC PATCH v4 5/5] mac80211: track master queue status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081202200426.5507.44042.stgit@tikku> (sfid-20081202_210437_005505_E84F6109)
-References: <20081202200219.5507.83250.stgit@tikku>
-	 <20081202200426.5507.44042.stgit@tikku>
-	 (sfid-20081202_210437_005505_E84F6109)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JNzxRF7HDJDJQS9pxvu6"
-Date: Thu, 04 Dec 2008 18:34:35 +0100
-Message-Id: <1228412076.5692.25.camel@johannes.berg> (sfid-20081204_183453_109147_266CE3E1)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:36693 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751646AbYL2ElR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Dec 2008 23:41:17 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2008 20:41:17 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18776.21554.302227.967726@gargle.gargle.HOWL> (sfid-20081229_054120_447958_2EFD0F54)
+Date: Mon, 29 Dec 2008 10:08:10 +0530
+To: Luis Rodriguez <lrodriguez@atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v3 07/16] ath9k: use ieee80211_conf on
+ ath9k_hw_iscal_supported()
+In-Reply-To: <1230076731-22946-8-git-send-email-lrodriguez@atheros.com>
+References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
+	<1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
+	<1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
+	<1230076731-22946-4-git-send-email-lrodriguez@atheros.com>
+	<1230076731-22946-5-git-send-email-lrodriguez@atheros.com>
+	<1230076731-22946-6-git-send-email-lrodriguez@atheros.com>
+	<1230076731-22946-7-git-send-email-lrodriguez@atheros.com>
+	<1230076731-22946-8-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis Rodriguez wrote:
+> -       case IQ_MISMATCH_CAL:
+> -               if (!IS_CHAN_B(chan))
+> -                       retval = true;
+> -               break;
+> +       case IQ_MISMATCH_CAL: /* Both 2 GHz and 5 GHz support OFDM */
+> +               return true;
+>         case ADC_GAIN_CAL:
+>         case ADC_DC_CAL:
+> -               if (!IS_CHAN_B(chan)
+> -                   && !(IS_CHAN_2GHZ(chan) && IS_CHAN_HT20(chan)))
+> -                       retval = true;
+> +               if (conf->channel->band == IEEE80211_BAND_5GHZ &&
+> +                 conf_is_ht20(conf))
+> +                       return true;
+>                 break;
+>         }
 
---=-JNzxRF7HDJDJQS9pxvu6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Why are the IS_CHAN_B() checks removed ?
 
-On Tue, 2008-12-02 at 22:04 +0200, Kalle Valo wrote:
-
-> +void __ieee80211_stop_queues(struct ieee80211_hw *hw,
-> +			     enum queue_stop_reason reason)
->  {
->  	int i;
-> =20
->  	for (i =3D 0; i < ieee80211_num_queues(hw); i++)
-> -		ieee80211_stop_queue(hw, i);
-> +		__ieee80211_stop_queue(hw, i, reason);
-> +}
-> +
-> +void ieee80211_stop_queues(struct ieee80211_hw *hw)
-> +{
-> +	__ieee80211_stop_queues(hw, IEEE80211_QUEUE_STOP_REASON_DRIVER);
->  }
->  EXPORT_SYMBOL(ieee80211_stop_queues);
-> =20
-> @@ -367,12 +409,18 @@ int ieee80211_queue_stopped(struct ieee80211_hw *hw=
-, int queue)
->  }
->  EXPORT_SYMBOL(ieee80211_queue_stopped);
-> =20
-> -void ieee80211_wake_queues(struct ieee80211_hw *hw)
-> +void __ieee80211_wake_queues(struct ieee80211_hw *hw,
-> +			     enum queue_stop_reason reason)
->  {
->  	int i;
-> =20
->  	for (i =3D 0; i < hw->queues + hw->ampdu_queues; i++)
-> -		ieee80211_wake_queue(hw, i);
-> +		__ieee80211_wake_queue(hw, i, reason);
-> +}
-> +
-> +void ieee80211_wake_queues(struct ieee80211_hw *hw)
-> +{
-> +	__ieee80211_wake_queues(hw, IEEE80211_QUEUE_STOP_REASON_DRIVER);
->  }
->  EXPORT_SYMBOL(ieee80211_wake_queues);
-
-I wonder if we should optimise the spinlock here?
-
-Also, I'd prefer to first add this with just a single DRIVER reason
-first, and then add the PS patches that add and use the second reason.
-Other than that, it looks good to me, thanks!
-
-johannes
-
---=-JNzxRF7HDJDJQS9pxvu6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJOBSoAAoJEKVg1VMiehFYYXoP/RffVcfg7CXVwyjc42FsXmy1
-Wi/37WQOjrTti30WumARGymeOXTujH+P60PLohWNTV6aZP7L0u2ajuzaz0CAsK3Y
-pppgR7ZLf4A9wwjiqGx810XUd8KVpLwQxhK/uPTxgjbWVAPzkqtt+tS2k3zH4yIw
-Gi5vFuKsN+CB1N3ipk1ekJFoItoRwMttL1+HMolB2fevqI7opN7g5J/gUm5TLJSe
-XvO461Modk5QECNqCpH6+7y4A6CDX3bCDZGO0cYJO3NX2FHcGgOyDnW9nHXVFL0g
-2V1BfWLAqBjMqlLocAg1ONNvOof2/XBruAxuWwB/kgOuDNTg9SgvtFgekdU+pd8r
-QqxBO+pwcjFPdaSs58RB0bCoZL0q/nMf3d/eG4cP7T67PKbojINB7ZR+u2wlToV0
-sU6qKvga2tgSNg9LHO2PUutqn/hfQVSXImjMlb01oisVdu58Ryyyc3e9BqPEUoY8
-F/UYlTIDdT73MhKg80003VN/AVjqmfBOPPqHd1vRaTOWe2hYPXDyYrB+O+T8ov8i
-aQ89YKgds/nq0K9LWiM7wQh+bO4iOpxJDNAZw2HZb4/As0XWCEa4yvaa75221NC7
-Ftj6CPjT+Vib1XQd0oDMH9El/SxHyp3PAdXhoNxY13swcJmxhA3MoEUOIQxiRa+n
-h/wjQvm879K7trLPIQbS
-=7vtd
------END PGP SIGNATURE-----
-
---=-JNzxRF7HDJDJQS9pxvu6--
-
+Sujith
