@@ -1,82 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45351 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43907 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752580AbYLVIpK (ORCPT
+	with ESMTP id S1750867AbYL2KtN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 03:45:10 -0500
-Subject: Re: [PATCH] [RFC v2] mac80211: Scale down to non-HT association
-	with TKIP/WEP as pairwise cipher
+	Mon, 29 Dec 2008 05:49:13 -0500
+Subject: Re: subdirs under drivers/net/wireless
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-In-Reply-To: <20081222081050.GA3500@localhost.localdomain>
-References: <1229927497-30923-1-git-send-email-vasanth@atheros.com>
-	 <1229928585.3087.1.camel@johannes>
-	 <20081222081050.GA3500@localhost.localdomain>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gvHGHnKJ4yRjMJ8kp1mE"
-Date: Mon, 22 Dec 2008 09:45:04 +0100
-Message-Id: <1229935505.3481.0.camel@johannes.berg> (sfid-20081222_094517_418328_3EAB70D8)
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081229101138.GA15022@infradead.org> (sfid-20081229_111142_550654_AFAD09B2)
+References: <20081229101138.GA15022@infradead.org>
+	 (sfid-20081229_111142_550654_AFAD09B2)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6xU42IbDT+P7VDDeP0pS"
+Date: Mon, 29 Dec 2008 11:49:35 +0100
+Message-Id: <1230547775.3116.6.camel@johannes> (sfid-20081229_114938_310960_3882389B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-gvHGHnKJ4yRjMJ8kp1mE
+--=-6xU42IbDT+P7VDDeP0pS
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2008-12-22 at 13:40 +0530, Vasanthakumar Thiagarajan wrote:
-> On Mon, Dec 22, 2008 at 12:19:45PM +0530, Johannes Berg wrote:
-> > > +	case IW_AUTH_CIPHER_PAIRWISE:
-> > > +		if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION) {
-> > > +			if (data->value & (IW_AUTH_CIPHER_WEP40 |
-> > > +			    IW_AUTH_CIPHER_WEP104 | IW_AUTH_CIPHER_TKIP))
-> > > +				sdata->u.sta.flags |=3D
-> > > +					IEEE80211_STA_TKIP_WEP_USED;
-> > > +			else
-> > > +				sdata->u.sta.flags &=3D
-> > > +					~IEEE80211_STA_TKIP_WEP_USED;
-> > > +		}
-> > > +		break;
-> >=20
-> > Can't we check
-> > the key algorithm for the pairwise key associated with the AP's sta_inf=
-o
-> > directly in _send_assoc?
+On Mon, 2008-12-29 at 05:11 -0500, Christoph Hellwig wrote:
+> It looks like most multi-file drivers moved into subdirs in current git.
 >=20
-> AP's sta_info will not have the negotiated pirwise cipher before associat=
-ion.
+> Any reason wavelan didn't get the same treatment?  Or do you plan to
+> kill that driver because it seems mostly dead..
 
-Ok. I guess this patch is the way to go then, and we'll figure out how
-to make it work with nl80211/cfg80211 when we actually push all the key
-operations there.
+Nobody cared enough to do it, it'd probably be a good idea regardless.
+But those drivers that did get the treatment are, afaik, those that are
+actively maintained, and not just sticking around for historic reasons.
 
 johannes
 
---=-gvHGHnKJ4yRjMJ8kp1mE
+--=-6xU42IbDT+P7VDDeP0pS
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJT1OMAAoJEKVg1VMiehFYfBQP/2/Pk4sh7tAlZjKSzzR+x0fp
-5ZFB7gh4sv8emMRCtaiqqc8VGCDqe6bKANXVHV/dn11Dy5HzNUrtZqFN04L7MzBh
-aRU+HamQTtKtoLXs/hWJWb9ia6YTaSoqY0buLlNgLjf6tGKh/MttNTDiFyN8/D0Z
-3BjdRLKLy54ciANs8QFJRcTtWT4oHCihgCVB6UYAW1RdHaLlQ7Yrhbg9OwllA7YL
-NL73bf9j0AGFWy+MPf7ivmRuV58vMpNbkDl8J4ndysiLXL2pRmZgGjWUb1WomUuy
-1e3UKx14c14uOKKgwOgH/Z8nxpkKJpT+WlZMeRhInHbjFSTCthY3sR5GSLGRcHje
-FJb82m1zue1sirUHhP/G76PNP/MlPzwGCLYiQYta0bFjbz+IsMHFJf5DSbi3u9pz
-MzF3e3xW+obRrL6kBxBDuNOFgaKJNglBdK8O/XdrIq6H0Q/ZvEohzZwq7VtZQGYV
-wVgnNzNW2pUtgUXccMlG4guHHWCFZIBuEMe2RTSqrbTVQVAdgQzyv3vJH0U/gCC9
-CG7YeELLGWI2X+qHz5tlb4fEpy9HsVLygU2mOx4Mfe/tnZiE76+Q33ChQRX1LQct
-fq5Ba674QWYrW1m5R0vGKr0Dni7/JMllCpri8We/qj/kJYc5RzZ/HEk4wvYDycXh
-70DNVhWqFjPx6LJwqx8x
-=PnBd
+iQIcBAABAgAGBQJJWKs9AAoJEKVg1VMiehFYxngQAJ9yhe0L0LJJcFwOeDQwyMgT
+iBjKcgL8dFul/6wpcPTgG8REJj49ikVOEoQj/e0LOtve6+BPyO30H2cx2gvHViFX
+ozwRy/1pmwAYz63eqXC+cR75AohoS9J5APcrAQtpHPaHXp3/rPUjael1GPqJK1Oa
+4lrpoq1PcEmdGSlOkaW75kJNXmgrJjjcHQZ8LefN/471C1uXYFQ08CRHSTEG6t+o
+0v9ogQ7aKqkfzO07vp1Es31Rs4INO1BR8gvogMTQ8ctalX6gHC3L/307z17RZSTM
+S5VbctJqlbX67U0lYub809DBtV33EINuS2cfFlPOkv7btOD+LdCKbyYGVi5XLW/U
+dDjGGXSTTwlmsVgPyGEz80G0/c0+D3e+ITkEzqS7JBz/ifj3CGNJ6pIxnIQGpBw9
+RcpjkjVAFYoT3HtfMsWHNDZmIKeMMrHLdDqrr62YIozg8nAlZSi0Jll/oTkbi3MR
+lCDfjb1J0Wqi9HSLGNxWFZR20ectVtNHsqTrIE5ubboirhCJd6VhUrwHcyQptEKY
+1CvABxaqxRKsS/GU6DDzxLIJOuzL/5dmYodj7pJwN9tLJXrUDi0dQIF+cR1jC1MZ
+uLRvjZo+p9sf4br3Fm682HKWBW7uOc7y+5nnnJrfuf0DngsLOR4dgIMwLjWsaX+h
+KIthPTjrT0pZTjxLn2xl
+=RA2l
 -----END PGP SIGNATURE-----
 
---=-gvHGHnKJ4yRjMJ8kp1mE--
+--=-6xU42IbDT+P7VDDeP0pS--
 
