@@ -1,35 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:62571 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:46011 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756209AbYLKU4D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 15:56:03 -0500
+	id S1751508AbYL2EkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Dec 2008 23:40:10 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2008 12:56:03 -0800
-Date: Thu, 11 Dec 2008 04:56:19 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Henning Rogge <hrogge@googlemail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [Patch v14] nl80211: Add signal strength and bandwith to
-	nl80211station info
-Message-ID: <20081211125619.GA6810@tesla> (sfid-20081211_215609_814347_1E4CE430)
-References: <200812112135.02656.hrogge@googlemail.com>
+	for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2008 20:40:10 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <200812112135.02656.hrogge@googlemail.com>
+Message-ID: <18776.21485.750323.652519@gargle.gargle.HOWL> (sfid-20081229_054015_225378_C3C553AE)
+Date: Mon, 29 Dec 2008 10:07:01 +0530
+To: Luis Rodriguez <lrodriguez@atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v3 02/16] ath9k: use hw->conf on ath_setcurmode()
+In-Reply-To: <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
+References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
+	<1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
+	<1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 11, 2008 at 12:34:38PM -0800, Henning Rogge wrote:
-> This patch adds signal strength and transmission bitrate
-> to the station_info of nl80211.
-> 
-> Signed-off-by: Henning Rogge <rogge@fgan.de>
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Luis Rodriguez wrote:
+> +       switch (conf->channel->band) {
+> +       case IEEE80211_BAND_2GHZ:
+> +               if (conf_is_ht20(conf))
+> +                       sc->cur_rate_table =
+> +                         sc->hw_rate_table[ATH9K_MODE_11NG_HT20];
+> +               else if (conf_is_ht40_minus(conf))
+> +                       sc->cur_rate_table =
+> +                         sc->hw_rate_table[ATH9K_MODE_11NG_HT40MINUS];
+> +               else if (conf_is_ht40_plus(conf))
+> +                       sc->cur_rate_table =
+> +                         sc->hw_rate_table[ATH9K_MODE_11NG_HT40PLUS];
+> +               else {
+> +                       sc->sc_protrix = 1;
+> +                       sc->cur_rate_table =
+> +                         sc->hw_rate_table[ATH9K_MODE_11G];
+> +               }
+> +               break;
+> +       case IEEE80211_BAND_5GHZ:
+> +               if (conf_is_ht20(conf))
+> +                       sc->cur_rate_table =
+> +                         sc->hw_rate_table[ATH9K_MODE_11NA_HT20];
+> +               else if (conf_is_ht40_minus(conf))
+> +                       sc->cur_rate_table =
+> +                         sc->hw_rate_table[ATH9K_MODE_11NA_HT40MINUS];
+> +               else if (conf_is_ht40_plus(conf))
+> +                       sc->cur_rate_table =
+> +                         sc->hw_rate_table[ATH9K_MODE_11NA_HT40PLUS];
+> +               else
+> +                       sc->cur_rate_table = sc->hw_rate_table[ATH9K_MODE_11A];
+> +               break;
+> +       default:
+> +               break;
+> +       }
+>  }
 
-Please resend without a PGP sign patches, please see:
+We don't have separate rate tables for ht20, ht40+, ht40-.
+Setting cur_rate_table just once using conf_is_ht() to any HT mode would suffice.
 
-http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches#Priortosendingpatches
-
-  Luis
+Sujith
