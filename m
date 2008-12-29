@@ -1,78 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp102.biz.mail.re2.yahoo.com ([68.142.229.216]:39860 "HELO
-	smtp102.biz.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751495AbYLPSMk (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:29577 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751404AbYL2QoG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 13:12:40 -0500
-Message-ID: <4947EE05.7080302@mdesystems.com> (sfid-20081216_191243_831884_1EA54F75)
-Date: Tue, 16 Dec 2008 13:05:57 -0500
-From: Angel Roman <angel.roman@mdesystems.com>
+	Mon, 29 Dec 2008 11:44:06 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so1527658ywe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 08:44:04 -0800 (PST)
+Message-ID: <43e72e890812290844y56c6c4c9v24c99ccc0c010261@mail.gmail.com> (sfid-20081229_174411_205318_F9914DEF)
+Date: Mon, 29 Dec 2008 08:44:04 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Sujith <m.sujith@gmail.com>
+Subject: Re: [ath9k-devel] [PATCH v3 02/16] ath9k: use hw->conf on ath_setcurmode()
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <18776.62379.965798.668056@localhost.localdomain>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org, Colin McCabe <colin@cozybit.com>,
-	libertas-dev@lists.infradead.org
-Subject: Re: [PATCH 3/3] libertas: if_spi, driver for libertas GSPI devices
-References: <1229398052-27465-1-git-send-email-colin@cozybit.com>	<1229398052-27465-2-git-send-email-colin@cozybit.com>	<1229398052-27465-3-git-send-email-colin@cozybit.com>	<1229398052-27465-4-git-send-email-colin@cozybit.com>	<4947241F.10305@mdesystems.com> <1229449129.7307.51.camel@localhost.localdomain>
-In-Reply-To: <1229449129.7307.51.camel@localhost.localdomain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
+References: <1230076731-22946-1-git-send-email-lrodriguez@atheros.com>
+	 <1230076731-22946-2-git-send-email-lrodriguez@atheros.com>
+	 <1230076731-22946-3-git-send-email-lrodriguez@atheros.com>
+	 <18776.21485.750323.652519@gargle.gargle.HOWL>
+	 <20081229154453.GP5944@tesla>
+	 <18776.62379.965798.668056@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Dec 29, 2008 at 7:58 AM, Sujith <m.sujith@gmail.com> wrote:
+> Luis R. Rodriguez wrote:
+>> > We don't have separate rate tables for ht20, ht40+, ht40-.
+>> > Setting cur_rate_table just once using conf_is_ht() to any HT mode would suffice.
+>>
+>> I do see we have different rate tables for these though, do you mean we can
+>> consolidate on the rate tables?
+>
+> We have only 2 HT rate tables, ar5416_11na_ratetable and ar5416_11ng_ratetable.
+> The different HT modes point to the same tables, in ath_rate_attach().
 
+Oh very nice, I failed to notice that, thanks!
 
-Dan Williams wrote:
-> On Mon, 2008-12-15 at 22:44 -0500, Angel Roman wrote:
->> Hi Colin,
->>
->> I have support for the gspi as well. I've been trying to get in contact
->> with Dan Williams in order to contribute it to the list.
->
-> Sorry about that... it's in my queue and I'll try to get to do some
-> review in the next few days. Doing the new interface isn't a ton of
-> code, and I'd expect both yours and Colin's drivers to be quite similar
-> as there's only a few ways this thing can be done :)
->
-> The submission process is basically just like Colin did; generate a
-> series of patches of your latest code (split into independent patches if
-> possible) based on a kernel version (ideally the latest kernel version
-> or better yet, wireless-testing.git) and then post it to linux-wireless
-> and maybe cc libertas-dev as well.
-Thanks, will do. I look forward to combining our efforts.
->
->> If you want, you can take a look at the code via:
->>
->> svn list -R
->> svn://svn.buglabs.net/bug/trunk/bug-linux-2.6.27.2/drivers/net/wireless/libertas 
->>
->>
->>
->> This is currently working in the mx31 processor. Maybe we can work out a
->> way to merge the two drivers. The mx31 was a little tricky since there's
->> an error in the processor where one is not able to keep the chip select
->> signal active during multiple spi transfers as requried by the wifi
->> module. I've also abstracted the board interface from the GSPI code as
->> much as I could.
->
-> Is there a generic SPI layer that could be used for the board-specific
-> bits too, rather than putting that stuff in the libertas tree? I assume
-> that the SPI bus is more or less generic on your hardware (ie you could
-> put something else on the other end instead of the 8686), and thus it
-> would be better if we could figure out way not to put some much board
-> specific logic into the libertas driver itself.
-Yes, the spi libertas core driver in buglabs' tree does not depend on 
-any particular spi implementation. The board specific code - if_bmi.c 
-and if_bmi.h - in my code registers a call back function with the gspi 
-core which performs the actual  spi transfer. if_bmi.c and if_bmi.h 
-could go in another driver and does not need to go into libertas, 
-however, the core seems like a good fit for the libertas tree.
-
->
-> Dan
->
->
-> _______________________________________________
-> libertas-dev mailing list
-> libertas-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/libertas-dev
->
+  Luis
