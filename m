@@ -1,106 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:58179 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752867AbYLHWyD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 17:54:03 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so854093ugf.37
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Dec 2008 14:54:01 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFT] mac80211: clean up set_key callback
-Date: Mon, 8 Dec 2008 23:53:57 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Chr <chunkeey@web.de>, Tomas Winkler <tomasw@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Kalle Valo <kalle.valo@nokia.com>
-References: <1228757035.22164.94.camel@johannes.berg>
-In-Reply-To: <1228757035.22164.94.camel@johannes.berg>
+Received: from gateway03.websitewelcome.com ([69.93.155.28]:38155 "HELO
+	gateway03.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752044AbYL2SRH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Dec 2008 13:17:07 -0500
+Received: from 96-26-251-53.sea.clearwire-dns.net ([96.26.251.53]:46696 helo=Hydra.darkmatter.org)
+	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.68)
+	(envelope-from <Info@delphi-real-estate.com>)
+	id 1LHMZN-0000zd-9O
+	for linux-wireless@vger.kernel.org; Mon, 29 Dec 2008 12:10:25 -0600
+From: Delphi Real Estate <Info@delphi-real-estate.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Setting 'n' or 'a' Mode, and WPA2?
+Date: Mon, 29 Dec 2008 10:10:25 -0800
+References: <200812270706.56478.Info@delphi-real-estate.com> <200812290531.47379.Info@delphi-real-estate.com> <69e28c910812290944j10d4477fsab61acdfc79d8c15@mail.gmail.com>
+In-Reply-To: <69e28c910812290944j10d4477fsab61acdfc79d8c15@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200812082353.58453.IvDoorn@gmail.com> (sfid-20081208_235409_218029_35606B0D)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200812291010.25373.Info@delphi-real-estate.com> (sfid-20081229_191713_178170_74E8E334)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 December 2008, Johannes Berg wrote:
-> The set_key callback now seems rather odd, passing a MAC address
-> instead of a station struct, and a local address instead of a
-> vif struct. Change that.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-ACK for the rt2x00 changes,
-I'm especially happy with the ieee80211_find_sta() removal from rt2x00. :)
+On Monday 29 December 2008 9:44:58 Stefanik G=E1bor wrote:
+> On Mon, Dec 29, 2008 at 2:31 PM, Delphi Real Estate
+> <Info@delphi-real-estate.com> wrote:
+> >
+> > On Monday 29 December 2008 5:19:54 Johannes Berg wrote:
+> >> Umm, no. A single card can only be on one band at a time.
+> >
+> > OK, so you're saying that only the 'n' Draft2 routers can do that? =
+ That this firmware for the 4965AGN does not have Draft2 features?
+> >
+> > Does it have Draft1 features?
+> >
+> > How do you set only 5GHz 'n' mode?  WPA2?
+>=20
+> No. An access point can operate on both bands at the same time, but
+> not a wireless client - a client must choose _one_ band from the
+> several ones offered by the AP and operate on that band.
 
-I'll see if I can test this in a few days,
-One small change request though.
 
-> --- everything.orig/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-12-08 17:48:03.000000000 +0100
-> +++ everything/drivers/net/wireless/rt2x00/rt2x00mac.c	2008-12-08 17:57:43.000000000 +0100
-> @@ -483,15 +483,17 @@ EXPORT_SYMBOL_GPL(rt2x00mac_configure_fi
->  
->  #ifdef CONFIG_RT2X00_LIB_CRYPTO
->  int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-> -		      const u8 *local_address, const u8 *address,
-> +		      struct ieee80211_vif *vif, struct ieee80211_sta *sta,
->  		      struct ieee80211_key_conf *key)
->  {
->  	struct rt2x00_dev *rt2x00dev = hw->priv;
-> -	struct ieee80211_sta *sta;
-> +	struct rt2x00_intf *intf = vif_to_intf(vif);
->  	int (*set_key) (struct rt2x00_dev *rt2x00dev,
->  			struct rt2x00lib_crypto *crypto,
->  			struct ieee80211_key_conf *key);
->  	struct rt2x00lib_crypto crypto;
-> +	static const u8 bcast_addr[ETH_ALEN] =
-> +		{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, };
->  
->  	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
->  		return 0;
-> @@ -509,15 +511,14 @@ int rt2x00mac_set_key(struct ieee80211_h
->  	if (rt2x00dev->intf_sta_count)
->  		crypto.bssidx = 0;
->  	else
-> -		crypto.bssidx =
-> -		    local_address[5] & (rt2x00dev->ops->max_ap_intf - 1);
-> +		crypto.bssidx = intf->mac[5] & (rt2x00dev->ops->max_ap_intf - 1);
->  
->  	crypto.cipher = rt2x00crypto_key_to_cipher(key);
->  	if (crypto.cipher == CIPHER_NONE)
->  		return -EOPNOTSUPP;
->  
->  	crypto.cmd = cmd;
-> -	crypto.address = address;
-> +	crypto.address = sta ? sta->addr : bcast_addr;
->  
->  	if (crypto.cipher == CIPHER_TKIP) {
->  		if (key->keylen > NL80211_TKIP_DATA_OFFSET_ENCR_KEY)
-> @@ -542,11 +543,8 @@ int rt2x00mac_set_key(struct ieee80211_h
->  	 * Some drivers need this information when updating the
->  	 * hardware key (either adding or removing).
->  	 */
-> -	rcu_read_lock();
-> -	sta = ieee80211_find_sta(hw, address);
->  	if (sta)
->  		crypto.aid = sta->aid;
-> -	rcu_read_unlock();
+OK, that's fine.
+=20
+So does the driver/firmware firmware for the 4965AGN have Draft2 featur=
+es?
 
-Please move this bit up a bit to merge it with the address if-statement:
+Does it have Draft1 features?
 
-	if (sta) {
-		crypto.address = sta->addr;
-		crypto.aid = sta->aid
-	} else
-		crypto.address = bcast_addr;
+How do you set only 5GHz 'n' mode?  WPA2?
 
-that would group the sta dependencies together so we only need to check
-if sta is valid once.
 
-Thanks!
-
-Ivo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
