@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:60387 "EHLO
-	xi.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805AbYLPDN0 (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:48863 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752082AbYL2DpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 22:13:26 -0500
-Date: Tue, 16 Dec 2008 04:13:25 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
-Message-ID: <20081216031325.GD21476@xi.wantstofly.org> (sfid-20081216_041336_592667_E12521BC)
-References: <20081216025542.GO18056@xi.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20081216025542.GO18056@xi.wantstofly.org>
+	Sun, 28 Dec 2008 22:45:23 -0500
+Message-Id: <1230522322.28489.1292098677@webmail.messagingengine.com> (sfid-20081229_044529_946345_0B3286A6)
+From: "Dan E" <trg_info@mailhaven.com>
+To: "Jouni Malinen" <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+MIME-Version: 1.0
+References: <200812272208.20153.mb@bu3sch.de> <20081227220814.GA15229@jm.kir.nu>
+Subject: Re: Hostapd doesn't like crda
+In-Reply-To: <20081227220814.GA15229@jm.kir.nu>
+Date: Sun, 28 Dec 2008 22:45:22 -0500
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 16, 2008 at 03:55:42AM +0100, Lennert Buytenhek wrote:
 
-> Attached is an initial version of the mwl8k driver for Marvell 88w8xxx
-> PCI/PCIe wireless parts (against 2.6.27.1).  This version was written
-> and tested against the 88w8687 (802.11b/g), but it shouldn't be hard to
-> extend the support to other parts in the 8xxx series, since the firmware
-> interface is very similar between parts.
+On Sun, 28 Dec 2008 00:08:14 +0200, "Jouni Malinen" <j@w1.fi> said:
+> On Sat, Dec 27, 2008 at 10:08:20PM +0100, Michael Buesch wrote:
+> > Please take a look at the following log:
+> > http://bu3sch.de/misc/crda.JPG
+> > 
+> > Note the ordering of the events.
+> > Hostapd starts up and tells the kernel what country we're in.
+> > Then the kernel calls CRDA, _but_ hostapd goes on with its business
+> > before CRDA has finished its work.
 > 
-> There's an occasional timeout warning with mwl8k_stop(), and hardware
-> crypto is still a work-in-progress, but other than that it looks pretty
-> stable.
+> Yes, because the netlink message was completed and hostapd assumes
+> everything is ready at that point. Ignoring the complexity in the kernel
+> (+ CRDA as a helper), this looks like reasonable expectation to make for
+> NL80211_CMD_REQ_SET_REG operation. There is no other mechanism that
+> would notify hostapd (or any other program setting country for that
+> matter) when the operation was actually fully completed and polling for
+> channel changes up to a timeout is not very appealing either.
 > 
-> Feedback appreciated!
+> Unfortunately, I don't see an easy fix for this.
 
-I suppose the mail got eaten because the attachment trips the list's
-post size limit, so I've uploaded a copy of the patch to:
+This sounds like it's broken by design.  Hostapd should not send
+NL80211_CMD_REQ_SET_REG if it is unable to evaluate the result.  If it's
+necessary to do "iw reg set foobar" in a script prior to invoking
+hostapd, then why does hostapd even bother?
 
-	http://www.wantstofly.org/~buytenh/mwl8k.diff
+-- 
+http://www.fastmail.fm - Accessible with your email software
+                          or over the web
+
