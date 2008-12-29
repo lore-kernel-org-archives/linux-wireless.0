@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:65492 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809AbYLFSKi (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:41556 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753234AbYL2UPG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 13:10:38 -0500
-To: linux-wireless@vger.kernel.org
-Cc: linux-omap@vger.kernel.org
-Subject: Re: [PATCH] Add stlc45xx, wi-fi driver for stlc4550/4560
-References: <20081206173056.6853.95209.stgit@tikku>
-	<20081206173211.6853.59029.stgit@tikku>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Sat, 06 Dec 2008 20:10:31 +0200
-In-Reply-To: <20081206173211.6853.59029.stgit@tikku> (ext Kalle Valo's message of "Sat\, 06 Dec 2008 19\:32\:12 +0200")
-Message-ID: <87hc5h5g4o.fsf@nokia.com> (sfid-20081206_191058_174029_0AF89DE8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 29 Dec 2008 15:15:06 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: lrodriguez@atheros.com
+Cc: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH] ath9k: use signed format to print HAL status
+Date: Mon, 29 Dec 2008 21:07:42 +0100
+Message-Id: <1230581262-14932-1-git-send-email-juhosg@openwrt.org> (sfid-20081229_211521_721883_91ECD437)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Kalle Valo" <kalle.valo@nokia.com> writes:
 
-> This patch adds a new driver called stlc45xx, which supports wi-fi chipsets
-> stlc4550 and stlc4560 from ST-NXP Wireless. The chipset can be found, for
-> example, from Nokia N800 and N810 products.
->
-> The driver is implemented based on the firmware interface information
-> published by ST-NXP Wireless here:
->
-> http://wireless.kernel.org/en/developers/Documentation/specs#STMicroelectronicshardware
->
-> Currently only SPI interface is supported.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath9k/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Crap, just now I realised to try to compile this with pristine
-wireless-testing tree:
-
-In file included from drivers/net/wireless/stlc45xx.c:24:
-drivers/net/wireless/stlc45xx.h:27:24: error: mach/board.h: No such file or directory
-drivers/net/wireless/stlc45xx.c: In function 'stlc45xx_power_off':
-drivers/net/wireless/stlc45xx.c:958: error: dereferencing pointer to incomplete type
-drivers/net/wireless/stlc45xx.c:959: error: dereferencing pointer to incomplete type
-
-I usually merge linux-omap to wireless-testing and that's why I didn't
-notice this. I will implement the platform data solution in v2 which
-should fix this compile error. But I would still love to hear any
-comments people have about v1.
-
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 70affb7..226ff7e 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1354,7 +1354,7 @@ static int ath_init(u16 devid, struct ath_softc *sc)
+ 	ah = ath9k_hw_attach(devid, sc, sc->mem, &status);
+ 	if (ah == NULL) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+-			"Unable to attach hardware; HAL status %u\n", status);
++			"Unable to attach hardware; HAL status %d\n", status);
+ 		error = -ENXIO;
+ 		goto bad;
+ 	}
 -- 
-Kalle Valo
+1.5.3.2
+
