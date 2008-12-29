@@ -1,43 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:40878 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754804AbYLJKeV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2008 05:34:21 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43legacy: Fix sparse warnings
-Date: Wed, 10 Dec 2008 11:33:53 +0100
-Cc: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <493f552d.zivnzjivWDMPej+O%Larry.Finger@lwfinger.net>
-In-Reply-To: <493f552d.zivnzjivWDMPej+O%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200812101133.54173.mb@bu3sch.de> (sfid-20081210_113428_009637_4E8CE094)
+Received: from rv-out-0506.google.com ([209.85.198.234]:21666 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753409AbYL2WVw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Dec 2008 17:21:52 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so4575784rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 14:21:51 -0800 (PST)
+Date: Mon, 29 Dec 2008 17:21:06 -0500
+From: Michael Gilbert <michael.s.gilbert@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: reducing the priority of orinoco.c link status messages
+Message-Id: <20081229172106.e680ccf1.michael.s.gilbert@gmail.com> (sfid-20081229_232156_287097_2D831034)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 10 December 2008 06:35:41 Larry Finger wrote:
->   CHECK   drivers/net/wireless/b43legacy/debugfs.c
-> drivers/net/wireless/b43legacy/debugfs.c:243:9: warning: memset with byte count of 131072
+hello, i am at a location where a nearby wireless router comes in and out of
+range, so i get a ton of "eth2: New link status: AP Out of Range (0004)" 
+and "eth2: New link status: AP In Range (0005)" messages on the active 
+terminal.  this makes it difficult to work (especially in vi).
 
-I know about this error and I think it's a damn stupid error.
-There is a reason why the value was so high in b43. I don't know about b43legacy.
-Did you check if all callbacks still work properly?
+i've found that orinoco.c contains the code that prints these messages.  would it be possible/reasonable to use the KERN_DEBUG or lower printk level instead of KERN_INFO for this specific information?
 
-> Index: wireless-testing/drivers/net/wireless/b43legacy/debugfs.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43legacy/debugfs.c
-> +++ wireless-testing/drivers/net/wireless/b43legacy/debugfs.c
-> @@ -211,7 +211,7 @@ static ssize_t b43legacy_debugfs_read(st
->  	struct b43legacy_dfs_file *dfile;
->  	ssize_t uninitialized_var(ret);
->  	char *buf;
-> -	const size_t bufsize = 1024 * 128;
-> +	const size_t bufsize = 1024 * 16; /* 16 KiB buffer */
->  	const size_t buforder = get_order(bufsize);
->  	int err = 0;
+this problem was also submitted to debian's bts, see [1].
 
--- 
-Greetings, Michael.
+please cc me on any replies as i am not subscribed to this list.  thank you.
+
+mike
+
+[1] http://bugs.debian.org/447549
