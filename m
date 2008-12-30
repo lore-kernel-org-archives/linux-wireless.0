@@ -1,101 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58913 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751974AbYL2VGo (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.178]:53848 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401AbYL3TzW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 16:06:44 -0500
-Subject: Re: [PATCH] mac80211: Add IWSPY support to mac80211 stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ville Nuorvala <ville.nuorvala@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <46fdfd70812291023q62f146edhbbfe7d9f9b9beb1f@mail.gmail.com> (sfid-20081229_192409_507086_3B774237)
-References: <1230567920-16623-1-git-send-email-ville.nuorvala@gmail.com>
-	 <1230568151.3116.63.camel@johannes>
-	 <46fdfd70812291023q62f146edhbbfe7d9f9b9beb1f@mail.gmail.com>
-	 (sfid-20081229_192409_507086_3B774237)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZgD5JE5brWr3UUKSiXaR"
-Date: Mon, 29 Dec 2008 22:07:08 +0100
-Message-Id: <1230584828.3116.67.camel@johannes> (sfid-20081229_220648_165918_D4764796)
-Mime-Version: 1.0
+	Tue, 30 Dec 2008 14:55:22 -0500
+Received: by ik-out-1112.google.com with SMTP id c29so1128729ika.5
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2008 11:55:20 -0800 (PST)
+To: rt2400-devel@lists.sourceforge.net
+Subject: HW CRYPTO: rt2500usb
+Date: Tue, 30 Dec 2008 20:55:17 +0100
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200812302055.18017.IvDoorn@gmail.com> (sfid-20081230_205527_955646_280FAB96)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-ZgD5JE5brWr3UUKSiXaR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Currently HW crypto support has been implemented for rt2500usb,
+but has been disabled by default since it only works for TKIP.
+I am currently investigating why WEP and AES are failing, I am currently
+hitting a deadend so I hope somebody else has some suggestions.
 
-On Mon, 2008-12-29 at 20:23 +0200, Ville Nuorvala wrote:
+With the current implementation which works for TKIP I noticed that WEP128
+and AES will neither transmit any data after the succesfull association. Upon
+investigation I discovered that below patch was required to make the transmitting
+of frames possible, _but_ none of the frames receive a proper reply from the AP.
 
-> to my knowledge it is currently the only way to get a realtime
-> indication that the wireless link quality has changed, please correct
-> me if I'm wrong.
+The strange part is that the data length of the frame must be increased by a number
+of bytes depending on the crypto algorithm. From what I gather, the value most likely
+represents the icv_len value from the ieee80211_key structure. The weird part is that
+TKIP apparently does not require this additional length.
 
-You should be able to obtain information out of nl80211 about the AP
-you're currently associated with, namely via listing the stations.
-Currently you can only get rate information, but that's a feature, since
-the "quality" information "defined" by wext is anything but defined.
+So far I haven't found the legacy driver adding these extra bytes to the length either,
+which sounds a bit suspicious as well.
 
-> Such a feature can be used as an early indication that the link is
-> going down, and may help prepare a vertical IP layer handover to for
-> example 3G or just another WLAN interface. The predictive nature of
-> the event allows you (most of the time) to set up the other link
-> before the WLAN link is down, which allows a make-before-break
-> handover without packet loss. In fact such events are described in the
-> IEEE 802.21 Media Independent Handover document. Ideally these events
-> might be produced by the 802.11 firmware or at least somewhere lower
-> in the stack, but lacking that, it can at least be emulated by the
-> IWSPY interface. Also, as an added bonus for using IWSPY, you can
-> choose the trigger signal levels yourself and don't have to rely on
-> any preset levels chosen by the device manufacturer.
+Frames caught using wireshark from a second computer look a bit suspicious,
+a ping command from my PC will be received as broadcast frames on wireshark
+with a size of 32 bytes. (I have changed the size of the ping request, but the received
+frames don't change in size)
 
-I really really don't like the iwspy interface, it also requires that
-you explicitly monitor the AP you're associated to etc. IMHO any such
-tool needs something that is more reliable and predictable than iwspy.
+I'll try to do some more research later this week, but hopefully somebody has some
+suggestions on where to look for me. :)
 
-> I'm not bringing any new functionality to the wireless stack, I'm just
-> reintroducing a feature that got lost when the wireless stack was
-> changed.
+Thanks,
 
-For good measure, if you ask me!
+Ivo
 
-> Sure a pure netlink interface without any ugly IOCTL hacks would be
-> nice, but last time I checked the documentation for nl80211 and
-> cfg80211 was nonexistent, and even driver_nl80211.c straight from the
-> hostap GIT repository uses WEXT IOCTLs internally for several
-> different purposes. To me at least it seems like the nl80211 interface
-> is still far from ready. As my resources are currently very limited, I
-> don't have time to implement the necessary netlink API and userspace
-> tools at the moment. The logical conclusion for me was therefore to
-> just use the old WEXT interface for now.
-
-Then can you afford to keep porting the iwspy hack? I really don't want
-to see this in the tree, especially not since the implementation is ugly
-too by implementing purely wext stuff in the core mac80211 code.
-
-johannes
-
---=-ZgD5JE5brWr3UUKSiXaR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJWTv6AAoJEKVg1VMiehFYyLYP+we/T6emvuguWSYRkMiHdMqW
-pYOCTWb7NjqCu6IelRE/oLIceHRxR/UA9ihxWO3AIX/3YBFifg2HL/Km2PJFIr2g
-T9Nyunj5dhi8Jip67oelhV3iaaZcWAEN07+sPLDz/a8FyIGKxXRF67jMRWF1UlrM
-/fu+C/EzuAqNi6V23tqceu3wYN6455hxi6i1bHkW14BvDM4ILFvkpSDJJWlj9eT4
-rOajuyLUPbOkofbyApQbbvS4RiQhVc07fD3aU8sYp3OQ+O0W/WULTaheToaYEdEc
-yAG5OVAvCqVylxAX8e/BlUtaau5uX1vI0qfluNDRh4JfDjJngh1F9b9uES1+Mtk1
-QMBjldkUNF6dV3A2XxzopwGLZmeQ60qv8nv2W/YW5FcUMf61iANvywCptVMIgUq4
-BjEMRsche9DEYPk0NZE35+zSaFG5s6HNDMSeh4hjsCblEwVEvKz+ASNo12D5ZNs+
-a4kqOIk1UXFuP8EnP3WLnQBHm1UmxKzPRZ4KCfCg2EoqKjiAeARl2PbO43rCT7bt
-sOUR5oAB3klQWwvQpgE9T8FyqWWc57Teh/ZnnBfMW+PiPIqZMcFbhxkfXX4qZrGk
-fnzBOtW56klK+ZhQcY2ur4NRfvfFdqO6DRbAINqtuFJKIiFeta1JYZtR+AUZUjxQ
-fydYGb9yobbfPgQgpEoQ
-=jGPz
------END PGP SIGNATURE-----
-
---=-ZgD5JE5brWr3UUKSiXaR--
-
+---
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 32435ba..283a597 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -38,7 +38,7 @@
+ /*
+  * Allow hardware encryption to be disabled.
+  */
+-static int modparam_nohwcrypt = 1;
++static int modparam_nohwcrypt = 0;
+ module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+ 
+@@ -1185,6 +1185,7 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+ 	__le32 *txd = skbdesc->desc;
+ 	u32 word;
++	unsigned int overhead = 0;
+ 
+ 	/*
+ 	 * Start writing the descriptor words.
+@@ -1206,6 +1207,11 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	if (test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags)) {
+ 		_rt2x00_desc_write(txd, 3, skbdesc->iv[0]);
+ 		_rt2x00_desc_write(txd, 4, skbdesc->iv[1]);
++
++		if (txdesc->cipher == CIPHER_WEP64 || txdesc->cipher == CIPHER_WEP128)
++			overhead += 4;
++		else if (txdesc->cipher == CIPHER_AES)
++			overhead += 8;
+ 	}
+ 
+ 	rt2x00_desc_read(txd, 0, &word);
+@@ -1221,7 +1227,7 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&word, TXD_W0_NEW_SEQ,
+ 			   test_bit(ENTRY_TXD_FIRST_FRAGMENT, &txdesc->flags));
+ 	rt2x00_set_field32(&word, TXD_W0_IFS, txdesc->ifs);
+-	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, skb->len);
++	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, skb->len + overhead);
+ 	rt2x00_set_field32(&word, TXD_W0_CIPHER, txdesc->cipher);
+ 	rt2x00_set_field32(&word, TXD_W0_KEY_ID, txdesc->key_idx);
+ 	rt2x00_desc_write(txd, 0, word);
