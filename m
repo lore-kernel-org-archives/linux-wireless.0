@@ -1,115 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp7-g19.free.fr ([212.27.42.64]:38039 "EHLO smtp7-g19.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758599AbYLKV7D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Dec 2008 16:59:03 -0500
-Message-ID: <49418D23.8060905@free.fr> (sfid-20081211_225920_318663_0EE458F5)
-Date: Thu, 11 Dec 2008 22:58:59 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Received: from ey-out-2122.google.com ([74.125.78.25]:22990 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304AbYL3QsX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2008 11:48:23 -0500
+Message-ID: <495A50D0.3080000@tuffmail.co.uk> (sfid-20081230_174829_187611_50E7ED71)
+Date: Tue, 30 Dec 2008 16:48:16 +0000
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [PATCH] ath5k : Fix correct padding
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Bob Copeland <me@bobcopeland.com>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	linux-wireless@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org,
+	USB list <linux-usb@vger.kernel.org>
+Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
+References: <495A1DC8.1050609@tuffmail.co.uk>	 <Pine.LNX.4.44L0.0812301043290.2292-100000@iolanthe.rowland.org> <b6c5339f0812300845y169ee09dwccbc03ff63cf6525@mail.gmail.com>
+In-Reply-To: <b6c5339f0812300845y169ee09dwccbc03ff63cf6525@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Padding the 802.11 header to a multiple of 4 bytes needs to be done only
-for DATA frames. This fixes a bug where 2 bytes were missing in monitor
-mode for ACK frames.
+Bob Copeland wrote:
+> On Tue, Dec 30, 2008 at 10:45 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>   
+>>> Is it possible to fix this without suspend support in mac80211?  If not,
+>>> I vote we change rtl8187 (and zd_usb) to prevent suspend.  I.e. set USB
+>>> suspend callbacks which return an error.
+>>>       
+>
+> Alan J:
+>
+> Are you using 'echo -n mem > /sys/power/state' directly to do suspend,
+> or hitting the power button?
 
-Ref: http://bugzilla.kernel.org/show_bug.cgi?id=12101 :
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
----
-  drivers/net/wireless/ath5k/base.c |   49
-+++++++++++++++++++++++-------------
-  1 files changed, 31 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/base.c
-b/drivers/net/wireless/ath5k/base.c
-index bfb0c49..2318b1c 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1668,6 +1668,7 @@ ath5k_tasklet_rx(unsigned long data)
-  	int ret;
-  	int hdrlen;
-  	int pad;
-+	struct ieee80211_hdr * hdr;
-
-  	spin_lock(&sc->rxbuflock);
-  	if (list_empty(&sc->rxbuf)) {
-@@ -1754,14 +1755,19 @@ accept:
-
-  		/*
-  		 * the hardware adds a padding to 4 byte boundaries between
--		 * the header and the payload data if the header length is
--		 * not multiples of 4 - remove it
-+		 * the header and the payload data if the header length is not
-+		 * multiple of 4 - remove it. This only affect data frames.
-  		 */
--		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
--		if (hdrlen & 3) {
--			pad = hdrlen % 4;
--			memmove(skb->data + pad, skb->data, hdrlen);
--			skb_pull(skb, pad);
-+
-+		hdr = (struct ieee80211_hdr *) skb;
-+		if ((skb->len >= 2) && ieee80211_is_data(hdr->frame_control)) {
-+
-+			hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-+			if (hdrlen & 3) {
-+				pad = hdrlen % 4;
-+				memmove(skb->data + pad, skb->data, hdrlen);
-+				skb_pull(skb, pad);
-+			}
-  		}
-
-  		/*
-@@ -2623,6 +2629,7 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-  	unsigned long flags;
-  	int hdrlen;
-  	int pad;
-+	const struct ieee80211_hdr * hdr = (const struct ieee80211_hdr *)skb;
-
-  	ath5k_debug_dump_skb(sc, skb, "TX  ", 1);
-
-@@ -2630,19 +2637,25 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff
-*skb)
-  		ATH5K_DBG(sc, ATH5K_DEBUG_XMIT, "tx in monitor (scan?)\n");
-
-  	/*
--	 * the hardware expects the header padded to 4 byte boundaries
--	 * if this is not the case we add the padding after the header
-+	 * the hardware expects the header padded to 4 byte boundaries for
-+	 * data frames, if this is not the case we add the padding after the
-+	 * header
-  	 */
--	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
--	if (hdrlen & 3) {
--		pad = hdrlen % 4;
--		if (skb_headroom(skb) < pad) {
--			ATH5K_ERR(sc, "tx hdrlen not %%4: %d not enough"
--				" headroom to pad %d\n", hdrlen, pad);
--			return -1;
-+
-+	if ((skb->len >= 2) && ieee80211_is_data(hdr->frame_control)) {
-+
-+		hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-+		if (hdrlen & 3) {
-+			pad = hdrlen % 4;
-+			if (skb_headroom(skb) < pad) {
-+				ATH5K_ERR(sc,
-+					  "tx hdrlen not %%4: %d not enough"
-+					  " headroom to pad %d\n", hdrlen, pad);
-+				return -1;
-+			}
-+			skb_push(skb, pad);
-+			memmove(skb->data, skb->data+pad, hdrlen);
-  		}
--		skb_push(skb, pad);
--		memmove(skb->data, skb->data+pad, hdrlen);
-  	}
-
-  	spin_lock_irqsave(&sc->txbuflock, flags);
--- 1.5.6.5
-
+Various.  Normally I use my GUI, which is using s2disk.  I did try using
+/sys/power/state directly as well, but there was no difference.
