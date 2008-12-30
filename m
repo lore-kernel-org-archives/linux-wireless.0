@@ -1,86 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32862 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:44920 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751853AbYLRPX5 (ORCPT
+	with ESMTP id S1751510AbYL3KjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 10:23:57 -0500
-Subject: Re: [PATCH] mac80211: Print unknown packet type in tasklet_handler
+	Tue, 30 Dec 2008 05:39:02 -0500
+Subject: Re: mac80211 (ath9k, ath5k, etc.) set BSSID Patch
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <49496093.ddL5Pgdq/zMZM8op%Larry.Finger@lwfinger.net>
-References: <49496093.ddL5Pgdq/zMZM8op%Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dCmdY/q/v3eXi2qHYguD"
-Date: Thu, 18 Dec 2008 16:23:55 +0100
-Message-Id: <1229613835.3601.3.camel@johannes.berg> (sfid-20081218_162401_077245_A4E2F01E)
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: berlin@berlin.freifunk.net, linux-wireless@vger.kernel.org,
+	openwrt-devel@lists.openwrt.org, Vladimir Koutny <vlado@ksp.sk>
+In-Reply-To: <20081230025651.6500@gmx.net> (sfid-20081230_035657_768921_742B8565)
+References: <20081230025651.6500@gmx.net>
+	 (sfid-20081230_035657_768921_742B8565)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fkQcS7h3vSY3E7wwl93Z"
+Date: Tue, 30 Dec 2008 11:39:25 +0100
+Message-Id: <1230633565.3850.7.camel@johannes> (sfid-20081230_113908_745221_E83EC17E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-dCmdY/q/v3eXi2qHYguD
+--=-fkQcS7h3vSY3E7wwl93Z
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-12-17 at 14:26 -0600, Larry Finger wrote:
-> In stress testing p54usb, the WARN_ON() in ieee80211_tasklet_handler() wa=
-s
-> triggered; however, there is no logging of the received value for packet
-> type. Adding that feature will improve the warning.
->=20
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Hi Alina,
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+>                 if (beacon_timestamp > rx_timestamp) {
+> +                       if (memcmp(sdata->u.sta.bssid, mgmt->bssid, ETH_A=
+LEN) !=3D 0) {
+>  #ifdef CONFIG_MAC80211_IBSS_DEBUG
+> -                       printk(KERN_DEBUG "%s: beacon TSF higher than "
+> -                              "local TSF - IBSS merge with BSSID %s\n",
+> -                              sdata->dev->name, print_mac(mac, mgmt->bss=
+id));
+> +                               printk(KERN_DEBUG "%s: beacon TSF higher =
+than "
+> +                                      "local TSF - IBSS merge with BSSID=
+ %s\n",
+> +                                      sdata->dev->name, print_mac(mac, m=
+gmt->bssid));
+>  #endif
+> -                       ieee80211_sta_join_ibss(sdata, &sdata->u.sta, bss=
+);
+> -                       ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->=
+sa, supp_rates);
+> +                               ieee80211_sta_join_ibss(sdata, &sdata->u.=
+sta, bss);
+> +                               ieee80211_ibss_add_sta(sdata, mgmt->bssid=
+, mgmt->sa, supp_rates);
+> +                       }
+>                 }
 
-> ---
->=20
-> John.
->=20
-> This is 2.6.29 material.
->=20
-> Larry
-> ---
->=20
-> Index: wireless-testing/net/mac80211/main.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wireless-testing.orig/net/mac80211/main.c
-> +++ wireless-testing/net/mac80211/main.c
-> @@ -341,7 +341,8 @@ static void ieee80211_tasklet_handler(un
->  			dev_kfree_skb(skb);
->  			break ;
->  		default:
-> -			WARN_ON(1);
-> +			WARN(1, "mac80211: Packet is of unknown type %d\n",
-> +			     skb->pkt_type);
->  			dev_kfree_skb(skb);
->  			break;
->  		}
->=20
+Can you move the memcmp() into the other condition to avoid indenting
+twice please? Also, it seems there needs to be a STA_BSSID_SET exclusion
+somewhere above to avoid doing merges?
 
---=-dCmdY/q/v3eXi2qHYguD
+> @@ -2576,11 +2582,14 @@
+>  {
+>         struct ieee80211_if_sta *ifsta;
+>         int res;
+> +       int valid;
+
+please use a bool for that
+=20
+>         ifsta =3D &sdata->u.sta;
+> +       valid =3D is_valid_ether_addr(bssid);
+> =20
+>         if (memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0) {
+> -               memcpy(ifsta->bssid, bssid, ETH_ALEN);
+> +               if(valid) memcpy(ifsta->bssid, bssid, ETH_ALEN);
+> +               else memset(ifsta->bssid, 0, ETH_ALEN);
+>                 res =3D 0;
+
+and indent these properly
+
+I won't comment on the actual code right now, the IBSS code is pretty
+much unknown to me and I don't use it.
+
+johannes
+
+--=-fkQcS7h3vSY3E7wwl93Z
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJSmsIAAoJEKVg1VMiehFYtHgP/A52VD/ECmzDezFfi00eyN4x
-XaSvgGZLBpsjBKh+gV2tLx2KJljDl9Ap2ionfWFSbPXekcoeWNmQ8ld3eZMZqdha
-S3tdNfJ/GlIqZvYI8uf8RqbTplUlsq1iz7TH7/j1yM2JRg1wiATygnFGzGcs91A3
-29ao1Lv5+J4FFC7ZeY3xSmSQqbOZ2atMsmH+TAvfLqa2KDUSob0rcS1hbESXdnoU
-2beGk/3cK7s3aUyfJlwrY0+fVnQFtds4B/leaVYNbAPSomRKmkiq8ZJwr9nhBe4V
-Ir6ipw1n3RVSvt0WirBEEBsxcYML9y1KB6a8dRtnJ9vMFO9Flh+s79PkubEkddRP
-P3IMZcM2aweAQpdYi/k2M5YnoZ+ZQUo/UKonoRgeZqhWKj5YJjLQo9oxFt/i+5uT
-CjFWASbpn6g/PAVwtW5550Uy0J/L7EvPj0iX3BbaqW8ubnHaiTMLmE0bl0E/+FuD
-13UhkZmw/0ICOS/ooH51DK7Ev5CZ7hTDT0QNiaIgiu6Ck0lAqTG9RVTBk2iqXgKy
-rsJIFAKa8Jn45mLR0ElUMQ0bZ/EdnvpJ0gNWCygO1cLDcR8m1LvzlGln2d8/aImU
-BeKk1fLbnYrFgEyQTS9TexPuZ1RPN7hO+So4/mzQoPDWQlJrD/5zMKu29/rgcIhj
-HHPOrQTgTC6lOw2iVall
-=9wyr
+iQIcBAABAgAGBQJJWfpaAAoJEKVg1VMiehFYmDUP/iN2ItsE4vPpUwTucpMfSB3Q
+hK0qbsr20PKdfOVonBefT5Sodmt1JCJsBmonUGD+Iz22AN6rC10V+zvvlGFqxXzy
+67xiSSoAevpINSIrH1iBDl89qw5ajeh6BR6GodMTPhjmz+bIDVL973oYnwT0hgkq
+5fMLHlwoyGb5TewUnh8GbYGdaQdVw7eZ1LbLDEbQ8FLNO3vrWEkaOACnIkrRF1WU
+VEoziJuE0sowJLTEWVTdrOfUh9pL50wBx3ntEsHNkZbjORibtZPFHGJhj1B4RoeZ
+YELqpfIWbxpmHRAqDqZTJhueUXTps1Pztz5A9mfyqlZTNTcGP0hIUdhBsGXGm1hN
+asHUl52niWGDfytsvcxslIayLy8octUVlivBG5i16ehyiiyZUrAWcBZJhO2QE/uZ
+coHzHsBN9QC2/wul7+ZmdRxHOnvJsqhrf57TOhvgLN6j+esb3rFpTemxfjzi4lLJ
+AfAt/VcOff2pbqNV01dlvIfXJ2GlmNOqtWy8cn1nhwsgaYSw5Y3v4Ml852QCoC7e
+iVVBLMK2XXNmvvzZpiSJ+DDYlaRYUYCz/DgCD6kE3Hrjmq4RHKGOmk4NrFeN3qZB
+zfDbgOhyygz3tedfWegOuD1i0KSEyQ6RK5bAS2sWD7Yhm9TEIcwKOPGNVywOhUv7
+rGw50ws9nXKsFAr7jlai
+=avUX
 -----END PGP SIGNATURE-----
 
---=-dCmdY/q/v3eXi2qHYguD--
+--=-fkQcS7h3vSY3E7wwl93Z--
 
