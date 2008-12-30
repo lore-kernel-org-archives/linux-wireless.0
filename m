@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48853 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752226AbYL0AeI (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.189]:55292 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501AbYL3NKj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2008 19:34:08 -0500
-Date: Fri, 26 Dec 2008 16:34:04 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "Patrizio Bassi" <patrizio.bassi@gmail.com>
-Cc: "Kernel," <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [BUG] Kernel Panic with ath5k and 2.6.28
-Message-Id: <20081226163404.c619fa4f.akpm@linux-foundation.org> (sfid-20081227_013433_914692_39A0B4F7)
-In-Reply-To: <742b1fb30812251218k66a090f6je8c1e0f9d98dffc5@mail.gmail.com>
-References: <742b1fb30812251218k66a090f6je8c1e0f9d98dffc5@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 30 Dec 2008 08:10:39 -0500
+Message-ID: <495A1DC8.1050609@tuffmail.co.uk> (sfid-20081230_141049_987615_E6B58226)
+Date: Tue, 30 Dec 2008 13:10:32 +0000
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org,
+	USB list <linux-usb@vger.kernel.org>
+Subject: Re: rtl8187 usb wifi adaptor causes suspend hang
+References: <4959FD3F.1060306@tuffmail.co.uk>
+In-Reply-To: <4959FD3F.1060306@tuffmail.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(cc linux-wireless)
+Alan Jenkins wrote:
+> [lsusb: ID 0bda:8187 Realtek Semiconductor Corp]
+>
+>
+> I'd like to use this wireless adaptor I have, but the driver doesn't
+> play nice with suspend.  It hangs after switching to the console,
+> without printing anything.  This happens even if I haven't used the
+> adaptor (i.e. ifconfig shows 0 bytes rx/tx).  Interestingly the numlock
+> key on my USB keyboard still works.
+>
+> I tried "no_console_suspend nmi_watchdog=1", but it didn't show any more
+> output.  (I waited 3 minutes for the watchdog to trigger).
+>
+> However, I can insert panic() calls, and see whether I hit the hang
+> first, or go into a panic with flashing keyboard LEDs.  I used this to
+> confirm that the hang happens inside the rtl8187_disconnect() function.
+>
+> There's a good chance I can track this down myself, using panic()
+> again.  Before I start, does anyone have an idea what might be happening?
+>   
+Ok, I think I got it.
 
-On Thu, 25 Dec 2008 21:18:42 +0100 "Patrizio Bassi" <patrizio.bassi@gmail.com> wrote:
+The hang is in ieee80211_unregister_hw(), on this line:
 
-> Kernel Panic with ath5k and 2.6.28
-> 
-> Hi all,
-> 
-> Today i migrated to 2.6.28 and ath5k from 2.6.27 and madwifi.
-> I have a trust speedshare turbo 108mb/s card
-> Connection is ok, even with WPA.
-> 
-> The problem i met is when i tried to bridge the wifi and the eth interface.
-> 
-> I just rebuild the kernel with the bridge module enabled (builtin) and
-> i got the panic
-> in the picture (http://www.patriziobassi.it/downloads/ath5k_panic.jpg)
+destroy_workqueue(local->hw.workqueue);
 
-That trace doesn't have symbolic information hence it isn't a lot of
-use.  Please set CONFIG_KALLSYMS=y and generate a new one.
 
-> when i try to put the wifi interface up on startup with old script configuration
-> 
-> The strange thing is that i'm not adding it to the bridge, i just have
-> it in the kernel and i'm enabling the interface.
-> Eth interface goes up flawlessy.
-> Workaround is to boot the laptop without the card plugged it (pcmcia)
-> or do not compile the bridge into the kernel.
-> 
-> Attaching the working config. the broken just has the bridge module enabled.
-> 
-> I'm ready to test all the patches/suggestions you may provide.
-> 
-> Config is at http://www.patriziobassi.it/downloads/config-2.6.28
-> 
+local->hw.workqueue is created using create_freezeable_workqueue().  So
+presumably destroy_workqueue() deadlocks because the workqueue has
+already been frozen.
+
+Is it possible to fix this without suspend support in mac80211?  If not,
+I vote we change rtl8187 (and zd_usb) to prevent suspend.  I.e. set USB
+suspend callbacks which return an error.
+
+Thanks
+Alan
 
