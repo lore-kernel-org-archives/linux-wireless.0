@@ -1,108 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58233 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108AbYLVTGX (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:43915 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753203AbYL3MuP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 14:06:23 -0500
-Subject: Re: [PATCH v2 01/18] mac80211: add HT conf helpers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-In-Reply-To: <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
-References: <1229970039-10561-1-git-send-email-lrodriguez@atheros.com>
-	 <1229970039-10561-2-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wwAX69n/yoTISrTHZSCo"
-Date: Mon, 22 Dec 2008 20:06:21 +0100
-Message-Id: <1229972781.4406.12.camel@johannes> (sfid-20081222_200627_826167_FE8B616B)
-Mime-Version: 1.0
+	Tue, 30 Dec 2008 07:50:15 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] p54: power save management
+Date: Tue, 30 Dec 2008 13:48:41 +0100
+Cc: John W Linville <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200812301348.41201.chunkeey@web.de> (sfid-20081230_135033_432901_2CFF90BD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch implements dynamic power save feature for p54.
 
---=-wwAX69n/yoTISrTHZSCo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2008-12-22 at 10:20 -0800, Luis Rodriguez wrote:
-> In HT capable drivers you often need to check if you
-> are currently using HT20 or HT40. This adds a few small
-> helpers to let drivers figure that out.
->=20
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  include/net/mac80211.h |   30 ++++++++++++++++++++++++++++++
->  1 files changed, 30 insertions(+), 0 deletions(-)
->=20
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index b3bd00a..ee2b75e 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1963,4 +1963,34 @@ rate_lowest_index(struct ieee80211_supported_band =
-*sband,
->  int ieee80211_rate_control_register(struct rate_control_ops *ops);
->  void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
->=20
-> +static inline bool
-> +conf_is_ht20(struct ieee80211_conf *conf)
-> +{
-> +       return conf->ht.channel_type =3D=3D NL80211_CHAN_HT20;
-> +}
-> +
-> +static inline bool
-> +conf_is_ht40_minus(struct ieee80211_conf *conf)
-> +{
-> +       return conf->ht.channel_type =3D=3D NL80211_CHAN_HT40MINUS;
-> +}
-> +
-> +static inline bool
-> +conf_is_ht40_plus(struct ieee80211_conf *conf)
-> +{
-> +       return conf->ht.channel_type =3D=3D NL80211_CHAN_HT40PLUS;
-> +}
-> +
-> +static inline bool
-> +conf_is_ht40(struct ieee80211_conf *conf)
-> +{
-> +       return conf_is_ht40_minus(conf) || conf_is_ht40_plus(conf);
-> +}
-> +
-> +static inline bool
-> +conf_is_ht(struct ieee80211_conf *conf)
-> +{
-> +       return conf->ht.channel_type !=3D NL80211_CHAN_NO_HT;
-> +}
-> +
->  #endif /* MAC80211_H */
-> --
-> 1.6.1.rc3.51.g5832d
->=20
->=20
-
---=-wwAX69n/yoTISrTHZSCo
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJT+UpAAoJEKVg1VMiehFY2H0P/2eNsM9kB7wWlglZx8cglFEk
-vtgul50O/XxIY698zdVIQ/CXGGWfMHlYZ8Nc8mDo5b38EhsCH9z1BBlvqHjtcYJw
-w/Ty9C5nBD9hr9nZzIKpEb8UqwUl8K1Qz5RuEs0zajGiJiwqu9o5r+fTg1eRRIuY
-Azjpc8jNFu7roiBEoRK7tKdF/JNeE80fTpoNDH/cDdgaB6lX8MTjBZeFu9rTs2lw
-NS5uk4nt7T8OdiBA5wIuTPU1WWnTB9yD6i3pzVfkR74nOc/pWtwAmmkJa2wFJcTm
-0upGdBMf3G7Zx4zDvhASCe25GfcIAD4gtceN3PJc1kb+1V0nyqYwYqIGsHAXiLj/
-UwO1xdPo4+D23U1/63I5Q8SwYwsG2ge/ZTC0usFbqoYykqU0wmsAjkV/TilMJLWn
-lMa40swi4Kn0UR97iYpPWeoIfPe0IwIoh19wX2xPNnQ9sBjAqCv/2zkvJ/X6knpO
-/UbGkv4ImglwvcEsIDW+mI6EV0nMhblDvijA0uIFyHxgQuVGBqEY+ZDjhJFR3iL/
-g/5b5VdjI84kZdM2hDypXC2qR3wBW3UE9QJbP4+5Miet+XpmK0fzZ6dOBwuUeBfp
-4C0XRP7SAduc4SIUweJ+7xEfEJNCO9GrWq61vMQDv1cBvMpckjK12RAgt47Kf1Ji
-xAgqWbZT5p7akvcQkCMd
-=9qe2
------END PGP SIGNATURE-----
-
---=-wwAX69n/yoTISrTHZSCo--
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2008-12-30 13:21:07.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2008-12-30 13:29:59.000000000 +0100
+@@ -1741,6 +1741,43 @@ static int p54_set_edcf(struct ieee80211
+ 	return 0;
+ }
+ 
++static int p54_set_ps(struct ieee80211_hw *dev)
++{
++	struct p54_common *priv = dev->priv;
++	struct sk_buff *skb;
++	struct p54_psm *psm;
++	u16 mode;
++	int i;
++
++	if (dev->conf.flags & IEEE80211_CONF_PS)
++		mode = cpu_to_le16(P54_PSM | P54_PSM_DTIM | P54_PSM_MCBC);
++	else
++		mode = P54_PSM_CAM;
++
++	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*psm) +
++			sizeof(struct p54_hdr), P54_CONTROL_TYPE_PSM,
++			GFP_ATOMIC);
++	if (!skb)
++		return -ENOMEM;
++
++	psm = (struct p54_psm *)skb_put(skb, sizeof(*psm));
++	psm->mode = cpu_to_le16(mode);
++	psm->aid = cpu_to_le16(priv->aid);
++	for (i = 0; i < ARRAY_SIZE(psm->intervals); i++) {
++		psm->intervals[i].interval =
++			cpu_to_le16(dev->conf.listen_interval);
++		psm->intervals[i].periods = 1;
++	}
++
++	psm->beacon_rssi_skip_max = 60;
++	psm->rssi_delta_threshold = 0;
++	psm->nr = 0;
++
++	priv->tx(dev, skb);
++
++	return 0;
++}
++
+ static int p54_beacon_tim(struct sk_buff *skb)
+ {
+ 	/*
+@@ -1933,6 +1970,11 @@ static int p54_config(struct ieee80211_h
+ 		if (ret)
+ 			goto out;
+ 	}
++	if (changed & IEEE80211_CONF_CHANGE_PS) {
++		ret = p54_set_ps(dev);
++		if (ret)
++			goto out;
++	}
+ 
+ out:
+ 	mutex_unlock(&priv->conf_mutex);
+diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
+--- a/drivers/net/wireless/p54/p54common.h	2008-12-30 11:22:27.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.h	2008-12-30 13:22:05.000000000 +0100
+@@ -534,6 +534,7 @@ struct p54_psm_interval {
+ 	__le16 periods;
+ } __attribute__ ((packed));
+ 
++#define P54_PSM_CAM			0
+ #define P54_PSM				BIT(0)
+ #define P54_PSM_DTIM			BIT(1)
+ #define P54_PSM_MCBC			BIT(2)
