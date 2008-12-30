@@ -1,80 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:34248 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752887AbYLHXSQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 18:18:16 -0500
-Message-Id: <1228778295.10662.1288975589@webmail.messagingengine.com> (sfid-20081209_001824_312714_9872DB43)
-From: "Dan E" <trg_info@mailhaven.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail.gmx.net ([213.165.64.20]:33929 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752273AbYL3XHx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2008 18:07:53 -0500
+Cc: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
+	berlin@berlin.freifunk.net
+Content-Type: multipart/mixed; boundary="========GMX163101230678471384781"
+Date: Wed, 31 Dec 2008 00:07:51 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1230676811.3850.22.camel@johannes>
+Message-ID: <20081230230751.163100@gmx.net> (sfid-20081231_000758_412792_0480B932)
 MIME-Version: 1.0
-References: <1228692546.8826.1288759933@webmail.messagingengine.com>
- (sfid-20081208_002919_244971_30E436F9)
- <1228723993.22164.65.camel@johannes.berg>
-Subject: Re: Userspace tools: Roadmap?
-In-Reply-To: <1228723993.22164.65.camel@johannes.berg>
-Date: Mon, 08 Dec 2008 18:18:15 -0500
+References: <20081230025651.6500@gmx.net>	
+ (sfid-20081230_035657_768921_742B8565) <1230633565.3850.7.camel@johannes>	
+ <20081230223611.163110@gmx.net> (sfid-20081230_233642_601178_E4AB42EE)
+ <1230676811.3850.22.camel@johannes>
+Subject: Re: mac80211 (ath9k, ath5k, etc.) set BSSID Patch
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--========GMX163101230678471384781
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8bit
 
-On Mon, 08 Dec 2008 09:13:13 +0100, "Johannes Berg"
-<johannes@sipsolutions.net> said:
-> 
-> Not really, in the short term, you still are using iwconfig (wireless
-> extensions) with anything but hostapd.
+Hi Johannes!
 
-Ugh.  I was afraid you were going to say that.
+> I disagree, even if the function doesn't use the proper types
+> pervasively, we shouldn't be adding old-style stuff.
 
-> > Userspace tools.  I want to proceed as if Wireless Extensions never
-> > existed.  Is that even possible?
-> 
-> No, it's not.
+Okay, I can use bool to if you want, too.
 
-My fault for assuming too much about the urgency to get away from WE.
+> What Jouni pointed out still stands, you should separate the bugfix and
+> the 'disregard ibss join' feature into two patches.
 
-> Yes, it should, and nl80211 even supports it, but iw itself doesn't yet.
-> That's fairly easy to fix, too, but then iw won't support actually
-> telling mac80211 to scan and associate etc.
+As I say, the "the 'disregard ibss join' feature" is already implemented only not complete. If you want a driver, that do in some situations merges and some others don't, you can easily remove the line 1663. But I think it would nice, if the main driver implement it properly, not half.
 
-Right.  I had a few early problems with iw.  For instance, the Linux
-Wireless web pages say you need "at least" libnl-1.0-pre8, but it won't
-build with libnl-1.2 or 2.0.  I had to go with libnl-1.1 to make it
-happy.  iw seems to be like a redheaded stepchild.
+For now we can only use the madwifi and an awful hacked proprietary 2.4er kernel broadcom driver for it. It would nice to have a clean free software implementation for it.
 
-> If you're writing a mac80211-based driver, there's no point where you
-> could possibly get in touch with the userspace API. You're writing the
-> driver completely to mac80211's internal driver API, and mac80211
-> completely shields you from the userspace API. You'll never interact
-> with either wireless extensions or nl80211.
-> 
-> > If somone could answer only 1 question (okay, it's a two-parter) the one
-> > I would most like answered is this:  How does one, from userspace, ask
-> > the driver to switch to a specific channel, and what callback(s) from
-> > mac80211 should my driver expect to receive as a result?  
-> 
-> iwconfig wlan0 channel 7
-> 
-> then mac80211 calls your _ops->config() with the channel flag. Have you
-> looked at the mac80211 book and the other documentation on
-> http://wireless.kernel.org/?
-
-That's what I thought but I wasn't seeing any callbacks at all through
-my ieee80211_ops pointers.  I did see the channel frequency change with
-'iwconfig wlan0', but no callbacks.  My fault, again, for not RTFM.  I
-haven't gotten to the point yet on my driver where I expect 'ip link set
-up dev wlan0' (or 'ifconfig wlan0 up', if you prefer) and now I see
-that's why the config callback never happened.  If I had RTFM I might
-have noticed adding 'commit' at the end of the iwconfig command would
-have done it without the 'up'.
-
-Thanks for the info, Johannes.  It answers a lot of my questions.
-
---
-Dan
+Regards
+Alina
 
 -- 
-http://www.fastmail.fm - Access your email from home and the web
+Psssst! Schon vom neuen GMX MultiMessenger gehört? Der kann`s mit allen: http://www.gmx.net/de/go/multimessenger
 
+--========GMX163101230678471384781
+Content-Type: text/x-patch;
+ charset="iso-8859-15";
+ name="mac80211-setbssid-2.patch"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment; filename="mac80211-setbssid-2.patch"
+
+diff -urN compat-wireless-2008-12-29.orig/net/mac80211/mlme.c compat-wireless-2008-12-29/net/mac80211/mlme.c
+--- compat-wireless-2008-12-29.orig/net/mac80211/mlme.c	2008-12-29 06:14:35.000000000 +0100
++++ compat-wireless-2008-12-29/net/mac80211/mlme.c	2008-12-30 23:08:08.000000000 +0100
+@@ -1660,6 +1660,7 @@
+ 
+ 	/* check if we need to merge IBSS */
+ 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && beacon &&
++	    (!(sdata->u.sta.flags & IEEE80211_STA_BSSID_SET)) &&
+ 	    bss->capability & WLAN_CAPABILITY_IBSS &&
+ 	    bss->freq == local->oper_channel->center_freq &&
+ 	    elems->ssid_len == sdata->u.sta.ssid_len &&
+@@ -1705,7 +1706,8 @@
+ 		       (unsigned long long)(rx_timestamp - beacon_timestamp),
+ 		       jiffies);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+-		if (beacon_timestamp > rx_timestamp) {
++		if (beacon_timestamp > rx_timestamp &&
++		    memcmp(sdata->u.sta.bssid, mgmt->bssid, ETH_ALEN) != 0) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 			printk(KERN_DEBUG "%s: beacon TSF higher than "
+ 			       "local TSF - IBSS merge with BSSID %s\n",
+@@ -2031,6 +2033,9 @@
+ 	if (ieee80211_sta_active_ibss(sdata))
+ 		return;
+ 
++	if (sdata->u.sta.flags & IEEE80211_STA_BSSID_SET)
++		return;
++
+ 	printk(KERN_DEBUG "%s: No active IBSS STAs - trying to scan for other "
+ 	       "IBSS networks with same SSID (merge)\n", sdata->dev->name);
+ 	ieee80211_request_scan(sdata, ifsta->ssid, ifsta->ssid_len);
+@@ -2576,11 +2581,16 @@
+ {
+ 	struct ieee80211_if_sta *ifsta;
+ 	int res;
++	bool valid;
+ 
+ 	ifsta = &sdata->u.sta;
++	valid = is_valid_ether_addr(bssid);
+ 
+ 	if (memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0) {
+-		memcpy(ifsta->bssid, bssid, ETH_ALEN);
++		if(valid)
++			memcpy(ifsta->bssid, bssid, ETH_ALEN);
++		else
++			memset(ifsta->bssid, 0, ETH_ALEN);
+ 		res = 0;
+ 		/*
+ 		 * Hack! See also ieee80211_sta_set_ssid.
+@@ -2594,7 +2604,7 @@
+ 		}
+ 	}
+ 
+-	if (is_valid_ether_addr(bssid))
++	if (valid)
+ 		ifsta->flags |= IEEE80211_STA_BSSID_SET;
+ 	else
+ 		ifsta->flags &= ~IEEE80211_STA_BSSID_SET;
+
+--========GMX163101230678471384781--
