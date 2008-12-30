@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26460 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751345AbYLCRgF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2008 12:36:05 -0500
-Subject: Re: Unusually low speeds with ath5k and iwl3945
-From: reinette chatre <reinette.chatre@intel.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"wally@theblackmoor.net" <wally@theblackmoor.net>
-In-Reply-To: <1228324148.23040.0.camel@maxim-laptop>
-References: <492719ED.5000006@gmail.com>  <1228323319.12006.3.camel@rc-desk>
-	 <1228324148.23040.0.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Wed, 03 Dec 2008 09:36:58 -0800
-Message-Id: <1228325818.13338.3.camel@rc-desk> (sfid-20081203_183611_067329_08E03E75)
-Mime-Version: 1.0
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:51303 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753811AbYL3IOi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2008 03:14:38 -0500
+Received: by bwz14 with SMTP id 14so17053663bwz.13
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2008 00:14:36 -0800 (PST)
+Message-ID: <1ba2fa240812300014q40aa3402ie4251b38eb017610@mail.gmail.com> (sfid-20081230_091502_398542_5166D375)
+Date: Tue, 30 Dec 2008 10:14:30 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: clean up set_key callback
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1230597160.3116.74.camel@johannes>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1230551709.3116.30.camel@johannes>
+	 <1ba2fa240812291417w6e99dd17t3ffc2973774ed824@mail.gmail.com>
+	 <1230597160.3116.74.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2008-12-03 at 09:09 -0800, Maxim Levitsky wrote:
-> On Wed, 2008-12-03 at 08:55 -0800, reinette chatre wrote:
-> > On Fri, 2008-11-21 at 12:28 -0800, Maxim Levitsky wrote:
-> > 
-> > > sorry for cross-posting, but this issue really spans both iwl3945 and ath5k.
-> > > 
-> > > I have two laptops (acer 5720, and aspire one) and I see some strange speed issues.
-> > > 
-> > > I initially blamed iwl3945, then thought it got fixed, but now I have ath5k, and speeds are low
-> > > and I suspect that both drivers has bugs regarding to speed.
-> > 
-> > We just posted some fixes to iwl3945 rate scaling. Could you please test
-> > with http://marc.info/?l=linux-wireless&m=122824880823630&w=2 ?
-> > 
-> > Thank you
-> > 
-> > Reinette
-> > 
-> > 
-> I''l test this, but for all my tests rate on iwl3945 was already 54M,
-> could this still help?
-> 
+On Tue, Dec 30, 2008 at 2:32 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2008-12-30 at 00:17 +0200, Tomas Winkler wrote:
+>
+>> > @@ -3038,6 +3039,9 @@ static int iwl_mac_set_key(struct ieee80
+>> >        int ret = 0;
+>> >        u8 sta_id = IWL_INVALID_STATION;
+>> >        u8 is_default_wep_key = 0;
+>> > +       static const u8 bcast_addr[ETH_ALEN] =
+>> > +               { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, };
+>> > +       static const u8 *addr;
+>>
+>> >        IWL_DEBUG_MAC80211("enter\n");
+>> >
+>> > @@ -3046,9 +3050,7 @@ static int iwl_mac_set_key(struct ieee80
+>> >                return -EOPNOTSUPP;
+>> >        }
+>> >
+>> > -       if (is_zero_ether_addr(addr))
+>> > -               /* only support pairwise keys */
+>> > -               return -EOPNOTSUPP;
+>> > +       addr = sta ? sta->addr : bcast_addr;
+>> >
+>>
+>> Please use this code instead in both iwlwifi drivers.
+>>
+>> +sta_id = sta ? iwl_find_station(priv, sta->addr) :
+>> priv->hw_params.bcast_sta_id;
+>> - sta_id = iwl_find_station(priv, addr);
+>
+> Should probably be a separate patch though since this particular patch
+> isn't meant to change semantics here, I think.
 
-Yes. Please test with netcat as you did previously to see if you get
-better performance.
-
-Thanks
-
-Reinette
-
+Whatever, we can patch it over.
+Tomas
