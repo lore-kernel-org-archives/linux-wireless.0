@@ -1,114 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:58767 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756757AbYLLMj1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 07:39:27 -0500
-Message-Id: <20081212123918.723191687@atheros.com> (sfid-20081212_133932_354807_FB857735)
-References: <20081212123832.506588839@atheros.com>
-Date: Fri, 12 Dec 2008 14:38:35 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 3/3] mac80211: Add HT rates into radiotap
+Received: from mail.atheros.com ([12.36.123.2]:57905 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751479AbYL3NFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2008 08:05:00 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2008 05:05:00 -0800
+Date: Tue, 30 Dec 2008 18:23:10 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: Handle power constraint level advertised in
+	11d+h beacon
+Message-ID: <20081230125309.GA9080@localhost.localdomain> (sfid-20081230_140504_717286_FAA9522D)
+References: <1230641555-13425-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1230641555-13425-1-git-send-email-vasanth@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the radiotap definition based on the format used in FreeBSD to
-allows MCS index, HT20/HT40, and short GI information to be reported
-for received frames in monitor mode. This format is also supported by
-wireshark.
+On Tue, Dec 30, 2008 at 06:22:35PM +0530, Vasanth Thiagarajan wrote:
+> This patch uses power constraint level while determining the maximum
+> transmit power, there by it makes sure that any power mitigation
+> requirement for the channel in the current regulatory domain is met.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+>  include/net/mac80211.h     |    2 ++
+>  net/mac80211/ieee80211_i.h |    3 +++
+>  net/mac80211/main.c        |   10 ++++++++--
+>  net/mac80211/mlme.c        |   20 +++++++++++++++++++-
+>  net/mac80211/spectmgmt.c   |   22 ++++++++++++++++++++++
+>  5 files changed, 54 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 153a8d1..a1126d3 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -549,6 +549,7 @@ enum ieee80211_conf_changed {
+>   * @flags: configuration flags defined above
+>   * @power_level: requested transmit power (in dBm)
+>   * @user_power_level: User configured transmit power (in dBm)
+> + * @power_constr_level: Power constraint level advertised in 11h beacon (in dBm)
+>   * @channel: the channel to tune to
+>   * @ht: the HT configuration for the device
+>   * @long_frame_max_tx_count: Maximum number of transmissions for a "long" frame
+> @@ -563,6 +564,7 @@ struct ieee80211_conf {
+>         u32 flags;
+>         int power_level;
+>         int user_power_level;
+> +       int power_constr_level;
+> 
+>         u16 listen_interval;
+>         bool radio_enabled;
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index 117718b..1abe96e 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -964,6 +964,9 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+>  void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+>                                        struct ieee80211_mgmt *mgmt,
+>                                        size_t len);
+> +void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+> +                                u16 capab_info, u8 *pwr_constr_elem,
+> +                                u8 pwr_constr_elem_len);
+> 
+>  /* utility functions/constants */
+>  extern void *mac80211_wiphy_privid; /* for wiphy privid */
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 8831e87..66108f6 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -224,10 +224,16 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+>                 changed |= IEEE80211_CONF_CHANGE_CHANNEL;
+>         }
+> 
+> -       if (!local->hw.conf.user_power_level)
+> +       if (local->sw_scanning)
+>                 power = chan->max_power;
+>         else
+> -               power = min(chan->max_power, local->hw.conf.user_power_level);
+> +               power = local->hw.conf.power_constr_level ?
+> +                       (chan->max_power - local->hw.conf.power_constr_level) :
+> +                       chan->max_power;
+> +
+> +       if (local->hw.conf.user_power_level)
+> +               power = min(power, local->hw.conf.user_power_level);
+> +
+>         if (local->hw.conf.power_level != power) {
+>                 changed |= IEEE80211_CONF_CHANGE_POWER;
+>                 local->hw.conf.power_level = power;
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index e317c6d..f193ba4 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -911,6 +911,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+>         local->oper_channel_type = NL80211_CHAN_NO_HT;
+>         config_changed |= IEEE80211_CONF_CHANGE_HT;
+> 
+> +       local->hw.conf.power_constr_level = 0;
+> +
+>         del_timer_sync(&local->dynamic_ps_timer);
+>         cancel_work_sync(&local->dynamic_ps_enable_work);
+> 
+> @@ -1719,7 +1721,6 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+>         ieee80211_rx_bss_put(local, bss);
+>  }
+> 
+> -
+>  static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+>                                          struct ieee80211_mgmt *mgmt,
+>                                          size_t len,
+> @@ -1748,6 +1749,16 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+>                        sdata->dev->name);
+>                 ieee80211_authenticate(sdata, ifsta);
+>         }
+> +
+> +       /* TODO: for IBSS */
+> +       if ((sdata->vif.type == NL80211_IFTYPE_STATION) &&
+> +           (ifsta->flags & IEEE80211_STA_ASSOCIATED) &&
+> +           (memcmp(ifsta->bssid, mgmt->bssid, ETH_ALEN) == 0) &&
+> +           elems.pwr_constr_elem)
+> +               ieee80211_handle_pwr_constr(sdata,
+> +                               le16_to_cpu(mgmt->u.probe_resp.capab_info),
+> +                               elems.pwr_constr_elem,
+> +                               elems.pwr_constr_elem_len);
+>  }
+> 
+> 
+> @@ -1841,6 +1852,13 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+>                         elems.country_elem, elems.country_elem_len);
+>         }
+> 
+> +       /* TODO: IBSS also needs this */
+> +       if (elems.pwr_constr_elem)
+> +               ieee80211_handle_pwr_constr(sdata,
+> +                               le16_to_cpu(mgmt->u.probe_resp.capab_info),
+> +                               elems.pwr_constr_elem,
+> +                               elems.pwr_constr_elem_len);
+> +
+>         ieee80211_bss_info_change_notify(sdata, changed);
+>  }
+> 
+> diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+> index f72bad6..f7ffec1 100644
+> --- a/net/mac80211/spectmgmt.c
+> +++ b/net/mac80211/spectmgmt.c
+> @@ -84,3 +84,25 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+>                         mgmt->sa, mgmt->bssid,
+>                         mgmt->u.action.u.measurement.dialog_token);
+>  }
+> +
+> +void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+> +                                u16 capab_info, u8 *pwr_constr_elem,
+> +                                u8 pwr_constr_elem_len)
+> +{
+> +       struct ieee80211_conf *conf = &sdata->local->hw.conf;
+> +
+> +       if ((conf->channel->band != IEEE80211_BAND_5GHZ) ||
+> +           !(capab_info & WLAN_CAPABILITY_SPECTRUM_MGMT))
+> +               return;
+> +
+> +       /* Power constraint IE length should be 1 octet */
+> +       if (pwr_constr_elem_len != 1)
+> +               return;
+> +
+> +       if ((*pwr_constr_elem <= conf->channel->max_power) &&
+> +           (*pwr_constr_elem != conf->power_constr_level)) {
+> +               conf->power_constr_level = *pwr_constr_elem;
+> +               ieee80211_hw_config(sdata->local, 0);
+> +       }
+> +}
+> +
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
----
- include/net/ieee80211_radiotap.h |    7 +++++--
- net/mac80211/rx.c                |   28 ++++++++++++----------------
- 2 files changed, 17 insertions(+), 18 deletions(-)
+This patch will apply on top of my previous tx power fix.
 
---- wireless-testing.orig/include/net/ieee80211_radiotap.h	2008-12-04 12:56:59.000000000 +0200
-+++ wireless-testing/include/net/ieee80211_radiotap.h	2008-12-12 14:10:02.000000000 +0200
-@@ -100,9 +100,10 @@ struct ieee80211_radiotap_header {
-  *      For frequency-hopping radios, the hop set (first byte)
-  *      and pattern (second byte).
-  *
-- * IEEE80211_RADIOTAP_RATE              u8           500kb/s
-+ * IEEE80211_RADIOTAP_RATE              u8           500kb/s or index
-  *
-- *      Tx/Rx data rate
-+ *      Tx/Rx data rate.  If bit 0x80 is set then it represents an
-+ *      an MCS index and not an IEEE rate.
-  *
-  * IEEE80211_RADIOTAP_DBM_ANTSIGNAL     s8           decibels from
-  *                                                   one milliwatt (dBm)
-@@ -230,6 +231,8 @@ enum ieee80211_radiotap_type {
- 						 * 802.11 header and payload
- 						 * (to 32-bit boundary)
- 						 */
-+#define	IEEE80211_RADIOTAP_F_SHORTGI	0x80	/* HT short GI */
-+
- /* For IEEE80211_RADIOTAP_RX_FLAGS */
- #define IEEE80211_RADIOTAP_F_RX_BADFCS	0x0001	/* frame failed crc check */
- 
---- wireless-testing.orig/net/mac80211/rx.c	2008-12-12 14:09:52.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2008-12-12 14:10:02.000000000 +0200
-@@ -116,6 +116,7 @@ ieee80211_add_rx_radiotap_header(struct 
- {
- 	struct ieee80211_radiotap_header *rthdr;
- 	unsigned char *pos;
-+	u16 chan_flags;
- 
- 	rthdr = (struct ieee80211_radiotap_header *)skb_push(skb, rtap_len);
- 	memset(rthdr, 0, rtap_len);
-@@ -146,19 +147,14 @@ ieee80211_add_rx_radiotap_header(struct 
- 		*pos |= IEEE80211_RADIOTAP_F_FCS;
- 	if (status->flag & RX_FLAG_SHORTPRE)
- 		*pos |= IEEE80211_RADIOTAP_F_SHORTPRE;
-+	if (status->flag & RX_FLAG_SHORT_GI)
-+		*pos |= IEEE80211_RADIOTAP_F_SHORTGI;
- 	pos++;
- 
- 	/* IEEE80211_RADIOTAP_RATE */
--	if (status->flag & RX_FLAG_HT) {
--		/*
--		 * TODO: add following information into radiotap header once
--		 * suitable fields are defined for it:
--		 * - MCS index (status->rate_idx)
--		 * - HT40 (status->flag & RX_FLAG_40MHZ)
--		 * - short-GI (status->flag & RX_FLAG_SHORT_GI)
--		 */
--		*pos = 0;
--	} else
-+	if (status->flag & RX_FLAG_HT)
-+		*pos = 0x80 | status->rate_idx;
-+	else
- 		*pos = rate->bitrate / 5;
- 	pos++;
- 
-@@ -166,14 +162,14 @@ ieee80211_add_rx_radiotap_header(struct 
- 	*(__le16 *)pos = cpu_to_le16(status->freq);
- 	pos += 2;
- 	if (status->band == IEEE80211_BAND_5GHZ)
--		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_OFDM |
--					     IEEE80211_CHAN_5GHZ);
-+		chan_flags = IEEE80211_CHAN_OFDM | IEEE80211_CHAN_5GHZ;
- 	else if (rate->flags & IEEE80211_RATE_ERP_G)
--		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_OFDM |
--					     IEEE80211_CHAN_2GHZ);
-+		chan_flags = IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
- 	else
--		*(__le16 *)pos = cpu_to_le16(IEEE80211_CHAN_CCK |
--					     IEEE80211_CHAN_2GHZ);
-+		chan_flags = IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ;
-+	if (status->flag & RX_FLAG_40MHZ)
-+		chan_flags |= IEEE80211_CHAN_TURBO;
-+	*(__le16 *) pos = cpu_to_le16(chan_flags);
- 	pos += 2;
- 
- 	/* IEEE80211_RADIOTAP_DBM_ANTSIGNAL */
-
--- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+vasanth
+> --
+> 1.5.5.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
