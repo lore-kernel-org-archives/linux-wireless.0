@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27186 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751048AbYLFHZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 02:25:25 -0500
-Subject: Re: [PATCH 3/6] iwlwifi: fix time interval misuse in
-	iwl_poll_{direct_}bit
-From: reinette chatre <reinette.chatre@intel.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>, "Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <1228502611.28839.35.camel@violet.holtmann.net>
-References: <> <1228492721-27381-1-git-send-email-reinette.chatre@intel.com>
-	 <1228492721-27381-2-git-send-email-reinette.chatre@intel.com>
-	 <1228492721-27381-3-git-send-email-reinette.chatre@intel.com>
-	 <1228492721-27381-4-git-send-email-reinette.chatre@intel.com>
-	 <1228502611.28839.35.camel@violet.holtmann.net>
-Content-Type: text/plain
-Date: Fri, 05 Dec 2008 23:26:23 -0800
-Message-Id: <1228548383.26014.43.camel@rc-desk> (sfid-20081206_082529_715001_D12ABFC4)
+Received: from ug-out-1314.google.com ([66.249.92.173]:20855 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752021AbYL3Vte (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2008 16:49:34 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so1170988ugf.37
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2008 13:49:32 -0800 (PST)
+Date: Tue, 30 Dec 2008 22:49:28 +0100
+From: Erik Ekman <erik@kryo.se>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, trivial@kernel.org
+Subject: [PATCH 2.6.28] Wireless: Fix Kconfig fact error
+Message-Id: <20081230224928.c0558274.erik@kryo.se> (sfid-20081230_224938_401951_DDB0C74B)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2008-12-05 at 10:43 -0800, Marcel Holtmann wrote:
-> Hi Reinette,
-> 
-> > The patch fixes the misuse of microsecond with millisecond in the
-> > polling mechanism of the iwlwifi driver. The impact of this problem
-> > is the unacceptable latency for the whole system (especially during
-> > bringing down the wlan interface).
-> 
-> I will test the whole set of patches again, but as already mentioned
-> this is making the situation worse than better.
-> 
+Raytheon cards use 2.4 GHz, not 2.4 MHz.
+See http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Linux.Wireless.drivers.html#Raylink
 
-Please let us know the test results. These patches are necessary and the
-system latency issue has improved significantly for other users (please
-see feedback in
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1790 ). There
-may thus be other problems in your system that still needs to be
-addressed.
-
-Reinette
-
+Signed-off-by: Erik Ekman <erik@kryo.se>
+---
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index ea543fc..e4f9f74 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -111,7 +111,7 @@ config WLAN_80211
+ 	  lets you choose drivers.
+ 
+ config PCMCIA_RAYCS
+-	tristate "Aviator/Raytheon 2.4MHz wireless support"
++	tristate "Aviator/Raytheon 2.4GHz wireless support"
+ 	depends on PCMCIA && WLAN_80211
+ 	select WIRELESS_EXT
+ 	---help---
