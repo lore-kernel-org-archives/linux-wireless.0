@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.brikks.com ([82.209.166.4]:18655 "EHLO smtp.bredband2.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752331AbYLFMps (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 07:45:48 -0500
-Received: from unknown (HELO loke.fish.not) ([83.233.19.199])
-          (envelope-sender <spamcan1@abrasax.se>)
-          by smtp.bredband2.net (qmail-ldap-1.03) with SMTP
-          for <linux-wireless@vger.kernel.org>; 6 Dec 2008 12:50:34 -0000
-Received: from loke.fish.not (localhost [127.0.0.1])
-	by loke.fish.not (Postfix) with ESMTP id D23C812B94
-	for <linux-wireless@vger.kernel.org>; Sat,  6 Dec 2008 13:45:42 +0100 (CET)
-Date: Sat, 6 Dec 2008 13:45:42 +0100
-From: Mats Johannesson <spamcan1@abrasax.se>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
- root
-Message-ID: <20081206134542.05cd9664@loke.fish.not> (sfid-20081206_134606_815468_365559F2)
-In-Reply-To: <20081206113406.734f1d94@loke.fish.not>
-References: <20081206113406.734f1d94@loke.fish.not>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.gmx.net ([213.165.64.20]:48310 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751530AbYL3QPl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2008 11:15:41 -0500
+Cc: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
+	berlin@berlin.freifunk.net
+Content-Type: text/plain; charset=iso-8859-1
+Date: Tue, 30 Dec 2008 17:15:39 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20081230113714.GA31451@jm.kir.nu>
+Message-ID: <20081230161539.184750@gmx.net> (sfid-20081230_171546_161437_5C87B929)
+MIME-Version: 1.0
+References: <20081230025651.6500@gmx.net> <20081230113714.GA31451@jm.kir.nu>
+Subject: Re: mac80211 (ath9k, ath5k, etc.) set BSSID Patch
+To: Jouni Malinen <j@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 6 Dec 2008 11:34:06 +0100 Mats Johannesson wrote:
-> 
-> As the subject says, 2.6.28-rc7-wl git pulled Dec 6 exhibits a kernel
-> panic when doing "iwlist ath0 scan" as root under the ath9k driver.
-> Machine dead, panic LED blinking.
-> 
-> Scan as normal user is OK.
+Hello Jouni!
 
-Ick! Panic as normal user as well when using the graphical "Wicd
-Manager" to Refresh (ie scan). Possibly it does its thing as root?
+> This is not how IEEE 802.11 IBSS is supposed to work. If there are
+> issues in IBSS splits, merges, or timesync, I would consider fixes to
+> those to be preferred over hacks that hide the issues and cause
+> interoperability issues with standard compliant IBSS implementations.
 
-First panic was as root on a fresh kernel without any graphics driver
-(plain terminal). Second try was as a normal user in said plain
-terminal - was OK. Logged out and in as root to scan -> panic.
+This breaks nothing. I think if you set your BSSID manually, you really=
+ don't want that the driver changed it back. If you want this behavior,=
+ you don't set it.
+Handle BSSID splits in a mile width city mesh network with 500 or more =
+nodes is impossible in a other way, I think. The standard was never wri=
+tten for that dimensions.
 
-Installed graphics driver and ran as normal user under X. Wicd handles
-the wpa_supplicant etc. Scanning in an xterm as myself was OK. Later
-tried the Wicd Manager Refresh thing out of curiosity. Panic.
+Besides it fixes a bug that driver want to try to merge with the same B=
+SSID, which is unnecessary and causes problems.
 
-/Mats
+See:
+http://wiki.villagetelco.org/index.php/Information_about_cell-id_splitt=
+ing%2C_stuck_beacons%2C_and_failed_IBSS_merges!#The_phenomenon_of_IBSS-=
+ID_cell_splits
+
+> Anyway, since I don't really care that much about IBSS
+
+We need it much here in the "Freifunk" mesh network of Berlin.
+
+> to actually start
+> using lots of time to fix problems there, I would not object to this
+> type of change as long it does not change the default behavior (i.e.,=
+ by
+> default, mac80211 should operate in standard compliant manner) and th=
+e
+> users are not mislead to enable such a hack while still believing tha=
+t
+> their devices are operating in a standard IBSS.
+
+ACK
+
+Regards
+Alina
+
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
