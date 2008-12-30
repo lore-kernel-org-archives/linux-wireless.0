@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport.netspeed.com.au ([203.31.48.201]:57864 "EHLO
-	ironport.netspeed.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752060AbYLDH7K (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44179 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569AbYL3KpW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2008 02:59:10 -0500
-Message-ID: <49378DCB.3080401@astronomicalresearchaustralia.org> (sfid-20081204_085915_601185_5B71EBF9)
-Date: Thu, 04 Dec 2008 17:59:07 +1000
-From: Brian <bnc@astronomicalresearchaustralia.org>
-Reply-To: bnc@astronomicalresearchaustralia.org
-MIME-Version: 1.0
-CC: "ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: 2.6.28-rc7-wl
-References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>	<1228251082-11677-2-git-send-email-lrodriguez@atheros.com>	<1228251082-11677-3-git-send-email-lrodriguez@atheros.com>	<1228251082-11677-4-git-send-email-lrodriguez@atheros.com>	<20081203001253.GC14943@kroah.com>	<43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com>	<20081203002404.GA22789@tuxdriver.com>	<20081203212255.GB4263@tuxdriver.com>	<43e72e890812031414m6a5782e7ga8eed8d91fe056b2@mail.gmail.com>	<49370F49.2090602@astronomicalresearchaustralia.org> <20081204023228.GT6522@tesla>
-In-Reply-To: <20081204023228.GT6522@tesla>
-Content-Type: text/plain; charset=ISO-8859-1
-To: unlisted-recipients:; (no To-header on input)
+	Tue, 30 Dec 2008 05:45:22 -0500
+Subject: Re: [RFC v2] mac80211: Add 802.11h CSA support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless@vger.kernel.org, jouni.malinen@atheros.com
+In-Reply-To: <18777.64102.60878.194252@localhost.localdomain> (sfid-20081230_114208_708501_346345E9)
+References: <18777.63336.140527.717269@localhost.localdomain>
+	 <1230633305.3850.2.camel@johannes>
+	 <18777.64102.60878.194252@localhost.localdomain>
+	 (sfid-20081230_114208_708501_346345E9)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LWwfI1o/1HNeo9ckP7vQ"
+Date: Tue, 30 Dec 2008 11:45:49 +0100
+Message-Id: <1230633949.3850.11.camel@johannes> (sfid-20081230_114526_905459_0B67F52B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+--=-LWwfI1o/1HNeo9ckP7vQ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Luis,
-> 
-> wireless-testing is now on 2.6.28-rc7, please do a git pull and
-> recompile and test that. It has some critical fixes for ath9k.
-> 
-Downloaded and installed, I had done a git-pull a few hours before and
-it was not there:)
+On Tue, 2008-12-30 at 16:09 +0530, Sujith wrote:
+> Johannes Berg wrote:
+> > We already have a bss pointer here, would it be better to pass that in,
+> > avoid the bss lookup, and do the bss lookup manually in the action fram=
+e
+> > case, to avoid a double lookup here?
+> >=20
+>=20
+> We don't have a bss pointer in ieee80211_rx_h_action(), where CSA
+> action frames are handled too.
 
-I set up my system with NX running and was waiting to be up 2hours.
-Unfortunately it only made 1:50.
-Still this is bundles better than the 10mins I was getting.
+Yeah I know, I'm just wondering if it's worth saving the lookup in the
+other case by doing the lookup outside of ieee80211_process_chanswitch()
+and in ieee80211_rx_h_action()
 
-Some observations:
+> > Didn't you want to put this into the workqueue?
+>=20
+> Calling ieee80211_hw_config() from the timer was problematic since
+> drivers might use a mutex, this won't matter.
+> But if it makes things clearer, I can add it to the workqueue here too.
 
-1) wpa_supplicant no longer chews up cpu/mem. It started and then did
-nothing from then on. It used to be in the top 5 on htop.
+But the RX stuff (rx_h_action) is from a tasklet or directly from the
+driver, and in the tasklet we can't sleep either, and if we call back
+from ieee80211_rx() into rx_h_action into the driver again via config()
+the driver might not like it? Or am I totally off base right now?
 
-2) I used to get a huge number of receive errors
- This is what I started with Errors :3708
- After an hour I had         Errors :3746
+johannes
 
-3) Towards the end the memory usage was creeping, slightly, up but no
-where near the swap file.
+--=-LWwfI1o/1HNeo9ckP7vQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-As suggested by others I did have a console running, but I was
-monitoring htop(to see if it started to use the swap) when it went.
-So I have no further diagnostics.
+iQIcBAABAgAGBQJJWfvaAAoJEKVg1VMiehFYNPMP/1OWodcrKmqjxcKIJsaeBQqr
+qPh2PIakxag2w14EGcylzqInerIMsGIiEDroVuyWka46/6NVFE238xzj1itYgyT+
+u3uO5gtcjdLntc49XBU0FbCaQ8p/XXkNskyLmn3hjv5Xm1lWZurV+38xqk4V+xg6
+QUqo9G2L94h48qggpy8KJCrEvcJ5NRy/VfC2mIj1eYwGEUhdg1KNmVBaIMClx1d7
+pM+I+ySmhFdVh5OBYcMk9qgq/GSH7IGjdnaG1czXo7UqtU6VONWLz/81R6Fk+PSs
+h+Ax/Reo9y/U2uQ4o4EcjOehX0hwiFXuaC9AxLgoQWmqJUOaiuxeYsSs7uCPRDKG
+AxIG4nqhwY5L8PDwZc2gWlR1/AuqOnq3rAUHpfAMOBvAGDyqxop6t09GYPwdcy2t
+ba1cHWmBeTOfX7aVmX4rj0blc6wAnywc/529JX8tlf03iad3BhY8jmrHTKBdiExn
+IdAj4zdYaHyx5fsBFg0Ep+POFSLrH3Teqm4Ny+7b5cIAj3PSdcsVaGT+lPMQXxLt
++NqROR3r6M687DZUSmt6+0zSBHDAqS7IuAq292IMqiZbvUOJFudfjESOP83dnzIA
+wtSf08r5mawdKs5isPvxu1uVzWMidHLxEQCStQPpIyYeDOSw7tyc671dkZkdnYcN
+JVeyBbr5ksHA+hRjmH2y
+=E6H5
+-----END PGP SIGNATURE-----
 
-When I did the compile it came up and asked me if I wanted the new
-diagnostic facility for the driver and I just pressed enter.
-Happy to go back and recompile(or can I turn it on).
-
-If I turn it on do you have a methodology to use it?
-
-Thanks for the great improvement,
-Brian
-
-
-
+--=-LWwfI1o/1HNeo9ckP7vQ--
 
