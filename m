@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:31898 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751846AbYL2SnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 13:43:16 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 10:43:16 -0800
-Date: Mon, 29 Dec 2008 10:43:01 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Pavel Roskin <proski@gnu.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Michael Buesch <mb@bu3sch.de>, Dan E <trg_info@mailhaven.com>,
-	Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Hostapd doesn't like crda
-Message-ID: <20081229184301.GW5944@tesla> (sfid-20081229_194334_626627_3C9FA8CD)
-References: <200812272208.20153.mb@bu3sch.de> <200812291128.00512.mb@bu3sch.de> <20081229155613.GR5944@tesla> <200812291704.28163.mb@bu3sch.de> <20081229161828.GT5944@tesla> <1230575256.22537.3.camel@dv>
+Received: from ti-out-0910.google.com ([209.85.142.190]:65483 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561AbYL3KmG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2008 05:42:06 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so8035094tic.23
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2008 02:42:04 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1230575256.22537.3.camel@dv>
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18777.64102.60878.194252@localhost.localdomain> (sfid-20081230_114212_248154_D4315B76)
+Date: Tue, 30 Dec 2008 16:09:34 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, jouni.malinen@atheros.com
+Subject: Re: [RFC v2] mac80211: Add 802.11h CSA support
+In-Reply-To: <1230633305.3850.2.camel@johannes>
+References: <18777.63336.140527.717269@localhost.localdomain>
+	<1230633305.3850.2.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 29, 2008 at 10:27:36AM -0800, Pavel Roskin wrote:
-> On Mon, 2008-12-29 at 08:18 -0800, Luis R. Rodriguez wrote:
-> > > I think this wouldn't be hackish, but do we actually _know_ when crda has finished
-> > > uploading regulatory information? Does it do it all in one step?
-> >
-> > It would go in through another nl80211 command, NL80211_CMD_SET_REG. nl80211 eventually
-> > calls set_regdom() and this will set it, so if all goes well we can remove the timer
-> > at the end if its active (other means can call CRDA like for 802.11d or the wireless core
-> > upon initialization).
+Johannes Berg wrote:
+> We already have a bss pointer here, would it be better to pass that in,
+> avoid the bss lookup, and do the bss lookup manually in the action frame
+> case, to avoid a double lookup here?
 > 
-> Can we have a command to _get_ regulatory settings?  I think it would be
-> useful.  Then hostapd could wait until the correct settings are active.
-> If it doesn't happen after some time, hostapd should exit with an error.
 
-Yeah, I've been meaning to get to that but haven't yet, we should have
-a nl80211 command which lets userspace get the entire rd structure, and maybe
-some info from last_request.
+We don't have a bss pointer in ieee80211_rx_h_action(), where CSA
+action frames are handled too.
 
-> It would be even better if hostapd could wait for an event notifying of
-> the regulatory settings change.
+> Didn't you want to put this into the workqueue?
 
-Whatever works. But as can be seen this just requires a bit of work.
+Calling ieee80211_hw_config() from the timer was problematic since
+drivers might use a mutex, this won't matter.
+But if it makes things clearer, I can add it to the workqueue here too.
 
-  Luis
+Sujith
