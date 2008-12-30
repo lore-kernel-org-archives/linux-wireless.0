@@ -1,46 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:58451 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751189AbYLPERU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2008 23:17:20 -0500
-Message-ID: <49472BC9.7060406@lwfinger.net> (sfid-20081216_051726_431736_A0DC386E)
-Date: Mon, 15 Dec 2008 22:17:13 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:57486 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752015AbYL3WgN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2008 17:36:13 -0500
+Cc: openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org,
+	berlin@berlin.freifunk.net
+Content-Type: multipart/mixed; boundary="========GMX163111230676571497411"
+Date: Tue, 30 Dec 2008 23:36:11 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1230633565.3850.7.camel@johannes>
+Message-ID: <20081230223611.163110@gmx.net> (sfid-20081230_233618_935336_A03FB019)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Memory errors from p54usb
-References: <49466F56.6060805@lwfinger.net> <200812152051.48349.chunkeey@web.de>
-In-Reply-To: <200812152051.48349.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <20081230025651.6500@gmx.net>	
+ (sfid-20081230_035657_768921_742B8565) <1230633565.3850.7.camel@johannes>
+Subject: Re: mac80211 (ath9k, ath5k, etc.) set BSSID Patch
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> 
-> look at the high 4KB count?! it looks like your memory is highly fragmented...
-> 
-> rx_mtu is usually around 3240 bytes on new firmwares...
-> but for a quick test it can limited to something much less like the
->  RTS/Fragmentation threshold (somewhere around 2356?)...
-> just add:
-> priv->rx_mtu = 2356; at line 198 in p54common.c
-> 
-> In the mean time, I've to get rid of my RAM ;-)
+--========GMX163111230676571497411
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8bit
 
-No matter how hard I try, I cannot duplicate these results. They may have been a
-fluke, but I do have another problem fr you to ponder.
+Hi Johannes,
 
-If I run the 'ping -f -i 0.2' to my file server in one window, and start a
-kernel compilation with the source on an NFS volume on that same server, p54usb
-will hang. I managed to capture the whole process with kismet running on a third
-computer and have analyzed it with wireshark. I can find the last transmission
-from the server, but no ACK. The next transmission from the p54 is more than 26
-sec later when it sends an 802.11 Probe request. The dmesg log just shows that
-there was a disconnection, and a reconnection attempt.
+thanks for your comments. I'm not so familiar with your coding style for now. Here is the revised patch.
 
-Any idea as to why the receiver would go off-line, but the transmitter is still
-working?
+> Can you move the memcmp() into the other condition to avoid indenting
+> twice please?
 
-Larry
+Done.
+
+> Also, it seems there needs to be a STA_BSSID_SET exclusion
+> somewhere above to avoid doing merges?
+
+Yes this function is even called if you set a fixed BSSID, where you don't want any merges. Done in line 1663.
+
+> please use a bool for that
+
+Yes, but the called function is written in the old C style before C99, so I think I should use the same type.
+
+> static inline int is_valid_ether_addr(const u8 *addr)
+
+> and indent these properly
+
+Done.
+
+> I won't comment on the actual code right now, the IBSS code is pretty
+> much unknown to me and I don't use it.
+
+You only need it for mesh networks.
+
+Regards
+Alina
+
+-- 
+Sensationsangebot verlängert: GMX FreeDSL - Telefonanschluss + DSL 
+für nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=OM.AD.PD003K1308T4569a
+
+--========GMX163111230676571497411
+Content-Type: text/x-patch;
+ charset="iso-8859-15";
+ name="mac80211-setbssid-1.patch"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment; filename="mac80211-setbssid-1.patch"
+
+diff -urN compat-wireless-2008-12-29.orig/net/mac80211/mlme.c compat-wireless-2008-12-29/net/mac80211/mlme.c
+--- compat-wireless-2008-12-29.orig/net/mac80211/mlme.c	2008-12-29 06:14:35.000000000 +0100
++++ compat-wireless-2008-12-29/net/mac80211/mlme.c	2008-12-30 23:08:08.000000000 +0100
+@@ -1660,6 +1660,7 @@
+ 
+ 	/* check if we need to merge IBSS */
+ 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && beacon &&
++	    (!(sdata->u.sta.flags & IEEE80211_STA_BSSID_SET)) &&
+ 	    bss->capability & WLAN_CAPABILITY_IBSS &&
+ 	    bss->freq == local->oper_channel->center_freq &&
+ 	    elems->ssid_len == sdata->u.sta.ssid_len &&
+@@ -1705,7 +1706,8 @@
+ 		       (unsigned long long)(rx_timestamp - beacon_timestamp),
+ 		       jiffies);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+-		if (beacon_timestamp > rx_timestamp) {
++		if (beacon_timestamp > rx_timestamp &&
++		    memcmp(sdata->u.sta.bssid, mgmt->bssid, ETH_ALEN) != 0) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 			printk(KERN_DEBUG "%s: beacon TSF higher than "
+ 			       "local TSF - IBSS merge with BSSID %s\n",
+@@ -2031,6 +2033,9 @@
+ 	if (ieee80211_sta_active_ibss(sdata))
+ 		return;
+ 
++	if (sdata->u.sta.flags & IEEE80211_STA_BSSID_SET)
++		return;
++
+ 	printk(KERN_DEBUG "%s: No active IBSS STAs - trying to scan for other "
+ 	       "IBSS networks with same SSID (merge)\n", sdata->dev->name);
+ 	ieee80211_request_scan(sdata, ifsta->ssid, ifsta->ssid_len);
+@@ -2576,11 +2581,16 @@
+ {
+ 	struct ieee80211_if_sta *ifsta;
+ 	int res;
++	int valid;
+ 
+ 	ifsta = &sdata->u.sta;
++	valid = is_valid_ether_addr(bssid);
+ 
+ 	if (memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0) {
+-		memcpy(ifsta->bssid, bssid, ETH_ALEN);
++		if(valid)
++			memcpy(ifsta->bssid, bssid, ETH_ALEN);
++		else
++			memset(ifsta->bssid, 0, ETH_ALEN);
+ 		res = 0;
+ 		/*
+ 		 * Hack! See also ieee80211_sta_set_ssid.
+@@ -2594,7 +2604,7 @@
+ 		}
+ 	}
+ 
+-	if (is_valid_ether_addr(bssid))
++	if (valid)
+ 		ifsta->flags |= IEEE80211_STA_BSSID_SET;
+ 	else
+ 		ifsta->flags &= ~IEEE80211_STA_BSSID_SET;
+
+--========GMX163111230676571497411--
