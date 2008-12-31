@@ -1,31 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35398 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178AbYLVKtL (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46851 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755495AbYLaPms (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2008 05:49:11 -0500
-To: Dave <kilroyd@googlemail.com>
-Subject: Re: [RFC] wireless: Add channel/frequency conversions
-MIME-Version: 1.0
-Date: Mon, 22 Dec 2008 11:49:08 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <494F6BE6.60009@gmail.com> (sfid-20081222_112903_735110_0C849BF0)
-References: <1229797871-21179-1-git-send-email-kilroyd@googlemail.com>	 (sfid-20081220_193122_880708_FEC683E0) <1229855782.4953.8.camel@johannes> <494F6BE6.60009@gmail.com> (sfid-20081222_112903_735110_0C849BF0)
-Message-ID: <c78e595374b4ebeef303c2bf12982735@localhost>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 31 Dec 2008 10:42:48 -0500
+Message-Id: <20081231154241.204285868@w1.fi> (sfid-20081231_170902_013669_E92C904B)
+References: <20081231153834.840526845@w1.fi>
+Date: Wed, 31 Dec 2008 17:38:45 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [RFC 11/11] mac80211: 802.11w - Implement Association Comeback processing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When MFP is enabled, the AP does not allow a STA to associate if an
+existing security association exists without first going through SA
+Query process. When this happens, the association request is denied
+with a new status code ("temporarily rejected") ans Association
+Comeback IE is used to notify when the association may be tried again
+(i.e., when the SA Query procedure has timed out).
 
-On Mon, 22 Dec 2008 10:28:54 +0000, Dave <kilroyd@googlemail.com> wrote:
+Use the comeback time to update the mac80211 client MLME timer for
+next association attempt to minimize waiting time if association is
+temporarily rejected.
 
-> I didn't quite get what you meant by that last statement - did you mean
-> that the inlining is OK, or that you'd prefer them not inlined?
-> 
-> If you meant the former (and there aren't any strong opinions about
-> lib80211), I'll just submit as is.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Sorry, I meant it's fine, go ahead.
 
-johannes
+---
+ include/linux/ieee80211.h  |    4 ++++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/mlme.c        |   20 +++++++++++++++++---
+ net/mac80211/util.c        |    4 ++++
+ 4 files changed, 27 insertions(+), 3 deletions(-)
+
+--- wireless-testing.orig/include/linux/ieee80211.h	2008-12-31 17:15:01.000000000 +0200
++++ wireless-testing/include/linux/ieee80211.h	2008-12-31 17:25:32.000000000 +0200
+@@ -914,6 +914,9 @@ enum ieee80211_statuscode {
+ 	/* 802.11g */
+ 	WLAN_STATUS_ASSOC_DENIED_NOSHORTTIME = 25,
+ 	WLAN_STATUS_ASSOC_DENIED_NODSSSOFDM = 26,
++	/* 802.11w */
++	WLAN_STATUS_ASSOC_REJECTED_TEMPORARILY = 30,
++	WLAN_STATUS_ROBUST_MGMT_FRAME_POLICY_VIOLATION = 31,
+ 	/* 802.11i */
+ 	WLAN_STATUS_INVALID_IE = 40,
+ 	WLAN_STATUS_INVALID_GROUP_CIPHER = 41,
+@@ -1034,6 +1037,7 @@ enum ieee80211_eid {
+ 	/* 802.11i */
+ 	WLAN_EID_RSN = 48,
+ 	WLAN_EID_MMIE = 76 /* 802.11w */,
++	WLAN_EID_ASSOC_COMEBACK_TIME = 77,
+ 	WLAN_EID_WPA = 221,
+ 	WLAN_EID_GENERIC = 221,
+ 	WLAN_EID_VENDOR_SPECIFIC = 221,
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2008-12-31 17:12:37.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2008-12-31 17:25:32.000000000 +0200
+@@ -816,6 +816,7 @@ struct ieee802_11_elems {
+ 	u8 *country_elem;
+ 	u8 *pwr_constr_elem;
+ 	u8 *quiet_elem; 	/* first quite element */
++	u8 *assoc_comeback;
+ 
+ 	/* length of them, respectively */
+ 	u8 ssid_len;
+@@ -843,6 +844,7 @@ struct ieee802_11_elems {
+ 	u8 pwr_constr_elem_len;
+ 	u8 quiet_elem_len;
+ 	u8 num_of_quiet_elem;	/* can be more the one */
++	u8 assoc_comeback_len;
+ };
+ 
+ static inline struct ieee80211_local *hw_to_local(
+--- wireless-testing.orig/net/mac80211/mlme.c	2008-12-31 17:12:37.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2008-12-31 17:25:32.000000000 +0200
+@@ -1288,6 +1288,23 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 	       sdata->dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
+ 	       capab_info, status_code, (u16)(aid & ~(BIT(15) | BIT(14))));
+ 
++	pos = mgmt->u.assoc_resp.variable;
++	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
++
++	if (status_code == WLAN_STATUS_ASSOC_REJECTED_TEMPORARILY &&
++	    elems.assoc_comeback && elems.assoc_comeback_len == 4) {
++		u32 tu, ms;
++		tu = get_unaligned_le32(elems.assoc_comeback);
++		ms = tu * 1024 / 1000;
++		printk(KERN_DEBUG "%s: AP rejected association temporarily; "
++		       "comeback duration %u TU (%u ms)\n",
++		       sdata->dev->name, tu, ms);
++		if (ms > IEEE80211_ASSOC_TIMEOUT)
++			mod_timer(&ifsta->timer,
++				  jiffies + msecs_to_jiffies(ms));
++		return;
++	}
++
+ 	if (status_code != WLAN_STATUS_SUCCESS) {
+ 		printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
+ 		       sdata->dev->name, status_code);
+@@ -1303,9 +1320,6 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 		       "set\n", sdata->dev->name, aid);
+ 	aid &= ~(BIT(15) | BIT(14));
+ 
+-	pos = mgmt->u.assoc_resp.variable;
+-	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
+-
+ 	if (!elems.supp_rates) {
+ 		printk(KERN_DEBUG "%s: no SuppRates element in AssocResp\n",
+ 		       sdata->dev->name);
+--- wireless-testing.orig/net/mac80211/util.c	2008-12-31 16:45:07.000000000 +0200
++++ wireless-testing/net/mac80211/util.c	2008-12-31 17:25:32.000000000 +0200
+@@ -653,6 +653,10 @@ void ieee802_11_parse_elems(u8 *start, s
+ 			elems->pwr_constr_elem = pos;
+ 			elems->pwr_constr_elem_len = elen;
+ 			break;
++		case WLAN_EID_ASSOC_COMEBACK_TIME:
++			elems->assoc_comeback = pos;
++			elems->assoc_comeback_len = elen;
++			break;
+ 		default:
+ 			break;
+ 		}
+
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
