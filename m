@@ -1,80 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39283 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751395AbYLRMdF (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:2242 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752957AbYLaJbP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2008 07:33:05 -0500
-Date: Thu, 18 Dec 2008 14:33:00 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Fixed RX decryption status reporting
-Message-ID: <20081218123300.GB32267@jm.kir.nu> (sfid-20081218_133309_294392_ECFF980C)
+	Wed, 31 Dec 2008 04:31:15 -0500
+Message-ID: <a32f33a40812310131o3207f10p2499b129d2701f3a@mail.gmail.com> (sfid-20081231_103121_542062_83D639EA)
+Date: Wed, 31 Dec 2008 10:31:13 +0100
+From: "Ivo Van Doorn" <ivdoorn@gmail.com>
+To: "=?ISO-8859-1?Q?Simon_Holm_Th=F8gersen?=" <odie@cs.aau.dk>
+Subject: Re: [PATCH] net/rfkill/rfkill.c: fix unused rfkill_led_trigger() warning
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John Linville" <linville@tuxdriver.com>
+In-Reply-To: <1230714558.24416.1.camel@odie.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1230714558.24416.1.camel@odie.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RX code in ath9k uses sc_keymap to figure out whether a default
-key was used. However, the default key entries in sc_keymap were
-always set and as such, frames could have been claimed to be decrypted
-by hardware when they were not. This can cause problems especially
-with TKIP since mac80211 is validating the Michael MIC in the frame
-and this will result in MIC failure and potentially TKIP
-countermeasures if the frame was not decrypted correctly.
+On Wed, Dec 31, 2008 at 10:09 AM, Simon Holm Th=F8gersen <odie@cs.aau.d=
+k> wrote:
+> commit 4dec9b807be757780ca3611a959ac22c28d292a7 ("rfkill: strip point=
+less
+> notifier chain") removed the only user of rfkill_led_trigger() that w=
+as not
+> guarded by #ifdef CONFIG_RFKILL_LEDS. Therefore, move rfkill_led_trig=
+ger()
+> completely inside #ifdef CONFIG_RFKILL_LEDS and avoid the compile tim=
+e
+> warning:
+>
+> net/rfkill/rfkill.c:59: warning: 'rfkill_led_trigger' defined but not=
+ used
+>
+> Signed-off-by: Simon Holm Th=F8gersen <odie@cs.aau.dk>
 
-Change key cache slot allocation to mark only the keys that really
-have been used in sc_keymap to avoid the issue. The key cache slot
-selection routines are now internally avoiding the slots that may be
-needed for TKIP group keys.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |   26 ++++++++++++--------------
- 1 file changed, 12 insertions(+), 14 deletions(-)
-
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2008-12-18 13:22:57.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2008-12-18 13:23:05.000000000 +0200
-@@ -776,6 +776,18 @@ static int ath_reserve_key_cache_slot(st
- 
- 	/* No partially used TKIP slots, pick any available slot */
- 	for (i = IEEE80211_WEP_NKID; i < sc->sc_keymax; i++) {
-+		/* Do not allow slots that could be needed for TKIP group keys
-+		 * to be used. This limitation could be removed if we know that
-+		 * TKIP will not be used. */
-+		if (i >= 64 && i < 64 + IEEE80211_WEP_NKID)
-+			continue;
-+		if (sc->sc_splitmic) {
-+			if (i >= 32 && i < 32 + IEEE80211_WEP_NKID)
-+				continue;
-+			if (i >= 64 + 32 && i < 64 + 32 + IEEE80211_WEP_NKID)
-+				continue;
-+		}
-+
- 		if (!test_bit(i, sc->sc_keymap))
- 			return i; /* Found a free slot for a key */
- 	}
-@@ -1363,20 +1375,6 @@ static int ath_init(u16 devid, struct at
- 	 */
- 	for (i = 0; i < sc->sc_keymax; i++)
- 		ath9k_hw_keyreset(ah, (u16) i);
--	/*
--	 * Mark key cache slots associated with global keys
--	 * as in use.  If we knew TKIP was not to be used we
--	 * could leave the +32, +64, and +32+64 slots free.
--	 */
--	for (i = 0; i < IEEE80211_WEP_NKID; i++) {
--		set_bit(i, sc->sc_keymap);
--		set_bit(i + 64, sc->sc_keymap);
--		if (ath9k_hw_getcapability(ah, ATH9K_CAP_TKIP_SPLIT,
--					   0, NULL)) {
--			set_bit(i + 32, sc->sc_keymap);
--			set_bit(i + 32 + 64, sc->sc_keymap);
--		}
--	}
- 
- 	/* Collect the channel list using the default country code */
- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> ---
+>  net/rfkill/rfkill.c |    4 +---
+>  1 files changed, 1 insertions(+), 3 deletions(-)
+>
+> diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
+> index 3c94f76..3eaa394 100644
+> --- a/net/rfkill/rfkill.c
+> +++ b/net/rfkill/rfkill.c
+> @@ -54,10 +54,10 @@ static unsigned long rfkill_states_lockdflt[BITS_=
+TO_LONGS(RFKILL_TYPE_MAX)];
+>  static bool rfkill_epo_lock_active;
+>
+>
+> +#ifdef CONFIG_RFKILL_LEDS
+>  static void rfkill_led_trigger(struct rfkill *rfkill,
+>                               enum rfkill_state state)
+>  {
+> -#ifdef CONFIG_RFKILL_LEDS
+>        struct led_trigger *led =3D &rfkill->led_trigger;
+>
+>        if (!led->name)
+> @@ -66,10 +66,8 @@ static void rfkill_led_trigger(struct rfkill *rfki=
+ll,
+>                led_trigger_event(led, LED_OFF);
+>        else
+>                led_trigger_event(led, LED_FULL);
+> -#endif /* CONFIG_RFKILL_LEDS */
+>  }
+>
+> -#ifdef CONFIG_RFKILL_LEDS
+>  static void rfkill_led_trigger_activate(struct led_classdev *led)
+>  {
+>        struct rfkill *rfkill =3D container_of(led->trigger,
+> --
+> 1.6.0.2.526.g5c283
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
