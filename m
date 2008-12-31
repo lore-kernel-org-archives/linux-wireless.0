@@ -1,72 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44129 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753727AbYLIAwR (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46669 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756736AbYLaPmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2008 19:52:17 -0500
-Subject: Re: Userspace tools: Roadmap?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan E <trg_info@mailhaven.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1228783416.25383.1288982771@webmail.messagingengine.com>
-References: <1228692546.8826.1288759933@webmail.messagingengine.com>
-	 (sfid-20081208_002919_244971_30E436F9) <1228723993.22164.65.camel@johannes.berg>
-	 <1228778295.10662.1288975589@webmail.messagingengine.com>
-	 <1228778801.22164.156.camel@johannes.berg>
-	 <1228783416.25383.1288982771@webmail.messagingengine.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nfkR1U6tv6K9+dnEiDE8"
-Date: Tue, 09 Dec 2008 01:51:43 +0100
-Message-Id: <1228783903.22164.166.camel@johannes.berg> (sfid-20081209_015222_761989_1C3CB0A7)
-Mime-Version: 1.0
+	Wed, 31 Dec 2008 10:42:08 -0500
+Message-Id: <20081231154159.677496781@w1.fi> (sfid-20081231_164220_141043_40CB79F5)
+References: <20081231153834.840526845@w1.fi>
+Date: Wed, 31 Dec 2008 17:38:35 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [RFC 01/11] mac80211: 802.11w - STA flag for MFP
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add flags for setting STA entries and struct ieee80211_if_sta to
+indicate whether management frame protection (MFP) is used.
 
---=-nfkR1U6tv6K9+dnEiDE8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-On Mon, 2008-12-08 at 19:43 -0500, Dan E wrote:
 
-> When I reboot, modprobe the driver, and do 'iwconfig wlan0 channel 9
-> commit' the .config callback does run.  If I leave off the 'commit' it
-> does not. =20
+---
+ include/linux/nl80211.h    |    2 ++
+ include/net/cfg80211.h     |    2 ++
+ net/mac80211/cfg.c         |    4 ++++
+ net/mac80211/debugfs_sta.c |    5 +++--
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    7 +++++--
+ net/mac80211/sta_info.h    |    2 ++
+ 7 files changed, 19 insertions(+), 4 deletions(-)
 
-Strange. But .start also runs, right? Something must be turning up the
-interface.
+--- wireless-testing.orig/net/mac80211/mlme.c	2008-12-31 16:47:22.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2008-12-31 16:48:01.000000000 +0200
+@@ -1,6 +1,6 @@
+ /*
+  * BSS client mode implementation
+- * Copyright 2003, Jouni Malinen <jkmaline@cc.hut.fi>
++ * Copyright 2003-2008, Jouni Malinen <j@w1.fi>
+  * Copyright 2004, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+@@ -472,7 +472,7 @@ static void ieee80211_send_deauth_disass
+ 	/* u.deauth.reason_code == u.disassoc.reason_code */
+ 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
+ 
+-	ieee80211_tx_skb(sdata, skb, 0);
++	ieee80211_tx_skb(sdata, skb, ifsta->flags & IEEE80211_STA_MFP_ENABLED);
+ }
+ 
+ /* MLME */
+@@ -1421,6 +1421,9 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 
+ 	rate_control_rate_init(sta);
+ 
++	if (ifsta->flags & IEEE80211_STA_MFP_ENABLED)
++		set_sta_flags(sta, WLAN_STA_MFP);
++
+ 	if (elems.wmm_param)
+ 		set_sta_flags(sta, WLAN_STA_WME);
+ 
+--- wireless-testing.orig/include/linux/nl80211.h	2008-12-31 16:47:22.000000000 +0200
++++ wireless-testing/include/linux/nl80211.h	2008-12-31 16:48:01.000000000 +0200
+@@ -412,12 +412,14 @@ enum nl80211_iftype {
+  * @NL80211_STA_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
+  *	with short barker preamble
+  * @NL80211_STA_FLAG_WME: station is WME/QoS capable
++ * @NL80211_STA_FLAG_MFP: station uses management frame protection
+  */
+ enum nl80211_sta_flags {
+ 	__NL80211_STA_FLAG_INVALID,
+ 	NL80211_STA_FLAG_AUTHORIZED,
+ 	NL80211_STA_FLAG_SHORT_PREAMBLE,
+ 	NL80211_STA_FLAG_WME,
++	NL80211_STA_FLAG_MFP,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_FLAG_AFTER_LAST,
+--- wireless-testing.orig/include/net/cfg80211.h	2008-12-31 16:47:22.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2008-12-31 16:48:01.000000000 +0200
+@@ -112,12 +112,14 @@ struct beacon_parameters {
+  * @STATION_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
+  *	with short preambles
+  * @STATION_FLAG_WME: station is WME/QoS capable
++ * @STATION_FLAG_MFP: station uses management frame protection
+  */
+ enum station_flags {
+ 	STATION_FLAG_CHANGED		= 1<<0,
+ 	STATION_FLAG_AUTHORIZED		= 1<<NL80211_STA_FLAG_AUTHORIZED,
+ 	STATION_FLAG_SHORT_PREAMBLE	= 1<<NL80211_STA_FLAG_SHORT_PREAMBLE,
+ 	STATION_FLAG_WME		= 1<<NL80211_STA_FLAG_WME,
++	STATION_FLAG_MFP		= 1<<NL80211_STA_FLAG_MFP,
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/cfg.c	2008-12-31 16:47:22.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2008-12-31 16:48:01.000000000 +0200
+@@ -630,6 +630,10 @@ static void sta_apply_parameters(struct 
+ 		sta->flags &= ~WLAN_STA_WME;
+ 		if (params->station_flags & STATION_FLAG_WME)
+ 			sta->flags |= WLAN_STA_WME;
++
++		sta->flags &= ~WLAN_STA_MFP;
++		if (params->station_flags & STATION_FLAG_MFP)
++			sta->flags |= WLAN_STA_MFP;
+ 		spin_unlock_bh(&sta->lock);
+ 	}
+ 
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2008-12-31 16:47:22.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2008-12-31 16:48:01.000000000 +0200
+@@ -67,14 +67,15 @@ static ssize_t sta_flags_read(struct fil
+ 	char buf[100];
+ 	struct sta_info *sta = file->private_data;
+ 	u32 staflags = get_sta_flags(sta);
+-	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s",
++	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s%s",
+ 		staflags & WLAN_STA_AUTH ? "AUTH\n" : "",
+ 		staflags & WLAN_STA_ASSOC ? "ASSOC\n" : "",
+ 		staflags & WLAN_STA_PS ? "PS\n" : "",
+ 		staflags & WLAN_STA_AUTHORIZED ? "AUTHORIZED\n" : "",
+ 		staflags & WLAN_STA_SHORT_PREAMBLE ? "SHORT PREAMBLE\n" : "",
+ 		staflags & WLAN_STA_WME ? "WME\n" : "",
+-		staflags & WLAN_STA_WDS ? "WDS\n" : "");
++		staflags & WLAN_STA_WDS ? "WDS\n" : "",
++		staflags & WLAN_STA_MFP ? "MFP\n" : "");
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+ }
+ STA_OPS(flags);
+--- wireless-testing.orig/net/mac80211/sta_info.h	2008-12-31 16:47:22.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2008-12-31 16:48:01.000000000 +0200
+@@ -34,6 +34,7 @@
+  * @WLAN_STA_CLEAR_PS_FILT: Clear PS filter in hardware (using the
+  *	IEEE80211_TX_CTL_CLEAR_PS_FILT control flag) when the next
+  *	frame to this station is transmitted.
++ * @WLAN_STA_MFP: Management frame protection is used with this STA.
+  */
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH		= 1<<0,
+@@ -46,6 +47,7 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_WDS		= 1<<7,
+ 	WLAN_STA_PSPOLL		= 1<<8,
+ 	WLAN_STA_CLEAR_PS_FILT	= 1<<9,
++	WLAN_STA_MFP		= 1<<10,
+ };
+ 
+ #define STA_TID_NUM 16
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2008-12-31 16:47:22.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2008-12-31 16:48:01.000000000 +0200
+@@ -259,6 +259,7 @@ struct mesh_preq_queue {
+ #define IEEE80211_STA_AUTO_CHANNEL_SEL	BIT(12)
+ #define IEEE80211_STA_PRIVACY_INVOKED	BIT(13)
+ #define IEEE80211_STA_TKIP_WEP_USED	BIT(14)
++#define IEEE80211_STA_MFP_ENABLED	BIT(15)
+ /* flags for MLME request */
+ #define IEEE80211_STA_REQ_SCAN 0
+ #define IEEE80211_STA_REQ_DIRECT_PROBE 1
 
-> I'm trying to validate as many callbacks as I can before
-> moving on to the next step, enabling the interface.
->=20
-> An additional question, if I may... Is wlan0 considered a "virtual
-> interface" or does that term only apply to additional interfaces created
-> with iw?  The whole vif thing has me a little confused.
+-- 
 
-Yes, wlan0 is a virtual interface too, the first one.
-
-johannes
-
---=-nfkR1U6tv6K9+dnEiDE8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJPcEbAAoJEKVg1VMiehFYRxgP/2oqKncq5D6G6G9itk+l27cr
-qU6ehXbjP5QS4z+q5try4sOaeynlJXE7CkLP1jPQq1LclPFVjugVTwN6qX/yvMNd
-pZ8wiJa6T6BRPRwTuyVSkT6m4q978zral1UTsW8thH86imbZH/UTJ+PyQXjnh4RQ
-+7GHIvuZWCdxhdTdSHsdKxdPE8CVbHlRJTvPH8SRQ+a5AgCHqbmIdIAwL3plHQvz
-6r4lGGOr3cU1ilbWK/jK4Rj9LyV1SyI0t5X7C5JDDT/3Kx9o/aJLf+kns2XTLPrn
-wOpOJlrT8E9quP80YGHeQq+pUCFm1r1EiEIod/uadjXawqJuiTZJkC0PTiu+eOz2
-5TxpMoEQJ9m5ooujTZ/SPXpj6Dn4pv4cjh73wUzvbQSBNipeNy89gcU2WzP7PpRR
-9oFqQ6qxcPMRS7KG9mAm6NV7uw7XrDRndOtXHmHZRtChXWPjbBWdmlTQ+woKnmDr
-IK3UnKuGkjWhm9ODtKADelCq6Mag1GH7MrbLSiKQvMFnRwbtVTaCqtjguRbs0n9i
-zeQtgaA+FrQJfkUvYiPGpvfVfoCBp5o1hUr+rxVM3UZGKt06NwE8AYGD4uj8w3x/
-LZNp2Eh9cKBVpo6J7spiyb9G+vFVBHpZSo0qhBe7HOG+SNt48xdjlRWbAjTnhiNR
-Ag+q5KD4ukPv9vlISSrU
-=pqjF
------END PGP SIGNATURE-----
-
---=-nfkR1U6tv6K9+dnEiDE8--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
