@@ -1,56 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:3366 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228AbYLEQQY (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42573 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752963AbYLaKTl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2008 11:16:24 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so38440nfc.21
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Dec 2008 08:16:21 -0800 (PST)
-Message-ID: <eb3ff54b0812050816i5ee503b6o6c107ace966b204c@mail.gmail.com> (sfid-20081205_171628_871484_8A5C15F4)
-Date: Fri, 5 Dec 2008 18:16:21 +0200
-From: "Rami Rosen" <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH] iwlwifi: cleanup (remove pm_state)
-Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com,
-	yi.zhu@intel.com, ipw3945-devel@lists.sourceforge.net
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 31 Dec 2008 05:19:41 -0500
+Subject: Re: [PATCH] mac80211: Add 802.11h CSA support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@Atheros.com
+In-Reply-To: <18779.17630.122619.462997@gargle.gargle.HOWL>
+References: <18779.17630.122619.462997@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-X6uDGvzEmpUeYRblRQMU"
+Date: Wed, 31 Dec 2008 11:20:12 +0100
+Message-Id: <1230718812.4065.7.camel@johannes> (sfid-20081231_111945_338527_9CFBE1D7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches removes unused variable (pm_state) from iwl-dev.h and
-from iwl-3945.h. (wireless-testing tree)
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+--=-X6uDGvzEmpUeYRblRQMU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2008-12-31 at 15:39 +0530, Sujith wrote:
+> Move to the advertised channel on reception of
+> a CSA element. This is needed for 802.11h compliance.
+>=20
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+
+One thing I've been wondering about though, should we have a hook into
+the driver to actually stop transmit at a lower level, where possible?
+For example Broadcom hardware we can actually set some value on the chip
+and then let it reject all frames, drain its FIFOs, and then in the
+driver we could schedule those frames again for afterwards.
+
+One other small note:
+
+> +	bss =3D ieee80211_rx_bss_get(sdata->local, ifsta->bssid,
+> +				   sdata->local->hw.conf.channel->center_freq,
+> +				   ifsta->ssid, ifsta->ssid_len);
+> +	if (!bss)
+> +		goto exit;
+> +
+> +	if (!ieee80211_hw_config(sdata->local, IEEE80211_CONF_CHANGE_CHANNEL))
+> +		bss->freq =3D sdata->local->oper_channel->center_freq;
+
+This looks a little odd. (read on)
 
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h
-b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index 5c2c15e..b7f31d6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -906,9 +906,6 @@ struct iwl3945_priv {
- 	s8 user_txpower_limit;
- 	s8 max_channel_txpower_limit;
+> +void ieee80211_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+> +				  struct ieee80211_channel_sw_ie *sw_elem,
+> +				  struct ieee80211_bss *bss)
+> +{
+> +	struct ieee80211_channel *new_ch;
+> +	struct ieee80211_if_sta *ifsta =3D &sdata->u.sta;
+> +	int new_freq =3D ieee80211_channel_to_frequency(sw_elem->new_ch_num);
+> +	int exp;
+> +
+> +	/* FIXME: Handle ADHOC later */
+> +	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
+> +		return;
+> +
+> +	if (ifsta->state !=3D IEEE80211_STA_MLME_ASSOCIATED)
+> +		return;
+> +
+> +	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
+> +		return;
+> +
+> +	/* Disregard subsequent beacons if we are already running a timer
+> +	   processing a CSA */
+> +
+> +	if (ifsta->flags & IEEE80211_STA_CSA_RECEIVED)
+> +		return;
+> +
+> +	new_ch =3D ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
+> +	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED)
+> +		return;
+> +
+> +	sdata->local->oper_channel =3D new_ch;
 
--#ifdef CONFIG_PM
--	u32 pm_state[16];
--#endif
+Here you're setting oper_channel, but is that really the right thing to
+do? That means any hw config call that comes in between this and later
+will already switch to that channel, and hw config can happen for
+various other reasons, for instance PS mode stuff. I think we may need
+to have a separate variable?
 
- #ifdef CONFIG_IWL3945_DEBUG
- 	/* debugging info */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h
-b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index a19fbb5..2df36e9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1003,9 +1003,6 @@ struct iwl_priv {
- 	s8 tx_power_user_lmt;
- 	s8 tx_power_channel_lmt;
+johannes
 
--#ifdef CONFIG_PM
--	u32 pm_state[16];
--#endif
+--=-X6uDGvzEmpUeYRblRQMU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	/* debugging info */
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJW0dZAAoJEKVg1VMiehFYxfsQAL4YFZKCuvRO8l8sZKqnaWGD
+qZdzUX+e357yEF0oQ9/xqyCGKvaFr/58+VO2ShmEc+RU0OljmdjzIev1LyHspG3M
+qG67XEmyN95BUYus+unPpL/qNMqh7BGQaOCbIuxiwEc0UXAS5Qbkd+xVLp9jH0WV
+BAnCYwB7A+BXIe5OtY2GcKrPIlqLuIYe1/TZMcR+n/N8tVWoxvwpEEfHGe/VBiF5
+qwcPDj2qj9wIKSnTebYYfHKkHHwUK8Xpe8RtD991mgMjXdKp/MvoMLgtwyzFnYdE
+IiTLpfl0d0kYCAICflc3WPVYSbpRpOSn8ehgIn0F9onj7s86/xr+xb4XKb/GCRkt
+wFF4O49Jziw/8qF57qK6YYzuMiRxhjGDpx46Fho3SKNIFExJthJ/XA2fSQBeEGqF
+yTqeTNlz7d2joU80ljbUFdRY9DWAWyLulOPPq4fj1UdKpC/uo88FszbCE3KVMx+h
+U79gG6mP/DJEaCMFj6rlM10dUgZfgMTWfcKAOKMWuQCbJJNwaDHizzGlD5Xz1XGI
+Xgv2PRrpOeZs03RUdXXAO5FoKOR82w8EJ1Tq9bhdA5lbnKK2bbyKNRSnEEuUviUz
+1F/Ze6FtzyDRagTzrcsUiE3VazKVil4kOTup8kRibDssL29j0zeYzlycPvY5QpoA
+5lck7cedYmNDkuczTiH5
+=4+BE
+-----END PGP SIGNATURE-----
+
+--=-X6uDGvzEmpUeYRblRQMU--
+
