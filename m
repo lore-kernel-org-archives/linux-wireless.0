@@ -1,52 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56871 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751747AbZA0Vas (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:40826 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752326AbYLaXAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 16:30:48 -0500
-Date: Tue, 27 Jan 2009 16:25:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: Bob Copeland <bcopeland@gmail.com>, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Set TSF fix
-Message-ID: <20090127212557.GC11849@tuxdriver.com> (sfid-20090127_223057_291196_488C184A)
-References: <20090124081223.50440@gmx.net> <b6c5339f0901250841r22635bd7q40532891293a6744@mail.gmail.com> <1232901917.3837.0.camel@johannes.local> <b6c5339f0901250847i5f9f98bcl4ebec04027d7c93c@mail.gmail.com> <20090126140130.14450@gmx.net>
+	Wed, 31 Dec 2008 18:00:14 -0500
+Message-ID: <495BF975.7030603@lwfinger.net> (sfid-20090101_000022_882721_C0F57A0E)
+Date: Wed, 31 Dec 2008 17:00:05 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090126140130.14450@gmx.net>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+CC: htl10@users.sourceforge.net,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
+References: <348894.23448.qm@web23108.mail.ird.yahoo.com> <495B82CB.6050205@tuffmail.co.uk> <495BC8F9.4040203@lwfinger.net>
+In-Reply-To: <495BC8F9.4040203@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 26, 2009 at 03:01:30PM +0100, Alina Friedrichsen wrote:
-> Hello!
-> 
-> > > Either way, I think the changelog should back up the claim by
-> > > _something_. Even if it's just "tested on device XXX, old way doesn't
-> > > work, new way does" or "looked at legacy HAL code" or ...
-> > 
-> > Agreed, "tested on..." would be good.  I looked at the HAL and it
-> > doesn't have a set tsf function, only reset.
-> 
-> The old code does not work on:
-> AR5418+AR2122 (ath9k)
-> AR5416+AR2133 (ath9k)
-> 
-> The new code is tested on:
-> AR5418+AR2122 (ath9k)
-> AR5416+AR2133 (ath9k)
-> AR5001X+ (ath5k)
-> AR5007EG (ath5k)
-> 
-> The old code was taken from:
-> https://dev.openwrt.org/browser/trunk/package/madwifi/patches/383-ibss_hostap.patch
-> (by Sven-Ola Tuecke)
+Here is a second try at a suspend/resume patch for rtl8187. This one
+also seems a bit too easy; however, it did work for me, at least for
+STD. I now realize that my machine didn't power off in my previous
+test. This time I manually turned it off before restarting. My
+computer still doesn't STR, thus that was not tested.
 
-Could you resubmit this patch with some/all of the above information
-incorporated into the changelog?  I'm dropping the current version
-(with limited changelog) just to avoid my own confusion.
+Larry
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+=============
+
+
+
+
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1464,6 +1464,28 @@ static int __devinit rtl8187_probe(struc
+ 	return err;
+ }
+
++#ifdef CONFIG_PM
++
++static int rtl8187_suspend(struct usb_interface *intf, pm_message_t
+state)
++{
++	struct ieee80211_hw *dev = usb_get_intfdata(intf);
++
++	rtl8187_stop(dev);
++
++	return 0;
++}
++
++static int rtl8187_resume(struct usb_interface *intf)
++{
++	struct ieee80211_hw *dev = usb_get_intfdata(intf);
++
++	rtl8187_start(dev);
++
++	return 0;
++}
++
++#endif /* CONFIG_PM */
++
+ static void __devexit rtl8187_disconnect(struct usb_interface *intf)
+ {
+ 	struct ieee80211_hw *dev = usb_get_intfdata(intf);
+@@ -1484,6 +1506,10 @@ static struct usb_driver rtl8187_driver
+ 	.id_table	= rtl8187_table,
+ 	.probe		= rtl8187_probe,
+ 	.disconnect	= __devexit_p(rtl8187_disconnect),
++#ifdef CONFIG_PM
++	.suspend	= rtl8187_suspend,
++	.resume		= rtl8187_resume,
++#endif /* CONFIG_PM */
+ };
+
+ static int __init rtl8187_init(void)
+
