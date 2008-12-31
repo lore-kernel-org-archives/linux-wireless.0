@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:44083 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078AbYLPRj4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 12:39:56 -0500
-Subject: Re: [PATCH 3/3] libertas: if_spi, driver for libertas GSPI devices
-From: Dan Williams <dcbw@redhat.com>
-To: Angel Roman <angel.roman@mdesystems.com>
-Cc: Colin McCabe <colin@cozybit.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org,
-	Andrey Yurovsky <andrey@cozybit.com>
-In-Reply-To: <4947241F.10305@mdesystems.com>
-References: <1229398052-27465-1-git-send-email-colin@cozybit.com>
-	 <1229398052-27465-2-git-send-email-colin@cozybit.com>
-	 <1229398052-27465-3-git-send-email-colin@cozybit.com>
-	 <1229398052-27465-4-git-send-email-colin@cozybit.com>
-	 <4947241F.10305@mdesystems.com>
-Content-Type: text/plain
-Date: Tue, 16 Dec 2008 12:38:49 -0500
-Message-Id: <1229449129.7307.51.camel@localhost.localdomain> (sfid-20081216_184000_232315_F5D11739)
-Mime-Version: 1.0
+Received: from ti-out-0910.google.com ([209.85.142.186]:58769 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751452AbYLaKnt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2008 05:43:49 -0500
+Received: by ti-out-0910.google.com with SMTP id b6so8331962tic.23
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2008 02:43:47 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18779.19560.719396.912447@localhost.localdomain> (sfid-20081231_114353_963955_C881CEAC)
+Date: Wed, 31 Dec 2008 16:11:44 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@Atheros.com
+Subject: Re: [PATCH] mac80211: Add 802.11h CSA support
+In-Reply-To: <1230718812.4065.7.camel@johannes>
+References: <18779.17630.122619.462997@gargle.gargle.HOWL>
+	<1230718812.4065.7.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2008-12-15 at 22:44 -0500, Angel Roman wrote:
-> Hi Colin,
+Johannes Berg wrote:
+> On Wed, 2008-12-31 at 15:39 +0530, Sujith wrote:
+> > Move to the advertised channel on reception of
+> > a CSA element. This is needed for 802.11h compliance.
+> > 
+> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 > 
-> I have support for the gspi as well. I've been trying to get in contact 
-> with Dan Williams in order to contribute it to the list.
+> One thing I've been wondering about though, should we have a hook into
+> the driver to actually stop transmit at a lower level, where possible?
+> For example Broadcom hardware we can actually set some value on the chip
+> and then let it reject all frames, drain its FIFOs, and then in the
+> driver we could schedule those frames again for afterwards.
 
-Sorry about that... it's in my queue and I'll try to get to do some
-review in the next few days.  Doing the new interface isn't a ton of
-code, and I'd expect both yours and Colin's drivers to be quite similar
-as there's only a few ways this thing can be done :)
+I think that is needed only when handling Quiet IE, which I was planning to work
+on separately, with a notification to the driver to stop transmission completely for a period of time.
 
-The submission process is basically just like Colin did; generate a
-series of patches of your latest code (split into independent patches if
-possible) based on a kernel version (ideally the latest kernel version
-or better yet, wireless-testing.git) and then post it to linux-wireless
-and maybe cc libertas-dev as well.
-
-> If you want, you can take a look at the code via:
+> > +	sdata->local->oper_channel = new_ch;
 > 
->  svn list -R 
-> svn://svn.buglabs.net/bug/trunk/bug-linux-2.6.27.2/drivers/net/wireless/libertas 
-> 
-> 
-> This is currently working in the mx31 processor. Maybe we can work out a 
-> way to merge the two drivers. The mx31 was a little tricky since there's 
-> an error in the processor where one is not able to keep the chip select 
-> signal active during multiple spi transfers as requried by the wifi 
-> module. I've also abstracted the board interface from the GSPI code as 
-> much as I could.
+> Here you're setting oper_channel, but is that really the right thing to
+> do? That means any hw config call that comes in between this and later
+> will already switch to that channel, and hw config can happen for
+> various other reasons, for instance PS mode stuff. I think we may need
+> to have a separate variable?
 
-Is there a generic SPI layer that could be used for the board-specific
-bits too, rather than putting that stuff in the libertas tree?  I assume
-that the SPI bus is more or less generic on your hardware (ie you could
-put something else on the other end instead of the 8686), and thus it
-would be better if we could figure out way not to put some much board
-specific logic into the libertas driver itself.
+Right, a *switch_to in sdata would suffice, I guess.
+I'll send an updated patch.
 
-Dan
-
+Sujith
