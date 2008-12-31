@@ -1,156 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ti-out-0910.google.com ([209.85.142.185]:56499 "EHLO
-	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751301AbYLFRyT (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46848 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755942AbYLaPmp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2008 12:54:19 -0500
-Received: by ti-out-0910.google.com with SMTP id b6so348077tic.23
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Dec 2008 09:54:17 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18746.48068.593834.660064@localhost.localdomain> (sfid-20081206_185432_464908_BAEB1D03)
-Date: Sat, 6 Dec 2008 23:22:04 +0530
-To: Mats Johannesson <spamcan1@abrasax.se>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [ath9k] 2.6.28-rc7-wl Kernel panic when "iwlist ath0 scan" as
- root
-In-Reply-To: <20081206180537.717d1791@loke.fish.not>
-References: <20081206113406.734f1d94@loke.fish.not>
-	<18746.37273.989918.333164@localhost.localdomain>
-	<20081206180537.717d1791@loke.fish.not>
+	Wed, 31 Dec 2008 10:42:45 -0500
+Message-Id: <20081231154237.228873645@w1.fi> (sfid-20081231_170904_289071_5B6A0F9B)
+References: <20081231153834.840526845@w1.fi>
+Date: Wed, 31 Dec 2008 17:38:44 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [RFC 10/11] mac80211: 802.11w - Drop unprotected robust management frames if MFP is used
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mats Johannesson wrote:
-> It fixes the kernel panic with root "iwlist ath0 scan" but after that
-> the network dies without a sign of any kind (iwlist, ifconfig etc is
-> normal, nothing in logs). Tried several times. Boot -> ping local and
-> remote machine OK -> "iwlist ath0 scan" -> ping nonfunctional: 'no
-> route to host' or some such message.
-> 
+Use ieee80211_drop_unencrypted() to decide whether a received frame
+should be dropped with management frames, too. If MFP is negotiated,
+unprotected robust management frames will be dropped.
 
-Ok, thanks for testing.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Can you check if this patch makes the connection stable ?
-Please apply on top of the earlier patch.
 
-diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
-index d874223..9e5c0c0 100644
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -106,7 +106,7 @@ static void ath_beacon_setup(struct ath_softc *sc,
- 	 * XXX everything at min xmit rate
- 	 */
- 	rix = 0;
--	rt = sc->hw_rate_table[sc->sc_curmode];
-+	rt = sc->cur_rate_table;
- 	rate = rt->info[rix].ratecode;
- 	if (sc->sc_flags & SC_OP_PREAMBLE_SHORT)
- 		rate |= rt->info[rix].short_preamble;
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 726d0a3..23844e0 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -646,7 +646,6 @@ struct ath_softc {
- 	u8 sc_tx_chainmask;
- 	u8 sc_rx_chainmask;
- 	enum ath9k_int sc_imask;
--	enum wireless_mode sc_curmode;
- 	enum PROT_MODE sc_protmode;
+---
+ net/mac80211/rx.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+--- wireless-testing.orig/net/mac80211/rx.c	2008-12-31 17:17:04.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2008-12-31 17:20:37.000000000 +0200
+@@ -1703,6 +1703,9 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 		return RX_DROP_MONITOR;
  
- 	u8 sc_nbcnvaps;
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 08f2949..5c6a1b0 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -60,7 +60,8 @@ static void bus_read_cachesize(struct ath_softc *sc, int *csz)
++	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
++		return RX_DROP_MONITOR;
++
+ 	/* all categories we currently handle have action_code */
+ 	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
+ 		return RX_DROP_MONITOR;
+@@ -1773,10 +1776,14 @@ static ieee80211_rx_result debug_noinlin
+ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
++	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
  
- static void ath_setcurmode(struct ath_softc *sc, enum wireless_mode mode)
- {
--	sc->sc_curmode = mode;
-+	if (!sc->sc_curaid)
-+		sc->cur_rate_table = sc->hw_rate_table[mode];
- 	/*
- 	 * All protection frames are transmited at 2Mb/s for
- 	 * 11g, otherwise at 1Mb/s.
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 8eec667..0ae5988 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -874,9 +874,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 	 * So, set fourth rate in series to be same as third one for
- 	 * above conditions.
- 	 */
--	if ((sc->sc_curmode == ATH9K_MODE_11NG_HT20) ||
--	    (sc->sc_curmode == ATH9K_MODE_11NG_HT40PLUS) ||
--	    (sc->sc_curmode == ATH9K_MODE_11NG_HT40MINUS)) {
-+	if ((sc->hw->conf.channel->band == IEEE80211_BAND_2GHZ) &&
-+	    (sc->hw->conf.ht.enabled)) {
- 		u8 dot11rate = rate_table->info[rix].dot11rate;
- 		u8 phy = rate_table->info[rix].phy;
- 		if (i == 4 &&
-@@ -1354,8 +1353,8 @@ static void ath_rc_init(struct ath_softc *sc,
- 						   sta->ht_cap.ht_supported,
- 						   is_cw_40);
- 	} else if (sc->sc_ah->ah_opmode == NL80211_IFTYPE_AP) {
--		/* sc_curmode would be set on init through config() */
--		rate_table = sc->hw_rate_table[sc->sc_curmode];
-+		/* cur_rate_table would be set on init through config() */
-+		rate_table = sc->cur_rate_table;
- 	}
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 		return RX_DROP_MONITOR;
  
- 	if (!rate_table) {
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index ec7edac..8aa8614 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -147,7 +147,7 @@ static int ath_rx_prepare(struct sk_buff *skb, struct ath_desc *ds,
- 			  struct ieee80211_rx_status *rx_status, bool *decrypt_error,
- 			  struct ath_softc *sc)
- {
--	struct ath_rate_table *rate_table = sc->hw_rate_table[sc->sc_curmode];
-+	struct ath_rate_table *rate_table = sc->cur_rate_table;
- 	struct ieee80211_hdr *hdr;
- 	int ratekbps, rix;
- 	u8 ratecode;
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 9de27c6..353b7ed 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -493,7 +493,7 @@ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
- static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, struct ath_buf *bf,
- 			    int width, int half_gi, bool shortPreamble)
- {
--	struct ath_rate_table *rate_table = sc->hw_rate_table[sc->sc_curmode];
-+	struct ath_rate_table *rate_table = sc->cur_rate_table;
- 	u32 nbits, nsymbits, duration, nsymbols;
- 	u8 rc;
- 	int streams, pktlen;
-@@ -557,7 +557,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
- 	}
++	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
++		return RX_DROP_MONITOR;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif))
+ 		return ieee80211_mesh_rx_mgmt(sdata, rx->skb, rx->status);
  
- 	/* get the cix for the lowest valid rix */
--	rt = sc->hw_rate_table[sc->sc_curmode];
-+	rt = sc->cur_rate_table;
- 	for (i = 3; i >= 0; i--) {
- 		if (rates[i].count && (rates[i].idx >= 0)) {
- 			rix = rates[i].idx;
-@@ -1240,7 +1240,7 @@ static u32 ath_lookup_rate(struct ath_softc *sc,
- 			   struct ath_buf *bf,
- 			   struct ath_atx_tid *tid)
- {
--	struct ath_rate_table *rate_table = sc->hw_rate_table[sc->sc_curmode];
-+	struct ath_rate_table *rate_table = sc->cur_rate_table;
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *tx_info;
- 	struct ieee80211_tx_rate *rates;
-@@ -1308,7 +1308,7 @@ static int ath_compute_num_delims(struct ath_softc *sc,
- 				  struct ath_buf *bf,
- 				  u16 frmlen)
- {
--	struct ath_rate_table *rt = sc->hw_rate_table[sc->sc_curmode];
-+	struct ath_rate_table *rt = sc->cur_rate_table;
- 	struct sk_buff *skb = bf->bf_mpdu;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	u32 nsymbits, nsymbols, mpdudensity;
+
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
