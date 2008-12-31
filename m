@@ -1,117 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37081 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752245AbYLVDis (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2008 22:38:48 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 07/10] iwlwifi: move sysfs status entry to debugfs
-Date: Mon, 22 Dec 2008 11:31:20 +0800
-Message-Id: <1229916683-9772-8-git-send-email-yi.zhu@intel.com> (sfid-20081222_043856_071280_9D50B798)
-In-Reply-To: <1229916683-9772-7-git-send-email-yi.zhu@intel.com>
-References: <1229916683-9772-1-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-2-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-3-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-4-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-5-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-6-git-send-email-yi.zhu@intel.com>
- <1229916683-9772-7-git-send-email-yi.zhu@intel.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46709 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755144AbYLaPmZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2008 10:42:25 -0500
+Message-Id: <20081231154217.012384698@w1.fi> (sfid-20081231_164228_827006_DCBD1747)
+References: <20081231153834.840526845@w1.fi>
+Date: Wed, 31 Dec 2008 17:38:39 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [RFC 05/11] mac80211: 802.11w - WEXT parameter for setting mgmt cipher
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+Add a new IW_AUTH parameter for setting cipher suite for
+multicast/broadcast management frames. This is for full-mac drivers
+that take care of RSN IE generation for (re)association request frames.
 
-This patch moves priv->status sysfs entry to debugfs. It is for
-debugging only anyway.
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c     |   11 -----------
- drivers/net/wireless/iwlwifi/iwl-debug.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   10 +++++++++-
- 3 files changed, 10 insertions(+), 12 deletions(-)
+ include/linux/wireless.h |    5 ++++-
+ net/mac80211/wext.c      |    1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 05cd04c..ecf8141 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3667,16 +3667,6 @@ static ssize_t show_statistics(struct device *d,
+--- wireless-testing.orig/include/linux/wireless.h	2008-12-31 17:08:47.000000000 +0200
++++ wireless-testing/include/linux/wireless.h	2008-12-31 17:10:50.000000000 +0200
+@@ -577,18 +577,21 @@
+ #define IW_AUTH_RX_UNENCRYPTED_EAPOL	8
+ #define IW_AUTH_ROAMING_CONTROL		9
+ #define IW_AUTH_PRIVACY_INVOKED		10
++#define IW_AUTH_CIPHER_GROUP_MGMT	11
  
- static DEVICE_ATTR(statistics, S_IRUGO, show_statistics, NULL);
+ /* IW_AUTH_WPA_VERSION values (bit field) */
+ #define IW_AUTH_WPA_VERSION_DISABLED	0x00000001
+ #define IW_AUTH_WPA_VERSION_WPA		0x00000002
+ #define IW_AUTH_WPA_VERSION_WPA2	0x00000004
  
--static ssize_t show_status(struct device *d,
--			   struct device_attribute *attr, char *buf)
--{
--	struct iwl_priv *priv = (struct iwl_priv *)d->driver_data;
--	if (!iwl_is_alive(priv))
--		return -EAGAIN;
--	return sprintf(buf, "0x%08x\n", (int)priv->status);
--}
--
--static DEVICE_ATTR(status, S_IRUGO, show_status, NULL);
+-/* IW_AUTH_PAIRWISE_CIPHER and IW_AUTH_GROUP_CIPHER values (bit field) */
++/* IW_AUTH_PAIRWISE_CIPHER, IW_AUTH_GROUP_CIPHER, and IW_AUTH_CIPHER_GROUP_MGMT
++ * values (bit field) */
+ #define IW_AUTH_CIPHER_NONE	0x00000001
+ #define IW_AUTH_CIPHER_WEP40	0x00000002
+ #define IW_AUTH_CIPHER_TKIP	0x00000004
+ #define IW_AUTH_CIPHER_CCMP	0x00000008
+ #define IW_AUTH_CIPHER_WEP104	0x00000010
++#define IW_AUTH_CIPHER_AES_CMAC	0x00000020
  
- /*****************************************************************************
-  *
-@@ -3732,7 +3722,6 @@ static struct attribute *iwl_sysfs_entries[] = {
- 	&dev_attr_power_level.attr,
- 	&dev_attr_retry_rate.attr,
- 	&dev_attr_statistics.attr,
--	&dev_attr_status.attr,
- 	&dev_attr_temperature.attr,
- 	&dev_attr_tx_power.attr,
- #ifdef CONFIG_IWLWIFI_DEBUG
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 798f946..057781c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -72,6 +72,7 @@ struct iwl_debugfs {
- 		struct dentry *file_tx_statistics;
- 		struct dentry *file_log_event;
- 		struct dentry *file_channels;
-+		struct dentry *file_status;
- 	} dbgfs_data_files;
- 	struct dir_rf_files {
- 		struct dentry *file_disable_sensitivity;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index ecb3900..61949c8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -63,6 +63,14 @@
- 		goto err;                                               \
- } while (0)
- 
-+#define DEBUGFS_ADD_X32(name, parent, ptr) do {                        \
-+	dbgfs->dbgfs_##parent##_files.file_##name =                     \
-+	debugfs_create_x32(#name, 0444, dbgfs->dir_##parent, ptr);     \
-+	if (IS_ERR(dbgfs->dbgfs_##parent##_files.file_##name)		\
-+			|| !dbgfs->dbgfs_##parent##_files.file_##name)	\
-+		goto err;                                               \
-+} while (0)
-+
- #define DEBUGFS_REMOVE(name)  do {              \
- 	debugfs_remove(name);                   \
- 	name = NULL;                            \
-@@ -419,7 +427,6 @@ static ssize_t iwl_dbgfs_channels_read(struct file *file, char __user *user_buf,
- 	return ret;
- }
- 
--
- DEBUGFS_READ_WRITE_FILE_OPS(sram);
- DEBUGFS_WRITE_FILE_OPS(log_event);
- DEBUGFS_READ_FILE_OPS(eeprom);
-@@ -461,6 +468,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- 	DEBUGFS_ADD_FILE(rx_statistics, data);
- 	DEBUGFS_ADD_FILE(tx_statistics, data);
- 	DEBUGFS_ADD_FILE(channels, data);
-+	DEBUGFS_ADD_X32(status, data, (u32 *)&priv->status);
- 	DEBUGFS_ADD_BOOL(disable_sensitivity, rf, &priv->disable_sens_cal);
- 	DEBUGFS_ADD_BOOL(disable_chain_noise, rf,
- 			 &priv->disable_chain_noise_cal);
+ /* IW_AUTH_KEY_MGMT values (bit field) */
+ #define IW_AUTH_KEY_MGMT_802_1X	1
+--- wireless-testing.orig/net/mac80211/wext.c	2008-12-31 17:08:47.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2008-12-31 17:10:50.000000000 +0200
+@@ -913,6 +913,7 @@ static int ieee80211_ioctl_siwauth(struc
+ 	case IW_AUTH_WPA_ENABLED:
+ 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
+ 	case IW_AUTH_KEY_MGMT:
++	case IW_AUTH_CIPHER_GROUP_MGMT:
+ 		break;
+ 	case IW_AUTH_CIPHER_PAIRWISE:
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+
 -- 
-1.5.3.6
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
