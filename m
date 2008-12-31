@@ -1,251 +1,424 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56092 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbYLLUPN (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46675 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756678AbYLaPmR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2008 15:15:13 -0500
-Date: Fri, 12 Dec 2008 15:08:06 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2008-12-12
-Message-ID: <20081212200806.GA3768@tuxdriver.com> (sfid-20081212_211519_631356_09C3F8D5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 31 Dec 2008 10:42:17 -0500
+Message-Id: <20081231154208.047037431@w1.fi> (sfid-20081231_164221_963026_DC5AB934)
+References: <20081231153834.840526845@w1.fi>
+Date: Wed, 31 Dec 2008 17:38:37 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [RFC 03/11] mac80211: 802.11w - Add BIP (AES-128-CMAC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Implement Broadcast/Multicast Integrity Protocol for management frame
+protection. This patch adds the needed definitions for the new
+information element (MMIE) and implementation for the new "encryption"
+type (though, BIP is actually not encrypting data, it provides only
+integrity protection). These routines will be used by a follow-on patch
+that enables BIP for multicast/broadcast robust management frames.
 
-Here is another batch of wireless updates intended for 2.6.29.  As
-usual, mostly driver updates with a smattering of mac80211 bits as well.
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
 
 ---
+ include/linux/ieee80211.h  |   10 +++
+ net/mac80211/Makefile      |    1 
+ net/mac80211/aes_cmac.c    |  135 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/aes_cmac.h    |   19 ++++++
+ net/mac80211/ieee80211_i.h |    2 
+ net/mac80211/key.h         |   10 +++
+ net/mac80211/wpa.c         |  125 +++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/wpa.h         |    5 +
+ 8 files changed, 306 insertions(+), 1 deletion(-)
 
-The following changes since commit 7a3c66e2d322c638e9306e739d96b2192dacde88:
-  Daniel Silverstone (1):
-        net: Add support for the KS8695 ethernet devices.
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
-
-Abbas, Mohamed (1):
-      iwl3945: Fix rate scale for B-mode connection
-
-Anna Neal (1):
-      libertas: Create sysfs entry for changing the mesh probe response limit
-
-Bob Copeland (1):
-      ath5k: fix endianness of bitwise ops when installing mic
-
-Christian Lamparter (4):
-      p54usb: rewriting rx/tx routines to make use of usb_anchor's facilities
-      mac80211: integrate sta_notify_ps cmds into sta_notify
-      p54: enforce strict tx_queue limits
-      p54: fix oops on faulty devices
-
-David Kilroy (3):
-      orinoco: Fix function names used in debug strings
-      orinoco: Fix inappropriate use of IRQ_BAP
-      spectrum_cs: Fix function names used in debug strings
-
-Halperin, Daniel C (1):
-      iwlwifi: implement iwl_debug_report_frame for iwlagn
-
-Helmut Schaa (1):
-      ipw2200: fix scanning while associated
-
-Johannes Berg (7):
-      mac80211: improve sta_notify documentation
-      cfg80211: fix nl80211 frequency handling
-      mac80211: only create default STA interface if supported
-      ath9k: remove fragmentation workaround again
-      mac80211: remove fragmentation offload functionality
-      mac80211/cfg80211: check endianness in sparse runs
-      rfkill: strip pointless notifier chain
-
-John W. Linville (1):
-      ieee80211_security: correct warning about width of auth_mode
-
-Jouni Malinen (4):
-      ath9k: Free Beacon skbs in AP mode
-      ath9k: Disable staggered Beacon frame scheduling
-      mac80211: Disable requests for new scans in AP mode
-      ath9k: Do not remove header padding on RX from short frames
-
-Larry Finger (3):
-      rtl8187: Improve wireless statistics for RTL8187
-      rtl8187: Use usb anchor facilities to manage urbs
-      b43legacy: Fix sparse warnings
-
-Mohamed Abbas (1):
-      iwlwifi: fix resume while txpower off
-
-Pavel Roskin (1):
-      airport: remove useless return in a function returning void
-
-Rami Rosen (4):
-      iwlwifi: cleanup (remove pm_state)
-      iwlwifi: fix build error (iwl-rx.c).
-      mac80211: misc cleanups
-      iwlwifi: fix build warning (iwl-rx.c)
-
-Reinette Chatre (1):
-      mac80211: remove WARN_ON() from ieee80211_hw_config
-
-Senthil Balasubramanian (7):
-      wireless: Incorrect LEAP authentication algorithm identifier.
-      ath9k: Adding AR9285 chipset register information.
-      ath9k: Adding initvalues for Atheros AR9285 chipset.
-      ath9k: Adding support for Atheros AR9285 chipset.
-      ath9k: Incorrect band enum causes invalid antenna configuration.
-      ath9k: avoid rx frames with corrupted descriptor.
-      ath9k: BH shouldn't be enabled when hardirqs are disabled.
-
-Sujith (6):
-      ath9k: Fix bug in rate table management
-      ath9k: Maintain rate table choice after association
-      ath9k: Add a debugfs file to show interrupt statistics
-      ath9k: Remove remaining occurrences of CONFIG_SLOW_ANT_DIV
-      ath9k: Merge structures ath_atx, ath_node_aggr with ath_node
-      ath9k: Refactor struct ath_softc
-
-Tomas Winkler (4):
-      iwlwifi: remove unused clip_groups priv member
-      iwlwifi: remove includes of iwl-helpers.h where not needed
-      iwlwifi: remove 4965 from common uCode API structures
-      iwlwifi: add contact email to MODULE_AUTHOR
-
-Winkler, Tomas (4):
-      iwlwifi: change email contact information
-      iwlifi: remove twice defined SINGLE_FRAME RX FH MASK
-      iwlwifi: 3945 remove qos module parameter
-      iwlwifi: remove qos module parameter
-
-Zhu, Yi (5):
-      iwlwifi: fix time interval misuse in iwl_poll_{direct_}bit
-      iwlwifi: fix "MAC in deep sleep" error
-      iwlwifi: iwl_poll_{direct_}bit cleanup
-      iwlwifi: use rmb/wmb to protect indirect mmio operation
-      iwlwifi: use iwl_poll_direct_bit in EEPROM reading
-
- drivers/net/wireless/ath5k/pcu.c                  |    4 +-
- drivers/net/wireless/ath9k/ath9k.h                |    1 +
- drivers/net/wireless/ath9k/beacon.c               |   97 +-
- drivers/net/wireless/ath9k/calib.c                |   98 ++
- drivers/net/wireless/ath9k/core.h                 |  356 +++--
- drivers/net/wireless/ath9k/debug.c                |  102 ++
- drivers/net/wireless/ath9k/eeprom.c               | 1826 +++++++++++++++++----
- drivers/net/wireless/ath9k/hw.c                   |  115 +-
- drivers/net/wireless/ath9k/hw.h                   |  140 ++-
- drivers/net/wireless/ath9k/initvals.h             | 1363 +++++++++++++++
- drivers/net/wireless/ath9k/mac.c                  |    5 +-
- drivers/net/wireless/ath9k/main.c                 |   80 +-
- drivers/net/wireless/ath9k/phy.h                  |    5 +
- drivers/net/wireless/ath9k/rc.c                   |   18 +-
- drivers/net/wireless/ath9k/recv.c                 |  121 +-
- drivers/net/wireless/ath9k/reg.h                  |  109 ++-
- drivers/net/wireless/ath9k/xmit.c                 |  141 +-
- drivers/net/wireless/b43legacy/debugfs.c          |    2 +-
- drivers/net/wireless/b43legacy/phy.c              |    6 +-
- drivers/net/wireless/ipw2x00/ipw2200.c            |   28 +-
- drivers/net/wireless/ipw2x00/ipw2200.h            |    1 +
- drivers/net/wireless/iwlwifi/iwl-3945-commands.h  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-core.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-debug.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h        |    4 +-
- drivers/net/wireless/iwlwifi/iwl-3945-io.h        |   20 +-
- drivers/net/wireless/iwlwifi/iwl-3945-led.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-led.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c        |   14 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c           |   59 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h           |    8 +-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h        |    8 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c           |   24 +-
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c           |   16 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd-check.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    3 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c            |   34 +-
- drivers/net/wireless/iwlwifi/iwl-calib.c          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-calib.h          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h       |  111 +-
- drivers/net/wireless/iwlwifi/iwl-core.c           |   44 +-
- drivers/net/wireless/iwlwifi/iwl-core.h           |    4 +-
- drivers/net/wireless/iwlwifi/iwl-csr.h            |    4 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h            |   31 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c         |   30 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h         |    9 +-
- drivers/net/wireless/iwlwifi/iwl-fh.h             |    5 +-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-helpers.h        |    4 +-
- drivers/net/wireless/iwlwifi/iwl-io.h             |   24 +-
- drivers/net/wireless/iwlwifi/iwl-led.c            |    3 +-
- drivers/net/wireless/iwlwifi/iwl-led.h            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.c          |    3 +-
- drivers/net/wireless/iwlwifi/iwl-power.h          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-rfkill.c         |    4 +-
- drivers/net/wireless/iwlwifi/iwl-rfkill.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c             |  100 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-spectrum.c       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-spectrum.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c            |    4 +-
- drivers/net/wireless/iwlwifi/iwl-sta.h            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c             |    4 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c       |   94 +-
- drivers/net/wireless/libertas/host.h              |    1 +
- drivers/net/wireless/libertas/main.c              |   60 +
- drivers/net/wireless/mac80211_hwsim.c             |    4 +
- drivers/net/wireless/orinoco/airport.c            |    2 +-
- drivers/net/wireless/orinoco/orinoco.c            |    6 +-
- drivers/net/wireless/orinoco/orinoco_cs.c         |    8 +-
- drivers/net/wireless/orinoco/spectrum_cs.c        |    8 +-
- drivers/net/wireless/p54/p54common.c              |   59 +-
- drivers/net/wireless/p54/p54pci.c                 |    7 -
- drivers/net/wireless/p54/p54usb.c                 |  151 ++-
- drivers/net/wireless/p54/p54usb.h                 |    1 +
- drivers/net/wireless/rtl818x/rtl8187.h            |    2 +-
- drivers/net/wireless/rtl818x/rtl8187_dev.c        |  124 +-
- include/linux/ieee80211.h                         |    2 +-
- include/linux/rfkill.h                            |    7 -
- include/net/ieee80211.h                           |    5 +-
- include/net/mac80211.h                            |   32 +-
- net/mac80211/Makefile                             |    2 +
- net/mac80211/cfg.c                                |    6 +-
- net/mac80211/ieee80211_i.h                        |    4 +-
- net/mac80211/main.c                               |   26 +-
- net/mac80211/mlme.c                               |   10 +-
- net/mac80211/rx.c                                 |   17 +-
- net/mac80211/tx.c                                 |    1 -
- net/mac80211/wext.c                               |   11 +-
- net/rfkill/rfkill.c                               |   83 +-
- net/wireless/Makefile                             |    2 +
- net/wireless/nl80211.c                            |   40 +-
- 98 files changed, 4513 insertions(+), 1500 deletions(-)
-
-Omnibus patch is available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2008-12-12.patch.bz2
+--- wireless-testing.orig/include/linux/ieee80211.h	2008-12-31 17:00:34.000000000 +0200
++++ wireless-testing/include/linux/ieee80211.h	2008-12-31 17:03:09.000000000 +0200
+@@ -655,6 +655,15 @@ struct ieee80211_mgmt {
+ #define IEEE80211_MIN_ACTION_SIZE offsetof(struct ieee80211_mgmt, u.action.u)
+ 
+ 
++/* Management MIC information element (IEEE 802.11w) */
++struct ieee80211_mmie {
++	u8 element_id;
++	u8 length;
++	__le16 key_id;
++	u8 sequence_number[6];
++	u8 mic[8];
++} __attribute__ ((packed));
++
+ /* Control frames */
+ struct ieee80211_rts {
+ 	__le16 frame_control;
+@@ -1018,6 +1027,7 @@ enum ieee80211_eid {
+ 	WLAN_EID_HT_INFORMATION = 61,
+ 	/* 802.11i */
+ 	WLAN_EID_RSN = 48,
++	WLAN_EID_MMIE = 76 /* 802.11w */,
+ 	WLAN_EID_WPA = 221,
+ 	WLAN_EID_GENERIC = 221,
+ 	WLAN_EID_VENDOR_SPECIFIC = 221,
+--- wireless-testing.orig/net/mac80211/key.h	2008-12-31 16:45:09.000000000 +0200
++++ wireless-testing/net/mac80211/key.h	2008-12-31 17:03:09.000000000 +0200
+@@ -96,6 +96,16 @@ struct ieee80211_key {
+ 			u8 tx_crypto_buf[6 * AES_BLOCK_LEN];
+ 			u8 rx_crypto_buf[6 * AES_BLOCK_LEN];
+ 		} ccmp;
++		struct {
++			u8 tx_pn[6];
++			u8 rx_pn[6];
++			struct crypto_cipher *tfm;
++			u32 replays; /* dot11RSNAStatsCMACReplays */
++			u32 icverrors; /* dot11RSNAStatsCMACICVErrors */
++			/* scratch buffers for virt_to_page() (crypto API) */
++			u8 tx_crypto_buf[2 * AES_BLOCK_LEN];
++			u8 rx_crypto_buf[2 * AES_BLOCK_LEN];
++		} aes_cmac;
+ 	} u;
+ 
+ 	/* number of times this key has been used */
+--- wireless-testing.orig/net/mac80211/wpa.c	2008-12-31 16:54:27.000000000 +0200
++++ wireless-testing/net/mac80211/wpa.c	2008-12-31 17:03:09.000000000 +0200
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright 2002-2004, Instant802 Networks, Inc.
++ * Copyright 2008, Jouni Malinen <j@w1.fi>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -19,6 +20,7 @@
+ #include "michael.h"
+ #include "tkip.h"
+ #include "aes_ccm.h"
++#include "aes_cmac.h"
+ #include "wpa.h"
+ 
+ ieee80211_tx_result
+@@ -494,3 +496,126 @@ ieee80211_crypto_ccmp_decrypt(struct iee
+ 
+ 	return RX_CONTINUE;
+ }
++
++
++static void bip_aad(struct sk_buff *skb, u8 *aad)
++{
++	/* BIP AAD: FC(masked) || A1 || A2 || A3 */
++
++	/* FC type/subtype */
++	aad[0] = skb->data[0];
++	/* Mask FC Retry, PwrMgt, MoreData flags to zero */
++	aad[1] = skb->data[1] & ~(BIT(4) | BIT(5) | BIT(6));
++	/* A1 || A2 || A3 */
++	memcpy(aad + 2, skb->data + 4, 3 * ETH_ALEN);
++}
++
++
++static inline void bip_ipn_swap(u8 *d, const u8 *s)
++{
++	*d++ = s[5];
++	*d++ = s[4];
++	*d++ = s[3];
++	*d++ = s[2];
++	*d++ = s[1];
++	*d = s[0];
++}
++
++
++ieee80211_tx_result
++ieee80211_crypto_aes_cmac_encrypt(struct ieee80211_tx_data *tx)
++{
++	struct sk_buff *skb = tx->skb;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_key *key = tx->key;
++	struct ieee80211_mmie *mmie;
++	u8 *pn, aad[20];
++	int i;
++
++	if (tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
++		/* hwaccel */
++		info->control.hw_key = &tx->key->conf;
++		return 0;
++	}
++
++	if (WARN_ON(skb_tailroom(skb) < sizeof(*mmie)))
++		return TX_DROP;
++
++	mmie = (struct ieee80211_mmie *) skb_put(skb, sizeof(*mmie));
++	mmie->element_id = WLAN_EID_MMIE;
++	mmie->length = sizeof(*mmie) - 2;
++	mmie->key_id = cpu_to_le16(key->conf.keyidx);
++
++	/* PN = PN + 1 */
++	pn = key->u.aes_cmac.tx_pn;
++
++	for (i = sizeof(key->u.aes_cmac.tx_pn) - 1; i >= 0; i--) {
++		pn[i]++;
++		if (pn[i])
++			break;
++	}
++	bip_ipn_swap(mmie->sequence_number, pn);
++
++	bip_aad(skb, aad);
++
++	/*
++	 * MIC = AES-128-CMAC(IGTK, AAD || Management Frame Body || MMIE, 64)
++	 */
++	ieee80211_aes_cmac(key->u.aes_cmac.tfm, key->u.aes_cmac.tx_crypto_buf,
++			   aad, skb->data + 24, skb->len - 24, mmie->mic);
++
++	return TX_CONTINUE;
++}
++
++
++ieee80211_rx_result
++ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx)
++{
++	struct sk_buff *skb = rx->skb;
++	struct ieee80211_key *key = rx->key;
++	struct ieee80211_mmie *mmie;
++	u8 aad[20], mic[8], ipn[6];
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++
++	if (!ieee80211_is_mgmt(hdr->frame_control))
++		return RX_CONTINUE;
++
++	if ((rx->status->flag & RX_FLAG_DECRYPTED) &&
++	    (rx->status->flag & RX_FLAG_IV_STRIPPED))
++		return RX_CONTINUE;
++
++	if (skb->len < 24 + sizeof(*mmie))
++		return RX_DROP_UNUSABLE;
++
++	mmie = (struct ieee80211_mmie *)
++		(skb->data + skb->len - sizeof(*mmie));
++	if (mmie->element_id != WLAN_EID_MMIE ||
++	    mmie->length != sizeof(*mmie) - 2)
++		return RX_DROP_UNUSABLE; /* Invalid MMIE */
++
++	bip_ipn_swap(ipn, mmie->sequence_number);
++
++	if (memcmp(ipn, key->u.aes_cmac.rx_pn, 6) <= 0) {
++		key->u.aes_cmac.replays++;
++		return RX_DROP_UNUSABLE;
++	}
++
++	if (!(rx->status->flag & RX_FLAG_DECRYPTED)) {
++		/* hardware didn't decrypt/verify MIC */
++		bip_aad(skb, aad);
++		ieee80211_aes_cmac(key->u.aes_cmac.tfm,
++				   key->u.aes_cmac.rx_crypto_buf, aad,
++				   skb->data + 24, skb->len - 24, mic);
++		if (memcmp(mic, mmie->mic, sizeof(mmie->mic)) != 0) {
++			key->u.aes_cmac.icverrors++;
++			return RX_DROP_UNUSABLE;
++		}
++	}
++
++	memcpy(key->u.aes_cmac.rx_pn, ipn, 6);
++
++	/* Remove MMIE */
++	skb_trim(skb, skb->len - sizeof(*mmie));
++
++	return RX_CONTINUE;
++}
+--- wireless-testing.orig/net/mac80211/wpa.h	2008-12-31 16:45:09.000000000 +0200
++++ wireless-testing/net/mac80211/wpa.h	2008-12-31 17:03:09.000000000 +0200
+@@ -28,4 +28,9 @@ ieee80211_crypto_ccmp_encrypt(struct iee
+ ieee80211_rx_result
+ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx);
+ 
++ieee80211_tx_result
++ieee80211_crypto_aes_cmac_encrypt(struct ieee80211_tx_data *tx);
++ieee80211_rx_result
++ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx);
++
+ #endif /* WPA_H */
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ wireless-testing/net/mac80211/aes_cmac.c	2008-12-31 17:03:09.000000000 +0200
+@@ -0,0 +1,135 @@
++/*
++ * AES-128-CMAC with TLen 16 for IEEE 802.11w BIP
++ * Copyright 2008, Jouni Malinen <j@w1.fi>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/kernel.h>
++#include <linux/types.h>
++#include <linux/crypto.h>
++#include <linux/err.h>
++
++#include <net/mac80211.h>
++#include "key.h"
++#include "aes_cmac.h"
++
++#define AES_BLOCK_SIZE 16
++#define AES_CMAC_KEY_LEN 16
++#define CMAC_TLEN 8 /* CMAC TLen = 64 bits (8 octets) */
++#define AAD_LEN 20
++
++
++static void gf_mulx(u8 *pad)
++{
++	int i, carry;
++
++	carry = pad[0] & 0x80;
++	for (i = 0; i < AES_BLOCK_SIZE - 1; i++)
++		pad[i] = (pad[i] << 1) | (pad[i + 1] >> 7);
++	pad[AES_BLOCK_SIZE - 1] <<= 1;
++	if (carry)
++		pad[AES_BLOCK_SIZE - 1] ^= 0x87;
++}
++
++
++static void aes_128_cmac_vector(struct crypto_cipher *tfm, u8 *scratch,
++				size_t num_elem,
++				const u8 *addr[], const size_t *len, u8 *mac)
++{
++	u8 *cbc, *pad;
++	const u8 *pos, *end;
++	size_t i, e, left, total_len;
++
++	cbc = scratch;
++	pad = scratch + AES_BLOCK_SIZE;
++
++	memset(cbc, 0, AES_BLOCK_SIZE);
++
++	total_len = 0;
++	for (e = 0; e < num_elem; e++)
++		total_len += len[e];
++	left = total_len;
++
++	e = 0;
++	pos = addr[0];
++	end = pos + len[0];
++
++	while (left >= AES_BLOCK_SIZE) {
++		for (i = 0; i < AES_BLOCK_SIZE; i++) {
++			cbc[i] ^= *pos++;
++			if (pos >= end) {
++				e++;
++				pos = addr[e];
++				end = pos + len[e];
++			}
++		}
++		if (left > AES_BLOCK_SIZE)
++			crypto_cipher_encrypt_one(tfm, cbc, cbc);
++		left -= AES_BLOCK_SIZE;
++	}
++
++	memset(pad, 0, AES_BLOCK_SIZE);
++	crypto_cipher_encrypt_one(tfm, pad, pad);
++	gf_mulx(pad);
++
++	if (left || total_len == 0) {
++		for (i = 0; i < left; i++) {
++			cbc[i] ^= *pos++;
++			if (pos >= end) {
++				e++;
++				pos = addr[e];
++				end = pos + len[e];
++			}
++		}
++		cbc[left] ^= 0x80;
++		gf_mulx(pad);
++	}
++
++	for (i = 0; i < AES_BLOCK_SIZE; i++)
++		pad[i] ^= cbc[i];
++	crypto_cipher_encrypt_one(tfm, pad, pad);
++	memcpy(mac, pad, CMAC_TLEN);
++}
++
++
++void ieee80211_aes_cmac(struct crypto_cipher *tfm, u8 *scratch, const u8 *aad,
++			const u8 *data, size_t data_len, u8 *mic)
++{
++	const u8 *addr[3];
++	size_t len[3];
++	u8 zero[CMAC_TLEN];
++
++	memset(zero, 0, CMAC_TLEN);
++	addr[0] = aad;
++	len[0] = AAD_LEN;
++	addr[1] = data;
++	len[1] = data_len - CMAC_TLEN;
++	addr[2] = zero;
++	len[2] = CMAC_TLEN;
++
++	aes_128_cmac_vector(tfm, scratch, 3, addr, len, mic);
++}
++
++
++struct crypto_cipher * ieee80211_aes_cmac_key_setup(const u8 key[])
++{
++	struct crypto_cipher *tfm;
++
++	tfm = crypto_alloc_cipher("aes", 0, CRYPTO_ALG_ASYNC);
++	if (IS_ERR(tfm))
++		return NULL;
++
++	crypto_cipher_setkey(tfm, key, AES_CMAC_KEY_LEN);
++
++	return tfm;
++}
++
++
++void ieee80211_aes_cmac_key_free(struct crypto_cipher *tfm)
++{
++	if (tfm)
++		crypto_free_cipher(tfm);
++}
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ wireless-testing/net/mac80211/aes_cmac.h	2008-12-31 17:03:09.000000000 +0200
+@@ -0,0 +1,19 @@
++/*
++ * Copyright 2008, Jouni Malinen <j@w1.fi>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef AES_CMAC_H
++#define AES_CMAC_H
++
++#include <linux/crypto.h>
++
++struct crypto_cipher * ieee80211_aes_cmac_key_setup(const u8 key[]);
++void ieee80211_aes_cmac(struct crypto_cipher *tfm, u8 *scratch, const u8 *aad,
++			const u8 *data, size_t data_len, u8 *mic);
++void ieee80211_aes_cmac_key_free(struct crypto_cipher *tfm);
++
++#endif /* AES_CMAC_H */
+--- wireless-testing.orig/net/mac80211/Makefile	2008-12-31 16:45:09.000000000 +0200
++++ wireless-testing/net/mac80211/Makefile	2008-12-31 17:03:09.000000000 +0200
+@@ -15,6 +15,7 @@ mac80211-y := \
+ 	michael.o \
+ 	tkip.o \
+ 	aes_ccm.o \
++	aes_cmac.o \
+ 	cfg.o \
+ 	rx.o \
+ 	spectmgmt.o \
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2008-12-31 16:48:01.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2008-12-31 17:03:09.000000000 +0200
+@@ -43,7 +43,7 @@ struct ieee80211_local;
+ 
+ /* Required encryption head and tailroom */
+ #define IEEE80211_ENCRYPT_HEADROOM 8
+-#define IEEE80211_ENCRYPT_TAILROOM 12
++#define IEEE80211_ENCRYPT_TAILROOM 18
+ 
+ /* IEEE 802.11 (Ch. 9.5 Defragmentation) requires support for concurrent
+  * reception of at least three fragmented frames. This limit can be increased
 
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
