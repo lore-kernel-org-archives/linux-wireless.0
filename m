@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:63066 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700AbYLSHhc (ORCPT
+Received: from aa002msb.fastweb.it ([85.18.95.81]:59059 "EHLO
+	aa002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755157AbYLaOKY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2008 02:37:32 -0500
-To: "Vivek Natarajan" <vivek.natraj@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v6 3/3] mac80211: implement dynamic power save
-References: <20081218213306.7248.64398.stgit@tikku>
-	<20081218213527.7248.65697.stgit@tikku>
-	<8e92b4100812182217q6f8e6014s3f28ab79c5bc2ba3@mail.gmail.com>
-	<8e92b4100812182221n747661b5pe4d18e8c564f871b@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Fri, 19 Dec 2008 09:37:20 +0200
-In-Reply-To: <8e92b4100812182221n747661b5pe4d18e8c564f871b@mail.gmail.com> (ext Vivek Natarajan's message of "Fri\, 19 Dec 2008 11\:51\:24 +0530")
-Message-ID: <87r644y5sf.fsf@nokia.com> (sfid-20081219_083737_513372_3637B381)
+	Wed, 31 Dec 2008 09:10:24 -0500
+Received: from [192.168.1.101] (39.234.158.229) by aa002msb.fastweb.it (8.0.013.8)
+        id 493752D305CB0B33 for linux-wireless@vger.kernel.org; Wed, 31 Dec 2008 15:10:23 +0100
+Message-ID: <495B7D4E.80403@techemia.com> (sfid-20081231_151030_523026_84FA36A1)
+Date: Wed, 31 Dec 2008 15:10:22 +0100
+From: techmin <info@techemia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: problem on gelic ps3 driver 2.25.2 kernel (used with psubuntu)
+References: <4958C029.7000407@techemia.com>
+In-Reply-To: <4958C029.7000407@techemia.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan <vivek.natraj@gmail.com> writes:
-
-> On Fri, Dec 19, 2008 at 11:47 AM, Vivek Natarajan
-> <vivek.natraj@gmail.com> wrote:
->> On Fri, Dec 19, 2008 at 3:05 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
->>> @@ -872,6 +878,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
->>>        local->oper_channel_type = NL80211_CHAN_NO_HT;
->>>        config_changed |= IEEE80211_CONF_CHANGE_HT;
->>>
->>> +       del_timer_sync(&local->dynamic_ps_timer);
->>> +       cancel_work_sync(&local->dynamic_ps_enable_work);
->>
->> In addition, shouldn't we have this 'cancel_work'  in ieee80211_stop
->> or where ever in the stop/detach path since the ps timer may be
->> triggered even after the interface is brought down.
+techmin ha scritto:
+> If i configure network with tool, the icon show 100% connection (and 
+> it is not possible, maximum is 50% cause the distance to acces point), 
+> wireless is protect (i use wep) but the led not blinck, simply is on. 
+> But ping not work, and is not possible to navigate on the web.
+> If i configure directly from /etc/network/interfaces (with all 
+> network-manager disabled) same problem.
+> If i use simple script to manually pass the iwconfig and ifconfig 
+> command same proble.
+> If i not use protection same problem.
 >
-> Sorry, ieee80211_set_disassoc is called from ieee80211_stop too...
+> If i set manage mode:
+> managed mode is not set, operation not permitted
+>
+> iwlist scan work.
+> Note: in iwconfig not appear the channel and if i add manually the 
+> channel with iwconfig wlan0 channel numder i have error: operation not 
+> permitted.
+>
+> syslog don't have any entry
+> only error is this:
+> gelic_eurus_sync_cmd_worker: cmd issue failed
+>
+>
+Compiled 2.6.27 kernel from git
+wireless WORK
+a this point i suppose is an issue of 2.6.25-2 kernel
 
-Yeah, I got lucky. John fixed this a while ago.
-
--- 
-Kalle Valo
