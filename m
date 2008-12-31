@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:44037 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753061AbYL2OYL (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:40805 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752920AbYLaRKI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2008 09:24:11 -0500
-Received: by bwz14 with SMTP id 14so16194414bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2008 06:24:09 -0800 (PST)
-Message-ID: <8e92b4100812290624i7a7eebc0t75a2868dd8532994@mail.gmail.com> (sfid-20081229_152416_085557_6EDBFBB7)
-Date: Mon, 29 Dec 2008 19:54:07 +0530
-From: "Vivek Natarajan" <vivek.natraj@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] ath9k: Enable dynamic power save in ath9k.
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1230559969.3116.56.camel@johannes>
+	Wed, 31 Dec 2008 12:10:08 -0500
+Message-ID: <495BA769.4060702@tuffmail.co.uk> (sfid-20081231_181036_440832_908480D5)
+Date: Wed, 31 Dec 2008 17:10:01 +0000
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: htl10@users.sourceforge.net,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-wireless@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
+References: <348894.23448.qm@web23108.mail.ird.yahoo.com> <495B82CB.6050205@tuffmail.co.uk> <20081231155757.GA26806@hash.localnet>
+In-Reply-To: <20081231155757.GA26806@hash.localnet>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <20081229135341.GB2914@myhost.users.atheros.com>
-	 <1230559969.3116.56.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 29, 2008 at 7:42 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2008-12-29 at 19:23 +0530, Vivek Natarajan wrote:
+Bob Copeland wrote:
+> On Wed, Dec 31, 2008 at 02:33:47PM +0000, Alan Jenkins wrote:
+>   
+>> Thanks for the patch.  I tested STD too, and it doesn't seem to hang
+>> anymore.  I even tested removing the adaptor while the system was
+>> hibernated.  However, after resume the interface is useless.
+>>     
 >
->> +static inline void ath9k_ps_wakeup(struct ath_softc *sc)
->> +{
->> +     if ((atomic_inc_return(&sc->ps_usecount) == 1) &&
->> +         (sc->sc_ah->ah_powerMode !=  ATH9K_PM_AWAKE)) {
->> +             sc->sc_ah->ah_restoreMode = sc->sc_ah->ah_powerMode;
->> +             ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
->> +     }
->> +}
->> +
->> +static inline void ath9k_ps_restore(struct ath_softc *sc)
->> +{
->> +     if (atomic_dec_and_test(&sc->ps_usecount) &&
->> +        (sc->hw->conf.flags & IEEE80211_CONF_PS))
->> +             ath9k_hw_setpower(sc->sc_ah, sc->sc_ah->ah_restoreMode);
+> Kind of sounds like the hardware is not responding... so this probably
+> won't help, but you can always give my patches a spin:
 >
-> Not sure which is intended, but maybe you should do the flags/powermode
-> check before doing the refcount change? In either case, I would probably
-> nest it into two if statements so it's clear which one is intended?
+>     http://bobcopeland.com/kernel/wl/20081214/
+>
+> Should apply with fuzz.  Just ignore patch 3, also you don't need 
+> anything special for rtl8187 since the classdev will suspend/resume
+> on its own and rtl8187 already didn't do anything special for PM.
+>   
 
-The count has to be incremented or decremented for every call.
-Otherwise, the mode might not be restored in some corner case
-conditions. Anyhow, I will nest it as two if
-statements.
-
-Thanks,
-Vivek.
+You were right, they didn't help :-).  Thanks anyway.
