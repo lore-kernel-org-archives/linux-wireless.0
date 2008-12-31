@@ -1,102 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:62995 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751139AbYLAM1B (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46763 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755825AbYLaPma (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2008 07:27:01 -0500
-Received: by ey-out-2122.google.com with SMTP id 6so1029871eyi.37
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Dec 2008 04:26:59 -0800 (PST)
-From: Diego 'Flameeyes' =?utf-8?q?Petten=C3=B2?= <flameeyes@gmail.com>
-Subject: [crda PATCH 1/3] Move is_valid_reg_rule() in intersect.c.
-To: linux-wireless@vger.kernel.org
-Date: Mon, 01 Dec 2008 13:26:57 +0100
-Message-ID: <20081201122657.20222.49058.stgit@localhost> (sfid-20081201_132706_477529_928431D5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 31 Dec 2008 10:42:30 -0500
+Message-Id: <20081231154220.962581321@w1.fi> (sfid-20081231_164232_801173_8A579D17)
+References: <20081231153834.840526845@w1.fi>
+Date: Wed, 31 Dec 2008 17:38:40 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [RFC 06/11] mac80211: 802.11w - WEXT configuration for IGTK
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function is only ever used in that translation unit so it makes no
-sense to define it for all the binaries.
+Added new SIOCSIWENCODEEXT algorithm for configuring BIP (AES-CMAC)
+keys (IGTK).
+
+Signed-off-by: Jouni Malinen <j@w1.fi>
+
+
 ---
+ include/linux/wireless.h |    1 
+ net/mac80211/wext.c      |   62 ++++++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 49 insertions(+), 14 deletions(-)
 
- intersect.c |   20 ++++++++++++++++++++
- reglib.c    |   20 --------------------
- reglib.h    |    1 -
- 3 files changed, 20 insertions(+), 21 deletions(-)
+--- wireless-testing.orig/include/linux/wireless.h	2008-12-31 17:10:50.000000000 +0200
++++ wireless-testing/include/linux/wireless.h	2008-12-31 17:11:41.000000000 +0200
+@@ -615,6 +615,7 @@
+ #define IW_ENCODE_ALG_TKIP	2
+ #define IW_ENCODE_ALG_CCMP	3
+ #define IW_ENCODE_ALG_PMK	4
++#define IW_ENCODE_ALG_AES_CMAC	5
+ /* struct iw_encode_ext ->ext_flags */
+ #define IW_ENCODE_EXT_TX_SEQ_VALID	0x00000001
+ #define IW_ENCODE_EXT_RX_SEQ_VALID	0x00000002
+--- wireless-testing.orig/net/mac80211/wext.c	2008-12-31 17:10:50.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2008-12-31 17:11:41.000000000 +0200
+@@ -37,7 +37,14 @@ static int ieee80211_set_encryption(stru
+ 	struct ieee80211_key *key;
+ 	int err;
+ 
+-	if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
++	if (alg == ALG_AES_CMAC) {
++		if (idx < NUM_DEFAULT_KEYS ||
++		    idx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS) {
++			printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d "
++			       "(BIP)\n", sdata->dev->name, idx);
++			return -EINVAL;
++		}
++	} else if (idx < 0 || idx >= NUM_DEFAULT_KEYS) {
+ 		printk(KERN_DEBUG "%s: set_encrypt - invalid idx=%d\n",
+ 		       sdata->dev->name, idx);
+ 		return -EINVAL;
+@@ -103,6 +110,9 @@ static int ieee80211_set_encryption(stru
+ 
+ 		if (set_tx_key || (!sta && !sdata->default_key && key))
+ 			ieee80211_set_default_key(sdata, idx);
++		if (alg == ALG_AES_CMAC &&
++		    (set_tx_key || (!sta && !sdata->default_mgmt_key && key)))
++			ieee80211_set_default_mgmt_key(sdata, idx);
+ 	}
+ 
+  out_unlock:
+@@ -1034,6 +1044,9 @@ static int ieee80211_ioctl_siwencodeext(
+ 	case IW_ENCODE_ALG_CCMP:
+ 		alg = ALG_CCMP;
+ 		break;
++	case IW_ENCODE_ALG_AES_CMAC:
++		alg = ALG_AES_CMAC;
++		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -1042,20 +1055,41 @@ static int ieee80211_ioctl_siwencodeext(
+ 		remove = 1;
+ 
+ 	idx = erq->flags & IW_ENCODE_INDEX;
+-	if (idx < 1 || idx > 4) {
+-		idx = -1;
+-		if (!sdata->default_key)
+-			idx = 0;
+-		else for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
+-			if (sdata->default_key == sdata->keys[i]) {
+-				idx = i;
+-				break;
++	if (alg == ALG_AES_CMAC) {
++		if (idx < NUM_DEFAULT_KEYS + 1 ||
++		    idx > NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS) {
++			idx = -1;
++			if (!sdata->default_mgmt_key)
++				idx = 0;
++			else for (i = NUM_DEFAULT_KEYS;
++				  i < NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS;
++				  i++) {
++				if (sdata->default_mgmt_key == sdata->keys[i])
++				{
++					idx = i;
++					break;
++				}
+ 			}
+-		}
+-		if (idx < 0)
+-			return -EINVAL;
+-	} else
+-		idx--;
++			if (idx < 0)
++				return -EINVAL;
++		} else
++			idx--;
++	} else {
++		if (idx < 1 || idx > 4) {
++			idx = -1;
++			if (!sdata->default_key)
++				idx = 0;
++			else for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
++				if (sdata->default_key == sdata->keys[i]) {
++					idx = i;
++					break;
++				}
++			}
++			if (idx < 0)
++				return -EINVAL;
++		} else
++			idx--;
++	}
+ 
+ 	return ieee80211_set_encryption(sdata, ext->addr.sa_data, idx, alg,
+ 					remove,
 
-diff --git a/intersect.c b/intersect.c
-index d6d857d..2f4d416 100644
---- a/intersect.c
-+++ b/intersect.c
-@@ -19,6 +19,26 @@
- 	} \
- 	} while (0)
- 
-+/* Sanity check on a regulatory rule */
-+static int is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
-+{
-+	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
-+	__u32 freq_diff;
-+
-+	if (freq_range->start_freq_khz == 0 || freq_range->end_freq_khz == 0)
-+		return 0;
-+
-+	if (freq_range->start_freq_khz > freq_range->end_freq_khz)
-+		return 0;
-+
-+	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
-+
-+	if (freq_diff == 0 || freq_range->max_bandwidth_khz > freq_diff)
-+		return 0;
-+
-+	return 1;
-+}
-+
- /* Helper for regdom_intersect(), this does the real
-  * mathematical intersection fun */
- static int reg_rules_intersect(
-diff --git a/reglib.c b/reglib.c
-index 2f10d23..e02bd8f 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -195,26 +195,6 @@ struct ieee80211_regdomain *country2rd(__u8 *db, int dblen,
- 	return rd;
- }
- 
--/* Sanity check on a regulatory rule */
--int is_valid_reg_rule(const struct ieee80211_reg_rule *rule)
--{
--	const struct ieee80211_freq_range *freq_range = &rule->freq_range;
--	__u32 freq_diff;
--
--	if (freq_range->start_freq_khz == 0 || freq_range->end_freq_khz == 0)
--		return 0;
--
--	if (freq_range->start_freq_khz > freq_range->end_freq_khz)
--		return 0;
--
--	freq_diff = freq_range->end_freq_khz - freq_range->start_freq_khz;
--
--	if (freq_diff == 0 || freq_range->max_bandwidth_khz > freq_diff)
--		return 0;
--
--	return 1;
--}
--
- static void print_reg_rule(struct ieee80211_reg_rule *rule)
- {
- 	struct ieee80211_freq_range *freq;
-diff --git a/reglib.h b/reglib.h
-index 095090b..f3a76ef 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -92,7 +92,6 @@ struct ieee80211_regdomain *country2rd(__u8 *db, int dblen,
- 	struct regdb_file_reg_country *country);
- 
- /* reg helpers */
--int is_valid_reg_rule(const struct ieee80211_reg_rule *rule);
- void print_regdom(struct ieee80211_regdomain *rd);
- 
- #endif
+-- 
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
