@@ -1,91 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:57778 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545AbZAPAoR (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:4110 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919AbYLaX1M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 19:44:17 -0500
-Message-ID: <dd18b0c30901151644q4578f7d6k3023cad6f05325dd@mail.gmail.com> (sfid-20090116_014424_024414_64987438)
-Date: Thu, 15 Jan 2009 16:44:15 -0800
-From: "Justin Mattock" <justinmattock@gmail.com>
-To: "Paul Moore" <paul.moore@hp.com>
-Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	SE-Linux <selinux@tycho.nsa.gov>
-In-Reply-To: <200901151752.06622.paul.moore@hp.com>
+	Wed, 31 Dec 2008 18:27:12 -0500
+Date: Wed, 31 Dec 2008 18:26:09 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	htl10@users.sourceforge.net,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-wireless@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
+Message-ID: <20081231232609.GA27391@hash.localnet> (sfid-20090101_002719_259256_09275B8C)
+References: <348894.23448.qm@web23108.mail.ird.yahoo.com> <495B82CB.6050205@tuffmail.co.uk> <495BC8F9.4040203@lwfinger.net> <495BF975.7030603@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <496D759A.7010401@gmail.com> <200901151246.38396.paul.moore@hp.com>
-	 <dd18b0c30901151400t68dfc54cu67a378ba71a2edc9@mail.gmail.com>
-	 <200901151752.06622.paul.moore@hp.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <495BF975.7030603@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2009 at 2:52 PM, Paul Moore <paul.moore@hp.com> wrote:
-> On Thursday 15 January 2009 5:00:55 pm Justin Mattock wrote:
->> On Thu, Jan 15, 2009 at 9:46 AM, Paul Moore <paul.moore@hp.com> wrote:
->> > On Wednesday 14 January 2009 9:43:56 pm Justin P. Mattock wrote:
->> >> Paul Moore wrote:
->> >> > On Wednesday 14 January 2009 4:35:25 pm Justin P. Mattock wrote:
->> >> >> here is what the error looks like:
->> >> >>
->> >> >> netlabel_tools-0.19# make
->> >> >> INFO: creating the version header file
->> >> >> .: 10: version_info: not found
->> >> >> make: *** [include/version.h] Error 2
->> >> >
->> >> > Huh, can you try the following:
->> >> >
->> >> >  1. Open the netlabel_tools-0.19/Makefile in your favorite
->> >> > editor 2. Change the ". version_info; \" line to "source
->> >> > ./version_info; \" 3. Save your changes
->> >> >  4. Try running "make" again
->> >> >
->> >> > Thanks.
->> >>
->> >> O.k. changed . version like how you had posted.
->> >> The package compiled like a charm.
->> >
->> > Great, I'll change the Makefile(s) in SVN ... I don't quite
->> > understand the reason (what is your /bin/sh?  I'm guessing not
->> > bash?) but at least we now have a solution :)
->> >
->> > --
->> > paul moore
->> > linux @ hp
->>
->> hmm..
->> under ps auxZ
->> I see:
->> 2896 tty1 S+ 0:00 /bin/bash /usr/bin/startx
->> then open aterm for navigating.
->>
->> Thankfully it works(this people can install
->> it a test it out.)
->
-> Well, it is possible that /bin/sh points to a non-bash shell but maybe
-> not (I'm pretty sure the make command executes the scripts
-> with /bin/sh).  Either way, I checked in the fix to the SVN tree
-> earlier today so newer releases will have the fix; if needed I can
-> release a 0.19.1 or similar but I want to wait and see how widespread
-> the problem is ...
->
-> --
-> paul moore
-> linux @ hp
->
+On Wed, Dec 31, 2008 at 05:00:05PM -0600, Larry Finger wrote:
+> +#ifdef CONFIG_PM
+> +
+> +static int rtl8187_suspend(struct usb_interface *intf, pm_message_t
+> state)
+> +{
+> +	struct ieee80211_hw *dev = usb_get_intfdata(intf);
+> +
+> +	rtl8187_stop(dev);
+> +
+> +	return 0;
+> +}
 
-Cool, If I see anybody
-struggling, I point them to the
-fix you posted.
-I also might be missing something, i.g.
-one of the boxes that gave this error I built
-with debootstrap, but then the other that gave this as well
-was built with nubuntu which seems more complete
-than debootstrap.
-but then maybe both are missing a package.
-(or it's a debian thing)
-
-regards;
+Won't this do the wrong thing if the interface is never brought up
+before you do suspend?  (And then you can add a flag etc. to handle
+that case, but that's exactly what my mac80211 patches aim to do.)
 
 -- 
-Justin P. Mattock
+Bob Copeland %% www.bobcopeland.com
+
