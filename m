@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:9297 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753383AbYLCAUe (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:1586 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755782AbYLaP6i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2008 19:20:34 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so1342661yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2008 16:20:32 -0800 (PST)
-Message-ID: <43e72e890812021620lccafachbd8e781d283095b7@mail.gmail.com> (sfid-20081203_012043_453108_4133D5F0)
-Date: Tue, 2 Dec 2008 16:20:32 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Greg KH" <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [stable] [PATCH 1/3] ath9k: Handle -ENOMEM on RX gracefully
-Cc: stable@kernel.org, sfr@canb.auug.org.au,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20081203001253.GC14943@kroah.com>
+	Wed, 31 Dec 2008 10:58:38 -0500
+Date: Wed, 31 Dec 2008 10:57:57 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: htl10@users.sourceforge.net,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	linux-wireless@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
+Message-ID: <20081231155757.GA26806@hash.localnet> (sfid-20081231_165842_503112_32BAE1EC)
+References: <348894.23448.qm@web23108.mail.ird.yahoo.com> <495B82CB.6050205@tuffmail.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1228251082-11677-1-git-send-email-lrodriguez@atheros.com>
-	 <1228251082-11677-2-git-send-email-lrodriguez@atheros.com>
-	 <1228251082-11677-3-git-send-email-lrodriguez@atheros.com>
-	 <1228251082-11677-4-git-send-email-lrodriguez@atheros.com>
-	 <20081203001253.GC14943@kroah.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <495B82CB.6050205@tuffmail.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 2, 2008 at 4:12 PM, Greg KH <greg@kroah.com> wrote:
-> I don't see this patch upstream in Linus's tree.  Am I just missing it
-> and if so, do you know the git commit id?
+On Wed, Dec 31, 2008 at 02:33:47PM +0000, Alan Jenkins wrote:
+> Thanks for the patch.  I tested STD too, and it doesn't seem to hang
+> anymore.  I even tested removing the adaptor while the system was
+> hibernated.  However, after resume the interface is useless.
 
-Nope sorry, John has yet to send his pending-fixes branch to davem and
-so forth, which would contain it AFAICT. Please correct me if I'm
-wrong John.
+Kind of sounds like the hardware is not responding... so this probably
+won't help, but you can always give my patches a spin:
 
-  Luis
+    http://bobcopeland.com/kernel/wl/20081214/
+
+Should apply with fuzz.  Just ignore patch 3, also you don't need 
+anything special for rtl8187 since the classdev will suspend/resume
+on its own and rtl8187 already didn't do anything special for PM.
+
+> Regards
+> "Alan J"
+
+Heh!
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
