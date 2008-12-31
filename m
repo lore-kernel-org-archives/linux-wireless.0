@@ -1,46 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46430 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751977AbYLZWo3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2008 17:44:29 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: [PATCH] wireless-regdb: Add install target to Makefile
-Date: Fri, 26 Dec 2008 23:42:57 +0100
-Cc: linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200812262342.57675.mb@bu3sch.de> (sfid-20081226_234431_796191_86A8F3F3)
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46802 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755914AbYLaPmd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2008 10:42:33 -0500
+Message-Id: <20081231154224.895735911@w1.fi> (sfid-20081231_164236_937324_6C9976A7)
+References: <20081231153834.840526845@w1.fi>
+Date: Wed, 31 Dec 2008 17:38:41 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [RFC 07/11] mac80211: 802.11w - Configuration of MFP disabled/optional/required
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds an "install" target to the Makefile.
-We intentionally don't make install depend on "all" or another build
-target, to avoid an undesired rebuild.
+Add new WEXT IW_AUTH_* parameter for setting MFP
+disabled/optional/required.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-Index: wireless-regdb/Makefile
-===================================================================
---- wireless-regdb.orig/Makefile	2008-12-26 23:33:19.000000000 +0100
-+++ wireless-regdb/Makefile	2008-12-26 23:38:54.000000000 +0100
-@@ -1,4 +1,7 @@
--.PHONY: all clean
-+# Install prefix
-+PREFIX = /usr
+
+---
+ include/linux/wireless.h   |    6 ++++++
+ net/mac80211/ieee80211_i.h |    6 ++++++
+ net/mac80211/mlme.c        |    4 ++++
+ net/mac80211/wext.c        |    7 +++++++
+ 4 files changed, 23 insertions(+)
+
+--- wireless-testing.orig/include/linux/wireless.h	2008-12-31 17:11:41.000000000 +0200
++++ wireless-testing/include/linux/wireless.h	2008-12-31 17:12:37.000000000 +0200
+@@ -578,6 +578,7 @@
+ #define IW_AUTH_ROAMING_CONTROL		9
+ #define IW_AUTH_PRIVACY_INVOKED		10
+ #define IW_AUTH_CIPHER_GROUP_MGMT	11
++#define IW_AUTH_MFP			12
+ 
+ /* IW_AUTH_WPA_VERSION values (bit field) */
+ #define IW_AUTH_WPA_VERSION_DISABLED	0x00000001
+@@ -607,6 +608,11 @@
+ #define IW_AUTH_ROAMING_DISABLE	1	/* user space program used for roaming
+ 					 * control */
+ 
++/* IW_AUTH_MFP (management frame protection) values */
++#define IW_AUTH_MFP_DISABLED	0	/* MFP disabled */
++#define IW_AUTH_MFP_OPTIONAL	1	/* MFP optional */
++#define IW_AUTH_MFP_REQUIRED	2	/* MFP required */
 +
-+.PHONY: all clean install
+ /* SIOCSIWENCODEEXT definitions */
+ #define IW_ENCODE_SEQ_MAX_SIZE	8
+ /* struct iw_encode_ext ->alg */
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2008-12-31 17:04:36.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2008-12-31 17:12:37.000000000 +0200
+@@ -317,6 +317,12 @@ struct ieee80211_if_sta {
+ 	int auth_alg; /* currently used IEEE 802.11 authentication algorithm */
+ 	int auth_transaction;
  
- all: regulatory.bin key.pub.pem
- 
-@@ -13,3 +16,6 @@
- 
- key.priv.pem:
- 	openssl genrsa -out key.priv.pem 2048
++	enum {
++		IEEE80211_MFP_DISABLED,
++		IEEE80211_MFP_OPTIONAL,
++		IEEE80211_MFP_REQUIRED
++	} mfp; /* management frame protection */
 +
-+install:
-+	-install -o 0 -g 0 -m 644 regulatory.bin $(PREFIX)/lib/crda/regulatory.bin
+ 	unsigned long ibss_join_req;
+ 	struct sk_buff *probe_resp; /* ProbeResp template for IBSS */
+ 	u32 supp_rates_bits[IEEE80211_NUM_BANDS];
+--- wireless-testing.orig/net/mac80211/wext.c	2008-12-31 17:11:41.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2008-12-31 17:12:37.000000000 +0200
+@@ -961,6 +961,13 @@ static int ieee80211_ioctl_siwauth(struc
+ 		else
+ 			ret = -EOPNOTSUPP;
+ 		break;
++	case IW_AUTH_MFP:
++		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
++		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
++			sdata->u.sta.mfp = data->value;
++		else
++			ret = -EOPNOTSUPP;
++		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		break;
+--- wireless-testing.orig/net/mac80211/mlme.c	2008-12-31 16:48:01.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2008-12-31 17:12:37.000000000 +0200
+@@ -2332,6 +2332,10 @@ static int ieee80211_sta_config_auth(str
+ 					       selected->ssid_len);
+ 		ieee80211_sta_set_bssid(sdata, selected->bssid);
+ 		ieee80211_sta_def_wmm_params(sdata, selected);
++		if (sdata->u.sta.mfp == IEEE80211_MFP_REQUIRED)
++			sdata->u.sta.flags |= IEEE80211_STA_MFP_ENABLED;
++		else
++			sdata->u.sta.flags &= ~IEEE80211_STA_MFP_ENABLED;
+ 
+ 		/* Send out direct probe if no probe resp was received or
+ 		 * the one we have is outdated
 
 -- 
-Greetings, Michael.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
