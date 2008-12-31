@@ -1,108 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aa002msb.fastweb.it ([85.18.95.81]:35314 "EHLO
-	aa002msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756453AbYLPQvi (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46833 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755929AbYLaPmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2008 11:51:38 -0500
-Received: from [192.168.1.101] (39.234.158.229) by aa002msb.fastweb.it (8.0.013.8)
-        id 493752D303232EFF for linux-wireless@vger.kernel.org; Tue, 16 Dec 2008 17:46:33 +0100
-Message-ID: <4947DB68.4090704@techemia.com> (sfid-20081216_175144_018986_2BF22271)
-Date: Tue, 16 Dec 2008 17:46:32 +0100
-From: techmin <info@techemia.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: compat-wireless-2008-12-11 disassociating on intel pro wireless 4965
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Wed, 31 Dec 2008 10:42:38 -0500
+Message-Id: <20081231154228.927953929@w1.fi> (sfid-20081231_164240_779905_F7A6AB2F)
+References: <20081231153834.840526845@w1.fi>
+Date: Wed, 31 Dec 2008 17:38:42 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [RFC 08/11] mac80211: 802.11w - SA Query processing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All
+Process SA Query Requests for client mode in mac80211. AP side
+processing of SA Query Response frames is in user space (hostapd).
 
-I have problem with last compact wireless
-i suppose the problem is present on 2.6.27 series linux kernel
-this is the link of the bug for ubuntu
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/302069
-
-(the ubuntu 8.04 with 2.6.24 kernel don't have problem, the wireless 
-work correctly)
-
-The problem is present on ubuntu precompiled kernel and on compiled 
-compat-wireless-2008-12-11 from source.
-
-I suppose the core of the problem is:
-wlan0: disassociating by local choice (reason=3)
-
-This is the dmesg
-
-iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 
-1.3.27ks                                      
-[   12.356966] iwlagn: Copyright(c) 2003-2008 Intel 
-Corporation                                                        
-[   12.357803] iwlagn 0000:06:00.0: enabling device (0000 -> 
-0002)                                                     
-[   12.357816] iwlagn 0000:06:00.0: PCI INT A -> GSI 19 (level, low) -> 
-IRQ 19                                         
-[   12.357838] iwlagn 0000:06:00.0: setting latency timer to 
-64                                                        
-[   12.357884] iwlagn: Detected Intel Wireless WiFi Link 4965AGN 
-REV=0x4                                               
-[   12.400480] iwlagn: Tunable channels: 13 802.11bg, 19 802.11a 
-channels                                              
-[   12.401472] iwlagn 0000:06:00.0: PCI INT A 
-disabled                                                                 
-[   12.401977] phy0: Selected rate control algorithm 
-'iwl-agn-rs'                 
-
-[   28.513385] iwlagn 0000:06:00.0: PCI INT A -> GSI 19 (level, low) -> 
-IRQ 19
-[   28.513625] iwlagn 0000:06:00.0: restoring config space at offset 0x1 
-(was 0x100002, writing 0x100006)
-[   28.514905] firmware: requesting iwlwifi-4965-2.ucode
-[   28.580500] iwlagn loaded firmware version 228.57.2.21
-[   28.844315] Registered led device: iwl-phy0:radio
-[   28.844331] Registered led device: iwl-phy0:assoc
-[   28.844344] Registered led device: iwl-phy0:RX
-[   28.844355] Registered led device: iwl-phy0:TX
-[   29.216382] NET: Registered protocol family 17
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
 
-[  282.441881] wlan0: direct probe to AP XX:XX:4b:15:a5:a0 try 1
-[  282.443862] wlan0 direct probe responded
-[  282.443876] wlan0: authenticate with AP XX:XX:4b:15:a5:a0
-[  282.445670] wlan0: authenticated
-[  282.445683] wlan0: associate with AP XX:XX:4b:15:a5:a0
-[  282.447907] wlan0: RX AssocResp from XX:XX:4b:15:a5:a0 (capab=0x411 
-status=0 aid=3)
-[  282.447917] wlan0: associated
-[  282.468876] wlan0: disassociating by local choice (reason=3)
-[  282.492063] iwlagn: index 0 not used in uCode key table.
-[  284.464387] wlan0: privacy configuration mismatch and mixed-cell 
-disabled - disassociate
+---
+ include/linux/ieee80211.h |   14 +++++++++
+ net/mac80211/rx.c         |   69 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 83 insertions(+)
 
+--- wireless-testing.orig/include/linux/ieee80211.h	2008-12-31 17:04:36.000000000 +0200
++++ wireless-testing/include/linux/ieee80211.h	2008-12-31 17:15:01.000000000 +0200
+@@ -527,6 +527,8 @@ struct ieee80211_tim_ie {
+ 	u8 virtual_map[0];
+ } __attribute__ ((packed));
+ 
++#define WLAN_SA_QUERY_TR_ID_LEN 16
++
+ struct ieee80211_mgmt {
+ 	__le16 frame_control;
+ 	__le16 duration;
+@@ -646,6 +648,10 @@ struct ieee80211_mgmt {
+ 					u8 action_code;
+ 					u8 variable[0];
+ 				} __attribute__((packed)) mesh_action;
++				struct {
++					u8 action;
++					u8 trans_id[WLAN_SA_QUERY_TR_ID_LEN];
++				} __attribute__ ((packed)) sa_query;
+ 			} u;
+ 		} __attribute__ ((packed)) action;
+ 	} u;
+@@ -1041,6 +1047,7 @@ enum ieee80211_category {
+ 	WLAN_CATEGORY_DLS = 2,
+ 	WLAN_CATEGORY_BACK = 3,
+ 	WLAN_CATEGORY_PUBLIC = 4,
++	WLAN_CATEGORY_SA_QUERY = 8,
+ 	WLAN_CATEGORY_WMM = 17,
+ };
+ 
+@@ -1129,6 +1136,13 @@ enum ieee80211_back_parties {
+ 	WLAN_BACK_TIMER = 2,
+ };
+ 
++/* SA Query action */
++enum ieee80211_sa_query_action {
++	WLAN_ACTION_SA_QUERY_REQUEST = 0,
++	WLAN_ACTION_SA_QUERY_RESPONSE = 1,
++};
++
++
+ /* A-MSDU 802.11n */
+ #define IEEE80211_QOS_CONTROL_A_MSDU_PRESENT 0x0080
+ 
+--- wireless-testing.orig/net/mac80211/rx.c	2008-12-31 17:06:31.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2008-12-31 17:17:04.000000000 +0200
+@@ -1635,6 +1635,57 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
+ 	return RX_CONTINUE;
+ }
+ 
++void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
++				    struct ieee80211_mgmt *mgmt,
++				    size_t len)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *resp;
++
++	if (compare_ether_addr(mgmt->da, sdata->dev->dev_addr) != 0) {
++		/* Not to own unicast address */
++		return;
++	}
++
++	if (compare_ether_addr(mgmt->sa, sdata->u.sta.bssid) != 0 ||
++	    compare_ether_addr(mgmt->bssid, sdata->u.sta.bssid) != 0) {
++		/* Not from the current AP. */
++		return;
++	}
++
++	if (sdata->u.sta.state == IEEE80211_STA_MLME_ASSOCIATE) {
++		/* Association in progress; ignore SA Query */
++		return;
++	}
++
++	if (len < 24 + 1 + sizeof(resp->u.action.u.sa_query)) {
++		/* Too short SA Query request frame */
++		return;
++	}
++
++	skb = dev_alloc_skb(sizeof(*resp) + local->hw.extra_tx_headroom);
++	if (skb == NULL)
++		return;
++
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++	resp = (struct ieee80211_mgmt *) skb_put(skb, 24);
++	memset(resp, 0, 24);
++	memcpy(resp->da, mgmt->sa, ETH_ALEN);
++	memcpy(resp->sa, sdata->dev->dev_addr, ETH_ALEN);
++	memcpy(resp->bssid, sdata->u.sta.bssid, ETH_ALEN);
++	resp->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					  IEEE80211_STYPE_ACTION);
++	skb_put(skb, 1 + sizeof(resp->u.action.u.sa_query));
++	resp->u.action.category = WLAN_CATEGORY_SA_QUERY;
++	resp->u.action.u.sa_query.action = WLAN_ACTION_SA_QUERY_RESPONSE;
++	memcpy(resp->u.action.u.sa_query.trans_id,
++	       mgmt->u.action.u.sa_query.trans_id,
++	       WLAN_SA_QUERY_TR_ID_LEN);
++
++	ieee80211_tx_skb(sdata, skb, 1);
++}
++
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ {
+@@ -1691,6 +1742,24 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 			break;
+ 		}
+ 		break;
++	case WLAN_CATEGORY_SA_QUERY:
++		if (len < (IEEE80211_MIN_ACTION_SIZE +
++			   sizeof(mgmt->u.action.u.sa_query)))
++			return RX_DROP_MONITOR;
++		switch (mgmt->u.action.u.sa_query.action) {
++		case WLAN_ACTION_SA_QUERY_REQUEST:
++			if (sdata->vif.type != NL80211_IFTYPE_STATION)
++				return RX_DROP_MONITOR;
++			ieee80211_process_sa_query_req(sdata, mgmt, len);
++			break;
++		case WLAN_ACTION_SA_QUERY_RESPONSE:
++			/*
++			 * SA Query response is currently only used in AP mode
++			 * and it is processed in user space.
++			 */
++			return RX_CONTINUE;
++		}
++		break;
+ 	default:
+ 		return RX_CONTINUE;
+ 	}
 
-This is the lspci -vv
+-- 
 
-06:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or 
-AGN [Kedron] Network Connection (rev 61)
-        Subsystem: Intel Corporation Device 
-1101                                                             
-        Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- 
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx- 
-        Interrupt: pin A routed to IRQ 
-19                                                                    
-        Region 0: Memory at c2000000 (64-bit, non-prefetchable) 
-[size=8K]                                    
-        Capabilities: <access 
-denied>                                                                         
-
-        Kernel driver in use: 
-iwlagn                                                                          
-
-        Kernel modules: iwlagn
-
-
-Tank you
-
-techmin
+-- 
+Jouni Malinen                                            PGP id EFC895FA
