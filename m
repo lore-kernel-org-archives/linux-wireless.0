@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:46742 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757995AbZAPQMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 11:12:21 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:12:21 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from web23104.mail.ird.yahoo.com ([217.146.189.44]:21396 "HELO
+	web23104.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756105AbZAAOjo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jan 2009 09:39:44 -0500
+Date: Thu, 1 Jan 2009 14:39:41 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	=?iso-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+In-Reply-To: <69e28c910901010540r5e79431cjf6ad1a76f06ff0fd@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18800.45336.294871.849693@gargle.gargle.HOWL> (sfid-20090116_171224_198818_6C471279)
-Date: Fri, 16 Jan 2009 21:38:56 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 9/9] ath9k: Cleanup buffer type assignment
+Content-Type: text/plain; charset=iso-8859-1
+Message-ID: <120849.67182.qm@web23104.mail.ird.yahoo.com> (sfid-20090101_154000_884881_41E716C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The buffer state is already cleared in ATH_TXBUF_RESET.
-Remove redundant code clearing the type variable.
+--- On Thu, 1/1/09, Stefanik G=E1bor <netrolller.3d@gmail.com> wrote:
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/xmit.c |   28 +++++++++++-----------------
- 1 files changed, 11 insertions(+), 17 deletions(-)
+> On Thu, Jan 1, 2009 at 2:07 PM, Alan Jenkins
+> <alan-jenkins@tuffmail.co.uk> wrote:
 
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 0d05a7f..1b83673 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -1576,27 +1576,21 @@ static int ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
- 
- 	bf->bf_frmlen = skb->len + FCS_LEN - (hdrlen & 3);
- 
--	ieee80211_is_data(fc) ?
--		(bf->bf_state.bf_type |= BUF_DATA) :
--		(bf->bf_state.bf_type &= ~BUF_DATA);
--	ieee80211_is_back_req(fc) ?
--		(bf->bf_state.bf_type |= BUF_BAR) :
--		(bf->bf_state.bf_type &= ~BUF_BAR);
--	ieee80211_is_pspoll(fc) ?
--		(bf->bf_state.bf_type |= BUF_PSPOLL) :
--		(bf->bf_state.bf_type &= ~BUF_PSPOLL);
--	(sc->sc_flags & SC_OP_PREAMBLE_SHORT) ?
--		(bf->bf_state.bf_type |= BUF_SHORT_PREAMBLE) :
--		(bf->bf_state.bf_type &= ~BUF_SHORT_PREAMBLE);
--	(conf_is_ht(&sc->hw->conf) && !is_pae(skb) &&
--	 (tx_info->flags & IEEE80211_TX_CTL_AMPDU)) ?
--		(bf->bf_state.bf_type |= BUF_HT) :
--		(bf->bf_state.bf_type &= ~BUF_HT);
-+	if (ieee80211_is_data(fc))
-+		bf->bf_state.bf_type |= BUF_DATA;
-+	if (ieee80211_is_back_req(fc))
-+		bf->bf_state.bf_type |= BUF_BAR;
-+	if (ieee80211_is_pspoll(fc))
-+		bf->bf_state.bf_type |= BUF_PSPOLL;
-+	if (sc->sc_flags & SC_OP_PREAMBLE_SHORT)
-+		bf->bf_state.bf_type |= BUF_SHORT_PREAMBLE;
-+	if ((conf_is_ht(&sc->hw->conf) && !is_pae(skb) &&
-+	     (tx_info->flags & IEEE80211_TX_CTL_AMPDU)))
-+		bf->bf_state.bf_type |= BUF_HT;
- 
- 	bf->bf_flags = setup_tx_flags(sc, skb, txctl->txq);
- 
- 	bf->bf_keytype = get_hw_crypto_keytype(skb);
--
- 	if (bf->bf_keytype != ATH9K_KEY_TYPE_CLEAR) {
- 		bf->bf_frmlen += tx_info->control.hw_key->icv_len;
- 		bf->bf_keyix = tx_info->control.hw_key->hw_key_idx;
--- 
-1.6.0.3
+> > I think it's a B device.
+> >
+> > phy0: hwaddr 00:1b:2f:76:02:bc, RTL8187vB (default) V1
+> + rtl8225z2
 
+> That is an RTL8187L, rev. B. It is not an RTL8187B.
+
+Yes, that's the (older) non-B device. B devices says RTL8187Bv{B,D,E} .=
+ with a B before the 7; I have a rev E .The B device and the non-B devi=
+ce while similiar enough to share some driver code, are different enoug=
+h that
+they might suspend/resume differently - they do probe/init slightly dif=
+ferently. Besides, I think all the people who recently worked on that c=
+ode are B-device owners, with maybe Larry who probably owns both types =
+(or a few).
+
+Hin-Tak
+
+
+     =20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
