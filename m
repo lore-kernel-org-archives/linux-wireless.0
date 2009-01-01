@@ -1,153 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34398 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751732AbZAZSwZ (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3366 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292AbZAAUCA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 13:52:25 -0500
-Message-Id: <20090126184925.500822996@sipsolutions.net> (sfid-20090126_195229_608528_A11909E9)
-References: <20090126184740.036240879@sipsolutions.net>
-Date: Mon, 26 Jan 2009 19:47:45 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@gmail.com, Sujith.Manoharan@atheros.com, tomasw@gmail.com
-Subject: [RFC/RFT 5/7] mac80211: fix race in TX aggregation
-Mime-Version: 1.0
+	Thu, 1 Jan 2009 15:02:00 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, maximlevitsky@gmail.com, andi@lisas.de
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/2] ath5k: support LEDs on Acer Aspire One netbook
+Date: Thu,  1 Jan 2009 15:01:44 -0500
+Message-Id: <1230840105-30960-1-git-send-email-me@bobcopeland.com> (sfid-20090101_210205_164142_74A0547B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When disabling TX aggregation because it was rejected, there
-is a window where we first set the state to operation. unlock,
-and then undo the whole thing. Avoid that by splitting up the
-stop function.
+Add vendor ID for Foxconn and use it to set the ath5k LED gpio and
+polarity for Acer branded laptops.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+base.c:
+Changes-licensed-under: 3-Clause-BSD
+
+Reported-by: Maxim Levitsky <maximlevitsky@gmail.com>
+Tested-by: Maxim Levitsky <maximlevitsky@gmail.com>
+Tested-by: Andreas Mohr <andi@lisas.de>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- net/mac80211/agg-tx.c |   69 +++++++++++++++++++++++++++++++-------------------
- 1 file changed, 43 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath5k/base.c |    7 +++++++
+ include/linux/pci_ids.h           |    2 ++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/net/mac80211/agg-tx.c	2009-01-26 12:37:13.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2009-01-26 12:45:13.000000000 +0100
-@@ -186,6 +186,9 @@ int ieee80211_start_tx_ba_session(struct
- 	u8 *state;
- 	int ret = 0;
- 
-+	if (WARN_ON(!local->ops->ampdu_action))
-+		return -EINVAL;
-+
- 	if ((tid >= STA_TID_NUM) || !(hw->flags & IEEE80211_HW_AMPDU_AGGREGATION))
- 		return -EINVAL;
- 
-@@ -266,9 +269,8 @@ int ieee80211_start_tx_ba_session(struct
- 	/* This is slightly racy because the queue isn't stopped */
- 	start_seq_num = sta->tid_seq[tid];
- 
--	if (local->ops->ampdu_action)
--		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
--					       &sta->sta, tid, &start_seq_num);
-+	ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
-+				       &sta->sta, tid, &start_seq_num);
- 
- 	if (ret) {
- 		/* No need to requeue the packets in the agg queue, since we
-@@ -400,6 +402,34 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
- EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
- 
- 
-+static int __ieee80211_stop_tx_ba_session(struct ieee80211_local *local,
-+					  struct sta_info *sta, u16 tid,
-+					  enum ieee80211_back_parties initiator)
-+{
-+	int ret;
-+	u8 *state;
-+
-+	state = &sta->ampdu_mlme.tid_state_tx[tid];
-+
-+	if (local->hw.ampdu_queues)
-+		ieee80211_stop_queue(&local->hw, sta->tid_to_tx_q[tid]);
-+
-+	*state = HT_AGG_STATE_REQ_STOP_BA_MSK |
-+		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
-+
-+	ret = local->ops->ampdu_action(&local->hw, IEEE80211_AMPDU_TX_STOP,
-+				       &sta->sta, tid, NULL);
-+
-+	/* HW shall not deny going back to legacy */
-+	if (WARN_ON(ret)) {
-+		*state = HT_AGG_STATE_OPERATIONAL;
-+		if (local->hw.ampdu_queues)
-+			ieee80211_wake_queue(&local->hw, sta->tid_to_tx_q[tid]);
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 40c0155..fd3a6f4 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2595,6 +2595,13 @@ ath5k_init_leds(struct ath5k_softc *sc)
+ 		sc->led_pin = 1;
+ 		sc->led_on = 1;  /* active high */
+ 	}
++	/* Pin 3 on Foxconn chips used in Acer Aspire One (0x105b:e008) */
++	if (pdev->subsystem_vendor == PCI_VENDOR_ID_FOXCONN) {
++		__set_bit(ATH_STAT_LEDSOFT, sc->status);
++		sc->led_pin = 3;
++		sc->led_on = 0;  /* active low */
 +	}
 +
-+	return ret;
-+}
+ 	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
+ 		goto out;
+ 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 1800f1d..c1fb01c 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -834,6 +834,8 @@
+ #define PCI_DEVICE_ID_PROMISE_20276	0x5275
+ #define PCI_DEVICE_ID_PROMISE_20277	0x7275
+ 
++#define PCI_VENDOR_ID_FOXCONN		0x105b
 +
- int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
- 				 u8 *ra, u16 tid,
- 				 enum ieee80211_back_parties initiator)
-@@ -409,6 +439,9 @@ int ieee80211_stop_tx_ba_session(struct 
- 	u8 *state;
- 	int ret = 0;
- 
-+	if (WARN_ON(!local->ops->ampdu_action))
-+		return -EINVAL;
-+
- 	if (tid >= STA_TID_NUM)
- 		return -EINVAL;
- 
-@@ -425,7 +458,7 @@ int ieee80211_stop_tx_ba_session(struct 
- 
- 	if (*state != HT_AGG_STATE_OPERATIONAL) {
- 		ret = -ENOENT;
--		goto stop_BA_exit;
-+		goto unlock;
- 	}
- 
- #ifdef CONFIG_MAC80211_HT_DEBUG
-@@ -433,27 +466,13 @@ int ieee80211_stop_tx_ba_session(struct 
- 	       ra, tid);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
- 
--	if (hw->ampdu_queues)
--		ieee80211_stop_queue(hw, sta->tid_to_tx_q[tid]);
--
--	*state = HT_AGG_STATE_REQ_STOP_BA_MSK |
--		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
-+	ret = __ieee80211_stop_tx_ba_session(local, sta, tid, initiator);
- 
--	if (local->ops->ampdu_action)
--		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_STOP,
--					       &sta->sta, tid, NULL);
--
--	/* HW shall not deny going back to legacy */
--	if (WARN_ON(ret)) {
--		*state = HT_AGG_STATE_OPERATIONAL;
--		if (hw->ampdu_queues)
--			ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
--		goto stop_BA_exit;
--	}
--
--stop_BA_exit:
-+ unlock:
- 	spin_unlock_bh(&sta->lock);
-+
- 	rcu_read_unlock();
-+
- 	return ret;
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
-@@ -609,10 +628,8 @@ void ieee80211_process_addba_resp(struct
- 		spin_unlock_bh(&sta->lock);
- 	} else {
- 		sta->ampdu_mlme.addba_req_num[tid]++;
--		/* this will allow the state check in stop_BA_session */
--		*state = HT_AGG_STATE_OPERATIONAL;
-+		__ieee80211_stop_tx_ba_session(local, sta, tid,
-+					       WLAN_BACK_INITIATOR);
- 		spin_unlock_bh(&sta->lock);
--		ieee80211_stop_tx_ba_session(hw, sta->sta.addr, tid,
--					     WLAN_BACK_INITIATOR);
- 	}
- }
-
+ #define PCI_VENDOR_ID_UMC		0x1060
+ #define PCI_DEVICE_ID_UMC_UM8673F	0x0101
+ #define PCI_DEVICE_ID_UMC_UM8886BF	0x673a
 -- 
+1.6.0.6
+
 
