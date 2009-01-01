@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57325 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753036AbZA0Ki7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 05:38:59 -0500
-Subject: Re: [RFC/RFT 5/7] mac80211: fix race in TX aggregation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@gmail.com, Sujith.Manoharan@atheros.com, tomasw@gmail.com
-In-Reply-To: <20090126184925.500822996@sipsolutions.net> (sfid-20090126_195229_608528_A11909E9)
-References: <20090126184740.036240879@sipsolutions.net>
-	 <20090126184925.500822996@sipsolutions.net>
-	 (sfid-20090126_195229_608528_A11909E9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-h6c+Hyy+WQz5pr8nl9pc"
-Date: Tue, 27 Jan 2009 11:38:54 +0100
-Message-Id: <1233052734.4012.29.camel@johannes.local> (sfid-20090127_113901_750052_29B4D074)
-Mime-Version: 1.0
+Received: from web23106.mail.ird.yahoo.com ([217.146.189.46]:38180 "HELO
+	web23106.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754268AbZAAXmW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jan 2009 18:42:22 -0500
+Date: Thu, 1 Jan 2009 23:42:18 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+In-Reply-To: <Pine.LNX.4.44L0.0901011724590.5737-100000@netrider.rowland.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <26416.81498.qm@web23106.mail.ird.yahoo.com> (sfid-20090102_004232_681753_7D866A2E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--- On Thu, 1/1/09, Alan Stern <stern@rowland.harvard.edu> wrote:
 
---=-h6c+Hyy+WQz5pr8nl9pc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Thu, 1 Jan 2009, Hin-Tak Leung wrote:
+> 
+> > Also since Alan Stern is now CC'ed, can I ask the
+> in-tree skeleton
+> > usb driver code updated to reflect the recent
+> PM-related changes?
+> > There seems to be quite some changes between 2.6.26
+> and 2.6.27 .
+> 
+> It _has_ been updated.  But the USB PM interfaces allow
+> several
+> different modes of operation, and usb-skeleton can
+> illustrate only one
+> of them.
 
-On Mon, 2009-01-26 at 19:47 +0100, Johannes Berg wrote:
-> plain text document attachment (017-mac80211-fix-tx-agg.patch)
-> When disabling TX aggregation because it was rejected, there
-> is a window where we first set the state to operation. unlock,
-> and then undo the whole thing. Avoid that by splitting up the
-> stop function.
+So it has... I found Documentation/usb/power-management.txt a bit brief...
+and I am planning to read
+http://ols.fedoraproject.org/OLS/Reprints-2008/brown-reprint.pdf
+which seems to be quite relevant... do you have any recommended readings? I have tried "use the source", but the majority of wireless device drivers don't have any suspend/resume hooks :-). The behavior of 2.6.26pre - somewhere in usbcore forces unloading of all usb device drivers on suspend - was useable.
 
-Need to take part of the 7/7 patch and put it into this, split it up
-wrongly by accident. And 7/7 needs to be _before_ this, because this
-patch makes the race triggerable.
+Hin-Tak
 
-johannes
 
---=-h6c+Hyy+WQz5pr8nl9pc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJfuQ8AAoJEKVg1VMiehFYUOkQAK04NTdlMvZuGg0gGOsBkz2m
-49NBw1IWAWQqVQ8caFnd/DDZn3Z66bHZUdm2kQhTsZYS5kuJ7Zdm3Dz3z3mE/v60
-wCbVXblrQX51tZPQ7LkuvH7YiAHsTMkawZA5Ac5zMeLjHjN817d79CvAoNGtROaY
-pSlKnKx5ru/cChlCGbitAUKdNIFvd6vmjzM67mEjfUtYarcOAKpGb3eDMZ7QcwAB
-7bb2QyF1uR5IyXhzTRGajBstB8Nu06xOknt+5hFA5TTERdpRzSTOsqnsuWIiHR4a
-cgfBdvDIUHy5USPwsR2grtok6dNYsWlqAB4j8Y9qvA8p8IRfIOtcT3qoscoa3LEv
-GsL33YSsnrDP5RQcWE08rTCyKFceMDXesExlUmKHBhHzzTbdLFqoKhVqUTHygM3B
-9mcYBLFw6dDL54F0YXvHjeEKjqLOwkNpoTPlOmjiaoxNScSClhyyPrAILOA5AU1o
-585SfIFqAZL75WNf9Itg5vhybm32fZMq/4pv+/t5763WyA93BSCrHrMHq8VEv6qc
-92DePoS164PAVGu4I/Osuqz7/9QUdVNFzQ17xcFT81PsTVtWSZghpPuir/o1PEC7
-zIgu1Y5/8+CBzwcmILLA6qXqlKHULucQzlqr4mhrU6+fg+7nAX/76SFP3/GLSE37
-W2sILKoE2Nkg8plpYqSg
-=MS0E
------END PGP SIGNATURE-----
-
---=-h6c+Hyy+WQz5pr8nl9pc--
-
+      
