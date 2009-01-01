@@ -1,88 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38962 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838AbZAUTaq (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:35033 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756828AbZAAQij (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 14:30:46 -0500
-Date: Wed, 21 Jan 2009 14:23:30 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] iwl3945: Remove unused variables
-Message-ID: <20090121192329.GB14710@tuxdriver.com> (sfid-20090121_203051_048345_862D0A3F)
-References: <200901190955.32818.helmut.schaa@gmail.com>
+	Thu, 1 Jan 2009 11:38:39 -0500
+Message-ID: <495CF183.10107@lwfinger.net> (sfid-20090101_173856_692688_5BC9951C)
+Date: Thu, 01 Jan 2009 10:38:27 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <200901190955.32818.helmut.schaa@gmail.com>
+To: htl10@users.sourceforge.net
+CC: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	=?ISO-8859-1?Q?Stefanik_?= =?ISO-8859-1?Q?G=E1bor?=
+	<netrolller.3d@gmail.com>, Alan Stern <stern@rowland.harvard.edu>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org,
+	linux-pm@lists.linux-foundation.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
+References: <120849.67182.qm@web23104.mail.ird.yahoo.com>
+In-Reply-To: <120849.67182.qm@web23104.mail.ird.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 19, 2009 at 09:55:32AM +0100, Helmut Schaa wrote:
-> Fix the following warnings in iwl-3945-rs.c by removing unused variab=
-les.
->=20
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98iwl3=
-945_rate_scale_flush_windows=E2=80=99:
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:186: warning: unused varia=
-ble =E2=80=98priv=E2=80=99
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98iwl3=
-945_bg_rate_scale_flush=E2=80=99:
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:219: warning: unused varia=
-ble =E2=80=98priv=E2=80=99
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98iwl3=
-945_collect_tx_data=E2=80=99:
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: warning: unused varia=
-ble =E2=80=98priv=E2=80=99
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98rs_f=
-ree_sta=E2=80=99:
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: warning: unused varia=
-ble =E2=80=98priv=E2=80=99
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98iwl3=
-945_get_adjacent_rate=E2=80=99:
-> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:559: warning: unused varia=
-ble =E2=80=98priv=E2=80=99
->=20
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Hin-Tak Leung wrote:
+> 
+> Yes, that's the (older) non-B device. B devices says RTL8187Bv{B,D,E} . with a B before the 7; I have a rev E .The B device and the non-B device while similiar enough to share some driver code, are different enough that
+> they might suspend/resume differently - they do probe/init slightly differently. Besides, I think all the people who recently worked on that code are B-device owners, with maybe Larry who probably owns both types (or a few).
 
-With this applied, I get these:
+I only have one. It is the strange device that reports an 8187 USB ID,
+but is really an 8187B.
 
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-3945-rs.o
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98iwl394=
-5_rate_scale_flush_windows=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: =E2=80=98priv=E2=
-=80=99 undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: (Each undeclared=
- identifier is reported only once
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: for each functio=
-n it appears in.)
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98iwl394=
-5_bg_rate_scale_flush=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:222: error: =E2=80=98priv=E2=
-=80=99 undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98iwl394=
-5_collect_tx_data=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: error: =E2=80=98priv=E2=
-=80=99 undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98rs_fre=
-e_sta=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: error: =E2=80=98priv=E2=
-=80=99 undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function =E2=80=98iwl394=
-5_get_adjacent_rate=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:594: error: =E2=80=98priv=E2=
-=80=99 undeclared (first use in this function)
-make[2]: *** [drivers/net/wireless/iwlwifi/iwl-3945-rs.o] Error 1
-make[1]: *** [drivers/net/wireless/iwlwifi] Error 2
-make: *** [drivers/net/wireless/] Error 2
-
-Dropping...
-
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Larry
