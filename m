@@ -1,33 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:34844 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750698AbZAISFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 13:05:08 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1LLLjD-0002VJ-3S
-	for linux-wireless@vger.kernel.org; Fri, 09 Jan 2009 18:05:03 +0000
-Received: from 77.21.169.220 ([77.21.169.220])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 18:05:03 +0000
-Received: from feldmann_markus by 77.21.169.220 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 18:05:03 +0000
-To: linux-wireless@vger.kernel.org
-From: feldmaus <feldmann_markus@gmx.de>
-Subject: Re: show WMI magic Signals and activate hardware RF-kill button
-Date: Fri, 09 Jan 2009 19:05:11 +0100
-Message-ID: <gk83hk$fu2$2@ger.gmane.org> (sfid-20090109_190513_433186_D7B88739)
-References: <gk83fe$fu2$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-In-Reply-To: <gk83fe$fu2$1@ger.gmane.org>
+Received: from netrider.rowland.org ([192.131.102.5]:2115 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750933AbZAAAQr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2008 19:16:47 -0500
+Date: Wed, 31 Dec 2008 19:16:44 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	<htl10@users.sourceforge.net>, Bob Copeland <me@bobcopeland.com>,
+	<linux-wireless@vger.kernel.org>,
+	<linux-pm@lists.linux-foundation.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
+In-Reply-To: <495BF975.7030603@lwfinger.net>
+Message-ID: <Pine.LNX.4.44L0.0812311915350.12880-100000@netrider.rowland.org> (sfid-20090101_011654_231844_CA55F2FF)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My actually Sydtem is:
-  HP Pavilion Laptop zv5000
-  Debian Lenny(Testing)
-  Linux Kernel 2.6.28 from kernel.org
-  Broadcom Wlan card BCM4303
+On Wed, 31 Dec 2008, Larry Finger wrote:
+
+> Here is a second try at a suspend/resume patch for rtl8187. This one
+> also seems a bit too easy; however, it did work for me, at least for
+> STD. I now realize that my machine didn't power off in my previous
+> test. This time I manually turned it off before restarting. My
+> computer still doesn't STR, thus that was not tested.
+
+As Oliver pointed out, you generally need to implement a reset_resume
+method for hibernation to work.  See 
+Documentation/usb/power-management.txt.
+
+Alan Stern
 
