@@ -1,74 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:42818 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755928AbZATUGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 15:06:34 -0500
-Date: Tue, 20 Jan 2009 12:05:15 -0800
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: Paul Hickey <paul@christianpatriot.us>, stable@kernel.org,
-	Kyle McMartin <kyle@mcmartin.ca>,
-	linux-wireless@vger.kernel.org,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [stable] Failed Build of modules for 2.6.27.9-159
-Message-ID: <20090120200515.GA5077@kroah.com> (sfid-20090120_210639_214303_4759E2BB)
-References: <1232319854.4596.1.camel@localhost.localdomain> <20090119191138.GA4018@tesla> <1232404986.3641.2.camel@localhost.localdomain> <20090120000336.GB4018@tesla> <1232433738.3696.3.camel@localhost.localdomain> <20090120194243.GC19581@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20090120194243.GC19581@tesla>
+Received: from xc.sipsolutions.net ([83.246.72.84]:52416 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757318AbZABKEX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jan 2009 05:04:23 -0500
+Subject: Re: [RFC 02/11] mac80211: 802.11w - CCMP for management frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081231154203.845811912@w1.fi>
+References: <20081231153834.840526845@w1.fi>
+	 <20081231154203.845811912@w1.fi>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-CqES2cI90Wi04pkf9rX8"
+Date: Fri, 02 Jan 2009 11:04:57 +0100
+Message-Id: <1230890697.3272.6.camel@johannes> (sfid-20090102_110431_550639_B35B99B1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 11:42:43AM -0800, Luis R. Rodriguez wrote:
-> On Mon, Jan 19, 2009 at 10:42:18PM -0800, Paul Hickey wrote:
-> > Hi Luis,
-> >=20
-> > 2.6.27.9-159.fc10.x86_64 is the kernel. I burned the distro right f=
-rom
-> > Fedora.
->=20
-> I am =FCber-surprised to hear that FC10 2.6.27 kernels have added
-> pci_ioremap_bar() in their kernel header include/linux/pci.h. I
-> have verified this by checking:
->=20
-> http://download.fedora.redhat.com/pub/fedora/linux/updates/10/x86_64/=
-kernel-devel-2.6.27.9-159.fc10.x86_64.rpm
->=20
-> I have checked upstrea 2.6.27.9 and even 2.6.27.12 and they do not ha=
-ve this. This breaks
-> compatibility projects like compat-wireless :(
 
-compatibility projects should be checking for the absense or presence o=
-f
-specific functions, not triggering off of kernel release numbers :)
+--=-CqES2cI90Wi04pkf9rX8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > Also, the ForceXPA might not be a problem, but it makes and logs it=
-s
-> > attempts 4X per minute. It may not be much of an impact on the CPU,=
- but
-> > is it necessary? Plus the message log gets really long really fast.
->=20
-> Good point, hopefully this is enough of an argument to make the patch
-> go into 2.6.27. The patch is already in for >=3D 2.6.28.
->=20
-> Greg -- there is an annoying message that gets printed very often
-> when new Atheros 11n cards are used, this is printed upon hw reset
-> which occurs on channel changes (scans) and as such happens quite
-> often. The message was moved to print only when "EEPROM debugging"
-> was enaabled through upstream commit f1dc56003b23d2d5bb5a756de6b1633a=
-76c9e697.
-> Unfortunately this commit is pretty large as it refactored hw.c into
-> separate files. Below is a small one line patch that changes this. Pl=
-ease
-> let me know if this is OK for 2.6.27.x
+On Wed, 2008-12-31 at 17:38 +0200, Jouni Malinen wrote:
 
-Looks good to me, I'll queue it up for the next .27 release.
+>  /**
+> + * ieee80211_is_robust_mgmt_frame - check if frame is a robust managemen=
+t frame
+> + * @hdr: the frame (buffer must include at least the first octet of payl=
+oad)
+> + */
+> +static inline bool ieee80211_is_robust_mgmt_frame(struct ieee80211_hdr *=
+hdr)
+> +{
+> +	if (ieee80211_is_disassoc(hdr->frame_control) ||
+> +	    ieee80211_is_deauth(hdr->frame_control))
+> +		return true;
+> +
+> +	if (ieee80211_is_action(hdr->frame_control)) {
+> +		/*
+> +		 * Action frames, excluding Public Action frames, are Robust
+> +		 * Management Frames.
+> +		 */
+> +		u8 *category =3D ((u8 *) hdr) + 24;
+> +		return *category !=3D WLAN_CATEGORY_PUBLIC;
+> +	}
+> +
+> +	return false;
+> +}
 
-thanks,
+Should that be in include/linux/ieee80211.h?
 
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-CqES2cI90Wi04pkf9rX8
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJXebGAAoJEKVg1VMiehFY0EcP/Aq4AsXarin7THf3KqmF2FA/
+g1/VE9DJUzNeBHAZ5gQHW5SpgKkiAc89VRxLEQqs8LT56YoXNvltdl/ZZTY4jrZ0
+I4pPNxNM77/BMnoVl7McrirzzehqYXNCBXQkwO8G7xioaLW3WutUwy27/bAW8hbY
+wKcYoaG9c8NahEbblUZO8IBds0iEKmCeNWjOVUqMNxQ1zibnU+hY1qr1daFyzuXC
+2SO4aUXEkYdvjGmIaTGOKdHhLdefhBHyWe7VJ2wGa92yoMma8OVZfSTltLBT2l53
+CV7r/RuvW+MA5GSdQy6WuNhpJgVcPwiu6UM3bP8ggdbK5Ku1UTQrSMeAIByNuavc
++IO224Z+V5WTd5x4yU5//8Ep5fxYpGpyPo4b4nl1QkQN4XE8oP4RNPsu9LUbdwIH
+Cm3XT4XEdwXNAjFazTCp8t0HHiHPeDl2AoomeWK/F8Q45v4AMBsCn2EznzxECelR
+003aGMAGADB/1SccSGEwCRr/0n1USh0V1MqnVPlzCNHATFBwWI9B5oksWAg1ZHRF
+Q/OcaAxvKMJjnP+5Jbitr9HJL6EU0+6JMrUQI1rTNsBAMdEUhIcAhWXwhLDhzPVz
+LN+HmotbFdI1meAoPj+LFRMjD8ZdbKjaH5fPi0/Uw8+KZNfe6OqtJfZME0lPbX0q
+GMYqFl0pmvidlrdVG9/p
+=smcv
+-----END PGP SIGNATURE-----
+
+--=-CqES2cI90Wi04pkf9rX8--
+
