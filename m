@@ -1,89 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:59482 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:38832 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751870AbZA2ROB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 12:14:01 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Jan 2009 09:14:01 -0800
-Date: Thu, 29 Jan 2009 09:13:17 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Jack Bates <ms419@freezone.co.uk>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] compat-wireless-old redefinition of
-	'ieee80211_install_qdisc'
-Message-ID: <20090129171316.GA10772@tesla> (sfid-20090129_181408_015836_9C73044D)
-References: <1232918295.3448.9.camel@tad.lat>
+	id S1751669AbZABTct convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jan 2009 14:32:49 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Kalle Valo" <kalle.valo@iki.fi>
+Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
+Date: Fri, 2 Jan 2009 20:31:24 +0100
+Cc: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>,
+	"Vasanthakumar Thiagarajan" <vasanth@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Luis.Rodriguez@atheros.com, Jouni.Malinen@atheros.com,
+	ath9k-devel@lists.ath9k.org
+References: <1230890746-3075-1-git-send-email-vasanth@atheros.com> <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com> <da94abde0901021106l721ad722w9eb857ed41214377@mail.gmail.com>
+In-Reply-To: <da94abde0901021106l721ad722w9eb857ed41214377@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232918295.3448.9.camel@tad.lat>
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200901022031.24460.mb@bu3sch.de> (sfid-20090102_203252_688628_09D449AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 25, 2009 at 01:18:15PM -0800, Jack Bates wrote:
-> http://cgi.sfu.ca/~jdbates/tmp/linux/200901250/patch
-> 
-> I installed Debian Lenny on my new Eee PC 1000HA this weekend, and to
-> get the Atheros AR242x working, I compiled the compat-wireless-old
-> package.
-> 
-> I installed the Debian linux-headers-2.6.26-1-686 package, version
-> 2.6.26-13 but got errors such as this compiling compat-wireless-old:
-> 
-> [...]/wme.c:594: error: redefinition of 'ieee80211_install_qdisc'
-> [...]/wme.h:39: error: previous definition of 'ieee80211_install_qdisc'
-> was here
-> 
-> After applying the linked patch to wme.c, I successfully compiled
-> compat-wireless-old, and am sending this message from my Eee PC with
-> wireless : )
-> --
+On Friday 02 January 2009 20:06:08 Kalle Valo wrote:
+> On Fri, Jan 2, 2009 at 8:52 PM, Stefanik G=E1bor <netrolller.3d@gmail=
+=2Ecom> wrote:
+> > Probably a NOBTCOEX modparam might be a good idea - when implementi=
+ng
+> > BT coexistence in b43, a lot of non-BT-aware cards failed to work
+> > because the BT GPIO line was connected to the TX preamplifier,
+> > breaking all TX.
+>=20
+> It would be nice to have a common interface for this, for example
+> through nl80211. Lots of drivers have BT coexistence support. But thi=
+s
+> is just an idea.
 
-Thanks for the report and the patch. I'm pasting it inline here to comment on it:
+Well, why? If btcoex works correctly (=3D is not buggy), the user does =
+not
+notice it at all. I see no reason to turn it off. Except if it's buggy.
+But then we should simply fix it or always disable it at compiletime, i=
+f
+it's not possible to fix.
 
---- a/compat-wireless-2.6-old/net/mac80211/wme.c	2009-01-24 15:15:21.000000000 -0800
-+++ b/compat-wireless-2.6-old/net/mac80211/wme.c	2009-01-24 15:30:11.000000000 -0800
-@@ -590,6 +590,7 @@
- };
- 
- 
-+#ifdef CONFIG_MAC80211_QOS
- void ieee80211_install_qdisc(struct net_device *dev)
- {
- 	struct Qdisc *qdisc;
-@@ -706,3 +707,4 @@
- 			wme_qdiscop_enqueue(skb, root_qd);
- 	}
- }
-+#endif /* CONFIG_MAC80211_QOS */
-
-----
-
-This is incorrect as wme.c should not be compiled unless you have
-CONFIG_MAC80211_QOS and CONFIG_MAC80211_QOS will only be defined:
-
- * if you have 2.6.22
- * you are on 2.6.23..2.6.26 AND
-	- You have CONFIG_NETDEVICES_MULTIQUEUE
-	- You have CONFIG_NET_SCHED
-
-This logic is in config.mk. Then our mac80211 Makefile has:
-
-mac80211-$(CONFIG_MAC80211_QOS) += wme.o
-
-In your case you have 2.6.26 and you seem to be having compilation issues
-with wme.o. Note that the 2.6.26 kernel has its own mac80211 and its Makeifle has:
-
-mac80211-$(CONFIG_NET_SCHED) += wme.o
-
-CONFIG_MAC80211_QOS is no longer an option on 2.6.26, I'm curious
-where it got enabled then as config.mk shouldn't have enabled it unless
-you had both:
-
-CONFIG_NETDEVICES_MULTIQUEUE
-CONFIG_NET_SCHED
-
-I just updated compat-wireless old to bail out if you have CONFIG_MAC80211_QOS
-from your own kernel if you are on 2.6.23..2.6.26 as it should not be enabled.
-
-  Luis
+--=20
+Greetings, Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
