@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.191]:33949 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327AbZA3IRx (ORCPT
+Received: from mxm.seznam.cz ([77.75.72.45]:34649 "EHLO mxm.seznam.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757446AbZABMJy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 03:17:53 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so252556rnd.17
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 00:17:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <498269D5.7080204@openwrt.org>
-References: <498269D5.7080204@openwrt.org>
-Date: Fri, 30 Jan 2009 10:17:51 +0200
-Message-ID: <40f31dec0901300017g2504e494mc75db9d9a0ffca7@mail.gmail.com> (sfid-20090130_091758_355179_EF0D9174)
-Subject: Re: [PATCH,RFC 0/2] ath5k: implement tx power calibration on
-	ar2413/5413
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 2 Jan 2009 07:09:54 -0500
+Cc: linux-wireless@vger.kernel.org,
+	=?us-ascii?Q?Michael=20Green?= <Michael.Green@atheros.com>,
+	=?us-ascii?Q?Luis=20R=2E=20Rodriguez?= <mcgrof@gmail.com>
+To: linville@tuxdriver.com
+Date: Fri, 02 Jan 2009 13:09:41 +0100 (CET)
+From: =?iso-8859-2?Q?Carlos=20Lau=E9?= <CarlosL@seznam.cz>
+Subject: =?us-ascii?Q?=5BPATCH=20v3=5D=20wireless=2Dregdb=3A=20Update=20regulatory=20rules=20for=20Czech=20Republic=20=28CZ=29=20on=205GHz?=
+Mime-Version: 1.0
+Message-Id: <272.644-30384-2075382930-1230898181@seznam.cz> (sfid-20090102_131021_406737_1E9F3985)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/1/30 Felix Fietkau <nbd@openwrt.org>:
-> Hi,
->
-> I got my AR2413 patches to the point where ath5k properly
-> initializes the PDGAIN curves (register dumps verified against
-> what the madwifi HAL does), and it does Tx at much better
-> power level and with 54 Mbit (tested on an AR5413 card).
-> Power still isn't as good as on madwifi yet, but much closer
-> than before, and I actually get >20Mbit/s throughput now.
->
-> Enjoy!
->
-> - Felix
->
+Hello,
 
-You are the man !
+This patch updates the frequency table for Czech Republic to include 80=
+2.11a. It should be in conformance with all EU & Czech laws.Thanks  Mic=
+hael Green &   Luis R. Rodriguez for explaining some details about TPC =
+compliance. It does not penalize by 3dB, nor includes the dubious  freq=
+uencies 5,725=E2=80=935,875 GHz.
 
-I'm sending some patches that update phy.c, initvals.c and reset.c etc
-today and i'll merge this one with RF5111/RF5112 pcdac stuff and tpc
-support asap to have power table support for all chips. We also need
-to work out regulatory stuff before we fully enable tx power support
-so i have to test this on a spectrum analyzer.
+Signed-off-by: Carlos Lau=C3=A9 <carlosl@seznam.cz>
 
-Just give me some time and i'll come back with code ;-)
+diff --git a/db.txt b/db.txt
+index 6a282b6..55d928a 100644
+--- a/db.txt
++++ b/db.txt
+@@ -141,10 +141,13 @@ country CY:
+        (5250 - 5330 @ 40), (N/A, 20), DFS
+        (5490 - 5710 @ 40), (N/A, 27), DFS
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
++# Data from http://www.ctu.eu/164/download/VOR/VOR-12-08-2005-34.pdf
++# and http://www.ctu.eu/164/download/VOR/VOR-12-05-2007-6-AN.pdf
+ country CZ:
+-       (2402 - 2482 @ 40), (N/A, 20)
+-       (5170 - 5250 @ 40), (N/A, 20)
+-       (5250 - 5330 @ 40), (N/A, 20), DFS
++       (2400 - 2483.5 @ 40), (N/A, 100 mW)
++       (5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
++       (5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
++       (5470 - 5725 @ 40), (N/A, 1000 mW), DFS
+
+ # Data from "Frequenznutzungsplan" (as published in April 2008),
+ # downloaded from http://www.bundesnetzagentur.de/media/archive/13358.=
+pdf
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
