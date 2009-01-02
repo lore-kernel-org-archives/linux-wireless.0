@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:41018 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134AbZAENvl (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:44173 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754760AbZABOKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 08:51:41 -0500
-Date: Mon, 5 Jan 2009 15:05:28 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linville@tuxdriver.com,
-	davem <davem@davemloft.net>
-Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless stack
-Message-ID: <20090105140528.GR496@one.firstfloor.org> (sfid-20090105_145145_323873_BA2D8AED)
-References: <20090104162826.GT496@one.firstfloor.org> <1231087288.3296.15.camel@johannes> <20090104174339.GX496@one.firstfloor.org> <1231090388.3296.17.camel@johannes> <20090104184136.GY496@one.firstfloor.org> <1231144574.3286.15.camel@johannes> <20090105132141.GO496@one.firstfloor.org> <1231161379.3334.14.camel@johannes> <20090105133657.GQ496@one.firstfloor.org> <1231162275.3334.20.camel@johannes>
+	Fri, 2 Jan 2009 09:10:17 -0500
+Subject: Re: [PATCH] rt2x00: Fix radio LED type check
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Andrew Price <andy@andrewprice.me.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <a32f33a40901020314h3f33347dw6433e485abd627e5@mail.gmail.com>
+References: <20090102080527.GA16585@silver.sucs.org>
+	 <a32f33a40901020314h3f33347dw6433e485abd627e5@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 02 Jan 2009 15:10:14 +0100
+Message-Id: <1230905414.15391.39.camel@californication> (sfid-20090102_151023_427303_FD8BAAD7)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231162275.3334.20.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 05, 2009 at 02:31:15PM +0100, Johannes Berg wrote:
-> I was under the impression that you only modified monitor mode code, but
-> upon closer inspection (really, you should diff with -p, makes it a lot
-> easier to review) it seems that you also touched packet defragmentation
-> code. Are you running a low fragmentation threshold on your network?
+Hi Ivo,
 
-I don't use any special settings, only defaults.
-
-> Can you
-> check /sys/kernel/debug/ieee80211/phy*/statistics/rx_expand_skb_head*
-> please?
-
-The kernel doesn't have 80211 debugging enabled. I can enable 
-it, but it will take some time until the messages reappear
-(I cannot reproduce them at will, but have to wait)
-
+> > Since commit 9a95dba32735534bda59def40c747bf606fedf05 "rt2x00: Fix LED
+> > state handling", rt2x00leds_led_radio wrongly checks that the LED type
+> > is LED_TYPE_ASSOC. This patch makes it check for LED_TYPE_RADIO once
+> > again.
+> >
+> > Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
 > 
-> > > actually used those skbs then it's likely that the warning didn't result
-> > > in any corruption at all.
-> > 
-> > Nothing was corrupted ever to my knowledge, just lots of spam in my kernel logs.
+> Good catch. Thanks.
 > 
-> You wouldn't easily notice any socket memory charge corruption anyway.
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-There are WARN_ON(sk->sk_forward_alloc)s in the socket destroy paths
-which should trigger.
+small comment from my side here. Signed-off-by is only suppose to be
+used if you pick up the patch and then send it to John by yourself. If
+you just wanna indicate that it is fine for John to pick up this patch,
+then it should be an Acked-by: line.
 
--Andi
+The Signed-off-by should indicate the steps (aka persons) this patch
+when through until it reached Linus. This doesn't include people testing
+or acknowledging a patch.
 
--- 
-ak@linux.intel.com
+Regards
+
+Marcel
+
+
