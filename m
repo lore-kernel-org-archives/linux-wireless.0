@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36123 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:37549 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300AbZA3IId (ORCPT
+	with ESMTP id S1751205AbZABKLn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 03:08:33 -0500
-Subject: Re: [RFC/RFT 06/11] mac80211: document TX aggregation (and small
-	cleanup)
+	Fri, 2 Jan 2009 05:11:43 -0500
+Subject: Re: [RFC 00/11] mac80211: Add support for IEEE 802.11w (MFP)
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org, m.sujith@gmail.com,
-	tomasw@gmail.com
-In-Reply-To: <20090129215152.GA27253@jm.kir.nu>
-References: <20090129005450.068797016@sipsolutions.net>
-	 <20090129005808.843799105@sipsolutions.net>
-	 <20090129215152.GA27253@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kkPgn7zfi8yankg9dLgr"
-Date: Fri, 30 Jan 2009 09:08:28 +0100
-Message-Id: <1233302908.4161.8.camel@johannes.local> (sfid-20090130_090836_929335_A327480C)
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20081231153834.840526845@w1.fi>
+References: <20081231153834.840526845@w1.fi>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3DCpLRfUdPuYGSA8KOfA"
+Date: Fri, 02 Jan 2009 11:12:19 +0100
+Message-Id: <1230891139.3272.10.camel@johannes> (sfid-20090102_111145_848481_1163CC50)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-kkPgn7zfi8yankg9dLgr
+--=-3DCpLRfUdPuYGSA8KOfA
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-01-29 at 23:51 +0200, Jouni Malinen wrote:
-> On Thu, Jan 29, 2009 at 01:54:56AM +0100, Johannes Berg wrote:
->=20
-> > + * DOC: TX aggregation
->=20
-> > + * When TX aggregation is started by some subsystem (usually the rate =
-control
-> > + * control algorithm would be appropriate) by calling the
-> > + * ieee80211_start_tx_ba_session() function, the driver will be notifi=
-ed via
-> > + * its @ampdu_action function, with the %IEEE80211_AMPDU_TX_START acti=
-on.
->=20
-> Does rate control (btw, remove the duplicated "control" from the text)
+On Wed, 2008-12-31 at 17:38 +0200, Jouni Malinen wrote:
+> This set of patches adds support for IEEE 802.11w (management frame
+> protection) into mac80211. It is up-to-date with the latest IEEE 802.11w
+> draft (D7.0) and I do not expect any major changes to IEEE 802.11w
+> anymore.
 
-Oops, thanks.
-
-> algorithm have knowledge of whether PTK has already been configured?
-> There is going to be a somewhat unfortunate timing issue with trying to
-> set up aggregation before 4-way handshake has been completed if 802.11w
-> is used (Action frames are dropped before the keys are set). Something
-> in the system (either the request or mac80211's action on the request)
-> would need to be delayed until the keys are in place in such a case.
-
-Interesting issue, something I wasn't aware of. Yes, we'd need to delay
-it in that case, not that it makes sense to set up aggregation that
-early -- who knows it's going to be used? My AP at least will disable
-your session if you're fairly idle (I guess to save reorder buffer
-resources). We can simply delay it in mac80211, or we can just return
--EAGAIN. For iwl-agn-rs it wouldn't matter, it tries to enable
-aggregation repeatedly even while it's already enabled =3D)
+Looks good to me, I wouldn't mind putting this in.
 
 johannes
 
---=-kkPgn7zfi8yankg9dLgr
+--=-3DCpLRfUdPuYGSA8KOfA
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJgrV5AAoJEKVg1VMiehFYa+MQAMYco6NvELIcMDGD17xB+0P+
-aB40ehBgqaSy7EJW6bcrh9gx/blfUSTZJGkk3quM4HhoXUVQLUV8IszzDOYRT7WD
-GL7ObkD7PVC7RxQG32PPP4RFxkxZPcgP8zcspUSlejiXQdiGK2aoTz1yV+kjkKzb
-bsbauHEwW8lXrrcgvk9U55vLvHnYnPTQw7UjtnyvPQSaV4K4JKEMwpsneMwF462C
-RUYdPCN5EuXkGCgTHHnrG9Hc44nN6h1Si2Qf3S0wuvzxmcG9W1H7vdttobXLaPgz
-MeSsTN4BvkeJ9cc0vp4n/s9cdJr0OsiEU80l7fvdvz37DwhVJHb+56hClOovBZ/y
-+2prI2Urup9SEHauMTho7joJtQi93HFQ9SLD5te7AFrRrHmEPkeZmAMuqgFS0vkd
-fd5k7XNs0PKWCw9w39ag6lsT22+k+CiKVBpemf5uvEfSdPu79J0cND6ElZstLjVS
-j+nW8np+El6AkXIdHeGCzdU7GKF6m0ZQ87LPCPdIrilCSkc0IEK5ysO0YF3Mpn/T
-8pZsceUTd7MyE9KGVATaJ3fkn0FikunxeVYkDlTb7d27HVS3zsKeYnW+1a9iwGcc
-j897mZAukHRgtYKaMjtq5DYQj2lJbgQzHQDm3nvBgcWKMnYweMJBo5Mh5+fvF4Ym
-zU3IkM5ddF6jGhN7lL6e
-=ukLv
+iQIcBAABAgAGBQJJXeiAAAoJEKVg1VMiehFYRjIP/1YcOjd9iJskXYdTWP3Mbqrj
+YY27M+vPRjV2OfslnQQKTqpxszg/NQ5N1Z5sqVzs1qxCWiLZF7uhH5qAjNYWkRe7
+89/UilfTsUOHny27JF89efM7bQ8f0eTM6/jtVwNSaRe8ZGMsBowrDis0V5wY8trG
+66QF1DPDst6UPXyPtyDoxffVBGf9Bc0twdlILootSvGBvDOWHOPFiHNnORqngsdh
+jjZ87I6Cvqecb7DNiLXLG4SFePbfuwQN95jvp/P+hgq3v1mGm/+xxxb5WGzZzgmt
+se/1aM7rfZInTruj6PD/HDCreyHO5YNgTgYgo9KU5HzGFomlCDQSLnenfaW1yLhC
+F0ZLOnAnJj7rSCkTupGNEH7XXpxUjI+uynBHwsvZ1VmIG6ClhuXrVAvk0uAXOG5Z
+q8oD3Q800FTBnPIiv1oxgTXgoHL5UdfRkR21NZ81l65CGjns1gq5pOZ7+6ytMnV5
+DzSHuYjLGf6jrIoEkxyr9SAzDG3wS63R5M3/INC9ymr56Bl1hN9USJwmhl4g0wAX
+8Z/TAiJrzFvkvg6azhZRqa/7bqE8JaeOKLMG1mKZeuwjI17UjQl+LFxchRq3hJ3b
+LIxdLU8fkmV6I38PHREW1XiZK4ijSpMQXucXV0rgp/vBFVVH81ZeMQHsUwo75YPZ
+j8OpOIUaT+r29cXk5oWh
+=Eu57
 -----END PGP SIGNATURE-----
 
---=-kkPgn7zfi8yankg9dLgr--
+--=-3DCpLRfUdPuYGSA8KOfA--
 
