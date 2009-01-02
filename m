@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:32979 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752434AbZAIQhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 11:37:13 -0500
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-From: Dan Williams <dcbw@redhat.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
-In-Reply-To: <87skns29t5.fsf@litku.valot.fi>
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
-	 <1229336057.4471.9.camel@johannes.berg>
-	 <1229354532.12163.24.camel@localhost.localdomain>
-	 <20081217174244.M36761@bobcopeland.com>
-	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
-	 <1230102989.16960.14.camel@californication>
-	 <1231260306.14565.21.camel@localhost.localdomain>
-	 <1231261937.5246.16.camel@californication>
-	 <1231267979.14565.34.camel@localhost.localdomain>
-	 <1231270575.14901.6.camel@californication>
-	 <1231432778.21643.40.camel@localhost.localdomain>
-	 <87skns29t5.fsf@litku.valot.fi>
-Content-Type: text/plain
-Date: Fri, 09 Jan 2009 11:35:21 -0500
-Message-Id: <1231518921.30057.14.camel@dhcp-18-190-61-35.dyn.mit.edu> (sfid-20090109_173718_501273_0CF9BB80)
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.157]:19816 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751741AbZABS7S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jan 2009 13:59:18 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2307730fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2009 10:59:15 -0800 (PST)
+Message-ID: <69e28c910901021059q5bc604afn62117fcdf937d813@mail.gmail.com> (sfid-20090102_195921_740708_5BF1EBF0)
+Date: Fri, 2 Jan 2009 19:59:15 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
+Cc: "Vasanthakumar Thiagarajan" <vasanth@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Luis.Rodriguez@atheros.com, Jouni.Malinen@atheros.com,
+	ath9k-devel@lists.ath9k.org
+In-Reply-To: <200901021956.21785.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1230890746-3075-1-git-send-email-vasanth@atheros.com>
+	 <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com>
+	 <200901021956.21785.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-01-09 at 09:55 +0200, Kalle Valo wrote:
-> Dan Williams <dcbw@redhat.com> writes:
-> 
-> >> Having the suspend scripts to tell NM to disconnect is just not a good
-> >> solution and especially in the embedded world this is a broken design
-> >> concept.
-> >
-> > Right; the missing piece is pushing the necessary roaming support down
-> > to the supplicant and letting it make the decisions about what to
-> > connect to.  There's a few things that I need from the supplicant before
-> > I can simply push the entire config set down from NM and let it go wild:
-> >
-> > 1) A 'frequency' config item that works in infrastructure mode too,
-> > ignoring any AP not matching that frequency
-> 
-> Just out of curiosity, why this feature is needed? I can understand
-> hard-coding bssid, but I don't understand the use for hard-coding the
-> frequency.
+On Fri, Jan 2, 2009 at 7:56 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Friday 02 January 2009 19:52:49 Stefanik G=E1bor wrote:
+>> On Fri, Jan 2, 2009 at 11:05 AM, Vasanthakumar Thiagarajan
+>> <vasanth@atheros.com> wrote:
+>> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+>> > ---
+>> >  drivers/net/wireless/ath9k/ath9k.h |    5 +++++
+>> >  drivers/net/wireless/ath9k/hw.c    |   33 +++++++++++++++++++++++=
+++++++++++
+>> >  drivers/net/wireless/ath9k/main.c  |    9 +++++++--
+>> >  drivers/net/wireless/ath9k/reg.h   |   10 ++++++++++
+>> >  4 files changed, 55 insertions(+), 2 deletions(-)
+>> >
+>> > <snip>
+>>
+>> Probably a NOBTCOEX modparam might be a good idea - when implementin=
+g
+>> BT coexistence in b43, a lot of non-BT-aware cards failed to work
+>
+> And what makes you think that atheros also ships cards with broken bt=
+coex support?
 
-If the user wishes to lock the connection to a specific frequency,
-irregardless of other values.  Maybe you're right and we don't really
-care about it, but one other thing that would be nice is a "band"
-argument for a network block to differentiate A vs. B/G APs that might
-have the same SSID and security settings, but where the user only wants
-to use the A-side for example.
-
-Dan
+We can never know what vendors will do - or does Atheros only allow
+reference card designs?
+>
+> --
+> Greetings, Michael.
+>
 
 
+
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
