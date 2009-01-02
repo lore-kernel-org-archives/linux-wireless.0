@@ -1,166 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4998 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753535AbZASX2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 18:28:21 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 15/15] iwlwifi: add recognition of Intel WiFi Link 100 Series
-Date: Mon, 19 Jan 2009 15:30:35 -0800
-Message-Id: <1232407835-19451-16-git-send-email-reinette.chatre@intel.com> (sfid-20090120_003051_689830_B66FF185)
-In-Reply-To: <1232407835-19451-15-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232407835-19451-1-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-2-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-3-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-4-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-5-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-6-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-7-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-8-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-9-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-10-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-11-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-12-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-13-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-14-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-15-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44924 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755618AbZABO2b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jan 2009 09:28:31 -0500
+Subject: Re: mac80211 (ath9k, ath5k, etc.) set fixed BSSID + channel Patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: berlin@berlin.freifunk.net, linux-wireless@vger.kernel.org
+In-Reply-To: <20090101224144.232020@gmx.net> (sfid-20090101_234215_262569_45D2D4DC)
+References: <20081230025651.6500@gmx.net>
+	 (sfid-20081230_035657_768921_742B8565) <1230633565.3850.7.camel@johannes>
+	 <20081230223611.163110@gmx.net>
+	 (sfid-20081230_233642_601178_E4AB42EE) <1230676811.3850.22.camel@johannes>
+	 <20081230230751.163100@gmx.net>  <20090101224144.232020@gmx.net>
+	 (sfid-20090101_234215_262569_45D2D4DC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-anhLhQVASuO4GCPiwHRG"
+Date: Fri, 02 Jan 2009 15:29:06 +0100
+Message-Id: <1230906546.3586.5.camel@johannes> (sfid-20090102_152837_070890_981495F8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
 
-add configuration for new Intel WiFi Link 100 series as part of the
-iwlagn driver under the umbrella of 5000 family of devices.
+--=-anhLhQVASuO4GCPiwHRG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/Makefile  |    1 +
- drivers/net/wireless/iwlwifi/iwl-100.c |   70 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.c |    3 +
- drivers/net/wireless/iwlwifi/iwl-dev.h |    1 +
- 4 files changed, 75 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-100.c
+[dropping openwrt list, it ignores non-subscribers anyway]
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index 1347d0c..fec2fbf 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -13,6 +13,7 @@ iwlagn-objs		:= iwl-agn.o iwl-agn-rs.o iwl-agn-hcmd-check.o
- iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
- iwlagn-$(CONFIG_IWL5000) += iwl-5000.o
- iwlagn-$(CONFIG_IWL5000) += iwl-6000.o
-+iwlagn-$(CONFIG_IWL5000) += iwl-100.o
- 
- obj-$(CONFIG_IWL3945)	+= iwl3945.o
- iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
-diff --git a/drivers/net/wireless/iwlwifi/iwl-100.c b/drivers/net/wireless/iwlwifi/iwl-100.c
-new file mode 100644
-index 0000000..dbadaf4
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/iwl-100.c
-@@ -0,0 +1,70 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2008-2009 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ *****************************************************************************/
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/pci.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/delay.h>
-+#include <linux/skbuff.h>
-+#include <linux/netdevice.h>
-+#include <linux/wireless.h>
-+#include <net/mac80211.h>
-+#include <linux/etherdevice.h>
-+#include <asm/unaligned.h>
-+
-+#include "iwl-eeprom.h"
-+#include "iwl-dev.h"
-+#include "iwl-core.h"
-+#include "iwl-io.h"
-+#include "iwl-sta.h"
-+#include "iwl-helpers.h"
-+#include "iwl-5000-hw.h"
-+
-+/* Highest firmware API version supported */
-+#define IWL100_UCODE_API_MAX 1
-+
-+/* Lowest firmware API version supported */
-+#define IWL100_UCODE_API_MIN 1
-+
-+#define IWL100_FW_PRE "iwlwifi-100-"
-+#define _IWL100_MODULE_FIRMWARE(api) IWL100_FW_PRE #api ".ucode"
-+#define IWL100_MODULE_FIRMWARE(api) _IWL100_MODULE_FIRMWARE(api)
-+
-+struct iwl_cfg iwl100_bgn_cfg = {
-+	.name = "100 Series BGN",
-+	.fw_name_pre = IWL100_FW_PRE,
-+	.ucode_api_max = IWL100_UCODE_API_MAX,
-+	.ucode_api_min = IWL100_UCODE_API_MIN,
-+	.sku = IWL_SKU_G|IWL_SKU_N,
-+	.ops = &iwl5000_ops,
-+	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
-+	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.mod_params = &iwl50_mod_params,
-+};
-+
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 00f73a6..fc6f639 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4183,6 +4183,9 @@ static struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x0087, PCI_ANY_ID, iwl6050_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0088, PCI_ANY_ID, iwl6050_3agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0089, PCI_ANY_ID, iwl6050_2agn_cfg)},
-+/* 100 Series WiFi */
-+	{IWL_PCI_DEVICE(0x0083, PCI_ANY_ID, iwl100_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0084, PCI_ANY_ID, iwl100_bgn_cfg)},
- #endif /* CONFIG_IWL5000 */
- 
- 	{0}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 199e331..79f2d45 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -62,6 +62,7 @@ extern struct iwl_cfg iwl6000_2agn_cfg;
- extern struct iwl_cfg iwl6000_3agn_cfg;
- extern struct iwl_cfg iwl6050_2agn_cfg;
- extern struct iwl_cfg iwl6050_3agn_cfg;
-+extern struct iwl_cfg iwl100_bgn_cfg;
- 
- /* shared structures from iwl-5000.c */
- extern struct iwl_mod_params iwl50_mod_params;
--- 
-1.5.4.3
+On Thu, 2009-01-01 at 23:41 +0100, Alina Friedrichsen wrote:
+> Hello,
+>=20
+> here is a new version of this patch, that fixes a bug that manual
+> channel setting in the ad-hoc (IBSS) mode doesn't work properly, too.
+>=20
+> It would nice, if it can be committed, before it's out of sync.
+
+You need to provide a proper changelog that explains the changes, a
+proper subject (don't mention any drivers) and a signed-off-by, see
+http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches
+please.
+
+johannes
+
+--=-anhLhQVASuO4GCPiwHRG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJXiSwAAoJEKVg1VMiehFYE28QAKPVyX04YthnGnBOPw2QHnwq
+m+Eqa99YktkRzhS43pTMKzMI784SrFhFtkxQGUCwIkbA6Vtn5qdcnO8OJ624C2nZ
+L4EvxUuvDo/dWOXY4iP4urXdfegAeB+9asySAtQh794vPPLFDuqh71rWffQ9IEOR
+cCWIihSf4shFeGB7YhqJvMxSRpY7Tw/i3nbE3Ym3vGhmxoisotc3mrFpGdCXed0d
+smzt7rNd60c6mnWwp9yEfbm162pwT++M84zYqE9OkmgGUw3RuGBbN2BMJyEADxSV
+sg0dQqc3iJGN7gFddUaY6ReJflHACIOshxK1rbdZeUArFNNf56LMPL2JdLzrHuZV
+ATuwUyCAhog4vjg4zqFRLsPBgg221Og7z2pldyfa+DU9QtEJEpHyS/KKJ4CgPZ5e
+4C3kOoNkBcJJ5Jv2YR5276SjVN045rqrBZtVIvufPBC0D/NbB/m/j0bx/CwMRFcv
+b1swcbe/teHl0k4h5q2JR93K/D5OFsEeheZ6ZYsLSJB4PIMJX89apv9YcIV8O4GN
+/CWE0NDfKRG82K7zFWEtrQBlmEIjS5Gul1s6F7qVa7pqLIRWZWDdf6P8SInKdsm0
+Qz3ToXmFYnQbHhQmPEyYG5MI3aLm3DtiDJH8shCXKDPQQ+i0rbiBz35kRj2L/pWo
+LwfwZKu2DjezZoB8bYD6
+=PzuC
+-----END PGP SIGNATURE-----
+
+--=-anhLhQVASuO4GCPiwHRG--
 
