@@ -1,28 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38900 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753051AbZATWPq (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:22924 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758283AbZABSwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 17:15:46 -0500
-Date: Tue, 20 Jan 2009 17:12:35 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/7] airo: cleanups and simplifications
-Message-ID: <20090120221235.GB3982@tuxdriver.com> (sfid-20090120_231550_883905_50447053)
-References: <1232462691.22158.6.camel@localhost.localdomain>
+	Fri, 2 Jan 2009 13:52:51 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2306973fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2009 10:52:49 -0800 (PST)
+Message-ID: <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com> (sfid-20090102_195255_556900_750F1473)
+Date: Fri, 2 Jan 2009 19:52:49 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Vasanthakumar Thiagarajan" <vasanth@atheros.com>
+Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Luis.Rodriguez@atheros.com, Jouni.Malinen@atheros.com,
+	ath9k-devel@lists.ath9k.org
+In-Reply-To: <1230890746-3075-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1232462691.22158.6.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1230890746-3075-1-git-send-email-vasanth@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 09:44:51AM -0500, Dan Williams wrote:
-> airo needs some hot sexy love.  come and get your love come and get your
-> love now.
+On Fri, Jan 2, 2009 at 11:05 AM, Vasanthakumar Thiagarajan
+<vasanth@atheros.com> wrote:
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+>  drivers/net/wireless/ath9k/ath9k.h |    5 +++++
+>  drivers/net/wireless/ath9k/hw.c    |   33 +++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath9k/main.c  |    9 +++++++--
+>  drivers/net/wireless/ath9k/reg.h   |   10 ++++++++++
+>  4 files changed, 55 insertions(+), 2 deletions(-)
+>
+> <snip>
 
-*shudder*
+Probably a NOBTCOEX modparam might be a good idea - when implementing
+BT coexistence in b43, a lot of non-BT-aware cards failed to work
+because the BT GPIO line was connected to the TX preamplifier,
+breaking all TX.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
