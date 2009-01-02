@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60624 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760179AbZAHM5U (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:36750 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759325AbZABTz2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 07:57:20 -0500
-Subject: Re: [PATCH 1/6] cfg80211: call reg_notifier() once
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1231379017-28363-2-git-send-email-lrodriguez@atheros.com>
-References: <1231379017-28363-1-git-send-email-lrodriguez@atheros.com>
-	 <1231379017-28363-2-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZGNgQrwsfd4k7/KzLRVr"
-Date: Thu, 08 Jan 2009 13:58:12 +0100
-Message-Id: <1231419492.3685.0.camel@johannes> (sfid-20090108_135742_226075_276830E3)
-Mime-Version: 1.0
+	Fri, 2 Jan 2009 14:55:28 -0500
+Received: by bwz14 with SMTP id 14so20394193bwz.13
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2009 11:55:25 -0800 (PST)
+Message-ID: <da94abde0901021155x47aa5c34u85f0a9b7f41fa8cf@mail.gmail.com> (sfid-20090102_205534_756034_2C31535B)
+Date: Fri, 2 Jan 2009 21:55:25 +0200
+From: "Kalle Valo" <kalle.valo@iki.fi>
+To: Claudio <der.claudio@aon.at>
+Subject: Re: status of at76-usb driver
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1230923532.495e670ca90b6@webmail.aon.at>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <11844363.2869.1230645164289.JavaMail.root@WARSBL214.highway.telekom.at>
+	 <87fxk1902j.fsf@litku.valot.fi>
+	 <1230923532.495e670ca90b6@webmail.aon.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jan 2, 2009 at 9:12 PM, Claudio <der.claudio@aon.at> wrote:
+> Kalle Valo <kalle.valo@iki.fi> wrote:
+>> I tried twice with latest Ubuntu 8.10 (updated yesterday) and kernel
+>> oopsed both time for me:
+>
+> So it did for me.
+>
+> But the at76_usb that comes with Ubuntu 8.10 is actually a (very old)
+> 0.14beta1 version. Try $ strings /lib/modules/`uname \\
+> -r`/kernel/ubuntu/misc/wireless/at76/at76_usb.ko | egrep \'0.1[47]\'
+>
+> Ad 1: It seems like Ubuntu ships an outdated version of the old
+> stand-alone driver.
+>
+> Ad 2: I\'ve found a work-around (I\'ve tried this earlier but it did not
+> work for any reason): adapting and compiling the 0.17 version of the old
+> stand-alone driver (http://developer.berlios.de/projects/at76c503a/) ->
+> It works again.
+>
+> Since this is not the perfect solution I would like to find out how to
+> enable the at76 driver from the staging tree and then vote for doing the
+> same in the Ubuntu kernel package. Well, how do I enable this driver
+> anyway?
 
---=-ZGNgQrwsfd4k7/KzLRVr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I think at76_usb was included to 2.6.28 and I doubt that ubuntu uses
+so new kernel yet.
 
-On Wed, 2009-01-07 at 17:43 -0800, Luis R. Rodriguez wrote:
-> We are calling the reg_notifier() callback per band, this is
-> not necessary, just call it once.
->=20
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Or what do you think we should do?
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Better to use the stand-alone driver from berlios for now and wait for
+ubuntu to upgrade 2.6.28.
 
-> ---
->  net/wireless/reg.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index 4f87753..2f2ba92 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -841,9 +841,9 @@ void wiphy_update_regulatory(struct wiphy *wiphy, enu=
-m reg_set_by setby)
->  	for (band =3D 0; band < IEEE80211_NUM_BANDS; band++) {
->  		if (wiphy->bands[band])
->  			handle_band(wiphy->bands[band]);
-> -		if (wiphy->reg_notifier)
-> -			wiphy->reg_notifier(wiphy, setby);
->  	}
-> +	if (wiphy->reg_notifier)
-> +		wiphy->reg_notifier(wiphy, setby);
->  }
-> =20
->  /* Return value which can be used by ignore_request() to indicate
-
---=-ZGNgQrwsfd4k7/KzLRVr
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJZfhhAAoJEKVg1VMiehFYMbsP/3Pf69LQPQKM5YvoF29GUdEz
-ib0SqewtiuAZalKNAwS9RCMMP79bYhu8wELu1YCDNHi8EOM1UnnKsuUeJowL8g8o
-2EQzvY7C/qR2mQPbfns3v7V5HWQsFqkeVBI3ksgAs97RXVSApVfmWtN/QzA8E84B
-pHEFmfuihJra76IZMaMnmeDaqO8vVJ/PZBPr/G0XTgHAlKtQiNQPY9A4rEJgWbFs
-WXEA3KGBB/6qTgkRRP9wU/9gCiFHQJskqHw3CQmni2oc5fIIAiUKoBp9gijKFWOI
-by5kYhIciqL79NTjQhra8gKf1v1hVX374eTbY/1YflZRRnE8uSaAiWM0ByQG/AaT
-SfHu9MK4Fsvp2LRvr1Dk/mGSq9WOcvMJ4KeBP6lo8rcHe4TwVZY0/QQ8029t1HpL
-8Sf3YzSfmqAVh356CLwa8Uroh55cemene7EA+C1hCG9Pu9ySr/2Lp7jMiERA4ET4
-36SViI/PKZPzz3gguVWZ19XOjNILfN6CYNhYzB7eaTKXvODBgMCO5hHU7PNmXRlf
-UVDtkZ5u3UQlV05opOohS3HbmsuTwBiGya8rwzFsIdAzB6MCyytwd02Xjf7PN1Kk
-Aqz3YgM2Qph1yN/kq+cEBVZx9XJqkkq7OaoeKdd49kqs5P0ngBTt57FPmb9vu6NT
-XEm4tUrjkfbAdxTURAP9
-=/Dvr
------END PGP SIGNATURE-----
-
---=-ZGNgQrwsfd4k7/KzLRVr--
-
+Kalle
