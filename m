@@ -1,30 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f28.google.com ([209.85.219.28]:60347 "EHLO
-	mail-ew0-f28.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785AbZAVPwt (ORCPT
+Received: from terminus.zytor.com ([198.137.202.10]:60758 "EHLO
+	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751168AbZABTgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 10:52:49 -0500
-Received: by ewy9 with SMTP id 9so1706ewy.13
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 07:52:46 -0800 (PST)
-Message-ID: <4978964C.8000301@gmail.com> (sfid-20090122_165254_381895_42FE5537)
-Date: Thu, 22 Jan 2009 16:52:44 +0100
-From: Artur Skawina <art.08.09@gmail.com>
+	Fri, 2 Jan 2009 14:36:24 -0500
+Message-ID: <495E6C96.3040102@kernel.org> (sfid-20090102_203626_917615_D8AD4691)
+Date: Fri, 02 Jan 2009 11:35:50 -0800
+From: "H. Peter Anvin" <hpa@kernel.org>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: Artur Skawina <art.08.09@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
-References: <200901211450.50880.chunkeey@web.de> <4977785B.7020009@gmail.com> <497806E8.1060709@gmail.com> <200901221609.27401.chunkeey@web.de>
-In-Reply-To: <200901221609.27401.chunkeey@web.de>
+To: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>
+CC: Ingo Molnar <mingo@elte.hu>, x86 maintainers <x86@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: tip - Solution of ath9k: turn off temporarily (66b5c4a2c638b5a69d3e41abe4a2bae55035a92e)
+References: <3f9a31f40901020936l4bed87e2jb64678572d2ad45b@mail.gmail.com>	 <20090102180730.GA10072@elte.hu> <3f9a31f40901021040l2afb5e19sc37e61d3f9728531@mail.gmail.com>
+In-Reply-To: <3f9a31f40901021040l2afb5e19sc37e61d3f9728531@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> On Thursday 22 January 2009 06:40:56 Artur Skawina wrote:
-> was this with your patch to use rx_refills urb pool for tx, or without?
+Jaswinder Singh Rajput wrote:
+>>
+>> diff --git a/drivers/net/wireless/ath9k/Kconfig b/drivers/net/wireless/ath9k/Kconfig
+>> index c43bd32..b849a45 100644
+>> --- a/drivers/net/wireless/ath9k/Kconfig
+>> +++ b/drivers/net/wireless/ath9k/Kconfig
+>> @@ -1,6 +1,8 @@
+>>  config ATH9K
+>>        tristate "Atheros 802.11n wireless cards support"
+>>        depends on PCI && MAC80211 && WLAN_80211
+>> +       # build failures
+>> +       depends on 0
+>>        select MAC80211_LEDS
+>>        select LEDS_CLASS
+>>        select NEW_LEDS
+>>
+> 
 
-just your patch plus the fixes that i needed to get it to work, all
-of them were in that email. The subject said RFT... ;)
-[the line #s were off, because of some extra printks logging the queue len]
+I thought the proper way to do this was "depends on BROKEN"...
 
-artur
+	-hpa
+
