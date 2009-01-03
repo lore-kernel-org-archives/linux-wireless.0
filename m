@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:35352 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755670AbZAHStt (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:10221 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752490AbZACIqv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 13:49:49 -0500
-Received: by ewy10 with SMTP id 10so9791424ewy.13
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2009 10:49:47 -0800 (PST)
-To: Andrew Price <andy@andrewprice.me.uk>
-Subject: Re: [PATCH] rt2x00: Fix radio LED type check
-Date: Thu, 8 Jan 2009 19:49:43 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20090102080527.GA16585@silver.sucs.org> <a32f33a40901020314h3f33347dw6433e485abd627e5@mail.gmail.com> <20090108181035.GA27377@silver.sucs.org>
-In-Reply-To: <20090108181035.GA27377@silver.sucs.org>
+	Sat, 3 Jan 2009 03:46:51 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2009 00:46:50 -0800
+Date: Sat, 3 Jan 2009 14:16:38 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
+Message-ID: <20090103084637.GA31929@vasanth-laptop> (sfid-20090103_094657_298701_6E641A1C)
+References: <1230890746-3075-1-git-send-email-vasanth@atheros.com> <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901081949.43463.IvDoorn@gmail.com> (sfid-20090108_194953_036566_E75D65BF)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 January 2009, Andrew Price wrote:
-> On Fri, Jan 02, 2009 at 12:14:17PM +0100, Ivo Van Doorn wrote:
-> > On Fri, Jan 2, 2009 at 9:05 AM, Andrew Price <andy@andrewprice.me.uk> wrote:
-> > > Since commit 9a95dba32735534bda59def40c747bf606fedf05 "rt2x00: Fix LED
-> > > state handling", rt2x00leds_led_radio wrongly checks that the LED type
-> > > is LED_TYPE_ASSOC. This patch makes it check for LED_TYPE_RADIO once
-> > > again.
-> > >
-> > > Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
-> > 
-> > Good catch. Thanks.
-> > 
-> > Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-> 
-> Thanks for that. I'm a little new to this so I'm not sure what happens now.
-> Will the patch go into John's tree and make it's way to Linus' tree (where the
-> bug is) or should I send it directly to Linus/LKML with Ivo's Acked-by line?
+On Sat, Jan 03, 2009 at 12:22:49AM +0530, Stefanik G=E1bor wrote:
+> On Fri, Jan 2, 2009 at 11:05 AM, Vasanthakumar Thiagarajan
+> <vasanth@atheros.com> wrote:
+> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath9k/ath9k.h |    5 +++++
+> >  drivers/net/wireless/ath9k/hw.c    |   33 ++++++++++++++++++++++++=
++++++++++
+> >  drivers/net/wireless/ath9k/main.c  |    9 +++++++--
+> >  drivers/net/wireless/ath9k/reg.h   |   10 ++++++++++
+> >  4 files changed, 55 insertions(+), 2 deletions(-)
+> >
+> > <snip>
+>=20
+> Probably a NOBTCOEX modparam might be a good idea - when implementing
+> BT coexistence in b43, a lot of non-BT-aware cards failed to work
+> because the BT GPIO line was connected to the TX preamplifier,
+> breaking all TX.
 
-I had added John to the CC list in my initial reply to notify him of the patch,
-he will pick up the patch and make sure it will make its way to Linus. :)
+No need for any module parameters for enabling BT coex. It is
+already running without any issue on Windows Vista.
 
-Ivo
+Vasanth
+>=20
+> --
+> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
