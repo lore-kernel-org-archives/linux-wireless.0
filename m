@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:57905 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbZAGGEv (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:59712 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758994AbZACPHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 01:04:51 -0500
-Received: by bwz14 with SMTP id 14so25051898bwz.13
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 22:04:49 -0800 (PST)
-Message-ID: <da94abde0901062204r1041cdeawf0a0360cad88741d@mail.gmail.com> (sfid-20090107_070455_011545_19F07E56)
-Date: Wed, 7 Jan 2009 08:04:49 +0200
-From: "Kalle Valo" <kalle.valo@iki.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: status of at76-usb driver
-Cc: Claudio <der.claudio@aon.at>, linux-wireless@vger.kernel.org,
-	"Greg KH" <gregkh@suse.de>
-In-Reply-To: <20090106201517.GD3544@tuxdriver.com>
+	Sat, 3 Jan 2009 10:07:44 -0500
+Received: by ewy10 with SMTP id 10so7151734ewy.13
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2009 07:07:41 -0800 (PST)
+To: rt2400-devel@lists.sourceforge.net
+Subject: Re: HW CRYPTO: rt2500usb
+Date: Sat, 3 Jan 2009 16:07:38 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200812302055.18017.IvDoorn@gmail.com>
+In-Reply-To: <200812302055.18017.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1230411118.4956956ecb911@webmail.aon.at>
-	 <87fxk8o2g0.fsf@litku.valot.fi> <20090106201517.GD3544@tuxdriver.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901031607.38915.IvDoorn@gmail.com> (sfid-20090103_160750_233495_23056027)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 6, 2009 at 10:15 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Sun, Dec 28, 2008 at 03:26:55PM +0200, Kalle Valo wrote:
->
->> Also I'm going to rename the mac80211 port to something else for just
->> to avoid the confusion with the original driver. Last thing I want to
->> see is having two in-tree drivers with identical names.
->
-> OK, I still have patches to recreate the original port of at76_usb
-> to mac80211 and another to keep-up with a later mac80211 API change
-> on the at76 branch of wireless-testing.  I had intended to send them
-> to Greg now that the mac80211 API change has made it upstream.
+On Tuesday 30 December 2008, Ivo van Doorn wrote:
+> Hi,
+> 
+> Currently HW crypto support has been implemented for rt2500usb,
+> but has been disabled by default since it only works for TKIP.
+> I am currently investigating why WEP and AES are failing, I am currently
+> hitting a deadend so I hope somebody else has some suggestions.
+> 
+> With the current implementation which works for TKIP I noticed that WEP128
+> and AES will neither transmit any data after the succesfull association. Upon
+> investigation I discovered that below patch was required to make the transmitting
+> of frames possible, _but_ none of the frames receive a proper reply from the AP.
+> 
+> The strange part is that the data length of the frame must be increased by a number
+> of bytes depending on the crypto algorithm. From what I gather, the value most likely
+> represents the icv_len value from the ieee80211_key structure. The weird part is that
+> TKIP apparently does not require this additional length.
+> 
+> So far I haven't found the legacy driver adding these extra bytes to the length either,
+> which sounds a bit suspicious as well.
+> 
+> Frames caught using wireshark from a second computer look a bit suspicious,
+> a ping command from my PC will be received as broadcast frames on wireshark
+> with a size of 32 bytes. (I have changed the size of the ping request, but the received
+> frames don't change in size)
+> 
+> I'll try to do some more research later this week, but hopefully somebody has some
+> suggestions on where to look for me. :)
 
-I have to disagree here. It's better not to change at76_usb in staging
-to avoid any breakage. Like I said, I will submit the mac80211 port
-with a new name (most probably at76c50x-usb) as soon as I get it
-stable enough. It's good idea to have a working driver in staging tree
-until the mac80211 has been verified to be working.
+Never mind, issue has been fixed. Well at least it is working on WEP 128
+but my laptop died before I could test AES. Patch will be send to linux-wireless in
+a few minutes.
 
-> Since you mentioned a) that you are working on the port again and b)
-> you are going to rename the driver for mac80211, should I just drop
-> my at76 branch of wireless testing for good?
-
-Please do, because I will submit at7650x-usb patches from scratch. But
-don't remove at76 branch from the legacy tree, it's useful for me:
-
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-legacy.git;a=shortlog;h=at76
-
-Kalle
+Ivo
