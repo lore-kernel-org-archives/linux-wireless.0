@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:42938 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759328AbZADR3x (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:48806 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758598AbZACNoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 12:29:53 -0500
-Date: Sun, 4 Jan 2009 18:43:39 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linville@tuxdriver.com,
-	davem <davem@davemloft.net>
-Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless stack
-Message-ID: <20090104174339.GX496@one.firstfloor.org> (sfid-20090104_183008_755042_38515B21)
-References: <20090104151819.GA6590@basil.nowhere.org> <1231085150.3296.3.camel@johannes> <20090104162826.GT496@one.firstfloor.org> <1231087288.3296.15.camel@johannes>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231087288.3296.15.camel@johannes>
+	Sat, 3 Jan 2009 08:44:54 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [RFC 11/12] ath9k: fix ar5416Addac_9100 values
+Date: Sat,  3 Jan 2009 14:44:21 +0100
+Message-Id: <1230990262-22923-12-git-send-email-juhosg@openwrt.org> (sfid-20090103_144508_135938_5356B415)
+In-Reply-To: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
+References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 04, 2009 at 05:41:28PM +0100, Johannes Berg wrote:
-> On Sun, 2009-01-04 at 17:28 +0100, Andi Kleen wrote:
-> > > Thanks, but I'll need to look at this in more detail, we need to make
-> > > sure that we orphan the skb before 
-> > 
-> > What do you mean with orphaning the skb? 
-> 
-> Well, touching truesize is absolutely not allowed while the skb is
-> charged to a socket. This is what causes the truesize warning. The thing
+Writing the register at offset 0x98c4 causes a deadlock on the AR913x
+SoCs. Although i don't have detailed knowledge about these registers, but if i
+change the register offset according to the 'ar5416Addac' table, it
+works. Additionally there is no reference to the 0x98c4 elsewhere.
 
-The cause of the warnings was because the skb changed, but
-truesize didn't.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/initvals.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> we need to do is figure out is why the skb has a wrong truesize.
+diff --git a/drivers/net/wireless/ath9k/initvals.h b/drivers/net/wireless/ath9k/initvals.h
+index f3cfa16..80a5d85 100644
+--- a/drivers/net/wireless/ath9k/initvals.h
++++ b/drivers/net/wireless/ath9k/initvals.h
+@@ -659,7 +659,7 @@ static const u32 ar5416Addac_9100[][2] = {
+     {0x0000989c,  0x00000000 },
+     {0x0000989c,  0x00000000 },
+     {0x0000989c,  0x00000000 },
+-    {0x000098c4,  0x00000000 },
++    {0x000098cc,  0x00000000 },
+ };
+ 
+ /* ar5416 - howl ar5416_howl.ini */
+-- 
+1.5.3.2
 
-Because it was expanded without truesize being adjusted (see my
-original mail) 
-
--Andi
