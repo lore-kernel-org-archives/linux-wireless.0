@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60337 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757947AbZABS5b convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.231]:3599 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758580AbZACDEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 13:57:31 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
-Date: Fri, 2 Jan 2009 19:56:21 +0100
-Cc: "Vasanthakumar Thiagarajan" <vasanth@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Luis.Rodriguez@atheros.com, Jouni.Malinen@atheros.com,
-	ath9k-devel@lists.ath9k.org
-References: <1230890746-3075-1-git-send-email-vasanth@atheros.com> <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com>
-In-Reply-To: <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200901021956.21785.mb@bu3sch.de> (sfid-20090102_195733_489068_44E7B834)
+	Fri, 2 Jan 2009 22:04:40 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so6119672rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2009 19:04:39 -0800 (PST)
+From: Colin McCabe <colin@cozybit.com>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: [PATCH v2 0/3] libertas: driver for GSPI devices
+Date: Fri,  2 Jan 2009 19:00:20 -0800
+Message-Id: <1230951623-26998-1-git-send-email-colin@cozybit.com> (sfid-20090103_040443_590810_731190FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 02 January 2009 19:52:49 Stefanik G=E1bor wrote:
-> On Fri, Jan 2, 2009 at 11:05 AM, Vasanthakumar Thiagarajan
-> <vasanth@atheros.com> wrote:
-> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> > ---
-> >  drivers/net/wireless/ath9k/ath9k.h |    5 +++++
-> >  drivers/net/wireless/ath9k/hw.c    |   33 ++++++++++++++++++++++++=
-+++++++++
-> >  drivers/net/wireless/ath9k/main.c  |    9 +++++++--
-> >  drivers/net/wireless/ath9k/reg.h   |   10 ++++++++++
-> >  4 files changed, 55 insertions(+), 2 deletions(-)
-> >
-> > <snip>
->=20
-> Probably a NOBTCOEX modparam might be a good idea - when implementing
-> BT coexistence in b43, a lot of non-BT-aware cards failed to work
 
-And what makes you think that atheros also ships cards with broken btco=
-ex support?
+This patch series adds suport for GSPI devices to libertas.
+These devices are found in some embedded systems. We used a blackfin-based
+board for development.
 
---=20
-Greetings, Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks to everyone who took a look at version 1 of the patch.
+
+Changes in v2: 
+* Store the host IRQ setting in spi->irq rather than creating a new variable
+for this purpose.
+* Add TODO comment to declaration of card->gpio_cs.
+(We do intend to get rid of gpio_cs eventually, but it will require some
+changes to the generic SPI layer, which could take a while.)
+* When loading the module, check to see if the firmware is already loaded. If
+so, skip firmware load.
+* Speed up module load time slightly.
+* Add if_spi_e2h to handle libertas card events.
+* Include relevant Kconfig change.
+
+thanks... and
+Happy New Year.
+
+Colin
