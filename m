@@ -1,328 +1,883 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flock1.newmail.ru ([82.204.219.207]:52063 "HELO
-	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754811AbZAQNHi (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:48837 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758861AbZACNo7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 08:07:38 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: [PATCH] Move orinoco Kconfig entries in drivers/net/wireless/orinoco/Kconfig
-Date: Sat, 17 Jan 2009 15:53:45 +0300
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart24175770.Mb21tCMEJb";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200901171554.00061.arvidjaar@mail.ru> (sfid-20090117_140744_611868_2BE6205B)
+	Sat, 3 Jan 2009 08:44:59 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [RFC 05/12] ath9k: move PCI code into separate file
+Date: Sat,  3 Jan 2009 14:44:15 +0100
+Message-Id: <1230990262-22923-6-git-send-email-juhosg@openwrt.org> (sfid-20090103_150902_181254_7E008714)
+In-Reply-To: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
+References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart24175770.Mb21tCMEJb
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Convert 'struct pci_dev' to 'struct device' to make it usable on the AHB
+bus as well.
 
-Subject: [PATCH] Move orinoco Kconfig entries in=20
-drivers/net/wireless/orinoco/Kconfig
-=46rom: Andrey Borzenkov <arvidjaar@mail.ru>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/Makefile |    1 +
+ drivers/net/wireless/ath9k/core.h   |   16 ++
+ drivers/net/wireless/ath9k/main.c   |  368 ++---------------------------------
+ drivers/net/wireless/ath9k/pci.c    |  357 +++++++++++++++++++++++++++++++++
+ 4 files changed, 395 insertions(+), 347 deletions(-)
 
-Since driver now lives in separate subdirectory, move Kconfig entries
-in own file so they can be tweaked indepndently. It complements commit
-b2e53b338b7b4608372d070bb477f3bae3971e5a.
-
-Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
-
-=2D--
-
- drivers/net/wireless/Kconfig         |  122=20
-=2D---------------------------------
- drivers/net/wireless/orinoco/Kconfig |  120=20
-+++++++++++++++++++++++++++++++++
- 2 files changed, 121 insertions(+), 121 deletions(-)
- create mode 100644 drivers/net/wireless/orinoco/Kconfig
-
-
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index e4f9f74..4ddc11d 100644
-=2D-- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -188,127 +188,6 @@ config AIRO
-=20
- 	  The driver can be compiled as a module and will be named "airo".
-=20
-=2Dconfig HERMES
-=2D	tristate "Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)"
-=2D	depends on (PPC_PMAC || PCI || PCMCIA) && WLAN_80211
-=2D	select WIRELESS_EXT
-=2D	select FW_LOADER
-=2D	select CRYPTO
-=2D	select CRYPTO_MICHAEL_MIC
-=2D	---help---
-=2D	  A driver for 802.11b wireless cards based on the "Hermes" or
-=2D	  Intersil HFA384x (Prism 2) MAC controller.  This includes the vast
-=2D	  majority of the PCMCIA 802.11b cards (which are nearly all rebadges)
-=2D	  - except for the Cisco/Aironet cards.  Cards supported include the
-=2D	  Apple Airport (not a PCMCIA card), WavelanIEEE/Orinoco,
-=2D	  Cabletron/EnteraSys Roamabout, ELSA AirLancer, MELCO Buffalo, Avaya,
-=2D	  IBM High Rate Wireless, Farralon Syyline, Samsung MagicLAN, Netgear
-=2D	  MA401, LinkSys WPC-11, D-Link DWL-650, 3Com AirConnect, Intel
-=2D	  IPW2011, and Symbol Spectrum24 High Rate amongst others.
-=2D
-=2D	  This option includes the guts of the driver, but in order to
-=2D	  actually use a card you will also need to enable support for PCMCIA
-=2D	  Hermes cards, PLX9052 based PCI adaptors or the Apple Airport below.
-=2D
-=2D	  You will also very likely also need the Wireless Tools in order to
-=2D	  configure your card and that /etc/pcmcia/wireless.opts works :
-=2D	  <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>
-=2D
-=2Dconfig HERMES_CACHE_FW_ON_INIT
-=2D	bool "Cache Hermes firmware on driver initialisation"
-=2D	depends on HERMES
-=2D	default y
-=2D	---help---
-=2D	  Say Y to cache any firmware required by the Hermes drivers
-=2D	  on startup.  The firmware will remain cached until the
-=2D	  driver is unloaded.  The cache uses 64K of RAM.
-=2D
-=2D	  Otherwise load the firmware from userspace as required.  In
-=2D	  this case the driver should be unloaded and restarted
-=2D	  whenever the firmware is changed.
-=2D
-=2D	  If you are not sure, say Y.
-=2D
-=2Dconfig APPLE_AIRPORT
-=2D	tristate "Apple Airport support (built-in)"
-=2D	depends on PPC_PMAC && HERMES
-=2D	help
-=2D	  Say Y here to support the Airport 802.11b wireless Ethernet hardware
-=2D	  built into the Macintosh iBook and other recent PowerPC-based
-=2D	  Macintosh machines. This is essentially a Lucent Orinoco card with=20
-=2D	  a non-standard interface.
-=2D
-=2D	  This driver does not support the Airport Extreme (802.11b/g). Use
-=2D	  the BCM43xx driver for Airport Extreme cards.
-=2D
-=2Dconfig PLX_HERMES
-=2D	tristate "Hermes in PLX9052 based PCI adaptor support (Netgear MA301=20
-etc.)"
-=2D	depends on PCI && HERMES
-=2D	help
-=2D	  Enable support for PCMCIA cards supported by the "Hermes" (aka
-=2D	  orinoco) driver when used in PLX9052 based PCI adaptors.  These
-=2D	  adaptors are not a full PCMCIA controller but act as a more limited
-=2D	  PCI <-> PCMCIA bridge.  Several vendors sell such adaptors so that
-=2D	  802.11b PCMCIA cards can be used in desktop machines.  The Netgear
-=2D	  MA301 is such an adaptor.
-=2D
-=2Dconfig TMD_HERMES
-=2D	tristate "Hermes in TMD7160 based PCI adaptor support"
-=2D	depends on PCI && HERMES
-=2D	help
-=2D	  Enable support for PCMCIA cards supported by the "Hermes" (aka
-=2D	  orinoco) driver when used in TMD7160 based PCI adaptors.  These
-=2D	  adaptors are not a full PCMCIA controller but act as a more limited
-=2D	  PCI <-> PCMCIA bridge.  Several vendors sell such adaptors so that
-=2D	  802.11b PCMCIA cards can be used in desktop machines.
-=2D
-=2Dconfig NORTEL_HERMES
-=2D	tristate "Nortel emobility PCI adaptor support"
-=2D	depends on PCI && HERMES
-=2D	help
-=2D	  Enable support for PCMCIA cards supported by the "Hermes" (aka
-=2D	  orinoco) driver when used in Nortel emobility PCI adaptors.  These
-=2D	  adaptors are not full PCMCIA controllers, but act as a more limited
-=2D	  PCI <-> PCMCIA bridge.
-=2D
-=2Dconfig PCI_HERMES
-=2D	tristate "Prism 2.5 PCI 802.11b adaptor support"
-=2D	depends on PCI && HERMES
-=2D	help
-=2D	  Enable support for PCI and mini-PCI 802.11b wireless NICs based on
-=2D	  the Prism 2.5 chipset.  These are true PCI cards, not the 802.11b
-=2D	  PCMCIA cards bundled with PCI<->PCMCIA adaptors which are also
-=2D	  common.  Some of the built-in wireless adaptors in laptops are of
-=2D	  this variety.
-=2D
-=2Dconfig PCMCIA_HERMES
-=2D	tristate "Hermes PCMCIA card support"
-=2D	depends on PCMCIA && HERMES
-=2D	---help---
-=2D	  A driver for "Hermes" chipset based PCMCIA wireless adaptors, such
-=2D	  as the Lucent WavelanIEEE/Orinoco cards and their OEM (Cabletron/
-=2D	  EnteraSys RoamAbout 802.11, ELSA Airlancer, Melco Buffalo and
-=2D	  others).  It should also be usable on various Prism II based cards
-=2D	  such as the Linksys, D-Link and Farallon Skyline.  It should also
-=2D	  work on Symbol cards such as the 3Com AirConnect and Ericsson WLAN.
-=2D
-=2D	  You will very likely need the Wireless Tools in order to
-=2D	  configure your card and that /etc/pcmcia/wireless.opts works:
-=2D	  <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>.
-=2D
-=2Dconfig PCMCIA_SPECTRUM
-=2D	tristate "Symbol Spectrum24 Trilogy PCMCIA card support"
-=2D	depends on PCMCIA && HERMES
-=2D	---help---
-=2D
-=2D	  This is a driver for 802.11b cards using RAM-loadable Symbol
-=2D	  firmware, such as Symbol Wireless Networker LA4100, CompactFlash
-=2D	  cards by Socket Communications and Intel PRO/Wireless 2011B.
-=2D
-=2D	  This driver requires firmware download on startup.  Utilities
-=2D	  for downloading Symbol firmware are available at
-=2D	  <http://sourceforge.net/projects/orinoco/>
-=2D
- config ATMEL
-       tristate "Atmel at76c50x chipset  802.11b support"
-       depends on (PCI || PCMCIA) && WLAN_80211
-@@ -590,5 +469,6 @@ source "drivers/net/wireless/b43/Kconfig"
- source "drivers/net/wireless/b43legacy/Kconfig"
- source "drivers/net/wireless/zd1211rw/Kconfig"
- source "drivers/net/wireless/rt2x00/Kconfig"
-+source "drivers/net/wireless/orinoco/Kconfig"
-=20
- endmenu
-diff --git a/drivers/net/wireless/orinoco/Kconfig=20
-b/drivers/net/wireless/orinoco/Kconfig
+diff --git a/drivers/net/wireless/ath9k/Makefile b/drivers/net/wireless/ath9k/Makefile
+index 1209d14..af3f39b 100644
+--- a/drivers/net/wireless/ath9k/Makefile
++++ b/drivers/net/wireless/ath9k/Makefile
+@@ -11,6 +11,7 @@ ath9k-y +=	hw.o \
+ 		xmit.o \
+ 		rc.o
+ 
++ath9k-$(CONFIG_PCI) += pci.o
+ ath9k-$(CONFIG_ATH9K_DEBUG) += debug.o
+ 
+ obj-$(CONFIG_ATH9K) += ath9k.o
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 4833598..73a409b 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -857,4 +857,20 @@ static inline void ath_bus_cleanup(struct ath_softc *sc)
+ 	sc->bus_ops->cleanup(sc);
+ }
+ 
++extern struct ieee80211_ops ath9k_ops;
++
++irqreturn_t ath_isr(int irq, void *dev);
++int ath_attach(u16 devid, struct ath_softc *sc);
++void ath_detach(struct ath_softc *sc);
++const char *ath_mac_bb_name(u32 mac_bb_version);
++const char *ath_rf_name(u16 rf_version);
++
++#ifdef CONFIG_PCI
++int ath_pci_init(void);
++void ath_pci_exit(void);
++#else
++static inline int ath_pci_init(void) { return 0; };
++static inline void ath_pci_exit(void) {};
++#endif
++
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index e126b65..423cf3b 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -28,37 +28,6 @@ MODULE_DESCRIPTION("Support for Atheros 802.11n wireless LAN cards.");
+ MODULE_SUPPORTED_DEVICE("Atheros 802.11n WLAN cards");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
+-static struct pci_device_id ath_pci_id_table[] __devinitdata = {
+-	{ PCI_VDEVICE(ATHEROS, 0x0023) }, /* PCI   */
+-	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
+-	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
+-	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
+-	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
+-	{ PCI_VDEVICE(ATHEROS, 0x002B) }, /* PCI-E */
+-	{ 0 }
+-};
+-
+-static void ath_detach(struct ath_softc *sc);
+-
+-/* return bus cachesize in 4B word units */
+-static void ath_pci_read_cachesize(struct ath_softc *sc, int *csz)
+-{
+-	u8 u8tmp;
+-
+-	pci_read_config_byte(sc->pdev, PCI_CACHE_LINE_SIZE, (u8 *)&u8tmp);
+-	*csz = (int)u8tmp;
+-
+-	/*
+-	 * This check was put in to avoid "unplesant" consequences if
+-	 * the bootrom has not fully initialized all PCI devices.
+-	 * Sometimes the cache line size register is not set
+-	 */
+-
+-	if (*csz == 0)
+-		*csz = DEFAULT_CACHELINE >> 2;   /* Use the default size */
+-}
+-
+-
+ static void ath_setcurmode(struct ath_softc *sc, enum wireless_mode mode)
+ {
+ 	sc->cur_rate_table = sc->hw_rate_table[mode];
+@@ -499,7 +468,7 @@ static void ath9k_tasklet(unsigned long data)
+ 	ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_imask);
+ }
+ 
+-static irqreturn_t ath_isr(int irq, void *dev)
++irqreturn_t ath_isr(int irq, void *dev)
+ {
+ 	struct ath_softc *sc = dev;
+ 	struct ath_hal *ah = sc->sc_ah;
+@@ -1287,7 +1256,7 @@ static int ath_start_rfkill_poll(struct ath_softc *sc)
+ }
+ #endif /* CONFIG_RFKILL */
+ 
+-static void ath_detach(struct ath_softc *sc)
++void ath_detach(struct ath_softc *sc)
+ {
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	int i = 0;
+@@ -1538,7 +1507,7 @@ bad:
+ 	return error;
+ }
+ 
+-static int ath_attach(u16 devid, struct ath_softc *sc)
++int ath_attach(u16 devid, struct ath_softc *sc)
+ {
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	int error = 0;
+@@ -2466,7 +2435,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 	return ret;
+ }
+ 
+-static struct ieee80211_ops ath9k_ops = {
++struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+ 	.stop 		    = ath9k_stop,
+@@ -2510,7 +2479,7 @@ static struct {
+ /*
+  * Return the MAC/BB name. "????" is returned if the MAC/BB is unknown.
+  */
+-static const char *
++const char *
+ ath_mac_bb_name(u32 mac_bb_version)
+ {
+ 	int i;
+@@ -2527,7 +2496,7 @@ ath_mac_bb_name(u32 mac_bb_version)
+ /*
+  * Return the RF name. "????" is returned if the RF is unknown.
+  */
+-static const char *
++const char *
+ ath_rf_name(u16 rf_version)
+ {
+ 	int i;
+@@ -2541,306 +2510,7 @@ ath_rf_name(u16 rf_version)
+ 	return "????";
+ }
+ 
+-static dma_addr_t ath_pci_map_single_to_device(struct ath_softc *sc,
+-					       void *p, size_t size)
+-{
+-	return pci_map_single(sc->pdev, p, size, PCI_DMA_TODEVICE);
+-}
+-
+-static void ath_pci_unmap_single_to_device(struct ath_softc *sc,
+-					   dma_addr_t da, size_t size)
+-{
+-	pci_unmap_single(sc->pdev, da, size, PCI_DMA_TODEVICE);
+-}
+-
+-static dma_addr_t ath_pci_map_single_from_device(struct ath_softc *sc,
+-						 void *p, size_t size)
+-{
+-	return pci_map_single(sc->pdev, p, size, PCI_DMA_FROMDEVICE);
+-}
+-
+-static void ath_pci_unmap_single_from_device(struct ath_softc *sc,
+-					     dma_addr_t da, size_t size)
+-{
+-	pci_unmap_single(sc->pdev, da, size, PCI_DMA_FROMDEVICE);
+-}
+-
+-static int ath_pci_dma_mapping_error(struct ath_softc *sc, dma_addr_t da)
+-{
+-	return pci_dma_mapping_error(sc->pdev, da);
+-}
+-
+-static void ath_pci_sync_single_for_cpu(struct ath_softc *sc, dma_addr_t da,
+-				       size_t size)
+-{
+-	pci_dma_sync_single_for_cpu(sc->pdev, da, size,
+-				    PCI_DMA_FROMDEVICE);
+-}
+-
+-static void *ath_pci_dma_alloc(struct ath_softc *sc, size_t size,
+-				       dma_addr_t *pda)
+-{
+-	return pci_alloc_consistent(sc->pdev, size, pda);
+-}
+-
+-static void ath_pci_dma_free(struct ath_softc *sc, size_t size,
+-				    void *p, dma_addr_t da)
+-{
+-	pci_free_consistent(sc->pdev, size, p, da);
+-}
+-
+-static u32 ath_pci_reg_read(struct ath_hal *ah, unsigned reg)
+-{
+-	return ioread32(ah->ah_sh + reg);
+-}
+-
+-static void ath_pci_reg_write(struct ath_hal *ah, unsigned reg, u32 val)
+-{
+-	iowrite32(val, ah->ah_sh + reg);
+-}
+-
+-static void ath_pci_cleanup(struct ath_softc *sc)
+-{
+-	ath_detach(sc);
+-	if (sc->pdev->irq)
+-		free_irq(sc->pdev->irq, sc);
+-	pci_iounmap(sc->pdev, sc->mem);
+-	pci_release_region(sc->pdev, 0);
+-	pci_disable_device(sc->pdev);
+-	ieee80211_free_hw(sc->hw);
+-}
+-
+-static struct ath_bus_ops ath_pci_bus_ops  = {
+-	.dma_map_single_to_device = ath_pci_map_single_to_device,
+-	.dma_unmap_single_to_device = ath_pci_unmap_single_to_device,
+-	.dma_map_single_from_device = ath_pci_map_single_from_device,
+-	.dma_unmap_single_from_device = ath_pci_unmap_single_from_device,
+-	.dma_map_single_to_device = ath_pci_map_single_to_device,
+-	.dma_mapping_error = ath_pci_dma_mapping_error,
+-	.dma_sync_single_for_cpu = ath_pci_sync_single_for_cpu,
+-	.dma_alloc = ath_pci_dma_alloc,
+-	.dma_free = ath_pci_dma_free,
+-
+-	.reg_read = ath_pci_reg_read,
+-	.reg_write = ath_pci_reg_write,
+-
+-	.read_cachesize = ath_pci_read_cachesize,
+-
+-	.cleanup = ath_pci_cleanup,
+-};
+-
+-static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+-{
+-	void __iomem *mem;
+-	struct ath_softc *sc;
+-	struct ieee80211_hw *hw;
+-	u8 csz;
+-	u32 val;
+-	int ret = 0;
+-	struct ath_hal *ah;
+-
+-	if (pci_enable_device(pdev))
+-		return -EIO;
+-
+-	ret =  pci_set_dma_mask(pdev, DMA_32BIT_MASK);
+-
+-	if (ret) {
+-		printk(KERN_ERR "ath9k: 32-bit DMA not available\n");
+-		goto bad;
+-	}
+-
+-	ret = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
+-
+-	if (ret) {
+-		printk(KERN_ERR "ath9k: 32-bit DMA consistent "
+-			"DMA enable failed\n");
+-		goto bad;
+-	}
+-
+-	/*
+-	 * Cache line size is used to size and align various
+-	 * structures used to communicate with the hardware.
+-	 */
+-	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &csz);
+-	if (csz == 0) {
+-		/*
+-		 * Linux 2.4.18 (at least) writes the cache line size
+-		 * register as a 16-bit wide register which is wrong.
+-		 * We must have this setup properly for rx buffer
+-		 * DMA to work so force a reasonable value here if it
+-		 * comes up zero.
+-		 */
+-		csz = L1_CACHE_BYTES / sizeof(u32);
+-		pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, csz);
+-	}
+-	/*
+-	 * The default setting of latency timer yields poor results,
+-	 * set it to the value used by other systems. It may be worth
+-	 * tweaking this setting more.
+-	 */
+-	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0xa8);
+-
+-	pci_set_master(pdev);
+-
+-	/*
+-	 * Disable the RETRY_TIMEOUT register (0x41) to keep
+-	 * PCI Tx retries from interfering with C3 CPU state.
+-	 */
+-	pci_read_config_dword(pdev, 0x40, &val);
+-	if ((val & 0x0000ff00) != 0)
+-		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+-
+-	ret = pci_request_region(pdev, 0, "ath9k");
+-	if (ret) {
+-		dev_err(&pdev->dev, "PCI memory region reserve error\n");
+-		ret = -ENODEV;
+-		goto bad;
+-	}
+-
+-	mem = pci_iomap(pdev, 0, 0);
+-	if (!mem) {
+-		printk(KERN_ERR "PCI memory map error\n") ;
+-		ret = -EIO;
+-		goto bad1;
+-	}
+-
+-	hw = ieee80211_alloc_hw(sizeof(struct ath_softc), &ath9k_ops);
+-	if (hw == NULL) {
+-		printk(KERN_ERR "ath_pci: no memory for ieee80211_hw\n");
+-		goto bad2;
+-	}
+-
+-	SET_IEEE80211_DEV(hw, &pdev->dev);
+-	pci_set_drvdata(pdev, hw);
+-
+-	sc = hw->priv;
+-	sc->hw = hw;
+-	sc->pdev = pdev;
+-	sc->mem = mem;
+-	sc->bus_ops = &ath_pci_bus_ops;
+-
+-	if (ath_attach(id->device, sc) != 0) {
+-		ret = -ENODEV;
+-		goto bad3;
+-	}
+-
+-	/* setup interrupt service routine */
+-
+-	if (request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath", sc)) {
+-		printk(KERN_ERR "%s: request_irq failed\n",
+-			wiphy_name(hw->wiphy));
+-		ret = -EIO;
+-		goto bad4;
+-	}
+-
+-	ah = sc->sc_ah;
+-	printk(KERN_INFO
+-	       "%s: Atheros AR%s MAC/BB Rev:%x "
+-	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
+-	       wiphy_name(hw->wiphy),
+-	       ath_mac_bb_name(ah->ah_macVersion),
+-	       ah->ah_macRev,
+-	       ath_rf_name((ah->ah_analog5GhzRev & AR_RADIO_SREV_MAJOR)),
+-	       ah->ah_phyRev,
+-	       (unsigned long)mem, pdev->irq);
+-
+-	return 0;
+-bad4:
+-	ath_detach(sc);
+-bad3:
+-	ieee80211_free_hw(hw);
+-bad2:
+-	pci_iounmap(pdev, mem);
+-bad1:
+-	pci_release_region(pdev, 0);
+-bad:
+-	pci_disable_device(pdev);
+-	return ret;
+-}
+-
+-static void ath_pci_remove(struct pci_dev *pdev)
+-{
+-	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+-	struct ath_softc *sc = hw->priv;
+-
+-	ath_pci_cleanup(sc);
+-}
+-
+-#ifdef CONFIG_PM
+-
+-static int ath_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+-{
+-	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+-	struct ath_softc *sc = hw->priv;
+-
+-	ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN, 1);
+-
+-#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+-	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
+-		cancel_delayed_work_sync(&sc->rf_kill.rfkill_poll);
+-#endif
+-
+-	pci_save_state(pdev);
+-	pci_disable_device(pdev);
+-	pci_set_power_state(pdev, 3);
+-
+-	return 0;
+-}
+-
+-static int ath_pci_resume(struct pci_dev *pdev)
+-{
+-	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+-	struct ath_softc *sc = hw->priv;
+-	u32 val;
+-	int err;
+-
+-	err = pci_enable_device(pdev);
+-	if (err)
+-		return err;
+-	pci_restore_state(pdev);
+-	/*
+-	 * Suspend/Resume resets the PCI configuration space, so we have to
+-	 * re-disable the RETRY_TIMEOUT register (0x41) to keep
+-	 * PCI Tx retries from interfering with C3 CPU state
+-	 */
+-	pci_read_config_dword(pdev, 0x40, &val);
+-	if ((val & 0x0000ff00) != 0)
+-		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+-
+-	/* Enable LED */
+-	ath9k_hw_cfg_output(sc->sc_ah, ATH_LED_PIN,
+-			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+-	ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN, 1);
+-
+-#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+-	/*
+-	 * check the h/w rfkill state on resume
+-	 * and start the rfkill poll timer
+-	 */
+-	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
+-		queue_delayed_work(sc->hw->workqueue,
+-				   &sc->rf_kill.rfkill_poll, 0);
+-#endif
+-
+-	return 0;
+-}
+-
+-#endif /* CONFIG_PM */
+-
+-MODULE_DEVICE_TABLE(pci, ath_pci_id_table);
+-
+-static struct pci_driver ath_pci_driver = {
+-	.name       = "ath9k",
+-	.id_table   = ath_pci_id_table,
+-	.probe      = ath_pci_probe,
+-	.remove     = ath_pci_remove,
+-#ifdef CONFIG_PM
+-	.suspend    = ath_pci_suspend,
+-	.resume     = ath_pci_resume,
+-#endif /* CONFIG_PM */
+-};
+-
+-static int __init init_ath_pci(void)
++static int __init ath9k_init(void)
+ {
+ 	int error;
+ 
+@@ -2852,26 +2522,30 @@ static int __init init_ath_pci(void)
+ 		printk(KERN_ERR
+ 			"Unable to register rate control algorithm: %d\n",
+ 			error);
+-		ath_rate_control_unregister();
+-		return error;
++		goto err_out;
+ 	}
+ 
+-	if (pci_register_driver(&ath_pci_driver) < 0) {
++	error = ath_pci_init();
++	if (error < 0) {
+ 		printk(KERN_ERR
+ 			"ath_pci: No devices found, driver not installed.\n");
+-		ath_rate_control_unregister();
+-		pci_unregister_driver(&ath_pci_driver);
+-		return -ENODEV;
++		error = -ENODEV;
++		goto err_rate_unregister;
+ 	}
+ 
+ 	return 0;
++
++ err_rate_unregister:
++	ath_rate_control_unregister();
++ err_out:
++	return error;
+ }
+-module_init(init_ath_pci);
++module_init(ath9k_init);
+ 
+-static void __exit exit_ath_pci(void)
++static void __exit ath9k_exit(void)
+ {
++	ath_pci_exit();
+ 	ath_rate_control_unregister();
+-	pci_unregister_driver(&ath_pci_driver);
+ 	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
+ }
+-module_exit(exit_ath_pci);
++module_exit(ath9k_exit);
+diff --git a/drivers/net/wireless/ath9k/pci.c b/drivers/net/wireless/ath9k/pci.c
 new file mode 100644
-index 0000000..93031dc
-=2D-- /dev/null
-+++ b/drivers/net/wireless/orinoco/Kconfig
-@@ -0,0 +1,120 @@
-+config HERMES
-+	tristate "Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)"
-+	depends on (PPC_PMAC || PCI || PCMCIA) && WLAN_80211
-+	select WIRELESS_EXT
-+	select FW_LOADER
-+	select CRYPTO
-+	select CRYPTO_MICHAEL_MIC
-+	---help---
-+	  A driver for 802.11b wireless cards based on the "Hermes" or
-+	  Intersil HFA384x (Prism 2) MAC controller.  This includes the vast
-+	  majority of the PCMCIA 802.11b cards (which are nearly all rebadges)
-+	  - except for the Cisco/Aironet cards.  Cards supported include the
-+	  Apple Airport (not a PCMCIA card), WavelanIEEE/Orinoco,
-+	  Cabletron/EnteraSys Roamabout, ELSA AirLancer, MELCO Buffalo, Avaya,
-+	  IBM High Rate Wireless, Farralon Syyline, Samsung MagicLAN, Netgear
-+	  MA401, LinkSys WPC-11, D-Link DWL-650, 3Com AirConnect, Intel
-+	  IPW2011, and Symbol Spectrum24 High Rate amongst others.
+index 0000000..1bb4787
+--- /dev/null
++++ b/drivers/net/wireless/ath9k/pci.c
+@@ -0,0 +1,357 @@
++/*
++ * Copyright (c) 2008 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+	  This option includes the guts of the driver, but in order to
-+	  actually use a card you will also need to enable support for PCMCIA
-+	  Hermes cards, PLX9052 based PCI adaptors or the Apple Airport below.
++#include <linux/nl80211.h>
++#include "core.h"
++#include "reg.h"
++#include "hw.h"
 +
-+	  You will also very likely also need the Wireless Tools in order to
-+	  configure your card and that /etc/pcmcia/wireless.opts works :
-+	  <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>
++static struct pci_device_id ath_pci_id_table[] __devinitdata = {
++	{ PCI_VDEVICE(ATHEROS, 0x0023) }, /* PCI   */
++	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
++	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
++	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
++	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
++	{ PCI_VDEVICE(ATHEROS, 0x002B) }, /* PCI-E */
++	{ 0 }
++};
 +
-+config HERMES_CACHE_FW_ON_INIT
-+	bool "Cache Hermes firmware on driver initialisation"
-+	depends on HERMES
-+	default y
-+	---help---
-+	  Say Y to cache any firmware required by the Hermes drivers
-+	  on startup.  The firmware will remain cached until the
-+	  driver is unloaded.  The cache uses 64K of RAM.
++/* return bus cachesize in 4B word units */
++static void ath_pci_read_cachesize(struct ath_softc *sc, int *csz)
++{
++	u8 u8tmp;
 +
-+	  Otherwise load the firmware from userspace as required.  In
-+	  this case the driver should be unloaded and restarted
-+	  whenever the firmware is changed.
++	pci_read_config_byte(sc->pdev, PCI_CACHE_LINE_SIZE, (u8 *)&u8tmp);
++	*csz = (int)u8tmp;
 +
-+	  If you are not sure, say Y.
++	/*
++	 * This check was put in to avoid "unplesant" consequences if
++	 * the bootrom has not fully initialized all PCI devices.
++	 * Sometimes the cache line size register is not set
++	 */
 +
-+config APPLE_AIRPORT
-+	tristate "Apple Airport support (built-in)"
-+	depends on PPC_PMAC && HERMES
-+	help
-+	  Say Y here to support the Airport 802.11b wireless Ethernet hardware
-+	  built into the Macintosh iBook and other recent PowerPC-based
-+	  Macintosh machines. This is essentially a Lucent Orinoco card with=20
-+	  a non-standard interface.
++	if (*csz == 0)
++		*csz = DEFAULT_CACHELINE >> 2;   /* Use the default size */
++}
 +
-+	  This driver does not support the Airport Extreme (802.11b/g). Use
-+	  the BCM43xx driver for Airport Extreme cards.
++static dma_addr_t ath_pci_map_single_to_device(struct ath_softc *sc,
++					       void *p, size_t size)
++{
++	return pci_map_single(sc->pdev, p, size, PCI_DMA_TODEVICE);
++}
 +
-+config PLX_HERMES
-+	tristate "Hermes in PLX9052 based PCI adaptor support (Netgear MA301=20
-etc.)"
-+	depends on PCI && HERMES
-+	help
-+	  Enable support for PCMCIA cards supported by the "Hermes" (aka
-+	  orinoco) driver when used in PLX9052 based PCI adaptors.  These
-+	  adaptors are not a full PCMCIA controller but act as a more limited
-+	  PCI <-> PCMCIA bridge.  Several vendors sell such adaptors so that
-+	  802.11b PCMCIA cards can be used in desktop machines.  The Netgear
-+	  MA301 is such an adaptor.
++static void ath_pci_unmap_single_to_device(struct ath_softc *sc,
++					   dma_addr_t da, size_t size)
++{
++	pci_unmap_single(sc->pdev, da, size, PCI_DMA_TODEVICE);
++}
 +
-+config TMD_HERMES
-+	tristate "Hermes in TMD7160 based PCI adaptor support"
-+	depends on PCI && HERMES
-+	help
-+	  Enable support for PCMCIA cards supported by the "Hermes" (aka
-+	  orinoco) driver when used in TMD7160 based PCI adaptors.  These
-+	  adaptors are not a full PCMCIA controller but act as a more limited
-+	  PCI <-> PCMCIA bridge.  Several vendors sell such adaptors so that
-+	  802.11b PCMCIA cards can be used in desktop machines.
++static dma_addr_t ath_pci_map_single_from_device(struct ath_softc *sc,
++						 void *p, size_t size)
++{
++	return pci_map_single(sc->pdev, p, size, PCI_DMA_FROMDEVICE);
++}
 +
-+config NORTEL_HERMES
-+	tristate "Nortel emobility PCI adaptor support"
-+	depends on PCI && HERMES
-+	help
-+	  Enable support for PCMCIA cards supported by the "Hermes" (aka
-+	  orinoco) driver when used in Nortel emobility PCI adaptors.  These
-+	  adaptors are not full PCMCIA controllers, but act as a more limited
-+	  PCI <-> PCMCIA bridge.
++static void ath_pci_unmap_single_from_device(struct ath_softc *sc,
++					     dma_addr_t da, size_t size)
++{
++	pci_unmap_single(sc->pdev, da, size, PCI_DMA_FROMDEVICE);
++}
 +
-+config PCI_HERMES
-+	tristate "Prism 2.5 PCI 802.11b adaptor support"
-+	depends on PCI && HERMES
-+	help
-+	  Enable support for PCI and mini-PCI 802.11b wireless NICs based on
-+	  the Prism 2.5 chipset.  These are true PCI cards, not the 802.11b
-+	  PCMCIA cards bundled with PCI<->PCMCIA adaptors which are also
-+	  common.  Some of the built-in wireless adaptors in laptops are of
-+	  this variety.
++static int ath_pci_dma_mapping_error(struct ath_softc *sc, dma_addr_t da)
++{
++	return pci_dma_mapping_error(sc->pdev, da);
++}
 +
-+config PCMCIA_HERMES
-+	tristate "Hermes PCMCIA card support"
-+	depends on PCMCIA && HERMES
-+	---help---
-+	  A driver for "Hermes" chipset based PCMCIA wireless adaptors, such
-+	  as the Lucent WavelanIEEE/Orinoco cards and their OEM (Cabletron/
-+	  EnteraSys RoamAbout 802.11, ELSA Airlancer, Melco Buffalo and
-+	  others).  It should also be usable on various Prism II based cards
-+	  such as the Linksys, D-Link and Farallon Skyline.  It should also
-+	  work on Symbol cards such as the 3Com AirConnect and Ericsson WLAN.
++static void ath_pci_sync_single_for_cpu(struct ath_softc *sc, dma_addr_t da,
++				       size_t size)
++{
++	pci_dma_sync_single_for_cpu(sc->pdev, da, size,
++				    PCI_DMA_FROMDEVICE);
++}
 +
-+	  You will very likely need the Wireless Tools in order to
-+	  configure your card and that /etc/pcmcia/wireless.opts works:
-+	  <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>.
++static void *ath_pci_dma_alloc(struct ath_softc *sc, size_t size,
++				       dma_addr_t *pda)
++{
++	return pci_alloc_consistent(sc->pdev, size, pda);
++}
 +
-+config PCMCIA_SPECTRUM
-+	tristate "Symbol Spectrum24 Trilogy PCMCIA card support"
-+	depends on PCMCIA && HERMES
-+	---help---
++static void ath_pci_dma_free(struct ath_softc *sc, size_t size,
++				    void *p, dma_addr_t da)
++{
++	pci_free_consistent(sc->pdev, size, p, da);
++}
 +
-+	  This is a driver for 802.11b cards using RAM-loadable Symbol
-+	  firmware, such as Symbol Wireless Networker LA4100, CompactFlash
-+	  cards by Socket Communications and Intel PRO/Wireless 2011B.
++static u32 ath_pci_reg_read(struct ath_hal *ah, unsigned reg)
++{
++	return ioread32(ah->ah_sh + reg);
++}
 +
-+	  This driver requires firmware download on startup.  Utilities
-+	  for downloading Symbol firmware are available at
-+	  <http://sourceforge.net/projects/orinoco/>
++static void ath_pci_reg_write(struct ath_hal *ah, unsigned reg, u32 val)
++{
++	iowrite32(val, ah->ah_sh + reg);
++}
++
++static void ath_pci_cleanup(struct ath_softc *sc)
++{
++	ath_detach(sc);
++	if (sc->pdev->irq)
++		free_irq(sc->pdev->irq, sc);
++	pci_iounmap(sc->pdev, sc->mem);
++	pci_release_region(sc->pdev, 0);
++	pci_disable_device(sc->pdev);
++	ieee80211_free_hw(sc->hw);
++}
++
++static struct ath_bus_ops ath_pci_bus_ops  = {
++	.dma_map_single_to_device = ath_pci_map_single_to_device,
++	.dma_unmap_single_to_device = ath_pci_unmap_single_to_device,
++	.dma_map_single_from_device = ath_pci_map_single_from_device,
++	.dma_unmap_single_from_device = ath_pci_unmap_single_from_device,
++	.dma_map_single_to_device = ath_pci_map_single_to_device,
++	.dma_mapping_error = ath_pci_dma_mapping_error,
++	.dma_sync_single_for_cpu = ath_pci_sync_single_for_cpu,
++	.dma_alloc = ath_pci_dma_alloc,
++	.dma_free = ath_pci_dma_free,
++
++	.reg_read = ath_pci_reg_read,
++	.reg_write = ath_pci_reg_write,
++
++	.read_cachesize = ath_pci_read_cachesize,
++
++	.cleanup = ath_pci_cleanup,
++};
++
++static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++{
++	void __iomem *mem;
++	struct ath_softc *sc;
++	struct ieee80211_hw *hw;
++	u8 csz;
++	u32 val;
++	int ret = 0;
++	struct ath_hal *ah;
++
++	if (pci_enable_device(pdev))
++		return -EIO;
++
++	ret =  pci_set_dma_mask(pdev, DMA_32BIT_MASK);
++
++	if (ret) {
++		printk(KERN_ERR "ath9k: 32-bit DMA not available\n");
++		goto bad;
++	}
++
++	ret = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
++
++	if (ret) {
++		printk(KERN_ERR "ath9k: 32-bit DMA consistent "
++			"DMA enable failed\n");
++		goto bad;
++	}
++
++	/*
++	 * Cache line size is used to size and align various
++	 * structures used to communicate with the hardware.
++	 */
++	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &csz);
++	if (csz == 0) {
++		/*
++		 * Linux 2.4.18 (at least) writes the cache line size
++		 * register as a 16-bit wide register which is wrong.
++		 * We must have this setup properly for rx buffer
++		 * DMA to work so force a reasonable value here if it
++		 * comes up zero.
++		 */
++		csz = L1_CACHE_BYTES / sizeof(u32);
++		pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, csz);
++	}
++	/*
++	 * The default setting of latency timer yields poor results,
++	 * set it to the value used by other systems. It may be worth
++	 * tweaking this setting more.
++	 */
++	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0xa8);
++
++	pci_set_master(pdev);
++
++	/*
++	 * Disable the RETRY_TIMEOUT register (0x41) to keep
++	 * PCI Tx retries from interfering with C3 CPU state.
++	 */
++	pci_read_config_dword(pdev, 0x40, &val);
++	if ((val & 0x0000ff00) != 0)
++		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
++
++	ret = pci_request_region(pdev, 0, "ath9k");
++	if (ret) {
++		dev_err(&pdev->dev, "PCI memory region reserve error\n");
++		ret = -ENODEV;
++		goto bad;
++	}
++
++	mem = pci_iomap(pdev, 0, 0);
++	if (!mem) {
++		printk(KERN_ERR "PCI memory map error\n") ;
++		ret = -EIO;
++		goto bad1;
++	}
++
++	hw = ieee80211_alloc_hw(sizeof(struct ath_softc), &ath9k_ops);
++	if (hw == NULL) {
++		printk(KERN_ERR "ath_pci: no memory for ieee80211_hw\n");
++		goto bad2;
++	}
++
++	SET_IEEE80211_DEV(hw, &pdev->dev);
++	pci_set_drvdata(pdev, hw);
++
++	sc = hw->priv;
++	sc->hw = hw;
++	sc->pdev = pdev;
++	sc->mem = mem;
++	sc->bus_ops = &ath_pci_bus_ops;
++
++	if (ath_attach(id->device, sc) != 0) {
++		ret = -ENODEV;
++		goto bad3;
++	}
++
++	/* setup interrupt service routine */
++
++	if (request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath", sc)) {
++		printk(KERN_ERR "%s: request_irq failed\n",
++			wiphy_name(hw->wiphy));
++		ret = -EIO;
++		goto bad4;
++	}
++
++	ah = sc->sc_ah;
++	printk(KERN_INFO
++	       "%s: Atheros AR%s MAC/BB Rev:%x "
++	       "AR%s RF Rev:%x: mem=0x%lx, irq=%d\n",
++	       wiphy_name(hw->wiphy),
++	       ath_mac_bb_name(ah->ah_macVersion),
++	       ah->ah_macRev,
++	       ath_rf_name((ah->ah_analog5GhzRev & AR_RADIO_SREV_MAJOR)),
++	       ah->ah_phyRev,
++	       (unsigned long)mem, pdev->irq);
++
++	return 0;
++bad4:
++	ath_detach(sc);
++bad3:
++	ieee80211_free_hw(hw);
++bad2:
++	pci_iounmap(pdev, mem);
++bad1:
++	pci_release_region(pdev, 0);
++bad:
++	pci_disable_device(pdev);
++	return ret;
++}
++
++static void ath_pci_remove(struct pci_dev *pdev)
++{
++	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
++	struct ath_softc *sc = hw->priv;
++
++	ath_pci_cleanup(sc);
++}
++
++#ifdef CONFIG_PM
++
++static int ath_pci_suspend(struct pci_dev *pdev, pm_message_t state)
++{
++	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
++	struct ath_softc *sc = hw->priv;
++
++	ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN, 1);
++
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
++	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
++		cancel_delayed_work_sync(&sc->rf_kill.rfkill_poll);
++#endif
++
++	pci_save_state(pdev);
++	pci_disable_device(pdev);
++	pci_set_power_state(pdev, 3);
++
++	return 0;
++}
++
++static int ath_pci_resume(struct pci_dev *pdev)
++{
++	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
++	struct ath_softc *sc = hw->priv;
++	u32 val;
++	int err;
++
++	err = pci_enable_device(pdev);
++	if (err)
++		return err;
++	pci_restore_state(pdev);
++	/*
++	 * Suspend/Resume resets the PCI configuration space, so we have to
++	 * re-disable the RETRY_TIMEOUT register (0x41) to keep
++	 * PCI Tx retries from interfering with C3 CPU state
++	 */
++	pci_read_config_dword(pdev, 0x40, &val);
++	if ((val & 0x0000ff00) != 0)
++		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
++
++	/* Enable LED */
++	ath9k_hw_cfg_output(sc->sc_ah, ATH_LED_PIN,
++			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++	ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN, 1);
++
++#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
++	/*
++	 * check the h/w rfkill state on resume
++	 * and start the rfkill poll timer
++	 */
++	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
++		queue_delayed_work(sc->hw->workqueue,
++				   &sc->rf_kill.rfkill_poll, 0);
++#endif
++
++	return 0;
++}
++
++#endif /* CONFIG_PM */
++
++MODULE_DEVICE_TABLE(pci, ath_pci_id_table);
++
++static struct pci_driver ath_pci_driver = {
++	.name       = "ath9k",
++	.id_table   = ath_pci_id_table,
++	.probe      = ath_pci_probe,
++	.remove     = ath_pci_remove,
++#ifdef CONFIG_PM
++	.suspend    = ath_pci_suspend,
++	.resume     = ath_pci_resume,
++#endif /* CONFIG_PM */
++};
++
++int __init ath_pci_init(void)
++{
++	return pci_register_driver(&ath_pci_driver);
++}
++
++void ath_pci_exit(void)
++{
++	pci_unregister_driver(&ath_pci_driver);
++}
+-- 
+1.5.3.2
 
-
---nextPart24175770.Mb21tCMEJb
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAklx1N0ACgkQR6LMutpd94z7CACfehf5KfCNbmVsw8dIQQMqLYB8
-2V0AoJw47S0Nmxri7CfeguFUWl8UYmhd
-=a0Zq
------END PGP SIGNATURE-----
-
---nextPart24175770.Mb21tCMEJb--
