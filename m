@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34030 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752522AbZAGL2J (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49056 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbZACW4k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:28:09 -0500
-Message-Id: <20090107112658.959454673@atheros.com> (sfid-20090107_123903_167791_CE70A501)
-References: <20090107112346.369581673@atheros.com>
-Date: Wed, 07 Jan 2009 13:23:56 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 10/14] mac80211: 802.11w - Drop unprotected robust management frames if MFP is used
+	Sat, 3 Jan 2009 17:56:40 -0500
+Subject: Re: Invalid BSSID handling?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090103000028.302750@gmx.net> (sfid-20090103_010037_599013_5390FD9B)
+References: <20090103000028.302750@gmx.net>
+	 (sfid-20090103_010037_599013_5390FD9B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BLzp51GvVK9pqEV5z0/P"
+Date: Sat, 03 Jan 2009 23:57:17 +0100
+Message-Id: <1231023437.4629.1.camel@johannes> (sfid-20090103_235643_733661_82FF421F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use ieee80211_drop_unencrypted() to decide whether a received frame
-should be dropped with management frames, too. If MFP is negotiated,
-unprotected robust management frames will be dropped.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+--=-BLzp51GvVK9pqEV5z0/P
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Sat, 2009-01-03 at 01:00 +0100, Alina Friedrichsen wrote:
 
----
- net/mac80211/rx.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+> The madwifi accepts all BSSIDs except 00:00:00:00:00:00 and
+> ff:ff:ff:ff:ff:ff. Should mac80211 allow all BSSIDs like madwifi, or
+> should it better treat multicast MAC addresses as 00:00:00:00:00:00,
+> or an other handling?
 
---- wireless-testing.orig/net/mac80211/rx.c	2009-01-07 13:07:59.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2009-01-07 13:08:03.000000000 +0200
-@@ -1705,6 +1705,9 @@ ieee80211_rx_h_action(struct ieee80211_r
- 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
- 		return RX_DROP_MONITOR;
- 
-+	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
-+		return RX_DROP_MONITOR;
-+
- 	/* all categories we currently handle have action_code */
- 	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
- 		return RX_DROP_MONITOR;
-@@ -1790,10 +1793,14 @@ static ieee80211_rx_result debug_noinlin
- ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
- 
- 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
- 		return RX_DROP_MONITOR;
- 
-+	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
-+		return RX_DROP_MONITOR;
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		return ieee80211_mesh_rx_mgmt(sdata, rx->skb, rx->status);
- 
+Even though the standard asks you to use locally administered addresses
+for IBSS, I don't see this as a requirement since they just want to
+guarantee uniqueness and if you're assigning manually you rely on
+different methods for uniqueness.
 
--- 
+Cf. 7.1.3.3.3 in 802.11-2007 (which you can download for free)
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+johannes
+
+--=-BLzp51GvVK9pqEV5z0/P
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJX+1KAAoJEKVg1VMiehFYZ14P/39814cZvd9jyQdoQ47s6cYj
+1xCWxfsMSfNaQeXRsGjamdK8Rbt/S5LLc+1iJwwS7toy4LzrlaLFVB+cG3Mu9bew
+s29gxRJndGR7OIReUU+c8uoXSr3bVN7BlL/jzTv/7dzq7xgmW+OS3aiHXzqHZZWx
+Gd/ZoGM464rJtzlkAZ5G4NYXjc2KVitjTCUHRM0LZRbqG8LVt/59f7QVCwnIo3QJ
+1UYDGqPHtzcMQmr3TBC5pJ1w/Iu5JYdI8YV5gVl52UVni5quQWWz45qlOktvdh/c
+SqdDGV/sl6fGr4ZjUythvK8+3ElSSHj2Psx55Ri5pG1iKUmy3n2E0QPlL2IYtGe4
+Wxdb09MdIzQEUK0Y4ocMOOEyq6aVZPlEA1VBw1oTQuBX/0y0MVrEHpT4lt7t6dvN
+kUXsr+1z+HBqgk050qEGxBZs8SvXW7b3l0E+DnYalv6A3wVjfsG5LoKmpiZNoUyY
+VL4A5BNUmuiVQU66o4drTUqVKAy3SwYueMk0Yecntm2Y+LlFJByQpYiB1r1ysIFx
+xgPVt6FwmsG5SqQ9/w5TwzLyGZWEjxDOSnhx3aJ7CfLEebhOi26ykBwjcehgGC/h
+OgYFu83hGu0bvwvHSYNKlzXIMZitykEdZplpANJ2PwhVU0rCIT1uQRQKmb8/gh4v
+Q23Budm+efYChuhqUfSz
+=iOeW
+-----END PGP SIGNATURE-----
+
+--=-BLzp51GvVK9pqEV5z0/P--
+
