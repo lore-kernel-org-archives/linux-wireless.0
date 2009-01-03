@@ -1,162 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34005 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752359AbZAGL1r (ORCPT
+Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:55506 "EHLO
+	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758824AbZACN4T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:27:47 -0500
-Message-Id: <20090107112620.653060803@atheros.com> (sfid-20090107_122750_720517_CA2AE6B2)
-References: <20090107112346.369581673@atheros.com>
-Date: Wed, 07 Jan 2009 13:23:47 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [PATCH 01/14] mac80211: 802.11w - STA flag for MFP
+	Sat, 3 Jan 2009 08:56:19 -0500
+Received: from hp4000.wilsoft.nl ([192.168.4.5])
+	by linux.wilsoft.nl with esmtp (Exim 4.69)
+	(envelope-from <listsrv@wilsoft.nl>)
+	id 1LJ6z3-0001hn-T2
+	for linux-wireless@vger.kernel.org; Sat, 03 Jan 2009 14:56:09 +0100
+From: "W. van den Akker" <listsrv@wilsoft.nl>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
+Date: Sat, 3 Jan 2009 14:56:07 +0100
+References: <200901011444.20333.listsrv@wilsoft.nl>
+In-Reply-To: <200901011444.20333.listsrv@wilsoft.nl>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901031456.07988.listsrv@wilsoft.nl> (sfid-20090103_145623_103257_B4B762DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add flags for setting STA entries and struct ieee80211_if_sta to
-indicate whether management frame protection (MFP) is used.
+On Thursday 01 January 2009, you wrote:
+> Jouni Malinen <j <at> w1.fi> writes:
+> > I've never tested this with compat-wireless, but the wireless-testing
+> > version seems to be working fine in my tests.
+> >
+> > > I have build the kernel, compiled the compat-wireless and did a make
+>
+> install.
+>
+> > > Make unload didnt work because some drivers were in use (mac80211).
+> > > First problem arises, a rmmod ath9k hangs the kernel. No message of
+> > > what
+>
+> so
+>
+> > > ever in the log or to stdout.
+> >
+> > Would you happen to have another host available for storing the logs? I
+> > have been able to receive debug messages from most crashes with
+> > netconsole (see Documentation/networking/netconsole.txt).
+>
+> I have tested on the server  with the latest wireless-testing the past days
+> (2.6.28-rc9-wl). The wireless-testing looks somewhat more stable then the
+> compat-wireless.
+>
+> I have also installed the netconsole module to watch any kernel prints.
+> After running hostapd (v0.6.6) from command line the AP is up-and-running.
+> Then if I connect with the laptop (tested it with kernel .26 and .28 on the
+> laptop) I get a connection and can start a browser en explore the internet.
+> If I start a second session (Kmail or second browser) the
+> server hangs within a minute. Leaving again no trace on the console,
+> hostapd-log or netconsole.
+> Only way to reset the server is switch off the power.
+> Its very frustrating because no information or what so ever can be found.
+>
+> If I connect an internet radio (Musicpal) to the server there is no
+> problem. It stays stable for hours. If I also connect the laptop and start
+> a browser the server hangs again within minuts.
+>
+> Its looks like if there is a second connection been set up the server
+> hangs.
+>
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+I have narrowed the problem down to the number of connections setted up in a 
+short time.
+If a system (notebook, internetradio or what so ever) setup a number of 
+connections is a very short time (couple of seconds) the server crashes.
 
+If I start Kmail on the notebook (with 5 mailboxes) the server crashes within 
+seconds. Its always reproduceble. If I change the broadcast on the 
+internetradio fast (for example 3 time with seconds between them) server 
+hangs.
 
----
- include/linux/nl80211.h    |    2 ++
- include/net/cfg80211.h     |    2 ++
- net/mac80211/cfg.c         |    4 ++++
- net/mac80211/debugfs_sta.c |    5 +++--
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    7 +++++--
- net/mac80211/sta_info.h    |    2 ++
- 7 files changed, 19 insertions(+), 4 deletions(-)
+All the server hang ups dont leave a trace in log or console what so ever.
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-01-07 13:07:38.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-01-07 13:07:41.000000000 +0200
-@@ -1,6 +1,6 @@
- /*
-  * BSS client mode implementation
-- * Copyright 2003, Jouni Malinen <jkmaline@cc.hut.fi>
-+ * Copyright 2003-2008, Jouni Malinen <j@w1.fi>
-  * Copyright 2004, Instant802 Networks, Inc.
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-@@ -472,7 +472,7 @@ static void ieee80211_send_deauth_disass
- 	/* u.deauth.reason_code == u.disassoc.reason_code */
- 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
- 
--	ieee80211_tx_skb(sdata, skb, 0);
-+	ieee80211_tx_skb(sdata, skb, ifsta->flags & IEEE80211_STA_MFP_ENABLED);
- }
- 
- /* MLME */
-@@ -1420,6 +1420,9 @@ static void ieee80211_rx_mgmt_assoc_resp
- 
- 	rate_control_rate_init(sta);
- 
-+	if (ifsta->flags & IEEE80211_STA_MFP_ENABLED)
-+		set_sta_flags(sta, WLAN_STA_MFP);
-+
- 	if (elems.wmm_param)
- 		set_sta_flags(sta, WLAN_STA_WME);
- 
---- wireless-testing.orig/include/linux/nl80211.h	2008-12-31 17:33:38.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2009-01-07 13:07:41.000000000 +0200
-@@ -412,12 +412,14 @@ enum nl80211_iftype {
-  * @NL80211_STA_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
-  *	with short barker preamble
-  * @NL80211_STA_FLAG_WME: station is WME/QoS capable
-+ * @NL80211_STA_FLAG_MFP: station uses management frame protection
-  */
- enum nl80211_sta_flags {
- 	__NL80211_STA_FLAG_INVALID,
- 	NL80211_STA_FLAG_AUTHORIZED,
- 	NL80211_STA_FLAG_SHORT_PREAMBLE,
- 	NL80211_STA_FLAG_WME,
-+	NL80211_STA_FLAG_MFP,
- 
- 	/* keep last */
- 	__NL80211_STA_FLAG_AFTER_LAST,
---- wireless-testing.orig/include/net/cfg80211.h	2008-12-31 17:33:38.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-01-07 13:07:41.000000000 +0200
-@@ -112,12 +112,14 @@ struct beacon_parameters {
-  * @STATION_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
-  *	with short preambles
-  * @STATION_FLAG_WME: station is WME/QoS capable
-+ * @STATION_FLAG_MFP: station uses management frame protection
-  */
- enum station_flags {
- 	STATION_FLAG_CHANGED		= 1<<0,
- 	STATION_FLAG_AUTHORIZED		= 1<<NL80211_STA_FLAG_AUTHORIZED,
- 	STATION_FLAG_SHORT_PREAMBLE	= 1<<NL80211_STA_FLAG_SHORT_PREAMBLE,
- 	STATION_FLAG_WME		= 1<<NL80211_STA_FLAG_WME,
-+	STATION_FLAG_MFP		= 1<<NL80211_STA_FLAG_MFP,
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/cfg.c	2008-12-31 17:33:38.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-01-07 13:07:41.000000000 +0200
-@@ -630,6 +630,10 @@ static void sta_apply_parameters(struct 
- 		sta->flags &= ~WLAN_STA_WME;
- 		if (params->station_flags & STATION_FLAG_WME)
- 			sta->flags |= WLAN_STA_WME;
-+
-+		sta->flags &= ~WLAN_STA_MFP;
-+		if (params->station_flags & STATION_FLAG_MFP)
-+			sta->flags |= WLAN_STA_MFP;
- 		spin_unlock_bh(&sta->lock);
- 	}
- 
---- wireless-testing.orig/net/mac80211/debugfs_sta.c	2008-12-31 17:33:38.000000000 +0200
-+++ wireless-testing/net/mac80211/debugfs_sta.c	2009-01-07 13:07:41.000000000 +0200
-@@ -67,14 +67,15 @@ static ssize_t sta_flags_read(struct fil
- 	char buf[100];
- 	struct sta_info *sta = file->private_data;
- 	u32 staflags = get_sta_flags(sta);
--	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s",
-+	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s%s",
- 		staflags & WLAN_STA_AUTH ? "AUTH\n" : "",
- 		staflags & WLAN_STA_ASSOC ? "ASSOC\n" : "",
- 		staflags & WLAN_STA_PS ? "PS\n" : "",
- 		staflags & WLAN_STA_AUTHORIZED ? "AUTHORIZED\n" : "",
- 		staflags & WLAN_STA_SHORT_PREAMBLE ? "SHORT PREAMBLE\n" : "",
- 		staflags & WLAN_STA_WME ? "WME\n" : "",
--		staflags & WLAN_STA_WDS ? "WDS\n" : "");
-+		staflags & WLAN_STA_WDS ? "WDS\n" : "",
-+		staflags & WLAN_STA_MFP ? "MFP\n" : "");
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
- STA_OPS(flags);
---- wireless-testing.orig/net/mac80211/sta_info.h	2008-12-31 17:33:39.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2009-01-07 13:07:41.000000000 +0200
-@@ -34,6 +34,7 @@
-  * @WLAN_STA_CLEAR_PS_FILT: Clear PS filter in hardware (using the
-  *	IEEE80211_TX_CTL_CLEAR_PS_FILT control flag) when the next
-  *	frame to this station is transmitted.
-+ * @WLAN_STA_MFP: Management frame protection is used with this STA.
-  */
- enum ieee80211_sta_info_flags {
- 	WLAN_STA_AUTH		= 1<<0,
-@@ -46,6 +47,7 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_WDS		= 1<<7,
- 	WLAN_STA_PSPOLL		= 1<<8,
- 	WLAN_STA_CLEAR_PS_FILT	= 1<<9,
-+	WLAN_STA_MFP		= 1<<10,
- };
- 
- #define STA_TID_NUM 16
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-07 13:07:38.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-07 13:07:41.000000000 +0200
-@@ -260,6 +260,7 @@ struct mesh_preq_queue {
- #define IEEE80211_STA_PRIVACY_INVOKED	BIT(13)
- #define IEEE80211_STA_TKIP_WEP_USED	BIT(14)
- #define IEEE80211_STA_CSA_RECEIVED	BIT(15)
-+#define IEEE80211_STA_MFP_ENABLED	BIT(16)
- /* flags for MLME request */
- #define IEEE80211_STA_REQ_SCAN 0
- #define IEEE80211_STA_REQ_DIRECT_PROBE 1
+Hope this gives any additional information.
+
+gr,
+Willem
 
 -- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
