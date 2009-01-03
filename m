@@ -1,122 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f12.google.com ([209.85.219.12]:56524 "EHLO
-	mail-ew0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752480AbZARQYB (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:44205 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751571AbZACUlF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 11:24:01 -0500
-Received: by ewy5 with SMTP id 5so585543ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 08:23:59 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Chris Clayton <chris2553@googlemail.com>
-Subject: Re: 2.6.29-rc2 - rt61pci regression
-Date: Sun, 18 Jan 2009 17:23:56 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <c6b1100b0901180730y4d32dfabn8de0024b4fc1c749@mail.gmail.com>
-In-Reply-To: <c6b1100b0901180730y4d32dfabn8de0024b4fc1c749@mail.gmail.com>
+	Sat, 3 Jan 2009 15:41:05 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2422097fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2009 12:41:01 -0800 (PST)
+Message-ID: <69e28c910901031241iaef37d5t2cb11bf867f75c86@mail.gmail.com> (sfid-20090103_214112_485062_7BC73DED)
+Date: Sat, 3 Jan 2009 21:41:01 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Vasanthakumar Thiagarajan" <vasanth@atheros.com>
+Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
+Cc: "Vasanth Thiagarajan" <Vasanth.Thiagarajan@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Jouni Malinen" <Jouni.Malinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <20090103084637.GA31929@vasanth-laptop>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200901181723.56783.IvDoorn@gmail.com> (sfid-20090118_172408_365733_84908933)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1230890746-3075-1-git-send-email-vasanth@atheros.com>
+	 <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com>
+	 <20090103084637.GA31929@vasanth-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 18 January 2009, Chris Clayton wrote:
-> Hi,
-> 
-> Firstly, I'm not subscribed, so please cc me on any reply.
-> 
-> I started testing 2.6.29 on my laptop yesterday and find that my
-> wireless connection, which works fine on 2.6.28, is not working. The
-> output from dmesg is attached. lspci shows the wireless card as:
-> 
-> 03:00.0 Network controller: RaLink RT2561/RT61 802.11g PCI
->         Subsystem: Belkin Device 701e
->         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-> ParErr- Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 64, Cache Line Size: 32 bytes
->         Interrupt: pin A routed to IRQ 11
->         Region 0: Memory at f4000000 (32-bit, non-prefetchable) [size=32K]
->         Capabilities: <access denied>
->         Kernel driver in use: rt61pci
->         Kernel modules: rt61pci
-> 
-> Today, I've bisected and found that the problem is caused by:
-> 
-> [chris:~/kernel/linux-2.6]$ git bisect good
-> 3ea96463156123cbfd09ac412012a87fef068830 is first bad commit
-> commit 3ea96463156123cbfd09ac412012a87fef068830
-> Author: Ivo van Doorn <ivdoorn@gmail.com>
-> Date:   Sun Jan 4 17:33:25 2009 +0100
-> 
->     rt2x00: Fix TX short preamble detection
-> 
->     The short preamble mode was not correctly detected during TX,
->     rt2x00 used the rate->hw_value_short field but mac80211 is not
->     using this field that way.
->     Instead the flag IEEE80211_TX_RC_USE_SHORT_PREAMBLE should be
->     used to determine if the frame should be send out using
->     short preamble or not.
-> 
->     Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> :040000 040000 efa4788721fcbc8366f6c75c09fa276a17713004
-> 696761e1c46d0e5f1040df19c48be9c2f4d173f7 M      drivers
-> 
-> Reverting this patch from -rc2 makes my wireless connection work again.
-> 
-> Feel free to request any additional information needed to resolve this problem.
+On Sat, Jan 3, 2009 at 9:46 AM, Vasanthakumar Thiagarajan
+<vasanth@atheros.com> wrote:
+> On Sat, Jan 03, 2009 at 12:22:49AM +0530, Stefanik G=E1bor wrote:
+>> On Fri, Jan 2, 2009 at 11:05 AM, Vasanthakumar Thiagarajan
+>> <vasanth@atheros.com> wrote:
+>> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+>> > ---
+>> >  drivers/net/wireless/ath9k/ath9k.h |    5 +++++
+>> >  drivers/net/wireless/ath9k/hw.c    |   33 +++++++++++++++++++++++=
+++++++++++
+>> >  drivers/net/wireless/ath9k/main.c  |    9 +++++++--
+>> >  drivers/net/wireless/ath9k/reg.h   |   10 ++++++++++
+>> >  4 files changed, 55 insertions(+), 2 deletions(-)
+>> >
+>> > <snip>
+>>
+>> Probably a NOBTCOEX modparam might be a good idea - when implementin=
+g
+>> BT coexistence in b43, a lot of non-BT-aware cards failed to work
+>> because the BT GPIO line was connected to the TX preamplifier,
+>> breaking all TX.
+>
+> No need for any module parameters for enabling BT coex. It is
+> already running without any issue on Windows Vista.
+>
+> Vasanth
+>>
+>> --
+>> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-=
+)
+>
 
-Could you try below patch?
+Broadcom's BT coex was also running correctly on Windows Vista, but it
+still caused problems on Linux.
 
-Thanks,
-
-Ivo
----
-Subject: Fix preamble detection by using correct structure to read flags
-
-rt2x00 mixed up structures ieee80211_tx_rate and ieee80211_rate to
-read the IEEE80211_TX_RC_USE_SHORT_PREAMBLE flags. This could lead
-to incorrect preamble detection.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index ce06d00..3c2a8bd 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -186,10 +186,11 @@ static void rt2x00queue_create_tx_descriptor_seq(struct queue_entry *entry,
- 
- static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
- 						  struct txentry_desc *txdesc,
--						  struct ieee80211_rate *rate)
-+						  const struct rt2x00_rate *hwrate)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	const struct rt2x00_rate *hwrate = rt2x00_get_rate(rate->hw_value);
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
-+	const struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
- 	unsigned int data_length;
- 	unsigned int duration;
- 	unsigned int residual;
-@@ -232,7 +233,7 @@ static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
- 		 * When preamble is enabled we should set the
- 		 * preamble bit for the signal.
- 		 */
--		if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
-+		if (txrate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
- 			txdesc->signal |= 0x08;
- 	}
- }
-@@ -327,7 +328,7 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	rt2x00crypto_create_tx_descriptor(entry, txdesc);
- 	rt2x00ht_create_tx_descriptor(entry, txdesc, rate);
- 	rt2x00queue_create_tx_descriptor_seq(entry, txdesc);
--	rt2x00queue_create_tx_descriptor_plcp(entry, txdesc, rate);
-+	rt2x00queue_create_tx_descriptor_plcp(entry, txdesc, hwrate);
- }
- 
- static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
