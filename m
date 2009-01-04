@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:35257 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545AbZAEW1y (ORCPT
+Received: from one.firstfloor.org ([213.235.205.2]:55942 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448AbZADS1v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 17:27:54 -0500
-Message-ID: <49628964.806@gmail.com> (sfid-20090105_232758_595939_0411947F)
-Date: Mon, 05 Jan 2009 23:27:48 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Dave <kilroyd@googlemail.com>
-CC: Andrey Borzenkov <arvidjaar@mail.ru>,
-	orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 2.6.28: warn_slowpath in orinoco receive path
-References: <200901052005.12428.arvidjaar@mail.ru> <49626E4D.3010705@gmail.com>
-In-Reply-To: <49626E4D.3010705@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 4 Jan 2009 13:27:51 -0500
+Date: Sun, 4 Jan 2009 19:41:36 +0100
+From: Andi Kleen <andi@firstfloor.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andi Kleen <andi@firstfloor.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linville@tuxdriver.com,
+	davem <davem@davemloft.net>
+Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless stack
+Message-ID: <20090104184136.GY496@one.firstfloor.org> (sfid-20090104_192756_500906_30CC7026)
+References: <20090104151819.GA6590@basil.nowhere.org> <1231085150.3296.3.camel@johannes> <20090104162826.GT496@one.firstfloor.org> <1231087288.3296.15.camel@johannes> <20090104174339.GX496@one.firstfloor.org> <1231090388.3296.17.camel@johannes>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231090388.3296.17.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2009 09:32 PM, Dave wrote:
-> --- a/drivers/net/wireless/orinoco/orinoco.c
-> +++ b/drivers/net/wireless/orinoco/orinoco.c
-> @@ -1616,9 +1616,15 @@ static void orinoco_rx_isr_tasklet(unsigned long
-> data)
+On Sun, Jan 04, 2009 at 06:33:08PM +0100, Johannes Berg wrote:
+> On Sun, 2009-01-04 at 18:43 +0100, Andi Kleen wrote:
 > 
->         /* extract desc and skb from queue */
->         list_for_each_entry_safe(rx_data, temp, &priv->rx_list, list) {
-> +               unsigned long flags;
-> +
->                 desc = rx_data->desc;
->                 skb = rx_data->skb;
-> +
-> +               local_irq_save(flags);
->                 list_del(&rx_data->list);
-> +               local_irq_restore(flags);
-> +
+> > > we need to do is figure out is why the skb has a wrong truesize.
+> > 
+> > Because it was expanded without truesize being adjusted (see my
+> > original mail) 
+> 
+> So why is this not making trouble with all the other users?
 
-Hi,
+I think most adjustments are too small to be noticed. Typically
+they are just for a few bytes in the header. truesize
+is already larger, so it can tolerate some slag.
 
-another processor still can see inconsistent state, spinlock should be taken.
-Or, am I missing something?
+I also only see it occasionally (maybe 5-10 times/day) when
+the wireless stack appends a lot of data.
 
-regards,
---js
+My proposal would be to include this patch for 2.6.28/2.6.29
+and investigate fixing pskb_expand_head for 2.6.30.
+
+-Andi
+
+-- 
+ak@linux.intel.com
