@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:64833 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751387AbZALTmH (ORCPT
+Received: from one.firstfloor.org ([213.235.205.2]:38340 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750856AbZADPLO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 14:42:07 -0500
-Received: by bwz14 with SMTP id 14so32736531bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2009 11:42:05 -0800 (PST)
-Message-ID: <45e8e6c40901121142k1fc6869cl2d6bd058fbacf972@mail.gmail.com> (sfid-20090112_204210_824802_06D05671)
-Date: Mon, 12 Jan 2009 11:42:05 -0800
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: "Dan Williams" <dcbw@redhat.com>
-Subject: Re: [PATCH v3] libertas: if_spi, driver for libertas GSPI devices
-Cc: "Colin McCabe" <colin@cozybit.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1231789072.28887.11.camel@localhost.localdomain>
+	Sun, 4 Jan 2009 10:11:14 -0500
+Date: Sun, 4 Jan 2009 16:12:22 +0100
+From: Andi Kleen <andi@firstfloor.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: regression: no interfaces with rtl8180 driver post 2.6.28 git
+Message-ID: <20090104151222.GA6331@basil.nowhere.org> (sfid-20090104_161118_702041_F88BF356)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1231541889-7999-1-git-send-email-colin@cozybit.com>
-	 <1231772017.23907.3.camel@localhost.localdomain>
-	 <45e8e6c40901121104r1f55894dy35d7528e8174f036@mail.gmail.com>
-	 <1231789072.28887.11.camel@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan, that sounds better: I've asked John to please go ahead and
-revert it and we'll send a new version that just packs all of the
-structs.  Thanks!
 
-  -Andrey
+I got a 
 
-On Mon, Jan 12, 2009 at 11:37 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Mon, 2009-01-12 at 11:04 -0800, Andrey Yurovsky wrote:
->> Hi Dan, Johannes was correct -- the explicit get_unaligned_ was not
->> needed and using packed was required.  Unfortunately our patch got
->> merged before we had a chance to send a version including just the
->> packing, so I'm preparing a patch that reverts the calls to
->> get_unaligned_* ...this is, however, independent of the actual
->> if_spi.c driver patch.
->
-> Yes, they are independent.  Alternatively, you could just ask John to
-> revert the patch, and then provide a new patch with just the 'packed'
-> bits, which might be cleaner in the git history.
->
-> Dan
->
->
->
+06:02.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8185 IEEE 802.11a/b/g Wireless LAN Controller (rev 20)
+
+PCI card in a box. With 2.6.28 it works (although rather poorly, always
+seems to eventually fallback to 1Mbit/s). With post 2.6.28-git latest the card
+is still detected, but no wlan0 interface is created anymore, only
+wmaster0:
+
+Some excerpts from the log.
+
+rtl8180 0000:06:02.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+wmaster0 (rtl8180): not using net_device_ops yet
+phy0: Selected rate control algorithm 'minstrel'
+phy0: hwaddr 00:18:e7:49:f4:32, RTL8185vD + rtl8225z2
+
+On 2.6.28 I get a wlan0 and roughly the same messages (except 
+for the net_device_ops one, but I think that's harmless)
+
+I first suspected udev, but there's no trace of wlan0 anywhere
+in /sys, so it looks like it's not even create in kernel. 
+
+Git tip 7d3b56ba37a95f1f370f50258ed3954c304c524b 
+Userland is opensuse 11.1.  
+
+-Andi
+
+-- 
+ak@linux.intel.com
