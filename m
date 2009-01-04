@@ -1,61 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60725 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757969AbZAIWTQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 17:19:16 -0500
-Subject: Re: [PATCH 1/1 #2] IWL: fix WARN typo
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <20090109214216.GG3371@tuxdriver.com> (sfid-20090109_224547_996637_901AF36B)
-References: <1231171404-22822-1-git-send-email-jirislaby@gmail.com>
-	 <1231171566-22984-1-git-send-email-jirislaby@gmail.com>
-	 <20090109201759.GE3371@tuxdriver.com> <20090109214216.GG3371@tuxdriver.com>
-	 (sfid-20090109_224547_996637_901AF36B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TYhSYxg5QXEMZ/7Du5uS"
-Date: Fri, 09 Jan 2009 23:20:18 +0100
-Message-Id: <1231539618.3603.22.camel@johannes> (sfid-20090109_231920_868963_AFDF6536)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:35735 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752887AbZADQiQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Jan 2009 11:38:16 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Andi Kleen <andi@firstfloor.org>
+Subject: Re: rate instability in wireless stack
+Date: Sun, 4 Jan 2009 17:36:47 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <20090104164649.GV496@one.firstfloor.org>
+In-Reply-To: <20090104164649.GV496@one.firstfloor.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901041736.47650.mb@bu3sch.de> (sfid-20090104_173822_059732_0D3AFB8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 04 January 2009 17:46:49 Andi Kleen wrote:
+[snip]
 
---=-TYhSYxg5QXEMZ/7Du5uS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I guess you're using the minstrel rate control.
+Can you switch to PID rate control and retry.
 
-On Fri, 2009-01-09 at 16:42 -0500, John W. Linville wrote:
-> People have pointed-out the "kew -> key" part of the patch.
-> Any thoughts on "new key" vs. "a new key"?
+Note that intel uses its own rate control algorithm. so I guess that's
+where it breaks.
 
-As I said, if anything it should be "the", not "a" imho.
-
-johannes
-
---=-TYhSYxg5QXEMZ/7Du5uS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJZ82fAAoJEKVg1VMiehFY3BIQALFKcl2NoeqKF4RJXPihON1w
-HjgRpjTHyhOOMmnSGs2Sseuz/chEBEDv5y5GPkeCd2LxsZDTRIzLAjb75AbTePgt
-5mGwzr/ApoPLvvFILkET7hMVnlbG6ovPpWnnN8cM91HFT0rXfRx4DUkaHrG7RZ7Z
-J4bscfUs49GlPATjugCQMN9xcyHdtiNEFdgzAzJduo+BcfgwjNQ3zAE6kXn3sMKr
-MJRrJ47xmC8MHMViNlLivuQGnlOh+gd72BphIi7bhXRy36NAvF7YA7v6JbtVuYpb
-5YuAEy0NzU7vM0Y6QVZCwQM/59XyRFZc6X58mWjDkf6Q6XJy9s5cND31S/xWo/+S
-tjRrzSSDWTnghXPk6OQP11cg5jmRwDPULlDZjKClOFYoxC1LH+UcOinp1zPqwoyk
-j7X+a4jytlPHJXSma3+qNF/TfiUWNUxkHOSDWPuNchJIeMi0iVj/j7GzfYtkGEEg
-iogbkIrUqk7ZjI3kmeUZhzE4o6U2m5w86tubJaqBWS47aZbYh6TsFIqAqgnPxEzh
-kvYNGtST4TxPAgoTk3Dtm/wP2bGtJxFxuVyBbnb+ipBvmn0Vu6v2xdVJjJZZqy5e
-dQWk1zMwcecIOr6NuQ8iQZ0vVFnjd4FHzIC/jSJLE2UA/BBP7ct0uxjaPGiAaNMe
-PkX0CR5FdqJ9KffIF5oD
-=d6px
------END PGP SIGNATURE-----
-
---=-TYhSYxg5QXEMZ/7Du5uS--
-
+-- 
+Greetings, Michael.
