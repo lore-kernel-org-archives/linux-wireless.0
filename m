@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37622 "EHLO
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:38662 "EHLO
 	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754196AbZANTSn (ORCPT
+	with ESMTP id S1751397AbZADLS7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 14:18:43 -0500
+	Sun, 4 Jan 2009 06:18:59 -0500
+Message-ID: <49609AFE.2010209@openwrt.org> (sfid-20090104_121901_588626_6C03BEE6)
+Date: Sun, 04 Jan 2009 12:18:22 +0100
 From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+MIME-Version: 1.0
+To: Christoph Hellwig <hch@infradead.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
 	Jouni Malinen <jmalinen@atheros.com>,
 	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v4 09/11] ath9k: fix ar5416Addac_9100 values
-Date: Wed, 14 Jan 2009 20:17:10 +0100
-Message-Id: <1231960632-4452-10-git-send-email-juhosg@openwrt.org> (sfid-20090114_201846_830081_D1CDDDB0)
-In-Reply-To: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
-References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
+	Felix Fietkau <nbd@openwrt.org>, Imre Kaloz <kaloz@openwrt.org>
+Subject: Re: [RFC 07/12] ath9k: introduce platform driver for AHB bus	support
+References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org> <1230990262-22923-8-git-send-email-juhosg@openwrt.org> <20090104073022.GC12905@infradead.org>
+In-Reply-To: <20090104073022.GC12905@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Writing the register at offset 0x98c4 causes a deadlock on the AR913x
-SoCs. Although i don't have detailed knowledge about these registers,
-but if i change the register offset according to the 'ar5416Addac' table,
-it works. Additionally there is no reference to the 0x98c4 elsewhere.
+Christoph Hellwig =EDrta:
+> On Sat, Jan 03, 2009 at 02:44:17PM +0100, Gabor Juhos wrote:
+>> +static dma_addr_t ath_ahb_map_single_to_device(struct ath_softc *sc=
+,
+>> +					       void *p, size_t size)
+>> +{
+>> +	return dma_map_single(NULL, p, size, DMA_TO_DEVICE);
+>> +}
+>=20
+> As said before you should just use dma_* directly.  And please make s=
+ure
+> to always pass a struct device to the dma_* routines, even if your
+> platform might currently not required it the API does.
+>=20
+>> +static void ath_ahb_cleanup(struct ath_softc *sc)
+>> +{
+>> +	struct platform_device *pdev =3D to_platform_device(sc->dev);
+>> +	struct ieee80211_hw *hw =3D sc->hw;
+>> +	struct resource *res;
+>> +
+>> +	res =3D platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+>> +	if (res)
+>> +		free_irq(res->start, sc);
+>=20
+> If you stored the irq value directly in the softc this whole thing mi=
+ght
+> be able to be done in a generic way..
+>=20
+>=20
 
-Changes-licensed-under: ISC
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/initvals.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/initvals.h b/drivers/net/wireless/ath9k/initvals.h
-index a1bc631..d492363 100644
---- a/drivers/net/wireless/ath9k/initvals.h
-+++ b/drivers/net/wireless/ath9k/initvals.h
-@@ -658,7 +658,7 @@ static const u32 ar5416Addac_9100[][2] = {
-     {0x0000989c,  0x00000000 },
-     {0x0000989c,  0x00000000 },
-     {0x0000989c,  0x00000000 },
--    {0x000098c4,  0x00000000 },
-+    {0x000098cc,  0x00000000 },
- };
- 
- static const u32 ar5416Modes[][6] = {
--- 
-1.5.3.2
-
+I did not want to store it in the softc, because 'struct pci_dev' has i=
+t already
+and we will duplicate it. However the code will be simpler, so i can ad=
+d it of
+course.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
