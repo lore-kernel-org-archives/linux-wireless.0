@@ -1,68 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:43386 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752816AbZAIIOA (ORCPT
+Received: from one.firstfloor.org ([213.235.205.2]:42938 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759328AbZADR3x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 03:14:00 -0500
-Received: by bwz14 with SMTP id 14so28552451bwz.13
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 00:13:58 -0800 (PST)
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linville@tuxdriver.com
-Subject: Re: drivers returning wrong results from their _tx op
-References: <1231193264.3697.41.camel@johannes>
-	<b6c5339f0901051424q12d8fc14o8f20b62cfacc4e6e@mail.gmail.com>
-	<1231246859.3503.0.camel@johannes>
-	<20090109022347.GA5077@hash.localnet>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 09 Jan 2009 10:13:56 +0200
-In-Reply-To: <20090109022347.GA5077@hash.localnet> (Bob Copeland's message of "Thu\, 8 Jan 2009 21\:23\:47 -0500")
-Message-ID: <87hc4828xn.fsf@litku.valot.fi> (sfid-20090109_091406_850141_8E237274)
-MIME-Version: 1.0
+	Sun, 4 Jan 2009 12:29:53 -0500
+Date: Sun, 4 Jan 2009 18:43:39 +0100
+From: Andi Kleen <andi@firstfloor.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andi Kleen <andi@firstfloor.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linville@tuxdriver.com,
+	davem <davem@davemloft.net>
+Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless stack
+Message-ID: <20090104174339.GX496@one.firstfloor.org> (sfid-20090104_183008_755042_38515B21)
+References: <20090104151819.GA6590@basil.nowhere.org> <1231085150.3296.3.camel@johannes> <20090104162826.GT496@one.firstfloor.org> <1231087288.3296.15.camel@johannes>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231087288.3296.15.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+On Sun, Jan 04, 2009 at 05:41:28PM +0100, Johannes Berg wrote:
+> On Sun, 2009-01-04 at 17:28 +0100, Andi Kleen wrote:
+> > > Thanks, but I'll need to look at this in more detail, we need to make
+> > > sure that we orphan the skb before 
+> > 
+> > What do you mean with orphaning the skb? 
+> 
+> Well, touching truesize is absolutely not allowed while the skb is
+> charged to a socket. This is what causes the truesize warning. The thing
 
-> On Tue, Jan 06, 2009 at 02:00:59PM +0100, Johannes Berg wrote:
->> I guess it should, want to send a patch?
->
-> Some of the return values were already documented in the ops comment, 
-> and others like set_key() elsewhere.  Here are more, though I guessed 
-> on a couple of them...
->
-> From: Bob Copeland <me@bobcopeland.com>
-> Date: Thu, 8 Jan 2009 21:00:34 -0500
-> Subject: [PATCH] mac80211: document return codes from ops callbacks
->
-> For any callbacks in ieee80211_ops, specify what values the return
-> codes represent.  While at it, fix a couple of capitalization and
-> punctuation differences.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  include/net/mac80211.h |   14 ++++++++++++--
->  1 files changed, 12 insertions(+), 2 deletions(-)
->
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index b7b9014..903dade 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1170,6 +1170,7 @@ enum ieee80211_ampdu_mlme_action {
->   *	configuration in the TX control data. This handler should,
->   *	preferably, never fail and stop queues appropriately, more
->   *	importantly, however, it must never fail for A-MPDU-queues.
-> + *	Returns NETDEV_TX_OK, or NETDEV_TX_BUSY if it fails.
->   *	Must be implemented and atomic.
+The cause of the warnings was because the skb changed, but
+truesize didn't.
 
-Based on discussion from netdev I have understood that NETDEV_TX_BUSY
-is not recommended, it's better to stop the queue already earlier,
-drop the frame or store the skb somewhere else temporarily. Johannes,
-have I understood this correctly?
+> we need to do is figure out is why the skb has a wrong truesize.
 
-It would be nice to have this documented here.
+Because it was expanded without truesize being adjusted (see my
+original mail) 
 
--- 
-Kalle Valo
+-Andi
