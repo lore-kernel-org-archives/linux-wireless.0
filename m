@@ -1,47 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47910 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092AbZAMQpn (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53974 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750764AbZADH1J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 11:45:43 -0500
-Date: Tue, 13 Jan 2009 11:34:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-01-12
-Message-ID: <20090113163455.GC3623@tuxdriver.com> (sfid-20090113_174549_162028_E0F7EC2C)
-References: <20090112201302.GB3786@tuxdriver.com> <20090112.212345.259792227.davem@davemloft.net>
+	Sun, 4 Jan 2009 02:27:09 -0500
+Date: Sun, 4 Jan 2009 02:27:06 -0500
+From: Christoph Hellwig <hch@infradead.org>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, Imre Kaloz <kaloz@openwrt.org>
+Subject: Re: [RFC 02/12] ath9k: introduce bus specific register access
+	routines
+Message-ID: <20090104072706.GB12905@infradead.org> (sfid-20090104_082719_045951_E4A50763)
+References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org> <1230990262-22923-3-git-send-email-juhosg@openwrt.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090112.212345.259792227.davem@davemloft.net>
+In-Reply-To: <1230990262-22923-3-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 12, 2009 at 09:23:45PM -0800, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 12 Jan 2009 15:13:02 -0500
-> 
-> > Please let me know if there are problems!
-> 
-> There's something funny in this tree.   In changeset
-> 19f0a391bf9d88307e52557ff3125b24e2519bd4 there is
-> a removal of arch/arm/mach-integrator/clock.h
-> 
-> I think when you installed that commit something
-> automatically deleted zero length files it found,
-> but that's just a guess.
-> 
-> Please fix this up so I can pull from you.
-> 
-> Otherwise all of those changes looked fine.
- 
-Hmmm...dirty tree I suppose.  Sorry about that!  I should have noticed
-that in the changelog.
+On Sat, Jan 03, 2009 at 02:44:12PM +0100, Gabor Juhos wrote:
+> The AHB bus will require different code for register access, so we make
+> them replaceable as well.
 
-I'll post a new pull request immediately.
+What kind of different code?  ioread*/iowrite* are supposed to be bus-agnostic.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
