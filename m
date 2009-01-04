@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:48445 "EHLO
-	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991AbZABIb4 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:40010 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492AbZADXWf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 03:31:56 -0500
-Date: Fri, 2 Jan 2009 08:05:27 +0000
-From: Andrew Price <andy@andrewprice.me.uk>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rt2x00: Fix radio LED type check
-Message-ID: <20090102080527.GA16585@silver.sucs.org> (sfid-20090102_093159_911227_43E5A500)
-Mime-Version: 1.0
+	Sun, 4 Jan 2009 18:22:35 -0500
+Date: Sun, 04 Jan 2009 17:22:28 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
+Cc: michiel@ettema.net, linux-wireless@vger.kernel.org
+Subject: [PATCH] p54usb: Add USB ID for Thomson Speedtouch 121g
+Message-ID: <496144b4.iPUdF4BLnkZPcWDl%Larry.Finger@lwfinger.net> (sfid-20090105_002240_008972_D1D9D89D)
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since commit 9a95dba32735534bda59def40c747bf606fedf05 "rt2x00: Fix LED
-state handling", rt2x00leds_led_radio wrongly checks that the LED type
-is LED_TYPE_ASSOC. This patch makes it check for LED_TYPE_RADIO once
-again.
+From: Michiel <michiel@ettema.net>
 
-Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
+Add the USB ID for Thomson Speedtouch 121g to p54usb.
+
+Signed-off-by: Michiel <michiel@ettema.net>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/rt2x00/rt2x00leds.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
-index 68f4e0f..a0cd35b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00leds.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
-@@ -97,7 +97,7 @@ void rt2x00leds_led_assoc(struct rt2x00_dev *rt2x00dev, bool enabled)
- 
- void rt2x00leds_led_radio(struct rt2x00_dev *rt2x00dev, bool enabled)
- {
--	if (rt2x00dev->led_radio.type == LED_TYPE_ASSOC)
-+	if (rt2x00dev->led_radio.type == LED_TYPE_RADIO)
- 		rt2x00led_led_simple(&rt2x00dev->led_radio, enabled);
- }
- 
--- 
-1.5.6.5
+John,
 
+This should be included in 2.6.29.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
++++ wireless-testing/drivers/net/wireless/p54/p54usb.c
+@@ -56,6 +56,7 @@ static struct usb_device_id p54u_table[]
+ 	{USB_DEVICE(0x050d, 0x7050)},	/* Belkin F5D7050 ver 1000 */
+ 	{USB_DEVICE(0x0572, 0x2000)},	/* Cohiba Proto board */
+ 	{USB_DEVICE(0x0572, 0x2002)},	/* Cohiba Proto board */
++	{USB_DEVICE(0x06b9, 0x0121)},	/* Thomson SpeedTouch 121g */
+ 	{USB_DEVICE(0x0707, 0xee13)},   /* SMC 2862W-G version 2 */
+ 	{USB_DEVICE(0x083a, 0x4521)},   /* Siemens Gigaset USB Adapter 54 version 2 */
+ 	{USB_DEVICE(0x0846, 0x4240)},	/* Netgear WG111 (v2) */
