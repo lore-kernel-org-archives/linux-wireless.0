@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45760 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752611AbZAWUPr (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:48310 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750764AbZADIyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 15:15:47 -0500
-Date: Fri, 23 Jan 2009 15:01:20 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [ipw3945-devel] [PATCH 2/2 v2.6.29] iwlagn: fix agn rate
-	scaling
-Message-ID: <20090123200120.GE30486@tuxdriver.com> (sfid-20090123_211552_833029_3ACDCC76)
-References: <1232564283-18008-1-git-send-email-reinette.chatre@intel.com> <1232564283-18008-2-git-send-email-reinette.chatre@intel.com> <1232564283-18008-3-git-send-email-reinette.chatre@intel.com> <20090123190138.GC30486@tuxdriver.com> <1232738937.24871.6.camel@rc-desk> <1ba2fa240901231155q79607779t1b91880b98db0839@mail.gmail.com>
+	Sun, 4 Jan 2009 03:54:08 -0500
+Received: by ewy10 with SMTP id 10so7380623ewy.13
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2009 00:54:04 -0800 (PST)
+To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
+Subject: Re: [PATCH] rt2x00: add USB ID for the Linksys WUSB200.
+Date: Sun, 4 Jan 2009 09:54:01 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+References: <200901040110.51629.s.L-H@gmx.de>
+In-Reply-To: <200901040110.51629.s.L-H@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240901231155q79607779t1b91880b98db0839@mail.gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901040954.02065.IvDoorn@gmail.com> (sfid-20090104_095413_823907_4808AF47)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2009 at 09:55:34PM +0200, Tomas Winkler wrote:
-> On Fri, Jan 23, 2009 at 9:28 PM, reinette chatre
-> <reinette.chatre@intel.com> wrote:
-> > On Fri, 2009-01-23 at 11:01 -0800, John W. Linville wrote:
-> >> On Wed, Jan 21, 2009 at 10:58:03AM -0800, Reinette Chatre wrote:
-> >> > From: Abbas, Mohamed <mohamed.abbas@intel.com>
-> >> >
-> >> > Sometime Tx reply rate different than what rate scale expecting
-> >> > causing rate scale to bail out. This could cause failing to
-> >> > commit LQ cmd. This patch will try to solve this instead of just
-> >> > bail out. It also make sure we start with a valid rate.
-> >> >
-> >> > Signed-off-by: mohamed abbas <mohamed.abbas@intel.com>
-> >> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-> >>
-> >> While I'm sure this would be nice to fix, I don't see the regression,
-> >> Oops or crash?
-> >
-> > You are right - this does not fix an oops or a crash. Having this patch
-> > in 2.6.29 is thus not critical.
+On Sunday 04 January 2009, Stefan Lippers-Hollmann wrote:
+> add USB ID for the Linksys WUSB200 Wireless-G Business USB Adapter to 
+> rt73usb.
 > 
-> What is funny that we have to wait till  2.6.30 is open to get it to
-> stable of 2.6.27 and 28.
+> Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+> Cc: stable <stable@kernel.org>
 
-Not my rule -- ask Greg for special dispensation?
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> ---
+>  drivers/net/wireless/rt2x00/rt73usb.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+> index d638a8a..96a8d69 100644
+> --- a/drivers/net/wireless/rt2x00/rt73usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
+> @@ -2321,6 +2321,7 @@ static struct usb_device_id rt73usb_device_table[] = {
+>  	/* Linksys */
+>  	{ USB_DEVICE(0x13b1, 0x0020), USB_DEVICE_DATA(&rt73usb_ops) },
+>  	{ USB_DEVICE(0x13b1, 0x0023), USB_DEVICE_DATA(&rt73usb_ops) },
+> +	{ USB_DEVICE(0x13b1, 0x0028), USB_DEVICE_DATA(&rt73usb_ops) },
+>  	/* MSI */
+>  	{ USB_DEVICE(0x0db0, 0x6877), USB_DEVICE_DATA(&rt73usb_ops) },
+>  	{ USB_DEVICE(0x0db0, 0x6874), USB_DEVICE_DATA(&rt73usb_ops) },
+
+
