@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53848 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754405AbZAOPil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 10:38:41 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [b43] opensource firmware
-Date: Thu, 15 Jan 2009 16:37:57 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Lorenzo Nava <navalorenx@gmail.com>, kyle@infradead.org,
-	linux-wireless@vger.kernel.org
-References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> <1231965922.20309.0.camel@johannes>
-In-Reply-To: <1231965922.20309.0.camel@johannes>
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:38161 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383AbZADLRG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Jan 2009 06:17:06 -0500
+Message-ID: <49609A84.3070600@openwrt.org> (sfid-20090104_121711_116696_CC5915BD)
+Date: Sun, 04 Jan 2009 12:16:20 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901151637.58196.mb@bu3sch.de> (sfid-20090115_163845_263529_359196B6)
+To: Christoph Hellwig <hch@infradead.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, Imre Kaloz <kaloz@openwrt.org>
+Subject: Re: [RFC 01/12] ath9k: introduce bus specific DMA routines
+References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org> <1230990262-22923-2-git-send-email-juhosg@openwrt.org> <20090104072628.GA12905@infradead.org>
+In-Reply-To: <20090104072628.GA12905@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 January 2009 21:45:22 Johannes Berg wrote:
-> 
-> > Initvals and new firmware version can be found at http://www.ing.unibs.it/openfwwf
-> 
-> I suggest that before this is packaged, we change it so b43 can
-> recognise it and automatically disable qos and hwcrypto.
+Christoph Hellwig =EDrta:
+> On Sat, Jan 03, 2009 at 02:44:11PM +0100, Gabor Juhos wrote:
+>> In the AR913x SoCs, the WMAC devices are connected to the CPU throug=
+h
+>> the internal AHB bus instead of PCI. We first patch ath9k driver to =
+use
+>> replaceable DMA routines, so we can use different code for the AHB b=
+us.
+>=20
+>> -		pci_unmap_single(sc->pdev, bf->bf_dmacontext,
+>> -				 skb->len,
+>> -				 PCI_DMA_TODEVICE);
+>> +		ath_unmap_single_to_device(sc, bf->bf_dmacontext, skb->len);
+>=20
+> Just use the dma_* routines, as they are bus-agnostic and make sure t=
+he
+> implementation on your mips SOC works for the ahb bus.
+>=20
+>=20
 
-Yes, please introduce a feature-bitfield at some location in SHM that's unused
-by the proprietary firmware. This bitfields would contain a bit for QoS and
-a bit for hwcrypto.
-Also change your firmware so the driver detects it as open-source firmware.
-I think that's done by writing 0xFFFF to the date/time field in SHM. I don't
-quite remember, but it's something like that.
-Note that this might mean that the firmware watchdog in the driver will trigger,
-as that's enabled by the open-source-firmware-flag. We might want to temporarly
-disable the watchdog in the driver for the time being.
-
--- 
-Greetings, Michael.
+Ok, i will try it.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
