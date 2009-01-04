@@ -1,63 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:47834 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbZAEO4k (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.180]:5535 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755901AbZADTbe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 09:56:40 -0500
-Received: by bwz14 with SMTP id 14so22674728bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 06:56:37 -0800 (PST)
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
-Date: Mon, 5 Jan 2009 15:56:12 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	mohamed salim abbas <mabbaswireless@gmail.com>,
-	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
-	yi.zhu@intel.com, reinette.chatre@intel.com
-References: <200812161307.07193.helmut.schaa@gmail.com> <20081217202943.GB3516@tuxdriver.com> <1229549485.26406.12.camel@localhost.localdomain>
-In-Reply-To: <1229549485.26406.12.camel@localhost.localdomain>
+	Sun, 4 Jan 2009 14:31:34 -0500
+Received: by ik-out-1112.google.com with SMTP id c29so1483796ika.5
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2009 11:31:31 -0800 (PST)
+Message-ID: <49610E8D.9080807@gmail.com> (sfid-20090104_203138_906993_09DEB2FE)
+Date: Sun, 04 Jan 2009 20:31:25 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901051556.13403.helmut.schaa@gmail.com> (sfid-20090105_155643_962787_DCAC3F31)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	me@bobcopeland.com, nbd@openwrt.org
+Subject: Re: [PATCH] ath5k: Add debug code for EEPROM
+References: <20090104173252.GA5944@makis>
+In-Reply-To: <20090104173252.GA5944@makis>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 17. Dezember 2008 schrieb Dan Williams:
-> On Wed, 2008-12-17 at 15:29 -0500, John W. Linville wrote:
-> > On Wed, Dec 17, 2008 at 12:10:11PM -0800, mohamed salim abbas wrote:
-> > > the interrupt moved from pci_probe to mac_start for power saving. once
-> > > the interface is up the driver will read some register to know rfkill
-> > > status, if the interface in down the driver don't care to keep track
-> > > of rfkill switch. I wonder what the purpose of changing this behavior?
-> > 
-> > I think it still isn't settled in everyone's minds whether rfkill
-> > only matters if the device is "up" or if it is something that
-> > e.g. NetworkManager might want to monitor as a clue to bring the
-> > device up or down in response to rfkill changes.
+Nick Kossifidis wrote:
+>  * Add debug code for displaying EEPROM data. Tested on various chip combinations, on x86 and IXP43x (armv5te). It has many > 80cols warnings but i 
+> don't think it'll be more readable if i start breaking lines, it's already messy, after all it's debug code. This code also replaces ath_info tool.
+
+I think breaking lines in this case would be rather contraproductive.
+
+> Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
 > 
-> The question is:  does NetworkManager just always keep the device 'up'
-> irregardless of whether it's supposed to be associated with anything
-> just so we can get rfkill events?
+> ---
+> diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+> index ccaeb5c..f0ef5b3 100644
+> --- a/drivers/net/wireless/ath5k/debug.c
+> +++ b/drivers/net/wireless/ath5k/debug.c
+> @@ -324,6 +324,858 @@ static const struct file_operations fops_reset = {
+>  	.owner = THIS_MODULE,
+>  };
+>  
+> +/* debugfs: EEPROM stuff */
+> +
+> +/* EEPROM Header (common) */
+> +static ssize_t read_file_eeprom_header(struct file *file, char __user *user_buf,
+> +				   size_t count, loff_t *ppos)
+> +{
+> +
+> +	struct ath5k_softc *sc = file->private_data;
+> +	struct ath5k_hw *ah = sc->ah;
+> +	struct ath5k_eeprom_info ee = ah->ah_capabilities.cap_eeprom;
+> +	char buf[2000];
 
-Another question is: is it worth to keep the interface up (and thus the
-firmware loaded) even if the transceiver is killed by a hardware switch?
-Wouldn't that consume even more power than just listening to rfkill
-interrupts (or polling the killswitch state in case of 3945) with no
-firmware loaded.
+Please don't use that much memory from stack. 2k is way too much. Note that
+you use yet another bunch of stack (next 3k here on 64-bit) by
+ath5k_eeprom_info and 32-bit x86 can still be configured with 4k stacks.
 
-> I guess I'll treat rfkill the same as ethernet carrier.  If we cannot
-> rely on rfkill notifications when the device is down (we already can't,
-> since iwl3945 simply can't do it) 
+Convert both of them to dynamically allocated buffers.
 
-I've just checked the 3945 and it is indeed possible to poll the killswitch
-state even if the firmware is not loaded. Hence 3945 could also expose
-the killswitch state while the interface is down (of course the driver would
-have to poll for that information).
+> +/* EEPROM Header (per mode) */
+> +static unsigned int dump_calinfo_for_mode(struct ath5k_hw *ah, int mode,
+> +				char __user *user_buf, size_t count, loff_t *ppos)
+> +{
+> +	struct ath5k_eeprom_info ee = ah->ah_capabilities.cap_eeprom;
+> +	unsigned int len = 0;
+> +	char buf[2000];
 
-> if there are quirks for devices, those quirks need to live in the driver,
-> not worked around in userspace.
+dtto
 
-Agreed.
+> +	int i;
+...
+> +	len = simple_read_from_buffer(user_buf, count, ppos, buf, len);
 
-Helmut
+simple_read_from_buffer can fail and returns negative errno in that case,
+change dump_calinfo_for_mode return type appropriately.
+
+> +	return len;
+> +}
+...
+> +/* EEPROM channel power calibration info (per mode) */
+> +static unsigned int dump_pcalinfo_for_mode_rf5111(struct ath5k_hw *ah, int mode,
+> +				char __user *user_buf, size_t count, loff_t *ppos)
+
+return ssize_t for the same reason
+
+> +{
+> +	struct ath5k_eeprom_info ee = ah->ah_capabilities.cap_eeprom;
+> +	struct ath5k_chan_pcal_info *gen_chan_info;
+> +	struct ath5k_chan_pcal_info_rf5111 *chan_pcal_info;
+> +	unsigned int len = 0;
+> +	char buf[4000];
+
+Here you are almost out of stack even on 8k stacks ;).
+
+> +static unsigned int dump_pcalinfo_for_mode_rf5112(struct ath5k_hw *ah, int mode,
+> +				char __user *user_buf, size_t count, loff_t *ppos)
+
+dtto and further too
+
+> +{
+> +	struct ath5k_eeprom_info ee = ah->ah_capabilities.cap_eeprom;
+> +	struct ath5k_chan_pcal_info *gen_chan_info;
+> +	struct ath5k_chan_pcal_info_rf5112 *chan_pcal_info;
+> +	unsigned int len = 0;
+> +	char buf[4000];
+
+dtto and further too
+
+Happy new year!
