@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59824 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152AbZAWTPr (ORCPT
+Received: from one.firstfloor.org ([213.235.205.2]:43953 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754053AbZAEOJw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 14:15:47 -0500
-Date: Fri, 23 Jan 2009 14:01:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-Subject: Re: [PATCH 2/2 v2.6.29] iwlagn: fix agn rate scaling
-Message-ID: <20090123190138.GC30486@tuxdriver.com> (sfid-20090123_201551_530564_F06D6EC1)
-References: <1232564283-18008-1-git-send-email-reinette.chatre@intel.com> <1232564283-18008-2-git-send-email-reinette.chatre@intel.com> <1232564283-18008-3-git-send-email-reinette.chatre@intel.com>
-MIME-Version: 1.0
+	Mon, 5 Jan 2009 09:09:52 -0500
+Date: Mon, 5 Jan 2009 15:23:43 +0100
+From: Andi Kleen <andi@firstfloor.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Andi Kleen <andi@firstfloor.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: rate instability in wireless stack
+Message-ID: <20090105142343.GS496@one.firstfloor.org> (sfid-20090105_150954_758966_64FE00C6)
+References: <20090104164649.GV496@one.firstfloor.org> <200901041736.47650.mb@bu3sch.de> <20090104174123.GW496@one.firstfloor.org> <49615465.4090604@lwfinger.net> <20090105025302.GF496@one.firstfloor.org> <49618497.50809@lwfinger.net> <20090105050248.GG496@one.firstfloor.org> <496193A6.3040608@lwfinger.net> <20090105054830.GJ496@one.firstfloor.org> <49620BE5.9030507@openwrt.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1232564283-18008-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <49620BE5.9030507@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 21, 2009 at 10:58:03AM -0800, Reinette Chatre wrote:
-> From: Abbas, Mohamed <mohamed.abbas@intel.com>
-> 
-> Sometime Tx reply rate different than what rate scale expecting
-> causing rate scale to bail out. This could cause failing to
-> commit LQ cmd. This patch will try to solve this instead of just
-> bail out. It also make sure we start with a valid rate.
-> 
-> Signed-off-by: mohamed abbas <mohamed.abbas@intel.com>
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+On Mon, Jan 05, 2009 at 02:32:21PM +0100, Felix Fietkau wrote:
+> It looks like mac80211 is not getting proper feedback from the tx
+> status of the device. Is this with the patch that Larry suggested?
+> If so, please revert that patch and post an updated version of the
+> same stats.
 
-While I'm sure this would be nice to fix, I don't see the regression,
-Oops or crash?
+With Larry's patch reverted. Rate is still at 1Mbit/s of course.
+This is all only with rtl8180, I didn't try everything on the realtek
+card too. 
 
-John
+-Andi
+
+rate     throughput  ewma prob   this prob  this succ/attempt   success    attempts
+TtP  1         0.9       99.2      100.0          1(  1)         23          32
+     2         0.0        0.0        0.0          0(  0)          0           0
+     5.5       0.0        0.0        0.0          0(  0)          0           1
+    11         0.0        0.0        0.0          0(  0)          0           0
+     6         0.0        0.0        0.0          0(  0)          0           0
+     9         0.0        0.0        0.0          0(  0)          0           0
+    12         0.0        0.0        0.0          0(  0)          0           0
+    18         0.0        0.0        0.0          0(  0)          0           0
+    24         0.0        0.0        0.0          0(  0)          0           0
+    36         0.0        0.0        0.0          0(  0)          0           0
+    48         0.0        0.0        0.0          0(  0)          0           0
+    54         0.0        0.0        0.0          0(  0)          0           0
+
+Total packet count::    ideal 25      lookaround 1
+
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ak@linux.intel.com
