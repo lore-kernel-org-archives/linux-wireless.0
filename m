@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:42864
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586AbZA2AjT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 19:39:19 -0500
-Message-ID: <4980FAB3.9050706@erley.org> (sfid-20090129_013923_003114_D1E1DFFB)
-Date: Wed, 28 Jan 2009 19:39:15 -0500
-From: pat-lkml <pat-lkml@erley.org>
+Received: from mx2.mail.elte.hu ([157.181.151.9]:35890 "EHLO mx2.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754106AbZAEOE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 09:04:29 -0500
+Date: Mon, 5 Jan 2009 15:04:13 +0100
+From: Ingo Molnar <mingo@elte.hu>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Enforce module build if rfkill is a module
+Message-ID: <20090105140413.GE4190@elte.hu> (sfid-20090105_150432_863294_6DFF296B)
+References: <3f9a31f40901020936l4bed87e2jb64678572d2ad45b@mail.gmail.com> <20090102180730.GA10072@elte.hu> <3f9a31f40901021040l2afb5e19sc37e61d3f9728531@mail.gmail.com> <495E6C96.3040102@kernel.org> <20090102195802.GA28494@elte.hu> <20090105115124.GA2235@jm.kir.nu>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH resend] crda: rename nl_handle to nl_sock for libnl-2.0
-References: <4980EDC8.4050204@erley.org>	 (sfid-20090129_004437_360979_B9D4728F) <1233187526.16048.95.camel@johannes.local>	 <4980F67C.70207@erley.org> <1233189164.16048.106.camel@johannes.local>
-In-Reply-To: <1233189164.16048.106.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090105115124.GA2235@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2009-01-28 at 19:21 -0500, pat-lkml wrote:
->> Johannes Berg wrote:
->>> On Wed, 2009-01-28 at 18:44 -0500, pat-lkml wrote:
->>>> Upstream has renamed nl_handle to nl_sock.  Update crda to the new names
->>>> and add #define for libnl-1.1.
->>> But libnl-2.0 comes with a define too:
->>> #define nl_handle nl_sock
->>>
->>> you just need to include the right headers, no?
->>>
->>> johannes
->> dunno.... but I can't find it:
->>
->> libnl $ egrep "#define nl_handle" * -r
->> libnl $ git pull
->> Already up-to-date.
-> 
-> Ah. Grr. Just recently removed.
-> 
-> johannes
 
-Which leads back around to my question, should I continue pushing
-patches like this your way (after making sure the right patch is on the
-right e-mail with the right description), or do we want to wait and I'll
-just maintain the patches outside of git, and push them once libnl-2.0
-hits?  On one hand, it makes testing both versions easier, on the other,
-it makes a lot of little 'fix' commits like this.  I have no issues
-maintaining these sorts of patches, but I don't want to do it if you
-don't want them.
+* Jouni Malinen <jouni.malinen@atheros.com> wrote:
 
-Pat
+> CONFIG_ATH9K=y results in build issues if CONFIG_RFKILL=m since ath9k
+> does not depend on rfkill in kconfig (i.e., CONFIG_RFKILL is used to
+> select whether to enable rfkill in ath9k), but uses its functions if
+> rfkill is enabled. Enforce ath9k to be build as a module if
+> CONFIG_RFKILL=m to avoid this invalid configuration.
+> 
+> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> 
+> ---
+>  drivers/net/wireless/ath9k/Kconfig |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> --- wireless-testing.orig/drivers/net/wireless/ath9k/Kconfig	2009-01-05 13:27:01.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/ath9k/Kconfig	2009-01-05 13:36:27.000000000 +0200
+> @@ -1,6 +1,7 @@
+>  config ATH9K
+>  	tristate "Atheros 802.11n wireless cards support"
+>  	depends on PCI && MAC80211 && WLAN_80211
+> +	depends on RFKILL || RFKILL=n
+>  	select MAC80211_LEDS
+>  	select LEDS_CLASS
+>  	select NEW_LEDS
+
+thanks - i'll let you know if there's still any build failures in this 
+area. (Sidenote: next time around please also add a Reported-by line 
+crediting bugreporters. Doesnt matter to me but matters to contributors 
+and testers in general.)
+
+	Ingo
