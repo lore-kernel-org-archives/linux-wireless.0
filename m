@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:4291 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752233AbZAIQid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 11:38:33 -0500
-Subject: Re: [ath9k-devel] [PATCH v2 08/11] ath9k: remove (u16) casts from
- rtc register access
-From: Pavel Roskin <proski@gnu.org>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1231503868-29226-9-git-send-email-juhosg@openwrt.org>
-References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
-	 <1231503868-29226-9-git-send-email-juhosg@openwrt.org>
-Content-Type: text/plain
-Date: Fri, 09 Jan 2009 11:38:28 -0500
-Message-Id: <1231519108.24032.1.camel@dv> (sfid-20090109_173845_915603_0384E185)
-Mime-Version: 1.0
+Received: from exchange07.timesys.com ([209.114.137.35]:25894 "EHLO
+	exchange07.timesys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752763AbZAETrC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 14:47:02 -0500
+Message-ID: <496263BC.5020707@cheek.com> (sfid-20090105_204713_600205_E50DCCC3)
+Date: Mon, 5 Jan 2009 14:47:08 -0500
+From: Joseph Cheek <joseph@cheek.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] 2.6.27 with compat-wireless-2008-12-31 stops	transmitting
+ every 2-3 minutes
+References: <495C7640.8060806@cheek.com> <20090105170432.GA6834@tesla> <49624B10.70400@cheek.com> <20090105181250.GD6834@tesla>
+In-Reply-To: <20090105181250.GD6834@tesla>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-01-09 at 13:24 +0100, Gabor Juhos wrote:
-> The RTC register offsets don't fit into 'u16' on the AR913x, so we have
-> to remove the existing casts.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
-> ---
->  drivers/net/wireless/ath9k/hw.c |   14 +++++++-------
->  1 files changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-> index 088d968..742ecc1 100644
-> --- a/drivers/net/wireless/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath9k/hw.c
-> @@ -1008,7 +1008,7 @@ static void ath9k_hw_init_pll(struct ath_hal *ah,
->  				pll |= SM(0xb, AR_RTC_PLL_DIV);
->  		}
->  	}
-> -	REG_WRITE(ah, (u16) (AR_RTC_PLL_CONTROL), pll);
-> +	REG_WRITE(ah, (AR_RTC_PLL_CONTROL), pll);
+Is this page up to date?  I found the latest 802.11n NIC that I could
+find for my machine...
 
-Perhaps you could remove the parentheses as well?  It looks weird
-otherwise.
+http://wireless.kernel.org/en/users/Drivers/ath9k#ProductsintheretailmarketcontainingAtheros11nsolutions
 
--- 
-Regards,
-Pavel Roskin
+I bought my card after specifically consulting this page.
+
+thanks!
+
+Joseph Cheek
+
+Luis R. Rodriguez wrote:
+> Anything communication on the same spectrum affects your 802.11
+> connection,
+> so using the microwave oven, using bluetooth, or a 2.4 GHz home phone should
+> affet your connection. Not sure the freq used by Xbox / PS3 controllers...
+> Bluetooth particularly should affect your 802.11 connection and we only recently
+> added bluetooth coexistance to help with this but this is only available for
+> more modern cards so your card does not have this feature.
+>
+> If you are using bluetooth then it should affect your connection if using the
+> 2.4 GHz spectrum on your wirless AP.
+>
+>   Luis
+>
+>   
