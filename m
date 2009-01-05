@@ -1,106 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:46728 "EHLO mail.atheros.com"
+Received: from nbd.name ([88.198.39.176]:47625 "EHLO ds10.mine.nu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756188AbZAPQL5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 11:11:57 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:11:57 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1754674AbZAEOmD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 09:42:03 -0500
+Message-ID: <49621C36.70602@openwrt.org> (sfid-20090105_154211_331477_95C2AC99)
+Date: Mon, 05 Jan 2009 15:41:58 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18800.45308.437535.808225@gargle.gargle.HOWL> (sfid-20090116_171202_512443_A90765A8)
-Date: Fri, 16 Jan 2009 21:38:28 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 1/9] ath9k: rateCodeToIndex is not used, remove it
+To: Andi Kleen <andi@firstfloor.org>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: rate instability in wireless stack
+References: <20090104164649.GV496@one.firstfloor.org> <200901041736.47650.mb@bu3sch.de> <20090104174123.GW496@one.firstfloor.org> <49615465.4090604@lwfinger.net> <20090105025302.GF496@one.firstfloor.org> <49618497.50809@lwfinger.net> <20090105050248.GG496@one.firstfloor.org> <496193A6.3040608@lwfinger.net> <20090105054830.GJ496@one.firstfloor.org> <49620BE5.9030507@openwrt.org> <20090105142343.GS496@one.firstfloor.org>
+In-Reply-To: <20090105142343.GS496@one.firstfloor.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calculation of rate indices from ratecode is done in recv.c
-in a straightforward manner for both HT and legacy rates.
-This variable is not needed anymore.
+Andi Kleen wrote:
+> With Larry's patch reverted. Rate is still at 1Mbit/s of course.
+> This is all only with rtl8180, I didn't try everything on the realtek
+> card too. 
+> 
+> -Andi
+> 
+> rate     throughput  ewma prob   this prob  this succ/attempt   success    attempts
+> TtP  1         0.9       99.2      100.0          1(  1)         23          32
+>      2         0.0        0.0        0.0          0(  0)          0           0
+>      5.5       0.0        0.0        0.0          0(  0)          0           1
+>     11         0.0        0.0        0.0          0(  0)          0           0
+>      6         0.0        0.0        0.0          0(  0)          0           0
+>      9         0.0        0.0        0.0          0(  0)          0           0
+>     12         0.0        0.0        0.0          0(  0)          0           0
+>     18         0.0        0.0        0.0          0(  0)          0           0
+>     24         0.0        0.0        0.0          0(  0)          0           0
+>     36         0.0        0.0        0.0          0(  0)          0           0
+>     48         0.0        0.0        0.0          0(  0)          0           0
+>     54         0.0        0.0        0.0          0(  0)          0           0
+> 
+> Total packet count::    ideal 25      lookaround 1
+OK, that confirms that Larry's patch was wrong - at least the dump
+looks consistent now.
+Probably the RT2561 and the RTL8180 simply have a lower Tx power and
+thus can't get the signal through the walls as easily as the zd1211rw.
+If you still think that it's a rate control problem, please try all
+the rates individually and see if one of them works better.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/rc.c |   13 -------------
- drivers/net/wireless/ath9k/rc.h |    1 -
- 2 files changed, 0 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 0686a7c..182884a 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -19,7 +19,6 @@
- 
- static struct ath_rate_table ar5416_11na_ratetable = {
- 	42,
--	{0},
- 	{
- 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 6000, /* 6 Mb */
- 			5400, 0x0b, 0x00, 12,
-@@ -158,7 +157,6 @@ static struct ath_rate_table ar5416_11na_ratetable = {
- 
- static struct ath_rate_table ar5416_11ng_ratetable = {
- 	46,
--	{0},
- 	{
- 		{ VALID_ALL, VALID_ALL, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
- 			900, 0x1b, 0x00, 2,
-@@ -306,7 +304,6 @@ static struct ath_rate_table ar5416_11ng_ratetable = {
- 
- static struct ath_rate_table ar5416_11a_ratetable = {
- 	8,
--	{0},
- 	{
- 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 6000, /* 6 Mb */
- 			5400, 0x0b, 0x00, (0x80|12),
-@@ -340,7 +337,6 @@ static struct ath_rate_table ar5416_11a_ratetable = {
- 
- static struct ath_rate_table ar5416_11g_ratetable = {
- 	12,
--	{0},
- 	{
- 		{ VALID, VALID, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
- 			900, 0x1b, 0x00, 2,
-@@ -386,7 +382,6 @@ static struct ath_rate_table ar5416_11g_ratetable = {
- 
- static struct ath_rate_table ar5416_11b_ratetable = {
- 	4,
--	{0},
- 	{
- 		{ VALID, VALID, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
- 			900, 0x1b,  0x00, (0x80|2),
-@@ -1607,16 +1602,8 @@ static void ath_setup_rate_table(struct ath_softc *sc,
- {
- 	int i;
- 
--	for (i = 0; i < 256; i++)
--		rate_table->rateCodeToIndex[i] = (u8)-1;
--
- 	for (i = 0; i < rate_table->rate_cnt; i++) {
--		u8 code = rate_table->info[i].ratecode;
- 		u8 cix = rate_table->info[i].ctrl_rate;
--		u8 sh = rate_table->info[i].short_preamble;
--
--		rate_table->rateCodeToIndex[code] = i;
--		rate_table->rateCodeToIndex[code | sh] = i;
- 
- 		rate_table->info[i].lpAckDuration =
- 			ath9k_hw_computetxtime(sc->sc_ah, rate_table,
-diff --git a/drivers/net/wireless/ath9k/rc.h b/drivers/net/wireless/ath9k/rc.h
-index 97c60d1..a987cb9 100644
---- a/drivers/net/wireless/ath9k/rc.h
-+++ b/drivers/net/wireless/ath9k/rc.h
-@@ -90,7 +90,6 @@ struct ath_softc;
-  */
- struct ath_rate_table {
- 	int rate_cnt;
--	u8 rateCodeToIndex[256];
- 	struct {
- 		int valid;
- 		int valid_single_stream;
--- 
-1.6.0.3
-
+- Felix
