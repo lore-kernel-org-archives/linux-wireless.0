@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52142 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756660AbZAVOAr (ORCPT
+Received: from one.firstfloor.org ([213.235.205.2]:43473 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbZAEQ5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 09:00:47 -0500
-Date: Thu, 22 Jan 2009 08:49:59 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	Glenn Burkhardt <gbburkhardt@verizon.net>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: poor performance with ath5k; reverting to ath_pci
-Message-ID: <20090122134958.GA27560@tuxdriver.com> (sfid-20090122_150113_735117_2FF31F66)
-References: <200901140003.31693.gbburkhardt@verizon.net> <200901151734.46144.gbburkhardt@verizon.net> <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com> <200901202238.08756.gbburkhardt@verizon.net> <20090121151435.GB3643@tuxdriver.com> <69e28c910901211022j7f9c67dfv6392ce043dcff522@mail.gmail.com> <20090121191141.GA14710@tuxdriver.com> <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com> <40f31dec0901212032j65371fc6j5fcc1952f841d2ef@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <40f31dec0901212032j65371fc6j5fcc1952f841d2ef@mail.gmail.com>
+	Mon, 5 Jan 2009 11:57:15 -0500
+Date: Mon, 5 Jan 2009 18:11:05 +0100
+From: Andi Kleen <andi@firstfloor.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Andi Kleen <andi@firstfloor.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: rate instability in wireless stack
+Message-ID: <20090105171105.GW496@one.firstfloor.org> (sfid-20090105_175717_665390_9D97C75C)
+References: <20090105050248.GG496@one.firstfloor.org> <496193A6.3040608@lwfinger.net> <20090105054830.GJ496@one.firstfloor.org> <49620BE5.9030507@openwrt.org> <20090105142343.GS496@one.firstfloor.org> <49621C36.70602@openwrt.org> <20090105152410.GT496@one.firstfloor.org> <49622686.9050005@openwrt.org> <20090105163553.GU496@one.firstfloor.org> <49623712.4060106@openwrt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49623712.4060106@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 22, 2009 at 06:32:55AM +0200, Nick Kossifidis wrote:
-> 2009/1/21 Stefanik G=E1bor <netrolller.3d@gmail.com>:
-> >
-> > I think EMBEDDED is for options that replace full-featured Linux
-> > components with dumbed-down, "low-profile" equivalents (like SLOB) =
--
-> > PID vs. minstrel is more like SLAB vs. SLUB.
-> >
-> > G=E1bor
-> >
->=20
-> Minstrell performs very well even on embedded devices, i don't think
-> it's that heavy compared to pid.
+> According to the rate control's view, only the 1M has a usable
+> success probability. It's rather insteresting that 11M is the only
+> other rate that had some successes. With this kind of results, the
+> only two options that I can think of are either a systematic tx
+> status reporting error (false negative for the IEEE80211_TX_STAT_ACK
+> flag), or something PHY related.
 
-I think his point was that people should be able to select multiple
-algorithms without having to select EMBEDDED.
+Ok. Any more data I should provide to help tracking this down?
+Do you want the same from the RaLink?
 
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Andi
+-- 
+ak@linux.intel.com
