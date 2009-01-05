@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4925 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756143AbZAHSSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 13:18:25 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 07/11] iwlwifi: remove CMD_WANT_SKB flag if send_cmd_sync failure
-Date: Thu,  8 Jan 2009 10:19:58 -0800
-Message-Id: <1231438802-10991-8-git-send-email-reinette.chatre@intel.com> (sfid-20090108_191841_028684_FE6E7432)
-In-Reply-To: <1231438802-10991-7-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1231438802-10991-1-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-2-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-3-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-4-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-5-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-6-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-7-git-send-email-reinette.chatre@intel.com>
+Received: from exchange07.timesys.com ([209.114.137.35]:27206 "EHLO
+	exchange07.timesys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751959AbZAEUBZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 15:01:25 -0500
+Message-ID: <4962671C.9080605@cheek.com> (sfid-20090105_210129_794081_0C178C97)
+Date: Mon, 5 Jan 2009 15:01:32 -0500
+From: Joseph Cheek <joseph@cheek.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] 2.6.27 with compat-wireless-2008-12-31 stops transmitting
+ every 2-3 mins
+References: <495C7640.8060806@cheek.com> <20090105170432.GA6834@tesla> <49624B10.70400@cheek.com> <20090105181250.GD6834@tesla>
+In-Reply-To: <20090105181250.GD6834@tesla>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
+thanks, Luis!  comments below...
 
-In function iwl_send_cmd_sync(), if the flag CMD_WANT_SKB is set but
-we are not provided with a valid SKB (cmd->meta.u.skb == NULL), we need
-to remove the CMD_WANT_SKB flag from the TX cmd queue. Otherwise in case
-the cmd comes in later, it will possibly set an invalid address. Thus
-it causes an invalid memory access.
+Luis R. Rodriguez wrote:
+> Thanks for the details, this seems to be related to noise and therefore
+> could be due to some issues with how we deal with ANI. We will have to
+> try to reproduce this ourselves now and try to fix it.
+>   
 
-This fixed the bug http://bugzilla.kernel.org/show_bug.cgi?id=11326.
+great!  i wish you luck!  would it help it i try the same test with the
+problematic box right next to the AP?  I could move it upstairs to the
+same room and retry an SCP or video serve.  not sure if that would give
+you more useful data or not, but i can certainly move it.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+if the box were quiet enough, i would keep it in the same room and just
+connect via ethernet 8-).
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-index 0accf88..c35805c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-@@ -225,7 +225,7 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 		IWL_ERR(priv, "Error: Response NULL in '%s'\n",
- 			  get_cmd_string(cmd->id));
- 		ret = -EIO;
--		goto out;
-+		goto cancel;
- 	}
- 
- 	ret = 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index a4c44d2..f1158a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -623,7 +623,7 @@ static int iwl3945_send_cmd_sync(struct iwl_priv *priv,
- 		IWL_ERR(priv, "Error: Response NULL in '%s'\n",
- 			  get_cmd_string(cmd->id));
- 		ret = -EIO;
--		goto out;
-+		goto cancel;
- 	}
- 
- 	ret = 0;
--- 
-1.5.4.3
+>> I can try anything you need me to with respect to ath9k drivers or
+>> kernels.  does it matter if bluetooth and/or ipv6 is enabled?  both are
+>> enabled on this box but not on my laptop?
+>>     
+>
+> Anything communication on the same spectrum affects your 802.11 connection,
+> so using the microwave oven, using bluetooth, or a 2.4 GHz home phone should
+> affet your connection. Not sure the freq used by Xbox / PS3 controllers...
+> Bluetooth particularly should affect your 802.11 connection and we only recently
+> added bluetooth coexistance to help with this but this is only available for
+> more modern cards so your card does not have this feature.
+>
+> If you are using bluetooth then it should affect your connection if using the
+> 2.4 GHz spectrum on your wirless AP.
+>   
 
+I didn't actually have the bluetooth in use, just the module built.  so
+that might not be the problem.  the DIR-655 will do 5MHz only if it's in
+n-only mode, and I have too many g devices in the house to want to
+replace them all 8-).
+
+>   Luis
+>   
