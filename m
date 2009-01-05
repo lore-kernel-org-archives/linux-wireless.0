@@ -1,112 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:35381 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbZAVFlA (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:47834 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbZAEO4k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 00:41:00 -0500
-Received: by ewy13 with SMTP id 13so2150603ewy.13
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 21:40:58 -0800 (PST)
-Message-ID: <497806E8.1060709@gmail.com> (sfid-20090122_064107_158535_791AC497)
-Date: Thu, 22 Jan 2009 06:40:56 +0100
-From: Artur Skawina <art.08.09@gmail.com>
+	Mon, 5 Jan 2009 09:56:40 -0500
+Received: by bwz14 with SMTP id 14so22674728bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 06:56:37 -0800 (PST)
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
+Date: Mon, 5 Jan 2009 15:56:12 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	mohamed salim abbas <mabbaswireless@gmail.com>,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	yi.zhu@intel.com, reinette.chatre@intel.com
+References: <200812161307.07193.helmut.schaa@gmail.com> <20081217202943.GB3516@tuxdriver.com> <1229549485.26406.12.camel@localhost.localdomain>
+In-Reply-To: <1229549485.26406.12.camel@localhost.localdomain>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
-References: <200901211450.50880.chunkeey@web.de> <49774794.507@gmail.com> <200901211924.54660.chunkeey@web.de> <4977785B.7020009@gmail.com>
-In-Reply-To: <4977785B.7020009@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901051556.13403.helmut.schaa@gmail.com> (sfid-20090105_155643_962787_DCAC3F31)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Artur Skawina wrote:
-> Christian Lamparter wrote:
->> A updated patch is attached (as file)
+Am Mittwoch, 17. Dezember 2008 schrieb Dan Williams:
+> On Wed, 2008-12-17 at 15:29 -0500, John W. Linville wrote:
+> > On Wed, Dec 17, 2008 at 12:10:11PM -0800, mohamed salim abbas wrote:
+> > > the interrupt moved from pci_probe to mac_start for power saving. once
+> > > the interface is up the driver will read some register to know rfkill
+> > > status, if the interface in down the driver don't care to keep track
+> > > of rfkill switch. I wonder what the purpose of changing this behavior?
+> > 
+> > I think it still isn't settled in everyone's minds whether rfkill
+> > only matters if the device is "up" or if it is something that
+> > e.g. NetworkManager might want to monitor as a clue to bring the
+> > device up or down in response to rfkill changes.
 > 
-> Will test.
+> The question is:  does NetworkManager just always keep the device 'up'
+> irregardless of whether it's supposed to be associated with anything
+> just so we can get rfkill events?
 
-Did a quick test of your patch on top of
-  current w-t/pending
-+
-  "p54usb: fix packet loss with first generation devices"
-+ this:
+Another question is: is it worth to keep the interface up (and thus the
+firmware loaded) even if the transceiver is killed by a hardware switch?
+Wouldn't that consume even more power than just listening to rfkill
+interrupts (or polling the killswitch state in case of 3945) with no
+firmware loaded.
 
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index f754798..20818d6 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -92,7 +92,7 @@ static void p54u_rx_cb(struct urb *urb)
- 
-        if (unlikely(urb->status)) {
-                dev_kfree_skb_irq(skb);
--           return;
-+         goto stash_urb;
-        }
- 
-        skb_put(skb, urb->actual_length);
-@@ -141,7 +141,7 @@ static void p54u_rx_cb(struct urb *urb)
-         * the less critical workqueue thread.
-         * This eases the memory pressure and prevents latency spikes.
-         */
--
-+stash_urb:
-        urb->transfer_buffer = NULL;
-        urb->context = NULL;
- 
-That didn't work, various symptoms such as hostapd getting stuck, other unrelated
-usb devices breaking, machine frozen etc.
+> I guess I'll treat rfkill the same as ethernet carrier.  If we cannot
+> rely on rfkill notifications when the device is down (we already can't,
+> since iwl3945 simply can't do it) 
 
-After applying the changes below it seemed to work alright, but i only tested for
-a few minutes.
-[line #s are wrong]
+I've just checked the 3945 and it is indeed possible to poll the killswitch
+state even if the firmware is not loaded. Hence 3945 could also expose
+the killswitch state while the interface is down (of course the driver would
+have to poll for that information).
 
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index 20818d6..643d517 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -160,7 +173,7 @@ stash_urb:
- 		 * Huh? mac80211 isn't fully initialized yet?
- 		 * Please check your system, something bad is going on.
- 		 */
--		WARN_ON(1);
-+		printk(KERN_WARNING "p54u_rx_cb workqueue missing\n");
- 		return;
- 	}
- 
-@@ -196,9 +210,9 @@ static void p54u_free_urbs(struct ieee80211_hw *dev)
- {
- 	struct p54u_priv *priv = dev->priv;
- 
- 	cancel_work_sync(&priv->rx_refill_work);
--	p54u_free_rx_refill_list(dev);
- 	usb_kill_anchored_urbs(&priv->submitted);
-+	p54u_free_rx_refill_list(dev);
- }
- 
- static int p54u_rx_refill(struct ieee80211_hw *dev)
-@@ -281,9 +297,9 @@ static int p54u_init_urbs(struct ieee80211_hw *dev)
- 	}
- 
- 	p54u_rx_refill(dev);
--
- err:
--	p54u_free_rx_refill_list(dev);
-+	if (ret)
-+		p54u_free_rx_refill_list(dev);
- 	return ret;
- }
- 
-The 'workqueue-missing' warnings appear on module init; there are several
-p54u_init_urbs(), p54u_free_urbs() call sequences.
-p54u_free_urbs() triggers the unlikely(urb->status) path while killing
-the urbs, and the first time this happens you get 32 warnings.
-After that everything's fine.
+> if there are quirks for devices, those quirks need to live in the driver,
+> not worked around in userspace.
 
-I put the machine under some load and while there was usually 28..31 RX
-urbs queued, at one point the refilling stalled and the number went down
-from 31 to 1, then 6, slowly grew to ~30, then fell to 13, then recovered.
-All of this within ~5 mins of testing, w/ only a small amount of http 
-traffic generated by the client. it looks like i will have to try 
-allocating in the interrupt after all.
+Agreed.
 
-artur
+Helmut
