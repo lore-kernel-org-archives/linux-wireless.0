@@ -1,67 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:51391 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582AbZARTP3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43696 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753069AbZAEVBZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 14:15:29 -0500
-Received: by ewy13 with SMTP id 13so38186ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 11:15:27 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH] Fix TX rate short preamble detection
-Date: Sun, 18 Jan 2009 20:15:24 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Chris Clayton <chris2553@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901182015.24298.IvDoorn@gmail.com> (sfid-20090118_201533_653739_71C6A8D6)
+	Mon, 5 Jan 2009 16:01:25 -0500
+Subject: Re: Problem with rtl8187
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <496273D4.6020600@lwfinger.net>
+References: <496273D4.6020600@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hQieMoX56AxxnI2Fm3q3"
+Date: Mon, 05 Jan 2009 22:01:42 +0100
+Message-Id: <1231189302.3697.25.camel@johannes> (sfid-20090105_220129_435539_2095F862)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mac80211 provides 2 structures to handle bitrates, namely
-ieee80211_rate and ieee80211_tx_rate. To determine the short preamble
-mode for an outgoing frame, the flag IEEE80211_TX_RC_USE_SHORT_PREAMBLE
-must be checked on ieee80211_tx_rate and not ieee80211_rate (which rt2x00 did).
 
-This fixes a regression which was triggered in 2.6.29-rcX as reported by Chris Clayton.
+--=-hQieMoX56AxxnI2Fm3q3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Larry,
 
----
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index c1e5a05..3dab9b4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -186,10 +186,11 @@ static void rt2x00queue_create_tx_descriptor_seq(struct queue_entry *entry,
- 
- static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
- 						  struct txentry_desc *txdesc,
--						  struct ieee80211_rate *rate)
-+						  const struct rt2x00_rate *hwrate)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	const struct rt2x00_rate *hwrate = rt2x00_get_rate(rate->hw_value);
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
-+	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
- 	unsigned int data_length;
- 	unsigned int duration;
- 	unsigned int residual;
-@@ -232,7 +233,7 @@ static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
- 		 * When preamble is enabled we should set the
- 		 * preamble bit for the signal.
- 		 */
--		if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
-+		if (txrate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
- 			txdesc->signal |= 0x08;
- 	}
- }
-@@ -326,7 +327,7 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	 */
- 	rt2x00crypto_create_tx_descriptor(entry, txdesc);
- 	rt2x00queue_create_tx_descriptor_seq(entry, txdesc);
--	rt2x00queue_create_tx_descriptor_plcp(entry, txdesc, rate);
-+	rt2x00queue_create_tx_descriptor_plcp(entry, txdesc, hwrate);
- }
- 
- static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
+> I'm chasing a problem with suspend/resume on rtl8187; however, in my test=
+ing, I
+> found that a simple "modprobe -r/modprobe" sequence fails, even though
+> unplugging/replugging the stick with or without a "modprobe -r" works jus=
+t fine.
+
+Strange, since modprobe -r/rmmod should unregister the driver just as
+though it was unplugged, afaik.
+
+> I'm running into the WARN-ON at net/mac80211/tx.c:1184. The start of the
+> traceback is as follows:
+>=20
+>  [<ffffffff8023afce>] warn_on_slowpath+0x58/0x7d
+>  [<ffffffff803c8c3c>] ? pskb_expand_head+0xe6/0x156
+>  [<ffffffffa029dbff>] ? __ieee80211_tx+0x40/0x12a [mac80211]
+>  [<ffffffffa029e98b>] ieee80211_master_start_xmit+0x41c/0x50d [mac80211]
+>  [<ffffffffa029e8c5>] ? ieee80211_master_start_xmit+0x356/0x50d [mac80211=
+]
+>  [<ffffffff803cf0a4>] dev_hard_start_xmit+0x214/0x28f
+>  [<ffffffff803dfb9b>] __qdisc_run+0xf3/0x1fe
+>  [<ffffffff803cf584>] dev_queue_xmit+0x357/0x48f
+>=20
+> The last rtl8187 routine that was started was rtl8187_add_interface. From=
+ a
+> debugging message, I see that info->flags =3D 0x6B6B6B6B - the SLUB debug=
+ging
+> poison value.=20
+
+The WARN_ON then triggers because IEEE80211_TX_CTL_AMPDU is 0x40 which
+is set in 0x6b. The question is ... why are we trying to send a freed
+skb??
+
+>  If I interpret the traceback correctly, a workqueue has been
+> restarted without being properly initialized.
+
+Does the backtrace continue beyond what you pasted?
+
+> Is there any routine that needs to be called when shutting down that has =
+been
+> missed?
+
+Just unregister_hw/free_hw ought to be fine, very strange.
+
+johannes
+
+--=-hQieMoX56AxxnI2Fm3q3
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJYnUsAAoJEKVg1VMiehFYSo4QAJ6u7YcjgO1EgROPgTLlLu6Y
+kN+mFYf0hLQdU1X+lvozdHX01AtXXvYZ8JyMTVFX0Ik4LzQskk9AD6Oclg2li3MK
+uFvsxStqc1t0En1ZTxrpRj9OivOC5FNPfB5XhfFeCZm71nqdp9yyMx6A8TSlNnOt
+GuG8Npx6ei208EZjgGzqZvFNWqFiOgTUcf6I1oCpKrzGS3xeKRD/GzJj1Gn09YDW
+p2Jh8yLauwAHqmKboWOlWzUoqly1E1KfnMRxn4QSRuY9XZjKSrqYQwYUzdYV7ppa
+dB4bpnWC6tZI1npUuiY/VZHLAG+xQQjtuRVV7WUJAjAltHsjVI7XH9yyUBtIBO/l
+Rw61EtK2NdVh0sjMlwDi5G7fQ7UqMZQzXpHYb3sYDI6SBNyI7TRrPjqPuAn0D4Wj
+Rm2GSyQ72YtoGgdFW1v4QQQp/odUZY4qK2A6WW8QMdTblHNtIF0aGFAIg8OQzhrF
+HH6ocj0phxrqmtn+XQh/7y217BSX/PyGA94ACQCZruAG3YiDLDxKCmVSAKvKVZ7d
+s9+fu7BpcIfG7zqWDn0yjDVheemgOY9/LbK7efKbYrQwxSZoV4nSCXUJU7UWRkKh
+s9i82uIrvknOOU1yySLvSl87Bi1UzU2p/6gOuma73Kzt3n6TGEoNuK/b2gyjbwSK
+qXEdgj8nEHzZhWjeeklP
+=tdiQ
+-----END PGP SIGNATURE-----
+
+--=-hQieMoX56AxxnI2Fm3q3--
+
