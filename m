@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:2114 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757564AbZAWW5h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 17:57:37 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so1459700fkf.5
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 14:57:35 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:16426 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752977AbZAEREg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 12:04:36 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 09:04:35 -0800
+Date: Mon, 5 Jan 2009 09:04:32 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Joseph Cheek <joseph@cheek.com>, <stable@kernel.org>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] 2.6.2{7, 8} with compat-wireless-2008-12-3{0, 1)
+	drops link every 2-3 minutes
+Message-ID: <20090105170432.GA6834@tesla> (sfid-20090105_180455_132887_77A7D054)
+References: <495C7640.8060806@cheek.com>
 MIME-Version: 1.0
-In-Reply-To: <1232749288.3977.14.camel@johannes.local>
-References: <49788E88.5000608@telecom-sudparis.eu>
-	 <1232749288.3977.14.camel@johannes.local>
-Date: Fri, 23 Jan 2009 14:57:35 -0800
-Message-ID: <45e8e6c40901231457x57625153wad49b4869a1627bd@mail.gmail.com> (sfid-20090123_235740_064589_DB179748)
-Subject: Re: SIOCSIFFLAGS: Name not unique on network
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Chanthearith HUON <chanthearith.huon@telecom-sudparis.eu>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <495C7640.8060806@cheek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2009 at 2:21 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-01-22 at 16:19 +0100, Chanthearith HUON wrote:
->
->> This wireless card is not listed
->> in http://linuxwireless.org/en/users/Devices
->> <http://linuxwireless.org/en/users/Devices>
->> but the driver is in the
->> list http://linuxwireless.org/en/developers/Documentation/mac80211#mac80211drivers
->> <http://linuxwireless.org/en/developers/Documentation/mac80211#mac80211drivers>
->
-> But it's listed here:
-> http://linuxwireless.org/en/users/Drivers
->
-> -- as not supporting mesh.
->
->> The OS is ubuntu Intrepid Ibex 8.10 with kernel 2.6.27-9-generic
->>
->> After creating new interface for mesh "iw dev wlan0 interface add mesh
->> type mp mesh_id 100". I turned the mesh interface up by "ifconfig mesh up".
->> I got following error message
->> " SIOCSIFFLAGS: Name not unique on network "
->
-> That's strange, it should not have allowed you to add the interface in
-> the first place. But then, you're using an ancient kernel anyway...
->
-> johannes
->
+On Wed, Dec 31, 2008 at 11:52:32PM -0800, Joseph Cheek wrote:
+> Hi all,
+> 
+> Happy New Year!  It's about 2:30 AM here and I'm up debugging my shiny
+> new DWA-552 <AR5416+AR2133> XtremeN Desktop Adapter.  Stock 2.6.28 gave
+> me the dreaded "No ProbeResp from current AP" in syslog with a
+> disconnect every few minutes, even after updating
+> |IEEE80211_MONITORING_INTERVAL to (100 * HZ).  It's highly annoying.
 
-That's indeed strange: the iwl3945 (along with the other Intel cards)
-definitely doesn't support mesh but I was able to add an interface as
-well on my Ubuntu box (2.6.27-9).  I think the reason is that iwlwifi
-doesn't explicitly test for interfaces it actually supports:
+This should be due to the fact that the RX filter disabled beaconing from
+the current AP and mac80211 expects beacons from the AP. This was fixed
+in wireless-testing but I do not see this pushed out for 2.6.28.
 
-static int iwl3945_mac_add_interface(struct ieee80211_hw *hw,
-                                 struct ieee80211_if_init_conf *conf)
-{
-        struct iwl_priv *priv = hw->priv;
-        unsigned long flags;
+Greg, this was fixed in Linus' tree via ffb826767bffda61426d964a8fc24a216a14b0bd,
+merged by John on Fri, 21 Nov 2008, the patch is titled:
+"ath9k: enable RXing of beacons on STA/IBSS". Just in case I've
+provided the hunk below. Without this patch users will face this disconnect
+issue on noisy environments where the beacons don't reach mac80211 within
+a certain time frame dicated by mac80211.
 
-        IWL_DEBUG_MAC80211("enter: type %d\n", conf->type);
+> I thought compat-wireless might help.
 
-        if (priv->vif) {
-                IWL_DEBUG_MAC80211("leave - vif != NULL\n");
-                return -EOPNOTSUPP;
-        }
-<snip>
+It should resolve the "No ProbeResp from current AP" in" issue at least.
+
+> It seems to do a little bit better
+> but that's subjective.  I still get a disconnect every few minutes.
+> iwconfig and my DIR-655 show plenty of signal strength but it doesn't
+> respond to pings and my ssh sessions all get stuck in limbo.
+> 
+> What can I do to debug this?  This is an old Athlon XP 2000+ box running
+> Gentoo (if it helps).  I've seen a few other probs on this list recently
+> but they don't seem similar to mine enough to warrant tacking this msg
+> on to an existing thread.
+
+That may be due to a separate issue, but to review that we need more information,
+such as the type of AP you are connecting to, encryption options used, mode
+of operation (11n, 11b or 11a), your type of environment (noisy or a quiet home).
+To review this issue you can remove stable@kernel.org from the To or Cc list.
+
+  Luis
+
+--- drivers/net/wireless/ath9k/recv.c.orig	2009-01-05 08:44:45.000000000 -0800
++++ drivers/net/wireless/ath9k/recv.c	2009-01-05 08:46:40.000000000 -0800
+@@ -627,9 +627,8 @@
+ 		rfilt &= ~ATH9K_RX_FILTER_UCAST;
+ 	}
+ 
+-	if (((sc->sc_ah->ah_opmode == ATH9K_M_STA) &&
+-	     (sc->rx_filter & FIF_BCN_PRBRESP_PROMISC)) ||
+-	    (sc->sc_ah->ah_opmode == ATH9K_M_IBSS))
++	if (sc->sc_ah->ah_opmode == ATH9K_M_STA ||
++	    sc->sc_ah->ah_opmode == ATH9K_M_IBSS)
+ 		rfilt |= ATH9K_RX_FILTER_BEACON;
+ 
+ 	/* If in HOSTAP mode, want to enable reception of PSPOLL frames
