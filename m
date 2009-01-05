@@ -1,167 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:12131 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752278AbZAJAQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 19:16:55 -0500
-Subject: [PATCH] crda: prevent key2pub.py from generating bogus output on
-	failure
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-From: Pavel Roskin <proski@gnu.org>
-Date: Fri, 09 Jan 2009 19:16:50 -0500
-Message-ID: <20090110001650.3681.35686.stgit@dv.roinet.com> (sfid-20090110_011658_798956_8E73BD5F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.wellnetcz.com ([212.24.148.102]:54555 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbZAEQGO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 11:06:14 -0500
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1 #2] IWL: fix WARN typo
+Date: Mon,  5 Jan 2009 17:06:06 +0100
+Message-Id: <1231171566-22984-1-git-send-email-jirislaby@gmail.com> (sfid-20090105_170617_991851_0DDC8043)
+In-Reply-To: <1231171404-22822-1-git-send-email-jirislaby@gmail.com>
+References: <1231171404-22822-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Specify output file on the command line, so that it's not created in
-case of fatal errors, such as asbence of M2Crypto.
+new kew -> a new key
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Tomas Winkler <tomas.winkler@intel.com>
+Cc: John W. Linville <linville@tuxdriver.com>
 ---
- Makefile         |    2 +-
- utils/key2pub.py |   57 ++++++++++++++++++++++++++++--------------------------
- 2 files changed, 31 insertions(+), 28 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-sta.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index c871182..292dad0 100644
---- a/Makefile
-+++ b/Makefile
-@@ -64,7 +64,7 @@ $(REG_BIN):
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 412f66b..ce2ba40 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -638,7 +638,7 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+ 	 * in uCode. */
  
- keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
- 	$(NQ) '  GEN ' $@
--	$(Q)./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) > $@
-+	$(Q)./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
+ 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+-		"no space for new kew");
++		"no space for a new key");
  
- %.o: %.c regdb.h
- 	$(NQ) '  CC  ' $@
-diff --git a/utils/key2pub.py b/utils/key2pub.py
-index 40c60eb..47f50e3 100755
---- a/utils/key2pub.py
-+++ b/utils/key2pub.py
-@@ -3,7 +3,7 @@
- import sys
- from M2Crypto import RSA
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+@@ -686,7 +686,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+ 	 * in uCode. */
  
--def print_ssl(name, val):
-+def print_ssl(output, name, val):
-     while val[0] == '\0':
-         val = val[1:]
-     while len(val) % 4:
-@@ -13,22 +13,22 @@ def print_ssl(name, val):
-         vnew.append((val[0], val[1], val[2], val[3], ))
-         val = val[4:]
-     vnew.reverse()
--    sys.stdout.write('static BN_ULONG %s[%d] = {\n' % (name, len(vnew)))
-+    output.write('static BN_ULONG %s[%d] = {\n' % (name, len(vnew)))
-     idx = 0
-     for v1, v2, v3, v4 in vnew:
-         if not idx:
--            sys.stdout.write('\t')
--        sys.stdout.write('0x%.2x%.2x%.2x%.2x, ' % (ord(v1), ord(v2), ord(v3), ord(v4)))
-+            output.write('\t')
-+        output.write('0x%.2x%.2x%.2x%.2x, ' % (ord(v1), ord(v2), ord(v3), ord(v4)))
-         idx += 1
-         if idx == 4:
-             idx = 0
--            sys.stdout.write('\n')
-+            output.write('\n')
-     if idx:
--        sys.stdout.write('\n')
--    sys.stdout.write('};\n\n')
-+        output.write('\n')
-+    output.write('};\n\n')
+ 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+-		"no space for new kew");
++		"no space for a new key");
  
--def print_ssl_keys(n):
--    sys.stdout.write(r'''
-+def print_ssl_keys(output, n):
-+    output.write(r'''
- struct pubkey {
- 	struct bignum_st e, n;
- };
-@@ -43,29 +43,29 @@ struct pubkey {
- static struct pubkey keys[] = {
- ''')
-     for n in xrange(n + 1):
--        sys.stdout.write('	KEYS(e_%d, n_%d),\n' % (n, n))
--    sys.stdout.write('};\n')
-+        output.write('	KEYS(e_%d, n_%d),\n' % (n, n))
-+    output.write('};\n')
-     pass
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+@@ -722,7 +722,7 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+ 	 * in uCode. */
  
--def print_gcrypt(name, val):
-+def print_gcrypt(output, name, val):
-     while val[0] == '\0':
-         val = val[1:]
--    sys.stdout.write('static const __u8 %s[%d] = {\n' % (name, len(val)))
-+    output.write('static const __u8 %s[%d] = {\n' % (name, len(val)))
-     idx = 0
-     for v in val:
-         if not idx:
--            sys.stdout.write('\t')
--        sys.stdout.write('0x%.2x, ' % ord(v))
-+            output.write('\t')
-+        output.write('0x%.2x, ' % ord(v))
-         idx += 1
-         if idx == 8:
-             idx = 0
--            sys.stdout.write('\n')
-+            output.write('\n')
-     if idx:
--        sys.stdout.write('\n')
--    sys.stdout.write('};\n\n')
-+        output.write('\n')
-+    output.write('};\n\n')
+ 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+-		"no space for new kew");
++		"no space for a new key");
  
--def print_gcrypt_keys(n):
--    sys.stdout.write(r'''
-+def print_gcrypt_keys(output, n):
-+    output.write(r'''
- struct key_params {
- 	const __u8 *e, *n;
- 	__u32 len_e, len_n; 
-@@ -79,8 +79,8 @@ struct key_params {
- static const struct key_params keys[] = {
- ''')
-     for n in xrange(n + 1):
--        sys.stdout.write('	KEYS(e_%d, n_%d),\n' % (n, n))
--    sys.stdout.write('};\n')
-+        output.write('	KEYS(e_%d, n_%d),\n' % (n, n))
-+    output.write('};\n')
-     
- 
- modes = {
-@@ -90,14 +90,17 @@ modes = {
- 
- try:
-     mode = sys.argv[1]
--    files = sys.argv[2:]
-+    files = sys.argv[2:-1]
-+    outfile = sys.argv[-1]
- except IndexError:
-     mode = None
- 
- if not mode in modes:
--    print 'Usage: %s [%s] files' % (sys.argv[0], '|'.join(modes.keys()))
-+    print 'Usage: %s [%s] input-file... output-file' % (sys.argv[0], '|'.join(modes.keys()))
-     sys.exit(2)
- 
-+output = open(outfile, 'w')
-+
- # load key
- idx = 0
- for f in files:
-@@ -106,8 +109,8 @@ for f in files:
-     except RSA.RSAError:
-         key = RSA.load_key(f)
- 
--    modes[mode][0]('e_%d' % idx, key.e[4:])
--    modes[mode][0]('n_%d' % idx, key.n[4:])
-+    modes[mode][0](output, 'e_%d' % idx, key.e[4:])
-+    modes[mode][0](output, 'n_%d' % idx, key.n[4:])
-     idx += 1
- 
--modes[mode][1](idx - 1)
-+modes[mode][1](output, idx - 1)
+ 	/* This copy is acutally not needed: we get the key with each TX */
+ 	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
+-- 
+1.6.0.6
+
