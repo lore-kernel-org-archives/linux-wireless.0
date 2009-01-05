@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41245 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754681AbZAIS3a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 13:29:30 -0500
-Message-ID: <49679783.8070901@lwfinger.net> (sfid-20090109_192936_743767_652CF326)
-Date: Fri, 09 Jan 2009 12:29:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:36653 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753664AbZAEKcw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 05:32:52 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 02:32:51 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: feldmaus <feldmann_markus@gmx.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: show WMI magic Signals and activate hardware RF-kill button
-References: <gk83fe$fu2$1@ger.gmane.org>
-In-Reply-To: <gk83fe$fu2$1@ger.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18785.57618.47120.669270@gargle.gargle.HOWL> (sfid-20090105_113313_753468_18A1652B)
+Date: Mon, 5 Jan 2009 15:59:38 +0530
+To: Gabor Juhos <juhosg@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, Imre Kaloz <kaloz@openwrt.org>
+Subject: [RFC 08/12] ath9k: get EEPROM contents from platform data on AHB bus
+In-Reply-To: <1230990262-22923-9-git-send-email-juhosg@openwrt.org>
+References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
+	<1230990262-22923-9-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-feldmaus wrote:
-> Hi All,
-> 
-> my wlan Button, which should enable/disable my wlan card,
-> seems not to send signals which i can watch with <showkey>.
-> 
-> Larry Finger asked me:
-> "Is your radio on/off button one that generates a keycode, or does it
-> need the WMI magic to be detected?"
-> 
-> I need to get my wlan Button(hardware Rf-kill Button)
-> to work to still turn my wlan physically on.
-> 
-> What is WMI Magic and are there Linux commands to watch
-> was is going on?
+Gabor Juhos wrote:
+> +#ifndef _LINUX_ATH9K_PLATFORM_H
+> +#define _LINUX_ATH9L_PLATFORM_H
 
-There is a protocol named WMI for Windows Management Interface. I
-assume that it was invented by the folks in Redmond. In any case, it
-is designed to handle events that have buttons that do not generate a
-keycode. The module named hp-wmi is supposed to take care of the
-things under Linux for HP and Compaq computers.
+Typo ?
 
-Did you generate this module? Is it loaded?
+Also, after addressing Christopher's comments, I don't think too many
+bus specific routines would remain. In that case would it be reasonable
+to just have a single file (bus.c, with appropriate ifdefs), instead
+of pci.c and ahb.c ?
 
-I dont use this module on my HP as my RFKILL switch generates a
-keycode. Others may be able to help you with it.
-
-Larry
+Sujith
