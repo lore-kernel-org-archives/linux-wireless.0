@@ -1,59 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:57466 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753030AbZAVLp7 (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:37820 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755404AbZAEURF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 06:45:59 -0500
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [RFC PATCH v2 0/2] mac80211: ps-poll implementation
-To: johannes@sipsolutions.net, vivek.natraj@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 22 Jan 2009 13:45:32 +0200
-Message-ID: <20090122114240.31443.18218.stgit@tikku> (sfid-20090122_124603_945386_6F5F4102)
+	Mon, 5 Jan 2009 15:17:05 -0500
+Message-ID: <49626AB4.5010907@lwfinger.net> (sfid-20090105_211718_443941_01394CF2)
+Date: Mon, 05 Jan 2009 14:16:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Felix Fietkau <nbd@openwrt.org>, Andi Kleen <andi@firstfloor.org>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: rate instability in wireless stack
+References: <20090105050248.GG496@one.firstfloor.org>	 <49620BE5.9030507@openwrt.org>	 <20090105142343.GS496@one.firstfloor.org> <49621C36.70602@openwrt.org>	 <20090105152410.GT496@one.firstfloor.org>	 <49622686.9050005@openwrt.org>	 <20090105163553.GU496@one.firstfloor.org>	 <49623712.4060106@openwrt.org>	 <20090105171105.GW496@one.firstfloor.org>	 <49623CEA.4080407@openwrt.org> <3ace41890901051133t13c827ubcd0416503b7b878@mail.gmail.com>
+In-Reply-To: <3ace41890901051133t13c827ubcd0416503b7b878@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's my suggestion for how to implement ps-poll in mac80211. Also
-this fixes the case when dynamic_ps_timeout is zero.
+Hin-Tak Leung wrote:
+> This sounds a bit like what is mentioned in this bug report - (no solution yet,
+> but the symptom seem similiar).
+> http://bugzilla.kernel.org/show_bug.cgi?id=12131
+> 
 
-I decided to use ps-polling when dynamic_ps_timeout is zero. If
-userspace sets timeout to zero, it means that it's ready to sacrifice
-throughput over power consumption. But in case there throughput is
-more, userspace can set timeout to a non-zero value and null frame
-wakeup is used instead, throughput is higher but power consumption
-also increases.
+I think that one is different. If I read the bug report correctly, that one
+cannot even keep a full rate of 1 Mb/s.
 
-Most probably this patchset breaks ath9k multicast handling. I
-recommend ath9k to try do multicast tim bit handling in hardware, I
-would really assume that to be possible. But if that's really
-impossible, then it can be done in the driver. But having support for
-waking up multicast tim bits in mac80211 is unreliable and complicated
-the implementation, I just recommend dropping it.
+Larry
 
-Open question is that should power save be disabled whenever mac80211
-is ps-polling the frames. For example, p54/stlc45xx does not require to
-disable power save in that case, it just stays awake long enough to
-receive the data frame from the AP. So I did not disable power save
-mode in this case, but I would like to hear comments what other
-hardware needs.
-
-v2:
-
-o RX_CONTINUE after sending ps-poll frame in ieee80211_rx_h_check_more_data()
-o remove leftover debug printk
-o use ps-poll only when dynamic_ps_timeout is zero, otherwise null frame
-  wakeup is used
-
----
-
-Kalle Valo (2):
-      mac80211: use ps-poll when dynamic power save mode is disabled
-      mac80211: remove multicast check from check_tim()
-
-
- net/mac80211/ieee80211_i.h |    3 ++
- net/mac80211/mlme.c        |   69 +++++++++++++++++++++++++++++++++++++-------
- net/mac80211/rx.c          |   34 ++++++++++++++++++++++
- 3 files changed, 95 insertions(+), 11 deletions(-)
