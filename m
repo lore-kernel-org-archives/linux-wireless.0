@@ -1,239 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:41593 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423AbZA0Jlo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 04:41:44 -0500
-Received: by fxm13 with SMTP id 13so1717438fxm.13
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 01:41:42 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:12548 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752605AbZAEJqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 04:46:17 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 01:46:16 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20090126184925.913285565@sipsolutions.net>
-References: <20090126184740.036240879@sipsolutions.net>
-	 <20090126184925.913285565@sipsolutions.net>
-Date: Tue, 27 Jan 2009 11:41:42 +0200
-Message-ID: <1ba2fa240901270141y7361d332p7a0423e105afaec3@mail.gmail.com> (sfid-20090127_104147_909865_6191A7B6)
-Subject: Re: [RFC/RFT 7/7] mac80211: fix aggregation timer lockups
-From: Tomas Winkler <tomasw@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
-	Sujith.Manoharan@atheros.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18785.54821.934672.713597@gargle.gargle.HOWL> (sfid-20090105_104621_277932_963B52F4)
+Date: Mon, 5 Jan 2009 15:13:01 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<Jouni.Malinen@Atheros.com>
+Subject: [PATCH v2] mac80211: Add 802.11h CSA support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 26, 2009 at 8:47 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> As far as I can tell, there are possible lockups because both the RX
-> session_timer and TX addba_resp_timer are del_timer_sync'ed under
-> the sta spinlock which both timer functions take. Additionally, the
-> TX agg code seems to leak memory when TX aggregation is not disabled
-> before the sta_info is freed.
+Move to the advertised channel on reception of
+a CSA element. This is needed for 802.11h compliance.
 
-Funny,  it was your deed to replaced the two locks with one. Woudn;t
-be better just put it back?
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+v2
+--
+* Add a new variable to hold the CSA channel 
+* Use msecs_to_jiffies for calculating expiration time
+* Add a check to drop beacons in case of a frequency mismatch
 
+ net/mac80211/ieee80211_i.h |   11 ++++++-
+ net/mac80211/iface.c       |    2 +
+ net/mac80211/mlme.c        |   13 +++++++
+ net/mac80211/rx.c          |   17 ++++++++++
+ net/mac80211/spectmgmt.c   |   77 ++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 119 insertions(+), 1 deletions(-)
 
->
-> Fix this by making the free code a little smarter in the RX agg case,
-> and actually make the sta_info_destroy code free the TX agg info in
-> the TX agg case. We won't notify the peer, but it'll notice something
-> is wrong anyway, and normally this only happens after we've told it
-> in some other way we will no longer talk to it.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/mac80211/agg-rx.c   |   11 +++++-
->  net/mac80211/agg-tx.c   |   77 +++++++++++++++++++-----------------------------
->  net/mac80211/sta_info.c |   29 +++++++++++++++---
->  net/mac80211/sta_info.h |    1
->  4 files changed, 67 insertions(+), 51 deletions(-)
->
-> --- wireless-testing.orig/net/mac80211/agg-rx.c 2009-01-26 16:55:48.000000000 +0100
-> +++ wireless-testing/net/mac80211/agg-rx.c      2009-01-26 17:09:17.000000000 +0100
-> @@ -78,11 +78,18 @@ void ieee80211_sta_stop_rx_ba_session(st
->                        sta->ampdu_mlme.tid_rx[tid]->reorder_buf[i] = NULL;
->                }
->        }
-> +
-> +       spin_lock_bh(&sta->lock);
->        /* free resources */
->        kfree(sta->ampdu_mlme.tid_rx[tid]->reorder_buf);
-> -       kfree(sta->ampdu_mlme.tid_rx[tid]);
-> -       sta->ampdu_mlme.tid_rx[tid] = NULL;
-> +
-> +       if (!sta->ampdu_mlme.tid_rx[tid]->shutdown) {
-> +               kfree(sta->ampdu_mlme.tid_rx[tid]);
-> +               sta->ampdu_mlme.tid_rx[tid] = NULL;
-> +       }
-> +
->        sta->ampdu_mlme.tid_state_rx[tid] = HT_AGG_STATE_IDLE;
-> +       spin_unlock_bh(&sta->lock);
->
->        rcu_read_unlock();
->  }
-> --- wireless-testing.orig/net/mac80211/sta_info.c       2009-01-26 16:55:48.000000000 +0100
-> +++ wireless-testing/net/mac80211/sta_info.c    2009-01-26 17:13:06.000000000 +0100
-> @@ -194,12 +194,33 @@ void sta_info_destroy(struct sta_info *s
->                dev_kfree_skb_any(skb);
->
->        for (i = 0; i <  STA_TID_NUM; i++) {
-> +               struct tid_ampdu_rx *tid_rx;
-> +               struct tid_ampdu_tx *tid_tx;
-> +
->                spin_lock_bh(&sta->lock);
-> -               if (sta->ampdu_mlme.tid_rx[i])
-> -                 del_timer_sync(&sta->ampdu_mlme.tid_rx[i]->session_timer);
-> -               if (sta->ampdu_mlme.tid_tx[i])
-> -                 del_timer_sync(&sta->ampdu_mlme.tid_tx[i]->addba_resp_timer);
-> +               tid_rx = sta->ampdu_mlme.tid_rx[i];
-> +               if (tid_rx)
-> +                       tid_rx->shutdown = true;
-> +               tid_tx = sta->ampdu_mlme.tid_tx[i];
-> +               if (tid_tx) {
-> +                       /*
-> +                        * XXX: in this case, ieee80211_stop_tx_ba_session
-> +                        *      cannot do anything since the sta_info won't
-> +                        *      be found... free the aggregation info here.
-> +                        */
-> +                       del_timer(&tid_tx->addba_resp_timer);
-> +                       kfree(tid_tx);
-> +               }
->                spin_unlock_bh(&sta->lock);
-> +
-> +               /*
-> +                * outside spinlock - shutdown is true now so
-> +                * that the timer won't free tid_rx.
-> +                */
-> +               if (tid_rx) {
-> +                       del_timer_sync(&tid_rx->session_timer);
-> +                       kfree(tid_rx);
-> +               }
->        }
->
->        __sta_info_free(local, sta);
-> --- wireless-testing.orig/net/mac80211/sta_info.h       2009-01-26 16:56:10.000000000 +0100
-> +++ wireless-testing/net/mac80211/sta_info.h    2009-01-26 17:07:16.000000000 +0100
-> @@ -100,6 +100,7 @@ struct tid_ampdu_rx {
->        u16 buf_size;
->        u16 timeout;
->        u8 dialog_token;
-> +       bool shutdown;
->  };
->
->  /**
-> --- wireless-testing.orig/net/mac80211/agg-tx.c 2009-01-26 16:55:48.000000000 +0100
-> +++ wireless-testing/net/mac80211/agg-tx.c      2009-01-26 17:07:16.000000000 +0100
-> @@ -122,6 +122,34 @@ void ieee80211_send_bar(struct ieee80211
->        ieee80211_tx_skb(sdata, skb, 0);
->  }
->
-> +static int __ieee80211_stop_tx_ba_session(struct ieee80211_local *local,
-> +                                         struct sta_info *sta, u16 tid,
-> +                                         enum ieee80211_back_parties initiator)
-> +{
-> +       int ret;
-> +       u8 *state;
-> +
-> +       state = &sta->ampdu_mlme.tid_state_tx[tid];
-> +
-> +       if (local->hw.ampdu_queues)
-> +               ieee80211_stop_queue(&local->hw, sta->tid_to_tx_q[tid]);
-> +
-> +       *state = HT_AGG_STATE_REQ_STOP_BA_MSK |
-> +               (initiator << HT_AGG_STATE_INITIATOR_SHIFT);
-> +
-> +       ret = local->ops->ampdu_action(&local->hw, IEEE80211_AMPDU_TX_STOP,
-> +                                      &sta->sta, tid, NULL);
-> +
-> +       /* HW shall not deny going back to legacy */
-> +       if (WARN_ON(ret)) {
-> +               *state = HT_AGG_STATE_OPERATIONAL;
-> +               if (local->hw.ampdu_queues)
-> +                       ieee80211_wake_queue(&local->hw, sta->tid_to_tx_q[tid]);
-> +       }
-> +
-> +       return ret;
-> +}
-> +
->  /*
->  * After sending add Block Ack request we activated a timer until
->  * add Block Ack response will arrive from the recipient.
-> @@ -134,23 +162,13 @@ static void sta_addba_resp_timer_expired
->         * flow in sta_info_create gives the TID as data, while the timer_to_id
->         * array gives the sta through container_of */
->        u16 tid = *(u8 *)data;
-> -       struct sta_info *temp_sta = container_of((void *)data,
-> +       struct sta_info *sta = container_of((void *)data,
->                struct sta_info, timer_to_tid[tid]);
-> -
-> -       struct ieee80211_local *local = temp_sta->local;
-> -       struct ieee80211_hw *hw = &local->hw;
-> -       struct sta_info *sta;
-> +       struct ieee80211_local *local = sta->local;
->        u8 *state;
->
-> -       rcu_read_lock();
-> -
-> -       sta = sta_info_get(local, temp_sta->sta.addr);
-> -       if (!sta) {
-> -               rcu_read_unlock();
-> -               return;
-> -       }
-> -
->        state = &sta->ampdu_mlme.tid_state_tx[tid];
-> +
->        /* check if the TID waits for addBA response */
->        spin_lock_bh(&sta->lock);
->        if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
-> @@ -167,11 +185,8 @@ static void sta_addba_resp_timer_expired
->        printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
->  #endif
->
-> -       /* go through the state check in stop_BA_session */
-> -       *state = HT_AGG_STATE_OPERATIONAL;
-> +       __ieee80211_stop_tx_ba_session(local, sta, tid, WLAN_BACK_INITIATOR);
->        spin_unlock_bh(&sta->lock);
-> -       ieee80211_stop_tx_ba_session(hw, temp_sta->sta.addr, tid,
-> -                                    WLAN_BACK_INITIATOR);
->
->  timer_expired_exit:
->        rcu_read_unlock();
-> @@ -402,34 +417,6 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
->  EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
->
->
-> -static int __ieee80211_stop_tx_ba_session(struct ieee80211_local *local,
-> -                                         struct sta_info *sta, u16 tid,
-> -                                         enum ieee80211_back_parties initiator)
-> -{
-> -       int ret;
-> -       u8 *state;
-> -
-> -       state = &sta->ampdu_mlme.tid_state_tx[tid];
-> -
-> -       if (local->hw.ampdu_queues)
-> -               ieee80211_stop_queue(&local->hw, sta->tid_to_tx_q[tid]);
-> -
-> -       *state = HT_AGG_STATE_REQ_STOP_BA_MSK |
-> -               (initiator << HT_AGG_STATE_INITIATOR_SHIFT);
-> -
-> -       ret = local->ops->ampdu_action(&local->hw, IEEE80211_AMPDU_TX_STOP,
-> -                                      &sta->sta, tid, NULL);
-> -
-> -       /* HW shall not deny going back to legacy */
-> -       if (WARN_ON(ret)) {
-> -               *state = HT_AGG_STATE_OPERATIONAL;
-> -               if (local->hw.ampdu_queues)
-> -                       ieee80211_wake_queue(&local->hw, sta->tid_to_tx_q[tid]);
-> -       }
-> -
-> -       return ret;
-> -}
-> -
->  int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
->                                 u8 *ra, u16 tid,
->                                 enum ieee80211_back_parties initiator)
->
-> --
->
->
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 117718b..d2a007a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -259,6 +259,7 @@ struct mesh_preq_queue {
+ #define IEEE80211_STA_AUTO_CHANNEL_SEL	BIT(12)
+ #define IEEE80211_STA_PRIVACY_INVOKED	BIT(13)
+ #define IEEE80211_STA_TKIP_WEP_USED	BIT(14)
++#define IEEE80211_STA_CSA_RECEIVED	BIT(15)
+ /* flags for MLME request */
+ #define IEEE80211_STA_REQ_SCAN 0
+ #define IEEE80211_STA_REQ_DIRECT_PROBE 1
+@@ -283,7 +284,9 @@ enum ieee80211_sta_mlme_state {
+ 
+ struct ieee80211_if_sta {
+ 	struct timer_list timer;
++	struct timer_list chswitch_timer;
+ 	struct work_struct work;
++	struct work_struct chswitch_work;
+ 	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	enum ieee80211_sta_mlme_state state;
+@@ -542,6 +545,7 @@ enum {
+ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_DRIVER,
+ 	IEEE80211_QUEUE_STOP_REASON_PS,
++	IEEE80211_QUEUE_STOP_REASON_CSA
+ };
+ 
+ /* maximum number of hardware queues we support. */
+@@ -631,7 +635,7 @@ struct ieee80211_local {
+ 	unsigned long last_scan_completed;
+ 	struct delayed_work scan_work;
+ 	struct ieee80211_sub_if_data *scan_sdata;
+-	struct ieee80211_channel *oper_channel, *scan_channel;
++	struct ieee80211_channel *oper_channel, *scan_channel, *csa_channel;
+ 	enum nl80211_channel_type oper_channel_type;
+ 	u8 scan_ssid[IEEE80211_MAX_SSID_LEN];
+ 	size_t scan_ssid_len;
+@@ -964,6 +968,11 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+ 				       size_t len);
++void ieee80211_chswitch_timer(unsigned long data);
++void ieee80211_chswitch_work(struct work_struct *work);
++void ieee80211_process_chanswitch(struct ieee80211_sub_if_data *sdata,
++				  struct ieee80211_channel_sw_ie *sw_elem,
++				  struct ieee80211_bss *bss);
+ 
+ /* utility functions/constants */
+ extern void *mac80211_wiphy_privid; /* for wiphy privid */
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 2c7a87d..f927641 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -443,6 +443,7 @@ static int ieee80211_stop(struct net_device *dev)
+ 						WLAN_REASON_DEAUTH_LEAVING);
+ 
+ 		memset(sdata->u.sta.bssid, 0, ETH_ALEN);
++		del_timer_sync(&sdata->u.sta.chswitch_timer);
+ 		del_timer_sync(&sdata->u.sta.timer);
+ 		/*
+ 		 * If the timer fired while we waited for it, it will have
+@@ -452,6 +453,7 @@ static int ieee80211_stop(struct net_device *dev)
+ 		 * it no longer is.
+ 		 */
+ 		cancel_work_sync(&sdata->u.sta.work);
++		cancel_work_sync(&sdata->u.sta.chswitch_work);
+ 		/*
+ 		 * When we get here, the interface is marked down.
+ 		 * Call synchronize_rcu() to wait for the RX path
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e317c6d..4d25cf9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1645,6 +1645,13 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 	if (!bss)
+ 		return;
+ 
++	if (elems->ch_switch_elem && (elems->ch_switch_elem_len == 3) &&
++	    (memcmp(mgmt->bssid, sdata->u.sta.bssid, ETH_ALEN) == 0)) {
++		struct ieee80211_channel_sw_ie *sw_elem =
++			(struct ieee80211_channel_sw_ie *)elems->ch_switch_elem;
++		ieee80211_process_chanswitch(sdata, sw_elem, bss);
++	}
++
+ 	/* was just updated in ieee80211_bss_info_update */
+ 	beacon_timestamp = bss->timestamp;
+ 
+@@ -1781,6 +1788,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	    memcmp(ifsta->bssid, mgmt->bssid, ETH_ALEN) != 0)
+ 		return;
+ 
++	if (rx_status->freq != local->hw.conf.channel->center_freq)
++		return;
++
+ 	ieee80211_sta_wmm_params(local, ifsta, elems.wmm_param,
+ 				 elems.wmm_param_len);
+ 
+@@ -2447,8 +2457,11 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ifsta = &sdata->u.sta;
+ 	INIT_WORK(&ifsta->work, ieee80211_sta_work);
++	INIT_WORK(&ifsta->chswitch_work, ieee80211_chswitch_work);
+ 	setup_timer(&ifsta->timer, ieee80211_sta_timer,
+ 		    (unsigned long) sdata);
++	setup_timer(&ifsta->chswitch_timer, ieee80211_chswitch_timer,
++		    (unsigned long) sdata);
+ 	skb_queue_head_init(&ifsta->skb_queue);
+ 
+ 	ifsta->capab = WLAN_CAPABILITY_ESS;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 384cb3b..c8daf8a 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1564,7 +1564,9 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_local *local = rx->local;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
++	struct ieee80211_bss *bss;
+ 	int len = rx->skb->len;
+ 
+ 	if (!ieee80211_is_action(mgmt->frame_control))
+@@ -1613,6 +1615,21 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 				return RX_DROP_MONITOR;
+ 			ieee80211_process_measurement_req(sdata, mgmt, len);
+ 			break;
++		case WLAN_ACTION_SPCT_CHL_SWITCH:
++			if (len < (IEEE80211_MIN_ACTION_SIZE +
++				   sizeof(mgmt->u.action.u.chan_switch)))
++				return RX_DROP_MONITOR;
++
++			bss = ieee80211_rx_bss_get(local, ifsta->bssid,
++					   local->hw.conf.channel->center_freq,
++					   ifsta->ssid, ifsta->ssid_len);
++			if (!bss)
++				return RX_DROP_MONITOR;
++
++			ieee80211_process_chanswitch(sdata,
++				     &mgmt->u.action.u.chan_switch.sw_elem, bss);
++			ieee80211_rx_bss_put(local, bss);
++			break;
+ 		}
+ 		break;
+ 	default:
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index f72bad6..22ad480 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -84,3 +84,80 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 			mgmt->sa, mgmt->bssid,
+ 			mgmt->u.action.u.measurement.dialog_token);
+ }
++
++void ieee80211_chswitch_work(struct work_struct *work)
++{
++	struct ieee80211_sub_if_data *sdata =
++		container_of(work, struct ieee80211_sub_if_data, u.sta.chswitch_work);
++	struct ieee80211_bss *bss;
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++
++	if (!netif_running(sdata->dev))
++		return;
++
++	bss = ieee80211_rx_bss_get(sdata->local, ifsta->bssid,
++				   sdata->local->hw.conf.channel->center_freq,
++				   ifsta->ssid, ifsta->ssid_len);
++	if (!bss)
++		goto exit;
++
++	sdata->local->oper_channel = sdata->local->csa_channel;
++	if (!ieee80211_hw_config(sdata->local, IEEE80211_CONF_CHANGE_CHANNEL))
++		bss->freq = sdata->local->oper_channel->center_freq;
++
++	ieee80211_rx_bss_put(sdata->local, bss);
++exit:
++	ifsta->flags &= ~IEEE80211_STA_CSA_RECEIVED;
++	ieee80211_wake_queues_by_reason(&sdata->local->hw,
++					IEEE80211_QUEUE_STOP_REASON_CSA);
++}
++
++void ieee80211_chswitch_timer(unsigned long data)
++{
++	struct ieee80211_sub_if_data *sdata =
++		(struct ieee80211_sub_if_data *) data;
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++
++	queue_work(sdata->local->hw.workqueue, &ifsta->chswitch_work);
++}
++
++void ieee80211_process_chanswitch(struct ieee80211_sub_if_data *sdata,
++				  struct ieee80211_channel_sw_ie *sw_elem,
++				  struct ieee80211_bss *bss)
++{
++	struct ieee80211_channel *new_ch;
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++	int new_freq = ieee80211_channel_to_frequency(sw_elem->new_ch_num);
++
++	/* FIXME: Handle ADHOC later */
++	if (sdata->vif.type != NL80211_IFTYPE_STATION)
++		return;
++
++	if (ifsta->state != IEEE80211_STA_MLME_ASSOCIATED)
++		return;
++
++	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
++		return;
++
++	/* Disregard subsequent beacons if we are already running a timer
++	   processing a CSA */
++
++	if (ifsta->flags & IEEE80211_STA_CSA_RECEIVED)
++		return;
++
++	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
++	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED)
++		return;
++
++	sdata->local->csa_channel = new_ch;
++
++	if (sw_elem->count <= 1) {
++		queue_work(sdata->local->hw.workqueue, &ifsta->chswitch_work);
++	} else {
++		ieee80211_stop_queues_by_reason(&sdata->local->hw,
++						IEEE80211_QUEUE_STOP_REASON_CSA);
++		ifsta->flags |= IEEE80211_STA_CSA_RECEIVED;
++		mod_timer(&ifsta->chswitch_timer,
++			  jiffies + msecs_to_jiffies(sw_elem->count * bss->beacon_int));
++	}
++}
+-- 
+1.6.0.3
+
