@@ -1,95 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34245 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755785AbZAWVmr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 16:42:47 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Samuel Ortiz <samuel.ortiz@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/15] iwl3945: Define send_tx_power
-Date: Fri, 23 Jan 2009 13:45:11 -0800
-Message-Id: <1232747123-7261-4-git-send-email-reinette.chatre@intel.com> (sfid-20090123_224257_832812_C779910F)
-In-Reply-To: <1232747123-7261-3-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232747123-7261-1-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-2-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-3-git-send-email-reinette.chatre@intel.com>
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:59575 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbZAEKgS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 05:36:18 -0500
+From: Christian Borntraeger <borntraeger@de.ibm.com>
+To: linux-wireless@vger.kernel.org
+Subject: 2.6.28-git: WARNING: at drivers/net/wireless/iwlwifi/iwl-sta.c:689
+Date: Mon, 5 Jan 2009 11:36:13 +0100
+Cc: linux-kernel@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200901051136.13519.borntraeger@de.ibm.com> (sfid-20090105_113622_331736_F89EA3EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <samuel.ortiz@intel.com>
+Hi, 
 
-We can define this iwl_lib ops for 3945, as this would help us cleaning the
-scanning code.
+on my Thinkpad T61p I get several of the following warnings. The warning seems to happen on some reassociations 
+(like after resume) but not on all. I have never seen this message with 2.6.28-rc9. Since I cannot reliably trigger 
+this warning I am unable to bisect it...
 
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    7 ++++---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- 2 files changed, 6 insertions(+), 5 deletions(-)
+Christian
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 4aeb101..602a3a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -1705,12 +1705,12 @@ static void iwl3945_hw_reg_set_scan_power(struct iwl_priv *priv, u32 scan_tbl_in
- }
- 
- /**
-- * iwl3945_hw_reg_send_txpower - fill in Tx Power command with gain settings
-+ * iwl3945_send_tx_power - fill in Tx Power command with gain settings
-  *
-  * Configures power settings for all rates for the current channel,
-  * using values from channel info struct, and send to NIC
-  */
--int iwl3945_hw_reg_send_txpower(struct iwl_priv *priv)
-+int iwl3945_send_tx_power(struct iwl_priv *priv)
- {
- 	int rate_idx, i;
- 	const struct iwl_channel_info *ch_info = NULL;
-@@ -1935,7 +1935,7 @@ static int iwl3945_hw_reg_comp_txpower_temp(struct iwl_priv *priv)
- 	}
- 
- 	/* send Txpower command for current channel to ucode */
--	return iwl3945_hw_reg_send_txpower(priv);
-+	return priv->cfg->ops->lib->send_tx_power(priv);
- }
- 
- int iwl3945_hw_reg_set_txpower(struct iwl_priv *priv, s8 power)
-@@ -2712,6 +2712,7 @@ static struct iwl_lib_ops iwl3945_lib = {
- 		.config = iwl3945_nic_config,
- 		.set_pwr_src = iwl3945_set_pwr_src,
- 	},
-+	.send_tx_power	= iwl3945_send_tx_power,
- };
- 
- static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index de8c8d7..997ac33 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -744,7 +744,7 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv)
- 
- 	/* If we issue a new RXON command which required a tune then we must
- 	 * send a new TXPOWER command or we won't be able to Tx any frames */
--	rc = iwl3945_hw_reg_send_txpower(priv);
-+	rc = priv->cfg->ops->lib->send_tx_power(priv);
- 	if (rc) {
- 		IWL_ERR(priv, "Error setting Tx power (%d).\n", rc);
- 		return rc;
-@@ -5517,7 +5517,7 @@ static void iwl3945_bg_scan_completed(struct work_struct *work)
- 	/* Since setting the TXPOWER may have been deferred while
- 	 * performing the scan, fire one off */
- 	mutex_lock(&priv->mutex);
--	iwl3945_hw_reg_send_txpower(priv);
-+	priv->cfg->ops->lib->send_tx_power(priv);
- 	mutex_unlock(&priv->mutex);
- }
- 
--- 
-1.5.4.3
-
+[ 3850.807734] Restarting tasks ... done.
+[ 3858.346160] wlan0: deauthenticated (Reason: 7)
+[ 3859.345135] wlan0: direct probe to AP .. try 1
+[ 3859.347476] wlan0 direct probe responded
+[ 3859.347483] wlan0: authenticate with AP ...
+[ 3859.349471] wlan0: authenticated
+[ 3859.349476] wlan0: associate with AP ..
+[ 3859.351984] wlan0: RX ReassocResp from .. (capab=0x431 status=0 aid=1)
+[ 3859.351990] wlan0: associated
+[ 3861.347111] ------------[ cut here ]------------
+[ 3861.347119] WARNING: at drivers/net/wireless/iwlwifi/iwl-sta.c:689 iwl_set_dynamic_key+0x48e/0x4a0()
+[ 3861.347125] Hardware name: 64575GG
+[ 3861.347129] no space for new kewModules linked in: psmouse
+[ 3861.347142] Pid: 16225, comm: events/1 Not tainted 2.6.28-self-05692-g7d3b56b #64
+[ 3861.347148] Call Trace:
+[ 3861.347159]  [<c014c7d3>] warn_slowpath+0x73/0xd0
+[ 3861.347169]  [<c036b99f>] ? iwl_send_cmd_async+0x3f/0x90
+[ 3861.347178]  [<c0146219>] ? finish_task_switch+0x29/0xc0
+[ 3861.347186]  [<c036bd15>] ? iwl_send_cmd+0x15/0x20
+[ 3861.347193]  [<c037047d>] ? iwl_send_add_sta+0x6d/0x110
+[ 3861.347204]  [<c016cbe3>] ? tick_dev_program_event+0x33/0xb0
+[ 3861.347212]  [<c013a7c8>] ? default_spin_lock_flags+0x8/0x10
+[ 3861.347222]  [<c053ce8e>] ? _spin_lock_irqsave+0x3e/0x50
+[ 3861.347230]  [<c03712ee>] iwl_set_dynamic_key+0x48e/0x4a0
+[ 3861.347237]  [<c053d288>] ? _spin_unlock_irq+0x8/0x40
+[ 3861.347244]  [<c03700fa>] ? iwl_find_station+0xda/0x120
+[ 3861.347252]  [<c03735c8>] ? iwl_scan_cancel_timeout+0x18/0x80
+[ 3861.347261]  [<c03749b3>] iwl_mac_set_key+0xf3/0x130
+[ 3861.347269]  [<c0525337>] __ieee80211_key_todo+0xd7/0x260
+[ 3861.347277]  [<c015df34>] ? queue_delayed_work_on+0xb4/0xe0
+[ 3861.347284]  [<c03748c0>] ? iwl_mac_set_key+0x0/0x130
+[ 3861.347291]  [<c05255d2>] ieee80211_key_todo+0x12/0x20
+[ 3861.347298]  [<c05255e8>] key_todo+0x8/0x10
+[ 3861.347307]  [<c015d6c1>] run_workqueue+0x81/0x150
+[ 3861.347313]  [<c05255e0>] ? key_todo+0x0/0x10
+[ 3861.347321]  [<c015d818>] worker_thread+0x88/0xf0
+[ 3861.347329]  [<c0161490>] ? autoremove_wake_function+0x0/0x40
+[ 3861.347337]  [<c015d790>] ? worker_thread+0x0/0xf0
+[ 3861.347344]  [<c01610bc>] kthread+0x3c/0x70
+[ 3861.347351]  [<c0161080>] ? kthread+0x0/0x70
+[ 3861.347359]  [<c0120d13>] kernel_thread_helper+0x7/0x14
+[ 3861.347365] ---[ end trace 0f088f1dccf29d2c ]---
