@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:51910 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642AbZAUODG (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41426 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752949AbZAEWJR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 09:03:06 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH -stable] p54usb: fix traffic stalls / packet drop
-Date: Wed, 21 Jan 2009 15:03:11 +0100
-Cc: Greg KH <gregkh@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Artur Skawina <art.08.09@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Linux wireless <linux-wireless@vger.kernel.org>
-References: <KTnguC9mFUC.A.VNB.TJRdJB@chimera> <20090120223957.GA6088@suse.de> <20090120235626.GA3094@tuxdriver.com>
-In-Reply-To: <20090120235626.GA3094@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901211503.11849.chunkeey@web.de> (sfid-20090121_150313_762381_121B6B48)
+	Mon, 5 Jan 2009 17:09:17 -0500
+Subject: Re: Problem with rtl8187
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <496283F7.7010902@lwfinger.net>
+References: <496273D4.6020600@lwfinger.net>
+	 <1231189302.3697.25.camel@johannes>  <4962775B.2040205@lwfinger.net>
+	 <1231190634.3697.32.camel@johannes>  <496283F7.7010902@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wQZ/g3yiIRrj7DFhf/oV"
+Date: Mon, 05 Jan 2009 23:09:36 +0100
+Message-Id: <1231193376.3697.44.camel@johannes> (sfid-20090105_230921_594466_69058A06)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 January 2009 00:56:26 John W. Linville wrote:
-> On Tue, Jan 20, 2009 at 02:39:57PM -0800, Greg KH wrote:
-> > On Tue, Jan 20, 2009 at 11:11:11PM +0100, Christian Lamparter wrote:
-> > > All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
-> > > Else, the firmware could freeze, or simply drop the frame.
-> > > 
-> > > Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> > > Cc: stable <stable@kernel.org>
-> > > ---
-> > > Attached is the patch is for the stable series only.
-> > > Bugzilla reference: http://bugzilla.kernel.org/show_bug.cgi?id=12260
-> > > (wireless-testing needs a different one)
-> > 
-> > What do you mean, this is for 2.6.28-stable or 2.6.27-stable only, and
-> > not 2.6.29?  Why?
-> 
-> At least part of that patch is already in 2.6.29.  I think Christian
-> may have combined another patch into the -stable version, one that
-> he posted today for -rc inclusion.
 
-Yup, the -stable patch includes the diff "hunks" for all devices.
+--=-wQZ/g3yiIRrj7DFhf/oV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-linux-wireless is a different affair, because the fix for LM87
-(aka "p54usb: fix random traffic stalls (LM87)" ) is already merged.
-So the patch I posted on linux-wirelss (-rc inclusion) only has the
-diffs for the 1st generation and 2nd generation with old firmwares.
+On Mon, 2009-01-05 at 16:04 -0600, Larry Finger wrote:
 
-Regards,
-	Chr
+> Thanks. That took care of the WARN_ON message and the SLUB debug messages=
+;
+
+Ok, good. Want to adopt that patch and formally submit it, or want me
+to?
+
+> however, the device will not scan until it has been powered down. I'm sti=
+ll
+> looking for something there.
+
+That's a bit odd, but I'm not sure I know how to help you. I've seen
+things like that with ar9170 too though, if I rmmod/modprobe then I need
+to unplug it to make it work again.
+
+> Are there any other mac80211 routines that should be fed other than error=
+ codes?
+
+I don't think so, no.
+
+johannesNone that I'm aware of, no.
+
+--=-wQZ/g3yiIRrj7DFhf/oV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJYoUdAAoJEKVg1VMiehFY9oEQAKWH8CjkqvhK+e49jP782Rg7
+CcMIdvagNnCDmx3jjEUO7diQ9GAjnglisDFLvxZ1WVyz6vIJO7BJYC+yHMBtQDi3
+SNJi+/rF0h9GMrg0pcOQq+9lKo8qiQ6GVOVBsTFrG5ut33+LIu2CYe+5Dc5RLyXr
+UT3Cl/fQGo/0sQPUx/zcYGdJ8RZaiMNqvrPnAfP3L0Uog5r4Co3NWp7TBPXFD456
+WyUMVf/aebwZUeFz/wVLquFYSrV1gb6pc1yJb/VPofEu3uqZAydvWJZg5zaWZ1/8
+KYpxzdS8Bq8IS3tys6E3AZ5V4h3JI/rwOCE2HXm48LXVqa9RuuXQiGKCn6Nd5tpw
+2RUotibpbeP21OL7xFqwU4dJTKThagv6OEsqX3bsAD5EZ52hvreDYVq7aW+QsciD
+flwkIYaIgKXBNmp/dDsVVDvlCrCmVKoLtH6ROP8d+kGbP6T41LpBYhal+QSPzkyx
+HO1rTn3Si4nAHj5XyrN9eTyzHlLVytz3v/m6VboI6oARNVcfUOYr+4+gsmpnrhLz
+XkNc6lvnva9yZOfDfeJ2DbIKelX6w6+gd5DRHfxCIzrmowbqd9z4PdxZ0xU3uE23
+ny7vqaRufEnWvEmYQqThK0izloKLdAT7bzEHBl/9kir9SYYifRIUBO4db54Pf48E
+4rBo6GxM3UZkerrmRrdQ
+=xVva
+-----END PGP SIGNATURE-----
+
+--=-wQZ/g3yiIRrj7DFhf/oV--
+
