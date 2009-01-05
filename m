@@ -1,77 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42510 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753323AbZATSTG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 13:19:06 -0500
-Subject: Re: [PATCHv2] iwlagn: fix hw-rfkill while the interface is down
-From: reinette chatre <reinette.chatre@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"mabbaswireless@gmail.com" <mabbaswireless@gmail.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"samuel@sortiz.org" <samuel@sortiz.org>
-In-Reply-To: <200901191310.08654.helmut.schaa@gmail.com>
-References: <200901191310.08654.helmut.schaa@gmail.com>
-Content-Type: text/plain
-Date: Tue, 20 Jan 2009 10:21:05 -0800
-Message-Id: <1232475665.11197.77.camel@rc-desk> (sfid-20090120_191913_396171_1982A73C)
+Received: from xc.sipsolutions.net ([83.246.72.84]:58180 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751620AbZAENJ5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 08:09:57 -0500
+Subject: Re: [PATCH v2] mac80211: Add 802.11h CSA support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@Atheros.com
+In-Reply-To: <18785.54821.934672.713597@gargle.gargle.HOWL>
+References: <18785.54821.934672.713597@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-f5J4SG3zvCODCGKsTTje"
+Date: Mon, 05 Jan 2009 14:10:40 +0100
+Message-Id: <1231161041.3334.8.camel@johannes> (sfid-20090105_141000_155367_E63E24AE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-01-19 at 04:10 -0800, Helmut Schaa wrote:
-> Currently iwlagn is not able to report hw-killswitch events while the
-> interface is down. This has implications on user space tools (like
-> NetworkManager) relying on rfkill notifications to bring the interface
-> up once the wireless gets enabled through a hw killswitch.
-> 
-> Thus, enable the device already in iwl_pci_probe instead of iwl_up
-> and enable interrups while the interface is down in order to get
-> notified about killswitch state changes. The firmware loading is still
-> done in iwl_up.
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> ---
-> 
 
-<...>
+--=-f5J4SG3zvCODCGKsTTje
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, 2009-01-05 at 15:13 +0530, Sujith wrote:
 
-> +               if (!test_bit(STATUS_ALIVE, &priv->status)) {
+[...]
 
-Is this test necessary? If the intention is to get rfkill state updates
-when interface is down (and ucode is thus not loaded, and STATUS_ALIVE
-thus not set) then this test is not necessary.
+Looks good to me, just one thought I had:
 
-> +                       if (hw_rf_kill)
-> +                               set_bit(STATUS_RF_KILL_HW, &priv->status);
-> +                       else
-> +                               clear_bit(STATUS_RF_KILL_HW, &priv->status);
-> +                       queue_work(priv->workqueue, &priv->rf_kill);
->                 }
-> 
->                 handled |= CSR_INT_BIT_RF_KILL;
-> @@ -2158,7 +2161,8 @@ static void iwl_bg_rf_kill(struct work_struct *work)
->                 IWL_DEBUG(IWL_DL_RF_KILL,
->                           "HW and/or SW RF Kill no longer active, restarting "
->                           "device\n");
-> -               if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
-> +               if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
-> +                    test_bit(STATUS_ALIVE, &priv->status))
+> +	/* Disregard subsequent beacons if we are already running a timer
+> +	   processing a CSA */
+> +
+> +	if (ifsta->flags & IEEE80211_STA_CSA_RECEIVED)
+> +		return;
 
-This ties in with the question above. Above the work is scheduled when
-STATUS_ALIVE is not set ... having this test here encourages me to think
-that the above test for STATUS_ALIVE is not necessary.
+Should we verify that we're getting subsequent CSAs? Is it possible that
+an AP drops the CSA element again and expects STAs to _not_ switch in
+that case? Or, even if that is not possible, should we verify that
+anyway?
 
-The rest of the patch looks good.
+johannes
 
-Thank you very much
+--=-f5J4SG3zvCODCGKsTTje
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Reinette
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJJYgbNAAoJEKVg1VMiehFYtssP/iqPZczD6/q2QAcBUf1oP7wm
+XTz2MDsruF8JlnBuQJT6uh+jjZ130yRo0GqtzpVGLb4r5ng6Z83kipWkdIeEJWoN
+2ZoIb5DxFNio4k015lVMAC2t6/3J5ZgoSC7MdusBOWZddxevaN2YbugXyh+588ds
+ocvOsfLcVbDPWXLu5VVg1SJncorfEqZtNBbluXb1vrPvJ9kSYolocXIII9S5YnuG
+eK0shFVaW3kVo3zaWFbK4q2GF96Ona3nCRdfjVRVu+KuyTvaVCCGCn9cbuhSJctB
+xvWmTjyKH87KFKLSKOZqFLjw8TG4bk45GLLX08xluvgDivQDDS+mSgax+TRM3Y3V
+6vRJX7Qyioa4x1TaTudnU6qVlFbAnHwwRDpx6dBpix4Jdm5gNC0qDVdV6zzFjMDt
+GEn5kB4RM7xG5StkeBhSC4PUEfZ9mzsr/3nfPGDQgfg/3URnAkoSN+GxoaTbY9/p
+XtUtKMbI9ftCL9zv/Xs++A4AKa2CDDPTzg5O6QYIRD0DmCnz2OQmiM61CjsXxtO9
+6BKRnRjWS16lMJRAdQyjNY97SAwF9pVaR0Sbc/Uc0vgnoJfixWYGXy1BGoii5qp0
+giQk7vcNV8Eq1fCgRM80FP5N5+xbnajCNVORywgW2AAtQ0P/c8uojR+1rjtI9njv
+tPKDtTLAuI4qNWVc3Cor
+=dyVW
+-----END PGP SIGNATURE-----
 
+--=-f5J4SG3zvCODCGKsTTje--
 
