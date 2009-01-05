@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:18274 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753079AbZAIODx convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:53412 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807AbZAEXKv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 09:03:53 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 06:03:53 -0800
-From: Vivek Natarajan <Vivek.Natarajan@Atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 9 Jan 2009 19:29:25 +0530
-Subject: RE: multicast traffic and ath9k
-Message-ID: <44EE5C37ADC36343B0625A05DD408C4845A77DAF08@CHEXMB-01.global.atheros.com> (sfid-20090109_150359_500670_ED4A1F69)
-References: <1231346161.3545.52.camel@johannes>
-	 <44EE5C37ADC36343B0625A05DD408C4845A77DAF07@CHEXMB-01.global.atheros.com>,<1231506446.3703.18.camel@johannes>
-In-Reply-To: <1231506446.3703.18.camel@johannes>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 5 Jan 2009 18:10:51 -0500
+Received: from [192.168.1.194] (S0106001cf062885c.vc.shawcable.net [24.82.150.230])
+	by mail.holtmann.org (Postfix) with ESMTP id 52A2C8B547
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Jan 2009 00:10:51 +0100 (CET)
+Subject: iwlagn: Microcode SW error detected.  Restarting 0x2000000
+From: Marcel Holtmann <marcel@holtmann.org>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 06 Jan 2009 00:10:48 +0100
+Message-Id: <1231197048.4858.9.camel@californication> (sfid-20090106_001054_849135_F9C407C4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi guys,
 
-Johannes Berg wrote:
+so I am running into this one on my X61:
 
-> > Is the mc bit
-> > checking done only on enabling power save? if set and mc packets are received,
-> > how does it automatically go back to sleep and wouldn't there be any conflict
-> > between mac80211 and the hw regarding power state since mac80211 is not aware
-> > of the mc bit induced state change?
+iwlagn 0000:03:00.0: PCI INT A disabled
+iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27k
+iwlagn: Copyright(c) 2003-2008 Intel Corporation
+vendor=8086 device=2841
+iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwlagn 0000:03:00.0: setting latency timer to 64
+iwlagn: Detected Intel Wireless WiFi Link 4965AGN REV=0x4
+iwlagn: Tunable channels: 11 802.11bg, 13 802.11a channels
+wmaster0 (iwlagn): not using net_device_ops yet
+phy1: Selected rate control algorithm 'iwl-agn-rs'
+wlan0 (iwlagn): not using net_device_ops yet
+vendor=8086 device=2841
+iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwlagn 0000:03:00.0: firmware: requesting iwlwifi-4965-2.ucode
+iwlagn loaded firmware version 228.57.2.23
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+iwlagn: Microcode SW error detected.  Restarting 0x2000000.
 
-> I don't think there would be a conflict. mac80211's CONF_PS is always
-> only "go to sleep if you can", so receiving multicast traffic would
-> obviously imply not being able to go to sleep. When mac80211 then unsets
-> the CONF_PS flag you'd just not go back to sleep after being awake for
-> MC traffic.
+It renders the wireless device useless and module unload/reload doesn't
+help either. Is this the AMT issue again or something totally different
+with the latest ucode?
 
-How does the mac80211 know if the hw is receiving mc traffic or not and
-unset the CONF_PS flag accordingly? Am I missing something basic here?
+This machine is running Linus' tip from today. I am currently not
+running wireless-testing since it is not synced up with Linus tree at
+the moment.
 
-Maybe p54 (stlc45xx) has the answer for how it goes back to sleep after mc traffic.
+Regards
 
-Vivek.
+Marcel
+
+
