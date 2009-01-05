@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38154 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057AbZATXXF (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:54394 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750875AbZAEFv6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 18:23:05 -0500
-Date: Tue, 20 Jan 2009 18:23:00 -0500
-From: Kyle McMartin <kyle@infradead.org>
-To: Greg KH <greg@kroah.com>
-Cc: Kyle McMartin <kyle@infradead.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Paul Hickey <paul@christianpatriot.us>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [stable] Failed Build of modules for 2.6.27.9-159
-Message-ID: <20090120232300.GF17452@bombadil.infradead.org> (sfid-20090121_002322_764169_EE63D838)
-References: <1232404986.3641.2.camel@localhost.localdomain> <20090120000336.GB4018@tesla> <1232433738.3696.3.camel@localhost.localdomain> <20090120194243.GC19581@tesla> <20090120200515.GA5077@kroah.com> <20090120201316.GG19581@tesla> <20090120201613.GA5313@kroah.com> <20090120211630.GJ19581@tesla> <20090120220810.GE17452@bombadil.infradead.org> <20090120223707.GA5988@kroah.com>
+	Mon, 5 Jan 2009 00:51:58 -0500
+Message-ID: <49619FF7.2030606@lwfinger.net> (sfid-20090105_065200_489891_B53AF630)
+Date: Sun, 04 Jan 2009 23:51:51 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090120223707.GA5988@kroah.com>
+To: Andi Kleen <andi@firstfloor.org>
+CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rate instability in wireless stack
+References: <20090104164649.GV496@one.firstfloor.org> <200901041736.47650.mb@bu3sch.de> <20090104174123.GW496@one.firstfloor.org> <49615465.4090604@lwfinger.net> <20090105025302.GF496@one.firstfloor.org> <49618497.50809@lwfinger.net> <20090105050248.GG496@one.firstfloor.org> <496193A6.3040608@lwfinger.net> <20090105054830.GJ496@one.firstfloor.org>
+In-Reply-To: <20090105054830.GJ496@one.firstfloor.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 02:37:07PM -0800, Greg KH wrote:
-> On Tue, Jan 20, 2009 at 05:08:10PM -0500, Kyle McMartin wrote:
-> > 
-> > *sigh* I don't know, and don't really want to argue about it. ;-) People
-> > with backports are pretty much always going to get screwed. What's the
-> > use case for wireless-testing backports? bugfixes or new features? Could
-> > we improve the stable process to help wireless stuff get into 2.6.$(x-1)
-> > more easily so this won't happen in the future?
+Andi Kleen wrote:
+> On Sun, Jan 04, 2009 at 10:59:18PM -0600, Larry Finger wrote:
+>> Andi Kleen wrote:
+>>> On Sun, Jan 04, 2009 at 09:55:03PM -0600, Larry Finger wrote:
+>>>
+>>> Minstrel stays constantly at 1 Mbit/s
+>> Do you have mac80211 debugging turned on? If so, then do a
+>>
+>> sudo cat /sys/kernel/debug/ieee80211/phyXX/stations/<MAC ADDR>/rc_stats
+>>
+>> and post them.
 > 
-> I don't think we want to start adding entire new drivers to the -stable
-> releases, which is what the wireless backport stuff is for, right?  That
-> would really be adding new features, which is not the goal.
-> 
+> Lots of zeroes.
 
-Sorry, I meant getting bugfixes in.
+Strange. Mine looks like this.
 
-r, Kyle
+rate     throughput  ewma prob   this prob  this succ/attempt   success    attempts
+     1         0.9       97.7      100.0          1(  1)       2086        2206
+     2         0.1        7.0        0.0          0(  0)          1           5
+     5.5       0.0        0.0        0.0          0(  0)          0           1
+    11         0.0        0.0        0.0          0(  0)          0           4
+     6         1.4       25.0      100.0          0(  0)          1           2
+     9         0.0        0.0        0.0          0(  0)          0           6
+    12         7.6       68.8        0.0          0(  0)        187         192
+    18         7.0       43.3        0.0          0(  0)          3           5
+    24        10.6       49.8      100.0          0(  0)         20          40
+    36         8.5       28.0       50.0          0(  0)       1389        1520
+T P 48        15.7       99.9      100.0          1(  1)       3277        3525
+ t  54        21.7       50.1        0.0          0(  0)      19282       20028
+
+Total packet count::    ideal 3800      lookaround 422
+
+Johannes,
+
+Any explanation as to why there are no attempts?
+
+Larry
+
+
