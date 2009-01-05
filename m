@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50214 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752664AbZAGK3Y (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48505 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750798AbZAELvw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 05:29:24 -0500
-Subject: Re: [PATCH 08/11] ath9k: enable support for AR9100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Imre Kaloz <kaloz@openwrt.org>
-In-Reply-To: <1231322972-24094-9-git-send-email-juhosg@openwrt.org> (sfid-20090107_111133_655032_422B6AA7)
-References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
-	 <1231322972-24094-9-git-send-email-juhosg@openwrt.org>
-	 (sfid-20090107_111133_655032_422B6AA7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WrfyL95BU41O0OX6Nzer"
-Date: Wed, 07 Jan 2009 11:29:44 +0100
-Message-Id: <1231324184.3545.26.camel@johannes> (sfid-20090107_112933_169811_C87045DE)
-Mime-Version: 1.0
+	Mon, 5 Jan 2009 06:51:52 -0500
+Date: Mon, 5 Jan 2009 13:51:24 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ingo Molnar <mingo@elte.hu>, ath9k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Enforce module build if rfkill is a module
+Message-ID: <20090105115124.GA2235@jm.kir.nu> (sfid-20090105_125156_359105_6FC16FEB)
+References: <3f9a31f40901020936l4bed87e2jb64678572d2ad45b@mail.gmail.com> <20090102180730.GA10072@elte.hu> <3f9a31f40901021040l2afb5e19sc37e61d3f9728531@mail.gmail.com> <495E6C96.3040102@kernel.org> <20090102195802.GA28494@elte.hu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090102195802.GA28494@elte.hu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+CONFIG_ATH9K=y results in build issues if CONFIG_RFKILL=m since ath9k
+does not depend on rfkill in kconfig (i.e., CONFIG_RFKILL is used to
+select whether to enable rfkill in ath9k), but uses its functions if
+rfkill is enabled. Enforce ath9k to be build as a module if
+CONFIG_RFKILL=m to avoid this invalid configuration.
 
---=-WrfyL95BU41O0OX6Nzer
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-On Wed, 2009-01-07 at 11:09 +0100, Gabor Juhos wrote:
-> Because we have support for the AR9100 devices now, we can enable them.
+---
+ drivers/net/wireless/ath9k/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-should be later in the series, I think
+--- wireless-testing.orig/drivers/net/wireless/ath9k/Kconfig	2009-01-05 13:27:01.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/Kconfig	2009-01-05 13:36:27.000000000 +0200
+@@ -1,6 +1,7 @@
+ config ATH9K
+ 	tristate "Atheros 802.11n wireless cards support"
+ 	depends on PCI && MAC80211 && WLAN_80211
++	depends on RFKILL || RFKILL=n
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
+ 	select NEW_LEDS
 
-johannes
-
---=-WrfyL95BU41O0OX6Nzer
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJZIQVAAoJEKVg1VMiehFYSyoP/jERwcM1tF39TFXblMa4yujp
-WQ7F0dJC73EPDzxsmRP6enj8E8hpTfzRY3W+uDY0aGJNMSrCVAA1+Ord1sHaMaZB
-NuvXfDNqsNfAMic8ZfPUYWXvtH7e++C8+EfJ+ciQdlluMfHX9n/pUY4mUymnLVLQ
-ecpw4fvX4ccoqEJ08fwVorsSEWwn8FDTO+b6uydWSlXdy/MhCqspgHHHEKtcyx/W
-Nscq9ntSk8vv4/niCxas7eVcvWoh1uvzgoYcI8l0uCjN4lkv0S1P5vImecHwM5eV
-oIIdS7nQ1RPsm+vNMycrbAjCO1SyFlweZeP0BHsSeAQi5l2W6w6fHKvwKmqFOm/f
-HDGuI+1dgosyGRwiCdbYL2bETlzysGc2OsYbJB60naiqa2TIw1It6YsHWikdPEL4
-UFx8m9mC/vXq4enY3+XfBoqtBYKO1wjOzR1e8eYtetKAmnyCfZYfbv6OZnIBnrx6
-Ljx3jNkBtjamOFGUEUxY4v7iLxoU5qLD2F04I6NZvTwtParJOBiwWPIkdKNPzaas
-KAUek2b78Asqkyq44kGmFwkOkcpxR/vwqw/uzve/hFWY9Ly7Qf3W/jFOMJ1iRMUN
-NWR00dxY4M+oa1xr86N/ScGyrWOeCE/b7PdspeuW1AZEr1tBsEYN41PNa5NWaTzq
-FeVilgevp1ommSOaolh8
-=VAB+
------END PGP SIGNATURE-----
-
---=-WrfyL95BU41O0OX6Nzer--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
