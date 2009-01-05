@@ -1,139 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:52447 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366AbZAILL3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 06:11:29 -0500
-Cc: linux-wireless@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>
-Message-Id: <9F70A0D3-6334-45FB-9DAF-263FE89C847E@ing.unibs.it> (sfid-20090109_121138_171691_B46CC964)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <200901091149.28683.mb@bu3sch.de>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: [b43] opensource firmware
-Date: Fri, 9 Jan 2009 12:00:41 +0100
-References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de>
+Received: from mail.atheros.com ([12.36.123.2]:52564 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750698AbZAEXpv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 18:45:51 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 15:45:50 -0800
+Date: Mon, 5 Jan 2009 15:45:46 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: Gertjan van Wingerde <gwingerde@kpnplanet.nl>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rt2400-devel@lists.sourceforge.net"
+	<rt2400-devel@lists.sourceforge.net>
+Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
+Message-ID: <20090105234546.GK6834@tesla> (sfid-20090106_004554_433254_0C487C1B)
+References: <200901042021.10904.IvDoorn@gmail.com> <20090105200809.GH6834@tesla> <49627BCB.4020200@kpnplanet.nl> <200901052321.46422.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <200901052321.46422.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael,
+On Mon, Jan 05, 2009 at 02:21:46PM -0800, Ivo van Doorn wrote:
+> On Monday 05 January 2009, Gertjan van Wingerde wrote:
+> > On 01/05/09 21:08, Luis R. Rodriguez wrote:
+> > > On Sun, Jan 04, 2009 at 11:21:10AM -0800, Ivo van Doorn wrote:
+> > >
+> > >> rt2500pci and rt2500usb contain a special field in the EEPROM
+> > >> which indicates which regulatory domain the card belongs to.
+> > >> This code can easily be translated into a country code which
+> > >> we can send as alpha2 hint for CRDA.
+> > >>
+> > >> Please note that most cards will have 0xffff as EEPROM value,
+> > >> and thus do not provide a regulatory hint through the EEPROM.
+> > >>
+> > >> Signed-off-by: Ivo van Doorn<IvDoorn@gmail.com>
+> 
+> John: Please drop this patch, a more correct patch should be merged later
+> which is based on the code from Gertjan.
+> 
+> > > I believe regulatory_hint() is being called before the ieee80211_register_hw()
+> > > call. This is not a requirement right now but I believe this should be the case
+> > > in the future as we want cfg80211 to keep track a few things for the driver, like
+> > > the regulatory domain it wants in case of conflicts with other drivers. I'm working
+> > > on this right now so just wanted to throw that out there.
+> > >
+> > > Is it possible to move the regulatory_hint() to be used after ieee80211_register_hw()
+> > > is called?
+> 
+> Sure, I was a bit doubting about the timing of the call, I noticed that zd1211rw called it during the start()
+> callback function. Would that be the best location? Or right after ieee80211_register_hw()?
 
-I think someone else other than us two (me and Lorenzo, here) should  
-test the firmware. Have you tested it on your boards?
+Doesn't really matter, so long as its after ieee80211_register_hw() has been called
+would be nice.
 
-1) We are pretty sure this firmware works on the hardware we have  
-tested it for now six months... nevertheless some external testing  
-should be required
-2) On Linux RTS/CTS seems to be default disable (at least on the  
-kernel we used for testing, 2.6.27-rc5-wl) but if someone enables it  
-the driver+firmware chain could freeze and leave the system in  
-undetermined state
-3) The firmware does not support the QoS interface of b43, it should  
-be disable on module load.
+> > The things that kept me from submitting it so far are:
+> > 1. The conversion to a country code for the a-band EEPROM values is not complete / correct. So far I've been unable to map the possible code described in the EEPROM spec to real country codes.
+> 
+> I recall there would be a possibility to provide a custom definition for the domain, not sure if that ever went in.
 
-Cheers,
--FG
+Nope, we determined its not necessary because it was only required for Intel driver and
+we found a better solution for them.
 
-On Jan 9, 2009, at 11:49 AM, Michael Buesch wrote:
+> > 2. I'm still puzzled how to handle the two different values that the EEPROM has, namely one for the bg band and one for the a band. I've handled it by registering the one associated with the configured band, but that seems to be unlikely to be correct. I still haven't found a better way to handle this.
+> 
+> Because of this I hadn't looked very deep into rt61 and rt73 yet.
+> 
+> > The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
+> 
+> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
+> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
 
-> I'd like to start merging this into the "firmware" directory
-> of the mainline kernel.
->
-> On Friday 09 January 2009 11:29:22 Michael Buesch wrote:
->>
->> ----------  Forwarded Message  ----------
->>
->> Subject: opensource firmware
->> Date: Friday 09 January 2009
->> From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
->> To: bcm43xx-dev@lists.berlios.de
->>
->> Hello folks,
->>
->> we have been involved in the past few months in testing modifications
->> to the standard 802.11 MAC for research purposes. During this time we
->> did some tests with Broadcom 802.11b/g boards and we wrote down a
->> simple 802.11 compliant firmware that we used as a starting point for
->> the modified MAC algorithms.
->>
->> Although the base firmware is not fully 802.11 compliant, e.g., it
->> does not support RTS/CTS procedure or QoS, we believe that someone
->> could be interested in testing it. The firmware does not require the
->> kernel to be modified and it uses the same shared memory layout and
->> global registers usage of the original stuff from broadcom to ease
->> loading by the b43 driver (and ease our writing...). We wrote it to
->> make the b43 driver recognize it as Broadcom version 5 firmware: it
->> still uses the original initval files of that version of the
->> Broadcom's firmware, we do not include them as usual users have to
->> extract these files following the b43 installation instructions.
->>
->> Lorenzo and I tested this firmware only on 4306 and 4318 hardware  
->> (pci
->> and minipci, pc-card based architectures seem to have problems), and
->> we did simple tests on the integrated board of a Linksys WRT54GL, so
->> we are quite sure it runs on 4306, 4318 and 4320 cards. We did all  
->> the
->> works on kernel 2.6.27-rc5-wl.
->>
->> The firmware along with the instructions to build it from the  
->> assembly
->> code using the tools developed by the b43 community can be found here
->>
->> 	http://www.ing.unibs.it/openfwwf
->>
->> In the firmware website you can find more information about the fw
->> algorithm, its interaction with Broadcom hardware and other
->> information that we discovered as we were writing it.
->>
->> We would like to underline that this work would have not been  
->> possible
->> without the instruments already developed by the b43 community
->> (assembler/disassembler), hardware specifications (sipsolution's
->> website), the opensource test firmware written by Michael Buesch and
->> useful talks with those guys (b43 developers), which we deeply
->> acknowledge. As we used several definition files written by Michael
->> for its firmware and we have prepared a source tar file that includes
->> them, we kindly ask Michael if this could be a problem.
->>
->> Finally we stress that this is a TEST firmware and some stuff needs  
->> to
->> be fixed (e.g. RTS/CTS and QoS), we have been using it as a starting
->> point to implement other MAC algorithms for research purposes: if
->> someone is interested in this kind of work and would like to share
->> ideas also on research topics, please let us know.
->>
->> Cheers,
->> Francesco Gringoli
->> Lorenzo Nava
->> _______________________________________________
->> Bcm43xx-dev mailing list
->> Bcm43xx-dev@lists.berlios.de
->> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
->>
->>
->> -------------------------------------------------------
->>
->
->
->
-> -- 
-> Greetings, Michael.
+Based on the documentation from the EEPROM for all devices I read that its recommended
+that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
+windows registry be used.
 
--------
+Based on tests for the devices with only one band, do are you seeing an actual regulatory
+domain in the EEPROM?
 
-Francesco Gringoli, PhD - Assistant Professor
-Dept. of Electrical Engineering for Automation
-University of Brescia
-via Branze, 38
-25123 Brescia
-ITALY
+To deal with the issue of having two separate EEPROM values for a regulatory domain
+and since the documentation indicates to not rely on it I would advise to allow users
+to be compliant by selecting the country they are in. wpa_supplicant has support for
+selecting country now, and so does iw. Eventually I see Network Manager letting users
+select the country. But you guys are the maintainers and developers so you will know
+better.
 
-Ph:  ++39.030.3715843
-FAX: ++39.030.380014
-WWW: http://www.ing.unibs.it/~gringoli
-
-
-
-
+  Luis
