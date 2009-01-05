@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:2300 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248AbZASSxB (ORCPT
+Received: from one.firstfloor.org ([213.235.205.2]:35794 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750967AbZAENSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 13:53:01 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so224539ugf.37
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 10:52:59 -0800 (PST)
-Message-ID: <4974CC08.2060402@gmail.com> (sfid-20090119_195309_486731_BEA171B2)
-Date: Mon, 19 Jan 2009 19:52:56 +0100
-From: Artur Skawina <art.08.09@gmail.com>
-MIME-Version: 1.0
-CC: Christian Lamparter <chunkeey@web.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-References: <494698AF.4020204@gmail.com> <497105D1.5040906@gmail.com> <4973BAC6.5020502@gmail.com> <200901190126.58392.chunkeey@web.de> <4974C32D.4030802@gmail.com>
-In-Reply-To: <4974C32D.4030802@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
+	Mon, 5 Jan 2009 08:18:37 -0500
+Date: Mon, 5 Jan 2009 14:32:28 +0100
+From: Andi Kleen <andi@firstfloor.org>
+To: David Miller <davem@davemloft.net>
+Cc: andi@firstfloor.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless stack
+Message-ID: <20090105133228.GP496@one.firstfloor.org> (sfid-20090105_141842_206969_06F597E2)
+References: <20090104174339.GX496@one.firstfloor.org> <1231090388.3296.17.camel@johannes> <20090104184136.GY496@one.firstfloor.org> <20090104.224916.253586382.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090104.224916.253586382.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Here's an interesting sequence:
-> 
-> 1) a TX urb is submitted.
-> 2) p54u_rx_cb() => p54_rx_frame_sent(), which does kfree_skb( the_skb_in_(1) ).
-> 3) p54u_tx_cb() for (1) is called with the same, now freed, skb. kaboom.
-> 
-> IOW the skb is freed before the usb completion runs.
-> 
-> Somehow i don't think this is the reason for the corruption, but it certainly
-> seems to be responsible for some, if not all, of the crashes/panics.
+> At a minimum you need to add a skb->sk == NULL warn-on and abort path
+> here, otherwise we will corrupt socket accounting and just explode
+> somewhere else.  Adding this patch as-is will just introduce a new
 
-Hmm, if it happens for beacons, it's probably also happening for other frames,
-which are not freed, but given to ieee80211_tx_status_irqsafe() and that could
-explain the corruption. Will verify, but probably not before tomorrow.
+I ran the patch for a few days now and nothing exploded, no messages.
+I can add a skb->sk check and see if it triggers.
 
-artur
+> There are cases where the Tx path of the wireless loops back packets
+> back to the Rx path, and in such cases we certainly could see sockets
+> attached to the SKB.
+> 
+> And Johannes is right,
+
+He keeps talking about cases like monitoring sockets that don't
+apply, which makes me somewhat suspicious of his analysis.
+
+> absolutely cannot modify ->truesize blindly.  You can't change the
+> truesize value if a socket is attached.
+
+But pskb_expand_head modifies the size so obviously 
+truesize needs to change too. So you're saying pskb_expand_head() 
+is illegal when there might be a socket attached? Somehow
+I suspect a lot of the pskb_expand_head() callers are failing
+that requirement.
+
+Ok I guess we could call skb_orphan() unconditionally.
+
+Or if you guys have a better patch I can test.
+
+-Andi
+
+-- 
+ak@linux.intel.com
