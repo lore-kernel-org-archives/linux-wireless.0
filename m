@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23108.mail.ird.yahoo.com ([217.146.189.48]:37979 "HELO
-	web23108.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750870AbZAAGGl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2009 01:06:41 -0500
-Date: Thu, 1 Jan 2009 06:06:38 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-In-Reply-To: <495BC8F9.4040203@lwfinger.net>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:51549 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754846AbZAEOnu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 09:43:50 -0500
+Received: by bwz14 with SMTP id 14so22656016bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 06:43:46 -0800 (PST)
+To: "Tomas Winkler" <tomasw@gmail.com>
+Subject: Re: iwlwifi - rfkill only works if the interface is up
+Date: Mon, 5 Jan 2009 15:43:21 +0100
+Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com,
+	"reinette chatre" <reinette.chatre@intel.com>
+References: <200812011311.17346.helmut.schaa@gmail.com> <200812011604.05700.helmut.schaa@gmail.com> <1ba2fa240812010943p4cc1617asbe66d090ee8f4aa0@mail.gmail.com>
+In-Reply-To: <1ba2fa240812010943p4cc1617asbe66d090ee8f4aa0@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <584629.91849.qm@web23108.mail.ird.yahoo.com> (sfid-20090101_070654_810938_FBEEEBC0)
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901051543.22355.helmut.schaa@gmail.com> (sfid-20090105_154353_159682_9D66CC75)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Wed, 31/12/08, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-<snipped>
-> Thanks for testing. I have some ideas on how to improve the
-> suspend/resume, but they will require some changes in the
-> structure. I
-> will also try to determine why my system fails at STR so I
-> can test
-> both flavors.
+Am Montag, 1. Dezember 2008 schrieb Tomas Winkler:
+> >> In 3495  rfkill interrupt is not available and rfkill state is
+> >> delivered only when firmware is loaded, therefore this is not
+> >> possible to bring device down and also expect rfill switch event.
+> >
+> > Would it be possible to poll CSR_GP_CNTRL for that information on iwl3945?
+> 
+> Not sure, need to run and check
 
-I had a crash STR, after restoring my SUSPEND_MODULES workaround , so it is possible that the new addition actually stop the module getting unloaded. In any case, I suggest testing STR/STD while leaving a ping to the router running, just to be sure that the suspend/resume code does the right thing.
+JFYI, I've just checked that:
+It is possible to poll CSR_GP_CNTRL without the firmware begin loaded.
+Hence the 3945 could also report the killswitch state to userspace while
+being "down" by polling (instead of listening to interrupts like 4965).
 
-Also since Alan Stern is now CC'ed, can I ask the in-tree skeleton usb driver code updated to reflect the recent PM-related changes? There seems to be quite some changes between 2.6.26 and 2.6.27 .
-
-Cheers,
-Hin-Tak 
-
-
-      
+Helmut
