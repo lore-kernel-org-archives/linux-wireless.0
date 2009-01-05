@@ -1,91 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:37751 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754244AbZAVWtD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 17:49:03 -0500
-Subject: patch p54usb-fix-traffic-stalls-packet-drop.patch added to 2.6.28-stable tree
-To: chunkeey@web.de, art.08.09@gmail.com, gregkh@suse.de,
-	Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	rjw@sisk.pl
-Cc: <stable@kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@suse.de>
-Date: Thu, 22 Jan 2009 14:47:40 -0800
-In-Reply-To: <200901202311.11854.chunkeey@web.de>
-Message-Id: <20090122224902.3E4E948815@coco.kroah.org> (sfid-20090122_234908_754471_43C8A3D3)
+Received: from mail.atheros.com ([12.36.123.2]:20946 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752688AbZAEJig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2009 04:38:36 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 01:38:35 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH] mac80211: Handle power constraint level advertised in 11d+h beacon
+Date: Mon, 5 Jan 2009 15:06:05 +0530
+Message-ID: <1231148165-10529-1-git-send-email-vasanth@atheros.com> (sfid-20090105_103849_565950_8A6A9F2D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch uses power constraint level while determining the maximum
+transmit power, there by it makes sure that any power mitigation
+requirement for the channel in the current regulatory domain is met.
 
-This is a note to let you know that we have just queued up the patch titled
-
-    Subject: p54usb: fix traffic stalls / packet drop
-
-to the 2.6.28-stable tree.  Its filename is
-
-    p54usb-fix-traffic-stalls-packet-drop.patch
-
-A git repo of this tree can be found at 
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-
->From chunkeey@web.de  Thu Jan 22 14:30:12 2009
-From: Christian Lamparter <chunkeey@web.de>
-Date: Tue, 20 Jan 2009 23:11:11 +0100
-Subject: p54usb: fix traffic stalls / packet drop
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, Greg KH gr <gregkh@suse.de>, Artur Skawina <art.08.09@gmail.com>
-Cc: "Larry Finger" <Larry.Finger@lwfinger.net>, "Linux wireless" <linux-wireless@vger.kernel.org>
-Message-ID: <200901202311.11854.chunkeey@web.de>
-Content-Disposition: inline
-
-From: Christian Lamparter <chunkeey@web.de>
-
-commit 00627f229c9807e4cb825a7ce36b886e2adf2229 upstream.
-
-All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
-Else, the firmware could freeze, or simply drop the frame.
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/p54/p54usb.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ include/net/mac80211.h     |    2 ++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/main.c        |   10 ++++++++--
+ net/mac80211/mlme.c        |    9 +++++++++
+ net/mac80211/spectmgmt.c   |   21 +++++++++++++++++++++
+ 5 files changed, 43 insertions(+), 2 deletions(-)
 
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -215,6 +215,8 @@ static void p54u_tx_3887(struct ieee8021
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), data, len,
- 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
-+	addr_urb->transfer_flags |= URB_ZERO_PACKET;
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 153a8d1..a1126d3 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -549,6 +549,7 @@ enum ieee80211_conf_changed {
+  * @flags: configuration flags defined above
+  * @power_level: requested transmit power (in dBm)
+  * @user_power_level: User configured transmit power (in dBm)
++ * @power_constr_level: Power constraint level advertised in 11h beacon (in dBm)
+  * @channel: the channel to tune to
+  * @ht: the HT configuration for the device
+  * @long_frame_max_tx_count: Maximum number of transmissions for a "long" frame
+@@ -563,6 +564,7 @@ struct ieee80211_conf {
+ 	u32 flags;
+ 	int power_level;
+ 	int user_power_level;
++	int power_constr_level;
  
- 	usb_submit_urb(addr_urb, GFP_ATOMIC);
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
-@@ -252,6 +254,7 @@ static void p54u_tx_lm87(struct ieee8021
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr,
- 		len + sizeof(*hdr), free_on_tx ? p54u_tx_free_cb : p54u_tx_cb,
- 		dev);
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
+ 	u16 listen_interval;
+ 	bool radio_enabled;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 117718b..1abe96e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -964,6 +964,9 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+ 				       size_t len);
++void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
++				 u16 capab_info, u8 *pwr_constr_elem,
++				 u8 pwr_constr_elem_len);
  
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
+ /* utility functions/constants */
+ extern void *mac80211_wiphy_privid; /* for wiphy privid */
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 8831e87..66108f6 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -224,10 +224,16 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ 		changed |= IEEE80211_CONF_CHANGE_CHANNEL;
+ 	}
+ 
+-	if (!local->hw.conf.user_power_level)
++	if (local->sw_scanning)
+ 		power = chan->max_power;
+ 	else
+-		power = min(chan->max_power, local->hw.conf.user_power_level);
++		power = local->hw.conf.power_constr_level ?
++			(chan->max_power - local->hw.conf.power_constr_level) :
++			chan->max_power;
++
++	if (local->hw.conf.user_power_level)
++		power = min(power, local->hw.conf.user_power_level);
++
+ 	if (local->hw.conf.power_level != power) {
+ 		changed |= IEEE80211_CONF_CHANGE_POWER;
+ 		local->hw.conf.power_level = power;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e317c6d..0292955 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -911,6 +911,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	local->oper_channel_type = NL80211_CHAN_NO_HT;
+ 	config_changed |= IEEE80211_CONF_CHANGE_HT;
+ 
++	local->hw.conf.power_constr_level = 0;
++
+ 	del_timer_sync(&local->dynamic_ps_timer);
+ 	cancel_work_sync(&local->dynamic_ps_enable_work);
+ 
+@@ -1839,6 +1841,13 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		 * for the BSSID we are associated to */
+ 		regulatory_hint_11d(local->hw.wiphy,
+ 			elems.country_elem, elems.country_elem_len);
++
++		/* TODO: IBSS also needs this */
++		if (elems.pwr_constr_elem)
++			ieee80211_handle_pwr_constr(sdata,
++				le16_to_cpu(mgmt->u.probe_resp.capab_info),
++				elems.pwr_constr_elem,
++				elems.pwr_constr_elem_len);
+ 	}
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index f72bad6..f4b72d7 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -84,3 +84,24 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 			mgmt->sa, mgmt->bssid,
+ 			mgmt->u.action.u.measurement.dialog_token);
  }
-@@ -294,11 +297,13 @@ static void p54u_tx_net2280(struct ieee8
- 	usb_fill_bulk_urb(int_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DEV), reg, sizeof(*reg),
- 		p54u_tx_free_cb, dev);
-+	int_urb->transfer_flags |= URB_ZERO_PACKET;
- 	usb_submit_urb(int_urb, GFP_ATOMIC);
- 
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr, len + sizeof(*hdr),
- 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
- }
- 
++
++void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
++				 u16 capab_info, u8 *pwr_constr_elem,
++				 u8 pwr_constr_elem_len)
++{
++	struct ieee80211_conf *conf = &sdata->local->hw.conf;
++
++	if (!(capab_info & WLAN_CAPABILITY_SPECTRUM_MGMT))
++		return;
++
++	/* Power constraint IE length should be 1 octet */
++	if (pwr_constr_elem_len != 1)
++		return;
++
++	if ((*pwr_constr_elem <= conf->channel->max_power) &&
++	    (*pwr_constr_elem != conf->power_constr_level)) {
++		conf->power_constr_level = *pwr_constr_elem;
++		ieee80211_hw_config(sdata->local, 0);
++	}
++}
++
+-- 
+1.5.5.1
 
-
-Patches currently in stable-queue which might be from chunkeey@web.de are
-
-queue-2.6.28/p54usb-fix-traffic-stalls-packet-drop.patch
