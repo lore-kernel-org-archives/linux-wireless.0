@@ -1,46 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:62805 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758914AbZAOSTs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48570 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554AbZAEIfd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 13:19:48 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so525626ywe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 10:19:47 -0800 (PST)
-Message-ID: <43e72e890901151019r41cf1b3cv7deeca7a2a283a79@mail.gmail.com> (sfid-20090115_191953_228586_D4D31207)
-Date: Thu, 15 Jan 2009 10:19:46 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: tony@linx.net
-Subject: Re: wireless-regdb updated 2009-01-15 (was Re: wireless-regdb updated 2009-01-14)
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Helmut Schaa" <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <496F7A5E.5070008@linx.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20090114162250.GC3854@tuxdriver.com>
-	 <200901151011.23147.helmut.schaa@gmail.com>
-	 <20090115134928.GA3241@tuxdriver.com>
-	 <1232031893.5839.0.camel@johannes>
-	 <43e72e890901150954t4bc9a390x43a30f287b609173@mail.gmail.com>
-	 <43e72e890901151000y4dda530aw96e76f68b72c3fd4@mail.gmail.com>
-	 <496F7A5E.5070008@linx.net>
+	Mon, 5 Jan 2009 03:35:33 -0500
+Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless
+	stack
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linville@tuxdriver.com, davem <davem@davemloft.net>
+In-Reply-To: <20090104184136.GY496@one.firstfloor.org>
+References: <20090104151819.GA6590@basil.nowhere.org>
+	 <1231085150.3296.3.camel@johannes>
+	 <20090104162826.GT496@one.firstfloor.org>
+	 <1231087288.3296.15.camel@johannes>
+	 <20090104174339.GX496@one.firstfloor.org>
+	 <1231090388.3296.17.camel@johannes>
+	 <20090104184136.GY496@one.firstfloor.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XG+m6QfDIuW39io5uPJL"
+Date: Mon, 05 Jan 2009 09:36:14 +0100
+Message-Id: <1231144574.3286.15.camel@johannes> (sfid-20090105_093536_719135_CEC5C885)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2009 at 10:03 AM, Tony Vroon <tony@linx.net> wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
->
-> On Thu, Jan 15, 2009 at 9:54 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> I'll set CRDA to pull this latest file upon building too by
->> default.
->
-> I'd be pleased if that wasn't the default for make all. We explicitly
-> separate fetching sources and compiling/installing. (And sources are
-> hashed to confirm integrity)
-> Otherwise I'd have to patch that out of the Makefile each time.
 
-Yeah I won't do it, thanks.
+--=-XG+m6QfDIuW39io5uPJL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Sun, 2009-01-04 at 19:41 +0100, Andi Kleen wrote:
+
+> I think most adjustments are too small to be noticed. Typically
+> they are just for a few bytes in the header. truesize
+> is already larger, so it can tolerate some slag.
+
+This statement is incompatible with your patch when you think about the
+exact definition of truesize and the (unconditional!) adjustments your
+patch makes.
+
+> I also only see it occasionally (maybe 5-10 times/day) when
+> the wireless stack appends a lot of data.
+
+Except the data it appends should generally be of the same or very
+similar size under unchanging conditions, so that doesn't make a lot of
+sense either.
+
+> My proposal would be to include this patch for 2.6.28/2.6.29
+> and investigate fixing pskb_expand_head for 2.6.30.
+
+I disagree, obviously. I knew there was some truesize corruption, and I
+think you for tracing down where it occurs. I'll investigate a proper
+fix when I get around to that, meanwhile I don't think the problem is
+awfully urgent since we've had this going on for quite a while and, if
+any, it probably only affects/corrupts the raw monitor sockets.
+
+johannes
+
+--=-XG+m6QfDIuW39io5uPJL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJYcZ7AAoJEKVg1VMiehFYmHMP/RhvtkeYWZgv/mctgmTsxrbN
+GaFyHsExlrB/2JvpHJRCZy61jmHRG9b3YWfO8ZI9W4mR9a0WO3/8cT2YGp2H3+6Y
+upO+V9N8KUTcuqtvRFnYW0jcEmyCL7PqE8haYAklYVYwarbhGt9llugznqJlLtql
+o2j+aLRVSSvjs11M2KhDGcUTeQtZ9Xw6nygJSAs2KMf3pFwIgdmC8uFh/4Mrt8C7
+wFb//nJyBzmA/GYdesOk44/dJUwoLiUCueN9hqflSAEmRgUU3aQJBSZp4dqZhsBx
+fsM0OXOl4KWgjMSQmb5KS/NBMGh0DkEUV9WZawAK3EnSv+c/6orQluJ+78/FdgwU
+Ov3ASZV3QxTGWOmWcQ7JlzPOXW8LRxtRaYS9Aq31hGyymKdpBNBrFp1TKsPczGuz
+G51m23McWRRIn0bcWKTzHzhGBc1XZbco60nLlFuTwC5tsLAdv9hj9IJcZNVs5ufQ
+d1cyeTswDTAUPEPWn+2Tkg3+KxEE6FEel2MZnD38vagqLiIwipvr/4ENkGc4WkT7
+BiwcKooBmQwzqp7Las1v5PIJvShB5mFjdXd6sYminauZAEonHzmqH4gj0Uj/40KZ
+TJuRwGTlJZFeq+shbEKYhuWw5zsfKQ2hdSO7idY48xIaNp2gNU4yUaXAceT0VcCi
+pBN1Y3c7D/UTco7Zab9a
+=GmMd
+-----END PGP SIGNATURE-----
+
+--=-XG+m6QfDIuW39io5uPJL--
+
