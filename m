@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44727 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756577AbZATXyU (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:65190 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750964AbZAEA3h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 18:54:20 -0500
-Date: Tue, 20 Jan 2009 18:56:26 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Greg KH <gregkh@suse.de>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Artur Skawina <art.08.09@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Linux wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH -stable] p54usb: fix traffic stalls / packet drop
-Message-ID: <20090120235626.GA3094@tuxdriver.com> (sfid-20090121_005425_606285_F64DB95D)
-References: <KTnguC9mFUC.A.VNB.TJRdJB@chimera> <cX2gZ6Cy9nC.A.vUD.KKRdJB@chimera> <200901202311.11854.chunkeey@web.de> <20090120223957.GA6088@suse.de>
+	Sun, 4 Jan 2009 19:29:37 -0500
+Message-ID: <49615465.4090604@lwfinger.net> (sfid-20090105_012942_040993_A170F12E)
+Date: Sun, 04 Jan 2009 18:29:25 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090120223957.GA6088@suse.de>
+To: Andi Kleen <andi@firstfloor.org>
+CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: rate instability in wireless stack
+References: <20090104164649.GV496@one.firstfloor.org> <200901041736.47650.mb@bu3sch.de> <20090104174123.GW496@one.firstfloor.org>
+In-Reply-To: <20090104174123.GW496@one.firstfloor.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 02:39:57PM -0800, Greg KH wrote:
-> On Tue, Jan 20, 2009 at 11:11:11PM +0100, Christian Lamparter wrote:
-> > All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
-> > Else, the firmware could freeze, or simply drop the frame.
-> > 
-> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> > Cc: stable <stable@kernel.org>
-> > ---
-> > Attached is the patch is for the stable series only.
-> > Bugzilla reference: http://bugzilla.kernel.org/show_bug.cgi?id=12260
-> > (wireless-testing needs a different one)
+Andi,
+
+Andi Kleen wrote:
 > 
-> What do you mean, this is for 2.6.28-stable or 2.6.27-stable only, and
-> not 2.6.29?  Why?
+> Anyways with PID i get between 1Mbit/s and 5.5Mbit/s, most of the
+> time 1Mbit/s. So it's not really much better.
 
-At least part of that patch is already in 2.6.29.  I think Christian
-may have combined another patch into the -stable version, one that
-he posted today for -rc inclusion.
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Does this patch help? Recently mac80211 changed from expecting tries
+to retries, and I don't think rtl8180 got changed.
+
+Larry
+
+===============
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
+@@ -188,7 +188,7 @@ static void rtl8180_handle_tx(struct iee
+ 		    (flags & RTL818X_TX_DESC_FLAG_TX_OK))
+ 			info->flags |= IEEE80211_TX_STAT_ACK;
+
+-		info->status.rates[0].count = (flags & 0xFF) + 1;
++		info->status.rates[0].count = (flags & 0xFF);
+
+ 		ieee80211_tx_status_irqsafe(dev, skb);
+ 		if (ring->entries - skb_queue_len(&ring->queue) == 2)
+
+-------
+
+
