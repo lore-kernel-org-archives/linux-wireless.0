@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54102 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753458AbZANQar (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:50378 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752390AbZAEJtw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 11:30:47 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1LN8dh-0006kK-G8
-	for linux-wireless@vger.kernel.org; Wed, 14 Jan 2009 11:30:45 -0500
-Received: from linville-t43.local (linville-t43.local [127.0.0.1])
-	by linville-t43.local (8.14.2/8.14.2) with ESMTP id n0EGMpiS008445
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2009 11:22:51 -0500
-Received: (from linville@localhost)
-	by linville-t43.local (8.14.2/8.14.2/Submit) id n0EGMpi7008444
-	for linux-wireless@vger.kernel.org; Wed, 14 Jan 2009 11:22:51 -0500
-Date: Wed, 14 Jan 2009 11:22:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-regdb updated 2009-01-14
-Message-ID: <20090114162250.GC3854@tuxdriver.com> (sfid-20090114_173051_259617_B95BD0EF)
+	Mon, 5 Jan 2009 04:49:52 -0500
+Date: Mon, 5 Jan 2009 11:49:40 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alina Friedrichsen <x-alina@gmx.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Invalid BSSID handling?
+Message-ID: <20090105094940.GA28304@jm.kir.nu> (sfid-20090105_104955_477694_693274AC)
+References: <20090103000028.302750@gmx.net> <1231023437.4629.1.camel@johannes>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231023437.4629.1.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FYI...wireless-regdb.git has been updated with the recent patches
-from Michael, Luis, and Pavel.  In particular the Makefile is much
-better than I had previously left it. :-)
+On Sat, Jan 03, 2009 at 11:57:17PM +0100, Johannes Berg wrote:
+> On Sat, 2009-01-03 at 01:00 +0100, Alina Friedrichsen wrote:
+> > The madwifi accepts all BSSIDs except 00:00:00:00:00:00 and
+> > ff:ff:ff:ff:ff:ff. Should mac80211 allow all BSSIDs like madwifi, or
+> > should it better treat multicast MAC addresses as 00:00:00:00:00:00,
+> > or an other handling?
+> 
+> Even though the standard asks you to use locally administered addresses
+> for IBSS, I don't see this as a requirement since they just want to
+> guarantee uniqueness and if you're assigning manually you rely on
+> different methods for uniqueness.
 
-It is about time (or past time) that we start pushing distributions to
-pick-up CRDA and either their own version of wireless-regdb or just
-pull the version I am publishing.  I think our wireless regulatory
-compliance mechanisms are a lot more flexible than what other systems
-are offering -- it is time to get it into the hands of users and get
-userland apps (e.g. NetworkManager) to take advantage of it.
+For locally administered bit, I would agree, but I would still avoid
+using any multicast address as the BSSID. It could cause undesired
+behavior for RX filtering.
 
-Thanks,
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jouni Malinen                                            PGP id EFC895FA
