@@ -1,154 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ganymede.vroon.org ([195.66.242.11]:45256 "EHLO
-	ganymede.vroon.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754295AbZAXQFI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 11:05:08 -0500
-Subject: Re: [ANN] crda v1.0.0
-From: Tony Vroon <tony@vroon.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Diego E. 'Flameeyes'" =?ISO-8859-1?Q?Petten=F2?=
-	<flameeyes@gmail.com>
-In-Reply-To: <20090123235725.GC30761@tesla>
-References: <20090123235725.GC30761@tesla>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lFnlcx+m5AlXC48tCJUk"
-Date: Sat, 24 Jan 2009 15:54:31 +0000
-Message-Id: <1232812471.19657.5.camel@localhost> (sfid-20090124_170512_821580_36CAD8D7)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:17945 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751072AbZAFUrs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 15:47:48 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 12:47:48 -0800
+Date: Tue, 6 Jan 2009 12:47:44 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rt2400-devel@lists.sourceforge.net"
+	<rt2400-devel@lists.sourceforge.net>
+Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
+Message-ID: <20090106204744.GB21980@tesla> (sfid-20090106_214753_823231_3AC97F47)
+References: <200901042021.10904.IvDoorn@gmail.com> <20090105200809.GH6834@tesla> <49627BCB.4020200@kpnplanet.nl> <200901052321.46422.IvDoorn@gmail.com> <20090105234546.GK6834@tesla> <4963BFEF.2090006@kpnplanet.nl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4963BFEF.2090006@kpnplanet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jan 06, 2009 at 12:32:47PM -0800, Gertjan van Wingerde wrote:
+> On 01/06/09 00:45, Luis R. Rodriguez wrote:
+> > On Mon, Jan 05, 2009 at 02:21:46PM -0800, Ivo van Doorn wrote:
+> >
+> >> On Monday 05 January 2009, Gertjan van Wingerde wrote:
+> >>
+> >>> On 01/05/09 21:08, Luis R. Rodriguez wrote:
+> >>>
+> >>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
+> >>>
+> >> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
+> >> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
+> >>
+> >
+> > Based on the documentation from the EEPROM for all devices I read that its recommended
+> > that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
+> > windows registry be used.
+> >
+> > Based on tests for the devices with only one band, do are you seeing an actual regulatory
+> > domain in the EEPROM?
+> >
+> > To deal with the issue of having two separate EEPROM values for a regulatory domain
+> > and since the documentation indicates to not rely on it I would advise to allow users
+> > to be compliant by selecting the country they are in. wpa_supplicant has support for
+> > selecting country now, and so does iw. Eventually I see Network Manager letting users
+> > select the country. But you guys are the maintainers and developers so you will know
+> > better.
+> >
+> 
+> My tests indicate that there are devices out there that have this
+> information set in the EEPROM. Based on tests with my own patch, and my
+> own devices, I have been able to determine the following:
+> 
+> 1. rt2400pci --> don't know, don't own a rt2400pci device.
+> 2. rt2500pci --> don't know, don't own a rt2500pci device anymore.
+> 3. rt2500usb --> my e-tech device (not sure which type; the device
+> doesn't say it) has an actual domain set for the bg band.
+> 4. rt61pci --> my Sitecom WL151 device does not contain actual domain
+> information.
+> 5. rt73usb --> my Sitecom WL113-002 device does contain actual domain
+> information, and the codes for the bg band and a band are the same.
+> 6. rt2800pci --> my Sitecom WL182 device does contain actual domain
+> information, and the codes for the bg band and a band are the same.
+> 7. rt2800usb --> my Sitecom WL181 device does contain actual domain
+> information, and the codes for the bg band and a band are the same.
+> 
+> So, there are devices out there that do contain "meaningful" regulatory
+> information.
+> 
+> Luis, the definitions for the a-band EEPROM codes only give the channel
+> numbers, it doesn't indicate a real "country". Is there any way we can
+> check whether these sets of channels are actually consistent with the
+> regulations of specific countries?
 
---=-lFnlcx+m5AlXC48tCJUk
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+You can help contribute to the wireless-regdb and check that the valid
+channels apply there.
 
-On Fri, 2009-01-23 at 15:57 -0800, Luis R. Rodriguez wrote:
-> The crda code has been intact for a while now, no main issues
-> have been found or reported. As such this wraps up its 1.0.0
-> release, and I doubt it will be changed for a while.
-
-Thanks Luis.
-Two questions:
-1) Could you please drop that v from the tarball name. It's new, and it
-means extra work for me. The old naming was perfect for automatic
-handling.
-2) You say the only changes were manpages, example directories and a
-spec file, but it introduces a new build failure for me:
->>> Unpacking source...
->>> Unpacking crda-v1.0.0.tar.bz2
-to /var/tmp/portage/net-wireless/crda-1.0.0/work
->>> Source unpacked in /var/tmp/portage/net-wireless/crda-1.0.0/work
->>> Compiling source
-in /var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0 ...
-make -j8 CC=3Dx86_64-pc-linux-gnu-gcc
-  GEN  keys-gcrypt.c
-  CC   crda.o
-  CC   intersect.o
-  CC   print-regdom.o
-  CC   regdbdump.o
-  CC   reglib.o
-  LD   regdbdump
-  LD   intersect
-  CHK  /usr/lib/crda/regulatory.bin
-  LD   crda
-crda.o: In function `nl_socket_alloc':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:28:
-undefined reference to `nl_handle_alloc'
-crda.o: In function `nl80211_init':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:64:
-undefined reference to `genl_connect'
-crda.o: In function `__genl_ctrl_alloc_cache':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:38:
-undefined reference to `genl_ctrl_alloc_cache'
-crda.o: In function `nl80211_init':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:76:
-undefined reference to `genl_ctrl_search_by_name'
-crda.o: In function `main':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:252:
-undefined reference to `nlmsg_alloc'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:259:
-undefined reference to `genl_family_get_id'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:259:
-undefined reference to `genlmsg_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:270:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:320:
-undefined reference to `nlmsg_free'
-crda.o: In function `nl80211_cleanup':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:94:
-undefined reference to `genl_family_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:95:
-undefined reference to `nl_cache_free'
-crda.o: In function `nl_socket_free':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:33:
-undefined reference to `nl_handle_destroy'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:33:
-undefined reference to `nl_handle_destroy'
-crda.o: In function `main':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:272:
-undefined reference to `nla_nest_start'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:280:
-undefined reference to `nla_nest_start'
-crda.o: In function `put_reg_rule':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:130:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:131:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:132:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:133:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:134:
-undefined reference to `nla_put'
-crda.o:/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:135=
-: more undefined references to `nla_put' follow
-crda.o: In function `main':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:288:
-undefined reference to `nla_nest_end'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:291:
-undefined reference to `nla_nest_end'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:293:
-undefined reference to `nl_cb_alloc'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:297:
-undefined reference to `nl_send_auto_complete'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:304:
-undefined reference to `nl_cb_set'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:305:
-undefined reference to `nl_cb_set'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:306:
-undefined reference to `nl_cb_err'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:318:
-undefined reference to `nl_cb_put'
-crda.o: In function `nl80211_init':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:86:
-undefined reference to `nl_cache_free'
-crda.o: In function `main':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:309:
-undefined reference to `nl_wait_for_ack'
-collect2: ld returned 1 exit status
-make: *** [crda] Error 1
-
-Is it possible that you inadvertently broke the ability to build in
-parallel? This is make -j8 on a dual quad-core Opteron, so there are 8
-cores ready to handle jobs. I've seen it break compilations before.
-I have CC'd Diego on the e-mail, just in case it's an easy fix.
-
-Regards,
-Tony V.
-
---=-lFnlcx+m5AlXC48tCJUk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkl7ObcACgkQp5vW4rUFj5ozAQCdE4vUfk49HixkBjdTPYsnURwb
-uuwAn20zyiWrI4U7zEPByPGXsUth53g+
-=c1oq
------END PGP SIGNATURE-----
-
---=-lFnlcx+m5AlXC48tCJUk--
-
+  Luis
