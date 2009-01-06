@@ -1,70 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:43903 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757324AbZAWQEP (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:45481 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728AbZAFCSX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 11:04:15 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so980281eye.37
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 08:04:14 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 2/3] rt2x00: Restrict firmware file lengths
-Date: Fri, 23 Jan 2009 17:03:24 +0100
-Cc: rt2400-devel@lists.sourceforge.net,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200901231703.06609.IvDoorn@gmail.com>
-In-Reply-To: <200901231703.06609.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901231703.24523.IvDoorn@gmail.com> (sfid-20090123_170420_150203_EC879207)
+	Mon, 5 Jan 2009 21:18:23 -0500
+Subject: Re: iwlagn: Microcode SW error detected.  Restarting 0x2000000
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1231204420.11581.24.camel@debian>
+References: <1231197048.4858.9.camel@californication>
+	 <1231204420.11581.24.camel@debian>
+Content-Type: text/plain
+Date: Tue, 06 Jan 2009 03:18:18 +0100
+Message-Id: <1231208299.13304.9.camel@californication> (sfid-20090106_031825_977596_7408C441)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add extra security to the drivers for firmware loading,
-check the firmware file length before uploading it to
-the hardware. Incorrect lengths might indicate a firmware
-upgrade (which is not yet supported by the driver) or
-otherwise incorrect firmware.
+Hi Yi,
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.c |    5 +++++
- drivers/net/wireless/rt2x00/rt73usb.c |    5 +++++
- 2 files changed, 10 insertions(+), 0 deletions(-)
+> > iwlagn 0000:03:00.0: PCI INT A disabled
+> > iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27k
+> > iwlagn: Copyright(c) 2003-2008 Intel Corporation
+> > vendor=8086 device=2841
+> > iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> > iwlagn 0000:03:00.0: setting latency timer to 64
+> > iwlagn: Detected Intel Wireless WiFi Link 4965AGN REV=0x4
+> > iwlagn: Tunable channels: 11 802.11bg, 13 802.11a channels
+> > wmaster0 (iwlagn): not using net_device_ops yet
+> > phy1: Selected rate control algorithm 'iwl-agn-rs'
+> > wlan0 (iwlagn): not using net_device_ops yet
+> > vendor=8086 device=2841
+> > iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> > iwlagn 0000:03:00.0: firmware: requesting iwlwifi-4965-2.ucode
+> > iwlagn loaded firmware version 228.57.2.23
+> > ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> > iwlagn: Microcode SW error detected.  Restarting 0x2000000.
+> > 
+> > It renders the wireless device useless and module unload/reload
+> > doesn't
+> > help either. Is this the AMT issue again or something totally
+> > different with the latest ucode?
+> 
+> Not sure. Marcel, please load iwlagn with debug=0x43fff. We can then
+> track the uCode failure.
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 3a7ecca..d81a8de 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1199,6 +1199,11 @@ static int rt61pci_load_firmware(struct rt2x00_dev *rt2x00dev, const void *data,
- 	int i;
- 	u32 reg;
- 
-+	if (len != 8192) {
-+		ERROR(rt2x00dev, "Invalid firmware file length (len=%zu)\n", len);
-+		return -ENOENT;
-+	}
-+
- 	/*
- 	 * Wait for stable hardware.
- 	 */
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 60c43c1..f854551 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1085,6 +1085,11 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev, const void *data,
- 	int status;
- 	u32 reg;
- 
-+	if (len != 2048) {
-+		ERROR(rt2x00dev, "Invalid firmware file length (len=%zu)\n", len);
-+		return -ENOENT;
-+	}
-+
- 	/*
- 	 * Wait for stable hardware.
- 	 */
--- 
-1.5.6.1
+too late. I need that wireless card working and so I rebooted. I try to
+remember it for next time. Also I have seen this one for the first time
+and I have literally no clue on how I got the card into that mode.
+
+Regards
+
+Marcel
+
 
