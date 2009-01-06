@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:18742 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753422AbZAWBHh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 20:07:37 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2355496fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 17:07:34 -0800 (PST)
-Subject: [BUG] latest wireless-testing (compat-wireless) doesn't work with
- iwl3945
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
+Received: from mail.atheros.com ([12.36.123.2]:63606 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751848AbZAFPWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 10:22:06 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 07:22:06 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [RFC 0/4] cfg80211: add support multiple regulatory_hint()s
+Date: Tue, 6 Jan 2009 07:21:58 -0800
+Message-ID: <1231255322-13100-1-git-send-email-lrodriguez@atheros.com> (sfid-20090106_162211_669769_40F5ADE2)
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Fri, 23 Jan 2009 03:07:30 +0200
-Message-Id: <1232672850.7913.6.camel@maxim-laptop> (sfid-20090123_020741_280830_B868CB38)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I currently use 2.6.28, and don't yet want to switch to 2.6.29-rc, so I
-installed vanilla 2.6.28, and compat-wireless of today on top of it
-only options I changed, were I enabled rfkill in iwl3945 and crda, which
-I did install.
+This series adds support for multiple regulatory_hint()s. We support
+this by allowing each driver to claim its own regulatory domain and stick
+to it. Should a country IE be received and processed that is followed
+instead. If three devices are present with different, two with separate
+regulatory_hint()s the first two will adhere to their own regulatory domain,
+the third one will adhere to the intersection of the first two.
 
-device doesn't associate with my AP (even in open mode)
+With this patches applied we can then do away with our own interntal tables
+for regulatory control in ath9k.
 
-nothing suspicions in logs, just says it did associate and then it
-dropped.
+I've only started to test this, so would like comments on the general approach
+taken here.
 
-btw, in last versions of iwwifi.git I noticed that hardware encryption
-doesn't work anymore, so I enabled swcrypto, now nether it works
+Luis R. Rodriguez (4):
+  cfg80211: add a wiphy specific regulatory domain cache
+  cfg80211: call reg_notifier() once
+  cfg80211: make handle_band() and handle_channel() wiphy specific
+  cfg80211: allow multiple driver regulatory_hints()
 
-Best regards,
-	Maxim Levitsky
+ include/net/wireless.h |    6 +++
+ net/wireless/reg.c     |   92 ++++++++++++++++++++++++++++++++++++++----------
+ 2 files changed, 79 insertions(+), 19 deletions(-)
 
