@@ -1,58 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:48819 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758280AbZACNoy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40759 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758862AbZAFWXg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jan 2009 08:44:54 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
+	Tue, 6 Jan 2009 17:23:36 -0500
+Subject: [PATCH] mac80211: remove user_power_level from driver API
+From: Johannes Berg <johannes@sipsolutions.net>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [RFC 00/12] ath9k: add preliminary support for the AR913x SoCs
-Date: Sat,  3 Jan 2009 14:44:10 +0100
-Message-Id: <1230990262-22923-1-git-send-email-juhosg@openwrt.org> (sfid-20090103_144500_578753_FD5CE589)
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Content-Type: text/plain
+Date: Tue, 06 Jan 2009 23:23:56 +0100
+Message-Id: <1231280636.3767.13.camel@johannes> (sfid-20090106_232357_777600_5D48D334)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set introduces preliminary support for the Atheros' AR9130/AR9132
-SoCs built-in WMAC device. Tested with compat-wireless-2008-12-29 on 2.6.2{7,8} 
-kernels.
+I missed this during review of "mac80211: Fix tx power setting",
+the user_power_level shouldn't be available to the driver but
+rather be an internal value used to calculate the value for the
+driver.
 
-12 patches will follow as replies:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+John, my PS patches from earlier today won't apply cleanly without this,
+so please put this one in first to and don't try to fix them up.
 
-Gabor Juhos (12):
-      ath9k: introduce bus specific DMA routines
-      ath9k: introduce bus specific register access routines
-      ath9k: introduce bus specific cache size routine
-      ath9k: introduce bus specific cleanup routine
-      ath9k: move PCI code into separate file
-      ath9k: convert to struct device
-      ath9k: introduce platform driver for AHB bus support
-      ath9k: get EEPROM contents from platform data on AHB bus
-      ath9k: enable support for AR9100
-      ath9k: remove (u16) casts from rtc register access
-      ath9k: fix ar5416Addac_9100 values
-      ath9k: fix null pointer dereference in ani monitor code
+ include/net/mac80211.h     |    2 --
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/main.c        |    4 ++--
+ net/mac80211/wext.c        |    2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/ath9k/Makefile   |    2 
- drivers/net/wireless/ath9k/ahb.c      |  285 +++++++++++++++++++++++++
- drivers/net/wireless/ath9k/ani.c      |    6 -
- drivers/net/wireless/ath9k/ath9k.h    |    4 
- drivers/net/wireless/ath9k/beacon.c   |   29 +--
- drivers/net/wireless/ath9k/core.h     |  137 ++++++++++++
- drivers/net/wireless/ath9k/eeprom.c   |   51 ----
- drivers/net/wireless/ath9k/hw.c       |   17 +
- drivers/net/wireless/ath9k/initvals.h |    2 
- drivers/net/wireless/ath9k/main.c     |  315 +++------------------------
- drivers/net/wireless/ath9k/pci.c      |  381 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/recv.c     |   30 +--
- drivers/net/wireless/ath9k/xmit.c     |   12 -
- include/linux/ath9k_platform.h        |   28 ++
- 14 files changed, 913 insertions(+), 386 deletions(-)
- create mode 100644 drivers/net/wireless/ath9k/ahb.c
- create mode 100644 drivers/net/wireless/ath9k/pci.c
- create mode 100644 include/linux/ath9k_platform.h
+--- wireless-testing.orig/include/net/mac80211.h	2009-01-06 23:19:19.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-01-06 23:19:42.000000000 +0100
+@@ -547,7 +547,6 @@ enum ieee80211_conf_changed {
+  * @listen_interval: listen interval in units of beacon interval
+  * @flags: configuration flags defined above
+  * @power_level: requested transmit power (in dBm)
+- * @user_power_level: User configured transmit power (in dBm)
+  * @channel: the channel to tune to
+  * @ht: the HT configuration for the device
+  * @long_frame_max_tx_count: Maximum number of transmissions for a "long" frame
+@@ -561,7 +560,6 @@ struct ieee80211_conf {
+ 	int beacon_int;
+ 	u32 flags;
+ 	int power_level;
+-	int user_power_level;
+ 
+ 	u16 listen_interval;
+ 	bool radio_enabled;
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-06 23:19:48.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-06 23:20:25.000000000 +0100
+@@ -702,6 +702,8 @@ struct ieee80211_local {
+ 	struct work_struct dynamic_ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
+ 
++	int user_power_level; /* in dBm */
++
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct local_debugfsdentries {
+ 		struct dentry *rcdir;
+--- wireless-testing.orig/net/mac80211/main.c	2009-01-06 23:20:30.000000000 +0100
++++ wireless-testing/net/mac80211/main.c	2009-01-06 23:20:45.000000000 +0100
+@@ -214,10 +214,10 @@ int ieee80211_hw_config(struct ieee80211
+ 		changed |= IEEE80211_CONF_CHANGE_CHANNEL;
+ 	}
+ 
+-	if (!local->hw.conf.user_power_level)
++	if (!local->user_power_level)
+ 		power = chan->max_power;
+ 	else
+-		power = min(chan->max_power, local->hw.conf.user_power_level);
++		power = min(chan->max_power, local->user_power_level);
+ 	if (local->hw.conf.power_level != power) {
+ 		changed |= IEEE80211_CONF_CHANGE_POWER;
+ 		local->hw.conf.power_level = power;
+--- wireless-testing.orig/net/mac80211/wext.c	2009-01-06 23:20:51.000000000 +0100
++++ wireless-testing/net/mac80211/wext.c	2009-01-06 23:20:55.000000000 +0100
+@@ -549,7 +549,7 @@ static int ieee80211_ioctl_siwtxpower(st
+ 	else /* Automatic power level setting */
+ 		new_power_level = chan->max_power;
+ 
+-	local->hw.conf.user_power_level = new_power_level;
++	local->user_power_level = new_power_level;
+ 	if (local->hw.conf.power_level != new_power_level)
+ 		reconf_flags |= IEEE80211_CONF_CHANGE_POWER;
+ 
+
+
