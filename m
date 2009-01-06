@@ -1,88 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36815 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966AbZAPUhz (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:41324 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738AbZAFTgS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 15:37:55 -0500
-Subject: Re: [PATCH 03/13] cfg80211: add wiphy_apply_custom_regulatory()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090116163646.GG29609@tesla>
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
-	 <1232097659.3854.20.camel@johannes>  <20090116163646.GG29609@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8xVh2pmbKwHytR0p8xFi"
-Date: Fri, 16 Jan 2009 21:37:50 +0100
-Message-Id: <1232138270.3745.11.camel@johannes> (sfid-20090116_213759_885123_EA2DF750)
+	Tue, 6 Jan 2009 14:36:18 -0500
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+In-Reply-To: <1231267979.14565.34.camel@localhost.localdomain>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <1229336057.4471.9.camel@johannes.berg>
+	 <1229354532.12163.24.camel@localhost.localdomain>
+	 <20081217174244.M36761@bobcopeland.com>
+	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
+	 <1230102989.16960.14.camel@californication>
+	 <1231260306.14565.21.camel@localhost.localdomain>
+	 <1231261937.5246.16.camel@californication>
+	 <1231267979.14565.34.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 06 Jan 2009 20:36:15 +0100
+Message-Id: <1231270575.14901.6.camel@californication> (sfid-20090106_203622_844997_B8F175D5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dan,
 
---=-8xVh2pmbKwHytR0p8xFi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> > > > > > > Running pm-suspend from pm-utils directly also triggers the problem, 
+> > > > > > > so that would seem to excuse gnome-power-manager at least.
+> > > > > > 
+> > > > > > What's the status of this? Should I look into things a bit?
+> > > > > 
+> > > > > Well, I guess I should have noticed this a lot earlier, but anyway the 
+> > > > > problem was pm-utils on Fedora 10:
+> > > > > 
+> > > > > /usr/lib/pm-utils/sleep.d/55NetworkManager:
+> > > > > 
+> > > > >     suspend_nm()
+> > > > >     {
+> > > > >         # Tell NetworkManager to shut down networking
+> > > > >         dbus-send --system                         \
+> > > > >             --dest=org.freedesktop.NetworkManager  \
+> > > > >             /org/freedesktop/NetworkManager        \
+> > > > >             org.freedesktop.NetworkManager.sleep
+> > > > >     }
+> > > > > 
+> > > > > I really don't think this is necessary (g-p-m will also do it if you 
+> > > > > set the proper gconf setting.)
+> > > > 
+> > > > this should not be needed at all. I have systems running wpa_supplicant
+> > > > and not any of the pm-utils scripts messing with it. During suspend and
+> > > > later resume it indicates normally just only a new handshake with the AP
+> > > > or a disconnect if the AP got out of range.
+> > > > 
+> > > > I think Network Manager is perfectly capable of handling state changes
+> > > > from wpa_supplicant. I really do think that this hack only exists of
+> > > > some broken drivers from really old kernels or for the 0.6 version of
+> > > > Network Manager. Remember that Ubuntu's suspend/resume solution used to
+> > > > be to unload all networking drivers on suspend.
+> > > 
+> > > You still want to tell NM to go to sleep so it doesn't see the
+> > > disconnection from the supplicant (triggered by the driver because it
+> > > was going to sleep), and thus try to reconnect, or try a different AP.
+> > > Ideally NM would simply listen for signals from some power service such
+> > > that we wouldn't have to have this hack, but there isn't a global power
+> > > service yet on the system bus.
+> > > 
+> > > Furthermore, it's nice to know if we've gone to sleep or not so that we
+> > > can do some optimizations on wakeup to find APs and reconnect faster.
+> > 
+> > actually the fastest way to re-connect is to just let wpa_supplicant do
+> > it and then you don't even have to go through DHCP again if the lease
+> > time is still valid. This works great if the AP is still in range.
+> > 
+> > What is your downside with the letting wpa_supplicant send you a
+> > disconnect when the AP is out of range after resume?
+> 
+> Depends on the driver what the resume behavior is with the supplicant.
+> But you want to alert *something* that the system is now going to sleep,
+> so that it can clean up state before doing so.
+> 
+> The problem is that you have absolutely no idea how long the sleep will
+> be.  It's at least 2 minutes with S2D, because that's how long it takes
+> to write your state out to disk.  It's less with S2R obviously, but when
+> you resume, there's no guarantee that you'll be in the same place.  You
+> cannot assume that you will be.
+> 
+> If you keep trying to reconnect to the same AP, many times you simply
+> won't be there and you'll spend the 10 or 20 seconds reconnecting to an
+> AP miles away, time that could have been spent scanning for the AP
+> that's *really* where you are.  Many people I know don't often suspend
+> at the same location they resume, thus trying to reconnect hurts
+> reconnection latency.
+> 
+> The ideal way to handle all this is to be *aware* of suspend/resume in
+> the supplicant (or NM), and on resume, do a quick probe-scan or two to
+> find out if the old AP is still around.  If it's not, do a full scan to
+> find all APs, and then pick the best one, which is probably not the one
+> you were associated with before.  Then you actually start the auth/assoc
+> process with an AP you know exists.
+> 
+> So my point is that *something* needs to be aware of the suspend/resume
+> at a userlevel, whether it's NM or the supplicant doesn't really matter
+> as long as you can do what I describe above on resume.
 
-On Fri, 2009-01-16 at 08:36 -0800, Luis R. Rodriguez wrote:
+since mac80211 gets suspend/resume support, I think it is the best that
+we signal this to wpa_supplicant. In that case it can do the hard work
+here. Either it re-connects to the last AP or signals a disconnected
+state or trigger scanning.
 
-> > Also, I don't think calling the notifier is
-> > appropriate since the driver just called this function.
->=20
-> Calling the notifier is why we want REGDOM_SET_BY_PROBE. We also technica=
-lly
-> do not need to call the notifier unless we want to allow for tricks like =
-the
-> one I am using in ath9k to condense the regulatory domains to 5 based on =
-frequency
-> and to let a helper sort out the flags. Without this I believe we'd be fo=
-rced to
-> use 12 full blown regds.
+Having the suspend scripts to tell NM to disconnect is just not a good
+solution and especially in the embedded world this is a broken design
+concept.
 
-I just don't see why the driver couldn't be like this:
+Regards
 
-static void helper(...) {...}
+Marcel
 
-static void ath9k_reg_notifier(...) {
-	helper(...)
-}
-
-static void ath9k_something(...) {
-	apply_custom_regulatory(..)
-	helper(..)
-}
-
-so cfg80211 doesn't call back into it but it does it itself. It's
-usually deadlock prone if some called code calls back into the caller
-code.
-
-johannes
-
---=-8xVh2pmbKwHytR0p8xFi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJcPAcAAoJEKVg1VMiehFYgA4P+gPs02SE6/XYi2sjQSGhMHPw
-cP6vgM/c4EQqWPMvU76Nr6SjaKiCiy7XTu58ierS3YLLV0fBmjtlDu+O4u55Tp1U
-pyEUjsz8mgoYLzQoBki4RqqJj5VqWkNUW1cTvqVIuZs7cTA4IXbbtocN28Q9h9zR
-5pn+Ztc5jDKaSyTsw3uOdKXa1YbI+Kum/8OPHKOMM+S5u0bT8JPfPH4fFrEn29II
-El+wqf+UVB5Xr8YthA4RaHxS2uuquNtzwYIN6oJOXrJ6KFq4mL0vvM4zH07G5Bpl
-w3D6JIFIEub9l/ymWg44cE3kdT6Om8RCCwNxPd1hw3aZ/BdDaWCvyKHuOpuBL2U4
-zKxwu4CBehm9x+xr8DO+3hP5D3J7vWPmRQs2HHfgRvdhe8PYKO3r12zdUVb/RlDU
-MBjDqijVjp89WCLb2EHbsuBHl23x0Gv/t0peLEJXPI8TPNvbKXifphm6H8Y0Mg2B
-NgUCYyGxX8OpxaS4FZZsYWe9qx4M5o3iKjejXNdRMQ3uzqgoBO6FAd69jm2N2luZ
-7mKc3UlsoElJJi7n731jv0eBh6Jto05gGKV9X4UbdgIrzpGgkquCwzURf/lJsjo2
-+bELwywlGiRcsBFtCB/3v+oS47fcd4t5shcodIP293H47BkYAUzVTkwG/7l8GW13
-I7M6T0ihU4IeuTDAGCcC
-=rU8x
------END PGP SIGNATURE-----
-
---=-8xVh2pmbKwHytR0p8xFi--
 
