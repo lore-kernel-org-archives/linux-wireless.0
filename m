@@ -1,120 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flock1.newmail.ru ([82.204.219.207]:39180 "HELO
-	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758562AbZAQPWx (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:51378 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064AbZAFRFR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 10:22:53 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: [PATCH] [2.6.29-rc2] orinoco: use GFP_ATOMIC in kmalloc in orinoco_ioctl_set_genie
-Date: Sat, 17 Jan 2009 18:22:43 +0300
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3586920.UGEu2y5suV";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200901171822.45476.arvidjaar@mail.ru> (sfid-20090117_162259_362460_ADC269D5)
+	Tue, 6 Jan 2009 12:05:17 -0500
+Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	mohamed salim abbas <mabbaswireless@gmail.com>,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	yi.zhu@intel.com, reinette.chatre@intel.com
+In-Reply-To: <1231260557.14565.24.camel@localhost.localdomain>
+References: <200812161307.07193.helmut.schaa@gmail.com>
+	 <20081217202943.GB3516@tuxdriver.com>
+	 <1229549485.26406.12.camel@localhost.localdomain>
+	 <200901051556.13403.helmut.schaa@gmail.com>
+	 <1231257584.14565.16.camel@localhost.localdomain>
+	 <1231260067.5246.7.camel@californication>
+	 <1231260557.14565.24.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 06 Jan 2009 18:05:15 +0100
+Message-Id: <1231261515.5246.9.camel@californication> (sfid-20090106_180523_292191_6DEA6522)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3586920.UGEu2y5suV
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Hi Dan,
 
-Subject: [PATCH] [2.6.29-rc2] orinoco: use GFP_ATOMIC in kmalloc in=20
-orinoco_ioctl_set_genie
-=46rom: Andrey Borzenkov <arvidjaar@mail.ru>
+> > > > > > > the interrupt moved from pci_probe to mac_start for power saving. once
+> > > > > > > the interface is up the driver will read some register to know rfkill
+> > > > > > > status, if the interface in down the driver don't care to keep track
+> > > > > > > of rfkill switch. I wonder what the purpose of changing this behavior?
+> > > > > > 
+> > > > > > I think it still isn't settled in everyone's minds whether rfkill
+> > > > > > only matters if the device is "up" or if it is something that
+> > > > > > e.g. NetworkManager might want to monitor as a clue to bring the
+> > > > > > device up or down in response to rfkill changes.
+> > > > > 
+> > > > > The question is:  does NetworkManager just always keep the device 'up'
+> > > > > irregardless of whether it's supposed to be associated with anything
+> > > > > just so we can get rfkill events?
+> > > > 
+> > > > Another question is: is it worth to keep the interface up (and thus the
+> > > > firmware loaded) even if the transceiver is killed by a hardware switch?
+> > > > Wouldn't that consume even more power than just listening to rfkill
+> > > > interrupts (or polling the killswitch state in case of 3945) with no
+> > > > firmware loaded.
+> > > > 
+> > > > > I guess I'll treat rfkill the same as ethernet carrier.  If we cannot
+> > > > > rely on rfkill notifications when the device is down (we already can't,
+> > > > > since iwl3945 simply can't do it) 
+> > > > 
+> > > > I've just checked the 3945 and it is indeed possible to poll the killswitch
+> > > > state even if the firmware is not loaded. Hence 3945 could also expose
+> > > > the killswitch state while the interface is down (of course the driver would
+> > > > have to poll for that information).
+> > > 
+> > > Even polling the state once every 2 - 4 seconds would be perfectly
+> > > acceptable latency for me.  It doesn't have to be instantaneous, so we
+> > > can certainly trade off latency for fewer wakeups.  Care to propose a
+> > > patch?  it'll make a lot of people happy :)
+> > 
+> > if we can't get the rfkill state change via interrupt, then the kernel
+> > driver has to poll for it (in the no-firmware cases). Or we have to
+> > remove the rfkill support completely. Everything else is just not
+> > acceptable. It is _not_ the responsibility of the userspace to make this
+> > work with quirks.
+> 
+> Right; I meant polling in *iwl3945* every 2 - 4 seconds or so, not from
+> userspace.  Userspace should still listen for the rfkill uevents (not
+> that HAL does yet, but...)
 
-kmalloc is called with interrupt disabled and may not sleep. This
-fixes this BUG:
+you actually could use libudev for it directly. That is what I am doing
+right now. Works pretty smooth.
 
-[   56.923623] BUG: sleeping function called from invalid context at=20
-/home/bor/src/linux-git/mm/slub.c:1599
-[   56.923644] in_atomic(): 0, irqs_disabled(): 1, pid: 3031, name:=20
-wpa_supplicant
-[   56.923656] 2 locks held by wpa_supplicant/3031:
-[   56.923662]  #0:  (rtnl_mutex){--..}, at: [<c02abd1f>] rtnl_lock+0xf/0x20
-[   56.923703]  #1:  (&priv->lock){++..}, at: [<dfc840c2>]=20
-orinoco_ioctl_set_genie+0x52/0x130 [orinoco]
-[   56.923782] irq event stamp: 910
-[   56.923788] hardirqs last  enabled at (909): [<c01957db>]=20
-__kmalloc+0x7b/0x140
-[   56.923820] hardirqs last disabled at (910): [<c0309419>]=20
-_spin_lock_irqsave+0x19/0x80
-[   56.923847] softirqs last  enabled at (880): [<c0124f54>]=20
-__do_softirq+0xc4/0x110
-[   56.923865] softirqs last disabled at (871): [<c01049ae>]=20
-do_softirq+0x8e/0xe0
-[   56.923895] Pid: 3031, comm: wpa_supplicant Not tainted 2.6.29-rc2-1avb=
-=20
-#1
-[   56.923905] Call Trace:
-[   56.923919]  [<c01049ae>] ? do_softirq+0x8e/0xe0
-[   56.923941]  [<c011ad12>] __might_sleep+0xd2/0x100
-[   56.923952]  [<c0195837>] __kmalloc+0xd7/0x140
-[   56.923963]  [<c030946a>] ? _spin_lock_irqsave+0x6a/0x80
-[   56.923981]  [<dfc840e9>] ? orinoco_ioctl_set_genie+0x79/0x130 [orinoco]
-[   56.923999]  [<dfc840c2>] ? orinoco_ioctl_set_genie+0x52/0x130 [orinoco]
-[   56.924017]  [<dfc840e9>] orinoco_ioctl_set_genie+0x79/0x130 [orinoco]
-[   56.924036]  [<c0209325>] ? copy_from_user+0x35/0x130
-[   56.924061]  [<c02ffd96>] ioctl_standard_call+0x196/0x380
-[   56.924085]  [<c029f945>] ? __dev_get_by_name+0x85/0xb0
-[   56.924096]  [<c02ff88f>] wext_handle_ioctl+0x14f/0x230
-[   56.924113]  [<dfc84070>] ? orinoco_ioctl_set_genie+0x0/0x130 [orinoco]
-[   56.924132]  [<c02a3da5>] dev_ioctl+0x495/0x570
-[   56.924155]  [<c0293e05>] ? sys_sendto+0xa5/0xd0
-[   56.924171]  [<c0142fe8>] ? mark_held_locks+0x48/0x90
-[   56.924183]  [<c0292880>] ? sock_ioctl+0x0/0x280
-[   56.924193]  [<c029297d>] sock_ioctl+0xfd/0x280
-[   56.924203]  [<c0292880>] ? sock_ioctl+0x0/0x280
-[   56.924235]  [<c01a51d0>] vfs_ioctl+0x20/0x80
-[   56.924246]  [<c01a53e2>] do_vfs_ioctl+0x72/0x570
-[   56.924257]  [<c0293e62>] ? sys_send+0x32/0x40
-[   56.924268]  [<c02947c0>] ? sys_socketcall+0x1d0/0x2a0
-[   56.924280]  [<c010339f>] ? sysenter_exit+0xf/0x16
-[   56.924292]  [<c01a5919>] sys_ioctl+0x39/0x70
-[   56.924302]  [<c0103371>] sysenter_do_call+0x12/0x31
+Regards
 
-Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
-
-=2D--
-
-Why did not we see it before?
-
- drivers/net/wireless/orinoco/orinoco.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Marcel
 
 
-diff --git a/drivers/net/wireless/orinoco/orinoco.c=20
-b/drivers/net/wireless/orinoco/orinoco.c
-index c3bb85e..779ab10 100644
-=2D-- a/drivers/net/wireless/orinoco/orinoco.c
-+++ b/drivers/net/wireless/orinoco/orinoco.c
-@@ -5079,7 +5079,7 @@ static int orinoco_ioctl_set_genie(struct net_device=
-=20
-*dev,
- 		return -EBUSY;
-=20
- 	if (wrqu->data.length) {
-=2D		buf =3D kmalloc(wrqu->data.length, GFP_KERNEL);
-+		buf =3D kmalloc(wrqu->data.length, GFP_ATOMIC);
- 		if (buf =3D=3D NULL) {
- 			err =3D -ENOMEM;
- 			goto out;
-
-
---nextPart3586920.UGEu2y5suV
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAklx98UACgkQR6LMutpd94xM+QCeOAwYsZpTGPnEvfH8RoE1dOdL
-x/QAnAwIESwhuqaa0/h1a94v1X3XR/6k
-=5wgW
------END PGP SIGNATURE-----
-
---nextPart3586920.UGEu2y5suV--
