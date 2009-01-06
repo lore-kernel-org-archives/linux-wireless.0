@@ -1,144 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57292 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751582AbZA1CvC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 21:51:02 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 18:51:02 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <Jouni.Malinen@atheros.com>,
-	<johannes@sipsolutions.net>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] mac80211: do not TX injected frames when not allowed
-Date: Tue, 27 Jan 2009 18:50:19 -0800
-Message-ID: <1233111019-7827-1-git-send-email-lrodriguez@atheros.com> (sfid-20090128_035108_787374_9C4F8217)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:41866 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751684AbZAFROg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 12:14:36 -0500
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+In-Reply-To: <20090106165434.M2397@bobcopeland.com>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <1229336057.4471.9.camel@johannes.berg>
+	 <1229354532.12163.24.camel@localhost.localdomain>
+	 <20081217174244.M36761@bobcopeland.com>
+	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
+	 <1230102989.16960.14.camel@californication>
+	 <1231260306.14565.21.camel@localhost.localdomain>
+	 <20090106165434.M2397@bobcopeland.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ULU59/xlbIEy0Fz7eH9F"
+Date: Tue, 06 Jan 2009 18:14:41 +0100
+Message-Id: <1231262082.3654.5.camel@johannes> (sfid-20090106_181450_618513_D33561CE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Monitor mode is able to TX by using injected frames. We should
-not allow injected frames to be sent unless allowed by regulatory
-rules. Since AP mode uses a monitor interfaces to transmit
-management frames we have to take care to not break AP mode as
-well while resolving this. We deal with this by allowing compliant
-APs solutions to inform mac80211 if their monitor interface is
-intended to be used for an AP by setting a cfg80211 flag for the
-monitor interface. hostapd, for example, currently does its own
-checks to ensure AP mode is not used on channels which require radar
-detection. Once such solutions are available it can can enable this
-flag.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+--=-ULU59/xlbIEy0Fz7eH9F
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Note that we also add the passive scan flag now as well. Passive scan
-is used for STAs on DFS channels *and* when on world regulatory domains where
-you are your location is unknown yet. Once a location is known by finding
-a local AP though you should be good to TX, but the found regulatory domain
-would indicate this to us.
+On Tue, 2009-01-06 at 12:07 -0500, Bob Copeland wrote:
+> On Tue, 06 Jan 2009 11:45:06 -0500, Dan Williams wrote
+> > You still want to tell NM to go to sleep so it doesn't see the
+> > disconnection from the supplicant (triggered by the driver because it
+> > was going to sleep), and thus try to reconnect, or try a different AP.
+>=20
+> Well, I tried it without the hack and it works (connection stays up=20
+> over a short suspend period).  This is with the new mac80211 suspend
+> patches, where suspend/resume looks like this:
+>=20
+> suspend:
+>   suspend userspace (freezes NM)
+>   save bssid, keys etc
+>   if wlan0 up
+>      ifdown wlan0 (note NM is already frozen)
+>   power down hw
+>=20
+> resume:
+>   power up hw
+>   if wlan0 was up
+>      ifup wlan0
+>   reload config, bssid, ...
+>   resume userspace
+>=20
+> However, _with_ the current procedure of telling NM to go to sleep, it
+> tries to reconnect after resume because NM takes care of downing the
+> interfaces.  As a result mac80211 never gets the chance to save the
+> state of the running interfaces.
 
- include/linux/nl80211.h |    3 +++
- include/net/cfg80211.h  |    4 ++++
- net/mac80211/tx.c       |   22 ++++++++++++++++++++++
- net/wireless/nl80211.c  |    1 +
- 4 files changed, 30 insertions(+), 0 deletions(-)
+You mean restore?
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 76aae3d..3357907 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -705,6 +705,8 @@ enum nl80211_reg_rule_flags {
-  * @NL80211_MNTR_FLAG_OTHER_BSS: disable BSSID filtering
-  * @NL80211_MNTR_FLAG_COOK_FRAMES: report frames after processing.
-  *	overrides all other flags.
-+ * @NL80211_MNTR_FLAG_AP_MGT: this monitor interface is used for AP mode
-+ * 	to be able to inject management frames.
-  *
-  * @__NL80211_MNTR_FLAG_AFTER_LAST: internal use
-  * @NL80211_MNTR_FLAG_MAX: highest possible monitor flag
-@@ -716,6 +718,7 @@ enum nl80211_mntr_flags {
- 	NL80211_MNTR_FLAG_CONTROL,
- 	NL80211_MNTR_FLAG_OTHER_BSS,
- 	NL80211_MNTR_FLAG_COOK_FRAMES,
-+	NL80211_MNTR_FLAG_AP_MGT,
- 
- 	/* keep last */
- 	__NL80211_MNTR_FLAG_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index dd1fd51..fe65c64 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -255,6 +255,9 @@ struct station_info {
-  * @MONITOR_FLAG_CONTROL: pass control frames
-  * @MONITOR_FLAG_OTHER_BSS: disable BSSID filtering
-  * @MONITOR_FLAG_COOK_FRAMES: report frames after processing
-+ * @MONITOR_FLAG_AP_MGT: informs us this monitor interface is
-+ *	used by a driver for AP mode to be able to inject management
-+ * 	frames.
-  */
- enum monitor_flags {
- 	MONITOR_FLAG_FCSFAIL		= 1<<NL80211_MNTR_FLAG_FCSFAIL,
-@@ -262,6 +265,7 @@ enum monitor_flags {
- 	MONITOR_FLAG_CONTROL		= 1<<NL80211_MNTR_FLAG_CONTROL,
- 	MONITOR_FLAG_OTHER_BSS		= 1<<NL80211_MNTR_FLAG_OTHER_BSS,
- 	MONITOR_FLAG_COOK_FRAMES	= 1<<NL80211_MNTR_FLAG_COOK_FRAMES,
-+	MONITOR_FLAG_AP_MGT		= 1<<NL80211_MNTR_FLAG_AP_MGT,
- };
- 
- /**
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7b013fb..f242cf4 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1432,11 +1432,33 @@ int ieee80211_master_start_xmit(struct sk_buff *skb, struct net_device *dev)
- int ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 				 struct net_device *dev)
- {
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_channel *chan = local->hw.conf.channel;
- 	struct ieee80211_radiotap_header *prthdr =
- 		(struct ieee80211_radiotap_header *)skb->data;
- 	u16 len_rthdr;
- 
-+	/*
-+	 * Frame injection is not allowed if beaconing is not allowed
-+	 * or if we need radar detection. Beaconing is usually not allowed when
-+	 * the mode or operation (Adhoc, AP, Mesh) does not support DFS.
-+	 * Passive scan is also used in world regulatory domains where
-+	 * your country is not known and as such it should be treated as
-+	 * NO TX unless the channel is explicitly allowed in which case
-+	 * your current regulatory domain would not have the passive scan
-+	 * flag.
-+	 *
-+	 * Since AP mode uses monitor interfaces to inject/TX management
-+	 * frames we make AP mode the exception to this rule as its
-+	 * implementation can deal with radar detection by itself.
-+	 */
-+	if (!(sdata->u.mntr_flags & MONITOR_FLAG_AP_MGT) &&
-+	   (chan->flags & (IEEE80211_CHAN_NO_IBSS |
-+	   IEEE80211_CHAN_RADAR |
-+	   IEEE80211_CHAN_PASSIVE_SCAN)))
-+		goto fail;
-+
- 	/* check for not even having the fixed radiotap header part */
- 	if (unlikely(skb->len < sizeof(struct ieee80211_radiotap_header)))
- 		goto fail; /* too short to be possibly valid */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e69da8d..3c6327d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -537,6 +537,7 @@ static const struct nla_policy mntr_flags_policy[NL80211_MNTR_FLAG_MAX + 1] = {
- 	[NL80211_MNTR_FLAG_CONTROL] = { .type = NLA_FLAG },
- 	[NL80211_MNTR_FLAG_OTHER_BSS] = { .type = NLA_FLAG },
- 	[NL80211_MNTR_FLAG_COOK_FRAMES] = { .type = NLA_FLAG },
-+	[NL80211_MNTR_FLAG_AP_MGT] = { .type = NLA_FLAG },
- };
- 
- static int parse_monitor_flags(struct nlattr *nla, u32 *mntrflags)
--- 
-1.6.1.rc3.51.g5832d
+Does that mean there's a race condition now, between userspace config
+and the resume stuff? Can't we fix that by taking the rtnl?
+
+johannes
+
+--=-ULU59/xlbIEy0Fz7eH9F
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJY5F/AAoJEKVg1VMiehFYrqkP/AgrDuLu5vX2Vonr5PjPvRiO
+FM4nB/r+v9/iu6YgNEHkX4NhQ6H37XRNTsUdFS4D/06Rm3VsyCssX9XLPVoZL0vZ
+PEv4mjGIXMTw4emPvKt5fGERUWy5NKzwaBWQ6IuZbGWFsisCg3enqB4250GsUCLr
+4UkQoODTuEJnpa0Y1Bjbapv11h56a+OLA15JhygJpyJxK/XTEUEFjtf62HBqB6++
+y1069CoDQogYz9Ky9VQ7F+0RZ2FJuPRTL70166mQ7M2Sdwi/ijEYXD1LpcSDkgXq
+Q04z7xi80yj/LQH0mDd+Pdq2sZlyqzhBF1g0qE1YLbRI71Zhm1BWkDwponwC+9Gv
+Hn0prTMY7yKFOqJ13j5ZMScu5/geITiqyWuxPrDd9AlqRhpY4hABccEy6tqlHlMe
+zqBGpYvRMhIcMXfTujPbiepRivOHpf5adPJY9Kelj15WhJxe0gawGhk0VYJyxSBv
+FyyvIcWEwSUaaNAPWtnKl1hBfJDOKeSJ3nkiPzln4qEwwnpMt7W8ju6HYO0j5FBd
+KSAxGYGZzyteO2BqqFNaJNuz4tuPzbpW063BneS0s3MMfRg5fGjl6id7gGGCvVEO
+lYB4pHlDClIAsxts3aQHNrHjxR/nLDknrFNb4DORXDqUYpy1rp4/2wa2XEZYxVhd
+GRMrzDI2B77wqp0pKWYM
+=DJVG
+-----END PGP SIGNATURE-----
+
+--=-ULU59/xlbIEy0Fz7eH9F--
 
