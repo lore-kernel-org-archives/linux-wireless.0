@@ -1,118 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19404 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754330AbZAMT6l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 14:58:41 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 11:58:41 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/12] cfg80211: export freq_reg_info()
-Date: Tue, 13 Jan 2009 11:57:51 -0800
-Message-ID: <1231876675-20518-9-git-send-email-lrodriguez@atheros.com> (sfid-20090113_205844_516159_90924491)
-In-Reply-To: <1231876675-20518-8-git-send-email-lrodriguez@atheros.com>
-References: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-2-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-3-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-4-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-5-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-6-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-7-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-8-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from senator.holtmann.net ([87.106.208.187]:58750 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009AbZAFRMT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 12:12:19 -0500
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+In-Reply-To: <1231260306.14565.21.camel@localhost.localdomain>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <1229336057.4471.9.camel@johannes.berg>
+	 <1229354532.12163.24.camel@localhost.localdomain>
+	 <20081217174244.M36761@bobcopeland.com>
+	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
+	 <1230102989.16960.14.camel@californication>
+	 <1231260306.14565.21.camel@localhost.localdomain>
 Content-Type: text/plain
+Date: Tue, 06 Jan 2009 18:12:17 +0100
+Message-Id: <1231261937.5246.16.camel@californication> (sfid-20090106_181223_380955_C1EABD2E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be used by drivers on the reg_notifier()
+Hi Dan,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/wireless.h |   24 ++++++++++++++++++++++++
- net/wireless/reg.c     |   24 ++----------------------
- 2 files changed, 26 insertions(+), 22 deletions(-)
+> > > > > Running pm-suspend from pm-utils directly also triggers the problem, 
+> > > > > so that would seem to excuse gnome-power-manager at least.
+> > > > 
+> > > > What's the status of this? Should I look into things a bit?
+> > > 
+> > > Well, I guess I should have noticed this a lot earlier, but anyway the 
+> > > problem was pm-utils on Fedora 10:
+> > > 
+> > > /usr/lib/pm-utils/sleep.d/55NetworkManager:
+> > > 
+> > >     suspend_nm()
+> > >     {
+> > >         # Tell NetworkManager to shut down networking
+> > >         dbus-send --system                         \
+> > >             --dest=org.freedesktop.NetworkManager  \
+> > >             /org/freedesktop/NetworkManager        \
+> > >             org.freedesktop.NetworkManager.sleep
+> > >     }
+> > > 
+> > > I really don't think this is necessary (g-p-m will also do it if you 
+> > > set the proper gconf setting.)
+> > 
+> > this should not be needed at all. I have systems running wpa_supplicant
+> > and not any of the pm-utils scripts messing with it. During suspend and
+> > later resume it indicates normally just only a new handshake with the AP
+> > or a disconnect if the AP got out of range.
+> > 
+> > I think Network Manager is perfectly capable of handling state changes
+> > from wpa_supplicant. I really do think that this hack only exists of
+> > some broken drivers from really old kernels or for the 0.6 version of
+> > Network Manager. Remember that Ubuntu's suspend/resume solution used to
+> > be to unload all networking drivers on suspend.
+> 
+> You still want to tell NM to go to sleep so it doesn't see the
+> disconnection from the supplicant (triggered by the driver because it
+> was going to sleep), and thus try to reconnect, or try a different AP.
+> Ideally NM would simply listen for signals from some power service such
+> that we wouldn't have to have this hack, but there isn't a global power
+> service yet on the system bus.
+> 
+> Furthermore, it's nice to know if we've gone to sleep or not so that we
+> can do some optimizations on wakeup to find APs and reconnect faster.
 
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 4fd40a2..5982b91 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -437,6 +437,30 @@ extern int regulatory_set_custom_rd(
-  */
- extern int regdom_intersect_wiphy_regd(struct wiphy *wiphy);
- 
-+/**
-+ * freq_reg_info - get regulatory information for the given frequency
-+ * @wiphy: the wiphy for which we want to process this rule for
-+ * @center_freq: Frequency in KHz for which we want regulatory information for
-+ * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
-+ * 	you can set this to 0. If this frequency is allowed we then set
-+ * 	this value to the maximum allowed bandwidth.
-+ * @reg_rule: the regulatory rule which we have for this frequency
-+ *
-+ * Use this function to get the regulatory rule for a specific frequency on
-+ * a given wireless device. If the device has a specific regulatory domain
-+ * it wants to follow we respect that unless a country IE has been received
-+ * and processed already.
-+ *
-+ * Returns 0 if it was able to find a valid regulatory rule which does
-+ * apply to the given center_freq otherwise it returns non-zero. It will
-+ * also return -ERANGE if we determine the given center_freq does not even have
-+ * a regulatory rule for a frequency range in the center_freq's band. See
-+ * freq_in_rule_band() for our current definition of a band -- this is purely
-+ * subjective and right now its 802.11 specific.
-+ */
-+extern int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
-+			 const struct ieee80211_reg_rule **reg_rule);
-+
- /* The wireless core regulatory domain */
- extern const struct ieee80211_regdomain *cfg80211_regdomain;
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ad38a9d..7bc1ae8 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -797,28 +797,7 @@ static int reg_follow_driver_regd(struct wiphy *wiphy)
- 	return false;
- }
- 
--/**
-- * freq_reg_info - get regulatory information for the given frequency
-- * @wiphy: the wiphy for which we want to process this rule for
-- * @center_freq: Frequency in KHz for which we want regulatory information for
-- * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
-- * 	you can set this to 0. If this frequency is allowed we then set
-- * 	this value to the maximum allowed bandwidth.
-- * @reg_rule: the regulatory rule which we have for this frequency
-- *
-- * Use this function to get the regulatory rule for a specific frequency on
-- * a given wireless device. If the device has a specific regulatory domain
-- * it wants to follow we respect that unless a country IE has been received
-- * and processed already.
-- *
-- * Returns 0 if it was able to find a valid regulatory rule which does
-- * apply to the given center_freq otherwise it returns non-zero. It will
-- * also return -ERANGE if we determine the given center_freq does not even have
-- * a regulatory rule for a frequency range in the center_freq's band. See
-- * freq_in_rule_band() for our current definition of a band -- this is purely
-- * subjective and right now its 802.11 specific.
-- */
--static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
-+int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
- 			 const struct ieee80211_reg_rule **reg_rule)
- {
- 	int i;
-@@ -863,6 +842,7 @@ static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
- 
- 	return !max_bandwidth;
- }
-+EXPORT_SYMBOL(freq_reg_info);
- 
- static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 			   unsigned int chan_idx)
--- 
-1.6.1.rc3.51.g5832d
+actually the fastest way to re-connect is to just let wpa_supplicant do
+it and then you don't even have to go through DHCP again if the lease
+time is still valid. This works great if the AP is still in range.
+
+What is your downside with the letting wpa_supplicant send you a
+disconnect when the AP is out of range after resume?
+
+Regards
+
+Marcel
+
 
