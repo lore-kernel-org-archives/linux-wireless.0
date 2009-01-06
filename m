@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:41743 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbZALI5r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 03:57:47 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so11242943wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2009 00:57:46 -0800 (PST)
-Message-ID: <8e92b4100901120057n4cea722fo1a78bcbc45341d00@mail.gmail.com> (sfid-20090112_095754_300747_FFCD5537)
-Date: Mon, 12 Jan 2009 14:27:46 +0530
-From: "Vivek Natarajan" <vivek.natraj@gmail.com>
-To: "Kalle Valo" <kalle.valo@iki.fi>
-Subject: Re: [RFC PATCH v1 2/2] mac80211: use ps-poll to request frames in power save mode
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20090111070353.3849.5303.stgit@tikku>
+Received: from mail.gmx.net ([213.165.64.20]:38534 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752210AbZAFUFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 15:05:08 -0500
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=iso-8859-1
+Date: Tue, 06 Jan 2009 21:05:05 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <43e72e890901061057g106dead2wad00d2664874152d@mail.gmail.com>
+Message-ID: <20090106200505.122540@gmx.net> (sfid-20090106_210514_052437_9205BFD8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20090111070148.3849.10799.stgit@tikku>
-	 <20090111070353.3849.5303.stgit@tikku>
+References: <20090106014135.302730@gmx.net> <1231247805.3503.13.camel@johannes>
+	 <20090106183543.241290@gmx.net> <1231267148.3654.15.camel@johannes>
+ <43e72e890901061057g106dead2wad00d2664874152d@mail.gmail.com>
+Subject: Re: [PATCH] Fixed BSSID step 1: Disallow to set multicast BSSID
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>, johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 11, 2009 at 12:33 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> When a directed tim bit is set, mac80211 currently disables power save
-> and sends a null frame to the AP. But if dynamic power save is
-> disabled, mac80211 will not enable power save again.
+Hi Luis!
 
-The patch I had sent earlier, 'mac80211: Reset the power save timer
-from master_start_xmit' (44378a8e64b9399...) addresses this issue.
-This enables mac80211 to start the dynamic ps timer after sending a
-null data frame. Hence when the specified time lapses, power save is
-enabled again.
+> Alina, check this guide out, it may help you to post your patches:
+>=20
+> http://wireless.kernel.org/en/developers/Documentation/git-guide
 
-Vivek.
+Okay, thanks!
+
+Regards
+Alina
+
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
