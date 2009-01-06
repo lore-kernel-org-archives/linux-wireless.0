@@ -1,49 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:41964 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752676AbZAWSwV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 13:52:21 -0500
-Subject: Re: integration of opensource firmware with b43 kernel driver
-From: Dan Williams <dcbw@redhat.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
-	Johannes Berg <johannes@sipsolutions.net>,
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34934
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751584AbZAFSma (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 13:42:30 -0500
+Date: Tue, 06 Jan 2009 10:42:31 -0800 (PST)
+Message-Id: <20090106.104231.217868582.davem@davemloft.net> (sfid-20090106_194245_472243_82D64168)
+To: shemminger@vyatta.com
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <200901231908.05835.mb@bu3sch.de>
-References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it>
-	 <497A05DC.4040101@lwfinger.net>  <200901231908.05835.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Fri, 23 Jan 2009 13:50:37 -0500
-Message-Id: <1232736637.2577.40.camel@localhost.localdomain> (sfid-20090123_195226_132301_6198EC8C)
+Subject: Re: [PATCH 3/8] wireless: convert wireless ioctl to net_device_ops
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090105201514.442703045@vyatta.com>
+References: <20090105201442.749889072@vyatta.com>
+	<20090105201514.442703045@vyatta.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-01-23 at 19:08 +0100, Michael Buesch wrote:
-> On Friday 23 January 2009 19:01:00 Larry Finger wrote:
-> > The driver can certainly be coded to look for the open-source firmware
-> > names before trying to load vendor firmware. That way there will not
-> > be any confusion.
-> 
-> I already posted that, but in case you missed it:
-> http://bu3sch.de/patches/wireless-testing/20081227-1821/patches/008-b43-probe-open-fw.patch
+From: Stephen Hemminger <shemminger@vyatta.com>
+Date: Mon, 05 Jan 2009 12:14:45 -0800
 
-Preferring the proprietary firmware over the open firmware (for now)
-seems like the best approach at this time.  Many people will be quite
-happy with the open firmware that we can actually ship in distros, and
-those that aren't can do the fwcutter stuff and get their own
-proprietary firmware.  If for some reason the open firmware isn't
-working, use fwcutter and get the proprietary firmware, which you would
-have had to do before anyway.  And those people with chips that aren't
-supported by the proprietary firmware yet still have to use the
-fwcutter, which they would have had to do anyway.  Win all around.
+> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-If in the future there's a set of chips that the open firmware is known
-to work exceptionally well on, it could be preferred over the
-proprietary firmware at that point.
-
-Dan
-
-
+Applied.
