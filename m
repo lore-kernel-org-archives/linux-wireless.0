@@ -1,52 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:48299 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753900AbZAQDj5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 22:39:57 -0500
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sat, 17 Jan 2009 04:39:55 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <20090110091659.GC1170@jm.kir.nu>
-Message-ID: <20090117033955.273880@gmx.net> (sfid-20090117_044004_278188_4AF6213D)
+Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:14309 "EHLO
+	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750926AbZAFUcM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 15:32:12 -0500
+Received: from notebook.wilsoft.nl ([192.168.4.4])
+	by linux.wilsoft.nl with esmtp (Exim 4.69)
+	(envelope-from <listsrv@wilsoft.nl>)
+	id 1LKIaq-0001Mr-Ky
+	for linux-wireless@vger.kernel.org; Tue, 06 Jan 2009 21:32:04 +0100
+From: "W. van den Akker" <listsrv@wilsoft.nl>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
+Date: Tue, 6 Jan 2009 21:32:04 +0100
+References: <200901011444.20333.listsrv@wilsoft.nl> <200901060857.41357.listsrv@wilsoft.nl> <200901061552.45729.listsrv@wilsoft.nl>
+In-Reply-To: <200901061552.45729.listsrv@wilsoft.nl>
 MIME-Version: 1.0
-References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu>
- <20090109205315.277310@gmx.net> <20090110091659.GC1170@jm.kir.nu>
-Subject: Re: [PATCH] Fixed BSSID (timesync)
-To: Jouni Malinen <j@w1.fi>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901062132.04403.listsrv@wilsoft.nl> (sfid-20090106_213215_912482_36235D3F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tuesday 06 January 2009 15:52:45 you wrote:
+> On Tuesday 06 January 2009, you wrote:
+> > On Monday 05 January 2009, you wrote:
+> > > On Thu, Jan 01, 2009 at 02:44:20PM +0100, W. van den Akker wrote:
+> > > > I have tested on the server  with the latest wireless-testing the
+> > > > past days (2.6.28-rc9-wl). The wireless-testing looks somewhat more
+> > > > stable then the compat-wireless.
+> > > >
+> > > > I have also installed the netconsole module to watch any kernel
+> > > > prints. After running hostapd (v0.6.6) from command line the AP is
+> > > > up-and-running. Then if I connect with the laptop (tested it with
+> > > > kernel .26 and .28 on the laptop) I get a connection and can start a
+> > > > browser en explore the internet. If I start a second session (Kmail
+> > > > or second browser) the
+> > > > server hangs within a minute. Leaving again no trace on the console,
+> > > > hostapd-log or netconsole.
+> > >
+> > > Just to make sure I understood this correctly.. Does this happen with
+> > > just a single association station (your laptop)? What are you referring
+> > > to with a "session"? Just another program using network (i.e., no new
+> > > wireless associations, etc.)? As far as the ath9k driver is concerned,
+> > > new applications (e.g., new TCP connection) should not really matter
+> > > much.. If you have IEEE 802.11n enabled, could you please run a test
+> > > with it disabled to make sure this is not related to frame aggregation?
+> > >
+> > > As far as getting any output from the system is concerned, the next
+> > > step could be to see if NMI watchdog would be able to provide any help.
+> > > Please take a look at Documentation/nmi_watchdog.txt in the kernel
+> > > source code and see if you could use that on the AP to get some output
+> > > when the system hangs (running without X on console to make sure you
+> > > see the output).
+> >
+> > Hi Jouni,
+> >
+> > Yes you understood correctly. Only a laptop, start a browser then start
+> > Kmail over the same wireless connection. Then it hangs. This is always
+> > reproducable. There are also other sorts or hangups (for example when
+> > starting hostapd, but that is not always reproducable when it happens).
+> >
+> > I will try today the watchdog-suggestion. Hope that it will provide some
+> > help.
+>
+> I have enabled the NMI_watchdog (see below)
+>           CPU0       CPU1
+>   0:     322372          0   IO-APIC-edge      timer
+>   1:         12          0   IO-APIC-edge      i8042
+>   4:        101          0   IO-APIC-edge      serial
+>   6:          3          0   IO-APIC-edge      floppy
+>   7:          0          0   IO-APIC-edge      parport0
+>   8:          2          0   IO-APIC-edge      rtc0
+>   9:          0          0   IO-APIC-fasteoi   acpi
+>  12:          4          0   IO-APIC-edge      i8042
+>  16:          0          0   IO-APIC-fasteoi   uhci_hcd:usb1
+>  17:       6282          0   IO-APIC-fasteoi   eth1
+>  18:     364152          0   IO-APIC-fasteoi   ata_piix, ata_piix, eth0
+>  19:          0          0   IO-APIC-fasteoi   uhci_hcd:usb2
+>  21:       1727          0   IO-APIC-fasteoi   ath
+>  23:          0          0   IO-APIC-fasteoi   ehci_hcd:usb3
+>  27:         89          0   IO-APIC-fasteoi   aic79xx
+> NMI:     322364     322307   Non-maskable interrupts
+> LOC:          0     322302   Local timer interrupts
+> RES:      10695      24691   Rescheduling interrupts
+> CAL:         36        112   Function call interrupts
+> TLB:       2371       3165   TLB shootdowns
+> TRM:          0          0   Thermal event interrupts
+> SPU:          0          0   Spurious interrupts
+> ERR:          0
+> MIS:          0
+>
+> However, after starting a internet session and Kmail session the server
+> hangs again without any output. Does the NMI-handler not process per CPU?
+> So if one CPU hangs, the other would still proceed?
+>
+> I have no 802.11n enabled, nor X.
+>
+> This means I think the system halted hard 'hlt-instruction'
+>
+> Any further suggestion? I am little bit hopeless now. I have placed the PCI
+> card into another slot, no result.
 
-I'm looking now for a better implementation for the IBSS fixed BSSID st=
-uff, that handles the TSF sync correctly. I think now having centralize=
-d IBSS join function ist more easy to maintain, as many little function=
-s. This function can look in the environment for the current state, so =
-that it can see what to do for the current join.
+Some additional information:
+I have booted the server at approx 16:00. Hostapd was started at boot-time.
+After 5 hours without any connection from any computers the server hangs.
 
-So I have moved all my fixed BSSID stuff in this centralized function, =
-so that the TSF will be reseted, even if a fixed BSSID is set.
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
 
-I will allow a channel change too, if you have a fixed BSSID but not a =
-fixed channel setting. If there is a other IBSS network with the same B=
-SSID but in an other channel.
-Like now a BSSID change is allowed, if you set a fixed channel but not =
-a fixed BSSID.
-I think this would be a more clean and consistent implementation.
-
-What do you think about it?
-I will post a beta patch tomorrow.
-
-Regards
-Alina
-
---=20
-Sensationsangebot verl=E4ngert: GMX FreeDSL - Telefonanschluss + DSL=20
-f=FCr nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1308T45=
-69a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
