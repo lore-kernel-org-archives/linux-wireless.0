@@ -1,62 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52222 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbZA1KzM (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:33592 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753839AbZAFWMS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 05:55:12 -0500
-Subject: Re: [PATCH] cfg80211: add get reg command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1233111125-7955-1-git-send-email-lrodriguez@atheros.com>
-References: <1233111125-7955-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OJTKWGUNMHP+vJpuwmp1"
-Date: Wed, 28 Jan 2009 11:17:21 +0100
-Message-Id: <1233137841.3936.2.camel@johannes.local> (sfid-20090128_115516_038832_CF6A33B6)
-Mime-Version: 1.0
+	Tue, 6 Jan 2009 17:12:18 -0500
+Received: by ewy10 with SMTP id 10so8702523ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 14:12:17 -0800 (PST)
+To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
+Date: Tue, 6 Jan 2009 23:12:10 +0100
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rt2400-devel@lists.sourceforge.net"
+	<rt2400-devel@lists.sourceforge.net>
+References: <200901042021.10904.IvDoorn@gmail.com> <200901062252.15677.IvDoorn@gmail.com> <4963D5FB.60409@kpnplanet.nl>
+In-Reply-To: <4963D5FB.60409@kpnplanet.nl>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200901062312.12081.IvDoorn@gmail.com> (sfid-20090106_231238_478057_EB3B1E4E)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 06 January 2009, Gertjan van Wingerde wrote:
+> On 01/06/09 22:52, Ivo van Doorn wrote:
+> >>>
+> >>>        
+> >>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
+> >>>>
+> >>>>          
+> >>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
+> >>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
+> >>>
+> >>>        
+> >> OK. But the EEPROM definitions I got from Ralink on the Country
+> >> information indicate that there is only a single indication in the EEPROM.
+> >>      
+> >
+> > That is right, like I said the comments already indicates there the legacy code didn't contain the
+> > definitions (yet). ;)
+> >
+> >    
+> >>> GertJan, some comments about your patch:
+> >>>
+> >>>
+> >>>        
+> >>>> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
+> >>>> index 9aefda4..986e428 100644
+> >>>> --- a/drivers/net/wireless/rt2x00/rt2400pci.h
+> >>>> +++ b/drivers/net/wireless/rt2x00/rt2400pci.h
+> >>>> @@ -806,6 +806,13 @@
+> >>>>    #define EEPROM_TXPOWER_2		FIELD16(0xff00)
+> >>>>
+> >>>>    /*
+> >>>> + * EEPROM geography.
+> >>>> + * GEO: Default geography setting for device.
+> >>>> + */
+> >>>> +#define EEPROM_GEOGRAPHY		0x17
+> >>>> +#define EEPROM_GEOGRAPHY_GEO		FIELD16(0xff00)
+> >>>>
+> >>>>          
+> >>> Where did you find this definition? I couldn't find it in the legacy driver or the specsheets.
+> >>>
+> >>>        
+> >> I got an excerpt from the EEPROM definition for the rt2460 chip (which I
+> >> received with the help of Luis). It's defined in there.
+> >>      
+> >
+> > I assume you mean the file RT2460_DS_P1.3.pdf, could you point me to the right pagenumber?
+> >
+> >    
+> No, I meant RT2460_EEPROM_Channels.pdf, which was sent by Ralink a 
+> couple of months ago. You were copied on the email; let me know if you 
+> can't find them. Note that these were only small excerpts from the 
+> entire EEPROM definitions, only the parts on geography information.
 
---=-OJTKWGUNMHP+vJpuwmp1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ah those, I thought they only contained the valid values. :S
+well ok, that means that this part of the patch is correct as well. :)
 
-On Tue, 2009-01-27 at 18:52 -0800, Luis R. Rodriguez wrote:
-
-> +	mutex_lock(&cfg80211_drv_mutex);
-> +	regd =3D reg_get_current_rd();
-> +	mutex_unlock(&cfg80211_drv_mutex);
-> +
-> +	if (!regd)
-> +		goto out;
-
-Any reason you need to copy and can't just build the whole thing under
-lock?
-
-johannes
-
---=-OJTKWGUNMHP+vJpuwmp1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJgDCtAAoJEKVg1VMiehFYA0MP+wQsU32cI+B+nqD/CLGA5SbL
-GodrKtjw40JB83Dn1ioFsCz9/8gBdplGn6K61rNe0rqj8JHZTyfZGlDJX9l/MSZ+
-BTQonuqv326hLhmYZBmN/TlQiRk8C5JjqBy+ekc8lOnCgj6sQOumxNzrCvpGrvd0
-hmN19obvz2LqdKrOLuM/B7oeXiCs8fsDKS8+pfIdZD0UrqwxEdHQoruD8EDG4lr5
-sbVQ5JIYswjVJksIc0zgD3IIrAjK2Swn37yawJPTv1bqZklLJlhFXp+b9VeDw3nC
-oo4nzorEtwhKmj3+QwmIzH75yBp0EeTR/ckJ/T+N0ZzKzrs0b/wTAMIyK8dSWMO7
-SXxzx6Qo0h5orceGCNOPRkUW1qY3OsHs1AVhJdMrWHVLyiqJALEIeLGC00EBIOIE
-7vfw1QWX4fcA4mMt+823GGRIynYb/Xb4ISoK3IRbOxWg4TTjCNnwuziSNZdI4r34
-mbR8b0hFslyATaAXuli8J58beF86WV+HzzSH+xLJuLoReaZDqeeDZcn5ic4ZS8G5
-M4oeNJ2aGIzbeZDiaQ8qiO7JNmY9KccutVvV7SxapgqWw0+vWV3d9hRYYSSMoi/I
-Qc5b5AKdtlwgACtg8G8yJE10XPxESVILf8z3VrXZVmubznWqaGNq8A2Bah3qnvbr
-eL+O3r6AkUn3MlCQxg+r
-=TrAk
------END PGP SIGNATURE-----
-
---=-OJTKWGUNMHP+vJpuwmp1--
-
+Ivo
