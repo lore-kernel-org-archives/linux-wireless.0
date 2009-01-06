@@ -1,533 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 25.mail-out.ovh.net ([91.121.27.228]:54324 "HELO
-	25.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752085AbZANR5k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 12:57:40 -0500
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [PATCH] iwl3945: report killswitch changes even if the interface is
- down
-MIME-Version: 1.0
-Date: Wed, 14 Jan 2009 18:46:55 +0100
-From: <samuel@sortiz.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ipw3945-devel@lists.sourceforge.net, mabbaswireless@gmail.com,
-	tomas.winkler@intel.com, yi.zhu@intel.com,
-	reinette.chatre@intel.com, dcbw@redhat.com
-In-Reply-To: <200901141658.50842.helmut.schaa@gmail.com>
-References: <200901141658.50842.helmut.schaa@gmail.com>
-Message-ID: <4db8d83d05d00146e1b2ad0921dbaedd@localhost> (sfid-20090114_185745_186228_7090FA2F)
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx2.redhat.com ([66.187.237.31]:56267 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752479AbZAFSzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 13:55:43 -0500
+Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	mohamed salim abbas <mabbaswireless@gmail.com>,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	yi.zhu@intel.com, reinette.chatre@intel.com
+In-Reply-To: <1231261515.5246.9.camel@californication>
+References: <200812161307.07193.helmut.schaa@gmail.com>
+	 <20081217202943.GB3516@tuxdriver.com>
+	 <1229549485.26406.12.camel@localhost.localdomain>
+	 <200901051556.13403.helmut.schaa@gmail.com>
+	 <1231257584.14565.16.camel@localhost.localdomain>
+	 <1231260067.5246.7.camel@californication>
+	 <1231260557.14565.24.camel@localhost.localdomain>
+	 <1231261515.5246.9.camel@californication>
+Content-Type: text/plain
+Date: Tue, 06 Jan 2009 13:54:28 -0500
+Message-Id: <1231268068.14565.37.camel@localhost.localdomain> (sfid-20090106_195547_449861_3CED451E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Hi Helmut,
-
-
-
-On Wed, 14 Jan 2009 16:58:50 +0100, Helmut Schaa
-
-<helmut.schaa@googlemail.com> wrote:
-
-> Currently iwl3945 is not able to report hw-killswitch events while the
-
-> interface is down. This has implications on user space tools (like
-
-> NetworkManager) relying on rfkill notifications to bring the interface
-
-> up once the wireless gets enabled through a hw killswitch.
-
+On Tue, 2009-01-06 at 18:05 +0100, Marcel Holtmann wrote:
+> Hi Dan,
 > 
-
-> Thus enable the device already in iwl3945_pci_probe instead of iwl3945_up
-
-> and poll the CSR_GP_CNTRL register to update the killswitch state every
-
-> two seconds. The polling is only needed on 3945 hardware as this adapter
-
-> does not use interrupts to signal rfkill changes to the driver (in case
-
-no
-
-> firmware is loaded). The firmware loading is still done in iwl3945_up.
-
-The patch looks good and makes sense.
-
-However, it would be nice to cancel the rfkill polling work once the
-
-firmware is loaded, as we'll then get card state notifications.
-
-
-
-Cheers,
-
-Samuel.
-
-
-
-
-
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-
-> ---
-
+> > > > > > > > the interrupt moved from pci_probe to mac_start for power saving. once
+> > > > > > > > the interface is up the driver will read some register to know rfkill
+> > > > > > > > status, if the interface in down the driver don't care to keep track
+> > > > > > > > of rfkill switch. I wonder what the purpose of changing this behavior?
+> > > > > > > 
+> > > > > > > I think it still isn't settled in everyone's minds whether rfkill
+> > > > > > > only matters if the device is "up" or if it is something that
+> > > > > > > e.g. NetworkManager might want to monitor as a clue to bring the
+> > > > > > > device up or down in response to rfkill changes.
+> > > > > > 
+> > > > > > The question is:  does NetworkManager just always keep the device 'up'
+> > > > > > irregardless of whether it's supposed to be associated with anything
+> > > > > > just so we can get rfkill events?
+> > > > > 
+> > > > > Another question is: is it worth to keep the interface up (and thus the
+> > > > > firmware loaded) even if the transceiver is killed by a hardware switch?
+> > > > > Wouldn't that consume even more power than just listening to rfkill
+> > > > > interrupts (or polling the killswitch state in case of 3945) with no
+> > > > > firmware loaded.
+> > > > > 
+> > > > > > I guess I'll treat rfkill the same as ethernet carrier.  If we cannot
+> > > > > > rely on rfkill notifications when the device is down (we already can't,
+> > > > > > since iwl3945 simply can't do it) 
+> > > > > 
+> > > > > I've just checked the 3945 and it is indeed possible to poll the killswitch
+> > > > > state even if the firmware is not loaded. Hence 3945 could also expose
+> > > > > the killswitch state while the interface is down (of course the driver would
+> > > > > have to poll for that information).
+> > > > 
+> > > > Even polling the state once every 2 - 4 seconds would be perfectly
+> > > > acceptable latency for me.  It doesn't have to be instantaneous, so we
+> > > > can certainly trade off latency for fewer wakeups.  Care to propose a
+> > > > patch?  it'll make a lot of people happy :)
+> > > 
+> > > if we can't get the rfkill state change via interrupt, then the kernel
+> > > driver has to poll for it (in the no-firmware cases). Or we have to
+> > > remove the rfkill support completely. Everything else is just not
+> > > acceptable. It is _not_ the responsibility of the userspace to make this
+> > > work with quirks.
+> > 
+> > Right; I meant polling in *iwl3945* every 2 - 4 seconds or so, not from
+> > userspace.  Userspace should still listen for the rfkill uevents (not
+> > that HAL does yet, but...)
 > 
+> you actually could use libudev for it directly. That is what I am doing
+> right now. Works pretty smooth.
 
-> I did not do any power measurements but I think it is more efficient to
+Do what with libudev?  Poll the register directly?  Or hit some sysfs
+file that eventually polls the register?  And you said "it's not the
+responsibility of userspace to make this work with quirks" which to me
+says you'd prefer this polling to be done in the driver, not
+userspace...  no?
 
-> leave the pci device enabled (without firmware being loaded) then to
+Dan
 
-change
 
-> NetworkManagers behaviour to keep the interface up all the time just to
-
-get
-
-> rfkill notifications (which means the firmware has to be loaded).
-
-> 
-
-> The patch applies against wireless-testing from today.
-
-> 
-
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h
-
-> b/drivers/net/wireless/iwlwifi/iwl-dev.h
-
-> index fd34ba8..4d437cf 100644
-
-> --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-
-> +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-
-> @@ -1041,6 +1041,7 @@ struct iwl_priv {
-
->  
-
->  	/*For 3945 only*/
-
->  	struct delayed_work thermal_periodic;
-
-> +	struct delayed_work rfkill_poll;
-
->  
-
->  	/* TX Power */
-
->  	s8 tx_power_user_lmt;
-
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-
-> b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-
-> index 15425a0..04b7080 100644
-
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-
-> @@ -5479,7 +5479,8 @@ static void iwl3945_bg_rf_kill(struct work_struct
-
-> *work)
-
->  		IWL_DEBUG(IWL_DL_INFO | IWL_DL_RF_KILL,
-
->  			  "HW and/or SW RF Kill no longer active, restarting "
-
->  			  "device\n");
-
-> -		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
-
-> +		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) && 
-
-> +		     test_bit(STATUS_ALIVE, &priv->status))
-
->  			queue_work(priv->workqueue, &priv->restart);
-
->  	} else {
-
->  
-
-> @@ -5496,6 +5497,25 @@ static void iwl3945_bg_rf_kill(struct work_struct
-
-> *work)
-
->  	iwl3945_rfkill_set_hw_state(priv);
-
->  }
-
->  
-
-> +static void iwl3945_rfkill_poll(struct work_struct *data)
-
-> +{
-
-> +	struct iwl_priv *priv =
-
-> +	    container_of(data, struct iwl_priv, rfkill_poll.work);
-
-> +	unsigned long status = priv->status;
-
-> +
-
-> +	if (iwl_read32(priv, CSR_GP_CNTRL) &
-
-CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
-
-> +		clear_bit(STATUS_RF_KILL_HW, &priv->status);
-
-> +	else
-
-> +		set_bit(STATUS_RF_KILL_HW, &priv->status);
-
-> +
-
-> +	if (test_bit(STATUS_RF_KILL_HW, &status) != test_bit(STATUS_RF_KILL_HW,
-
-> &priv->status))
-
-> +		queue_work(priv->workqueue, &priv->rf_kill);
-
-> +
-
-> +	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
-
-> +			   round_jiffies_relative(2 * HZ));
-
-> +
-
-> +}
-
-> +
-
->  #define IWL_SCAN_CHECK_WATCHDOG (7 * HZ)
-
->  
-
->  static void iwl3945_bg_scan_check(struct work_struct *data)
-
-> @@ -5898,20 +5918,6 @@ static int iwl3945_mac_start(struct ieee80211_hw
-
-> *hw)
-
->  
-
->  	IWL_DEBUG_MAC80211("enter\n");
-
->  
-
-> -	if (pci_enable_device(priv->pci_dev)) {
-
-> -		IWL_ERR(priv, "Fail to pci_enable_device\n");
-
-> -		return -ENODEV;
-
-> -	}
-
-> -	pci_restore_state(priv->pci_dev);
-
-> -	pci_enable_msi(priv->pci_dev);
-
-> -
-
-> -	ret = request_irq(priv->pci_dev->irq, iwl3945_isr, IRQF_SHARED,
-
-> -			  DRV_NAME, priv);
-
-> -	if (ret) {
-
-> -		IWL_ERR(priv, "Error allocating IRQ %d\n", priv->pci_dev->irq);
-
-> -		goto out_disable_msi;
-
-> -	}
-
-> -
-
->  	/* we should be verifying the device is ready to be opened */
-
->  	mutex_lock(&priv->mutex);
-
->  
-
-> @@ -5962,10 +5968,6 @@ static int iwl3945_mac_start(struct ieee80211_hw
-
-> *hw)
-
->  	return 0;
-
->  
-
->  out_release_irq:
-
-> -	free_irq(priv->pci_dev->irq, priv);
-
-> -out_disable_msi:
-
-> -	pci_disable_msi(priv->pci_dev);
-
-> -	pci_disable_device(priv->pci_dev);
-
->  	priv->is_open = 0;
-
->  	IWL_DEBUG_MAC80211("leave - failed\n");
-
->  	return ret;
-
-> @@ -5996,10 +5998,6 @@ static void iwl3945_mac_stop(struct ieee80211_hw
-
-> *hw)
-
->  	iwl3945_down(priv);
-
->  
-
->  	flush_workqueue(priv->workqueue);
-
-> -	free_irq(priv->pci_dev->irq, priv);
-
-> -	pci_disable_msi(priv->pci_dev);
-
-> -	pci_save_state(priv->pci_dev);
-
-> -	pci_disable_device(priv->pci_dev);
-
->  
-
->  	IWL_DEBUG_MAC80211("leave\n");
-
->  }
-
-> @@ -7207,6 +7205,7 @@ static void iwl3945_setup_deferred_work(struct
-
-> iwl_priv *priv)
-
->  	INIT_DELAYED_WORK(&priv->init_alive_start,
-
-iwl3945_bg_init_alive_start);
-
->  	INIT_DELAYED_WORK(&priv->alive_start, iwl3945_bg_alive_start);
-
->  	INIT_DELAYED_WORK(&priv->scan_check, iwl3945_bg_scan_check);
-
-> +	INIT_DELAYED_WORK(&priv->rfkill_poll, iwl3945_rfkill_poll);
-
->  
-
->  	iwl3945_hw_setup_deferred_work(priv);
-
->  
-
-> @@ -7497,6 +7496,15 @@ static int iwl3945_pci_probe(struct pci_dev *pdev,
-
-> const struct pci_device_id *e
-
->  	iwl3945_disable_interrupts(priv);
-
->  	spin_unlock_irqrestore(&priv->lock, flags);
-
->  
-
-> +	pci_enable_msi(priv->pci_dev);
-
-> +
-
-> +	err = request_irq(priv->pci_dev->irq, iwl3945_isr, IRQF_SHARED,
-
-> +			  DRV_NAME, priv);
-
-> +	if (err) {
-
-> +		IWL_ERR(priv, "Error allocating IRQ %d\n", priv->pci_dev->irq);
-
-> +		goto out_disable_msi;
-
-> +	}
-
-> +
-
->  	err = sysfs_create_group(&pdev->dev.kobj, &iwl3945_attribute_group);
-
->  	if (err) {
-
->  		IWL_ERR(priv, "failed to create sysfs device attributes\n");
-
-> @@ -7507,14 +7515,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev,
-
-> const struct pci_device_id *e
-
->  	iwl3945_setup_deferred_work(priv);
-
->  	iwl3945_setup_rx_handlers(priv);
-
->  
-
-> -	/***********************
-
-> -	 * 9. Conclude
-
-> -	 * ********************/
-
-> -	pci_save_state(pdev);
-
-> -	pci_disable_device(pdev);
-
-> -
-
->  	/*********************************
-
-> -	 * 10. Setup and Register mac80211
-
-> +	 * 9. Setup and Register mac80211
-
->  	 * *******************************/
-
->  
-
->  	err = ieee80211_register_hw(priv->hw);
-
-> @@ -7539,10 +7541,12 @@ static int iwl3945_pci_probe(struct pci_dev
-
-*pdev,
-
-> const struct pci_device_id *e
-
->  	iwl3945_free_geos(priv);
-
->  
-
->   out_release_irq:
-
-> +	free_irq(priv->pci_dev->irq, priv);
-
->  	destroy_workqueue(priv->workqueue);
-
->  	priv->workqueue = NULL;
-
->  	iwl3945_unset_hw_params(priv);
-
-> -
-
-> + out_disable_msi:
-
-> +	pci_disable_msi(priv->pci_dev);
-
->   out_iounmap:
-
->  	pci_iounmap(pdev, priv->hw_base);
-
->   out_pci_release_regions:
-
-> @@ -7605,6 +7609,9 @@ static void __devexit iwl3945_pci_remove(struct
-
-> pci_dev *pdev)
-
->  	destroy_workqueue(priv->workqueue);
-
->  	priv->workqueue = NULL;
-
->  
-
-> +	free_irq(pdev->irq, priv);
-
-> +	pci_disable_msi(pdev);
-
-> +
-
->  	pci_iounmap(pdev, priv->hw_base);
-
->  	pci_release_regions(pdev);
-
->  	pci_disable_device(pdev);
-
-> @@ -7630,7 +7637,8 @@ static int iwl3945_pci_suspend(struct pci_dev
-
-*pdev,
-
-> pm_message_t state)
-
->  		iwl3945_mac_stop(priv->hw);
-
->  		priv->is_open = 1;
-
->  	}
-
-> -
-
-> +	pci_save_state(pdev);
-
-> +	pci_disable_device(pdev);
-
->  	pci_set_power_state(pdev, PCI_D3hot);
-
->  
-
->  	return 0;
-
-> @@ -7641,6 +7649,8 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
-
->  	struct iwl_priv *priv = pci_get_drvdata(pdev);
-
->  
-
->  	pci_set_power_state(pdev, PCI_D0);
-
-> +	pci_enable_device(pdev);
-
-> +	pci_restore_state(pdev);
-
->  
-
->  	if (priv->is_open)
-
->  		iwl3945_mac_start(priv->hw);
-
-> @@ -7719,6 +7729,10 @@ int iwl3945_rfkill_init(struct iwl_priv *priv)
-
->  		goto freed_rfkill;
-
->  	}
-
->  
-
-> +	/* Start monitoring the killswitch */
-
-> +	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
-
-> +			   2 * HZ);
-
-> +
-
->  	IWL_DEBUG_RF_KILL("RFKILL initialization complete.\n");
-
->  	return ret;
-
->  
-
-> @@ -7734,6 +7748,8 @@ error:
-
->  
-
->  void iwl3945_rfkill_unregister(struct iwl_priv *priv)
-
->  {
-
-> +	cancel_delayed_work(&priv->rfkill_poll);
-
-> +
-
->  	if (priv->rfkill)
-
->  		rfkill_unregister(priv->rfkill);
-
-> --
-
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-
-> in
-
-> the body of a message to majordomo@vger.kernel.org
-
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
