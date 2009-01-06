@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54294 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755925AbZAPSwl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 13:52:41 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 10:52:41 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <Jouni.Malinen@atheros.com>, <Jouni.Malinen@atheros.com>,
-	<johannes@sipsolutions.net>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: do not TX injected frames when not allowed
-Date: Fri, 16 Jan 2009 10:52:12 -0800
-Message-ID: <1232131932-25044-1-git-send-email-lrodriguez@atheros.com> (sfid-20090116_195246_662337_C460CDDB)
+Received: from cpsmtpo-eml03.KPNXCHANGE.COM ([213.75.38.152]:8296 "EHLO
+	cpsmtpo-eml03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751572AbZAFWGy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 17:06:54 -0500
+Message-ID: <4963D5FB.60409@kpnplanet.nl> (sfid-20090106_230705_743902_FDBBB762)
+Date: Tue, 06 Jan 2009 23:06:51 +0100
+From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rt2400-devel@lists.sourceforge.net"
+	<rt2400-devel@lists.sourceforge.net>
+Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
+References: <200901042021.10904.IvDoorn@gmail.com> <200901052321.46422.IvDoorn@gmail.com> <4963BC6F.7030201@kpnplanet.nl> <200901062252.15677.IvDoorn@gmail.com>
+In-Reply-To: <200901062252.15677.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Monitor mode is able to TX by using injected frames. We should
-not allow injected frames to be sent unless allowed by regulatory rules.
-Since AP mode uses a monitor interfaces to transmit management frames
-we have to take care to not break AP mode as well. Since hostapd
-respects 'no-ibss|radar' flags we can make use of the same policy
-statically for checking when to disable injected frames. Once AP
-mode supports radar detection we should somehow distinguish a
-regular monitor mode from an AP's monitor interface.
+On 01/06/09 22:52, Ivo van Doorn wrote:
+>>>
+>>>        
+>>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
+>>>>
+>>>>          
+>>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
+>>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
+>>>
+>>>        
+>> OK. But the EEPROM definitions I got from Ralink on the Country
+>> information indicate that there is only a single indication in the EEPROM.
+>>      
+>
+> That is right, like I said the comments already indicates there the legacy code didn't contain the
+> definitions (yet). ;)
+>
+>    
+>>> GertJan, some comments about your patch:
+>>>
+>>>
+>>>        
+>>>> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
+>>>> index 9aefda4..986e428 100644
+>>>> --- a/drivers/net/wireless/rt2x00/rt2400pci.h
+>>>> +++ b/drivers/net/wireless/rt2x00/rt2400pci.h
+>>>> @@ -806,6 +806,13 @@
+>>>>    #define EEPROM_TXPOWER_2		FIELD16(0xff00)
+>>>>
+>>>>    /*
+>>>> + * EEPROM geography.
+>>>> + * GEO: Default geography setting for device.
+>>>> + */
+>>>> +#define EEPROM_GEOGRAPHY		0x17
+>>>> +#define EEPROM_GEOGRAPHY_GEO		FIELD16(0xff00)
+>>>>
+>>>>          
+>>> Where did you find this definition? I couldn't find it in the legacy driver or the specsheets.
+>>>
+>>>        
+>> I got an excerpt from the EEPROM definition for the rt2460 chip (which I
+>> received with the help of Luis). It's defined in there.
+>>      
+>
+> I assume you mean the file RT2460_DS_P1.3.pdf, could you point me to the right pagenumber?
+>
+>    
+No, I meant RT2460_EEPROM_Channels.pdf, which was sent by Ralink a 
+couple of months ago. You were copied on the email; let me know if you 
+can't find them. Note that these were only small excerpts from the 
+entire EEPROM definitions, only the parts on geography information.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/tx.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 955f186..276a666 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -899,6 +899,16 @@ __ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
- 
- 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
- 
-+	/* Frame injection is not allowed if beaconing is not allowed
-+	 * or if we need radar detection. Beaconing is usually not allowed when
-+	 * the mode or operation (Adhoc, AP, Mesh) does not support DFS.
-+	 * Since AP mode uses monitor interafaces to inject/TX management
-+	 * frames once we have radar detection support we can change this
-+	 * here */
-+	if ((tx->channel->flags & (IEEE80211_CHAN_NO_IBSS |
-+	    IEEE80211_CHAN_RADAR)))
-+		return TX_DROP;
-+
- 	skb->do_not_encrypt = 1;
- 	tx->flags &= ~IEEE80211_TX_FRAGMENTED;
- 
--- 
-1.6.1.rc3.51.g5832d
-
+Gertjan.
