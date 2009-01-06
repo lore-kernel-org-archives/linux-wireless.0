@@ -1,125 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:23398 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753468AbZA2TGW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 14:06:22 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/7] iwlwifi: define structures and functions externally for customization
-Date: Thu, 29 Jan 2009 11:09:15 -0800
-Message-Id: <1233256157-21290-6-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200630_366207_04E31837)
-In-Reply-To: <1233256157-21290-5-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
- <1233256157-21290-2-git-send-email-reinette.chatre@intel.com>
- <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
- <1233256157-21290-4-git-send-email-reinette.chatre@intel.com>
- <1233256157-21290-5-git-send-email-reinette.chatre@intel.com>
+Received: from cpsmtpo-eml04.KPNXCHANGE.COM ([213.75.38.153]:45838 "EHLO
+	cpsmtpo-eml04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757103AbZAFWub (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 17:50:31 -0500
+Message-ID: <4963E034.6000606@kpnplanet.nl> (sfid-20090106_235052_399325_EBDEB2FD)
+Date: Tue, 06 Jan 2009 23:50:28 +0100
+From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rt2400-devel@lists.sourceforge.net"
+	<rt2400-devel@lists.sourceforge.net>
+Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
+References: <200901042021.10904.IvDoorn@gmail.com>	 <20090105200809.GH6834@tesla> <49627BCB.4020200@kpnplanet.nl>	 <200901052321.46422.IvDoorn@gmail.com> <20090105234546.GK6834@tesla>	 <4963BFEF.2090006@kpnplanet.nl> <20090106204744.GB21980@tesla>	 <4963D7F0.3090402@kpnplanet.nl> <43e72e890901061423o1b2c84b6q38f791408b2ad9d9@mail.gmail.com>
+In-Reply-To: <43e72e890901061423o1b2c84b6q38f791408b2ad9d9@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+On 01/06/09 23:23, Luis R. Rodriguez wrote:
+> On Tue, Jan 6, 2009 at 2:15 PM, Gertjan van Wingerde
+> <gwingerde@kpnplanet.nl>  wrote:
+>    
+>> On 01/06/09 21:47, Luis R. Rodriguez wrote:
+>>      
+>>> On Tue, Jan 06, 2009 at 12:32:47PM -0800, Gertjan van Wingerde wrote:
+>>>
+>>>        
+>>>> On 01/06/09 00:45, Luis R. Rodriguez wrote:
+>>>>
+>>>>          
+>>>>> On Mon, Jan 05, 2009 at 02:21:46PM -0800, Ivo van Doorn wrote:
+>>>>>
+>>>>>
+>>>>>            
+>>>>>> On Monday 05 January 2009, Gertjan van Wingerde wrote:
+>>>>>>
+>>>>>>
+>>>>>>              
+>>>>>>> On 01/05/09 21:08, Luis R. Rodriguez wrote:
+>>>>>>>
+>>>>>>> The problem isn't there for the bits that Ivo sent, as the rt2500
+>>>>>>> devices don't support the a band.
+>>>>>>>
+>>>>>>>
+>>>>>>>                
+>>>>>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they
+>>>>>> are rare, but they do exist),
+>>>>>> comments for the Ralink drivers indicate they simply didn't add the
+>>>>>> regulatory domain definitions yet.
+>>>>>>
+>>>>>>
+>>>>>>              
+>>>>> Based on the documentation from the EEPROM for all devices I read that
+>>>>> its recommended
+>>>>> that the EEPROM *not be relied on for the regulatory domain*, instead it
+>>>>> recommends the
+>>>>> windows registry be used.
+>>>>>
+>>>>> Based on tests for the devices with only one band, do are you seeing an
+>>>>> actual regulatory
+>>>>> domain in the EEPROM?
+>>>>>
+>>>>> To deal with the issue of having two separate EEPROM values for a
+>>>>> regulatory domain
+>>>>> and since the documentation indicates to not rely on it I would advise
+>>>>> to allow users
+>>>>> to be compliant by selecting the country they are in. wpa_supplicant has
+>>>>> support for
+>>>>> selecting country now, and so does iw. Eventually I see Network Manager
+>>>>> letting users
+>>>>> select the country. But you guys are the maintainers and developers so
+>>>>> you will know
+>>>>> better.
+>>>>>
+>>>>>
+>>>>>            
+>>>> My tests indicate that there are devices out there that have this
+>>>> information set in the EEPROM. Based on tests with my own patch, and my
+>>>> own devices, I have been able to determine the following:
+>>>>
+>>>> 1. rt2400pci -->   don't know, don't own a rt2400pci device.
+>>>> 2. rt2500pci -->   don't know, don't own a rt2500pci device anymore.
+>>>> 3. rt2500usb -->   my e-tech device (not sure which type; the device
+>>>> doesn't say it) has an actual domain set for the bg band.
+>>>> 4. rt61pci -->   my Sitecom WL151 device does not contain actual domain
+>>>> information.
+>>>> 5. rt73usb -->   my Sitecom WL113-002 device does contain actual domain
+>>>> information, and the codes for the bg band and a band are the same.
+>>>> 6. rt2800pci -->   my Sitecom WL182 device does contain actual domain
+>>>> information, and the codes for the bg band and a band are the same.
+>>>> 7. rt2800usb -->   my Sitecom WL181 device does contain actual domain
+>>>> information, and the codes for the bg band and a band are the same.
+>>>>
+>>>> So, there are devices out there that do contain "meaningful" regulatory
+>>>> information.
+>>>>
+>>>> Luis, the definitions for the a-band EEPROM codes only give the channel
+>>>> numbers, it doesn't indicate a real "country". Is there any way we can
+>>>> check whether these sets of channels are actually consistent with the
+>>>> regulations of specific countries?
+>>>>
+>>>>          
+>>> You can help contribute to the wireless-regdb and check that the valid
+>>> channels apply there.
+>>>
+>>>        
+>> Well, the trouble I'm having is to match the allowed values and channels
+>> against the regdb, to see to which countries each of the values map, if any.
+>> I'm a bit illiterate on channel assignments etc., so I don't know how to do
+>> the math from channel number to frequency, and all the other stuff that is
+>> in the regdb.
+>>      
+>
+> Look at net/wireless/util.c ieee80211_channel_to_frequency() for how
+> to do this. If all you have is channel maps then just focus on that
+> then.
+>    
 
-defined the structures and functions as extern to alter behavior used by
-5000 series for other products including 100 and 6000 series
+OK. Will have a look at that. This will have to wait until the weekend 
+tho (need to travel for work for the rest of the week).
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-5000.c |   14 +++++++-------
- drivers/net/wireless/iwlwifi/iwl-dev.h  |   12 ++++++++++++
- 2 files changed, 19 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 5b59286..2b37aa7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -394,7 +394,7 @@ static void iwl5000_chain_noise_reset(struct iwl_priv *priv)
- 	}
- }
- 
--static void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
-+void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
- 			__le32 *tx_flags)
- {
- 	if ((info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
-@@ -1105,7 +1105,7 @@ static int iwl5000_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
- 	return 0;
- }
- 
--static u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
-+u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
- {
- 	u16 size = (u16)sizeof(struct iwl_addsta_cmd);
- 	memcpy(data, cmd, size);
-@@ -1334,7 +1334,7 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
- }
- 
- /* Currently 5000 is the superset of everything */
--static u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len)
-+u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len)
- {
- 	return len;
- }
-@@ -1435,7 +1435,7 @@ static void iwl5000_temperature(struct iwl_priv *priv)
- }
- 
- /* Calc max signal level (dBm) among 3 possible receivers */
--static int iwl5000_calc_rssi(struct iwl_priv *priv,
-+int iwl5000_calc_rssi(struct iwl_priv *priv,
- 			     struct iwl_rx_phy_res *rx_resp)
- {
- 	/* data from PHY/DSP regarding signal strength, etc.,
-@@ -1472,11 +1472,11 @@ static int iwl5000_calc_rssi(struct iwl_priv *priv,
- 	return max_rssi - agc - IWL49_RSSI_OFFSET;
- }
- 
--static struct iwl_hcmd_ops iwl5000_hcmd = {
-+struct iwl_hcmd_ops iwl5000_hcmd = {
- 	.rxon_assoc = iwl5000_send_rxon_assoc,
- };
- 
--static struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
-+struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
- 	.get_hcmd_size = iwl5000_get_hcmd_size,
- 	.build_addsta_hcmd = iwl5000_build_addsta_hcmd,
- 	.gain_computation = iwl5000_gain_computation,
-@@ -1485,7 +1485,7 @@ static struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
- 	.calc_rssi = iwl5000_calc_rssi,
- };
- 
--static struct iwl_lib_ops iwl5000_lib = {
-+struct iwl_lib_ops iwl5000_lib = {
- 	.set_hw_params = iwl5000_hw_set_hw_params,
- 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
- 	.txq_inval_byte_cnt_tbl = iwl5000_txq_inval_byte_cnt_tbl,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index b9954bc..afde713 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -67,6 +67,18 @@ extern struct iwl_cfg iwl100_bgn_cfg;
- /* shared structures from iwl-5000.c */
- extern struct iwl_mod_params iwl50_mod_params;
- extern struct iwl_ops iwl5000_ops;
-+extern struct iwl_lib_ops iwl5000_lib;
-+extern struct iwl_hcmd_ops iwl5000_hcmd;
-+extern struct iwl_hcmd_utils_ops iwl5000_hcmd_utils;
-+
-+/* shared functions from iwl-5000.c */
-+extern u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len);
-+extern u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd,
-+				     u8 *data);
-+extern void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
-+				    __le32 *tx_flags);
-+extern int iwl5000_calc_rssi(struct iwl_priv *priv,
-+			     struct iwl_rx_phy_res *rx_resp);
- 
- /* CT-KILL constants */
- #define CT_KILL_THRESHOLD	110 /* in Celsius */
--- 
-1.5.4.3
-
+Gertjan.
