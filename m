@@ -1,35 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39027 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756577AbZAUAMy (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:54581 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751588AbZAFM5Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 19:12:54 -0500
-Date: Tue, 20 Jan 2009 19:12:50 -0500
-From: Kyle McMartin <kyle@infradead.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Kyle McMartin <kyle@infradead.org>, Greg KH <greg@kroah.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Paul Hickey <paul@christianpatriot.us>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [stable] Failed Build of modules for 2.6.27.9-159
-Message-ID: <20090121001250.GG17452@bombadil.infradead.org> (sfid-20090121_011259_037184_E632B329)
-References: <1232404986.3641.2.camel@localhost.localdomain> <20090120000336.GB4018@tesla> <1232433738.3696.3.camel@localhost.localdomain> <20090120194243.GC19581@tesla> <20090120200515.GA5077@kroah.com> <20090120201316.GG19581@tesla> <20090120201613.GA5313@kroah.com> <20090120211630.GJ19581@tesla> <20090120220810.GE17452@bombadil.infradead.org> <43e72e890901201607h359018eew3bf7f99b5d1b0759@mail.gmail.com>
+	Tue, 6 Jan 2009 07:57:25 -0500
+Message-ID: <4963552D.40808@web.de> (sfid-20090106_135729_420615_EAB728D7)
+Date: Tue, 06 Jan 2009 13:57:17 +0100
+From: Jan Kiszka <jan.kiszka@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890901201607h359018eew3bf7f99b5d1b0759@mail.gmail.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
+References: <20081216025542.GO18056@xi.wantstofly.org>
+In-Reply-To: <20081216025542.GO18056@xi.wantstofly.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigCF8CEF99ADDC709F51CA05F5"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 04:07:52PM -0800, Luis R. Rodriguez wrote:
-> Thanks Kyle, that's pretty neat, unfortunately my compat.c includes
-> compat.h and since compat.h includes pci.h the compiler nags about the
-> double header redefinition of foo() where pci.h already has that
-> present (on those systems only). Essentially I'd need a way for
-> systems without foo() to define the header line and for systems that
-> already have it to not add the line. Know any trick for that?
-> 
-> Any particular strong reason to add that pci inline onto FC10 headers?
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigCF8CEF99ADDC709F51CA05F5
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Well, because it came with an ALSA update...
+Lennert Buytenhek wrote:
+> Hi all,
+>=20
+> Attached is an initial version of the mwl8k driver for Marvell 88w8xxx
+> PCI/PCIe wireless parts (against 2.6.27.1).  This version was written
+> and tested against the 88w8687 (802.11b/g), but it shouldn't be hard to=
+
+> extend the support to other parts in the 8xxx series, since the firmwar=
+e
+> interface is very similar between parts.
+
+I guess 88w8xxx will not include 88w8618 on day, will it? That's an
+ARM-based SoC with integrated b/g-WLAN. Are there chances to reuse parts
+of this driver for that controller or are they totally different?
+
+We are still stuck with a 2.6.16.16-based BSP kernel because
+implementing proper Linux support based on mainline would mean loosing
+WLAN support - the BSP is GPL'ed, but the WLAN driver is only a binary
+blob for 2.6.16.16...
+
+Jan
+
+
+--------------enigCF8CEF99ADDC709F51CA05F5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+Comment: Using GnuPG with SUSE - http://enigmail.mozdev.org
+
+iEYEARECAAYFAkljVTEACgkQniDOoMHTA+m/QwCdEe5oe4erW+kims0PVHYNtyeI
+TRsAn2AIwPJtW02z+8s1gOOvASrLArcq
+=KvCO
+-----END PGP SIGNATURE-----
+
+--------------enigCF8CEF99ADDC709F51CA05F5--
