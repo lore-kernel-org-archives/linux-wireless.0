@@ -1,75 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34247 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755863AbZAWVmy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 16:42:54 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Samuel Ortiz <samuel.ortiz@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 11/15] iwl3945: Add restart_fw module parameter
-Date: Fri, 23 Jan 2009 13:45:19 -0800
-Message-Id: <1232747123-7261-12-git-send-email-reinette.chatre@intel.com> (sfid-20090123_230907_036082_F203DEF1)
-In-Reply-To: <1232747123-7261-11-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232747123-7261-1-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-2-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-3-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-4-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-5-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-6-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-7-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-8-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-9-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-10-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-11-git-send-email-reinette.chatre@intel.com>
+Received: from mail.deathmatch.net ([70.167.247.36]:2805 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569AbZAFSDI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 13:03:08 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+Date: Tue, 6 Jan 2009 13:01:00 -0500
+Message-Id: <20090106174830.M95524@bobcopeland.com> (sfid-20090106_190313_967720_5D5E0C7C)
+In-Reply-To: <1231263802.3654.8.camel@johannes>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com> <1229336057.4471.9.camel@johannes.berg> <1229354532.12163.24.camel@localhost.localdomain> <20081217174244.M36761@bobcopeland.com> <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet> <1230102989.16960.14.camel@californication> <1231260306.14565.21.camel@localhost.localdomain> <20090106165434.M2397@bobcopeland.com> <1231262082.3654.5.camel@johannes> <20090106172758.M47578@bobcopeland.com> <1231263802.3654.8.camel@johannes>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <samuel.ortiz@intel.com>
+On Tue, 06 Jan 2009 18:43:22 +0100, Johannes Berg wrote
+> We should probably take the rtnl anyway though to be prepared for when
+> userspace is not suspended.. Need to think about that more though, and
+> possibly add a new "suspended" flag that makes it block all
+> configuration attempts.
 
-In order to be in sync with the agn code, we're ading a fw_restart3945 module
-parameter to iwl3945.
+Well, luckily we do take the rtnl already, wiphy_suspend() and _resume()
+do that around the cfg ops.
 
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+IMHO a suspended flag would be extra complexity that we should just
+hold off on until the freezer really is getting removed.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 8aaa6bf..13fb618 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -90,6 +90,7 @@ MODULE_LICENSE("GPL");
- struct iwl_mod_params iwl3945_mod_params = {
- 	.num_of_queues = IWL39_MAX_NUM_QUEUES,
- 	.sw_crypto = 1,
-+	.restart_fw = 1,
- 	/* the rest are 0 by default */
- };
- 
-@@ -3088,7 +3089,8 @@ static void iwl3945_irq_handle_error(struct iwl_priv *priv)
- 			       sizeof(priv->recovery39_rxon));
- 			priv->error_recovering = 1;
- 		}
--		queue_work(priv->workqueue, &priv->restart);
-+		if (priv->cfg->mod_params->restart_fw)
-+			queue_work(priv->workqueue, &priv->restart);
- 	}
- }
- 
-@@ -6482,5 +6484,8 @@ MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
- module_param_named(queues_num, iwl3945_mod_params.num_of_queues, int, 0444);
- MODULE_PARM_DESC(queues_num, "number of hw queues.");
- 
-+module_param_named(fw_restart3945, iwl3945_mod_params.restart_fw, int, 0444);
-+MODULE_PARM_DESC(fw_restart3945, "restart firmware in case of error");
-+
- module_exit(iwl3945_exit);
- module_init(iwl3945_init);
+For now is there anything besides driver support we need to do for this
+patchset?  I guess that the drivers will actually be OK as-is too unless
+there are any that do release_firmware in ->stop(), but it will be nice
+to clean them up.
+
 -- 
-1.5.4.3
+Bob Copeland %% www.bobcopeland.com
+
 
