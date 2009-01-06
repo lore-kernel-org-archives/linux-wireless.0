@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:38371 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932183AbZACDDh (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:44007 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136AbZAFS53 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 22:03:37 -0500
-Message-ID: <495ED57A.7080101@lwfinger.net> (sfid-20090103_040351_102808_0978FA78)
-Date: Fri, 02 Jan 2009 21:03:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 6 Jan 2009 13:57:29 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so2530353yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 10:57:28 -0800 (PST)
+Message-ID: <43e72e890901061057g106dead2wad00d2664874152d@mail.gmail.com> (sfid-20090106_195733_820392_479C1281)
+Date: Tue, 6 Jan 2009 10:57:28 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] Fixed BSSID step 1: Disallow to set multicast BSSID
+Cc: "Alina Friedrichsen" <x-alina@gmx.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1231267148.3654.15.camel@johannes>
 MIME-Version: 1.0
-To: Jan Engelhardt <jengelh@medozas.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: b43 depends on lots of modules
-References: <alpine.LSU.2.00.0901030349030.3914@fbirervta.pbzchgretzou.qr>
-In-Reply-To: <alpine.LSU.2.00.0901030349030.3914@fbirervta.pbzchgretzou.qr>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+References: <20090106014135.302730@gmx.net> <1231247805.3503.13.camel@johannes>
+	 <20090106183543.241290@gmx.net> <1231267148.3654.15.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jan Engelhardt wrote:
-> Hi,
-> 
-> I noticed that the b43 module has a lot of dependencies, among:
-> 
-> depends:        pcmcia,mac80211,ssb,input-polldev,pcmcia_core,led-class,rfkill,rng-core,firmware_class
-> 
-> Why does it depend on PCMCIA when I hear that b43 devices are also 
-> available in PCI variants? Similarly, is SSB needed on x86en which
-> usually don't have such?
+On Tue, Jan 6, 2009 at 10:39 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2009-01-06 at 19:35 +0100, Alina Friedrichsen wrote:
 
-B43 only depends on PCMCIA if that option is selected in the
-configuration. Mine doesn't, but most distros will. Ssb is the PCI
-driver for b43. If you have a PCI device, then you need it. Ssb was
-split out because it is shared among b43, b43legacy and b44.
+>> Is there somewhere a git repository, with all the new patches merged?
+>> So that I have link where other people can download easily the newest
+>> version and test it, to maybe look for other problem in the ad hoc
+>> mode, before it is in compat-wireless.
+>
+> well, wireless-testing, but compat-wireless is updated nightly, iirc.
 
-Larry
+Affirmative.
+
+Alina, check this guide out, it may help you to post your patches:
+
+http://wireless.kernel.org/en/developers/Documentation/git-guide
+
+  Luis
