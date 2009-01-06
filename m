@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46942 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755242AbZAGMZk (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:63013 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751444AbZAFIvn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 07:25:40 -0500
-Date: Wed, 7 Jan 2009 14:24:27 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: Re: [PATCH 12/14] mac80211: 802.11w - Optional software CCMP for
-	management frames
-Message-ID: <20090107122427.GA20019@jm.kir.nu> (sfid-20090107_132544_274942_500B007F)
-References: <20090107112346.369581673@atheros.com> <20090107112707.370907962@atheros.com> <1231330118.3545.28.camel@johannes>
+	Tue, 6 Jan 2009 03:51:43 -0500
+Received: by mail-ew0-f17.google.com with SMTP id 10so8320917ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 00:51:41 -0800 (PST)
+Message-ID: <eb3ff54b0901060051y5b6f557dkf17a98ae8d8e2311@mail.gmail.com> (sfid-20090106_095145_468131_E6CE937C)
+Date: Tue, 6 Jan 2009 10:51:41 +0200
+From: "Rami Rosen" <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH 6/6] mac80211: remove unused declaration in mesh_plink_block().
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231330118.3545.28.camel@johannes>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 07, 2009 at 01:08:38PM +0100, Johannes Berg wrote:
-> On Wed, 2009-01-07 at 13:23 +0200, Jouni Malinen wrote:
-> > plain text document attachment (ieee80211w-sw-mgmt-ccmp.patch)
-> > If driver/firmware/hardware does not support CCMP for management
-> > frames, it can now request mac80211 to take care of encryption and
-> > decryption of management frames (when MFP is enabled) in software. The
-> > driver will need to add this new IEEE80211_KEY_FLAG_SW_MGMT flag when a
-> > CCMP key is being configured for TX side and return the encrypted frames
-> > on RX side without RX_FLAG_DECRYPTED flag to use software CCMP for
-> > management frames (but hardware for data frames).
-> 
-> Wouldn't it be better to invert the meaning of the flag so we don't have
-> to update all drivers now? It's likely that people won't test CCMP hw
-> encryption and also that it won't work, I'd think, no?
+This patch removes and unused declaration (mac) in mesh_plink_block(),
+mesh_plink.c.
 
-I did consider this, but could not convince myself that drivers would be
-expected to work without some testing and likely changes.. I do not care
-that much which way this is, so if you want this to be inverted, that's
-fine, too. I might even go as far as adding an explicit capability flag
-that drivers will need to set to claim MFP support and export this to
-userspace so that hostapd/wpa_supplicant could refuse the configuration
-early. With that kind of flag, inverting this key flag does not get much
-since the drivers would need to be changed anyway for MFP to work in
-every case.
+(wireless-testing).
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
+
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index faac101..1c76a0e 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -360,10 +360,6 @@ int mesh_plink_open(struct sta_info *sta)
+
+ void mesh_plink_block(struct sta_info *sta)
+ {
+-#ifdef CONFIG_MAC80211_VERBOSE_MPL_DEBUG
+-	DECLARE_MAC_BUF(mac);
+-#endif
+-
+ 	spin_lock_bh(&sta->lock);
+ 	__mesh_plink_deactivate(sta);
+ 	sta->plink_state = PLINK_BLOCKED;
