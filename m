@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:53412 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750807AbZAEXKv (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.243]:57709 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020AbZAFLMk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 18:10:51 -0500
-Received: from [192.168.1.194] (S0106001cf062885c.vc.shawcable.net [24.82.150.230])
-	by mail.holtmann.org (Postfix) with ESMTP id 52A2C8B547
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Jan 2009 00:10:51 +0100 (CET)
-Subject: iwlagn: Microcode SW error detected.  Restarting 0x2000000
-From: Marcel Holtmann <marcel@holtmann.org>
+	Tue, 6 Jan 2009 06:12:40 -0500
+Received: by an-out-0708.google.com with SMTP id d40so2502269and.1
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 03:12:39 -0800 (PST)
+Message-ID: <e6236e5f0901060312h6946f9a1p49e299e723cb0190@mail.gmail.com> (sfid-20090106_121245_090079_B43BFCAA)
+Date: Tue, 6 Jan 2009 12:12:38 +0100
+From: "Rodrigo Fresneda" <fresneda@gmail.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 06 Jan 2009 00:10:48 +0100
-Message-Id: <1231197048.4858.9.camel@californication> (sfid-20090106_001054_849135_F9C407C4)
-Mime-Version: 1.0
+Subject: trouble with compat-old
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
+Dear developers,
+I recently (06-Jan-09) tried to compile the compat-wireless-2.6-old
+drivers to use with my intel wifi 5100 (Intel Corporation PRO/Wireless 5100
+AGN [Shiloh]) in debian lenny with generic kernel 2.6.26-1-amd64
+Compilation went fine until it tried to build iwlagn, when the following
+error message was displayed:
 
-so I am running into this one on my X61:
+WARNING: "iwl4965_agn_cfg"
+[/home/fresneda/compat-wireless-2.6-old/drivers/net/wireless/iwlwifi/iwlagn.ko]
+undefined!
 
-iwlagn 0000:03:00.0: PCI INT A disabled
-iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27k
-iwlagn: Copyright(c) 2003-2008 Intel Corporation
-vendor=8086 device=2841
-iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-iwlagn 0000:03:00.0: setting latency timer to 64
-iwlagn: Detected Intel Wireless WiFi Link 4965AGN REV=0x4
-iwlagn: Tunable channels: 11 802.11bg, 13 802.11a channels
-wmaster0 (iwlagn): not using net_device_ops yet
-phy1: Selected rate control algorithm 'iwl-agn-rs'
-wlan0 (iwlagn): not using net_device_ops yet
-vendor=8086 device=2841
-iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-iwlagn 0000:03:00.0: firmware: requesting iwlwifi-4965-2.ucode
-iwlagn loaded firmware version 228.57.2.23
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
-iwlagn: Microcode SW error detected.  Restarting 0x2000000.
+The module is built, but it cannot be inserted:
 
-It renders the wireless device useless and module unload/reload doesn't
-help either. Is this the AMT issue again or something totally different
-with the latest ucode?
+FATAL: Error inserting iwlagn
+(/lib/modules/2.6.26-1-amd64/updates/drivers/net/wireless/iwlwifi/iwlagn.ko):
+Unknown symbol in module, or unknown parameter (see
+dmesg)
 
-This machine is running Linus' tip from today. I am currently not
-running wireless-testing since it is not synced up with Linus tree at
-the moment.
+And the output of dmesg:
 
-Regards
+iwlagn: Unknown symbol iwl4965_agn_cfg
 
-Marcel
-
-
+Is there a simple workaround? Unfortunately, I cannot use a kernel >=2.6.27,
+because of sound and video issues.
+best regards,
+rodrigo.
