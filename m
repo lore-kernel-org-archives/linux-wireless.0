@@ -1,85 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc4-s32.blu0.hotmail.com ([65.55.111.171]:24922 "EHLO
-	blu0-omc4-s32.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750825AbZALGhQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 01:37:16 -0500
-Message-ID: <BLU129-W353904E1AB1EEE7AC28C7D80D80@phx.gbl> (sfid-20090112_073722_769047_71C8194D)
-From: Jayant Sane <jayant_sane@hotmail.com>
-To: <larry.finger@lwfinger.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: RE: Newbie question on 2.6.28-rc8-wl
-Date: Mon, 12 Jan 2009 06:37:15 +0000
-In-Reply-To: <496A27FA.5030508@lwfinger.net>
-References: <BLU129-W39120C9D5D733AC53C210180DB0@phx.gbl>
- <496A27FA.5030508@lwfinger.net>
-Content-Type: text/plain; charset=Windows-1252
+Received: from mail.deathmatch.net ([70.167.247.36]:2486 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752398AbZAFRhV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 12:37:21 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+Date: Tue, 6 Jan 2009 12:35:11 -0500
+Message-Id: <20090106172758.M47578@bobcopeland.com> (sfid-20090106_183726_253327_6AF806EE)
+In-Reply-To: <1231262082.3654.5.camel@johannes>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com> <1229336057.4471.9.camel@johannes.berg> <1229354532.12163.24.camel@localhost.localdomain> <20081217174244.M36761@bobcopeland.com> <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet> <1230102989.16960.14.camel@californication> <1231260306.14565.21.camel@localhost.localdomain> <20090106165434.M2397@bobcopeland.com> <1231262082.3654.5.camel@johannes>
 MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 06 Jan 2009 18:14:41 +0100, Johannes Berg wrote
+> > However, _with_ the current procedure of telling NM to go to sleep, it
+> > tries to reconnect after resume because NM takes care of downing the
+> > interfaces.  As a result mac80211 never gets the chance to save the
+> > state of the running interfaces.
+> 
+> You mean restore?
+> 
+> Does that mean there's a race condition now, between userspace config
+> and the resume stuff? Can't we fix that by taking the rtnl?
 
+No, I mean that with dbus telling NM to go to sleep (as part of pm-utils)
+NM then takes down the interfaces -- userspace is still running, this is
+before the kernel actually suspends.
 
-Thank you.
+Consequently, all the interfaces look down to mac80211 when suspend() is
+actually called so the suspend/resume in mac80211 doesn't wind up doing
+anything with interfaces.  No race condition, but a re-association must 
+happen from userspace on the resume side (NM will do this, though).
 
-Again pardon my ignorance here..
+At least this appears the case on f10, correct me if I'm wrong, Dan.
 
-It seems that I can either get 2.6.28-wl or 2.6.28-rc8 per your suggest=
-ions below but not 2.6.28-rc8-wl
+-- 
+Bob Copeland %% www.bobcopeland.com
 
-And I know it is possible to have the kernel version reported as 2.6.28=
--rc8-wl.  How can I get that?
-
-thx
-Jay
-
-> Date: Sun, 11 Jan 2009 11:10:18 -0600
-> From: Larry.Finger@lwfinger.net
-> To: jayant_sane@hotmail.com
-> CC: linux-wireless@vger.kernel.org
-> Subject: Re: Newbie question on 2.6.28-rc8-wl
->=20
-> Jayant Sane wrote:
->> Bear with a miserable newbie...=20
->> =20
->> I have been asked to compile against the 2.6.28-rc8-wl version of ke=
-rnel (as printed by uname -r). How and where can I get this specific ke=
-rnel version from?=20
->> =20
->> I figured how to get the patch for 2.6.28-rc8 but the "-wl" part stu=
-mps me.=20
->=20
-> That is the kernel from the wireless-testing git tree. The only way t=
-o
-> get it is to install the git package from your distro and issue the
-> command
->=20
-> git clone \
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testi=
-ng.git
->=20
->=20
-> Be aware that the download is roughly 200 MB. In addition, the above
-> will get you 2.6.28-wl. If you really need -rc8 (which I doubt), then
-> you will need to issue the additional command
->=20
-> git checkout v2.6.28-rc8
->=20
-> The -wl part is not needed here.
->=20
-> Larry
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-_________________________________________________________________
-Windows Live=99 Hotmail=AE: Chat. Store. Share. Do more with mail.=20
-http://windowslive.com/howitworks?ocid=3DTXT_TAGLM_WL_t1_hm_justgotbett=
-er_howitworks_012009--
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
