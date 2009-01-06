@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:55753 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751231AbZAERBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 12:01:39 -0500
-Message-ID: <49623CEA.4080407@openwrt.org> (sfid-20090105_180141_565079_86C6F679)
-Date: Mon, 05 Jan 2009 18:01:30 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from fg-out-1718.google.com ([72.14.220.157]:36471 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758043AbZAFWw6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 17:52:58 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2898196fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 14:52:57 -0800 (PST)
+Message-ID: <69e28c910901061452r75ef5b27yce3dd32f5d1e19f4@mail.gmail.com> (sfid-20090106_235316_367636_0DABFFA8)
+Date: Tue, 6 Jan 2009 23:52:56 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Andrey Yurovsky" <andrey@cozybit.com>
+Subject: Re: firmware for GSPI '8686 available
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	libertas-dev@lists.infradead.org,
+	"Javier Cardona" <javier@cozybit.com>,
+	"Colin McCabe" <colin@cozybit.com>
+In-Reply-To: <45e8e6c40901061413n1a984e58n8e1643caa1fd481e@mail.gmail.com>
 MIME-Version: 1.0
-To: Andi Kleen <andi@firstfloor.org>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: rate instability in wireless stack
-References: <20090105050248.GG496@one.firstfloor.org> <496193A6.3040608@lwfinger.net> <20090105054830.GJ496@one.firstfloor.org> <49620BE5.9030507@openwrt.org> <20090105142343.GS496@one.firstfloor.org> <49621C36.70602@openwrt.org> <20090105152410.GT496@one.firstfloor.org> <49622686.9050005@openwrt.org> <20090105163553.GU496@one.firstfloor.org> <49623712.4060106@openwrt.org> <20090105171105.GW496@one.firstfloor.org>
-In-Reply-To: <20090105171105.GW496@one.firstfloor.org>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <45e8e6c40901061413n1a984e58n8e1643caa1fd481e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andi Kleen wrote:
->> According to the rate control's view, only the 1M has a usable
->> success probability. It's rather insteresting that 11M is the only
->> other rate that had some successes. With this kind of results, the
->> only two options that I can think of are either a systematic tx
->> status reporting error (false negative for the IEEE80211_TX_STAT_ACK
->> flag), or something PHY related.
-> 
-> Ok. Any more data I should provide to help tracking this down?
-> Do you want the same from the RaLink?
-Yes, It'd be interesting to see if the table looks similar or if
-more rates work.
+On Tue, Jan 6, 2009 at 11:13 PM, Andrey Yurovsky <andrey@cozybit.com> wrote:
+> Marvell will make the 88W8686 GSPI firmware available for public
+> download on their website in the next weeks.  In the meantime we've
+> uploaded it to our website:
+> http://cozybit.com/projects/gspi8686
+>
+> Please note that you must accept Marvell's license before downloading the files.
+>
+> We encourage you to use this firmware to test the patch set that Colin
+> submitted on Jan 2nd.
+>
+> Thanks,
+>
+>  -Andrey
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-- Felix
+That license looks like it is not really a valid click-wrap -
+similarly to the GPL, acceptance is not required for having copies,
+since it only covers redistribution.
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
