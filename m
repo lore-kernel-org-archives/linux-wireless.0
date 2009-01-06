@@ -1,65 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:44810 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765392AbZAOSxp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60681 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754089AbZAFRnP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 13:53:45 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Artur Skawina <art.08.09@gmail.com>
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-Date: Thu, 15 Jan 2009 19:53:49 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <494698AF.4020204@gmail.com> <496D163B.5030307@gmail.com> <496F7887.8070203@gmail.com>
-In-Reply-To: <496F7887.8070203@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901151953.49053.chunkeey@web.de> (sfid-20090115_195400_478489_F6895B04)
+	Tue, 6 Jan 2009 12:43:15 -0500
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+In-Reply-To: <20090106172758.M47578@bobcopeland.com>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <1229336057.4471.9.camel@johannes.berg>
+	 <1229354532.12163.24.camel@localhost.localdomain>
+	 <20081217174244.M36761@bobcopeland.com>
+	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
+	 <1230102989.16960.14.camel@californication>
+	 <1231260306.14565.21.camel@localhost.localdomain>
+	 <20090106165434.M2397@bobcopeland.com> <1231262082.3654.5.camel@johannes>
+	 <20090106172758.M47578@bobcopeland.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+tkzQChf+RrS9k3Wnreq"
+Date: Tue, 06 Jan 2009 18:43:22 +0100
+Message-Id: <1231263802.3654.8.camel@johannes> (sfid-20090106_184325_418085_FF72468C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 January 2009 18:55:19 Artur Skawina wrote:
-> Artur Skawina wrote:
-> > Artur Skawina wrote:
-> >>>>> reboots, but locks up after only a few packets go over the hostap driven
-> >>>>> p54usb device. I need the box to be up, that limits the number of tests i can
-> > 
-> >> after switching from SLUB to SLAB and enabling some debugging i finally caught this:
-> > 
-> > and slub debugging gave something a bit more useful:
-> > 
-> > =============================================================================
-> > BUG kmalloc-4096: Poison overwritten
-> 
-> tried reproducing (using the old w-t/pending pull) on different machine,
-> but no oops or crash there...
-> (similar connectivity issues though, such as connecting only works
-> exactly once after starting hostapd, to reconnect i have to restart
-> hostapd)
-hmm, maybe Windows Mobile uses another PS mechanism, e.g WMM-PS.
 
-> Upgraded to current wireless-testing/pending on the problematic box
-> and almost immediately got [1]. No slab corruption this time (at least
-> not yet). Will switch to GFP_ATOMIC and retry w/ the new fw.
-> 
-> artur
-yes that's a bug, p54_set_tim must use GFP_ATOMIC, do you want to post the patch?
+--=-+tkzQChf+RrS9k3Wnreq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> [1]:
-> BUG: scheduling while atomic: named/2004/0x10000200
-> Modules linked in: netconsole saa7134_empress saa6752hs lnbp21 s5h1420 saa7134 videobuf_dma_sg serio_raw budget videobuf_core tveeprom budget_ci budget_core saa7146 ttpci_eeprom ir_common [last unloaded: microcode]
-> Pid: 2004, comm: named Not tainted 2.6.29-rc1-00271-ge9fa6b0 #45
-> Call Trace:
->  [<c04d4ef7>] schedule+0x2a7/0x320
->  [<c03aed74>] __alloc_skb+0x34/0x110
->  [<c011f5b3>] __cond_resched+0x13/0x30
->  [<c04d501d>] _cond_resched+0x2d/0x40
->  [<c016d8c5>] kmem_cache_alloc+0x95/0xc0
->  [<c016b8d4>] check_object+0xc4/0x230
->  [<c03aed74>] __alloc_skb+0x34/0x110
->  [<c02ede91>] p54_alloc_skb+0x71/0xf0
->  [<c02ee36f>] p54_set_tim+0x3f/0xa0
->  [<c04ae064>] sta_info_set_tim_bit+0x64/0x80
+On Tue, 2009-01-06 at 12:35 -0500, Bob Copeland wrote:
 
-Regards,
-	Chr
+> No, I mean that with dbus telling NM to go to sleep (as part of pm-utils)
+> NM then takes down the interfaces -- userspace is still running, this is
+> before the kernel actually suspends.
+>=20
+> Consequently, all the interfaces look down to mac80211 when suspend() is
+> actually called so the suspend/resume in mac80211 doesn't wind up doing
+> anything with interfaces.  No race condition, but a re-association must=20
+> happen from userspace on the resume side (NM will do this, though).
+
+Ok, but that's fine, that means the mac80211 resume code will also not
+do anything. Hence, we can put this code in, but it won't be used on
+such systems initially.
+
+We should probably take the rtnl anyway though to be prepared for when
+userspace is not suspended.. Need to think about that more though, and
+possibly add a new "suspended" flag that makes it block all
+configuration attempts.
+
+johannes
+
+--=-+tkzQChf+RrS9k3Wnreq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJY5g3AAoJEKVg1VMiehFYG2sQALvW+lGZiA/MVX1hu7EGuRE9
+qeWb0zw1xcSt9VhaHHxmN7c5WVmkrfjjn0CTA+KLws/U0DtlGiUFKhL7qq0BeR2K
+NtJAH6QdZVdhEwWVOaZJqdnhFCbTCtsaeyEdiX9ZYY8iCajkP8U2oNUvuP0LnUil
+Ln308GQNrCKsh8WhWbn5jzFaKHttcpEMMBU5mBlSQpQQxAYIOiTH3qUzzBetAZlf
+B4nEH5zV2zUhn10Yizw5cCb6qzxQ7y4Y4VmhMfKQEFrTMgb9oh46mU8FYuYK2kar
+ilKAYFwOufRLV9bBRO2ECzeuP+lFBu20XH8P5B/7au4tR0N3b/MsYY8nHEDVJ6go
+hDIGYiCSvylGUP02Al0PTA8VsRMuGy7PB+RkT6pT1mEZnCAluVHT5jmmm1kmXXp1
+eZYyv/yPXDZpGt/dJjHOmTziP67T9f5RXAMdQVEhFPMwfMyo+eICBbgbM6u4+h+s
+SP9TCTVkQwi2Es50N0ZRQa7l6uctldn3XQMcrTYrefkzwXLdHPVwgb5heRZ4/UuZ
+rEALVdD50GHfAbyqueW4hP70mPAH/RtEadjOEAI+jOjv2V5i+OOlEboTo2ogeVfY
+HhmLD8UpncAz106R0zueVnhB42eww4BwbpUEjT+WahB4TrT8Tmrm4gd9o2aKFjdK
+H//URUG+B4zkLXoNCuX1
+=uyg/
+-----END PGP SIGNATURE-----
+
+--=-+tkzQChf+RrS9k3Wnreq--
+
