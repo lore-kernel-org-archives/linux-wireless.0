@@ -1,41 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:1868 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445AbZAYVVH (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:26144 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758767AbZAFWXT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 16:21:07 -0500
-Date: Sun, 25 Jan 2009 16:20:44 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] [PATCH] ath5k: support LED's on emachines E510 notebok
-Message-ID: <20090125212044.GA3592@hash.localnet> (sfid-20090125_222114_159897_524A682F)
-References: <1232914461-19607-1-git-send-email-tuliom@gmail.com>
+	Tue, 6 Jan 2009 17:23:19 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so2565869yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 14:23:18 -0800 (PST)
+Message-ID: <43e72e890901061423o1b2c84b6q38f791408b2ad9d9@mail.gmail.com> (sfid-20090106_232337_986290_06A5D381)
+Date: Tue, 6 Jan 2009 14:23:18 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Gertjan van Wingerde" <gwingerde@kpnplanet.nl>
+Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
+Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
+	"Ivo van Doorn" <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rt2400-devel@lists.sourceforge.net"
+	<rt2400-devel@lists.sourceforge.net>
+In-Reply-To: <4963D7F0.3090402@kpnplanet.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1232914461-19607-1-git-send-email-tuliom@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <200901042021.10904.IvDoorn@gmail.com>
+	 <20090105200809.GH6834@tesla> <49627BCB.4020200@kpnplanet.nl>
+	 <200901052321.46422.IvDoorn@gmail.com> <20090105234546.GK6834@tesla>
+	 <4963BFEF.2090006@kpnplanet.nl> <20090106204744.GB21980@tesla>
+	 <4963D7F0.3090402@kpnplanet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 25, 2009 at 09:14:21PM +0100, Tulio Magno Quites Machado Filho wrote:
-> Add vendor ID for AMBIT and use it to set the ath5k LED gpio.
+On Tue, Jan 6, 2009 at 2:15 PM, Gertjan van Wingerde
+<gwingerde@kpnplanet.nl> wrote:
+> On 01/06/09 21:47, Luis R. Rodriguez wrote:
+>>
+>> On Tue, Jan 06, 2009 at 12:32:47PM -0800, Gertjan van Wingerde wrote:
+>>
+>>>
+>>> On 01/06/09 00:45, Luis R. Rodriguez wrote:
+>>>
+>>>>
+>>>> On Mon, Jan 05, 2009 at 02:21:46PM -0800, Ivo van Doorn wrote:
+>>>>
+>>>>
+>>>>>
+>>>>> On Monday 05 January 2009, Gertjan van Wingerde wrote:
+>>>>>
+>>>>>
+>>>>>>
+>>>>>> On 01/05/09 21:08, Luis R. Rodriguez wrote:
+>>>>>>
+>>>>>> The problem isn't there for the bits that Ivo sent, as the rt2500
+>>>>>> devices don't support the a band.
+>>>>>>
+>>>>>>
+>>>>>
+>>>>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they
+>>>>> are rare, but they do exist),
+>>>>> comments for the Ralink drivers indicate they simply didn't add the
+>>>>> regulatory domain definitions yet.
+>>>>>
+>>>>>
+>>>>
+>>>> Based on the documentation from the EEPROM for all devices I read that
+>>>> its recommended
+>>>> that the EEPROM *not be relied on for the regulatory domain*, instead it
+>>>> recommends the
+>>>> windows registry be used.
+>>>>
+>>>> Based on tests for the devices with only one band, do are you seeing an
+>>>> actual regulatory
+>>>> domain in the EEPROM?
+>>>>
+>>>> To deal with the issue of having two separate EEPROM values for a
+>>>> regulatory domain
+>>>> and since the documentation indicates to not rely on it I would advise
+>>>> to allow users
+>>>> to be compliant by selecting the country they are in. wpa_supplicant has
+>>>> support for
+>>>> selecting country now, and so does iw. Eventually I see Network Manager
+>>>> letting users
+>>>> select the country. But you guys are the maintainers and developers so
+>>>> you will know
+>>>> better.
+>>>>
+>>>>
+>>>
+>>> My tests indicate that there are devices out there that have this
+>>> information set in the EEPROM. Based on tests with my own patch, and my
+>>> own devices, I have been able to determine the following:
+>>>
+>>> 1. rt2400pci -->  don't know, don't own a rt2400pci device.
+>>> 2. rt2500pci -->  don't know, don't own a rt2500pci device anymore.
+>>> 3. rt2500usb -->  my e-tech device (not sure which type; the device
+>>> doesn't say it) has an actual domain set for the bg band.
+>>> 4. rt61pci -->  my Sitecom WL151 device does not contain actual domain
+>>> information.
+>>> 5. rt73usb -->  my Sitecom WL113-002 device does contain actual domain
+>>> information, and the codes for the bg band and a band are the same.
+>>> 6. rt2800pci -->  my Sitecom WL182 device does contain actual domain
+>>> information, and the codes for the bg band and a band are the same.
+>>> 7. rt2800usb -->  my Sitecom WL181 device does contain actual domain
+>>> information, and the codes for the bg band and a band are the same.
+>>>
+>>> So, there are devices out there that do contain "meaningful" regulatory
+>>> information.
+>>>
+>>> Luis, the definitions for the a-band EEPROM codes only give the channel
+>>> numbers, it doesn't indicate a real "country". Is there any way we can
+>>> check whether these sets of channels are actually consistent with the
+>>> regulations of specific countries?
+>>>
+>>
+>> You can help contribute to the wireless-regdb and check that the valid
+>> channels apply there.
+>>
+>
+> Well, the trouble I'm having is to match the allowed values and channels
+> against the regdb, to see to which countries each of the values map, if any.
+> I'm a bit illiterate on channel assignments etc., so I don't know how to do
+> the math from channel number to frequency, and all the other stuff that is
+> in the regdb.
 
-Thanks!
+Look at net/wireless/util.c ieee80211_channel_to_frequency() for how
+to do this. If all you have is channel maps then just focus on that
+then.
 
->  #define PCI_VENDOR_ID_FOXCONN		0x105b
->  
-> +#define PCI_VENDOR_ID_AMBIT		0x1468
-> +
-
-Can you put the vendor id in order?  The file is supposed to be
-sorted by vendor id, then by device id in order to reduce merge 
-conflicts.
-
-With that change, feel free to add my:
-
-Acked-by: Bob Copeland <me@bobcopeland.com>
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
