@@ -1,58 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37549 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:41895 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbZABKLn (ORCPT
+	with ESMTP id S1751598AbZAFNBg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 05:11:43 -0500
-Subject: Re: [RFC 00/11] mac80211: Add support for IEEE 802.11w (MFP)
+	Tue, 6 Jan 2009 08:01:36 -0500
+Subject: Re: [PATCH 5/6] mac80211: remove unused variable in
+	ieee80211_local (dot11WEPUndecryptableCount).
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081231153834.840526845@w1.fi>
-References: <20081231153834.840526845@w1.fi>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-3DCpLRfUdPuYGSA8KOfA"
-Date: Fri, 02 Jan 2009 11:12:19 +0100
-Message-Id: <1230891139.3272.10.camel@johannes> (sfid-20090102_111145_848481_1163CC50)
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <eb3ff54b0901060051x67121996ib7b1471e1e585ccf@mail.gmail.com> (sfid-20090106_095126_324912_40C35CBE)
+References: <eb3ff54b0901060051x67121996ib7b1471e1e585ccf@mail.gmail.com>
+	 (sfid-20090106_095126_324912_40C35CBE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-oFQ4Ckddwm6SqjaCFXtV"
+Date: Tue, 06 Jan 2009 14:02:25 +0100
+Message-Id: <1231246945.3503.2.camel@johannes> (sfid-20090106_140139_746615_83B9715B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-3DCpLRfUdPuYGSA8KOfA
+--=-oFQ4Ckddwm6SqjaCFXtV
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2008-12-31 at 17:38 +0200, Jouni Malinen wrote:
-> This set of patches adds support for IEEE 802.11w (management frame
-> protection) into mac80211. It is up-to-date with the latest IEEE 802.11w
-> draft (D7.0) and I do not expect any major changes to IEEE 802.11w
-> anymore.
+On Tue, 2009-01-06 at 10:51 +0200, Rami Rosen wrote:
+> This patch removes and unused declaration of dot11WEPUndecryptableCount (=
+an
+> snmp counter) in ieee80211_local structure ; this counter is not
+> incremented/decremented
+> anywhere.
+>=20
+>=20
+> (wireless-testing).
+>=20
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+>=20
+> diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+> index 2697a2f..39f00e1 100644
+> --- a/net/mac80211/debugfs.c
+> +++ b/net/mac80211/debugfs.c
+> @@ -136,8 +136,6 @@ DEBUGFS_STATS_FILE(multicast_received_frame_count, 20=
+, "%u",
+>  		   local->dot11MulticastReceivedFrameCount);
+>  DEBUGFS_STATS_FILE(transmitted_frame_count, 20, "%u",
+>  		   local->dot11TransmittedFrameCount);
+> -DEBUGFS_STATS_FILE(wep_undecryptable_count, 20, "%u",
+> -		   local->dot11WEPUndecryptableCount);
 
-Looks good to me, I wouldn't mind putting this in.
+this won't compile
 
 johannes
 
---=-3DCpLRfUdPuYGSA8KOfA
+--=-oFQ4Ckddwm6SqjaCFXtV
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJXeiAAAoJEKVg1VMiehFYRjIP/1YcOjd9iJskXYdTWP3Mbqrj
-YY27M+vPRjV2OfslnQQKTqpxszg/NQ5N1Z5sqVzs1qxCWiLZF7uhH5qAjNYWkRe7
-89/UilfTsUOHny27JF89efM7bQ8f0eTM6/jtVwNSaRe8ZGMsBowrDis0V5wY8trG
-66QF1DPDst6UPXyPtyDoxffVBGf9Bc0twdlILootSvGBvDOWHOPFiHNnORqngsdh
-jjZ87I6Cvqecb7DNiLXLG4SFePbfuwQN95jvp/P+hgq3v1mGm/+xxxb5WGzZzgmt
-se/1aM7rfZInTruj6PD/HDCreyHO5YNgTgYgo9KU5HzGFomlCDQSLnenfaW1yLhC
-F0ZLOnAnJj7rSCkTupGNEH7XXpxUjI+uynBHwsvZ1VmIG6ClhuXrVAvk0uAXOG5Z
-q8oD3Q800FTBnPIiv1oxgTXgoHL5UdfRkR21NZ81l65CGjns1gq5pOZ7+6ytMnV5
-DzSHuYjLGf6jrIoEkxyr9SAzDG3wS63R5M3/INC9ymr56Bl1hN9USJwmhl4g0wAX
-8Z/TAiJrzFvkvg6azhZRqa/7bqE8JaeOKLMG1mKZeuwjI17UjQl+LFxchRq3hJ3b
-LIxdLU8fkmV6I38PHREW1XiZK4ijSpMQXucXV0rgp/vBFVVH81ZeMQHsUwo75YPZ
-j8OpOIUaT+r29cXk5oWh
-=Eu57
+iQIcBAABAgAGBQJJY1ZfAAoJEKVg1VMiehFYcmgP/35Wyzcvicq8J9/G5e7zA4O1
+fogGiquJU67CO1Fvqw82U7l3MN26qo5DQVHIuked+0zwsiTt60fBonmKzTSkkOoc
+IeN1gn9b8lnXmbUBvFxU/cSZmA+igJw/c+4hEnp1m54IU2SwW38ljBmOu0zWs43y
+UNO5klz0ZqL1vIOALJIx6B7pELnkp6yOw3ibV/xTk7j6K4WdrBh2uflNClyTLj+W
+GWgqTsVRnJfD3hB+HekfNN2dyKYNJdH8JQmwkXMsQTbPH+k+JV8lIdZENRNX+myd
+AblEYNyaZl3K/wr8VO/Kc/UnYY8/K6iNutb2TsdAvWo+4eTqcvBoWINi8LaTXiar
+/Bw6fRSpYi0Ul75S5Uugy1wg6D5TVcb2PKsjqnXpojgddvLbitqYujRy0lrTYiEE
+rALorRn87JPmstXuCkM+X6yUjkze2xiJSwVHpiMgNwhlxuRcgF+aBfSxb0x8qPZm
+bFNMApTbvXrtXs9VVymVy8+wFNK972wLa4fWB8wkJwHt9bA356stzjN1/wup9bqS
+WEqQDhxE5JcFl0mCqlrFQNoDMnAQ255zoYRZ04RHgw8aoXtyAUqHHwFenGi6HEVT
+TdpkhL7SrlhWxjlpFB80xsXo+RW8kLuUgOYu1MNRcFA/zn2YnXhFK2978OyorTZZ
+/e7siJbvgZbg0EV1mrpy
+=MPmg
 -----END PGP SIGNATURE-----
 
---=-3DCpLRfUdPuYGSA8KOfA--
+--=-oFQ4Ckddwm6SqjaCFXtV--
 
