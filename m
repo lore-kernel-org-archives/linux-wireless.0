@@ -1,283 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:48697 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751893AbZA3WyK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 17:54:10 -0500
-Subject: [PATCH 2/7 v2] iwlwifi: simplify parameter setting to allow
-	support for 6000 series
-From: reinette chatre <reinette.chatre@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>
-In-Reply-To: <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
-References: <> <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
-	 <1233256157-21290-2-git-send-email-reinette.chatre@intel.com>
-	 <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
-Content-Type: text/plain
-Date: Fri, 30 Jan 2009 14:57:12 -0800
-Message-Id: <1233356232.2411.110.camel@rc-desk> (sfid-20090130_235415_367720_50027785)
-Mime-Version: 1.0
+Received: from cpsmtpo-eml03.KPNXCHANGE.COM ([213.75.38.152]:14308 "EHLO
+	cpsmtpo-eml03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756482AbZAFWPP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 17:15:15 -0500
+Message-ID: <4963D7F0.3090402@kpnplanet.nl> (sfid-20090106_231536_898544_CE54DB20)
+Date: Tue, 06 Jan 2009 23:15:12 +0100
+From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rt2400-devel@lists.sourceforge.net"
+	<rt2400-devel@lists.sourceforge.net>
+Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
+References: <200901042021.10904.IvDoorn@gmail.com> <20090105200809.GH6834@tesla> <49627BCB.4020200@kpnplanet.nl> <200901052321.46422.IvDoorn@gmail.com> <20090105234546.GK6834@tesla> <4963BFEF.2090006@kpnplanet.nl> <20090106204744.GB21980@tesla>
+In-Reply-To: <20090106204744.GB21980@tesla>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+On 01/06/09 21:47, Luis R. Rodriguez wrote:
+> On Tue, Jan 06, 2009 at 12:32:47PM -0800, Gertjan van Wingerde wrote:
+>    
+>> On 01/06/09 00:45, Luis R. Rodriguez wrote:
+>>      
+>>> On Mon, Jan 05, 2009 at 02:21:46PM -0800, Ivo van Doorn wrote:
+>>>
+>>>        
+>>>> On Monday 05 January 2009, Gertjan van Wingerde wrote:
+>>>>
+>>>>          
+>>>>> On 01/05/09 21:08, Luis R. Rodriguez wrote:
+>>>>>
+>>>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
+>>>>>
+>>>>>            
+>>>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
+>>>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
+>>>>
+>>>>          
+>>> Based on the documentation from the EEPROM for all devices I read that its recommended
+>>> that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
+>>> windows registry be used.
+>>>
+>>> Based on tests for the devices with only one band, do are you seeing an actual regulatory
+>>> domain in the EEPROM?
+>>>
+>>> To deal with the issue of having two separate EEPROM values for a regulatory domain
+>>> and since the documentation indicates to not rely on it I would advise to allow users
+>>> to be compliant by selecting the country they are in. wpa_supplicant has support for
+>>> selecting country now, and so does iw. Eventually I see Network Manager letting users
+>>> select the country. But you guys are the maintainers and developers so you will know
+>>> better.
+>>>
+>>>        
+>> My tests indicate that there are devices out there that have this
+>> information set in the EEPROM. Based on tests with my own patch, and my
+>> own devices, I have been able to determine the following:
+>>
+>> 1. rt2400pci -->  don't know, don't own a rt2400pci device.
+>> 2. rt2500pci -->  don't know, don't own a rt2500pci device anymore.
+>> 3. rt2500usb -->  my e-tech device (not sure which type; the device
+>> doesn't say it) has an actual domain set for the bg band.
+>> 4. rt61pci -->  my Sitecom WL151 device does not contain actual domain
+>> information.
+>> 5. rt73usb -->  my Sitecom WL113-002 device does contain actual domain
+>> information, and the codes for the bg band and a band are the same.
+>> 6. rt2800pci -->  my Sitecom WL182 device does contain actual domain
+>> information, and the codes for the bg band and a band are the same.
+>> 7. rt2800usb -->  my Sitecom WL181 device does contain actual domain
+>> information, and the codes for the bg band and a band are the same.
+>>
+>> So, there are devices out there that do contain "meaningful" regulatory
+>> information.
+>>
+>> Luis, the definitions for the a-band EEPROM codes only give the channel
+>> numbers, it doesn't indicate a real "country". Is there any way we can
+>> check whether these sets of channels are actually consistent with the
+>> regulations of specific countries?
+>>      
+>
+> You can help contribute to the wireless-regdb and check that the valid
+> channels apply there.
+>    
 
-by parametrizing the set hw function, in addition to allowing for
-supporting the 6000 family significantly simplify the addition of new
-hardware.
+Well, the trouble I'm having is to match the allowed values and channels 
+against the regdb, to see to which countries each of the values map, if any.
+I'm a bit illiterate on channel assignments etc., so I don't know how to 
+do the math from channel number to frequency, and all the other stuff 
+that is in the regdb.
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
-v2 fix HW params initialization: antennas are antennas and chains are num_of_ant()
-
- drivers/net/wireless/iwlwifi/iwl-100.c  |    2 +
- drivers/net/wireless/iwlwifi/iwl-5000.c |   76 ++++++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-6000.c |   10 ++++
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 +
- 4 files changed, 53 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-100.c b/drivers/net/wireless/iwlwifi/iwl-100.c
-index dbadaf4..4c4d165 100644
---- a/drivers/net/wireless/iwlwifi/iwl-100.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-100.c
-@@ -66,5 +66,7 @@ struct iwl_cfg iwl100_bgn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_A,
-+	.valid_rx_ant = ANT_AB,
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index c5e9a66..535a46c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -43,6 +43,7 @@
- #include "iwl-sta.h"
- #include "iwl-helpers.h"
- #include "iwl-5000-hw.h"
-+#include "iwl-6000-hw.h"
- 
- /* Highest firmware API version supported */
- #define IWL5000_UCODE_API_MAX 1
-@@ -840,8 +841,18 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.tfd_size = sizeof(struct iwl_tfd);
- 	priv->hw_params.max_stations = IWL5000_STATION_COUNT;
- 	priv->hw_params.bcast_sta_id = IWL5000_BROADCAST_ID;
--	priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
--	priv->hw_params.max_inst_size = IWL50_RTC_INST_SIZE;
-+
-+	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
-+	case CSR_HW_REV_TYPE_6x00:
-+	case CSR_HW_REV_TYPE_6x50:
-+		priv->hw_params.max_data_size = IWL60_RTC_DATA_SIZE;
-+		priv->hw_params.max_inst_size = IWL60_RTC_INST_SIZE;
-+		break;
-+	default:
-+		priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
-+		priv->hw_params.max_inst_size = IWL50_RTC_INST_SIZE;
-+	}
-+
- 	priv->hw_params.max_bsm_size = 0;
- 	priv->hw_params.fat_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
-@@ -849,61 +860,40 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 
- 	priv->hw_params.sens = &iwl5000_sensitivity;
- 
--	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
--	case CSR_HW_REV_TYPE_5100:
--		priv->hw_params.tx_chains_num = 1;
--		priv->hw_params.rx_chains_num = 2;
--		priv->hw_params.valid_tx_ant = ANT_B;
--		priv->hw_params.valid_rx_ant = ANT_AB;
--		break;
--	case CSR_HW_REV_TYPE_5150:
--		priv->hw_params.tx_chains_num = 1;
--		priv->hw_params.rx_chains_num = 2;
--		priv->hw_params.valid_tx_ant = ANT_A;
--		priv->hw_params.valid_rx_ant = ANT_AB;
--		break;
--	case CSR_HW_REV_TYPE_5300:
--	case CSR_HW_REV_TYPE_5350:
--		priv->hw_params.tx_chains_num = 3;
--		priv->hw_params.rx_chains_num = 3;
--		priv->hw_params.valid_tx_ant = ANT_ABC;
--		priv->hw_params.valid_rx_ant = ANT_ABC;
--		break;
--	}
-+	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
-+	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
-+	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
-+	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
- 
- 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
--	case CSR_HW_REV_TYPE_5100:
--	case CSR_HW_REV_TYPE_5300:
--	case CSR_HW_REV_TYPE_5350:
--		/* 5X00 and 5350 wants in Celsius */
--		priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
--		break;
- 	case CSR_HW_REV_TYPE_5150:
- 		/* 5150 wants in Kelvin */
- 		priv->hw_params.ct_kill_threshold =
- 				iwl5150_get_ct_threshold(priv);
- 		break;
-+	default:
-+		/* all others want Celsius */
-+		priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
-+		break;
- 	}
- 
- 	/* Set initial calibration set */
- 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
--	case CSR_HW_REV_TYPE_5100:
--	case CSR_HW_REV_TYPE_5300:
--	case CSR_HW_REV_TYPE_5350:
-+	case CSR_HW_REV_TYPE_5150:
- 		priv->hw_params.calib_init_cfg =
--			BIT(IWL_CALIB_XTAL)		|
-+			BIT(IWL_CALIB_DC)		|
- 			BIT(IWL_CALIB_LO)		|
- 			BIT(IWL_CALIB_TX_IQ) 		|
--			BIT(IWL_CALIB_TX_IQ_PERD)	|
- 			BIT(IWL_CALIB_BASE_BAND);
-+
- 		break;
--	case CSR_HW_REV_TYPE_5150:
-+	default:
- 		priv->hw_params.calib_init_cfg =
--			BIT(IWL_CALIB_DC)		|
-+			BIT(IWL_CALIB_XTAL)		|
- 			BIT(IWL_CALIB_LO)		|
- 			BIT(IWL_CALIB_TX_IQ) 		|
-+			BIT(IWL_CALIB_TX_IQ_PERD)	|
- 			BIT(IWL_CALIB_BASE_BAND);
--
- 		break;
- 	}
- 
-@@ -1556,6 +1546,8 @@ struct iwl_cfg iwl5300_agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_ABC,
-+	.valid_rx_ant = ANT_ABC,
- };
- 
- struct iwl_cfg iwl5100_bg_cfg = {
-@@ -1569,6 +1561,8 @@ struct iwl_cfg iwl5100_bg_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_A,
-+	.valid_rx_ant = ANT_AB,
- };
- 
- struct iwl_cfg iwl5100_abg_cfg = {
-@@ -1582,6 +1576,8 @@ struct iwl_cfg iwl5100_abg_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_B,
-+	.valid_rx_ant = ANT_AB,
- };
- 
- struct iwl_cfg iwl5100_agn_cfg = {
-@@ -1595,6 +1591,8 @@ struct iwl_cfg iwl5100_agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_B,
-+	.valid_rx_ant = ANT_AB,
- };
- 
- struct iwl_cfg iwl5350_agn_cfg = {
-@@ -1608,6 +1606,8 @@ struct iwl_cfg iwl5350_agn_cfg = {
- 	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_ABC,
-+	.valid_rx_ant = ANT_ABC,
- };
- 
- struct iwl_cfg iwl5150_agn_cfg = {
-@@ -1621,6 +1621,8 @@ struct iwl_cfg iwl5150_agn_cfg = {
- 	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_B,
-+	.valid_rx_ant = ANT_AB,
- };
- 
- MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 4515a60..b78d676 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -72,6 +72,8 @@ struct iwl_cfg iwl6000_2ag_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_BC,
-+	.valid_rx_ant = ANT_BC,
- };
- 
- struct iwl_cfg iwl6000_2agn_cfg = {
-@@ -85,6 +87,8 @@ struct iwl_cfg iwl6000_2agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_BC,
-+	.valid_rx_ant = ANT_BC,
- };
- 
- struct iwl_cfg iwl6050_2agn_cfg = {
-@@ -98,6 +102,8 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_BC,
-+	.valid_rx_ant = ANT_BC,
- };
- 
- struct iwl_cfg iwl6000_3agn_cfg = {
-@@ -111,6 +117,8 @@ struct iwl_cfg iwl6000_3agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_ABC,
-+	.valid_rx_ant = ANT_ABC,
- };
- 
- struct iwl_cfg iwl6050_3agn_cfg = {
-@@ -124,6 +132,8 @@ struct iwl_cfg iwl6050_3agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_ABC,
-+	.valid_rx_ant = ANT_ABC,
- };
- 
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 0a719ae..02e92be 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -211,6 +211,8 @@ struct iwl_cfg {
- 	u16  eeprom_calib_ver;
- 	const struct iwl_ops *ops;
- 	const struct iwl_mod_params *mod_params;
-+	u8   valid_tx_ant;
-+	u8   valid_rx_ant;
- };
- 
- /***************************
--- 
-1.5.4.3
-
-
+Gertjan.
 
