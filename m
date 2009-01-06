@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:37630 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818AbZAZSos (ORCPT
+Received: from exchange07.timesys.com ([209.114.137.35]:40495 "EHLO
+	exchange07.timesys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750742AbZAFPmJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 13:44:48 -0500
-Received: by ewy14 with SMTP id 14so896696ewy.13
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 10:44:46 -0800 (PST)
+	Tue, 6 Jan 2009 10:42:09 -0500
+Message-ID: <49637BD7.5000509@cheek.com> (sfid-20090106_164214_076882_C0B40C2F)
+Date: Tue, 6 Jan 2009 10:42:15 -0500
+From: Joseph Cheek <joseph@cheek.com>
 MIME-Version: 1.0
-In-Reply-To: <20090127053357.689baabe@s6510>
-References: <20090127053357.689baabe@s6510>
-Date: Mon, 26 Jan 2009 19:44:46 +0100
-Message-ID: <69e28c910901261044r1a078240rb7d16306ef5a2b09@mail.gmail.com> (sfid-20090126_194454_248268_ABFC2487)
-Subject: Re: [PATCH] hostap: convert to net_device_ops
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] 2.6.27 with compat-wireless-2008-12-31 stops transmitting
+ every 2-3 minutes
+References: <495C7640.8060806@cheek.com> <20090105170432.GA6834@tesla> <49624B10.70400@cheek.com>
+In-Reply-To: <49624B10.70400@cheek.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 26, 2009 at 7:33 PM, Stephen Hemminger
-<shemminger@vyatta.com> wrote:
-> +       dev->netdev_ops = &hostap_netdev-ops;
+Hi,
 
-I guess this should be
-+       dev->netdev_ops = &hostap_netdev_ops;
+looks like i misspoke.  my laptop, this morning, lost its connection for
+about 30 seconds while running a remote X app.  I just sshed to another
+box (running a g card with a broadcom chipset 8-), exported the display
+back to my laptop, and started ripperX.  About 2/3 into the rip the
+connection stalled for about 30 seconds and then came back.  perhaps i
+didn't see it before because i don't do any video serving from my
+laptop?  unsure.  i do watch the videos there, and i would expect the
+bandwidth utilization to be the same.  at least it seems bandwidth related.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+speaking of the broadcom card, it reassociated with the access point
+automatically after a reboot (of the access point).  both d-link/atheros
+cards needed some work to get it to reassociate - the desktop needed a
+reboot and the laptop needed a reinsertion of the pcmcia card.  possibly
+rmmod/modprobe ath9k would have worked to get it to reassociate, but
+/etc/init.d/net.wlan0 restart did not work.
+
+thanks for your help!
+
+Joseph Cheek
+
+Joseph Cheek wrote:
+> My laptop right next to the AP has no problems staying connected and
+> transmitting and receiving with stock 2.6.27.  It's running a DWL-652
+> (AR5416).
+>   
