@@ -1,93 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41866 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684AbZAFROg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 12:14:36 -0500
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
-In-Reply-To: <20090106165434.M2397@bobcopeland.com>
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
-	 <1229336057.4471.9.camel@johannes.berg>
-	 <1229354532.12163.24.camel@localhost.localdomain>
-	 <20081217174244.M36761@bobcopeland.com>
-	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
-	 <1230102989.16960.14.camel@californication>
-	 <1231260306.14565.21.camel@localhost.localdomain>
-	 <20090106165434.M2397@bobcopeland.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ULU59/xlbIEy0Fz7eH9F"
-Date: Tue, 06 Jan 2009 18:14:41 +0100
-Message-Id: <1231262082.3654.5.camel@johannes> (sfid-20090106_181450_618513_D33561CE)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:63611 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752274AbZAFPWR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 10:22:17 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 07:22:17 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [RFC 4/4] cfg80211: allow multiple driver regulatory_hints()
+Date: Tue, 6 Jan 2009 07:22:02 -0800
+Message-ID: <1231255322-13100-5-git-send-email-lrodriguez@atheros.com> (sfid-20090106_162220_670385_FE85E397)
+In-Reply-To: <1231255322-13100-4-git-send-email-lrodriguez@atheros.com>
+References: <1231255322-13100-1-git-send-email-lrodriguez@atheros.com>
+ <1231255322-13100-2-git-send-email-lrodriguez@atheros.com>
+ <1231255322-13100-3-git-send-email-lrodriguez@atheros.com>
+ <1231255322-13100-4-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We handle conflicts by intersecting multiple regulatory domains,
+each driver will stick to its own regulatory domain though unless
+a country IE has been received and processed.
 
---=-ULU59/xlbIEy0Fz7eH9F
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   43 +++++++++++++++++++++++++++++--------------
+ 1 files changed, 29 insertions(+), 14 deletions(-)
 
-On Tue, 2009-01-06 at 12:07 -0500, Bob Copeland wrote:
-> On Tue, 06 Jan 2009 11:45:06 -0500, Dan Williams wrote
-> > You still want to tell NM to go to sleep so it doesn't see the
-> > disconnection from the supplicant (triggered by the driver because it
-> > was going to sleep), and thus try to reconnect, or try a different AP.
->=20
-> Well, I tried it without the hack and it works (connection stays up=20
-> over a short suspend period).  This is with the new mac80211 suspend
-> patches, where suspend/resume looks like this:
->=20
-> suspend:
->   suspend userspace (freezes NM)
->   save bssid, keys etc
->   if wlan0 up
->      ifdown wlan0 (note NM is already frozen)
->   power down hw
->=20
-> resume:
->   power up hw
->   if wlan0 was up
->      ifup wlan0
->   reload config, bssid, ...
->   resume userspace
->=20
-> However, _with_ the current procedure of telling NM to go to sleep, it
-> tries to reconnect after resume because NM takes care of downing the
-> interfaces.  As a result mac80211 never gets the chance to save the
-> state of the running interfaces.
-
-You mean restore?
-
-Does that mean there's a race condition now, between userspace config
-and the resume stuff? Can't we fix that by taking the rtnl?
-
-johannes
-
---=-ULU59/xlbIEy0Fz7eH9F
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJY5F/AAoJEKVg1VMiehFYrqkP/AgrDuLu5vX2Vonr5PjPvRiO
-FM4nB/r+v9/iu6YgNEHkX4NhQ6H37XRNTsUdFS4D/06Rm3VsyCssX9XLPVoZL0vZ
-PEv4mjGIXMTw4emPvKt5fGERUWy5NKzwaBWQ6IuZbGWFsisCg3enqB4250GsUCLr
-4UkQoODTuEJnpa0Y1Bjbapv11h56a+OLA15JhygJpyJxK/XTEUEFjtf62HBqB6++
-y1069CoDQogYz9Ky9VQ7F+0RZ2FJuPRTL70166mQ7M2Sdwi/ijEYXD1LpcSDkgXq
-Q04z7xi80yj/LQH0mDd+Pdq2sZlyqzhBF1g0qE1YLbRI71Zhm1BWkDwponwC+9Gv
-Hn0prTMY7yKFOqJ13j5ZMScu5/geITiqyWuxPrDd9AlqRhpY4hABccEy6tqlHlMe
-zqBGpYvRMhIcMXfTujPbiepRivOHpf5adPJY9Kelj15WhJxe0gawGhk0VYJyxSBv
-FyyvIcWEwSUaaNAPWtnKl1hBfJDOKeSJ3nkiPzln4qEwwnpMt7W8ju6HYO0j5FBd
-KSAxGYGZzyteO2BqqFNaJNuz4tuPzbpW063BneS0s3MMfRg5fGjl6id7gGGCvVEO
-lYB4pHlDClIAsxts3aQHNrHjxR/nLDknrFNb4DORXDqUYpy1rp4/2wa2XEZYxVhd
-GRMrzDI2B77wqp0pKWYM
-=DJVG
------END PGP SIGNATURE-----
-
---=-ULU59/xlbIEy0Fz7eH9F--
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 09ba97f..2ea95cf 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -742,29 +742,42 @@ static u32 map_regdom_flags(u32 rd_flags)
+ 
+ /**
+  * freq_reg_info - get regulatory information for the given frequency
++ * @wiphy: the wiphy for which we want to process this rule for
+  * @center_freq: Frequency in KHz for which we want regulatory information for
+  * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
+  * 	you can set this to 0. If this frequency is allowed we then set
+  * 	this value to the maximum allowed bandwidth.
+  * @reg_rule: the regulatory rule which we have for this frequency
+  *
+- * Use this function to get the regulatory rule for a specific frequency.
++ * Use this function to get the regulatory rule for a specific frequency on
++ * a given wireless device. If the device has a specific regulatory domain
++ * it wants to follow we respect that unless a country IE has been received
++ * and processed already.
+  */
+-static int freq_reg_info(u32 center_freq, u32 *bandwidth,
++static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
+ 			 const struct ieee80211_reg_rule **reg_rule)
+ {
+ 	int i;
++	const struct ieee80211_regdomain *regd;
+ 	u32 max_bandwidth = 0;
+ 
+-	if (!cfg80211_regdomain)
++	regd = cfg80211_regdomain;
++
++	/* Follow the driver's regulatory domain, if present, unless a country
++	 * IE has been processed */
++	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
++	    wiphy->regd)
++		regd = wiphy->regd;
++
++	if (!regd)
+ 		return -EINVAL;
+ 
+-	for (i = 0; i < cfg80211_regdomain->n_reg_rules; i++) {
++	for (i = 0; i < regd->n_reg_rules; i++) {
+ 		const struct ieee80211_reg_rule *rr;
+ 		const struct ieee80211_freq_range *fr = NULL;
+ 		const struct ieee80211_power_rule *pr = NULL;
+ 
+-		rr = &cfg80211_regdomain->reg_rules[i];
++		rr = &regd->reg_rules[i];
+ 		fr = &rr->freq_range;
+ 		pr = &rr->power_rule;
+ 		max_bandwidth = freq_max_bandwidth(fr, center_freq);
+@@ -795,7 +808,7 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
+ 
+ 	flags = chan->orig_flags;
+ 
+-	r = freq_reg_info(MHZ_TO_KHZ(chan->center_freq),
++	r = freq_reg_info(wiphy, MHZ_TO_KHZ(chan->center_freq),
+ 		&max_bandwidth, &reg_rule);
+ 
+ 	if (r) {
+@@ -906,9 +919,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		}
+ 		return REG_INTERSECT;
+ 	case REGDOM_SET_BY_DRIVER:
+-		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
+-			return -EALREADY;
+-		return 0;
++		return REG_INTERSECT;
+ 	case REGDOM_SET_BY_USER:
+ 		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
+ 			return REG_INTERSECT;
+@@ -1258,9 +1269,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		}
+ 
+ 		/* For a driver hint, lets copy the regulatory domain the
+-		 * driver wanted to the wiphy to deal with conflicts or allow
+-		 * the driver itself to decide whether or not it wants to ignore
+-		 * specific user updates through the reg_notifier() */
++		 * driver wanted to the wiphy to deal with conflicts */
+ 
+ 		BUG_ON(last_request->wiphy->regd);
+ 
+@@ -1285,8 +1294,14 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		if (!intersected_rd)
+ 			return -EINVAL;
+ 
+-		/* We can trash what CRDA provided now */
+-		kfree(rd);
++		/* We can trash what CRDA provided now.
++		 * However if a driver requested this specific regulatory domain we
++		 * keep it for its private use */
++		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
++			last_request->wiphy->regd = rd;
++		else
++			kfree(rd);
++
+ 		rd = NULL;
+ 
+ 		reset_regdomains();
+-- 
+1.6.1.rc3.51.g5832d
 
