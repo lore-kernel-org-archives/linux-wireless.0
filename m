@@ -1,62 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:38231 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750741AbZABT3g convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:55170 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554AbZAFTjy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 14:29:36 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Stefanik =?iso-8859-1?q?G=E1bor?=" <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
-Date: Fri, 2 Jan 2009 20:28:32 +0100
-Cc: "Vasanthakumar Thiagarajan" <vasanth@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Luis.Rodriguez@atheros.com, Jouni.Malinen@atheros.com,
-	ath9k-devel@lists.ath9k.org
-References: <1230890746-3075-1-git-send-email-vasanth@atheros.com> <200901021956.21785.mb@bu3sch.de> <69e28c910901021059q5bc604afn62117fcdf937d813@mail.gmail.com>
-In-Reply-To: <69e28c910901021059q5bc604afn62117fcdf937d813@mail.gmail.com>
-MIME-Version: 1.0
-Message-Id: <200901022028.32764.mb@bu3sch.de> (sfid-20090102_202939_579153_1C3E7541)
-Content-Type: text/plain; charset=iso-8859-1
+	Tue, 6 Jan 2009 14:39:54 -0500
+Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	mohamed salim abbas <mabbaswireless@gmail.com>,
+	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
+	yi.zhu@intel.com, reinette.chatre@intel.com
+In-Reply-To: <1231268068.14565.37.camel@localhost.localdomain>
+References: <200812161307.07193.helmut.schaa@gmail.com>
+	 <20081217202943.GB3516@tuxdriver.com>
+	 <1229549485.26406.12.camel@localhost.localdomain>
+	 <200901051556.13403.helmut.schaa@gmail.com>
+	 <1231257584.14565.16.camel@localhost.localdomain>
+	 <1231260067.5246.7.camel@californication>
+	 <1231260557.14565.24.camel@localhost.localdomain>
+	 <1231261515.5246.9.camel@californication>
+	 <1231268068.14565.37.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 06 Jan 2009 20:39:51 +0100
+Message-Id: <1231270791.14901.10.camel@californication> (sfid-20090106_203958_326017_CDB1FB1C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 02 January 2009 19:59:15 Stefanik G=E1bor wrote:
-> On Fri, Jan 2, 2009 at 7:56 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> > On Friday 02 January 2009 19:52:49 Stefanik G=E1bor wrote:
-> >> On Fri, Jan 2, 2009 at 11:05 AM, Vasanthakumar Thiagarajan
-> >> <vasanth@atheros.com> wrote:
-> >> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> >> > ---
-> >> >  drivers/net/wireless/ath9k/ath9k.h |    5 +++++
-> >> >  drivers/net/wireless/ath9k/hw.c    |   33 +++++++++++++++++++++=
-++++++++++++
-> >> >  drivers/net/wireless/ath9k/main.c  |    9 +++++++--
-> >> >  drivers/net/wireless/ath9k/reg.h   |   10 ++++++++++
-> >> >  4 files changed, 55 insertions(+), 2 deletions(-)
-> >> >
-> >> > <snip>
-> >>
-> >> Probably a NOBTCOEX modparam might be a good idea - when implement=
-ing
-> >> BT coexistence in b43, a lot of non-BT-aware cards failed to work
-> >
-> > And what makes you think that atheros also ships cards with broken =
-btcoex support?
->=20
-> We can never know what vendors will do
+Hi Dan,
 
-Well, I'd say that applies to any feature.
-Should we add modparams for all new features from now on?
+> > > > > > > > > the interrupt moved from pci_probe to mac_start for power saving. once
+> > > > > > > > > the interface is up the driver will read some register to know rfkill
+> > > > > > > > > status, if the interface in down the driver don't care to keep track
+> > > > > > > > > of rfkill switch. I wonder what the purpose of changing this behavior?
+> > > > > > > > 
+> > > > > > > > I think it still isn't settled in everyone's minds whether rfkill
+> > > > > > > > only matters if the device is "up" or if it is something that
+> > > > > > > > e.g. NetworkManager might want to monitor as a clue to bring the
+> > > > > > > > device up or down in response to rfkill changes.
+> > > > > > > 
+> > > > > > > The question is:  does NetworkManager just always keep the device 'up'
+> > > > > > > irregardless of whether it's supposed to be associated with anything
+> > > > > > > just so we can get rfkill events?
+> > > > > > 
+> > > > > > Another question is: is it worth to keep the interface up (and thus the
+> > > > > > firmware loaded) even if the transceiver is killed by a hardware switch?
+> > > > > > Wouldn't that consume even more power than just listening to rfkill
+> > > > > > interrupts (or polling the killswitch state in case of 3945) with no
+> > > > > > firmware loaded.
+> > > > > > 
+> > > > > > > I guess I'll treat rfkill the same as ethernet carrier.  If we cannot
+> > > > > > > rely on rfkill notifications when the device is down (we already can't,
+> > > > > > > since iwl3945 simply can't do it) 
+> > > > > > 
+> > > > > > I've just checked the 3945 and it is indeed possible to poll the killswitch
+> > > > > > state even if the firmware is not loaded. Hence 3945 could also expose
+> > > > > > the killswitch state while the interface is down (of course the driver would
+> > > > > > have to poll for that information).
+> > > > > 
+> > > > > Even polling the state once every 2 - 4 seconds would be perfectly
+> > > > > acceptable latency for me.  It doesn't have to be instantaneous, so we
+> > > > > can certainly trade off latency for fewer wakeups.  Care to propose a
+> > > > > patch?  it'll make a lot of people happy :)
+> > > > 
+> > > > if we can't get the rfkill state change via interrupt, then the kernel
+> > > > driver has to poll for it (in the no-firmware cases). Or we have to
+> > > > remove the rfkill support completely. Everything else is just not
+> > > > acceptable. It is _not_ the responsibility of the userspace to make this
+> > > > work with quirks.
+> > > 
+> > > Right; I meant polling in *iwl3945* every 2 - 4 seconds or so, not from
+> > > userspace.  Userspace should still listen for the rfkill uevents (not
+> > > that HAL does yet, but...)
+> > 
+> > you actually could use libudev for it directly. That is what I am doing
+> > right now. Works pretty smooth.
+> 
+> Do what with libudev?  Poll the register directly?  Or hit some sysfs
+> file that eventually polls the register?  And you said "it's not the
+> responsibility of userspace to make this work with quirks" which to me
+> says you'd prefer this polling to be done in the driver, not
+> userspace...  no?
 
-I'd say we simply apply this patch and see what happens. Most likely no=
-thing,
-because the btcoex implementation in the atheros hardware works differe=
-ntly anyway.
+with libudev you can listen on udev events that translate directly from
+uevent from the kernel. Don't confuse libudev with the broken libsysfs
+attempt.
 
---=20
-Greetings, Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And this comment was meant in response for HAL not being able to notify
+you of rfkill state changes. You don't need HAL for this if you want
+proper support for rfkill events.
+
+The iwl3945 driver has to do the polling of the rfkill register if the
+firmware is not loaded. There is nothing we can or should do in
+userspace.
+
+Regards
+
+Marcel
+
+
