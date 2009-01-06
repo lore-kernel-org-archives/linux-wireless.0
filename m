@@ -1,39 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50127 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755857AbZA3QvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 11:51:12 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 08:51:12 -0800
-Date: Fri, 30 Jan 2009 08:50:26 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bruno Randolf <bruno@thinktube.com>
-Subject: Re: [PATCH] mac80211: remove HW_SIGNAL_DB
-Message-ID: <20090130165026.GD6534@tesla> (sfid-20090130_175119_356018_31B88CD7)
-References: <1233310386.4161.25.camel@johannes.local>
+Received: from cpsmtpo-eml02.KPNXCHANGE.COM ([213.75.38.151]:46363 "EHLO
+	cpsmtpo-eml02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751562AbZAFUcu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 15:32:50 -0500
+Message-ID: <4963BFEF.2090006@kpnplanet.nl> (sfid-20090106_213253_182030_D2948A9B)
+Date: Tue, 06 Jan 2009 21:32:47 +0100
+From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1233310386.4161.25.camel@johannes.local>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Ivo van Doorn <ivdoorn@gmail.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rt2400-devel@lists.sourceforge.net"
+	<rt2400-devel@lists.sourceforge.net>
+Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
+References: <200901042021.10904.IvDoorn@gmail.com> <20090105200809.GH6834@tesla> <49627BCB.4020200@kpnplanet.nl> <200901052321.46422.IvDoorn@gmail.com> <20090105234546.GK6834@tesla>
+In-Reply-To: <20090105234546.GK6834@tesla>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 30, 2009 at 02:13:06AM -0800, Johannes Berg wrote:
-> Giving the signal in dB isn't much more useful to userspace
-> than giving the signal in unspecified units. This removes
-> some radiotap information for zd1211 (the only driver using
-> this flag), but it helps a lot for getting cfg80211-based
-> scanning which won't support dB, and zd1211 being dB is a
-> little fishy anyway.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Cc: Bruno Randolf <bruno@thinktube.com>
+On 01/06/09 00:45, Luis R. Rodriguez wrote:
+> On Mon, Jan 05, 2009 at 02:21:46PM -0800, Ivo van Doorn wrote:
+>    
+>> On Monday 05 January 2009, Gertjan van Wingerde wrote:
+>>      
+>>> On 01/05/09 21:08, Luis R. Rodriguez wrote:
+>>>        
+>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
+>>>        
+>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
+>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
+>>      
+>
+> Based on the documentation from the EEPROM for all devices I read that its recommended
+> that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
+> windows registry be used.
+>
+> Based on tests for the devices with only one band, do are you seeing an actual regulatory
+> domain in the EEPROM?
+>
+> To deal with the issue of having two separate EEPROM values for a regulatory domain
+> and since the documentation indicates to not rely on it I would advise to allow users
+> to be compliant by selecting the country they are in. wpa_supplicant has support for
+> selecting country now, and so does iw. Eventually I see Network Manager letting users
+> select the country. But you guys are the maintainers and developers so you will know
+> better.
+>    
 
-We should be able to convert zd1211rw to use dBm anyway, we shall
-release a new "vendor driver" for it which I think has some bits for this.
-Just need to get around to it.
+My tests indicate that there are devices out there that have this 
+information set in the EEPROM. Based on tests with my own patch, and my 
+own devices, I have been able to determine the following:
 
-  Luis
+1. rt2400pci --> don't know, don't own a rt2400pci device.
+2. rt2500pci --> don't know, don't own a rt2500pci device anymore.
+3. rt2500usb --> my e-tech device (not sure which type; the device 
+doesn't say it) has an actual domain set for the bg band.
+4. rt61pci --> my Sitecom WL151 device does not contain actual domain 
+information.
+5. rt73usb --> my Sitecom WL113-002 device does contain actual domain 
+information, and the codes for the bg band and a band are the same.
+6. rt2800pci --> my Sitecom WL182 device does contain actual domain 
+information, and the codes for the bg band and a band are the same.
+7. rt2800usb --> my Sitecom WL181 device does contain actual domain 
+information, and the codes for the bg band and a band are the same.
+
+So, there are devices out there that do contain "meaningful" regulatory 
+information.
+
+Luis, the definitions for the a-band EEPROM codes only give the channel 
+numbers, it doesn't indicate a real "country". Is there any way we can 
+check whether these sets of channels are actually consistent with the 
+regulations of specific countries?
+
+---
+Gertjan.
