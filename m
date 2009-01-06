@@ -1,88 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756401AbZAMXYE (ORCPT
+Received: from cpsmtpo-eml01.KPNXCHANGE.COM ([213.75.38.150]:37994 "EHLO
+	cpsmtpo-eml01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757994AbZAFW0d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 18:24:04 -0500
-Subject: Re: [PATCH 00/12] cfg80211/mac80211: fixes/enhancements for
-	reg_notifier()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090113231741.GU4416@tesla>
-References: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com>
-	 <1231887621.3728.12.camel@johannes>  <20090113231741.GU4416@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jt90HWjuFFJ6Wl6iOieq"
-Date: Wed, 14 Jan 2009 00:23:34 +0100
-Message-Id: <1231889014.3728.19.camel@johannes> (sfid-20090114_002413_399021_5FEC95EE)
-Mime-Version: 1.0
+	Tue, 6 Jan 2009 17:26:33 -0500
+Message-ID: <4963D704.5030502@kpnplanet.nl> (sfid-20090106_232650_452481_1C821245)
+Date: Tue, 06 Jan 2009 23:11:16 +0100
+From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+MIME-Version: 1.0
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rt2400-devel@lists.sourceforge.net"
+	<rt2400-devel@lists.sourceforge.net>
+Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
+References: <200901042021.10904.IvDoorn@gmail.com> <4963C186.2070408@kpnplanet.nl> <20090106204923.GC21980@tesla> <200901062251.28850.IvDoorn@gmail.com>
+In-Reply-To: <200901062251.28850.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/06/09 22:51, Ivo van Doorn wrote:
+> On Tuesday 06 January 2009, Luis R. Rodriguez wrote:
+>    
+>> On Tue, Jan 06, 2009 at 12:39:34PM -0800, Gertjan van Wingerde wrote:
+>>      
+>>> On 01/06/09 18:47, Ivo van Doorn wrote:
+>>>        
+>>>> On Tuesday 06 January 2009, Luis R. Rodriguez wrote:
+>>>>
+>>>>          
+>>>>> On Tue, Jan 06, 2009 at 09:32:20AM -0800, Ivo van Doorn wrote:
+>>>>>
+>>>>>            
+>>>>>>>>> 2. I'm still puzzled how to handle the two different values that the EEPROM has, namely one for the bg band and one for the a band. I've handled it by registering the one associated with the configured band, but that seems to be unlikely to be correct. I still haven't found a better way to handle this.
+>>>>>>>>>
+>>>>>>>>>                    
+>>>>>>>> Because of this I hadn't looked very deep into rt61 and rt73 yet.
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>                  
+>>>>>>>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
+>>>>>>>>>
+>>>>>>>>>                    
+>>>>>>>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
+>>>>>>>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
+>>>>>>>>
+>>>>>>>>                  
+>>>>>>> Based on the documentation from the EEPROM for all devices I read that its recommended
+>>>>>>> that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
+>>>>>>> windows registry be used.
+>>>>>>>
+>>>>>>> Based on tests for the devices with only one band, do are you seeing an actual regulatory
+>>>>>>> domain in the EEPROM?
+>>>>>>>
+>>>>>>>                
+>>>>>> I have to check, but I don't think I have any hardware with valid domain values.
+>>>>>>
+>>>>>>
+>>>>>>              
+>>>>>>> To deal with the issue of having two separate EEPROM values for a regulatory domain
+>>>>>>> and since the documentation indicates to not rely on it I would advise to allow users
+>>>>>>> to be compliant by selecting the country they are in. wpa_supplicant has support for
+>>>>>>> selecting country now, and so does iw. Eventually I see Network Manager letting users
+>>>>>>> select the country. But you guys are the maintainers and developers so you will know
+>>>>>>> better.
+>>>>>>>
+>>>>>>>                
+>>>>>> Well it is fine with me,  understood from earlier discussion that it was advised that drivers
+>>>>>> attempted to set the domain if they could. Hence the reason I had added reading the EEPROM
+>>>>>> for domain values to the TODO list. But it is true that it is quite rare that there are valid values
+>>>>>> for it. So it would be fine with me by letting the user handle it completely.
+>>>>>>
+>>>>>>              
+>>>>> I see -- well if there are *some* cards that do have valid EEPROM values then it seems worth it
+>>>>> to do the actual regulatory_hint(), for dual band cards you can probably just not support it. But
+>>>>> its up to you guys. Just my advice based on the documentation I have read so far.
+>>>>>
+>>>>>            
+>>>> Ok.
+>>>>
+>>>> Gertjan, do you know if there is any hardware with valid GEO data in the EEPROM?
+>>>>
+>>>>          
+>>> As mentioned in my previous email, I do have devices that have valid GEO
+>>> data in the EEPROM. So, we should be able to use that.
+>>> Also, for the dual band cards, it does seem that at least the numerical
+>>> values are similar for both bands (although I'm not sure that same
+>>> numerical values means same regulatory domain). This is at least the
+>>> case on all the cards that I own.
+>>>        
+>> If that's the case and since dual band cards will most likely have 2ghz support
+>> why not just provide regulatory_hint() based on the 2ghz band all the time?
+>>      
+>
+> Sounds like the most reasonable solution to me as well.
 
---=-jt90HWjuFFJ6Wl6iOieq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I had a *slightly* more sophisticated model in mind: Check for dual-band 
+devices whether the EEPROM values match. If they do, provide the 
+regulatory_hint(), if they don't then just log an error, stating that 
+the EEPROM cannot make up its mind in which geography it belongs. Just 
+to prevent some unexpected behavior for devices that don't have sane 
+EEPROM values.
 
-On Tue, 2009-01-13 at 15:17 -0800, Luis R. Rodriguez wrote:
-> > (2) you
-> > should not do via the regulatory code and the notifier but rather by no=
-t
-> > registering those channels to start with
->=20
-> I did a lot of this work because you had opposed to allow drivers dynamic=
-ally register
-> their channels.=20
+However, that is all based on the assumption that we can match the 
+numerical values of the two band geography domains. So far I haven't 
+been able to establish that, and, moreover, the a-band field allows for 
+values 0-10 where the bg-band field allows for values 0-7. So, we have 
+to start matching these values against their defined allowed channels, 
+and against the regulatory definitions, to see if we can actually match 
+the values.
 
-I think we may have had some miscommunication here? I didn't like
-registering the channels dynamically with new calls, but I certainly
-don't care how you arrive at your channel array, you can kmalloc it if
-you want.
-
-> The size of the code also increases considerably by using static set of
-> channels for each custom regulatory domain, its possible though.
-
-You don't have to.
-
-> >, or setting the disabled flag
-> > before registration if that's easier.
->=20
-> You'll still need some sort of table. Either way -- all these are options=
- of how to
-> accomplish the same task. I did this as part of cfg80211 as I figured it =
-could be
-> used by other drivers.
-
-In what form do you have this data? Is it "valid 2412-2472 and 4950-5250
-MHz"? If so, can we just have a function that marks all channel that
-would fall outside these ranges as invalid, and you call that function
-with a specific band and channel before registering your wiphy?
-
-johannes
-
---=-jt90HWjuFFJ6Wl6iOieq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJbSJ0AAoJEKVg1VMiehFYgpUP/3RA/w5i++IaeCVLGDyPMEqr
-q0urvKisexSunUNQVtgiMaW+vcJAOTY1EtvYwOIl9etmdm9NJfa0rP7IBY90rFz+
-zdtndz6d7IYZx1zVlazfqYKk4WCPbIHpKhDo1YbQ7KV/0Io+RTV0GC5wEa1a8LgM
-bG4ByvLlNoD0eM562x3oyfAyYUh2JDD5AvfzwjW6nQrIGDmojpL8PHMXN1my3zo3
-HuHwIBkfKna0izCRB1VtF/ilIVW8dntvwN/zDrheEjLit0DvI4pWftIPSKWNu5n1
-NU6lJ5qsszg96uwa/7RcdCLCQAOstAyMy1D6QDOLD0PLYHsOLvuB73x77b+2HQ7x
-8u//r+66SbdQQd8u3ucWLJRu9yGgUhFkHBnW+X74kjcU2ggWaaYwpvQ8ryoOHKsk
-0p+9vz3Ws5d0U9+J/uxh4Q49rtQGzAizH8fFp3rJUnERAuf81pV9b0r6c6DRaL7u
-yBfF1KUjZRoR8b/meqBFp4CAuS2UXnlL8CbHeoSkUQM+qMrWHUGnr6A4T6Y/Q2Bs
-g5MyZwLbd1RfrLS/rbUCmremBdRbyWDcHQsb7fuMBict3KDLs0NdsJVYuJ67jBfA
-+Qo9BI7xJZbUDVICpm+H5E9obZM0zz3KAgSVWe4Nk3F6sUyesukjsHkcqgjHHOpA
-/bLBbK9i9YFDCWlbqdib
-=5Tvy
------END PGP SIGNATURE-----
-
---=-jt90HWjuFFJ6Wl6iOieq--
-
+---
+Gertjan
