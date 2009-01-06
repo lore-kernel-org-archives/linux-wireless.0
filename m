@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41248 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757406AbZAWXDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 18:03:15 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 15:03:15 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] iw: fix typo, add few references
-Date: Fri, 23 Jan 2009 15:02:38 -0800
-Message-ID: <1232751758-23329-1-git-send-email-lrodriguez@atheros.com> (sfid-20090124_000320_851339_7C3D56DE)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41314 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897AbZAFUal (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 15:30:41 -0500
+Date: Tue, 6 Jan 2009 15:29:36 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Piter PUNK <piterpunk@unitednerds.org>
+Cc: Jason Self <jason.self@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Realtek wireless 8187se
+Message-ID: <20090106202936.GF3544@tuxdriver.com> (sfid-20090106_213049_147046_66B8EFC3)
+References: <9EFEF18C-02C1-4E22-B712-9E5C582E4DEB@gmail.com> <20081216140222.GA3636@tuxdriver.com> <4957202A.5010706@unitednerds.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4957202A.5010706@unitednerds.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a small typo s/ip/iw, and adds references
-to the other new wireless subsystem userspace applications/files.
-Lets also point users to the iw wiki as it has lots of good stuff.
+On Sun, Dec 28, 2008 at 04:43:54AM -0200, Piter PUNK wrote:
+> John W. Linville wrote:
+>> On Mon, Dec 15, 2008 at 06:41:01PM -0800, Jason Self wrote:
+>>> On Dec 15, 2008, at 5:26 PM, "John W. Linville" 
+>>> <linville@tuxdriver.com> wrote:
+>>>> I have acquired an MSI Wind equipped with this device, I have
+>>>> multiple variations of the vendor driver to support the hardware, and
+>>>> I have a datasheet the covers at least some of the hardware involved.
+>>>> I'm working on it...
+>>> Why not share your work?
+>>
+>> What I have (which is barely anything) is on the "linville" branch
+>> of wireless-testing...
+>
+> Hi John,
+>
+> I am using that branch on mine Positivo Mobo White (MSI Wind OEM). It
+> loads the rtl8180 module, the wlan0 device appears but nothing more
+> happens. No scans, no associations, etc.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- iw.8 |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+There really is nothing there to activate the device, just some
+infrastructure bits.
 
-diff --git a/iw.8 b/iw.8
-index 4d13667..2dc57a9 100644
---- a/iw.8
-+++ b/iw.8
-@@ -6,7 +6,7 @@ iw \- show / manipulate wireless devices and their configuration
- .ad l
- .in +8
- .ti -8
--.B ip
-+.B iw
- .RI [ " OPTIONS " ] " " { " 
- .BR help " |"
- .RI ""OBJECT " " COMMAND " }"
-@@ -57,3 +57,8 @@ will print all supported commands.
- 
- .SH SEE ALSO
- .BR ip (8)
-+.BR crda (8)
-+.BR regdbdump (8)
-+.BR regulatory.bin (5)
-+
-+.BR http://wireless.kernel.org/en/users/Documentation/iw
+> I'm really lost looking the code, and vendor code is very very different
+> of kernel code (at least to my eyes), isn't an easy job to "look vendor
+> code -> adapt code to kernel". What can I do to help? Any special
+> test case? Any log? Any tip to do the un-easy job?
+
+Now that we are done with the holidays, hopefully I can make some
+progress on this soon.  Until then, there isn't much for you to do...
+
+John
 -- 
-1.6.1.rc3.51.g5832d
-
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
