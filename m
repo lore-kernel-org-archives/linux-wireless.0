@@ -1,85 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43605 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755294AbZAHLeO (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41317 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750907AbZAFUam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 06:34:14 -0500
-Message-Id: <20090108113405.509040837@atheros.com> (sfid-20090108_123903_633470_9B1EAE6D)
-References: <20090108113158.681894124@atheros.com>
-Date: Thu, 08 Jan 2009 13:32:10 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCHv2 12/16] mac80211: 802.11w - Optional software CCMP for management frames
+	Tue, 6 Jan 2009 15:30:42 -0500
+Date: Tue, 6 Jan 2009 15:27:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Piter PUNK <piterpunk@unitednerds.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt2500usb vs rt73usb
+Message-ID: <20090106202740.GE3544@tuxdriver.com> (sfid-20090106_213051_678808_174C313B)
+References: <49571E29.8060204@unitednerds.org> <200812281034.07373.IvDoorn@gmail.com> <1230502494.25726.26.camel@dv>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1230502494.25726.26.camel@dv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If driver/firmware/hardware does not support CCMP for management
-frames, it can now request mac80211 to take care of encrypting and
-decrypting management frames (when MFP is enabled) in software. The
-will need to add this new IEEE80211_KEY_FLAG_SW_MGMT flag when a CCMP
-key is being configured for TX side and return the undecrypted frames
-on RX side without RX_FLAG_DECRYPTED flag to use software CCMP for
-management frames (but hardware for data frames).
+On Sun, Dec 28, 2008 at 05:14:54PM -0500, Pavel Roskin wrote:
+> On Sun, 2008-12-28 at 10:34 +0100, Ivo van Doorn wrote:
+> > On Sunday 28 December 2008, Piter PUNK wrote:
+> 
+> > > If the those 148f:2573 USB devices doesn't exists or
+> > > if they exists and works fine with rt73usb, can we
+> > > remove 148f:2573 from rt2500usb?
+> > 
+> > No we can't, you can blame manufacturers for shipping
+> > USB sticks with different chipsets but the exact same USB ID.
+> 
+> Maybe there are some hints on the USB level that would make it possible
+> to distinguish between the devices without loading the driver?
+> Something like the number of endpoints?  Then we could ask USB
+> developers to provide a way to specify them in the USB devece table.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Seems like a trouble to solve a non-problem...
 
+> > On Sunday 28 December 2008, Piter PUNK wrote:
+> > > Loading rt2500usb AND rt73usb don't have any functional
+> > > problem. All wireless devices works fine. But is very
+> > > annoying the additional modules loaded.
 
----
- include/net/mac80211.h |    4 ++++
- net/mac80211/wpa.c     |    9 +++++++--
- 2 files changed, 11 insertions(+), 2 deletions(-)
+I'm not sure I see how it is annoying, but I'm sorry it annoys you.
+Nevertheless, I don't think it is worth much effort to fix it.
 
---- wireless-testing.orig/include/net/mac80211.h	2009-01-08 13:06:27.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-01-08 13:06:48.000000000 +0200
-@@ -693,12 +693,16 @@ enum ieee80211_key_len {
-  *	generation in software.
-  * @IEEE80211_KEY_FLAG_PAIRWISE: Set by mac80211, this flag indicates
-  *	that the key is pairwise rather then a shared key.
-+ * @IEEE80211_KEY_FLAG_SW_MGMT: This flag should be set by the driver for a
-+ *	CCMP key if it requires CCMP encryption of management frames (MFP) to
-+ *	be done in software.
-  */
- enum ieee80211_key_flags {
- 	IEEE80211_KEY_FLAG_WMM_STA	= 1<<0,
- 	IEEE80211_KEY_FLAG_GENERATE_IV	= 1<<1,
- 	IEEE80211_KEY_FLAG_GENERATE_MMIC= 1<<2,
- 	IEEE80211_KEY_FLAG_PAIRWISE	= 1<<3,
-+	IEEE80211_KEY_FLAG_SW_MGMT	= 1<<4,
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/wpa.c	2009-01-08 13:06:24.000000000 +0200
-+++ wireless-testing/net/mac80211/wpa.c	2009-01-08 13:06:48.000000000 +0200
-@@ -369,9 +369,14 @@ static int ccmp_encrypt_skb(struct ieee8
- 	int hdrlen, len, tail;
- 	u8 *pos, *pn;
- 	int i;
-+	bool skip_hw;
-+
-+	skip_hw = (tx->key->conf.flags & IEEE80211_KEY_FLAG_SW_MGMT) &&
-+		ieee80211_is_mgmt(hdr->frame_control);
- 
- 	if ((tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) &&
--	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
-+	    !(tx->key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
-+	    !skip_hw) {
- 		/* hwaccel - with no need for preallocated room for CCMP
- 		 * header or MIC fields */
- 		info->control.hw_key = &tx->key->conf;
-@@ -406,7 +411,7 @@ static int ccmp_encrypt_skb(struct ieee8
- 
- 	ccmp_pn2hdr(pos, pn, key->conf.keyidx);
- 
--	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
-+	if ((key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) && !skip_hw) {
- 		/* hwaccel - with preallocated room for CCMP header */
- 		info->control.hw_key = &tx->key->conf;
- 		return 0;
-
+John
 -- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
