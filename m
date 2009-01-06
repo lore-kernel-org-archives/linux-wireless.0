@@ -1,163 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34025 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752547AbZAGL2D (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45026 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753686AbZAFUFR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:28:03 -0500
-Message-Id: <20090107112650.614383765@atheros.com> (sfid-20090107_122809_147995_476FE5F5)
-References: <20090107112346.369581673@atheros.com>
-Date: Wed, 07 Jan 2009 13:23:54 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 08/14] mac80211: 802.11w - SA Query processing
+	Tue, 6 Jan 2009 15:05:17 -0500
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Dan Williams <dcbw@redhat.com>, Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+In-Reply-To: <1231270575.14901.6.camel@californication>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <1229336057.4471.9.camel@johannes.berg>
+	 <1229354532.12163.24.camel@localhost.localdomain>
+	 <20081217174244.M36761@bobcopeland.com>
+	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
+	 <1230102989.16960.14.camel@californication>
+	 <1231260306.14565.21.camel@localhost.localdomain>
+	 <1231261937.5246.16.camel@californication>
+	 <1231267979.14565.34.camel@localhost.localdomain>
+	 <1231270575.14901.6.camel@californication>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-upS0ev3rq2PbWNUF0B/w"
+Date: Tue, 06 Jan 2009 21:05:26 +0100
+Message-Id: <1231272326.3767.2.camel@johannes> (sfid-20090106_210521_198745_709D13EC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Process SA Query Requests for client mode in mac80211. AP side
-processing of SA Query Response frames is in user space (hostapd).
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+--=-upS0ev3rq2PbWNUF0B/w
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2009-01-06 at 20:36 +0100, Marcel Holtmann wrote:
 
----
- include/linux/ieee80211.h |   14 +++++++++
- net/mac80211/rx.c         |   69 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 83 insertions(+)
+> since mac80211 gets suspend/resume support, I think it is the best that
+> we signal this to wpa_supplicant. In that case it can do the hard work
+> here. Either it re-connects to the last AP or signals a disconnected
+> state or trigger scanning.
 
---- wireless-testing.orig/include/linux/ieee80211.h	2009-01-07 13:07:49.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2009-01-07 13:07:59.000000000 +0200
-@@ -527,6 +527,8 @@ struct ieee80211_tim_ie {
- 	u8 virtual_map[0];
- } __attribute__ ((packed));
- 
-+#define WLAN_SA_QUERY_TR_ID_LEN 16
-+
- struct ieee80211_mgmt {
- 	__le16 frame_control;
- 	__le16 duration;
-@@ -646,6 +648,10 @@ struct ieee80211_mgmt {
- 					u8 action_code;
- 					u8 variable[0];
- 				} __attribute__((packed)) mesh_action;
-+				struct {
-+					u8 action;
-+					u8 trans_id[WLAN_SA_QUERY_TR_ID_LEN];
-+				} __attribute__ ((packed)) sa_query;
- 			} u;
- 		} __attribute__ ((packed)) action;
- 	} u;
-@@ -1041,6 +1047,7 @@ enum ieee80211_category {
- 	WLAN_CATEGORY_DLS = 2,
- 	WLAN_CATEGORY_BACK = 3,
- 	WLAN_CATEGORY_PUBLIC = 4,
-+	WLAN_CATEGORY_SA_QUERY = 8,
- 	WLAN_CATEGORY_WMM = 17,
- };
- 
-@@ -1129,6 +1136,13 @@ enum ieee80211_back_parties {
- 	WLAN_BACK_TIMER = 2,
- };
- 
-+/* SA Query action */
-+enum ieee80211_sa_query_action {
-+	WLAN_ACTION_SA_QUERY_REQUEST = 0,
-+	WLAN_ACTION_SA_QUERY_RESPONSE = 1,
-+};
-+
-+
- /* A-MSDU 802.11n */
- #define IEEE80211_QOS_CONTROL_A_MSDU_PRESENT 0x0080
- 
---- wireless-testing.orig/net/mac80211/rx.c	2009-01-07 13:07:49.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2009-01-07 13:07:59.000000000 +0200
-@@ -1635,6 +1635,57 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
- 	return RX_CONTINUE;
- }
- 
-+void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
-+				    struct ieee80211_mgmt *mgmt,
-+				    size_t len)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sk_buff *skb;
-+	struct ieee80211_mgmt *resp;
-+
-+	if (compare_ether_addr(mgmt->da, sdata->dev->dev_addr) != 0) {
-+		/* Not to own unicast address */
-+		return;
-+	}
-+
-+	if (compare_ether_addr(mgmt->sa, sdata->u.sta.bssid) != 0 ||
-+	    compare_ether_addr(mgmt->bssid, sdata->u.sta.bssid) != 0) {
-+		/* Not from the current AP. */
-+		return;
-+	}
-+
-+	if (sdata->u.sta.state == IEEE80211_STA_MLME_ASSOCIATE) {
-+		/* Association in progress; ignore SA Query */
-+		return;
-+	}
-+
-+	if (len < 24 + 1 + sizeof(resp->u.action.u.sa_query)) {
-+		/* Too short SA Query request frame */
-+		return;
-+	}
-+
-+	skb = dev_alloc_skb(sizeof(*resp) + local->hw.extra_tx_headroom);
-+	if (skb == NULL)
-+		return;
-+
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+	resp = (struct ieee80211_mgmt *) skb_put(skb, 24);
-+	memset(resp, 0, 24);
-+	memcpy(resp->da, mgmt->sa, ETH_ALEN);
-+	memcpy(resp->sa, sdata->dev->dev_addr, ETH_ALEN);
-+	memcpy(resp->bssid, sdata->u.sta.bssid, ETH_ALEN);
-+	resp->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
-+	skb_put(skb, 1 + sizeof(resp->u.action.u.sa_query));
-+	resp->u.action.category = WLAN_CATEGORY_SA_QUERY;
-+	resp->u.action.u.sa_query.action = WLAN_ACTION_SA_QUERY_RESPONSE;
-+	memcpy(resp->u.action.u.sa_query.trans_id,
-+	       mgmt->u.action.u.sa_query.trans_id,
-+	       WLAN_SA_QUERY_TR_ID_LEN);
-+
-+	ieee80211_tx_skb(sdata, skb, 1);
-+}
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- {
-@@ -1708,6 +1759,24 @@ ieee80211_rx_h_action(struct ieee80211_r
- 			break;
- 		}
- 		break;
-+	case WLAN_CATEGORY_SA_QUERY:
-+		if (len < (IEEE80211_MIN_ACTION_SIZE +
-+			   sizeof(mgmt->u.action.u.sa_query)))
-+			return RX_DROP_MONITOR;
-+		switch (mgmt->u.action.u.sa_query.action) {
-+		case WLAN_ACTION_SA_QUERY_REQUEST:
-+			if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+				return RX_DROP_MONITOR;
-+			ieee80211_process_sa_query_req(sdata, mgmt, len);
-+			break;
-+		case WLAN_ACTION_SA_QUERY_RESPONSE:
-+			/*
-+			 * SA Query response is currently only used in AP mode
-+			 * and it is processed in user space.
-+			 */
-+			return RX_CONTINUE;
-+		}
-+		break;
- 	default:
- 		return RX_CONTINUE;
- 	}
+Let me just say once again that all this discussion is entirely
+orthogonal to properly supporting suspend/resume in mac80211, it's
+always possible for userspace to do anything with the devices before
+going into suspend, but the kernel should take some care to resume as it
+was at suspend time, which is what we're aiming for here. Of course,
+this may mean that at resume we lose the AP connection that we think we
+still have right away, but that's great since then wpa_supplicant will
+reconnect quickly.
 
--- 
+johannes
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--=-upS0ev3rq2PbWNUF0B/w
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJY7mDAAoJEKVg1VMiehFYbgMP/jTR4z6qVhKVWzjcYQ/IGf8M
+BLTKIFr53qEOAEBPLaqcT9OcJW5Fgo3S+mP5uLctkegwht25Ty6UMnMpgKs+Vw+1
+S0urhZIhnwlQ2nVAlo1Sto+pNez1cVbnao2Sj9gzzXDooeqnv6YfBzkZmM6rLEek
+uYBEr5IbU8f6YSTJPYm1WWGao1yGmTkUCRxc6IOl4sUPMQJSFiMj+bul/3svQQ+9
+M/4PH2BSuot2aUx+NubbvQeTDem9SoFr/sDxvsub7Halpdrqd/k6gGrqkhQ9cRAZ
+9T1tPp5wwmy52Qg0iBG0S0LkTRfHn49tpx03UtQ68/9xf8IcE6MvyANs8aXegfYh
+WYWabScCKVDwARt7caeLJP+qAIDTvA/CtnPqwSNTOW4sjrMEKw0MTMUnwXEwBitE
+1tZm12m0hLoU7rzBycIlOVeXWmeK/b+x5Bb3fc3jyqX/NqSHISy/thhRPhUPywh7
+UxOS2GvMB4dSiSjPt5caZ7GfqRKLT7PmqmHV0xu4zFqNcgml2MTD9PtBKmn7FJXG
+/fX+StHb4YhYcOavx7uq4o8BKsKVJ/f0hAcVv56ygZdtYqyavedjTUnPJNibKpqh
+w7fa8ltNzDOPDugqleeTz31SNnZsJpGbnKonXkABBY9huCM71uOGYJsY7nVVc2b0
+6A4Kxi1Gqi0r4P90Bcir
+=fYyW
+-----END PGP SIGNATURE-----
+
+--=-upS0ev3rq2PbWNUF0B/w--
+
