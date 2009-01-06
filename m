@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38591 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756354AbZAIUan (ORCPT
+Received: from mail-gx0-f13.google.com ([209.85.217.13]:59277 "EHLO
+	mail-gx0-f13.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757681AbZAFWgf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 15:30:43 -0500
-Date: Fri, 9 Jan 2009 15:18:00 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 1/1 #2] IWL: fix WARN typo
-Message-ID: <20090109201759.GE3371@tuxdriver.com> (sfid-20090109_213052_063922_1647068F)
-References: <1231171404-22822-1-git-send-email-jirislaby@gmail.com> <1231171566-22984-1-git-send-email-jirislaby@gmail.com>
+	Tue, 6 Jan 2009 17:36:35 -0500
+Received: by gxk6 with SMTP id 6so6419090gxk.13
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 14:36:34 -0800 (PST)
+Message-ID: <445f43ac0901061436t29cd66acy8ad35181e4430ce6@mail.gmail.com> (sfid-20090106_233654_130851_C23C0860)
+Date: Tue, 6 Jan 2009 14:36:34 -0800
+From: "Javier Cardona" <javier@cozybit.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: firmware for GSPI '8686 available
+Cc: "Andrey Yurovsky" <andrey@cozybit.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	libertas-dev@lists.infradead.org,
+	"Colin McCabe" <colin@cozybit.com>
+In-Reply-To: <1231280724.3767.15.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231171566-22984-1-git-send-email-jirislaby@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <45e8e6c40901061413n1a984e58n8e1643caa1fd481e@mail.gmail.com>
+	 <1231280724.3767.15.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is the way it is now problematic for non-native English speakers?
-Or native ones for that matter?
+Johannes,
 
-Dropping an article in a "computer-ese" statement has never bothered
-me, so this seems like just a handful of unnecessary string bytes?
+On Tue, Jan 6, 2009 at 2:25 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2009-01-06 at 14:13 -0800, Andrey Yurovsky wrote:
+>> Marvell will make the 88W8686 GSPI firmware available for public
+>> download on their website in the next weeks.  In the meantime we've
+>> uploaded it to our website:
+>> http://cozybit.com/projects/gspi8686
+>>
+>> Please note that you must accept Marvell's license before downloading the files.
+>
+> That license seems suitable for inclusion into the linux-firmware
+> repository, would that be doable?
 
-John
+A lawyer could tell.  Not us ;)
 
-On Mon, Jan 05, 2009 at 05:06:06PM +0100, Jiri Slaby wrote:
-> new kew -> a new key
-> 
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Tomas Winkler <tomas.winkler@intel.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-sta.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> index 412f66b..ce2ba40 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> @@ -638,7 +638,7 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
->  	 * in uCode. */
->  
->  	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
-> -		"no space for new kew");
-> +		"no space for a new key");
->  
->  	priv->stations[sta_id].sta.key.key_flags = key_flags;
->  	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-> @@ -686,7 +686,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
->  	 * in uCode. */
->  
->  	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
-> -		"no space for new kew");
-> +		"no space for a new key");
->  
->  	priv->stations[sta_id].sta.key.key_flags = key_flags;
->  	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-> @@ -722,7 +722,7 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
->  	 * in uCode. */
->  
->  	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
-> -		"no space for new kew");
-> +		"no space for a new key");
->  
->  	/* This copy is acutally not needed: we get the key with each TX */
->  	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
-> -- 
-> 1.6.0.6
-> 
-> 
+Javier
 
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Javier Cardona
+cozybit Inc.
