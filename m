@@ -1,78 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48817 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:41850 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178AbZA3L15 (ORCPT
+	with ESMTP id S1753524AbZAFNAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 06:27:57 -0500
-Subject: Re: [PATCH] mac80211: convert to net_device_ops
+	Tue, 6 Jan 2009 08:00:21 -0500
+Subject: Re: drivers returning wrong results from their _tx op
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
-In-Reply-To: <1233314257.30970.6.camel@johannes.local> (sfid-20090130_121747_128792_58F3B8C4)
-References: <20090127052926.44d3fd5f@s6510>
-	 <1233314257.30970.6.camel@johannes.local>
-	 (sfid-20090130_121747_128792_58F3B8C4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sIiM1PbIIO3RcqifSzok"
-Date: Fri, 30 Jan 2009 12:27:51 +0100
-Message-Id: <1233314871.30970.10.camel@johannes.local> (sfid-20090130_122800_139422_5A6BA1E4)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Daniel Drake <dsd@gentoo.org>,
+	Tomas Winkler <tomasw@gmail.com>,
+	Javier Cardona <javier@cozybit.com>, Chr <chunkeey@web.de>
+In-Reply-To: <b6c5339f0901051424q12d8fc14o8f20b62cfacc4e6e@mail.gmail.com> (sfid-20090105_232440_694283_0A261787)
+References: <1231193264.3697.41.camel@johannes>
+	 <b6c5339f0901051424q12d8fc14o8f20b62cfacc4e6e@mail.gmail.com>
+	 (sfid-20090105_232440_694283_0A261787)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qGV/zK5Pt9ykJzPmfN7p"
+Date: Tue, 06 Jan 2009 14:00:59 +0100
+Message-Id: <1231246859.3503.0.camel@johannes> (sfid-20090106_140027_227151_BAFA5595)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-sIiM1PbIIO3RcqifSzok
+--=-qGV/zK5Pt9ykJzPmfN7p
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-01-30 at 12:17 +0100, Johannes Berg wrote:
-> On Tue, 2009-01-27 at 05:29 +1100, Stephen Hemminger wrote:
-> > Convert to new net_device_ops in 2.6.28 and later.
-> >=20
-> > Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+On Mon, 2009-01-05 at 17:24 -0500, Bob Copeland wrote:
+> On Mon, Jan 5, 2009 at 5:07 PM, Johannes Berg <johannes@sipsolutions.net>=
+ wrote:
+> > spatch:
+> >
+> > @ r1 @
+> > identifier _tx, _ops;
 >=20
-> John, please revert this commit for now, it's breaking monitor mode
-> injection (and thus AP mode) because the xmit handler assignment in
-> ieee80211_setup_sdata is not effective.
+> spatch is very neat...
 
-Oh, for reference:
+Yes, indeed, it is, I've used it a few times already :)
 
-commit e22cab741afdd1e9857ea9fe51e28a6fe3c97b90
-Author: Stephen Hemminger <shemminger@vyatta.com>
-Date:   Tue Jan 27 05:29:25 2009 +1100
+> > First off: all those should return NETDEV_TX_OK/BUSY.
+> > ath5k: returns 0/-1
+>=20
+> Can the kerneldoc for mac80211 ops structure document it?
 
-    mac80211: convert to net_device_ops
-   =20
-    Convert to new net_device_ops in 2.6.28 and later.
-   =20
-    Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
-    Acked-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+I guess it should, want to send a patch?
 
-And yes, it's my fault, sorry!
+> I'll send a patch for ath5k unless someone beats me to it.
+
+Thanks.
 
 johannes
 
---=-sIiM1PbIIO3RcqifSzok
+--=-qGV/zK5Pt9ykJzPmfN7p
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJguQ1AAoJEKVg1VMiehFYOwUQAMCtAT3zowOJMTRZ6NEOH6kM
-kDLSPsb3H07/JWwltkX8h+V3KZchVXWeH/q6t9CgpnZp3FyOjn0AEaA+mffuEnYK
-dDQFZuGvgFTyP8F+YBBaMqhOQ3ceDmrxpyHcR9cUH12OftFH6rLK2qAlN0x26b+j
-aqLcRtHtfxvGsvL7KOI2hrcN/+WCiOmokKQ4iZrjMf3Cj0atScY6a9Xxs0r4EZAm
-r+h1dRfAYErfLec7GCGcWRWwFpfaUdvcOmvw4ycRHVwGPUBVbDo8YEmcZQnMOQLR
-RsvEoTWlinebpCTTguuDpJ781jT9bZqpahPL8u56cYy/9hHxIrav0xGRlYr7YfgZ
-TSDISphCScHvAdUbCkV39AvBFD9i3OqTUbFRzZBc++Mb6R2O6h2k9Mm44RqrLswq
-F8uJ70N01a37bp3ql5RpXC5khdWNdVVqZxuYVm505rM4GpxbIvL6y2GlNa9fNfO9
-YqvbQ0UUb2usd4uXfgRepRDRV1Sz46ZmE0FZW03k5/qZqiMtvX6kFsOdRHiHEfaI
-Piwe1k9yi9RlpiZ/dhxgNUc3U7KQk632rP346g9RNDcPcyH2wdYgQwRzbwqTfDVC
-h/Gvt2VzUG/18ZcPZ1yo/oNxbPSbzMNc5liSTZXoTmD0FQ/cX0xL1DEKCN8u8k1T
-AhYUoyu/Kzw2zJR295UD
-=ryhI
+iQIcBAABAgAGBQJJY1YIAAoJEKVg1VMiehFYWP8P/2yGfneXLTPlDwGBunaj1tW9
++gtAEEcZ0XrP2WPaxTm+pom3y7T4FtcCLpMgN0zub4UNbI/qkn2eEokBGPGvThs0
+AMmjCrRDO59KaBpgOJdpICPSsnFa7D4I01kF4k/3G3+Evy15c5ZILNkY17B0uCRo
+0F9YmB3BQ/N1VqRe1Tq94FC4cU61L2TG/8H4sKTHwgItInSjju1irkhOt2pXUr71
+BHQUQ1dDKZsWF9s4oWDLiTQ9Jb9YdSR1FUcIc5iXgUZmjCF/+sWUGib57AxlX6qC
+JQfBUr/TC/5wymbOgrWo7FIABmrADwOF0T5UuJB9usZlbIrwMdXSfOq4iTQquSoy
+4uahsMl40JxRHprgsJNYfAk0BpWCfCDz2Sec6+lE83/K7D7YGcfPr9gPgbA/sK4Y
+tdz2l8G9lqNHJyKTWlk8e9H42xBLkvLyPxw9we0BPRD0Q4y81pqtuV/P+x9LKOvu
+1NbZT14Hv4yGzhObup/Hb3/zQgeaISuGkSSbyqkuEiMcxXQLDEG3PXIEUoMJ7/wx
+68izLp8jRWxwQB9LO5Hxh5F4SfOn2UHERxvJTlkOu7C1Uhl308W1x9BTAnnTwODv
+J+zTXoNjZ6fmdQRDm3oUFJ+kKO8mPDbu+KVQhU3MmAWRIv9Suwusm4Yj7oDrF4gX
+Vxo11vVtDBLa83rcTOo4
+=TDRE
 -----END PGP SIGNATURE-----
 
---=-sIiM1PbIIO3RcqifSzok--
+--=-qGV/zK5Pt9ykJzPmfN7p--
 
