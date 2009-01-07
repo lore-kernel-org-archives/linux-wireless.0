@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43265 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757629AbZALUam (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:57260 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758575AbZAGRZg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 15:30:42 -0500
-Date: Mon, 12 Jan 2009 15:17:11 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: fix =?utf-8?B?IuKAmGdt?=
-	=?utf-8?B?b2Rl4oCZ?= may be used uninitialized" warning
-Message-ID: <20090112201711.GC3786@tuxdriver.com> (sfid-20090112_213051_575457_101162CF)
-References: <1231789741-13433-1-git-send-email-linville@tuxdriver.com> <1231789741-13433-2-git-send-email-linville@tuxdriver.com> <496BA39F.6040600@lwfinger.net>
+	Wed, 7 Jan 2009 12:25:36 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: Vivek Natarajan <vnatarajan@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v3] mac80211: extend/document powersave API
+References: <1231264395.3654.10.camel@johannes>
+	<1231273502.3767.4.camel@johannes> <878wpn5d64.fsf@nokia.com>
+	<1231346625.3545.56.camel@johannes>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 07 Jan 2009 19:25:09 +0200
+In-Reply-To: <1231346625.3545.56.camel@johannes> (ext Johannes Berg's message of "Wed\, 07 Jan 2009 17\:43\:45 +0100")
+Message-ID: <87tz8b3u6i.fsf@nokia.com> (sfid-20090107_182541_813763_47D1219F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <496BA39F.6040600@lwfinger.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 12, 2009 at 02:10:07PM -0600, Larry Finger wrote:
-> John W. Linville wrote:
-> > drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_config=
-=E2=80=99:
-> > drivers/net/wireless/b43/main.c:3264: warning: =E2=80=98gmode=E2=80=
-=99 may be used uninitialized
->=20
-> What version of gcc generates this warning? Mine (gcc (SUSE Linux)
-> 4.3.2) does not.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-gcc -v gives "gcc version 4.1.2 20070925 (Red Hat 4.1.2-33)"
+> This modifies hardware flags for powersave to support three different
+> flags:
+>  * IEEE80211_HW_SUPPORTS_PS - indicates general PS support
+>  * IEEE80211_HW_PS_NULLFUNC_STACK - indicates nullfunc sending in software
+>  * IEEE80211_HW_SUPPORTS_DYNAMIC_PS - indicates dynamic PS on the device
+>
+> It also adds documentation for all this which explains how to set the
+> various flags.
+>
+> Additionally, it fixes a few things:
+>  * a spot where && was used to test flags
+>  * enable CONF_PS only when associated again
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
---=20
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Looks good to me.
+
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+
+> -set:
+> + set:
+
+Really? My emacs always indents it without space, should I fix my
+settings?
+
+-- 
+Kalle Valo
