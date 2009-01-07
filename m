@@ -1,24 +1,19 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:42817 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026AbZA2UT5 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:64826 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534AbZAGPu1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 15:19:57 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so71269muf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Jan 2009 12:19:55 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "vivek.natraj\@gmail.com" <vivek.natraj@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 2/2] mac80211: use ps-poll when dynamic power	save mode is disabled
-References: <20090122114240.31443.18218.stgit@tikku>
-	<20090122114546.31443.79387.stgit@tikku>
-	<1232643729.5819.3.camel@johannes.local> <87hc3jgyu9.fsf@nokia.com>
-	<1233168737.4811.18.camel@johannes.local> <4981F232.5000801@nokia.com>
-	<1233253941.4067.2.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 29 Jan 2009 22:19:52 +0200
-In-Reply-To: <1233253941.4067.2.camel@johannes.local> (Johannes Berg's message of "Thu\, 29 Jan 2009 19\:32\:21 +0100")
-Message-ID: <87y6wtlv9z.fsf@litku.valot.fi> (sfid-20090129_212002_154710_C9A35412)
+	Wed, 7 Jan 2009 10:50:27 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: Vivek Natarajan <vnatarajan@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v2] mac80211: extend/document powersave API
+References: <1231264395.3654.10.camel@johannes>
+	<1231273502.3767.4.camel@johannes>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 07 Jan 2009 17:49:39 +0200
+In-Reply-To: <1231273502.3767.4.camel@johannes> (ext Johannes Berg's message of "Tue\, 06 Jan 2009 21\:25\:02 +0100")
+Message-ID: <878wpn5d64.fsf@nokia.com> (sfid-20090107_165032_907450_A3E9C4DC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
@@ -26,28 +21,109 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 Johannes Berg <johannes@sipsolutions.net> writes:
 
-> On Thu, 2009-01-29 at 20:15 +0200, Kalle Valo wrote:
+> This modifies hardware flags for powersave to support three different
+> flags:
+>  * IEEE80211_HW_SUPPORTS_PS - indicates general PS support
+>  * IEEE80211_HW_PS_NULLFUNC_STACK - indicates nullfunc/... handling in software
+>  * IEEE80211_HW_SUPPORTS_DYNAMIC_PS - indicates dynamic PS on the device
 >
->> > No, I mean in the timeout > 0 case, what vivek mentioned too. We never
->> > go back to sleep unless we send a packet.
->> 
->> First of all, this patchset doesn't change the logic for timeout > 0 
->> case. But that case was working already earlier, here's my analysis:
->> 
->> 1. tim bit is set
->> 2. if timeout > 0 disable power save and send null frame
->> 3. null frame enables dynamic_ps_timer in ieee80211_master_start_xmit()
->> 4. after dynamic_ps_timer triggers, power save is enabled again
->> 
->> I understood that this was the reason why Vivek moved the running of 
->> dynamic_ps_timer from subif to the master interface. Or did I miss 
->> something?
->
-> Hah, no, you're right, sorry, I got confused.
+> It also adds documentation for all this which explains how to set the
+> various flags.
 
-It confused me also. I would prefer to have the dynamic_ps_timer stuff
-in subif and have an explicit timer for the null frames, just to avoid
-confusion. I'll try to see if I can come up with a patch later on.
+Very good, this is just what was needed. I was planning to add similar
+flags myself. Few comments though:
+
+> + * @IEEE80211_HW_SUPPORTS_DYNAMIC_PS:
+> + *	Hardware has support for dynamic PS.
+
+The "dynamic power save" was a very bad term, it seems that people
+misunderstand it all the time. Maybe we should rename it to something
+else? We can do it later, though.
+
+> + * DOC: Powersave support
+> + *
+> + * mac80211 has support for various powersave implementations.
+> + *
+> + * First, it can support hardware that handles all powersaving by
+> + * itself, such hardware should simply set the %IEEE80211_HW_SUPPORTS_PS
+> + * hardware flag. In that case, it will be told about the desired
+> + * powersave mode regardless of association status, and the driver or
+> + * hardware must take care of enabling/disabling powersave depending on
+> + * the association status and TIM bit and send nullfunc frames by
+> + itself.
+
+Actually I'm not aware of any hardware designs which enables and
+disables power save according to association status (modulo fullmac
+design, of course). Even iwlwifi, which I think has the most
+sophisticated power save support, requires the host to enable power
+save according to the association status. Hence I would like to have
+the power save enable/disable logic based on association status in
+mac80211.
+
+We already have this support in ieee80211_set_associated() 
+
+[Reads the function again] 
+
+Or, actually we had it. I think Vivek's patch changed the
+functionality. But anyway, it's very easy to add the support back.
+
+The reason why I would like to have this in mac80211 is to avoid
+having duplicate bugs in different drivers and make the driver
+implementation easier.
+
+> + * Additionally, such hardware may set the %IEEE80211_HW_SUPPORTS_DYNAMIC_PS
+> + * flag to indicate that it can support dynamic PS mode (see below).
+> + *
+> + * Other hardware designs cannot send nullfunc frames by themselves and
+> + * need to be told explicitly about powersave transitions depending on
+> + * association status, need software support for parsing the TIM bitmap
+> + * and can implement dynamic PS mode in software. This is also supported
+> + * by mac80211 by combining the %IEEE80211_HW_SUPPORTS_PS and
+> + * %IEEE80211_HW_PS_NULLFUNC_STACK flags.
+
+stlc45xx (and p54spi) wakeup for multicast frames automatically, but
+ath5/9k need the host to do it. I think we will need a separate flag
+for that, but I can add it later.
+
+> + * Dynamic powersave mode is an extension to normal powersave mode in which
+> + * the hardware stays awake for a user-specified period of time after sending
+> + * a frame so that reply frames need not be buffered and therefore delayed
+> + * to the next wakeup. This can either be supported by hardware, in which case
+> + * the driver needs to look at the @dynamic_ps_timeout hardware configuration
+> + * value, or by the stack if all nullfunc handling is in the stack.
+> + */
+
+Good description of the feature. Hopefully people now better
+understand what I meant with dynamic power save.
+
+> @@ -858,8 +861,17 @@ static int ieee80211_ioctl_siwpower(stru
+>  	if (wrq->flags & ~(IW_POWER_MODE | IW_POWER_TIMEOUT))
+>  		return -EINVAL;
+>  
+> -	if (wrq->flags & IW_POWER_TIMEOUT)
+> +	if (wrq->flags & IW_POWER_TIMEOUT) {
+> +		/*
+> +		 * dynamic PS only supported if nullfunc handling in stack
+> +		 * or hardware supports dynamic PS itself
+> +		 */
+> +		if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS) &&
+> +		    !(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
+> +			return -EOPNOTSUPP;
+> +
+>  		timeout = wrq->value / 1000;
+> +	}
+
+Actually there are hardware designs which don't have dynamic power
+save but have null frame creation in firmware (and hence don't need
+IEEE80211_HW_PS_NULLFUNC_STACK). So IEEE80211_HW_SUPPORTS_DYNAMIC_PS
+and IEEE80211_HW_PS_NULLFUNC_STACK are not related to each other in
+any way. I suspect at76_usb is such design, but I need to recheck
+that.
+
+So I would like to implement this so that if
+IEEE80211_HW_SUPPORTS_DYNAMIC_PS is not set mac80211 will always use
+it's own timer, independent of IEEE80211_HW_PS_NULLFUNC_STACK. If you
+agree, I can create a separate patch for this.
 
 -- 
 Kalle Valo
