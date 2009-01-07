@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23106.mail.ird.yahoo.com ([217.146.189.46]:38180 "HELO
-	web23106.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754268AbZAAXmW convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2009 18:42:22 -0500
-Date: Thu, 1 Jan 2009 23:42:18 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-In-Reply-To: <Pine.LNX.4.44L0.0901011724590.5737-100000@netrider.rowland.org>
+Received: from fg-out-1718.google.com ([72.14.220.155]:7016 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758913AbZAGVAk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2009 16:00:40 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so3099543fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 13:00:39 -0800 (PST)
+Message-ID: <69e28c910901071300n5be02c34u5e618bcee9ea4763@mail.gmail.com> (sfid-20090107_220053_021189_0FCCB0DC)
+Date: Wed, 7 Jan 2009 22:00:39 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Kalle Valo" <kalle.valo@iki.fi>
+Subject: Re: localversion-wireless missing from wireless-testing
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <877i59q97f.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <26416.81498.qm@web23106.mail.ird.yahoo.com> (sfid-20090102_004232_681753_7D866A2E)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <877i59q97f.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Thu, 1/1/09, Alan Stern <stern@rowland.harvard.edu> wrote:
+On Tue, Jan 6, 2009 at 6:45 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> Hi John,
+>
+> I noticed that after 2.6.28 update localversion-wireless file is
+> missing from wireless-testing and version doesn't contain -wl suffix
+> anymore.
+>
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> On Thu, 1 Jan 2009, Hin-Tak Leung wrote:
-> 
-> > Also since Alan Stern is now CC'ed, can I ask the
-> in-tree skeleton
-> > usb driver code updated to reflect the recent
-> PM-related changes?
-> > There seems to be quite some changes between 2.6.26
-> and 2.6.27 .
-> 
-> It _has_ been updated.  But the USB PM interfaces allow
-> several
-> different modes of operation, and usb-skeleton can
-> illustrate only one
-> of them.
+Confirming - version number becomes "2.6.28" instead of "2.6.28-wl".
 
-So it has... I found Documentation/usb/power-management.txt a bit brief...
-and I am planning to read
-http://ols.fedoraproject.org/OLS/Reprints-2008/brown-reprint.pdf
-which seems to be quite relevant... do you have any recommended readings? I have tried "use the source", but the majority of wireless device drivers don't have any suspend/resume hooks :-). The behavior of 2.6.26pre - somewhere in usbcore forces unloading of all usb device drivers on suspend - was useable.
-
-Hin-Tak
-
-
-      
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
