@@ -1,66 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:48823 "EHLO
-	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbZAJTiJ (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:44000 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751755AbZAGKLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jan 2009 14:38:09 -0500
-Date: Sat, 10 Jan 2009 19:38:05 +0000
-From: Andrew Price <andy@andrewprice.me.uk>
+	Wed, 7 Jan 2009 05:11:05 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo Van Doorn <ivdoorn@gmail.com>
-Subject: [PATCH] rt2400,rt2500: init led_qual for LED_MODE_DEFAULT
-Message-ID: <20090110193805.GA13086@silver.sucs.org> (sfid-20090110_203815_019902_36B8A16E)
-References: <200901101345.57310.IvDoorn@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200901101345.57310.IvDoorn@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH 04/11] ath9k: introduce bus specific cleanup routine
+Date: Wed,  7 Jan 2009 11:09:25 +0100
+Message-Id: <1231322972-24094-5-git-send-email-juhosg@openwrt.org> (sfid-20090107_111132_955895_E4ACE8AD)
+In-Reply-To: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a check for LED_MODE_DEFAULT so that we use the link LED for rt2400
-and rt2500 devices.
+We have left only some PCI specific cleanup code. We have to convert
+them as well.
 
-Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/core.h |    6 ++++++
+ drivers/net/wireless/ath9k/main.c |   30 ++++++++++++++++--------------
+ 2 files changed, 22 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 6a97767..b86400d 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1365,7 +1365,7 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 8e93d11..175f026 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -695,6 +695,7 @@ enum PROT_MODE {
  
- 	rt2400pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
--	if (value == LED_MODE_TXRX_ACTIVITY)
-+	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
- 		rt2400pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
- 				   LED_TYPE_ACTIVITY);
- #endif /* CONFIG_RT2X00_LIB_LEDS */
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index d3bc218..651cb4f 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1524,7 +1524,7 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
+ struct ath_bus_ops {
+ 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
++	void		(*cleanup)(struct ath_softc *sc);
+ };
  
- 	rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
--	if (value == LED_MODE_TXRX_ACTIVITY)
-+	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
- 		rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
- 				   LED_TYPE_ACTIVITY);
- #endif /* CONFIG_RT2X00_LIB_LEDS */
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 30028e2..c8e38a5 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1569,7 +1569,7 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
+ struct ath_softc {
+@@ -760,4 +761,9 @@ static inline void ath_read_cachesize(struct ath_softc *sc, int *csz)
+ 	sc->bus_ops->read_cachesize(sc, csz);
+ }
  
- 	rt2500usb_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
--	if (value == LED_MODE_TXRX_ACTIVITY)
-+	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
- 		rt2500usb_init_led(rt2x00dev, &rt2x00dev->led_qual,
- 				   LED_TYPE_ACTIVITY);
- #endif /* CONFIG_RT2X00_LIB_LEDS */
++static inline void ath_bus_cleanup(struct ath_softc *sc)
++{
++	sc->bus_ops->cleanup(sc);
++}
++
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 15824c1..7917441 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1267,13 +1267,7 @@ static int ath_start_rfkill_poll(struct ath_softc *sc)
+ 			rfkill_free(sc->rf_kill.rfkill);
+ 
+ 			/* Deinitialize the device */
+-			ath_detach(sc);
+-			if (to_pci_dev(sc->dev)->irq)
+-				free_irq(to_pci_dev(sc->dev)->irq, sc);
+-			pci_iounmap(to_pci_dev(sc->dev), sc->mem);
+-			pci_release_region(to_pci_dev(sc->dev), 0);
+-			pci_disable_device(to_pci_dev(sc->dev));
+-			ieee80211_free_hw(sc->hw);
++			ath_bus_cleanup(sc);
+ 			return -EIO;
+ 		} else {
+ 			sc->sc_flags |= SC_OP_RFKILL_REGISTERED;
+@@ -2529,8 +2523,22 @@ ath_rf_name(u16 rf_version)
+ 	return "????";
+ }
+ 
++static void ath_pci_cleanup(struct ath_softc *sc)
++{
++	struct pci_dev *pdev = to_pci_dev(sc->dev);
++
++	ath_detach(sc);
++	if (pdev->irq)
++		free_irq(pdev->irq, sc);
++	pci_iounmap(pdev, sc->mem);
++	pci_release_region(pdev, 0);
++	pci_disable_device(pdev);
++	ieee80211_free_hw(sc->hw);
++}
++
+ static struct ath_bus_ops ath_pci_bus_ops = {
+ 	.read_cachesize = ath_pci_read_cachesize,
++	.cleanup = ath_pci_cleanup,
+ };
+ 
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+@@ -2667,13 +2675,7 @@ static void ath_pci_remove(struct pci_dev *pdev)
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath_softc *sc = hw->priv;
+ 
+-	ath_detach(sc);
+-	if (pdev->irq)
+-		free_irq(pdev->irq, sc);
+-	pci_iounmap(pdev, sc->mem);
+-	pci_release_region(pdev, 0);
+-	pci_disable_device(pdev);
+-	ieee80211_free_hw(hw);
++	ath_pci_cleanup(sc);
+ }
+ 
+ #ifdef CONFIG_PM
 -- 
-1.5.6.5
+1.5.3.2
 
