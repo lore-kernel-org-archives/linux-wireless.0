@@ -1,66 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39668 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753794AbZAXORU (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:46144 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755422AbZAGAnu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 09:17:20 -0500
-Subject: Re: [PATCH] ath9k: Read and write the TSF via debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090123222602.50450@gmx.net> (sfid-20090123_232635_135057_A4C5AB03)
-References: <20090123044421.270720@gmx.net>
-	 (sfid-20090123_054428_080982_2340614F) <1232748841.3977.10.camel@johannes.local>
-	 <20090123222602.50450@gmx.net> (sfid-20090123_232635_135057_A4C5AB03)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jF3i9x+QHwt2pOhpyzGK"
-Date: Sat, 24 Jan 2009 15:17:16 +0100
-Message-Id: <1232806636.4036.8.camel@johannes.local> (sfid-20090124_151723_166893_F0F8D135)
-Mime-Version: 1.0
+	Tue, 6 Jan 2009 19:43:50 -0500
+Received: by ewy10 with SMTP id 10so8757855ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 16:43:48 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH] orinoco: Remove unused variable rx_data
+Date: Wed,  7 Jan 2009 00:43:54 +0000
+Message-Id: <1231289034-24065-1-git-send-email-kilroyd@googlemail.com> (sfid-20090107_014356_371611_8E95B816)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Probably something leftover from experimentation with tasklets. Now the
+structure declaration orinoco_rx_data can be relocated to orinoco.c
 
---=-jF3i9x+QHwt2pOhpyzGK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/orinoco.c |    6 ++++++
+ drivers/net/wireless/orinoco/orinoco.h |    9 ---------
+ 2 files changed, 6 insertions(+), 9 deletions(-)
 
-On Fri, 2009-01-23 at 23:26 +0100, Alina Friedrichsen wrote:
-> Hi Johannes!
->=20
-> > Ok, read I can understand, but write??
->=20
-> I need to write it to test if the BSSID merge to the older IBSS
-> network works correctly.=20
->=20
-> I don't want to run around the block to test it. ;)
-
-Fine, but that definitely doesn't need to have support in mac80211, I
-don't really want to see debug-only hooks that people will be left
-wondering about.
-
-johannes
-
---=-jF3i9x+QHwt2pOhpyzGK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJeyLpAAoJEKVg1VMiehFYuVsP/3JmryQHy0KsywJSUrLQS8BR
-oW2839CcQlCTNaBd4BzBIBZq2837AlNaZPDC0072p61N9o3JOg076SX8PS2FaRgw
-L3h/SWAniHg6/YWRoWl7mXaKsrSBRzRuIGM8M++06Z1JwVajB+2pVwbDenz7Hj2Z
-O+S6WnpWqugJoi4aG8q8dT3EiPzXkHJ45BUdUljPpszzo4zja5SyahwPmgTXiS0I
-ec1NkLOOMJFT7uIVLOXSaG31D9XgyCs51giZl9s/NjRN3XSkdiWLMybbIWiYt/lS
-FWMxGqIFH/25h7Enu4vfO4Ll+gPrMi25c6zYTYSbPvqtcp9Tr0IiOvqbhIymvgmG
-+R+EGOEUOoCxsN9+KrpCvr8Y+Hj3OpdKqmWyh/70ig9+HFtZQNZaUsRL7vRlAvVY
-4Vi3q14y/juISK4C+xXgZgzVIBzhAOFjb2OAvcplPGRF4FkB2ZIvrMvWp9QY6OWb
-nFE5S5MKIjh0ylJ/tRprzlc1AmlScrfr3mrZKyVMYrr9vo/ImORHULXOxTu+wwZ3
-qTWScxiKo7gBw5IaNrtPJ7wXf3eaLTxLxqqEJz5ww8LYMjZDSO37c3BK0cjaQb1e
-lJx3TSdzqhi4zoXAVGCUFjVyV/w8nccPF+3/7tm6S7eCmeJEr78QqBpYfzU7yaxo
-0WZ5H8UMEAM0O3f1vblH
-=aoDG
------END PGP SIGNATURE-----
-
---=-jF3i9x+QHwt2pOhpyzGK--
+diff --git a/drivers/net/wireless/orinoco/orinoco.c b/drivers/net/wireless/orinoco/orinoco.c
+index 2b7e2e9..47e51db 100644
+--- a/drivers/net/wireless/orinoco/orinoco.c
++++ b/drivers/net/wireless/orinoco/orinoco.c
+@@ -240,6 +240,12 @@ struct hermes_rx_descriptor {
+ 	__le16 data_len;
+ } __attribute__ ((packed));
+ 
++struct orinoco_rx_data {
++	struct hermes_rx_descriptor *desc;
++	struct sk_buff *skb;
++	struct list_head list;
++};
++
+ /********************************************************************/
+ /* Function prototypes                                              */
+ /********************************************************************/
+diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
+index 00750c8..c653816 100644
+--- a/drivers/net/wireless/orinoco/orinoco.h
++++ b/drivers/net/wireless/orinoco/orinoco.h
+@@ -59,14 +59,6 @@ struct xbss_element {
+ 	struct list_head list;
+ };
+ 
+-struct hermes_rx_descriptor;
+-
+-struct orinoco_rx_data {
+-	struct hermes_rx_descriptor *desc;
+-	struct sk_buff *skb;
+-	struct list_head list;
+-};
+-
+ struct firmware;
+ 
+ struct orinoco_private {
+@@ -83,7 +75,6 @@ struct orinoco_private {
+ 	/* Interrupt tasklets */
+ 	struct tasklet_struct rx_tasklet;
+ 	struct list_head rx_list;
+-	struct orinoco_rx_data *rx_data;
+ 
+ 	/* driver state */
+ 	int open;
+-- 
+1.6.0.6
 
