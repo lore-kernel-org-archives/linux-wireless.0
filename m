@@ -1,155 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gold.linx.net ([195.66.232.40]:56378 "EHLO gold.linx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751870AbZAXPz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 10:55:27 -0500
-Subject: Re: [ANN] crda v1.0.0
-From: Tony Vroon <tony@linx.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Diego E. 'Flameeyes'" =?ISO-8859-1?Q?Petten=F2?=
-	<flameeyes@gmail.com>
-In-Reply-To: <20090123235725.GC30761@tesla>
-References: <20090123235725.GC30761@tesla>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dUq3hmlr0QmCqmxwYHKQ"
-Date: Sat, 24 Jan 2009 15:55:57 +0000
-Message-Id: <1232812557.19657.6.camel@localhost> (sfid-20090124_165529_929455_7325E019)
-Mime-Version: 1.0
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:44006 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751806AbZAGKLG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2009 05:11:06 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH 09/11] ath9k: remove (u16) casts from rtc register access
+Date: Wed,  7 Jan 2009 11:09:30 +0100
+Message-Id: <1231322972-24094-10-git-send-email-juhosg@openwrt.org> (sfid-20090107_111134_446159_39E17DAD)
+In-Reply-To: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The RTC register offsets don't fit into 'u16' on the AR913x, so we have
+to remove the existing casts.
 
---=-dUq3hmlr0QmCqmxwYHKQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/hw.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-On Fri, 2009-01-23 at 15:57 -0800, Luis R. Rodriguez wrote:
-> The crda code has been intact for a while now, no main issues
-> have been found or reported. As such this wraps up its 1.0.0
-> release, and I doubt it will be changed for a while.
-
-Thanks Luis.
-Two questions:
-1) Could you please drop that v from the tarball name. It's new, and it
-means extra work for me. The old naming was perfect for automatic
-handling.
-2) You say the only changes were manpages, example directories and a
-spec file, but it introduces a new build failure for me:
->>> Unpacking source...
->>> Unpacking crda-v1.0.0.tar.bz2
-to /var/tmp/portage/net-wireless/crda-1.0.0/work
->>> Source unpacked in /var/tmp/portage/net-wireless/crda-1.0.0/work
->>> Compiling source
-in /var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0 ...
-make -j8 CC=3Dx86_64-pc-linux-gnu-gcc
-  GEN  keys-gcrypt.c
-  CC   crda.o
-  CC   intersect.o
-  CC   print-regdom.o
-  CC   regdbdump.o
-  CC   reglib.o
-  LD   regdbdump
-  LD   intersect
-  CHK  /usr/lib/crda/regulatory.bin
-  LD   crda
-crda.o: In function `nl_socket_alloc':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:28:
-undefined reference to `nl_handle_alloc'
-crda.o: In function `nl80211_init':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:64:
-undefined reference to `genl_connect'
-crda.o: In function `__genl_ctrl_alloc_cache':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:38:
-undefined reference to `genl_ctrl_alloc_cache'
-crda.o: In function `nl80211_init':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:76:
-undefined reference to `genl_ctrl_search_by_name'
-crda.o: In function `main':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:252:
-undefined reference to `nlmsg_alloc'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:259:
-undefined reference to `genl_family_get_id'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:259:
-undefined reference to `genlmsg_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:270:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:320:
-undefined reference to `nlmsg_free'
-crda.o: In function `nl80211_cleanup':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:94:
-undefined reference to `genl_family_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:95:
-undefined reference to `nl_cache_free'
-crda.o: In function `nl_socket_free':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:33:
-undefined reference to `nl_handle_destroy'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:33:
-undefined reference to `nl_handle_destroy'
-crda.o: In function `main':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:272:
-undefined reference to `nla_nest_start'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:280:
-undefined reference to `nla_nest_start'
-crda.o: In function `put_reg_rule':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:130:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:131:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:132:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:133:
-undefined reference to `nla_put'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:134:
-undefined reference to `nla_put'
-crda.o:/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:135=
-: more undefined references to `nla_put' follow
-crda.o: In function `main':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:288:
-undefined reference to `nla_nest_end'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:291:
-undefined reference to `nla_nest_end'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:293:
-undefined reference to `nl_cb_alloc'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:297:
-undefined reference to `nl_send_auto_complete'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:304:
-undefined reference to `nl_cb_set'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:305:
-undefined reference to `nl_cb_set'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:306:
-undefined reference to `nl_cb_err'
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:318:
-undefined reference to `nl_cb_put'
-crda.o: In function `nl80211_init':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:86:
-undefined reference to `nl_cache_free'
-crda.o: In function `main':
-/var/tmp/portage/net-wireless/crda-1.0.0/work/crda-v1.0.0/crda.c:309:
-undefined reference to `nl_wait_for_ack'
-collect2: ld returned 1 exit status
-make: *** [crda] Error 1
-
-Is it possible that you inadvertently broke the ability to build in
-parallel? This is make -j8 on a dual quad-core Opteron, so there are 8
-cores ready to handle jobs. I've seen it break compilations before.
-I have CC'd Diego on the e-mail, just in case it's an easy fix.
-
-Regards,
-Tony V.
-
-P.S. Resend, accidentally used wrong FROM address. Apologies.
-
---=-dUq3hmlr0QmCqmxwYHKQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkl7Og0ACgkQp5vW4rUFj5pBrACePi8hRU3TvjWzHwsO+CpJ/RTF
-ylwAn1Y+BL5RQkzf0DLRuyvqu32TjoWo
-=6RZM
------END PGP SIGNATURE-----
-
---=-dUq3hmlr0QmCqmxwYHKQ--
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index e4aa39e..8bfa216 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -1010,7 +1010,7 @@ static void ath9k_hw_init_pll(struct ath_hal *ah,
+ 				pll |= SM(0xb, AR_RTC_PLL_DIV);
+ 		}
+ 	}
+-	REG_WRITE(ah, (u16) (AR_RTC_PLL_CONTROL), pll);
++	REG_WRITE(ah, (AR_RTC_PLL_CONTROL), pll);
+ 
+ 	udelay(RTC_PLL_SETTLE_DELAY);
+ 
+@@ -1550,11 +1550,11 @@ static bool ath9k_hw_set_reset(struct ath_hal *ah, int type)
+ 			rst_flags |= AR_RTC_RC_MAC_COLD;
+ 	}
+ 
+-	REG_WRITE(ah, (u16) (AR_RTC_RC), rst_flags);
++	REG_WRITE(ah, (AR_RTC_RC), rst_flags);
+ 	udelay(50);
+ 
+-	REG_WRITE(ah, (u16) (AR_RTC_RC), 0);
+-	if (!ath9k_hw_wait(ah, (u16) (AR_RTC_RC), AR_RTC_RC_M, 0)) {
++	REG_WRITE(ah, (AR_RTC_RC), 0);
++	if (!ath9k_hw_wait(ah, (AR_RTC_RC), AR_RTC_RC_M, 0)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_RESET,
+ 			"RTC stuck in MAC reset\n");
+ 		return false;
+@@ -1576,8 +1576,8 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hal *ah)
+ 	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN |
+ 		  AR_RTC_FORCE_WAKE_ON_INT);
+ 
+-	REG_WRITE(ah, (u16) (AR_RTC_RESET), 0);
+-	REG_WRITE(ah, (u16) (AR_RTC_RESET), 1);
++	REG_WRITE(ah, (AR_RTC_RESET), 0);
++	REG_WRITE(ah, (AR_RTC_RESET), 1);
+ 
+ 	if (!ath9k_hw_wait(ah,
+ 			   AR_RTC_STATUS,
+@@ -2602,7 +2602,7 @@ static void ath9k_set_power_sleep(struct ath_hal *ah, int setChip)
+ 		if (!AR_SREV_9100(ah))
+ 			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
+ 
+-		REG_CLR_BIT(ah, (u16) (AR_RTC_RESET),
++		REG_CLR_BIT(ah, (AR_RTC_RESET),
+ 			    AR_RTC_RESET_EN);
+ 	}
+ }
+-- 
+1.5.3.2
 
