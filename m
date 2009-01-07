@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:24583 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757473AbZAWW43 (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:43979 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbZAGKLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 17:56:29 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so5803705wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 14:56:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b6c5339f0901231027j22c9c797x6ad3a29b719eee99@mail.gmail.com>
-References: <1232672850.7913.6.camel@maxim-laptop>
-	 <1232733061.6513.2.camel@maxim-laptop>
-	 <b6c5339f0901231027j22c9c797x6ad3a29b719eee99@mail.gmail.com>
-Date: Fri, 23 Jan 2009 17:56:28 -0500
-Message-ID: <b6c5339f0901231456g1b749430v28890b95e1c06337@mail.gmail.com> (sfid-20090123_235634_253372_A196C43B)
-Subject: Re: [BUG] latest wireless-testing (compat-wireless) doesn't work with
-	iwl3945
-From: Bob Copeland <bcopeland@gmail.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 7 Jan 2009 05:11:05 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH 10/11] ath9k: fix ar5416Addac_9100 values
+Date: Wed,  7 Jan 2009 11:09:31 +0100
+Message-Id: <1231322972-24094-11-git-send-email-juhosg@openwrt.org> (sfid-20090107_111130_501274_43922495)
+In-Reply-To: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[dropped ipw3945 from cc, not intel specific, and I didn't want the
- moderation bounce]
+Writing the register at offset 0x98c4 causes a deadlock on the AR913x
+SoCs. Although i don't have detailed knowledge about these registers,
+but if i change the register offset according to the 'ar5416Addac' table,
+it works. Additionally there is no reference to the 0x98c4 elsewhere.
 
-On Fri, Jan 23, 2009 at 1:27 PM, Bob Copeland <bcopeland@gmail.com> wrote:
-> On Fri, Jan 23, 2009 at 12:51 PM, Maxim Levitsky
-> <maximlevitsky@gmail.com> wrote:
->> On Fri, 2009-01-23 at 03:07 +0200, Maxim Levitsky wrote:
->>
->>
->> I noticed another wierd bug, somehow iwl3945 manages now to break
->> suspend to disk (hands on suspend) but not suspend to ram.
->
-> Probably related to my mac80211 changes :(  Can you boot with
-> no_console_suspend=1?
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/initvals.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Actually... I have a pretty good idea why this happens and a nice one
-liner fix.  Can you try changing "create_freezeable_workqueue" in
-net/mac80211/main.c (there's only one) to "create_singlethread_workqueue"?
-
+diff --git a/drivers/net/wireless/ath9k/initvals.h b/drivers/net/wireless/ath9k/initvals.h
+index a1bc631..d492363 100644
+--- a/drivers/net/wireless/ath9k/initvals.h
++++ b/drivers/net/wireless/ath9k/initvals.h
+@@ -658,7 +658,7 @@ static const u32 ar5416Addac_9100[][2] = {
+     {0x0000989c,  0x00000000 },
+     {0x0000989c,  0x00000000 },
+     {0x0000989c,  0x00000000 },
+-    {0x000098c4,  0x00000000 },
++    {0x000098cc,  0x00000000 },
+ };
+ 
+ static const u32 ar5416Modes[][6] = {
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.3.2
+
