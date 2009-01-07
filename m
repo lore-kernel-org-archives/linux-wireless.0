@@ -1,83 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:41813 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759874AbZAQToU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 14:44:20 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so398534eye.37
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Jan 2009 11:44:18 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH 3/3] rt2x00: Add LED_MODE_ASUS support
-Date: Sat, 17 Jan 2009 20:44:08 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200901172042.32618.IvDoorn@gmail.com> <200901172042.58545.IvDoorn@gmail.com>
-In-Reply-To: <200901172042.58545.IvDoorn@gmail.com>
+Received: from berniwa.com ([88.80.197.66]:47629 "EHLO berniwa.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759581AbZAGTaq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2009 14:30:46 -0500
+Message-ID: <4964FBCE.1070804@berniwa.com> (sfid-20090107_203050_078144_971DEAD4)
+Date: Wed, 07 Jan 2009 20:00:30 +0100
+From: =?ISO-8859-15?Q?Bernhard_W=F6rndl-Aichriedler?= <bwa@berniwa.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901172044.08251.IvDoorn@gmail.com> (sfid-20090117_204426_285361_9F51858C)
+To: andrey@cozybit.com, Colin McCabe <colin@cozybit.com>
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] libertas: Fix alignment issues in libertas core TESTED
+Content-Type: text/plain; charset=ISO-8859-15;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the led mode is asus, the activity led mode must
-be registered otherwise the second LED will not be enabled.
+Hi!
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-John, this should fix Fedora Bug 437391:
-"RT2500 from kernel-2.6.23.15-137.fc8 - no power LED"
+I'm using the AP7000 (Atmel AVR32) combined with the Marvell 88W8686 an=
+d=20
+the patch is just great,
+through that patch ([PATCH 1/3] libertas: Fix alignment issues in=20
+libertas core) i got the wireless working successfully and fully stable=
+=2E
 
- drivers/net/wireless/rt2x00/rt2400pci.c |    4 +++-
- drivers/net/wireless/rt2x00/rt2500pci.c |    4 +++-
- drivers/net/wireless/rt2x00/rt2500usb.c |    4 +++-
- 3 files changed, 9 insertions(+), 3 deletions(-)
+I suggest pulling it into the kernel
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 5c617b9..908f43a 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1397,7 +1397,9 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
- 
- 	rt2400pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
--	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
-+	if (value == LED_MODE_TXRX_ACTIVITY ||
-+	    value == LED_MODE_DEFAULT ||
-+	    value == LED_MODE_ASUS)
- 		rt2400pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
- 				   LED_TYPE_ACTIVITY);
- #endif /* CONFIG_RT2X00_LIB_LEDS */
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 09ae308..b9563aa 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1555,7 +1555,9 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
- 
- 	rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
--	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
-+	if (value == LED_MODE_TXRX_ACTIVITY ||
-+	    value == LED_MODE_DEFAULT ||
-+	    value == LED_MODE_ASUS)
- 		rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
- 				   LED_TYPE_ACTIVITY);
- #endif /* CONFIG_RT2X00_LIB_LEDS */
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index cecaba9..31d8474 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1605,7 +1605,9 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
- 
- 	rt2500usb_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
--	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
-+	if (value == LED_MODE_TXRX_ACTIVITY ||
-+	    value == LED_MODE_DEFAULT ||
-+	    value == LED_MODE_ASUS)
- 		rt2500usb_init_led(rt2x00dev, &rt2x00dev->led_qual,
- 				   LED_TYPE_ACTIVITY);
- #endif /* CONFIG_RT2X00_LIB_LEDS */
--- 
-1.5.6.1
+Thank you Colin and Andrey!
 
+Best Regards=20
+Bernhard W=F6rndl-Aichriedler
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
