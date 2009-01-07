@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54933 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758300AbZAHQcZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 11:32:25 -0500
-Subject: Re: firmware for GSPI '8686 available
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	libertas-dev@lists.infradead.org,
-	Javier Cardona <javier@cozybit.com>,
-	Colin McCabe <colin@cozybit.com>
-In-Reply-To: <45e8e6c40901061413n1a984e58n8e1643caa1fd481e@mail.gmail.com>
-References: <45e8e6c40901061413n1a984e58n8e1643caa1fd481e@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 08 Jan 2009 11:31:13 -0500
-Message-Id: <1231432273.21643.31.camel@localhost.localdomain> (sfid-20090108_173230_301601_EB6D9C96)
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33517 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759394AbZAGPbN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2009 10:31:13 -0500
+Date: Wed, 7 Jan 2009 17:30:52 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: Re: [PATCH 12/14] mac80211: 802.11w - Optional software CCMP for
+	management frames
+Message-ID: <20090107153052.GA24894@jm.kir.nu> (sfid-20090107_163128_641236_7A217A8E)
+References: <20090107112346.369581673@atheros.com> <20090107112707.370907962@atheros.com> <1231330118.3545.28.camel@johannes> <20090107122427.GA20019@jm.kir.nu> <1231332428.3545.33.camel@johannes> <20090107140956.GA22424@jm.kir.nu> <1231340944.3545.38.camel@johannes>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231340944.3545.38.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-01-06 at 14:13 -0800, Andrey Yurovsky wrote:
-> Marvell will make the 88W8686 GSPI firmware available for public
-> download on their website in the next weeks.  In the meantime we've
-> uploaded it to our website:
-> http://cozybit.com/projects/gspi8686
-> 
-> Please note that you must accept Marvell's license before downloading the files.
-> 
-> We encourage you to use this firmware to test the patch set that Colin
-> submitted on Jan 2nd.
+On Wed, Jan 07, 2009 at 04:09:04PM +0100, Johannes Berg wrote:
 
-I'm already pushing firmware for the following devices to Woodhouse's
-linux-firmware tree:
+> Or just adding it to nl80211, are we ever expecting to have pure wext
+> drivers with MFP capabilities??
 
-mwl8k/fmimage_8687.fw
-mwl8k/helper_8687.fw
-libertas/gspi8686_v9.bin
-libertas/sd8385.bin
-libertas/sd8686_v9.bin
-libertas/cf8385_helper.bin
-libertas/sd8686_v8_helper.bin
-libertas/cf8385.bin
-libertas/usb8388_v9.bin
-libertas/usb8388_v5.bin
-libertas/sd8686_v8.bin
-libertas/sd8686_v9_helper.bin
-libertas/gspi8686_v9_helper.bin
-libertas/sd8385_helper.bin
+Not that likely, I would assume. However, I would rather not start
+extending driver_wext.c in wpa_supplicant with nl80211 functionality and
+I don't see Network Manager moving away from hardcoding driver_wext
+anytime soon..
 
-Pending one final sign-off from Manas, it'll be up and live.
+> Generally, the thing is that we don't really want to require people to
+> manually enable MFP, but rather have NM set it to "enable whenever
+> possible". That seems not workable unless we know which driver/hw
+> supports it.
 
-Dan
+Sure. Enabling optional MFP automatically whenever driver/hw supports it
+would be nice (there is a separate policy selection of requiring MFP and
+that's something that users will need to configure if they want it). For
+this feature, I would be fine having the optional-MFP configuration in
+wpa_supplicant mean that it will be disabled if driver does not support
+it, i.e., NM would not actually need to care and it could just always
+set ieee80211w=1 in wpa_supplicant configuration (or well, at this
+point, it would need to care a bit since wpa_supplicant would reject the
+configuration if it was not built with 802.11w support, but that is
+probably fine when done over dbus and not config file).
 
+As far as wpa_supplicant is concerned, I can make it determine this by
+trying to enable MFP mode at startup to figure out whether the driver is
+capable, so there is no need to add an explicit capability flag for this
+if we do not want to modify WEXT. For nl80211, we can add capability
+flag for MFP and then driver_nl80211.c can skip this validation step.
+However, we would still need to add a driver-mac80211 flag for
+indicating whether the driver supports MFP.
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
