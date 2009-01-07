@@ -1,125 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37367 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751759AbZAUSzf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 13:55:35 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/2 v2.6.29] iwlwifi: fix rs_get_rate WARN_ON()
-Date: Wed, 21 Jan 2009 10:58:02 -0800
-Message-Id: <1232564283-18008-2-git-send-email-reinette.chatre@intel.com> (sfid-20090121_195542_734853_62E08E0F)
-In-Reply-To: <1232564283-18008-1-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232564283-18008-1-git-send-email-reinette.chatre@intel.com>
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:43973 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbZAGKLF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2009 05:11:05 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH 02/11] ath9k: convert to use bus-agnostic DMA routines
+Date: Wed,  7 Jan 2009 11:09:23 +0100
+Message-Id: <1231322972-24094-3-git-send-email-juhosg@openwrt.org> (sfid-20090107_111110_325461_DA22A317)
+In-Reply-To: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abbas, Mohamed <mohamed.abbas@intel.com>
+Convert to use bus-agnostic DMA routines to make it usable on AHB bus as well.
 
-In ieee80211_sta structure there is u64 supp_rates[IEEE80211_NUM_BANDS]
-this is filled with all support rate from assoc_resp.  If we associate
-with G-band AP only supp_rates of G-band will be set the other band
-supp_rates will be set to 0. If the user type this command
-this will cause mac80211 to set to new channel, mac80211
-does not disassociate in setting new channel, so the active
-band is now A-band. then in handling the new essid mac80211 will
-kick in the assoc steps which involve sending disassociation frame.
-in this mac80211 will WARN_ON sta->supp_rates[A_BAND] == 0.
-
-This fixes:
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1822
-http://www.kerneloops.org/searchweek.php?search=rs_get_rate
-
-Signed-off-by: mohamed abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   14 +++++++++++---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   14 ++++++++++++--
- 2 files changed, 23 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath9k/beacon.c |   31 ++++++++++++++-----------------
+ drivers/net/wireless/ath9k/main.c   |   13 ++++++-------
+ drivers/net/wireless/ath9k/recv.c   |   27 ++++++++++++---------------
+ drivers/net/wireless/ath9k/xmit.c   |   15 ++++++---------
+ 4 files changed, 38 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index 9b60a0c..21c8418 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -638,12 +638,16 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 	s8 scale_action = 0;
- 	unsigned long flags;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	u16 fc, rate_mask;
-+	u16 fc;
-+	u16 rate_mask = 0;
- 	struct iwl3945_priv *priv = (struct iwl3945_priv *)priv_r;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
- 	IWL_DEBUG_RATE("enter\n");
- 
-+	if (sta)
-+		rate_mask = sta->supp_rates[sband->band];
-+
- 	/* Send management frames and broadcast/multicast data using lowest
- 	 * rate. */
- 	fc = le16_to_cpu(hdr->frame_control);
-@@ -651,11 +655,15 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 	    is_multicast_ether_addr(hdr->addr1) ||
- 	    !sta || !priv_sta) {
- 		IWL_DEBUG_RATE("leave: No STA priv data to update!\n");
--		info->control.rates[0].idx = rate_lowest_index(sband, sta);
-+		if (!rate_mask)
-+			info->control.rates[0].idx =
-+					rate_lowest_index(sband, NULL);
-+		else
-+			info->control.rates[0].idx =
-+					rate_lowest_index(sband, sta);
- 		return;
+diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
+index f02b099..be1d84a 100644
+--- a/drivers/net/wireless/ath9k/beacon.c
++++ b/drivers/net/wireless/ath9k/beacon.c
+@@ -164,9 +164,9 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
+ 	bf = avp->av_bcbuf;
+ 	skb = (struct sk_buff *)bf->bf_mpdu;
+ 	if (skb) {
+-		pci_unmap_single(to_pci_dev(sc->dev), bf->bf_dmacontext,
++		dma_unmap_single(sc->dev, bf->bf_dmacontext,
+ 				 skb->len,
+-				 PCI_DMA_TODEVICE);
++				 DMA_TO_DEVICE);
+ 		dev_kfree_skb_any(skb);
  	}
  
--	rate_mask = sta->supp_rates[sband->band];
- 	index = min(rs_sta->last_txrate_idx & 0xffff, IWL_RATE_COUNT - 1);
- 
- 	if (sband->band == IEEE80211_BAND_5GHZ)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index f3f1792..27f5047 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -944,7 +944,8 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
+@@ -188,15 +188,14 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
  	}
  
- 	/* See if there's a better rate or modulation mode to try. */
--	rs_rate_scale_perform(priv, hdr, sta, lq_sta);
-+	if (sta && sta->supp_rates[sband->band])
-+		rs_rate_scale_perform(priv, hdr, sta, lq_sta);
- out:
- 	return;
- }
-@@ -2101,14 +2102,23 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct iwl_lq_sta *lq_sta = priv_sta;
- 	int rate_idx;
-+	u64 mask_bit = 0;
+ 	bf->bf_buf_addr = bf->bf_dmacontext =
+-		pci_map_single(to_pci_dev(sc->dev), skb->data,
++		dma_map_single(sc->dev, skb->data,
+ 			       skb->len,
+-			       PCI_DMA_TODEVICE);
+-	if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
+-					   bf->bf_buf_addr))) {
++			       DMA_TO_DEVICE);
++	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+ 		dev_kfree_skb_any(skb);
+ 		bf->bf_mpdu = NULL;
+ 		DPRINTF(sc, ATH_DBG_CONFIG,
+-			"pci_dma_mapping_error() on beaconing\n");
++			"dma_mapping_error() on beaconing\n");
+ 		return NULL;
+ 	}
  
- 	IWL_DEBUG_RATE_LIMIT("rate scale calculate new rate for skb\n");
+@@ -344,9 +343,9 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
+ 	bf = avp->av_bcbuf;
+ 	if (bf->bf_mpdu != NULL) {
+ 		skb = (struct sk_buff *)bf->bf_mpdu;
+-		pci_unmap_single(to_pci_dev(sc->dev), bf->bf_dmacontext,
++		dma_unmap_single(sc->dev, bf->bf_dmacontext,
+ 				 skb->len,
+-				 PCI_DMA_TODEVICE);
++				 DMA_TO_DEVICE);
+ 		dev_kfree_skb_any(skb);
+ 		bf->bf_mpdu = NULL;
+ 	}
+@@ -403,15 +402,14 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
  
-+	if (sta)
-+		mask_bit = sta->supp_rates[sband->band];
+ 	bf->bf_mpdu = skb;
+ 	bf->bf_buf_addr = bf->bf_dmacontext =
+-		pci_map_single(to_pci_dev(sc->dev), skb->data,
++		dma_map_single(sc->dev, skb->data,
+ 			       skb->len,
+-			       PCI_DMA_TODEVICE);
+-	if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
+-					   bf->bf_buf_addr))) {
++			       DMA_TO_DEVICE);
++	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+ 		dev_kfree_skb_any(skb);
+ 		bf->bf_mpdu = NULL;
+ 		DPRINTF(sc, ATH_DBG_CONFIG,
+-			"pci_dma_mapping_error() on beacon alloc\n");
++			"dma_mapping_error() on beacon alloc\n");
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -431,10 +429,9 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vap *avp)
+ 		bf = avp->av_bcbuf;
+ 		if (bf->bf_mpdu != NULL) {
+ 			struct sk_buff *skb = (struct sk_buff *)bf->bf_mpdu;
+-			pci_unmap_single(to_pci_dev(sc->dev),
+-					 bf->bf_dmacontext,
++			dma_unmap_single(sc->dev, bf->bf_dmacontext,
+ 					 skb->len,
+-					 PCI_DMA_TODEVICE);
++					 DMA_TO_DEVICE);
+ 			dev_kfree_skb_any(skb);
+ 			bf->bf_mpdu = NULL;
+ 		}
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 3313459..9acd968 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1709,9 +1709,8 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ 	}
+ 
+ 	/* allocate descriptors */
+-	dd->dd_desc = pci_alloc_consistent(to_pci_dev(sc->dev),
+-			      dd->dd_desc_len,
+-			      &dd->dd_desc_paddr);
++	dd->dd_desc = dma_alloc_coherent(sc->dev, dd->dd_desc_len,
++					 &dd->dd_desc_paddr, GFP_ATOMIC);
+ 	if (dd->dd_desc == NULL) {
+ 		error = -ENOMEM;
+ 		goto fail;
+@@ -1757,8 +1756,8 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ 	}
+ 	return 0;
+ fail2:
+-	pci_free_consistent(to_pci_dev(sc->dev),
+-		dd->dd_desc_len, dd->dd_desc, dd->dd_desc_paddr);
++	dma_free_coherent(sc->dev, dd->dd_desc_len, dd->dd_desc,
++			  dd->dd_desc_paddr);
+ fail:
+ 	memset(dd, 0, sizeof(*dd));
+ 	return error;
+@@ -1771,8 +1770,8 @@ void ath_descdma_cleanup(struct ath_softc *sc,
+ 			 struct ath_descdma *dd,
+ 			 struct list_head *head)
+ {
+-	pci_free_consistent(to_pci_dev(sc->dev),
+-		dd->dd_desc_len, dd->dd_desc, dd->dd_desc_paddr);
++	dma_free_coherent(sc->dev, dd->dd_desc_len, dd->dd_desc,
++			  dd->dd_desc_paddr);
+ 
+ 	INIT_LIST_HEAD(head);
+ 	kfree(dd->dd_bufptr);
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index d7774d1..1fc4dd9 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -291,16 +291,15 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 			}
+ 
+ 			bf->bf_mpdu = skb;
+-			bf->bf_buf_addr = pci_map_single(to_pci_dev(sc->dev),
+-							 skb->data,
++			bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
+ 							 sc->rx.bufsize,
+-							 PCI_DMA_FROMDEVICE);
+-			if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
++							 DMA_FROM_DEVICE);
++			if (unlikely(dma_mapping_error(sc->dev,
+ 				  bf->bf_buf_addr))) {
+ 				dev_kfree_skb_any(skb);
+ 				bf->bf_mpdu = NULL;
+ 				DPRINTF(sc, ATH_DBG_CONFIG,
+-					"pci_dma_mapping_error() on RX init\n");
++					"dma_mapping_error() on RX init\n");
+ 				error = -ENOMEM;
+ 				break;
+ 			}
+@@ -525,10 +524,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		 * 1. accessing the frame
+ 		 * 2. requeueing the same buffer to h/w
+ 		 */
+-		pci_dma_sync_single_for_cpu(to_pci_dev(sc->dev),
+-				bf->bf_buf_addr,
++		dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
+ 				sc->rx.bufsize,
+-				PCI_DMA_FROMDEVICE);
++				DMA_FROM_DEVICE);
+ 
+ 		/*
+ 		 * If we're asked to flush receive queue, directly
+@@ -559,9 +557,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 			goto requeue;
+ 
+ 		/* Unmap the frame */
+-		pci_unmap_single(to_pci_dev(sc->dev), bf->bf_buf_addr,
++		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+ 				 sc->rx.bufsize,
+-				 PCI_DMA_FROMDEVICE);
++				 DMA_FROM_DEVICE);
+ 
+ 		skb_put(skb, ds->ds_rxstat.rs_datalen);
+ 		skb->protocol = cpu_to_be16(ETH_P_CONTROL);
+@@ -601,16 +599,15 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 
+ 		/* We will now give hardware our shiny new allocated skb */
+ 		bf->bf_mpdu = requeue_skb;
+-		bf->bf_buf_addr = pci_map_single(to_pci_dev(sc->dev),
+-					 requeue_skb->data,
++		bf->bf_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
+ 					 sc->rx.bufsize,
+-					 PCI_DMA_FROMDEVICE);
+-		if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
++					 DMA_FROM_DEVICE);
++		if (unlikely(dma_mapping_error(sc->dev,
+ 			  bf->bf_buf_addr))) {
+ 			dev_kfree_skb_any(requeue_skb);
+ 			bf->bf_mpdu = NULL;
+ 			DPRINTF(sc, ATH_DBG_CONFIG,
+-				"pci_dma_mapping_error() on RX\n");
++				"dma_mapping_error() on RX\n");
+ 			break;
+ 		}
+ 		bf->bf_dmacontext = bf->bf_buf_addr;
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 27cb9d5..522078d 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -340,10 +340,8 @@ static void ath_tx_complete_buf(struct ath_softc *sc,
+ 	}
+ 
+ 	/* Unmap this frame */
+-	pci_unmap_single(to_pci_dev(sc->dev),
+-			 bf->bf_dmacontext,
+-			 skb->len,
+-			 PCI_DMA_TODEVICE);
++	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
 +
- 	/* Send management frames and broadcast/multicast data using lowest
- 	 * rate. */
- 	if (!ieee80211_is_data(hdr->frame_control) ||
- 	    is_multicast_ether_addr(hdr->addr1) || !sta || !lq_sta) {
--		info->control.rates[0].idx = rate_lowest_index(sband, sta);
-+		if (!mask_bit)
-+			info->control.rates[0].idx =
-+					rate_lowest_index(sband, NULL);
-+		else
-+			info->control.rates[0].idx =
-+					rate_lowest_index(sband, sta);
- 		return;
+ 	/* complete this frame */
+ 	ath_tx_complete(sc, skb, &tx_status);
+ 
+@@ -1716,13 +1714,12 @@ static int ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
+ 	/* DMA setup */
+ 	bf->bf_mpdu = skb;
+ 
+-	bf->bf_dmacontext = pci_map_single(to_pci_dev(sc->dev), skb->data,
+-					   skb->len, PCI_DMA_TODEVICE);
+-	if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
+-					   bf->bf_dmacontext))) {
++	bf->bf_dmacontext = dma_map_single(sc->dev, skb->data,
++					   skb->len, DMA_TO_DEVICE);
++	if (unlikely(dma_mapping_error(sc->dev, bf->bf_dmacontext))) {
+ 		bf->bf_mpdu = NULL;
+ 		DPRINTF(sc, ATH_DBG_CONFIG,
+-			"pci_dma_mapping_error() on TX\n");
++			"dma_mapping_error() on TX\n");
+ 		return -ENOMEM;
  	}
  
 -- 
-1.5.4.3
+1.5.3.2
 
