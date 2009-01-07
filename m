@@ -1,73 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42342 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756559AbZAWQey (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34022 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752423AbZAGL16 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 11:34:54 -0500
-Subject: Re: [RFC PATCH v2 2/2] mac80211: use ps-poll when dynamic power
-	save mode is disabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: vivek.natraj@gmail.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20090122114546.31443.79387.stgit@tikku>
-References: <20090122114240.31443.18218.stgit@tikku>
-	 <20090122114546.31443.79387.stgit@tikku>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ikh0Tn2GTW93wLg2xJVL"
-Date: Thu, 22 Jan 2009 18:02:09 +0100
-Message-Id: <1232643729.5819.3.camel@johannes.local> (sfid-20090123_173457_386284_3E60A873)
-Mime-Version: 1.0
+	Wed, 7 Jan 2009 06:27:58 -0500
+Message-Id: <20090107112646.530888227@atheros.com> (sfid-20090107_122804_334742_423EB3B1)
+References: <20090107112346.369581673@atheros.com>
+Date: Wed, 07 Jan 2009 13:23:53 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [PATCH 07/14] mac80211: 802.11w - Configuration of MFP disabled/optional/required
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add new WEXT IW_AUTH_* parameter for setting MFP
+disabled/optional/required.
 
---=-Ikh0Tn2GTW93wLg2xJVL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-On Thu, 2009-01-22 at 13:45 +0200, Kalle Valo wrote:
 
-> +	printk(KERN_DEBUG "sending ps-poll");
+---
+ include/linux/wireless.h   |    6 ++++++
+ net/mac80211/ieee80211_i.h |    6 ++++++
+ net/mac80211/mlme.c        |    4 ++++
+ net/mac80211/wext.c        |    7 +++++++
+ 4 files changed, 23 insertions(+)
 
-remove one, add another? Or forgot quilt refresh? :)
+--- wireless-testing.orig/include/linux/wireless.h	2009-01-07 13:07:54.000000000 +0200
++++ wireless-testing/include/linux/wireless.h	2009-01-07 13:07:56.000000000 +0200
+@@ -578,6 +578,7 @@
+ #define IW_AUTH_ROAMING_CONTROL		9
+ #define IW_AUTH_PRIVACY_INVOKED		10
+ #define IW_AUTH_CIPHER_GROUP_MGMT	11
++#define IW_AUTH_MFP			12
+ 
+ /* IW_AUTH_WPA_VERSION values (bit field) */
+ #define IW_AUTH_WPA_VERSION_DISABLED	0x00000001
+@@ -607,6 +608,11 @@
+ #define IW_AUTH_ROAMING_DISABLE	1	/* user space program used for roaming
+ 					 * control */
+ 
++/* IW_AUTH_MFP (management frame protection) values */
++#define IW_AUTH_MFP_DISABLED	0	/* MFP disabled */
++#define IW_AUTH_MFP_OPTIONAL	1	/* MFP optional */
++#define IW_AUTH_MFP_REQUIRED	2	/* MFP required */
++
+ /* SIOCSIWENCODEEXT definitions */
+ #define IW_ENCODE_SEQ_MAX_SIZE	8
+ /* struct iw_encode_ext ->alg */
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-07 13:07:49.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-07 13:07:56.000000000 +0200
+@@ -320,6 +320,12 @@ struct ieee80211_if_sta {
+ 	int auth_alg; /* currently used IEEE 802.11 authentication algorithm */
+ 	int auth_transaction;
+ 
++	enum {
++		IEEE80211_MFP_DISABLED,
++		IEEE80211_MFP_OPTIONAL,
++		IEEE80211_MFP_REQUIRED
++	} mfp; /* management frame protection */
++
+ 	unsigned long ibss_join_req;
+ 	struct sk_buff *probe_resp; /* ProbeResp template for IBSS */
+ 	u32 supp_rates_bits[IEEE80211_NUM_BANDS];
+--- wireless-testing.orig/net/mac80211/wext.c	2009-01-07 13:07:54.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-01-07 13:07:56.000000000 +0200
+@@ -960,6 +960,13 @@ static int ieee80211_ioctl_siwauth(struc
+ 		else
+ 			ret = -EOPNOTSUPP;
+ 		break;
++	case IW_AUTH_MFP:
++		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
++		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
++			sdata->u.sta.mfp = data->value;
++		else
++			ret = -EOPNOTSUPP;
++		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		break;
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-01-07 13:07:41.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-01-07 13:07:56.000000000 +0200
+@@ -2341,6 +2341,10 @@ static int ieee80211_sta_config_auth(str
+ 					       selected->ssid_len);
+ 		ieee80211_sta_set_bssid(sdata, selected->bssid);
+ 		ieee80211_sta_def_wmm_params(sdata, selected);
++		if (sdata->u.sta.mfp == IEEE80211_MFP_REQUIRED)
++			sdata->u.sta.flags |= IEEE80211_STA_MFP_ENABLED;
++		else
++			sdata->u.sta.flags &= ~IEEE80211_STA_MFP_ENABLED;
+ 
+ 		/* Send out direct probe if no probe resp was received or
+ 		 * the one we have is outdated
 
-If we receive a frame, but don't send any, we'll still stay awake.
-Should receiving update the dynamic timer as well, to avoid that case?
-Here, I mean:
+-- 
 
-> @@ -1816,9 +1851,24 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80=
-211_sub_if_data *sdata,
-...
-> +                       if (local->hw.conf.dynamic_ps_timeout > 0) {
-> +                               local->hw.conf.flags &=3D ~IEEE80211_CONF=
-_PS;
-> +                               ieee80211_hw_config(local,
-> +                                                   IEEE80211_CONF_CHANGE=
-_PS);
-> +                               ieee80211_send_nullfunc(local, sdata, 0);
-
-johannes
-
---=-Ikh0Tn2GTW93wLg2xJVL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJeKaOAAoJEKVg1VMiehFYpd0P/iai0HURIeukvCgyhtw/v1pk
-UybwiQR+SUmipVa7S13u3dGoq1YYdvXiYN94q9p6Yiqx4g6SF/nJv5EQx8xqaalb
-Y60JXrBPi4vOgARPr9lQwGTTsJ1sgkCLl0Ei7kwDoAbbwgJe6PwkTUsx1lDRbnx3
-xnHUCXptpNIMqaOvhJOGfzIgoPhUH1sKFSZjJkyHeC6GN/1O+w9+MNDoF8jTId5H
-JCF/cf5JLyNH4K1mPmoMe5fIDsfj9YVbAgEYwXgoFzaahZKyrIjUB9ZxHcOMC2SN
-uHgE41wPF9OjhKRzB/ow+9RQP6MDHY1bd33GTNseOpc+Y4Fark62tQpi3MOk9n7l
-UgWVqXPubuA5s0DLJmQtYPBxX7csnhqkBlphiFbtAx4BRIowh8h9AaUK0cS1K/gs
-Hiz/ulT+D3FMj/yskNUmq0ELiu0qIVQzUcrbbXJwRo61Af6hRK4M0lNfSWfQfmum
-QRTpmBZ8yxDB9pMbAjQtLGAHDblRwuKFrYHTe36JYFzDzjMuCS3Qs0sOrcJEl2Il
-obJhcm/slqZGqiKs9icdrh0Ufoy3p6uOP9uxWkXvknqCXn4hhA8FcjCKPVBjVYUt
-ocZUeqxYa/LqAH5C/2KTjDtqDRhsySdJKhQEjwjmMurllCVqHSOJLzoBCxwW9L/h
-iSFer1mcGGvzGN8DjV5M
-=M8ZZ
------END PGP SIGNATURE-----
-
---=-Ikh0Tn2GTW93wLg2xJVL--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
