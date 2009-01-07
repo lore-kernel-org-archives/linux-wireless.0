@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:52550 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758418AbZAPTYe (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:32683 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562AbZAGOEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 14:24:34 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54usb: fix conflict with recent usb changes
-Date: Fri, 16 Jan 2009 20:24:31 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 7 Jan 2009 09:04:08 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so2646172yxm.1
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 06:04:07 -0800 (PST)
+Message-ID: <e6236e5f0901070604w351e9199r9f2c2f8a44cd7a49@mail.gmail.com> (sfid-20090107_150413_635637_9280AB5E)
+Date: Wed, 7 Jan 2009 15:04:07 +0100
+From: "Rodrigo Fresneda" <fresneda@gmail.com>
+To: "Hin-Tak Leung" <hintak.leung@gmail.com>
+Subject: Re: trouble with compat-old
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <3ace41890901070440w63fbb06fy39e3bcb387f08d60@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901162024.31636.chunkeey@web.de> (sfid-20090116_202440_377306_93A894C0)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <e6236e5f0901060312h6946f9a1p49e299e723cb0190@mail.gmail.com>
+	 <3ace41890901061536k7722b63h906962283ce9e4ad@mail.gmail.com>
+	 <e6236e5f0901061740s20d817b1s2befb66cefbf72b0@mail.gmail.com>
+	 <3ace41890901070440w63fbb06fy39e3bcb387f08d60@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A recent change in the usb core "USB: change interface to usb_lock_device_for_reset()" 
-conflicts with "p54usb: utilize usb_reset_device for 3887".
+Hi, thanks again.
 
-Sadly, we have to call usb_reset_device before we can upload the firmware on 3887.
-Unless someone figures out how to reliably stop the 3887 so the hardware is still usable
-next time we want to start it.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-John,
+>
+> yes and no... "y" sometimes means it assumes *your current kernel* has
+> it built-in (i.e. = "ignore this option").
 
-I guess this patch should be in the next wireless-2.6 pull.
-And it would be nice, if you can put "[PATCH] p54: fix p54_set_key's return code" in there too. 
----
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index 4d54826..3bfee58 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -435,14 +435,16 @@ static const char p54u_firmware_upload_3887[] = "<\r";
- static int p54u_device_reset_3887(struct ieee80211_hw *dev)
- {
- 	struct p54u_priv *priv = dev->priv;
--	int ret, lock;
-+	int ret, lock = (priv->intf->condition != USB_INTERFACE_BINDING);
- 	u8 buf[4];
- 
--	ret = lock = usb_lock_device_for_reset(priv->udev, priv->intf);
--	if (ret < 0) {
--		dev_err(&priv->udev->dev, "(p54usb) unable to lock device for "
--			"reset: %d\n", ret);
--		return ret;
-+	if (lock) {
-+		ret = usb_lock_device_for_reset(priv->udev, priv->intf);
-+		if (ret < 0) {
-+			dev_err(&priv->udev->dev, "(p54usb) unable to lock "
-+				" device for reset: %d\n", ret);
-+			return ret;
-+		}
- 	}
- 
- 	ret = usb_reset_device(priv->udev);
+Unfortunately, didn't work out. But I am trying various configurations
+to see if I get lucky.
+
+
+> A shame you aren't using the latest compat-wireless.
+
+Well, I am using the latest compat-wireless-*old*... and the only
+reason is because I can't use a newer kernel. With 2.6.28 iwlagn works
+like a charm, so why would I compile compat-wireless anyway?
+Just to be clear about this, my kernel is the debian lenny stock
+kernel 2.6.26-1-amd64
+
+
+>
+> Well, if you want to skip some modules, you just put comment it out,
+> e.g. edit drivers/net/wireless/Makefile and put a "#" before any line
+> that doesn't contain obj-$(CONFIG_IWL*
+>
+
+Thanks, now it goes much faster.
+best wishes,
+rodrigo.
