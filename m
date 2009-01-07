@@ -1,45 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:28000 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbZA1LyO (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:20029 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751836AbZAGQWq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 06:54:14 -0500
-Received: by fg-out-1718.google.com with SMTP id 13so527359fge.17
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 03:54:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1233137791.3936.0.camel@johannes.local>
-References: <1233095278-5850-1-git-send-email-reinette.chatre@intel.com>
-	 <1233095278-5850-2-git-send-email-reinette.chatre@intel.com>
-	 <1233095278-5850-3-git-send-email-reinette.chatre@intel.com>
-	 <1233095278-5850-4-git-send-email-reinette.chatre@intel.com>
-	 <1233095278-5850-5-git-send-email-reinette.chatre@intel.com>
-	 <1233095278-5850-6-git-send-email-reinette.chatre@intel.com>
-	 <1233095278-5850-7-git-send-email-reinette.chatre@intel.com>
-	 <1233095278-5850-8-git-send-email-reinette.chatre@intel.com>
-	 <1233137791.3936.0.camel@johannes.local>
-Date: Wed, 28 Jan 2009 13:54:12 +0200
-Message-ID: <1ba2fa240901280354g2c5d47e1q93ed9e9a747d381f@mail.gmail.com> (sfid-20090128_125416_509423_B1FE35F0)
-Subject: Re: [PATCH 7/7] iwlwifi: unify iwlagn and 3945 power save management
-From: Tomas Winkler <tomasw@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com,
+	Wed, 7 Jan 2009 11:22:46 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: Vivek Natarajan <vnatarajan@atheros.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [RFC v2] mac80211: extend/document powersave API
+References: <1231264395.3654.10.camel@johannes>
+	<1231273502.3767.4.camel@johannes> <878wpn5d64.fsf@nokia.com>
+	<1231343803.3545.50.camel@johannes>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 07 Jan 2009 18:22:21 +0200
+In-Reply-To: <1231343803.3545.50.camel@johannes> (ext Johannes Berg's message of "Wed\, 07 Jan 2009 16\:56\:43 +0100")
+Message-ID: <874p0b5bnm.fsf@nokia.com> (sfid-20090107_172250_159228_57759D77)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 12:16 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2009-01-27 at 14:27 -0800, Reinette Chatre wrote:
->> From: Winkler, Tomas <tomas.winkler@intel.com>
->>
->> This patch unifies 3945 and iwlagn power save management
->> This patch also better separates system state from user setting.
->> System state shall be removed later as this shall be shifted to user space
->
-> I've got a patch to remove much of the cruft (system state and
-> associated variables etc) somewhere, can dig that up if you want.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Send it over, better if it's rebased upon this one
-Tomas
+> On Wed, 2009-01-07 at 17:49 +0200, Kalle Valo wrote:
+>
+>> > + * First, it can support hardware that handles all powersaving by
+>> > + * itself, such hardware should simply set the %IEEE80211_HW_SUPPORTS_PS
+>> > + * hardware flag. In that case, it will be told about the desired
+>> > + * powersave mode regardless of association status, and the driver or
+>> > + * hardware must take care of enabling/disabling powersave depending on
+>> > + * the association status and TIM bit and send nullfunc frames by
+>> > + itself.
+>> 
+>> Actually I'm not aware of any hardware designs which enables and
+>> disables power save according to association status (modulo fullmac
+>> design, of course). Even iwlwifi, which I think has the most
+>> sophisticated power save support, requires the host to enable power
+>> save according to the association status. Hence I would like to have
+>> the power save enable/disable logic based on association status in
+>> mac80211.
+>
+> Yeah, good point. But iwlwifi is confusing me ;) Since iwlwifi is the
+> only user, I'll clean that up along with cleaning up iwlwifi, would you
+> mind leaving it as-is, and I'll fix it in the short term?
+
+I'm perfectly fine with this. Most important is that we have a
+consensus about long term goals, the current solution is just fine.
+Power save is always tricky, and it's even trickier when we have to
+deal with all these different hardware designs. Let's do this in small
+pieces, it makes life a lot easier.
+
+>> We already have this support in ieee80211_set_associated() 
+>> 
+>> [Reads the function again] 
+>> 
+>> Or, actually we had it. I think Vivek's patch changed the
+>> functionality. But anyway, it's very easy to add the support back.
+>> 
+>> The reason why I would like to have this in mac80211 is to avoid
+>> having duplicate bugs in different drivers and make the driver
+>> implementation easier.
+>
+> Makes sense.
+
+Good, we have an agreement :)
+
+>> Actually there are hardware designs which don't have dynamic power
+>> save but have null frame creation in firmware (and hence don't need
+>> IEEE80211_HW_PS_NULLFUNC_STACK). So IEEE80211_HW_SUPPORTS_DYNAMIC_PS
+>> and IEEE80211_HW_PS_NULLFUNC_STACK are not related to each other in
+>> any way. I suspect at76_usb is such design, but I need to recheck
+>> that.
+>
+> But if they don't have dynps but nullfunc in firmware then we can't
+> support dynamic ps at all, can we?
+>
+>> So I would like to implement this so that if
+>> IEEE80211_HW_SUPPORTS_DYNAMIC_PS is not set mac80211 will always use
+>> it's own timer, independent of IEEE80211_HW_PS_NULLFUNC_STACK. If you
+>> agree, I can create a separate patch for this.
+>
+> Oh, I see now, so the firmware just creates the nullfunc whenever you
+> tell it to? 
+
+Exactly. In that case we command the null frame creation in firmware
+with the CONF_PS flag.
+
+> bit strange, I guess.
+
+It's strange, but I think it's because the hardware designers haven't
+properly thought about power save. 802.11 power save wasn't important
+few years ago, but fortunately times are changing.
+
+-- 
+Kalle Valo
