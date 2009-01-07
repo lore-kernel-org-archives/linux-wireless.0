@@ -1,68 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 39.mail-out.ovh.net ([213.251.138.60]:57229 "HELO
-	39.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751304AbZA1MKL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 07:10:11 -0500
-Date: Wed, 28 Jan 2009 13:12:37 +0100
-From: Samuel Ortiz <samuel@sortiz.org>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Jason Andryuk <jandryuk@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
-Message-ID: <20090128121237.GB3197@sortiz.org> (sfid-20090128_131017_774697_FD013214)
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-References: <760481.57662.qm@web57614.mail.re1.yahoo.com> <20090126114453.GB3197@sortiz.org> <c4d76b3b0901261913s23427b19tbbe34ee7b4261068@mail.gmail.com> <c4d76b3b0901261935n1846b675w72cfa7308d198080@mail.gmail.com> <20090127162437.GA3596@sortiz.org> <c4d76b3b0901271531q19578871idbc59b5a23ac868e@mail.gmail.com> <1ba2fa240901272312j270eedb5x33534a9703d26e06@mail.gmail.com> <20090128113751.GA3197@sortiz.org> <1ba2fa240901280352o56ccbc07h50c7a4bfcd0ac9ab@mail.gmail.com>
+Received: from ozlabs.org ([203.10.76.45]:46004 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755849AbZAGCm4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2009 21:42:56 -0500
+Date: Wed, 7 Jan 2009 13:42:48 +1100
+From: David Gibson <hermes@gibson.dropbear.id.au>
+To: Dave <kilroyd@googlemail.com>
+Cc: Andrey Borzenkov <arvidjaar@mail.ru>,
+	orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [Orinoco-devel] 2.6.28: warn_slowpath in orinoco receive path
+Message-ID: <20090107024248.GA14990@yookeroo.seuss> (sfid-20090107_034302_111045_E90BA8F1)
+References: <200901052005.12428.arvidjaar@mail.ru> <49626E4D.3010705@gmail.com> <200901061251.41628.arvidjaar@mail.ru> <4963B8BE.9000204@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240901280352o56ccbc07h50c7a4bfcd0ac9ab@mail.gmail.com>
+In-Reply-To: <4963B8BE.9000204@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 01:52:17PM +0200, Tomas Winkler wrote:
-> On Wed, Jan 28, 2009 at 1:37 PM, Samuel Ortiz <samuel@sortiz.org> wrote:
-> > On Wed, Jan 28, 2009 at 09:12:48AM +0200, Tomas Winkler wrote:
-> >> On Wed, Jan 28, 2009 at 1:31 AM, Jason Andryuk <jandryuk@gmail.com> wrote:
-> >> >> No, that's just a consequence of the bug, not the bug itself.
-> >> >> Would you mind applying this patch on top of your latest wireless-testing tree
-> >> >> and testing 3945 with it ? Thanks for your patience.
-> >> >
-> >> > The patch did not cleanly apply, but I just removed the lines
-> >> > indicated in the patch.  It crashed with a NULL pointer dereference.
-> >>
-> >> Samuel
-> >> It was really wrong try, you cannot just leave place where firmware
-> >> updated read pointer unallocated. I would rather focus on differences
-> >> introduced by this patch.
-> > Well, that's what I did. I neglected to check if rb_stts were actually used.
-> >
-> >
-> >> commit 738910c064ff461051cd37e17199f270ff88a9a3 iwl3945: use rx queue
-> >> management infrastructure from iwlcore is the first to trigger the
-> >> BUG_ON. However, prior versions would dereference a NULL pointer
-> >> before the driver could get far enough to trigger the BUG_ON.
-> > I know, that's what Jason described.
-> > I think I now understand why. Prior to
-> > 738910c064ff461051cd37e17199f270ff88a9a3, you introduced
-> > c2a0aa3cb733452e749727680e380dca6cc10a68 without actually allocating the
-> > rb_stts pointer, which was really wrong too.
+On Tue, Jan 06, 2009 at 08:02:06PM +0000, Dave wrote:
+> Andrey Borzenkov wrote:
+> > On 05 January 2009 23:32:13 Dave wrote:
+[snip]
+> > By the way. Agere driver takes different approach. The only thing it 
+> > does in interrupt handler directly is to turn off Hermes interrupts and 
+> > start off another thread to process pending events. After all events are 
+> > processed interrupts are enabled again. It means the bulk of code is 
+> > executed in non-interrupt context; and looking how much is done in 
+> > orinoco driver during interrupt processing, this does not sound like bad 
+> > idea. Do you see any obvious cons here?
 > 
-> Yes I made mistake then I tought that 3945 take also init path of agn
-> already... Now it's hard to besect :(.
-> I suspect the rx queue managment infrastructure more because we brohgt
-> iwlagn bug into 3945 I guess it wrong rx buffer index handling. It's
-> really important we nail it now this will solve also our troubles in
-> iwlagn, where it get lost upon tons of patches.
-I agree. I also suspect that a lot more people will report the same problem
-when this code leaves wireless-testing for upstream inclusion.
+> When I moved the RX handling into a tasklet I had a go at moving all the
+> interrupt handling code into the tasklet, and just couldn't get the card
+> to play nice. It might have worked if I disabled the interrupts (which I
+> didn't try), but my personal preference is not to touch interrupt
+> enables if we don't have to. Anyway, cons I can think of? :
 
-Cheers,
-Samuel.
- 
-> Thanks
-> Tomas
+Heh.  Glad to see it wasn't just me that had perrennial problems with
+locking in the orinoco driver due to trouble with the hardware.
+
+Incidentally, the approach descibed in the Agere driver sounds
+not-dissimilar to an approach I thought about, which I think would fix
+most of the problems we've seen, but I never got around to
+implementing.
+
+That is to run all the guts of the driver in a single kernel thread,
+which just loops most of the time sending any queued packets,
+receiving any available packets and otherwise sleeping.  The interrupt
+path and the userland entry points would do nothing except flag and
+wakeup the main thread.
+
+Because everything would be single threaded, we'd no longer need any
+locks for hardware contention, which sidesteps all the problems we've
+seen with the hardware taking too damn long to respond for operations
+that could contend.  Even for reset, which takes ages, and on Prism
+firmware with WEP enabled when the BAP occasionally takes ages to
+respond.  The only locks would be to protect the flags/queues that are
+used to signal the master thread, and since that's entirely under
+software control we can make sure the critical sections are small
+enough.
+
+I suspect it would also allow support for USB orinoco hardware to be
+integrated more sanely than the current organization.
+
+It's not exactly a high throughput approach, but given the hardware's
+so crappy anyway, I don't think it would be a significant problem.
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+David Gibson			| I'll have my music baroque, and my code
+david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
+				| _way_ _around_!
+http://www.ozlabs.org/~dgibson
