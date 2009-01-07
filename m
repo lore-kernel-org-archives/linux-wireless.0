@@ -1,42 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:24021 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751294AbZAYVd4 (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.178]:54128 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754914AbZAGPa6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 16:33:56 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so3280922fgg.17
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 13:33:54 -0800 (PST)
+	Wed, 7 Jan 2009 10:30:58 -0500
+Message-ID: <4964CAAA.3040801@gmail.com> (sfid-20090107_163104_597298_C94F684F)
+Date: Wed, 07 Jan 2009 16:30:50 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20090125212044.GA3592@hash.localnet>
-References: <1232914461-19607-1-git-send-email-tuliom@gmail.com>
-	 <20090125212044.GA3592@hash.localnet>
-Date: Sun, 25 Jan 2009 22:33:54 +0100
-Message-ID: <d94c510d0901251333u3d5baec5nb0d51977fd82b620@mail.gmail.com> (sfid-20090125_223401_478747_1D05E3D8)
-Subject: Re: [ath5k-devel] [PATCH] ath5k: support LED's on emachines E510
-	notebok
-From: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
+To: Dhaval Giani <dhaval@linux.vnet.ibm.com>
+CC: linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
+References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com> <1231338965-796-1-git-send-email-jirislaby@gmail.com> <20090107152208.GB4207@linux.vnet.ibm.com>
+In-Reply-To: <20090107152208.GB4207@linux.vnet.ibm.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 25, 2009 at 10:20 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> Can you put the vendor id in order?  The file is supposed to be
-> sorted by vendor id, then by device id in order to reduce merge
-> conflicts.
+On 01/07/2009 04:22 PM, Dhaval Giani wrote:
+> I will get back to you in about a day or two.
 
-Sorry... I haven't seen that.
-After the changes, should I submit them as a new mail? And to all lists?
-
-> With that change, feel free to add my:
->
-> Acked-by: Bob Copeland <me@bobcopeland.com>
-
-Ok!
-
-Thanks,
-
--- 
-Tulio Magno
+No problem. Thanks.
