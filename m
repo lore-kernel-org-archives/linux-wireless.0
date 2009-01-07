@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:56899 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454AbZA1A2J (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.248]:4926 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754681AbZAGBkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 19:28:09 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so2903619yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 16:28:08 -0800 (PST)
+	Tue, 6 Jan 2009 20:40:06 -0500
+Received: by an-out-0708.google.com with SMTP id d40so2636018and.1
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 17:40:05 -0800 (PST)
+Message-ID: <e6236e5f0901061740s20d817b1s2befb66cefbf72b0@mail.gmail.com> (sfid-20090107_024012_645378_CAD0DD81)
+Date: Wed, 7 Jan 2009 02:40:05 +0100
+From: "Rodrigo Fresneda" <fresneda@gmail.com>
+To: "Hin-Tak Leung" <hintak.leung@gmail.com>
+Subject: Re: trouble with compat-old
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <3ace41890901061536k7722b63h906962283ce9e4ad@mail.gmail.com>
 MIME-Version: 1.0
-Date: Tue, 27 Jan 2009 19:28:07 -0500
-Message-ID: <c4d76b3b0901271628q7710a272xdcf487ee5779f154@mail.gmail.com> (sfid-20090128_012814_710002_E143841B)
-Subject: at76_usb fails to load firmware on Linksys WUSB11
-From: Jason Andryuk <jandryuk@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <e6236e5f0901060312h6946f9a1p49e299e723cb0190@mail.gmail.com>
+	 <3ace41890901061536k7722b63h906962283ce9e4ad@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A change is preventing my old Linksys WUSB11 from loading its
-firmware.  It was working in 2.6.28.
+Thanks for your answer. Now, what exactly am I supposed to do? Take a
+look at the IWL section in config.mk:
 
-Below are two dmesg snippets.  The first is the 2.6.29-rc2-wl failure
-to load and the second is the successful 2.6.28 era.  Notice that the
-firmware reported in 2.6.28 is different from the one that the kernel
-attempts to load.
+CONFIG_IWL3945=m
+CONFIG_IWL3945_DEBUG=n
+CONFIG_IWL3945_LEDS=y
+# CONFIG_IWL3945_RFKILL=y
+CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
+CONFIG_IWL4965=y
+CONFIG_IWL5000=y
+CONFIG_IWLAGN=m
+CONFIG_IWLAGN_LEDS=y
+CONFIG_IWLAGN_SPECTRUM_MEASUREMENT=y
+CONFIG_IWLCORE=m
+CONFIG_IWLWIFI=m
+CONFIG_IWLWIFI_DEBUG=n
+CONFIG_IWLWIFI_LEDS=y
 
-I believe the WUSB11 actually has firmware stored in flash on the
-device.  Linksys downloads for WUSB11 v1 include a firmware update for
-WUSB11 v. 1 which I believe the device to be.  No explicit version is
-reported.
+It seems CONFIG_IWL4965 is selected by default. Do you think there is
+a better selection than the default one? An unrelated question, is
+there a way to instruct make to build only the modules I want, i.e.,
+iwlagn?
 
-Tested on wireless-testing master-2009-01-26.
+thanks again,
+rodrigo.
 
-Jason
 
-2.6.29-rc2-wl
 
-[  121.704098] usb 5-1: new full speed USB device using uhci_hcd and address 2
-[  121.857426] usb 5-1: configuration #1 chosen from 1 choice
-[  121.950007] at76_usb: module is from the staging directory, the
-quality is unknown, you have been warned.
-[  121.957247] Atmel at76x USB Wireless LAN Driver 0.17 loading
-[  121.957304] usb 5-1: firmware: requesting atmel_at76c503-i3861.bin
-[  121.984135] usb 5-1: using firmware atmel_at76c503-i3861.bin
-(version 0.90.0-44)
-[  121.987186] usb 5-1: downloading internal fw failed with -22
-[  121.987204] at76_usb 5-1:1.0: error -22 downloading internal firmware
-[  121.987223] at76_usb: probe of 5-1:1.0 failed with error -22
-[  121.987270] usbcore: registered new interface driver at76_usb
-
-2.6.28:
-
-Jan 12 20:47:35 rainbow kernel: [  509.084123] usb 4-2: new full speed
-USB device using uhci_hcd and address 2
-Jan 12 20:47:35 rainbow kernel: [  509.233741] usb 4-2: configuration
-#1 chosen from 1 choice
-Jan 12 20:47:35 rainbow kernel: [  509.360214] at76_usb: module is
-from the staging directory, the quality is unknown, you have been
-warned.
-Jan 12 20:47:35 rainbow kernel: [  509.367532] Atmel at76x USB
-Wireless LAN Driver 0.17 loading
-Jan 12 20:47:35 rainbow kernel: [  509.367587] usb 4-2: firmware:
-requesting atmel_at76c503-i3861.bin
-Jan 12 20:47:35 rainbow kernel: [  509.399173] usb 4-2: using firmware
-atmel_at76c503-i3861.bin (version 0.90.0-44)
-Jan 12 20:47:35 rainbow kernel: [  509.403102] wlan1: USB 4-2:1.0, MAC
-00:06:25:00:6a:7a, firmware 0.90.0-2
-Jan 12 20:47:35 rainbow kernel: [  509.403108] wlan1: regulatory
-domain 0x10: FCC (USA)
-Jan 12 20:47:35 rainbow kernel: [  509.403579] usbcore: registered new
-interface driver at76_usb
+On Wed, Jan 7, 2009 at 12:36 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> On Tue, Jan 6, 2009 at 11:12 AM, Rodrigo Fresneda <fresneda@gmail.com> wrote:
+>
+>> WARNING: "iwl4965_agn_cfg"
+>> [/home/fresneda/compat-wireless-2.6-old/drivers/net/wireless/iwlwifi/iwlagn.ko]
+>> undefined!
+>>
+>> The module is built, but it cannot be inserted:
+>>
+>> FATAL: Error inserting iwlagn
+>> (/lib/modules/2.6.26-1-amd64/updates/drivers/net/wireless/iwlwifi/iwlagn.ko):
+>> Unknown symbol in module, or unknown parameter (see
+>> dmesg)
+>>
+>> And the output of dmesg:
+>>
+>> iwlagn: Unknown symbol iwl4965_agn_cfg
+>
+>
+> symbol iwl4965_agn_cfg is enabled if you select "Intel Wireless WiFi
+> 4965AGN" support also.
+> config IWL4965 . Try selecting that when you build compat-wireless.old
+> . (seems that in some older version of
+> conpat-wireless, the 5000 code depends on the 4965 code).
+>
+> Also, make sure that you do "depmod -a"
+>
