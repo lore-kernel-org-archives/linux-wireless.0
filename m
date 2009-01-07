@@ -1,63 +1,292 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50600
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750904AbZAEGtP (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:43981 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751748AbZAGKLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 01:49:15 -0500
-Date: Sun, 04 Jan 2009 22:49:16 -0800 (PST)
-Message-Id: <20090104.224916.253586382.davem@davemloft.net> (sfid-20090105_074919_584732_2F12C14D)
-To: andi@firstfloor.org
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless
- stack
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090104184136.GY496@one.firstfloor.org>
-References: <20090104174339.GX496@one.firstfloor.org>
-	<1231090388.3296.17.camel@johannes>
-	<20090104184136.GY496@one.firstfloor.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 7 Jan 2009 05:11:05 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH 06/11] ath9k: introduce platform driver for AHB bus support
+Date: Wed,  7 Jan 2009 11:09:27 +0100
+Message-Id: <1231322972-24094-7-git-send-email-juhosg@openwrt.org> (sfid-20090107_111121_380447_DB25D717)
+In-Reply-To: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andi Kleen <andi@firstfloor.org>
-Date: Sun, 4 Jan 2009 19:41:36 +0100
+This patch adds the platform_driver itself, and modifies the main driver
+to register it.
 
-> On Sun, Jan 04, 2009 at 06:33:08PM +0100, Johannes Berg wrote:
-> > On Sun, 2009-01-04 at 18:43 +0100, Andi Kleen wrote:
-> > 
-> > > > we need to do is figure out is why the skb has a wrong truesize.
-> > > 
-> > > Because it was expanded without truesize being adjusted (see my
-> > > original mail) 
-> > 
-> > So why is this not making trouble with all the other users?
-> 
-> I think most adjustments are too small to be noticed. Typically
-> they are just for a few bytes in the header. truesize
-> is already larger, so it can tolerate some slag.
-> 
-> I also only see it occasionally (maybe 5-10 times/day) when
-> the wireless stack appends a lot of data.
-> 
-> My proposal would be to include this patch for 2.6.28/2.6.29
-> and investigate fixing pskb_expand_head for 2.6.30.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/Makefile |    1 +
+ drivers/net/wireless/ath9k/ahb.c    |  179 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/core.h   |    9 ++
+ drivers/net/wireless/ath9k/main.c   |   10 ++
+ 4 files changed, 199 insertions(+), 0 deletions(-)
 
-At a minimum you need to add a skb->sk == NULL warn-on and abort path
-here, otherwise we will corrupt socket accounting and just explode
-somewhere else.  Adding this patch as-is will just introduce a new
-bug in exchange for an existing one.
+diff --git a/drivers/net/wireless/ath9k/Makefile b/drivers/net/wireless/ath9k/Makefile
+index af3f39b..0062958 100644
+--- a/drivers/net/wireless/ath9k/Makefile
++++ b/drivers/net/wireless/ath9k/Makefile
+@@ -12,6 +12,7 @@ ath9k-y +=	hw.o \
+ 		rc.o
+ 
+ ath9k-$(CONFIG_PCI) += pci.o
++ath9k-$(CONFIG_ATHEROS_AR71XX) += ahb.o
+ ath9k-$(CONFIG_ATH9K_DEBUG) += debug.o
+ 
+ obj-$(CONFIG_ATH9K) += ath9k.o
+diff --git a/drivers/net/wireless/ath9k/ahb.c b/drivers/net/wireless/ath9k/ahb.c
+new file mode 100644
+index 0000000..0a6fa0e
+--- /dev/null
++++ b/drivers/net/wireless/ath9k/ahb.c
+@@ -0,0 +1,179 @@
++/*
++ * Copyright (c) 2008 Atheros Communications Inc.
++ * Copyright (c) 2009 Gabor Juhos <juhosg@openwrt.org>
++ * Copyright (c) 2009 Imre Kaloz <kaloz@openwrt.org>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/nl80211.h>
++#include <linux/platform_device.h>
++#include "core.h"
++#include "reg.h"
++#include "hw.h"
++
++/* return bus cachesize in 4B word units */
++static void ath_ahb_read_cachesize(struct ath_softc *sc, int *csz)
++{
++	*csz = L1_CACHE_BYTES >> 2;
++}
++
++static void ath_ahb_cleanup(struct ath_softc *sc)
++{
++	struct ieee80211_hw *hw = sc->hw;
++
++	free_irq(sc->irq, sc);
++
++	ath_detach(sc);
++	iounmap(sc->mem);
++	ieee80211_free_hw(hw);
++}
++
++static struct ath_bus_ops ath_ahb_bus_ops  = {
++	.read_cachesize = ath_ahb_read_cachesize,
++	.cleanup = ath_ahb_cleanup,
++};
++
++static int ath_ahb_probe(struct platform_device *pdev)
++{
++	void __iomem *mem;
++	struct ath_softc *sc;
++	struct ieee80211_hw *hw;
++	struct resource *res;
++	int irq;
++	int ret = 0;
++	struct ath_hal *ah;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (res == NULL) {
++		dev_err(&pdev->dev, "no memory resource found\n");
++		ret = -ENXIO;
++		goto err_out;
++	}
++
++	mem = ioremap_nocache(res->start, res->end - res->start + 1);
++	if (mem == NULL) {
++		dev_err(&pdev->dev, "ioremap failed\n");
++		ret = -ENOMEM;
++		goto err_out;
++	}
++
++	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (res == NULL) {
++		dev_err(&pdev->dev, "no IRQ resource found\n");
++		ret = -ENXIO;
++		goto err_iounmap;
++	}
++
++	irq = res->start;
++
++	hw = ieee80211_alloc_hw(sizeof(struct ath_softc), &ath9k_ops);
++	if (hw == NULL) {
++		dev_err(&pdev->dev, "no memory for ieee80211_hw\n");
++		ret = -ENOMEM;
++		goto err_iounmap;
++	}
++
++	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
++		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
++		IEEE80211_HW_SIGNAL_DBM |
++		IEEE80211_HW_NOISE_DBM;
++
++	hw->wiphy->interface_modes =
++		BIT(NL80211_IFTYPE_AP) |
++		BIT(NL80211_IFTYPE_STATION) |
++		BIT(NL80211_IFTYPE_ADHOC);
++
++	SET_IEEE80211_DEV(hw, &pdev->dev);
++	platform_set_drvdata(pdev, hw);
++
++	sc = hw->priv;
++	sc->hw = hw;
++	sc->dev = &pdev->dev;
++	sc->mem = mem;
++	sc->bus_ops = &ath_ahb_bus_ops;
++	sc->irq = irq;
++
++	ret = ath_attach(AR5416_AR9100_DEVID, sc);
++	if (ret != 0) {
++		dev_err(&pdev->dev, "failed to attach device, err=%d\n", ret);
++		ret = -ENODEV;
++		goto err_free_hw;
++	}
++
++	ret = request_irq(irq, ath_isr, IRQF_SHARED, "ath9k", sc);
++	if (ret) {
++		dev_err(&pdev->dev, "request_irq failed, err=%d\n", ret);
++		ret = -EIO;
++		goto err_detach;
++	}
++
++	ah = sc->sc_ah;
++	printk(KERN_INFO
++	       "%s: Atheros AR%s MAC/BB Rev:%x, "
++	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
++	       wiphy_name(hw->wiphy),
++	       ath_mac_bb_name(ah->ah_macVersion),
++	       ah->ah_macRev,
++	       ath_rf_name((ah->ah_analog5GhzRev & AR_RADIO_SREV_MAJOR)),
++	       ah->ah_phyRev,
++	       (unsigned long)mem, irq);
++
++	return 0;
++
++ err_detach:
++	ath_detach(sc);
++ err_free_hw:
++	ieee80211_free_hw(hw);
++	platform_set_drvdata(pdev, NULL);
++ err_iounmap:
++	iounmap(mem);
++ err_out:
++	return ret;
++}
++
++static int ath_ahb_remove(struct platform_device *pdev)
++{
++	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
++
++	if (hw) {
++		struct ath_softc *sc = hw->priv;
++
++		free_irq(sc->irq, sc);
++		ath_detach(sc);
++		iounmap(sc->mem);
++		ieee80211_free_hw(hw);
++		platform_set_drvdata(pdev, NULL);
++	}
++
++	return 0;
++}
++
++static struct platform_driver ath_ahb_driver = {
++	.probe      = ath_ahb_probe,
++	.remove     = ath_ahb_remove,
++	.driver		= {
++		.name	= "ath9k",
++		.owner	= THIS_MODULE,
++	},
++};
++
++int ath_ahb_init(void)
++{
++	return platform_driver_register(&ath_ahb_driver);
++}
++
++void ath_ahb_exit(void)
++{
++	platform_driver_register(&ath_ahb_driver);
++}
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index a7cdbed..e162ab1 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -705,6 +705,7 @@ struct ath_softc {
+ 	struct tasklet_struct bcon_tasklet;
+ 	struct ath_hal *sc_ah;
+ 	void __iomem *mem;
++	int irq;
+ 	spinlock_t sc_resetlock;
+ 	struct mutex mutex;
+ 
+@@ -782,4 +783,12 @@ static inline int ath_pci_init(void) { return 0; };
+ static inline void ath_pci_exit(void) {};
+ #endif
+ 
++#ifdef CONFIG_ATHEROS_AR71XX
++int ath_ahb_init(void);
++void ath_ahb_exit(void);
++#else
++static inline int ath_ahb_init(void) { return 0; };
++static inline void ath_ahb_exit(void) {};
++#endif
++
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index a1b3f82..f2dc538 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -2514,8 +2514,17 @@ static int __init ath9k_init(void)
+ 		goto err_rate_unregister;
+ 	}
+ 
++	error = ath_ahb_init();
++	if (error < 0) {
++		error = -ENODEV;
++		goto err_pci_exit;
++	}
++
+ 	return 0;
+ 
++ err_pci_exit:
++	ath_pci_exit();
++
+  err_rate_unregister:
+ 	ath_rate_control_unregister();
+  err_out:
+@@ -2525,6 +2534,7 @@ module_init(ath9k_init);
+ 
+ static void __exit ath9k_exit(void)
+ {
++	ath_ahb_exit();
+ 	ath_pci_exit();
+ 	ath_rate_control_unregister();
+ 	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
+-- 
+1.5.3.2
 
-There are cases where the Tx path of the wireless loops back packets
-back to the Rx path, and in such cases we certainly could see sockets
-attached to the SKB.
-
-And Johannes is right, the other alternative is to orphan the SKB, you
-absolutely cannot modify ->truesize blindly.  You can't change the
-truesize value if a socket is attached.
-
-There is, as usual, an exception.  TCP does this kind of adjustment,
-but it also fixes the socket memory accounting to match.  Only it can
-do this because it happens to have the socket locked at the time and
-it's running in the proper context.
