@@ -1,84 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:57813 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750994AbZA1QH2 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43483 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752321AbZAGQeW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 11:07:28 -0500
-To: "Vivek Natarajan" <vivek.natraj@gmail.com>
-Cc: "johannes\@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 1/2] mac80211: remove multicast check from check_tim()
-References: <20090122114240.31443.18218.stgit@tikku>
-	<20090122114539.31443.45201.stgit@tikku>
-	<8e92b4100901280659t444486b2v27efffe7224d17b@mail.gmail.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 28 Jan 2009 18:06:22 +0200
-In-Reply-To: <8e92b4100901280659t444486b2v27efffe7224d17b@mail.gmail.com> (ext Vivek Natarajan's message of "Wed\, 28 Jan 2009 15\:59\:20 +0100")
-Message-ID: <87pri7h0u9.fsf@nokia.com> (sfid-20090128_170732_709593_D47743BA)
+	Wed, 7 Jan 2009 11:34:22 -0500
+Date: Wed, 7 Jan 2009 18:33:22 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH 12/14] mac80211: 802.11w - Optional software CCMP for
+	management frames
+Message-ID: <20090107163322.GA26418@jm.kir.nu> (sfid-20090107_173425_749789_947DEC8B)
+References: <20090107112346.369581673@atheros.com> <20090107112707.370907962@atheros.com> <1231330118.3545.28.camel@johannes> <20090107122427.GA20019@jm.kir.nu> <1231332428.3545.33.camel@johannes> <20090107140956.GA22424@jm.kir.nu> <1231340944.3545.38.camel@johannes> <20090107153052.GA24894@jm.kir.nu> <1231342671.3545.43.camel@johannes>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231342671.3545.43.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan <vivek.natraj@gmail.com> writes:
+On Wed, Jan 07, 2009 at 04:37:51PM +0100, Johannes Berg wrote:
 
-> On Thu, Jan 22, 2009 at 5:15 PM, Kalle Valo <kalle.valo@nokia.com>
-> wrote:
->> Currently mac80211 checks for the multicast tim bit from beacons,
->> disables power save and sends a null frame if the bit is set. This
->> was added to support ath9k. But this is a bit controversial because
->> the AP will send multicast frames immediately after the beacon and
->> the time constraints are really high. Relying mac80211 to be fast
->> enough here might not be reliable in all situations.
->
-> I agree that mac80211 is not fast enough to disable power save when
-> multicast bit is set. But a quick testing with multicast traffic with
-> power save enabled shows me that the traffic is passing without much
-> failures(97% passes through and this is not a small number considering
-> my high traffic/noisy channel conditions). 
+> > For nl80211, we can add capability
+> > flag for MFP and then driver_nl80211.c can skip this validation step.
+> 
+> Would be nice to be able to print it out in iw, just for information.
 
-I'm still not convinced. Even if it works for your setup, somebody
-else might have problems.
+OK. I think I'll leave this as a separate step since there does not seem
+to be an existing command suitable for this yet, but anyway, the
+information will be available once that gets added.. This should be
+something that allows the driver to be queried about general
+capabilities (encr algorithms, etc., and now also MFP).
 
-> So, the reason is not strong enough or the mac80211 is not too slow
-> to respond to a mc traffic in practical conditions and hence the
-> check need not be removed.
+> > However, we would still need to add a driver-mac80211 flag for
+> > indicating whether the driver supports MFP.
+> 
+> Right, and once we have that the polarity of this key flag doesn't
+> matter at all, though I suspect there are much fewer drivers that will
+> be able to support it in hardware.
 
-Well, we have to do something because stlc45xx/p54spi doesn't need
-this. Either we need to do add a yet another hw flag or move the
-functionality to ath9k. And I don't see the benefit of adding a new hw
-flag just for one driver. If there are more hardware designs requiring
-this, then adding support to mac80211 might make sense.
+How about following on top of the MFP patch series (and a small change
+to ath9k to set this flag)?
 
-There's also a third option: do this in hardware. Are you really sure
-that your hardware doesn't support waking up for broadcast/multicast
-frames? It would only need to check two bits, multicast tim bit from
-beacons and moredata bits from received broadcast/multicast frames.
 
->> And there's no need to send a null frame, AP will send the frames
->> immediately after the dtim beacon no matter what.
->
-> You are right. In that case, if mc bit is set, we can change the code
-> to just disable ps and not to send a null frame.
+PS.
 
-Like I said earlier, I don't like this approach. 
+Actually, NM would probably not need to care about MFP at all (unless
+user wants to require it). I think I will change wpa_supplicant default
+to MFP-optional once 802.11w gets deployed and is found not to cause
+problems.
 
-> But this pops up another issue! How to enable ps after waking up for
-> mc traffic?
 
-Just go back to sleep after receiving a broadcast/multicast frame with
-moredata bit not set.
+ ---
+ include/net/mac80211.h |    4 ++++
+ net/mac80211/wext.c    |    4 ++++
+ 2 files changed, 8 insertions(+)
 
-> For this we have got to have the dynamic_ps_timer called from the rx
-> path also. This enables ps after the specified timeout. I don't see
-> any good reason for not to have this timer in Rx path also.
+--- wireless-testing.orig/include/net/mac80211.h	2009-01-07 18:10:40.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2009-01-07 18:11:33.000000000 +0200
+@@ -866,6 +866,9 @@ enum ieee80211_tkip_key_type {
+  *	Hardware which has dynamic power save support, meaning
+  *	that power save is enabled in idle periods, and don't need support
+  *	from stack.
++ *
++ * @IEEE80211_HW_MFP_CAPABLE:
++ *	Hardware supports management frame protection (MFP, IEEE 802.11w).
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_RX_INCLUDES_FCS			= 1<<1,
+@@ -879,6 +882,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SPECTRUM_MGMT			= 1<<9,
+ 	IEEE80211_HW_AMPDU_AGGREGATION			= 1<<10,
+ 	IEEE80211_HW_NO_STACK_DYNAMIC_PS		= 1<<11,
++	IEEE80211_HW_MFP_CAPABLE			= 1<<12,
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/wext.c	2009-01-07 18:20:30.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-01-07 18:22:38.000000000 +0200
+@@ -961,6 +961,10 @@ static int ieee80211_ioctl_siwauth(struc
+ 			ret = -EOPNOTSUPP;
+ 		break;
+ 	case IW_AUTH_MFP:
++		if (!(sdata->local->hw.flags & IEEE80211_HW_MFP_CAPABLE)) {
++			ret = -EOPNOTSUPP;
++			break;
++		}
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
+ 		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
+ 			sdata->u.sta.mfp = data->value;
 
-Please take into account that dynamic_ps_timeout can be zero, you
-cannot rely on dynamic_ps_timer.
-
-Having dynamic timeout in rx path also is possible, but that's a
-separate issue from multicast/broadcast problem. I haven't considered
-it myself, though.
 
 -- 
-Kalle Valo
+Jouni Malinen                                            PGP id EFC895FA
