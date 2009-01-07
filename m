@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:16533 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:9663 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751938AbZAERGv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 12:06:51 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 09:06:50 -0800
-Date: Mon, 5 Jan 2009 09:06:47 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-CC: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
-Message-ID: <20090105170647.GB6834@tesla> (sfid-20090105_180654_883211_DF3408D5)
-References: <1230890746-3075-1-git-send-email-vasanth@atheros.com> <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com> <20090103084637.GA31929@vasanth-laptop> <69e28c910901031241iaef37d5t2cb11bf867f75c86@mail.gmail.com> <20090105052709.GA19024@vasanth-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20090105052709.GA19024@vasanth-laptop>
+	id S1752492AbZAGQoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2009 11:44:06 -0500
+Subject: Re: [wireless-testing] iwl3945: ErrMsgs "MAC is in deep sleep!"
+	and "mac80211-phy0: failed to set key" and unused variables in build-log
+From: reinette chatre <reinette.chatre@intel.com>
+To: Sedat Dilek <sedat.dilek@googlemail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <2d0a357f0901070301ha31f71cma046bdc9590f0e33@mail.gmail.com>
+References: <2d0a357f0901070301ha31f71cma046bdc9590f0e33@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 07 Jan 2009 08:45:41 -0800
+Message-Id: <1231346741.13053.7.camel@rc-desk> (sfid-20090107_174410_234838_B99E52E7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 04, 2009 at 09:27:09PM -0800, Vasanth Thiagarajan wrote:
-> On Sun, Jan 04, 2009 at 02:11:01AM +0530, Stefanik G=E1bor wrote:
->=20
-> > Broadcom's BT coex was also running correctly on Windows Vista, but=
- it
-> > still caused problems on Linux.
->=20
-> I dont know about Broadcom BT coex implementation and issues. As far
-> as Atheros chip is cocerned the BT Coex stuff is fully taken care in
-> h/w. All I can say is, this BT Coex has gone through enough
-> throughput testing on BT coex aware/unaware platforms to make sure
-> it does not break anything both on Linux and Windows. Lets not add
-> any module parameter to enable/disable BT coex for no reason.
+On Wed, 2009-01-07 at 03:01 -0800, Sedat Dilek wrote:
 
-Broadcom also does not provide support, we do ;) Please also not this i=
-s only
-enabled for newer chipsets.
+> # tail -f /var/log/kern.log
+> [...]
+> Jan  7 11:37:58 seduxbox kernel: wlan0: deauthenticating by local
+> choice (reason=3)
+> Jan  7 11:37:58 seduxbox kernel: iwl3945 0000:10:00.0: MAC is in deep sleep!
+> Jan  7 11:37:58 seduxbox kernel: iwl3945 0000:10:00.0: MAC is in deep sleep!
+> Jan  7 11:37:58 seduxbox kernel: iwl3945 0000:10:00.0: MAC is in deep sleep!
+> [...]
+> 
+> Q: What does this mean in general "MAC is in deep sleep!"? Has this
+> something to do with power-management?
+> 
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We are aware of this problem (see
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1834 ) and
+are working on a fix for 3945.
+
+I'll look into the build warnings - than you for the report.
+
+Reinette
+
+
