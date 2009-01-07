@@ -1,103 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f29.google.com ([209.85.218.29]:44953 "EHLO
-	mail-bw0-f29.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220AbZAHDpz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35163 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbZAGKX4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 22:45:55 -0500
-Received: by bwz10 with SMTP id 10so6430751bwz.13
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 19:45:53 -0800 (PST)
-Message-ID: <45e8e6c40901071945u27a8de0aqbf2b50f0075a32f3@mail.gmail.com> (sfid-20090108_044602_533515_FD45ADBF)
-Date: Wed, 7 Jan 2009 19:45:53 -0800
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: libertas: BUG: unable to handle paging request
-Cc: wangchen@cn.fujitsu.com
-In-Reply-To: <45e8e6c40901071837o56dba8f1w6db5c7e982f698da@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <45e8e6c40901071658j6a22fcc7gedcc41d73a61ff2a@mail.gmail.com>
-	 <45e8e6c40901071837o56dba8f1w6db5c7e982f698da@mail.gmail.com>
+	Wed, 7 Jan 2009 05:23:56 -0500
+Subject: Re: [PATCH 04/11] ath9k: introduce bus specific cleanup routine
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Imre Kaloz <kaloz@openwrt.org>
+In-Reply-To: <1231322972-24094-5-git-send-email-juhosg@openwrt.org> (sfid-20090107_111132_955895_E4ACE8AD)
+References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+	 <1231322972-24094-5-git-send-email-juhosg@openwrt.org>
+	 (sfid-20090107_111132_955895_E4ACE8AD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GJrHh4b8CXRyrp5d2uzc"
+Date: Wed, 07 Jan 2009 11:24:12 +0100
+Message-Id: <1231323852.3545.22.camel@johannes> (sfid-20090107_112400_258719_21AE45B9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hmm, I do see the problem start at
-29726d85d7b98558a8bc8e69b859bf12e1347f9f and after, but I don't think
-that I'm right with my analysis, especially since the OOPS happens in
-wext.c and the functions there (namely lbs_get_freq) use netdev->priv
-directly.  I apologize for the noise but there is still something
-wrong here that I'm trying to understand better.
 
-  -Andrey
+--=-GJrHh4b8CXRyrp5d2uzc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jan 7, 2009 at 6:37 PM, Andrey Yurovsky <andrey@cozybit.com> wrote:
-> The commit that caused this regression is
-> 29726d85d7b98558a8bc8e69b859bf12e1347f9f "netdevice libertas: Fix
-> directly reference of netdev->priv" by Wang Chen.  It probably causes
-> a problem with netdev->priv's offset and then we get a pointer
-> dereference problem when lbs_get_freq() tries to use its priv data.
->
->  -Andrey
->
-> On Wed, Jan 7, 2009 at 4:58 PM, Andrey Yurovsky <andrey@cozybit.com> wrote:
->> Hello.  I noticed that the libertas driver causes a kernel oops in
->> more recent wireless-testing kernels (I am bisecting right now to
->> narrow this down).  To reproduce, load the driver and run iwconfig,
->> causing lbs_get_freq() to be called.
->>
->> So far I know that this problem doesn't exist at the 2.6.28-rc2 tag
->> (commit 0173a3265b228da319ceb9c1ec6a5682fd1b2d92)  but I have seen it
->> in -rc7 and up through today's wireless-testing.  It seems that
->> there's a regression somewhere after -rc2.  I've reproduced this with
->> the USB hardware as well as an SDIO board.
->>
->> [  118.571205] BUG: unable to handle kernel paging request at 00001e01
->> [  118.578500] IP: [<c81fddda>] lbs_get_freq+0x1a/0x160 [libertas]
->> [  118.585417] *pde = 00000000
->> [  118.588877] Oops: 0000 [#1]
->> [  118.592092] last sysfs file: /sys/block/ram9/range
->> [  118.592385] Modules linked in: usb8xxx libertas lib80211
->> [  118.592385]
->> [  118.592385] Pid: 2317, comm: iwconfig Not tainted (2.6.28-wl #65) Uknown
->> [  118.592385] EIP: 0060:[<c81fddda>] EFLAGS: 00010293 CPU: 0
->> [  118.592385] EIP is at lbs_get_freq+0x1a/0x160 [libertas]
->> [  118.592385] EAX: 00000000 EBX: 00000000 ECX: c6891ef8 EDX: c6891e98
->> [  118.592385] ESI: c6891ef8 EDI: c6891ef8 EBP: c7295000 ESP: c6891e10
->> [  118.592385]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
->> [  118.592385] Process iwconfig (pid: 2317, ti=c6890000 task=c7349880
->> task.ti=c6890000)
->> [  118.592385] Stack:
->> [  118.592385]  c8201b4b c6891ef8 00000010 ffffffa1 00008b05 c038aa20
->> 00000000 c03c691c
->> [  118.592385]  00000000 c04bc7e0 c0301287 b7f01d70 c68ce000 c6895000
->> c04c8260 00000c04
->> [  118.592385]  c68c7b7c 00000000 c7295000 c6891ee8 c0300325 c6891ee8
->> c7295000 c6891ee8
->> [  118.592385] Call Trace:
->> [  118.592385]  [<c8201b4b>] lbs_get_name+0x2b/0xb0 [libertas]
->> [  118.592385]  [<c038aa20>] ioctl_standard_call+0x60/0x3a0
->> [  118.592385]  [<c0301287>] netif_receive_skb+0x1d7/0x3e0
->> [  118.592385]  [<c0300325>] __dev_get_by_name+0x75/0x90
->> [  118.592385]  [<c0300325>] __dev_get_by_name+0x75/0x90
->> [  118.592385]  [<c038a687>] wext_handle_ioctl+0x157/0x230
->> [  118.592385]  [<c81fddc0>] lbs_get_freq+0x0/0x160 [libertas]
->> [  118.592385]  [<c03034c4>] dev_ioctl+0x304/0x4f0
->> [  118.592385]  [<c02ffdd2>] net_rx_action+0x92/0x140
->> [  118.592385]  [<c027ca89>] pty_write+0x39/0x60
->> [  118.592385]  [<c02f4280>] sock_ioctl+0x0/0x260
->> [  118.592385]  [<c017e27f>] vfs_ioctl+0x1f/0x70
->> [  118.592385]  [<c017e65b>] do_vfs_ioctl+0x24b/0x490
->> [  118.592385]  [<c011654e>] update_curr+0x13e/0x190
->> [  118.592385]  [<c0117fab>] set_next_entity+0x2b/0x70
->> [  118.592385]  [<c0397c64>] schedule+0x1b4/0x350
->> [  118.592385]  [<c017e906>] sys_ioctl+0x66/0x70
->> [  118.592385]  [<c0103cd2>] syscall_call+0x7/0xb
->> [  118.592385] Code: e9 38 ff ff ff 8d b6 00 00 00 00 8d bf 00 00 00
->> 00 56 89 ce 53 83 ec 0c 8b 98 a4 01 00 00 a1 80 19 22 c8 83 e0 21 83
->> f8 21 74 42 <0f> b6 8b 01 1e 00 00 31 d2 89 d8 e8 a6 fe ff ff 85 c0 0f
->> 84 cd
->> [  118.592385] EIP: [<c81fddda>] lbs_get_freq+0x1a/0x160 [libertas]
->> SS:ESP 0068:c6891e10
->> [  118.594153] ---[ end trace f426cd49b2b378f4 ]---
->>
->
+On Wed, 2009-01-07 at 11:09 +0100, Gabor Juhos wrote:
+
+>  			/* Deinitialize the device */
+> -			ath_detach(sc);
+> -			if (to_pci_dev(sc->dev)->irq)
+> -				free_irq(to_pci_dev(sc->dev)->irq, sc);
+> -			pci_iounmap(to_pci_dev(sc->dev), sc->mem);
+> -			pci_release_region(to_pci_dev(sc->dev), 0);
+> -			pci_disable_device(to_pci_dev(sc->dev));
+> -			ieee80211_free_hw(sc->hw);
+> +			ath_bus_cleanup(sc);
+
+And how is ath_detach() or ieee80211_free_hw() bus specific? That should
+not be in the bus specific function.
+
+johannes
+
+--=-GJrHh4b8CXRyrp5d2uzc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJZILJAAoJEKVg1VMiehFY/6UQAMII6M6UW03tDbH0CGXlHm9O
+GKXy89Doe2pKtrdsYWXVDFE1K6UD7BzpFogvuPPLM+MRx4GkqooqxOcTZlgb4QG1
+Zc+co3Jb7Vfr4RYHeior1fRLBd4Kz3iNkuRvu4/853JxxZDEDkAVpjHwN9oXzwMK
+QqynLxr14n/fP7aEV0DkSzWMr7KMek0ZXycC8UAKyW4V221TRTGacdJSIzoBvUzc
+HgKdYtc9ueTl/vXmKvrQ/Ye1f+2TAf1I4qnoL+fE6ylvFxNGmKN07cBk3knJ47T0
+yoPN2iM7x2V2MwOUDvz3CfSKF/+p8NrHd+fKqSaf0zVkIK/TO+CliUXCqs+SEsC7
+DlKyGjQybQ3RL6YhN8rZMujPhw2aqHPHz93xxQSPzC/vXe3HGVURIPdM+m4JfNIO
+V9PJQbPgY/fN8qRUn+Zm/121RiYr+oAJ/Qhq48hnzpCpYEMgOCV7xkmpWt0iryQ5
+dwwwWwwq0M7j49X2W7yxsOIekzAEkBG/9VE0955vJrlCnuGqMNUnelkX8wooW589
+ASbeyOb0VJe+FkPqj/EwLqSNgEEd62l87Mr4AfmHYsO7MxgSVLhxNeK5Y9TMrUnW
+/s4PJ39vEHuFgpzTYVehiYOwrGNLAECKk8U265PnFlMyQ4HkNb93+NsFHqD19VGZ
+cVec/TxCeYxcuo2k9CmP
+=Acun
+-----END PGP SIGNATURE-----
+
+--=-GJrHh4b8CXRyrp5d2uzc--
+
