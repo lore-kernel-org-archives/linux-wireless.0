@@ -1,134 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34411 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:42547 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962AbZAZSwe (ORCPT
+	with ESMTP id S1753245AbZAGQfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 13:52:34 -0500
-Message-Id: <20090126184925.267529450@sipsolutions.net> (sfid-20090126_195237_451940_FE0FC69C)
-References: <20090126184740.036240879@sipsolutions.net>
-Date: Mon, 26 Jan 2009 19:47:44 +0100
+	Wed, 7 Jan 2009 11:35:38 -0500
+Subject: multicast traffic and ath9k
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@gmail.com, Sujith.Manoharan@atheros.com, tomasw@gmail.com
-Subject: [RFC/RFT 4/7] mac80211: document TX aggregation (and small cleanup)
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LX+fTj6doDOWkhVNfP05"
+Date: Wed, 07 Jan 2009 17:36:01 +0100
+Message-Id: <1231346161.3545.52.camel@johannes> (sfid-20090107_173541_125119_AE6D48DF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation and move ieee80211_start_tx_ba_cb_irqsafe to right
-after ieee80211_start_tx_ba_cb.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/agg-tx.c |   76 +++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 51 insertions(+), 25 deletions(-)
+--=-LX+fTj6doDOWkhVNfP05
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/net/mac80211/agg-tx.c	2009-01-26 12:16:16.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2009-01-26 12:30:51.000000000 +0100
-@@ -18,6 +18,31 @@
- #include "ieee80211_i.h"
- #include "wme.h"
- 
-+/**
-+ * DOC: TX aggregation
-+ *
-+ * Aggregation on the TX side requires setting the hardware flag
-+ * %IEEE80211_HW_AMPDU_AGGREGATION as well as, if present, the @ampdu_queues
-+ * hardware parameter to the number of hardware AMPDU queues. If there are no
-+ * hardware queues then the driver will (currently) have to do all frame
-+ * buffering.
-+ *
-+ * When TX aggregation is started by some subsystem (usually the rate control
-+ * control algorithm would be appropriate) by calling the
-+ * ieee80211_start_tx_ba_session() function, the driver will be notified via
-+ * its @ampdu_action function, with the %IEEE80211_AMPDU_TX_START action.
-+ *
-+ * In response to that, the driver is later required to call the
-+ * ieee80211_start_tx_ba_cb() (or ieee80211_start_tx_ba_cb_irqsafe())
-+ * function, which will start the aggregation session.
-+ *
-+ * Similarly, when the aggregation session is stopped by
-+ * ieee80211_stop_tx_ba_session(), the driver's @ampdu_action function will
-+ * be called with the action %IEEE80211_AMPDU_TX_STOP. In this case, the
-+ * call must not fail, and the driver must later call ieee80211_stop_tx_ba_cb()
-+ * (or ieee80211_stop_tx_ba_cb_irqsafe()).
-+ */
-+
- static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
- 					 const u8 *da, u16 tid,
- 					 u8 dialog_token, u16 start_seq_num,
-@@ -349,6 +374,31 @@ void ieee80211_start_tx_ba_cb(struct iee
- }
- EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
- 
-+void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
-+				      const u8 *ra, u16 tid)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_ra_tid *ra_tid;
-+	struct sk_buff *skb = dev_alloc_skb(0);
-+
-+	if (unlikely(!skb)) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		if (net_ratelimit())
-+			printk(KERN_WARNING "%s: Not enough memory, "
-+			       "dropping start BA session", skb->dev->name);
-+#endif
-+		return;
-+	}
-+	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
-+	memcpy(&ra_tid->ra, ra, ETH_ALEN);
-+	ra_tid->tid = tid;
-+
-+	skb->pkt_type = IEEE80211_ADDBA_MSG;
-+	skb_queue_tail(&local->skb_queue, skb);
-+	tasklet_schedule(&local->tasklet);
-+}
-+EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
-+
- 
- int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
- 				 u8 *ra, u16 tid,
-@@ -478,31 +528,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
- 
--void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
--				      const u8 *ra, u16 tid)
--{
--	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_ra_tid *ra_tid;
--	struct sk_buff *skb = dev_alloc_skb(0);
--
--	if (unlikely(!skb)) {
--#ifdef CONFIG_MAC80211_HT_DEBUG
--		if (net_ratelimit())
--			printk(KERN_WARNING "%s: Not enough memory, "
--			       "dropping start BA session", skb->dev->name);
--#endif
--		return;
--	}
--	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
--	memcpy(&ra_tid->ra, ra, ETH_ALEN);
--	ra_tid->tid = tid;
--
--	skb->pkt_type = IEEE80211_ADDBA_MSG;
--	skb_queue_tail(&local->skb_queue, skb);
--	tasklet_schedule(&local->tasklet);
--}
--EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
--
- void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
- 				     const u8 *ra, u16 tid)
- {
-@@ -528,6 +553,7 @@ void ieee80211_stop_tx_ba_cb_irqsafe(str
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb_irqsafe);
- 
-+
- void ieee80211_process_addba_resp(struct ieee80211_local *local,
- 				  struct sta_info *sta,
- 				  struct ieee80211_mgmt *mgmt,
+Hi,
 
--- 
+Does ath9k hardware really not check the multicast bit by itself? It
+seems that we can't really be fast enough to wake up the hardware, so
+the check for the MC bit is kinda useless, no?
+
+johannes
+
+--=-LX+fTj6doDOWkhVNfP05
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJZNnuAAoJEKVg1VMiehFYwX0QAJgWssoh7ORBRSUc2cRMswhs
+9l6ZT52qXwmov82xsKtfRyarFNfWdQCtF94Zfnlp+q0rEDhSMgjpU0VeZX/CqBy8
+1RZlUZgpkPbGj64yhjpetEK4rrYOw2NakC0Qxgy8A7wh+JUUf0sbTTma7QTJ6UTB
+icHbthTfZ5u5zeuucC2OXlQYDMOzYyIFregqjoAl3Aqz6FVakWu+UR2kS/ZZc86v
+xQrnaft70QK+ISuNsIuBdBVvODxqnce/FmCLSK4hikJToieKIJxbrJMGr3e85/Rf
+Ayd/aPq6AB1D3C0o7oJrKSamqOO7Xm5hd8vmOgViAlLUoqtWUgLxQyv8ouWZcE+O
+2R/AsMwpstiUCk6n+aIoZ4zRSPrkPHPB5ip0B21mcbxrPOVV6uOx3omNFm9FUH0Z
+yVmaLf9nvkD1YpdX3uzT0wAJjfYZS04vz3j35cXwSQ6JYnuI5AX+wJvxYiSN1JVf
+2qOBGXLEYIsHboD19JlT8owdTYcqi+rJdcacgBtIuRNJu01q+2yjlX4zMwx81Q12
+uyLJDqE1CFagcERRyMCpgA/LSE7Gbn0G5Cmbs1pa0tY9UxPpfcgvQufmhPmIwzrP
+Cvl6R+Q6qQHbx9wUgMP9EL6HRN5/DoMbNZEH2W0ek2Jgae3m0oaCMyMtVRRJuNV7
+ukzSBn6B65X6Q/DQpISP
+=C6eD
+-----END PGP SIGNATURE-----
+
+--=-LX+fTj6doDOWkhVNfP05--
 
