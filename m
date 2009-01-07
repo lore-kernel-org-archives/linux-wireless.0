@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33766 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754679AbZAOSsf (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:57519 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751477AbZAGPkN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 13:48:35 -0500
-Subject: Re: [PATCH] mac80211_hwsim: configfs support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: igor_trindade@yahoo.com.br
-Cc: j@w1.fi, linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <700428.4819.qm@web59316.mail.re1.yahoo.com>
-References: <700428.4819.qm@web59316.mail.re1.yahoo.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-h+IdHQDEGMJ3TaZ0CpJ7"
-Date: Thu, 15 Jan 2009 19:48:02 +0100
-Message-Id: <1232045282.5839.48.camel@johannes> (sfid-20090115_194840_253115_E7963373)
-Mime-Version: 1.0
+	Wed, 7 Jan 2009 10:40:13 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] p54: return NETDEV_TX_OK in p54_tx and fix sparse warnings
+Date: Wed, 7 Jan 2009 16:40:08 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200901071640.08721.chunkeey@web.de> (sfid-20090107_164019_902499_4A19755B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch addresses all recent comments from Johannes Berg:
 
---=-h+IdHQDEGMJ3TaZ0CpJ7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+1st: (reference http://marc.info/?l=linux-wireless&m=123124685019631 )
+>First off: all those should return NETDEV_TX_OK/BUSY.
+>iwl-agn: returns 0 (== NETDEV_TX_OK, but still should be changed) 
+>[...]
+>p54: same (some paths)
 
-On Sat, 2008-12-20 at 09:48 -0800, Igor Trindade Oliveira wrote:
-> Mac80211_hwsim: Support to configfs operations to create a new radio
+2nd:
+> due to your PS patch ("p54: power save management"), please run sparse:
+> make C=2 CF=-D__CHECK_ENDIAN__ M=...
+> +drivers/net/wireless/p54/p54common.c:1753:8: warning: incorrect type in assignment (different base types)
+> +drivers/net/wireless/p54/p54common.c:1769:29: warning: incorrect type in assignment (different base types)
+The cpu_to_le16 ended up in the wrong line... Sorry!
 
-Were you planning to update this patch for the comments? Otherwise I'll
-probably just adopt it.
-
-johannes
-
---=-h+IdHQDEGMJ3TaZ0CpJ7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJb4TeAAoJEKVg1VMiehFYNd0P/3EeMV0ngG9rmk8o3boVE4wB
-NR07uYc2ZBnL2laj6C+zi0Mc99nBnwUMAK1DtdZNf9SLRwn6ndvIcPSH9iL47cJF
-nfSMoPL9yeajt+fuXjOx34GGD0kv4jbYXNp1sIeb14mf6co//6lk+giSUrgLjdBe
-9smjzzd/Ai9kBqxH526GAxiegL0zyB+uqUhYsXX+A8hh1NrrrFYAUeVq/TAp+bBY
-pAsc5cOFqGZjdgr5vaSJOnZgcOezgMfqr2eMuqFceCX1mIZ5f4CzZca1OoVGAVgp
-0XqIkxbqBYlw8i3s1nUvMCqR7mF6MpcMsC7aQCK2vBEnhiWhsF0exKgl/zKrFKyr
-2/ypUdQKn5wynwMlXNnQ49px6kpovwrJqOYN1zPU4wtIbeHV2aNXiIWSXERD1AzI
-esMIFc+BvJhSMu9OjXPX/sQfBZb5MAJ+BPvDJTC+2fS7hCCx44PKvjiCLd0QhNfw
-n4fDy1+D7rWmMPsY4WoA3oU6tus7388YUr6wVtVhqjjoomdDOyCrcrRjH5ocqlhM
-3RRaKqC+s7R08nOzvo1gBaYdSzArcW/bbimvcJGK2Mvw4NbKfjyjhS3+eCOlP4rr
-CAHwMt8/H3vMybnocyUUXmMKd+UGJCEJZtFfvB8IM759ljDQNHTSYcpjfC5Z3T2a
-4PFyNqUdG+amECmgQgz0
-=cOvI
------END PGP SIGNATURE-----
-
---=-h+IdHQDEGMJ3TaZ0CpJ7--
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index c4ad148..1702eac 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -1508,7 +1508,7 @@ static int p54_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	queue_delayed_work(dev->workqueue, &priv->work,
+ 			   msecs_to_jiffies(P54_TX_FRAME_LIFETIME));
+ 
+-	return 0;
++	return NETDEV_TX_OK;
+ 
+  err:
+ 	skb_pull(skb, sizeof(*hdr) + sizeof(*txhdr) + padding);
+@@ -1750,7 +1750,7 @@ static int p54_set_ps(struct ieee80211_hw *dev)
+ 	int i;
+ 
+ 	if (dev->conf.flags & IEEE80211_CONF_PS)
+-		mode = cpu_to_le16(P54_PSM | P54_PSM_DTIM | P54_PSM_MCBC);
++		mode = P54_PSM | P54_PSM_DTIM | P54_PSM_MCBC;
+ 	else
+ 		mode = P54_PSM_CAM;
+ 
+@@ -1766,7 +1766,7 @@ static int p54_set_ps(struct ieee80211_hw *dev)
+ 	for (i = 0; i < ARRAY_SIZE(psm->intervals); i++) {
+ 		psm->intervals[i].interval =
+ 			cpu_to_le16(dev->conf.listen_interval);
+-		psm->intervals[i].periods = 1;
++		psm->intervals[i].periods = cpu_to_le16(1);
+ 	}
+ 
+ 	psm->beacon_rssi_skip_max = 60;
