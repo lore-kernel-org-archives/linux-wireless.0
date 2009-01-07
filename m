@@ -1,136 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:35639 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750836AbZAFP1K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 10:27:10 -0500
-Date: Tue, 6 Jan 2009 17:27:06 +0200
-From: Nick Kossifidis <mick@madwifi.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	me@bobcopeland.com, nbd@openwrt.org
-Subject: [PATCH] ath5k: Minor QCU updates
-Message-ID: <20090106152706.GA7850@makis> (sfid-20090106_162714_353400_AFB5689A)
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46942 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755242AbZAGMZk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2009 07:25:40 -0500
+Date: Wed, 7 Jan 2009 14:24:27 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: Re: [PATCH 12/14] mac80211: 802.11w - Optional software CCMP for
+	management frames
+Message-ID: <20090107122427.GA20019@jm.kir.nu> (sfid-20090107_132544_274942_500B007F)
+References: <20090107112346.369581673@atheros.com> <20090107112707.370907962@atheros.com> <1231330118.3545.28.camel@johannes>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231330118.3545.28.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Sync qcu.c with legacy-hal
- * Add some more comments
- * Set QCU mask to save power (QCU mask controls which QCUs are attached to each DCU, we do a 1:1 mapping)
+On Wed, Jan 07, 2009 at 01:08:38PM +0100, Johannes Berg wrote:
+> On Wed, 2009-01-07 at 13:23 +0200, Jouni Malinen wrote:
+> > plain text document attachment (ieee80211w-sw-mgmt-ccmp.patch)
+> > If driver/firmware/hardware does not support CCMP for management
+> > frames, it can now request mac80211 to take care of encryption and
+> > decryption of management frames (when MFP is enabled) in software. The
+> > driver will need to add this new IEEE80211_KEY_FLAG_SW_MGMT flag when a
+> > CCMP key is being configured for TX side and return the encrypted frames
+> > on RX side without RX_FLAG_DECRYPTED flag to use software CCMP for
+> > management frames (but hardware for data frames).
+> 
+> Wouldn't it be better to invert the meaning of the flag so we don't have
+> to update all drivers now? It's likely that people won't test CCMP hw
+> encryption and also that it won't work, I'd think, no?
 
- TODO: Use max QCU from EEPROM, further sync with legacy-hal and sam's hal and a few more minor fixes.
+I did consider this, but could not convince myself that drivers would be
+expected to work without some testing and likely changes.. I do not care
+that much which way this is, so if you want this to be inverted, that's
+fine, too. I might even go as far as adding an explicit capability flag
+that drivers will need to set to claim MFP support and export this to
+userspace so that hostapd/wpa_supplicant could refuse the configuration
+early. With that kind of flag, inverting this key flag does not get much
+since the drivers would need to be changed anyway for MFP to work in
+every case.
 
- I think after this we are ready to implement WME on the driver part. Anyone interested ?
-
- Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
-
----
-diff --git a/drivers/net/wireless/ath5k/qcu.c b/drivers/net/wireless/ath5k/qcu.c
-index 1b7bc50..5094c39 100644
---- a/drivers/net/wireless/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath5k/qcu.c
-@@ -148,6 +148,7 @@ int ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
-  */
- u32 ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
- {
-+	u32 pending;
- 	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(queue, ah->ah_capabilities.cap_queues.q_tx_num);
- 
-@@ -159,7 +160,15 @@ u32 ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
- 	if (ah->ah_version == AR5K_AR5210)
- 		return false;
- 
--	return AR5K_QUEUE_STATUS(queue) & AR5K_QCU_STS_FRMPENDCNT;
-+	pending = (AR5K_QUEUE_STATUS(queue) & AR5K_QCU_STS_FRMPENDCNT);
-+
-+	/* It's possible to have no frames pending even if TXE
-+	 * is set. To indicate that q has not stopped return
-+	 * true */
-+	if (!pending && AR5K_REG_READ_Q(ah, AR5K_QCU_TXE, queue))
-+		return true;
-+
-+	return pending;
- }
- 
- /*
-@@ -324,8 +333,18 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 		/*
- 		 * Set misc registers
- 		 */
--		ath5k_hw_reg_write(ah, AR5K_QCU_MISC_DCU_EARLY,
--			AR5K_QUEUE_MISC(queue));
-+		/* Enable DCU early termination for this queue */
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_MISC(queue),
-+					AR5K_QCU_MISC_DCU_EARLY);
-+
-+		/* Enable DCU to wait for next fragment from QCU */
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_DFS_MISC(queue),
-+					AR5K_DCU_MISC_FRAG_WAIT);
-+
-+		/* On Maui and Spirit use the global seqnum on DCU */
-+		if (ah->ah_mac_version < AR5K_SREV_AR5211)
-+			AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_DFS_MISC(queue),
-+						AR5K_DCU_MISC_SEQNUM_CTL);
- 
- 		if (tq->tqi_cbr_period) {
- 			ath5k_hw_reg_write(ah, AR5K_REG_SM(tq->tqi_cbr_period,
-@@ -341,7 +360,8 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 					AR5K_QCU_MISC_CBR_THRES_ENABLE);
- 		}
- 
--		if (tq->tqi_ready_time)
-+		if (tq->tqi_ready_time &&
-+		(tq->tqi_type != AR5K_TX_QUEUE_ID_CAB))
- 			ath5k_hw_reg_write(ah, AR5K_REG_SM(tq->tqi_ready_time,
- 				AR5K_QCU_RDYTIMECFG_INTVAL) |
- 				AR5K_QCU_RDYTIMECFG_ENABLE,
-@@ -383,13 +403,6 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 				AR5K_DCU_MISC_ARBLOCK_CTL_S) |
- 				AR5K_DCU_MISC_POST_FR_BKOFF_DIS |
- 				AR5K_DCU_MISC_BCN_ENABLE);
--
--			ath5k_hw_reg_write(ah, ((AR5K_TUNE_BEACON_INTERVAL -
--				(AR5K_TUNE_SW_BEACON_RESP -
--				AR5K_TUNE_DMA_BEACON_RESP) -
--				AR5K_TUNE_ADDITIONAL_SWBA_BACKOFF) * 1024) |
--				AR5K_QCU_RDYTIMECFG_ENABLE,
--				AR5K_QUEUE_RDYTIMECFG(queue));
- 			break;
- 
- 		case AR5K_TX_QUEUE_CAB:
-@@ -398,6 +411,13 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 				AR5K_QCU_MISC_CBREXP_DIS |
- 				AR5K_QCU_MISC_CBREXP_BCN_DIS);
- 
-+			ath5k_hw_reg_write(ah, ((AR5K_TUNE_BEACON_INTERVAL -
-+				(AR5K_TUNE_SW_BEACON_RESP -
-+				AR5K_TUNE_DMA_BEACON_RESP) -
-+				AR5K_TUNE_ADDITIONAL_SWBA_BACKOFF) * 1024) |
-+				AR5K_QCU_RDYTIMECFG_ENABLE,
-+				AR5K_QUEUE_RDYTIMECFG(queue));
-+
- 			AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_DFS_MISC(queue),
- 				(AR5K_DCU_MISC_ARBLOCK_CTL_GLOBAL <<
- 				AR5K_DCU_MISC_ARBLOCK_CTL_S));
-@@ -413,6 +433,8 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 			break;
- 		}
- 
-+		/* TODO: Handle frame compression */
-+
- 		/*
- 		 * Enable interrupts for this tx queue
- 		 * in the secondary interrupt mask registers
-@@ -483,6 +505,9 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 		 * by setting AR5K_TXNOFRM to zero */
- 		if (ah->ah_txq_imr_nofrm == 0)
- 			ath5k_hw_reg_write(ah, 0, AR5K_TXNOFRM);
-+
-+		/* Set QCU mask for this DCU to save power */
-+		AR5K_REG_WRITE_Q(ah, AR5K_QUEUE_QCUMASK(queue), queue);
- 	}
- 
- 	return 0;
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
