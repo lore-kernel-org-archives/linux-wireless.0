@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:39606 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752117AbZAEDzK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 22:55:10 -0500
-Message-ID: <49618497.50809@lwfinger.net> (sfid-20090105_045514_519814_E202517F)
-Date: Sun, 04 Jan 2009 21:55:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:18462 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751778AbZAGI6o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2009 03:58:44 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 00:58:44 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: Andi Kleen <andi@firstfloor.org>
-CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: rate instability in wireless stack
-References: <20090104164649.GV496@one.firstfloor.org> <200901041736.47650.mb@bu3sch.de> <20090104174123.GW496@one.firstfloor.org> <49615465.4090604@lwfinger.net> <20090105025302.GF496@one.firstfloor.org>
-In-Reply-To: <20090105025302.GF496@one.firstfloor.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18788.28161.172196.813321@gargle.gargle.HOWL> (sfid-20090107_095848_905261_3F505AC8)
+Date: Wed, 7 Jan 2009 14:25:29 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH] ath9k: Fix chainmask handling bug
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andi Kleen wrote:
-> 
-> Same issue with this patch. It fluctuates some time between 11Mbit/s
-> and 48Mbit/s, but then eventually settles on 1Mbit/s again. That's with PID
-> now, not Mistrel. I think it takes longer with this patch than
-> before, but not much.
-> 
-> BTW I see the problem with RT2561 too.
+The chainmasks have to be updated before setting the channel,
+since the HW reset routine uses them to set the appropriate registers.
 
-Can you retry with mistrel? In my experience, it converges to a lower rate than
-does pid, but it doesn't fluctuate as much.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-I'll look into RT2561.
-
-What I generally do is start a ping in one window and enter the following line
-in another:
-
-while [ 1 ] ; do iwconfig wlan0 | grep Mb ; sleep 1 ; done
-
-and watch the rate.
-
-Larry
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index f590fce..416b2ac 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -2144,13 +2144,13 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 						    conf->ht.channel_type);
+ 		}
+ 
++		ath_update_chainmask(sc, conf_is_ht(conf));
++
+ 		if (ath_set_channel(sc, &sc->sc_ah->ah_channels[pos]) < 0) {
+ 			DPRINTF(sc, ATH_DBG_FATAL, "Unable to set channel\n");
+ 			mutex_unlock(&sc->mutex);
+ 			return -EINVAL;
+ 		}
+-
+-		ath_update_chainmask(sc, conf_is_ht(conf));
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER)
+-- 
+1.6.0.3
 
