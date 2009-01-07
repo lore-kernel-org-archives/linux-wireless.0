@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:57761 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754882AbZAWT61 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47983 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752104AbZAGK1D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 14:58:27 -0500
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Message-Id: <4B2A9520-D727-472F-A62A-0DC2E5F3C2B3@ing.unibs.it> (sfid-20090123_205831_681543_2CAD0F97)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: "Brian J. Murrell" <brian@interlinx.bc.ca>
-In-Reply-To: <1232732649.7440.42.camel@pc.interlinx.bc.ca>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: integration of opensource firmware with b43 kernel driver
-Date: Fri, 23 Jan 2009 20:58:23 +0100
-References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it> <1232732649.7440.42.camel@pc.interlinx.bc.ca>
+	Wed, 7 Jan 2009 05:27:03 -0500
+Subject: Re: [PATCH 04/11] ath9k: introduce bus specific cleanup routine
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Imre Kaloz <kaloz@openwrt.org>
+In-Reply-To: <1231322972-24094-5-git-send-email-juhosg@openwrt.org> (sfid-20090107_111132_955895_E4ACE8AD)
+References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+	 <1231322972-24094-5-git-send-email-juhosg@openwrt.org>
+	 (sfid-20090107_111132_955895_E4ACE8AD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mK5TJh9mj9tPBLK7M/pY"
+Date: Wed, 07 Jan 2009 11:27:22 +0100
+Message-Id: <1231324042.3545.24.camel@johannes> (sfid-20090107_112706_827958_EACF1A9C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 23, 2009, at 6:44 PM, Brian J. Murrell wrote:
 
-> On Fri, 2009-01-23 at 18:36 +0100, Francesco Gringoli wrote:
->> Hello,
->>
->> we have been testing the firmware for a week now and it seems stable.
->> I personally tested it also on a Linksys WRT54GL and it works both in
->> station and in AP modes.
->
-> Did you try pushing it hard?  i.e. doing a nice big bulk transfer
-> through it?  Did it reach decent speeds without pegging the CPU with
-> softirqs?
->
-> Can you give details on which kernel(s) and how you built/configured  
-> the
-> router firmware(s)?
-Well, I just tested a 500Mbytes bulk transfer and I got a mean  
-throughput of about 5.5Mbit/s, it was a simple infinite wget loop so  
-we can have some slowness due to TCP. However no errors were logged to  
-syslog and the AP is still there, it didn't complain about anything.
+--=-mK5TJh9mj9tPBLK7M/pY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I built kamikaze yesterday image (r14144), kernel 2.6.25.17, I used  
-the AP as a station joined to another AP without encryption.
+On Wed, 2009-01-07 at 11:09 +0100, Gabor Juhos wrote:
 
-By the way, we did thousands of tests with x86 and we came to the  
-conclusion that there is no performance (throughput) difference if  
-compared to the standard proprietary firmware.
+> +	ath_detach(sc);
+> +	if (pdev->irq)
+> +		free_irq(pdev->irq, sc);
 
-Cheers,
--FG
+the irq stuff also need not be bus specific, if the bus specific code
+tells the generic code which irq to use
+
+johannes
+
+--=-mK5TJh9mj9tPBLK7M/pY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJZIOHAAoJEKVg1VMiehFYfTEQAJyfXttE1Ou6iPmYFF4SOPJM
+NDpfXCVQ4+xREnT+FBx3XQPGDFrcxSurgUMFKpUUYjEqli5f9E9sWz3cxabqjesV
+IbEcJiwF218Y35aUiKPEoPz5dyQ6XynonvoRsFJSVTGOu2/v1KBnIU4jjydwIK49
+3IvtiC364wBsbIxZ/INCixKvDcsHU8O4VHq9bSwfrEEB7LdV/cLr3KQlORajG7yh
+us3fi+rMwTvm6L4wPBRc15/X6FP0BLdiQVU9Ea2m7Sxj4DOkbg107MQ5bL5SP7oT
+eyTfjPWjhmrP4N+0WB8e8hshGyYkyZXFhx1R8IMKS4OF0vDjESp4XXDSXA3XiWQK
+XzE25VenfPDZpvqsXQOPBKlRVYhaXPHoWn0LxJC9Ek/4bZsdJCQSQiK3svaBxVUc
+0BakqHHGizVZs18kTguI+F2QsDKG83v77tbDuCIIO0Taivnpgww0xXr9dv3lHqus
+gej+1iexySrmNR2dmpxFHwSuRfQ5ux5r2XlayRdTwnBYxqvlOa9XRy541LvGLtAb
+Jtn1fG4K+QMgnIlG7Y+rStAShIjJY1EiuZGrgvuYwp6CWr9GFP4/PJxHr2AriLVR
+b7Uf7nb3H/wqd/v5UQ2JJLdhcdfNFQYHWDPFdkpI0H/8L06827SIt9dfZFl6Uyhu
+ZZF4sDkXLzLhiEAIC2PB
+=1F4L
+-----END PGP SIGNATURE-----
+
+--=-mK5TJh9mj9tPBLK7M/pY--
+
