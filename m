@@ -1,59 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42538 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759894AbZAVXHC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 18:07:02 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 15:07:02 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/12] cfg80211: allow users to help a driver's compliance
-Date: Thu, 22 Jan 2009 15:05:54 -0800
-Message-ID: <1232665554-26132-13-git-send-email-lrodriguez@atheros.com> (sfid-20090123_000710_341675_F2E37AAA)
-In-Reply-To: <1232665554-26132-12-git-send-email-lrodriguez@atheros.com>
-References: <1232665554-26132-1-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-2-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-4-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-5-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-6-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-7-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-8-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-9-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-10-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-11-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-12-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from fk-out-0910.google.com ([209.85.128.185]:19437 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753636AbZAHOrD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 09:47:03 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so4486571fkq.5
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2009 06:47:02 -0800 (PST)
+Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net
+In-Reply-To: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils>
+References: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils>
 Content-Type: text/plain
+Date: Thu, 08 Jan 2009 16:46:57 +0200
+Message-Id: <1231426017.922.2.camel@maxim-laptop> (sfid-20090108_154711_898368_804B206A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let users be more compliant if so desired.
+On Thu, 2009-01-08 at 13:49 +0000, Hugh Dickins wrote:
+> Thank you for the ath5k wireless driver,
+> which I've just started using on an Aspire One.
+> 
+> When running swapping load tests, wireless alive but not in active use,
+> I've now twice hit the BUG_ON(bf->skb == NULL) in ath5k_tasklet_rx().
+> 
+> First time was with 2.6.28 plus kdb patch,
+> kernel BUG at drivers/net/wireless/ath5k/base.c:1675!
+> and poking around the messages I could see before that an
+> ath5k phy0: can't alloc skbuff of size 2673, after a
+> swapper: page allocation failure, order:0 mode:0x4020
+> on a call from dev_alloc_skb(), with memory summary.
+> 
+> Second time was with yesterday's 2.6.28-git, no kdb,
+> kernel BUG at drivers/net/wireless/ath5k/base.c:1683!
+> running ath5k_tasklet_rx() from under do_softirq(),
+> Kernel panic - not syncing: Fatal exception in interrupt
+> so I couldn't see more; but at the top of the screen, the
+> last three lines of a page allocation failure memory summary.
+> 
+> So, that BUG_ON(bf->skb == NULL) appears to be unsafe under
+> memory pressure; but the fix wasn't obvious to me, so over
+> to you!
+> 
+> I'd be glad to try patches, of course, but it's not happening
+> often enough for me to report back success quickly - unless I
+> stumble on a quicker way to reproduce it, it'll need a week or
+> two to grow confident of a fix.
+> 
+> Thanks,
+> Hugh
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2da5427..f643d39 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -772,8 +772,9 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
- 	regd = custom_regd ? custom_regd : cfg80211_regdomain;
- 
- 	/* Follow the driver's regulatory domain, if present, unless a country
--	 * IE has been processed */
-+	 * IE has been processed or a user wants to help complaince further */
- 	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
-+	    last_request->initiator != REGDOM_SET_BY_USER &&
- 	    wiphy->regd)
- 		regd = wiphy->regd;
- 
--- 
-1.6.1.rc3.51.g5832d
+I use aspire one, and I don't see that, did this happen several times?
+
+
+Could you try compat-wireless:
+
+http://wireless.kernel.org/en/users/Download
+
+
+It has many fixes that made my wireless on that notebook more or less
+usable.
+
+Best regards,
+	Maxim Levitsky
 
