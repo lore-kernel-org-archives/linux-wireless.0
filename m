@@ -1,86 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:60973 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755517AbZAUAHx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 19:07:53 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so1620232ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 16:07:52 -0800 (PST)
-Message-ID: <43e72e890901201607h359018eew3bf7f99b5d1b0759@mail.gmail.com> (sfid-20090121_010758_446375_6AD32B00)
-Date: Tue, 20 Jan 2009 16:07:52 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Kyle McMartin" <kyle@infradead.org>
-Subject: Re: [stable] Failed Build of modules for 2.6.27.9-159
-Cc: "Greg KH" <greg@kroah.com>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Paul Hickey" <paul@christianpatriot.us>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"Kyle McMartin" <kyle@mcmartin.ca>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090120220810.GE17452@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1232319854.4596.1.camel@localhost.localdomain>
-	 <1232404986.3641.2.camel@localhost.localdomain>
-	 <20090120000336.GB4018@tesla>
-	 <1232433738.3696.3.camel@localhost.localdomain>
-	 <20090120194243.GC19581@tesla> <20090120200515.GA5077@kroah.com>
-	 <20090120201316.GG19581@tesla> <20090120201613.GA5313@kroah.com>
-	 <20090120211630.GJ19581@tesla>
-	 <20090120220810.GE17452@bombadil.infradead.org>
+Received: from mga02.intel.com ([134.134.136.20]:4925 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756143AbZAHSSX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 13:18:23 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 01/11] iwl3945: kill hw_params.tx_ant_num
+Date: Thu,  8 Jan 2009 10:19:52 -0800
+Message-Id: <1231438802-10991-2-git-send-email-reinette.chatre@intel.com> (sfid-20090108_191840_348969_306EBCD7)
+In-Reply-To: <1231438802-10991-1-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1231438802-10991-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 2:08 PM, Kyle McMartin <kyle@infradead.org> wrote:
-> On Tue, Jan 20, 2009 at 01:16:30PM -0800, Luis R. Rodriguez wrote:
->> As Michael pointed out -- its tough, in fact I am not sure how to do this with
->> static inlines. Advice on how to do this is welcomed. I have no clue.
->>
->
-> In this case, where a header will be providing a static inline, and you
-> need to provide a stub function, and you're unable to test on a typedef,
-> you'll have to use a weak function.
->
-> kyle@phobos ~ $ cat foo.c
-> #include "bar.h"
-> #include "compat.h"
->
-> int main(void) {
->        int a = 0;
->
->        a = foo(a);
->
->        return a;
-> }
->
-> kyle@phobos ~ $ cat compat.h
-> int __attribute__((weak)) foo(int x);
->
-> kyle@phobos ~ $ cat bar.h
-> static inline int foo(int a) {
->        return a;
-> }
->
-> kyle@phobos ~ $ cat compat.c
-> int __attribute__((weak)) foo(int a)
-> {
->        return a+1;
-> }
->
-> kyle@phobos ~ $ gcc -Wall -O2 -o foo foo.c compat.c
-> kyle@phobos ~ $ ./foo
-> kyle@phobos ~ $ echo $?
-> 0
->
-> Seems to work ok and not whinge about the double definition.
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-Thanks Kyle, that's pretty neat, unfortunately my compat.c includes
-compat.h and since compat.h includes pci.h the compiler nags about the
-double header redefinition of foo() where pci.h already has that
-present (on those systems only). Essentially I'd need a way for
-systems without foo() to define the header line and for systems that
-already have it to not add the line. Know any trick for that?
+This patch removes tx_ant_num for hw_params structure. It is not used.
 
-Any particular strong reason to add that pci inline onto FC10 headers?
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    3 ---
+ 2 files changed, 0 insertions(+), 4 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 85a8790..502df73 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2493,7 +2493,6 @@ int iwl3945_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.max_stations = IWL3945_STATION_COUNT;
+ 	priv->hw_params.bcast_sta_id = IWL3945_BROADCAST_ID;
+ 
+-	priv->hw_params.tx_ant_num = 2;
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 9b9d743..a092401 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -595,9 +595,6 @@ struct iwl_hw_params {
+ 	u32 ct_kill_threshold; /* value in hw-dependent units */
+ 	u32 calib_init_cfg;
+ 	const struct iwl_sensitivity_ranges *sens;
+-
+-	/* for 3945 */
+-	u16 tx_ant_num;
+ };
+ 
+ 
+-- 
+1.5.4.3
+
