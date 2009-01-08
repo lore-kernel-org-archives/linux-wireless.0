@@ -1,75 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:39481 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752647AbZAaOwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2009 09:52:30 -0500
-Received: from Relay1.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id 003C7429B4
-	for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2009 15:52:28 +0100 (CET)
-From: Danny Kukawka <dkukawka@suse.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] rt2x00: fix led naming
-Date: Sat, 31 Jan 2009 15:52:20 +0100
-Cc: Helmut Schaa <hschaa@suse.de>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:40278 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750837AbZAHFUu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 00:20:50 -0500
+Received: by bwz14 with SMTP id 14so26758320bwz.13
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 21:20:48 -0800 (PST)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: localversion-wireless missing from wireless-testing
+References: <877i59q97f.fsf@litku.valot.fi>
+	<20090107205618.GB4387@tuxdriver.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 08 Jan 2009 07:20:45 +0200
+In-Reply-To: <20090107205618.GB4387@tuxdriver.com> (John W. Linville's message of "Wed\, 7 Jan 2009 15\:56\:18 -0500")
+Message-ID: <87ljtmcr0y.fsf@litku.valot.fi> (sfid-20090108_062056_349897_77DA6F15)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901311552.20951.dkukawka@suse.de> (sfid-20090131_155245_336369_418C5239)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Danny Kukawka <dkukawka@suse.de>
-Subject: rt2x00: fix led naming
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-Fixed led device naming for the rt2x00 driver. Due to the
-documentation of the led subsystem/class the naming should be
-"devicename:colour:function" while not applying sections
-should be left blank.
-    
-This should lead to e.g. "%s::radio" instead of "%s:radio".
+> On Tue, Jan 06, 2009 at 07:45:08AM +0200, Kalle Valo wrote:
+>
+>> I noticed that after 2.6.28 update localversion-wireless file is
+>> missing from wireless-testing and version doesn't contain -wl suffix
+>> anymore.
+>
+> Yes, sorry -- not sure what happened.  Anyway, it is there today.
 
-Signed-off-by: Danny Kukawka <dkukawka@suse.de>
---
- rt2x00leds.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Yes, it's working now:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
-index a0cd35b..c741d77 100644
---- a/drivers/net/wireless/rt2x00/rt2x00leds.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
-@@ -134,7 +134,7 @@ void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- 		 rt2x00dev->ops->name, wiphy_name(rt2x00dev->hw->wiphy));
- 
- 	if (rt2x00dev->led_radio.flags & LED_INITIALIZED) {
--		snprintf(name, sizeof(name), "%s:radio", dev_name);
-+		snprintf(name, sizeof(name), "%s::radio", dev_name);
- 
- 		retval = rt2x00leds_register_led(rt2x00dev,
- 						 &rt2x00dev->led_radio,
-@@ -144,7 +144,7 @@ void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	if (rt2x00dev->led_assoc.flags & LED_INITIALIZED) {
--		snprintf(name, sizeof(name), "%s:assoc", dev_name);
-+		snprintf(name, sizeof(name), "%s::assoc", dev_name);
- 
- 		retval = rt2x00leds_register_led(rt2x00dev,
- 						 &rt2x00dev->led_assoc,
-@@ -154,7 +154,7 @@ void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	if (rt2x00dev->led_qual.flags & LED_INITIALIZED) {
--		snprintf(name, sizeof(name), "%s:quality", dev_name);
-+		snprintf(name, sizeof(name), "%s::quality", dev_name);
- 
- 		retval = rt2x00leds_register_led(rt2x00dev,
- 						 &rt2x00dev->led_qual,
+Linux tikku 2.6.28-wl #111 SMP Wed Jan 7 11:07:11 EET 2009 i686 GNU/Linux
+
+Thanks for fixing it.
+
 -- 
-Danny Kukawka
-dkukawka@suse.de
-R&D Team Mobile Devices
-SUSE LINUX a Novell Business
-Maxfeldstr. 5, D-90409 Nuernberg, Germany
-SUSE LINUX Products GmbH, Nuernberg; GF: Markus Rex, HRB 16746 (AG Nuernberg)
+Kalle Valo
