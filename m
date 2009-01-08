@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:55041 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752897AbZAXOPR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 09:15:17 -0500
-Subject: [PATCH 7/7 v2] airo: remove useless #defines
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1232748914.447.2.camel@localhost.localdomain>
-References: <1232748914.447.2.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Sat, 24 Jan 2009 09:13:58 -0500
-Message-Id: <1232806438.2870.12.camel@localhost.localdomain> (sfid-20090124_151520_926526_7C0D08F0)
-Mime-Version: 1.0
+Received: from warsl404pip5.highway.telekom.at ([195.3.96.77]:27239 "EHLO
+	email.aon.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752358AbZAHO4t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 09:56:49 -0500
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: status of at76-usb driver
+Message-ID: <1231426604.4966142c2f17c@webmail.aon.at> (sfid-20090108_155653_760894_32D95E4D)
+Date: Thu, 08 Jan 2009 15:56:44 +0100 (CET)
+From: Claudio <der.claudio@aon.at>
+Cc: "\"John W. Linville\"" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Greg KH <gregkh@suse.de>
+References: <1230411118.4956956ecb911@webmail.aon.at>  <87fxk8o2g0.fsf@litku.valot.fi> <20090106201517.GD3544@tuxdriver.com> <da94abde0901062204r1041cdeawf0a0360cad88741d@mail.gmail.com>
+In-Reply-To: <da94abde0901062204r1041cdeawf0a0360cad88741d@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+Kalle Valo <kalle.valo@iki.fi> wrote:
+> On Tue, Jan 6, 2009 at 10:15 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> On Sun, Dec 28, 2008 at 03:26:55PM +0200, Kalle Valo wrote:
+>>
+>>> Also I\'m going to rename the mac80211 port to something else for just
+>>> to avoid the confusion with the original driver. Last thing I want to
+>>> see is having two in-tree drivers with identical names.
+>>
+>> OK, I still have patches to recreate the original port of at76_usb
+>> to mac80211 and another to keep-up with a later mac80211 API change
+>> on the at76 branch of wireless-testing.  I had intended to send them
+>> to Greg now that the mac80211 API change has made it upstream.
+>
+> I have to disagree here. It\'s better not to change at76_usb in staging
+> to avoid any breakage. Like I said, I will submit the mac80211 port
+> with a new name (most probably at76c50x-usb) as soon as I get it
+> stable enough. It\'s good idea to have a working driver in staging tree
+> until the mac80211 has been verified to be working.
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index c047580..acda458 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -1094,12 +1094,6 @@ typedef struct wep_key_t {
- 	u8	key[16];	/* 40-bit and 104-bit keys */
- } wep_key_t;
- 
--/* Backward compatibility */
--#ifndef IW_ENCODE_NOKEY
--#define IW_ENCODE_NOKEY         0x0800  /* Key is write only, so not present */
--#define IW_ENCODE_MODE  (IW_ENCODE_DISABLED | IW_ENCODE_RESTRICTED | IW_ENCODE_OPEN)
--#endif /* IW_ENCODE_NOKEY */
--
- /* List of Wireless Handlers (new API) */
- static const struct iw_handler_def	airo_handler_def;
- 
+I think so too.
 
+>> Since you mentioned a) that you are working on the port again and b)
+>> you are going to rename the driver for mac80211, should I just drop
+>> my at76 branch of wireless testing for good?
+>
+> Please do, because I will submit at7650x-usb patches from scratch. But
+> don\'t remove at76 branch from the legacy tree, it\'s useful for me:
+
+I am looking forward for testing your new mac80211 version. Please tell
+me where the development happens, so that I can contribute to it.
+
+Regarding Ubuntu: They are still shipping an ancient version (0.14beta1!).
+Sorry for considering blaming you for the problems. The current version
+of the staging-tree/directory(?) works well.
+
+Claudio
