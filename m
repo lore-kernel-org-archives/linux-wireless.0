@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from warsl404pip5.highway.telekom.at ([195.3.96.77]:27239 "EHLO
-	email.aon.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752358AbZAHO4t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 09:56:49 -0500
-To: Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: status of at76-usb driver
-Message-ID: <1231426604.4966142c2f17c@webmail.aon.at> (sfid-20090108_155653_760894_32D95E4D)
-Date: Thu, 08 Jan 2009 15:56:44 +0100 (CET)
-From: Claudio <der.claudio@aon.at>
-Cc: "\"John W. Linville\"" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Greg KH <gregkh@suse.de>
-References: <1230411118.4956956ecb911@webmail.aon.at>  <87fxk8o2g0.fsf@litku.valot.fi> <20090106201517.GD3544@tuxdriver.com> <da94abde0901062204r1041cdeawf0a0360cad88741d@mail.gmail.com>
-In-Reply-To: <da94abde0901062204r1041cdeawf0a0360cad88741d@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga02.intel.com ([134.134.136.20]:4925 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756569AbZAHSSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 13:18:24 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 05/11] iwl3945: remove double defined 3945 tfd structures
+Date: Thu,  8 Jan 2009 10:19:56 -0800
+Message-Id: <1231438802-10991-6-git-send-email-reinette.chatre@intel.com> (sfid-20090108_191840_222699_17104757)
+In-Reply-To: <1231438802-10991-5-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1231438802-10991-1-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-2-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-3-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-4-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kalle.valo@iki.fi> wrote:
-> On Tue, Jan 6, 2009 at 10:15 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
->> On Sun, Dec 28, 2008 at 03:26:55PM +0200, Kalle Valo wrote:
->>
->>> Also I\'m going to rename the mac80211 port to something else for just
->>> to avoid the confusion with the original driver. Last thing I want to
->>> see is having two in-tree drivers with identical names.
->>
->> OK, I still have patches to recreate the original port of at76_usb
->> to mac80211 and another to keep-up with a later mac80211 API change
->> on the at76 branch of wireless-testing.  I had intended to send them
->> to Greg now that the mac80211 API change has made it upstream.
->
-> I have to disagree here. It\'s better not to change at76_usb in staging
-> to avoid any breakage. Like I said, I will submit the mac80211 port
-> with a new name (most probably at76c50x-usb) as soon as I get it
-> stable enough. It\'s good idea to have a working driver in staging tree
-> until the mac80211 has been verified to be working.
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-I think so too.
+This patch removes doubly defined struct iwl3945_tfd_frame_data
+and struct iwl3945_tfd_frame.
 
->> Since you mentioned a) that you are working on the port again and b)
->> you are going to rename the driver for mac80211, should I just drop
->> my at76 branch of wireless testing for good?
->
-> Please do, because I will submit at7650x-usb patches from scratch. But
-> don\'t remove at76 branch from the legacy tree, it\'s useful for me:
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fh.h |   12 ------------
+ 1 files changed, 0 insertions(+), 12 deletions(-)
 
-I am looking forward for testing your new mac80211 version. Please tell
-me where the development happens, so that I can contribute to it.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index 313b03b..a72aa1b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -478,18 +478,6 @@ struct iwl_tfd {
+ 	__le32 __pad;
+ } __attribute__ ((packed));
+ 
+-struct iwl3945_tfd_frame_data {
+-	__le32 addr;
+-	__le32 len;
+-} __attribute__ ((packed));
+-
+-struct iwl3945_tfd_frame {
+-	__le32 control_flags;
+-	struct iwl3945_tfd_frame_data pa[4];
+-	u8 reserved[28];
+-} __attribute__ ((packed));
+-
+-
+ /* Keep Warm Size */
+ #define IWL_KW_SIZE 0x1000	/* 4k */
+ 
+-- 
+1.5.4.3
 
-Regarding Ubuntu: They are still shipping an ancient version (0.14beta1!).
-Sorry for considering blaming you for the problems. The current version
-of the staging-tree/directory(?) works well.
-
-Claudio
