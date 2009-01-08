@@ -1,152 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:55940 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753699AbZAPUi4 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:51812 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752528AbZAHMpJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 15:38:56 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-Date: Fri, 16 Jan 2009 21:38:51 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Artur Skawina <art.08.09@gmail.com>,
+	Thu, 8 Jan 2009 07:45:09 -0500
+Date: Thu, 8 Jan 2009 14:44:58 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Ahmad Ali Tabassam <ahmadthe8@yahoo.com>
+Cc: johannes@sipsolutions.net, hostap@lists.shmoo.com,
 	linux-wireless@vger.kernel.org
-References: <494698AF.4020204@gmail.com> <496FFC9F.1000907@lwfinger.net> <1232097187.3854.9.camel@johannes>
-In-Reply-To: <1232097187.3854.9.camel@johannes>
+Subject: Re: [patch] vif_conf.patch failed to patch git wireless-testing
+	(07-01-2009)
+Message-ID: <20090108124458.GA21552@jm.kir.nu> (sfid-20090108_134515_859979_6FCF21DE)
+References: <20090107112346.369581673@atheros.com> <20090107112707.370907962@atheros.com> <1231330118.3545.28.camel@johannes> <20090107122427.GA20019@jm.kir.nu> <1231332428.3545.33.camel@johannes> <20090107140956.GA22424@jm.kir.nu> <226823.3656.qm@web57008.mail.re3.yahoo.com>
 MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_bBPcJLrwXn7AG/L"
-Message-Id: <200901162138.51855.chunkeey@web.de> (sfid-20090116_213901_663983_4C209DBC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <226823.3656.qm@web57008.mail.re3.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_bBPcJLrwXn7AG/L
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Wed, Jan 07, 2009 at 07:21:51AM -0800, Ahmad Ali Tabassam wrote:
 
-On Friday 16 January 2009 10:13:07 Johannes Berg wrote:
-> On Thu, 2009-01-15 at 21:18 -0600, Larry Finger wrote:
-> 
-> > >>   Object 0xddec18d0:  >69< 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ikkkkkkkkkkkkkkk
-> 
-> > I too have seen real single bit changes - in my case 6b went to 6a,
-> > and my memory is fine. I wouldn't necessarily blame your hardware.
-> 
-> 6b to 6a is often the result of a refcounting bug that happens to unref
-> a value _after_ it has been freed. But that doesn't explain 6b to 69,
-> unless you happen to have _two_ refcounting bugs. Not that I necessarily
-> think that memory is bad
-Well, this idiotic debug patch (kref-kernel-debug-patch) could shed some light into
-the problem who's using a freed skb. 
-(and please, I _know_ there is already a better solution for this refcount-thing... but where?)
+> I want to enable userspace mlme for my client for wpa_supplicant 0.6.7 with client MLME. . But the http://w1.fi/wireless-testing/vif_conf.patch failed to be applied.  I have the latest wireless-testing git tree (07-01-09). The error is given below............any idea. does there any new pathch?
 
-Of course, there's some sample code to test it... see refcount-test-module.c
+I updated the patches at http://w1.fi/wireless-testing/ now and the
+version there seemed to work in my tests. However, you will now also
+need to patch wpa_supplicant with the nl80211.h (see patch below) in
+order to get the needed nl80211 command for enabling userspace MLME.
 
-BTW, & 0xfffffff0) == 0x6b6b6b60); can detect even more...
 
-Regards,
-	Chr
-
---Boundary-00=_bBPcJLrwXn7AG/L
-Content-Type: text/x-patch;
-  charset="iso-8859-15";
-  name="kref-kernel-debug.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="kref-kernel-debug.patch"
-
-diff --git a/lib/kref.c b/lib/kref.c
-index 9ecd6e8..e143fd8 100644
---- a/lib/kref.c
-+++ b/lib/kref.c
-@@ -64,6 +64,8 @@ int kref_put(struct kref *kref, void (*release)(struct kref *kref))
- 	WARN_ON(release == NULL);
- 	WARN_ON(release == (void (*)(struct kref *))kfree);
+diff --git a/src/common/nl80211_copy.h b/src/common/nl80211_copy.h
+index ee742bc..47f9531 100644
+--- a/src/common/nl80211_copy.h
++++ b/src/common/nl80211_copy.h
+@@ -133,6 +133,9 @@
+  * @NL80211_CMD_SET_MESH_PARAMS: Set mesh networking properties for the
+  *      interface identified by %NL80211_ATTR_IFINDEX
+  *
++ * @NL80211_CMD_SET_VIF: Set virtual interface attributes for vif identified by
++ *	%NL80211_ATTR_IFINDEX.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -178,6 +181,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_GET_MESH_PARAMS,
+ 	NL80211_CMD_SET_MESH_PARAMS,
  
-+	WARN_ON((atomic_read(&kref->refcount) & 0xffffffff) == 0x6b6b6b6b);
++	NL80211_CMD_SET_VIF,
 +
- 	if (atomic_dec_and_test(&kref->refcount)) {
- 		release(kref);
- 		return 1;
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -190,6 +195,7 @@ enum nl80211_commands {
+  * here
+  */
+ #define NL80211_CMD_SET_BSS NL80211_CMD_SET_BSS
++#define NL80211_CMD_SET_VIF NL80211_CMD_SET_VIF
+ 
+ /**
+  * enum nl80211_attrs - nl80211 netlink attributes
+@@ -284,6 +290,11 @@ enum nl80211_commands {
+  *	supported interface types, each a flag attribute with the number
+  *	of the interface mode.
+  *
++ * @NL80211_ATTR_VIF_DROP_UNENCRYPTED: whether unencrypted frames will be
++ *	dropped (u8, 0 or 1)
++ * @NL80211_ATTR_VIF_USERSPACE_MLME: whether userspace MLME is used
++ *	(u8, 0 or 1)
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -348,6 +359,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_KEY_DEFAULT_MGMT,
+ 
++	NL80211_ATTR_VIF_DROP_UNENCRYPTED,
++	NL80211_ATTR_VIF_USERSPACE_MLME,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
 
---Boundary-00=_bBPcJLrwXn7AG/L
-Content-Type: text/x-csrc;
-  charset="iso-8859-15";
-  name="refcount-test-module.c"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="refcount-test-module.c"
-
-#include <linux/init.h>
-#include <linux/kernel.h>
-#include <linux/module.h>
-#include <linux/kref.h>
-
-static void reftst_release(struct kref *ref)
-{
-	printk(KERN_INFO "released %p\n", ref);
-}
-
-static void reftst_static_simple_test(void)
-{
-	struct kref test;
-	printk(KERN_INFO "RefTest - Static\n");
-	kref_init(&test);
-	kref_get(&test);
-	kref_put(&test, reftst_release);
-	kref_put(&test, reftst_release);
-}
-
-static void reftst_static_watermark_test(void)
-{
-	struct kref test;
-	printk(KERN_INFO "RefTest - Watermark test\n");
-	kref_init(&test);
-	kref_set(&test, 0x6b6b6b6b);
-	kref_put(&test, reftst_release);
-}
-
-struct reftst_struct {
-	u8 redzone[32];	/* or just 8 */
-	struct kref ref;
-	u8 redzone2[32];
-};
-
-static void reftst_static_poison_test(void)
-{
-	struct reftst_struct *test = kzalloc(sizeof(*test), GFP_KERNEL);
-
-	if (!test)
-		return;
-
-	printk(KERN_INFO "RefTest - slXb poison test\n");
-	kref_init(&test->ref);
-	
-	kfree(test);
-
-	/* this is illegal, "test" is already freed... so it could oops here */
-	kref_put(&test->ref, reftst_release);
-}
-
-static int __init reftst_init(void)
-{
-	printk(KERN_INFO "RefTest\n");
-	reftst_static_simple_test();
-	reftst_static_watermark_test();
-	reftst_static_poison_test();
-	
-	return 0;
-}
-
-static void __exit reftst_exit(void)
-{
-	
-}
-
-module_init(reftst_init);
-module_exit(reftst_exit);
-MODULE_LICENSE("GPL");
-
---Boundary-00=_bBPcJLrwXn7AG/L--
+-- 
+Jouni Malinen                                            PGP id EFC895FA
