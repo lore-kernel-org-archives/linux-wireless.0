@@ -1,34 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:44465 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752992AbZAEWPM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48222 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068AbZAHUTs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 17:15:12 -0500
-Message-ID: <4962866A.7040108@lwfinger.net> (sfid-20090105_231517_198619_55D6DD76)
-Date: Mon, 05 Jan 2009 16:15:06 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problem with rtl8187
-References: <496273D4.6020600@lwfinger.net>	 <1231189302.3697.25.camel@johannes>  <4962775B.2040205@lwfinger.net>	 <1231190634.3697.32.camel@johannes>  <496283F7.7010902@lwfinger.net> <1231193376.3697.44.camel@johannes>
-In-Reply-To: <1231193376.3697.44.camel@johannes>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Jan 2009 15:19:48 -0500
+Subject: Re: James sent you a Greeting!
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910901081215l43dec6d3i1323423e5a19bcca@mail.gmail.com> (sfid-20090108_211552_577102_6D43C324)
+References: <20090108105933.7070001@Binary>
+	 <69e28c910901081215l43dec6d3i1323423e5a19bcca@mail.gmail.com>
+	 (sfid-20090108_211552_577102_6D43C324)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-w5uRXBswSueVbhc2gstK"
+Date: Thu, 08 Jan 2009 21:20:18 +0100
+Message-Id: <1231446018.8398.20.camel@johannes> (sfid-20090108_211952_772530_AD3BA01C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2009-01-05 at 16:04 -0600, Larry Finger wrote:
-> 
->> Thanks. That took care of the WARN_ON message and the SLUB debug messages;
-> 
-> Ok, good. Want to adopt that patch and formally submit it, or want me
-> to?
 
-I'll keep looking for the final bit, but I'll formalize the patch when I find
-the other problem, or give up.
+--=-w5uRXBswSueVbhc2gstK
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the help. I'll never tell how much time I spent looking for that problem.
+On Thu, 2009-01-08 at 21:15 +0100, Stefanik G=C3=A1bor wrote:
+> \   / | | > |  |  < |
+>  \ /  | | \  \_/  > !
+> <jokemode>
+> Uncensor the link to check your virus scanner.
+> Disclaimer: use at your own risk! :-)
+> </jokemode>
 
-Larry
+Can you please not reply to spam that my spam filter happily removes
+from my view? thanks :)
+
+johannes
+
+--=-w5uRXBswSueVbhc2gstK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJZl/4AAoJEKVg1VMiehFYvKEP/3R/DR8uGpMqP4mNskKPSGYp
+ztkMQqG4U3UztoCxWWP6HZMheiI+fvL4Xcr9N+UkNH3lsD4AqNUjBec9Z9oKkY6N
+UY3yWkWBjzCz2ph/HUeG7H4TbHlUJ4MQPmI8z0/xYe7Rl3XPcyUaRwsg3zn3ADcR
+9/0MraHX3qJrSVQPOhh0n0t3QfSej0hhqPpzil7phY6feQg843gz6dQ+Yo6WUw37
+l7OoRPYu3OLkukz6UV48JvK5UhIfI9m3uylmu/aUcvZDe7SaDNDCL0qcLiE2uPA6
+fDaPOuITCwHYlxLXlkKjg+Z/tmRIh8kpk8QxvX/+xzTlTjrT9uc6HY3yoe6wrTqp
+c2Kly8jBxNb86cLNoVWuCoGFeysY6oWj5twpI7Clgjv8OpcDAZQ3B1Rx21WHuJEc
+ysfdjbuzoClwUaCcZq7l35EjShx/u0a2vCZOzTwgkKMM8B/tIJgo2wHp3NSMPzH6
+UuEGjHOZgruj7jln6PEDf0KQHOuj+27BsPIsD0gWNmXGBHbgyfnkKKsw++n78gJe
+tBlUCb+GtB/xJbppTVUtxSYmzaIm4QnfMW2I+9j6vYj8L/YsZy0Y4hkUEfMh9hjx
+/xD+PWYYRtwL46wqzZzldOrePL97CDg8jU3Uzby+cNabu585QkCSFhqy1ZH4+kax
+D4xUXJPs8Y9dUrMJH+uG
+=agT1
+-----END PGP SIGNATURE-----
+
+--=-w5uRXBswSueVbhc2gstK--
 
