@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:43979 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649AbZAGKLF (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48884 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753047AbZAHMTH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 05:11:05 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH 10/11] ath9k: fix ar5416Addac_9100 values
-Date: Wed,  7 Jan 2009 11:09:31 +0100
-Message-Id: <1231322972-24094-11-git-send-email-juhosg@openwrt.org> (sfid-20090107_111130_501274_43922495)
-In-Reply-To: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
-References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+	Thu, 8 Jan 2009 07:19:07 -0500
+Date: Thu, 8 Jan 2009 14:18:39 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH 12/14] mac80211: 802.11w - Optional software CCMP for
+	management frames
+Message-ID: <20090108121839.GA20687@jm.kir.nu> (sfid-20090108_131918_806704_C6EF3EE9)
+References: <20090107112346.369581673@atheros.com> <200901081057.46495.helmut.schaa@gmail.com> <20090108104822.GA12480@jm.kir.nu> <200901081308.23046.helmut.schaa@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200901081308.23046.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Writing the register at offset 0x98c4 causes a deadlock on the AR913x
-SoCs. Although i don't have detailed knowledge about these registers,
-but if i change the register offset according to the 'ar5416Addac' table,
-it works. Additionally there is no reference to the 0x98c4 elsewhere.
+On Thu, Jan 08, 2009 at 01:08:21PM +0100, Helmut Schaa wrote:
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/initvals.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> True. However, other consumers of wpa_supplicant (e.g. Yast in SUSE) could
+> also benefit from this feature if implemented inside the supplicant. But as
+> I wrote, this was just a quick thought on how to make the transition from
+> wext to nl80211 smoother.
 
-diff --git a/drivers/net/wireless/ath9k/initvals.h b/drivers/net/wireless/ath9k/initvals.h
-index a1bc631..d492363 100644
---- a/drivers/net/wireless/ath9k/initvals.h
-+++ b/drivers/net/wireless/ath9k/initvals.h
-@@ -658,7 +658,7 @@ static const u32 ar5416Addac_9100[][2] = {
-     {0x0000989c,  0x00000000 },
-     {0x0000989c,  0x00000000 },
-     {0x0000989c,  0x00000000 },
--    {0x000098c4,  0x00000000 },
-+    {0x000098cc,  0x00000000 },
- };
- 
- static const u32 ar5416Modes[][6] = {
+Agreed and it should be relatively small change in wpa_supplicant, so
+I'm not against doing this. However, at this point I would not yet
+recommend trying to use driver_nl80211 as the first option. Once we get
+nl80211 bit more complete and at least make sure it does not break
+something, adding the automatic driver selection would sound more
+reasonable. Though, this would also mean that we depend on drivers never
+implementing partial nl80211 support that could trigger wpa_supplicant
+into believing that they support nl80211 when they would actually work
+much better with wext.
+
 -- 
-1.5.3.2
-
+Jouni Malinen                                            PGP id EFC895FA
