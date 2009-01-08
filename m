@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2805 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751569AbZAFSDI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60624 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760179AbZAHM5U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 13:03:08 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-Date: Tue, 6 Jan 2009 13:01:00 -0500
-Message-Id: <20090106174830.M95524@bobcopeland.com> (sfid-20090106_190313_967720_5D5E0C7C)
-In-Reply-To: <1231263802.3654.8.camel@johannes>
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com> <1229336057.4471.9.camel@johannes.berg> <1229354532.12163.24.camel@localhost.localdomain> <20081217174244.M36761@bobcopeland.com> <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet> <1230102989.16960.14.camel@californication> <1231260306.14565.21.camel@localhost.localdomain> <20090106165434.M2397@bobcopeland.com> <1231262082.3654.5.camel@johannes> <20090106172758.M47578@bobcopeland.com> <1231263802.3654.8.camel@johannes>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+	Thu, 8 Jan 2009 07:57:20 -0500
+Subject: Re: [PATCH 1/6] cfg80211: call reg_notifier() once
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1231379017-28363-2-git-send-email-lrodriguez@atheros.com>
+References: <1231379017-28363-1-git-send-email-lrodriguez@atheros.com>
+	 <1231379017-28363-2-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZGNgQrwsfd4k7/KzLRVr"
+Date: Thu, 08 Jan 2009 13:58:12 +0100
+Message-Id: <1231419492.3685.0.camel@johannes> (sfid-20090108_135742_226075_276830E3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 06 Jan 2009 18:43:22 +0100, Johannes Berg wrote
-> We should probably take the rtnl anyway though to be prepared for when
-> userspace is not suspended.. Need to think about that more though, and
-> possibly add a new "suspended" flag that makes it block all
-> configuration attempts.
 
-Well, luckily we do take the rtnl already, wiphy_suspend() and _resume()
-do that around the cfg ops.
+--=-ZGNgQrwsfd4k7/KzLRVr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-IMHO a suspended flag would be extra complexity that we should just
-hold off on until the freezer really is getting removed.
+On Wed, 2009-01-07 at 17:43 -0800, Luis R. Rodriguez wrote:
+> We are calling the reg_notifier() callback per band, this is
+> not necessary, just call it once.
+>=20
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-For now is there anything besides driver support we need to do for this
-patchset?  I guess that the drivers will actually be OK as-is too unless
-there are any that do release_firmware in ->stop(), but it will be nice
-to clean them up.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> ---
+>  net/wireless/reg.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 4f87753..2f2ba92 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -841,9 +841,9 @@ void wiphy_update_regulatory(struct wiphy *wiphy, enu=
+m reg_set_by setby)
+>  	for (band =3D 0; band < IEEE80211_NUM_BANDS; band++) {
+>  		if (wiphy->bands[band])
+>  			handle_band(wiphy->bands[band]);
+> -		if (wiphy->reg_notifier)
+> -			wiphy->reg_notifier(wiphy, setby);
+>  	}
+> +	if (wiphy->reg_notifier)
+> +		wiphy->reg_notifier(wiphy, setby);
+>  }
+> =20
+>  /* Return value which can be used by ignore_request() to indicate
 
+--=-ZGNgQrwsfd4k7/KzLRVr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJZfhhAAoJEKVg1VMiehFYMbsP/3Pf69LQPQKM5YvoF29GUdEz
+ib0SqewtiuAZalKNAwS9RCMMP79bYhu8wELu1YCDNHi8EOM1UnnKsuUeJowL8g8o
+2EQzvY7C/qR2mQPbfns3v7V5HWQsFqkeVBI3ksgAs97RXVSApVfmWtN/QzA8E84B
+pHEFmfuihJra76IZMaMnmeDaqO8vVJ/PZBPr/G0XTgHAlKtQiNQPY9A4rEJgWbFs
+WXEA3KGBB/6qTgkRRP9wU/9gCiFHQJskqHw3CQmni2oc5fIIAiUKoBp9gijKFWOI
+by5kYhIciqL79NTjQhra8gKf1v1hVX374eTbY/1YflZRRnE8uSaAiWM0ByQG/AaT
+SfHu9MK4Fsvp2LRvr1Dk/mGSq9WOcvMJ4KeBP6lo8rcHe4TwVZY0/QQ8029t1HpL
+8Sf3YzSfmqAVh356CLwa8Uroh55cemene7EA+C1hCG9Pu9ySr/2Lp7jMiERA4ET4
+36SViI/PKZPzz3gguVWZ19XOjNILfN6CYNhYzB7eaTKXvODBgMCO5hHU7PNmXRlf
+UVDtkZ5u3UQlV05opOohS3HbmsuTwBiGya8rwzFsIdAzB6MCyytwd02Xjf7PN1Kk
+Aqz3YgM2Qph1yN/kq+cEBVZx9XJqkkq7OaoeKdd49kqs5P0ngBTt57FPmb9vu6NT
+XEm4tUrjkfbAdxTURAP9
+=/Dvr
+-----END PGP SIGNATURE-----
+
+--=-ZGNgQrwsfd4k7/KzLRVr--
 
