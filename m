@@ -1,54 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:10880 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754184AbZAVEc5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 23:32:57 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so1866707ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 20:32:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com>
-References: <200901140003.31693.gbburkhardt@verizon.net>
-	 <200901151734.46144.gbburkhardt@verizon.net>
-	 <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com>
-	 <200901202238.08756.gbburkhardt@verizon.net>
-	 <20090121151435.GB3643@tuxdriver.com>
-	 <69e28c910901211022j7f9c67dfv6392ce043dcff522@mail.gmail.com>
-	 <20090121191141.GA14710@tuxdriver.com>
-	 <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com>
-Date: Thu, 22 Jan 2009 06:32:55 +0200
-Message-ID: <40f31dec0901212032j65371fc6j5fcc1952f841d2ef@mail.gmail.com> (sfid-20090122_053650_200994_AAE815C2)
-Subject: Re: poor performance with ath5k; reverting to ath_pci
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: =?UTF-8?Q?Stefanik_G=C3=A1bor?= <netrolller.3d@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Glenn Burkhardt <gbburkhardt@verizon.net>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx2.redhat.com ([66.187.237.31]:36596 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750845AbZAHQlX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 11:41:23 -0500
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+From: Dan Williams <dcbw@redhat.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+In-Reply-To: <1231270575.14901.6.camel@californication>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <1229336057.4471.9.camel@johannes.berg>
+	 <1229354532.12163.24.camel@localhost.localdomain>
+	 <20081217174244.M36761@bobcopeland.com>
+	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
+	 <1230102989.16960.14.camel@californication>
+	 <1231260306.14565.21.camel@localhost.localdomain>
+	 <1231261937.5246.16.camel@californication>
+	 <1231267979.14565.34.camel@localhost.localdomain>
+	 <1231270575.14901.6.camel@californication>
+Content-Type: text/plain
+Date: Thu, 08 Jan 2009 11:39:38 -0500
+Message-Id: <1231432778.21643.40.camel@localhost.localdomain> (sfid-20090108_174127_347191_D6B30F0E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/1/21 Stefanik G=C3=A1bor <netrolller.3d@gmail.com>:
->
-> I think EMBEDDED is for options that replace full-featured Linux
-> components with dumbed-down, "low-profile" equivalents (like SLOB) -
-> PID vs. minstrel is more like SLAB vs. SLUB.
->
-> G=C3=A1bor
->
+On Tue, 2009-01-06 at 20:36 +0100, Marcel Holtmann wrote:
+> Hi Dan,
+> 
+> > > > > > > > Running pm-suspend from pm-utils directly also triggers the problem, 
+> > > > > > > > so that would seem to excuse gnome-power-manager at least.
+> > > > > > > 
+> > > > > > > What's the status of this? Should I look into things a bit?
+> > > > > > 
+> > > > > > Well, I guess I should have noticed this a lot earlier, but anyway the 
+> > > > > > problem was pm-utils on Fedora 10:
+> > > > > > 
+> > > > > > /usr/lib/pm-utils/sleep.d/55NetworkManager:
+> > > > > > 
+> > > > > >     suspend_nm()
+> > > > > >     {
+> > > > > >         # Tell NetworkManager to shut down networking
+> > > > > >         dbus-send --system                         \
+> > > > > >             --dest=org.freedesktop.NetworkManager  \
+> > > > > >             /org/freedesktop/NetworkManager        \
+> > > > > >             org.freedesktop.NetworkManager.sleep
+> > > > > >     }
+> > > > > > 
+> > > > > > I really don't think this is necessary (g-p-m will also do it if you 
+> > > > > > set the proper gconf setting.)
+> > > > > 
+> > > > > this should not be needed at all. I have systems running wpa_supplicant
+> > > > > and not any of the pm-utils scripts messing with it. During suspend and
+> > > > > later resume it indicates normally just only a new handshake with the AP
+> > > > > or a disconnect if the AP got out of range.
+> > > > > 
+> > > > > I think Network Manager is perfectly capable of handling state changes
+> > > > > from wpa_supplicant. I really do think that this hack only exists of
+> > > > > some broken drivers from really old kernels or for the 0.6 version of
+> > > > > Network Manager. Remember that Ubuntu's suspend/resume solution used to
+> > > > > be to unload all networking drivers on suspend.
+> > > > 
+> > > > You still want to tell NM to go to sleep so it doesn't see the
+> > > > disconnection from the supplicant (triggered by the driver because it
+> > > > was going to sleep), and thus try to reconnect, or try a different AP.
+> > > > Ideally NM would simply listen for signals from some power service such
+> > > > that we wouldn't have to have this hack, but there isn't a global power
+> > > > service yet on the system bus.
+> > > > 
+> > > > Furthermore, it's nice to know if we've gone to sleep or not so that we
+> > > > can do some optimizations on wakeup to find APs and reconnect faster.
+> > > 
+> > > actually the fastest way to re-connect is to just let wpa_supplicant do
+> > > it and then you don't even have to go through DHCP again if the lease
+> > > time is still valid. This works great if the AP is still in range.
+> > > 
+> > > What is your downside with the letting wpa_supplicant send you a
+> > > disconnect when the AP is out of range after resume?
+> > 
+> > Depends on the driver what the resume behavior is with the supplicant.
+> > But you want to alert *something* that the system is now going to sleep,
+> > so that it can clean up state before doing so.
+> > 
+> > The problem is that you have absolutely no idea how long the sleep will
+> > be.  It's at least 2 minutes with S2D, because that's how long it takes
+> > to write your state out to disk.  It's less with S2R obviously, but when
+> > you resume, there's no guarantee that you'll be in the same place.  You
+> > cannot assume that you will be.
+> > 
+> > If you keep trying to reconnect to the same AP, many times you simply
+> > won't be there and you'll spend the 10 or 20 seconds reconnecting to an
+> > AP miles away, time that could have been spent scanning for the AP
+> > that's *really* where you are.  Many people I know don't often suspend
+> > at the same location they resume, thus trying to reconnect hurts
+> > reconnection latency.
+> > 
+> > The ideal way to handle all this is to be *aware* of suspend/resume in
+> > the supplicant (or NM), and on resume, do a quick probe-scan or two to
+> > find out if the old AP is still around.  If it's not, do a full scan to
+> > find all APs, and then pick the best one, which is probably not the one
+> > you were associated with before.  Then you actually start the auth/assoc
+> > process with an AP you know exists.
+> > 
+> > So my point is that *something* needs to be aware of the suspend/resume
+> > at a userlevel, whether it's NM or the supplicant doesn't really matter
+> > as long as you can do what I describe above on resume.
+> 
+> since mac80211 gets suspend/resume support, I think it is the best that
+> we signal this to wpa_supplicant. In that case it can do the hard work
+> here. Either it re-connects to the last AP or signals a disconnected
+> state or trigger scanning.
+> 
+> Having the suspend scripts to tell NM to disconnect is just not a good
+> solution and especially in the embedded world this is a broken design
+> concept.
 
-Minstrell performs very well even on embedded devices, i don't think
-it's that heavy compared to pid.
+Right; the missing piece is pushing the necessary roaming support down
+to the supplicant and letting it make the decisions about what to
+connect to.  There's a few things that I need from the supplicant before
+I can simply push the entire config set down from NM and let it go wild:
 
+1) A 'frequency' config item that works in infrastructure mode too,
+ignoring any AP not matching that frequency
 
+2) Implementing the resume behavior that I mentioned above, with
+immediate directed scans for the last-connected AP, followed up by the
+normal non-directed scan + ap selection process that already happens.
 
---=20
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+3) Some method of getting suspend/resume notifications to the supplicant
+
+4) Ensure that the D-Bus interface has the right signals emitted to
+notify clients of what network block & exact AP it's connecting to when
+it starts to connect.
+
+I agree, the closer to the hardware this stuff happens, the better for
+reconnection latency.  I don't object to pushing roaming responsibility
+into the supplicant from NM, but more work needs to be done (probably by
+me) to support that and preserve the current level of functionality that
+NM has.
+
+Dan
+
