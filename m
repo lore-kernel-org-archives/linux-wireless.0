@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:40209 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751746AbZAHRYh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 12:24:37 -0500
-Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
-From: Dan Williams <dcbw@redhat.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20081216025542.GO18056@xi.wantstofly.org>
-References: <20081216025542.GO18056@xi.wantstofly.org>
-Content-Type: text/plain
-Date: Thu, 08 Jan 2009 12:23:30 -0500
-Message-Id: <1231435410.21643.59.camel@localhost.localdomain> (sfid-20090108_182444_977555_3C79BAF0)
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43594 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755277AbZAHLeG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 06:34:06 -0500
+Message-Id: <20090108113357.335514919@atheros.com> (sfid-20090108_123410_463753_EC16DE00)
+References: <20090108113158.681894124@atheros.com>
+Date: Thu, 08 Jan 2009 13:32:08 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCHv2 10/16] mac80211: 802.11w - Drop unprotected robust management frames if MFP is used
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2008-12-16 at 03:55 +0100, Lennert Buytenhek wrote:
-> Hi all,
-> 
-> Attached is an initial version of the mwl8k driver for Marvell 88w8xxx
-> PCI/PCIe wireless parts (against 2.6.27.1).  This version was written
-> and tested against the 88w8687 (802.11b/g), but it shouldn't be hard to
-> extend the support to other parts in the 8xxx series, since the firmware
-> interface is very similar between parts.
-> 
-> There's an occasional timeout warning with mwl8k_stop(), and hardware
-> crypto is still a work-in-progress, but other than that it looks pretty
-> stable.
-> 
-> Feedback appreciated!
+Use ieee80211_drop_unencrypted() to decide whether a received frame
+should be dropped with management frames, too. If MFP is negotiated,
+unprotected robust management frames will be dropped.
 
-Would you guys mind if we split this up into an mwl8k core, and separate
-mwl8335 and mwl8687 modules?  In starting to add at least firmware
-upload for the 8335 last night, I realized that  most of the 8687
-hardware access code won't work, because it's using DMA for passing the
-firmware image to the card, while the 8335 uses many small writes to the
-registers.  So I'd like to refactor the driver into those 3 distinct
-modules instead.  Eventually there will probably be 8361 and 8362
-modules as well once the TopDog N parts get added.
-
-Sound OK?  I'm working locally with git, but if I go too far it'll be a
-ton of work to merge any changes you have.  Can we put this in a git
-tree somewhere and all work from that while we wait for a merge?
-
-Dan
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
 
+---
+ net/mac80211/rx.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
+--- wireless-testing.orig/net/mac80211/rx.c	2009-01-08 13:06:38.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2009-01-08 13:06:43.000000000 +0200
+@@ -1705,6 +1705,9 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 		return RX_DROP_MONITOR;
+ 
++	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
++		return RX_DROP_MONITOR;
++
+ 	/* all categories we currently handle have action_code */
+ 	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
+ 		return RX_DROP_MONITOR;
+@@ -1790,10 +1793,14 @@ static ieee80211_rx_result debug_noinlin
+ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
++	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
+ 
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 		return RX_DROP_MONITOR;
+ 
++	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
++		return RX_DROP_MONITOR;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif))
+ 		return ieee80211_mesh_rx_mgmt(sdata, rx->skb, rx->status);
+ 
+
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
