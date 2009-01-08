@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50670
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751977AbZASFnd (ORCPT
+Received: from extu-mxob-2.symantec.com ([216.10.194.135]:50528 "EHLO
+	extu-mxob-2.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756288AbZAHNtu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 00:43:33 -0500
-Date: Sun, 18 Jan 2009 21:43:35 -0800 (PST)
-Message-Id: <20090118.214335.142183946.davem@davemloft.net> (sfid-20090119_064339_329099_644DB95E)
-To: yjwei@cn.fujitsu.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH] mac80211: cleanup kmalloc/memset -> kcalloc
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <496F04BC.3030703@cn.fujitsu.com>
-References: <496F04BC.3030703@cn.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 8 Jan 2009 08:49:50 -0500
+Received: from [172.20.18.193]([172.20.18.193]) (1847 bytes) by megami.veritas.com
+	via sendmail with P:esmtp/R:smart_host/T:smtp
+	(sender: <hugh@veritas.com>)
+	id <m1LKvGQ-0002SXC@megami.veritas.com>
+	for <linux-wireless@vger.kernel.org>; Thu, 8 Jan 2009 05:49:34 -0800 (PST)
+	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
+Date: Thu, 8 Jan 2009 13:49:44 +0000 (GMT)
+From: Hugh Dickins <hugh@veritas.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+Subject: ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
+Message-ID: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils> (sfid-20090108_144956_159448_46161596)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yjwei@cn.fujitsu.com>
-Date: Thu, 15 Jan 2009 17:41:16 +0800
+Thank you for the ath5k wireless driver,
+which I've just started using on an Aspire One.
 
-> Transform calls kmalloc/memset to a single kcalloc.
-> 
-> Signed-off-by: Wei Yongjun <yjwei@cn.fujitsu.com>
+When running swapping load tests, wireless alive but not in active use,
+I've now twice hit the BUG_ON(bf->skb == NULL) in ath5k_tasklet_rx().
 
-Wireless, thus this goes to linux-wireless and John
-Linville, CC:'d
+First time was with 2.6.28 plus kdb patch,
+kernel BUG at drivers/net/wireless/ath5k/base.c:1675!
+and poking around the messages I could see before that an
+ath5k phy0: can't alloc skbuff of size 2673, after a
+swapper: page allocation failure, order:0 mode:0x4020
+on a call from dev_alloc_skb(), with memory summary.
 
-> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-> index 5f510a1..743d530 100644
-> --- a/net/mac80211/ht.c
-> +++ b/net/mac80211/ht.c
-> @@ -949,7 +949,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
->  
->  	/* prepare reordering buffer */
->  	tid_agg_rx->reorder_buf =
-> -		kmalloc(buf_size * sizeof(struct sk_buff *), GFP_ATOMIC);
-> +		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_ATOMIC);
->  	if (!tid_agg_rx->reorder_buf) {
->  #ifdef CONFIG_MAC80211_HT_DEBUG
->  		if (net_ratelimit())
-> @@ -959,8 +959,6 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
->  		kfree(sta->ampdu_mlme.tid_rx[tid]);
->  		goto end;
->  	}
-> -	memset(tid_agg_rx->reorder_buf, 0,
-> -		buf_size * sizeof(struct sk_buff *));
->  
->  	if (local->ops->ampdu_action)
->  		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_START,
-> -- 
-> 1.6.0.3
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Second time was with yesterday's 2.6.28-git, no kdb,
+kernel BUG at drivers/net/wireless/ath5k/base.c:1683!
+running ath5k_tasklet_rx() from under do_softirq(),
+Kernel panic - not syncing: Fatal exception in interrupt
+so I couldn't see more; but at the top of the screen, the
+last three lines of a page allocation failure memory summary.
+
+So, that BUG_ON(bf->skb == NULL) appears to be unsafe under
+memory pressure; but the fix wasn't obvious to me, so over
+to you!
+
+I'd be glad to try patches, of course, but it's not happening
+often enough for me to report back success quickly - unless I
+stumble on a quicker way to reproduce it, it'll need a week or
+two to grow confident of a fix.
+
+Thanks,
+Hugh
