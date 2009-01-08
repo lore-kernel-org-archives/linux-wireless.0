@@ -1,51 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:65190 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750964AbZAEA3h (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43514 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754339AbZAHLd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 19:29:37 -0500
-Message-ID: <49615465.4090604@lwfinger.net> (sfid-20090105_012942_040993_A170F12E)
-Date: Sun, 04 Jan 2009 18:29:25 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Andi Kleen <andi@firstfloor.org>
-CC: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: rate instability in wireless stack
-References: <20090104164649.GV496@one.firstfloor.org> <200901041736.47650.mb@bu3sch.de> <20090104174123.GW496@one.firstfloor.org>
-In-Reply-To: <20090104174123.GW496@one.firstfloor.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Jan 2009 06:33:28 -0500
+Message-Id: <20090108113158.681894124@atheros.com> (sfid-20090108_123334_164223_0B9263EF)
+Date: Thu, 08 Jan 2009 13:31:58 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2 00/16] mac80211: IEEE 802.11w (management frame protection)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andi,
+This set of patches adds support for IEEE 802.11w (management frame
+protection) into mac80211. It is up-to-date with the latest IEEE 802.11w
+draft (D7.0) and I do not expect any major changes to IEEE 802.11w
+anymore.
 
-Andi Kleen wrote:
-> 
-> Anyways with PID i get between 1Mbit/s and 5.5Mbit/s, most of the
-> time 1Mbit/s. So it's not really much better.
+This version is ready to be applied into wireless-testing. It is against
+wireless-testing + CSA patch from Sujith + PS patches from Johannes.
 
+Differences to PATCH v1:
+- introduce a mechanism for drivers to indicate that they are MFP capable
+  and allow user space programs to figure out whether MFP can be used
+- mark ath9k MFP capable
+- mark mac80211_hwsim MFP capable
+- rebase against PS patches from Johannes (one of them allocated a new
+  driver hw flag that would have conflicted with an allocation for MFP)
 
-Does this patch help? Recently mac80211 changed from expecting tries
-to retries, and I don't think rtl8180 got changed.
-
-Larry
-
-===============
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -188,7 +188,7 @@ static void rtl8180_handle_tx(struct iee
- 		    (flags & RTL818X_TX_DESC_FLAG_TX_OK))
- 			info->flags |= IEEE80211_TX_STAT_ACK;
-
--		info->status.rates[0].count = (flags & 0xFF) + 1;
-+		info->status.rates[0].count = (flags & 0xFF);
-
- 		ieee80211_tx_status_irqsafe(dev, skb);
- 		if (ring->entries - skb_queue_len(&ring->queue) == 2)
-
--------
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
