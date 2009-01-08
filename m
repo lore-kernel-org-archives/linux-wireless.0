@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:1304 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754286AbZAJAzJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 19:55:09 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so10135976wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 16:55:08 -0800 (PST)
-Message-ID: <4967f1eb.14098e0a.2b44.ffffd9a6@mx.google.com> (sfid-20090110_015516_268551_B9F19DC0)
-Date: Fri, 09 Jan 2009 16:55:07 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-From: Andrey Yurovsky <andrey@cozybit.com>
-Subject: [RFC] libertas: revert switch from priv to ml_priv
+Received: from mx2.redhat.com ([66.187.237.31]:39919 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754223AbZAHQzy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 11:55:54 -0500
+Subject: Re: [PATCH v2 1/3] libertas: Fix alignment issues in libertas core
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Colin McCabe <colin@cozybit.com>, linux-wireless@vger.kernel.org,
+	Andrey Yurovsky <andrey@cozybit.com>
+In-Reply-To: <1231433597.8398.3.camel@johannes>
+References: <1230951623-26998-1-git-send-email-colin@cozybit.com>
+	 <1230951623-26998-2-git-send-email-colin@cozybit.com>
+	 (sfid-20090103_040451_022232_D73555CB)  <1231433597.8398.3.camel@johannes>
+Content-Type: text/plain
+Date: Thu, 08 Jan 2009 11:54:41 -0500
+Message-Id: <1231433681.21643.43.camel@localhost.localdomain> (sfid-20090108_175559_624102_3D41D63C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch reverts a part of commit 29726d85d7b98558a8bc8e69b859bf12e1347f9f
-which changed some instances of priv to ml_priv and seems to have resulted in 
-corruption of libertas' priv data which in turn causes a kernel oops when, for
-example, priv data is accessed and derefferenced in WEXT callbacks.
+On Thu, 2009-01-08 at 17:53 +0100, Johannes Berg wrote:
+> On Fri, 2009-01-02 at 19:00 -0800, Colin McCabe wrote:
+> > When loading fields from packed structs, use get_unaligned_le16 and
+> > get_unaligned_le32 instead of le16_to_cpu and le32_to_cpu.
+> > This doesn't matter on x86, but it is important for some other CPUs.
+> > 
+> > Also, mark all packed structs as packed. Generally, any data structure
+> > that comes over the wire from the WLAN firmware should be a packed struct.
+> 
+> Just marking the structs packed should be sufficient, since then the
+> compiler must assume they are potentially unaligned.
 
-I would appreciate some feedback about this, especially from folks who can
-explain what this portion of the patch was trying to accomplish.  In the mean
-time this makes libertas usable again without reverting the other parts of the
-patch that dealt with using the netdev macros.  Thanks,
+Colin, can you test out just the bits that mark the structs as packed
+and see if we can get by without using get_unaligned_le16() everywhere?
+There will be a few cases where get_unaligned_le16() may be required but
+I'm pretty sure we don't need this many...
 
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 69f7479..5fefe38 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -496,7 +496,7 @@ static int lbs_dev_open(struct net_device *dev)
-  */
- static int lbs_mesh_stop(struct net_device *dev)
- {
--	struct lbs_private *priv = dev->ml_priv;
-+	struct lbs_private *priv = netdev_priv(dev);
- 
- 	lbs_deb_enter(LBS_DEB_MESH);
- 	spin_lock_irq(&priv->driver_lock);
-@@ -1440,7 +1440,7 @@ static int lbs_add_mesh(struct lbs_private *priv)
- 		ret = -ENOMEM;
- 		goto done;
- 	}
--	mesh_dev->ml_priv = priv;
-+	mesh_dev->priv = priv;
- 	priv->mesh_dev = mesh_dev;
- 
- 	mesh_dev->open = lbs_dev_open;
-@@ -1653,7 +1653,7 @@ static int lbs_rtap_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 
- static struct net_device_stats *lbs_rtap_get_stats(struct net_device *dev)
- {
--	struct lbs_private *priv = dev->ml_priv;
-+	struct lbs_private *priv = netdev_priv(dev);
- 	lbs_deb_enter(LBS_DEB_NET);
- 	return &priv->stats;
- }
-@@ -1694,7 +1694,7 @@ static int lbs_add_rtap(struct lbs_private *priv)
- 	rtap_dev->stop = lbs_rtap_stop;
- 	rtap_dev->get_stats = lbs_rtap_get_stats;
- 	rtap_dev->hard_start_xmit = lbs_rtap_hard_start_xmit;
--	rtap_dev->ml_priv = priv;
-+	rtap_dev->priv = priv;
- 	SET_NETDEV_DEV(rtap_dev, priv->dev->dev.parent);
- 
- 	ret = register_netdev(rtap_dev);
-
+Dan
 
