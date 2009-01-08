@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:20977 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756389AbZAPVNo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 16:13:44 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 13:13:44 -0800
-Date: Fri, 16 Jan 2009 13:13:15 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 02/13] cfg80211: add option for wiphys to disregard
-	country IEs
-Message-ID: <20090116211315.GN29609@tesla> (sfid-20090116_221349_023341_EFD36433)
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com> <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232097432.3854.15.camel@johannes> <20090116164004.GH29609@tesla> <1232138328.3745.13.camel@johannes>
+Received: from fg-out-1718.google.com ([72.14.220.158]:18833 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755332AbZAHXGN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 18:06:13 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so3339724fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2009 15:06:11 -0800 (PST)
+Message-ID: <3ace41890901081506r7e38328apee3007b556db0cd3@mail.gmail.com> (sfid-20090109_000619_165482_0F5F9431)
+Date: Thu, 8 Jan 2009 23:06:11 +0000
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: lmage11@twcny.rr.com
+Subject: Re: Help debugging unexpected disassociations?
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090108224343.F9TJC.227705.root@hrndva-web20-z02>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232138328.3745.13.camel@johannes>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20081230013810.R86WV.401393.root@hrndva-web19-z02>
+	 <20090108224343.F9TJC.227705.root@hrndva-web20-z02>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2009 at 12:38:48PM -0800, Johannes Berg wrote:
-> On Fri, 2009-01-16 at 08:40 -0800, Luis R. Rodriguez wrote:
-> > On Fri, Jan 16, 2009 at 01:17:12AM -0800, Johannes Berg wrote:
-> > > On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
-> > > > Country IEs can be disregarded based on regulatory policy by
-> > > > a driver. This is only possible, of course, if the driver already
-> > > > has its own regulatory domain.
-> > > 
-> > > Can you say why? This doesn't seem useful to me.
-> > 
-> > Its based on our internal regulatory policy for our hardware. If you have
-> > a alpha2 map you should disregard the country IE. If you have a world regdom
-> > you can follow the IE (but not enable more). Technically I think that without
-> > this things may work now to respect the original driver stuff though with the
-> > new orig_* changes, will need to test.
-> 
-> I think it should work w/o this, yeah, and I also think we should follow
-> the 11d hint if it restricts us further rather than just ignoring it.
+On Thu, Jan 8, 2009 at 10:43 PM,  <lmage11@twcny.rr.com> wrote:
+> ---- lmage11@twcny.rr.com wrote:
+>> Hey everyone. I'm using an Intel 4965AGN using the iwlagn
+>> driver in 2.6.28. When using a specific AP, my connection is
+>> unexpectedly dropping with nothing more than a
+>> "wlan0: deauthenticated". Any tips on how I could figure out
+>> whether this is the driver's fault or the AP's? Another problem I'm
+>> having is that dhcpcd is timing out a lot, usually after trying to
+>> reconnect from a connection drop.
+>>
+>> The AP is a Linksys WRT54Gv1 with WPA2 and ssid broadcasting enabled.
+>>
+>> Thanks!
+>>
+>> Ari
+>
+> Um... Bump?
 
-I concur, will test (with OLD_REG and without it, jeesh).
+It is no use and quite annoying to do that - it sounds like "read my
+mind and spoon-feed me". Your initial post has almost no useful
+information to speak of (actual log entries, wpa_supplicant config,
+whether using networkmanager or static config, etc).
 
-  Luis
+You probably should try to run wpa_suplicant in the foreground.
