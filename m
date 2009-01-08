@@ -1,66 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:59323 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754158AbZAOWA5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 17:00:57 -0500
-Message-ID: <dd18b0c30901151400t68dfc54cu67a378ba71a2edc9@mail.gmail.com> (sfid-20090115_230103_853976_FFF822F9)
-Date: Thu, 15 Jan 2009 14:00:55 -0800
-From: "Justin Mattock" <justinmattock@gmail.com>
-To: "Paul Moore" <paul.moore@hp.com>
-Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	SE-Linux <selinux@tycho.nsa.gov>
-In-Reply-To: <200901151246.38396.paul.moore@hp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <496D759A.7010401@gmail.com> <200901141736.43805.paul.moore@hp.com>
-	 <496EA2EC.7030602@gmail.com> <200901151246.38396.paul.moore@hp.com>
+Received: from mx2.redhat.com ([66.187.237.31]:39976 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752824AbZAHQ6C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 11:58:02 -0500
+Subject: Re: [PATCH v2 2/3] libertas: Update libertas core with GSPI
+	constants
+From: Dan Williams <dcbw@redhat.com>
+To: Colin McCabe <colin@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	Andrey Yurovsky <andrey@cozybit.com>
+In-Reply-To: <1230951623-26998-3-git-send-email-colin@cozybit.com>
+References: <1230951623-26998-1-git-send-email-colin@cozybit.com>
+	 <1230951623-26998-2-git-send-email-colin@cozybit.com>
+	 <1230951623-26998-3-git-send-email-colin@cozybit.com>
+Content-Type: text/plain
+Date: Thu, 08 Jan 2009 11:56:41 -0500
+Message-Id: <1231433801.21643.44.camel@localhost.localdomain> (sfid-20090108_175809_154299_145CC496)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2009 at 9:46 AM, Paul Moore <paul.moore@hp.com> wrote:
-> On Wednesday 14 January 2009 9:43:56 pm Justin P. Mattock wrote:
->> Paul Moore wrote:
->> > On Wednesday 14 January 2009 4:35:25 pm Justin P. Mattock wrote:
->> >> here is what the error looks like:
->> >>
->> >> netlabel_tools-0.19# make
->> >> INFO: creating the version header file
->> >> .: 10: version_info: not found
->> >> make: *** [include/version.h] Error 2
->> >
->> > Huh, can you try the following:
->> >
->> >  1. Open the netlabel_tools-0.19/Makefile in your favorite editor
->> >  2. Change the ". version_info; \" line to "source ./version_info;
->> > \" 3. Save your changes
->> >  4. Try running "make" again
->> >
->> > Thanks.
->>
->> O.k. changed . version like how you had posted.
->> The package compiled like a charm.
->
-> Great, I'll change the Makefile(s) in SVN ... I don't quite understand
-> the reason (what is your /bin/sh?  I'm guessing not bash?) but at least
-> we now have a solution :)
->
-> --
-> paul moore
-> linux @ hp
->
+On Fri, 2009-01-02 at 19:00 -0800, Colin McCabe wrote:
+> Add GSPI constants to libertas core.
+> 
+> Fix misleading comment in lbs_setup_firmware.
+> 
+> Signed-off-by: Colin McCabe <colin@cozybit.com>
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
 
-hmm..
-under ps auxZ
-I see:
-2896 tty1 S+ 0:00 /bin/bash /usr/bin/startx
-then open aterm for navigating.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Thankfully it works(this people can install
-it a test it out.)
+> ---
+>  drivers/net/wireless/libertas/host.h    |    1 +
+>  drivers/net/wireless/libertas/hostcmd.h |    8 ++++++++
+>  drivers/net/wireless/libertas/main.c    |    5 ++---
+>  3 files changed, 11 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+> index 277ff19..d4457ef 100644
+> --- a/drivers/net/wireless/libertas/host.h
+> +++ b/drivers/net/wireless/libertas/host.h
+> @@ -66,6 +66,7 @@
+>  #define CMD_802_11_LED_GPIO_CTRL		0x004e
+>  #define CMD_802_11_EEPROM_ACCESS		0x0059
+>  #define CMD_802_11_BAND_CONFIG			0x0058
+> +#define CMD_GSPI_BUS_CONFIG			0x005a
+>  #define CMD_802_11D_DOMAIN_INFO			0x005b
+>  #define CMD_802_11_KEY_MATERIAL			0x005e
+>  #define CMD_802_11_SLEEP_PARAMS			0x0066
+> diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+> index c6d5771..3c15611 100644
+> --- a/drivers/net/wireless/libertas/hostcmd.h
+> +++ b/drivers/net/wireless/libertas/hostcmd.h
+> @@ -221,6 +221,14 @@ struct cmd_ds_mac_multicast_adr {
+>  	u8 maclist[ETH_ALEN * MRVDRV_MAX_MULTICAST_LIST_SIZE];
+>  } __attribute__ ((packed));
+>  
+> +struct cmd_ds_gspi_bus_config {
+> +	struct cmd_header hdr;
+> +	__le16 action;
+> +	__le16 bus_delay_mode;
+> +	__le16 host_time_delay_to_read_port;
+> +	__le16 host_time_delay_to_read_register;
+> +} __attribute__ ((packed));
+> +
+>  struct cmd_ds_802_11_authenticate {
+>  	u8 macaddr[ETH_ALEN];
+>  	u8 authtype;
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index 3b8cb29..69f7479 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -1011,9 +1011,8 @@ void lbs_resume(struct lbs_private *priv)
+>  EXPORT_SYMBOL_GPL(lbs_resume);
+>  
+>  /**
+> - *  @brief This function downloads firmware image, gets
+> - *  HW spec from firmware and set basic parameters to
+> - *  firmware.
+> + * @brief This function gets the HW spec from the firmware and sets
+> + *        some basic parameters.
+>   *
+>   *  @param priv    A pointer to struct lbs_private structure
+>   *  @return 	   0 or -1
 
-regards;
-
--- 
-Justin P. Mattock
