@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37648 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256AbZAGRai (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 12:30:38 -0500
-Subject: Re: [RFC v3] mac80211: extend/document powersave API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <87tz8b3u6i.fsf@nokia.com>
-References: <1231264395.3654.10.camel@johannes>
-	 <1231273502.3767.4.camel@johannes> <878wpn5d64.fsf@nokia.com>
-	 <1231346625.3545.56.camel@johannes>  <87tz8b3u6i.fsf@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fXFDRRDnxrJd8/RbRTZN"
-Date: Wed, 07 Jan 2009 18:31:00 +0100
-Message-Id: <1231349460.3545.63.camel@johannes> (sfid-20090107_183040_795048_709D4D26)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:4925 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756143AbZAHSSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 13:18:25 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 07/11] iwlwifi: remove CMD_WANT_SKB flag if send_cmd_sync failure
+Date: Thu,  8 Jan 2009 10:19:58 -0800
+Message-Id: <1231438802-10991-8-git-send-email-reinette.chatre@intel.com> (sfid-20090108_191841_028684_FE6E7432)
+In-Reply-To: <1231438802-10991-7-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1231438802-10991-1-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-2-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-3-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-4-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-5-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-6-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-7-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Zhu Yi <yi.zhu@intel.com>
 
---=-fXFDRRDnxrJd8/RbRTZN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+In function iwl_send_cmd_sync(), if the flag CMD_WANT_SKB is set but
+we are not provided with a valid SKB (cmd->meta.u.skb == NULL), we need
+to remove the CMD_WANT_SKB flag from the TX cmd queue. Otherwise in case
+the cmd comes in later, it will possibly set an invalid address. Thus
+it causes an invalid memory access.
 
-On Wed, 2009-01-07 at 19:25 +0200, Kalle Valo wrote:
+This fixed the bug http://bugzilla.kernel.org/show_bug.cgi?id=11326.
 
-> > -set:
-> > + set:
->=20
-> Really? My emacs always indents it without space, should I fix my
-> settings?
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-I like it better for two reasons:
- (1) my editor uses a heuristic to display the function you're in, and
-     the heuristic will display the label if it's in the first column
- (2) diff -p does the same, so you'll end up with the label in the @@
-     row which isn't very useful.
-
-The "right" way never got added to CodingStyle, despite discussions.
-
-johannes
-
---=-fXFDRRDnxrJd8/RbRTZN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJZObSAAoJEKVg1VMiehFYJ24QAJjM8z6CtYmXgwOEYZ0B+fkO
-j+mxoG6BeTElRZwbUyGKkSAePhY3qUK8x8wApuYezK6IVwQT3CInmGo6XdbdJHOi
-noAZlg1i6lSdLCLn5XJhtmBXpHKANZuW5cWcYSLWqR5PQ+qOUjHBUPOayOVMZO2c
-fGNsYYGK3YNiTBVy9b1iUG52mHEs9CVgicaN5jO0NdZvRqDjSwt08wARGA0/DaTl
-n7AecWsPN2MYSYXwojMHfiNyfk+S9mjFOgaFPwNbRDvr31AuECiNX4t+aCKVS9Es
-6Szum1R+VSGtbT3O01e6RJMKKcAuPfd7AoO1F+ar74gwDLxd4Ie+VIDqVOE2p7pL
-xXwifUG6IH/tIqAy6QhqtZw+er+BNDcr0obYumlFi7FwGYu56JM/m4BbyrOKnKhb
-g5s/NGcI7JLSI8jbP266dwPwI1oBRtEZWkYfBY/J8Z1OZXGfiKsxS+gOPZ9T8WQO
-gFM4xyG0rHlw+f8iAQl4jPfPeY0mXe+zkPcjNU6x5rhJ8kSkg5D2gqsUiY3+r8eJ
-eJWJPKWdsby99kzQTtN/TmFTQ4XXZqCgWP05uYvyqn87yas1cyzIHWDCXwgzI1EN
-FN7iDgc2GcFNARSq3TBEuiWnZfugOqELINQB5xusqDPv0ScqU6cJBXqWaTjCQZLo
-1aoDDwApbsQ8iMA6b02V
-=6bE7
------END PGP SIGNATURE-----
-
---=-fXFDRRDnxrJd8/RbRTZN--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+index 0accf88..c35805c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+@@ -225,7 +225,7 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 		IWL_ERR(priv, "Error: Response NULL in '%s'\n",
+ 			  get_cmd_string(cmd->id));
+ 		ret = -EIO;
+-		goto out;
++		goto cancel;
+ 	}
+ 
+ 	ret = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index a4c44d2..f1158a4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -623,7 +623,7 @@ static int iwl3945_send_cmd_sync(struct iwl_priv *priv,
+ 		IWL_ERR(priv, "Error: Response NULL in '%s'\n",
+ 			  get_cmd_string(cmd->id));
+ 		ret = -EIO;
+-		goto out;
++		goto cancel;
+ 	}
+ 
+ 	ret = 0;
+-- 
+1.5.4.3
 
