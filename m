@@ -1,115 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.183]:26494 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678AbZA3Mqo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 07:46:44 -0500
-Received: by el-out-1112.google.com with SMTP id b25so183318elf.1
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 04:46:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <45e8e6c40901280954l42bbe788y8723141d673bb7b3@mail.gmail.com>
-References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
-	 <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com>
-	 <e27b78a40901240804m1acd3a83o7bf6d01f81ec3397@mail.gmail.com>
-	 <45e8e6c40901240956g68a5364tdbacc1e49410c9cc@mail.gmail.com>
-	 <e27b78a40901260625w53acd646xeb5a9ca85555c74d@mail.gmail.com>
-	 <e27b78a40901260956w4e69d33s7db60defc026c8d7@mail.gmail.com>
-	 <45e8e6c40901280954l42bbe788y8723141d673bb7b3@mail.gmail.com>
-Date: Fri, 30 Jan 2009 12:46:41 +0000
-Message-ID: <e27b78a40901300446y294504d5kd7acaa6c5a26edd@mail.gmail.com> (sfid-20090130_134648_590230_2E9F6329)
-Subject: Re: Crashing on ping?
-From: Keir <keirlawson@gmail.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:4925 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756192AbZAHSSX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 13:18:23 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 03/11] iwl3945: kill iwl3945_rx_queue_space
+Date: Thu,  8 Jan 2009 10:19:54 -0800
+Message-Id: <1231438802-10991-4-git-send-email-reinette.chatre@intel.com> (sfid-20090108_191840_586766_F4D95E4E)
+In-Reply-To: <1231438802-10991-3-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1231438802-10991-1-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-2-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I did the following in my serial console:
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-root@kyp:/home/keir/Desktop/iw-0.9.6# echo 8 > /proc/sys/kernel/printk
-root@kyp:/home/keir/Desktop/iw-0.9.6# ping -I mesh0 10.0.0.2
-PING 10.0.0.2 (10.0.0.2) from 10.0.0.3 mesh0: 56(84) bytes of data.
-64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=2.67 ms
-64 bytes from 10.0.0.2: icmp_seq=2 ttl=64 time=0.550 ms
-64 bytes from 10.0.0.2: icmp_seq=3 ttl=64 time=0.445 ms
-64 bytes from 10.0.0.2: icmp_seq=4 ttl=64 time=6.28 ms
-64 bytes from 10.0.0.2: icmp_seq=5 ttl=64 time=2.19 ms
+This patch replaces iwl3945_rx_queue_space with iwl_rx_queue_space.
 
-At which point the console freezes with no further output.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   19 ++-----------------
+ 1 files changed, 2 insertions(+), 17 deletions(-)
 
-Any ideas?
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c39b6d3..611c35e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3210,21 +3210,6 @@ static void iwl3945_tx_cmd_complete(struct iwl_priv *priv,
+  */
+ 
+ /**
+- * iwl3945_rx_queue_space - Return number of free slots available in queue.
+- */
+-static int iwl3945_rx_queue_space(const struct iwl_rx_queue *q)
+-{
+-	int s = q->read - q->write;
+-	if (s <= 0)
+-		s += RX_QUEUE_SIZE;
+-	/* keep some buffer to not confuse full and empty queue */
+-	s -= 2;
+-	if (s < 0)
+-		s = 0;
+-	return s;
+-}
+-
+-/**
+  * iwl3945_dma_addr2rbd_ptr - convert a DMA address to a uCode read buffer ptr
+  */
+ static inline __le32 iwl3945_dma_addr2rbd_ptr(struct iwl_priv *priv,
+@@ -3254,7 +3239,7 @@ static int iwl3945_rx_queue_restock(struct iwl_priv *priv)
+ 
+ 	spin_lock_irqsave(&rxq->lock, flags);
+ 	write = rxq->write & ~0x7;
+-	while ((iwl3945_rx_queue_space(rxq) > 0) && (rxq->free_count)) {
++	while ((iwl_rx_queue_space(rxq) > 0) && (rxq->free_count)) {
+ 		/* Get next free Rx buffer, remove from free list */
+ 		element = rxq->rx_free.next;
+ 		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
+@@ -3465,7 +3450,7 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
+ 	r = le16_to_cpu(rxq->rb_stts->closed_rb_num) &  0x0FFF;
+ 	i = rxq->read;
+ 
+-	if (iwl3945_rx_queue_space(rxq) > (RX_QUEUE_SIZE / 2))
++	if (iwl_rx_queue_space(rxq) > (RX_QUEUE_SIZE / 2))
+ 		fill_rx = 1;
+ 	/* Rx interrupt, but nothing sent from uCode */
+ 	if (i == r)
+-- 
+1.5.4.3
 
-Cheers
-
-Keir
-
-2009/1/28 Andrey Yurovsky <andrey@cozybit.com>
->
-> Hi Keir.  If the system really crashes, you should have some output.
-> Can you please set:
->
-> echo 8 > /proc/sys/kernel/printk
->
-> ...and use your serial console and try to reproduce this?  Thanks,
->
->  -Andrey
->
-> On Mon, Jan 26, 2009 at 9:56 AM, Keir <keirlawson@gmail.com> wrote:
-> > Right, managed to set up a serial terminal, ran cat /proc/kmsg, but
-> > still no output of interest (just mesh plink stuff leading up to the
-> > connection being established), what should I do next?
-> >
-> > Cheers
-> >
-> > Keir
-> >
-> > 2009/1/26 Keir <keirlawson@gmail.com>:
-> >> "sudo cat /proc/kmsg > log" doesnt produce anything of interest.
-> >>
-> >> Will look into the serial console thing, never done it before.
-> >>
-> >> Keir
-> >>
-> >> 2009/1/24 Andrey Yurovsky <andrey@cozybit.com>:
-> >>> Can you post logs of the crash (dmesg output)?  You may need to
-> >>> connect a serial console to the PC in question to get them if the
-> >>> machine is really hard-locking, otherwise see if you can capture the
-> >>> output of dmesg
-> >>>
-> >>> On Sat, Jan 24, 2009 at 8:04 AM, Keir <keirlawson@gmail.com> wrote:
-> >>>> Tried that commit, still no luck :( It consistently freezes up on
-> >>>> ping, though sometimes it's the machine doing the pining, and other
-> >>>> times it's the machine being pinged.  Wondering what I can do to help
-> >>>> debug this?
-> >>>>
-> >>>> Keir
-> >>>>
-> >>>> 2009/1/23 Andrey Yurovsky <andrey@cozybit.com>:
-> >>>>> Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
-> >>>>> 93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
-> >>>>> 2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
-> >>>>> chance to try head of wireless-testing this week.
-> >>>>>
-> >>>>>  -Andrey
-> >>>>>
-> >>>>> On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
-> >>>>>> I just pulled the latest wireless-testing kernel, however, much like
-> >>>>>> the previous wireless-testing kernel I was working on, when attempting
-> >>>>>> to ping one node from another on a mesh, using ath5k, the node
-> >>>>>> attempting to ping completely freezes after about 7 pings are
-> >>>>>> (succesfully) sent.  Anyone have any idea what is going wrong here?
-> >>>>>>
-> >>>>>> Cheers
-> >>>>>>
-> >>>>>> Keir
-> >>>>>> --
-> >>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> >>>>>> the body of a message to majordomo@vger.kernel.org
-> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>>>>
-> >>>>>
-> >>>>
-> >>>
-> >>
-> >
