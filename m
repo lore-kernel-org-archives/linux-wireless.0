@@ -1,157 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37710 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756343AbZANTTT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 14:19:19 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v4 04/11] ath9k: introduce bus specific cleanup routine
-Date: Wed, 14 Jan 2009 20:17:05 +0100
-Message-Id: <1231960632-4452-5-git-send-email-juhosg@openwrt.org> (sfid-20090114_201937_719975_122F670E)
-In-Reply-To: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
-References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
+Received: from mga02.intel.com ([134.134.136.20]:18869 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754891AbZAHSSX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 13:18:23 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 02/11] iwl3945: kill iwl3945_rx_queue_restock
+Date: Thu,  8 Jan 2009 10:19:53 -0800
+Message-Id: <1231438802-10991-3-git-send-email-reinette.chatre@intel.com> (sfid-20090108_191837_117952_DB3E90FE)
+In-Reply-To: <1231438802-10991-2-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1231438802-10991-1-git-send-email-reinette.chatre@intel.com>
+ <1231438802-10991-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have left only some PCI specific cleanup code. We have to convert
-them as well.
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-Changes-licensed-under: ISC
+This patch kills iwl3945_rx_queue_restock function on prise of new
+hw_params.rx_wrt_ptr_reg which holds per NIC RX write pointer register.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/ath9k/core.h |    7 +++++++
- drivers/net/wireless/ath9k/main.c |   37 +++++++++++++++++++++++--------------
- 2 files changed, 30 insertions(+), 14 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    4 ++-
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 -
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |   14 ++++----
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   50 +-------------------------
+ 7 files changed, 18 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 8e93d11..f9fa5c6 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -695,6 +695,7 @@ enum PROT_MODE {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 502df73..6f27f18 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1219,7 +1219,7 @@ int iwl3945_hw_nic_init(struct iwl_priv *priv)
  
- struct ath_bus_ops {
- 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
-+	void		(*cleanup)(struct ath_softc *sc);
- };
+ 	/* Look at using this instead:
+ 	rxq->need_update = 1;
+-	iwl3945_rx_queue_update_write_ptr(priv, rxq);
++	iwl_rx_queue_update_write_ptr(priv, rxq);
+ 	*/
  
- struct ath_softc {
-@@ -704,6 +705,7 @@ struct ath_softc {
- 	struct tasklet_struct bcon_tasklet;
- 	struct ath_hal *sc_ah;
- 	void __iomem *mem;
-+	int irq;
- 	spinlock_t sc_resetlock;
- 	struct mutex mutex;
+ 	rc = iwl_grab_nic_access(priv);
+@@ -2493,6 +2493,8 @@ int iwl3945_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.max_stations = IWL3945_STATION_COUNT;
+ 	priv->hw_params.bcast_sta_id = IWL3945_BROADCAST_ID;
  
-@@ -760,4 +762,9 @@ static inline void ath_read_cachesize(struct ath_softc *sc, int *csz)
- 	sc->bus_ops->read_cachesize(sc, csz);
++	priv->hw_params.rx_wrt_ptr_reg = FH39_RSCSR_CHNL0_WPTR;
++
+ 	return 0;
  }
  
-+static inline void ath_bus_cleanup(struct ath_softc *sc)
-+{
-+	sc->bus_ops->cleanup(sc);
-+}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index c5f5481..3041616 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -225,8 +225,6 @@ extern int __must_check iwl3945_send_cmd(struct iwl_priv *priv,
+ 					 struct iwl_host_cmd *cmd);
+ extern unsigned int iwl3945_fill_beacon_frame(struct iwl_priv *priv,
+ 					struct ieee80211_hdr *hdr,int left);
+-extern int iwl3945_rx_queue_update_write_ptr(struct iwl_priv *priv,
+-					 struct iwl_rx_queue *q);
+ extern int iwl3945_send_statistics_request(struct iwl_priv *priv);
+ extern void iwl3945_set_decrypted_flag(struct iwl_priv *priv, struct sk_buff *skb,
+ 				   u32 decrypt_res,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index e68d587..57efd48 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -822,6 +822,8 @@ static int iwl4965_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.max_bsm_size = BSM_SRAM_SIZE;
+ 	priv->hw_params.fat_channel = BIT(IEEE80211_BAND_5GHZ);
+ 
++	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
 +
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 884469a..dd2be26 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -39,6 +39,7 @@ static struct pci_device_id ath_pci_id_table[] __devinitdata = {
- };
- 
- static void ath_detach(struct ath_softc *sc);
-+static void ath_cleanup(struct ath_softc *sc);
- 
- /* return bus cachesize in 4B word units */
- 
-@@ -1267,13 +1268,7 @@ static int ath_start_rfkill_poll(struct ath_softc *sc)
- 			rfkill_free(sc->rf_kill.rfkill);
- 
- 			/* Deinitialize the device */
--			ath_detach(sc);
--			if (to_pci_dev(sc->dev)->irq)
--				free_irq(to_pci_dev(sc->dev)->irq, sc);
--			pci_iounmap(to_pci_dev(sc->dev), sc->mem);
--			pci_release_region(to_pci_dev(sc->dev), 0);
--			pci_disable_device(to_pci_dev(sc->dev));
--			ieee80211_free_hw(sc->hw);
-+			ath_cleanup(sc);
- 			return -EIO;
- 		} else {
- 			sc->sc_flags |= SC_OP_RFKILL_REGISTERED;
-@@ -1284,6 +1279,14 @@ static int ath_start_rfkill_poll(struct ath_softc *sc)
- }
- #endif /* CONFIG_RFKILL */
- 
-+static void ath_cleanup(struct ath_softc *sc)
-+{
-+	ath_detach(sc);
-+	free_irq(sc->irq, sc);
-+	ath_bus_cleanup(sc);
-+	ieee80211_free_hw(sc->hw);
-+}
+ 	priv->hw_params.tx_chains_num = 2;
+ 	priv->hw_params.rx_chains_num = 2;
+ 	priv->hw_params.valid_tx_ant = ANT_A | ANT_B;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 76d86fe..d20d2ba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -844,6 +844,8 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.max_bsm_size = 0;
+ 	priv->hw_params.fat_channel =  BIT(IEEE80211_BAND_2GHZ) |
+ 					BIT(IEEE80211_BAND_5GHZ);
++	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
 +
- static void ath_detach(struct ath_softc *sc)
+ 	priv->hw_params.sens = &iwl5000_sensitivity;
+ 
+ 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index a092401..fbc4822 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -563,6 +563,7 @@ struct iwl_sensitivity_ranges {
+  * @max_rxq_size: Max # Rx frames in Rx queue (must be power-of-2)
+  * @max_rxq_log: Log-base-2 of max_rxq_size
+  * @rx_buf_size: Rx buffer size
++ * @rx_wrt_ptr_reg: FH{39}_RSCSR_CHNL0_WPTR
+  * @max_stations:
+  * @bcast_sta_id:
+  * @fat_channel: is 40MHz width possible in band 2.4
+@@ -584,6 +585,7 @@ struct iwl_hw_params {
+ 	u16 max_rxq_size;
+ 	u16 max_rxq_log;
+ 	u32 rx_buf_size;
++	u32 rx_wrt_ptr_reg;
+ 	u32 max_pkt_size;
+ 	u8  max_stations;
+ 	u8  bcast_sta_id;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index bc3febe..60be47f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -125,9 +125,10 @@ EXPORT_SYMBOL(iwl_rx_queue_space);
+  */
+ int iwl_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q)
  {
- 	struct ieee80211_hw *hw = sc->hw;
-@@ -2534,8 +2537,18 @@ ath_rf_name(u16 rf_version)
- 	return "????";
+-	u32 reg = 0;
+-	int ret = 0;
+ 	unsigned long flags;
++	u32 rx_wrt_ptr_reg = priv->hw_params.rx_wrt_ptr_reg;
++	u32 reg;
++	int ret = 0;
+ 
+ 	spin_lock_irqsave(&q->lock, flags);
+ 
+@@ -149,15 +150,14 @@ int iwl_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q)
+ 			goto exit_unlock;
+ 
+ 		/* Device expects a multiple of 8 */
+-		iwl_write_direct32(priv, FH_RSCSR_CHNL0_WPTR,
+-				     q->write & ~0x7);
++		iwl_write_direct32(priv, rx_wrt_ptr_reg, q->write & ~0x7);
+ 		iwl_release_nic_access(priv);
+ 
+ 	/* Else device is assumed to be awake */
+-	} else
++	} else {
+ 		/* Device expects a multiple of 8 */
+-		iwl_write32(priv, FH_RSCSR_CHNL0_WPTR, q->write & ~0x7);
+-
++		iwl_write32(priv, rx_wrt_ptr_reg, q->write & ~0x7);
++	}
+ 
+ 	q->need_update = 0;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 5999f45..c39b6d3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3225,52 +3225,6 @@ static int iwl3945_rx_queue_space(const struct iwl_rx_queue *q)
  }
  
-+static void ath_pci_cleanup(struct ath_softc *sc)
-+{
-+	struct pci_dev *pdev = to_pci_dev(sc->dev);
-+
-+	pci_iounmap(pdev, sc->mem);
-+	pci_release_region(pdev, 0);
-+	pci_disable_device(pdev);
-+}
-+
- static struct ath_bus_ops ath_pci_bus_ops = {
- 	.read_cachesize = ath_pci_read_cachesize,
-+	.cleanup = ath_pci_cleanup,
- };
- 
- static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-@@ -2642,6 +2655,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto bad4;
+ /**
+- * iwl3945_rx_queue_update_write_ptr - Update the write pointer for the RX queue
+- */
+-int iwl3945_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q)
+-{
+-	u32 reg = 0;
+-	int rc = 0;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&q->lock, flags);
+-
+-	if (q->need_update == 0)
+-		goto exit_unlock;
+-
+-	/* If power-saving is in use, make sure device is awake */
+-	if (test_bit(STATUS_POWER_PMI, &priv->status)) {
+-		reg = iwl_read32(priv, CSR_UCODE_DRV_GP1);
+-
+-		if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
+-			iwl_set_bit(priv, CSR_GP_CNTRL,
+-				    CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+-			goto exit_unlock;
+-		}
+-
+-		rc = iwl_grab_nic_access(priv);
+-		if (rc)
+-			goto exit_unlock;
+-
+-		/* Device expects a multiple of 8 */
+-		iwl_write_direct32(priv, FH39_RSCSR_CHNL0_WPTR,
+-				     q->write & ~0x7);
+-		iwl_release_nic_access(priv);
+-
+-	/* Else device is assumed to be awake */
+-	} else
+-		/* Device expects a multiple of 8 */
+-		iwl_write32(priv, FH39_RSCSR_CHNL0_WPTR, q->write & ~0x7);
+-
+-
+-	q->need_update = 0;
+-
+- exit_unlock:
+-	spin_unlock_irqrestore(&q->lock, flags);
+-	return rc;
+-}
+-
+-/**
+  * iwl3945_dma_addr2rbd_ptr - convert a DMA address to a uCode read buffer ptr
+  */
+ static inline __le32 iwl3945_dma_addr2rbd_ptr(struct iwl_priv *priv,
+@@ -3326,7 +3280,7 @@ static int iwl3945_rx_queue_restock(struct iwl_priv *priv)
+ 		spin_lock_irqsave(&rxq->lock, flags);
+ 		rxq->need_update = 1;
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+-		rc = iwl3945_rx_queue_update_write_ptr(priv, rxq);
++		rc = iwl_rx_queue_update_write_ptr(priv, rxq);
+ 		if (rc)
+ 			return rc;
  	}
- 
-+	sc->irq = pdev->irq;
-+
- 	ah = sc->sc_ah;
- 	printk(KERN_INFO
- 	       "%s: Atheros AR%s MAC/BB Rev:%x "
-@@ -2672,13 +2687,7 @@ static void ath_pci_remove(struct pci_dev *pdev)
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath_softc *sc = hw->priv;
- 
--	ath_detach(sc);
--	if (pdev->irq)
--		free_irq(pdev->irq, sc);
--	pci_iounmap(pdev, sc->mem);
--	pci_release_region(pdev, 0);
--	pci_disable_device(pdev);
--	ieee80211_free_hw(hw);
-+	ath_cleanup(sc);
- }
- 
- #ifdef CONFIG_PM
+@@ -4017,7 +3971,7 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ 	/* uCode wakes up after power-down sleep */
+ 	if (inta & CSR_INT_BIT_WAKEUP) {
+ 		IWL_DEBUG_ISR("Wakeup interrupt\n");
+-		iwl3945_rx_queue_update_write_ptr(priv, &priv->rxq);
++		iwl_rx_queue_update_write_ptr(priv, &priv->rxq);
+ 		iwl3945_tx_queue_update_write_ptr(priv, &priv->txq[0]);
+ 		iwl3945_tx_queue_update_write_ptr(priv, &priv->txq[1]);
+ 		iwl3945_tx_queue_update_write_ptr(priv, &priv->txq[2]);
 -- 
-1.5.3.2
+1.5.4.3
 
