@@ -1,145 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:34379 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750769AbZA1LqS (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43585 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755207AbZAHLd7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 06:46:18 -0500
-Received: by fg-out-1718.google.com with SMTP id 13so524598fge.17
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 03:46:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <874ozj964m.fsf@litku.valot.fi>
-References: <20090122114240.31443.18218.stgit@tikku>
-	 <20090122114546.31443.79387.stgit@tikku>
-	 <1ba2fa240901231528m21f13c1m43721f1d673e7cc7@mail.gmail.com>
-	 <874ozj964m.fsf@litku.valot.fi>
-Date: Wed, 28 Jan 2009 13:46:16 +0200
-Message-ID: <1ba2fa240901280346v6b4000b9m74eef26aabf86419@mail.gmail.com> (sfid-20090128_124623_447477_27D41587)
-Subject: Re: [RFC PATCH v2 2/2] mac80211: use ps-poll when dynamic power save
-	mode is disabled
-From: Tomas Winkler <tomasw@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: johannes@sipsolutions.net, vivek.natraj@gmail.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 8 Jan 2009 06:33:59 -0500
+Message-Id: <20090108113349.022499262@atheros.com> (sfid-20090108_123402_204944_A0504D69)
+References: <20090108113158.681894124@atheros.com>
+Date: Thu, 08 Jan 2009 13:32:06 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCHv2 08/16] mac80211: 802.11w - SA Query processing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 10:39 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Tomas Winkler <tomasw@gmail.com> writes:
->
->> On Thu, Jan 22, 2009 at 1:45 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
->>> When a directed tim bit is set, mac80211 currently disables power save
->>> ands sends a null frame to the AP. But if dynamic power save is
->>> disabled, mac80211 will not enable power save ever gain.
->>
->> Why not?
->
-> Because of a bug.
+Process SA Query Requests for client mode in mac80211. AP side
+processing of SA Query Response frames is in user space (hostapd).
 
-So wouldn't be better to fix the bug.
-
->
->>> Fix this by
->>> adding ps-poll functionality to mac80211. When a directed tim bit is
->>> set, mac80211 sends a ps-poll frame to the AP and checks for the more
->>> data bit in the returned data frames.
->>
->> Still have to see the implementation but this sounds strange.
->
-> Please be more specific, I don't understand what part you think is
-> strange. This is specified in the spec, see chapter 11.2.
->
-Strange you've decided implementing another feature instead of fixing
-a bug. Not that I'm against existence of PS-poll implementation in
-mac80211 it just should not be in order to fix a bug.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
 
->>> Using ps-poll is slower than waking up with null frame, but it's saves more
->>> power in cases where the traffic is low. Userspace can control if either
->>> ps-poll or null wakeup method is used by enabling and disabling dynamic
->>> power save.
->>
->> Do you have numbers how much power you save?
->
-> Unfortunately not yet.
->
->> With PS-Poll you must stay awak longer not saying that issueing TX
->> (PS-poll) also consume power.Ususally TXing has higher power
->> consumption then RX. Instead of tx(null PM=0) rx tx(ack)...rx
->> tx(ack) tx(null PM=1) you have now tx(ps-poll) rx tx (ack)
->> tx(ps-poll) rx tx(ack). So if the AP holds more then 3 packetes PS
->> poll will consume more power in this very simplified computation.
->
-> Let's take the null frame approach:
->
-> 1. notice tim bit set
-> 2. send null frame (pm=0)
-> 3. receive data frames
-> 4. wait for all buffered data frames
-> 5. send null frame (pm=1)
->
-> How do you know when the station has received all buffered data frames
-> from the AP (item 4 above)? By waiting a certain period after the last
-> received data frame? If that timeout is too short, we will get packet
-> loss, which is not good. If the timeout is too long, we waste too much
-> power.
+---
+ include/linux/ieee80211.h |   14 +++++++++
+ net/mac80211/rx.c         |   69 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 83 insertions(+)
 
-You can manage the idle timeout according the power save
-aggressiveness you want to achieve. There is no free lunch
-as result of power save you get some packet loss and jitter. Packet
-loss and jitter are natural to wifi also in normal operation. Last
-packet loss is not really an issue it's guarded by 802.11
-retransmission mechanism and by higher protocol.
+--- wireless-testing.orig/include/linux/ieee80211.h	2009-01-08 13:06:27.000000000 +0200
++++ wireless-testing/include/linux/ieee80211.h	2009-01-08 13:06:38.000000000 +0200
+@@ -527,6 +527,8 @@ struct ieee80211_tim_ie {
+ 	u8 virtual_map[0];
+ } __attribute__ ((packed));
+ 
++#define WLAN_SA_QUERY_TR_ID_LEN 16
++
+ struct ieee80211_mgmt {
+ 	__le16 frame_control;
+ 	__le16 duration;
+@@ -646,6 +648,10 @@ struct ieee80211_mgmt {
+ 					u8 action_code;
+ 					u8 variable[0];
+ 				} __attribute__((packed)) mesh_action;
++				struct {
++					u8 action;
++					u8 trans_id[WLAN_SA_QUERY_TR_ID_LEN];
++				} __attribute__ ((packed)) sa_query;
+ 			} u;
+ 		} __attribute__ ((packed)) action;
+ 	} u;
+@@ -1041,6 +1047,7 @@ enum ieee80211_category {
+ 	WLAN_CATEGORY_DLS = 2,
+ 	WLAN_CATEGORY_BACK = 3,
+ 	WLAN_CATEGORY_PUBLIC = 4,
++	WLAN_CATEGORY_SA_QUERY = 8,
+ 	WLAN_CATEGORY_WMM = 17,
+ };
+ 
+@@ -1129,6 +1136,13 @@ enum ieee80211_back_parties {
+ 	WLAN_BACK_TIMER = 2,
+ };
+ 
++/* SA Query action */
++enum ieee80211_sa_query_action {
++	WLAN_ACTION_SA_QUERY_REQUEST = 0,
++	WLAN_ACTION_SA_QUERY_RESPONSE = 1,
++};
++
++
+ /* A-MSDU 802.11n */
+ #define IEEE80211_QOS_CONTROL_A_MSDU_PRESENT 0x0080
+ 
+--- wireless-testing.orig/net/mac80211/rx.c	2009-01-08 13:06:27.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2009-01-08 13:06:38.000000000 +0200
+@@ -1635,6 +1635,57 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
+ 	return RX_CONTINUE;
+ }
+ 
++void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
++				    struct ieee80211_mgmt *mgmt,
++				    size_t len)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *resp;
++
++	if (compare_ether_addr(mgmt->da, sdata->dev->dev_addr) != 0) {
++		/* Not to own unicast address */
++		return;
++	}
++
++	if (compare_ether_addr(mgmt->sa, sdata->u.sta.bssid) != 0 ||
++	    compare_ether_addr(mgmt->bssid, sdata->u.sta.bssid) != 0) {
++		/* Not from the current AP. */
++		return;
++	}
++
++	if (sdata->u.sta.state == IEEE80211_STA_MLME_ASSOCIATE) {
++		/* Association in progress; ignore SA Query */
++		return;
++	}
++
++	if (len < 24 + 1 + sizeof(resp->u.action.u.sa_query)) {
++		/* Too short SA Query request frame */
++		return;
++	}
++
++	skb = dev_alloc_skb(sizeof(*resp) + local->hw.extra_tx_headroom);
++	if (skb == NULL)
++		return;
++
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++	resp = (struct ieee80211_mgmt *) skb_put(skb, 24);
++	memset(resp, 0, 24);
++	memcpy(resp->da, mgmt->sa, ETH_ALEN);
++	memcpy(resp->sa, sdata->dev->dev_addr, ETH_ALEN);
++	memcpy(resp->bssid, sdata->u.sta.bssid, ETH_ALEN);
++	resp->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					  IEEE80211_STYPE_ACTION);
++	skb_put(skb, 1 + sizeof(resp->u.action.u.sa_query));
++	resp->u.action.category = WLAN_CATEGORY_SA_QUERY;
++	resp->u.action.u.sa_query.action = WLAN_ACTION_SA_QUERY_RESPONSE;
++	memcpy(resp->u.action.u.sa_query.trans_id,
++	       mgmt->u.action.u.sa_query.trans_id,
++	       WLAN_SA_QUERY_TR_ID_LEN);
++
++	ieee80211_tx_skb(sdata, skb, 1);
++}
++
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ {
+@@ -1708,6 +1759,24 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 			break;
+ 		}
+ 		break;
++	case WLAN_CATEGORY_SA_QUERY:
++		if (len < (IEEE80211_MIN_ACTION_SIZE +
++			   sizeof(mgmt->u.action.u.sa_query)))
++			return RX_DROP_MONITOR;
++		switch (mgmt->u.action.u.sa_query.action) {
++		case WLAN_ACTION_SA_QUERY_REQUEST:
++			if (sdata->vif.type != NL80211_IFTYPE_STATION)
++				return RX_DROP_MONITOR;
++			ieee80211_process_sa_query_req(sdata, mgmt, len);
++			break;
++		case WLAN_ACTION_SA_QUERY_RESPONSE:
++			/*
++			 * SA Query response is currently only used in AP mode
++			 * and it is processed in user space.
++			 */
++			return RX_CONTINUE;
++		}
++		break;
+ 	default:
+ 		return RX_CONTINUE;
+ 	}
 
+-- 
 
-> With ps-poll we don't have to set any timeouts, the station can go to
-> sleep immeadiately after receiving a data frame with moredata bit not
-> set. So I see a clear advantage in certain cases where the data
-> troughput is very low and maximum power savings is desired. For
-> example when the device is idle on the table, display turned off and
-> only irc/jabber session is running in the background.
-
-You certainly cannot predict the RX activity especially when you have
-irc running in background.
-
->
-> And remember that userspace can control this with the power timeout
-> setting. My recommendation would be to use this only when the device
-> is idle and display is turned off.
-
-I guess that environment is more dynamic then user space can react
-upon and I thing that null packet method is more
-flexible then PS-poll but I also doesn't  have numbers to support my view
-
-Now maybe I'm a bit biased towards null frame approach because what we
-are doing in iwlwifi with and I know there was a lot of data collected
-in different environments to tune the numbers deep in HW and firmware
-but still this is was only on laptops usage in corporate or
-coffee/airport environments.
-There might be a case that for handhelds and different HW PS-poll
-might be preferable.  My point is that you cannot find universally
-said what is correct and there shell be configuration possibility from
-HW, user space, environment perspective.
-
-Frankly I don't like much mapping power save aggressiveness to timeout
-number because there so much more parameters that governs it that is
-says nothing.
-
-I would suggest to expose to user space non-unit index of power save
-aggressiveness which can be mapped to different methods such as
-PS-Poll, dynamic power save or iwlwifi firmware implementation by
-other more reach configurable interface
-
-
->
->> Do you measure power consumption on of the NIC or the whole system?
->
-> Usually I measure just the whole system. I can measure the nic, but
-> that's very time consuming.
-
-This can be important in tuning since you cannot distinguish between
-wasting of power by some wakening up timer or thread in the driver or
-by the fact that NIC itself doesn't enter power save state.
-
-Thanks
-Tomas
+-- 
+Jouni Malinen                                            PGP id EFC895FA
