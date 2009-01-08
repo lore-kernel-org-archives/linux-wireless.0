@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53139 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907AbZAJDPs (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:51857 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751716AbZAHJLN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 22:15:48 -0500
-Date: Fri, 9 Jan 2009 22:12:03 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Erik Ekman <erik@kryo.se>, linux-wireless@vger.kernel.org,
-	trivial@kernel.org
-Subject: Re: [PATCH 2.6.28] Wireless: Fix Kconfig fact error
-Message-ID: <20090110031203.GA22370@tuxdriver.com> (sfid-20090110_041628_924243_650E44C5)
-References: <20081230224928.c0558274.erik@kryo.se> <alpine.LNX.1.10.0901100107040.5377@jikos.suse.cz>
+	Thu, 8 Jan 2009 04:11:13 -0500
+Date: Thu, 8 Jan 2009 11:10:55 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH] Fixed BSSID step 3: Don't merge with the same BSSID
+Message-ID: <20090108091055.GA7009@jm.kir.nu> (sfid-20090108_101120_179972_5A36594C)
+References: <20090106020130.302750@gmx.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.1.10.0901100107040.5377@jikos.suse.cz>
+In-Reply-To: <20090106020130.302750@gmx.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 10, 2009 at 01:07:58AM +0100, Jiri Kosina wrote:
-> On Tue, 30 Dec 2008, Erik Ekman wrote:
-> 
-> > Raytheon cards use 2.4 GHz, not 2.4 MHz.
-> > See http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Linux.Wireless.drivers.html#Raylink
-> > 
-> > Signed-off-by: Erik Ekman <erik@kryo.se>
-> 
-> As this doesn't seem to be picked up to now by subsystem tree, I have 
-> queued it in the trivial tree. Thanks Erik.
+On Tue, Jan 06, 2009 at 03:01:30AM +0100, Alina Friedrichsen wrote:
 
-Actually, I have it.  Please drop it from your tree.
+> It's completely unnecessary to merge with same BSSID. Because here in our city networks we have many of the same BSSID (and SSID) with deferent timestamps, this causes problems.
 
-John
+I agree that merge part (updating Beacon/ProbeRsp data) can be skipped
+for same BSSID, but this change seems to break timesync by removing call
+to local->ops->reset_tsf(). I don't think that that should be removed
+unconditionally. I would like to know whether that operation is causing
+any problems in citywide networks and if yes, it might be better to
+provide a configuration option to allow the timesync for IBSS to be
+disabled since not doing that could cause problems to power saving in
+IBSS (not that it is really implemented that widely).
+
+In other words, I would be fine if the calls to
+ieee80211_sta_join_ibss() and ieee80211_ibss_add_sta() are replaced with
+local->ops->reset_tsf() if BSSIDs are the same when
+beacon_timestamp>rx_timestamp.
+
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+Jouni Malinen                                            PGP id EFC895FA
