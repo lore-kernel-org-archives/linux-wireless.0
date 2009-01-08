@@ -1,121 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:59795 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752989AbZAUFba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 00:31:30 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/5] iwlagn: fix agn rate scaling
-Date: Tue, 20 Jan 2009 21:33:53 -0800
-Message-Id: <1232516035-25524-4-git-send-email-reinette.chatre@intel.com> (sfid-20090121_063155_466054_90ECDAC2)
-In-Reply-To: <1232516035-25524-3-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232516035-25524-1-git-send-email-reinette.chatre@intel.com>
- <1232516035-25524-2-git-send-email-reinette.chatre@intel.com>
- <1232516035-25524-3-git-send-email-reinette.chatre@intel.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43522 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754535AbZAHLd3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 06:33:29 -0500
+Message-Id: <20090108113319.018122822@atheros.com> (sfid-20090108_123335_022109_58EDA839)
+References: <20090108113158.681894124@atheros.com>
+Date: Thu, 08 Jan 2009 13:31:59 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: [PATCHv2 01/16] mac80211: 802.11w - STA flag for MFP
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abbas, Mohamed <mohamed.abbas@intel.com>
+Add flags for setting STA entries and struct ieee80211_if_sta to
+indicate whether management frame protection (MFP) is used.
 
-Sometime Tx reply rate different than what rate scale expecting
-causing rate scale to bail out. This could cause failing to
-commit LQ cmd. This patch will try to solve this instead of just
-bail out. It also make sure we start with a valid rate.
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-Signed-off-by: mohamed abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   31 +++++++++++++++++++++-------
- 1 files changed, 23 insertions(+), 8 deletions(-)
+ include/linux/nl80211.h    |    2 ++
+ include/net/cfg80211.h     |    2 ++
+ net/mac80211/cfg.c         |    4 ++++
+ net/mac80211/debugfs_sta.c |    5 +++--
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    7 +++++--
+ net/mac80211/sta_info.h    |    2 ++
+ 7 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 12c5e5d..13039a0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -49,6 +49,8 @@
- #define IWL_RATE_MIN_FAILURE_TH		6	/* min failures to calc tpt */
- #define IWL_RATE_MIN_SUCCESS_TH		8	/* min successes to calc tpt */
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-01-08 13:05:41.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-01-08 13:06:19.000000000 +0200
+@@ -1,6 +1,6 @@
+ /*
+  * BSS client mode implementation
+- * Copyright 2003, Jouni Malinen <jkmaline@cc.hut.fi>
++ * Copyright 2003-2008, Jouni Malinen <j@w1.fi>
+  * Copyright 2004, Instant802 Networks, Inc.
+  * Copyright 2005, Devicescape Software, Inc.
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+@@ -472,7 +472,7 @@ static void ieee80211_send_deauth_disass
+ 	/* u.deauth.reason_code == u.disassoc.reason_code */
+ 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
  
-+/* max allowed rate miss before sync LQ cmd */
-+#define IWL_MISSED_RATE_MAX		15
- /* max time to accum history 2 seconds */
- #define IWL_RATE_SCALE_FLUSH_INTVL   (2*HZ)
- 
-@@ -149,6 +151,7 @@ struct iwl_lq_sta {
- 	u16 active_mimo3_rate;
- 	u16 active_rate_basic;
- 	s8 max_rate_idx;     /* Max rate set by user */
-+	u8 missed_rate_counter;
- 
- 	struct iwl_link_quality_cmd lq;
- 	struct iwl_scale_tbl_info lq_info[LQ_SIZE]; /* "active", "search" */
-@@ -841,10 +844,15 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
- 		/* the last LQ command could failed so the LQ in ucode not
- 		 * the same in driver sync up
- 		 */
--		iwl_send_lq_cmd(priv, &lq_sta->lq, CMD_ASYNC);
-+		lq_sta->missed_rate_counter++;
-+		if (lq_sta->missed_rate_counter > IWL_MISSED_RATE_MAX) {
-+			lq_sta->missed_rate_counter = 0;
-+			iwl_send_lq_cmd(priv, &lq_sta->lq, CMD_ASYNC);
-+		}
- 		goto out;
- 	}
- 
-+	lq_sta->missed_rate_counter = 0;
- 	/* Update frame history window with "failure" for each Tx retry. */
- 	while (retries) {
- 		/* Look up the rate and other info used for each tx attempt.
-@@ -2212,6 +2220,8 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
- 	struct ieee80211_conf *conf = &priv->hw->conf;
- 	struct iwl_lq_sta *lq_sta = priv_sta;
- 	u16 mask_bit = 0;
-+	int count;
-+	int start_rate = 0;
- 
- 	lq_sta->flush_timer = 0;
- 	lq_sta->supp_rates = sta->supp_rates[sband->band];
-@@ -2247,6 +2257,7 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
- 
- 	lq_sta->is_dup = 0;
- 	lq_sta->max_rate_idx = -1;
-+	lq_sta->missed_rate_counter = IWL_MISSED_RATE_MAX;
- 	lq_sta->is_green = rs_use_green(priv, conf);
- 	lq_sta->active_legacy_rate = priv->active_rate & ~(0x1000);
- 	lq_sta->active_rate_basic = priv->active_rate_basic;
-@@ -2285,16 +2296,20 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
- 	lq_sta->drv = priv;
- 
- 	/* Find highest tx rate supported by hardware and destination station */
--	mask_bit = sta->supp_rates[sband->band] & lq_sta->active_legacy_rate;
--	lq_sta->last_txrate_idx = 3;
--	for (i = 0; i < sband->n_bitrates; i++)
-+	mask_bit = sta->supp_rates[sband->band];
-+	count = sband->n_bitrates;
-+	if (sband->band == IEEE80211_BAND_5GHZ) {
-+		count += IWL_FIRST_OFDM_RATE;
-+		start_rate = IWL_FIRST_OFDM_RATE;
-+		mask_bit <<= IWL_FIRST_OFDM_RATE;
-+	}
-+
-+	mask_bit = mask_bit & lq_sta->active_legacy_rate;
-+	lq_sta->last_txrate_idx = 4;
-+	for (i = start_rate; i < count; i++)
- 		if (mask_bit & BIT(i))
- 			lq_sta->last_txrate_idx = i;
- 
--	/* For MODE_IEEE80211A, skip over cck rates in global rate table */
--	if (sband->band == IEEE80211_BAND_5GHZ)
--		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
--
- 	rs_initialize_lq(priv, conf, sta, lq_sta);
+-	ieee80211_tx_skb(sdata, skb, 0);
++	ieee80211_tx_skb(sdata, skb, ifsta->flags & IEEE80211_STA_MFP_ENABLED);
  }
  
--- 
-1.5.4.3
+ /* MLME */
+@@ -1421,6 +1421,9 @@ static void ieee80211_rx_mgmt_assoc_resp
+ 
+ 	rate_control_rate_init(sta);
+ 
++	if (ifsta->flags & IEEE80211_STA_MFP_ENABLED)
++		set_sta_flags(sta, WLAN_STA_MFP);
++
+ 	if (elems.wmm_param)
+ 		set_sta_flags(sta, WLAN_STA_WME);
+ 
+--- wireless-testing.orig/include/linux/nl80211.h	2009-01-08 13:03:44.000000000 +0200
++++ wireless-testing/include/linux/nl80211.h	2009-01-08 13:06:19.000000000 +0200
+@@ -412,12 +412,14 @@ enum nl80211_iftype {
+  * @NL80211_STA_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
+  *	with short barker preamble
+  * @NL80211_STA_FLAG_WME: station is WME/QoS capable
++ * @NL80211_STA_FLAG_MFP: station uses management frame protection
+  */
+ enum nl80211_sta_flags {
+ 	__NL80211_STA_FLAG_INVALID,
+ 	NL80211_STA_FLAG_AUTHORIZED,
+ 	NL80211_STA_FLAG_SHORT_PREAMBLE,
+ 	NL80211_STA_FLAG_WME,
++	NL80211_STA_FLAG_MFP,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_FLAG_AFTER_LAST,
+--- wireless-testing.orig/include/net/cfg80211.h	2009-01-08 13:03:44.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-01-08 13:06:19.000000000 +0200
+@@ -112,12 +112,14 @@ struct beacon_parameters {
+  * @STATION_FLAG_SHORT_PREAMBLE: station is capable of receiving frames
+  *	with short preambles
+  * @STATION_FLAG_WME: station is WME/QoS capable
++ * @STATION_FLAG_MFP: station uses management frame protection
+  */
+ enum station_flags {
+ 	STATION_FLAG_CHANGED		= 1<<0,
+ 	STATION_FLAG_AUTHORIZED		= 1<<NL80211_STA_FLAG_AUTHORIZED,
+ 	STATION_FLAG_SHORT_PREAMBLE	= 1<<NL80211_STA_FLAG_SHORT_PREAMBLE,
+ 	STATION_FLAG_WME		= 1<<NL80211_STA_FLAG_WME,
++	STATION_FLAG_MFP		= 1<<NL80211_STA_FLAG_MFP,
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-01-08 13:03:44.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-01-08 13:06:19.000000000 +0200
+@@ -630,6 +630,10 @@ static void sta_apply_parameters(struct 
+ 		sta->flags &= ~WLAN_STA_WME;
+ 		if (params->station_flags & STATION_FLAG_WME)
+ 			sta->flags |= WLAN_STA_WME;
++
++		sta->flags &= ~WLAN_STA_MFP;
++		if (params->station_flags & STATION_FLAG_MFP)
++			sta->flags |= WLAN_STA_MFP;
+ 		spin_unlock_bh(&sta->lock);
+ 	}
+ 
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2009-01-08 13:03:44.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2009-01-08 13:06:19.000000000 +0200
+@@ -67,14 +67,15 @@ static ssize_t sta_flags_read(struct fil
+ 	char buf[100];
+ 	struct sta_info *sta = file->private_data;
+ 	u32 staflags = get_sta_flags(sta);
+-	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s",
++	int res = scnprintf(buf, sizeof(buf), "%s%s%s%s%s%s%s%s",
+ 		staflags & WLAN_STA_AUTH ? "AUTH\n" : "",
+ 		staflags & WLAN_STA_ASSOC ? "ASSOC\n" : "",
+ 		staflags & WLAN_STA_PS ? "PS\n" : "",
+ 		staflags & WLAN_STA_AUTHORIZED ? "AUTHORIZED\n" : "",
+ 		staflags & WLAN_STA_SHORT_PREAMBLE ? "SHORT PREAMBLE\n" : "",
+ 		staflags & WLAN_STA_WME ? "WME\n" : "",
+-		staflags & WLAN_STA_WDS ? "WDS\n" : "");
++		staflags & WLAN_STA_WDS ? "WDS\n" : "",
++		staflags & WLAN_STA_MFP ? "MFP\n" : "");
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+ }
+ STA_OPS(flags);
+--- wireless-testing.orig/net/mac80211/sta_info.h	2009-01-08 13:03:44.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2009-01-08 13:06:19.000000000 +0200
+@@ -34,6 +34,7 @@
+  * @WLAN_STA_CLEAR_PS_FILT: Clear PS filter in hardware (using the
+  *	IEEE80211_TX_CTL_CLEAR_PS_FILT control flag) when the next
+  *	frame to this station is transmitted.
++ * @WLAN_STA_MFP: Management frame protection is used with this STA.
+  */
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH		= 1<<0,
+@@ -46,6 +47,7 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_WDS		= 1<<7,
+ 	WLAN_STA_PSPOLL		= 1<<8,
+ 	WLAN_STA_CLEAR_PS_FILT	= 1<<9,
++	WLAN_STA_MFP		= 1<<10,
+ };
+ 
+ #define STA_TID_NUM 16
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-08 13:05:38.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-08 13:06:19.000000000 +0200
+@@ -260,6 +260,7 @@ struct mesh_preq_queue {
+ #define IEEE80211_STA_PRIVACY_INVOKED	BIT(13)
+ #define IEEE80211_STA_TKIP_WEP_USED	BIT(14)
+ #define IEEE80211_STA_CSA_RECEIVED	BIT(15)
++#define IEEE80211_STA_MFP_ENABLED	BIT(16)
+ /* flags for MLME request */
+ #define IEEE80211_STA_REQ_SCAN 0
+ #define IEEE80211_STA_REQ_DIRECT_PROBE 1
 
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
