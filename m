@@ -1,197 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:55009 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753002AbZAXOMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 09:12:54 -0500
-Subject: [PATCH 3/7 v2] airo: simplify WEP index and capability checks
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1232748914.447.2.camel@localhost.localdomain>
-References: <1232748914.447.2.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Sat, 24 Jan 2009 09:11:35 -0500
-Message-Id: <1232806295.2870.4.camel@localhost.localdomain> (sfid-20090124_151257_618100_8D3AD8D1)
-Mime-Version: 1.0
+Received: from mail-bw0-f29.google.com ([209.85.218.29]:47670 "EHLO
+	mail-bw0-f29.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836AbZAHCiA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2009 21:38:00 -0500
+Received: by bwz10 with SMTP id 10so6420407bwz.13
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 18:37:58 -0800 (PST)
+Message-ID: <45e8e6c40901071837o56dba8f1w6db5c7e982f698da@mail.gmail.com> (sfid-20090108_033807_508954_742B81DA)
+Date: Wed, 7 Jan 2009 18:37:58 -0800
+From: "Andrey Yurovsky" <andrey@cozybit.com>
+To: libertas-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: libertas: BUG: unable to handle paging request
+Cc: wangchen@cn.fujitsu.com
+In-Reply-To: <45e8e6c40901071658j6a22fcc7gedcc41d73a61ff2a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <45e8e6c40901071658j6a22fcc7gedcc41d73a61ff2a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do the computation once at init time; don't ask the hardware
-every time.
+The commit that caused this regression is
+29726d85d7b98558a8bc8e69b859bf12e1347f9f "netdevice libertas: Fix
+directly reference of netdev->priv" by Wang Chen.  It probably causes
+a problem with netdev->priv's offset and then we get a pointer
+dereference problem when lbs_get_freq() tries to use its priv data.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+  -Andrey
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index a08aadf..e4ca5f8 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -1233,6 +1233,9 @@ struct airo_info {
- #define	PCI_SHARED_LEN		2*MPI_MAX_FIDS*PKTSIZE+RIDSIZE
- 	char			proc_name[IFNAMSIZ];
- 
-+	int			wep_capable;
-+	int			max_wep_idx;
-+
- 	/* WPA-related stuff */
- 	unsigned int bssListFirst;
- 	unsigned int bssListNext;
-@@ -2836,6 +2839,9 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 		rc = -EIO;
- 		goto err_out_wifi;
- 	}
-+	/* WEP capability discovery */
-+	ai->wep_capable = (cap_rid.softCap & cpu_to_le16(0x02)) ? 1 : 0;
-+	ai->max_wep_idx = (cap_rid.softCap & cpu_to_le16(0x80)) ? 3 : 0;
- 
- 	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
- 	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
-@@ -6265,11 +6271,9 @@ static int airo_get_mode(struct net_device *dev,
- 	return 0;
- }
- 
--static inline int valid_index(CapabilityRid *p, int index)
-+static inline int valid_index(struct airo_info *ai, int index)
- {
--	if (index < 0)
--		return 0;
--	return index < (p->softCap & cpu_to_le16(0x80) ? 4 : 1);
-+	return (index >= 0) && (index <= ai->max_wep_idx);
- }
- 
- /*------------------------------------------------------------------*/
-@@ -6282,16 +6286,12 @@ static int airo_set_encode(struct net_device *dev,
- 			   char *extra)
- {
- 	struct airo_info *local = dev->ml_priv;
--	CapabilityRid cap_rid;		/* Card capability info */
- 	int perm = ( dwrq->flags & IW_ENCODE_TEMP ? 0 : 1 );
- 	__le16 currentAuthType = local->config.authType;
- 
--	/* Is WEP supported ? */
--	readCapabilityRid(local, &cap_rid, 1);
--	/* Older firmware doesn't support this...
--	if(!(cap_rid.softCap & cpu_to_le16(2))) {
-+	if (!local->wep_capable)
- 		return -EOPNOTSUPP;
--	} */
-+
- 	readConfigRid(local, 1);
- 
- 	/* Basic checking: do we have a key to set ?
-@@ -6304,13 +6304,16 @@ static int airo_set_encode(struct net_device *dev,
- 		wep_key_t key;
- 		int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
- 		int current_index = get_wep_key(local, 0xffff);
-+
- 		/* Check the size of the key */
- 		if (dwrq->length > MAX_KEY_SIZE) {
- 			return -EINVAL;
- 		}
-+
- 		/* Check the index (none -> use current) */
--		if (!valid_index(&cap_rid, index))
-+		if (!valid_index(local, index))
- 			index = current_index;
-+
- 		/* Set the length */
- 		if (dwrq->length > MIN_KEY_SIZE)
- 			key.len = MAX_KEY_SIZE;
-@@ -6339,12 +6342,13 @@ static int airo_set_encode(struct net_device *dev,
- 	} else {
- 		/* Do we want to just set the transmit key index ? */
- 		int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
--		if (valid_index(&cap_rid, index)) {
-+		if (valid_index(local, index))
- 			set_wep_key(local, index, NULL, 0, perm, 1);
--		} else
-+		else {
- 			/* Don't complain if only change the mode */
- 			if (!(dwrq->flags & IW_ENCODE_MODE))
- 				return -EINVAL;
-+		}
- 	}
- 	/* Read the flags */
- 	if(dwrq->flags & IW_ENCODE_DISABLED)
-@@ -6370,14 +6374,12 @@ static int airo_get_encode(struct net_device *dev,
- {
- 	struct airo_info *local = dev->ml_priv;
- 	int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
--	CapabilityRid cap_rid;		/* Card capability info */
- 
--	/* Is it supported ? */
--	readCapabilityRid(local, &cap_rid, 1);
--	if(!(cap_rid.softCap & cpu_to_le16(2))) {
-+	if (!local->wep_capable)
- 		return -EOPNOTSUPP;
--	}
-+
- 	readConfigRid(local, 1);
-+
- 	/* Check encryption mode */
- 	switch(local->config.authType)	{
- 		case AUTH_ENCRYPT:
-@@ -6396,7 +6398,7 @@ static int airo_get_encode(struct net_device *dev,
- 	memset(extra, 0, 16);
- 
- 	/* Which key do we want ? -1 -> tx index */
--	if (!valid_index(&cap_rid, index))
-+	if (!valid_index(local, index))
- 		index = get_wep_key(local, 0xffff);
- 	dwrq->flags |= index + 1;
- 	/* Copy the key to the user buffer */
-@@ -6419,24 +6421,20 @@ static int airo_set_encodeext(struct net_device *dev,
- 	struct airo_info *local = dev->ml_priv;
- 	struct iw_point *encoding = &wrqu->encoding;
- 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
--	CapabilityRid cap_rid;		/* Card capability info */
- 	int perm = ( encoding->flags & IW_ENCODE_TEMP ? 0 : 1 );
- 	__le16 currentAuthType = local->config.authType;
- 	int idx, key_len, alg = ext->alg, set_key = 1;
- 	wep_key_t key;
- 
--	/* Is WEP supported ? */
--	readCapabilityRid(local, &cap_rid, 1);
--	/* Older firmware doesn't support this...
--	if(!(cap_rid.softCap & cpu_to_le16(2))) {
-+	if (!local->wep_capable)
- 		return -EOPNOTSUPP;
--	} */
-+
- 	readConfigRid(local, 1);
- 
- 	/* Determine and validate the key index */
- 	idx = encoding->flags & IW_ENCODE_INDEX;
- 	if (idx) {
--		if (!valid_index(&cap_rid, idx - 1))
-+		if (!valid_index(local, idx - 1))
- 			return -EINVAL;
- 		idx--;
- 	} else
-@@ -6505,14 +6503,11 @@ static int airo_get_encodeext(struct net_device *dev,
- 	struct airo_info *local = dev->ml_priv;
- 	struct iw_point *encoding = &wrqu->encoding;
- 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
--	CapabilityRid cap_rid;		/* Card capability info */
- 	int idx, max_key_len;
- 
--	/* Is it supported ? */
--	readCapabilityRid(local, &cap_rid, 1);
--	if(!(cap_rid.softCap & cpu_to_le16(2))) {
-+	if (!local->wep_capable)
- 		return -EOPNOTSUPP;
--	}
-+
- 	readConfigRid(local, 1);
- 
- 	max_key_len = encoding->length - sizeof(*ext);
-@@ -6521,7 +6516,7 @@ static int airo_get_encodeext(struct net_device *dev,
- 
- 	idx = encoding->flags & IW_ENCODE_INDEX;
- 	if (idx) {
--		if (!valid_index(&cap_rid, idx - 1))
-+		if (!valid_index(local, idx - 1))
- 			return -EINVAL;
- 		idx--;
- 	} else
-
-
+On Wed, Jan 7, 2009 at 4:58 PM, Andrey Yurovsky <andrey@cozybit.com> wrote:
+> Hello.  I noticed that the libertas driver causes a kernel oops in
+> more recent wireless-testing kernels (I am bisecting right now to
+> narrow this down).  To reproduce, load the driver and run iwconfig,
+> causing lbs_get_freq() to be called.
+>
+> So far I know that this problem doesn't exist at the 2.6.28-rc2 tag
+> (commit 0173a3265b228da319ceb9c1ec6a5682fd1b2d92)  but I have seen it
+> in -rc7 and up through today's wireless-testing.  It seems that
+> there's a regression somewhere after -rc2.  I've reproduced this with
+> the USB hardware as well as an SDIO board.
+>
+> [  118.571205] BUG: unable to handle kernel paging request at 00001e01
+> [  118.578500] IP: [<c81fddda>] lbs_get_freq+0x1a/0x160 [libertas]
+> [  118.585417] *pde = 00000000
+> [  118.588877] Oops: 0000 [#1]
+> [  118.592092] last sysfs file: /sys/block/ram9/range
+> [  118.592385] Modules linked in: usb8xxx libertas lib80211
+> [  118.592385]
+> [  118.592385] Pid: 2317, comm: iwconfig Not tainted (2.6.28-wl #65) Uknown
+> [  118.592385] EIP: 0060:[<c81fddda>] EFLAGS: 00010293 CPU: 0
+> [  118.592385] EIP is at lbs_get_freq+0x1a/0x160 [libertas]
+> [  118.592385] EAX: 00000000 EBX: 00000000 ECX: c6891ef8 EDX: c6891e98
+> [  118.592385] ESI: c6891ef8 EDI: c6891ef8 EBP: c7295000 ESP: c6891e10
+> [  118.592385]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+> [  118.592385] Process iwconfig (pid: 2317, ti=c6890000 task=c7349880
+> task.ti=c6890000)
+> [  118.592385] Stack:
+> [  118.592385]  c8201b4b c6891ef8 00000010 ffffffa1 00008b05 c038aa20
+> 00000000 c03c691c
+> [  118.592385]  00000000 c04bc7e0 c0301287 b7f01d70 c68ce000 c6895000
+> c04c8260 00000c04
+> [  118.592385]  c68c7b7c 00000000 c7295000 c6891ee8 c0300325 c6891ee8
+> c7295000 c6891ee8
+> [  118.592385] Call Trace:
+> [  118.592385]  [<c8201b4b>] lbs_get_name+0x2b/0xb0 [libertas]
+> [  118.592385]  [<c038aa20>] ioctl_standard_call+0x60/0x3a0
+> [  118.592385]  [<c0301287>] netif_receive_skb+0x1d7/0x3e0
+> [  118.592385]  [<c0300325>] __dev_get_by_name+0x75/0x90
+> [  118.592385]  [<c0300325>] __dev_get_by_name+0x75/0x90
+> [  118.592385]  [<c038a687>] wext_handle_ioctl+0x157/0x230
+> [  118.592385]  [<c81fddc0>] lbs_get_freq+0x0/0x160 [libertas]
+> [  118.592385]  [<c03034c4>] dev_ioctl+0x304/0x4f0
+> [  118.592385]  [<c02ffdd2>] net_rx_action+0x92/0x140
+> [  118.592385]  [<c027ca89>] pty_write+0x39/0x60
+> [  118.592385]  [<c02f4280>] sock_ioctl+0x0/0x260
+> [  118.592385]  [<c017e27f>] vfs_ioctl+0x1f/0x70
+> [  118.592385]  [<c017e65b>] do_vfs_ioctl+0x24b/0x490
+> [  118.592385]  [<c011654e>] update_curr+0x13e/0x190
+> [  118.592385]  [<c0117fab>] set_next_entity+0x2b/0x70
+> [  118.592385]  [<c0397c64>] schedule+0x1b4/0x350
+> [  118.592385]  [<c017e906>] sys_ioctl+0x66/0x70
+> [  118.592385]  [<c0103cd2>] syscall_call+0x7/0xb
+> [  118.592385] Code: e9 38 ff ff ff 8d b6 00 00 00 00 8d bf 00 00 00
+> 00 56 89 ce 53 83 ec 0c 8b 98 a4 01 00 00 a1 80 19 22 c8 83 e0 21 83
+> f8 21 74 42 <0f> b6 8b 01 1e 00 00 31 d2 89 d8 e8 a6 fe ff ff 85 c0 0f
+> 84 cd
+> [  118.592385] EIP: [<c81fddda>] lbs_get_freq+0x1a/0x160 [libertas]
+> SS:ESP 0068:c6891e10
+> [  118.594153] ---[ end trace f426cd49b2b378f4 ]---
+>
