@@ -1,83 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39488 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753194AbZALTtf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 14:49:35 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: rfkill: how murderous can it be ?
-Date: Mon, 12 Jan 2009 20:49:04 +0100
-Cc: Werner Almesberger <werner@openmoko.org>,
-	linux-wireless@vger.kernel.org
-References: <20090112191514.GA22112@almesberger.net> <1231788884.28887.4.camel@localhost.localdomain>
-In-Reply-To: <1231788884.28887.4.camel@localhost.localdomain>
+Received: from wf-out-1314.google.com ([209.85.200.169]:20784 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754763AbZAHSlE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 13:41:04 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so9395260wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2009 10:41:03 -0800 (PST)
+Message-ID: <b6c5339f0901081041p3c9669f8ycd461b155da60f94@mail.gmail.com> (sfid-20090108_194121_518259_6A9DBCE4)
+Date: Thu, 8 Jan 2009 13:41:03 -0500
+From: "Bob Copeland" <bcopeland@gmail.com>
+To: "Hugh Dickins" <hugh@veritas.com>
+Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
+Cc: "Maxim Levitsky" <maximlevitsky@gmail.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	ath5k-devel@venema.h4ckr.net
+In-Reply-To: <Pine.LNX.4.64.0901081740350.19523@blonde.anvils>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901122049.05116.mb@bu3sch.de> (sfid-20090112_204939_280873_BB1B9350)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils>
+	 <1231426017.922.2.camel@maxim-laptop>
+	 <Pine.LNX.4.64.0901081603410.8411@blonde.anvils>
+	 <b6c5339f0901080910x3d3b5758mae4e81411dcf1405@mail.gmail.com>
+	 <Pine.LNX.4.64.0901081740350.19523@blonde.anvils>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 January 2009 20:34:44 Dan Williams wrote:
-> On Mon, 2009-01-12 at 17:15 -0200, Werner Almesberger wrote:
-> > I'd like to restart a discussion from last year, namely how aggressive
-> > an rfkill implementation is allowed to be when it comes to destroying
-> > MAC state.
-> > 
-> > The design suggested in rfkill.txt and also implemented in the existing
-> > drivers basically assumes a simple on/off switch that cuts power to the
-> > transmitter but doesn't change anything else. The question is if this 
-> > is already the full extent to which rfkill is allowed to affect MAC
-> > state or if it could go further.
-> > 
-> > In the AR6k, we don't have such a simple switch for the transmitter. We
-> > can control what the transmitter does very indirectly by temporarily
-> > reconfiguring the MAC, but this creates a fair amount of complexity,
-> > which also seems to be at odds with the design of rfkill.
-> > 
-> > Alternatively, we could just power down the whole WLAN module. That is
-> > easily done and very reliable. However, MAC state (ESSID, keys, and a
-> > host of other settings) is obliterated if we do this. A watchful user 
-> > space (e.g., wpa_supplicant) could then restore the status quo ante.
-> > 
-> > Now the question is whether this is still in the spirit of the design 
-> > of rfkill of if it would take things too far.
-> > 
-> > It seems that there is no consensus on this issue yet. I started the 
-> > implementation with the assumption that rfkill should always behave as 
-> > if it only cut transmitter power, so no other state of the MAC is
-> > allowed to be lost. This is also what Henrique suggested I should do.
-> > 
-> > However, Andy and recently Michael suggested that, given that an
-> > interface that has no connectivity for an extended period of time is
-> > likely to get reconfigured anyway, it may be sufficient if rfkill 
-> > leaves things in a state that allows user space to restore 
-> > connectivity, without having to worry about details beyond that.
-> 
-> Yes.  You have no guarantees about how long the RF is down when the
-> switch is flipped or the checkbox ticked.  Instead of putting a bunch of
-> complexity in the kernel and drivers that *already* has to be in
-> userspace, just punt it out to userspace where it's already done and
-> works well.
-> 
-> If there are any latency issues with this, then we need to fix those
-> latency issues in wpa_supplicant, not put complex state handling into
+On Thu, Jan 8, 2009 at 12:55 PM, Hugh Dickins <hugh@veritas.com> wrote:
+> Let me see if I can reproduce the ath5k BUG with a straightforward
+> memhog, repeatedly dirtying more anon memory than RAM can provide.
+> Is there something suitable I could run to exercise that wireless
+> path concurrently?  It was just idling when I hit the BUGs before.
 
-Just a simple nl80211 notification message, probably.
-This could be shared with resume-notification.
-
-> the stack drivers for this.  Treat rfkill the same as suspend/resume
-> from a state perspective, because they really have the same
-> consequences: you have no idea where you are when you wake up, what has
-> happened since RF was turned off, and whether your AP is still around.
-> Better to make scanning and associate fast and foolproof, which has to
-> happen in userspace anyway.
-
-I fully agree with this.
-
-(Note that currently with mac80211 drivers, we leave the MAC state dangling.
-That's really the same type of "bug" like the mac80211 suspend issue.
-A fix would require integration of rfkill into mac80211)
+Receiving any packets will do it, in your case it was probably
+beacons from nearby APs if you weren't using the wifi.  So iperf
+or similar will work.
 
 -- 
-Greetings, Michael.
+Bob Copeland %% www.bobcopeland.com
