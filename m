@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:54274 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082AbZAMPSJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 10:18:09 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Werner Almesberger <werner@openmoko.org>
-Subject: Re: rfkill: how murderous can it be ?
-Date: Tue, 13 Jan 2009 16:17:31 +0100
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-References: <20090112191514.GA22112@almesberger.net> <1231788884.28887.4.camel@localhost.localdomain> <20090112211313.GK13290@almesberger.net>
-In-Reply-To: <20090112211313.GK13290@almesberger.net>
+Received: from fmmailgate03.web.de ([217.72.192.234]:41475 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312AbZAIQNP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 11:13:15 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Vivek Natarajan <Vivek.Natarajan@atheros.com>
+Subject: Re: multicast traffic and ath9k
+Date: Fri, 9 Jan 2009 17:13:12 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <1231346161.3545.52.camel@johannes> <1231506446.3703.18.camel@johannes> <44EE5C37ADC36343B0625A05DD408C4845A77DAF08@CHEXMB-01.global.atheros.com>
+In-Reply-To: <44EE5C37ADC36343B0625A05DD408C4845A77DAF08@CHEXMB-01.global.atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200901131617.31618.mb@bu3sch.de> (sfid-20090113_161814_333568_7E55354C)
+Message-Id: <200901091713.12777.chunkeey@web.de> (sfid-20090109_171319_517212_CEB001B2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 January 2009 22:13:13 Werner Almesberger wrote:
-> Dan Williams wrote:
-> > Instead of putting a bunch of
-> > complexity in the kernel and drivers that *already* has to be in
-> > userspace, just punt it out to userspace where it's already done and
-> > works well.
+On Friday 09 January 2009 14:59:25 Vivek Natarajan wrote:
 > 
-> That's the way I like things :-) Can the information user space may
-> have to recover include DHCP leases and routes ? I.e., can an rfkill
-> implementation choose to just restart the network interface ?
+> Johannes Berg wrote:
 > 
-> Next: what happens while the device is rfkill'ed ? E.g., is it okay to
-> just remove the interface, so any attempt to configure the interface
-> while it's rfkill'ed would yield an ENODEV ?
+> > > Is the mc bit
+> > > checking done only on enabling power save? if set and mc packets are received,
+> > > how does it automatically go back to sleep and wouldn't there be any conflict
+> > > between mac80211 and the hw regarding power state since mac80211 is not aware
+> > > of the mc bit induced state change?
 > 
-> Basically, could rfkill block/unblock semantics just be equivalent to
-> removal and reloading of the module containing the respective WLAN
-> device driver ? (Ignoring any response time issues for now.)
+> > I don't think there would be a conflict. mac80211's CONF_PS is always
+> > only "go to sleep if you can", so receiving multicast traffic would
+> > obviously imply not being able to go to sleep. When mac80211 then unsets
+> > the CONF_PS flag you'd just not go back to sleep after being awake for
+> > MC traffic.
+> 
+> How does the mac80211 know if the hw is receiving mc traffic or not and
+> unset the CONF_PS flag accordingly? Am I missing something basic here?
+> 
+> Maybe p54 (stlc45xx) has the answer for how it goes back to sleep after mc traffic.
 
-No. If you are in an rfkill situation, you're not required to kill the receiver.
-(However, currently most (all?) devices kill both TX and RX).
-So I think completely killing the interface is the wrong way to go.
+Well we have a flag to tell the firmware to do the following thing in client mode (while sleeping)
 
-And I don't think we should care about stuff above the MAC layer, too.
-If the user hits rfkill, he should _expect_ all upper layer connections
-to break (DHCP, TCP or whatever). That's a basic assumption about rfkill.
-The default timeouts will handle that just fine.
-In any way, this is nothing the kernel has to care about. It's userspace business, if any.
+"If the PSM object's *_PSM_MCBC flag is set, and a beacon is received with the TIM's multicast traffic bit
+set, [...] or the LMAC stays awake until the TIM's multicast traffic bit is cleared again from the beacon".
 
--- 
-Greetings, Michael.
+see:
+STSW45X0C LMAC API: page 24 - LM_PSM_MCBC (~ P54_PSM_MCBC)
+
+Regards,
+	Chr
