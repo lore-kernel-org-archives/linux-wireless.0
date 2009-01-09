@@ -1,81 +1,376 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36011 "EHLO vs166246.vserver.de"
+Received: from mail.atheros.com ([12.36.123.2]:46326 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754170AbZAYM4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 07:56:43 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Alina Friedrichsen" <x-alina@gmx.net>
-Subject: Re: [PATCH] b43: Accessing the TSF via mac80211
-Date: Sun, 25 Jan 2009 13:55:49 +0100
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-References: <20090125124151.115210@gmx.net> <200901251351.50230.mb@bu3sch.de>
-In-Reply-To: <200901251351.50230.mb@bu3sch.de>
+	id S1751949AbZAITaf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 14:30:35 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 11:30:35 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] Correct antenna gain
+Date: Fri, 9 Jan 2009 11:30:15 -0800
+Message-ID: <1231529415-29338-1-git-send-email-lrodriguez@atheros.com> (sfid-20090109_203040_785942_68C52F94)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901251355.49220.mb@bu3sch.de> (sfid-20090125_135647_296311_F1C68E4D)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 25 January 2009 13:51:50 Michael Buesch wrote:
-> On Sunday 25 January 2009 13:41:51 Alina Friedrichsen wrote:
-> > This allows the mac80211 high level code to access the TSF. This is e.g. needed for BSSID merges in the IBSS mode.
-> 
-> Thanks, can you also remove our private debugfs hook?
-> 
-> > Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
-> > ---
-> > diff -urN wireless-testing.orig/drivers/net/wireless/b43/main.c wireless-testing/drivers/net/wireless/b43/main.c
-> > --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-01-25 06:12:13.000000000 +0100
-> > +++ wireless-testing/drivers/net/wireless/b43/main.c	2009-01-25 13:09:35.000000000 +0100
-> > @@ -3177,6 +3177,25 @@
-> >  	return 0;
-> >  }
-> >  
-> > +static u64 b43_op_get_tsf(struct ieee80211_hw *hw)
-> > +{
-> > +	struct b43_wl *wl = hw_to_b43_wl(hw);
-> > +	struct b43_wldev *dev = wl->current_dev;
-> > +	u64 tsf;
-> > +
-> 
-> You must add a check and locking here.
-> 
-> 	if (dev && (b43_status(dev) >= B43_STAT_INITIALIZED)) {
-> 		mutex_lock(&wl->mutex);
-> 		spin_lock_irq(&wl->irq_lock);
-> 
-> > +	b43_tsf_read(dev, &tsf);
-> 
-> 		spin_unlock_irq(&wl->irq_lock);
-> 		mutex_unlock(&wl->mutex);
-> 	} else
-> 		tsf = 0; //FIXME what to do on error?
-> 
-> > +	return tsf;
-> > +}
+The original db.txt came from a program which scaped the ath9k
+regulatory framework, in it a value of 6 was used for antenna
+gain. The value for antenna gain in ath9k is twice the actual
+value, so a value of 6 is actually equivalent to 3 dBi. Lets
+correct this in db.txt
 
-Whoops, I got it wrong :D
-This is what it should look like:
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ db.txt |  178 ++++++++++++++++++++++++++++++++--------------------------------
+ 1 files changed, 89 insertions(+), 89 deletions(-)
 
-static u64 b43_op_get_tsf(struct ieee80211_hw *hw)
-{
-       struct b43_wl *wl = hw_to_b43_wl(hw);
-       struct b43_wldev *dev = wl->current_dev;
-       u64 tsf;
-
-	mutex_lock(&wl->mutex);
-	spin_lock_irq(&wl->irq_lock);
-	if (dev && (b43_status(dev) >= B43_STAT_INITIALIZED))
-		b43_tsf_read(dev, &tsf);
-	else
-		tsf = 0;//FIXME? what to do on error?
-	spin_unlock_irq(&wl->irq_lock);
-	mutex_unlock(&wl->mutex);
-
-       return tsf;
-}
-
+diff --git a/db.txt b/db.txt
+index 1ab81f0..d884c6c 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1,5 +1,5 @@
+ country 00:
+-	(2402 - 2472 @ 40), (6, 20)
++	(2402 - 2472 @ 40), (3, 20)
+ 
+ country AE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -20,8 +20,8 @@ country AN:
+ 
+ country AR:
+ 	(2402 - 2482 @ 20), (N/A, 20)
+-	(5270 - 5330 @ 20), (6, 17), DFS
+-	(5735 - 5815 @ 20), (6, 30)
++	(5270 - 5330 @ 20), (3, 17), DFS
++	(5735 - 5815 @ 20), (3, 30)
+ 
+ country AT:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -31,9 +31,9 @@ country AT:
+ 
+ country AU:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (6, 23)
+-	(5250 - 5330 @ 40), (6, 23), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(5170 - 5250 @ 40), (3, 23)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country AZ:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -79,10 +79,10 @@ country BO:
+ 
+ country BR:
+ 	(2402 - 2482 @ 20), (N/A, 20)
+-	(5170 - 5250 @ 20), (6, 17)
+-	(5250 - 5330 @ 20), (6, 20), DFS
+-	(5490 - 5710 @ 20), (6, 20), DFS
+-	(5735 - 5835 @ 20), (6, 30)
++	(5170 - 5250 @ 20), (3, 17)
++	(5250 - 5330 @ 20), (3, 20), DFS
++	(5490 - 5710 @ 20), (3, 20), DFS
++	(5735 - 5835 @ 20), (3, 30)
+ 
+ country BY:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -95,11 +95,11 @@ country BZ:
+ 	(5735 - 5835 @ 40), (N/A, 30)
+ 
+ country CA:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5170 - 5250 @ 40), (6, 17)
+-	(5250 - 5330 @ 40), (6, 20), DFS
+-	(5490 - 5710 @ 40), (6, 20), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country CH:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -118,16 +118,16 @@ country CN:
+ 	(5735 - 5835 @ 40), (N/A, 30)
+ 
+ country CO:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5170 - 5250 @ 20), (6, 17)
+-	(5250 - 5330 @ 20), (6, 23), DFS
+-	(5735 - 5835 @ 20), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 20), (3, 17)
++	(5250 - 5330 @ 20), (3, 23), DFS
++	(5735 - 5835 @ 20), (3, 30)
+ 
+ country CR:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (6, 17)
+-	(5250 - 5330 @ 20), (6, 23), DFS
+-	(5735 - 5835 @ 20), (6, 30)
++	(5170 - 5250 @ 20), (3, 17)
++	(5250 - 5330 @ 20), (3, 23), DFS
++	(5735 - 5835 @ 20), (3, 30)
+ 
+ country CS:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -163,19 +163,19 @@ country DK:
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
+ 
+ country DO:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5170 - 5250 @ 40), (6, 17)
+-	(5250 - 5330 @ 40), (6, 23), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country DZ:
+ 	(2402 - 2482 @ 20), (N/A, 20)
+ 
+ country EC:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (6, 17)
+-	(5250 - 5330 @ 20), (6, 23), DFS
+-	(5735 - 5835 @ 20), (6, 30)
++	(5170 - 5250 @ 20), (3, 17)
++	(5250 - 5330 @ 20), (3, 23), DFS
++	(5735 - 5835 @ 20), (3, 30)
+ 
+ country EE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -224,19 +224,19 @@ country GR:
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
+ 
+ country GT:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5170 - 5250 @ 40), (6, 17)
+-	(5250 - 5330 @ 40), (6, 23), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country HN:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 
+ country HK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (6, 23)
+-	(5250 - 5330 @ 40), (6, 23), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(5170 - 5250 @ 40), (3, 23)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country HR:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -310,17 +310,17 @@ country JO:
+ 
+ country KP:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5330 @ 40), (6, 20)
+-	(5160 - 5250 @ 40), (6, 20), DFS
+-	(5490 - 5630 @ 40), (6, 30), DFS
+-	(5735 - 5815 @ 40), (6, 30)
++	(5170 - 5330 @ 40), (3, 20)
++	(5160 - 5250 @ 40), (3, 20), DFS
++	(5490 - 5630 @ 40), (3, 30), DFS
++	(5735 - 5815 @ 40), (3, 30)
+ 
+ country KR:
+ 	(2402 - 2482 @ 20), (N/A, 20)
+-	(5170 - 5250 @ 20), (6, 20)
+-	(5260 - 5330 @ 20), (6, 20), DFS
+-	(5490 - 5710 @ 20), (6, 30), DFS
+-	(5735 - 5815 @ 20), (6, 30)
++	(5170 - 5250 @ 20), (3, 20)
++	(5260 - 5330 @ 20), (3, 20), DFS
++	(5490 - 5710 @ 20), (3, 30), DFS
++	(5735 - 5815 @ 20), (3, 30)
+ 
+ country KW:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -339,10 +339,10 @@ country LI:
+ 
+ country LK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (6, 17)
+-	(5250 - 5330 @ 20), (6, 20), DFS
+-	(5490 - 5710 @ 20), (6, 20), DFS
+-	(5735 - 5835 @ 20), (6, 30)
++	(5170 - 5250 @ 20), (3, 17)
++	(5250 - 5330 @ 20), (3, 20), DFS
++	(5490 - 5710 @ 20), (3, 20), DFS
++	(5735 - 5835 @ 20), (3, 30)
+ 
+ country LT:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -372,9 +372,9 @@ country MA:
+ 
+ country MO:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (6, 23)
+-	(5250 - 5330 @ 40), (6, 23), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(5170 - 5250 @ 40), (3, 23)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country MK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -391,10 +391,10 @@ country MY:
+ 	(5735 - 5835 @ 20), (N/A, 30)
+ 
+ country MX:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5170 - 5250 @ 40), (6, 17)
+-	(5250 - 5330 @ 40), (6, 23), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country NL:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -414,9 +414,9 @@ country NP:
+ 
+ country NZ:
+ 	(2402 - 2482 @ 40), (N/A, 30)
+-	(5170 - 5250 @ 20), (6, 23)
+-	(5250 - 5330 @ 20), (6, 23), DFS
+-	(5735 - 5835 @ 20), (6, 30)
++	(5170 - 5250 @ 20), (3, 23)
++	(5250 - 5330 @ 20), (3, 23), DFS
++	(5735 - 5835 @ 20), (3, 30)
+ 
+ country OM:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -425,10 +425,10 @@ country OM:
+ 	(5735 - 5835 @ 20), (N/A, 20)
+ 
+ country PA:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5170 - 5250 @ 40), (6, 17)
+-	(5250 - 5330 @ 40), (6, 23), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country PE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -436,9 +436,9 @@ country PE:
+ 
+ country PG:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (6, 17)
+-	(5250 - 5330 @ 40), (6, 23), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country PH:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -460,10 +460,10 @@ country PT:
+ 	(5490 - 5710 @ 40), (N/A, 27), DFS
+ 
+ country PR:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5170 - 5250 @ 40), (6, 17)
+-	(5250 - 5330 @ 40), (6, 23), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 23), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country QA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -503,17 +503,17 @@ country SK:
+ 
+ country SV:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (6, 17)
+-	(5250 - 5330 @ 20), (6, 23), DFS
+-	(5735 - 5835 @ 20), (6, 30)
++	(5170 - 5250 @ 20), (3, 17)
++	(5250 - 5330 @ 20), (3, 23), DFS
++	(5735 - 5835 @ 20), (3, 30)
+ 
+ country SY:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 
+ country TW:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5270 - 5330 @ 40), (6, 17), DFS
+-	(5735 - 5815 @ 40), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5270 - 5330 @ 40), (3, 17), DFS
++	(5735 - 5815 @ 40), (3, 30)
+ 
+ country TH:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+@@ -537,22 +537,22 @@ country UA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 
+ country US:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5170 - 5250 @ 40), (6, 17)
+-	(5250 - 5330 @ 40), (6, 20), DFS
+-	(5490 - 5710 @ 40), (6, 20), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country UY:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 	(5735 - 5815 @ 20), (N/A, 23)
+ 
+ country UZ:
+-	(2402 - 2472 @ 40), (6, 27)
+-	(5170 - 5250 @ 40), (6, 17)
+-	(5250 - 5330 @ 40), (6, 20), DFS
+-	(5490 - 5710 @ 40), (6, 20), DFS
+-	(5735 - 5835 @ 40), (6, 30)
++	(2402 - 2472 @ 40), (3, 27)
++	(5170 - 5250 @ 40), (3, 17)
++	(5250 - 5330 @ 40), (3, 20), DFS
++	(5490 - 5710 @ 40), (3, 20), DFS
++	(5735 - 5835 @ 40), (3, 30)
+ 
+ country VE:
+ 	(2402 - 2482 @ 40), (N/A, 30)
+@@ -566,10 +566,10 @@ country YE:
+ 
+ country ZA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 20), (6, 17)
+-	(5250 - 5330 @ 20), (6, 20), DFS
+-	(5490 - 5710 @ 20), (6, 20), DFS
+-	(5735 - 5835 @ 20), (6, 30)
++	(5170 - 5250 @ 20), (3, 17)
++	(5250 - 5330 @ 20), (3, 20), DFS
++	(5490 - 5710 @ 20), (3, 20), DFS
++	(5735 - 5835 @ 20), (3, 30)
+ 
+ country ZW:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-Greetings, Michael.
+1.6.1.rc3.51.g5832d
+
