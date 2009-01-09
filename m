@@ -1,95 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54607 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753747AbZAEWH3 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60066 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755487AbZAIUAn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 17:07:29 -0500
-Subject: drivers returning wrong results from their _tx op
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Daniel Drake <dsd@gentoo.org>,
-	Tomas Winkler <tomasw@gmail.com>,
-	Javier Cardona <javier@cozybit.com>, Chr <chunkeey@web.de>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8kC//sI4wu6XBbip4Ajt"
-Date: Mon, 05 Jan 2009 23:07:44 +0100
-Message-Id: <1231193264.3697.41.camel@johannes> (sfid-20090105_230733_765440_60D50AC3)
-Mime-Version: 1.0
+	Fri, 9 Jan 2009 15:00:43 -0500
+Date: Fri, 9 Jan 2009 14:51:20 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Enable dynamic power save in ath9k.
+Message-ID: <20090109195119.GC3371@tuxdriver.com> (sfid-20090109_210052_557226_955EDFEC)
+References: <20081229235300.GA8458@myhost.users.atheros.com> <1230552660.3116.33.camel@johannes> <8e92b4100812290537q7605b39dg382fe5d42963c65a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8e92b4100812290537q7605b39dg382fe5d42963c65a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Dec 29, 2008 at 07:07:41PM +0530, Vivek Natarajan wrote:
+> On Mon, Dec 29, 2008 at 5:41 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Mon, 2008-12-29 at 15:53 -0800, Vivek Natarajan wrote:
+> >
+> >> +#define ATH9K_PS_WAKEUP(sc)                                                \
+> >> +     do {                                                                  \
+> >> +             if (!atomic_read(&sc->ps_usecount) &&                         \
+> >> +                (ah->ah_powerMode !=  ATH9K_PM_AWAKE)) {                   \
+> >> +                     ah->ah_restoreMode = ah->ah_powerMode;                \
+> >> +                     ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);         \
+> >> +             }                                                             \
+> >> +             atomic_inc(&sc->ps_usecount);                                 \
+> >> +     } while (0);
+> >> +
+> >> +#define ATH9K_PS_RESTORE(sc)                                               \
+> >> +     do {                                                                  \
+> >> +             if (atomic_dec_and_test(&sc->ps_usecount) &&                  \
+> >> +                (sc->hw->conf.flags & IEEE80211_CONF_PS))                  \
+> >> +                     ath9k_hw_setpower(sc->sc_ah, ah->ah_restoreMode);     \
+> >> +     } while (0);
+> >
+> > I think those would be better as static inlines rather than macros.
+> >
+> > johannes
+> 
+> Thanks Johannes. I'll change them.
+> 
+> > Also, this seems racy, shouldn't it use something like if
+> > (atomic_inc_return() == 1) ?
+> 
+> Thanks.This seems much better.
 
---=-8kC//sI4wu6XBbip4Ajt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Did you repost this?  I don't see it.  Please (re?)send it to the
+list w/ the requested changes.
 
-spatch:
-
-@ r1 @
-identifier _tx, _ops;
-@@
- struct ieee80211_ops _ops =3D {
-...
- .tx =3D _tx,
-...
- };
-
-@ r2 depends on r1 @
-identifier r1._tx;
-@@
-static int _tx(...)
-{
-...
--return ...;
-}
-
-
-shows a lot...
-
-First off: all those should return NETDEV_TX_OK/BUSY.
-
-ath5k: returns 0/-1
-ath9k: returns 0/-1
-iwl-agn: returns 0 (=3D=3D NETDEV_TX_OK, but still should be changed)
-iwl3945: same
-libertas_tf: same
-rtl8180: same
-p54: same (some paths)
-rtl8187: that's why I started looking
-zd1211: returns -E* codes
-
-
-These need to be fixed, the bad ones are zd1211 and rtl8187, the -1 from
-ath5k/9k is not much of a worry but should be fixed anyway.
-
-Preferably, drivers should just drop frames when they can't handle them,
-but keep in mind fragmentation and keep enough space for up to 9 or 10
-(I think) fragments.
-
-johannes
-
---=-8kC//sI4wu6XBbip4Ajt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJYoSuAAoJEKVg1VMiehFYi04P/jJ82xbju/DrGBIM1QaAyk/d
-abqrlmjmE2+jEl2o2Ty9CsvsJMJAk/VVvtMwa2ihGzd6ewnHRLSo0IPICq2l2SQ3
-Yk0y9SiBDqmvR3ilctDO5dU/nwFaYZdCGuJJLiZXIq2gTEWbxAojsfI9GqMHhWlT
-5nRBI98dGPtu74hA8RysfHty1jLpmTpYcKPBMmKg2Mmr4RqfgbW8qunyBcw6zjon
-Ihbr5NS+PPSlNcGuMuLx5QeepsBrBB3ZvLXAoJCRqBsy4YMtZm+kf9K0KesM7QlO
-kgZeroc3xBkCAaTHQNNJWinokEKF+7me482Za/agr24IjpV0MLutejkWGXGAk9UE
-weSoNirlVXPVznOO5FFb7AlvLmWoKWvMEHpl3Z1dokCIif+Z8d/6IQ70sZIVIFuw
-PVAB3NdiasjFEICOr3XeDjRFsMCYLN5BUecfI2NN/ReuTcYJIfNjTEnP3SrWDJuf
-3pWdA//qAokjIn04OxMubodbbqOSiBPKF/0c89uKQHj/tmHiMOGFmW4zWR6goZEX
-FTEYBTzYlwb1sNZExTJ4LyM5mGN59VccjetKPIq6HRmgRzcShESWXmFgT1wsSEF6
-PtpV0vvtn+GeTR09fbVDz7mlyyfEfJN71wHSlN2CfIuiSdkKHhv9xtJq5nPuOcKf
-b4NbOgjnkhpwHrwqjOGu
-=TFdD
------END PGP SIGNATURE-----
-
---=-8kC//sI4wu6XBbip4Ajt--
-
+John
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
