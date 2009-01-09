@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:57104 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751765AbZAEUz4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 15:55:56 -0500
-Message-ID: <496273D4.6020600@lwfinger.net> (sfid-20090105_215600_538530_B1091584)
-Date: Mon, 05 Jan 2009 14:55:48 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Problem with rtl8187
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from main.gmane.org ([80.91.229.2]:56119 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752315AbZAITvi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 14:51:38 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LLNOI-0007A1-42
+	for linux-wireless@vger.kernel.org; Fri, 09 Jan 2009 19:51:34 +0000
+Received: from 77.21.169.220 ([77.21.169.220])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 19:51:34 +0000
+Received: from feldmann_markus by 77.21.169.220 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 19:51:34 +0000
+To: linux-wireless@vger.kernel.org
+From: feldmaus <feldmann_markus@gmx.de>
+Subject: Re: show WMI magic Signals and activate hardware RF-kill button
+Date: Fri, 09 Jan 2009 20:52:31 +0100
+Message-ID: <gk89qs$mra$1@ger.gmane.org> (sfid-20090109_205142_510153_C2B1F277)
+References: <gk83fe$fu2$1@ger.gmane.org> <49679783.8070901@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <49679783.8070901@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+Larry Finger schrieb:
+> 
+> There is a protocol named WMI for Windows Management Interface. I
+> assume that it was invented by the folks in Redmond. In any case, it
+> is designed to handle events that have buttons that do not generate a
+> keycode. The module named hp-wmi is supposed to take care of the
+> things under Linux for HP and Compaq computers.
+> 
+> Did you generate this module? Is it loaded?
+By now, yes.
+hp_wmi                  4632  0
+rfkill                  9648  4 rfkill_input,hp_wmi,b43legacy
+wmi                     6568  1 hp_wmi
 
-I'm chasing a problem with suspend/resume on rtl8187; however, in my testing, I
-found that a simple "modprobe -r/modprobe" sequence fails, even though
-unplugging/replugging the stick with or without a "modprobe -r" works just fine.
+But i still do not get any keycode with <showkey>.
+Is there an other program than <showkey> ?
 
-I'm running into the WARN-ON at net/mac80211/tx.c:1184. The start of the
-traceback is as follows:
+Where i can solve this problem with the wmi code ?
 
- [<ffffffff8023afce>] warn_on_slowpath+0x58/0x7d
- [<ffffffff803c8c3c>] ? pskb_expand_head+0xe6/0x156
- [<ffffffffa029dbff>] ? __ieee80211_tx+0x40/0x12a [mac80211]
- [<ffffffffa029e98b>] ieee80211_master_start_xmit+0x41c/0x50d [mac80211]
- [<ffffffffa029e8c5>] ? ieee80211_master_start_xmit+0x356/0x50d [mac80211]
- [<ffffffff803cf0a4>] dev_hard_start_xmit+0x214/0x28f
- [<ffffffff803dfb9b>] __qdisc_run+0xf3/0x1fe
- [<ffffffff803cf584>] dev_queue_xmit+0x357/0x48f
-
-The last rtl8187 routine that was started was rtl8187_add_interface. From a
-debugging message, I see that info->flags = 0x6B6B6B6B - the SLUB debugging
-poison value.  If I interpret the traceback correctly, a workqueue has been
-restarted without being properly initialized.
-
-Is there any routine that needs to be called when shutting down that has been
-missed?
-
-Thanks,
-
-Larry
-
-
+Regards Markus
 
