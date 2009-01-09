@@ -1,40 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:39919 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:60031 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754223AbZAHQzy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 11:55:54 -0500
-Subject: Re: [PATCH v2 1/3] libertas: Fix alignment issues in libertas core
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Colin McCabe <colin@cozybit.com>, linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>
-In-Reply-To: <1231433597.8398.3.camel@johannes>
-References: <1230951623-26998-1-git-send-email-colin@cozybit.com>
-	 <1230951623-26998-2-git-send-email-colin@cozybit.com>
-	 (sfid-20090103_040451_022232_D73555CB)  <1231433597.8398.3.camel@johannes>
+	id S1753276AbZAIMqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 07:46:42 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 04:46:42 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v2] mac80211: Handle power constraint level advertised in 11d+h beacon
+Date: Fri, 9 Jan 2009 18:14:15 +0530
+Message-ID: <1231505055-14411-1-git-send-email-vasanth@atheros.com> (sfid-20090109_134646_889854_DADCBFDA)
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Thu, 08 Jan 2009 11:54:41 -0500
-Message-Id: <1231433681.21643.43.camel@localhost.localdomain> (sfid-20090108_175559_624102_3D41D63C)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-01-08 at 17:53 +0100, Johannes Berg wrote:
-> On Fri, 2009-01-02 at 19:00 -0800, Colin McCabe wrote:
-> > When loading fields from packed structs, use get_unaligned_le16 and
-> > get_unaligned_le32 instead of le16_to_cpu and le32_to_cpu.
-> > This doesn't matter on x86, but it is important for some other CPUs.
-> > 
-> > Also, mark all packed structs as packed. Generally, any data structure
-> > that comes over the wire from the WLAN firmware should be a packed struct.
-> 
-> Just marking the structs packed should be sufficient, since then the
-> compiler must assume they are potentially unaligned.
+This patch uses power constraint level while determining the maximum
+transmit power, there by it makes sure that any power mitigation
+requirement for the channel in the current regulatory domain is met.
 
-Colin, can you test out just the bits that mark the structs as packed
-and see if we can get by without using get_unaligned_le16() everywhere?
-There will be a few cases where get_unaligned_le16() may be required but
-I'm pretty sure we don't need this many...
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ net/mac80211/ieee80211_i.h |    4 ++++
+ net/mac80211/main.c        |   10 ++++++++--
+ net/mac80211/mlme.c        |    9 +++++++++
+ net/mac80211/spectmgmt.c   |   21 +++++++++++++++++++++
+ 4 files changed, 42 insertions(+), 2 deletions(-)
 
-Dan
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 7ec1333..941cd8d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -703,6 +703,7 @@ struct ieee80211_local {
+ 	struct timer_list dynamic_ps_timer;
+ 
+ 	int user_power_level; /* in dBm */
++	int power_constr_level; /* in dBm */
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct local_debugfsdentries {
+@@ -966,6 +967,9 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+ 				       size_t len);
++void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
++				 u16 capab_info, u8 *pwr_constr_elem,
++				 u8 pwr_constr_elem_len);
+ 
+ /* utility functions/constants */
+ extern void *mac80211_wiphy_privid; /* for wiphy privid */
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b55b997..27f313c 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -214,10 +214,16 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ 		changed |= IEEE80211_CONF_CHANGE_CHANNEL;
+ 	}
+ 
+-	if (!local->user_power_level)
++	if (local->sw_scanning)
+ 		power = chan->max_power;
+ 	else
+-		power = min(chan->max_power, local->user_power_level);
++		power = local->power_constr_level ?
++			(chan->max_power - local->power_constr_level) :
++			chan->max_power;
++
++	if (local->user_power_level)
++		power = min(power, local->user_power_level);
++
+ 	if (local->hw.conf.power_level != power) {
+ 		changed |= IEEE80211_CONF_CHANGE_POWER;
+ 		local->hw.conf.power_level = power;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d108c12..f45fcb5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -910,6 +910,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	local->oper_channel_type = NL80211_CHAN_NO_HT;
+ 	config_changed |= IEEE80211_CONF_CHANGE_HT;
+ 
++	local->power_constr_level = 0;
++
+ 	del_timer_sync(&local->dynamic_ps_timer);
+ 	cancel_work_sync(&local->dynamic_ps_enable_work);
+ 
+@@ -1838,6 +1840,13 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		 * for the BSSID we are associated to */
+ 		regulatory_hint_11d(local->hw.wiphy,
+ 			elems.country_elem, elems.country_elem_len);
++
++		/* TODO: IBSS also needs this */
++		if (elems.pwr_constr_elem)
++			ieee80211_handle_pwr_constr(sdata,
++				le16_to_cpu(mgmt->u.probe_resp.capab_info),
++				elems.pwr_constr_elem,
++				elems.pwr_constr_elem_len);
+ 	}
+ 
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index f72bad6..b621e49 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -84,3 +84,24 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 			mgmt->sa, mgmt->bssid,
+ 			mgmt->u.action.u.measurement.dialog_token);
+ }
++
++void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
++				 u16 capab_info, u8 *pwr_constr_elem,
++				 u8 pwr_constr_elem_len)
++{
++	struct ieee80211_conf *conf = &sdata->local->hw.conf;
++
++	if (!(capab_info & WLAN_CAPABILITY_SPECTRUM_MGMT))
++		return;
++
++	/* Power constraint IE length should be 1 octet */
++	if (pwr_constr_elem_len != 1)
++		return;
++
++	if ((*pwr_constr_elem <= conf->channel->max_power) &&
++	    (*pwr_constr_elem != sdata->local->power_constr_level)) {
++		sdata->local->power_constr_level = *pwr_constr_elem;
++		ieee80211_hw_config(sdata->local, 0);
++	}
++}
++
+-- 
+1.5.5.1
 
