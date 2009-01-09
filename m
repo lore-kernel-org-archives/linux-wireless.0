@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:57613 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757216AbZATWLP (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:18274 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753079AbZAIODx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 17:11:15 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org,
-	John W Linville l <linville@tuxdriver.com>
-Subject: [PATCH] p54usb: fix packet loss with first generation devices
-Date: Tue, 20 Jan 2009 23:11:21 +0100
-Cc: Artur Skawina <art.08.09@gmail.com>
+	Fri, 9 Jan 2009 09:03:53 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 06:03:53 -0800
+From: Vivek Natarajan <Vivek.Natarajan@Atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 9 Jan 2009 19:29:25 +0530
+Subject: RE: multicast traffic and ath9k
+Message-ID: <44EE5C37ADC36343B0625A05DD408C4845A77DAF08@CHEXMB-01.global.atheros.com> (sfid-20090109_150359_500670_ED4A1F69)
+References: <1231346161.3545.52.camel@johannes>
+	 <44EE5C37ADC36343B0625A05DD408C4845A77DAF07@CHEXMB-01.global.atheros.com>,<1231506446.3703.18.camel@johannes>
+In-Reply-To: <1231506446.3703.18.camel@johannes>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901202311.21366.chunkeey@web.de> (sfid-20090120_231119_532120_D7CC9CF5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Artur Skawina confirmed that the first generation devices needs the same 
-URB_ZERO_PACKET flag, in oder to finish the pending transfer properly.
-The second generation has been successfully fixed by
-"p54usb: fix random traffic stalls (LM87)" (43af18f06d5)
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index da3e918..bf264b1 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -229,6 +229,8 @@ static void p54u_tx_3887(struct ieee80211_hw *dev, struct sk_buff *skb)
- 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
- 			  skb->data, skb->len, FREE_AFTER_TX(skb) ?
- 			  p54u_tx_cb : p54u_tx_dummy_cb, skb);
-+	addr_urb->transfer_flags |= URB_ZERO_PACKET;
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 
- 	usb_anchor_urb(addr_urb, &priv->submitted);
- 	err = usb_submit_urb(addr_urb, GFP_ATOMIC);
-@@ -237,7 +239,7 @@ static void p54u_tx_3887(struct ieee80211_hw *dev, struct sk_buff *skb)
- 		goto out;
- 	}
- 
--	usb_anchor_urb(addr_urb, &priv->submitted);
-+	usb_anchor_urb(data_urb, &priv->submitted);
- 	err = usb_submit_urb(data_urb, GFP_ATOMIC);
- 	if (err)
- 		usb_unanchor_urb(data_urb);
-@@ -332,12 +334,13 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	 * free what's inside the transfer_buffer after the callback routine
- 	 * has completed.
- 	 */
--	int_urb->transfer_flags |= URB_FREE_BUFFER;
-+	int_urb->transfer_flags |= URB_FREE_BUFFER | URB_ZERO_PACKET;
- 
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
- 			  hdr, skb->len + sizeof(*hdr), FREE_AFTER_TX(skb) ?
- 			  p54u_tx_cb : p54u_tx_dummy_cb, skb);
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 
- 	usb_anchor_urb(int_urb, &priv->submitted);
- 	err = usb_submit_urb(int_urb, GFP_ATOMIC);
+Johannes Berg wrote:
+
+> > Is the mc bit
+> > checking done only on enabling power save? if set and mc packets are received,
+> > how does it automatically go back to sleep and wouldn't there be any conflict
+> > between mac80211 and the hw regarding power state since mac80211 is not aware
+> > of the mc bit induced state change?
+
+> I don't think there would be a conflict. mac80211's CONF_PS is always
+> only "go to sleep if you can", so receiving multicast traffic would
+> obviously imply not being able to go to sleep. When mac80211 then unsets
+> the CONF_PS flag you'd just not go back to sleep after being awake for
+> MC traffic.
+
+How does the mac80211 know if the hw is receiving mc traffic or not and
+unset the CONF_PS flag accordingly? Am I missing something basic here?
+
+Maybe p54 (stlc45xx) has the answer for how it goes back to sleep after mc traffic.
+
+Vivek.
