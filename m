@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11026 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757365AbZAPANW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 19:13:22 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:13:22 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/13] cfg80211: remove check for last_request on ignore_reg_update()
-Date: Thu, 15 Jan 2009 16:12:23 -0800
-Message-ID: <1232064746-17134-11-git-send-email-lrodriguez@atheros.com> (sfid-20090116_011330_404330_7B4DE725)
-In-Reply-To: <1232064746-17134-10-git-send-email-lrodriguez@atheros.com>
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-9-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-10-git-send-email-lrodriguez@atheros.com>
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:49968 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674AbZAIUl2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 15:41:28 -0500
+Message-ID: <4967B62C.1050203@openwrt.org> (sfid-20090109_214133_256008_5B61E350)
+Date: Fri, 09 Jan 2009 21:40:12 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Pavel Roskin <proski@gnu.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [ath9k-devel] [PATCH v2 08/11] ath9k: remove (u16) casts from
+ rtc register access
+References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>	 <1231503868-29226-9-git-send-email-juhosg@openwrt.org> <1231519108.24032.1.camel@dv>
+In-Reply-To: <1231519108.24032.1.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to check for last_request as the callers of
-update_all_wiphy_regulatory() ensure its present.
+Pavel Roskin =EDrta:
+> On Fri, 2009-01-09 at 13:24 +0100, Gabor Juhos wrote:
+>> The RTC register offsets don't fit into 'u16' on the AR913x, so we h=
+ave
+>> to remove the existing casts.
+>>
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+>> Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+>> ---
+>>  drivers/net/wireless/ath9k/hw.c |   14 +++++++-------
+>>  1 files changed, 7 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/=
+ath9k/hw.c
+>> index 088d968..742ecc1 100644
+>> --- a/drivers/net/wireless/ath9k/hw.c
+>> +++ b/drivers/net/wireless/ath9k/hw.c
+>> @@ -1008,7 +1008,7 @@ static void ath9k_hw_init_pll(struct ath_hal *=
+ah,
+>>  				pll |=3D SM(0xb, AR_RTC_PLL_DIV);
+>>  		}
+>>  	}
+>> -	REG_WRITE(ah, (u16) (AR_RTC_PLL_CONTROL), pll);
+>> +	REG_WRITE(ah, (AR_RTC_PLL_CONTROL), pll);
+>=20
+> Perhaps you could remove the parentheses as well?  It looks weird
+> otherwise.
+>=20
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 8bf999d..6c45832 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1006,8 +1006,6 @@ static void handle_band_custom(struct wiphy *wiphy, enum ieee80211_band band,
- 
- static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
- {
--	if (!last_request)
--		return true;
- 	if (setby == REGDOM_SET_BY_CORE &&
- 		  wiphy->custom_regulatory)
- 		return true;
--- 
-1.6.1.rc3.51.g5832d
-
+Yes. I will do it.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
