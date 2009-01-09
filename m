@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:38161 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383AbZADLRG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38591 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756354AbZAIUan (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 06:17:06 -0500
-Message-ID: <49609A84.3070600@openwrt.org> (sfid-20090104_121711_116696_CC5915BD)
-Date: Sun, 04 Jan 2009 12:16:20 +0100
-From: Gabor Juhos <juhosg@openwrt.org>
+	Fri, 9 Jan 2009 15:30:43 -0500
+Date: Fri, 9 Jan 2009 15:18:00 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH 1/1 #2] IWL: fix WARN typo
+Message-ID: <20090109201759.GE3371@tuxdriver.com> (sfid-20090109_213052_063922_1647068F)
+References: <1231171404-22822-1-git-send-email-jirislaby@gmail.com> <1231171566-22984-1-git-send-email-jirislaby@gmail.com>
 MIME-Version: 1.0
-To: Christoph Hellwig <hch@infradead.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>, Imre Kaloz <kaloz@openwrt.org>
-Subject: Re: [RFC 01/12] ath9k: introduce bus specific DMA routines
-References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org> <1230990262-22923-2-git-send-email-juhosg@openwrt.org> <20090104072628.GA12905@infradead.org>
-In-Reply-To: <20090104072628.GA12905@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231171566-22984-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christoph Hellwig =EDrta:
-> On Sat, Jan 03, 2009 at 02:44:11PM +0100, Gabor Juhos wrote:
->> In the AR913x SoCs, the WMAC devices are connected to the CPU throug=
-h
->> the internal AHB bus instead of PCI. We first patch ath9k driver to =
-use
->> replaceable DMA routines, so we can use different code for the AHB b=
-us.
->=20
->> -		pci_unmap_single(sc->pdev, bf->bf_dmacontext,
->> -				 skb->len,
->> -				 PCI_DMA_TODEVICE);
->> +		ath_unmap_single_to_device(sc, bf->bf_dmacontext, skb->len);
->=20
-> Just use the dma_* routines, as they are bus-agnostic and make sure t=
-he
-> implementation on your mips SOC works for the ahb bus.
->=20
->=20
+Is the way it is now problematic for non-native English speakers?
+Or native ones for that matter?
 
-Ok, i will try it.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dropping an article in a "computer-ese" statement has never bothered
+me, so this seems like just a handful of unnecessary string bytes?
+
+John
+
+On Mon, Jan 05, 2009 at 05:06:06PM +0100, Jiri Slaby wrote:
+> new kew -> a new key
+> 
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Tomas Winkler <tomas.winkler@intel.com>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-sta.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> index 412f66b..ce2ba40 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> @@ -638,7 +638,7 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+>  	 * in uCode. */
+>  
+>  	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+> -		"no space for new kew");
+> +		"no space for a new key");
+>  
+>  	priv->stations[sta_id].sta.key.key_flags = key_flags;
+>  	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+> @@ -686,7 +686,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+>  	 * in uCode. */
+>  
+>  	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+> -		"no space for new kew");
+> +		"no space for a new key");
+>  
+>  	priv->stations[sta_id].sta.key.key_flags = key_flags;
+>  	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+> @@ -722,7 +722,7 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+>  	 * in uCode. */
+>  
+>  	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+> -		"no space for new kew");
+> +		"no space for a new key");
+>  
+>  	/* This copy is acutally not needed: we get the key with each TX */
+>  	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
+> -- 
+> 1.6.0.6
+> 
+> 
+
+-- 
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
