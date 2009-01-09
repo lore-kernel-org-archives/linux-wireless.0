@@ -1,79 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flock1.newmail.ru ([82.204.219.207]:47192 "HELO
-	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752718AbZAUSzj (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:28102 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606AbZAIVI7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 13:55:39 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Subject: [PATCH] orinoco: trivial cleanup in alloc_orinocodev
-Date: Wed, 21 Jan 2009 21:55:29 +0300
+	Fri, 9 Jan 2009 16:08:59 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so3523743fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 13:08:57 -0800 (PST)
+Message-ID: <3ace41890901091308g7c9f5e2cj5595017131b7afd7@mail.gmail.com> (sfid-20090109_220905_969399_6962BC45)
+Date: Fri, 9 Jan 2009 21:08:57 +0000
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: lmage11@twcny.rr.com
+Subject: Re: Help debugging unexpected disassociations?
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090108231828.QHGIG.228066.root@hrndva-web20-z02>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart10025835.W8SQ1yIznC";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200901212155.32754.arvidjaar@mail.ru> (sfid-20090121_195550_388146_87D089BA)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <3ace41890901081506r7e38328apee3007b556db0cd3@mail.gmail.com>
+	 <20090108231828.QHGIG.228066.root@hrndva-web20-z02>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart10025835.W8SQ1yIznC
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Thu, Jan 8, 2009 at 11:18 PM,  <lmage11@twcny.rr.com> wrote:
+> ---- Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+>> On Thu, Jan 8, 2009 at 10:43 PM,  <lmage11@twcny.rr.com> wrote:
+>> > ---- lmage11@twcny.rr.com wrote:
+>> >> Hey everyone. I'm using an Intel 4965AGN using the iwlagn
+>> >> driver in 2.6.28. When using a specific AP, my connection is
+>> >> unexpectedly dropping with nothing more than a
+>> >> "wlan0: deauthenticated". Any tips on how I could figure out
+>> >> whether this is the driver's fault or the AP's? Another problem I'm
+>> >> having is that dhcpcd is timing out a lot, usually after trying to
+>> >> reconnect from a connection drop.
+>> >>
+>> >> The AP is a Linksys WRT54Gv1 with WPA2 and ssid broadcasting enabled.
+>> >>
+>> >> Thanks!
+>> >>
+>> >> Ari
+>> >
+>> > Um... Bump?
+>>
+>> It is no use and quite annoying to do that - it sounds like "read my
+>> mind and spoon-feed me". Your initial post has almost no useful
+>> information to speak of (actual log entries, wpa_supplicant config,
+>> whether using networkmanager or static config, etc).
+>
+> Um.
+>
+> Well considering as I'm not a developer and don't know how to debug
+> these things, I think "spoon-feeding" is an appropriate term, no? And
+> also, I didn't ask you to read my mind, I didn't even ask you to figure
+> out the problem for me, I asked for the information that I would need
+> to figure out the problem MYSELF.
+>
+> As for "useful information", the "wlan0: deauthenticated" is *LITERALLY*
+> all I get. I was not lying to you. After stripping out identifying information,
+> my wpa_supplicant config would be pretty much completely empty. The config
+> for this AP is about as simple as a consumer WPA2 AP config can be. I am not
+> using networkmanager.
+>
+>> You probably should try to run wpa_suplicant in the foreground.
+>
+> You mean so I can see the debug messages it outputs?
 
-Subject: [PATCH] orinoco: trivial cleanup in alloc_orinocodev
-=46rom: Andrey Borzenkov <arvidjaar@mail.ru>
+Even if you strip away privacy info (and put in xx.yy.zz) it is still
+better than "read my mind and guess my problem".
 
-Remove extra space; remove redundant cast
+For example, this is how my deauth looks like, when NetworkManager
+cuts the connectiion, in preparation for
+suspending to RAM:
 
-Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
+wlan2: deauthenticating by local choice (reason=3)
 
-=2D--
-
-This is on top of previous patch for struct net_device_ops.
-
- drivers/net/wireless/orinoco/orinoco.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-
-diff --git a/drivers/net/wireless/orinoco/orinoco.c=20
-b/drivers/net/wireless/orinoco/orinoco.c
-index d1207d0..497f324 100644
-=2D-- a/drivers/net/wireless/orinoco/orinoco.c
-+++ b/drivers/net/wireless/orinoco/orinoco.c
-@@ -3603,7 +3603,7 @@ struct net_device
- 	struct orinoco_private *priv;
-=20
- 	dev =3D alloc_etherdev(sizeof(struct orinoco_private) + sizeof_card);
-=2D	if (! dev)
-+	if (!dev)
- 		return NULL;
- 	priv =3D netdev_priv(dev);
- 	priv->ndev =3D dev;
-@@ -3618,7 +3618,7 @@ struct net_device
- 	dev->netdev_ops =3D &orinoco_netdev_ops;
- 	dev->watchdog_timeo =3D HZ; /* 1 second timeout */
- 	dev->ethtool_ops =3D &orinoco_ethtool_ops;
-=2D	dev->wireless_handlers =3D (struct iw_handler_def *)&orinoco_handler_de=
-f;
-+	dev->wireless_handlers =3D &orinoco_handler_def;
- #ifdef WIRELESS_SPY
- 	priv->wireless_data.spy_data =3D &priv->spy_data;
- 	dev->wireless_data =3D &priv->wireless_data;
-
-
---nextPart10025835.W8SQ1yIznC
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkl3b6QACgkQR6LMutpd94xY2QCfZFRxE+77ZV6vl2A8lxu60Y8L
-V/oAn1RMDhxCKaitVtfrln+y4yVJY9AG
-=rkvQ
------END PGP SIGNATURE-----
-
---nextPart10025835.W8SQ1yIznC--
+Also, it is always useful to quote versions of relevant software -
+what version of wpa_supplicant, and networkmanager you are using; or
+even what distribution you are using, and hardware (64-bit, 32-bit).
+You have written 3 times and added no new info.
