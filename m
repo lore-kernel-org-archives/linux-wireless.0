@@ -1,93 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:61937 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753742AbZAVLqM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 06:46:12 -0500
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [RFC PATCH v2 1/2] mac80211: remove multicast check from check_tim()
-To: johannes@sipsolutions.net, vivek.natraj@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 22 Jan 2009 13:45:39 +0200
-Message-ID: <20090122114539.31443.45201.stgit@tikku> (sfid-20090122_124615_168068_35735FF9)
-In-Reply-To: <20090122114240.31443.18218.stgit@tikku>
-References: <20090122114240.31443.18218.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from main.gmane.org ([80.91.229.2]:44733 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751474AbZAIBsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2009 20:48:03 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LL6Th-00018M-60
+	for linux-wireless@vger.kernel.org; Fri, 09 Jan 2009 01:48:01 +0000
+Received: from 69-196-155-127.dsl.teksavvy.com ([69.196.155.127])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 01:48:01 +0000
+Received: from monnier by 69-196-155-127.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 01:48:01 +0000
+To: linux-wireless@vger.kernel.org
+From: Stefan Monnier <monnier@iro.umontreal.ca>
+Subject: b43 terribly slow
+Date: Thu, 08 Jan 2009 20:47:51 -0500
+Message-ID: <jwvvdspbjv6.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org> (sfid-20090109_024808_753131_BAC0B0D1)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently mac80211 checks for the multicast tim bit from beacons,
-disables power save and sends a null frame if the bit is set. This was
-added to support ath9k. But this is a bit controversial because the AP will
-send multicast frames immediately after the beacon and the time constraints
-are really high. Relying mac80211 to be fast enough here might not be
-reliable in all situations. And there's no need to send a null frame, AP
-will send the frames immediately after the dtim beacon no matter what.
+I'm using the b43 driver with a OpenWRT's 2.6.25 kernel (which includes
+changes from compat-wireless).  I'm happy to say that it works on my WPA
+network, but the bandwidth it offers is cometimes terrible.
+(like less than 50kB/s over NFS).
 
-Also if dynamic power save is disabled (iwconfig wlan0 power timeout 0)
-currently mac80211 disables power save whenever the multicast bit is set
-but it's never enabled again after receiving the first multicast/broadcast
-frame.
+The affected machine (an asus WL-700gE) is not overloaded at all, and
+while it serves those files over NFS, `top' says it's 94% idle.
 
-The current implementation is not usable on p54/stlc45xx and the
-easiest way to fix this is to remove the multicast tim bit check
-altogether. Handling multicast tim bit in host is rare, most of the
-designs do this in firmware/hardware, so it's better not to have it in
-mac80211. It's a lot better to do this in firmware/hardware, or if
-that's not possible it could be done in the driver.
+Has anybody seen this or have some idea what might be the trouble?
 
-Also renamed the function to ieee80211_check_tim() to follow the style
-of the file.
+It's not always like that, so it might be due to interference, but 
+I have an old WL-500g right next to this box (i.e. similar b43
+hardware, but running a 2.4 kernel with broadcom's proprietary driver),
+and I always get around 700kB/s bandwidth, so the problem is likely to
+be on the driver side.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+This afternoon, the problem lasted for a while, so I experimented a bit.
+While investigating, I noticed that a likely culprit is that `iwconfig'
+says it's rate is set to 1M.  So I tried to change the rate.
 
- net/mac80211/mlme.c |   11 ++++-------
- 1 files changed, 4 insertions(+), 7 deletions(-)
+Typical link quality during this test:
+Link Quality=70/100  Signal level:-40 dBm  Noise level=-63 dBm
+tho I've seen link quality reported as high as 105/100
+(and as low as 60/100).
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 51f021f..c7e61e2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -575,7 +575,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 	}
- }
- 
--static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
-+static bool ieee80211_check_tim(struct ieee802_11_elems *elems, u16 aid)
- {
- 	u8 mask;
- 	u8 index, indexn1, indexn2;
-@@ -585,9 +585,6 @@ static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
- 	index = aid / 8;
- 	mask  = 1 << (aid & 7);
- 
--	if (tim->bitmap_ctrl & 0x01)
--		*is_mc = true;
--
- 	indexn1 = tim->bitmap_ctrl & 0xfe;
- 	indexn2 = elems->tim_len + indexn1 - 4;
- 
-@@ -1788,7 +1785,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_local *local = sdata->local;
- 	u32 changed = 0;
--	bool erp_valid, directed_tim, is_mc = false;
-+	bool erp_valid, directed_tim;
- 	u8 erp_value = 0;
- 
- 	/* Process beacon from the current BSS */
-@@ -1816,9 +1813,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK &&
- 	    local->hw.conf.flags & IEEE80211_CONF_PS) {
--		directed_tim = check_tim(&elems, ifsta->aid, &is_mc);
-+		directed_tim = ieee80211_check_tim(&elems, ifsta->aid);
- 
--		if (directed_tim || is_mc) {
-+		if (directed_tim) {
- 			local->hw.conf.flags &= ~IEEE80211_CONF_PS;
- 			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
- 			ieee80211_send_nullfunc(local, sdata, 0);
+- with a 1M transfer speed, I see a bandwidth around 80kB/s
+- setting the rate manually to 2M improved the transfer speed to
+  around 140kB/s.
+- setting the rate to 5.5M improved the speed to around 280kB/s,
+  but with periods where nothing gets through.
+- with 11M, the periods where nothing get through are much more
+  significant, so connections are becoming very difficult.
+- with 54M, same thing.
+- if I "iwconfig wlan0 rate auto" it goes back down to 1M fairly quickly.
+
+Any idea what might be going on?  Or what I could do to try and figure
+it out?  It seems that the rate choice is a bit conservative (2M works
+as well as 1M, just faster), but it's probably not the culprit.
+So could someone explain to me why I see these drops in connectivity
+even though the WL-500g that sits right next stays connected "full
+blast" (at least 500kB/s, so at least 11M I guess)?
+
+
+        Stefan
 
