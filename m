@@ -1,84 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37544 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571AbZANTSZ (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:48324 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753633AbZAISr6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 14:18:25 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>, Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v4 00/11] ath9k: add preliminary support for the AR913x SoCs
-Date: Wed, 14 Jan 2009 20:17:01 +0100
-Message-Id: <1231960632-4452-1-git-send-email-juhosg@openwrt.org> (sfid-20090114_201832_663639_9011F751)
+	Fri, 9 Jan 2009 13:47:58 -0500
+Received: by bwz14 with SMTP id 14so29434958bwz.13
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 10:47:56 -0800 (PST)
+To: "Bob Copeland" <me@bobcopeland.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linville@tuxdriver.com
+Subject: Re: drivers returning wrong results from their _tx op
+References: <1231193264.3697.41.camel@johannes>
+	<b6c5339f0901051424q12d8fc14o8f20b62cfacc4e6e@mail.gmail.com>
+	<1231246859.3503.0.camel@johannes>
+	<20090109022347.GA5077@hash.localnet> <87hc4828xn.fsf@litku.valot.fi>
+	<20090109153716.M19288@bobcopeland.com>
+	<87hc48tpwa.fsf@litku.valot.fi> <20090109182142.M2510@bobcopeland.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 09 Jan 2009 20:47:53 +0200
+In-Reply-To: <20090109182142.M2510@bobcopeland.com> (Bob Copeland's message of "Fri\, 9 Jan 2009 13\:27\:27 -0500")
+Message-ID: <87zli0s4di.fsf@litku.valot.fi> (sfid-20090109_194803_099068_AF60E603)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set introduces preliminary support for the Atheros' AR9130/AR9132
-SoCs built-in WMAC device. Tested with compat-wireless-2.6 and 2.6.27.10 
-kernel on the following device:
-  * Atheros AP83-050 reference board (AR9132 SoC, AR9106 RF)
-  * TRENDnet TEW-632BRP router (AR9130 SoC, AR9102 RF)
-  * Mikrotik RB433 board (AR7161 SoC) + AR5416 based miniPCI card
+"Bob Copeland" <me@bobcopeland.com> writes:
 
-Changes since v3:
-  * rebased against master-2009-01-13 of wireless-testing
+> On Fri, 09 Jan 2009 18:17:41 +0200, Kalle Valo wrote
+>> I read it. Adding "or NETDEV_TX_BUSY if it fails" is just confusing,
+>> better to state that it just should not fail.
+>
+> Fair enough, but the state of things today is some drivers do.
+> Yes, we're guilty of that in ath5k and it should be fixed.  But like 
+> ->config(), if the callback should never ever fail, then returning
+> an error code at all is pretty suspect.
 
-Changes since v2:
-  * parentheses around RTC register's names has been removed
-  * rebased against master-2009-01-12 of wireless-testing
+Yes, that's why it's already better to deny this kind of usage in
+documentation already now.
 
-Changes since v1:
-  * enabling support of the AR9100 has been moved to the end of the series
-  * bus specific cleanup routine has been rewritten
-  * PCI code converted to use 'softc.irq' as well
-  * setup of 'hw->flags' and 'hw->wiphy->interface_modes' has been removed 
-    from ath_ahb_probe()
-  * unregistering of the ath_ahb_diver has been fixed
+> Would this be better?
+>
+> "This function should return NETDEV_TX_OK except in very limited cases."
+>
+> Then when someone asks which cases, you say "none"...
 
-Changes since RFC:
-  * bus specific DMA routines removed
-  * bus specific register access routines removed
-  * irq value is stored in softc
-  * rebased against master-2009-01-06 of wireless-testing
-  
-11 patches will follow as replies:
+That's better.
 
-Gabor Juhos (11):
-      ath9k: convert to struct device
-      ath9k: convert to use bus-agnostic DMA routines
-      ath9k: introduce bus specific cache size routine
-      ath9k: introduce bus specific cleanup routine
-      ath9k: move PCI code into separate file
-      ath9k: introduce platform driver for AHB bus support
-      ath9k: get EEPROM contents from platform data on AHB bus
-      ath9k: remove (u16) casts from rtc register access
-      ath9k: fix ar5416Addac_9100 values
-      ath9k: fix null pointer dereference in ani monitor code
-      ath9k: enable support for AR9100
+Thanks for doing this. It's very important to document the return
+values, especially for the people not familiar with mac80211.
 
- drivers/net/wireless/ath9k/Makefile   |    2 
- drivers/net/wireless/ath9k/ahb.c      |  187 +++++++++++++++++++
- drivers/net/wireless/ath9k/ani.c      |    6 -
- drivers/net/wireless/ath9k/beacon.c   |   28 +--
- drivers/net/wireless/ath9k/core.h     |   47 +++++
- drivers/net/wireless/ath9k/eeprom.c   |   51 -----
- drivers/net/wireless/ath9k/hw.c       |   17 +-
- drivers/net/wireless/ath9k/initvals.h |    2 
- drivers/net/wireless/ath9k/main.c     |  326 +++++----------------------------
- drivers/net/wireless/ath9k/pci.c      |  305 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/recv.c     |   24 +-
- drivers/net/wireless/ath9k/reg.h      |    4 
- drivers/net/wireless/ath9k/xmit.c     |   14 +
- include/linux/ath9k_platform.h        |   28 +++
- 14 files changed, 665 insertions(+), 376 deletions(-)
- create mode 100644 drivers/net/wireless/ath9k/ahb.c
- create mode 100644 drivers/net/wireless/ath9k/pci.c
- create mode 100644 include/linux/ath9k_platform.h
+-- 
+Kalle Valo
