@@ -1,94 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:18065 "EHLO mail.atheros.com"
+Received: from main.gmane.org ([80.91.229.2]:34844 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751910AbZAFUt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 15:49:28 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 12:49:28 -0800
-Date: Tue, 6 Jan 2009 12:49:23 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-CC: Ivo van Doorn <ivdoorn@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rt2400-devel@lists.sourceforge.net"
-	<rt2400-devel@lists.sourceforge.net>
-Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
-Message-ID: <20090106204923.GC21980@tesla> (sfid-20090106_214931_148778_D61E9AE8)
-References: <200901042021.10904.IvDoorn@gmail.com> <200901061832.20529.IvDoorn@gmail.com> <20090106173647.GP6834@tesla> <200901061847.31579.IvDoorn@gmail.com> <4963C186.2070408@kpnplanet.nl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4963C186.2070408@kpnplanet.nl>
+	id S1750698AbZAISFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 13:05:08 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1LLLjD-0002VJ-3S
+	for linux-wireless@vger.kernel.org; Fri, 09 Jan 2009 18:05:03 +0000
+Received: from 77.21.169.220 ([77.21.169.220])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 18:05:03 +0000
+Received: from feldmann_markus by 77.21.169.220 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 18:05:03 +0000
+To: linux-wireless@vger.kernel.org
+From: feldmaus <feldmann_markus@gmx.de>
+Subject: Re: show WMI magic Signals and activate hardware RF-kill button
+Date: Fri, 09 Jan 2009 19:05:11 +0100
+Message-ID: <gk83hk$fu2$2@ger.gmane.org> (sfid-20090109_190513_433186_D7B88739)
+References: <gk83fe$fu2$1@ger.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <gk83fe$fu2$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 06, 2009 at 12:39:34PM -0800, Gertjan van Wingerde wrote:
-> On 01/06/09 18:47, Ivo van Doorn wrote:
-> > On Tuesday 06 January 2009, Luis R. Rodriguez wrote:
-> >
-> >> On Tue, Jan 06, 2009 at 09:32:20AM -0800, Ivo van Doorn wrote:
-> >>
-> >>>>>> 2. I'm still puzzled how to handle the two different values that the EEPROM has, namely one for the bg band and one for the a band. I've handled it by registering the one associated with the configured band, but that seems to be unlikely to be correct. I still haven't found a better way to handle this.
-> >>>>>>
-> >>>>> Because of this I hadn't looked very deep into rt61 and rt73 yet.
-> >>>>>
-> >>>>>
-> >>>>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
-> >>>>>>
-> >>>>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
-> >>>>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
-> >>>>>
-> >>>> Based on the documentation from the EEPROM for all devices I read that its recommended
-> >>>> that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
-> >>>> windows registry be used.
-> >>>>
-> >>>> Based on tests for the devices with only one band, do are you seeing an actual regulatory
-> >>>> domain in the EEPROM?
-> >>>>
-> >>> I have to check, but I don't think I have any hardware with valid domain values.
-> >>>
-> >>>
-> >>>> To deal with the issue of having two separate EEPROM values for a regulatory domain
-> >>>> and since the documentation indicates to not rely on it I would advise to allow users
-> >>>> to be compliant by selecting the country they are in. wpa_supplicant has support for
-> >>>> selecting country now, and so does iw. Eventually I see Network Manager letting users
-> >>>> select the country. But you guys are the maintainers and developers so you will know
-> >>>> better.
-> >>>>
-> >>> Well it is fine with me,  understood from earlier discussion that it was advised that drivers
-> >>> attempted to set the domain if they could. Hence the reason I had added reading the EEPROM
-> >>> for domain values to the TODO list. But it is true that it is quite rare that there are valid values
-> >>> for it. So it would be fine with me by letting the user handle it completely.
-> >>>
-> >> I see -- well if there are *some* cards that do have valid EEPROM values then it seems worth it
-> >> to do the actual regulatory_hint(), for dual band cards you can probably just not support it. But
-> >> its up to you guys. Just my advice based on the documentation I have read so far.
-> >>
-> >
-> > Ok.
-> >
-> > Gertjan, do you know if there is any hardware with valid GEO data in the EEPROM?
-> >
-> 
-> As mentioned in my previous email, I do have devices that have valid GEO
-> data in the EEPROM. So, we should be able to use that.
-> Also, for the dual band cards, it does seem that at least the numerical
-> values are similar for both bands (although I'm not sure that same
-> numerical values means same regulatory domain). This is at least the
-> case on all the cards that I own.
+My actually Sydtem is:
+  HP Pavilion Laptop zv5000
+  Debian Lenny(Testing)
+  Linux Kernel 2.6.28 from kernel.org
+  Broadcom Wlan card BCM4303
 
-If that's the case and since dual band cards will most likely have 2ghz support
-why not just provide regulatory_hint() based on the 2ghz band all the time?
-
-> FYI: The legacy drivers do use the information in the EEPROM to
-> initialize the internal administration of regulatory information, but
-> allow the end-user to override that via config-file or via private wext
-> call. It would be good to have a similar possibility for rt2x00.
-
-We allow users to change regulatory domain, please see:
-
-http://wireless.kernel.org/en/developers/Regulatory/CRDA#Changingregulatorydomains
-
-  Luis
