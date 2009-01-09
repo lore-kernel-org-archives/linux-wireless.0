@@ -1,37 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10622 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750799AbZALGy7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 01:54:59 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2009 22:54:59 -0800
-Date: Mon, 12 Jan 2009 12:24:38 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH] ath9k: Fix basic connectivity issue
-Message-ID: <20090112065438.GA2008@vasanth-laptop> (sfid-20090112_075503_670730_D04C0FE5)
-References: <1231587429-23989-1-git-send-email-vasanth@atheros.com> <87sknrjrgk.fsf@litku.valot.fi>
+Received: from fmmailgate01.web.de ([217.72.192.221]:47444 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236AbZAIUGc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 15:06:32 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] p54: fix oops caused by bad eeproms
+Date: Fri, 9 Jan 2009 21:06:30 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <87sknrjrgk.fsf@litku.valot.fi>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200901092106.30274.chunkeey@web.de> (sfid-20090109_210635_373533_C2F9EE27)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +static int btcoex_enable;
-> > +module_param(btcoex_enable, bool, 0);
-> > +MODULE_PARM_DESC(btcoex_enable, "Enable Bluetooth coexistence support");
-> 
-> Somehow I guessed that this was coming :) I still think that a proper
-> nl80211 interface for this is in order.
+This patch fixes a bug that could occur, if it the eeprom is incomplete or partly corrupted.
 
-I agree that there should be a proper nl80211 interface for BT coex
-configuration. It is just an interim solution for the regression.
+BUG: unable to handle kernel NULL pointer dereference at 00000008
+IP: p54_assign_address+0x108/0x15d [p54common]
+Oops: 0002 [#1] SMP
+Pid: 12988, comm: phy1 Tainted: P        W  2.6.28-rc6-wl #3
+RIP: 0010: p54_assign_address+0x108/0x15d [p54common]
+ [...]
+Call Trace:
+ p54_alloc_skb+0xa3/0xc0 [p54common]
+ p54_scan+0x37/0x204 [p54common]
+ [...]
 
-Vasanth
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+This is just a updated version of the old one:
+http://www.spinics.net/lists/linux-wireless/msg24853.html
+---
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2009-01-09 19:14:11.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2009-01-09 19:13:18.000000000 +0100
+@@ -1674,7 +1674,7 @@ static int p54_scan(struct ieee80211_hw 
+ 
+  err:
+ 	printk(KERN_ERR "%s: frequency change failed\n", wiphy_name(dev->wiphy));
+-	kfree_skb(skb);
++	p54_free_skb(dev, skb);
+ 	return -EINVAL;
+ }
+ 
