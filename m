@@ -1,69 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:58879 "EHLO
-	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756203AbZAANod (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52835 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753387AbZAIMoa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2009 08:44:33 -0500
-Received: from hp4000.wilsoft.nl ([192.168.4.5])
-	by linux.wilsoft.nl with esmtp (Exim 4.69)
-	(envelope-from <listsrv@wilsoft.nl>)
-	id 1LINqY-0004wk-Nb
-	for linux-wireless@vger.kernel.org; Thu, 01 Jan 2009 14:44:22 +0100
-From: "W. van den Akker" <listsrv@wilsoft.nl>
-Date: Thu, 1 Jan 2009 14:44:20 +0100
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901011444.20333.listsrv@wilsoft.nl> (sfid-20090101_144436_679942_B874B17A)
+	Fri, 9 Jan 2009 07:44:30 -0500
+Subject: Re: [PATCH v2 04/11] ath9k: introduce bus specific cleanup routine
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Imre Kaloz <kaloz@openwrt.org>
+In-Reply-To: <1231504438.3703.11.camel@johannes> (sfid-20090109_133337_686480_7E68BD54)
+References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
+	 <1231503868-29226-5-git-send-email-juhosg@openwrt.org>
+	 <1231504438.3703.11.camel@johannes> (sfid-20090109_133337_686480_7E68BD54)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F2coAK163uZgaLF/D18N"
+Date: Fri, 09 Jan 2009 13:44:57 +0100
+Message-Id: <1231505097.3703.13.camel@johannes> (sfid-20090109_134434_537829_0F905C1E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen <j <at> w1.fi> writes:
 
-> I've never tested this with compat-wireless, but the wireless-testing
-> version seems to be working fine in my tests.
-> 
-> > I have build the kernel, compiled the compat-wireless and did a make 
-install.
-> > Make unload didnt work because some drivers were in use (mac80211).
-> > First problem arises, a rmmod ath9k hangs the kernel. No message of what 
-so 
-> > ever in the log or to stdout.
-> 
-> Would you happen to have another host available for storing the logs? I
-> have been able to receive debug messages from most crashes with
-> netconsole (see Documentation/networking/netconsole.txt).
-> 
+--=-F2coAK163uZgaLF/D18N
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I have tested on the server  with the latest wireless-testing the past days 
-(2.6.28-rc9-wl). The wireless-testing looks somewhat more stable then the 
-compat-wireless. 
+On Fri, 2009-01-09 at 13:33 +0100, Johannes Berg wrote:
+> On Fri, 2009-01-09 at 13:24 +0100, Gabor Juhos wrote:
+>=20
+> > +static void ath_cleanup(struct ath_softc *sc)
+> > +{
+> > +	ath_detach(sc);
+> > +	free_irq(sc->irq, sc);
+> > +	ath_bus_cleanup(sc);
+> > +	ieee80211_free_hw(sc->hw);
+> > +}
+>=20
+> Umm...
 
-I have also installed the netconsole module to watch any kernel prints. After 
-running hostapd (v0.6.6) from command line the AP is up-and-running. Then if I 
-connect with the laptop (tested it with kernel .26 and .28 on the laptop) I 
-get a connection and can start a browser en explore the internet. If I start 
-a second session (Kmail or second browser) the 
-server hangs within a minute. Leaving again no trace on the console, 
-hostapd-log or netconsole.
-Only way to reset the server is switch off the power.
-Its very frustrating because no information or what so ever can be found.
+Wait. I got confused, this is ok of course. The original ust had
+ath_pci_cleanup doing all this. Sorry!
 
-If I connect an internet radio (Musicpal) to the server there is no problem. 
-It stays stable for hours. If I also connect the laptop and start a browser 
-the server hangs again within minuts.
+johannes
 
-Its looks like if there is a second connection been set up the server hangs.
+--=-F2coAK163uZgaLF/D18N
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Anyone any clue how to investigate this??
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Thanks,
-Willem
+iQIcBAABAgAGBQJJZ0bGAAoJEKVg1VMiehFYIs4P/1sjig2jnHRhsaUuUE0U7D6p
+5Y7fhjyGgmk9aWJJAg//91MZoNZ3zgTWOC1IjtXNrJLyYlxuzXiUg7TqaEy9RmRY
+OJkTsP0+5FWf0D9Ar0YctuMZL2Wh4HT3hcpwHza07+OATykvfS3JurEKA3I5VnZ+
+ut8UpYj3mbpZ+WtoWerhawX/Mei5Uh97IxuqaoYwvUKP8SPiciumA/JIJYSh+585
+Lj3w9CUA8tYl1uxa7iM1VuSAA6olbllJJAkCjNmN6ou0eaMJBKuhCSQamrigset/
+RcgjHNJ7Dj6OvNAe4tYkYaFE0Bth3xzUEBhAIemZWtSF75qbK6qP90AWjIWlhiHk
+uNrKLU9tcxmeIS9ZNyYzJk0Lob/MJjWjgAijzcS1HG+k3q64FM18w1vRDYtCbjtr
+HOKx6XqqBM14Xyn+OQSEHLPTbUQynYnBhJhQapBuuJh8kMEqu8aDfo30r+XcKncs
+iUNjpzO1cfYRpsKnuuvJZdn6v6DuxhwV4oe+swDVoYNm/Oau9TR10Bb6ZgHuRIkT
+j3PkYp7baau0GX7fTHMYdv4O0B27BcS2WXgdZm11pA6W9iLinQAcpKw5HvYszNT5
+oTvjbWlQc9robXcvGEc2vWD/tiPQsEOczI/DK9BXCnNDDVn/aSrznMyHPW5LjZym
+NOKvIC7u3L6GW+RRQAQE
+=8XTB
+-----END PGP SIGNATURE-----
 
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+--=-F2coAK163uZgaLF/D18N--
 
