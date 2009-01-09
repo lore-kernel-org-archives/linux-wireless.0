@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12551 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760613AbZARRjN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 12:39:13 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 09:39:13 -0800
-Date: Sun, 18 Jan 2009 09:38:40 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 08/13] cfg80211: save original values on regulatory
-	hints
-Message-ID: <20090118173840.GY29609@tesla> (sfid-20090118_183917_716748_26E2B0B6)
-References: <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232064746-17134-9-git-send-email-lrodriguez@atheros.com> <1232097921.3854.28.camel@johannes> <20090116163100.GE29609@tesla> <1232138062.3745.6.camel@johannes> <20090116210655.GK29609@tesla> <1232268449.3877.8.camel@johannes> <20090118152844.GR29609@tesla> <1232298725.3819.4.camel@johannes>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:33309 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751776AbZAILL4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 06:11:56 -0500
+Received: by bwz14 with SMTP id 14so28747961bwz.13
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 03:11:55 -0800 (PST)
+Message-ID: <41960ccf0901090311k6165bd36rf2b70b443a0058f7@mail.gmail.com> (sfid-20090109_121159_433878_6529D24D)
+Date: Fri, 9 Jan 2009 12:11:55 +0100
+From: "Lorenzo Nava" <navalorenx@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [b43] opensource firmware
+Cc: "Francesco Gringoli" <francesco.gringoli@ing.unibs.it>,
+	linux-wireless@vger.kernel.org,
+	"David Woodhouse" <dwmw2@infradead.org>
+In-Reply-To: <200901091206.09736.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232298725.3819.4.camel@johannes>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de>
+	 <9F70A0D3-6334-45FB-9DAF-263FE89C847E@ing.unibs.it>
+	 <200901091206.09736.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 18, 2009 at 09:12:05AM -0800, Johannes Berg wrote:
-> On Sun, 2009-01-18 at 07:28 -0800, Luis R. Rodriguez wrote:
-> 
-> > Are you suggesting we consider new API for drivers which want the
-> > behaviour we want? That works for me too, but then again I'd be applying
-> > the save orig_* stuff perhaps at the end of this new, say,
-> > regulatory_hint_strict().
-> 
-> Well, I was more thinking to have a 
-> struct regdomain *cfg80211_ask_crda(const char *alpha2);
-> 
-> but I realise that is very hard to implement with the call to userspace
-> etc. So yeah, doing something like the _strict you propose seems more
-> appropriate. Maybe call it something else, not _hint,and have it call
-> out to userspace regardless (i.e. don't ever ignore that hint, as we
-> might ignore other hints), say regulatory_apply(wiphy, alpha2)? Not
-> sure, apply seems not quite right either.
+Hi,
 
-I'd definitely would prefer if cfg80211 handled this instead of the drivers
-through the reg_notifier(), will go back and try to do that and see if I
-can come up with a decent name to indicate what we are doing.
+the only advice that I can give you is to pay attention to have the
+correct initvals: firmware need v480 firmware initvals.
 
-  Luis
+regards
+
+Lorenzo.
+
+2009/1/9 Michael Buesch <mb@bu3sch.de>:
+> On Friday 09 January 2009 12:00:41 Francesco Gringoli wrote:
+>> I think someone else other than us two (me and Lorenzo, here) should
+>> test the firmware. Have you tested it on your boards?
+>
+> Yep, it doesn't work.
+> So I'll first try to (partially) merge it into my git repository and give it an extra review.
+>
+> --
+> Greetings, Michael.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
