@@ -1,83 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:33592 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753839AbZAFWMS (ORCPT
+Received: from acsinet12.oracle.com ([141.146.126.234]:33904 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751736AbZAIX24 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 17:12:18 -0500
-Received: by ewy10 with SMTP id 10so8702523ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 14:12:17 -0800 (PST)
-To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
-Date: Tue, 6 Jan 2009 23:12:10 +0100
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rt2400-devel@lists.sourceforge.net"
-	<rt2400-devel@lists.sourceforge.net>
-References: <200901042021.10904.IvDoorn@gmail.com> <200901062252.15677.IvDoorn@gmail.com> <4963D5FB.60409@kpnplanet.nl>
-In-Reply-To: <4963D5FB.60409@kpnplanet.nl>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200901062312.12081.IvDoorn@gmail.com> (sfid-20090106_231238_478057_EB3B1E4E)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Fri, 9 Jan 2009 18:28:56 -0500
+Date: Fri, 9 Jan 2009 15:25:09 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH] mac80211: more kernel-doc fixes
+Message-Id: <20090109152509.47d11049.randy.dunlap@oracle.com> (sfid-20090110_002902_165001_E20D2F1B)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 06 January 2009, Gertjan van Wingerde wrote:
-> On 01/06/09 22:52, Ivo van Doorn wrote:
-> >>>
-> >>>        
-> >>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
-> >>>>
-> >>>>          
-> >>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
-> >>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
-> >>>
-> >>>        
-> >> OK. But the EEPROM definitions I got from Ralink on the Country
-> >> information indicate that there is only a single indication in the EEPROM.
-> >>      
-> >
-> > That is right, like I said the comments already indicates there the legacy code didn't contain the
-> > definitions (yet). ;)
-> >
-> >    
-> >>> GertJan, some comments about your patch:
-> >>>
-> >>>
-> >>>        
-> >>>> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
-> >>>> index 9aefda4..986e428 100644
-> >>>> --- a/drivers/net/wireless/rt2x00/rt2400pci.h
-> >>>> +++ b/drivers/net/wireless/rt2x00/rt2400pci.h
-> >>>> @@ -806,6 +806,13 @@
-> >>>>    #define EEPROM_TXPOWER_2		FIELD16(0xff00)
-> >>>>
-> >>>>    /*
-> >>>> + * EEPROM geography.
-> >>>> + * GEO: Default geography setting for device.
-> >>>> + */
-> >>>> +#define EEPROM_GEOGRAPHY		0x17
-> >>>> +#define EEPROM_GEOGRAPHY_GEO		FIELD16(0xff00)
-> >>>>
-> >>>>          
-> >>> Where did you find this definition? I couldn't find it in the legacy driver or the specsheets.
-> >>>
-> >>>        
-> >> I got an excerpt from the EEPROM definition for the rt2460 chip (which I
-> >> received with the help of Luis). It's defined in there.
-> >>      
-> >
-> > I assume you mean the file RT2460_DS_P1.3.pdf, could you point me to the right pagenumber?
-> >
-> >    
-> No, I meant RT2460_EEPROM_Channels.pdf, which was sent by Ralink a 
-> couple of months ago. You were copied on the email; let me know if you 
-> can't find them. Note that these were only small excerpts from the 
-> entire EEPROM definitions, only the parts on geography information.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-ah those, I thought they only contained the valid values. :S
-well ok, that means that this part of the patch is correct as well. :)
+Fix (delete) more mac80211 kernel-doc:
 
-Ivo
+Warning(linux-2.6.28-git13//include/net/mac80211.h:375): Excess struct/union/enum/typedef member 'retry_count' description in 'ieee80211_tx_info'
+Warning(linux-2.6.28-git13//net/mac80211/sta_info.h:308): Excess struct/union/enum/typedef member 'last_txrate' description in 'sta_info'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ include/net/mac80211.h  |    1 -
+ net/mac80211/sta_info.h |    1 -
+ 2 files changed, 2 deletions(-)
+
+--- linux-2.6.28-git13.orig/include/net/mac80211.h
++++ linux-2.6.28-git13/include/net/mac80211.h
+@@ -322,7 +322,6 @@ struct ieee80211_tx_rate {
+  * @control: union for control data
+  * @status: union for status data
+  * @driver_data: array of driver_data pointers
+- * @retry_count: number of retries
+  * @ampdu_ack_len: number of aggregated frames.
+  * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
+  * @ampdu_ack_map: block ack bit map for the aggregation.
+--- linux-2.6.28-git13.orig/net/mac80211/sta_info.h
++++ linux-2.6.28-git13/net/mac80211/sta_info.h
+@@ -195,7 +195,6 @@ struct sta_ampdu_mlme {
+  * @tx_packets: number of RX/TX MSDUs
+  * @tx_bytes: number of bytes transmitted to this STA
+  * @tx_fragments: number of transmitted MPDUs
+- * @last_txrate: description of the last used transmit rate
+  * @tid_seq: per-TID sequence numbers for sending to this STA
+  * @ampdu_mlme: A-MPDU state machine state
+  * @timer_to_tid: identity mapping to ID timers
