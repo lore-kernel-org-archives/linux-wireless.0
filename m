@@ -1,120 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:48838 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758678AbZACNo4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jan 2009 08:44:56 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [RFC 04/12] ath9k: introduce bus specific cleanup routine
-Date: Sat,  3 Jan 2009 14:44:14 +0100
-Message-Id: <1230990262-22923-5-git-send-email-juhosg@openwrt.org> (sfid-20090103_150901_724398_4C435AE2)
-In-Reply-To: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
-References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
+Received: from bu3sch.de ([62.75.166.246]:42245 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752113AbZAIKa7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 05:30:59 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: linux-wireless@vger.kernel.org
+Subject: Fwd: [b43] opensource firmware
+Date: Fri, 9 Jan 2009 11:29:22 +0100
+Cc: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+MIME-Version: 1.0
+Message-Id: <200901091129.22708.mb@bu3sch.de> (sfid-20090109_113104_612110_89E81320)
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have left only some PCI specific cleanup code. We have to convert
-them as well.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/core.h |    7 +++++++
- drivers/net/wireless/ath9k/main.c |   29 +++++++++++++++--------------
- 2 files changed, 22 insertions(+), 14 deletions(-)
+----------  Forwarded Message  ----------
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 0c8064e..4833598 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -723,6 +723,8 @@ struct ath_bus_ops {
- 	void		(*reg_write)(struct ath_hal *ah, unsigned reg, u32 val);
- 
- 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
-+
-+	void		(*cleanup)(struct ath_softc *sc);
- };
- 
- struct ath_softc {
-@@ -850,4 +852,9 @@ static inline void ath_read_cachesize(struct ath_softc *sc, int *csz)
- 	sc->bus_ops->read_cachesize(sc, csz);
- }
- 
-+static inline void ath_bus_cleanup(struct ath_softc *sc)
-+{
-+	sc->bus_ops->cleanup(sc);
-+}
-+
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index f1da1ac..e126b65 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1276,13 +1276,7 @@ static int ath_start_rfkill_poll(struct ath_softc *sc)
- 			rfkill_free(sc->rf_kill.rfkill);
- 
- 			/* Deinitialize the device */
--			ath_detach(sc);
--			if (sc->pdev->irq)
--				free_irq(sc->pdev->irq, sc);
--			pci_iounmap(sc->pdev, sc->mem);
--			pci_release_region(sc->pdev, 0);
--			pci_disable_device(sc->pdev);
--			ieee80211_free_hw(sc->hw);
-+			ath_bus_cleanup(sc);
- 			return -EIO;
- 		} else {
- 			sc->sc_flags |= SC_OP_RFKILL_REGISTERED;
-@@ -2605,6 +2599,17 @@ static void ath_pci_reg_write(struct ath_hal *ah, unsigned reg, u32 val)
- 	iowrite32(val, ah->ah_sh + reg);
- }
- 
-+static void ath_pci_cleanup(struct ath_softc *sc)
-+{
-+	ath_detach(sc);
-+	if (sc->pdev->irq)
-+		free_irq(sc->pdev->irq, sc);
-+	pci_iounmap(sc->pdev, sc->mem);
-+	pci_release_region(sc->pdev, 0);
-+	pci_disable_device(sc->pdev);
-+	ieee80211_free_hw(sc->hw);
-+}
-+
- static struct ath_bus_ops ath_pci_bus_ops  = {
- 	.dma_map_single_to_device = ath_pci_map_single_to_device,
- 	.dma_unmap_single_to_device = ath_pci_unmap_single_to_device,
-@@ -2620,6 +2625,8 @@ static struct ath_bus_ops ath_pci_bus_ops  = {
- 	.reg_write = ath_pci_reg_write,
- 
- 	.read_cachesize = ath_pci_read_cachesize,
-+
-+	.cleanup = ath_pci_cleanup,
- };
- 
- static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-@@ -2756,13 +2763,7 @@ static void ath_pci_remove(struct pci_dev *pdev)
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath_softc *sc = hw->priv;
- 
--	ath_detach(sc);
--	if (pdev->irq)
--		free_irq(pdev->irq, sc);
--	pci_iounmap(pdev, sc->mem);
--	pci_release_region(pdev, 0);
--	pci_disable_device(pdev);
--	ieee80211_free_hw(hw);
-+	ath_pci_cleanup(sc);
- }
- 
- #ifdef CONFIG_PM
+Subject: opensource firmware
+Date: Friday 09 January 2009
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+To: bcm43xx-dev@lists.berlios.de
+
+Hello folks,
+
+we have been involved in the past few months in testing modifications  
+to the standard 802.11 MAC for research purposes. During this time we  
+did some tests with Broadcom 802.11b/g boards and we wrote down a  
+simple 802.11 compliant firmware that we used as a starting point for  
+the modified MAC algorithms.
+
+Although the base firmware is not fully 802.11 compliant, e.g., it  
+does not support RTS/CTS procedure or QoS, we believe that someone  
+could be interested in testing it. The firmware does not require the  
+kernel to be modified and it uses the same shared memory layout and  
+global registers usage of the original stuff from broadcom to ease  
+loading by the b43 driver (and ease our writing...). We wrote it to  
+make the b43 driver recognize it as Broadcom version 5 firmware: it  
+still uses the original initval files of that version of the  
+Broadcom's firmware, we do not include them as usual users have to  
+extract these files following the b43 installation instructions.
+
+Lorenzo and I tested this firmware only on 4306 and 4318 hardware (pci  
+and minipci, pc-card based architectures seem to have problems), and  
+we did simple tests on the integrated board of a Linksys WRT54GL, so  
+we are quite sure it runs on 4306, 4318 and 4320 cards. We did all the  
+works on kernel 2.6.27-rc5-wl.
+
+The firmware along with the instructions to build it from the assembly  
+code using the tools developed by the b43 community can be found here
+
+	http://www.ing.unibs.it/openfwwf
+
+In the firmware website you can find more information about the fw  
+algorithm, its interaction with Broadcom hardware and other  
+information that we discovered as we were writing it.
+
+We would like to underline that this work would have not been possible  
+without the instruments already developed by the b43 community  
+(assembler/disassembler), hardware specifications (sipsolution's  
+website), the opensource test firmware written by Michael Buesch and  
+useful talks with those guys (b43 developers), which we deeply  
+acknowledge. As we used several definition files written by Michael  
+for its firmware and we have prepared a source tar file that includes  
+them, we kindly ask Michael if this could be a problem.
+
+Finally we stress that this is a TEST firmware and some stuff needs to  
+be fixed (e.g. RTS/CTS and QoS), we have been using it as a starting  
+point to implement other MAC algorithms for research purposes: if  
+someone is interested in this kind of work and would like to share  
+ideas also on research topics, please let us know.
+
+Cheers,
+Francesco Gringoli
+Lorenzo Nava
+_______________________________________________
+Bcm43xx-dev mailing list
+Bcm43xx-dev@lists.berlios.de
+https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+
+
+-------------------------------------------------------
+
 -- 
-1.5.3.2
-
+Greetings, Michael.
