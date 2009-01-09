@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:39879 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbZAWPZC (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:39989 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752959AbZAIMZu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 10:25:02 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so2166632ywe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 07:25:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b6c5339f0901230717h605d2fbaibda8b720c6191abf@mail.gmail.com>
-References: <e27b78a40901230530h192a8030l6905089df2a5822d@mail.gmail.com>
-	 <b6c5339f0901230717h605d2fbaibda8b720c6191abf@mail.gmail.com>
-Date: Fri, 23 Jan 2009 15:25:00 +0000
-Message-ID: <e27b78a40901230725r4dc40975t8e4cb9f481df1702@mail.gmail.com> (sfid-20090123_162508_375428_40BAE758)
-Subject: Re: ath5k mesh in 2.6.28?
-From: Keir <keirlawson@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 9 Jan 2009 07:25:50 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH v2 10/11] ath9k: fix null pointer dereference in ani monitor code
+Date: Fri,  9 Jan 2009 13:24:27 +0100
+Message-Id: <1231503868-29226-11-git-send-email-juhosg@openwrt.org> (sfid-20090109_132556_039446_2C7520C3)
+In-Reply-To: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
+References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I would really like support in 2.6.28, but I don't want to
-inconvenience anyone... who's Greg?  What I would really like is ath5k
-mesh support in a stable kernel, the wireless-testing kernel I'm
-currently using is too unstable for my testing.
+In 'ath9k_ani_reset' the 'ahp->ah_curani' will be initialized only
+if 'DO_ANI(ah)' true. In 'ath9k_hw_ani_monitor' we are using
+'ahp->ah_curani' unconditionally, and it will cause a NULL pointer
+dereference on AR9100.
 
-Cheers
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/ani.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Keir
+diff --git a/drivers/net/wireless/ath9k/ani.c b/drivers/net/wireless/ath9k/ani.c
+index 4dd0860..42197ff 100644
+--- a/drivers/net/wireless/ath9k/ani.c
++++ b/drivers/net/wireless/ath9k/ani.c
+@@ -551,6 +551,9 @@ void ath9k_hw_ani_monitor(struct ath_hal *ah,
+ 	struct ar5416AniState *aniState;
+ 	int32_t listenTime;
+ 
++	if (!DO_ANI(ah))
++		return;
++
+ 	aniState = ahp->ah_curani;
+ 	ahp->ah_stats.ast_nodestats = *stats;
+ 
+@@ -610,9 +613,6 @@ void ath9k_hw_ani_monitor(struct ath_hal *ah,
+ 		aniState->cckPhyErrCount = cckPhyErrCnt;
+ 	}
+ 
+-	if (!DO_ANI(ah))
+-		return;
+-
+ 	if (aniState->listenTime > 5 * ahp->ah_aniPeriod) {
+ 		if (aniState->ofdmPhyErrCount <= aniState->listenTime *
+ 		    aniState->ofdmTrigLow / 1000 &&
+-- 
+1.5.3.2
 
-2009/1/23 Bob Copeland <me@bobcopeland.com>:
-> On Fri, Jan 23, 2009 at 8:30 AM, Keir <keirlawson@gmail.com> wrote:
->> Hi,
->>
->> According to the 802.11s website it seems to claim that mesh
->> networking is supported for ath5k devices in kernel 2.6.28, however,
->> upon running ifconfig mesh0 up (having previously created the mesh
->> device using iw) I get "SIOCSIFFLAGS: Operation not supported".
->
-> 2.6.28 does not support mesh, at least from looking at the code,
-> ath5k_add_interface has:
->
->    switch (conf->type) {
->    case NL80211_IFTYPE_STATION:
->    case NL80211_IFTYPE_ADHOC:
->    case NL80211_IFTYPE_MONITOR:
->        sc->opmode = conf->type;
->        break;
->    default:
->        ret = -EOPNOTSUPP;
->        goto end;
->    }
->
-> It needs to at least also have NL80211_IFTYPE_MESH_POINT.
->
-> Mesh was enabled for 2.6.29 via b706e65b40417e03c2451bb3f92488f3736843fa,
-> so if you need it in 2.6.28 you can ask Greg to pick it up for stable.
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
