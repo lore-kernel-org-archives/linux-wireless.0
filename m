@@ -1,66 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:45831 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755312AbZATUSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 15:18:18 -0500
-Date: Tue, 20 Jan 2009 12:16:13 -0800
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Paul Hickey <paul@christianpatriot.us>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [stable] Failed Build of modules for 2.6.27.9-159
-Message-ID: <20090120201613.GA5313@kroah.com> (sfid-20090120_211824_488825_2A2EF1D2)
-References: <1232319854.4596.1.camel@localhost.localdomain> <20090119191138.GA4018@tesla> <1232404986.3641.2.camel@localhost.localdomain> <20090120000336.GB4018@tesla> <1232433738.3696.3.camel@localhost.localdomain> <20090120194243.GC19581@tesla> <20090120200515.GA5077@kroah.com> <20090120201316.GG19581@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20090120201316.GG19581@tesla>
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:39986 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753007AbZAIMZv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 07:25:51 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH v2 08/11] ath9k: remove (u16) casts from rtc register access
+Date: Fri,  9 Jan 2009 13:24:25 +0100
+Message-Id: <1231503868-29226-9-git-send-email-juhosg@openwrt.org> (sfid-20090109_132557_008436_C2A353D9)
+In-Reply-To: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
+References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 12:13:16PM -0800, Luis R. Rodriguez wrote:
-> On Tue, Jan 20, 2009 at 12:05:15PM -0800, Greg KH wrote:
-> > On Tue, Jan 20, 2009 at 11:42:43AM -0800, Luis R. Rodriguez wrote:
-> > > On Mon, Jan 19, 2009 at 10:42:18PM -0800, Paul Hickey wrote:
-> > > > Hi Luis,
-> > > >
-> > > > 2.6.27.9-159.fc10.x86_64 is the kernel. I burned the distro rig=
-ht from
-> > > > Fedora.
-> > >
-> > > I am =FCber-surprised to hear that FC10 2.6.27 kernels have added
-> > > pci_ioremap_bar() in their kernel header include/linux/pci.h. I
-> > > have verified this by checking:
-> > >
-> > > http://download.fedora.redhat.com/pub/fedora/linux/updates/10/x86=
-_64/kernel-devel-2.6.27.9-159.fc10.x86_64.rpm
-> > >
-> > > I have checked upstrea 2.6.27.9 and even 2.6.27.12 and they do no=
-t have this. This breaks
-> > > compatibility projects like compat-wireless :(
-> >=20
-> > compatibility projects should be checking for the absense or presen=
-ce of
-> > specific functions, not triggering off of kernel release numbers :)
->=20
-> How can I do that? #ifdef no worky on static inlines, for example.
+The RTC register offsets don't fit into 'u16' on the AR913x, so we have
+to remove the existing casts.
 
-You can automatically test if the feature is there, right?  If so, then
-set your own #define for your compatiblity wrappers.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/hw.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-> BTW are you saying the above practice of adding new stuff to headers
-> is OK too? I wish it wasn't...
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 088d968..742ecc1 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -1008,7 +1008,7 @@ static void ath9k_hw_init_pll(struct ath_hal *ah,
+ 				pll |= SM(0xb, AR_RTC_PLL_DIV);
+ 		}
+ 	}
+-	REG_WRITE(ah, (u16) (AR_RTC_PLL_CONTROL), pll);
++	REG_WRITE(ah, (AR_RTC_PLL_CONTROL), pll);
+ 
+ 	udelay(RTC_PLL_SETTLE_DELAY);
+ 
+@@ -1547,11 +1547,11 @@ static bool ath9k_hw_set_reset(struct ath_hal *ah, int type)
+ 			rst_flags |= AR_RTC_RC_MAC_COLD;
+ 	}
+ 
+-	REG_WRITE(ah, (u16) (AR_RTC_RC), rst_flags);
++	REG_WRITE(ah, (AR_RTC_RC), rst_flags);
+ 	udelay(50);
+ 
+-	REG_WRITE(ah, (u16) (AR_RTC_RC), 0);
+-	if (!ath9k_hw_wait(ah, (u16) (AR_RTC_RC), AR_RTC_RC_M, 0)) {
++	REG_WRITE(ah, (AR_RTC_RC), 0);
++	if (!ath9k_hw_wait(ah, (AR_RTC_RC), AR_RTC_RC_M, 0)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_RESET,
+ 			"RTC stuck in MAC reset\n");
+ 		return false;
+@@ -1573,8 +1573,8 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hal *ah)
+ 	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN |
+ 		  AR_RTC_FORCE_WAKE_ON_INT);
+ 
+-	REG_WRITE(ah, (u16) (AR_RTC_RESET), 0);
+-	REG_WRITE(ah, (u16) (AR_RTC_RESET), 1);
++	REG_WRITE(ah, (AR_RTC_RESET), 0);
++	REG_WRITE(ah, (AR_RTC_RESET), 1);
+ 
+ 	if (!ath9k_hw_wait(ah,
+ 			   AR_RTC_STATUS,
+@@ -2599,7 +2599,7 @@ static void ath9k_set_power_sleep(struct ath_hal *ah, int setChip)
+ 		if (!AR_SREV_9100(ah))
+ 			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
+ 
+-		REG_CLR_BIT(ah, (u16) (AR_RTC_RESET),
++		REG_CLR_BIT(ah, (AR_RTC_RESET),
+ 			    AR_RTC_RESET_EN);
+ 	}
+ }
+-- 
+1.5.3.2
 
-Sure it's ok, distros can do whatever they want in their kernels, are
-you telling them that they are now not allowed to do that?  :)
-
-thanks,
-
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
