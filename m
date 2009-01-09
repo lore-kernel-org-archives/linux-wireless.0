@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12407 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750859AbZAZPan (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 10:30:43 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 07:30:43 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: remove useless ath9k driver version information
-Date: Mon, 26 Jan 2009 07:30:03 -0800
-Message-ID: <1232983803-18125-1-git-send-email-lrodriguez@atheros.com> (sfid-20090126_163049_631662_AEA5954E)
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:53365 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752668AbZAIRdo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 12:33:44 -0500
+Received: by bwz14 with SMTP id 14so29326288bwz.13
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 09:33:42 -0800 (PST)
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: Re: multicast traffic and ath9k
+References: <1231346161.3545.52.camel@johannes>
+	<1231506446.3703.18.camel@johannes>
+	<44EE5C37ADC36343B0625A05DD408C4845A77DAF08@CHEXMB-01.global.atheros.com>
+	<200901091713.12777.chunkeey@web.de>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 09 Jan 2009 19:33:40 +0200
+In-Reply-To: <200901091713.12777.chunkeey@web.de> (Christian Lamparter's message of "Fri\, 9 Jan 2009 17\:13\:12 +0100")
+Message-ID: <874p08tmdn.fsf@litku.valot.fi> (sfid-20090109_183348_925072_E3277238)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Versioning for ath9k is pointless we have kept it at 0.1
-since the initial release so its meaningless. We put more emphasis
-on kernel release or dated wireless-testing master tag
-as per John's tagging.
+Christian Lamparter <chunkeey@web.de> writes:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+>> How does the mac80211 know if the hw is receiving mc traffic or not and
+>> unset the CONF_PS flag accordingly? Am I missing something basic here?
+>> 
+>> Maybe p54 (stlc45xx) has the answer for how it goes back to sleep
+>> after mc traffic.
+>
+> Well we have a flag to tell the firmware to do the following thing
+> in client mode (while sleeping)
+>
+> "If the PSM object's *_PSM_MCBC flag is set, and a beacon is
+> received with the TIM's multicast traffic bit set, [...] or the LMAC
+> stays awake until the TIM's multicast traffic bit is cleared again
+> from the beacon".
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 15a7f90..db76016 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2579,13 +2579,12 @@ static int __init ath9k_init(void)
- {
- 	int error;
- 
--	printk(KERN_INFO "%s: %s\n", dev_info, ATH_PCI_VERSION);
--
- 	/* Register rate control algorithm */
- 	error = ath_rate_control_register();
- 	if (error != 0) {
- 		printk(KERN_ERR
--			"Unable to register rate control algorithm: %d\n",
-+			"ath9k: Unable to register rate control "
-+			"algorithm: %d\n",
- 			error);
- 		goto err_out;
- 	}
-@@ -2593,7 +2592,7 @@ static int __init ath9k_init(void)
- 	error = ath_pci_init();
- 	if (error < 0) {
- 		printk(KERN_ERR
--			"ath_pci: No devices found, driver not installed.\n");
-+			"ath9k: No PCI devices found, driver not installed.\n");
- 		error = -ENODEV;
- 		goto err_rate_unregister;
- 	}
+I doubt that LMAC stays awake until next beacon arrives, that would
+increase the power consumption too much. Most probably it follows the
+more data from the multicast frames and goes to sleep immeaditely
+after it has received the last multicast frame.
+
 -- 
-1.5.6.4
-
+Kalle Valo
