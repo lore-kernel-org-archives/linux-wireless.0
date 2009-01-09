@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:60449 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418AbZAFXj5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 18:39:57 -0500
-Message-ID: <4963EBD0.2080907@gmail.com> (sfid-20090107_004005_041205_88AD479F)
-Date: Tue, 06 Jan 2009 23:40:00 +0000
-MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-CC: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: 2.6.28: warn_slowpath in orinoco receive path
-References: <200901052005.12428.arvidjaar@mail.ru> <200901061251.41628.arvidjaar@mail.ru> <4963B8BE.9000204@gmail.com> <200901070007.52508.arvidjaar@mail.ru>
-In-Reply-To: <200901070007.52508.arvidjaar@mail.ru>
-Content-Type: text/plain; charset=ISO-8859-1
-From: Dave <kilroyd@googlemail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:32979 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752434AbZAIQhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 11:37:13 -0500
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+From: Dan Williams <dcbw@redhat.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+In-Reply-To: <87skns29t5.fsf@litku.valot.fi>
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <1229336057.4471.9.camel@johannes.berg>
+	 <1229354532.12163.24.camel@localhost.localdomain>
+	 <20081217174244.M36761@bobcopeland.com>
+	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
+	 <1230102989.16960.14.camel@californication>
+	 <1231260306.14565.21.camel@localhost.localdomain>
+	 <1231261937.5246.16.camel@californication>
+	 <1231267979.14565.34.camel@localhost.localdomain>
+	 <1231270575.14901.6.camel@californication>
+	 <1231432778.21643.40.camel@localhost.localdomain>
+	 <87skns29t5.fsf@litku.valot.fi>
+Content-Type: text/plain
+Date: Fri, 09 Jan 2009 11:35:21 -0500
+Message-Id: <1231518921.30057.14.camel@dhcp-18-190-61-35.dyn.mit.edu> (sfid-20090109_173718_501273_0CF9BB80)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
-> On 06 January 2009 23:02:06 Dave wrote:
+On Fri, 2009-01-09 at 09:55 +0200, Kalle Valo wrote:
+> Dan Williams <dcbw@redhat.com> writes:
 > 
->> Since we have to use spinlock we should introduce an rx_lock
->> specifically to protect the list so the tasklet is not held up by
->> anything else the driver is doing. I'll put something together if you
->> don't get round to it first.
->>
+> >> Having the suspend scripts to tell NM to disconnect is just not a good
+> >> solution and especially in the embedded world this is a broken design
+> >> concept.
+> >
+> > Right; the missing piece is pushing the necessary roaming support down
+> > to the supplicant and letting it make the decisions about what to
+> > connect to.  There's a few things that I need from the supplicant before
+> > I can simply push the entire config set down from NM and let it go wild:
+> >
+> > 1) A 'frequency' config item that works in infrastructure mode too,
+> > ignoring any AP not matching that frequency
 > 
-> You mean something like attached patch? Not sure if it worth it frankly.
+> Just out of curiosity, why this feature is needed? I can understand
+> hard-coding bssid, but I don't understand the use for hard-coding the
+> frequency.
 
-That's what I meant. I forgot we took orinoco_lock in orinoco_interrupt
-though, and that highlights the fact that I've neglected to ensure
-orinoco_lock is held when orinoco_rx is called from the tasklet.
+If the user wishes to lock the connection to a specific frequency,
+irregardless of other values.  Maybe you're right and we don't really
+care about it, but one other thing that would be nice is a "band"
+argument for a network block to differentiate A vs. B/G APs that might
+have the same SSID and security settings, but where the user only wants
+to use the A-side for example.
 
-So the locking gets simpler and fixes more problems than the one you
-noticed. But there's some extra cleanup to do. I'll submit a patch in a
-second.
-
-I'm surprised my wireless hasn't misbehaved in the last year.
+Dan
 
 
-Dave.
