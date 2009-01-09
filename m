@@ -1,125 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 25.mail-out.ovh.net ([91.121.27.228]:58328 "HELO
-	25.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759622AbZAVXmH (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:52447 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366AbZAILL3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 18:42:07 -0500
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: iwl3945 regression: associates but no data is transfered
-MIME-Version: 1.0
-Date: Fri, 23 Jan 2009 00:41:59 +0100
-From: <samuel@sortiz.org>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <20090122183448.GC3646@tuxdriver.com>
-References: <87priffb95.fsf@litku.valot.fi> <20090122183448.GC3646@tuxdriver.com>
-Message-ID: <d7a260e8d188b785d0d2be743c8c5461@localhost> (sfid-20090123_004222_187418_247AF699)
-Content-Type: text/plain; charset="UTF-8"
+	Fri, 9 Jan 2009 06:11:29 -0500
+Cc: linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>
+Message-Id: <9F70A0D3-6334-45FB-9DAF-263FE89C847E@ing.unibs.it> (sfid-20090109_121138_171691_B46CC964)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+To: Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <200901091149.28683.mb@bu3sch.de>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: [b43] opensource firmware
+Date: Fri, 9 Jan 2009 12:00:41 +0100
+References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michael,
 
-On Thu, 22 Jan 2009 13:34:48 -0500, "John W. Linville"
+I think someone else other than us two (me and Lorenzo, here) should  
+test the firmware. Have you tested it on your boards?
 
-<linville@tuxdriver.com> wrote:
-
-> On Thu, Jan 22, 2009 at 08:26:14PM +0200, Kalle Valo wrote:
-
->> Hello,
-
->> 
-
->> I upgraded to the latest wireless-testing and my iwl3945 is now
-
->> broken. It can associate but no data is transfered after that. Tried
-
->> with open and wep modes. With dhcp I cannot get ip and with static ip
-
->> ping to the gateway doesn't work.
-
->> 
-
->> Any hints?
-
-> 
-
-> Lots of iwlwifi stuff merged yesterday...
-
-The bad commit seems to be e32b1b9a33759e8a83ac566c4c43f23ed5d6343b, which
-
-is not iwlwifi related.
-
-Even though it's an mlme commit, it doesnt seem to affect other drivers (at
-
-least b43 and ath5k).
-
-I'll come up soon with a proper fix, but for now iwl3945 users should
-
-revert that commit locally.
-
-
+1) We are pretty sure this firmware works on the hardware we have  
+tested it for now six months... nevertheless some external testing  
+should be required
+2) On Linux RTS/CTS seems to be default disable (at least on the  
+kernel we used for testing, 2.6.27-rc5-wl) but if someone enables it  
+the driver+firmware chain could freeze and leave the system in  
+undetermined state
+3) The firmware does not support the QoS interface of b43, it should  
+be disable on module load.
 
 Cheers,
+-FG
 
-Samuel.
+On Jan 9, 2009, at 11:49 AM, Michael Buesch wrote:
+
+> I'd like to start merging this into the "firmware" directory
+> of the mainline kernel.
+>
+> On Friday 09 January 2009 11:29:22 Michael Buesch wrote:
+>>
+>> ----------  Forwarded Message  ----------
+>>
+>> Subject: opensource firmware
+>> Date: Friday 09 January 2009
+>> From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+>> To: bcm43xx-dev@lists.berlios.de
+>>
+>> Hello folks,
+>>
+>> we have been involved in the past few months in testing modifications
+>> to the standard 802.11 MAC for research purposes. During this time we
+>> did some tests with Broadcom 802.11b/g boards and we wrote down a
+>> simple 802.11 compliant firmware that we used as a starting point for
+>> the modified MAC algorithms.
+>>
+>> Although the base firmware is not fully 802.11 compliant, e.g., it
+>> does not support RTS/CTS procedure or QoS, we believe that someone
+>> could be interested in testing it. The firmware does not require the
+>> kernel to be modified and it uses the same shared memory layout and
+>> global registers usage of the original stuff from broadcom to ease
+>> loading by the b43 driver (and ease our writing...). We wrote it to
+>> make the b43 driver recognize it as Broadcom version 5 firmware: it
+>> still uses the original initval files of that version of the
+>> Broadcom's firmware, we do not include them as usual users have to
+>> extract these files following the b43 installation instructions.
+>>
+>> Lorenzo and I tested this firmware only on 4306 and 4318 hardware  
+>> (pci
+>> and minipci, pc-card based architectures seem to have problems), and
+>> we did simple tests on the integrated board of a Linksys WRT54GL, so
+>> we are quite sure it runs on 4306, 4318 and 4320 cards. We did all  
+>> the
+>> works on kernel 2.6.27-rc5-wl.
+>>
+>> The firmware along with the instructions to build it from the  
+>> assembly
+>> code using the tools developed by the b43 community can be found here
+>>
+>> 	http://www.ing.unibs.it/openfwwf
+>>
+>> In the firmware website you can find more information about the fw
+>> algorithm, its interaction with Broadcom hardware and other
+>> information that we discovered as we were writing it.
+>>
+>> We would like to underline that this work would have not been  
+>> possible
+>> without the instruments already developed by the b43 community
+>> (assembler/disassembler), hardware specifications (sipsolution's
+>> website), the opensource test firmware written by Michael Buesch and
+>> useful talks with those guys (b43 developers), which we deeply
+>> acknowledge. As we used several definition files written by Michael
+>> for its firmware and we have prepared a source tar file that includes
+>> them, we kindly ask Michael if this could be a problem.
+>>
+>> Finally we stress that this is a TEST firmware and some stuff needs  
+>> to
+>> be fixed (e.g. RTS/CTS and QoS), we have been using it as a starting
+>> point to implement other MAC algorithms for research purposes: if
+>> someone is interested in this kind of work and would like to share
+>> ideas also on research topics, please let us know.
+>>
+>> Cheers,
+>> Francesco Gringoli
+>> Lorenzo Nava
+>> _______________________________________________
+>> Bcm43xx-dev mailing list
+>> Bcm43xx-dev@lists.berlios.de
+>> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+>>
+>>
+>> -------------------------------------------------------
+>>
+>
+>
+>
+> -- 
+> Greetings, Michael.
+
+-------
+
+Francesco Gringoli, PhD - Assistant Professor
+Dept. of Electrical Engineering for Automation
+University of Brescia
+via Branze, 38
+25123 Brescia
+ITALY
+
+Ph:  ++39.030.3715843
+FAX: ++39.030.380014
+WWW: http://www.ing.unibs.it/~gringoli
 
 
 
-> 
 
-> Chatre, Reinette (1):
-
->       iwl3945: add debugging for wrong command queue
-
-> 
-
-> Helmut Schaa (2):
-
->       iwl3945: fix some warnings when compiled without debug
-
->       iwlagn: fix hw-rfkill while the interface is down
-
-> 
-
-> Jay Sternberg (4):
-
->       iwlwifi: correct Kconfig to prevent following entries from not
-
->       indenting
-
->       iwlwifi: remove static from 5000 structures
-
->       iwlwifi: add recognition of Intel WiFi Link 6000 and 6050 Series
-
->       iwlwifi: add recognition of Intel WiFi Link 100 Series
-
-> 
-
-> Reinette Chatre (1):
-
->       iwlwifi: return NETDEV_TX_OK from _tx ops
-
-> 
-
-> Samuel Ortiz (3):
-
->       iwl3945: Use iwl_txq_update_write_ptr
-
->       iwlwifi: Add TFD library operations
-
->       iwl3945: Use iwl-hcmd host command routines
-
-> 
-
-> Winkler, Tomas (6):
-
->       iwlwifi: make iwl-power.c more readable
-
->       iwlwifi: fix iwl_mac_set_key and iwl3945_mac_set_key
-
->       iwlwifi: kill iwl3945_scan_cancel and iwl3945_scan_cancel_timeout
-
->       iwlwifi: kill scan39
-
->       iwlwifi: remove unused or twice defined members in iwl_priv
-
->       iwlwifi: eliminate power_data_39.
