@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.185]:28671 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752225AbZAWTC3 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:6112 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753087AbZAINl4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 14:02:29 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so2979479muf.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 11:02:27 -0800 (PST)
+	Fri, 9 Jan 2009 08:41:56 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so9841333wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 05:41:55 -0800 (PST)
+Message-ID: <b6c5339f0901090541m1ac135bcta91bacb3f048a9ba@mail.gmail.com> (sfid-20090109_144201_086568_1863DFA1)
+Date: Fri, 9 Jan 2009 08:41:55 -0500
+From: "Bob Copeland" <bcopeland@gmail.com>
+To: "Hugh Dickins" <hugh@veritas.com>
+Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
+Cc: "Maxim Levitsky" <maximlevitsky@gmail.com>,
+	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
+	ath5k-devel@venema.h4ckr.net
+In-Reply-To: <b6c5339f0901081041p3c9669f8ycd461b155da60f94@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org>
-References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org>
-Date: Fri, 23 Jan 2009 11:02:27 -0800
-Message-ID: <45e8e6c40901231102y732b6929sce70b00ffcd8bef5@mail.gmail.com> (sfid-20090123_200232_197243_9B8E726B)
-Subject: Re: rt2x00 mesh support
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Antonio Marques <froz@icix.org>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
+References: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils>
+	 <1231426017.922.2.camel@maxim-laptop>
+	 <Pine.LNX.4.64.0901081603410.8411@blonde.anvils>
+	 <b6c5339f0901080910x3d3b5758mae4e81411dcf1405@mail.gmail.com>
+	 <Pine.LNX.4.64.0901081740350.19523@blonde.anvils>
+	 <b6c5339f0901081041p3c9669f8ycd461b155da60f94@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Antonio.  As I understand it, beaconing is currently broken in
-rt2x00 (it used to work in the past).  This means that, until the
-device can send beacons again, it won't be able to do mesh (or AP or
-IBSS).  However the commit in question at least sets up the driver to
-support mesh as soon as beaconing works again.
+On Thu, Jan 8, 2009 at 1:41 PM, Bob Copeland <bcopeland@gmail.com> wrote:
+> On Thu, Jan 8, 2009 at 12:55 PM, Hugh Dickins <hugh@veritas.com> wrote:
+>> Let me see if I can reproduce the ath5k BUG with a straightforward
+>> memhog, repeatedly dirtying more anon memory than RAM can provide.
+>> Is there something suitable I could run to exercise that wireless
+>> path concurrently?  It was just idling when I hit the BUGs before.
+>
+> Receiving any packets will do it, in your case it was probably
+> beacons from nearby APs if you weren't using the wifi.  So iperf
+> or similar will work.
 
-On Fri, Jan 23, 2009 at 10:58 AM, Antonio Marques <froz@icix.org> wrote:
-> Hi,
->
-> I have been trying to setup a mesh network using the 802.11s stack, but
-> unfortunately the only hardware that I have readily available are rt2x00
-> usb dongles and an ath5k mini-pci card. Since support for rt2x00
-> driver is listed on o11s.org as being in development, what is the current
-> status
-> of mesh support for this driver?
->
-> I see recent commit activity such as
-> fdc26201323eb8ba543ac5624f8d71e55b6f7352,
-> "rt2x00: Add mesh support" but I am still unable to establish mesh links
-> using
-> rt2x00 devices. An rt2x00 device can see the ath5k device according to
-> 'iw dev mesh station dump', but the link state never changes to ESTAB.
->
-> Thanks,
-> Antonio Marques
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Actually it's probably enough to just intentionally fail one
+of the allocations in the driver.  I'll do that and let you know
+if I can easily break it.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
