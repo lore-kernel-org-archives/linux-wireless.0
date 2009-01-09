@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60545 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752476AbZASI3m (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:59014 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751003AbZAILuK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 03:29:42 -0500
-Subject: Re: [PATCH] mac80211: Reconfigure beacons after a merge run in
-	IBSS mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni.Malinen@Atheros.com
-In-Reply-To: <18804.11602.400684.88722@gargle.gargle.HOWL>
-References: <18804.11602.400684.88722@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jGLoXkfiBbgAX0ySDqmq"
-Date: Mon, 19 Jan 2009 09:29:32 +0100
-Message-Id: <1232353772.3799.1.camel@johannes> (sfid-20090119_092951_315021_CCA99CD1)
-Mime-Version: 1.0
+	Fri, 9 Jan 2009 06:50:10 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 03:50:10 -0800
+From: Vivek Natarajan <Vivek.Natarajan@Atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 9 Jan 2009 17:20:05 +0530
+Subject: RE: multicast traffic and ath9k
+Message-ID: <44EE5C37ADC36343B0625A05DD408C4845A77DAF05@CHEXMB-01.global.atheros.com> (sfid-20090109_125016_516311_8E6306C2)
+References: <1231346161.3545.52.camel@johannes>
+In-Reply-To: <1231346161.3545.52.camel@johannes>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-jGLoXkfiBbgAX0ySDqmq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Johannes Berg wrote:
+> Does ath9k hardware really not check the multicast bit by itself? It
+> seems that we can't really be fast enough to wake up the hardware, so
+> the check for the MC bit is kinda useless, no?
 
-On Mon, 2009-01-19 at 13:05 +0530, Sujith wrote:
-> On completion of a merge scan run in IBSS mode, beacons have
-> to be reconfigured in the driver, so that the HW timers are updated
-> properly when coming back to the home channel. This patch fixes this issu=
-e.
+There are two options in atheros drivers. One is hardware beacon processing
+and the other is sw beacon processing. For some reason, sw beacon processing
+is enabled by default, the performance is as expected and it has been working fine
+for Windows implementation.
 
-I think instead we should have an enable-beacon flag that we disable
-before scanning, and then re-enable after scanning like here. That way,
-we also don't need any extra code in the driver to stop beaconing before
-scanning, and it generally helps too when userspace deletes the beacon
-we stop beaconing in a controlled fashion.
+Some functions related to power save and beacon are beacon timestamp update,
+verify tim bit and verify mc bit. The beacon timers have to be programmed correctly
+to wake up for every beacon and process it for tim.  If the timer is slightly
+out of sync, we my fail to receive the beacon.
 
-The best way is probably to add a conf flag like CONF_PS and a change
-flag for this, what do you think?
+The alternative is sw beacon processing using TIM_TIMER interrupt. This is a timer
+which runs in the hw while majority of the hw is asleep. This generates an interrupt
+for every beacon listen interval to wake up the chip and listen to beacon. We do not
+go back to sleep unless we receive a beacon. Since there is no dependency on the
+higher layers to update the beacon/sleep timers,  this implementation works fine in any
+corner case. Hence, there is a need to process multicast bit in the software itself.
 
-johannes
-
---=-jGLoXkfiBbgAX0ySDqmq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJdDnqAAoJEKVg1VMiehFYMakP/jgVLBTRsgLxSJj9cTs7TGdn
-jIO2rwmL6O760DCvVdx8bDSSom/IB7ZI31J/E6kZLiGkSe+OkRNLfUrP8sxHYlq4
-KfuCPBVHrGPlLafchMzx5JMn8PCh7pDG0IbhxX+Ku8HMPkfHLxw526pWeSvZYNQ5
-TfwY2/SEp2eG2eYBgxCpQRpecGkCASauXjIutG3dIXIyy1J5X1Fcz+syNaj3UXZt
-15ItJNe2fau9xtP42Gv2hEMzkRSpMUWLfHG7iidw0joEcdWa0HXK+OP1FGjGPRCR
-mr0PBh1G2JCF4wJy3VDYTCeo9qljVpeB4ZNybuTs4huj5lLfAY5Rw0fW2JPpMPtc
-lfxEz1KQtDWIsgMIYa1oeF0QZtg1IrMLcNY/pOVmDYLvkcFZgZz+Rfq07QxUu713
-pk66onvGbwgrLZNVxPkGX5XgxYzwB7zUgeBbj6bcvk6p/l3R9w/ugIMR6iqWH9vg
-1wH0D1t0FjIR8QHOToyq07cAif9D6/eTeDgmyzSVJ1xvXWNHAGQSVV2FkKanpUgs
-UgGoFqloo2gMsNPLFIgbldqkoJPp/yfJYFToZ0GCMedRzQY3mMftZG+SZ6HADe1y
-Q1mJ2TkBNIlvl05A6NWw+nZ8FV+vSsocMseCGgkKd/eVSf0ahdtE5C0R0HIspby/
-Wl90Ai+JRUpiSnkq//6E
-=IdKh
------END PGP SIGNATURE-----
-
---=-jGLoXkfiBbgAX0ySDqmq--
-
+Vivek.
