@@ -1,77 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:49488 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751009AbZAFQu3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 11:50:29 -0500
-Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	mohamed salim abbas <mabbaswireless@gmail.com>,
-	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
-	yi.zhu@intel.com, reinette.chatre@intel.com
-In-Reply-To: <1231260067.5246.7.camel@californication>
-References: <200812161307.07193.helmut.schaa@gmail.com>
-	 <20081217202943.GB3516@tuxdriver.com>
-	 <1229549485.26406.12.camel@localhost.localdomain>
-	 <200901051556.13403.helmut.schaa@gmail.com>
-	 <1231257584.14565.16.camel@localhost.localdomain>
-	 <1231260067.5246.7.camel@californication>
-Content-Type: text/plain
-Date: Tue, 06 Jan 2009 11:49:17 -0500
-Message-Id: <1231260557.14565.24.camel@localhost.localdomain> (sfid-20090106_175034_149084_7284C884)
-Mime-Version: 1.0
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:39990 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160AbZAIMZv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 07:25:51 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH v2 03/11] ath9k: introduce bus specific cache size routine
+Date: Fri,  9 Jan 2009 13:24:20 +0100
+Message-Id: <1231503868-29226-4-git-send-email-juhosg@openwrt.org> (sfid-20090109_132601_516008_45DD1CD5)
+In-Reply-To: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
+References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-01-06 at 17:41 +0100, Marcel Holtmann wrote:
-> Hi Dan,
-> 
-> > > > > > the interrupt moved from pci_probe to mac_start for power saving. once
-> > > > > > the interface is up the driver will read some register to know rfkill
-> > > > > > status, if the interface in down the driver don't care to keep track
-> > > > > > of rfkill switch. I wonder what the purpose of changing this behavior?
-> > > > > 
-> > > > > I think it still isn't settled in everyone's minds whether rfkill
-> > > > > only matters if the device is "up" or if it is something that
-> > > > > e.g. NetworkManager might want to monitor as a clue to bring the
-> > > > > device up or down in response to rfkill changes.
-> > > > 
-> > > > The question is:  does NetworkManager just always keep the device 'up'
-> > > > irregardless of whether it's supposed to be associated with anything
-> > > > just so we can get rfkill events?
-> > > 
-> > > Another question is: is it worth to keep the interface up (and thus the
-> > > firmware loaded) even if the transceiver is killed by a hardware switch?
-> > > Wouldn't that consume even more power than just listening to rfkill
-> > > interrupts (or polling the killswitch state in case of 3945) with no
-> > > firmware loaded.
-> > > 
-> > > > I guess I'll treat rfkill the same as ethernet carrier.  If we cannot
-> > > > rely on rfkill notifications when the device is down (we already can't,
-> > > > since iwl3945 simply can't do it) 
-> > > 
-> > > I've just checked the 3945 and it is indeed possible to poll the killswitch
-> > > state even if the firmware is not loaded. Hence 3945 could also expose
-> > > the killswitch state while the interface is down (of course the driver would
-> > > have to poll for that information).
-> > 
-> > Even polling the state once every 2 - 4 seconds would be perfectly
-> > acceptable latency for me.  It doesn't have to be instantaneous, so we
-> > can certainly trade off latency for fewer wakeups.  Care to propose a
-> > patch?  it'll make a lot of people happy :)
-> 
-> if we can't get the rfkill state change via interrupt, then the kernel
-> driver has to poll for it (in the no-firmware cases). Or we have to
-> remove the rfkill support completely. Everything else is just not
-> acceptable. It is _not_ the responsibility of the userspace to make this
-> work with quirks.
+The PCI specific bus_read_cachesize routine won't work on the AHB bus,
+we have to replace it with a suitable one later.
 
-Right; I meant polling in *iwl3945* every 2 - 4 seconds or so, not from
-userspace.  Userspace should still listen for the rfkill uevents (not
-that HAL does yet, but...)
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/core.h |   10 ++++++++++
+ drivers/net/wireless/ath9k/main.c |    9 +++++++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
 
-Dan
-
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 2256ba4..8e93d11 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -693,6 +693,10 @@ enum PROT_MODE {
+ #define SC_OP_RFKILL_SW_BLOCKED	BIT(12)
+ #define SC_OP_RFKILL_HW_BLOCKED	BIT(13)
+ 
++struct ath_bus_ops {
++	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
++};
++
+ struct ath_softc {
+ 	struct ieee80211_hw *hw;
+ 	struct device *dev;
+@@ -743,6 +747,7 @@ struct ath_softc {
+ #ifdef CONFIG_ATH9K_DEBUG
+ 	struct ath9k_debug sc_debug;
+ #endif
++	struct ath_bus_ops *bus_ops;
+ };
+ 
+ int ath_reset(struct ath_softc *sc, bool retry_tx);
+@@ -750,4 +755,9 @@ int ath_get_hal_qnum(u16 queue, struct ath_softc *sc);
+ int ath_get_mac80211_qnum(u32 queue, struct ath_softc *sc);
+ int ath_cabq_update(struct ath_softc *);
+ 
++static inline void ath_read_cachesize(struct ath_softc *sc, int *csz)
++{
++	sc->bus_ops->read_cachesize(sc, csz);
++}
++
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 9acd968..15824c1 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -42,7 +42,7 @@ static void ath_detach(struct ath_softc *sc);
+ 
+ /* return bus cachesize in 4B word units */
+ 
+-static void bus_read_cachesize(struct ath_softc *sc, int *csz)
++static void ath_pci_read_cachesize(struct ath_softc *sc, int *csz)
+ {
+ 	u8 u8tmp;
+ 
+@@ -1338,7 +1338,7 @@ static int ath_init(u16 devid, struct ath_softc *sc)
+ 	 * Cache line size is used to size and align various
+ 	 * structures used to communicate with the hardware.
+ 	 */
+-	bus_read_cachesize(sc, &csz);
++	ath_read_cachesize(sc, &csz);
+ 	/* XXX assert csz is non-zero */
+ 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
+ 
+@@ -2529,6 +2529,10 @@ ath_rf_name(u16 rf_version)
+ 	return "????";
+ }
+ 
++static struct ath_bus_ops ath_pci_bus_ops = {
++	.read_cachesize = ath_pci_read_cachesize,
++};
++
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	void __iomem *mem;
+@@ -2617,6 +2621,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	sc->hw = hw;
+ 	sc->dev = &pdev->dev;
+ 	sc->mem = mem;
++	sc->bus_ops = &ath_pci_bus_ops;
+ 
+ 	if (ath_attach(id->device, sc) != 0) {
+ 		ret = -ENODEV;
+-- 
+1.5.3.2
 
