@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45140 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759776AbZA2AFZ (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:49533 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752612AbZAILf5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 19:05:25 -0500
-Subject: Re: [PATCH] iw: rename nl_handle to nl_sock for libnl-2.0
-From: Johannes Berg <johannes@sipsolutions.net>
-To: pat-lkml <pat-lkml@erley.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4980E60D.9060505@erley.org> (sfid-20090129_001116_800094_6F18B713)
-References: <4980E60D.9060505@erley.org>
-	 (sfid-20090129_001116_800094_6F18B713)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/BfzVuiX+8KykxBZksEn"
-Date: Thu, 29 Jan 2009 01:04:47 +0100
-Message-Id: <1233187487.16048.93.camel@johannes.local> (sfid-20090129_010532_371723_16B71DF9)
-Mime-Version: 1.0
+	Fri, 9 Jan 2009 06:35:57 -0500
+Received: by bwz14 with SMTP id 14so28777682bwz.13
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 03:35:55 -0800 (PST)
+Message-ID: <41960ccf0901090335s3db5dc58x80047ea3085a6838@mail.gmail.com> (sfid-20090109_123601_559829_991F65C7)
+Date: Fri, 9 Jan 2009 12:35:54 +0100
+From: "Lorenzo Nava" <navalorenx@gmail.com>
+To: "Michael Buesch" <mb@bu3sch.de>
+Subject: Re: [b43] opensource firmware
+Cc: "Francesco Gringoli" <francesco.gringoli@ing.unibs.it>,
+	linux-wireless@vger.kernel.org,
+	"David Woodhouse" <dwmw2@infradead.org>
+In-Reply-To: <200901091206.09736.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de>
+	 <9F70A0D3-6334-45FB-9DAF-263FE89C847E@ing.unibs.it>
+	 <200901091206.09736.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> Yep, it doesn't work.
+> So I'll first try to (partially) merge it into my git repository and give it an extra review.
 
---=-/BfzVuiX+8KykxBZksEn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Can you tell us which kind of problem did you have?
 
-On Wed, 2009-01-28 at 18:11 -0500, pat-lkml wrote:
-> Upstream has renamed nl_handle to nl_sock.  Update iw to the new names
-> and add #define for libnl-1.1.
+Thank
 
-I fixed this already, no?
+regards
 
-And renaming nl_handle to nl_sock means that it won't work with older,
-released libs, afaict.
+Lorenzo.
 
-johannes
-
---=-/BfzVuiX+8KykxBZksEn
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJgPKdAAoJEKVg1VMiehFYRmgP/iL532hrwZLdHiT3hhYyO2nH
-WiYVsZXwpa2Y69fVwGmBVLPxLpceBJ0w60TyOjUN1sJjJ4JGwlzmLJUnVqmBhr/4
-deRRl3+ORdDXAnZNTdCmNLJ+zVJrWTgKE4Oez6ITIxXmL+A2LTPBlyBHbN/d6DRs
-L3rIT5y01vL6qvveQfEILIW/2xwxjAEHYdwQDFsG3Bb3YGLPGa00rcX6aOiOt6Sl
-Uo82DR9AG9d9DI4LAcuwDdejXVxnDAY5We6cXHqzQUxxXWKP7DSq5gpXF5T0fb71
-XNp+12KCleUVTC1Q/46ec8mwwM8ukbJRxPYYoRnsyEFYAFilTEmctGbTKaBY6TlN
-pR90zWGuCiXEKT+ksc3Xqe1B/5IKM3hpgqUjFyROKYeqHc8OkEDVKvFTjULSl7wl
-Pw+MNtEv8lFELtAkaFS9b9k6lgYiSlf+mclhThoBwyvKwwTEgnVvl6jzWlEX73vZ
-BIolFt5ZTGzTd8sgqE9QzcW6uZCpntSZ+RXb2wHa4lvpDJAmB8g7JVI5BYb8K2yG
-o8J6wRX4NNRP83e9Qff3aYZdpEH0izAtRwj9z9fI1tKZxOGbjerElD5mvzS4QKAE
-ekd/wsZ0sTlmYq/OZSuzbPq/scp7EExlaDRFsisQrqEDyCmI2D++jTZqm90ADtAt
-8J7i5AuCDgsn2SNfxNzX
-=y6TA
------END PGP SIGNATURE-----
-
---=-/BfzVuiX+8KykxBZksEn--
-
+>
+> --
+> Greetings, Michael.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
