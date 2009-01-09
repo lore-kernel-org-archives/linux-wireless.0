@@ -1,82 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:4420 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757919AbZASLua (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:52449 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751393AbZAILL3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 06:50:30 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so496562eye.37
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 03:50:27 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 19 Jan 2009 13:50:27 +0200
-Message-ID: <eb3ff54b0901190350p1ac95afdpdb0c937a66c6c00e@mail.gmail.com> (sfid-20090119_125032_898289_CAF7EAA4)
-Subject: [PATCH 1/4] mac80211: remove mesh_plink_close() method.
-From: Rami Rosen <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	luisca@cozybit.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 9 Jan 2009 06:11:29 -0500
+Cc: linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>
+Message-Id: <2DA5FF49-D67E-43CA-ACE5-FF530774A070@ing.unibs.it> (sfid-20090109_121133_008481_A444ADC0)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+To: Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <200901091158.48989.mb@bu3sch.de>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: [b43] opensource firmware
+Date: Fri, 9 Jan 2009 12:03:48 +0100
+References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de> <200901091158.48989.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes mesh_plink_close() method as it is unused.
+Damn! Our 4306 was a mini-pci card mounted on an adapter on a PCI bus.  
+Remember to disable qos (qos=0 on module load). Could we have  
+different initvals files? Our count
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+3e5442067f1c945e6180777728a2ea08  b0g0bsinitvals5.fw
+f85142421a4a1bcb9dd52c513c1ea558  b0g0initvals5.fw
 
---
-(wireless-testing)
+Finally, what kernel version are you using? We were out of sync since  
+late october (stopped ad 2.6.27-rc5-wl)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index c197ab5..c5b0b58 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -243,7 +243,6 @@ void mesh_accept_plinks_update(struct
-ieee80211_sub_if_data *sdata);
- void mesh_plink_broken(struct sta_info *sta);
- void mesh_plink_deactivate(struct sta_info *sta);
- int mesh_plink_open(struct sta_info *sta);
--int mesh_plink_close(struct sta_info *sta);
- void mesh_plink_block(struct sta_info *sta);
- void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
- 			 struct ieee80211_mgmt *mgmt, size_t len,
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 8a6c02b..c140a1b 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -361,36 +361,6 @@ void mesh_plink_block(struct sta_info *sta)
- 	spin_unlock_bh(&sta->lock);
- }
+Cheers,
+-FG
 
--int mesh_plink_close(struct sta_info *sta)
--{
--	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	__le16 llid, plid, reason;
--
--	mpl_dbg("Mesh plink: closing link with %pM\n", sta->sta.addr);
--	spin_lock_bh(&sta->lock);
--	sta->reason = cpu_to_le16(MESH_LINK_CANCELLED);
--	reason = sta->reason;
--
--	if (sta->plink_state == PLINK_LISTEN ||
--	    sta->plink_state == PLINK_BLOCKED) {
--		mesh_plink_fsm_restart(sta);
--		spin_unlock_bh(&sta->lock);
--		return 0;
--	} else if (sta->plink_state == PLINK_ESTAB) {
--		__mesh_plink_deactivate(sta);
--		/* The timer should not be running */
--		mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
--	} else if (!mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata)))
--		sta->ignore_plink_timer = true;
--
--	sta->plink_state = PLINK_HOLDING;
--	llid = sta->llid;
--	plid = sta->plid;
--	spin_unlock_bh(&sta->lock);
--	mesh_plink_frame_tx(sta->sdata, PLINK_CLOSE, sta->sta.addr, llid,
--			    plid, reason);
--	return 0;
--}
+On Jan 9, 2009, at 11:58 AM, Michael Buesch wrote:
 
- void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct
-ieee80211_mgmt *mgmt,
- 			 size_t len, struct ieee80211_rx_status *rx_status)
+> On Friday 09 January 2009 11:49:28 Michael Buesch wrote:
+>> I'd like to start merging this into the "firmware" directory
+>> of the mainline kernel.
+>
+> Ok, the code doesn't work on my 4306 hardware.
+> So I think I'll not merge it into the kernel right away, but first  
+> merge
+> it into my b43-openfw git repository, that already partially works  
+> on my hardware.
+> That also gives the code an extra review.
+>
+> -- 
+> Greetings, Michael.
+
+
