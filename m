@@ -1,97 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:37215 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753667AbZASX2R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 18:28:17 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 08/15] iwlwifi: kill scan39
-Date: Mon, 19 Jan 2009 15:30:28 -0800
-Message-Id: <1232407835-19451-9-git-send-email-reinette.chatre@intel.com> (sfid-20090120_002830_237080_1A83F304)
-In-Reply-To: <1232407835-19451-8-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232407835-19451-1-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-2-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-3-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-4-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-5-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-6-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-7-git-send-email-reinette.chatre@intel.com>
- <1232407835-19451-8-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:42775 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbZAJJNX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Jan 2009 04:13:23 -0500
+Subject: Re: [PATCH] iw: Fix regression in mesh_param input parsing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Colin McCabe <colin@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1231549996-15919-1-git-send-email-colin@cozybit.com> (sfid-20090110_021745_599151_06D1AB57)
+References: <1231549996-15919-1-git-send-email-colin@cozybit.com>
+	 (sfid-20090110_021745_599151_06D1AB57)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/uHoo7OklSNUs38Df41g"
+Date: Sat, 10 Jan 2009 10:14:26 +0100
+Message-Id: <1231578866.3685.5.camel@johannes> (sfid-20090110_101330_059284_7EA978B6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
 
-scan and scan39 can be represented by void * in iwl_priv
+--=-/uHoo7OklSNUs38Df41g
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 +---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   10 +++++-----
- 2 files changed, 6 insertions(+), 8 deletions(-)
+On Fri, 2009-01-09 at 17:13 -0800, Colin McCabe wrote:
+> In the iw tool, don't crash on bad arguments to "iw dev mesh set mesh_par=
+am"
+>=20
+> ---
+>  mesh.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/mesh.c b/mesh.c
+> index d6edf3f..f663363 100644
+> --- a/mesh.c
+> +++ b/mesh.c
+> @@ -192,9 +192,10 @@ static const struct mesh_param_descr* find_mesh_para=
+m(int argc, char **argv,
+> =20
+>  	/* Find out what mesh parameter we want to change. */
+>  	mdescr =3D NULL;
+> -	for (i =3D 0; ARRAY_SIZE(_mesh_param_descrs); i++)
+> +	for (i =3D 0; i < ARRAY_SIZE(_mesh_param_descrs); i++) {
+>  		if (!strcmp(_mesh_param_descrs[i].name, argv[0]))
+>  			return _mesh_param_descrs + i;
+> +	}
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 4d437cf..5b5e011 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -848,7 +848,7 @@ struct iwl_priv {
- 	unsigned long scan_start;
- 	unsigned long scan_pass_start;
- 	unsigned long scan_start_tsf;
--	struct iwl_scan_cmd *scan;
-+	void *scan;
- 	int scan_bands;
- 	int one_direct_scan;
- 	u8 direct_ssid_len;
-@@ -1071,8 +1071,6 @@ struct iwl_priv {
- 	s8 user_txpower_limit;
- 	s8 max_channel_txpower_limit;
- 
--	struct iwl3945_scan_cmd *scan39;
--
- 	/* We declare this const so it can only be
- 	 * changed via explicit cast within the
- 	 * routines that actually update the physical
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 67f05bc..47436ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5264,15 +5264,15 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 		goto done;
- 	}
- 
--	if (!priv->scan39) {
--		priv->scan39 = kmalloc(sizeof(struct iwl3945_scan_cmd) +
-+	if (!priv->scan) {
-+		priv->scan = kmalloc(sizeof(struct iwl3945_scan_cmd) +
- 				     IWL_MAX_SCAN_SIZE, GFP_KERNEL);
--		if (!priv->scan39) {
-+		if (!priv->scan) {
- 			rc = -ENOMEM;
- 			goto done;
- 		}
- 	}
--	scan = priv->scan39;
-+	scan = priv->scan;
- 	memset(scan, 0, sizeof(struct iwl3945_scan_cmd) + IWL_MAX_SCAN_SIZE);
- 
- 	scan->quiet_plcp_th = IWL_PLCP_QUIET_THRESH;
-@@ -7292,7 +7292,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 
- 	iwl3945_free_channel_map(priv);
- 	iwl3945_free_geos(priv);
--	kfree(priv->scan39);
-+	kfree(priv->scan);
- 	if (priv->ibss_beacon)
- 		dev_kfree_skb(priv->ibss_beacon);
- 
--- 
-1.5.4.3
+Ouch, sorry about that! Merged the patch, thanks.
+
+johannes
+
+--=-/uHoo7OklSNUs38Df41g
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJaGbsAAoJEKVg1VMiehFYFLMP/1QauTlALZ6gl63wGvP9JklN
+ogZjSBtN2edri1TaKEv33TW4QkzKBgoQFaIgH1dWiYFll+CJkJ7up7jlFRCAw7pN
+RFuzVGpisUXpJPSjrmvnDrgYYl/0+PKOblx3d31qYItPVqHaGVqA9pcx18JRYiPW
+vqxVZNMHGUmOTjEs8SxAelzvBe1Wbm+x0YqsAq3uUsxZYKd12Elus0cXgsqF8NXw
+MdqcKiDG8P21DQfeLYzp0NsD9PNbfXrJPGeGmUGbuoxvhOoHtwUw/NCGHiCgZDEO
+mtTl52oyHzg1TfCzrHhl775fR9FVNwi2EP2NMy4pUPYSuHCWXuZbADyB73zAnUjs
+R32mqzH++fl2pq3Nyyz3b9QfIFOogVBP+QCOrWgDAw3hIh/M4D0ESmV2/oedRshm
+yFYFEma3tQBND5yCdkiNZEgGHdJ99EHIqn63dOokkYIRWmny7a9AopUJBssJz4nw
+zBlME+7qm1/ChfqLZNfabV86a52dbpHEY1a8oPPovp8tF2uyaFHqu++8CMaJogP0
+7pdfTJGt+1hHjegHWNfLqeDUgt/jzwOUU9PxFBiICKkti5p2F3ycOwM8GVbdBQoW
+nD4COysZ+dxFnXTAlXIhsSizXMC0rnSu6fm5wrorgDkuUEzJwVkd0h/IelhaIcQs
+efaL9RqDxZWkJo52DwvD
+=8WEf
+-----END PGP SIGNATURE-----
+
+--=-/uHoo7OklSNUs38Df41g--
 
