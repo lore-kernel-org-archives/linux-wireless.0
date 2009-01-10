@@ -1,62 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:24422 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760329AbZAMBiN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 20:38:13 -0500
-Message-ID: <496BF076.7000601@oracle.com> (sfid-20090113_023827_094181_00BBA3D2)
-Date: Mon, 12 Jan 2009 17:37:58 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Received: from mail.atheros.com ([12.36.123.2]:15697 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751211AbZAJATM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 19:19:12 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 16:19:12 -0800
+Date: Fri, 9 Jan 2009 16:18:52 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] crda: prevent key2pub.py from generating bogus output
+	on failure
+Message-ID: <20090110001852.GK4416@tesla> (sfid-20090110_011915_115115_DC996AFB)
+References: <20090110001650.3681.35686.stgit@dv.roinet.com>
 MIME-Version: 1.0
-To: Sedat Dilek <sedat.dilek@googlemail.com>
-CC: Randy Dunlap <randy.dunlap@oracle.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [master-2009-01-12] compiler-error in 'drivers/net/irda/donauboe.c'
-References: <2d0a357f0901121657s1ea091b6m824e8f939be2d51d@mail.gmail.com>	 <496BE899.7010406@oracle.com> <2d0a357f0901121715y2aedbeecs9819688f275df25c@mail.gmail.com>
-In-Reply-To: <2d0a357f0901121715y2aedbeecs9819688f275df25c@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090110001650.3681.35686.stgit@dv.roinet.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sedat Dilek wrote:
-> No, it's not mainline - I checked 2.6.29-rc1-git{1|2}.
-> But, it is in net-2.6.git [1] if you mean that by mainline :).
+On Fri, Jan 09, 2009 at 04:16:50PM -0800, Pavel Roskin wrote:
+> Specify output file on the command line, so that it's not created in
+> case of fatal errors, such as asbence of M2Crypto.
 > 
-> -SD
-> 
-> [1] irda: fix incomplete conversation to internal stats
-> http://git.kernel.org/?p=linux/kernel/git/davem/net-2.6.git;a=commit;h=216c32d4407ea6951d6832773fdb3de058e12c62
-> 
-> On Tue, Jan 13, 2009 at 2:04 AM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
->> Sedat Dilek wrote:
->>> Hi,
->>>
->>> I could not compile latest wl.git due to problems in
->>> 'drivers/net/irda/donauboe.c'.
->>> A fix and description is given in [1].
->>> Hope this helps other people.
->>>
->>> Regards,
->>> Sedat
->>>
->>> [1] http://patchwork.kernel.org/patch/1791/
->> The patch was just merged into mainline.
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-I mean that it was just merged minutes ago:
+Thanks, BTW these should be addressed to John as its his tree.
 
-Gitweb:     http://git.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=216c32d4407ea6951d6832773fdb3de058e12c62
-Commit:     216c32d4407ea6951d6832773fdb3de058e12c62
-Parent:     c59765042f53a79a7a65585042ff463b69cb248c
-Author:     Alexander Beregalov <a.beregalov@gmail.com>
-AuthorDate: Thu Jan 8 16:42:08 2009 -0800
-Committer:  David S. Miller <davem@davemloft.net>
-CommitDate: Sun Jan 11 00:01:31 2009 -0800
-
-    irda: fix incomplete conversation to internal stats
-    
-    Fix for commit af0490810c (irda: convert to internal stats)
-
-
--- 
-~Randy
+  Luis
