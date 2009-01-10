@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13964 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750807AbZAYSVq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 13:21:46 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 10:21:46 -0800
-Date: Sun, 25 Jan 2009 10:21:07 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Michael Buesch <mb@bu3sch.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: regulatory: Operation already in progress
-Message-ID: <20090125182107.GG22475@tesla> (sfid-20090125_192159_941292_CC4AD31C)
-References: <200901251422.42616.mb@bu3sch.de>
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:46840 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766AbZAJLRv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Jan 2009 06:17:51 -0500
+Received: by ewy10 with SMTP id 10so10661288ewy.13
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Jan 2009 03:17:49 -0800 (PST)
+To: Andrew Price <andy@andrewprice.me.uk>
+Subject: Re: [RFC] rt2500pci: turn on led_qual for default LED mode
+Date: Sat, 10 Jan 2009 12:17:45 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <20090110100751.GA29761@silver.sucs.org>
+In-Reply-To: <20090110100751.GA29761@silver.sucs.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <200901251422.42616.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901101217.45569.IvDoorn@gmail.com> (sfid-20090110_121757_748067_34941BBD)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 25, 2009 at 05:22:42AM -0800, Michael Buesch wrote:
-> mb@quimby:~/kernel$ sudo iw reg set DE
-> command failed: Operation already in progress (-114)
-> 
-> I wonder why this happens.
-> What I just did was install 2.6.28.2 and install today's compat-wireless.
-> 
-> In dmesg I can see it succeeded once but it doesn't work anymore now.
-> [  973.992710] cfg80211: Calling CRDA for country: DE
-> [  973.998576] cfg80211: Regulatory domain changed to country: DE
-> [  973.998630]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> [  973.998691]  (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> [  973.998738]  (5150000 KHz - 5255000 KHz @ 40000 KHz), (N/A, 2301 mBm)
-> [  973.998785]  (5470000 KHz - 5650000 KHz @ 40000 KHz), (N/A, 3000 mBm)
+Hi,
 
-Had you called twice? If so we now tell userspace when its there by -EALREADY,
-we were just silently accepting two consecutive calls before.
+> Add a check for LED_MODE_DEFAULT so that we initialise the link LED.
+> 
+> Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
+> ---
+> 
+> I'm submitting this patch just as an RFC as I have no idea whether it works
+> with all rt2500pci devices. With my card, value holds 0 after the call to
+> rt2x00_get_field16() and so the added check for LED_MODE_DEFAULT (which is 0)
+> is needed for the link LED to work.
+> 
+> My card is a "RaLink RT2500 802.11g Cardbus/mini-PCI [1814:0201]" Belkin
+> F5D7010 according to lspci.
+> 
+> Any advice would be much appreciated. Does this patch look reasonable? Are
+> there any docs/specs which I could read to learn how this should be handled?
 
-  Luis
+You raise a very good point with this patch, I need to double check what the legacy drivers
+actually do with LED_MODE_DEFAULT and if it is similar as your approach this patch should
+be done for all rt2x00 drivers.
+
+I'll get back on this patch as soon as possible.
+
+Thanks,
+
+Ivo
+
+> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+> index d3bc218..651cb4f 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+> @@ -1524,7 +1524,7 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
+>  
+>  	rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
+> -	if (value == LED_MODE_TXRX_ACTIVITY)
+> +	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
+>  		rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
+>  				   LED_TYPE_ACTIVITY);
+>  #endif /* CONFIG_RT2X00_LIB_LEDS */
+
+
