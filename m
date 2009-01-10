@@ -1,60 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19288 "EHLO mail.atheros.com"
+Received: from c60.cesmail.net ([216.154.195.49]:12131 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755535AbZAOI0r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 03:26:47 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 00:26:47 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1752278AbZAJAQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2009 19:16:55 -0500
+Subject: [PATCH] crda: prevent key2pub.py from generating bogus output on
+	failure
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+From: Pavel Roskin <proski@gnu.org>
+Date: Fri, 09 Jan 2009 19:16:50 -0500
+Message-ID: <20090110001650.3681.35686.stgit@dv.roinet.com> (sfid-20090110_011658_798956_8E73BD5F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Message-ID: <18798.62076.794358.415474@gargle.gargle.HOWL> (sfid-20090115_092652_785123_3C2CC4BC)
-Date: Thu, 15 Jan 2009 13:53:24 +0530
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [ath9k-devel] [PATCH v4 07/11] ath9k: get EEPROM contents from
- platform data on AHB bus
-In-Reply-To: <496EEE6D.6090300@openwrt.org>
-References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
-	<1231960632-4452-8-git-send-email-juhosg@openwrt.org>
-	<18798.41971.397753.279649@localhost.localdomain>
-	<496EEE6D.6090300@openwrt.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gabor Juhos wrote:
-> Sujith  rta:
-> > Gabor Juhos wrote:
-> >> +static bool ath_ahb_eeprom_read(struct ath_hal *ah, u32 off, u16 *data)
-> >> +{
-> >> +    struct ath_softc *sc = ah->ah_sc;
-> >> +    struct platform_device *pdev = to_platform_device(sc->dev);
-> >> +    struct ath9k_platform_data *pdata;
-> >> +
-> >> +    pdata = (struct ath9k_platform_data *) pdev->dev.platform_data;
-> >> +    if (off >= (ARRAY_SIZE(pdata->eeprom_data))) {
-> >> +            DPRINTF(ah->ah_sc, ATH_DBG_FATAL,
-> >> +                    "%s: flash read failed, offset %08x is out of range\n",
-> >> +                            __func__, off);
-> >> +            return false;
-> >> +    }
-> >> +
-> >> +    *data = pdata->eeprom_data[off];
-> >> +    return true;
-> >> +}
-> >> +
-> >
-> > Shouldn't pdev->dev.platform_data be initalized somewhere ?
-> 
-> It must be initialized by the board specific setup code,
-> 
+Specify output file on the command line, so that it's not created in
+case of fatal errors, such as asbence of M2Crypto.
 
-Ok.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ Makefile         |    2 +-
+ utils/key2pub.py |   57 ++++++++++++++++++++++++++++--------------------------
+ 2 files changed, 31 insertions(+), 28 deletions(-)
 
-Sujith
+diff --git a/Makefile b/Makefile
+index c871182..292dad0 100644
+--- a/Makefile
++++ b/Makefile
+@@ -64,7 +64,7 @@ $(REG_BIN):
+ 
+ keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
+ 	$(NQ) '  GEN ' $@
+-	$(Q)./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) > $@
++	$(Q)./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
+ 
+ %.o: %.c regdb.h
+ 	$(NQ) '  CC  ' $@
+diff --git a/utils/key2pub.py b/utils/key2pub.py
+index 40c60eb..47f50e3 100755
+--- a/utils/key2pub.py
++++ b/utils/key2pub.py
+@@ -3,7 +3,7 @@
+ import sys
+ from M2Crypto import RSA
+ 
+-def print_ssl(name, val):
++def print_ssl(output, name, val):
+     while val[0] == '\0':
+         val = val[1:]
+     while len(val) % 4:
+@@ -13,22 +13,22 @@ def print_ssl(name, val):
+         vnew.append((val[0], val[1], val[2], val[3], ))
+         val = val[4:]
+     vnew.reverse()
+-    sys.stdout.write('static BN_ULONG %s[%d] = {\n' % (name, len(vnew)))
++    output.write('static BN_ULONG %s[%d] = {\n' % (name, len(vnew)))
+     idx = 0
+     for v1, v2, v3, v4 in vnew:
+         if not idx:
+-            sys.stdout.write('\t')
+-        sys.stdout.write('0x%.2x%.2x%.2x%.2x, ' % (ord(v1), ord(v2), ord(v3), ord(v4)))
++            output.write('\t')
++        output.write('0x%.2x%.2x%.2x%.2x, ' % (ord(v1), ord(v2), ord(v3), ord(v4)))
+         idx += 1
+         if idx == 4:
+             idx = 0
+-            sys.stdout.write('\n')
++            output.write('\n')
+     if idx:
+-        sys.stdout.write('\n')
+-    sys.stdout.write('};\n\n')
++        output.write('\n')
++    output.write('};\n\n')
+ 
+-def print_ssl_keys(n):
+-    sys.stdout.write(r'''
++def print_ssl_keys(output, n):
++    output.write(r'''
+ struct pubkey {
+ 	struct bignum_st e, n;
+ };
+@@ -43,29 +43,29 @@ struct pubkey {
+ static struct pubkey keys[] = {
+ ''')
+     for n in xrange(n + 1):
+-        sys.stdout.write('	KEYS(e_%d, n_%d),\n' % (n, n))
+-    sys.stdout.write('};\n')
++        output.write('	KEYS(e_%d, n_%d),\n' % (n, n))
++    output.write('};\n')
+     pass
+ 
+-def print_gcrypt(name, val):
++def print_gcrypt(output, name, val):
+     while val[0] == '\0':
+         val = val[1:]
+-    sys.stdout.write('static const __u8 %s[%d] = {\n' % (name, len(val)))
++    output.write('static const __u8 %s[%d] = {\n' % (name, len(val)))
+     idx = 0
+     for v in val:
+         if not idx:
+-            sys.stdout.write('\t')
+-        sys.stdout.write('0x%.2x, ' % ord(v))
++            output.write('\t')
++        output.write('0x%.2x, ' % ord(v))
+         idx += 1
+         if idx == 8:
+             idx = 0
+-            sys.stdout.write('\n')
++            output.write('\n')
+     if idx:
+-        sys.stdout.write('\n')
+-    sys.stdout.write('};\n\n')
++        output.write('\n')
++    output.write('};\n\n')
+ 
+-def print_gcrypt_keys(n):
+-    sys.stdout.write(r'''
++def print_gcrypt_keys(output, n):
++    output.write(r'''
+ struct key_params {
+ 	const __u8 *e, *n;
+ 	__u32 len_e, len_n; 
+@@ -79,8 +79,8 @@ struct key_params {
+ static const struct key_params keys[] = {
+ ''')
+     for n in xrange(n + 1):
+-        sys.stdout.write('	KEYS(e_%d, n_%d),\n' % (n, n))
+-    sys.stdout.write('};\n')
++        output.write('	KEYS(e_%d, n_%d),\n' % (n, n))
++    output.write('};\n')
+     
+ 
+ modes = {
+@@ -90,14 +90,17 @@ modes = {
+ 
+ try:
+     mode = sys.argv[1]
+-    files = sys.argv[2:]
++    files = sys.argv[2:-1]
++    outfile = sys.argv[-1]
+ except IndexError:
+     mode = None
+ 
+ if not mode in modes:
+-    print 'Usage: %s [%s] files' % (sys.argv[0], '|'.join(modes.keys()))
++    print 'Usage: %s [%s] input-file... output-file' % (sys.argv[0], '|'.join(modes.keys()))
+     sys.exit(2)
+ 
++output = open(outfile, 'w')
++
+ # load key
+ idx = 0
+ for f in files:
+@@ -106,8 +109,8 @@ for f in files:
+     except RSA.RSAError:
+         key = RSA.load_key(f)
+ 
+-    modes[mode][0]('e_%d' % idx, key.e[4:])
+-    modes[mode][0]('n_%d' % idx, key.n[4:])
++    modes[mode][0](output, 'e_%d' % idx, key.e[4:])
++    modes[mode][0](output, 'n_%d' % idx, key.n[4:])
+     idx += 1
+ 
+-modes[mode][1](idx - 1)
++modes[mode][1](output, idx - 1)
