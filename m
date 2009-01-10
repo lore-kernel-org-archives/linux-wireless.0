@@ -1,113 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:14309 "EHLO
-	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926AbZAFUcM (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:4768 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025AbZAJUQG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 15:32:12 -0500
-Received: from notebook.wilsoft.nl ([192.168.4.4])
-	by linux.wilsoft.nl with esmtp (Exim 4.69)
-	(envelope-from <listsrv@wilsoft.nl>)
-	id 1LKIaq-0001Mr-Ky
-	for linux-wireless@vger.kernel.org; Tue, 06 Jan 2009 21:32:04 +0100
-From: "W. van den Akker" <listsrv@wilsoft.nl>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
-Date: Tue, 6 Jan 2009 21:32:04 +0100
-References: <200901011444.20333.listsrv@wilsoft.nl> <200901060857.41357.listsrv@wilsoft.nl> <200901061552.45729.listsrv@wilsoft.nl>
-In-Reply-To: <200901061552.45729.listsrv@wilsoft.nl>
+	Sat, 10 Jan 2009 15:16:06 -0500
+Date: Sat, 10 Jan 2009 15:15:47 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Hugh Dickins <hugh@veritas.com>
+Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>, maximlevitsky@gmail.com
+Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
+Message-ID: <20090110201547.GA11261@hash.localnet> (sfid-20090110_211611_552747_3B1754CB)
+References: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils> <1231426017.922.2.camel@maxim-laptop> <Pine.LNX.4.64.0901081603410.8411@blonde.anvils> <b6c5339f0901080910x3d3b5758mae4e81411dcf1405@mail.gmail.com> <Pine.LNX.4.64.0901081740350.19523@blonde.anvils> <b6c5339f0901081041p3c9669f8ycd461b155da60f94@mail.gmail.com> <b6c5339f0901090541m1ac135bcta91bacb3f048a9ba@mail.gmail.com> <Pine.LNX.4.64.0901091400290.925@blonde.anvils> <20090110164705.GB10865@hash.localnet>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901062132.04403.listsrv@wilsoft.nl> (sfid-20090106_213215_912482_36235D3F)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090110164705.GB10865@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 06 January 2009 15:52:45 you wrote:
-> On Tuesday 06 January 2009, you wrote:
-> > On Monday 05 January 2009, you wrote:
-> > > On Thu, Jan 01, 2009 at 02:44:20PM +0100, W. van den Akker wrote:
-> > > > I have tested on the server  with the latest wireless-testing the
-> > > > past days (2.6.28-rc9-wl). The wireless-testing looks somewhat more
-> > > > stable then the compat-wireless.
-> > > >
-> > > > I have also installed the netconsole module to watch any kernel
-> > > > prints. After running hostapd (v0.6.6) from command line the AP is
-> > > > up-and-running. Then if I connect with the laptop (tested it with
-> > > > kernel .26 and .28 on the laptop) I get a connection and can start a
-> > > > browser en explore the internet. If I start a second session (Kmail
-> > > > or second browser) the
-> > > > server hangs within a minute. Leaving again no trace on the console,
-> > > > hostapd-log or netconsole.
-> > >
-> > > Just to make sure I understood this correctly.. Does this happen with
-> > > just a single association station (your laptop)? What are you referring
-> > > to with a "session"? Just another program using network (i.e., no new
-> > > wireless associations, etc.)? As far as the ath9k driver is concerned,
-> > > new applications (e.g., new TCP connection) should not really matter
-> > > much.. If you have IEEE 802.11n enabled, could you please run a test
-> > > with it disabled to make sure this is not related to frame aggregation?
-> > >
-> > > As far as getting any output from the system is concerned, the next
-> > > step could be to see if NMI watchdog would be able to provide any help.
-> > > Please take a look at Documentation/nmi_watchdog.txt in the kernel
-> > > source code and see if you could use that on the AP to get some output
-> > > when the system hangs (running without X on console to make sure you
-> > > see the output).
-> >
-> > Hi Jouni,
-> >
-> > Yes you understood correctly. Only a laptop, start a browser then start
-> > Kmail over the same wireless connection. Then it hangs. This is always
-> > reproducable. There are also other sorts or hangups (for example when
-> > starting hostapd, but that is not always reproducable when it happens).
-> >
-> > I will try today the watchdog-suggestion. Hope that it will provide some
-> > help.
->
-> I have enabled the NMI_watchdog (see below)
->           CPU0       CPU1
->   0:     322372          0   IO-APIC-edge      timer
->   1:         12          0   IO-APIC-edge      i8042
->   4:        101          0   IO-APIC-edge      serial
->   6:          3          0   IO-APIC-edge      floppy
->   7:          0          0   IO-APIC-edge      parport0
->   8:          2          0   IO-APIC-edge      rtc0
->   9:          0          0   IO-APIC-fasteoi   acpi
->  12:          4          0   IO-APIC-edge      i8042
->  16:          0          0   IO-APIC-fasteoi   uhci_hcd:usb1
->  17:       6282          0   IO-APIC-fasteoi   eth1
->  18:     364152          0   IO-APIC-fasteoi   ata_piix, ata_piix, eth0
->  19:          0          0   IO-APIC-fasteoi   uhci_hcd:usb2
->  21:       1727          0   IO-APIC-fasteoi   ath
->  23:          0          0   IO-APIC-fasteoi   ehci_hcd:usb3
->  27:         89          0   IO-APIC-fasteoi   aic79xx
-> NMI:     322364     322307   Non-maskable interrupts
-> LOC:          0     322302   Local timer interrupts
-> RES:      10695      24691   Rescheduling interrupts
-> CAL:         36        112   Function call interrupts
-> TLB:       2371       3165   TLB shootdowns
-> TRM:          0          0   Thermal event interrupts
-> SPU:          0          0   Spurious interrupts
-> ERR:          0
-> MIS:          0
->
-> However, after starting a internet session and Kmail session the server
-> hangs again without any output. Does the NMI-handler not process per CPU?
-> So if one CPU hangs, the other would still proceed?
->
-> I have no 802.11n enabled, nor X.
->
-> This means I think the system halted hard 'hlt-instruction'
->
-> Any further suggestion? I am little bit hopeless now. I have placed the PCI
-> card into another slot, no result.
+On Sat, Jan 10, 2009 at 11:47:05AM -0500, Bob Copeland wrote:
+> Well I got a lockup doing that, I'll try again later but anyway I see
+> the bug already, read on if interested.  I should have a patch shortly.
 
-Some additional information:
-I have booted the server at approx 16:00. Hostapd was started at boot-time.
-After 5 hours without any connection from any computers the server hangs.
+Err, of course I would get a lockup, it's a BUG_ON.  This patch seems to
+fix it for me.  
+
+From: Bob Copeland <me@bobcopeland.com>
+Date: Sat, 10 Jan 2009 14:42:54 -0500
+Subject: [PATCH] ath5k: fix bf->skb==NULL panic in ath5k_tasklet_rx
+
+Under memory pressure, we may not be able to allocate a new skb for
+new packets.  If the allocation fails, ath5k_tasklet_rx will exit but
+will leave a buffer in the list with a NULL skb, eventually triggering
+a BUG_ON.
+
+Extract the skb allocation from ath5k_rxbuf_setup() and change the
+tasklet to allocate the next skb before accepting a packet.
+
+Changes-licensed-under: 3-Clause-BSD
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/base.c |   85 +++++++++++++++++++++++--------------
+ 1 files changed, 53 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 2b7b7f6..1c0061a 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1095,6 +1095,42 @@ ath5k_hw_to_driver_rix(struct ath5k_softc *sc, int hw_rix)
+ * Buffers setup *
+ \***************/
+ 
++static
++struct sk_buff *ath5k_rx_skb_alloc(struct ath5k_softc *sc, dma_addr_t *skb_addr)
++{
++	struct sk_buff *skb;
++	unsigned int off;
++
++	/*
++	 * Allocate buffer with headroom_needed space for the
++	 * fake physical layer header at the start.
++	 */
++	skb = dev_alloc_skb(sc->rxbufsize + sc->cachelsz - 1);
++
++	if (!skb) {
++		ATH5K_ERR(sc, "can't alloc skbuff of size %u\n",
++				sc->rxbufsize + sc->cachelsz - 1);
++		return NULL;
++	}
++	/*
++	 * Cache-line-align.  This is important (for the
++	 * 5210 at least) as not doing so causes bogus data
++	 * in rx'd frames.
++	 */
++	off = ((unsigned long)skb->data) % sc->cachelsz;
++	if (off != 0)
++		skb_reserve(skb, sc->cachelsz - off);
++
++	*skb_addr = pci_map_single(sc->pdev,
++		skb->data, sc->rxbufsize, PCI_DMA_FROMDEVICE);
++	if (unlikely(pci_dma_mapping_error(sc->pdev, *skb_addr))) {
++		ATH5K_ERR(sc, "%s: DMA mapping failed\n", __func__);
++		dev_kfree_skb(skb);
++		return NULL;
++	}
++	return skb;
++}
++
+ static int
+ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ {
+@@ -1102,37 +1138,11 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 	struct sk_buff *skb = bf->skb;
+ 	struct ath5k_desc *ds;
+ 
+-	if (likely(skb == NULL)) {
+-		unsigned int off;
+-
+-		/*
+-		 * Allocate buffer with headroom_needed space for the
+-		 * fake physical layer header at the start.
+-		 */
+-		skb = dev_alloc_skb(sc->rxbufsize + sc->cachelsz - 1);
+-		if (unlikely(skb == NULL)) {
+-			ATH5K_ERR(sc, "can't alloc skbuff of size %u\n",
+-					sc->rxbufsize + sc->cachelsz - 1);
++	if (!skb) {
++		skb = ath5k_rx_skb_alloc(sc, &bf->skbaddr);
++		if (!skb)
+ 			return -ENOMEM;
+-		}
+-		/*
+-		 * Cache-line-align.  This is important (for the
+-		 * 5210 at least) as not doing so causes bogus data
+-		 * in rx'd frames.
+-		 */
+-		off = ((unsigned long)skb->data) % sc->cachelsz;
+-		if (off != 0)
+-			skb_reserve(skb, sc->cachelsz - off);
+-
+ 		bf->skb = skb;
+-		bf->skbaddr = pci_map_single(sc->pdev,
+-			skb->data, sc->rxbufsize, PCI_DMA_FROMDEVICE);
+-		if (unlikely(pci_dma_mapping_error(sc->pdev, bf->skbaddr))) {
+-			ATH5K_ERR(sc, "%s: DMA mapping failed\n", __func__);
+-			dev_kfree_skb(skb);
+-			bf->skb = NULL;
+-			return -ENOMEM;
+-		}
+ 	}
+ 
+ 	/*
+@@ -1661,7 +1671,8 @@ ath5k_tasklet_rx(unsigned long data)
+ {
+ 	struct ieee80211_rx_status rxs = {};
+ 	struct ath5k_rx_status rs = {};
+-	struct sk_buff *skb;
++	struct sk_buff *skb, *next_skb;
++	dma_addr_t next_skb_addr;
+ 	struct ath5k_softc *sc = (void *)data;
+ 	struct ath5k_buf *bf, *bf_last;
+ 	struct ath5k_desc *ds;
+@@ -1746,10 +1757,17 @@ ath5k_tasklet_rx(unsigned long data)
+ 				goto next;
+ 		}
+ accept:
++		next_skb = ath5k_rx_skb_alloc(sc, &next_skb_addr);
++
++		/*
++		 * If we can't replace bf->skb with a new skb under memory
++		 * pressure, just skip this packet
++		 */
++		if (!next_skb)
++			goto next;
++
+ 		pci_unmap_single(sc->pdev, bf->skbaddr, sc->rxbufsize,
+ 				PCI_DMA_FROMDEVICE);
+-		bf->skb = NULL;
+-
+ 		skb_put(skb, rs.rs_datalen);
+ 
+ 		/* The MAC header is padded to have 32-bit boundary if the
+@@ -1822,6 +1840,9 @@ accept:
+ 			ath5k_check_ibss_tsf(sc, skb, &rxs);
+ 
+ 		__ieee80211_rx(sc->hw, skb, &rxs);
++
++		bf->skb = next_skb;
++		bf->skbaddr = next_skb_addr;
+ next:
+ 		list_move_tail(&bf->list, &sc->rxbuf);
+ 	} while (ath5k_rxbuf_setup(sc, bf) == 0);
+-- 
+1.6.0.6
+
 
 -- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+Bob Copeland %% www.bobcopeland.com
 
