@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19298 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755535AbZAOI1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 03:27:50 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 00:27:50 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:39878 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752502AbZAJG2L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Jan 2009 01:28:11 -0500
+Received: by bwz14 with SMTP id 14so29952031bwz.13
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 22:28:09 -0800 (PST)
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Cc: "Jiri Slaby" <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@gmail.com, me@bobcopeland.com, nbd@openwrt.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Add debug code for EEPROM
+References: <20090104173252.GA5944@makis> <49610E8D.9080807@gmail.com>
+	<40f31dec0901091637u70ad5c97g3915d5b2b8726e88@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 10 Jan 2009 08:28:06 +0200
+In-Reply-To: <40f31dec0901091637u70ad5c97g3915d5b2b8726e88@mail.gmail.com> (Nick Kossifidis's message of "Sat\, 10 Jan 2009 02\:37\:28 +0200")
+Message-ID: <874p07llop.fsf@litku.valot.fi> (sfid-20090110_072817_710373_DAD233AE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Message-ID: <18798.62140.234415.246664@gargle.gargle.HOWL> (sfid-20090115_092753_896747_2B740E7E)
-Date: Thu, 15 Jan 2009 13:54:28 +0530
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [ath9k-devel] [PATCH v4 02/11] ath9k: convert to use
- bus-agnostic DMA routines
-In-Reply-To: <496EEE8B.3030702@openwrt.org>
-References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
-	<1231960632-4452-3-git-send-email-juhosg@openwrt.org>
-	<18798.42051.400380.269490@localhost.localdomain>
-	<496EEE8B.3030702@openwrt.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gabor Juhos wrote:
-> Sujith  rta:
-> > Gabor Juhos wrote:
-> >> Convert to use bus-agnostic DMA routines to make it usable on AHB bus as well.
-> >>
-> >
-> > This pretty much makes the previous patch redundant.
-> 
-> Yes. Although i can merge the two patches, but in my opinion it is easier to
-> review them in this way.
-> 
+"Nick Kossifidis" <mickflemm@gmail.com> writes:
 
-Alright.
-Otherwise, the series looks okay to me.
+>>> +     struct ath5k_eeprom_info ee = ah->ah_capabilities.cap_eeprom;
+>>> +     unsigned int len = 0;
+>>> +     char buf[2000];
+>>
+>> dtto
+>>
+>
+> What does dtto mean ?
 
-Sujith
+A typo from ditto:
+
+>From WordNet (r) 3.0 (2006) [wn]:
+
+  ditto
+      n 1: a mark used to indicate the word above it should be
+           repeated [syn: {ditto mark}, {ditto}]
+      v 1: repeat an action or statement; "The next speaker dittoed
+           her argument"
+
+
+-- 
+Kalle Valo
