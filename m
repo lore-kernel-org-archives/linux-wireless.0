@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.191]:49899 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957AbZA3TWr (ORCPT
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:48133
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734AbZAJTua (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 14:22:47 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so487815muf.1
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 11:22:45 -0800 (PST)
+	Sat, 10 Jan 2009 14:50:30 -0500
+Message-ID: <4968FC02.6010708@erley.org> (sfid-20090110_205034_945997_F0B6680F)
+Date: Sat, 10 Jan 2009 14:50:26 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
-In-Reply-To: <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>
-References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
-	 <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>
-	 <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>
-Date: Fri, 30 Jan 2009 19:17:35 +0000
-Message-ID: <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com> (sfid-20090130_202251_966792_BD60B572)
-Subject: Re: rtl8187 wireless issues
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-Cc: linux-wireless@vger.kernel.org
+To: "W. van den Akker" <listsrv@wilsoft.nl>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
+References: <200901011444.20333.listsrv@wilsoft.nl> <200901062342.22935.listsrv@wilsoft.nl> <200901071642.04310.listsrv@wilsoft.nl> <200901101226.16007.listsrv@wilsoft.nl>
+In-Reply-To: <200901101226.16007.listsrv@wilsoft.nl>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 30, 2009 at 1:59 PM, P.G. Richardson
-<p.g.richardson@phantomjinx.co.uk> wrote:
-> Hi,
->
-> Have compiled and install the latest driver and success!
+W. van den Akker wrote:
+> 
+> Did some futher testing to exclude problems....
+> The wlan0 and eth1 are both part of a bridge. I have removed the eth1 
+> interface so the the eth1-driver cannot interfer with the ath9k driver.
+> Also no result. The server still locks.
+> 
+> What is the right way to combine the eth1 and wlan0 into a bridge. Do I even 
+> need  a bridge? The hostapd.config says I must define a bridge when I use the 
+> nl80211driver interface.
+> The bridge has an IP adress, wlan0 and eth1 are in the same subnet.
+> 
+> When hostapd is started I have some error-messages. Dont know if they can 
+> hurt...
+> Failed to set CTS protect in kernel driver
+> Failed to set Short Slot Time option in kernel driver
+> Could not set preamble for kernel driver
+> 
+> 
 
-Glad to hear.
+I use gentoo's init scripts, but my wlan0 and eth0 are both in a bridge
+(br0) and it works fine.  I don't get the CTS, Short Slot Time, or
+preamble kernel driver errors.  Perhaps you need to comment out a few
+lines in hostapd.conf?
 
-> Just to answer your questions ...
->
-> dmesg didnt offer much information other than "link is not ready"
+# preamble=1
 
-No, my asking for "dmesg | grep rtl " wasn't for disagnostic purposes.
-There are 4-5 variants of the rtl8187b hardware, and they shows
-slightly different parts. e.g. mine says:
+and I have:
 
-phy0: hwaddr <address>, RTL8187BvE V0 + rtl8225z2
+rts_threshold=2347
 
-and yours probably will say 8187BvB with a B at the end, and some
-other for the 2nd part. I just like the info for curiosity, since you
-have a different rtl8187b from mine.
+I'll send you a direct e-mail with my .config and hostapd-wep.conf files
+to help with debugging.
 
-> Should have explained the detail of "cannot ping". Essentially I take the
-> network down doing /etc/init.d/network stop. Change around which
-> ifcfg-interfaces start on boot then do /etc/init.d/network start. Thus,
-> the default route was always the active interface.
->
-> Do not use NetworkManager and use static ip addresses.
-
-NetworkManager gives you the ability to switch interfaces quite easily
-and automatically and somewhat painlessly (when it works). If you want
-to have multiple interfaces active and working simultaneously, you
-need to learn a bit about routing, and do some homework. The issue you
-experienced is not specific to wireless but you would have the same
-issue with multiple wired ethernet interfaces; and somewhat
-irrelevant.
-
-> Anyway, hopefully everything is working.
->
-> Thanks for the response. Let me know if you require any more info or would
-> like some testing done.
-
-If it breaks or not working well, you can come back :-). What's in
-compat-wireless now will eventually end up in mainline, but meanwhile
-if you upgrade your kernel and find that you need compat-wireless, it
-would be nice to know just for the record that "distribution X is not
-quite up-to-date". (some distros like Fedora do selective back-ports
-of some drivers or some fixes). Support of rtl8187b in 2.6.27 wasn't
-very good, but the changes in wireless-testing/compat-wireless is
-gradually being pushed into mainline; what is in compat-wireless today
-is mostly 2.6.30 material.
-
-> PS. A minor thing which is probably my fault. I compiled the driver using
-> make then ran make install. The latter installed the new mac82011, ifcfg
-> and b44 drivers. None of the other specific wireless drivers were copied
-> to the kernel update directory. I had to copy the rtl8187 there manually.
-
-That's wierd - are you sure? Compat-wireless is supposed to put the
-whole lot (about 50MB of kernel modules, nearly 50 of them) into
-updates, although only about 4-5 kernel modules are used for rtl8187b.
+Pat Erley
