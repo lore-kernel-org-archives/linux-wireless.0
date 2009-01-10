@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:40123 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753201AbZATWlT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 17:41:19 -0500
-Date: Tue, 20 Jan 2009 14:39:57 -0800
-From: Greg KH <gregkh@suse.de>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Artur Skawina <art.08.09@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Linux wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH -stable] p54usb: fix traffic stalls / packet drop
-Message-ID: <20090120223957.GA6088@suse.de> (sfid-20090120_234123_693487_48D9E78C)
-References: <KTnguC9mFUC.A.VNB.TJRdJB@chimera> <cX2gZ6Cy9nC.A.vUD.KKRdJB@chimera> <200901202311.11854.chunkeey@web.de>
+Received: from fg-out-1718.google.com ([72.14.220.156]:25535 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752437AbZAJNQu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Jan 2009 08:16:50 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so3619299fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Jan 2009 05:16:48 -0800 (PST)
+Message-ID: <3ace41890901100516mc2e1ee1h42c4f67b552f7d73@mail.gmail.com> (sfid-20090110_141654_429223_52FF3905)
+Date: Sat, 10 Jan 2009 13:16:48 +0000
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: lmage11@twcny.rr.com
+Subject: Re: Help debugging unexpected disassociations?
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090110021351.MHLV4.64591.root@hrndva-web24-z02>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200901202311.11854.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20090110021351.MHLV4.64591.root@hrndva-web24-z02>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 11:11:11PM +0100, Christian Lamparter wrote:
-> All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
-> Else, the firmware could freeze, or simply drop the frame.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> Cc: stable <stable@kernel.org>
-> ---
-> Attached is the patch is for the stable series only.
-> Bugzilla reference: http://bugzilla.kernel.org/show_bug.cgi?id=12260
-> (wireless-testing needs a different one)
+On Sat, Jan 10, 2009 at 2:13 AM,  <lmage11@twcny.rr.com> wrote:
+<snipped>
+>> Also, it is always useful to quote versions of relevant software -
+>> what version of wpa_supplicant, and networkmanager you are using; or
+>> even what distribution you are using, and hardware (64-bit, 32-bit).
+>> You have written 3 times and added no new info.
+>
+> You need only ask. :)
 
-What do you mean, this is for 2.6.28-stable or 2.6.27-stable only, and
-not 2.6.29?  Why?
+That info should have been in your first post, or the 2nd...
+And you still have not answered one: what distro - that alone would
+have answered or at least hinted at most of the software versions,
+etc. 'read my mind'... you are the person asking for help, why do you
+expect others to *chase after you* for info? Most people won't bother.
 
-thanks,
+> I am using wpa_supplicant 0.5.7. I am aware that this is a really old version,
+> and I can try updating it if you think that would make a difference. I am running
+> on a Thinkpad T61, which is 64-bit. I think I already said which chip I'm using,
+> but I'll say it again. It's an IWL4965.
 
-greg k-h
+Now we are getting somewhere - and my first reply did ask you to run
+wpa_supplicant in the foreground.
+Even for the 0.5.x series, 0.5.10 is current... and most people are
+using 0.6.x . wpa_supplicant (not the driver) is responsible for
+encryption and authentication, and you had a deauthentication problem.
+Hello, anybody home??!!
+
+So, as you yourself suggested, you should update. And while you are at
+it, read wpa_supplicant's doc, and work out the debug options and what
+I meant by 'run it in the foreground'.
