@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:45777 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753220AbZASA0w (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:30176 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752424AbZAJMqC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 19:26:52 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Artur Skawina <art.08.09@gmail.com>
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-Date: Mon, 19 Jan 2009 01:26:58 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <494698AF.4020204@gmail.com> <497105D1.5040906@gmail.com> <4973BAC6.5020502@gmail.com>
-In-Reply-To: <4973BAC6.5020502@gmail.com>
+	Sat, 10 Jan 2009 07:46:02 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so1229257nfc.21
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Jan 2009 04:45:59 -0800 (PST)
+To: Andrew Price <andy@andrewprice.me.uk>
+Subject: Re: [RFC] rt2500pci: turn on led_qual for default LED mode
+Date: Sat, 10 Jan 2009 13:45:57 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <20090110100751.GA29761@silver.sucs.org>
+In-Reply-To: <20090110100751.GA29761@silver.sucs.org>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901190126.58392.chunkeey@web.de> (sfid-20090119_012658_530151_B2A237BA)
+  charset="iso-8859-1"
+Message-Id: <200901101345.57310.IvDoorn@gmail.com> (sfid-20090110_134609_626813_C8D13585)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 19 January 2009 00:27:02 Artur Skawina wrote:
-> Artur Skawina wrote:
-> > 
-> > didn't trigger anything here, just the usual:
-> > 
-> > BUG kmalloc-4096: Poison overwritten
+On Saturday 10 January 2009, Andrew Price wrote:
+> Add a check for LED_MODE_DEFAULT so that we initialise the link LED.
 > 
- 
-> Still haven't found the corruptor, but at least i've narrowed it down a bit;
-> what i'm seeing is:
+> Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
+> ---
 > 
-> 1) an skb "S" gets allocated in p54u_rx_cb and is submitted together w/ the urb.
-> 2) "S" later comes back to p54u_rx_cb, where it is given to p54_rx (eventually
->    ieee80211_rx_irqsafe) and a new one is allocated.
-> 3) a few (~15) rx/tx packets pass.
-> 4) SLUB detects modified poison in what used to be S->head in (1) and (2) above;
->    usually 0x6b turns into 0x6a, but i have also seen 0x69, just a few times.
->    (the offset from skb->head to the decremented byte seems to stay the same,
->    at least during the few times i tried w/ the same kernel, last one was eg
->    684 bytes)
+> I'm submitting this patch just as an RFC as I have no idea whether it works
+> with all rt2500pci devices. With my card, value holds 0 after the call to
+> rt2x00_get_field16() and so the added check for LED_MODE_DEFAULT (which is 0)
+> is needed for the link LED to work.
 > 
-> This is almost 100% reproducible; sometimes the machine freezes instead.
+> My card is a "RaLink RT2500 802.11g Cardbus/mini-PCI [1814:0201]" Belkin
+> F5D7010 according to lspci.
+> 
+> Any advice would be much appreciated. Does this patch look reasonable? Are
+> there any docs/specs which I could read to learn how this should be handled?
+> 
+> P.S. This is not related to my previous LED patch. This one is for the other
+> LED which has never worked as far as I can remember, until now :-)
 
-Do you know what is inside "S" when it handed over to ieee80211_rx_irqsafe?
-Is it always the same content, or is it sometimes a data or mgmt frame?
+Ok, I just checked legacy driver and LED_MODE_DEFAULT indeed can be considered
+as LED_MODE_TXRX_ACTIVITY. Could you resend this patch as normal patch,
+but with the same change for rt2400pci and rt2500usb.
 
-Another shot in the dark: do you have a daemon that listen to mon.wlan0, wmaster / "any" other than hostapd?
+Thanks,
 
-Regards,
-	Chr
+> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+> index d3bc218..651cb4f 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+> @@ -1524,7 +1524,7 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
+>  
+>  	rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
+> -	if (value == LED_MODE_TXRX_ACTIVITY)
+> +	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
+>  		rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
+>  				   LED_TYPE_ACTIVITY);
+>  #endif /* CONFIG_RT2X00_LIB_LEDS */
+
+
