@@ -1,107 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:50159 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753548AbZAWEjP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 23:39:15 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Fri, 23 Jan 2009 05:39:13 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090123043913.270710@gmx.net> (sfid-20090123_053923_228043_9845DB7A)
+Received: from mail.atheros.com ([12.36.123.2]:52216 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753629AbZAJLji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Jan 2009 06:39:38 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Jan 2009 03:39:38 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Fix basic connectivity issue
+Date: Sat, 10 Jan 2009 17:07:09 +0530
+Message-ID: <1231587429-23989-1-git-send-email-vasanth@atheros.com> (sfid-20090110_123942_176836_59B52955)
 MIME-Version: 1.0
-Subject: [PATCH v2] ath5k: Read and write the TSF via debugfs
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch updates the ath5k specific entry in the debugfs to read and =
-reset the TSF value, to allowing write it, too. This makes debugging th=
-e IBSS handling of wifi drivers _much_ easier.
+This patch temporarily fixes a regression introduced by BT coexistence support.
+There is an instability in connection when BT coexistence is enabled on some h/w.
+This interim fix introduces a module parameter for BT coexistence configuration.
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
-diff -urN compat-wireless-2009-01-19/drivers/net/wireless/ath5k/ath5k.h=
- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath5k/ath5k.h
---- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath5k/ath5k.h	=
-2009-01-19 20:07:20.000000000 +0100
-+++ compat-wireless-2009-01-19/drivers/net/wireless/ath5k/ath5k.h	2009-=
-01-23 01:47:11.000000000 +0100
-@@ -1206,6 +1206,7 @@
- /* Beacon control functions */
- extern u32 ath5k_hw_get_tsf32(struct ath5k_hw *ah);
- extern u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah);
-+extern void ath5k_hw_set_tsf64(struct ath5k_hw *ah, u64 tsf64);
- extern void ath5k_hw_reset_tsf(struct ath5k_hw *ah);
- extern void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon,=
- u32 interval);
- #if 0
-diff -urN compat-wireless-2009-01-19/drivers/net/wireless/ath5k/debug.c=
- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath5k/debug.c
---- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath5k/debug.c	=
-2009-01-19 20:07:20.000000000 +0100
-+++ compat-wireless-2009-01-19/drivers/net/wireless/ath5k/debug.c	2009-=
-01-23 00:34:25.000000000 +0100
-@@ -210,15 +210,22 @@
- 				 size_t count, loff_t *ppos)
- {
- 	struct ath5k_softc *sc =3D file->private_data;
--	char buf[20];
-+	char buf[21];
-+	unsigned long long tsf;
-=20
--	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
-+	if (copy_from_user(buf, userbuf, min(count, sizeof(buf) - 1)))
- 		return -EFAULT;
-+	buf[sizeof(buf) - 1] =3D '\0';
-=20
- 	if (strncmp(buf, "reset", 5) =3D=3D 0) {
- 		ath5k_hw_reset_tsf(sc->ah);
- 		printk(KERN_INFO "debugfs reset TSF\n");
-+	} else {
-+		tsf =3D simple_strtoul(buf, NULL, 0);
-+		ath5k_hw_set_tsf64(sc->ah, tsf);
-+		printk(KERN_INFO "debugfs set TSF to %#018llx\n", tsf);
- 	}
-+
- 	return count;
- }
-=20
-diff -urN compat-wireless-2009-01-19/drivers/net/wireless/ath5k/pcu.c c=
-ompat-wireless-2009-01-19.orig/drivers/net/wireless/ath5k/pcu.c
---- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath5k/pcu.c	20=
-09-01-19 20:07:20.000000000 +0100
-+++ compat-wireless-2009-01-19/drivers/net/wireless/ath5k/pcu.c	2009-01=
--23 01:04:26.000000000 +0100
-@@ -646,6 +646,23 @@
- }
-=20
- /**
-+ * ath5k_hw_set_tsf64 - Set a new 64bit TSF
-+ *
-+ * @ah: The &struct ath5k_hw
-+ * @tsf64: The new 64bit TSF
-+ *
-+ * Sets the new TSF
-+ */
-+void ath5k_hw_set_tsf64(struct ath5k_hw *ah, u64 tsf64)
-+{
-+	ATH5K_TRACE(ah->ah_sc);
-+
-+	ath5k_hw_reg_write(ah, 0x00000000, AR5K_TSF_L32);
-+	ath5k_hw_reg_write(ah, (tsf64 >> 32) & 0xffffffff, AR5K_TSF_U32);
-+	ath5k_hw_reg_write(ah, tsf64 & 0xffffffff, AR5K_TSF_L32);
-+}
-+
-+/**
-  * ath5k_hw_reset_tsf - Force a TSF reset
-  *
-  * @ah: The &struct ath5k_hw
+ drivers/net/wireless/ath9k/hw.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index cbd408f..6800e5c 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -23,6 +23,10 @@
+ #include "phy.h"
+ #include "initvals.h"
+ 
++static int btcoex_enable;
++module_param(btcoex_enable, bool, 0);
++MODULE_PARM_DESC(btcoex_enable, "Enable Bluetooth coexistence support");
++
+ #define ATH9K_CLOCK_RATE_CCK		22
+ #define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
+ #define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
+@@ -3359,7 +3363,7 @@ bool ath9k_hw_fill_cap_info(struct ath_hal *ah)
+ 	pCap->num_antcfg_2ghz =
+ 		ath9k_hw_get_num_ant_config(ah, ATH9K_HAL_FREQ_BAND_2GHZ);
+ 
+-	if (AR_SREV_9280_10_OR_LATER(ah)) {
++	if (AR_SREV_9280_10_OR_LATER(ah) && btcoex_enable) {
+ 		pCap->hw_caps |= ATH9K_HW_CAP_BT_COEX;
+ 		ah->ah_btactive_gpio = 6;
+ 		ah->ah_wlanactive_gpio = 5;
+-- 
+1.5.5.1
+
