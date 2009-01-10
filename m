@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f21.google.com ([209.85.217.21]:43372 "EHLO
-	mail-gx0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757526AbZAUAUV (ORCPT
+Received: from qmta04.emeryville.ca.mail.comcast.net ([76.96.30.40]:49264 "EHLO
+	QMTA04.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752381AbZAJCXc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 19:20:21 -0500
-Received: by gxk14 with SMTP id 14so3245193gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 16:20:19 -0800 (PST)
-Message-ID: <43e72e890901201620l6e3a16brce18b149e7678ee6@mail.gmail.com> (sfid-20090121_012027_332821_B3B80C21)
-Date: Tue, 20 Jan 2009 16:20:19 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Kyle McMartin" <kyle@infradead.org>
-Subject: Re: [stable] Failed Build of modules for 2.6.27.9-159
-Cc: "Greg KH" <greg@kroah.com>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Paul Hickey" <paul@christianpatriot.us>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"Kyle McMartin" <kyle@mcmartin.ca>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090121001250.GG17452@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1232404986.3641.2.camel@localhost.localdomain>
-	 <1232433738.3696.3.camel@localhost.localdomain>
-	 <20090120194243.GC19581@tesla> <20090120200515.GA5077@kroah.com>
-	 <20090120201316.GG19581@tesla> <20090120201613.GA5313@kroah.com>
-	 <20090120211630.GJ19581@tesla>
-	 <20090120220810.GE17452@bombadil.infradead.org>
-	 <43e72e890901201607h359018eew3bf7f99b5d1b0759@mail.gmail.com>
-	 <20090121001250.GG17452@bombadil.infradead.org>
+	Fri, 9 Jan 2009 21:23:32 -0500
+Date: Fri, 9 Jan 2009 18:23:22 -0800
+From: "Mark A. Haun" <haunma@keteu.org>
+To: linux-wireless@vger.kernel.org
+Subject: p54 "device does not respond" with fullmac SMC 2802W PCI
+Message-ID: <20090109182322.263db101@angwin.keteu.org> (sfid-20090110_032353_856040_330FB602)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 4:12 PM, Kyle McMartin <kyle@infradead.org> wrote:
-> On Tue, Jan 20, 2009 at 04:07:52PM -0800, Luis R. Rodriguez wrote:
->> Thanks Kyle, that's pretty neat, unfortunately my compat.c includes
->> compat.h and since compat.h includes pci.h the compiler nags about the
->> double header redefinition of foo() where pci.h already has that
->> present (on those systems only). Essentially I'd need a way for
->> systems without foo() to define the header line and for systems that
->> already have it to not add the line. Know any trick for that?
->>
->> Any particular strong reason to add that pci inline onto FC10 headers?
->
-> Well, because it came with an ALSA update...
+Greetings,
 
-Any chance that can be moved to ALSA specific dirs for the alsa updates?
+I have an older "fullmac" SMC 2802W PCI card that I'd like to
+get running with the new p54 driver.  A few years ago I had it working
+with the old prism54 driver.  At the time, I had hoped to set up an AP
+but there were persistent problems between prism54 and hostapd,
+particularly involving WPA.  These seem to be resolved in the new
+driver framework.
 
-  Luis
+This is how the card identifies in lspci -v:
+
+0a:00.0 Network controller: Intersil Corporation ISL3890 [Prism
+GT/Prism Duette]/ISL3886
+[Prism Javelin/Prism Xbow] (rev 01)
+	Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless
+PCI Adapter
+	Flags: medium devsel, IRQ 16 Memory at fd0fe000 (32-bit,
+non-prefetchable) [size=8K]
+	Capabilities: [dc] Power Management version 1
+	Kernel modules: p54pci
+
+Following the instructions for kernel 2.6.28 at
+
+http://wireless.kernel.org/en/users/Drivers/p54,
+
+I downloaded firmware 2.13.1.0.arm and renamed it "isl3886pci".  I
+think these instructions are incorrect, because the driver then
+complained that it could not find the firmware.  When I renamed it
+"isl3886" the driver found the firmware file, with the following
+result: 
+
+p54pci 0000:0a:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+p54pci 0000:0a:00.0: setting latency timer to 64
+p54pci 0000:0a:00.0: firmware: requesting isl3886
+p54: LM86 firmware
+p54: FW rev 2.13.1.0 - Softmac protocol 5.5
+phy0: device does not respond!
+p54pci 0000:0a:00.0: PCI INT A disabled
+p54pci: probe of 0000:0a:00.0 failed with error -16
+
+(I am running 'pristine' 2.6.28 SMP x86_64.  Is there a way to make
+this more verbose?)
+
+I'm still suspicious about the instructions.  I think my chip is a
+3890---does it need its own firmware?
+
+I'd be happy to test out driver patches, etc. if this has a non-trivial
+solution (and assuming anyone still cares about this old hardware).
+
+Thanks,
+
+Mark
+haunma@keteu.org
