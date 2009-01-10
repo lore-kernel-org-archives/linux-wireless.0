@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c1.cosetrain.com ([213.239.209.213]:43580 "EHLO
-	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752220AbZA0LQD (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:58060 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754714AbZAJBRo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 06:16:03 -0500
-Message-ID: <497EECED.1020106@cosetrain.com> (sfid-20090127_121609_270806_57D96C0A)
-Date: Tue, 27 Jan 2009 12:15:57 +0100
-From: Florian Sesser <flomaillist@cosetrain.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/6] mac80211: More small changes for modularization
-References: <497E1B90.4060803@cosetrain.com>	 <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>	 <3202b18e8531aa78c29636c163de20875ae1a9cf.1233001802.git.flomaillist@cosetrain.com>	 <e236615740b8ce8c9515c14aac3a2d9d93806a98.1233001802.git.flomaillist@cosetrain.com>	 <79a59b62a4378b8b88cb3a33b1ec3cbd3808906e.1233001802.git.flomaillist@cosetrain.com>	 (sfid-20090126_213927_757374_C1421A9C) <1233004598.4533.37.camel@johannes.local>
-In-Reply-To: <1233004598.4533.37.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 9 Jan 2009 20:17:44 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so10143447wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 17:17:43 -0800 (PST)
+From: Colin McCabe <colin@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Colin McCabe <colin@cozybit.com>
+Subject: [PATCH] iw: Fix regression in mesh_param input parsing
+Date: Fri,  9 Jan 2009 17:13:16 -0800
+Message-Id: <1231549996-15919-1-git-send-email-colin@cozybit.com> (sfid-20090110_021749_448311_F1D17CE7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+In the iw tool, don't crash on bad arguments to "iw dev mesh set mesh_param"
 
-Thanks for your comment. My intention was having a logical seperation to
-enable better discussion of my patch, which I think is pretty much of a
-monster and not yet ready for inclusion?
+---
+ mesh.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-What do you think about my selection of mesh_path_sel_ops and the
-storing of mesh PP/PM/CC id?
+diff --git a/mesh.c b/mesh.c
+index d6edf3f..f663363 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -192,9 +192,10 @@ static const struct mesh_param_descr* find_mesh_param(int argc, char **argv,
+ 
+ 	/* Find out what mesh parameter we want to change. */
+ 	mdescr = NULL;
+-	for (i = 0; ARRAY_SIZE(_mesh_param_descrs); i++)
++	for (i = 0; i < ARRAY_SIZE(_mesh_param_descrs); i++) {
+ 		if (!strcmp(_mesh_param_descrs[i].name, argv[0]))
+ 			return _mesh_param_descrs + i;
++	}
+ 
+ 	if (!mdescr) {
+ 		printf("Mesh_param must be one of: ");
+-- 
+1.5.6.3
 
-If you deem it OK I would be happy to reformat the patch (into three or
-so seperatly compiling patches) and include KConfigs.
-
-Thanks,
-
-Florian
-
-
-Johannes Berg wrote:
-> On Mon, 2009-01-26 at 21:39 +0100, Florian Sesser wrote:
->> Some rather small changes in various files.
->> After this patch, i was able to do a clean compile.
-> 
-> You need to ensure that after _every_ single patch.
-> 
-> johannes
