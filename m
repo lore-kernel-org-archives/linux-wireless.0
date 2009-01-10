@@ -1,63 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:58192 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755703AbZAHSYa (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:56720 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027AbZAJRhs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 13:24:30 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so1066904eye.37
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2009 10:24:27 -0800 (PST)
-Message-ID: <496644D0.6050301@gmail.com> (sfid-20090108_192434_372765_7A1F04CE)
-Date: Thu, 08 Jan 2009 18:24:16 +0000
-MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-CC: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] orinoco: take the driver lock in the rx tasklet
-References: <1231287835-17707-1-git-send-email-kilroyd@googlemail.com> <200901081128.30143.arvidjaar@mail.ru>
-In-Reply-To: <200901081128.30143.arvidjaar@mail.ru>
-Content-Type: text/plain; charset=ISO-8859-1
-From: Dave <kilroyd@googlemail.com>
+	Sat, 10 Jan 2009 12:37:48 -0500
+Received: by bwz14 with SMTP id 14so30342937bwz.13
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Jan 2009 09:37:46 -0800 (PST)
+Cc: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	Gringoli PhD Gringoli <francesco.gringoli@ing.unibs.it>
+Message-Id: <AE7A4FD8-1728-4CE2-8CC7-DCE699C3B6C9@gmail.com> (sfid-20090110_183801_974000_C746976B)
+From: Lorenzo Nava <navalorenx@gmail.com>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <200901091206.09736.mb@bu3sch.de>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: [b43] opensource firmware
+Date: Sat, 10 Jan 2009 18:37:43 +0100
+References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de> <9F70A0D3-6334-45FB-9DAF-263FE89C847E@ing.unibs.it> <200901091206.09736.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
-> On 07 January 2009 03:23:55 David Kilroy wrote:
->> Fix the warning reproduced below.
->>
->> We add to rx_list in interrupt context and remove elements in tasklet
->> context. While removing elements we need to prevent the interrupt
->> modifying the list.
->>
->> Note that commit 31afcef385bb8bf528c6fbe05b359af9f456f02a did not
->> preserve locking semantics on what is now orinoco_rx.
->>
->> This patch reinstates the locking semantics and ensures it covers
->> rx_list as well. 
-> [...]
->> --- a/drivers/net/wireless/orinoco/orinoco.c
->> +++ b/drivers/net/wireless/orinoco/orinoco.c
->> @@ -1613,6 +1613,16 @@ static void orinoco_rx_isr_tasklet(unsigned
-> [...]
->> +	if (orinoco_lock(priv, &flags) != 0)
->> +		return;
->>
-> 
-> this effectively serializes rx list processing with the rest of driver 
-> (specifically orinoco_interrupt) eliminating any benefit from doing it 
-> in separate tasklet. It is more simple and less confusing to just revert 
-> commit 31afcef385bb8bf528c6fbe05b359af9f456f02a then.
+Hello everybody,
 
-[adding orinoco-devel, who I missed of the original patch submission]
+today I tried OpenFWWF with kernel 2.6.28 on a Siemens wifi device  
+with Broadcom 4306 chipset:
 
-The move to the RX tasklet was not motivated by improved performance,
-but the requirements of the crypto library (can't call from interrupt)
-and the need to do MIC calculations on RX.
+BCM94306 802.11g (rev 03)
+PHY: Analog 2, Type 2, Revision 2
+Radio: Manuf 0x17F, Version 0x2050, Revision 2
 
-Unless the crypto routines have changed, reverting that commit will
-break WPA support.
+I did some tests and everything seems to work fine.
+
+I remember, once again, that OpenFWWF needs v480 initvals to work  
+properly, and was tested on 2.6.27-rc5 kernel.
+
+During firmware development we used these devices
+
+Belkin PCMCIA 4306 card,
+Siemens PCI 4306 card.
+Belkin PCI 4306 card.
+ASUSTeK PCI 4318 card.
+
+and firmware seems to work fine. Everyone that is interested in  
+testing OpenFWWF is welcome: please let us know if the firmware works  
+correctly, and, if it doesn't, please report which kind of problems  
+you had.
+
+Michael please let us know which kind of problem you had with your  
+device.
+
+cheers
+
+Lorenzo Nava.
 
 
-
-Regards,
-
-Dave.
