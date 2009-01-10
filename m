@@ -1,28 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:33414 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751680AbZADQTn (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:46697 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753410AbZAJOfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 11:19:43 -0500
-Date: Sun, 4 Jan 2009 17:33:29 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH - resubmit] rtl8180: Fix to add STA mode
-Message-ID: <20090104163329.GU496@one.firstfloor.org> (sfid-20090104_171945_754989_F4ED8D2D)
-References: <4960D7FF.9010903@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4960D7FF.9010903@lwfinger.net>
+	Sat, 10 Jan 2009 09:35:38 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so3627534fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Jan 2009 06:35:35 -0800 (PST)
+Message-ID: <4968B233.5050401@gmail.com> (sfid-20090110_153545_247303_EEF0EA6B)
+Date: Sat, 10 Jan 2009 15:35:31 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Add debug code for EEPROM
+References: <20090104173252.GA5944@makis> <49610E8D.9080807@gmail.com> <40f31dec0901091637u70ad5c97g3915d5b2b8726e88@mail.gmail.com>
+In-Reply-To: <40f31dec0901091637u70ad5c97g3915d5b2b8726e88@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This bug has now started to affect users of 2.6.28-git mainline. Did
-> it get lost, or has it already been push upstream?
+Nick Kossifidis napsal(a):
+> Hello Jiri and thanks a lot for the review ;-)
+> 
+> 2009/1/4 Jiri Slaby <jirislaby@gmail.com>:
+>>> +/* debugfs: EEPROM stuff */
+>>> +
+>>> +/* EEPROM Header (common) */
+>>> +static ssize_t read_file_eeprom_header(struct file *file, char __user *user_buf,
+>>> +                                size_t count, loff_t *ppos)
+>>> +{
+>>> +
+>>> +     struct ath5k_softc *sc = file->private_data;
+>>> +     struct ath5k_hw *ah = sc->ah;
+>>> +     struct ath5k_eeprom_info ee = ah->ah_capabilities.cap_eeprom;
+>>> +     char buf[2000];
+>> Please don't use that much memory from stack. 2k is way too much. Note that
+>> you use yet another bunch of stack (next 3k here on 64-bit) by
+>> ath5k_eeprom_info and 32-bit x86 can still be configured with 4k stacks.
+>>
+>> Convert both of them to dynamically allocated buffers.
+>>
+> 
+> Why dynamically allocated buffers (can you point out some docs on
+> these please ?) ? The length of each file (what we print) is standard.
+> I understand that we use too much stack here but we can work this out
+> eg. by using a pointer to ath5k_eeprom_info or something like that.
 
-Thanks with that the interface appears again.
+Yes, no problem in changing it to a pointer. Anyway the buf should be
+kmalloc'ed anyway.
 
-Of course it still goes quickly to 1Mbit/s. 
+> I
+> checked out user_buffer btw and it's 4K, sometimes it's not much for
+> calibration data (eg. on RF5111 that we have 10 points per pd gain
+> curve or RF2413+ that we can have multiple pd gain curves per
+> channel).
 
--Andi
+I don't understand here. user_buf is sized by userspace application. E.g.
+cat on my system requests user_buf of size 1K. simple_read_from_buffer()
+takes care about multiple invocations of fops.read function by looking at
+ppos parameter and filling user_buf by correct contents (some offset in from
+param). BTW as a side-effect, it is possible, that the user will get
+different info in these split reads.
+
+>> dtto
+>>
+> 
+> What does dtto mean ?
+
+Oops, as I checked right now, this shortcut is commonly used only in czech.
+It should be detto or ditto (and it means "the same as above"), sorry for
+the confusion.
