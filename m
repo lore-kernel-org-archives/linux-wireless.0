@@ -1,103 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19406 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754441AbZAMT6o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 14:58:44 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 11:58:44 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/12] cfg80211: Fix sanity check on 5 GHz when processing country IE
-Date: Tue, 13 Jan 2009 11:57:52 -0800
-Message-ID: <1231876675-20518-10-git-send-email-lrodriguez@atheros.com> (sfid-20090113_205847_197153_7A40E475)
-In-Reply-To: <1231876675-20518-9-git-send-email-lrodriguez@atheros.com>
-References: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-2-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-3-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-4-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-5-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-6-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-7-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-8-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-9-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:35797 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900AbZAKE6u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Jan 2009 23:58:50 -0500
+Subject: Re: Help debugging unexpected disassociations?
+From: Ari Entlich <lmage11@twcny.rr.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <3ace41890901100516mc2e1ee1h42c4f67b552f7d73@mail.gmail.com>
+References: <20090110021351.MHLV4.64591.root@hrndva-web24-z02>
+	 <3ace41890901100516mc2e1ee1h42c4f67b552f7d73@mail.gmail.com>
 Content-Type: text/plain
+Date: Sat, 10 Jan 2009 23:58:46 -0500
+Message-Id: <1231649926.21931.5.camel@g4mdd.entnet> (sfid-20090111_055853_066625_95CBB434)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes two issues with the sanity check loop when processing
-the country IE:
+On Sat, 2009-01-10 at 13:16 +0000, Hin-Tak Leung wrote:
+> On Sat, Jan 10, 2009 at 2:13 AM,  <lmage11@twcny.rr.com> wrote:
+> <snipped>
+> >> Also, it is always useful to quote versions of relevant software -
+> >> what version of wpa_supplicant, and networkmanager you are using; or
+> >> even what distribution you are using, and hardware (64-bit, 32-bit).
+> >> You have written 3 times and added no new info.
+> >
+> > You need only ask. :)
+> 
+> That info should have been in your first post, or the 2nd...
 
-1. Do not use frequency for the current subband channel check,
-   this was a big fat typo.
-2. Apply the 5 GHz 4-channel steps when considering max channel
-   on each subband as was done with a recent patch.
+The first post contained all the information that I felt at the time was
+relevant. The second post existed solely to get people to notice me (by
+the way, how was it "no use"? I seem to have gotten someone to listen to
+me...). If I was wrong in my initial assumption, it is completely within
+your capability to correct me without sounding as if I've put some sort
+of terrible burden on your head for no reason.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   30 +++++++++++++++++++-----------
- 1 files changed, 19 insertions(+), 11 deletions(-)
+> And you still have not answered one: what distro - that alone would
+> have answered or at least hinted at most of the software versions,
+> etc.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 7bc1ae8..12a547a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -499,6 +499,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 	 * calculate the number of reg rules we will need. We will need one
- 	 * for each channel subband */
- 	while (country_ie_len >= 3) {
-+		int end_channel = 0;
- 		struct ieee80211_country_ie_triplet *triplet =
- 			(struct ieee80211_country_ie_triplet *) country_ie;
- 		int cur_sub_max_channel = 0, cur_channel = 0;
-@@ -510,9 +511,25 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 			continue;
- 		}
- 
-+		/* 2 GHz */
-+		if (triplet->chans.first_channel <= 14)
-+			end_channel = triplet->chans.first_channel +
-+				triplet->chans.num_channels;
-+		else
-+			/*
-+			 * 5 GHz -- For example in country IEs if the first
-+			 * channel given is 36 and the number of channels is 4
-+			 * then the individual channel numbers defined for the
-+			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
-+			 * and not 36, 37, 38, 39.
-+			 *
-+			 * See: http://tinyurl.com/11d-clarification
-+			 */
-+			end_channel =  triplet->chans.first_channel +
-+				(4 * (triplet->chans.num_channels - 1));
-+
- 		cur_channel = triplet->chans.first_channel;
--		cur_sub_max_channel = ieee80211_channel_to_frequency(
--			cur_channel + triplet->chans.num_channels);
-+		cur_sub_max_channel = end_channel;
- 
- 		/* Basic sanity check */
- 		if (cur_sub_max_channel < cur_channel)
-@@ -591,15 +608,6 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 			end_channel = triplet->chans.first_channel +
- 				triplet->chans.num_channels;
- 		else
--			/*
--			 * 5 GHz -- For example in country IEs if the first
--			 * channel given is 36 and the number of channels is 4
--			 * then the individual channel numbers defined for the
--			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
--			 * and not 36, 37, 38, 39.
--			 *
--			 * See: http://tinyurl.com/11d-clarification
--			 */
- 			end_channel =  triplet->chans.first_channel +
- 				(4 * (triplet->chans.num_channels - 1));
- 
--- 
-1.6.1.rc3.51.g5832d
+I'm sorry for not answering this question, somehow I overlooked it. I'm
+using Gentoo, which is why my wpa_supplicant is so old - 0.5.7 is the
+newest stable version in Gentoo (no idea why).
+
+> 'read my mind'... you are the person asking for help, why do you
+> expect others to *chase after you* for info?
+
+Please quit with this "read my mind" crap. If I were asking you to read
+my mind, I would not be telling you the information you ask me for or
+demanding results before I tell you the required information. I am doing
+neither of these things. And also, the fact that you've had to ask me
+some questions hardly means you're having to "chase after" anything.
+
+> Most people won't bother.
+
+Most people want to improve the software they write. If they didn't,
+posting to this mailing list would be pointless.
+
+> > I am using wpa_supplicant 0.5.7. I am aware that this is a really old version,
+> > and I can try updating it if you think that would make a difference. I am running
+> > on a Thinkpad T61, which is 64-bit. I think I already said which chip I'm using,
+> > but I'll say it again. It's an IWL4965.
+> 
+> Now we are getting somewhere - and my first reply did ask you to run
+> wpa_supplicant in the foreground.
+> Even for the 0.5.x series, 0.5.10 is current... and most people are
+> using 0.6.x . wpa_supplicant (not the driver) is responsible for
+> encryption and authentication, and you had a deauthentication problem.
+> Hello, anybody home??!!
+
+Given that the version I'm using *CAN* authenticate, it doesn't
+immediately make sense to me why wpa_supplicant would be causing this
+problem, unless wpa_supplicant is intentionally trying to screw me up by
+deauthenticating me. I will try updating, but would you please try a
+little harder to hide the fact that you consider me a retard for no
+reason next time? Thanks.
+
+> So, as you yourself suggested, you should update. And while you are at
+> it, read wpa_supplicant's doc, and work out the debug options and what
+> I meant by 'run it in the foreground'.
+
+I know what foreground means. If you look at my response, I guessed that
+you meant in order to get debugging messages, which clearly shows that I
+knew what you were talking about. And I have in fact tried this (even
+before you suggested it), but have run into other problems. I'll try
+again.
+
+Ari
 
