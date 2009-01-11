@@ -1,20 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail37.messagelabs.com ([216.82.241.83]:43193 "EHLO
-	mail37.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753058AbZAVVwe convert rfc822-to-8bit (ORCPT
+Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:42541 "EHLO
+	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbZAKQxE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 16:52:34 -0500
-From: "Gordon, Charles" <Charles.Gordon@digi.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Jan 2009 15:52:30 -0600
-Subject: Question on tx field of struct ieee80211_ops
-Message-ID: <8DCC153EAFE67A4B990A840E829F704B010A451E5DE9@mtk-sms-exch01.digi.com> (sfid-20090122_225242_540860_F66534C9)
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 11 Jan 2009 11:53:04 -0500
+Date: Sun, 11 Jan 2009 17:53:01 +0100
+From: Andreas Mohr <andi@lisas.de>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Andreas Mohr <andi@lisas.de>, linville@tuxdriver.com,
+	maximlevitsky@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH 1/2] ath5k: support LEDs on Acer Aspire One netbook
+Message-ID: <20090111165301.GA20335@rhlx01.hs-esslingen.de> (sfid-20090111_175308_951296_92C56719)
+References: <1230840105-30960-1-git-send-email-me@bobcopeland.com> <20090111131015.GA31037@rhlx01.hs-esslingen.de> <20090111144227.GB13109@hash.localnet>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090111144227.GB13109@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm writing a wireless driver that will use the mac80211 API.  My hardware = allows me to send one packet at a time.  The driver is suppose to set the t= x field (among others) in the struct ieee80211_ops argument passed to ieee8= 0211_alloc_hw().  The tx field should be loaded with a pointer to a low lev= el transmit routine.  However, it's not clear from the documentation if thi= s routine should maintain a packet queue or not.  Is it okay for the low le= vel transmit routine to only allow one packet to be transmitted at a time, = or should it maintain a queue of tx packets?  It seems like the mac80211 AP= I is already maintaining a queue, so I'm not sure that the low level driver=  should maintain a second one.
+On Sun, Jan 11, 2009 at 09:42:27AM -0500, Bob Copeland wrote:
+> On Sun, Jan 11, 2009 at 02:10:15PM +0100, Andreas Mohr wrote:
+> > My LED is dead again on 2.6.29-rc1 (reason: doesn't contain this patch).
+> 
+> It's in wireless-testing, it just hasn't made it through the pipeline yet.
 
-Thanks for any information you can provide.
+Thanks, then consider my blurb a heads-up only ;)
 
+BTW, .29-rc1 is a veritable -rc1, there already are about 3 official
+suspend/resume regression reports and I've got yet another _different_
+one even (for me it locks up on suspend instead of on resume,
+and no_console_suspend doesn't help to debug it either...).
+
+So Maxim, if you've got time to waste here's your project ;)
+
+(and if I am forced to endure yet another STR regression then my mood is
+going to blow up...)
+
+(and no, unloading microcode, ath5k, snd_hda_intel and r8169 does not work,
+plus I've got no time for debugging anyway)
+
+Andreas
