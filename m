@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:61346 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbZAHRKM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 12:10:12 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so9354159wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2009 09:10:11 -0800 (PST)
-Message-ID: <b6c5339f0901080910x3d3b5758mae4e81411dcf1405@mail.gmail.com> (sfid-20090108_181017_884795_36A69550)
-Date: Thu, 8 Jan 2009 12:10:11 -0500
-From: "Bob Copeland" <bcopeland@gmail.com>
-To: "Hugh Dickins" <hugh@veritas.com>
-Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
-Cc: "Maxim Levitsky" <maximlevitsky@gmail.com>,
-	linux-wireless@vger.kernel.org, "Jiri Slaby" <jirislaby@gmail.com>,
-	ath5k-devel@venema.h4ckr.net
-In-Reply-To: <Pine.LNX.4.64.0901081603410.8411@blonde.anvils>
+Received: from ogre.sisk.pl ([217.79.144.158]:38078 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751695AbZAKSy4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Jan 2009 13:54:56 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [Bug #12260] Regression due to commit 2b80848e3818fb1c (p54usb: support LM87 firmwares)
+Date: Sun, 11 Jan 2009 19:54:35 +0100
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Christian Lamparter <chunkeey@web.de>,
+	Linux wireless <linux-wireless@vger.kernel.org>
+References: <nn3SOLVZ28H.A.bY.CafaJB@chimera> <nHCfeC0YLrE.A.EpC.8afaJB@chimera> <496A1246.6070007@lwfinger.net>
+In-Reply-To: <496A1246.6070007@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils>
-	 <1231426017.922.2.camel@maxim-laptop>
-	 <Pine.LNX.4.64.0901081603410.8411@blonde.anvils>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901111954.36221.rjw@sisk.pl> (sfid-20090111_195502_403299_36E738FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 8, 2009 at 11:18 AM, Hugh Dickins <hugh@veritas.com> wrote:
->> > So, that BUG_ON(bf->skb == NULL) appears to be unsafe under
->> > memory pressure; but the fix wasn't obvious to me, so over
->> > to you!
+On Sunday 11 January 2009, Larry Finger wrote:
+> Rafael J. Wysocki wrote:
+> > This message has been generated automatically as a part of a report
+> > of regressions introduced between 2.6.27 and 2.6.28.
+> > 
+> > The following bug entry is on the current list of known regressions
+> > introduced between 2.6.27 and 2.6.28.  Please verify if it still should
+> > be listed and let me know (either way).
+> > 
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12260
+> > Subject		: Regression due to commit 2b80848e3818fb1c (p54usb: support LM87 firmwares)
+> > Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
+> > Date		: 2008-12-20 10:45 (23 days old)
+> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2b80848e3818fb1c8ccddc105b065a86c68afa9d
+> > Patch		: http://bugzilla.kernel.org/show_bug.cgi?id=12260
+> 
+> The patch has _NOT_ been applied.
 
-Thanks for the report... I guess the error paths haven't been tested
-much when rx buf setup fails.
+Thanks for the update.
 
-> (Of course, just removing the BUG_ON, and making sure there's
-> no oops on the NULL pointer, would fix my immediate issue:
-> but I doubt the right fix will be as simple as that.)
-
-Are your memory load testing scripts available somewhere?
-
--- 
-Bob Copeland %% www.bobcopeland.com
+Rafael
