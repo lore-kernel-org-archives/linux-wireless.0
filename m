@@ -1,174 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43533 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754724AbZAHLdd (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:43971 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082AbZAKHDv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 06:33:33 -0500
-Message-Id: <20090108113323.281512850@atheros.com> (sfid-20090108_123337_663559_B53C7A0F)
-References: <20090108113158.681894124@atheros.com>
-Date: Thu, 08 Jan 2009 13:32:00 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [PATCHv2 02/16] mac80211: 802.11w - CCMP for management frames
+	Sun, 11 Jan 2009 02:03:51 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [RFC PATCH v1 1/2] mac80211: remove multicast check from check_tim()
+To: johannes@sipsolutions.net, vivek.natraj@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 11 Jan 2009 09:03:45 +0200
+Message-ID: <20090111070345.3849.96045.stgit@tikku> (sfid-20090111_080354_043775_EFC01FE0)
+In-Reply-To: <20090111070148.3849.10799.stgit@tikku>
+References: <20090111070148.3849.10799.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extend CCMP to support encryption and decryption of unicast management
-frames.
+Currently mac80211 checks for the multicast tim bit from beacons and
+disables power save if the bit is set. This was added to support
+ath9k. But this is a bit controversial because the AP will send
+multicast frames immediately after the beacon and the time constraints
+are really high. Relying mac80211 to be fast enough here might not be
+reliable in all situations.
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+Also with current implementation mac80211 disables power save whenever
+multicast bit is set but it's never enabled again. So if dynamic power
+save is disabled (iwconfig wlan0 power timeout 0), the power save mode
+is enabled only until first multicast/broadcast frame is received, which
+isn't a long time in a normal network.
 
+The current implementation is not usable on p54/stlc45xx and the
+easiest way to fix this is to remove the multicast tim bit check
+altogether. Handling multicast tim bit in host is rare, most of the
+designs do this in firmware/hardware, so it's better not to have it in
+mac80211. It's a lot better to do this in firmware/hardware, or if
+that's not possible it could be done in the driver.
 
+Also renamed the function to ieee80211_check_tim() to follow the style
+of the file.
+
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
 ---
- include/linux/ieee80211.h |   30 ++++++++++++++++++++++++++++++
- net/mac80211/tx.c         |   23 ++++++++++++++++++++++-
- net/mac80211/wpa.c        |   18 ++++++++++++------
- 3 files changed, 64 insertions(+), 7 deletions(-)
 
---- wireless-testing.orig/net/mac80211/tx.c	2009-01-08 13:05:41.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-01-08 13:06:22.000000000 +0200
-@@ -331,6 +331,22 @@ ieee80211_tx_h_multicast_ps_buf(struct i
- 	return TX_CONTINUE;
- }
- 
-+static int ieee80211_use_mfp(__le16 fc, struct sta_info *sta,
-+			     struct sk_buff *skb)
-+{
-+	if (!ieee80211_is_mgmt(fc))
-+		return 0;
-+
-+	if (sta == NULL || !test_sta_flags(sta, WLAN_STA_MFP))
-+		return 0;
-+
-+	if (!ieee80211_is_robust_mgmt_frame((struct ieee80211_hdr *)
-+					    skb->data))
-+		return 0;
-+
-+	return 1;
-+}
-+
- static ieee80211_tx_result
- ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- {
-@@ -430,10 +446,15 @@ ieee80211_tx_h_select_key(struct ieee802
- 			if (ieee80211_is_auth(hdr->frame_control))
- 				break;
- 		case ALG_TKIP:
--		case ALG_CCMP:
- 			if (!ieee80211_is_data_present(hdr->frame_control))
- 				tx->key = NULL;
- 			break;
-+		case ALG_CCMP:
-+			if (!ieee80211_is_data_present(hdr->frame_control) &&
-+			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
-+					       tx->skb))
-+				tx->key = NULL;
-+			break;
- 		}
+ net/mac80211/mlme.c |   11 ++++-------
+ 1 files changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 51f021f..c7e61e2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -575,7 +575,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
  	}
- 
---- wireless-testing.orig/net/mac80211/wpa.c	2009-01-08 13:03:44.000000000 +0200
-+++ wireless-testing/net/mac80211/wpa.c	2009-01-08 13:06:22.000000000 +0200
-@@ -268,7 +268,7 @@ static void ccmp_special_blocks(struct s
- 				int encrypted)
- {
- 	__le16 mask_fc;
--	int a4_included;
-+	int a4_included, mgmt;
- 	u8 qos_tid;
- 	u8 *b_0, *aad;
- 	u16 data_len, len_a;
-@@ -279,12 +279,15 @@ static void ccmp_special_blocks(struct s
- 	aad = scratch + 4 * AES_BLOCK_LEN;
- 
- 	/*
--	 * Mask FC: zero subtype b4 b5 b6
-+	 * Mask FC: zero subtype b4 b5 b6 (if not mgmt)
- 	 * Retry, PwrMgt, MoreData; set Protected
- 	 */
-+	mgmt = ieee80211_is_mgmt(hdr->frame_control);
- 	mask_fc = hdr->frame_control;
--	mask_fc &= ~cpu_to_le16(0x0070 | IEEE80211_FCTL_RETRY |
-+	mask_fc &= ~cpu_to_le16(IEEE80211_FCTL_RETRY |
- 				IEEE80211_FCTL_PM | IEEE80211_FCTL_MOREDATA);
-+	if (!mgmt)
-+		mask_fc &= ~cpu_to_le16(0x0070);
- 	mask_fc |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-@@ -302,8 +305,10 @@ static void ccmp_special_blocks(struct s
- 
- 	/* First block, b_0 */
- 	b_0[0] = 0x59; /* flags: Adata: 1, M: 011, L: 001 */
--	/* Nonce: QoS Priority | A2 | PN */
--	b_0[1] = qos_tid;
-+	/* Nonce: Nonce Flags | A2 | PN
-+	 * Nonce Flags: Priority (b0..b3) | Management (b4) | Reserved (b5..b7)
-+	 */
-+	b_0[1] = qos_tid | (mgmt << 4);
- 	memcpy(&b_0[2], hdr->addr2, ETH_ALEN);
- 	memcpy(&b_0[8], pn, CCMP_PN_LEN);
- 	/* l(m) */
-@@ -449,7 +454,8 @@ ieee80211_crypto_ccmp_decrypt(struct iee
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
--	if (!ieee80211_is_data(hdr->frame_control))
-+	if (!ieee80211_is_data(hdr->frame_control) &&
-+	    !ieee80211_is_robust_mgmt_frame(hdr))
- 		return RX_CONTINUE;
- 
- 	data_len = skb->len - hdrlen - CCMP_HDR_LEN - CCMP_MIC_LEN;
---- wireless-testing.orig/include/linux/ieee80211.h	2009-01-08 13:03:44.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2009-01-08 13:06:22.000000000 +0200
-@@ -1030,6 +1030,7 @@ enum ieee80211_category {
- 	WLAN_CATEGORY_QOS = 1,
- 	WLAN_CATEGORY_DLS = 2,
- 	WLAN_CATEGORY_BACK = 3,
-+	WLAN_CATEGORY_PUBLIC = 4,
- 	WLAN_CATEGORY_WMM = 17,
- };
- 
-@@ -1186,6 +1187,35 @@ static inline u8 *ieee80211_get_DA(struc
  }
  
- /**
-+ * ieee80211_is_robust_mgmt_frame - check if frame is a robust management frame
-+ * @hdr: the frame (buffer must include at least the first octet of payload)
-+ */
-+static inline bool ieee80211_is_robust_mgmt_frame(struct ieee80211_hdr *hdr)
-+{
-+	if (ieee80211_is_disassoc(hdr->frame_control) ||
-+	    ieee80211_is_deauth(hdr->frame_control))
-+		return true;
-+
-+	if (ieee80211_is_action(hdr->frame_control)) {
-+		u8 *category;
-+
-+		/*
-+		 * Action frames, excluding Public Action frames, are Robust
-+		 * Management Frames. However, if we are looking at a Protected
-+		 * frame, skip the check since the data may be encrypted and
-+		 * the frame has already been found to be a Robust Management
-+		 * Frame (by the other end).
-+		 */
-+		if (ieee80211_has_protected(hdr->frame_control))
-+			return true;
-+		category = ((u8 *) hdr) + 24;
-+		return *category != WLAN_CATEGORY_PUBLIC;
-+	}
-+
-+	return false;
-+}
-+
-+/**
-  * ieee80211_fhss_chan_to_freq - get channel frequency
-  * @channel: the FHSS channel
-  *
+-static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
++static bool ieee80211_check_tim(struct ieee802_11_elems *elems, u16 aid)
+ {
+ 	u8 mask;
+ 	u8 index, indexn1, indexn2;
+@@ -585,9 +585,6 @@ static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
+ 	index = aid / 8;
+ 	mask  = 1 << (aid & 7);
+ 
+-	if (tim->bitmap_ctrl & 0x01)
+-		*is_mc = true;
+-
+ 	indexn1 = tim->bitmap_ctrl & 0xfe;
+ 	indexn2 = elems->tim_len + indexn1 - 4;
+ 
+@@ -1788,7 +1785,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee802_11_elems elems;
+ 	struct ieee80211_local *local = sdata->local;
+ 	u32 changed = 0;
+-	bool erp_valid, directed_tim, is_mc = false;
++	bool erp_valid, directed_tim;
+ 	u8 erp_value = 0;
+ 
+ 	/* Process beacon from the current BSS */
+@@ -1816,9 +1813,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK &&
+ 	    local->hw.conf.flags & IEEE80211_CONF_PS) {
+-		directed_tim = check_tim(&elems, ifsta->aid, &is_mc);
++		directed_tim = ieee80211_check_tim(&elems, ifsta->aid);
+ 
+-		if (directed_tim || is_mc) {
++		if (directed_tim) {
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+ 			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 			ieee80211_send_nullfunc(local, sdata, 0);
 
--- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
