@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:2376 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755570AbZABCY0 (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:57151 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750755AbZAKPhy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2009 21:24:26 -0500
-Date: Thu, 1 Jan 2009 21:24:23 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Hin-Tak Leung <htl10@users.sourceforge.net>
-cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Bob Copeland <me@bobcopeland.com>,
-	<linux-wireless@vger.kernel.org>,
-	<linux-pm@lists.linux-foundation.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-In-Reply-To: <26416.81498.qm@web23106.mail.ird.yahoo.com>
-Message-ID: <Pine.LNX.4.44L0.0901012121350.10174-100000@netrider.rowland.org> (sfid-20090102_032431_196861_6F63553F)
+	Sun, 11 Jan 2009 10:37:54 -0500
+Message-ID: <496A1246.6070007@lwfinger.net> (sfid-20090111_163759_531318_3218706F)
+Date: Sun, 11 Jan 2009 09:37:42 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Christian Lamparter <chunkeey@web.de>,
+	Linux wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Bug #12260] Regression due to commit 2b80848e3818fb1c (p54usb:
+ support LM87 firmwares)
+References: <nn3SOLVZ28H.A.bY.CafaJB@chimera> <nHCfeC0YLrE.A.EpC.8afaJB@chimera>
+In-Reply-To: <nHCfeC0YLrE.A.EpC.8afaJB@chimera>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 1 Jan 2009, Hin-Tak Leung wrote:
+Rafael J. Wysocki wrote:
+> This message has been generated automatically as a part of a report
+> of regressions introduced between 2.6.27 and 2.6.28.
+> 
+> The following bug entry is on the current list of known regressions
+> introduced between 2.6.27 and 2.6.28.  Please verify if it still should
+> be listed and let me know (either way).
+> 
+> 
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12260
+> Subject		: Regression due to commit 2b80848e3818fb1c (p54usb: support LM87 firmwares)
+> Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
+> Date		: 2008-12-20 10:45 (23 days old)
+> First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2b80848e3818fb1c8ccddc105b065a86c68afa9d
+> Patch		: http://bugzilla.kernel.org/show_bug.cgi?id=12260
 
-> So it has... I found Documentation/usb/power-management.txt a bit brief...
-> and I am planning to read
-> http://ols.fedoraproject.org/OLS/Reprints-2008/brown-reprint.pdf
-> which seems to be quite relevant...
+The patch has _NOT_ been applied.
 
-It doesn't cover USB suspend/resume specifically.  But maybe it will 
-help you.
-
-> do you have any recommended readings? I have tried "use the source",
-> but the majority of wireless device drivers don't have any
-> suspend/resume hooks :-). The behavior of 2.6.26pre - somewhere in
-> usbcore forces unloading of all usb device drivers on suspend - was
-> useable.
-
-There aren't any other good documents to read, as far as I know.  
-2.6.28 also forces unloading of all USB drivers that don't have 
-suspend/resume support -- that was the part of the problem which 
-started this thread.
-
-Alan Stern
+Larry
 
