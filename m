@@ -1,136 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:52600 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752046AbZAWTSz (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.184]:11206 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752715AbZAKLLZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 14:18:55 -0500
-Cc: bcm43xx-dev@lists.berlios.de,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Message-Id: <82AB87FD-0247-4049-AA3D-309C3C1539FF@ing.unibs.it> (sfid-20090123_201858_602604_74550027)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <200901231902.06336.mb@bu3sch.de>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: integration of opensource firmware with b43 kernel driver
-Date: Fri, 23 Jan 2009 20:18:52 +0100
-References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it> <200901231902.06336.mb@bu3sch.de>
+	Sun, 11 Jan 2009 06:11:25 -0500
+Received: by fk-out-0910.google.com with SMTP id 18so5141094fkq.5
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2009 03:11:23 -0800 (PST)
+Message-ID: <1ba2fa240901110311o47fe2311w4717f5521c98aba@mail.gmail.com> (sfid-20090111_121149_817488_0BD8E316)
+Date: Sun, 11 Jan 2009 13:11:23 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+Cc: "Marcel Holtmann" <marcel@holtmann.org>,
+	"Dan Williams" <dcbw@redhat.com>,
+	"Bob Copeland" <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
+In-Reply-To: <1231579679.3685.10.camel@johannes>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
+	 <20081224054951.GA32398@hash.localnet>
+	 <1230102989.16960.14.camel@californication>
+	 <1231260306.14565.21.camel@localhost.localdomain>
+	 <1231261937.5246.16.camel@californication>
+	 <1231267979.14565.34.camel@localhost.localdomain>
+	 <1231270575.14901.6.camel@californication>
+	 <1231272326.3767.2.camel@johannes>
+	 <1ba2fa240901091553s387c1a95k3576ce6a82015434@mail.gmail.com>
+	 <1231579679.3685.10.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 23, 2009, at 7:02 PM, Michael Buesch wrote:
+On Sat, Jan 10, 2009 at 11:27 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sat, 2009-01-10 at 01:53 +0200, Tomas Winkler wrote:
+>
+>> I second this by stressing another issue. in the point that
+>> suspend/resume events shell be present to user space regardless of
+>> mac80211 specific talk with wpa_supplicant. Not only Wifi but also in
+>> my knowledge BT and other coms need user space application
+>> to close gracefully connection before kernel shuts in down.
+>
+> But userspace is usually the one _invoking_ the suspend, so what I was
+> trying to say is that we don't care what userspace did right before
+> invoking suspend.
 
-> On Friday 23 January 2009 18:36:37 Francesco Gringoli wrote:
->> Hello,
->>
->> we have been testing the firmware for a week now and it seems stable.
->> I personally tested it also on a Linksys WRT54GL and it works both in
->> station and in AP modes. I collected the feedbacks that some of you
->> sent and it seems that the firmware now runs on these board:
->>
->> - 4306, 4311, 4318, 4320
->
-> I don't think it has enough testing, yet.
-Sure, it seems to be stable on _our_ boards but I can't tell if it  
-shows the same behavior on other hardware revisions.
->
->
->> I was considering the suggestions you all gave me a few days ago and
->> other questions related to the possible integration of this firmware
->> into the kernel, and I came to these conclusions/questions (please
->> forgive me for this long message :-) )
->
-> I don't think we want to have the firmware in the kernel.
-> Instead distributions should simply ship the firmware in a package.
-> That's not our business.
-
-I agree with you, distributions could easily package the firmware and  
-distribute it to users when it will be stable, I was just wondering  
-about.
-
->> - change the name of the initvals for the opensource firmware: this
->
-> Why?
->
->> [cut]
->> initvals have already been uploaded. What can we do?
->
-> Nothing. Why do we need to have different names?
-Well, I was only considering a question raised by John, we can surely  
-maintain these names.
-
->> - detection of the opensource firmware capabilities: are you really
->> sure we cannot use a shm location that the bcm proprietary firmware
->> uses for some other purpose?
->
-> Yes, well. You're not intermixing an earlier discussion into this,  
-> where
-> you didn't indicate opensource capabilities to the kernel.
-> If you indicate OS capabilities, you can use whatever offset you  
-> want, of course.
-Excellent. We will modify the firmware accordingly and encode the  
-options.
-
->> - what to do with rts procedure: we can implement this feature easily
->> but I'm not sure about the value it can add to people (the majority  
->> of
->> users?) that use the bcm board in station mode. This is different for
->> those who run a bcm card in AP mode, but we can clearly discourage
->> them to run this firmware in AP mode if  not sure about rts usage by
->> stations. However, we put this task in the todo list.
->
-> RTS/CTS is not specific to AP mode. It's used on any station in the  
-> BSS.
-> See IEEE 802.11 specs.
-Yes, in fact we put this task in the todo list.
-
->> - tx header layout: the opensource firmware is now using the old
->> memory layout in the tx header (<351). Do you think switching to 410
->> format is mandatory now or we can concentrate on the other tasks?
->
-> Yes, the old format is deprecated and will be removed soon.
-Ok, first task in the todo list!
-
->> - I would like to start considering N-phy on the firmware side. I  
->> have
->> a late 2008 MacBook Pro and I'm not sure if beginning this work on
->> this platform is a waste of time or not as Apple could have asked
->> Broadcom a customized chipset. Should I start or is it better if I  
->> buy
->> a N-phy pci board for my x86 box?
->
-> A little bit of b43-asm work is still needed for this core.
-> There are a few FIXMEs in the code. Not sure, maybe there's more to  
-> do.
-> I didn't try that, yet.
-> Before you start, you'll have to verify whether the assembler works  
-> correctly.
-> Same for the disassembler.
-Ok, thanks for the hint. I will check,
-
-Cheers,
--FG
+Exactly, so routing suspend event from mac80211 to wpa_supplicant or
+NM just doesn't look right to me, if I understood properly Marcel
+suggestion.
 
 >
+>> Even sometime leavening shutting down interface managing application
+>> may reduce the crosstalk so that driver doesn't have go guess when
+>> application has finished it's shutdown. rtnl is probably not enough as
+>> there is still race who grabs it first.
 >
-> -- 
-> Greetings, Michael.
+> No, the rtnl definitely is enough right now since userspace will do
+> whatever it needs to _before_ invoking the kernel suspend.
+>
+> I say we should just put these patches in as they are.
 
--------
+No objections to that.
 
-Francesco Gringoli, PhD - Assistant Professor
-Dept. of Electrical Engineering for Automation
-University of Brescia
-via Branze, 38
-25123 Brescia
-ITALY
-
-Ph:  ++39.030.3715843
-FAX: ++39.030.380014
-WWW: http://www.ing.unibs.it/~gringoli
-
-
-
-
+Tomas
