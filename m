@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25960 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753642AbZA0IYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 03:24:40 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 00:24:40 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from fg-out-1718.google.com ([72.14.220.156]:11364 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506AbZAKPsj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Jan 2009 10:48:39 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so3760467fgg.17
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2009 07:48:37 -0800 (PST)
+Message-ID: <3ace41890901110748k474e99a9n7ceddf6bb263de99@mail.gmail.com> (sfid-20090111_164843_717893_CAF62474)
+Date: Sun, 11 Jan 2009 15:48:37 +0000
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: "Ari Entlich" <lmage11@twcny.rr.com>
+Subject: Re: Help debugging unexpected disassociations?
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1231649926.21931.5.camel@g4mdd.entnet>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18814.50159.933773.566773@gargle.gargle.HOWL> (sfid-20090127_092455_113597_0C7E4467)
-Date: Tue, 27 Jan 2009 13:51:03 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] ath9k: Setup short preamble properly in rate registration
+Content-Type: text/plain; charset=ISO-8859-1
+References: <20090110021351.MHLV4.64591.root@hrndva-web24-z02>
+	 <3ace41890901100516mc2e1ee1h42c4f67b552f7d73@mail.gmail.com>
+	 <1231649926.21931.5.camel@g4mdd.entnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an issue where hw_value_short was not being filled
-with the proper ratecode during rate registration, but was being used
-in the RX path for decoding the packet rate.
+On Sun, Jan 11, 2009 at 4:58 AM, Ari Entlich <lmage11@twcny.rr.com> wrote:
+<snipped>
+> Given that the version I'm using *CAN* authenticate, it doesn't
+> immediately make sense to me why wpa_supplicant would be causing this
+> problem, unless wpa_supplicant is intentionally trying to screw me up by
+> deauthenticating me. I will try updating, but would you please try a
+> little harder to hide the fact that you consider me a retard for no
+> reason next time? Thanks.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+You have been told by my first reply to look at wpa_supplicant, and
+again to upgrade.
+Why do you insist that you *know it better*, when you are asking for help?
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index e659c36..6d5394c 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -217,7 +217,13 @@ static void ath_setup_rates(struct ath_softc *sc, enum ieee80211_band band)
- 	for (i = 0; i < maxrates; i++) {
- 		rate[i].bitrate = rate_table->info[i].ratekbps / 100;
- 		rate[i].hw_value = rate_table->info[i].ratecode;
-+		if (rate_table->info[i].short_preamble) {
-+			rate[i].hw_value_short = rate_table->info[i].ratecode |
-+				rate_table->info[i].short_preamble;
-+			rate[i].flags = IEEE80211_RATE_SHORT_PREAMBLE;
-+		}
- 		sband->n_bitrates++;
-+
- 		DPRINTF(sc, ATH_DBG_CONFIG, "Rate: %2dMbps, ratecode: %2d\n",
- 			rate[i].bitrate / 10, rate[i].hw_value);
- 	}
--- 
-1.6.1
+1) there is a newer version of wpa_supplicant in the same series, (and
+even a newer series), there is a reason for it. Look it up, upgrade,
+and look at the logs, and come back with the logs, *before* you write
+again.
 
+2) if I have to spell it out for you, yes, I think you are exactly
+right, wpa_supplicant (or the older version of it) is screwing with
+you. wpa_supplicant monitors the state of your connectivity
+continuously, and it is responsible for authentication *and
+reauthentication*. If it detects, or *mis-detects* that your access
+point is not working right, it will drop your connection,
+deauthenticate and reauthenticate, and f*ck your wireless connectivity
+
+You do not understand that how wpa_supplicant works, and refuse to
+listen. wpa_supplicant does not just do one-off authenticate, it also
+*reauthenticate* from time to time when necessary, and continuously
+monitors and changes the states of communication between your wireless
+client and the access point.
