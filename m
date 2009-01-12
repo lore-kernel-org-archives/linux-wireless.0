@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:47442 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752814AbZAWTG2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 14:06:28 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: integration of opensource firmware with b43 kernel driver
-Date: Fri, 23 Jan 2009 20:05:31 +0100
-Cc: bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it> <200901231908.05835.mb@bu3sch.de> <1232736637.2577.40.camel@localhost.localdomain>
-In-Reply-To: <1232736637.2577.40.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901232005.32048.mb@bu3sch.de> (sfid-20090123_200630_844112_857C8AFD)
+Received: from xc.sipsolutions.net ([83.246.72.84]:40577 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752325AbZALOsZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2009 09:48:25 -0500
+Subject: Re: [RFC] nl80211: New command for adding extra IE(s) into
+	management frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090112142646.GB12109@jm.kir.nu>
+References: <20090112122605.GB9153@jm.kir.nu>
+	 <1231765724.2998.10.camel@home.berg>  <20090112142646.GB12109@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-swJzW9v/I/EIUzePuvkb"
+Date: Mon, 12 Jan 2009 15:48:22 +0100
+Message-Id: <1231771702.3591.2.camel@johannes> (sfid-20090112_154828_571002_F7004468)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 January 2009 19:50:37 Dan Williams wrote:
-> On Fri, 2009-01-23 at 19:08 +0100, Michael Buesch wrote:
-> > On Friday 23 January 2009 19:01:00 Larry Finger wrote:
-> > > The driver can certainly be coded to look for the open-source firmware
-> > > names before trying to load vendor firmware. That way there will not
-> > > be any confusion.
-> > 
-> > I already posted that, but in case you missed it:
-> > http://bu3sch.de/patches/wireless-testing/20081227-1821/patches/008-b43-probe-open-fw.patch
-> 
-> Preferring the proprietary firmware over the open firmware (for now)
-> seems like the best approach at this time.  Many people will be quite
-> happy with the open firmware that we can actually ship in distros, and
-> those that aren't can do the fwcutter stuff and get their own
-> proprietary firmware.  If for some reason the open firmware isn't
-> working, use fwcutter and get the proprietary firmware, which you would
-> have had to do before anyway.  And those people with chips that aren't
-> supported by the proprietary firmware yet still have to use the
-> fwcutter, which they would have had to do anyway.  Win all around.
 
-Exactly. This is why I implemented it that way.
+--=-swJzW9v/I/EIUzePuvkb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings, Michael.
+On Mon, 2009-01-12 at 16:26 +0200, Jouni Malinen wrote:
+
+> +	/* Extra IE data for management frames */
+> +	u8 *ie_probereq;
+> +	size_t ie_probereq_len;
+> +	u8 *ie_proberesp;
+> +	size_t ie_proberesp_len;
+> +	u8 *ie_auth;
+> +	size_t ie_auth_len;
+> +	u8 *ie_assocreq;
+> +	size_t ie_assocreq_len;
+> +	u8 *ie_reassocreq;
+> +	size_t ie_reassocreq_len;
+> +	u8 *ie_deauth;
+> +	size_t ie_deauth_len;
+> +	u8 *ie_disassoc;
+> +	size_t ie_disassoc_len;
+
+It'd be more memory efficient on 64-bit to not alternate between 64 and
+32 bit values, but I don't really care too much in this struct.
+
+Should we sanity-check the input? E.g. in nl80211, ensure that it's
+(<type><len><data...>)* with <len> being correct and no final padding?
+And maybe that there isn't anything in those IEs that we've already
+added, like an SSID?
+
+johannes
+
+--=-swJzW9v/I/EIUzePuvkb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJa1gzAAoJEKVg1VMiehFYscYP+gK5o6gfuXPWSUpejFCw9YMk
+fNNxAAZ5rlWs252IROLP+5W/R6kkX6m0aO+Ylm/L8WW3yoEFQGzMjQWg90yFL7US
+WAprDnf0K63upnkl0cyusYkdlYCfmUL9ehmW1ZwmIdReJjexFXukAqhRNCg9QwSE
+0iv3KkKuzEQMHhKaKuhO1LpZ+l6iR2Ux+Ek5QkP28cRKyvgvDD08ZradoxdPJIFg
+wyE3ZfdiYmX4kx6ECiPSVqi3ybFx0njmwVWscXG5kvZonTJAwfykAs9LEYeJ2WtK
+nZHOpwTE1uayKanaBnLnntfj7M02FmoZHsL5KothIzCbgyeoxuEtytrabgeeGbTx
+z9eqae+J0lpdhVTpEK+d+filrePgA5EKxU4EYgUwjQIz2+41ewSPznxmI8dSvi9z
+DSnLVMCMO+JeZ+iq6J/BdTRIzZ6k8xfSAqQBj+hgcYfivDKElDN376zAmS6HOX8H
+mUPsnvOz8+VitOJgVFrgreYQvi6U5dPx4tpGgbIt41u6Mgzun8sXm+oT5+PHOM5u
+BYlS95tOnbGHiNCJXJhlEYMXMZM6bN6w9U4CpuB7XBEu5Mn3kg/g7vqh+9ZAeOaN
+uTuoIkaTQitI5vK97dvpwfxiLzF1C8GveQo1Hjs2prBIYD2fyKz2G4/J7/+GHUz/
+9IF1Ls0lGVQOdt5g6UIS
+=mcjV
+-----END PGP SIGNATURE-----
+
+--=-swJzW9v/I/EIUzePuvkb--
+
