@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:55862 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753178AbZA2TGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 14:06:20 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:52038 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219AbZALL6n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2009 06:58:43 -0500
+Received: by bwz14 with SMTP id 14so31970290bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2009 03:58:41 -0800 (PST)
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/7] iwlwifi: add new HW_REV_TYPEs for Intel WiFi Link 100, 6000 and 6050 Series
-Date: Thu, 29 Jan 2009 11:09:11 -0800
-Message-Id: <1233256157-21290-2-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200625_632877_AF75949A)
-In-Reply-To: <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH] ath5k: discard 11g caps if reported by an ar5211 eeprom
+Date: Mon, 12 Jan 2009 13:04:06 +0100
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mickflemm@gmail.com
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200901121304.07360.helmut.schaa@gmail.com> (sfid-20090112_125851_642424_D3125D14)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+At least one ar5211 card (GIGABYTE GN-WLMA101, 168c:0012 subsystem
+1458:e800) reports itself as 11g capable which seems to be a bug in the
+eeprom. initvals.c assumes that ar5211 is only 11b capable and thus refuses
+to initialize this card. Hence this patch changes the probing for 11g
+capabilities to discard 11g capabilities for ar5211 cards which allows this
+specific card to work fine in 11b and 11a modes.
 
-simply add definitions for the HW_REV_TYPEs for the new devices.
-
-Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-csr.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 74d3d43..5028c78 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -211,6 +211,9 @@
- #define CSR_HW_REV_TYPE_5350           (0x0000030)
- #define CSR_HW_REV_TYPE_5100           (0x0000050)
- #define CSR_HW_REV_TYPE_5150           (0x0000040)
-+#define CSR_HW_REV_TYPE_100            (0x0000060)
-+#define CSR_HW_REV_TYPE_6x00           (0x0000070)
-+#define CSR_HW_REV_TYPE_6x50           (0x0000080)
- #define CSR_HW_REV_TYPE_NONE           (0x00000F0)
+Is anybody aware of 11g-capable ar5211 cards which would be limited by
+this patch?
+
+diff --git a/drivers/net/wireless/ath5k/caps.c b/drivers/net/wireless/ath5k/caps.c
+index 150f5ed..367a6c7 100644
+--- a/drivers/net/wireless/ath5k/caps.c
++++ b/drivers/net/wireless/ath5k/caps.c
+@@ -85,7 +85,8 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
+ 		/* Enable  802.11b if a 2GHz capable radio (2111/5112) is
+ 		 * connected */
+ 		if (AR5K_EEPROM_HDR_11B(ee_header) ||
+-				AR5K_EEPROM_HDR_11G(ee_header)) {
++		    (AR5K_EEPROM_HDR_11G(ee_header) &&
++		     ah->ah_version != AR5K_AR5211)) {
+ 			/* 2312 */
+ 			ah->ah_capabilities.cap_range.range_2ghz_min = 2412;
+ 			ah->ah_capabilities.cap_range.range_2ghz_max = 2732;
+@@ -94,7 +95,8 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
+ 				__set_bit(AR5K_MODE_11B,
+ 						ah->ah_capabilities.cap_mode);
  
- /* EEPROM REG */
--- 
-1.5.4.3
-
+-			if (AR5K_EEPROM_HDR_11G(ee_header))
++			if (AR5K_EEPROM_HDR_11G(ee_header) &&
++			    ah->ah_version != AR5K_AR5211)
+ 				__set_bit(AR5K_MODE_11G,
+ 						ah->ah_capabilities.cap_mode);
+ 		}
