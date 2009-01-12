@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway16.websitewelcome.com ([69.56.183.8]:53254 "HELO
-	gateway16.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752628AbZANALG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 19:11:06 -0500
-Received: from 96-26-216-101.sea.clearwire-dns.net ([96.26.216.101]:40256 helo=Hydra.darkmatter.org)
-	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.69)
-	(envelope-from <Info@delphi-real-estate.com>)
-	id 1LMtFC-0007kj-11
-	for linux-wireless@vger.kernel.org; Tue, 13 Jan 2009 18:04:26 -0600
-From: Delphi Real Estate <Info@delphi-real-estate.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: 'N' Mode and 5GHz, Also WPA2
-Date: Tue, 13 Jan 2009 16:04:22 -0800
-References: <200901131502.01047.Info@delphi-real-estate.com> <69e28c910901131534g28404687y6bf23bdbbb233b26@mail.gmail.com>
-In-Reply-To: <69e28c910901131534g28404687y6bf23bdbbb233b26@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901131604.22355.Info@delphi-real-estate.com> (sfid-20090114_011111_376747_50450C72)
+Received: from mx2.redhat.com ([66.187.237.31]:38723 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755132AbZALTjG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2009 14:39:06 -0500
+Subject: Re: [PATCH v3] libertas: if_spi, driver for libertas GSPI devices
+From: Dan Williams <dcbw@redhat.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: Colin McCabe <colin@cozybit.com>, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <45e8e6c40901121104r1f55894dy35d7528e8174f036@mail.gmail.com>
+References: <1231541889-7999-1-git-send-email-colin@cozybit.com>
+	 <1231772017.23907.3.camel@localhost.localdomain>
+	 <45e8e6c40901121104r1f55894dy35d7528e8174f036@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 12 Jan 2009 14:37:52 -0500
+Message-Id: <1231789072.28887.11.camel@localhost.localdomain> (sfid-20090112_203913_227624_EF09E80A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2009-01-12 at 11:04 -0800, Andrey Yurovsky wrote:
+> Hi Dan, Johannes was correct -- the explicit get_unaligned_ was not
+> needed and using packed was required.  Unfortunately our patch got
+> merged before we had a chance to send a version including just the
+> packing, so I'm preparing a patch that reverts the calls to
+> get_unaligned_* ...this is, however, independent of the actual
+> if_spi.c driver patch.
 
-On Tuesday 13 January 2009 15:34:47 you wrote:
-> Try checking its FCC ID on the Equipment Authorization page. It has
-> internal photos.
+Yes, they are independent.  Alternatively, you could just ask John to
+revert the patch, and then provide a new patch with just the 'packed'
+bits, which might be cleaner in the git history.
 
-Thanks, it's here:
-https://fjallfoss.fcc.gov/prod/oet/forms/blobs/retrieve.cgi?attachment_id=979202&native_or_pdf=pdf
-... looks like an Atheros.  Not sure which one is 5GHz tho...  and I'm not sure how compatible this is with Intel's 4965AGN at 5GHz.
-
-
-> > Also I am unable to associate in any mode in any band, with WPA2.  Has anyone got WPA2 working with the iwlagn driver?
-> 
-> Are you running the latest wpa_supplicant?
-
-The latest one that comes with updated Hardy, 0.6.0+0.5.8-0ubuntu2.  And I'm running an Intrepid kernel on Hardy, so I could get this newer iwlagn driver.
-
-
-On Tuesday 13 January 2009 15:39:20 you wrote:
-> Hi Bill.  I use WPA2 with the iwlagn driver on a daily basis, though
-> I've never used it for 5GHz.  If you are using the stock Ubuntu kernel
-> and are having trouble with WPA2 I really suggest using Ubuntu's
-> support resources and/or filing a bug there, the linux wireless
-> mailing list is probably not the right place.  If you are building the
-> wireless-testing kernel and wish to discuss your results, this
-> probably is the right place if you are very specific about your
-> configuration and post useful logs.
-
-Thanks for being kind.  I've switched to 5GHz exclusively because I stream H.264 using MythTV, and I don't want to pollute the 2.4GHz airwaves for my neighbors. (Also it prevents interference when I'm microwaving dinner, and gives more bandwidth <g>)  But for now I'm limited to 802.11a because 'n' will not associate.
-
-And WPA2 will not associate under any circumstances for me with the combo 4965AGN and DIR-825.  What's your combo Andrey?
+Dan
 
 
