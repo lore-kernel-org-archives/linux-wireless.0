@@ -1,73 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:46208 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761459AbZANPrR (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:64833 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751387AbZALTmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 10:47:17 -0500
-Message-ID: <496E08FD.9030803@lwfinger.net> (sfid-20090114_164722_082660_E1EB346F)
-Date: Wed, 14 Jan 2009 09:47:09 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 12 Jan 2009 14:42:07 -0500
+Received: by bwz14 with SMTP id 14so32736531bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2009 11:42:05 -0800 (PST)
+Message-ID: <45e8e6c40901121142k1fc6869cl2d6bd058fbacf972@mail.gmail.com> (sfid-20090112_204210_824802_06D05671)
+Date: Mon, 12 Jan 2009 11:42:05 -0800
+From: "Andrey Yurovsky" <andrey@cozybit.com>
+To: "Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH v3] libertas: if_spi, driver for libertas GSPI devices
+Cc: "Colin McCabe" <colin@cozybit.com>, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <1231789072.28887.11.camel@localhost.localdomain>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Eliminate compilation warning in b43_op_set_key
-References: <496d2fc9.UiHMYJR2melvWyoO%Larry.Finger@lwfinger.net> <20090114133417.GB18634@tuxdriver.com>
-In-Reply-To: <20090114133417.GB18634@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1231541889-7999-1-git-send-email-colin@cozybit.com>
+	 <1231772017.23907.3.camel@localhost.localdomain>
+	 <45e8e6c40901121104r1f55894dy35d7528e8174f036@mail.gmail.com>
+	 <1231789072.28887.11.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Tue, Jan 13, 2009 at 06:20:25PM -0600, Larry Finger wrote:
->> A recent pull from wireless testing generates the following warning:
->> =20
->>    CC [M]  drivers/net/wireless/b43/main.o
->>  drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_ke=
-y=E2=80=99:
->>  drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatc=
-h
->>  in conditional expression
->>
->> This fix was suggested by Johannes Berg <johannes@sipsolutions.net>.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> Index: wireless-testing/drivers/net/wireless/b43/main.c
->> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
->> +++ wireless-testing/drivers/net/wireless/b43/main.c
->> @@ -3630,10 +3630,12 @@ static int b43_op_set_key(struct ieee802
->> =20
->>  out_unlock:
->>  	if (!err) {
->> +		u8 bcast[ETH_ALEN];
->> +		memset(bcast, 0xff, ETH_ALEN);
->=20
-> Isn't there a statically-allocated array w/ the broadcast MAC in it
-> somewhere already?
->=20
+Hi Dan, that sounds better: I've asked John to please go ahead and
+revert it and we'll send a new version that just packs all of the
+structs.  Thanks!
 
-Not that I could find.
+  -Andrey
 
-There are several places in mac80211 where the broadcast MAC is
-created on the fly. None of them would benefit from having a static
-array - one would just substitute memcpy for memset and possibly trash
-the cache.
-
-There is an array broadcast[MAX_ADDR_LEN] in struct net_device, but it
-would need to be initialized with 0xFF's before usage.
-
-I still think that b43 needs to create this array, and that the best
-place to do it is in the error path that is unlikely to be executed.
-
-Larry
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, Jan 12, 2009 at 11:37 AM, Dan Williams <dcbw@redhat.com> wrote:
+> On Mon, 2009-01-12 at 11:04 -0800, Andrey Yurovsky wrote:
+>> Hi Dan, Johannes was correct -- the explicit get_unaligned_ was not
+>> needed and using packed was required.  Unfortunately our patch got
+>> merged before we had a chance to send a version including just the
+>> packing, so I'm preparing a patch that reverts the calls to
+>> get_unaligned_* ...this is, however, independent of the actual
+>> if_spi.c driver patch.
+>
+> Yes, they are independent.  Alternatively, you could just ask John to
+> revert the patch, and then provide a new patch with just the 'packed'
+> bits, which might be cleaner in the git history.
+>
+> Dan
+>
+>
+>
