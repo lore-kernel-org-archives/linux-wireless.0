@@ -1,59 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34241 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:58573 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755851AbZAWVmr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 16:42:47 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 01/15] iwlwifi: add test to determine if interface in monitor mode
-Date: Fri, 23 Jan 2009 13:45:09 -0800
-Message-Id: <1232747123-7261-2-git-send-email-reinette.chatre@intel.com> (sfid-20090123_224257_165350_9A65F3E5)
-In-Reply-To: <1232747123-7261-1-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232747123-7261-1-git-send-email-reinette.chatre@intel.com>
+	id S1752349AbZALVdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2009 16:33:44 -0500
+Subject: Re: [PATCH] iwl3945: fix
+	=?UTF-8?Q?=22=E2=80=98power=5Fidx=E2=80=99?= may be used uninitialized"
+	warning
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1231789741-13433-4-git-send-email-linville@tuxdriver.com>
+References: <> <1231789741-13433-1-git-send-email-linville@tuxdriver.com>
+	 <1231789741-13433-2-git-send-email-linville@tuxdriver.com>
+	 <1231789741-13433-3-git-send-email-linville@tuxdriver.com>
+	 <1231789741-13433-4-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=utf-8
+Date: Mon, 12 Jan 2009 13:35:38 -0800
+Message-Id: <1231796138.27071.34.camel@rc-desk> (sfid-20090112_223348_947973_3CA648F0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chatre, Reinette <reinette.chatre@intel.com>
+On Mon, 2009-01-12 at 11:49 -0800, John W. Linville wrote:
+> drivers/net/wireless/iwlwifi/iwl-3945.c: In function =E2=80=98iwl3945=
+_txpower_set_from_eeprom=E2=80=99:
+> drivers/net/wireless/iwlwifi/iwl-3945.c:2222: warning: =E2=80=98power=
+_idx=E2=80=99 may be used uninitialized in this function
+>=20
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-3945.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wi=
+reless/iwlwifi/iwl-3945.c
+> index 8fdb342..45cfa1c 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -2219,7 +2219,7 @@ int iwl3945_txpower_set_from_eeprom(struct iwl3=
+945_priv *priv)
+>  		/* set tx power value for all OFDM rates */
+>  		for (rate_index =3D 0; rate_index < IWL_OFDM_RATES;
+>  		     rate_index++) {
+> -			s32 power_idx;
+> +			s32 uninitialized_var(power_idx);
+>  			int rc;
+> =20
+>  			/* use channel group's clip-power table,
 
-mac80211 sets driver in monitor mode through configuring the
-RX filters. We cannot trust priv->iw_mode to be accurate
-regarding monitor mode as iw_mode is only set in add_interface,
-which is not called by mac80211 when in monitor mode.
+Thank you very much
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 9f284eb..ef4a7c5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -699,6 +699,18 @@ static u8 iwl_count_chain_bitmap(u32 chain_bitmap)
- }
- 
- /**
-+ * iwl_is_monitor_mode - Determine if interface in monitor mode
-+ *
-+ * priv->iw_mode is set in add_interface, but add_interface is
-+ * never called for monitor mode. The only way mac80211 informs us about
-+ * monitor mode is through configuring filters (call to configure_filter).
-+ */
-+static bool iwl_is_monitor_mode(struct iwl_priv *priv)
-+{
-+	return !!(priv->staging_rxon.filter_flags & RXON_FILTER_PROMISC_MSK);
-+}
-+
-+/**
-  * iwl_set_rxon_chain - Set up Rx chain usage in "staging" RXON image
-  *
-  * Selects how many and which Rx receivers/antennas/chains to use.
--- 
-1.5.4.3
+Reinette
 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
