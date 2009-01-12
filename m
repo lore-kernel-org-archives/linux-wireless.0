@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:17859 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751534AbZAHFqg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 00:46:36 -0500
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: move dynamic PS timeout to hardware config
-References: <1231261998.3654.2.camel@johannes>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Thu, 08 Jan 2009 07:45:46 +0200
-In-Reply-To: <1231261998.3654.2.camel@johannes> (ext Johannes Berg's message of "Tue\, 06 Jan 2009 18\:13\:18 +0100")
-Message-ID: <87aba2e4fp.fsf@nokia.com> (sfid-20090108_064648_965839_93CEB621)
+Received: from mail.gmx.net ([213.165.64.20]:57488 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751094AbZALEPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Jan 2009 23:15:36 -0500
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=iso-8859-1
+Date: Mon, 12 Jan 2009 05:15:34 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090110091659.GC1170@jm.kir.nu>
+Message-ID: <20090112041534.24150@gmx.net> (sfid-20090112_051544_424007_F5A62DCD)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu>
+ <20090109205315.277310@gmx.net> <20090110091659.GC1170@jm.kir.nu>
+Subject: Re: [PATCH] Fixed BSSID step 3: Don't merge with the same BSSID
+To: Jouni Malinen <j@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Johannes Berg" <johannes@sipsolutions.net> writes:
+Hello Jouni!
 
-> This will be needed for drivers that set the
-> IEEE80211_HW_NO_STACK_DYNAMIC_PS flag and still
-> want to handle dynamic PS.
+> Yes, I think it would be better option than removing it and the
+> reset_tsf()
+> call. Removing STA entries for other IBSS members in any merge case,
+> even if BSSID changes, does not sound correct in the first place. Thi=
+s
+> should really only be done if the SSID changes.
+>=20
+> [...]
+>=20
+> For the particular problem that you are
+> seeing, the minimal change would probably be just to make
+> sta_info_flush_delayed() call conditional on SSID change (I don't thi=
+nk
+> this would need to be based on BSSID change).
 
-Very good, at least iwlwifi can make use of this.
+If the others agree, I can implement it in the end of the week. Or do y=
+ou want it the other way?
+I personally don't want change too much...?
 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-
--- 
-Kalle Valo
+Regards
+Alina
+--=20
+Sensationsangebot verl=E4ngert: GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1308T45=
+69a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
