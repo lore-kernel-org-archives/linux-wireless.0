@@ -1,112 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:43844 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554AbZAGKKx (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:55172 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752502AbZALPsw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 05:10:53 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
+	Mon, 12 Jan 2009 10:48:52 -0500
+Cc: Lorenzo Nava <navalorenx@gmail.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Michael Buesch <mb@bu3sch.de>
+Message-Id: <2CB1EEC3-40EB-41D4-9A4C-E240359F05AA@ing.unibs.it> (sfid-20090112_164901_523230_F85592EE)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH 03/11] ath9k: introduce bus specific cache size routine
-Date: Wed,  7 Jan 2009 11:09:24 +0100
-Message-Id: <1231322972-24094-4-git-send-email-juhosg@openwrt.org> (sfid-20090107_111057_486053_0C05A092)
-In-Reply-To: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
-References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+In-Reply-To: <20090112153949.GC31525@tuxdriver.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: [b43] opensource firmware
+Date: Mon, 12 Jan 2009 16:48:48 +0100
+References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de> <9F70A0D3-6334-45FB-9DAF-263FE89C847E@ing.unibs.it> <200901091206.09736.mb@bu3sch.de> <AE7A4FD8-1728-4CE2-8CC7-DCE699C3B6C9@gmail.com> <20090112153949.GC31525@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PCI specific bus_read_cachesize routine won't work on the AHB bus,
-we have to replace it with a suitable one later.
+On Jan 12, 2009, at 4:39 PM, John W. Linville wrote:
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/core.h |   10 ++++++++++
- drivers/net/wireless/ath9k/main.c |    9 +++++++--
- 2 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 2256ba4..8e93d11 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -693,6 +693,10 @@ enum PROT_MODE {
- #define SC_OP_RFKILL_SW_BLOCKED	BIT(12)
- #define SC_OP_RFKILL_HW_BLOCKED	BIT(13)
- 
-+struct ath_bus_ops {
-+	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
-+};
-+
- struct ath_softc {
- 	struct ieee80211_hw *hw;
- 	struct device *dev;
-@@ -743,6 +747,7 @@ struct ath_softc {
- #ifdef CONFIG_ATH9K_DEBUG
- 	struct ath9k_debug sc_debug;
- #endif
-+	struct ath_bus_ops *bus_ops;
- };
- 
- int ath_reset(struct ath_softc *sc, bool retry_tx);
-@@ -750,4 +755,9 @@ int ath_get_hal_qnum(u16 queue, struct ath_softc *sc);
- int ath_get_mac80211_qnum(u32 queue, struct ath_softc *sc);
- int ath_cabq_update(struct ath_softc *);
- 
-+static inline void ath_read_cachesize(struct ath_softc *sc, int *csz)
-+{
-+	sc->bus_ops->read_cachesize(sc, csz);
-+}
-+
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 9acd968..15824c1 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -42,7 +42,7 @@ static void ath_detach(struct ath_softc *sc);
- 
- /* return bus cachesize in 4B word units */
- 
--static void bus_read_cachesize(struct ath_softc *sc, int *csz)
-+static void ath_pci_read_cachesize(struct ath_softc *sc, int *csz)
- {
- 	u8 u8tmp;
- 
-@@ -1338,7 +1338,7 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	 * Cache line size is used to size and align various
- 	 * structures used to communicate with the hardware.
- 	 */
--	bus_read_cachesize(sc, &csz);
-+	ath_read_cachesize(sc, &csz);
- 	/* XXX assert csz is non-zero */
- 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
- 
-@@ -2529,6 +2529,10 @@ ath_rf_name(u16 rf_version)
- 	return "????";
- }
- 
-+static struct ath_bus_ops ath_pci_bus_ops = {
-+	.read_cachesize = ath_pci_read_cachesize,
-+};
-+
- static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	void __iomem *mem;
-@@ -2617,6 +2621,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->hw = hw;
- 	sc->dev = &pdev->dev;
- 	sc->mem = mem;
-+	sc->bus_ops = &ath_pci_bus_ops;
- 
- 	if (ath_attach(id->device, sc) != 0) {
- 		ret = -ENODEV;
--- 
-1.5.3.2
-
+> On Sat, Jan 10, 2009 at 06:37:43PM +0100, Lorenzo Nava wrote:
+>> Hello everybody,
+>>
+>> today I tried OpenFWWF with kernel 2.6.28 on a Siemens wifi device  
+>> with
+>> Broadcom 4306 chipset:
+>>
+>> BCM94306 802.11g (rev 03)
+>> PHY: Analog 2, Type 2, Revision 2
+>> Radio: Manuf 0x17F, Version 0x2050, Revision 2
+>>
+>> I did some tests and everything seems to work fine.
+>>
+>> I remember, once again, that OpenFWWF needs v480 initvals to work
+>> properly, and was tested on 2.6.27-rc5 kernel.
+>
+> Any chance on getting a set of initvals packaged with the open source
+> firmware?  That would allow distros like Fedora to package this...
+>
+> John
+> -- 
+> John W. Linville		Linux should be at the core
+> linville@tuxdriver.com			of your literate lifestyle.
+Yes, we have it now. Still testing as several values can be cut out.  
+Posting ASAP.
+Cheers.
+-FG
