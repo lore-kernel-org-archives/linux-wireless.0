@@ -1,88 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37352 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752445AbZA2Ihk (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:55841 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752502AbZALQZx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 03:37:40 -0500
-Message-Id: <20090129005809.597263377@sipsolutions.net> (sfid-20090129_093743_032967_495EBF3B)
-References: <20090129005450.068797016@sipsolutions.net>
-Date: Thu, 29 Jan 2009 01:54:59 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: m.sujith@gmail.com, tomasw@gmail.com
-Subject: [RFC/RFT 09/11] mac80211: clean up BA session teardown
-Mime-Version: 1.0
+	Mon, 12 Jan 2009 11:25:53 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so11432934wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2009 08:25:51 -0800 (PST)
+Message-ID: <40f31dec0901120825i6ec6af4bq39e7e1be8459e846@mail.gmail.com> (sfid-20090112_172557_097490_7EF1BB9F)
+Date: Mon, 12 Jan 2009 18:25:51 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Helmut Schaa" <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH] ath5k: discard 11g caps if reported by an ar5211 eeprom
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com
+In-Reply-To: <200901121304.07360.helmut.schaa@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200901121304.07360.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sta_info pointer can very well be passed to
-ieee80211_sta_tear_down_BA_sessions, this will
-later allow us to pass it through even further.
+2009/1/12 Helmut Schaa <helmut.schaa@googlemail.com>:
+> At least one ar5211 card (GIGABYTE GN-WLMA101, 168c:0012 subsystem
+> 1458:e800) reports itself as 11g capable which seems to be a bug in the
+> eeprom. initvals.c assumes that ar5211 is only 11b capable and thus refuses
+> to initialize this card. Hence this patch changes the probing for 11g
+> capabilities to discard 11g capabilities for ar5211 cards which allows this
+> specific card to work fine in 11b and 11a modes.
+>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> ---
+>
+> Is anybody aware of 11g-capable ar5211 cards which would be limited by
+> this patch?
+>
+> diff --git a/drivers/net/wireless/ath5k/caps.c b/drivers/net/wireless/ath5k/caps.c
+> index 150f5ed..367a6c7 100644
+> --- a/drivers/net/wireless/ath5k/caps.c
+> +++ b/drivers/net/wireless/ath5k/caps.c
+> @@ -85,7 +85,8 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
+>                /* Enable  802.11b if a 2GHz capable radio (2111/5112) is
+>                 * connected */
+>                if (AR5K_EEPROM_HDR_11B(ee_header) ||
+> -                               AR5K_EEPROM_HDR_11G(ee_header)) {
+> +                   (AR5K_EEPROM_HDR_11G(ee_header) &&
+> +                    ah->ah_version != AR5K_AR5211)) {
+>                        /* 2312 */
+>                        ah->ah_capabilities.cap_range.range_2ghz_min = 2412;
+>                        ah->ah_capabilities.cap_range.range_2ghz_max = 2732;
+> @@ -94,7 +95,8 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
+>                                __set_bit(AR5K_MODE_11B,
+>                                                ah->ah_capabilities.cap_mode);
+>
+> -                       if (AR5K_EEPROM_HDR_11G(ee_header))
+> +                       if (AR5K_EEPROM_HDR_11G(ee_header) &&
+> +                           ah->ah_version != AR5K_AR5211)
+>                                __set_bit(AR5K_MODE_11G,
+>                                                ah->ah_capabilities.cap_mode);
+>                }
+>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ht.c          |    8 ++++----
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/iface.c       |    3 +--
- net/mac80211/mlme.c        |    2 +-
- 4 files changed, 7 insertions(+), 8 deletions(-)
-
---- wireless-testing.orig/net/mac80211/ht.c	2009-01-27 11:51:01.000000000 +0100
-+++ wireless-testing/net/mac80211/ht.c	2009-01-27 11:51:38.000000000 +0100
-@@ -153,15 +153,15 @@ u32 ieee80211_enable_ht(struct ieee80211
- 	return changed;
- }
- 
--void ieee80211_sta_tear_down_BA_sessions(struct ieee80211_sub_if_data *sdata, u8 *addr)
-+void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta)
- {
--	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_local *local = sta->local;
- 	int i;
- 
- 	for (i = 0; i <  STA_TID_NUM; i++) {
--		ieee80211_stop_tx_ba_session(&local->hw, addr, i,
-+		ieee80211_stop_tx_ba_session(&local->hw, sta->sta.addr, i,
- 					     WLAN_BACK_INITIATOR);
--		ieee80211_sta_stop_rx_ba_session(sdata, addr, i,
-+		ieee80211_sta_stop_rx_ba_session(sta->sdata, sta->sta.addr, i,
- 						 WLAN_BACK_RECIPIENT,
- 						 WLAN_REASON_QSTA_LEAVE_QBSS);
- 	}
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-27 11:50:29.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-27 11:50:36.000000000 +0100
-@@ -988,7 +988,7 @@ void ieee80211_send_delba(struct ieee802
- 
- void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *da,
- 				u16 tid, u16 initiator, u16 reason);
--void ieee80211_sta_tear_down_BA_sessions(struct ieee80211_sub_if_data *sdata, u8 *addr);
-+void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
- void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
- 			     struct sta_info *sta,
- 			     struct ieee80211_mgmt *mgmt, size_t len);
---- wireless-testing.orig/net/mac80211/iface.c	2009-01-27 11:50:50.000000000 +0100
-+++ wireless-testing/net/mac80211/iface.c	2009-01-27 11:50:58.000000000 +0100
-@@ -362,8 +362,7 @@ static int ieee80211_stop(struct net_dev
- 
- 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
- 		if (sta->sdata == sdata)
--			ieee80211_sta_tear_down_BA_sessions(sdata,
--							    sta->sta.addr);
-+			ieee80211_sta_tear_down_BA_sessions(sta);
- 	}
- 
- 	rcu_read_unlock();
---- wireless-testing.orig/net/mac80211/mlme.c	2009-01-27 11:50:42.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2009-01-27 11:50:47.000000000 +0100
-@@ -913,7 +913,7 @@ static void ieee80211_set_disassoc(struc
- 	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
- 
--	ieee80211_sta_tear_down_BA_sessions(sdata, sta->sta.addr);
-+	ieee80211_sta_tear_down_BA_sessions(sta);
- 
- 	if (self_disconnected) {
- 		if (deauth)
+This should be O.K. for now but i think AR5211 supports the so called
+"pureg" mode which means ofdm only g (no cck headers etc). It seems
+radio (RF5111) supports g mode (it can be found on AR5212 abg cards)
+but baseband doesn't support dynamic cck/ofdm switching. This bit on
+your eeprom might indicate the pureg capability. Since we don't handle
+this yet it's ok to skip it and use only b mode.
 
 -- 
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
