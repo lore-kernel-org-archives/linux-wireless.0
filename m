@@ -1,112 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:54063 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751821AbZAMNlx (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:61187 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750952AbZALPFZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 08:41:53 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v3 08/11] ath9k: remove (u16) casts from rtc register access
-Date: Tue, 13 Jan 2009 14:40:26 +0100
-Message-Id: <1231854029-26810-9-git-send-email-juhosg@openwrt.org> (sfid-20090113_144158_780733_1231EAD7)
-In-Reply-To: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
-References: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
+	Mon, 12 Jan 2009 10:05:25 -0500
+Message-ID: <496B5C2D.4030607@lwfinger.net> (sfid-20090112_160528_923319_7802EE29)
+Date: Mon, 12 Jan 2009 09:05:17 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jayant Sane <jayant_sane@hotmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Newbie question on 2.6.28-rc8-wl
+References: <BLU129-W39120C9D5D733AC53C210180DB0@phx.gbl> <496A27FA.5030508@lwfinger.net> <BLU129-W353904E1AB1EEE7AC28C7D80D80@phx.gbl>
+In-Reply-To: <BLU129-W353904E1AB1EEE7AC28C7D80D80@phx.gbl>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RTC register offsets don't fit into 'u16' on the AR913x, so we have
-to remove the existing casts.
+Jayant Sane wrote:
+> 
+> Thank you.
+> 
+> Again pardon my ignorance here..
+> 
+> It seems that I can either get 2.6.28-wl or 2.6.28-rc8 per your suggestions below but not 2.6.28-rc8-wl
+> 
+> And I know it is possible to have the kernel version reported as 2.6.28-rc8-wl.  How can I get that?
 
-Changes-licensed-under: ISC
+The -wl part comes from the presence of a file named
+"localversion-wireless" in the wireless-testing directory. This file
+has one line with the contents of that line being "-wl" (without the
+quotation marks, or course).
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/hw.c  |   14 +++++++-------
- drivers/net/wireless/ath9k/reg.h |    4 ++--
- 2 files changed, 9 insertions(+), 9 deletions(-)
+If you are compiling this particular kernel to get some wireless
+driver, then 2.6.28-wl is likely to be better than 2.6.28-rc8-wl.
+Please elaborate your reason for being told to get the -rc8 variant.
 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index e9a3951..e2a92d7 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -1007,7 +1007,7 @@ static void ath9k_hw_init_pll(struct ath_hal *ah,
- 				pll |= SM(0xb, AR_RTC_PLL_DIV);
- 		}
- 	}
--	REG_WRITE(ah, (u16) (AR_RTC_PLL_CONTROL), pll);
-+	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
- 
- 	udelay(RTC_PLL_SETTLE_DELAY);
- 
-@@ -1546,11 +1546,11 @@ static bool ath9k_hw_set_reset(struct ath_hal *ah, int type)
- 			rst_flags |= AR_RTC_RC_MAC_COLD;
- 	}
- 
--	REG_WRITE(ah, (u16) (AR_RTC_RC), rst_flags);
-+	REG_WRITE(ah, AR_RTC_RC, rst_flags);
- 	udelay(50);
- 
--	REG_WRITE(ah, (u16) (AR_RTC_RC), 0);
--	if (!ath9k_hw_wait(ah, (u16) (AR_RTC_RC), AR_RTC_RC_M, 0)) {
-+	REG_WRITE(ah, AR_RTC_RC, 0);
-+	if (!ath9k_hw_wait(ah, AR_RTC_RC, AR_RTC_RC_M, 0)) {
- 		DPRINTF(ah->ah_sc, ATH_DBG_RESET,
- 			"RTC stuck in MAC reset\n");
- 		return false;
-@@ -1572,8 +1572,8 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hal *ah)
- 	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN |
- 		  AR_RTC_FORCE_WAKE_ON_INT);
- 
--	REG_WRITE(ah, (u16) (AR_RTC_RESET), 0);
--	REG_WRITE(ah, (u16) (AR_RTC_RESET), 1);
-+	REG_WRITE(ah, AR_RTC_RESET, 0);
-+	REG_WRITE(ah, AR_RTC_RESET, 1);
- 
- 	if (!ath9k_hw_wait(ah,
- 			   AR_RTC_STATUS,
-@@ -2615,7 +2615,7 @@ static void ath9k_set_power_sleep(struct ath_hal *ah, int setChip)
- 		if (!AR_SREV_9100(ah))
- 			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
- 
--		REG_CLR_BIT(ah, (u16) (AR_RTC_RESET),
-+		REG_CLR_BIT(ah, (AR_RTC_RESET),
- 			    AR_RTC_RESET_EN);
- 	}
- }
-diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
-index 2dffe37..150eda5 100644
---- a/drivers/net/wireless/ath9k/reg.h
-+++ b/drivers/net/wireless/ath9k/reg.h
-@@ -953,7 +953,7 @@ enum {
- 
- #define AR_RTC_BASE             0x00020000
- #define AR_RTC_RC \
--	(AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0000) : 0x7000
-+	((AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0000) : 0x7000)
- #define AR_RTC_RC_M		0x00000003
- #define AR_RTC_RC_MAC_WARM      0x00000001
- #define AR_RTC_RC_MAC_COLD      0x00000002
-@@ -961,7 +961,7 @@ enum {
- #define AR_RTC_RC_WARM_RESET    0x00000008
- 
- #define AR_RTC_PLL_CONTROL \
--	(AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0014) : 0x7014
-+	((AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0014) : 0x7014)
- 
- #define AR_RTC_PLL_DIV          0x0000001f
- #define AR_RTC_PLL_DIV_S        0
--- 
-1.5.3.2
+Larry
 
