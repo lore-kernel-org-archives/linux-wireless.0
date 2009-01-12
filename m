@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57607 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289AbZAZVUI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59055 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757236AbZALUAn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 16:20:08 -0500
-Subject: Re: [PATCH 3/6] mac80211: Modularized mesh_hwmp.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Florian Sesser <flomaillist@cosetrain.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <e236615740b8ce8c9515c14aac3a2d9d93806a98.1233001802.git.flomaillist@cosetrain.com> (sfid-20090126_213927_189051_52B47541)
-References: <497E1B90.4060803@cosetrain.com>
-	 <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
-	 <3202b18e8531aa78c29636c163de20875ae1a9cf.1233001802.git.flomaillist@cosetrain.com>
-	 <e236615740b8ce8c9515c14aac3a2d9d93806a98.1233001802.git.flomaillist@cosetrain.com>
-	 (sfid-20090126_213927_189051_52B47541)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ea9HgFoOXAFA01el4FS+"
-Date: Mon, 26 Jan 2009 22:20:04 +0100
-Message-Id: <1233004804.4533.41.camel@johannes.local> (sfid-20090126_222014_900346_A4520708)
-Mime-Version: 1.0
+	Mon, 12 Jan 2009 15:00:43 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] =?utf-8?q?p54:=20fix=20"=E2=80=98ret=E2=80=99=20may=20be=20used=20uninitialized"=20warning?=
+Date: Mon, 12 Jan 2009 14:49:01 -0500
+Message-Id: <1231789741-13433-5-git-send-email-linville@tuxdriver.com> (sfid-20090112_210108_518682_138E430A)
+In-Reply-To: <1231789741-13433-4-git-send-email-linville@tuxdriver.com>
+References: <>
+ <1231789741-13433-1-git-send-email-linville@tuxdriver.com>
+ <1231789741-13433-2-git-send-email-linville@tuxdriver.com>
+ <1231789741-13433-3-git-send-email-linville@tuxdriver.com>
+ <1231789741-13433-4-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+drivers/net/wireless/p54/p54common.c: In function =E2=80=98p54_config=E2=
+=80=99:
+drivers/net/wireless/p54/p54common.c:1853: warning: =E2=80=98ret=E2=80=99=
+ may be used uninitialized in this function
 
---=-Ea9HgFoOXAFA01el4FS+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/p54/p54common.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Mon, 2009-01-26 at 21:39 +0100, Florian Sesser wrote:
-> Separate mesh_hwmp.c into own module, which is
-> loaded automatically as the default path selection
-> protocol.
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireles=
+s/p54/p54common.c
+index cba89ed..c6a370f 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -1850,7 +1850,7 @@ static void p54_remove_interface(struct ieee80211=
+_hw *dev,
+=20
+ static int p54_config(struct ieee80211_hw *dev, u32 changed)
+ {
+-	int ret;
++	int ret =3D 0;
+ 	struct p54_common *priv =3D dev->priv;
+ 	struct ieee80211_conf *conf =3D &dev->conf;
+=20
+--=20
+1.5.4.3
 
-Let's keep that built-in so it doesn't all break all the time. Kconfig
-too. Cf. rate control.
-
-johannes
-
---=-Ea9HgFoOXAFA01el4FS+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJfikBAAoJEKVg1VMiehFYYCcQAIXGtfCKfDdFjsH7HgoV6OBS
-CxELGDKjtIkku1+8AEfZlOJI3AbGxQ8MNxtS5+xu/r8mB4bnxN9q24yoqwhzNkYh
-PBicIjngOGiRgsxBVN+bx4IXuC9GmXSIjpJZSfde6VwKXHWTmIeh+oVZhxfY4n7j
-VzdCPDgRYKV0ijkbfa+p4bckmOnhD7j+Udd0BHn0Ek2Rk9GMNCmypichywUQWiTb
-H/nXGVQx66be36Bm+0CrnG0fmGwrBozduTillqOzTEylhXfcwQWjwteu/xWE+s6Z
-aQb6dk52TdRvIHFqdy41vPEUyNVAb9NPWnivPlIQMyNI4fP2iZD6MI2EXcPuOsxs
-8UyYBfRNpzQq2UAnKZriPimK+n21XQJCOk4jJna0qB2VNYBkIKtOXNRGhBhn69aL
-0xkFjuyRq0P7Xf/NIXO8URa/rVzBR42+XmiGRGww/nLZo5Gnbyw/mr+jgDUkXR23
-Csju6/ZCSBkuqNNJnf0Li52QMc9zKV/8w2iDrSOavetnBvzixNoYqjHKGDW9XNvP
-HyEQK1CiZvs0oCA7sGCTlJGM1ut+zQo6dVZnSQlFv+kA0pAfE3C3XVg8riEKWAQl
-8OTNfMTqEvXwZO55QQBH/LDjvZoT78q/q01PMdHYKp6qqBJ1swOqbZzVxK0UjFO/
-lVXiSWZNXQFNYr1pzF/o
-=qDzJ
------END PGP SIGNATURE-----
-
---=-Ea9HgFoOXAFA01el4FS+--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
