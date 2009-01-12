@@ -1,86 +1,440 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hpsmtp-eml15.KPNXCHANGE.COM ([213.75.38.115]:36550 "EHLO
-	hpsmtp-eml15.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750738AbZAFUjh (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35792 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751025AbZALM0i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 15:39:37 -0500
-Message-ID: <4963C186.2070408@kpnplanet.nl> (sfid-20090106_213941_800846_242F5B53)
-Date: Tue, 06 Jan 2009 21:39:34 +0100
-From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+	Mon, 12 Jan 2009 07:26:38 -0500
+Date: Mon, 12 Jan 2009 14:26:05 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC] nl80211: New command for adding extra IE(s) into management
+	frames
+Message-ID: <20090112122605.GB9153@jm.kir.nu> (sfid-20090112_132644_319144_86D63D27)
 MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rt2400-devel@lists.sourceforge.net"
-	<rt2400-devel@lists.sourceforge.net>
-Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
-References: <200901042021.10904.IvDoorn@gmail.com> <200901061832.20529.IvDoorn@gmail.com> <20090106173647.GP6834@tesla> <200901061847.31579.IvDoorn@gmail.com>
-In-Reply-To: <200901061847.31579.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/09 18:47, Ivo van Doorn wrote:
-> On Tuesday 06 January 2009, Luis R. Rodriguez wrote:
->    
->> On Tue, Jan 06, 2009 at 09:32:20AM -0800, Ivo van Doorn wrote:
->>      
->>>>>> 2. I'm still puzzled how to handle the two different values that the EEPROM has, namely one for the bg band and one for the a band. I've handled it by registering the one associated with the configured band, but that seems to be unlikely to be correct. I still haven't found a better way to handle this.
->>>>>>              
->>>>> Because of this I hadn't looked very deep into rt61 and rt73 yet.
->>>>>
->>>>>            
->>>>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
->>>>>>              
->>>>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
->>>>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
->>>>>            
->>>> Based on the documentation from the EEPROM for all devices I read that its recommended
->>>> that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
->>>> windows registry be used.
->>>>
->>>> Based on tests for the devices with only one band, do are you seeing an actual regulatory
->>>> domain in the EEPROM?
->>>>          
->>> I have to check, but I don't think I have any hardware with valid domain values.
->>>
->>>        
->>>> To deal with the issue of having two separate EEPROM values for a regulatory domain
->>>> and since the documentation indicates to not rely on it I would advise to allow users
->>>> to be compliant by selecting the country they are in. wpa_supplicant has support for
->>>> selecting country now, and so does iw. Eventually I see Network Manager letting users
->>>> select the country. But you guys are the maintainers and developers so you will know
->>>> better.
->>>>          
->>> Well it is fine with me,  understood from earlier discussion that it was advised that drivers
->>> attempted to set the domain if they could. Hence the reason I had added reading the EEPROM
->>> for domain values to the TODO list. But it is true that it is quite rare that there are valid values
->>> for it. So it would be fine with me by letting the user handle it completely.
->>>        
->> I see -- well if there are *some* cards that do have valid EEPROM values then it seems worth it
->> to do the actual regulatory_hint(), for dual band cards you can probably just not support it. But
->> its up to you guys. Just my advice based on the documentation I have read so far.
->>      
->
-> Ok.
->
-> Gertjan, do you know if there is any hardware with valid GEO data in the EEPROM?
->    
+A new nl80211 command, NL80211_CMD_SET_MGMT_EXTRA_IE, can be used to
+add arbitrary IE data into the end of management frames in client
+modes. The interface allows extra IEs to be configured for each
+management frame subtype, but only some of them (ProbeReq, ProbeResp,
+Auth, (Re)AssocReq, Deauth, Disassoc) are currently used.
 
-As mentioned in my previous email, I do have devices that have valid GEO 
-data in the EEPROM. So, we should be able to use that.
-Also, for the dual band cards, it does seem that at least the numerical 
-values are similar for both bands (although I'm not sure that same 
-numerical values means same regulatory domain). This is at least the 
-case on all the cards that I own.
+This makes it easier to implement IEEE 802.11 extensions like WPS and
+FT that add IE(s) into some management frames. In addition, this can
+be useful for testing and experimentation purposes.
 
-FYI: The legacy drivers do use the information in the EEPROM to 
-initialize the internal administration of regulatory information, but 
-allow the end-user to override that via config-file or via private wext 
-call. It would be good to have a similar possibility for rt2x00.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 
 ---
-Gertjan.
+ include/linux/nl80211.h    |   20 +++++++++++++++
+ include/net/cfg80211.h     |   21 +++++++++++++++
+ net/mac80211/cfg.c         |   29 +++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    5 +++
+ net/mac80211/iface.c       |    2 +
+ net/mac80211/mlme.c        |   60 +++++++++++++++++++++++++++++++++++++++------
+ net/wireless/nl80211.c     |   50 +++++++++++++++++++++++++++++++++++++
+ 7 files changed, 180 insertions(+), 7 deletions(-)
 
+--- wireless-testing.orig/include/linux/nl80211.h	2009-01-12 13:14:19.000000000 +0200
++++ wireless-testing/include/linux/nl80211.h	2009-01-12 13:15:56.000000000 +0200
+@@ -133,6 +133,12 @@
+  * @NL80211_CMD_SET_MESH_PARAMS: Set mesh networking properties for the
+  *      interface identified by %NL80211_ATTR_IFINDEX
+  *
++ * @NL80211_CMD_SET_MGMT_EXTRA_IE: Set extra IEs for management frames. The
++ *	interface is identified with %NL80211_ATTR_IFINDEX and the management
++ *	frame subtype with %NL80211_ATTR_MGMT_SUBTYPE. The extra IE data to be
++ *	added to the end of the specified management frame is specified with
++ *	%NL80211_ATTR_IE.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -178,6 +184,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_GET_MESH_PARAMS,
+ 	NL80211_CMD_SET_MESH_PARAMS,
+ 
++	NL80211_CMD_SET_MGMT_EXTRA_IE,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -190,6 +198,7 @@ enum nl80211_commands {
+  * here
+  */
+ #define NL80211_CMD_SET_BSS NL80211_CMD_SET_BSS
++#define NL80211_CMD_SET_MGMT_EXTRA_IE NL80211_CMD_SET_MGMT_EXTRA_IE
+ 
+ /**
+  * enum nl80211_attrs - nl80211 netlink attributes
+@@ -284,6 +293,12 @@ enum nl80211_commands {
+  *	supported interface types, each a flag attribute with the number
+  *	of the interface mode.
+  *
++ * @NL80211_ATTR_MGMT_SUBTYPE: Management frame subtype for
++ *	%NL80211_CMD_SET_MGMT_EXTRA_IE.
++ *
++ * @NL80211_ATTR_IE: Information element(s) data (used, e.g., with
++ *	%NL80211_CMD_SET_MGMT_EXTRA_IE).
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -348,6 +363,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_KEY_DEFAULT_MGMT,
+ 
++	NL80211_ATTR_MGMT_SUBTYPE,
++	NL80211_ATTR_IE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -363,6 +381,8 @@ enum nl80211_attrs {
+ #define NL80211_ATTR_WIPHY_TXQ_PARAMS NL80211_ATTR_WIPHY_TXQ_PARAMS
+ #define NL80211_ATTR_WIPHY_FREQ NL80211_ATTR_WIPHY_FREQ
+ #define NL80211_ATTR_WIPHY_CHANNEL_TYPE NL80211_ATTR_WIPHY_CHANNEL_TYPE
++#define NL80211_ATTR_MGMT_SUBTYPE NL80211_ATTR_MGMT_SUBTYPE
++#define NL80211_ATTR_IE NL80211_ATTR_IE
+ 
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_MAX_SUPP_REG_RULES		32
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-01-12 13:12:38.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-01-12 13:32:06.000000000 +0200
+@@ -105,6 +105,10 @@ static struct nla_policy nl80211_policy[
+ 
+ 	[NL80211_ATTR_HT_CAPABILITY] = { .type = NLA_BINARY,
+ 					 .len = NL80211_HT_CAPABILITY_LEN },
++
++	[NL80211_ATTR_MGMT_SUBTYPE] = { .type = NLA_U8 },
++	[NL80211_ATTR_IE] = { .type = NLA_BINARY,
++			      .len = IEEE80211_MAX_DATA_LEN },
+ };
+ 
+ /* message building helper */
+@@ -2149,6 +2153,46 @@ static int nl80211_set_reg(struct sk_buf
+ 	return -EINVAL;
+ }
+ 
++static int nl80211_set_mgmt_extra_ie(struct sk_buff *skb,
++				     struct genl_info *info)
++{
++	struct cfg80211_registered_device *drv;
++	int err;
++	struct net_device *dev;
++	struct mgmt_extra_ie_params params;
++
++	memset(&params, 0, sizeof(params));
++
++	if (!info->attrs[NL80211_ATTR_MGMT_SUBTYPE])
++		return -EINVAL;
++	params.subtype = nla_get_u8(info->attrs[NL80211_ATTR_MGMT_SUBTYPE]);
++	if (params.subtype > 15)
++		return -EINVAL; /* FC Subtype field is 4 bits (0..15) */
++
++	if (info->attrs[NL80211_ATTR_IE]) {
++		params.ies = nla_data(info->attrs[NL80211_ATTR_IE]);
++		params.ies_len = nla_len(info->attrs[NL80211_ATTR_IE]);
++	}
++
++	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
++	if (err)
++		return err;
++
++	if (!drv->ops->set_mgmt_extra_ie) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	rtnl_lock();
++	err = drv->ops->set_mgmt_extra_ie(&drv->wiphy, dev, &params);
++	rtnl_unlock();
++
++ out:
++	cfg80211_put_dev(drv);
++	dev_put(dev);
++	return err;
++}
++
+ static struct genl_ops nl80211_ops[] = {
+ 	{
+ 		.cmd = NL80211_CMD_GET_WIPHY,
+@@ -2310,6 +2354,12 @@ static struct genl_ops nl80211_ops[] = {
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_MGMT_EXTRA_IE,
++		.doit = nl80211_set_mgmt_extra_ie,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++	},
+ };
+ 
+ /* multicast groups */
+--- wireless-testing.orig/include/net/cfg80211.h	2009-01-12 13:18:24.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-01-12 13:23:07.000000000 +0200
+@@ -433,6 +433,21 @@ struct ieee80211_txq_params {
+ 	u8 aifs;
+ };
+ 
++/**
++ * struct mgmt_extra_ie_params - Extra management frame IE parameters
++ *
++ * Used to add extra IE(s) into management frames in client modes.
++ *
++ * @subtype: Management frame subtype
++ * @ies: IE data buffer or %NULL to remove previous data
++ * @ies_len: Length of @ies in octets
++ */
++struct mgmt_extra_ie_params {
++	u8 subtype;
++	u8 *ies;
++	int ies_len;
++};
++
+ /* from net/wireless.h */
+ struct wiphy;
+ 
+@@ -501,6 +516,8 @@ struct ieee80211_channel;
+  * @set_txq_params: Set TX queue parameters
+  *
+  * @set_channel: Set channel
++ *
++ * @set_mgmt_extra_ie: Set extra IE data for management frames
+  */
+ struct cfg80211_ops {
+ 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
+@@ -571,6 +588,10 @@ struct cfg80211_ops {
+ 	int	(*set_channel)(struct wiphy *wiphy,
+ 			       struct ieee80211_channel *chan,
+ 			       enum nl80211_channel_type channel_type);
++
++	int	(*set_mgmt_extra_ie)(struct wiphy *wiphy,
++				     struct net_device *dev,
++				     struct mgmt_extra_ie_params *params);
+ };
+ 
+ /* temporary wext handlers */
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-01-12 13:29:45.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-01-12 13:43:33.000000000 +0200
+@@ -1175,6 +1175,34 @@ static int ieee80211_set_channel(struct 
+ 	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ }
+ 
++static int ieee80211_set_mgmt_extra_ie(struct wiphy *wiphy,
++				       struct net_device *dev,
++				       struct mgmt_extra_ie_params *params)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++	    sdata->vif.type != NL80211_IFTYPE_ADHOC)
++		return -EINVAL;
++
++	kfree(sdata->u.sta.mgmt_ie[params->subtype]);
++	sdata->u.sta.mgmt_ie[params->subtype] = NULL;
++	sdata->u.sta.mgmt_ie_len[params->subtype] = 0;
++
++	if (params->ies) {
++		sdata->u.sta.mgmt_ie[params->subtype] =
++			kmalloc(params->ies_len, GFP_KERNEL);
++		if (sdata->u.sta.mgmt_ie[params->subtype] == NULL)
++			return -ENOMEM;
++		memcpy(sdata->u.sta.mgmt_ie[params->subtype], params->ies,
++		       params->ies_len);
++		sdata->u.sta.mgmt_ie_len[params->subtype] = params->ies_len;
++	}
++
++	return 0;
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1204,4 +1232,5 @@ struct cfg80211_ops mac80211_config_ops 
+ 	.change_bss = ieee80211_change_bss,
+ 	.set_txq_params = ieee80211_set_txq_params,
+ 	.set_channel = ieee80211_set_channel,
++	.set_mgmt_extra_ie = ieee80211_set_mgmt_extra_ie,
+ };
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-12 13:35:10.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-12 13:38:41.000000000 +0200
+@@ -331,6 +331,11 @@ struct ieee80211_if_sta {
+ 	u32 supp_rates_bits[IEEE80211_NUM_BANDS];
+ 
+ 	int wmm_last_param_set;
++
++	/* Extra IE data for management frames */
++#define IEEE80211_NUM_SUBTYPES 16
++	u8 *mgmt_ie[IEEE80211_NUM_SUBTYPES];
++	size_t mgmt_ie_len[IEEE80211_NUM_SUBTYPES];
+ };
+ 
+ struct ieee80211_if_mesh {
+--- wireless-testing.orig/net/mac80211/iface.c	2009-01-12 13:37:32.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2009-01-12 13:39:10.000000000 +0200
+@@ -632,6 +632,8 @@ static void ieee80211_teardown_sdata(str
+ 		kfree(sdata->u.sta.assocreq_ies);
+ 		kfree(sdata->u.sta.assocresp_ies);
+ 		kfree_skb(sdata->u.sta.probe_resp);
++		for (i = 0; i < IEEE80211_NUM_SUBTYPES; i++)
++			kfree(sdata->u.sta.mgmt_ie[i]);
+ 		break;
+ 	case NL80211_IFTYPE_WDS:
+ 	case NL80211_IFTYPE_AP_VLAN:
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-01-12 13:44:05.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-01-12 13:56:09.000000000 +0200
+@@ -139,10 +139,15 @@ void ieee80211_send_probe_req(struct iee
+ 	struct ieee80211_supported_band *sband;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+-	u8 *pos, *supp_rates, *esupp_rates = NULL;
++	u8 *pos, *supp_rates, *esupp_rates = NULL, *ies;
+ 	int i;
++	size_t ies_len;
+ 
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt) + 200);
++	ies = sdata->u.sta.mgmt_ie[IEEE80211_STYPE_PROBE_REQ >> 4];
++	ies_len = sdata->u.sta.mgmt_ie_len[IEEE80211_STYPE_PROBE_REQ >> 4];
++
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt) + 200 +
++			    ies_len);
+ 	if (!skb) {
+ 		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
+ 		       "request\n", sdata->dev->name);
+@@ -189,6 +194,9 @@ void ieee80211_send_probe_req(struct iee
+ 		*pos = rate->bitrate / 5;
+ 	}
+ 
++	if (ies)
++		memcpy(skb_put(skb, ies_len), ies, ies_len);
++
+ 	ieee80211_tx_skb(sdata, skb, 0);
+ }
+ 
+@@ -200,9 +208,14 @@ static void ieee80211_send_auth(struct i
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
++	u8 *ies;
++	size_t ies_len;
++
++	ies = sdata->u.sta.mgmt_ie[IEEE80211_STYPE_AUTH >> 4];
++	ies_len = sdata->u.sta.mgmt_ie_len[IEEE80211_STYPE_AUTH >> 4];
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+-			    sizeof(*mgmt) + 6 + extra_len);
++			    sizeof(*mgmt) + 6 + extra_len + ies_len);
+ 	if (!skb) {
+ 		printk(KERN_DEBUG "%s: failed to allocate buffer for auth "
+ 		       "frame\n", sdata->dev->name);
+@@ -225,6 +238,8 @@ static void ieee80211_send_auth(struct i
+ 	mgmt->u.auth.status_code = cpu_to_le16(0);
+ 	if (extra)
+ 		memcpy(skb_put(skb, extra_len), extra, extra_len);
++	if (ies)
++		memcpy(skb_put(skb, ies_len), ies, ies_len);
+ 
+ 	ieee80211_tx_skb(sdata, skb, encrypt);
+ }
+@@ -235,17 +250,28 @@ static void ieee80211_send_assoc(struct 
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+-	u8 *pos, *ies, *ht_ie;
++	u8 *pos, *ies, *ht_ie, *e_ies;
+ 	int i, len, count, rates_len, supp_rates_len;
+ 	u16 capab;
+ 	struct ieee80211_bss *bss;
+ 	int wmm = 0;
+ 	struct ieee80211_supported_band *sband;
+ 	u64 rates = 0;
++	size_t e_ies_len;
++
++	if (ifsta->flags & IEEE80211_STA_PREV_BSSID_SET) {
++		e_ies = sdata->u.sta.mgmt_ie[IEEE80211_STYPE_REASSOC_REQ >> 4];
++		e_ies_len = sdata->u.sta.mgmt_ie_len[
++			IEEE80211_STYPE_REASSOC_REQ >> 4];
++	} else {
++		e_ies = sdata->u.sta.mgmt_ie[IEEE80211_STYPE_ASSOC_REQ >> 4];
++		e_ies_len = sdata->u.sta.mgmt_ie_len[
++			IEEE80211_STYPE_ASSOC_REQ >> 4];
++	}
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+ 			    sizeof(*mgmt) + 200 + ifsta->extra_ie_len +
+-			    ifsta->ssid_len);
++			    ifsta->ssid_len + e_ies_len);
+ 	if (!skb) {
+ 		printk(KERN_DEBUG "%s: failed to allocate buffer for assoc "
+ 		       "frame\n", sdata->dev->name);
+@@ -436,6 +462,9 @@ static void ieee80211_send_assoc(struct 
+ 		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
+ 	}
+ 
++	if (e_ies)
++		memcpy(skb_put(skb, e_ies_len), e_ies, e_ies_len);
++
+ 	kfree(ifsta->assocreq_ies);
+ 	ifsta->assocreq_ies_len = (skb->data + skb->len) - ies;
+ 	ifsta->assocreq_ies = kmalloc(ifsta->assocreq_ies_len, GFP_KERNEL);
+@@ -453,8 +482,14 @@ static void ieee80211_send_deauth_disass
+ 	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
++	u8 *ies;
++	size_t ies_len;
++
++	ies = sdata->u.sta.mgmt_ie[stype >> 4];
++	ies_len = sdata->u.sta.mgmt_ie_len[stype >> 4];
+ 
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt));
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt) +
++			    ies_len);
+ 	if (!skb) {
+ 		printk(KERN_DEBUG "%s: failed to allocate buffer for "
+ 		       "deauth/disassoc frame\n", sdata->dev->name);
+@@ -472,6 +507,9 @@ static void ieee80211_send_deauth_disass
+ 	/* u.deauth.reason_code == u.disassoc.reason_code */
+ 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
+ 
++	if (ies)
++		memcpy(skb_put(skb, ies_len), ies, ies_len);
++
+ 	ieee80211_tx_skb(sdata, skb, ifsta->flags & IEEE80211_STA_MFP_ENABLED);
+ }
+ 
+@@ -1485,8 +1523,13 @@ static int ieee80211_sta_join_ibss(struc
+ 	u8 *pos;
+ 	struct ieee80211_supported_band *sband;
+ 	union iwreq_data wrqu;
++	u8 *ies;
++	size_t ies_len;
++
++	ies = sdata->u.sta.mgmt_ie[IEEE80211_STYPE_PROBE_RESP >> 4];
++	ies_len = sdata->u.sta.mgmt_ie_len[IEEE80211_STYPE_PROBE_RESP >> 4];
+ 
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 + ies_len);
+ 	if (!skb) {
+ 		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
+ 		       "response\n", sdata->dev->name);
+@@ -1569,6 +1612,9 @@ static int ieee80211_sta_join_ibss(struc
+ 		memcpy(pos, &bss->supp_rates[8], rates);
+ 	}
+ 
++	if (ies)
++		memcpy(skb_put(skb, ies_len), ies, ies_len);
++
+ 	ifsta->probe_resp = skb;
+ 
+ 	ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON);
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
