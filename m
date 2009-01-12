@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:60704 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753292AbZA3Orr (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47236 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423AbZALPpu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 09:47:47 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so467849rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 06:47:46 -0800 (PST)
+	Mon, 12 Jan 2009 10:45:50 -0500
+Date: Mon, 12 Jan 2009 10:39:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Lorenzo Nava <navalorenx@gmail.com>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Michael Buesch <mb@bu3sch.de>,
+	Gringoli PhD Gringoli <francesco.gringoli@ing.unibs.it>
+Subject: Re: [b43] opensource firmware
+Message-ID: <20090112153949.GC31525@tuxdriver.com> (sfid-20090112_164601_965758_6FC25554)
+References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de> <9F70A0D3-6334-45FB-9DAF-263FE89C847E@ing.unibs.it> <200901091206.09736.mb@bu3sch.de> <AE7A4FD8-1728-4CE2-8CC7-DCE699C3B6C9@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <40f31dec0901300017g2504e494mc75db9d9a0ffca7@mail.gmail.com>
-References: <498269D5.7080204@openwrt.org>
-	 <40f31dec0901300017g2504e494mc75db9d9a0ffca7@mail.gmail.com>
-Date: Fri, 30 Jan 2009 09:47:46 -0500
-Message-ID: <b6c5339f0901300647y69bda19bq9c749b1c42334398@mail.gmail.com> (sfid-20090130_154752_228515_B46B1B45)
-Subject: Re: [PATCH,RFC 0/2] ath5k: implement tx power calibration on
-	ar2413/5413
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AE7A4FD8-1728-4CE2-8CC7-DCE699C3B6C9@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 30, 2009 at 3:17 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> I'm sending some patches that update phy.c, initvals.c and reset.c etc
-> today and i'll merge this one with RF5111/RF5112 pcdac stuff and tpc
-> support asap to have power table support for all chips. We also need
-> to work out regulatory stuff before we fully enable tx power support
-> so i have to test this on a spectrum analyzer.
+On Sat, Jan 10, 2009 at 06:37:43PM +0100, Lorenzo Nava wrote:
+> Hello everybody,
+>
+> today I tried OpenFWWF with kernel 2.6.28 on a Siemens wifi device with 
+> Broadcom 4306 chipset:
+>
+> BCM94306 802.11g (rev 03)
+> PHY: Analog 2, Type 2, Revision 2
+> Radio: Manuf 0x17F, Version 0x2050, Revision 2
+>
+> I did some tests and everything seems to work fine.
+>
+> I remember, once again, that OpenFWWF needs v480 initvals to work  
+> properly, and was tested on 2.6.27-rc5 kernel.
 
-Speaking of regulatory, I had started adding the 802.11d stuff from
-ath9k already, but I haven't gotten to the point of even compiling it
-yet.  Want me to continue on it?  Probably can have something to show
-this weekend.
+Any chance on getting a set of initvals packaged with the open source
+firmware?  That would allow distros like Fedora to package this...
 
+John
 -- 
-Bob Copeland %% www.bobcopeland.com
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
