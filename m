@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:59014 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751003AbZAILuK convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f13.google.com ([209.85.217.13]:42125 "EHLO
+	mail-gx0-f13.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752687AbZALRFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 06:50:10 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 03:50:10 -0800
-From: Vivek Natarajan <Vivek.Natarajan@Atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 9 Jan 2009 17:20:05 +0530
-Subject: RE: multicast traffic and ath9k
-Message-ID: <44EE5C37ADC36343B0625A05DD408C4845A77DAF05@CHEXMB-01.global.atheros.com> (sfid-20090109_125016_516311_8E6306C2)
-References: <1231346161.3545.52.camel@johannes>
-In-Reply-To: <1231346161.3545.52.camel@johannes>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 12 Jan 2009 12:05:09 -0500
+Received: by gxk6 with SMTP id 6so70380gxk.5
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2009 09:05:07 -0800 (PST)
+Message-ID: <40f31dec0901120857p5c34b38duae69662934cec309@mail.gmail.com> (sfid-20090112_180513_743817_2292CFCA)
+Date: Mon, 12 Jan 2009 18:57:10 +0200
+From: "Nick Kossifidis" <mickflemm@gmail.com>
+To: "Helmut Schaa" <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH] ath5k: discard 11g caps if reported by an ar5211 eeprom
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com
+In-Reply-To: <200901121746.23260.helmut.schaa@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+References: <200901121304.07360.helmut.schaa@gmail.com>
+	 <40f31dec0901120825i6ec6af4bq39e7e1be8459e846@mail.gmail.com>
+	 <200901121746.23260.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/1/12 Helmut Schaa <helmut.schaa@googlemail.com>:
+> Am Montag, 12. Januar 2009 schrieb Nick Kossifidis:
+>> 2009/1/12 Helmut Schaa <helmut.schaa@googlemail.com>:
+>> > At least one ar5211 card (GIGABYTE GN-WLMA101, 168c:0012 subsystem
+>> > 1458:e800) reports itself as 11g capable which seems to be a bug in the
+>> > eeprom. initvals.c assumes that ar5211 is only 11b capable and thus refuses
+>> > to initialize this card. Hence this patch changes the probing for 11g
+>> > capabilities to discard 11g capabilities for ar5211 cards which allows this
+>> > specific card to work fine in 11b and 11a modes.
+>> >
+>> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>> > ---
+>> >
+>> > Is anybody aware of 11g-capable ar5211 cards which would be limited by
+>> > this patch?
+>
+> [...]
+>
+>> This should be O.K. for now but i think AR5211 supports the so called
+>> "pureg" mode which means ofdm only g (no cck headers etc).
+>
+> Sounds reasonable, yes.
+>
+>> It seems
+>> radio (RF5111) supports g mode (it can be found on AR5212 abg cards)
+>
+> I guess you mean RF2111, right? RF5111 should be 11a.
+>
+> I've just found a product sheet at [1] that states that the RF2111
+> supports "802.11g draft standard". I guess that's exactly what you've
+> described as "pureg" mode.
+>
+> Thanks,
+> Helmut
+>
+> [1] ftp://ftp.riss-telecom.ru/pub/wireless/doc/atheros/AR5001X.pdf
+>
 
-Johannes Berg wrote:
-> Does ath9k hardware really not check the multicast bit by itself? It
-> seems that we can't really be fast enough to wake up the hardware, so
-> the check for the MC bit is kinda useless, no?
+RF5111 is the RF chip, RF2111 is a frequency converter with cck
+support, check this out..
+http://www.hotchips.org/archives/hc14/3_Tue/16_mcfarland.pdf
 
-There are two options in atheros drivers. One is hardware beacon processing
-and the other is sw beacon processing. For some reason, sw beacon processing
-is enabled by default, the performance is as expected and it has been working fine
-for Windows implementation.
-
-Some functions related to power save and beacon are beacon timestamp update,
-verify tim bit and verify mc bit. The beacon timers have to be programmed correctly
-to wake up for every beacon and process it for tim.  If the timer is slightly
-out of sync, we my fail to receive the beacon.
-
-The alternative is sw beacon processing using TIM_TIMER interrupt. This is a timer
-which runs in the hw while majority of the hw is asleep. This generates an interrupt
-for every beacon listen interval to wake up the chip and listen to beacon. We do not
-go back to sleep unless we receive a beacon. Since there is no dependency on the
-higher layers to update the beacon/sleep timers,  this implementation works fine in any
-corner case. Hence, there is a need to process multicast bit in the software itself.
-
-Vivek.
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
