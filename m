@@ -1,77 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from E23SMTP03.au.ibm.com ([202.81.18.172]:34564 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751572AbZAGPW3 (ORCPT
+Received: from 30.mail-out.ovh.net ([213.186.62.213]:46444 "HELO
+	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750973AbZALSfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 10:22:29 -0500
-Date: Wed, 7 Jan 2009 20:52:08 +0530
-From: Dhaval Giani <dhaval@linux.vnet.ibm.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
-Message-ID: <20090107152208.GB4207@linux.vnet.ibm.com> (sfid-20090107_162246_827717_88703E4E)
-Reply-To: Dhaval Giani <dhaval@linux.vnet.ibm.com>
-References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com> <1231338965-796-1-git-send-email-jirislaby@gmail.com>
+	Mon, 12 Jan 2009 13:35:38 -0500
+Date: Mon, 12 Jan 2009 19:38:08 +0100
+From: Samuel Ortiz <samuel@sortiz.org>
+To: Deuce <the_deuce@yahoo.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
+Message-ID: <20090112183808.GA8485@sortiz.org> (sfid-20090112_193542_054268_21642E29)
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+References: <326502.74480.qm@web57615.mail.re1.yahoo.com> <1231528324.30298.14.camel@rc-desk> <960943.33934.qm@web57604.mail.re1.yahoo.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231338965-796-1-git-send-email-jirislaby@gmail.com>
+In-Reply-To: <960943.33934.qm@web57604.mail.re1.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 07, 2009 at 03:36:05PM +0100, Jiri Slaby wrote:
-> On 01/07/2009 02:51 PM, Jiri Slaby wrote:
-> > Dhaval Giani wrote:
-> >> I see this on current git. Not sure how to reproduce it, has happened on
-> >> two random occasions. At both times, I was not connected to a wireless
-> >> network, but to wired networks.
-> >>
-> >> ------------[ cut here ]------------
-> >> WARNING: at net/mac80211/rx.c:2234 __ieee80211_rx+0x7f/0x559
-> >> ...
-> >> Call Trace:
-> >>  [<f80d4192>] __ieee80211_rx+0x7f/0x559 [mac80211]
-> >>  [<f80a19f4>] ath5k_tasklet_rx+0x4f7/0x53b [ath5k]
-> >> ...
+Hi Jason,
+
+On Fri, Jan 09, 2009 at 03:07:01PM -0800, Deuce wrote:
+> > From: reinette chatre <reinette.chatre@intel.com>
+> 
+> > On Thu, 2009-01-08 at 19:28 -0800, Deuce wrote:
+> > > Kernel BUG in iwl3945 with 20090107 wireless-testing and firmware 15.28.2.8  
+> > The Microcode SW error detected seems to be the beginning of the end.  An 
+> > attempt with Ubuntu's distributed iwlwifi-3945-1.ucode firmware was not 
+> > successful either (I do not know the version).
+> > > 
+> > > The BUG happens a short period after logging in when Netmanager starts to scan 
+> > and attempt to associate.  Association never completes.
+> > > 
+> > > Curiously, the bug was not triggered the first time I finally booted up with 
+> > iwl3945 debug=0x43fff and netconsole functioning.  However it was immediately 
+> > triggered on a subsequent reboot.  The first try may have been a warm reboot vs. 
+> > a cold reboot.
+> > > 
+> > > Below is the dmesg output without debug.  Attached is a full dmesg output with 
+> > debug=0x43fff.
 > > 
-> > Hmm, maybe ath5k is culprit. Could you apply the attached patch and
-> > use the kernel till the problem appears again?
+> > There appears to be a few things going on here. I am still investigating
+> > the firmware error, but we could start with something that will not let
+> > your machine crash and get us some more information about one of the
+> > issues.
+> > 
+> > Could you please try with this patch? Please do run your test with
+> > debugging enabled as you have done before. Thank you very much.
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c 
+> > b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > index a23d51d..09c1c8d 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > @@ -3118,7 +3118,14 @@ static void iwl3945_tx_cmd_complete(struct iwl_priv 
+> > *priv,
+> >     int cmd_index;
+> >     struct iwl_cmd *cmd;
+> > 
+> > -    BUG_ON(txq_id != IWL_CMD_QUEUE_NUM);
+> > +    if (WARN(txq_id != IWL_CMD_QUEUE_NUM,
+> > +         "wrong command queue %d, sequence 0x%X readp=%d writep=%d\n",
+> > +          txq_id, sequence,
+> > +          priv->txq[IWL_CMD_QUEUE_NUM].q.read_ptr,
+> > +          priv->txq[IWL_CMD_QUEUE_NUM].q.write_ptr)) {
+> > +        iwl_print_hex_dump(priv, IWL_DL_INFO , rxb, 32);
+> > +        return;
+> > +    }
+> > 
+> >     cmd_index = get_cmd_index(&priv->txq[IWL_CMD_QUEUE_NUM].q, index, huge);
+> >     cmd = priv->txq[IWL_CMD_QUEUE_NUM].cmd[cmd_index];
 > 
-> I don't think this will print anything, the rate won't be 32, it's rather
-> too high. Could you apply also the appended debug one?
-> 
+> New log attached.  Only the above patch was applied to the previous code base.
+It seems you can easily reproduce this bug, but unfortunately we can't.
+Would you be able to run a code bisection on this one ? Can you try if commit
+cbd8b90ffd8a321ffb2a705733729f0d5ebb20f9 is working for you ? If that's so,
+that should let you bisect quite quickly.
 
-I will apply both the patches and try it out again. As I mentioned
-earlier, I am not sure how to reproduce the WARN_ON. I will get back to
-you in about a day or two.
+Thanks in advance for your time.
 
-> ---
->  net/mac80211/rx.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 7175ae8..5e17e57 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -2230,8 +2230,10 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
->  		 * MCS aware. */
->  		rate = &sband->bitrates[sband->n_bitrates - 1];
->  	} else {
-> -		if (WARN_ON(status->rate_idx < 0 ||
-> -			    status->rate_idx >= sband->n_bitrates))
-> +		if (WARN(status->rate_idx < 0 ||
-> +			    status->rate_idx >= sband->n_bitrates,
-> +			    "RATE=%u, BAND=%x\n", status->rate_idx,
-> +			    sband->n_bitrates))
->  			return;
->  		rate = &sband->bitrates[status->rate_idx];
->  	}
-> -- 
-> 1.6.0.6
+Cheers,
+Samuel.
 
 -- 
-regards,
-Dhaval
+Intel Open Source Technology Centre
+http://oss.intel.com/
