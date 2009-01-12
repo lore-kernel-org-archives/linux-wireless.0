@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:38078 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695AbZAKSy4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2009 13:54:56 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [Bug #12260] Regression due to commit 2b80848e3818fb1c (p54usb: support LM87 firmwares)
-Date: Sun, 11 Jan 2009 19:54:35 +0100
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Christian Lamparter <chunkeey@web.de>,
-	Linux wireless <linux-wireless@vger.kernel.org>
-References: <nn3SOLVZ28H.A.bY.CafaJB@chimera> <nHCfeC0YLrE.A.EpC.8afaJB@chimera> <496A1246.6070007@lwfinger.net>
-In-Reply-To: <496A1246.6070007@lwfinger.net>
+Received: from mail.openmoko.org ([88.198.124.205]:52306 "EHLO
+	mail.openmoko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753880AbZALVN3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2009 16:13:29 -0500
+Date: Mon, 12 Jan 2009 19:13:13 -0200
+From: Werner Almesberger <werner@openmoko.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rfkill: how murderous can it be ?
+Message-ID: <20090112211313.GK13290@almesberger.net> (sfid-20090112_221335_712234_92EE3EEA)
+References: <20090112191514.GA22112@almesberger.net> <1231788884.28887.4.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901111954.36221.rjw@sisk.pl> (sfid-20090111_195502_403299_36E738FD)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231788884.28887.4.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 11 January 2009, Larry Finger wrote:
-> Rafael J. Wysocki wrote:
-> > This message has been generated automatically as a part of a report
-> > of regressions introduced between 2.6.27 and 2.6.28.
-> > 
-> > The following bug entry is on the current list of known regressions
-> > introduced between 2.6.27 and 2.6.28.  Please verify if it still should
-> > be listed and let me know (either way).
-> > 
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12260
-> > Subject		: Regression due to commit 2b80848e3818fb1c (p54usb: support LM87 firmwares)
-> > Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
-> > Date		: 2008-12-20 10:45 (23 days old)
-> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2b80848e3818fb1c8ccddc105b065a86c68afa9d
-> > Patch		: http://bugzilla.kernel.org/show_bug.cgi?id=12260
-> 
-> The patch has _NOT_ been applied.
+Dan Williams wrote:
+> Instead of putting a bunch of
+> complexity in the kernel and drivers that *already* has to be in
+> userspace, just punt it out to userspace where it's already done and
+> works well.
 
-Thanks for the update.
+That's the way I like things :-) Can the information user space may
+have to recover include DHCP leases and routes ? I.e., can an rfkill
+implementation choose to just restart the network interface ?
 
-Rafael
+Next: what happens while the device is rfkill'ed ? E.g., is it okay to
+just remove the interface, so any attempt to configure the interface
+while it's rfkill'ed would yield an ENODEV ?
+
+Basically, could rfkill block/unblock semantics just be equivalent to
+removal and reloading of the module containing the respective WLAN
+device driver ? (Ignoring any response time issues for now.)
+
+- Werner
