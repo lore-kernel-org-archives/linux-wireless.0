@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f10.google.com ([209.85.219.10]:50357 "EHLO
-	mail-ew0-f10.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756112AbZAYKmE (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:43287 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752414AbZALUJj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 05:42:04 -0500
-Received: by ewy3 with SMTP id 3so409508ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 02:42:01 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH] wireless-regdb: add example spec file
-Date: Sun, 25 Jan 2009 11:41:26 +0100
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1232752577-24011-1-git-send-email-lrodriguez@atheros.com> <200901241227.48939.helmut.schaa@gmail.com> <20090124203746.GB22475@tesla>
-In-Reply-To: <20090124203746.GB22475@tesla>
+	Mon, 12 Jan 2009 15:09:39 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] b43: fix "=?utf-8?q?=E2=80=98gmode=E2=80=99_may_be_used?= uninitialized" warning
+Date: Mon, 12 Jan 2009 21:09:29 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <> <1231789741-13433-1-git-send-email-linville@tuxdriver.com> <1231789741-13433-2-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1231789741-13433-2-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901251141.27669.helmut.schaa@gmail.com> (sfid-20090125_114221_601069_FCF0A682)
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200901122109.30246.mb@bu3sch.de> (sfid-20090112_210943_405590_F6056EBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 24. Januar 2009 schrieb Luis R. Rodriguez:
-> On Sat, Jan 24, 2009 at 03:27:48AM -0800, Helmut Schaa wrote:
-> > Am Samstag, 24. Januar 2009 schrieb Luis R. Rodriguez:
-> > > This is a simple example spec file which can be used
-> > > by RPM distributions. Note that the man page isn't yet
-> > > installed as it has not yet been commited.
-> > >
-> > > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > > ---
-> > 
-> > [...]
-> > 
-> > > +%install
-> > > +install -m 755 -d %buildroot/%crda_lib
-> > > +install -m 644 regulatory.bin %buildroot/%{crda_lib}/regulatory.bin
-> > 
-> > Why not make use of "make DESTDIR=%buildroot install" here?
-> 
-> Since its in the spec file you have direct control over that, what would
-> be best is to get wireless-regdb makefile to use DESTDIR and then just
-> have the spec file call make install. I sent the patch for the first part
-> already, so the spec file can be changed once that goes in.
+On Monday 12 January 2009 20:48:58 John W. Linville wrote:
+> drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_config=E2=
+=80=99:
+> drivers/net/wireless/b43/main.c:3264: warning: =E2=80=98gmode=E2=80=99=
+ may be used uninitialized
 
-Yes, I saw your patch that allows DESTDIR usage and was just wondering why
-not make use of it.
+Stupid gcc :P
 
-Thanks,
-Helmut
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+ACK
+
+> ---
+>  drivers/net/wireless/b43/main.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b=
+43/main.c
+> index 7b31a32..c788bad 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -3261,7 +3261,7 @@ static int b43_switch_band(struct b43_wl *wl, s=
+truct ieee80211_channel *chan)
+>  	struct b43_wldev *down_dev;
+>  	struct b43_wldev *d;
+>  	int err;
+> -	bool gmode;
+> +	bool uninitialized_var(gmode);
+>  	int prev_status;
+> =20
+>  	/* Find a device and PHY which supports the band. */
+
+
+
+--=20
+Greetings, Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
