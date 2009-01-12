@@ -1,126 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37489 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753528AbZA2Ilb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59056 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757238AbZALUAn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 03:41:31 -0500
-Message-Id: <20090129005809.892477504@sipsolutions.net> (sfid-20090129_094135_000978_E0F6B2A1)
-References: <20090129005450.068797016@sipsolutions.net>
-Date: Thu, 29 Jan 2009 01:55:00 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 12 Jan 2009 15:00:43 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: m.sujith@gmail.com, tomasw@gmail.com
-Subject: [RFC/RFT 10/11] mac80211: RX aggregation: clean up stop session
-Mime-Version: 1.0
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] =?utf-8?q?mac80211:=20fix=20"=E2=80=98ret=E2=80=99=20may=20be=20used=20uninitialized"=20warning?=
+Date: Mon, 12 Jan 2009 14:48:57 -0500
+Message-Id: <1231789741-13433-1-git-send-email-linville@tuxdriver.com> (sfid-20090112_210112_032060_3EE20251)
+In-Reply-To: <>
+References: <>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clean up the locking by splitting it into two functions,
-this will also enable further cleanups of stopping all
-sessions.
+net/mac80211/ht.c: In function =E2=80=98ieee80211_start_tx_ba_session=E2=
+=80=99:
+net/mac80211/ht.c:472: warning: =E2=80=98ret=E2=80=99 may be used unini=
+tialized in this function
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/agg-rx.c |   57 ++++++++++++++++++++++++++++----------------------
- 1 file changed, 32 insertions(+), 25 deletions(-)
+ net/mac80211/ht.c                |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+ delete mode 100644 arch/arm/mach-integrator/clock.h
 
---- wireless-testing.orig/net/mac80211/agg-rx.c	2009-01-27 12:03:13.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-rx.c	2009-01-27 12:04:19.000000000 +0100
-@@ -17,47 +17,32 @@
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
- 
--void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid,
--					u16 initiator, u16 reason)
-+static void __ieee80211_sta_stop_rx_ba_session(struct sta_info *sta, u16 tid,
-+					       u16 initiator, u16 reason)
- {
--	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_hw *hw = &local->hw;
--	struct sta_info *sta;
--	int ret, i;
--
--	rcu_read_lock();
--
--	sta = sta_info_get(local, ra);
--	if (!sta) {
--		rcu_read_unlock();
--		return;
--	}
-+	int i;
- 
- 	/* check if TID is in operational state */
- 	spin_lock_bh(&sta->lock);
--	if (sta->ampdu_mlme.tid_state_rx[tid]
--				!= HT_AGG_STATE_OPERATIONAL) {
-+	if (sta->ampdu_mlme.tid_state_rx[tid] != HT_AGG_STATE_OPERATIONAL) {
- 		spin_unlock_bh(&sta->lock);
--		rcu_read_unlock();
- 		return;
- 	}
-+
- 	sta->ampdu_mlme.tid_state_rx[tid] =
- 		HT_AGG_STATE_REQ_STOP_BA_MSK |
- 		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
- 	spin_unlock_bh(&sta->lock);
- 
--	/* stop HW Rx aggregation. ampdu_action existence
--	 * already verified in session init so we add the BUG_ON */
--	BUG_ON(!local->ops->ampdu_action);
--
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "Rx BA session stop requested for %pM tid %u\n",
--	       ra, tid);
-+	       sta->sta.addr, tid);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
- 
--	ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
--				       &sta->sta, tid, NULL);
--	if (ret)
-+	if (local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
-+				     &sta->sta, tid, NULL))
- 		printk(KERN_DEBUG "HW problem - can not stop rx "
- 				"aggregation for tid %d\n", tid);
- 
-@@ -67,7 +52,8 @@ void ieee80211_sta_stop_rx_ba_session(st
- 
- 	/* check if this is a self generated aggregation halt */
- 	if (initiator == WLAN_BACK_RECIPIENT || initiator == WLAN_BACK_TIMER)
--		ieee80211_send_delba(sdata, ra, tid, 0, reason);
-+		ieee80211_send_delba(sta->sdata, sta->sta.addr,
-+				     tid, 0, reason);
- 
- 	/* free the reordering buffer */
- 	for (i = 0; i < sta->ampdu_mlme.tid_rx[tid]->buf_size; i++) {
-@@ -90,6 +76,27 @@ void ieee80211_sta_stop_rx_ba_session(st
- 
- 	sta->ampdu_mlme.tid_state_rx[tid] = HT_AGG_STATE_IDLE;
- 	spin_unlock_bh(&sta->lock);
-+}
-+
-+void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid,
-+					u16 initiator, u16 reason)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+
-+	/* stop HW Rx aggregation. ampdu_action existence
-+	 * already verified in session init so we add the BUG_ON */
-+	BUG_ON(!local->ops->ampdu_action);
-+
-+	rcu_read_lock();
-+
-+	sta = sta_info_get(local, ra);
-+	if (!sta) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	__ieee80211_sta_stop_rx_ba_session(sta, tid, initiator, reason);
- 
- 	rcu_read_unlock();
- }
+diff --git a/arch/arm/mach-integrator/clock.h b/arch/arm/mach-integrato=
+r/clock.h
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 5f510a1..c5c0c52 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -469,7 +469,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_=
+hw *hw, u8 *ra, u16 tid)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	u16 start_seq_num;
+ 	u8 *state;
+-	int ret;
++	int ret =3D 0;
+=20
+ 	if ((tid >=3D STA_TID_NUM) || !(hw->flags & IEEE80211_HW_AMPDU_AGGREG=
+ATION))
+ 		return -EINVAL;
+--=20
+1.5.4.3
 
--- 
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
