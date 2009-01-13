@@ -1,239 +1,270 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.179]:53571 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752019AbZAGLB3 (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:54077 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753136AbZAMNly (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:01:29 -0500
-Received: by ik-out-1112.google.com with SMTP id c29so1748914ika.5
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 03:01:27 -0800 (PST)
-Message-ID: <2d0a357f0901070301ha31f71cma046bdc9590f0e33@mail.gmail.com> (sfid-20090107_120136_798598_E763D437)
-Date: Wed, 7 Jan 2009 12:01:27 +0100
-From: "Sedat Dilek" <sedat.dilek@googlemail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [wireless-testing] iwl3945: ErrMsgs "MAC is in deep sleep!" and "mac80211-phy0: failed to set key" and unused variables in build-log
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 13 Jan 2009 08:41:54 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH v3 06/11] ath9k: introduce platform driver for AHB bus support
+Date: Tue, 13 Jan 2009 14:40:24 +0100
+Message-Id: <1231854029-26810-7-git-send-email-juhosg@openwrt.org> (sfid-20090113_144203_032521_834E4E8B)
+In-Reply-To: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
+References: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This patch adds the platform_driver itself, and modifies the main driver
+to register it.
 
-with wireless-testing master-2009-01-06 I discovered some problems
-with iwl3945-driver.
+Changes-licensed-under: ISC
 
-[1] While unloading the driver with modprobe I got the following
-error-message "MAC is in deep sleep!":
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/Makefile |    1 +
+ drivers/net/wireless/ath9k/ahb.c    |  160 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/core.h   |    8 ++
+ drivers/net/wireless/ath9k/main.c   |   10 ++
+ 4 files changed, 179 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath9k/ahb.c
 
-# modprobe -r -v iwl3945
-rmmod /lib/modules/2.6.28-wl-gcc44/kernel/drivers/net/wireless/iwlwifi/iwl3945.ko
-rmmod /lib/modules/2.6.28-wl-gcc44/kernel/drivers/net/wireless/iwlwifi/iwlcore.ko
-rmmod /lib/modules/2.6.28-wl-gcc44/kernel/net/mac80211/mac80211.ko
-rmmod /lib/modules/2.6.28-wl-gcc44/kernel/net/rfkill/rfkill.ko
-rmmod /lib/modules/2.6.28-wl-gcc44/kernel/net/wireless/cfg80211.ko
+diff --git a/drivers/net/wireless/ath9k/Makefile b/drivers/net/wireless/ath9k/Makefile
+index af3f39b..0062958 100644
+--- a/drivers/net/wireless/ath9k/Makefile
++++ b/drivers/net/wireless/ath9k/Makefile
+@@ -12,6 +12,7 @@ ath9k-y +=	hw.o \
+ 		rc.o
+ 
+ ath9k-$(CONFIG_PCI) += pci.o
++ath9k-$(CONFIG_ATHEROS_AR71XX) += ahb.o
+ ath9k-$(CONFIG_ATH9K_DEBUG) += debug.o
+ 
+ obj-$(CONFIG_ATH9K) += ath9k.o
+diff --git a/drivers/net/wireless/ath9k/ahb.c b/drivers/net/wireless/ath9k/ahb.c
+new file mode 100644
+index 0000000..8cbd4c2
+--- /dev/null
++++ b/drivers/net/wireless/ath9k/ahb.c
+@@ -0,0 +1,160 @@
++/*
++ * Copyright (c) 2008 Atheros Communications Inc.
++ * Copyright (c) 2009 Gabor Juhos <juhosg@openwrt.org>
++ * Copyright (c) 2009 Imre Kaloz <kaloz@openwrt.org>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/nl80211.h>
++#include <linux/platform_device.h>
++#include "core.h"
++#include "reg.h"
++#include "hw.h"
++
++/* return bus cachesize in 4B word units */
++static void ath_ahb_read_cachesize(struct ath_softc *sc, int *csz)
++{
++	*csz = L1_CACHE_BYTES >> 2;
++}
++
++static void ath_ahb_cleanup(struct ath_softc *sc)
++{
++	iounmap(sc->mem);
++}
++
++static struct ath_bus_ops ath_ahb_bus_ops  = {
++	.read_cachesize = ath_ahb_read_cachesize,
++	.cleanup = ath_ahb_cleanup,
++};
++
++static int ath_ahb_probe(struct platform_device *pdev)
++{
++	void __iomem *mem;
++	struct ath_softc *sc;
++	struct ieee80211_hw *hw;
++	struct resource *res;
++	int irq;
++	int ret = 0;
++	struct ath_hal *ah;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (res == NULL) {
++		dev_err(&pdev->dev, "no memory resource found\n");
++		ret = -ENXIO;
++		goto err_out;
++	}
++
++	mem = ioremap_nocache(res->start, res->end - res->start + 1);
++	if (mem == NULL) {
++		dev_err(&pdev->dev, "ioremap failed\n");
++		ret = -ENOMEM;
++		goto err_out;
++	}
++
++	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (res == NULL) {
++		dev_err(&pdev->dev, "no IRQ resource found\n");
++		ret = -ENXIO;
++		goto err_iounmap;
++	}
++
++	irq = res->start;
++
++	hw = ieee80211_alloc_hw(sizeof(struct ath_softc), &ath9k_ops);
++	if (hw == NULL) {
++		dev_err(&pdev->dev, "no memory for ieee80211_hw\n");
++		ret = -ENOMEM;
++		goto err_iounmap;
++	}
++
++	SET_IEEE80211_DEV(hw, &pdev->dev);
++	platform_set_drvdata(pdev, hw);
++
++	sc = hw->priv;
++	sc->hw = hw;
++	sc->dev = &pdev->dev;
++	sc->mem = mem;
++	sc->bus_ops = &ath_ahb_bus_ops;
++	sc->irq = irq;
++
++	ret = ath_attach(AR5416_AR9100_DEVID, sc);
++	if (ret != 0) {
++		dev_err(&pdev->dev, "failed to attach device, err=%d\n", ret);
++		ret = -ENODEV;
++		goto err_free_hw;
++	}
++
++	ret = request_irq(irq, ath_isr, IRQF_SHARED, "ath9k", sc);
++	if (ret) {
++		dev_err(&pdev->dev, "request_irq failed, err=%d\n", ret);
++		ret = -EIO;
++		goto err_detach;
++	}
++
++	ah = sc->sc_ah;
++	printk(KERN_INFO
++	       "%s: Atheros AR%s MAC/BB Rev:%x, "
++	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
++	       wiphy_name(hw->wiphy),
++	       ath_mac_bb_name(ah->ah_macVersion),
++	       ah->ah_macRev,
++	       ath_rf_name((ah->ah_analog5GhzRev & AR_RADIO_SREV_MAJOR)),
++	       ah->ah_phyRev,
++	       (unsigned long)mem, irq);
++
++	return 0;
++
++ err_detach:
++	ath_detach(sc);
++ err_free_hw:
++	ieee80211_free_hw(hw);
++	platform_set_drvdata(pdev, NULL);
++ err_iounmap:
++	iounmap(mem);
++ err_out:
++	return ret;
++}
++
++static int ath_ahb_remove(struct platform_device *pdev)
++{
++	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
++
++	if (hw) {
++		struct ath_softc *sc = hw->priv;
++
++		ath_cleanup(sc);
++		platform_set_drvdata(pdev, NULL);
++	}
++
++	return 0;
++}
++
++static struct platform_driver ath_ahb_driver = {
++	.probe      = ath_ahb_probe,
++	.remove     = ath_ahb_remove,
++	.driver		= {
++		.name	= "ath9k",
++		.owner	= THIS_MODULE,
++	},
++};
++
++int ath_ahb_init(void)
++{
++	return platform_driver_register(&ath_ahb_driver);
++}
++
++void ath_ahb_exit(void)
++{
++	platform_driver_unregister(&ath_ahb_driver);
++}
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 1e86a9c..c5dae11 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -784,4 +784,12 @@ static inline int ath_pci_init(void) { return 0; };
+ static inline void ath_pci_exit(void) {};
+ #endif
+ 
++#ifdef CONFIG_ATHEROS_AR71XX
++int ath_ahb_init(void);
++void ath_ahb_exit(void);
++#else
++static inline int ath_ahb_init(void) { return 0; };
++static inline void ath_ahb_exit(void) {};
++#endif
++
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 6257790..7f4d1bb 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -2527,8 +2527,17 @@ static int __init ath9k_init(void)
+ 		goto err_rate_unregister;
+ 	}
+ 
++	error = ath_ahb_init();
++	if (error < 0) {
++		error = -ENODEV;
++		goto err_pci_exit;
++	}
++
+ 	return 0;
+ 
++ err_pci_exit:
++	ath_pci_exit();
++
+  err_rate_unregister:
+ 	ath_rate_control_unregister();
+  err_out:
+@@ -2538,6 +2547,7 @@ module_init(ath9k_init);
+ 
+ static void __exit ath9k_exit(void)
+ {
++	ath_ahb_exit();
+ 	ath_pci_exit();
+ 	ath_rate_control_unregister();
+ 	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
+-- 
+1.5.3.2
 
-# tail -f /var/log/kern.log
-[...]
-Jan  7 11:37:58 seduxbox kernel: wlan0: deauthenticating by local
-choice (reason=3)
-Jan  7 11:37:58 seduxbox kernel: iwl3945 0000:10:00.0: MAC is in deep sleep!
-Jan  7 11:37:58 seduxbox kernel: iwl3945 0000:10:00.0: MAC is in deep sleep!
-Jan  7 11:37:58 seduxbox kernel: iwl3945 0000:10:00.0: MAC is in deep sleep!
-[...]
-
-Q: What does this mean in general "MAC is in deep sleep!"? Has this
-something to do with power-management?
-
-[2] Loading the driver with debug-options shows problems with
-"mac80211-phy0: failed to set key":
-
-# modprobe iwl3945 debug=0x43fff
-
-# tail -f /var/log/kern.log
-[...]
-Jan  7 11:39:02 seduxbox kernel: cfg80211: Using static regulatory domain info
-Jan  7 11:39:02 seduxbox kernel: cfg80211: Regulatory domain: US
-Jan  7 11:39:02 seduxbox kernel: 	(start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp)
-Jan  7 11:39:02 seduxbox kernel: 	(2402000 KHz - 2472000 KHz @ 40000
-KHz), (600 mBi, 2700 mBm)
-Jan  7 11:39:02 seduxbox kernel: 	(5170000 KHz - 5190000 KHz @ 40000
-KHz), (600 mBi, 2300 mBm)
-Jan  7 11:39:02 seduxbox kernel: 	(5190000 KHz - 5210000 KHz @ 40000
-KHz), (600 mBi, 2300 mBm)
-Jan  7 11:39:02 seduxbox kernel: 	(5210000 KHz - 5230000 KHz @ 40000
-KHz), (600 mBi, 2300 mBm)
-Jan  7 11:39:02 seduxbox kernel: 	(5230000 KHz - 5330000 KHz @ 40000
-KHz), (600 mBi, 2300 mBm)
-Jan  7 11:39:02 seduxbox kernel: 	(5735000 KHz - 5835000 KHz @ 40000
-KHz), (600 mBi, 3000 mBm)
-Jan  7 11:39:02 seduxbox kernel: cfg80211: Calling CRDA for country: US
-Jan  7 11:39:02 seduxbox kernel: iwl3945: Intel(R) PRO/Wireless
-3945ABG/BG Network Connection driver for Linux, 1.2.26ks
-Jan  7 11:39:02 seduxbox kernel: iwl3945: Copyright(c) 2003-2008 Intel
-Corporation
-Jan  7 11:39:02 seduxbox kernel: iwl3945 0000:10:00.0: PCI INT A ->
-GSI 17 (level, low) -> IRQ 17
-Jan  7 11:39:02 seduxbox kernel: iwl3945 0000:10:00.0: setting latency
-timer to 64
-Jan  7 11:39:02 seduxbox kernel: iwl3945 0000:10:00.0: Tunable
-channels: 13 802.11bg, 23 802.11a channels
-Jan  7 11:39:02 seduxbox kernel: iwl3945 0000:10:00.0: Detected Intel
-Wireless WiFi Link 3945ABG
-Jan  7 11:39:02 seduxbox kernel: phy0: Selected rate control algorithm
-'iwl-3945-rs'
-Jan  7 11:39:02 seduxbox kernel: iwl3945 0000:10:00.0: PCI INT A ->
-GSI 17 (level, low) -> IRQ 17
-Jan  7 11:39:02 seduxbox kernel: iwl3945 0000:10:00.0: irq 1274 for MSI/MSI-X
-Jan  7 11:39:02 seduxbox kernel: iwl3945 0000:10:00.0: firmware:
-requesting iwlwifi-3945-2.ucode
-Jan  7 11:39:02 seduxbox kernel: iwl3945 0000:10:00.0: loaded firmware
-version 15.28.2.8
-Jan  7 11:39:02 seduxbox kernel: Registered led device: iwl-phy0:radio
-Jan  7 11:39:02 seduxbox kernel: Registered led device: iwl-phy0:assoc
-Jan  7 11:39:02 seduxbox kernel: Registered led device: iwl-phy0:RX
-Jan  7 11:39:02 seduxbox kernel: Registered led device: iwl-phy0:TX
-Jan  7 11:39:02 seduxbox kernel: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-Jan  7 11:39:05 seduxbox kernel: wlan0: authenticate with AP 00:04:0e:e4:00:3d
-Jan  7 11:39:05 seduxbox kernel: wlan0: authenticated
-Jan  7 11:39:05 seduxbox kernel: wlan0: associate with AP 00:04:0e:e4:00:3d
-Jan  7 11:39:05 seduxbox kernel: wlan0: RX AssocResp from
-00:04:0e:e4:00:3d (capab=0x411 status=0 aid=1)
-Jan  7 11:39:05 seduxbox kernel: wlan0: associated
-Jan  7 11:39:05 seduxbox kernel: ADDRCONF(NETDEV_CHANGE): wlan0: link
-becomes ready
-Jan  7 11:39:06 seduxbox kernel: mac80211-phy0: failed to set key (0,
-00:04:0e:e4:00:3d) to hardware (-22)
-Jan  7 11:39:06 seduxbox kernel: mac80211-phy0: failed to set key (2,
-ff:ff:ff:ff:ff:ff) to hardware (-22)
-Jan  7 11:39:16 seduxbox kernel: wlan0: no IPv6 routers present
-[...]
-
-[3] Looking into the build-log of master-2009-01-06, I still see some
-unused variables:
-
-# zgrep iwl build.log_wireless-testing_master-2009-01-06.gz
-  LD      drivers/net/wireless/iwlwifi/built-in.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl3945-base.o
-drivers/net/wireless/iwlwifi/iwl3945-base.c: In function
-'iwl3945_rx_reply_add_sta':
-drivers/net/wireless/iwlwifi/iwl3945-base.c:2759: warning: unused variable 'pkt'
-drivers/net/wireless/iwlwifi/iwl3945-base.c: In function
-'iwl3945_rx_scan_results_notif':
-drivers/net/wireless/iwlwifi/iwl3945-base.c:2914: warning: unused
-variable 'notif'
-drivers/net/wireless/iwlwifi/iwl3945-base.c: In function
-'iwl3945_rx_scan_complete_notif':
-drivers/net/wireless/iwlwifi/iwl3945-base.c:2939: warning: unused
-variable 'scan_notif'
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-3945.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-3945-rs.o
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function
-'iwl3945_rate_scale_flush_windows':
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:186: warning: unused variable 'priv'
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function
-'iwl3945_bg_rate_scale_flush':
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:219: warning: unused variable 'priv'
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function
-'iwl3945_collect_tx_data':
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: warning: unused variable 'priv'
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'rs_free_sta':
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: warning: unused variable 'priv'
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function
-'iwl3945_get_adjacent_rate':
-drivers/net/wireless/iwlwifi/iwl-3945-rs.c:559: warning: unused variable 'priv'
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-3945-led.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-rs.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-hcmd-check.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-4965.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-5000.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-core.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-eeprom.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-hcmd.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-power.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-rx.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-tx.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-sta.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-calib.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-scan.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-led.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-rfkill.o
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-spectrum.o
-  LD [M]  drivers/net/wireless/iwlwifi/iwlcore.o
-  LD [M]  drivers/net/wireless/iwlwifi/iwlagn.o
-  LD [M]  drivers/net/wireless/iwlwifi/iwl3945.o
-  CC      drivers/net/wireless/iwlwifi/iwl3945.mod.o
-  CC      drivers/net/wireless/iwlwifi/iwlagn.mod.o
-  CC      drivers/net/wireless/iwlwifi/iwlcore.mod.o
-  LD [M]  drivers/net/wireless/iwlwifi/iwl3945.ko
-  LD [M]  drivers/net/wireless/iwlwifi/iwlagn.ko
-  LD [M]  drivers/net/wireless/iwlwifi/iwlcore.ko
-  INSTALL drivers/net/wireless/iwlwifi/iwl3945.ko
-  INSTALL drivers/net/wireless/iwlwifi/iwlagn.ko
-  INSTALL drivers/net/wireless/iwlwifi/iwlcore.ko
-
-Are these issues known? gcc-4.4-related?
-
-My Internet access is so far OK (see below).
-Just reporting - If there is a fix let me know.
-
-Kind Regards,
-Sedat
-
------ BEGIN Additional Informations -----
-
-# dpkg -l | grep linux-image | grep 2.6.28 | grep "\-wl-"
-ii  linux-image-2.6.28-wl-gcc44
-2.6.28+wl~git20090106.10bc721~dileX+1            Linux kernel binary
-image for version 2.6.28-wl-gcc44
-
-# dpkg -l | grep gcc-snapshot
-ii  gcc-snapshot                                          20081213-1
-                                    A SNAPSHOT of the GNU Compiler
-Collection
-
-# /usr/lib/gcc-snapshot/bin/gcc --version
-gcc (Debian 20081213-1) 4.4.0 20081212 (experimental) [trunk revision 142725]
-Copyright (C) 2008 Free Software Foundation, Inc.
-This is free software; see the source for copying conditions.  There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-# dpkg -l | grep binutils
-ii  binutils                                              2.19-1~exp2
-                                    The GNU assembler, linker and
-binary utilities
-
-# /usr/bin/ld --version
-GNU ld (GNU Binutils for Debian) 2.19
-Copyright 2007 Free Software Foundation, Inc.
-This program is free software; you may redistribute it under the terms of
-the GNU General Public License version 3 or (at your option) a later version.
-This program has absolutely no warranty.
-
-# /usr/bin/as --version
-GNU assembler (GNU Binutils for Debian) 2.19
-Copyright 2007 Free Software Foundation, Inc.
-This program is free software; you may redistribute it under the terms of
-the GNU General Public License version 3 or later.
-This program has absolutely no warranty.
-This assembler was configured for a target of `i486-linux-gnu'.
-
-# dpkg -l | grep wpa
-ii  wpagui
-0.6.6-1+c0.sidux.2                               graphical user
-interface for wpa_supplicant
-ii  wpasupplicant
-0.6.6-1+c0.sidux.2                               client support for
-WPA and WPA2 (IEEE 802.11i)
-
-# iwconfig wlan0
-wlan0     IEEE 802.11abg  Mode:Managed  Frequency:2.432 GHz
-          Access Point: 00:04:0E:E4:00:3D   Bit Rate=1 Mb/s   Tx-Power=15 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Encryption key:mySecretEncKey [3]   Security mode:open
-          Power Management:off
-          Link Quality=80/100  Signal level:-54 dBm  Noise level=-127 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
------ END Additional Informations -----
