@@ -1,41 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:36359 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762880AbZANQsx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 11:48:53 -0500
-Subject: Re: Marvell 88w8385 Support
-From: Dan Williams <dcbw@redhat.com>
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:54084 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754022AbZAMNl4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 08:41:56 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: tsr <tsr.offentlig@tsr.se>, linux-wireless@vger.kernel.org
-In-Reply-To: <20090113145213.GA3623@tuxdriver.com>
-References: <496C8468.4060101@tsr.se>  <20090113145213.GA3623@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 14 Jan 2009 11:47:34 -0500
-Message-Id: <1231951654.14909.22.camel@localhost.localdomain> (sfid-20090114_174858_058911_F49AD2FF)
-Mime-Version: 1.0
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3 00/11] ath9k: add preliminary support for the AR913x SoCs
+Date: Tue, 13 Jan 2009 14:40:18 +0100
+Message-Id: <1231854029-26810-1-git-send-email-juhosg@openwrt.org> (sfid-20090113_144209_501413_40CB3E40)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-01-13 at 09:52 -0500, John W. Linville wrote:
-> On Tue, Jan 13, 2009 at 01:09:12PM +0100, tsr wrote:
-> > Hi,
-> >
-> > I have a FSG-3 that includes a Marvell 88w8385 card. I wonder if there  
-> > is support for it in recent kernels. According to  
-> > http://marc.info/?l=linux-wireless&m=123178916308198&w=2 (search for  
-> > 8385) there seems to be support but I don't want to start messing around  
-> > with kernels and stuff without being sure.
-> 
-> That driver is for SDIO hardware.  It looks like your FSG-3 has
-> mini-PCI?  Either way, we don't have a driver merged yet that would
-> cover your hardware.
+This patch set introduces preliminary support for the Atheros' AR9130/AR9132
+SoCs built-in WMAC device. Tested with compat-wireless-2009-01-12 and 2.6.27.10 
+kernel on the following devices:
+  * Atheros AP83-050 reference board (AR9132 SoC, AR9106 RF)
+  * TRENDnet TEW-632BRP router (AR9130 SoC, AR9102 RF)
+  * Mikrotik RB433 board (AR7161 SoC) + AR5416 based miniPCI card
 
-Looks like it's a CB35, which is actually an 88w8335 MiniPCI card.
-Would be supported by the mwl8k driver ideally.  I've started on trying
-to add support to mwl8k for the 8335 parts, but we'll need to split the
-driver so that we can create IO hooks for the different parts.  It'll be
-a bit, but we'll get there.
+Changes since v2:
+  * parentheses around RTC register's names has been removed
+  * rebased against master-2009-01-12 of wireless-testing
 
-Dan
+Changes since v1:
+  * enabling support of the AR9100 has been moved to the end of the series
+  * bus specific cleanup routine has been rewritten
+  * PCI code converted to use 'softc.irq' as well
+  * setup of 'hw->flags' and 'hw->wiphy->interface_modes' has been removed 
+    from ath_ahb_probe()
+  * unregistering of the ath_ahb_diver has been fixed
 
+Changes since RFC:
+  * bus specific DMA routines removed
+  * bus specific register access routines removed
+  * irq value is stored in softc
+  * rebased against master-2009-01-06 of wireless-testing
+  
+11 patches will follow as replies:
 
+Gabor Juhos (11):
+      ath9k: convert to struct device
+      ath9k: convert to use bus-agnostic DMA routines
+      ath9k: introduce bus specific cache size routine
+      ath9k: introduce bus specific cleanup routine
+      ath9k: move PCI code into separate file
+      ath9k: introduce platform driver for AHB bus support
+      ath9k: get EEPROM contents from platform data on AHB bus
+      ath9k: remove (u16) casts from rtc register access
+      ath9k: fix ar5416Addac_9100 values
+      ath9k: fix null pointer dereference in ani monitor code
+      ath9k: enable support for AR9100
+
+ drivers/net/wireless/ath9k/Makefile   |    2 
+ drivers/net/wireless/ath9k/ahb.c      |  187 +++++++++++++++++++
+ drivers/net/wireless/ath9k/ani.c      |    6 -
+ drivers/net/wireless/ath9k/beacon.c   |   28 +--
+ drivers/net/wireless/ath9k/core.h     |   47 +++++
+ drivers/net/wireless/ath9k/eeprom.c   |   51 -----
+ drivers/net/wireless/ath9k/hw.c       |   17 +-
+ drivers/net/wireless/ath9k/initvals.h |    2 
+ drivers/net/wireless/ath9k/main.c     |  326 +++++----------------------------
+ drivers/net/wireless/ath9k/pci.c      |  305 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/recv.c     |   24 +-
+ drivers/net/wireless/ath9k/reg.h      |    4 
+ drivers/net/wireless/ath9k/xmit.c     |   14 +
+ include/linux/ath9k_platform.h        |   28 +++
+ 14 files changed, 665 insertions(+), 376 deletions(-)
+ create mode 100644 drivers/net/wireless/ath9k/ahb.c
+ create mode 100644 drivers/net/wireless/ath9k/pci.c
+ create mode 100644 include/linux/ath9k_platform.h
