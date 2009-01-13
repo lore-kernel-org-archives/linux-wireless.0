@@ -1,47 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35638 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbZA2IgU (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:26847 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825AbZAMA5c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 03:36:20 -0500
-Message-Id: <20090129005808.635331339@sipsolutions.net> (sfid-20090129_093628_730790_FEFA4D8D)
-References: <20090129005450.068797016@sipsolutions.net>
-Date: Thu, 29 Jan 2009 01:54:55 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: m.sujith@gmail.com, tomasw@gmail.com
-Subject: [RFC/RFT 05/11] mac80211: hardware should not deny going back to
-	legacy
-Mime-Version: 1.0
+	Mon, 12 Jan 2009 19:57:32 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so1391703eye.37
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2009 16:57:30 -0800 (PST)
+Message-ID: <2d0a357f0901121657s1ea091b6m824e8f939be2d51d@mail.gmail.com> (sfid-20090113_015734_958163_3575D658)
+Date: Tue, 13 Jan 2009 01:57:30 +0100
+From: "Sedat Dilek" <sedat.dilek@googlemail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [master-2009-01-12] compiler-error in 'drivers/net/irda/donauboe.c'
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Doing so would be an MLME protocol violation when the peer disabled
-the aggregation session. Quick driver review indicates that there are
-error codes passed all over the drivers but cannot ever be nonzero
-except in error conditions that would indicate mac80211 bugs.
+Hi,
 
-No real changes here, since no drivers currently can return -EBUSY.
+I could not compile latest wl.git due to problems in
+'drivers/net/irda/donauboe.c'.
+A fix and description is given in [1].
+Hope this helps other people.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/agg-tx.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Regards,
+Sedat
 
---- wireless-testing.orig/net/mac80211/agg-tx.c	2009-01-27 23:10:02.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2009-01-27 23:10:04.000000000 +0100
-@@ -406,9 +406,8 @@ int ieee80211_stop_tx_ba_session(struct 
- 		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_STOP,
- 					       &sta->sta, tid, NULL);
- 
--	/* case HW denied going back to legacy */
--	if (ret) {
--		WARN_ON(ret != -EBUSY);
-+	/* HW shall not deny going back to legacy */
-+	if (WARN_ON(ret)) {
- 		*state = HT_AGG_STATE_OPERATIONAL;
- 		if (hw->ampdu_queues)
- 			ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
-
--- 
-
+[1] http://patchwork.kernel.org/patch/1791/
