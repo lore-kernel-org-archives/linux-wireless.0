@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.184]:32876 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756727AbZAORy7 (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:56649 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754265AbZAMWAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 12:54:59 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so981503rnd.17
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 09:54:58 -0800 (PST)
-Message-ID: <43e72e890901150954t4bc9a390x43a30f287b609173@mail.gmail.com> (sfid-20090115_185505_441767_793C6B31)
-Date: Thu, 15 Jan 2009 09:54:57 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless-regdb updated 2009-01-15 (was Re: wireless-regdb updated 2009-01-14)
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Helmut Schaa" <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1232031893.5839.0.camel@johannes>
+	Tue, 13 Jan 2009 17:00:16 -0500
+Received: by ewy10 with SMTP id 10so305330ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 14:00:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20090114162250.GC3854@tuxdriver.com>
-	 <200901151011.23147.helmut.schaa@gmail.com>
-	 <20090115134928.GA3241@tuxdriver.com>
-	 <1232031893.5839.0.camel@johannes>
+Date: Wed, 14 Jan 2009 00:00:13 +0200
+Message-ID: <eb3ff54b0901131400x64a4812fje2ee233c37546c1e@mail.gmail.com> (sfid-20090113_230022_885680_78F4243B)
+Subject: [PATCH] rt2x00: fix a wrong parameter for __test_and_clear_bit() in
+	rt2x00rfkill_free().
+From: Rami Rosen <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
+	IvDoorn@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2009 at 7:04 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-01-15 at 08:49 -0500, John W. Linville wrote:
->
->> > Do you plan to push a new tarball to [1]?
->
->> > [1] http://wireless.kernel.org/download/wireless-regdb/
->>
->> Probably a good idea, but I didn't put that one there.  I think that is Luis IIRC...?
->
-> I thought it was updated nightly?
+When running modprobe rt73usb, and then rmmod rt73usb, and then
+iwconfig, the wlan0 device does not disappear. When repeating this
+process again, we get a kernel Oops errors and "BUG: unable to handle
+kernel paging request..." message in the kernel log.
 
-It is -- seems it hadn't run yet, scheduled to run at 06:10 CET (its
-now 18:51 CET), I manually ran it, but also changed it to not have
-"master" prefix in the tarball releases.
+The reason for this is that there is an error in rt2x00rfkill_free(),
+which is called in the process of removing the device
+(rt2x00lib_remove_dev() in rt2x00dev.c).
+rt2x00rfkill_free() clears the RFKILL_STATE_ALLOCATED bit , which is
+bit number 1 () in rt2x00dev->flags instead of in
+rt2x00dev->rfkill_state. As a result, when checking the
+DEVICE_STATE_REGISTERED_HW bit (bit number 1 in rt2x00dev->flags) in
+rt2x00lib_remove_hw() it is **unset**, and we wrongly **don't** call
+ieee80211_unregister_hw().
 
-http://wireless.kernel.org/download/wireless-regdb/
+This patch corrects this: the parameter for __test_and_clear_bit() in
+rt2x00rfkill_free() should be &rt2x00dev->rfkill_state and not
+&rt2x00dev->flags.
 
-Additionally for those distributions packaging based on John's
-regulatory.bin I've put a regulatory.bins dir with just the
-regulatory.bin files in it. You will also find a
-latest-regulatory-info.txt which tells you the latest regulatory.bin
-file used and its SHA1 sum. latest-regulatory.bin is a symlink to this
-file. I'll set CRDA to pull this latest file upon building too by
-default.
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-  Luis
+---
+(wireless-testing).
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+index 0b089ec..735a22d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
++++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+@@ -118,7 +118,7 @@ void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
+
+ void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
+ {
+-	if (!__test_and_clear_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->flags))
++	if (!__test_and_clear_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
+ 		return;
+
+ 	input_free_polled_device(rt2x00dev->rfkill_poll_dev);
