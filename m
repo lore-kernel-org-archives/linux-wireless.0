@@ -1,117 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpo-eml01.KPNXCHANGE.COM ([213.75.38.150]:37994 "EHLO
-	cpsmtpo-eml01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757994AbZAFW0d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 17:26:33 -0500
-Message-ID: <4963D704.5030502@kpnplanet.nl> (sfid-20090106_232650_452481_1C821245)
-Date: Tue, 06 Jan 2009 23:11:16 +0100
-From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from c60.cesmail.net ([216.154.195.49]:35831 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751771AbZAMViy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 16:38:54 -0500
+Subject: Re: [PATCH v3 00/11] ath9k: add preliminary support for the AR913x
+ SoCs
+From: Pavel Roskin <proski@gnu.org>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rt2400-devel@lists.sourceforge.net"
-	<rt2400-devel@lists.sourceforge.net>
-Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
-References: <200901042021.10904.IvDoorn@gmail.com> <4963C186.2070408@kpnplanet.nl> <20090106204923.GC21980@tesla> <200901062251.28850.IvDoorn@gmail.com>
-In-Reply-To: <200901062251.28850.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
+References: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
+Content-Type: text/plain
+Date: Tue, 13 Jan 2009 16:38:51 -0500
+Message-Id: <1231882731.21706.10.camel@dv> (sfid-20090113_223859_372241_7D2B094A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/09 22:51, Ivo van Doorn wrote:
-> On Tuesday 06 January 2009, Luis R. Rodriguez wrote:
->    
->> On Tue, Jan 06, 2009 at 12:39:34PM -0800, Gertjan van Wingerde wrote:
->>      
->>> On 01/06/09 18:47, Ivo van Doorn wrote:
->>>        
->>>> On Tuesday 06 January 2009, Luis R. Rodriguez wrote:
->>>>
->>>>          
->>>>> On Tue, Jan 06, 2009 at 09:32:20AM -0800, Ivo van Doorn wrote:
->>>>>
->>>>>            
->>>>>>>>> 2. I'm still puzzled how to handle the two different values that the EEPROM has, namely one for the bg band and one for the a band. I've handled it by registering the one associated with the configured band, but that seems to be unlikely to be correct. I still haven't found a better way to handle this.
->>>>>>>>>
->>>>>>>>>                    
->>>>>>>> Because of this I hadn't looked very deep into rt61 and rt73 yet.
->>>>>>>>
->>>>>>>>
->>>>>>>>                  
->>>>>>>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
->>>>>>>>>
->>>>>>>>>                    
->>>>>>>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
->>>>>>>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
->>>>>>>>
->>>>>>>>                  
->>>>>>> Based on the documentation from the EEPROM for all devices I read that its recommended
->>>>>>> that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
->>>>>>> windows registry be used.
->>>>>>>
->>>>>>> Based on tests for the devices with only one band, do are you seeing an actual regulatory
->>>>>>> domain in the EEPROM?
->>>>>>>
->>>>>>>                
->>>>>> I have to check, but I don't think I have any hardware with valid domain values.
->>>>>>
->>>>>>
->>>>>>              
->>>>>>> To deal with the issue of having two separate EEPROM values for a regulatory domain
->>>>>>> and since the documentation indicates to not rely on it I would advise to allow users
->>>>>>> to be compliant by selecting the country they are in. wpa_supplicant has support for
->>>>>>> selecting country now, and so does iw. Eventually I see Network Manager letting users
->>>>>>> select the country. But you guys are the maintainers and developers so you will know
->>>>>>> better.
->>>>>>>
->>>>>>>                
->>>>>> Well it is fine with me,  understood from earlier discussion that it was advised that drivers
->>>>>> attempted to set the domain if they could. Hence the reason I had added reading the EEPROM
->>>>>> for domain values to the TODO list. But it is true that it is quite rare that there are valid values
->>>>>> for it. So it would be fine with me by letting the user handle it completely.
->>>>>>
->>>>>>              
->>>>> I see -- well if there are *some* cards that do have valid EEPROM values then it seems worth it
->>>>> to do the actual regulatory_hint(), for dual band cards you can probably just not support it. But
->>>>> its up to you guys. Just my advice based on the documentation I have read so far.
->>>>>
->>>>>            
->>>> Ok.
->>>>
->>>> Gertjan, do you know if there is any hardware with valid GEO data in the EEPROM?
->>>>
->>>>          
->>> As mentioned in my previous email, I do have devices that have valid GEO
->>> data in the EEPROM. So, we should be able to use that.
->>> Also, for the dual band cards, it does seem that at least the numerical
->>> values are similar for both bands (although I'm not sure that same
->>> numerical values means same regulatory domain). This is at least the
->>> case on all the cards that I own.
->>>        
->> If that's the case and since dual band cards will most likely have 2ghz support
->> why not just provide regulatory_hint() based on the 2ghz band all the time?
->>      
->
-> Sounds like the most reasonable solution to me as well.
+On Tue, 2009-01-13 at 14:40 +0100, Gabor Juhos wrote:
+> This patch set introduces preliminary support for the Atheros' AR9130/AR9132
+> SoCs built-in WMAC device. Tested with compat-wireless-2009-01-12 and 2.6.27.10 
+> kernel on the following devices:
+>   * Atheros AP83-050 reference board (AR9132 SoC, AR9106 RF)
+>   * TRENDnet TEW-632BRP router (AR9130 SoC, AR9102 RF)
+>   * Mikrotik RB433 board (AR7161 SoC) + AR5416 based miniPCI card
 
-I had a *slightly* more sophisticated model in mind: Check for dual-band 
-devices whether the EEPROM values match. If they do, provide the 
-regulatory_hint(), if they don't then just log an error, stating that 
-the EEPROM cannot make up its mind in which geography it belongs. Just 
-to prevent some unexpected behavior for devices that don't have sane 
-EEPROM values.
+I confirm that my AR5416 miniPCI is still working with this patch on top
+of yesterdays wireless-testing (master-2009-01-12).
 
-However, that is all based on the assumption that we can match the 
-numerical values of the two band geography domains. So far I haven't 
-been able to establish that, and, moreover, the a-band field allows for 
-values 0-10 where the bg-band field allows for values 0-7. So, we have 
-to start matching these values against their defined allowed channels, 
-and against the regulatory definitions, to see if we can actually match 
-the values.
+Unfortunately, patch named "ath9k: move PCI code into separate file"
+doesn't apply to the today's wireless-testing and needs to be rebased.
 
----
-Gertjan
+Current checkpatch.pl gets confused by several patches because an
+"#endif" in the unchanged part somehow causes the preprocessor stack to
+underflow:
+
+Can't use an undefined value as an ARRAY reference at
+scripts/checkpatch.pl line 453.
+
+This appears to be a bug in checkpatch.pl and should not be considered a
+problem in the patches.
+
+-- 
+Regards,
+Pavel Roskin
