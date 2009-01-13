@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:18462 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:21102 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751778AbZAGI6o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 03:58:44 -0500
-Received: from mail.atheros.com ([10.10.20.105])
+	id S1752751AbZAMUVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 15:21:08 -0500
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 00:58:44 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 12:21:08 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: simplify regulatory code
+Date: Tue, 13 Jan 2009 12:20:42 -0800
+Message-ID: <1231878042-21799-1-git-send-email-lrodriguez@atheros.com> (sfid-20090113_212112_675180_4F7695D3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18788.28161.172196.813321@gargle.gargle.HOWL> (sfid-20090107_095848_905261_3F505AC8)
-Date: Wed, 7 Jan 2009 14:25:29 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] ath9k: Fix chainmask handling bug
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The chainmasks have to be updated before setting the channel,
-since the HW reset routine uses them to set the appropriate registers.
+Now that cfg80211 has its own regulatory infrastructure we can
+condense ath9k's regulatory code considerably. We only keep data
+we need to provide our own regulatory_hint(), regulatory_set_custom_rd(),
+reg_notifier() and information necessary for calibration.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Atheros hardware supports 12 world regulatory domains, since these
+are custom we apply them through the the new regulatory_set_custom_rd().
+Although we have 12 we consolidate these into 5 structures based on
+frequency and apply a different set of flags that differentiate them
+on a case by case basis through the reg_notifier().
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath9k/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index f590fce..416b2ac 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2144,13 +2144,13 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 						    conf->ht.channel_type);
- 		}
- 
-+		ath_update_chainmask(sc, conf_is_ht(conf));
-+
- 		if (ath_set_channel(sc, &sc->sc_ah->ah_channels[pos]) < 0) {
- 			DPRINTF(sc, ATH_DBG_FATAL, "Unable to set channel\n");
- 			mutex_unlock(&sc->mutex);
- 			return -EINVAL;
- 		}
--
--		ath_update_chainmask(sc, conf_is_ht(conf));
- 	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_POWER)
--- 
-1.6.0.3
+This patch seems to be too big (135653 bytes) for linux-wireless so
+here a URL to it if you want to wget it:
 
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-01-13/0001-ath9k-simplify-regulatory-code.patch
+
+This patch should be applied once the 12 patches from my series
+"cfg80211/mac80211: fixes/enhancements for reg_notifier()" have been
+merged as it depends on a few new cfg80211 helpers from there.
+
+ drivers/net/wireless/ath9k/ath9k.h       |   41 +-
+ drivers/net/wireless/ath9k/calib.c       |   41 +-
+ drivers/net/wireless/ath9k/core.h        |    1 -
+ drivers/net/wireless/ath9k/hw.c          |   63 +-
+ drivers/net/wireless/ath9k/main.c        |  248 ++--
+ drivers/net/wireless/ath9k/regd.c        | 1164 +++++-------------
+ drivers/net/wireless/ath9k/regd.h        |  181 +---
+ drivers/net/wireless/ath9k/regd_common.h | 2058 +++++-------------------------
+ 8 files changed, 761 insertions(+), 3036 deletions(-)
