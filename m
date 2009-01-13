@@ -1,33 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:62882 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756160AbZAMX7t (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43125 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753051AbZAMTpq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 18:59:49 -0500
-Message-ID: <496D2AE4.7000808@lwfinger.net> (sfid-20090114_005957_740853_8987481F)
-Date: Tue, 13 Jan 2009 17:59:32 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 13 Jan 2009 14:45:46 -0500
+Date: Tue, 13 Jan 2009 14:43:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: darklight <darklight.xdarklight@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k: ignore the return value of
+	ath5k_hw_noise_floor_calibration
+Message-ID: <20090113194325.GE3623@tuxdriver.com> (sfid-20090113_204550_554479_DE9A4B15)
+References: <888a464d0901091721l6657e755vbfe5bae0367f6413@mail.gmail.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Warning in latest wireless-testing
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <888a464d0901091721l6657e755vbfe5bae0367f6413@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the latest pull from wireless testing, I get the following warning:
+On Sat, Jan 10, 2009 at 02:21:44AM +0100, darklight wrote:
+> hi,
+> 
+> some weeks ago Felix Fietkau posted a patch for the "ath5k phy0:
+> unsupported jumbo" warnings (see here:
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/23430 )
+> I just had the same problem - after applying Felix' patch the warnings
+> went down from 50-100 per day to 5.
+> 
+> as a quick note: I did not just apply this patch, instead I replaced
+> Linus' upstream wireless stack with the one from wireless-testing
+> (using kernel version 2.6.28)
+> 
+> I hope Felix' patch can get into Linus' kernel (mainline) so other
+> users can profit from this
 
-  CC [M]  drivers/net/wireless/b43/main.o
-drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_key=E2=
-=80=99:
-drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatch
-in conditional expression
+It is in Linus' kernel right now:
 
-Larry
+commit 8b0162a3dc5c30e862b7a73da29e32de3170f5e4
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Mon Nov 3 11:27:38 2008 +0100
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    ath5k: ignore the return value of ath5k_hw_noise_floor_calibration
+
+    Noise floor calibration occasionally fails on Atheros hardware.
+    This is not fatal and can happen if there's simply too much
+    noise on the air. Ignoring the calibration error is the right
+    thing to do here, because when the error is ignored, the hardware
+    will still work, whereas if the error causes the driver to bail out
+    of a bigger configuration function and does not configure the tx
+    queues or the IMR (as is the case in reset.c), the hw no longer
+    works properly until the next reset.
+
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+Hth!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
