@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:19504 "EHLO
-	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754810AbZAORpO (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:38384 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757823AbZAMBPa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 12:45:14 -0500
-From: Paul Moore <paul.moore@hp.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
-Date: Thu, 15 Jan 2009 12:45:05 -0500
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"SE-Linux" <selinux@tycho.nsa.gov>
-References: <496D759A.7010401@gmail.com> <200901141736.43805.paul.moore@hp.com> <496E974E.1040806@gmail.com>
-In-Reply-To: <496E974E.1040806@gmail.com>
+	Mon, 12 Jan 2009 20:15:30 -0500
+Received: by ewy10 with SMTP id 10so11821091ewy.13
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2009 17:15:29 -0800 (PST)
+Message-ID: <2d0a357f0901121715y2aedbeecs9819688f275df25c@mail.gmail.com> (sfid-20090113_021545_666131_B6CC9E15)
+Date: Tue, 13 Jan 2009 02:15:27 +0100
+From: "Sedat Dilek" <sedat.dilek@googlemail.com>
+To: "Randy Dunlap" <randy.dunlap@oracle.com>
+Subject: Re: [master-2009-01-12] compiler-error in 'drivers/net/irda/donauboe.c'
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <496BE899.7010406@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901151245.05494.paul.moore@hp.com> (sfid-20090115_184521_373418_EC3E1002)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <2d0a357f0901121657s1ea091b6m824e8f939be2d51d@mail.gmail.com>
+	 <496BE899.7010406@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 January 2009 8:54:22 pm Justin P. Mattock wrote:
-> Paul Moore wrote:
-> apologize for the slow response
-> (had to do some external activities);
+No, it's not mainline - I checked 2.6.29-rc1-git{1|2}.
+But, it is in net-2.6.git [1] if you mean that by mainline :).
 
-No problem, I've got a day job too :)
+-SD
 
-> > NOTE: the domain mapping configuration only controls how outbound
-> > network traffic is labeled on-the-wire; it "maps" the
-> > LSM/SELinux "domains" to a specific labeling protocol
-> > configuration, e.g. all apache_t traffic should be labeled with
-> > CIPSO DOI 3 while all firefox_t traffic should not be labeled at
-> > all.
+[1] irda: fix incomplete conversation to internal stats
+http://git.kernel.org/?p=linux/kernel/git/davem/net-2.6.git;a=commit;h=216c32d4407ea6951d6832773fdb3de058e12c62
 
-...
-
-> > I think what you mean to type is the following:
-> >
-> >  # netlabelctl unlbl add interface:wlan0 address:<radioadd> \
-> >        label:system_u:object_r:netlabel_peer_t:s0
-> >
-> > ... note there is no "domain" argument, that only exists
-> > for "netlabelctl map ..." commands.
-> >
-> > NOTE: if you really want to get fancy you can create new SELinux
-> > domains for each type of media and add NetLabel configurations for
-> > those new domains.  Imagine you create a new "internet_radio_t"
-> > domain/type and only allow the "netplayer_t" domain (yeah, I made
-> > that up but you get the point) access to network traffic labeled
-> > with internet_radio_t. You would then use the following command to
-> > label your incoming traffic with NetLabel:
-> >
-> >  # netlabelctl unlbl add interface:wlan0 address:<radioadd> \
-> >        label:system_u:object_r:internet_radio_t:s0
-> >
-> > NOTE: you can also skip the "interface:wlan0" argument and just
-> > use "default" instead if you want the configuration to apply to all
-> > your network interfaces; although bear in mind that the "default"
-> > configuration can be overridden by the interface specific
-> > configurations.
+On Tue, Jan 13, 2009 at 2:04 AM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
+> Sedat Dilek wrote:
+>> Hi,
+>>
+>> I could not compile latest wl.git due to problems in
+>> 'drivers/net/irda/donauboe.c'.
+>> A fix and description is given in [1].
+>> Hope this helps other people.
+>>
+>> Regards,
+>> Sedat
+>>
+>> [1] http://patchwork.kernel.org/patch/1791/
 >
-> Alright, I thought you could use the map option for unlbl.
-
-Yes, you can use configure the LSM/SELinux domain mapping to send 
-unlabeled/"unlbl" packets (the default configuration maps all outbound 
-traffic to "unlbl") but since you only really care about inbound 
-traffic you can ignore the "map" option.
-
--- 
-paul moore
-linux @ hp
+> The patch was just merged into mainline.
+>
+>
+> --
+> ~Randy
+>
