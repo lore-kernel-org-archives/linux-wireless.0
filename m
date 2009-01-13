@@ -1,157 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47194 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:19385 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754456AbZAPQhP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 11:37:15 -0500
+	id S1753967AbZAMT6d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 14:58:33 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:37:15 -0800
-Date: Fri, 16 Jan 2009 08:36:46 -0800
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 11:58:33 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 03/13] cfg80211: add wiphy_apply_custom_regulatory()
-Message-ID: <20090116163646.GG29609@tesla> (sfid-20090116_173722_645253_E8613A24)
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com> <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232097659.3854.20.camel@johannes>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/12] cfg80211: add regulatory_set_custom_rd()
+Date: Tue, 13 Jan 2009 11:57:48 -0800
+Message-ID: <1231876675-20518-6-git-send-email-lrodriguez@atheros.com> (sfid-20090113_205836_532727_36DA4906)
+In-Reply-To: <1231876675-20518-5-git-send-email-lrodriguez@atheros.com>
+References: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com>
+ <1231876675-20518-2-git-send-email-lrodriguez@atheros.com>
+ <1231876675-20518-3-git-send-email-lrodriguez@atheros.com>
+ <1231876675-20518-4-git-send-email-lrodriguez@atheros.com>
+ <1231876675-20518-5-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232097659.3854.20.camel@johannes>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2009 at 01:20:59AM -0800, Johannes Berg wrote:
-> On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
-> 
-> >  /**
-> >   * enum reg_set_by - Indicates who is trying to set the regulatory domain
-> > + * @REGDOM_SET_BY_PROBE: regulatory domain applied came prior to wiphy
-> > + * 	registration by the driver itself using some custom regulatory
-> > + * 	information.
-> 
-> This is unnecessary, I think.
+This adds regulatory_set_custom_rd() to allow drivers to apply custom
+regulatory domains to their wireless device. This is required on drivers
+that do not have a direct 1-1 mapping between a regugulatory domain and a
+country. This applies to custom "world regulatory domains" which vendors
+may use.
 
-I'll make note of it below.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/wireless.h |   20 +++++++++++++++++++-
+ net/wireless/reg.c     |   17 +++++++++++++++++
+ 2 files changed, 36 insertions(+), 1 deletions(-)
 
-> > +/**
-> > + * freq_reg_info - get regulatory information for the given frequency
-> > + * @wiphy: the wiphy for which we want to process this rule for
-> > + * @center_freq: Frequency in KHz for which we want regulatory information for
-> > + * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
-> > + * 	you can set this to 0. If this frequency is allowed we then set
-> > + * 	this value to the maximum allowed bandwidth.
-> > + * @reg_rule: the regulatory rule which we have for this frequency
-> > + *
-> > + * Use this function to get the regulatory rule for a specific frequency on
-> > + * a given wireless device. If the device has a specific regulatory domain
-> > + * it wants to follow we respect that unless a country IE has been received
-> > + * and processed already.
-> > + *
-> > + * Returns 0 if it was able to find a valid regulatory rule which does
-> > + * apply to the given center_freq otherwise it returns non-zero. It will
-> > + * also return -ERANGE if we determine the given center_freq does not even have
-> > + * a regulatory rule for a frequency range in the center_freq's band. See
-> > + * freq_in_rule_band() for our current definition of a band -- this is purely
-> > + * subjective and right now its 802.11 specific.
-> > + */
-> > +static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
-> > +			 const struct ieee80211_reg_rule **reg_rule)
-> > +{
-> > +	return freq_reg_info_regd(wiphy, center_freq,
-> > +		bandwidth, reg_rule, NULL);
-> > +}
-> 
-> Are you not using this or am I just not seeing the user?
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index ea89958..16f020a 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -183,7 +183,8 @@ struct ieee80211_supported_band {
+  * @class_dev: the class device representing /sys/class/ieee80211/<wiphy-name>
+  * @ignore_country_ies: tells us the wireless core should ignore country IEs
+  *	received by itself or by other wireless drivers. This will only
+- *	apply if the driver has provided a regulatory_hint()
++ *	apply if the driver has provided its own regulatory domain via
++ *	regulatory_hint() or regulatory_set_custom_rd()
+  * @fw_handles_regulatory: tells us the firmware for this device
+  * 	has its own regulatory solution and cannot identify the
+  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
+@@ -405,4 +406,21 @@ extern void regulatory_hint(struct wiphy *wiphy, const char *alpha2);
+ extern void regulatory_hint_11d(struct wiphy *wiphy,
+ 				u8 *country_ie,
+ 				u8 country_ie_len);
++
++/**
++ * regulatory_set_custom_rd - apply a custom driver regulatory domain
++ * @wiphy: the wireless device we want to process the regulatory domain on
++ * @custom_regd: the custom regulatory domain to use for this wiphy
++ *
++ * Drivers can sometimes have custom regulatory domains which do not apply
++ * to a specific country. Drivers can use this to apply such custom regulatory
++ * domains. The custom regulatory domain will be copied into a new wiphy->regd
++ * for internal usage within cfg80211. The driver is in charge of freeing
++ * the passed regulatory domain if created using kmalloc(). This can be called
++ * after the wiphy has been registered with cfg80211.
++ */
++extern int regulatory_set_custom_rd(
++	struct wiphy *wiphy,
++	const struct ieee80211_regdomain *custom_regd);
++
+ #endif /* __NET_WIRELESS_H */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 127bec2..b05df36 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1003,6 +1003,23 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
+ 	return 0;
+ }
+ 
++int regulatory_set_custom_rd(struct wiphy *wiphy,
++			       const struct ieee80211_regdomain *custom_regd)
++{
++	int r = 0;
++	mutex_lock(&cfg80211_drv_mutex);
++	r = reg_copy_regd(&wiphy->regd, custom_regd);
++	if (r)
++		goto unlock;
++	regd_update_regulatory(wiphy);
++	if (wiphy->reg_notifier)
++		wiphy->reg_notifier(wiphy, REGDOM_SET_BY_DRIVER);
++unlock:
++	mutex_unlock(&cfg80211_drv_mutex);
++	return r;
++}
++EXPORT_SYMBOL(regulatory_set_custom_rd);
++
+ /* Return value which can be used by ignore_request() to indicate
+  * it has been determined we should intersect two regulatory domains */
+ #define REG_INTERSECT	1
+-- 
+1.6.1.rc3.51.g5832d
 
-Yeah -- good catch, its just cruft left over from my previous work.
-
-> > +static void handle_channel_custom(struct wiphy *wiphy,
-> > +				  enum ieee80211_band band,
-> > +				  unsigned int chan_idx,
-> > +				  const struct ieee80211_regdomain *regd)
-> > +{
-> > +	int r;
-> > +	u32 max_bandwidth = 0;
-> > +	const struct ieee80211_reg_rule *reg_rule = NULL;
-> > +	const struct ieee80211_power_rule *power_rule = NULL;
-> > +	struct ieee80211_supported_band *sband;
-> > +	struct ieee80211_channel *chan;
-> > +
-> > +	sband = wiphy->bands[band];
-> > +	BUG_ON(chan_idx >= sband->n_channels);
-> > +	chan = &sband->channels[chan_idx];
-> > +
-> > +	r = freq_reg_info_regd(wiphy, MHZ_TO_KHZ(chan->center_freq),
-> > +		&max_bandwidth, &reg_rule, regd);
-> > +
-> > +	if (r) {
-> > +		chan->flags = IEEE80211_CHAN_DISABLED;
-> > +		return;
-> > +	}
-> > +
-> > +	power_rule = &reg_rule->power_rule;
-> > +
-> > +	chan->flags |= map_regdom_flags(reg_rule->flags);
-> > +	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
-> > +	chan->max_bandwidth = KHZ_TO_MHZ(max_bandwidth);
-> > +	chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
-> > +}
-> > +
-> > +
-> >  static void handle_band(struct wiphy *wiphy, enum ieee80211_band band)
-> >  {
-> >  	unsigned int i;
-> > @@ -947,6 +989,19 @@ static void handle_band(struct wiphy *wiphy, enum ieee80211_band band)
-> >  		handle_channel(wiphy, band, i);
-> >  }
-> >  
-> > +static void handle_band_custom(struct wiphy *wiphy, enum ieee80211_band band,
-> > +			       const struct ieee80211_regdomain *regd)
-> > +{
-> > +	unsigned int i;
-> > +	struct ieee80211_supported_band *sband;
-> > +
-> > +	BUG_ON(!wiphy->bands[band]);
-> > +	sband = wiphy->bands[band];
-> > +
-> > +	for (i = 0; i < sband->n_channels; i++)
-> > +		handle_channel_custom(wiphy, band, i, regd);
-> > +}
-> > +
-> >  static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
-> >  {
-> >  	if (!last_request)
-> > @@ -977,6 +1032,20 @@ void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
-> >  		wiphy->reg_notifier(wiphy, setby);
-> >  }
-> >  
-> > +/* Used by drivers prior to wiphy registration */
-> > +void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
-> > +				   const struct ieee80211_regdomain *regd)
-> > +{
-> > +	enum ieee80211_band band;
-> > +	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-> > +		if (wiphy->bands[band])
-> > +			handle_band_custom(wiphy, band, regd);
-> > +	}
-> > +	if (wiphy->reg_notifier)
-> > +		wiphy->reg_notifier(wiphy, REGDOM_SET_BY_PROBE);
-> > +}
-> > +EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
-> 
-> Can you group all these functions together, rather than interspersing
-> them with the others?
-
-Yeah sure.
-
-> Also, I don't think calling the notifier is
-> appropriate since the driver just called this function.
-
-Calling the notifier is why we want REGDOM_SET_BY_PROBE. We also technically
-do not need to call the notifier unless we want to allow for tricks like the
-one I am using in ath9k to condense the regulatory domains to 5 based on frequency
-and to let a helper sort out the flags. Without this I believe we'd be forced to
-use 12 full blown regds.
-
-  Luis
