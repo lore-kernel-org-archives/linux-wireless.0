@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f10.google.com ([209.85.219.10]:43139 "EHLO
-	mail-ew0-f10.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747AbZAYShn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 13:37:43 -0500
-Received: by ewy3 with SMTP id 3so553622ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 10:37:40 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:19365 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752127AbZAMT6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 14:58:20 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 11:58:20 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/12] cfg80211/mac80211: fixes/enhancements for reg_notifier()
+Date: Tue, 13 Jan 2009 11:57:43 -0800
+Message-ID: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com> (sfid-20090113_205824_251428_1D313164)
 MIME-Version: 1.0
-In-Reply-To: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com>
-References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com>
-Date: Sun, 25 Jan 2009 19:37:40 +0100
-Message-ID: <14b026160901251037m43efe6efjde4a185a517ddf66@mail.gmail.com> (sfid-20090125_193749_198590_A893AB4E)
-Subject: Re: [b43] opensource firmware
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5polish@gmail.com>
-To: Lorenzo Nava <navalorenx@gmail.com>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/1/14 Lorenzo Nava <navalorenx@gmail.com>:
-> we completed the 1st version of initvals. They are available at http:=
-//www.ing.unibs.it/openfwwf
-> . Currently only binary version is available: don't worry, we will
-> publish source code as soon as possible!! This first version is a
-> "test version": please try it and let us know if everythink is ok...
->
-> Today we have also tested a new firmware version that works with WPA2=
--
-> personal (both TKIP and CCMP) and WPA2-enterprise (EAP-TTLS) (tested
-> on 4306 and 4318 PCI device). If anybody was interested please try ne=
-w
-> firmware with encryption and let us know if it works correctly, thank=
-s!
->
-> Initvals and new firmware version can be found at http://www.ing.unib=
-s.it/openfwwf
+This series contains a few fixes for cfg80211 such as another
+fix for parsing country IEs, but mostly contains work to help
+drivers build a more useful reg_notifier(). While at it we remove
+the CONFIG_WIRELESS_OLD_REGULATORY as we are now on road to 2.6.30.
 
-I belive you still need testing?
+Luis R. Rodriguez (12):
+  cfg80211: print correct intersected regulatory domain
+  cfg80211: add helper to indicate when to follow the driver regd
+  cfg80211: add option for wiphys to disregard country IEs
+  cfg80211: split wiphy_update_regulatory() in two
+  cfg80211: add regulatory_set_custom_rd()
+  cfg80211: add regdom_intersect_wiphy_regd()
+  cfg80211: allow driver read access to cfg80211_regdomain
+  cfg80211: export freq_reg_info()
+  cfg80211: Fix sanity check on 5 GHz when processing country IE
+  cfg80211: process user requests only after previous user/driver/core
+    requests
+  mac80211: allow mac80211 drivers to get to driver priv from wiphy
+  cfg80211: Remove CONFIG_WIRELESS_OLD_REGULATORY
 
-I used openfwwf-5.0.tar.gz and initvals.tar.gz for my bcm4318 card  in
-Acer Aspire 5024 (qos=3D0). Scanning works fine, connecting to WPA
-Personal network also. I can't check speed performance as I don't have
-antenna connected to my card (notebook lid just gone... I belive
-"Acer" explains that situation to you?). As for stability it's great.
-I downloaded 100MB, left notebook for 24h and then downloaded another
-50MB.
+ Documentation/feature-removal-schedule.txt |   18 --
+ include/net/mac80211.h                     |   11 +
+ include/net/wireless.h                     |   63 ++++++
+ net/mac80211/util.c                        |    9 +
+ net/wireless/Kconfig                       |   46 ++---
+ net/wireless/reg.c                         |  293 ++++++++++------------------
+ 6 files changed, 199 insertions(+), 241 deletions(-)
 
-So to sum up: I don't feel any difference between opensource and
-broardcom's firmware.
-
---=20
-Rafa=C5=82 Mi=C5=82ecki
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
