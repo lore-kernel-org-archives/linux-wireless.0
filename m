@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:41475 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751312AbZAIQNP (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:54100 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754601AbZAMNl6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 11:13:15 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Vivek Natarajan <Vivek.Natarajan@atheros.com>
-Subject: Re: multicast traffic and ath9k
-Date: Fri, 9 Jan 2009 17:13:12 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <1231346161.3545.52.camel@johannes> <1231506446.3703.18.camel@johannes> <44EE5C37ADC36343B0625A05DD408C4845A77DAF08@CHEXMB-01.global.atheros.com>
-In-Reply-To: <44EE5C37ADC36343B0625A05DD408C4845A77DAF08@CHEXMB-01.global.atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901091713.12777.chunkeey@web.de> (sfid-20090109_171319_517212_CEB001B2)
+	Tue, 13 Jan 2009 08:41:58 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH v3 10/11] ath9k: fix null pointer dereference in ani monitor code
+Date: Tue, 13 Jan 2009 14:40:28 +0100
+Message-Id: <1231854029-26810-11-git-send-email-juhosg@openwrt.org> (sfid-20090113_144213_501555_C787C4B5)
+In-Reply-To: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
+References: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 09 January 2009 14:59:25 Vivek Natarajan wrote:
-> 
-> Johannes Berg wrote:
-> 
-> > > Is the mc bit
-> > > checking done only on enabling power save? if set and mc packets are received,
-> > > how does it automatically go back to sleep and wouldn't there be any conflict
-> > > between mac80211 and the hw regarding power state since mac80211 is not aware
-> > > of the mc bit induced state change?
-> 
-> > I don't think there would be a conflict. mac80211's CONF_PS is always
-> > only "go to sleep if you can", so receiving multicast traffic would
-> > obviously imply not being able to go to sleep. When mac80211 then unsets
-> > the CONF_PS flag you'd just not go back to sleep after being awake for
-> > MC traffic.
-> 
-> How does the mac80211 know if the hw is receiving mc traffic or not and
-> unset the CONF_PS flag accordingly? Am I missing something basic here?
-> 
-> Maybe p54 (stlc45xx) has the answer for how it goes back to sleep after mc traffic.
+In 'ath9k_ani_reset' the 'ahp->ah_curani' will be initialized only
+if 'DO_ANI(ah)' true. In 'ath9k_hw_ani_monitor' we are using
+'ahp->ah_curani' unconditionally, and it will cause a NULL pointer
+dereference on AR9100.
 
-Well we have a flag to tell the firmware to do the following thing in client mode (while sleeping)
+Changes-licensed-under: ISC
 
-"If the PSM object's *_PSM_MCBC flag is set, and a beacon is received with the TIM's multicast traffic bit
-set, [...] or the LMAC stays awake until the TIM's multicast traffic bit is cleared again from the beacon".
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/ani.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-see:
-STSW45X0C LMAC API: page 24 - LM_PSM_MCBC (~ P54_PSM_MCBC)
+diff --git a/drivers/net/wireless/ath9k/ani.c b/drivers/net/wireless/ath9k/ani.c
+index 4dd0860..42197ff 100644
+--- a/drivers/net/wireless/ath9k/ani.c
++++ b/drivers/net/wireless/ath9k/ani.c
+@@ -551,6 +551,9 @@ void ath9k_hw_ani_monitor(struct ath_hal *ah,
+ 	struct ar5416AniState *aniState;
+ 	int32_t listenTime;
+ 
++	if (!DO_ANI(ah))
++		return;
++
+ 	aniState = ahp->ah_curani;
+ 	ahp->ah_stats.ast_nodestats = *stats;
+ 
+@@ -610,9 +613,6 @@ void ath9k_hw_ani_monitor(struct ath_hal *ah,
+ 		aniState->cckPhyErrCount = cckPhyErrCnt;
+ 	}
+ 
+-	if (!DO_ANI(ah))
+-		return;
+-
+ 	if (aniState->listenTime > 5 * ahp->ah_aniPeriod) {
+ 		if (aniState->ofdmPhyErrCount <= aniState->listenTime *
+ 		    aniState->ofdmTrigLow / 1000 &&
+-- 
+1.5.3.2
 
-Regards,
-	Chr
