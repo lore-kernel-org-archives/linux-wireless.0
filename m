@@ -1,84 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57322 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756410AbZAQJZ7 (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:4909 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755550AbZAMP45 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 04:25:59 -0500
-Subject: Re: [PATCH] mac80211: decrement ref count to netdev after
-	launching mesh discovery
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Brian Cavagnolo <brian@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1232161489-29528-1-git-send-email-brian@cozybit.com> (sfid-20090117_035936_492701_222DF2F9)
-References: <mesh netdev decrement>
-	 <1232161489-29528-1-git-send-email-brian@cozybit.com>
-	 (sfid-20090117_035936_492701_222DF2F9)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-do7vCdYmY8wcHJ+qoWkU"
-Date: Sat, 17 Jan 2009 10:25:56 +0100
-Message-Id: <1232184356.3668.0.camel@johannes> (sfid-20090117_102618_125068_02EA2175)
-Mime-Version: 1.0
+	Tue, 13 Jan 2009 10:56:57 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Hugh Dickins <hugh@veritas.com>
+Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>, maximlevitsky@gmail.com
+Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
+Date: Tue, 13 Jan 2009 10:56:37 -0500
+Message-Id: <20090113154204.M52697@bobcopeland.com> (sfid-20090113_165718_781479_0E852233)
+In-Reply-To: <Pine.LNX.4.64.0901131509080.9571@blonde.anvils>
+References: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils> <1231426017.922.2.camel@maxim-laptop> <Pine.LNX.4.64.0901081603410.8411@blonde.anvils> <b6c5339f0901080910x3d3b5758mae4e81411dcf1405@mail.gmail.com> <Pine.LNX.4.64.0901081740350.19523@blonde.anvils> <b6c5339f0901081041p3c9669f8ycd461b155da60f94@mail.gmail.com> <b6c5339f0901090541m1ac135bcta91bacb3f048a9ba@mail.gmail.com> <Pine.LNX.4.64.0901091400290.925@blonde.anvils> <20090110164705.GB10865@hash.localnet> <20090110201547.GA11261@hash.localnet> <Pine.LNX.4.64.0901131509080.9571@blonde.anvils>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 13 Jan 2009 15:35:29 +0000 (GMT), Hugh Dickins wrote
+> But I haven't seen any allocation failure for several days.
+> I didn't get any while trying to simplify the reproduction,
 
---=-do7vCdYmY8wcHJ+qoWkU
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ok, well here's how I reproduced it manually.  Without the patch, you 
+should see "can't alloc skbuff of size ...." followed shortly by the 
+BUG.  With the patch, you see the same error but things proceed as 
+normal.
 
-On Fri, 2009-01-16 at 19:04 -0800, Brian Cavagnolo wrote:
-> After launching mesh discovery in tx path, reference count was not being
-> decremented.  This was preventing module unload.
->=20
-> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+(I chose 60 because anything < 40 will fail in probe).
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+I'll go ahead and push this upstream then today or tomorrow; let me 
+know if you run into any problems with more testing.
+
+> > +static
+> > +struct sk_buff *ath5k_rx_skb_alloc(struct ath5k_softc *sc, dma_addr_t
+*skb_addr)
+> > +{
+> > +	struct sk_buff *skb;
+> > +	unsigned int off;
+
++    static int foo = 0; 
+
+> > +	/*
+> > +	 * Allocate buffer with headroom_needed space for the
+> > +	 * fake physical layer header at the start.
+> > +	 */
+> > +	skb = dev_alloc_skb(sc->rxbufsize + sc->cachelsz - 1);
+
++    if (++foo == 60)
++        skb = NULL;
+
+> > +
+> > +	if (!skb) {
+> > +		ATH5K_ERR(sc, "can't alloc skbuff of size %u\n",
+> > +				sc->rxbufsize + sc->cachelsz - 1);
+> > +		return NULL;
+> > +	}
 
 
-> ---
->  net/mac80211/tx.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index a7392af..d0ae7f0 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1358,8 +1358,10 @@ int ieee80211_master_start_xmit(struct sk_buff *sk=
-b, struct net_device *dev)
->  		if (is_multicast_ether_addr(hdr->addr3))
->  			memcpy(hdr->addr1, hdr->addr3, ETH_ALEN);
->  		else
-> -			if (mesh_nexthop_lookup(skb, osdata))
-> -				return  0;
-> +			if (mesh_nexthop_lookup(skb, osdata)) {
-> +				dev_put(odev);
-> +				return 0;
-> +			}
->  		if (memcmp(odev->dev_addr, hdr->addr4, ETH_ALEN) !=3D 0)
->  			IEEE80211_IFSTA_MESH_CTR_INC(&osdata->u.mesh,
->  							    fwded_frames);
+> > Changes-licensed-under: 3-Clause-BSD
+> 
+> Hmm, I haven't noticed anyone doing that before: hope you're not
+> starting a trend!  I think you'll find (Documentation/SubmittingPatches)
+> that your Signed-off-by agrees to the Developer's Certificate of Origin
+> 1.1, which would put your patch under the same open source licence(s) as
+> drivers/net/wireless/ath5k/base.c already contains - that's the usual
+> case.
 
---=-do7vCdYmY8wcHJ+qoWkU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I agree with all of the above, but the SFLC suggests we do it anyway.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+http://kerneltrap.org/Linux/Wireless_Project_Suggests_Changes-licensed-under_Tag
 
-iQIcBAABAgAGBQJJcaQhAAoJEKVg1VMiehFYurMQAJhZQ6sYnGVSbSIsJbb0fVoF
-JczpyDprx5X3OAiiONWLFFTswrRCeRKtXxodQqfnpjYNXYDuKe4GfSqTti7iqZmp
-oWIsK+lZdRiKbXHlKmAlA3fRm71bDhrhpM/HD4UMYc8dEwlGCfMJfweUL/HBV/vP
-PfkLVmZfoNqUaezn6GQczPVOhXUAMU4YlSrk6CehBB34DUUR0XWmCACod3P5zb+p
-Dhn7bfM7VOZoCGxvVgvV89ohOEl//mkft56OaPnoQRTmOF8Po1GT582lMe2JO/H2
-RQZr2BU5a0igOL0Vwr9D8sfE2PIBzNMhXv6fpOIm1JhsyNpvS0M16x5PRul5mDsc
-8J9fkYBGE1SrsRIel08KnXNsxFnVs9dHvojJQfPdIbQ9QILfb/VR0dsWTQIm4N5y
-4hTNMs3e12iCii3mwJ/oBoNHRZ5chhOF8Nqs2SbXF2UeCcvxVQgGahtKv5xwmajz
-zquN5vUeSe+7G3ResWvhPb1s5yKdS0pnaetAtSwk7CEnHZgdqJClrj8vVyjo+iQC
-ZrQiQE1M+XoQcTUzHNr5TQTfstT5Wgy46tStu377oPysr+J/tSO+n0WwUrR45V/K
-HG0DjiTRtmctIkVg+VxxqkrM6EWPXv/s9cc4dnpQuw0p52P3H53jrsKuWgX6BFq4
-kJ6KtklzBEg/phcJa5gQ
-=vgQF
------END PGP SIGNATURE-----
+-- 
+Bob Copeland %% www.bobcopeland.com
 
---=-do7vCdYmY8wcHJ+qoWkU--
 
