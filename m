@@ -1,113 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:60820 "EHLO
-	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758618AbZAQW73 (ORCPT
+Received: from mail.openmoko.org ([88.198.124.205]:34434 "EHLO
+	mail.openmoko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752381AbZAMQLs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 17:59:29 -0500
-Received: from c213-89-104-149.bredband.comhem.se ([213.89.104.149]:64229 helo=[192.168.0.142])
-	by ch-smtp02.sth.basefarm.net with esmtp (Exim 4.68)
-	(envelope-from <tsr.offentlig@tsr.se>)
-	id 1LOK8O-0006pH-8L
-	for linux-wireless@vger.kernel.org; Sat, 17 Jan 2009 23:59:26 +0100
-Message-ID: <497262C7.40105@tsr.se> (sfid-20090117_235937_074462_CA5CF617)
-Date: Sat, 17 Jan 2009 23:59:19 +0100
-From: tsr <tsr.offentlig@tsr.se>
+	Tue, 13 Jan 2009 11:11:48 -0500
+Date: Tue, 13 Jan 2009 14:11:29 -0200
+From: Werner Almesberger <werner@openmoko.org>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Hans Henry von Tresckow <hvontres@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rfkill: how murderous can it be ?
+Message-ID: <20090113161129.GB22112@almesberger.net> (sfid-20090113_171153_465406_2EA4CBD6)
+References: <20090112191514.GA22112@almesberger.net> <a7f8874a0901121131m75ffa5e0o246dee810eb29983@mail.gmail.com> <20090113131422.GA27676@khazad-dum.debian.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Marvell 88w8385 Support
-References: <496C8468.4060101@tsr.se>  <20090113145213.GA3623@tuxdriver.com>	 <1231951654.14909.22.camel@localhost.localdomain>	 <496E1D6A.10505@gmail.com>  <496E3075.6090901@tsr.se>	 <1231959472.14909.73.camel@localhost.localdomain> <1232127390.22915.9.camel@174-147-64-233.pools.spcsdns.net>
-In-Reply-To: <1232127390.22915.9.camel@174-147-64-233.pools.spcsdns.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090113131422.GA27676@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Wed, 2009-01-14 at 13:57 -0500, Dan Williams wrote:
->> On Wed, 2009-01-14 at 19:35 +0100, tsr wrote:
->>> John Daiker wrote:
->>>> On 01/14/2009 08:47 AM, Dan Williams wrote:
->>>>> On Tue, 2009-01-13 at 09:52 -0500, John W. Linville wrote:
->>>>>   
->>>>>> On Tue, Jan 13, 2009 at 01:09:12PM +0100, tsr wrote:
->>>>>>     
->>>>>>> Hi,
->>>>>>>
->>>>>>> I have a FSG-3 that includes a Marvell 88w8385 card. I wonder if there
->>>>>>> is support for it in recent kernels. According to
->>>>>>> http://marc.info/?l=linux-wireless&m=123178916308198&w=2 (search for
->>>>>>> 8385) there seems to be support but I don't want to start messing 
->>>>>>> around
->>>>>>> with kernels and stuff without being sure.
->>>>>>>        
->>>>>> That driver is for SDIO hardware.  It looks like your FSG-3 has
->>>>>> mini-PCI?  Either way, we don't have a driver merged yet that would
->>>>>> cover your hardware.
->>>>>>      
->>>>> Looks like it's a CB35, which is actually an 88w8335 MiniPCI card.
->>>>> Would be supported by the mwl8k driver ideally.  I've started on trying
->>>>> to add support to mwl8k for the 8335 parts, but we'll need to split the
->>>>> driver so that we can create IO hooks for the different parts.  It'll be
->>>>> a bit, but we'll get there.
->>>>>
->>>>> Dan
->>>>>    
->>>> Very interested in the progress of 8335 support at some point.  My 
->>>> Netgear wg311v3 is sitting on my desk... waiting for some Linux bits to 
->>>> get it running!
->>>>
->>>> I can assist in testing whenever bits become available ( officially or 
->>>> unofficially, hint, hint! :-P )
->>>>
->>>> Thanks for the hard work, and keep them bits a comin'
->>>>
->>>> JD
->>>>
->>> Thanks for the info, I've found something that is said to be a working 
->>> drivers for 'my' card in this package: 
->>> http://www.seagate.com/staticfiles/maxtor/en_us/downloads/MSSII_3.1.2.src.tgz
->>>
->>> The kernel source says it's some kind of 2.6 kernel, grepping for it I 
->>> found the highest number to be 2.6.14 so maybe it is possible to use 
->>> something from it.
->>>
->>> AFAIK it's also GPL.
->> Wow, that is the right driver...  haven't seen a driver for the 8335
->> before, but there it is, and it's GPL too.  Got the firmware too, which
->> I also haven't seen separately.
->>
->> The path forward with this is to port the support for the hardware over
->> to mwl8k since the firmware interface is almost the same.
->>
->> That said, the only reason I chose that as the path forward was that we
->> couldn't make any progress with the standalone driver, and figured that
->> Marvell's driver would actually work where mrv8k didn't.  I still think
->> it makes sense to use the same driver core for both but if that turns
->> out to be too hard, we can just do a mac80211 port for this.
+Henrique de Moraes Holschuh wrote:
+> If you kick it out of the bus (cause a full hotunplug on rfkill block,
+> and a hotplug when rfkill unblocks), it is userspace.
 > 
-> As a follow-up... the driver source contained in that tarball compiles
-> after a few trivial changes to update net80211 and hardware parts to the
-> latest kernel.  However, the firmware does not successfully load.  It
-> appears that the firmware load procedure for the MSSII driver is a
-> one-stage firmware load that probably depends on a minimal bootloader on
-> firmware of the card, or something like that.  In any case, it doesn't
-> work.
-> 
-> I spent some time porting over the firmware loading from mrv8k (which is
-> known to work), and got as far as successful boot and main firmware
-> load, but I'm not having a ton of success getting the card to actually
-> boot the main firmware.  More poking required.  If the MSSII driver can
-> actually *drive* 8335 cards, then we can use that as a reference for
-> hardware/firmware API when adding support for 8335 to mwl8k.
-> 
-> Dan
-> 
+> But what if you do it halfway?   That's what is being asked here...
 
-Ok, so both good and bad news I guess (for me the good news is that work
-is being done ;)
+If kicking it out of the bus is okay, then that's just what I'll
+do. This gives us clear and familiar semantics and avoids complex
+and fragile state preservation in the kernel.
 
-Is there anything I can do to help, with regards to testing, etc? I'm
-extremely unexperienced with kernels, but with some help I will dare to 
-compile my own.
+My concern about this was whether this wouldn't take things too
+far. E.g., if I can safely assume that user space will be there
+to take care of it.
 
-/tsr
+>From what I gather, it does indeed seem to be acceptable, even if
+it may not be ideal under all circumstances.
 
+Thanks,
+- Werner
