@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:53782 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752331AbZAWRmt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 12:42:49 -0500
-Date: Fri, 23 Jan 2009 09:40:50 -0800
-From: Greg KH <greg@kroah.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: Bob Copeland <me@bobcopeland.com>, Keir <keirlawson@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath5k mesh in 2.6.28?
-Message-ID: <20090123174050.GA12042@kroah.com> (sfid-20090123_184253_352770_662CC3C8)
-References: <e27b78a40901230530h192a8030l6905089df2a5822d@mail.gmail.com> <b6c5339f0901230717h605d2fbaibda8b720c6191abf@mail.gmail.com> <45e8e6c40901230929r6efbf19xbe2c32bef92db8e@mail.gmail.com>
+Received: from rn-out-0910.google.com ([64.233.170.188]:36053 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbZAMXAc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 18:00:32 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so242431rnd.17
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 15:00:30 -0800 (PST)
+Message-ID: <43e72e890901131500j32357b92kf57c0b12d38c9ad5@mail.gmail.com> (sfid-20090114_000036_486650_B9DC89F8)
+Date: Tue, 13 Jan 2009 15:00:30 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH 12/12] cfg80211: Remove CONFIG_WIRELESS_OLD_REGULATORY
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1231887058.3728.6.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45e8e6c40901230929r6efbf19xbe2c32bef92db8e@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+References: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com>
+	 <1231876675-20518-6-git-send-email-lrodriguez@atheros.com>
+	 <1231876675-20518-7-git-send-email-lrodriguez@atheros.com>
+	 <1231876675-20518-8-git-send-email-lrodriguez@atheros.com>
+	 <1231876675-20518-9-git-send-email-lrodriguez@atheros.com>
+	 <1231876675-20518-10-git-send-email-lrodriguez@atheros.com>
+	 <1231876675-20518-11-git-send-email-lrodriguez@atheros.com>
+	 <1231876675-20518-12-git-send-email-lrodriguez@atheros.com>
+	 <1231876675-20518-13-git-send-email-lrodriguez@atheros.com>
+	 <1231887058.3728.6.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2009 at 09:29:22AM -0800, Andrey Yurovsky wrote:
-> Sorry, looks like that's my mistake (I thought the patch had made it
-> in).  Greg -- thanks for queuing the patch.
-> 
-> For completeness, I should note that ath5k mesh is later broken by
-> "ath5k: Update PCU code" and fixed again (hopefully both in by
-> 2.6.29!) by "ath5k: Correct usage of AR5K_CFG_ADHOC"
-> 
-> Greg and Keir -- I also suggest Brian's patch, "mac80211: decrement
-> ref count to netdev after launching mesh discovery", commit
-> 05188d21d21dc8976bff13a9ca73a230eef86d40 for stable as it should apply
-> there and fixes a bug that will sometimes prevent module unload if a
-> mesh interface was active.
+On Tue, Jan 13, 2009 at 2:50 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2009-01-13 at 11:57 -0800, Luis R. Rodriguez wrote:
+>> This removal was scheduled for 2.6.29 but we decided to
+>> keep it around a bit longer. Now that we are on road to
+>> 2.6.30 lets remove it.
+>
+> Don't like this much, it's not really biting us (yet) to have this code
+> around still.
 
-Which stable kernel should this be for, .27 or .28 or both?
+It means double testing, I was going to test all the work in this
+series with this option but I figured it'd be better to move on.
 
-thanks,
-
-greg k-h
+  Luis
