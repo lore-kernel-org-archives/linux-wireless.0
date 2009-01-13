@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41314 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750897AbZAFUal (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:57709 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbZAMWqX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 15:30:41 -0500
-Date: Tue, 6 Jan 2009 15:29:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Piter PUNK <piterpunk@unitednerds.org>
-Cc: Jason Self <jason.self@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Realtek wireless 8187se
-Message-ID: <20090106202936.GF3544@tuxdriver.com> (sfid-20090106_213049_147046_66B8EFC3)
-References: <9EFEF18C-02C1-4E22-B712-9E5C582E4DEB@gmail.com> <20081216140222.GA3636@tuxdriver.com> <4957202A.5010706@unitednerds.org>
+	Tue, 13 Jan 2009 17:46:23 -0500
+Received: by ewy10 with SMTP id 10so328434ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 14:46:20 -0800 (PST)
+To: Rami Rosen <ramirose@gmail.com>
+Subject: Re: [PATCH] rt2x00: fix a wrong parameter for __test_and_clear_bit() in  rt2x00rfkill_free().
+Date: Tue, 13 Jan 2009 23:46:17 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	rt2400-devel@lists.sourceforge.net
+References: <eb3ff54b0901131400x64a4812fje2ee233c37546c1e@mail.gmail.com>
+In-Reply-To: <eb3ff54b0901131400x64a4812fje2ee233c37546c1e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4957202A.5010706@unitednerds.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901132346.18092.IvDoorn@gmail.com> (sfid-20090113_234627_818433_23EA7CD6)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 28, 2008 at 04:43:54AM -0200, Piter PUNK wrote:
-> John W. Linville wrote:
->> On Mon, Dec 15, 2008 at 06:41:01PM -0800, Jason Self wrote:
->>> On Dec 15, 2008, at 5:26 PM, "John W. Linville" 
->>> <linville@tuxdriver.com> wrote:
->>>> I have acquired an MSI Wind equipped with this device, I have
->>>> multiple variations of the vendor driver to support the hardware, and
->>>> I have a datasheet the covers at least some of the hardware involved.
->>>> I'm working on it...
->>> Why not share your work?
->>
->> What I have (which is barely anything) is on the "linville" branch
->> of wireless-testing...
->
-> Hi John,
->
-> I am using that branch on mine Positivo Mobo White (MSI Wind OEM). It
-> loads the rtl8180 module, the wlan0 device appears but nothing more
-> happens. No scans, no associations, etc.
+On Tuesday 13 January 2009, Rami Rosen wrote:
+> When running modprobe rt73usb, and then rmmod rt73usb, and then
+> iwconfig, the wlan0 device does not disappear. When repeating this
+> process again, we get a kernel Oops errors and "BUG: unable to handle
+> kernel paging request..." message in the kernel log.
+> 
+> The reason for this is that there is an error in rt2x00rfkill_free(),
+> which is called in the process of removing the device
+> (rt2x00lib_remove_dev() in rt2x00dev.c).
+> rt2x00rfkill_free() clears the RFKILL_STATE_ALLOCATED bit , which is
+> bit number 1 () in rt2x00dev->flags instead of in
+> rt2x00dev->rfkill_state. As a result, when checking the
+> DEVICE_STATE_REGISTERED_HW bit (bit number 1 in rt2x00dev->flags) in
+> rt2x00lib_remove_hw() it is **unset**, and we wrongly **don't** call
+> ieee80211_unregister_hw().
+> 
+> This patch corrects this: the parameter for __test_and_clear_bit() in
+> rt2x00rfkill_free() should be &rt2x00dev->rfkill_state and not
+> &rt2x00dev->flags.
+> 
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-There really is nothing there to activate the device, just some
-infrastructure bits.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-> I'm really lost looking the code, and vendor code is very very different
-> of kernel code (at least to my eyes), isn't an easy job to "look vendor
-> code -> adapt code to kernel". What can I do to help? Any special
-> test case? Any log? Any tip to do the un-easy job?
+> ---
+> (wireless-testing).
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+> b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+> index 0b089ec..735a22d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
+> @@ -118,7 +118,7 @@ void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
+> 
+>  void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
+>  {
+> -	if (!__test_and_clear_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->flags))
+> +	if (!__test_and_clear_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
+>  		return;
+> 
+>  	input_free_polled_device(rt2x00dev->rfkill_poll_dev);
+> 
 
-Now that we are done with the holidays, hopefully I can make some
-progress on this soon.  Until then, there isn't much for you to do...
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
