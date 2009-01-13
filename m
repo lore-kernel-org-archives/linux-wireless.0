@@ -1,82 +1,255 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55008 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751519AbZAXMMt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 07:12:49 -0500
-Message-ID: <497B05AF.5050701@hauke-m.de> (sfid-20090124_131254_983321_2F939864)
-Date: Sat, 24 Jan 2009 13:12:31 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from ey-out-2122.google.com ([74.125.78.26]:65423 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754365AbZAMVjF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 16:39:05 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so43284eye.37
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 13:39:03 -0800 (PST)
+Message-ID: <496D09F4.40209@gmail.com> (sfid-20090113_223911_097250_9A660447)
+Date: Tue, 13 Jan 2009 22:39:00 +0100
+From: Artur Skawina <art.08.09@gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Fix driver to return TX retry info for	RTL8187L
-References: <49790961.JdcKIZyYlMNFSiuO%Larry.Finger@lwfinger.net> <4979DD39.9000601@hauke-m.de> <20090123153144.GA13658@tuxdriver.com>
-In-Reply-To: <20090123153144.GA13658@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigDCAC72547602E187E081D20A"
+To: Artur Skawina <art.08.09@gmail.com>
+CC: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+References: <494698AF.4020204@gmail.com> <200901131449.41189.chunkeey@web.de> <496CC514.3030307@gmail.com> <200901131906.13096.chunkeey@web.de> <496CE55F.2080506@gmail.com>
+In-Reply-To: <496CE55F.2080506@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigDCAC72547602E187E081D20A
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Artur Skawina wrote:
+> Christian Lamparter wrote:
 
-John W. Linville wrote:
-> Just curious if you tried limiting the rate to 11Mb as Larry said
-> someone else had done?  Did that work any better?
->=20
-> John
-I did some more testing with and without the patch. With the patch it
-works when the rate is limited to 11M with pid and with minstrel
-algorithm. Without this limitation it works only with pid.
+>>> The machine has 512M, ~100M should be (usually is) free, is under constant light
+>>> load (typically <2k ints/s, 60% idle) and is running fine for weeks/months between
+>>> reboots, but locks up after only a few packets go over the hostap driven
+>>> p54usb device. I need the box to be up, that limits the number of tests i can
+>>> run, at least as long as the lockups w/o any diagnostics happen...
+>> Do keyboard-leds "flash" when it locks up, or does console respond 
+>> if you press alt-sysrq-m / alt-sysrq-w on the connected keyboard?
+> 
+> most of the times it happened there was no kbd attached. At least once
+> when it _was_ connected, sysrq was working, and i saw 0*8KB; that's why
+> i initially suspected fragmentation.
+> 
+>> ( If your box has a serial port, you can try to get the logs from there...  )
 
-Without this patch it also works with the limiting the rate to 11M with
-both rate control algorithms, but with minstrel it also works without
-limiting the rate.
+after switching from SLUB to SLAB and enabling some debugging i finally caught this:
 
-Without the patch, without limiting the rate and with minstrel iwconfig
-reports a rate of 1Mb/s, but I get 3Mb/s with wget, properly an other
-bug. With pid the rate goes up to 54Mb/s and it does not work.
+------------[ cut here ]------------
+Kernel BUG at c016a8a3 [verbose debug info unavailable]
+invalid opcode: 0000 [#1] 
+last sysfs file: /sys/devices/pci0000:00/0000:00:07.2/usb1/1-1/1-1.1/uevent
+Modules linked in: netconsole saa7134_empress saa6752hs lnbp21 s5h1420 saa7134 budget videobuf_dma_sg budget_ci budget_core saa7146 ttpci_eeprom videobuf_core tveeprom serio_raw ir_common [last unloaded: netconsole]
 
-With the patch, without limiting the rate and with minstrel iwconfig
-reports a rate of 24Mb/s and it does not work. With pid it starts with
-1Mb/s and the connection is stable. The rate is changing between 1mb/s,
-2Mb/s, 5.5Mb/s and 9Mb/s.
+Pid: 1885, comm: named Not tainted (2.6.28-rc8-00519-g90435df #42) 
+EIP: 0060:[<c016a8a3>] EFLAGS: 00210012 CPU: 0
+EIP is at cache_free_debugcheck+0x203/0x250
+EAX: dfb6c71f EBX: df803d20 ECX: dfb6c03f EDX: 00000002
+ESI: dfb6c720 EDI: 00000370 EBP: c1000000 ESP: c0669f74
+ DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+Process named (pid: 1885, ti=c0669000 task=df8443d0 task.ti=deb85000)
+Stack:
+ 00000000 df809660 d31d4528 00000003 00000000 00000002 c137c440 c060e2dc
+ c01483e2 dfb6c000 df808d38 df803d20 c069cb40 00200286 c016a911 00000000
+ 00000005 c069cb40 00000009 c01483e2 00000020 00000001 00000100 c014850f
+Call Trace:
+ [<c01483e2>] __rcu_process_callbacks+0xd2/0x1f0
+ [<c016a911>] kmem_cache_free+0x21/0x60
+ [<c01483e2>] __rcu_process_callbacks+0xd2/0x1f0
+ [<c014850f>] rcu_process_callbacks+0xf/0x20
+ [<c0127a37>] __do_softirq+0x57/0xf0
+ [<c01279e0>] __do_softirq+0x0/0xf0
+ <IRQ> <0> [<c01277e5>] irq_exit+0x45/0x70
+ [<c0112590>] smp_apic_timer_interrupt+0x40/0x70
+ [<c0103d9c>] apic_timer_interrupt+0x28/0x30
+Code: 8b 44 24 24 b9 fe ff ff ff 89 4c 90 1c f6 43 19 08 74 0e b9 6b 00 00 00 89 f2 89 d8 e8 e7 fa ff ff 83 c4 28 89 f0 5b 5e 5f 5d c3 <0f> 0b eb fe 0f 0b eb fe 8b 43 10 8d 44 06 f8 8d b6 00 00 00 00 
+EIP: [<c016a8a3>] cache_free_debugcheck+0x203/0x250 SS:ESP 0068:c0669f74
+Kernel panic - not syncing: Fatal exception in interrupt
 
-I will do more testing with pid and with this patch.
+followed after some time by lots of page alloc failures [1].
 
-I have tested with compat-wireless-2009-01-24 and reversed the patch.
+artur
 
-Hauke
-
-
---------------enigDCAC72547602E187E081D20A
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iQIcBAEBAgAGBQJJewWzAAoJEIZ0px9YPRMyyGEP/2u97Aizg1c7L3e+0jykp5m/
-HZ9H/lnJJruGeH4Uj2ckTNsSuPkfInxdYSZDIvT0l/1DOgzN45reLp0zk8iMq9Vj
-EPzBT381kjw2CEXtncY8MbOgAlFl1IfRUxp3rwhmV4T2LATkbANx1j1Y2+vYDpY3
-oRyPljRQs1YmBgWYBCQlyCp4ZcAc234UhEJQXFFez3FHYKcKQM8qr592mo9GohPf
-+tLtAyXuYYL+y9iFt5xYqAQDM7DfVu4tUPEhuz2UEwlb8QW7fv0t7kSvekQ9wXGQ
-PA4vDuf6zWmTdmBS1117XzcPw1AbAdqqjKx8lhE9SH/ZhAa9q4TFVrsgYFcTjYkQ
-POCkQVtgd8wvOm6OiFgq00pl3068Kj44Ivos6HpyciZ0uGeibnmPzdVivGSoGQv/
-QpHlOw0YXlWBTjMBYioSbxKCFYh+XWzbg81czlqztgRldYpwZJQZi11vwkIwgUAF
-DFGcaXQsuCPBoo6oJYn5gJEeB1MJFllevusk/kDkX5zsoTheNW+74+hVOE0KV4X7
-kLvCEMCJ/atoJx1q6YOSazRUOhfYeCHGECR2yTeTow6s6k4guYe44e7np8hieutA
-rEkyYqXAdXqquNdgRlF+YFTre3ZD6+pulFKkb4rrwyNnFUTBwDUMH/Y7QMQFIGBh
-b7d6/xoDtrW9hHWsNXIV
-=napd
------END PGP SIGNATURE-----
-
---------------enigDCAC72547602E187E081D20A--
+[1]:
+[...]
+__ratelimit: 1551 callbacks suppressed
+named: page allocation failure. order:0, mode:0x20
+Pid: 1885, comm: named Tainted: G      D    2.6.28-rc8-00519-g90435df #42
+Call Trace:
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+named: page allocation failure. order:0, mode:0x20
+Pid: 1885, comm: named Tainted: G      D    2.6.28-rc8-00519-g90435df #42
+Call Trace:
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c016b573>] cache_alloc_refill+0x363/0x710
+ [<c03a52c4>] __alloc_skb+0x34/0x120
+ [<c016bcc1>] kmem_cache_alloc+0xe1/0xf0
+ [<c03a52c4>] __alloc_skb+0x34/0x120
+ [<c03b8205>] find_skb+0x35/0x90
+ [<c03b840e>] netpoll_send_udp+0x2e/0x200
+ [<e33661ad>] write_msg+0x9d/0xe0 [netconsole]
+ [<e3366110>] write_msg+0x0/0xe0 [netconsole]
+ [<c0123443>] __call_console_drivers+0x43/0x50
+ [<c01238bb>] release_console_sem+0x13b/0x1c0
+ [<c0123dd7>] vprintk+0x227/0x2d0
+ [<c0123443>] __call_console_drivers+0x43/0x50
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c04c30c0>] printk+0x17/0x1f
+ [<c0105909>] print_trace_address+0x49/0x60
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c01059a4>] dump_trace+0x84/0x100
+ [<c0105fde>] show_trace+0x4e/0x60
+ [<c04c2fc1>] dump_stack+0x6e/0x73
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c016b573>] cache_alloc_refill+0x363/0x710
+ [<c03a52c4>] __alloc_skb+0x34/0x120
+ [<c03a539e>] __alloc_skb+0x10e/0x120
+ [<c016ba6e>] __kmalloc_track_caller+0x14e/0x160
+ [<c016bc53>] kmem_cache_alloc+0x73/0xf0
+ [<c03a5da9>] dev_alloc_skb+0x19/0x30
+ [<c03a52e5>] __alloc_skb+0x55/0x120
+ [<c03a5da9>] dev_alloc_skb+0x19/0x30
+ [<c02ced8e>] boomerang_rx+0x15e/0x520
+ [<c02d04cf>] boomerang_interrupt+0x13f/0x480
+ [<e109d6a9>] budget_ci_irq+0xa9/0x100 [budget_ci]
+ [<c0103d9c>] apic_timer_interrupt+0x28/0x30
+ [<c0146348>] handle_IRQ_event+0x28/0x50
+ [<c0147600>] handle_level_irq+0x0/0xb0
+ [<c014764b>] handle_level_irq+0x4b/0xb0
+ <IRQ>  [<c0103d6f>] common_interrupt+0x23/0x28
+ [<c024007b>] prio_tree_right+0xab/0x100
+ [<c02442f7>] delay_tsc+0x17/0x20
+ [<c0244298>] __const_udelay+0x18/0x20
+ [<c04c304a>] panic+0x84/0xe3
+ [<c010584c>] oops_end+0x7c/0x90
+ [<c01045d0>] do_invalid_op+0x0/0xa0
+ [<c0104651>] do_invalid_op+0x81/0xa0
+ [<c016a8a3>] cache_free_debugcheck+0x203/0x250
+ [<c011d233>] __wake_up_common+0x43/0x70
+ [<c04c4b82>] error_code+0x6a/0x70
+ [<c016a8a3>] cache_free_debugcheck+0x203/0x250
+ [<c01483e2>] __rcu_process_callbacks+0xd2/0x1f0
+ [<c016a911>] kmem_cache_free+0x21/0x60
+ [<c01483e2>] __rcu_process_callbacks+0xd2/0x1f0
+ [<c014850f>] rcu_process_callbacks+0xf/0x20
+ [<c0127a37>] __do_softirq+0x57/0xf0
+ [<c01279e0>] __do_softirq+0x0/0xf0
+ <IRQ>  [<c01277e5>] irq_exit+0x45/0x70
+ [<c0112590>] smp_apic_timer_interrupt+0x40/0x70
+ [<c0103d9c>] apic_timer_interrupt+0x28/0x30
+Mem-Info:
+DMA per-cpu:
+CPU    0: hi:    0, btch:   1 usd:   0
+Normal per-cpu:
+CPU    0: hi:  186, btch:  31 usd: 174
+Active_anon:13626 active_file:3702 inactive_anon:11682
+ inactive_file:91928 unevictable:5 dirty:48 writeback:0 unstable:0
+ free:737 slab:3377 mapped:2606 pagetables:219 bounce:0
+DMA free:2004kB min:84kB low:104kB high:124kB active_anon:24kB inactive_anon:28kB active_file:104kB inactive_file:8164kB unevictable:0kB present:15872kB pages_scanned:0 all_unreclaimable? no
+lowmem_reserve[]: 0 492 492
+Normal free:944kB min:2792kB low:3488kB high:4188kB active_anon:54480kB inactive_anon:46700kB active_file:14704kB inactive_file:359548kB unevictable:20kB present:503928kB pages_scanned:0 all_unreclaimable? no
+lowmem_reserve[]: 0 0 0
+DMA: 1*4kB 0*8kB 1*16kB 0*32kB 1*64kB 1*128kB 1*256kB 1*512kB 1*1024kB 0*2048kB 0*4096kB = 2004kB
+Normal: 0*4kB 0*8kB 1*16kB 1*32kB 0*64kB 1*128kB 1*256kB 1*512kB 0*1024kB 0*2048kB 0*4096kB = 944kB
+95760 total pagecache pages
+0 pages in swap cache
+Swap cache stats: add 0, delete 0, find 0/0
+Free swap  = 530104kB
+Total swap = 530104kB
+131070 pages RAM
+2635 pages reserved
+10978 pages shared
+121856 pages non-shared
+named: page allocation failure. order:0, mode:0x20
+Pid: 1885, comm: named Tainted: G      D    2.6.28-rc8-00519-g90435df #42
+Call Trace:
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c016b573>] cache_alloc_refill+0x363/0x710
+ [<c03a52c4>] __alloc_skb+0x34/0x120
+ [<c016bcc1>] kmem_cache_alloc+0xe1/0xf0
+ [<c03a52c4>] __alloc_skb+0x34/0x120
+ [<c03b739b>] refill_skbs+0x5b/0x70
+ [<c03b81e9>] find_skb+0x19/0x90
+ [<c0266d90>] bit_cursor+0x0/0x610
+ [<c03b840e>] netpoll_send_udp+0x2e/0x200
+ [<e33661ad>] write_msg+0x9d/0xe0 [netconsole]
+ [<e3366110>] write_msg+0x0/0xe0 [netconsole]
+ [<c0123443>] __call_console_drivers+0x43/0x50
+ [<c01238bb>] release_console_sem+0x13b/0x1c0
+ [<c0123dd7>] vprintk+0x227/0x2d0
+ [<c0123443>] __call_console_drivers+0x43/0x50
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c04c30c0>] printk+0x17/0x1f
+ [<c0105909>] print_trace_address+0x49/0x60
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c01059a4>] dump_trace+0x84/0x100
+ [<c0105fde>] show_trace+0x4e/0x60
+ [<c04c2fc1>] dump_stack+0x6e/0x73
+ [<c01505cd>] __alloc_pages_internal+0x35d/0x470
+ [<c016b573>] cache_alloc_refill+0x363/0x710
+ [<c03a52c4>] __alloc_skb+0x34/0x120
+ [<c03a539e>] __alloc_skb+0x10e/0x120
+ [<c016ba6e>] __kmalloc_track_caller+0x14e/0x160
+ [<c016bc53>] kmem_cache_alloc+0x73/0xf0
+ [<c03a5da9>] dev_alloc_skb+0x19/0x30
+ [<c03a52e5>] __alloc_skb+0x55/0x120
+ [<c03a5da9>] dev_alloc_skb+0x19/0x30
+ [<c02ced8e>] boomerang_rx+0x15e/0x520
+ [<c02d04cf>] boomerang_interrupt+0x13f/0x480
+ [<e109d6a9>] budget_ci_irq+0xa9/0x100 [budget_ci]
+ [<c0103d9c>] apic_timer_interrupt+0x28/0x30
+ [<c0146348>] handle_IRQ_event+0x28/0x50
+ [<c0147600>] handle_level_irq+0x0/0xb0
+ [<c014764b>] handle_level_irq+0x4b/0xb0
+ <IRQ>  [<c0103d6f>] common_interrupt+0x23/0x28
+ [<c024007b>] prio_tree_right+0xab/0x100
+ [<c02442f7>] delay_tsc+0x17/0x20
+ [<c0244298>] __const_udelay+0x18/0x20
+ [<c04c304a>] panic+0x84/0xe3
+ [<c010584c>] oops_end+0x7c/0x90
+ [<c01045d0>] do_invalid_op+0x0/0xa0
+ [<c0104651>] do_invalid_op+0x81/0xa0
+ [<c016a8a3>] cache_free_debugcheck+0x203/0x250
+ [<c011d233>] __wake_up_common+0x43/0x70
+ [<c04c4b82>] error_code+0x6a/0x70
+ [<c016a8a3>] cache_free_debugcheck+0x203/0x250
+ [<c01483e2>] __rcu_process_callbacks+0xd2/0x1f0
+ [<c016a911>] kmem_cache_free+0x21/0x60
+ [<c01483e2>] __rcu_process_callbacks+0xd2/0x1f0
+ [<c014850f>] rcu_process_callbacks+0xf/0x20
+ [<c0127a37>] __do_softirq+0x57/0xf0
+ [<c01279e0>] __do_softirq+0x0/0xf0
+ <IRQ>  [<c01277e5>] irq_exit+0x45/0x70
+ [<c0112590>] smp_apic_timer_interrupt+0x40/0x70
+ [<c0103d9c>] apic_timer_interrupt+0x28/0x30
+Mem-Info:
+DMA per-cpu:
+CPU    0: hi:    0, btch:   1 usd:   0
+Normal per-cpu:
+CPU    0: hi:  186, btch:  31 usd: 174
+Active_anon:13626 active_file:3702 inactive_anon:11682
+ inactive_file:91928 unevictable:5 dirty:48 writeback:0 unstable:0
+ free:737 slab:3377 mapped:2606 pagetables:219 bounce:0
+DMA free:2004kB min:84kB low:104kB high:124kB active_anon:24kB inactive_anon:28kB active_file:104kB inactive_file:8164kB unevictable:0kB present:15872kB pages_scanned:0 all_unreclaimable? no
+lowmem_reserve[]: 0 492 492
+Normal free:944kB min:2792kB low:3488kB high:4188kB active_anon:54480kB inactive_anon:46700kB active_file:14704kB inactive_file:359548kB unevictable:20kB present:503928kB pages_scanned:0 all_unreclaimable? no
+lowmem_reserve[]: 0 0 0
+DMA: 1*4kB 0*8kB 1*16kB 0*32kB 1*64kB 1*128kB 1*256kB 1*512kB 1*1024kB 0*2048kB 0*4096kB = 2004kB
+Normal: 0*4kB 0*8kB 1*16kB 1*32kB 0*64kB 1*128kB 1*256kB 1*512kB 0*1024kB 0*2048kB 0*4096kB = 944kB
+95760 total pagecache pages
+0 pages in swap cache
+Swap cache stats: add 0, delete 0, find 0/0
+Free swap  = 530104kB
+Total swap = 530104kB
+131070 pages RAM
+2635 pages reserved
+10978 pages shared
+121856 pages non-shared
+named: page allocation failure. order:0, mode:0x20
+[...]
