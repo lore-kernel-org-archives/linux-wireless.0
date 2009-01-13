@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:57151 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750755AbZAKPhy (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:60539 "EHLO
+	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752540AbZAMAyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2009 10:37:54 -0500
-Message-ID: <496A1246.6070007@lwfinger.net> (sfid-20090111_163759_531318_3218706F)
-Date: Sun, 11 Jan 2009 09:37:42 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 12 Jan 2009 19:54:06 -0500
+Date: Tue, 13 Jan 2009 00:54:01 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Werner Almesberger <werner@openmoko.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rfkill: how murderous can it be ?
+Message-ID: <20090113005401.GA7565@srcf.ucam.org> (sfid-20090113_015417_327650_2850A9C3)
+References: <20090112191514.GA22112@almesberger.net>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Christian Lamparter <chunkeey@web.de>,
-	Linux wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Bug #12260] Regression due to commit 2b80848e3818fb1c (p54usb:
- support LM87 firmwares)
-References: <nn3SOLVZ28H.A.bY.CafaJB@chimera> <nHCfeC0YLrE.A.EpC.8afaJB@chimera>
-In-Reply-To: <nHCfeC0YLrE.A.EpC.8afaJB@chimera>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090112191514.GA22112@almesberger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> This message has been generated automatically as a part of a report
-> of regressions introduced between 2.6.27 and 2.6.28.
-> 
-> The following bug entry is on the current list of known regressions
-> introduced between 2.6.27 and 2.6.28.  Please verify if it still should
-> be listed and let me know (either way).
-> 
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12260
-> Subject		: Regression due to commit 2b80848e3818fb1c (p54usb: support LM87 firmwares)
-> Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
-> Date		: 2008-12-20 10:45 (23 days old)
-> First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2b80848e3818fb1c8ccddc105b065a86c68afa9d
-> Patch		: http://bugzilla.kernel.org/show_bug.cgi?id=12260
+On Mon, Jan 12, 2009 at 05:15:14PM -0200, Werner Almesberger wrote:
 
-The patch has _NOT_ been applied.
+> Alternatively, we could just power down the whole WLAN module. That is
+> easily done and very reliable. However, MAC state (ESSID, keys, and a
+> host of other settings) is obliterated if we do this. A watchful user 
+> space (e.g., wpa_supplicant) could then restore the status quo ante.
 
-Larry
+Some platform rfkill methods will perform a logical PCI hotplug of the 
+device, without any means of notifying the driver beforehand. Since this 
+will destroy the driver structure, I think we really need to leave state 
+restoration up to userspace.
 
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
