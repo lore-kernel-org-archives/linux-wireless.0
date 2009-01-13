@@ -1,63 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56059 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756056AbZANNhe (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51741 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511AbZAMNj2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 08:37:34 -0500
-Date: Wed, 14 Jan 2009 08:33:23 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Warning in latest wireless-testing
-Message-ID: <20090114133322.GA18634@tuxdriver.com> (sfid-20090114_143741_101973_B3DEA1D2)
-References: <496D2AE4.7000808@lwfinger.net> <1231891570.28311.0.camel@johannes>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1231891570.28311.0.camel@johannes>
+	Tue, 13 Jan 2009 08:39:28 -0500
+Subject: Re: [PATCH] nl80211: New command for adding extra IE(s) into
+	management frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090113115128.GA11245@jm.kir.nu>
+References: <20090113115128.GA11245@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sfTTDJgWr6mgkoqAPiax"
+Date: Tue, 13 Jan 2009 14:38:57 +0100
+Message-Id: <1231853937.3671.28.camel@johannes> (sfid-20090113_143932_502263_50815837)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 14, 2009 at 01:06:10AM +0100, Johannes Berg wrote:
-> On Tue, 2009-01-13 at 17:59 -0600, Larry Finger wrote:
-> > In the latest pull from wireless testing, I get the following warni=
-ng:
-> >=20
-> >   CC [M]  drivers/net/wireless/b43/main.o
-> > drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_ke=
-y=E2=80=99:
-> > drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatc=
-h
-> > in conditional expression
->=20
-> That looks like a merge error:
 
-Yes, it is.
+--=-sfTTDJgWr6mgkoqAPiax
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->                 b43dbg(wl, "%s hardware based encryption for keyidx: =
-%d, "
->                        "mac: %pM\n",
->                        cmd =3D=3D SET_KEY ? "Using" : "Disabling", ke=
-y->keyidx,
->                        sta ? sta->addr : "<group key>");
->=20
-> It should be something like
->=20
-> u8 bcast[ETH_ALEN] =3D {0xff,...}
->=20
-> sta ? sta->addr : bcast
->=20
-> there.
+On Tue, 2009-01-13 at 13:51 +0200, Jouni Malinen wrote:
 
-Yes, it should.
+> +	if (params->ies) {
+> +		ies =3D kmalloc(params->ies_len, GFP_KERNEL);
+> +		if (ies =3D=3D NULL)
+> +			return -ENOMEM;
+> +		ies_len =3D params->ies_len;
+> +		memcpy(ies, params->ies, ies_len);
 
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+kmemdup? Might also make sense to not try the allocation if we're going
+to refuse it anyway, but that might be complicated to do and probably
+doesn't matter.
+
+Otherwise looks good to me.
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+johannes
+
+--=-sfTTDJgWr6mgkoqAPiax
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJbJluAAoJEKVg1VMiehFYVsQP/3IrGsGLOueQWUOqbXbMT9ab
+yiAJlGZWabwVuAx7bUbj8MAIS3ScodYYCxcelnRHRKcxp3Eagh8797//yOvEnoJi
+sVIewATwS4u2q2fCo72RnBjjIsWNLzBzieG8T3xf/jUZIbvWwJ0+2e5GY4vqAvnm
+3Hon2uqQQyZ1erzCSzwCYVbSqSNdgNtWdYuZYBAkXiQJn2BU5nLATrDleItXIX3R
+m/EpkyIJoldm3Xyw74rCLk5e2eBYn4D2Z0nKEZdyEGoo0ZmrprTlekliH9vzIxlC
+B6qs29Kp+Zd4cJmnXAMIWd9EC59guASShEh7kw7TH52SxGDGaoN9ZT4/osXro3Kk
+IL3idlpnK5ZV4tCVehDPtD3kH3JDkAmD+WIJxMdKZBi20ISr4Qi9azz6P/gU6s8V
+8RoYB2ZeTX5QU334tUb84zeJP++DiG6lf9E3KpTqfnmskZZE+XlVg4I3sZO4e+VM
+AEufQLvoecfgSJscnZAFMrvNutaNc35B9rPoiT6LMUsHVfdqoDWE4VTGp2nJ6xU+
+QplPV71gKEsnIkWxDN0P/ZsDxFIlZaujxUJd1YexJrv+OYZMIZSdCQWbT13t2q2a
+BFkD2jCe3GFT5bX5w66ScbzMqKnTWVDQKczYrgVcEmHeyOBXZ3dcBldZtexChxD2
+QWzNtrQ4APmm7IuJN5aA
+=z2uB
+-----END PGP SIGNATURE-----
+
+--=-sfTTDJgWr6mgkoqAPiax--
+
