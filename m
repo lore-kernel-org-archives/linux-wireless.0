@@ -1,64 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:19816 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751741AbZABS7S convert rfc822-to-8bit (ORCPT
+Received: from gateway04.websitewelcome.com ([67.18.144.11]:46779 "HELO
+	gateway04.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753291AbZAMX2n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 13:59:18 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2307730fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2009 10:59:15 -0800 (PST)
-Message-ID: <69e28c910901021059q5bc604afn62117fcdf937d813@mail.gmail.com> (sfid-20090102_195921_740708_5BF1EBF0)
-Date: Fri, 2 Jan 2009 19:59:15 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
-Cc: "Vasanthakumar Thiagarajan" <vasanth@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Luis.Rodriguez@atheros.com, Jouni.Malinen@atheros.com,
-	ath9k-devel@lists.ath9k.org
-In-Reply-To: <200901021956.21785.mb@bu3sch.de>
+	Tue, 13 Jan 2009 18:28:43 -0500
+Received: from 96-26-216-101.sea.clearwire-dns.net ([96.26.216.101]:36136 helo=Hydra.darkmatter.org)
+	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <Info@delphi-real-estate.com>)
+	id 1LMsGq-00086q-Hm
+	for linux-wireless@vger.kernel.org; Tue, 13 Jan 2009 17:02:04 -0600
+From: Delphi Real Estate <Info@delphi-real-estate.com>
+To: linux-wireless@vger.kernel.org
+Subject: 'N' Mode and 5GHz, Also WPA2
+Date: Tue, 13 Jan 2009 15:02:00 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1230890746-3075-1-git-send-email-vasanth@atheros.com>
-	 <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com>
-	 <200901021956.21785.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901131502.01047.Info@delphi-real-estate.com> (sfid-20090114_002847_398071_75BCF676)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 2, 2009 at 7:56 PM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Friday 02 January 2009 19:52:49 Stefanik G=E1bor wrote:
->> On Fri, Jan 2, 2009 at 11:05 AM, Vasanthakumar Thiagarajan
->> <vasanth@atheros.com> wrote:
->> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
->> > ---
->> >  drivers/net/wireless/ath9k/ath9k.h |    5 +++++
->> >  drivers/net/wireless/ath9k/hw.c    |   33 +++++++++++++++++++++++=
-++++++++++
->> >  drivers/net/wireless/ath9k/main.c  |    9 +++++++--
->> >  drivers/net/wireless/ath9k/reg.h   |   10 ++++++++++
->> >  4 files changed, 55 insertions(+), 2 deletions(-)
->> >
->> > <snip>
->>
->> Probably a NOBTCOEX modparam might be a good idea - when implementin=
-g
->> BT coexistence in b43, a lot of non-BT-aware cards failed to work
->
-> And what makes you think that atheros also ships cards with broken bt=
-coex support?
 
-We can never know what vendors will do - or does Atheros only allow
-reference card designs?
->
-> --
-> Greetings, Michael.
->
+Running the Intel 4965AGP with iwlagn driver that comes in Ubuntu kernel 2.6.27.10, and DLink DIR-825 dual-mode router.
 
+Despite extensive effort and research I have been unable to associate in 'n' mode at 5GHz.  I can associate and communicate in 'g' and 'n' mode at 2.4GHz, and in 'a' mode at 5GHz, but it simply does not work in 'n' at 5.  Has anyone been able to make this work?
 
+Does anyone know what chipset is in the DIR-825?  Should I crack it open?
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Also I am unable to associate in any mode in any band, with WPA2.  Has anyone got WPA2 working with the iwlagn driver?
+
+Best,
+
+Bill
