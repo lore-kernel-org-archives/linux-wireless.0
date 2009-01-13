@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:52788 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753046AbZARXct (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44919
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750844AbZAMFXo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 18:32:49 -0500
-Received: by ewy13 with SMTP id 13so103373ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 15:32:47 -0800 (PST)
-Message-ID: <4973BAC6.5020502@gmail.com> (sfid-20090119_003254_882567_F3D1B2CE)
-Date: Mon, 19 Jan 2009 00:27:02 +0100
-From: Artur Skawina <art.08.09@gmail.com>
-MIME-Version: 1.0
-To: Artur Skawina <art.08.09@gmail.com>
-CC: Christian Lamparter <chunkeey@web.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-References: <494698AF.4020204@gmail.com> <496FFC9F.1000907@lwfinger.net> <1232097187.3854.9.camel@johannes> <200901162138.51855.chunkeey@web.de> <497105D1.5040906@gmail.com>
-In-Reply-To: <497105D1.5040906@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 13 Jan 2009 00:23:44 -0500
+Date: Mon, 12 Jan 2009 21:23:45 -0800 (PST)
+Message-Id: <20090112.212345.259792227.davem@davemloft.net> (sfid-20090113_062352_674216_67DFA98C)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-01-12
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090112201302.GB3786@tuxdriver.com>
+References: <20090112201302.GB3786@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Artur Skawina wrote:
-> Christian Lamparter wrote:
->> On Friday 16 January 2009 10:13:07 Johannes Berg wrote:
->>> On Thu, 2009-01-15 at 21:18 -0600, Larry Finger wrote:
->>>
->>>>>>   Object 0xddec18d0:  >69< 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ikkkkkkkkkkkkkkk
->>>> I too have seen real single bit changes - in my case 6b went to 6a,
->>>> and my memory is fine. I wouldn't necessarily blame your hardware.
->>> 6b to 6a is often the result of a refcounting bug that happens to unref
->>> a value _after_ it has been freed. But that doesn't explain 6b to 69,
->>> unless you happen to have _two_ refcounting bugs. Not that I necessarily
->>> think that memory is bad
->> Well, this idiotic debug patch (kref-kernel-debug-patch) could shed some light into
->> the problem who's using a freed skb. 
-> 
-> didn't trigger anything here, just the usual:
-> 
-> BUG kmalloc-4096: Poison overwritten
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 12 Jan 2009 15:13:02 -0500
 
-I've run memtest, even swapped both ram and cpu, and symptoms stay the same, so it's
-very likely not bad hw.
+> Please let me know if there are problems!
 
-Still haven't found the corruptor, but at least i've narrowed it down a bit;
-what i'm seeing is:
+There's something funny in this tree.   In changeset
+19f0a391bf9d88307e52557ff3125b24e2519bd4 there is
+a removal of arch/arm/mach-integrator/clock.h
 
-1) an skb "S" gets allocated in p54u_rx_cb and is submitted together w/ the urb.
-2) "S" later comes back to p54u_rx_cb, where it is given to p54_rx (eventually
-   ieee80211_rx_irqsafe) and a new one is allocated.
-3) a few (~15) rx/tx packets pass.
-4) SLUB detects modified poison in what used to be S->head in (1) and (2) above;
-   usually 0x6b turns into 0x6a, but i have also seen 0x69, just a few times.
-   (the offset from skb->head to the decremented byte seems to stay the same,
-   at least during the few times i tried w/ the same kernel, last one was eg
-   684 bytes)
+I think when you installed that commit something
+automatically deleted zero length files it found,
+but that's just a guess.
 
-This is almost 100% reproducible; sometimes the machine freezes instead.
+Please fix this up so I can pull from you.
 
-artur
+Otherwise all of those changes looked fine.
