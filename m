@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19365 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752127AbZAMT6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 14:58:20 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 11:58:20 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/12] cfg80211/mac80211: fixes/enhancements for reg_notifier()
-Date: Tue, 13 Jan 2009 11:57:43 -0800
-Message-ID: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com> (sfid-20090113_205824_251428_1D313164)
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:35727 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754025AbZAMT7y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 14:59:54 -0500
+Message-ID: <496CF2B3.1000402@lwfinger.net> (sfid-20090113_210902_480524_DD2F5520)
+Date: Tue, 13 Jan 2009 13:59:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Christian Lamparter <chunkeey@web.de>
+CC: Artur Skawina <art.08.09@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+References: <494698AF.4020204@gmail.com> <200901131449.41189.chunkeey@web.de> <496CC514.3030307@gmail.com> <200901131906.13096.chunkeey@web.de>
+In-Reply-To: <200901131906.13096.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains a few fixes for cfg80211 such as another
-fix for parsing country IEs, but mostly contains work to help
-drivers build a more useful reg_notifier(). While at it we remove
-the CONFIG_WIRELESS_OLD_REGULATORY as we are now on road to 2.6.30.
+Christian Lamparter wrote:
+> well, you have a 32-bit architecture, unlike me or larry.
+> So, with a bit of luck the skbs always fitted into a single page and you never
+> had problems with memory fragmentation. 
 
-Luis R. Rodriguez (12):
-  cfg80211: print correct intersected regulatory domain
-  cfg80211: add helper to indicate when to follow the driver regd
-  cfg80211: add option for wiphys to disregard country IEs
-  cfg80211: split wiphy_update_regulatory() in two
-  cfg80211: add regulatory_set_custom_rd()
-  cfg80211: add regdom_intersect_wiphy_regd()
-  cfg80211: allow driver read access to cfg80211_regdomain
-  cfg80211: export freq_reg_info()
-  cfg80211: Fix sanity check on 5 GHz when processing country IE
-  cfg80211: process user requests only after previous user/driver/core
-    requests
-  mac80211: allow mac80211 drivers to get to driver priv from wiphy
-  cfg80211: Remove CONFIG_WIRELESS_OLD_REGULATORY
+Whether it is a 32- or 64-bit kernel, it has a 4K page size. If
+that were not true, the rx_mtu reduction would not have triggered.
 
- Documentation/feature-removal-schedule.txt |   18 --
- include/net/mac80211.h                     |   11 +
- include/net/wireless.h                     |   63 ++++++
- net/mac80211/util.c                        |    9 +
- net/wireless/Kconfig                       |   46 ++---
- net/wireless/reg.c                         |  293 ++++++++++------------------
- 6 files changed, 199 insertions(+), 241 deletions(-)
+I have additional information obtained from a kmemleak kernel. Driver
+p54usb and mac80211 do not show any memory leaks, at least in STA
+mode. I tested this by running normal traffic for about 15 minutes,
+and then rmmod'ed p54usb. If kernel leaks are the problem, then they
+are arising from hostapd. Userland memory leaks can be checked with
+valgrind.
+
+Larry
+
 
