@@ -1,121 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:58402 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754286AbZANQPx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 11:15:53 -0500
-Message-ID: <496E0FB2.407@gmail.com> (sfid-20090114_171559_361596_0D8FF4CA)
-Date: Wed, 14 Jan 2009 08:15:46 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:54274 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751082AbZAMPSJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 10:18:09 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Werner Almesberger <werner@openmoko.org>
+Subject: Re: rfkill: how murderous can it be ?
+Date: Tue, 13 Jan 2009 16:17:31 +0100
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+References: <20090112191514.GA22112@almesberger.net> <1231788884.28887.4.camel@localhost.localdomain> <20090112211313.GK13290@almesberger.net>
+In-Reply-To: <20090112211313.GK13290@almesberger.net>
 MIME-Version: 1.0
-To: Paul Moore <paul.moore@hp.com>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	SE-Linux <selinux@tycho.nsa.gov>
-Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
-References: <496D759A.7010401@gmail.com> <200901140957.09722.paul.moore@hp.com>
-In-Reply-To: <200901140957.09722.paul.moore@hp.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901131617.31618.mb@bu3sch.de> (sfid-20090113_161814_333568_7E55354C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Paul Moore wrote:
-> On Wednesday 14 January 2009 12:18:18 am Justin P. Mattock wrote:
->   
->> When using netlabelctl on a dell laptop
->> I'm able to define the addresses that I want:
->>
->> netlabelctl unlbl add interface:wlan0 address:<radiostation>
->> label:system_u:object_r:netlabel_peer_t:s0
->> netlabelctl unlbl add interface:wlan0 address:<myaddress>
->> label:system_u:object_r:netlabel_peer_t:s0
->> netlabelctl  -p unlbl accept off
->>
->> {the above was from http://paulmoore.livejournal.com/1758.html };
->>     
->
-> Hey, somebody actually reads that stuff!  I guess I'll need to be 
-> careful what I write from now on :)
->
-> Hi Justin, on a more serious note, if you are having problems with 
-> labeled networking it's probably a good idea to CC the SELinux, LSM 
-> and/or netdev lists depending on the issue as I often miss mail if it 
-> is only posted to LKML.  When in doubt you can just CC me personally 
-> (paul.moore@hp.com) and I'll add whatever list seems appropriate.
->
->   
->> (I'm able to listen to the radio station allowed, then if I choose
->> another station; if I haven't defined an address like the above,
->> mplayer just sits there.denying the unlabeled packet. that is until I
->> allow the address);
->>     
->
-> Good, that is how it should work give the configuration shown above.
->
->   
->> The problem I have is when I do the same on my macbook pro ati
->> chipset. with the ath9k module, I'm able to listen to any station,
->> search the web etc..
->> it seems netlabelctl  -p unlbl accept off makes no difference if it's
->> on or off.
->>
->> Is this built into ath9k yet, or is there something I'm missing?
->>     
->
-> That is just plain odd, there isn't really anything that is driver 
-> specific.  Can you share any more details like kernel version, 
-> netlabel_tools verion, distro, etc?  I don't have any ath9k hardware 
-> lying around to test so I would appreciate whatever additional 
-> information you can provide.
->
->   
-Hey alright.(I finally got around to  trying netlabelctl out!).
+On Monday 12 January 2009 22:13:13 Werner Almesberger wrote:
+> Dan Williams wrote:
+> > Instead of putting a bunch of
+> > complexity in the kernel and drivers that *already* has to be in
+> > userspace, just punt it out to userspace where it's already done and
+> > works well.
+> 
+> That's the way I like things :-) Can the information user space may
+> have to recover include DHCP leases and routes ? I.e., can an rfkill
+> implementation choose to just restart the network interface ?
+> 
+> Next: what happens while the device is rfkill'ed ? E.g., is it okay to
+> just remove the interface, so any attempt to configure the interface
+> while it's rfkill'ed would yield an ENODEV ?
+> 
+> Basically, could rfkill block/unblock semantics just be equivalent to
+> removal and reloading of the module containing the respective WLAN
+> device driver ? (Ignoring any response time issues for now.)
 
-The two systems I have for this are: Dell latitude x200
-running ubuntu jaunty, kernel is 2.6.29-rc1.
-with netlabel_tools_0.18 which was an rpm packaged
-that I converted to .deb.(can't remember the repository where I grabbed 
-it from);
-The wireless card for the dell is a dell 1350
-using bcmxx(b43-phy0); works great.
+No. If you are in an rfkill situation, you're not required to kill the receiver.
+(However, currently most (all?) devices kill both TX and RX).
+So I think completely killing the interface is the wrong way to go.
 
-The results when using netlabelctl with the dell is nice, i.g. like I said
-as soon as I issue netlabelctl unlbl accept off, those addresses not defined
-are simply not allowed.(the problem with the dell is I'm not seeing
-any allow rules being generated: i.g.
+And I don't think we should care about stuff above the MAC layer, too.
+If the user hits rfkill, he should _expect_ all upper layer connections
+to break (DHCP, TCP or whatever). That's a basic assumption about rfkill.
+The default timeouts will handle that just fine.
+In any way, this is nothing the kernel has to care about. It's userspace business, if any.
 
-allow netlabel_peer_t netif_t:netif ingress;
-allow netlabel_peer_t node_t:node recvfrom;
-allow unlabeled_t netif_t:netif ingress;
-allow unlabeled_t node_t:node recvfrom;
-
-The next is a macbookpro ati chipset the kernel is 2.6.29-rc1
-the o.s. is ubuntu jaunty, the netlabel_tools is the same as above.
-the only results I see out of this is the avc's it's generating
-(the allow rules above are from the macbook);
-some reason the dell doesn't generate any avc's,
-which makes me wonder is this a module issue.
-
-Also I've gone through thinking, well maybe this is avc's driven,
-i.g. each address once added by netlabelctl receives a certain allow rule
-(like the allow rules above),
-if not either no allow rule is given to it,resulting in a denial you 
-can't see in dmesg,
-or a denial that just won't be allowed by checkpolicy.
-So after seeing if this was the case I was left with  an address defined by
-netlabel(allowed) and defined the allow rules that it had created.
-unfortunately after all of that I still was able to turn on another radio
-station  that had  no  address  in netlabelctl's  unlbl database.(and no 
-allow rule
-with SELinux);
-leading me to believe that the netlabel area or driver isn't working
-properly. or just told to not enforce the netlabel accept off option.
-
-As for the list, I have linux-wireless in my address book(not sure which 
-is right);
-
-regards;
-
-Justin P. Mattock
-
-
-
+-- 
+Greetings, Michael.
