@@ -1,71 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:59260 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936188AbZAOW7m (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:47828 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753577AbZAMSGJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 17:59:42 -0500
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>, kyle@infradead.org,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Message-Id: <65BB63A7-75ED-464D-AD81-E34F3AD560BE@ing.unibs.it> (sfid-20090115_235948_765610_F14C8F3A)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <496F5D4F.3020805@lwfinger.net>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: [b43] opensource firmware
-Date: Fri, 16 Jan 2009 00:01:41 +0100
-References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com>	<1231965922.20309.0.camel@johannes> <200901151637.58196.mb@bu3sch.de> <496F5D4F.3020805@lwfinger.net>
+	Tue, 13 Jan 2009 13:06:09 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Artur Skawina <art.08.09@gmail.com>
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+Date: Tue, 13 Jan 2009 19:06:13 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <494698AF.4020204@gmail.com> <200901131449.41189.chunkeey@web.de> <496CC514.3030307@gmail.com>
+In-Reply-To: <496CC514.3030307@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901131906.13096.chunkeey@web.de> (sfid-20090113_190615_374032_8468A02D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 15, 2009, at 4:59 PM, Larry Finger wrote:
+On Tuesday 13 January 2009 17:45:08 Artur Skawina wrote:
+> Christian Lamparter wrote:
+> > On Monday 12 January 2009 18:09:47 Artur Skawina wrote:
+> >> kernel: phy0: p54 detected a LM86 firmware
+> >> kernel: p54: rx_mtu reduced from 3240 to 2392
+> >> kernel: phy0: FW rev 2.13.1.0 - Softmac protocol 5.5
+> > Well, I guess you got the latest wireless-testing tree, right?
+[...] 
+> will do, after upgrading the kernel (could take a few days).
+hmm... OT: who old is your hostapd version? As far as I can tell AP-mode is still WIP.
+Maybe you can save you alot trouble if your mobile can connect to ad-hoc wifis.
 
-> Michael Buesch wrote:
->> Yes, please introduce a feature-bitfield at some location in SHM  
->> that's unused
->> by the proprietary firmware. This bitfields would contain a bit for  
->> QoS and
->> a bit for hwcrypto.
->> Also change your firmware so the driver detects it as open-source  
->> firmware.
->> I think that's done by writing 0xFFFF to the date/time field in  
->> SHM. I don't
->> quite remember, but it's something like that.
->> Note that this might mean that the firmware watchdog in the driver  
->> will trigger,
->> as that's enabled by the open-source-firmware-flag. We might want  
->> to temporarly
->> disable the watchdog in the driver for the time being.
->
-> I like the idea of encoding the capabilities in the firmware as it
-> would be a self-documenting method as the firmware evolves.
->
-> Is using the Broadcom names for the firmware the best course of
-> action? What if the opensource firmware files were named something
-> like "os-ucode5.fw", etc. and b43 were coded to check for those files
-> first? It would then fall back to the standard firmware if the
-> opensource version is not found.
->
-> Larry
-It could be interesting to also not separate the initvalues in two  
-different files, everything could be coded in a single file. Never  
-understood why original init values are split in two files.
+> >> so to test the device further i set up hostapd, which mostly worked; after 
+> >> a few tweaks (eg patching out country code setting in hostapd)
+> > patching out country code?! why that?
+> > currently, hostapd is the only thing that works out-of-the-box :-D
+> 
+> hostapd was aborting no matter what country code i configured, so i
+> disabled that, leaving figuring this out for later.
+have you installed crda and udev on your box?
+( http://wireless.kernel.org/en/developers/Regulatory/CRDA )
 
-Michael: SHM(0x0014) (16bit) is not used by the open source firmware,  
-I know the b43 reads core revision from SHM(0x0016). Normally  
-SHM(0x0014) is set to zero. We can put fw capabilities here (0x0014),  
-e.g.:
+> [also hostapd is reporting some TX failures, didn't investigate yet]
+TX failures? do you have hostapd's log of it?
 
-- bit 0: [0 state that encryption should be handled by b43]
-- bit 1: [0 state that qos is not supported]
+> it certainly looks like a leak, at first i suspected memory fragmentation, but
+> Larrys patch didn't help; later the order-0 alloc failures appeared.
+well, you have a 32-bit architecture, unlike me or larry.
+So, with a bit of luck the skbs always fitted into a single page and you never
+had problems with memory fragmentation. 
 
-We can prepare a firmware image with such feature + watchdog. Posting  
-ASAP with new initvals (less values).
+> The machine has 512M, ~100M should be (usually is) free, is under constant light
+> load (typically <2k ints/s, 60% idle) and is running fine for weeks/months between
+> reboots, but locks up after only a few packets go over the hostap driven
+> p54usb device. I need the box to be up, that limits the number of tests i can
+> run, at least as long as the lockups w/o any diagnostics happen...
+Do keyboard-leds "flash" when it locks up, or does console respond 
+if you press alt-sysrq-m / alt-sysrq-w on the connected keyboard?
+( If your box has a serial port, you can try to get the logs from there...  )
 
-A question: is the standard kernel aware that date set to FFFF  
-indicates an opensource firmware or some define should be activated on  
-compilation?
-
-Cheers,
--FG
+Regards,
+	Chr
