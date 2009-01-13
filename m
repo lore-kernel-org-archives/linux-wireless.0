@@ -1,76 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45026 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:39630 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753686AbZAFUFR (ORCPT
+	with ESMTP id S1751290AbZAMXAu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 15:05:17 -0500
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
+	Tue, 13 Jan 2009 18:00:50 -0500
+Subject: Re: [PATCH 00/12] cfg80211/mac80211: fixes/enhancements for
+	reg_notifier()
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Dan Williams <dcbw@redhat.com>, Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
-In-Reply-To: <1231270575.14901.6.camel@californication>
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
-	 <1229336057.4471.9.camel@johannes.berg>
-	 <1229354532.12163.24.camel@localhost.localdomain>
-	 <20081217174244.M36761@bobcopeland.com>
-	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
-	 <1230102989.16960.14.camel@californication>
-	 <1231260306.14565.21.camel@localhost.localdomain>
-	 <1231261937.5246.16.camel@californication>
-	 <1231267979.14565.34.camel@localhost.localdomain>
-	 <1231270575.14901.6.camel@californication>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-upS0ev3rq2PbWNUF0B/w"
-Date: Tue, 06 Jan 2009 21:05:26 +0100
-Message-Id: <1231272326.3767.2.camel@johannes> (sfid-20090106_210521_198745_709D13EC)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com>
+References: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xlPkGNZEPDJB2+/LOMP0"
+Date: Wed, 14 Jan 2009 00:00:21 +0100
+Message-Id: <1231887621.3728.12.camel@johannes> (sfid-20090114_000053_438205_8A6F32F0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-upS0ev3rq2PbWNUF0B/w
+--=-xlPkGNZEPDJB2+/LOMP0
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-01-06 at 20:36 +0100, Marcel Holtmann wrote:
+On Tue, 2009-01-13 at 11:57 -0800, Luis R. Rodriguez wrote:
+> This series contains a few fixes for cfg80211 such as another
+> fix for parsing country IEs, but mostly contains work to help
+> drivers build a more useful reg_notifier(). While at it we remove
+> the CONFIG_WIRELESS_OLD_REGULATORY as we are now on road to 2.6.30.
+>=20
+> Luis R. Rodriguez (12):
+>   cfg80211: print correct intersected regulatory domain
+>   cfg80211: add helper to indicate when to follow the driver regd
+>   cfg80211: add option for wiphys to disregard country IEs
+>   cfg80211: split wiphy_update_regulatory() in two
+>   cfg80211: add regulatory_set_custom_rd()
+>   cfg80211: add regdom_intersect_wiphy_regd()
+>   cfg80211: allow driver read access to cfg80211_regdomain
+>   cfg80211: export freq_reg_info()
+>   cfg80211: Fix sanity check on 5 GHz when processing country IE
+>   cfg80211: process user requests only after previous user/driver/core
+>     requests
+>   mac80211: allow mac80211 drivers to get to driver priv from wiphy
+>   cfg80211: Remove CONFIG_WIRELESS_OLD_REGULATORY
 
-> since mac80211 gets suspend/resume support, I think it is the best that
-> we signal this to wpa_supplicant. In that case it can do the hard work
-> here. Either it re-connects to the last AP or signals a disconnected
-> state or trigger scanning.
+I think this series is pretty much overkill. While I'd like you to
+finish work on this (you know why), I think you should go back and
+describe what you're trying to achieve.
 
-Let me just say once again that all this discussion is entirely
-orthogonal to properly supporting suspend/resume in mac80211, it's
-always possible for userspace to do anything with the devices before
-going into suspend, but the kernel should take some care to resume as it
-was at suspend time, which is what we're aiming for here. Of course,
-this may mean that at resume we lose the AP connection that we think we
-still have right away, but that's great since then wpa_supplicant will
-reconnect quickly.
+It seems to me that you're trying to achieve two things:
+ 1) have ath9k have its own world regdomain
+ 2) restrict ath9k to the channels it has calibration data for
+
+Am I totally off base?
+
+For point (1), I'm not sure how you're doing that right now, but (2) you
+should not do via the regulatory code and the notifier but rather by not
+registering those channels to start with, or setting the disabled flag
+before registration if that's easier.
 
 johannes
 
---=-upS0ev3rq2PbWNUF0B/w
+--=-xlPkGNZEPDJB2+/LOMP0
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJY7mDAAoJEKVg1VMiehFYbgMP/jTR4z6qVhKVWzjcYQ/IGf8M
-BLTKIFr53qEOAEBPLaqcT9OcJW5Fgo3S+mP5uLctkegwht25Ty6UMnMpgKs+Vw+1
-S0urhZIhnwlQ2nVAlo1Sto+pNez1cVbnao2Sj9gzzXDooeqnv6YfBzkZmM6rLEek
-uYBEr5IbU8f6YSTJPYm1WWGao1yGmTkUCRxc6IOl4sUPMQJSFiMj+bul/3svQQ+9
-M/4PH2BSuot2aUx+NubbvQeTDem9SoFr/sDxvsub7Halpdrqd/k6gGrqkhQ9cRAZ
-9T1tPp5wwmy52Qg0iBG0S0LkTRfHn49tpx03UtQ68/9xf8IcE6MvyANs8aXegfYh
-WYWabScCKVDwARt7caeLJP+qAIDTvA/CtnPqwSNTOW4sjrMEKw0MTMUnwXEwBitE
-1tZm12m0hLoU7rzBycIlOVeXWmeK/b+x5Bb3fc3jyqX/NqSHISy/thhRPhUPywh7
-UxOS2GvMB4dSiSjPt5caZ7GfqRKLT7PmqmHV0xu4zFqNcgml2MTD9PtBKmn7FJXG
-/fX+StHb4YhYcOavx7uq4o8BKsKVJ/f0hAcVv56ygZdtYqyavedjTUnPJNibKpqh
-w7fa8ltNzDOPDugqleeTz31SNnZsJpGbnKonXkABBY9huCM71uOGYJsY7nVVc2b0
-6A4Kxi1Gqi0r4P90Bcir
-=fYyW
+iQIcBAABAgAGBQJJbR0CAAoJEKVg1VMiehFYkJsQAJTMKitu0S4d0av1MB6vpldx
+MWxn1XlJbB/UR4EN4PH6uIZUrVh0UR9CazrLgCqOqV8bDVczoViihmCnI7trqMXC
+tljS3i7AhqfkWA159pFtxJID4u4FTiNYxb1NkE4Di+gpgNNQkpzhDOjaN2TGg4KM
+UDAX7vYJl+QwheFMhUaVIxBjrQEFu/TDmZSkxZLRYTx3Hd/GX692zzvIcJ1MopFZ
+dY/pTAlY2aY/aXgyOT7fcXrMe198p9EFtAix2LmweC8I2HsZrnadp+h4IbxKI/fJ
+CcylHXhjbNIcal08pVdKZUYuNSndR7LCTsyX9wM89LoOUhZHGLR0J24d57Dbzzej
+ADasrVl34Jpn8RzsspyVE9pVzrBTZKztSOhtSXc48PJMbi47TwwIGXV5siMXlU3w
+m9dnZGlGvnznAS7lmP/+r/auT5i0VLu/gpoSaW+YLZjMQl/HHbC4jv8CPqRPaq3t
+K4VkaJQtMMsZ5XYsjaUW3t3s+40CkJAZXvzH5n+wNeZd40jlvzSsLAqqpjjXNgNJ
+YsDuskdOF+Ro8dsc6rYDeTHzO/kyopOCQibsrA2bUZN6wYm5YmGYuOsdsslFWBtm
+JecsTmIgtipBrwJjsYgIDQ4i5umau17sle/lNKjQ4LxHINMObpT4Ag4mk5nhfo4E
+6xKf/4iW5x14+uPwbn7N
+=qyPp
 -----END PGP SIGNATURE-----
 
---=-upS0ev3rq2PbWNUF0B/w--
+--=-xlPkGNZEPDJB2+/LOMP0--
 
