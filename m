@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4925 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756569AbZAHSSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 13:18:24 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 05/11] iwl3945: remove double defined 3945 tfd structures
-Date: Thu,  8 Jan 2009 10:19:56 -0800
-Message-Id: <1231438802-10991-6-git-send-email-reinette.chatre@intel.com> (sfid-20090108_191840_222699_17104757)
-In-Reply-To: <1231438802-10991-5-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1231438802-10991-1-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-2-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-3-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-4-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-5-git-send-email-reinette.chatre@intel.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54216 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757235AbZAMNuA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 08:50:00 -0500
+Date: Tue, 13 Jan 2009 15:49:48 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] nl80211: New command for adding extra IE(s) into
+	management frames
+Message-ID: <20090113134948.GA16694@jm.kir.nu> (sfid-20090113_145006_753391_F244C56B)
+References: <20090113115128.GA11245@jm.kir.nu> <1231853937.3671.28.camel@johannes>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231853937.3671.28.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+On Tue, Jan 13, 2009 at 02:38:57PM +0100, Johannes Berg wrote:
 
-This patch removes doubly defined struct iwl3945_tfd_frame_data
-and struct iwl3945_tfd_frame.
+> kmemdup? Might also make sense to not try the allocation if we're going
+> to refuse it anyway, but that might be complicated to do and probably
+> doesn't matter.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fh.h |   12 ------------
- 1 files changed, 0 insertions(+), 12 deletions(-)
+I did not know there is such a thing as kmemdup (apparently not that
+many other people, either, taken into account it is not used anywhere in
+the generic wireless code). Anyway, yes, it would work here.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index 313b03b..a72aa1b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -478,18 +478,6 @@ struct iwl_tfd {
- 	__le32 __pad;
- } __attribute__ ((packed));
- 
--struct iwl3945_tfd_frame_data {
--	__le32 addr;
--	__le32 len;
--} __attribute__ ((packed));
--
--struct iwl3945_tfd_frame {
--	__le32 control_flags;
--	struct iwl3945_tfd_frame_data pa[4];
--	u8 reserved[28];
--} __attribute__ ((packed));
--
--
- /* Keep Warm Size */
- #define IWL_KW_SIZE 0x1000	/* 4k */
- 
+Moving the allocation to be done for each subtype separately would add
+quite a bit of extra code and error paths. Doing it once resulted in
+simpler implementation. The array version was much simpler on this area,
+but with separate variables for each subtype, I think it is better to
+just allocate (and deal with NULL) once even if we will immediately
+after this need to free the buffer in the case the request is going to
+be refused.
+
 -- 
-1.5.4.3
-
+Jouni Malinen                                            PGP id EFC895FA
