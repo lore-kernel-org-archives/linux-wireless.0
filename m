@@ -1,68 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12552 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751074AbZA1QRI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 11:17:08 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 08:17:08 -0800
-Date: Wed, 28 Jan 2009 08:16:24 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: add get reg command
-Message-ID: <20090128161624.GI6174@tesla> (sfid-20090128_171712_854070_60AE2BC9)
-References: <1233111125-7955-1-git-send-email-lrodriguez@atheros.com> <1233137841.3936.2.camel@johannes.local> <20090128144455.GE6174@tesla> <1233154234.4071.26.camel@johannes.local> <20090128152011.GH6174@tesla>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:62882 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756160AbZAMX7t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 18:59:49 -0500
+Message-ID: <496D2AE4.7000808@lwfinger.net> (sfid-20090114_005957_740853_8987481F)
+Date: Tue, 13 Jan 2009 17:59:32 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090128152011.GH6174@tesla>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Warning in latest wireless-testing
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 07:20:11AM -0800, Luis Rodriguez wrote:
-> On Wed, Jan 28, 2009 at 06:50:34AM -0800, Johannes Berg wrote:
-> > On Wed, 2009-01-28 at 06:44 -0800, Luis R. Rodriguez wrote:
-> > > On Wed, Jan 28, 2009 at 02:17:21AM -0800, Johannes Berg wrote:
-> > > > On Tue, 2009-01-27 at 18:52 -0800, Luis R. Rodriguez wrote:
-> > > >
-> > > > > +       mutex_lock(&cfg80211_drv_mutex);
-> > > > > +       regd = reg_get_current_rd();
-> > > > > +       mutex_unlock(&cfg80211_drv_mutex);
-> > > > > +
-> > > > > +       if (!regd)
-> > > > > +               goto out;
-> > > >
-> > > > Any reason you need to copy and can't just build the whole thing under
-> > > > lock?
-> > >
-> > > Glad you asked, we can lock the entire call or we can do the above to
-> > > copy. I picked a copy to not let a regular user (get reg can be called
-> > > by anyone) abuse the lock as cfg80211_drv_mutex is used in a lot of places,
-> > > I guess its silly but other's input on this is appreciated as well. Not sure
-> > > if the copy was the best choice.
-> >
-> > I don't really see much difference between locking to create a copy and
-> > locking to create a copy in a different format, do you?
-> > Except to create
-> > a copy needs to allocate memory which could take even longer.
-> 
-> Agreed, that's the thing I was not thinking about those two paths I was
-> thinking of either using a copy of cfg80211_regdomain for nl80211.c to move
-> forward without having to keep cfg80211_drv_mutex *or* having
-> reg_get_current_rd() just return cfg80211_regdomain and have the reg_reg
-> lock during its entire access.
-> 
-> I am honestly not sure which is the best approach but I picked a copy
-> since I figure having a user do a kmalloc() is less harmless then contending
-> the lock more time if he wanted to abuse the system. I also thought about
-> using a static regd in place just to copy the cfg80211_regdomain but then
-> that would mean having a large static regd with max num rules and I didn't
-> like that either. Seemed to me a kmalloc() was in the middle. Let me know
-> if you guys have better advice.
+In the latest pull from wireless testing, I get the following warning:
 
-Actually nevermind, I see your point now, we would be iterating over 
-cfg80211_regdomain anyway, will resend, thanks.
+  CC [M]  drivers/net/wireless/b43/main.o
+drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_key=E2=
+=80=99:
+drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatch
+in conditional expression
 
-  Luis
+Larry
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
