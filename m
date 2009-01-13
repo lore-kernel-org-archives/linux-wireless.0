@@ -1,79 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53767 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:51790 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017AbZAETCJ (ORCPT
+	with ESMTP id S1750780AbZAMNku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 14:02:09 -0500
-Subject: Re: [PATCH 1/1] IWL: fix WARN typo
+	Tue, 13 Jan 2009 08:40:50 -0500
+Subject: Re: rfkill: how murderous can it be ?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-In-Reply-To: <1231171404-22822-1-git-send-email-jirislaby@gmail.com> (sfid-20090105_170346_728743_CFC4B367)
-References: <1231171404-22822-1-git-send-email-jirislaby@gmail.com>
-	 (sfid-20090105_170346_728743_CFC4B367)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-bIxsPomByoH6jo4BkF9d"
-Date: Mon, 05 Jan 2009 20:02:18 +0100
-Message-Id: <1231182138.3697.0.camel@johannes> (sfid-20090105_200213_833055_4BA1D5FE)
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Werner Almesberger <werner@openmoko.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090113132159.GB27676@khazad-dum.debian.net> (sfid-20090113_142214_349769_6EB61815)
+References: <20090112191514.GA22112@almesberger.net>
+	 <20090113005401.GA7565@srcf.ucam.org>
+	 <20090113132159.GB27676@khazad-dum.debian.net>
+	 (sfid-20090113_142214_349769_6EB61815)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ll+QY6cdBKA/ffLZkdw8"
+Date: Tue, 13 Jan 2009 14:40:16 +0100
+Message-Id: <1231854016.3671.29.camel@johannes> (sfid-20090113_144055_362608_9C78C9AE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-bIxsPomByoH6jo4BkF9d
+--=-ll+QY6cdBKA/ffLZkdw8
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2009-01-05 at 17:03 +0100, Jiri Slaby wrote:
-> new kew -> a new key
->=20
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: Tomas Winkler <tomas.winkler@intel.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-sta.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireles=
-s/iwlwifi/iwl-sta.c
-> index 412f66b..b28564a 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> @@ -638,7 +638,7 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_pr=
-iv *priv,
->  	 * in uCode. */
-> =20
->  	WARN(priv->stations[sta_id].sta.key.key_offset =3D=3D WEP_INVALID_OFFSE=
-T,
-> -		"no space for new kew");
-> +		"no space for a new key");
+On Tue, 2009-01-13 at 11:21 -0200, Henrique de Moraes Holschuh wrote:
 
-Eh, if anything shouldn't that be "the new key"?
+> But I DO heavily suggest that we inform userspace differently when state =
+was
+> lost (i.e. when it absolutely HAS to reconfigure the device or there are =
+no
+> chances of data passing through).
+>=20
+> Right now, it HAS that information in a roundabout way: if the device
+> disappears (hotunplug), state was lost (duh! :-p)   If it stays around, n=
+o
+> state was lost...
+>=20
+> And, as an user, I'd be rather annoyed if suddenly I couldn't easily and
+> cheaply just hit the rfkill hotkey (softswitch) to kill and unkill my WLA=
+N
+> while browsing, and stopping a few minutes to read the screen... because
+> every time I unkilled, the system would churn, deassociate and reassociat=
+e
+> and be otherwise annoying doing a reconfiguration it didn't absolutely ha=
+ve
+> to do.
+>=20
+> In other words: make it possible to be configurable!  From the kernel POV
+> that just means we need to have to publish to userspace the fact that it =
+has
+> to reconfigure when there is not a full hotunplug/hotplug being done.
+
+Way overkill. Anything more than a few seconds of rfkill will require
+the "churn" anyway.
 
 johannes
 
---=-bIxsPomByoH6jo4BkF9d
+--=-ll+QY6cdBKA/ffLZkdw8
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJYlk3AAoJEKVg1VMiehFYSdgQAKAwvJ2j/TCkHdRfGdRzEXPw
-A5rrVFtLaNWIpb2IQD6R/3X49EUHDwJiPTurqfyTEdBf9B8a7/9SlnjjD8qWUMht
-HY+35bpTfE5xSXXVi83GRP2lp3sbHiIZ6Mp2pAd8s5HQUCfMmF6w7k1SWdkYMwsh
-g8VMqqBI6tZHFk2+8KD7uO3lmmLxjM06Gxw7AxrS6L4C+v86Je510XEhtL2BVrvG
-TMizRnaUSm4bNmINbxoqDpVX9isYLAgFqmqvH74FavqCZ8KP0ByBBGO6JfAAvub0
-CQsG1unFzCraB+w2O4XoWmFLxt0+OE43vW0GY+odbyz8DHIBQfSbyPkCRV3bbusn
-a5vjRQYGMVG0WWlwf4FU2xPXcwAZ+Z4f//OXzFre6UelDstFepXj+q8GdVwBYjg3
-mnUp/mpdVHUBI5mQ84aRw17m5JlTkq87NHL3USyQV/tXmRQO1y9cLf6RYuoilPjS
-jrrjpHIMUDP1InSFGB86U3kzT/9TdDq4ZQjaQYhdakCZ5kejEqr7T9ZhhpewE/6e
-++y9NziZcPOYh5V8uwdPsaBMn1oC3gHPw4edruL+DDUpZECWtNIl9jN6TcMhwUer
-VAD61ODs/uSjOrV9Km/jZzVNamkyRLjwLyK37eZ9UE4NIzkWqJqt+apOvM07lXMh
-AMRHDtn80s6X7yyTYQjb
-=EPeo
+iQIcBAABAgAGBQJJbJm+AAoJEKVg1VMiehFY7E4P/32F7B07El0iPUJVzyD2RSyC
+1AQRcrCHiDAJF2+MPhgLf7kr70Lh00e8NBwZJCuC6sSqqwh+nWJ4cATmNaskilGz
+4x6LuNd2WTJcxrxTdnFRM/GwvG98FEoKiR0CawPiIKqOmi+5sKuUYU5FWMRC/85c
+Hiurvz8Wrn+C5aITZWvbxyOcVPMYZk9zwq5xPCqKVwZDSV0wbh2NtMkbC+nGauZC
+t6SzPAXpAyFbaiqt3ba0R0Hsr3Qrj+SI1cZz0W+0EI2BIRQoF524To7m3Q6a5y1s
+PcId2ykvgo25bZOr6emBXUBn+/1J/nVatU0IEg3GMP7U5WpnfspYYDgyxgy+bxOA
+/LYpyGAnYRevtpWEbEMUlulJedxd3HAgVHgGchc+Rja2/XPF+2+zgEg7WxsbLrbX
+AV5wrsPVCNMY20SB83L6GcAVivobJTPEh+CrbV/dSSHc+iuVT6omivBzllP0hDdo
+HqmtnWkYnLEVY6zj094PsZP81dtRbmhePDHhv5yRMxOZyvIHR0D3jM5HvRgEfyMo
+cCKYsOxytKlkjjtMPkWQ6E7WueNrHh64UY+fOxDRBpUi6SqGJPmcaimJ5GoGUrBn
+HC3/YSH7qFgmqFtSPugB0MueFDfmLrcGQ/MSvjfL9Jpk964NVUb0ivT5vHwEsWpg
+jFXqPD99cRqUYOg6tcp1
+=q41G
 -----END PGP SIGNATURE-----
 
---=-bIxsPomByoH6jo4BkF9d--
+--=-ll+QY6cdBKA/ffLZkdw8--
 
