@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:42965 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757615AbZAWXQM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 18:16:12 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sat, 24 Jan 2009 00:16:10 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <20090123122921.GA2745@sortiz.org>
-Message-ID: <20090123231610.50410@gmx.net> (sfid-20090124_001617_436761_FCD66EBE)
+Received: from fg-out-1718.google.com ([72.14.220.158]:38700 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756174AbZAMXet (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 18:34:49 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so161577fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 15:34:47 -0800 (PST)
+Message-ID: <69e28c910901131534g28404687y6bf23bdbbb233b26@mail.gmail.com> (sfid-20090114_003453_926503_38D634E3)
+Date: Wed, 14 Jan 2009 00:34:47 +0100
+From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
+To: "Delphi Real Estate" <Info@delphi-real-estate.com>
+Subject: Re: 'N' Mode and 5GHz, Also WPA2
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200901131502.01047.Info@delphi-real-estate.com>
 MIME-Version: 1.0
-References: <4979269F.1060500@lwfinger.net>
- <20090123021413.GB3177@tuxdriver.com> <4979567D.2020005@lwfinger.net>
- <20090123071345.270730@gmx.net> <20090123122921.GA2745@sortiz.org>
-Subject: Re: Regression caused by commit
-	e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
-To: kalle.valo@iki.fi, maximlevitsky@gmail.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset=ISO-8859-1
+References: <200901131502.01047.Info@delphi-real-estate.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel!
+On Wed, Jan 14, 2009 at 12:02 AM, Delphi Real Estate
+<Info@delphi-real-estate.com> wrote:
+>
+> Running the Intel 4965AGP with iwlagn driver that comes in Ubuntu kernel 2.6.27.10, and DLink DIR-825 dual-mode router.
+>
+> Despite extensive effort and research I have been unable to associate in 'n' mode at 5GHz.  I can associate and communicate in 'g' and 'n' mode at 2.4GHz, and in 'a' mode at 5GHz, but it simply does not work in 'n' at 5.  Has anyone been able to make this work?
+>
+> Does anyone know what chipset is in the DIR-825?  Should I crack it open?
 
-> I dont think we should ignore the if_config() return value.
+Try checking its FCC ID on the Equipment Authorization page. It has
+internal photos.
 
-I can write a warning in the kernel log, to help the low-level driver d=
-evelopers to debug this problem, but I don't want to stop the new mergi=
-ng process, so that the driver hangs in a mostly undefined state.
+>
+> Also I am unable to associate in any mode in any band, with WPA2.  Has anyone got WPA2 working with the iwlagn driver?
 
-> Is the 4965 error code sent when trying to set a fixed BSSID in IBSS =
-?
-> I dont see it in STA mode, when associating to my AP.
+Are you running the latest wpa_supplicant?
 
-I unfortunately don't know the error code, because I don't have the car=
-d, but I think if the setting of the BSSID fails here, I should work in=
- the new initiated normal joining process, even in broken low-level dri=
-vers.
+>
+> Best,
+>
+> Bill
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Regards
-Alina
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
