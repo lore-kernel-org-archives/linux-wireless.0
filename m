@@ -1,34 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:62477 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758876AbZAPPdP (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56059 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756056AbZANNhe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 10:33:15 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so615758yxb.67
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 07:33:13 -0800 (PST)
+	Wed, 14 Jan 2009 08:37:34 -0500
+Date: Wed, 14 Jan 2009 08:33:23 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Warning in latest wireless-testing
+Message-ID: <20090114133322.GA18634@tuxdriver.com> (sfid-20090114_143741_101973_B3DEA1D2)
+References: <496D2AE4.7000808@lwfinger.net> <1231891570.28311.0.camel@johannes>
 MIME-Version: 1.0
-In-Reply-To: <200901151734.46144.gbburkhardt@verizon.net>
-References: <200901140003.31693.gbburkhardt@verizon.net>
-	 <40f31dec0901140530n7ff2029em67687dcd1eab590f@mail.gmail.com>
-	 <200901151734.46144.gbburkhardt@verizon.net>
-Date: Fri, 16 Jan 2009 10:33:13 -0500
-Message-ID: <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com> (sfid-20090116_163320_115367_5CAE1768)
-Subject: Re: poor performance with ath5k; reverting to ath_pci
-From: Bob Copeland <me@bobcopeland.com>
-To: Glenn Burkhardt <gbburkhardt@verizon.net>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1231891570.28311.0.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2009 at 5:34 PM, Glenn Burkhardt
-<gbburkhardt@verizon.net> wrote:
-> ath5k_pci 0000:00:07.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> ath5k_pci 0000:00:07.0: registered as 'phy0'
-> phy0: Selected rate control algorithm 'pid'
+On Wed, Jan 14, 2009 at 01:06:10AM +0100, Johannes Berg wrote:
+> On Tue, 2009-01-13 at 17:59 -0600, Larry Finger wrote:
+> > In the latest pull from wireless testing, I get the following warni=
+ng:
+> >=20
+> >   CC [M]  drivers/net/wireless/b43/main.o
+> > drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_ke=
+y=E2=80=99:
+> > drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatc=
+h
+> > in conditional expression
+>=20
+> That looks like a merge error:
 
-Can you change the rate control algorithm to minstrel and retry?
+Yes, it is.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+>                 b43dbg(wl, "%s hardware based encryption for keyidx: =
+%d, "
+>                        "mac: %pM\n",
+>                        cmd =3D=3D SET_KEY ? "Using" : "Disabling", ke=
+y->keyidx,
+>                        sta ? sta->addr : "<group key>");
+>=20
+> It should be something like
+>=20
+> u8 bcast[ETH_ALEN] =3D {0xff,...}
+>=20
+> sta ? sta->addr : bcast
+>=20
+> there.
+
+Yes, it should.
+
+John
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
