@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60004 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750777AbZA1PUz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 10:20:55 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 07:20:54 -0800
-Date: Wed, 28 Jan 2009 07:20:11 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: add get reg command
-Message-ID: <20090128152011.GH6174@tesla> (sfid-20090128_162059_621337_9DE16AEA)
-References: <1233111125-7955-1-git-send-email-lrodriguez@atheros.com> <1233137841.3936.2.camel@johannes.local> <20090128144455.GE6174@tesla> <1233154234.4071.26.camel@johannes.local>
+Received: from rv-out-0506.google.com ([209.85.198.231]:52695 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757054AbZANROa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 12:14:30 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so614521rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2009 09:14:29 -0800 (PST)
+Message-ID: <496E1D6A.10505@gmail.com> (sfid-20090114_181434_329102_773E378A)
+Date: Wed, 14 Jan 2009 09:14:18 -0800
+From: John Daiker <daikerjohn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1233154234.4071.26.camel@johannes.local>
+To: Dan Williams <dcbw@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	tsr <tsr.offentlig@tsr.se>, linux-wireless@vger.kernel.org
+Subject: Re: Marvell 88w8385 Support
+References: <496C8468.4060101@tsr.se>  <20090113145213.GA3623@tuxdriver.com> <1231951654.14909.22.camel@localhost.localdomain>
+In-Reply-To: <1231951654.14909.22.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 06:50:34AM -0800, Johannes Berg wrote:
-> On Wed, 2009-01-28 at 06:44 -0800, Luis R. Rodriguez wrote:
-> > On Wed, Jan 28, 2009 at 02:17:21AM -0800, Johannes Berg wrote:
-> > > On Tue, 2009-01-27 at 18:52 -0800, Luis R. Rodriguez wrote:
-> > > 
-> > > > +	mutex_lock(&cfg80211_drv_mutex);
-> > > > +	regd = reg_get_current_rd();
-> > > > +	mutex_unlock(&cfg80211_drv_mutex);
-> > > > +
-> > > > +	if (!regd)
-> > > > +		goto out;
-> > > 
-> > > Any reason you need to copy and can't just build the whole thing under
-> > > lock?
-> > 
-> > Glad you asked, we can lock the entire call or we can do the above to
-> > copy. I picked a copy to not let a regular user (get reg can be called
-> > by anyone) abuse the lock as cfg80211_drv_mutex is used in a lot of places,
-> > I guess its silly but other's input on this is appreciated as well. Not sure
-> > if the copy was the best choice.
-> 
-> I don't really see much difference between locking to create a copy and
-> locking to create a copy in a different format, do you? 
-> Except to create
-> a copy needs to allocate memory which could take even longer.
+On 01/14/2009 08:47 AM, Dan Williams wrote:
+> On Tue, 2009-01-13 at 09:52 -0500, John W. Linville wrote:
+>    
+>> On Tue, Jan 13, 2009 at 01:09:12PM +0100, tsr wrote:
+>>      
+>>> Hi,
+>>>
+>>> I have a FSG-3 that includes a Marvell 88w8385 card. I wonder if there
+>>> is support for it in recent kernels. According to
+>>> http://marc.info/?l=linux-wireless&m=123178916308198&w=2 (search for
+>>> 8385) there seems to be support but I don't want to start messing around
+>>> with kernels and stuff without being sure.
+>>>        
+>> That driver is for SDIO hardware.  It looks like your FSG-3 has
+>> mini-PCI?  Either way, we don't have a driver merged yet that would
+>> cover your hardware.
+>>      
+>
+> Looks like it's a CB35, which is actually an 88w8335 MiniPCI card.
+> Would be supported by the mwl8k driver ideally.  I've started on trying
+> to add support to mwl8k for the 8335 parts, but we'll need to split the
+> driver so that we can create IO hooks for the different parts.  It'll be
+> a bit, but we'll get there.
+>
+> Dan
+>    
+Very interested in the progress of 8335 support at some point.  My 
+Netgear wg311v3 is sitting on my desk... waiting for some Linux bits to 
+get it running!
 
-Agreed, that's the thing I was not thinking about those two paths I was
-thinking of either using a copy of cfg80211_regdomain for nl80211.c to move
-forward without having to keep cfg80211_drv_mutex *or* having
-reg_get_current_rd() just return cfg80211_regdomain and have the reg_reg
-lock during its entire access.
+I can assist in testing whenever bits become available ( officially or 
+unofficially, hint, hint! :-P )
 
-I am honestly not sure which is the best approach but I picked a copy
-since I figure having a user do a kmalloc() is less harmless then contending
-the lock more time if he wanted to abuse the system. I also thought about
-using a static regd in place just to copy the cfg80211_regdomain but then
-that would mean having a large static regd with max num rules and I didn't
-like that either. Seemed to me a kmalloc() was in the middle. Let me know
-if you guys have better advice.
+Thanks for the hard work, and keep them bits a comin'
 
-  Luis
+JD
