@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:39636 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755722AbZAXVxY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 16:53:24 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sat, 24 Jan 2009 22:53:22 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1232807356.2870.23.camel@localhost.localdomain>
-Message-ID: <20090124215322.259390@gmx.net> (sfid-20090124_225343_013775_138C8E23)
-MIME-Version: 1.0
-References: <20090124081542.50450@gmx.net>	
- (sfid-20090124_091614_136619_417AC6BC)
- <1232806972.4036.10.camel@johannes.local>
- <1232807356.2870.23.camel@localhost.localdomain>
-Subject: Re: [PATCH] ath9k: Set TSF fix
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
+Received: from xc.sipsolutions.net ([83.246.72.84]:43378 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754672AbZANAGj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2009 19:06:39 -0500
+Subject: Re: Warning in latest wireless-testing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <496D2AE4.7000808@lwfinger.net> (sfid-20090114_005957_740853_8987481F)
+References: <496D2AE4.7000808@lwfinger.net>
+	 (sfid-20090114_005957_740853_8987481F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0/am2KggItvOcPKRRCdR"
+Date: Wed, 14 Jan 2009 01:06:10 +0100
+Message-Id: <1231891570.28311.0.camel@johannes> (sfid-20090114_010644_013014_26857313)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hallo Dan!
 
-> > Why don't you back that claim by something more substantial?
+--=-0/am2KggItvOcPKRRCdR
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2009-01-13 at 17:59 -0600, Larry Finger wrote:
+> In the latest pull from wireless testing, I get the following warning:
 >=20
-> Yeah, at *least* which hardware likes it better,
+>   CC [M]  drivers/net/wireless/b43/main.o
+> drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_key=E2=
+=80=99:
+> drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatch
+> in conditional expression
 
-The old version I have taken from an several years old madwifi patch. I=
-t works only with old ath5k hardware. With my new Atheros-Cards the low=
-er 32 bits of the TSF are only set to zero, not set to the new value. T=
-he new code does work with all my ath5k and ath9k cards.
+That looks like a merge error:
 
-> and some regression
-> testing to ensure that other hardware doesn't break with the change.
+                b43dbg(wl, "%s hardware based encryption for keyidx: %d, "
+                       "mac: %pM\n",
+                       cmd =3D=3D SET_KEY ? "Using" : "Disabling", key->key=
+idx,
+                       sta ? sta->addr : "<group key>");
 
-This does break nothing, because it's only debugging code, which I have=
- submitted a few day ago, and is not used for any other things.
+It should be something like
 
-By the way the TSF in ath5k is completely broken. I'm looking with this=
- patch for the reasons...
+u8 bcast[ETH_ALEN] =3D {0xff,...}
 
-Regards
-Alina
+sta ? sta->addr : bcast
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger
+there.
 
---=20
-NUR NOCH BIS 31.01.! GMX FreeDSL - Telefonanschluss + DSL=20
-f=FCr nur 16,37 EURO/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
-569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-0/am2KggItvOcPKRRCdR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJbSxqAAoJEKVg1VMiehFYJZMP/1GNLAujvNFKtinP7X6IN+k6
+zB6Unjn9+sm2WQvbyGsnuWlbFQ6fGZyxeYgVAo1f1dhHDyT9Z6kvGE7FIHe9nklv
+9tPWGFNdq96cTNeWKVauYS9M69osiCjdYtz8bkCUCNomDvJygV4IQoRF8rqB8eQP
+0gqL8D2Qjr4FMFNXVUpyx44MXHpQeFBxuVn1BZDFVs3LaTo0crx/bTzKPQMuThYP
+lhNknad8KzVg8eKVOJIukSEYD2XRpzyuW23TnlJ73/8DuwzUPNsYShHfLM6uA0qs
+UjLEupLvBmpa5TYB7pYJAW1UcgQjaXhzBFU/YPEXXWS0Kf24w3nq0d+95NnV2lIc
+SQy4Z5na0bmD2eXxuTo/ivfgP6Ujj2sT7U2s2XLvQfYG9fmhJDYAP34id/nOKhaK
+718u2dGkQ9TNxYeQcWFnFZIIcQgnirpBSCnuLsLQlK9Xx2sMEOcisUh8PNbb3Ft3
+teSEjyKf7TK6kGVUu3c9U1WX43K9g5/51UffCSpobhzuvsewdSm50V2X7Yl48T0G
+RjMYTztCeL2yXBTpsTBBsF1sSr1WJGzaKnQoUgW9lurmqCb1bRAWs4VDDpoMWuof
+9uBXgY9GLKBI4q4tqu1kfGhh2IurR0hCQ4wF7oueIcntlTnH/36qPgMZvygc+eZT
+wjOsail8s2IPM4t7clMs
+=6fNW
+-----END PGP SIGNATURE-----
+
+--=-0/am2KggItvOcPKRRCdR--
+
