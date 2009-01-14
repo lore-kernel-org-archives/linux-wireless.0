@@ -1,116 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:44165 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754943AbZAUFbb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 00:31:31 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/5] iwl3945: fix deep sleep when removing the driver.
-Date: Tue, 20 Jan 2009 21:33:55 -0800
-Message-Id: <1232516035-25524-6-git-send-email-reinette.chatre@intel.com> (sfid-20090121_063156_050896_7DA7FA84)
-In-Reply-To: <1232516035-25524-5-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232516035-25524-1-git-send-email-reinette.chatre@intel.com>
- <1232516035-25524-2-git-send-email-reinette.chatre@intel.com>
- <1232516035-25524-3-git-send-email-reinette.chatre@intel.com>
- <1232516035-25524-4-git-send-email-reinette.chatre@intel.com>
- <1232516035-25524-5-git-send-email-reinette.chatre@intel.com>
+Received: from wf-out-1314.google.com ([209.85.200.172]:65408 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755302AbZANWvW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 17:51:22 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so893994wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2009 14:51:21 -0800 (PST)
+Subject: Lots of minstrel WARN_ONS with current -git
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 14 Jan 2009 14:51:20 -0800
+Message-Id: <1231973480.5147.2.camel@brick> (sfid-20090114_235126_970511_33D14CEE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abbas, Mohamed <mohamed.abbas@intel.com>
+Seeing lots of these WARN_ONS with current -git.  Known issue?
 
-A warning message "MAC is in deep sleep" sometimes happen when user removes
-the driver.  This warning is related to card not being ready. In __iwl3945_down
-function some of the going down steps are in wrong order, to fix this this patch
-do the following:
-	1- make sure we are calling iwl3945_apm_reset and iwl3945_apm_stop
-	   in the right order.
+b43 hardware.
 
-	2- make sure we set CSR_GP_CNTRL_REG_FLAG_INIT_DONE in apm_reset before
-	   poll on CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY.
-
-	3- set correct polling counter.
-
-This fixes bug
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1834
-
-Signed-off-by: mohamed abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    8 +++-----
- drivers/net/wireless/iwlwifi/iwl-io.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 ++++++-
- 3 files changed, 10 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index e6d4503..8b486c9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -1332,6 +1332,9 @@ static int iwl3945_apm_reset(struct iwl_priv *priv)
- 	spin_lock_irqsave(&priv->lock, flags);
- 
- 	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
-+	udelay(10);
-+
-+	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
- 
- 	iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
- 			 CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
-@@ -1341,11 +1344,6 @@ static int iwl3945_apm_reset(struct iwl_priv *priv)
- 		iwl_write_prph(priv, APMG_CLK_CTRL_REG,
- 					 APMG_CLK_VAL_BSM_CLK_RQT);
- 
--		udelay(10);
--
--		iwl_set_bit(priv, CSR_GP_CNTRL,
--			    CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
--
- 		iwl_write_prph(priv, APMG_RTC_INT_MSK_REG, 0x0);
- 		iwl_write_prph(priv, APMG_RTC_INT_STT_REG,
- 					0xFFFFFFFF);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
-index bc3f3da..7341a2d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.h
-@@ -165,7 +165,7 @@ static inline int _iwl_grab_nic_access(struct iwl_priv *priv)
- 	ret = _iwl_poll_bit(priv, CSR_GP_CNTRL,
- 			   CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
- 			   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
--			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 50);
-+			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
- 	if (ret < 0) {
- 		IWL_ERR(priv, "MAC is in deep sleep!\n");
- 		return -EIO;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index be02272..e595c5a 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5295,6 +5295,7 @@ static void __iwl3945_down(struct iwl_priv *priv)
- 			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
- 				STATUS_EXIT_PENDING;
- 
-+	priv->cfg->ops->lib->apm_ops.reset(priv);
- 	spin_lock_irqsave(&priv->lock, flags);
- 	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
- 	spin_unlock_irqrestore(&priv->lock, flags);
-@@ -5312,7 +5313,11 @@ static void __iwl3945_down(struct iwl_priv *priv)
- 
- 	udelay(5);
- 
--	priv->cfg->ops->lib->apm_ops.reset(priv);
-+	if (exit_pending || test_bit(STATUS_IN_SUSPEND, &priv->status))
-+		priv->cfg->ops->lib->apm_ops.stop(priv);
-+	else
-+		priv->cfg->ops->lib->apm_ops.reset(priv);
-+
-  exit:
- 	memset(&priv->card_alive, 0, sizeof(struct iwl_alive_resp));
- 
--- 
-1.5.4.3
+[41850.615621] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0x92/0x3c0()
+[41850.615624] Hardware name: TravelMate 2480 
+[41850.615626] Modules linked in: uhci_hcd ehci_hcd usbcore ipv6 binfmt_misc rfcomm bnep sco l2cap bluetooth ppdev lp joydev psmouse serio_raw tifm_7xx1 tifm_core video output evdev ext3 jbd mbcache sg sr_mod cdrom sd_mod crc_t10dif fuse [last unloaded: usbcore]
+[41850.615652] Pid: 1024, comm: phy0 Tainted: G        W  2.6.29-rc1 #11
+[41850.615654] Call Trace:
+[41850.615660]  [<c0487935>] ? printk+0x18/0x1b
+[41850.615665]  [<c012ee43>] warn_slowpath+0x73/0xd0
+[41850.615671]  [<c0148cc5>] ? sched_clock_cpu+0x135/0x190
+[41850.615674]  [<c0147b5b>] ? up+0x2b/0x40
+[41850.615677]  [<c012f631>] ? release_console_sem+0x191/0x1d0
+[41850.615681]  [<c046f522>] minstrel_rate_init+0x92/0x3c0
+[41850.615686]  [<c0454708>] ? ieee80211_rx_bss_get+0x98/0xb0
+[41850.615689]  [<c0458ddb>] ? set_sta_flags+0x2b/0x40
+[41850.615693]  [<c0459955>] ieee80211_rx_mgmt_assoc_resp+0x565/0xd60
+[41850.615699]  [<c03b2ba4>] ? dev_queue_xmit+0xe4/0x5a0
+[41850.615705]  [<c03a85e8>] ? __kfree_skb+0x38/0x90
+[41850.615708]  [<c045ab50>] ? ieee80211_sta_work+0x0/0x760
+[41850.615712]  [<c045a7c3>] ieee80211_sta_rx_queued_mgmt+0x673/0xa00
+[41850.615715]  [<c03b1cfb>] ? dev_hard_start_xmit+0x25b/0x2f0
+[41850.615719]  [<c0148cc5>] ? sched_clock_cpu+0x135/0x190
+[41850.615723]  [<c011d0a9>] ? update_curr+0x99/0x200
+[41850.615726]  [<c0120426>] ? dequeue_entity+0x16/0x2a0
+[41850.615730]  [<c0121088>] ? dequeue_task_fair+0x68/0x70
+[41850.615733]  [<c011ddef>] ? dequeue_task+0xcf/0x130
+[41850.615736]  [<c03a81cd>] ? skb_dequeue+0x4d/0x70
+[41850.615739]  [<c045ab50>] ? ieee80211_sta_work+0x0/0x760
+[41850.615743]  [<c045abc1>] ieee80211_sta_work+0x71/0x760
+[41850.615746]  [<c0487e47>] ? schedule+0x3b7/0x9f0
+[41850.615749]  [<c045ab50>] ? ieee80211_sta_work+0x0/0x760
+[41850.615754]  [<c013fa4d>] run_workqueue+0x5d/0x110
+[41850.615757]  [<c013fb88>] worker_thread+0x88/0xf0
+[41850.615760]  [<c0143660>] ? autoremove_wake_function+0x0/0x50
+[41850.615764]  [<c013fb00>] ? worker_thread+0x0/0xf0
+[41850.615767]  [<c01432ec>] kthread+0x3c/0x70
+[41850.615769]  [<c01432b0>] ? kthread+0x0/0x70
+[41850.615773]  [<c0103e87>] kernel_thread_helper+0x7/0x10
+[41850.615776] ---[ end trace 8289e1ba6ce8ea7b ]---
 
