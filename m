@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:45594 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752367AbZAFTDj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 14:03:39 -0500
-Content-Type: text/plain; charset="us-ascii"
-Date: Tue, 06 Jan 2009 20:03:35 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1231267148.3654.15.camel@johannes>
-Message-ID: <20090106190335.184760@gmx.net> (sfid-20090106_200343_857482_17141242)
-MIME-Version: 1.0
-References: <20090106014135.302730@gmx.net>	
- (sfid-20090106_024205_979845_6893AA18) <1231247805.3503.13.camel@johannes>	
- <20090106183543.241290@gmx.net> (sfid-20090106_193614_541329_7F48D123)
- <1231267148.3654.15.camel@johannes>
-Subject: Re: [PATCH] Fixed BSSID step 1: Disallow to set multicast BSSID
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:33892 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758205AbZANPaw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 10:30:52 -0500
+Received: by bwz14 with SMTP id 14so1922488bwz.13
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2009 07:30:50 -0800 (PST)
+Message-Id: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> (sfid-20090114_163057_845343_D172C897)
+From: Lorenzo Nava <navalorenx@gmail.com>
+To: bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: [b43] opensource firmware
+Date: Wed, 14 Jan 2009 16:30:47 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Francesco Gringoli <francesco.gringoli@ing.unibs.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes!
+Hello everybody,
 
-> I'll leave that to John to answer, he gets to do the work if you don't
-> repost.
+we completed the 1st version of initvals. They are available at http://www.ing.unibs.it/openfwwf 
+. Currently only binary version is available: don't worry, we will  
+publish source code as soon as possible!! This first version is a  
+"test version": please try it and let us know if everythink is ok...
 
-Okay, if John want it, I will do this, sorry...
+Today we have also tested a new firmware version that works with WPA2- 
+personal (both TKIP and CCMP) and WPA2-enterprise (EAP-TTLS) (tested  
+on 4306 and 4318 PCI device). If anybody was interested please try new  
+firmware with encryption and let us know if it works correctly, thanks!
 
-> well, wireless-testing, but compat-wireless is updated nightly, iirc.
+Initvals and new firmware version can be found at http://www.ing.unibs.it/openfwwf
 
-Okay, thanks.
+Cheers
 
-cu
-Alina
+Lorenzo Nava
+Francesco Gringoli
+
+
