@@ -1,87 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:55369 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429AbZAJAha (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56061 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754509AbZANNhe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 19:37:30 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so3114047ywe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 16:37:28 -0800 (PST)
-Message-ID: <40f31dec0901091637u70ad5c97g3915d5b2b8726e88@mail.gmail.com> (sfid-20090110_013734_507556_BA90EC33)
-Date: Sat, 10 Jan 2009 02:37:28 +0200
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: "Jiri Slaby" <jirislaby@gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Add debug code for EEPROM
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, mcgrof@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-In-Reply-To: <49610E8D.9080807@gmail.com>
+	Wed, 14 Jan 2009 08:37:34 -0500
+Date: Wed, 14 Jan 2009 08:34:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: Eliminate compilation warning in b43_op_set_key
+Message-ID: <20090114133417.GB18634@tuxdriver.com> (sfid-20090114_143738_934897_D3E0D8BB)
+References: <496d2fc9.UiHMYJR2melvWyoO%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20090104173252.GA5944@makis> <49610E8D.9080807@gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <496d2fc9.UiHMYJR2melvWyoO%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Jiri and thanks a lot for the review ;-)
+On Tue, Jan 13, 2009 at 06:20:25PM -0600, Larry Finger wrote:
+> A recent pull from wireless testing generates the following warning:
+> =20
+>    CC [M]  drivers/net/wireless/b43/main.o
+>  drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_key=
+=E2=80=99:
+>  drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatch
+>  in conditional expression
+>=20
+> This fix was suggested by Johannes Berg <johannes@sipsolutions.net>.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>=20
+> Index: wireless-testing/drivers/net/wireless/b43/main.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
+> +++ wireless-testing/drivers/net/wireless/b43/main.c
+> @@ -3630,10 +3630,12 @@ static int b43_op_set_key(struct ieee802
+> =20
+>  out_unlock:
+>  	if (!err) {
+> +		u8 bcast[ETH_ALEN];
+> +		memset(bcast, 0xff, ETH_ALEN);
 
-2009/1/4 Jiri Slaby <jirislaby@gmail.com>:
->> +/* debugfs: EEPROM stuff */
->> +
->> +/* EEPROM Header (common) */
->> +static ssize_t read_file_eeprom_header(struct file *file, char __user *user_buf,
->> +                                size_t count, loff_t *ppos)
->> +{
->> +
->> +     struct ath5k_softc *sc = file->private_data;
->> +     struct ath5k_hw *ah = sc->ah;
->> +     struct ath5k_eeprom_info ee = ah->ah_capabilities.cap_eeprom;
->> +     char buf[2000];
->
-> Please don't use that much memory from stack. 2k is way too much. Note that
-> you use yet another bunch of stack (next 3k here on 64-bit) by
-> ath5k_eeprom_info and 32-bit x86 can still be configured with 4k stacks.
->
-> Convert both of them to dynamically allocated buffers.
->
+Isn't there a statically-allocated array w/ the broadcast MAC in it
+somewhere already?
 
-Why dynamically allocated buffers (can you point out some docs on
-these please ?) ? The length of each file (what we print) is standard.
-I understand that we use too much stack here but we can work this out
-eg. by using a pointer to ath5k_eeprom_info or something like that. I
-checked out user_buffer btw and it's 4K, sometimes it's not much for
-calibration data (eg. on RF5111 that we have 10 points per pd gain
-curve or RF2413+ that we can have multiple pd gain curves per
-channel).
+>  		b43dbg(wl, "%s hardware based encryption for keyidx: %d, "
+>  		       "mac: %pM\n",
+>  		       cmd =3D=3D SET_KEY ? "Using" : "Disabling", key->keyidx,
+> -		       sta ? sta->addr : "<group key>");
+> +		       sta ? sta->addr : bcast);
+>  		b43_dump_keymemory(dev);
+>  	}
+>  	write_unlock(&wl->tx_lock);
+>=20
 
->> +/* EEPROM Header (per mode) */
->> +static unsigned int dump_calinfo_for_mode(struct ath5k_hw *ah, int mode,
->> +                             char __user *user_buf, size_t count, loff_t *ppos)
->> +{
->> +     struct ath5k_eeprom_info ee = ah->ah_capabilities.cap_eeprom;
->> +     unsigned int len = 0;
->> +     char buf[2000];
->
-> dtto
->
-
-What does dtto mean ?
-
->> +     int i;
-> ...
->> +     len = simple_read_from_buffer(user_buf, count, ppos, buf, len);
->
-> simple_read_from_buffer can fail and returns negative errno in that case,
-> change dump_calinfo_for_mode return type appropriately.
->
-
-ACK
-
-> Happy new year!
-
-Thank you verry much, happy new year !! ;-)
-
-
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
