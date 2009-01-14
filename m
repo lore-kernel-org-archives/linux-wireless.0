@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43505 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbZA1Sat (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 13:30:49 -0500
-Date: Wed, 28 Jan 2009 13:26:56 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Alina Friedrichsen <x-alina@gmx.net>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH v2] mac80211: Creating new IBSS with fixed BSSID
-Message-ID: <20090128182656.GA4198@tuxdriver.com> (sfid-20090128_193053_115171_E75085BD)
-References: <20090128153012.138700@gmx.net> <87k58f74dk.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87k58f74dk.fsf@litku.valot.fi>
+Received: from mga11.intel.com ([192.55.52.93]:3991 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756397AbZANXzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 18:55:25 -0500
+Subject: Re: 'N' Mode and 5GHz, Also WPA2
+From: reinette chatre <reinette.chatre@intel.com>
+To: Delphi Real Estate <Info@delphi-real-estate.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <200901141501.16207.Info@delphi-real-estate.com>
+References: <200901131502.01047.Info@delphi-real-estate.com>
+	 <200901140921.21823.Info@delphi-real-estate.com>
+	 <1231972274.20912.142.camel@rc-desk>
+	 <200901141501.16207.Info@delphi-real-estate.com>
+Content-Type: text/plain
+Date: Wed, 14 Jan 2009 15:57:28 -0800
+Message-Id: <1231977448.20912.146.camel@rc-desk> (sfid-20090115_005535_840771_45DEA37E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 07:00:07PM +0200, Kalle Valo wrote:
-> "Alina Friedrichsen" <x-alina@gmx.net> writes:
+On Wed, 2009-01-14 at 15:01 -0800, Delphi Real Estate wrote:
+> On Wednesday 14 January 2009 2:31:14 pm you wrote:
+> > Could you please send some debug logs of the association attempts
+> > (driver and wpa_supplicant) for us to look at? When you do, please
+> > consider filing a bug at http://www.intellinuxwireless.org/bugzilla/ to
+> > help us keep track of it.
 > 
-> > This fixes a bug when creating a new IBSS network with a fixed BSSID. The fixed BSSID situation is now with one of my last patches handled in ieee80211_sta_find_ibss() function.
-> >
-> > It's more robust to test against (ifsta->flags & IEEE80211_STA_PREV_BSSID_SET), because ifsta->state is not seted right in every situation and so the creating of the new IBSS network sometimes hangs after the first try to scan for a network to merge.
+> I am not an expert, and the best way I know of evidencing the failure is
+> 	ifdown wlan0 && ifconfig wlan0 down
+> 	Kill any existing processes:  ps aux |grep wpa
+> 	# wpa_supplicant -c/etc/wpa_supplicant/wpa_supplicant.conf -iwlan0 -d
 > 
-> Please line wrap your commit logs. Now you had very long lines.
+> Is this the best way?
 
-ACK, please.
+Please run wpa_supplicant with "-dd" for increased debugging. It may be
+easier to do this manually. You can run "dmesg" to see the driver logs.
+You can load the driver with "modprobe iwlagn debug=0x43fff" for
+increased debugging.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Reinette
+
+
