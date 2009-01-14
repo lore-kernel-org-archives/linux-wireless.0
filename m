@@ -1,179 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:55862 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753285AbZA2TGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 14:06:21 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/7] iwlwifi: parametrize configuration of the PLL for exclusion on 6000
-Date: Thu, 29 Jan 2009 11:09:13 -0800
-Message-Id: <1233256157-21290-4-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200626_370093_FE05293C)
-In-Reply-To: <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
- <1233256157-21290-2-git-send-email-reinette.chatre@intel.com>
- <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
+Received: from yw-out-2324.google.com ([74.125.46.30]:51222 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563AbZANVfb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 16:35:31 -0500
+Message-ID: <496E5A9D.3050105@gmail.com> (sfid-20090114_223536_183307_BF699C12)
+Date: Wed, 14 Jan 2009 13:35:25 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Paul Moore <paul.moore@hp.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	SE-Linux <selinux@tycho.nsa.gov>
+Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
+References: <496D759A.7010401@gmail.com> <496E21B3.3070206@gmail.com> <200901141504.30674.paul.moore@hp.com> <200901141508.58174.paul.moore@hp.com>
+In-Reply-To: <200901141508.58174.paul.moore@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Paul Moore wrote:
+> On Wednesday 14 January 2009 3:04:30 pm Paul Moore wrote:
+>   
+>> On Wednesday 14 January 2009 12:32:35 pm Justin P. Mattock wrote:
+>>     
+>
+> ...
+>
+>   
+>>>>> The next is a macbookpro ati chipset the kernel is 2.6.29-rc1
+>>>>> the o.s. is ubuntu jaunty, the netlabel_tools is the same as
+>>>>> above. the only results I see out of this is the avc's it's
+>>>>> generating (the allow rules above are from the macbook);
+>>>>> some reason the dell doesn't generate any avc's,
+>>>>> which makes me wonder is this a module issue.
+>>>>>           
+>>>> Huh.  Just so I'm clear on this ... on the macbook you see avc
+>>>> denials that correspond to the allow rules you posted above, but
+>>>> on the dell you don't see the same avc denials?  Are you running
+>>>> the same SELinux policy on both systems (version numbers)?  What
+>>>> is the output of the following command on both systems?
+>>>>
+>>>>  # cat /selinux/policy_capabilities/network_peer_controls
+>>>>         
+>>> for both systems I'm running the refpolicy(svn) from tresys.
+>>> the new ubac options, and newrole mechanism etc..
+>>> doing cat /selinux/policy_capabilities_netowork_peer_controls says
+>>> "1" should be for both.
+>>>       
+>> Ahhhh!  How did that happen?!  (see my response to your other email)
+>>     
+>
+> Sorry, just realized your other email was private.  In case anyone else 
+> is following this thread, the SELinux policy for network_peer_controls 
+> policy capability is still a work in progress and is disabled by 
+> default because there are still a few issues remaining.  Disabling the 
+> network_peer_controls (the default configuration) fixed the problem.
+>
+>   
+Cool, that's what I figured when looking at cipsov4.
+As for the namespace term(yeah I don't know the term; ahh different
+domain's or mappings I think);
+Anyways heres what I'm trying to achieve:
 
-added a config parameter to enable setting PLL_CFG.  older hardware has
-this parameter set true.  the 6000 family does not support this setting,
-so this parameter set false.
+default looks like this:
+Configured NetLabel domain mappings(1)
+domain: DEFAULT
+    protocol: UNLABELED
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-100.c  |    1 +
- drivers/net/wireless/iwlwifi/iwl-5000.c |   12 ++++++++++--
- drivers/net/wireless/iwlwifi/iwl-6000.c |    5 +++++
- drivers/net/wireless/iwlwifi/iwl-core.h |    1 +
- 4 files changed, 17 insertions(+), 2 deletions(-)
+I want to try and have three of these for the
+different types of media:
+(in theory)
+Configured NetLabel domain mappings(3)
+domain:radio
+   protocol: UNLABELED
+domain:T.V.
+   protocol: UNLABELED
+domain:web
+   protocol: UNLABELED
+(and if possible three different tags(either 1,2,5), but probably can
+only do that with cipsov4);
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-100.c b/drivers/net/wireless/iwlwifi/iwl-100.c
-index 4c4d165..a5df931 100644
---- a/drivers/net/wireless/iwlwifi/iwl-100.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-100.c
-@@ -68,5 +68,6 @@ struct iwl_cfg iwl100_bgn_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_A,
- 	.valid_rx_ant = ANT_AB,
-+	.need_pll_cfg = true,
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 535a46c..ee58ddb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -109,7 +109,8 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
- 	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
- 		    CSR_HW_IF_CONFIG_REG_BIT_HAP_WAKE_L1A);
- 
--	iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR50_ANA_PLL_CFG_VAL);
-+	if (priv->cfg->need_pll_cfg)
-+		iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR50_ANA_PLL_CFG_VAL);
- 
- 	/* set "initialization complete" bit to move adapter
- 	 * D0U* --> D0A* state */
-@@ -177,7 +178,8 @@ static int iwl5000_apm_reset(struct iwl_priv *priv)
- 
- 	/* FIXME: put here L1A -L0S w/a */
- 
--	iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR50_ANA_PLL_CFG_VAL);
-+	if (priv->cfg->need_pll_cfg)
-+		iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR50_ANA_PLL_CFG_VAL);
- 
- 	/* set "initialization complete" bit to move adapter
- 	 * D0U* --> D0A* state */
-@@ -1548,6 +1550,7 @@ struct iwl_cfg iwl5300_agn_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_ABC,
- 	.valid_rx_ant = ANT_ABC,
-+	.need_pll_cfg = true,
- };
- 
- struct iwl_cfg iwl5100_bg_cfg = {
-@@ -1563,6 +1566,7 @@ struct iwl_cfg iwl5100_bg_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_A,
- 	.valid_rx_ant = ANT_AB,
-+	.need_pll_cfg = true,
- };
- 
- struct iwl_cfg iwl5100_abg_cfg = {
-@@ -1578,6 +1582,7 @@ struct iwl_cfg iwl5100_abg_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_B,
- 	.valid_rx_ant = ANT_AB,
-+	.need_pll_cfg = true,
- };
- 
- struct iwl_cfg iwl5100_agn_cfg = {
-@@ -1593,6 +1598,7 @@ struct iwl_cfg iwl5100_agn_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_B,
- 	.valid_rx_ant = ANT_AB,
-+	.need_pll_cfg = true,
- };
- 
- struct iwl_cfg iwl5350_agn_cfg = {
-@@ -1608,6 +1614,7 @@ struct iwl_cfg iwl5350_agn_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_ABC,
- 	.valid_rx_ant = ANT_ABC,
-+	.need_pll_cfg = true,
- };
- 
- struct iwl_cfg iwl5150_agn_cfg = {
-@@ -1623,6 +1630,7 @@ struct iwl_cfg iwl5150_agn_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_B,
- 	.valid_rx_ant = ANT_AB,
-+	.need_pll_cfg = true,
- };
- 
- MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index b78d676..1672a98 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -74,6 +74,7 @@ struct iwl_cfg iwl6000_2ag_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_BC,
- 	.valid_rx_ant = ANT_BC,
-+	.need_pll_cfg = false,
- };
- 
- struct iwl_cfg iwl6000_2agn_cfg = {
-@@ -89,6 +90,7 @@ struct iwl_cfg iwl6000_2agn_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_BC,
- 	.valid_rx_ant = ANT_BC,
-+	.need_pll_cfg = false,
- };
- 
- struct iwl_cfg iwl6050_2agn_cfg = {
-@@ -104,6 +106,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_BC,
- 	.valid_rx_ant = ANT_BC,
-+	.need_pll_cfg = false,
- };
- 
- struct iwl_cfg iwl6000_3agn_cfg = {
-@@ -119,6 +122,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_ABC,
- 	.valid_rx_ant = ANT_ABC,
-+	.need_pll_cfg = false,
- };
- 
- struct iwl_cfg iwl6050_3agn_cfg = {
-@@ -134,6 +138,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_ABC,
- 	.valid_rx_ant = ANT_ABC,
-+	.need_pll_cfg = false,
- };
- 
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 02e92be..789fe6e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -213,6 +213,7 @@ struct iwl_cfg {
- 	const struct iwl_mod_params *mod_params;
- 	u8   valid_tx_ant;
- 	u8   valid_rx_ant;
-+	bool need_pll_cfg;
- };
- 
- /***************************
--- 
-1.5.4.3
+heres what I've come up with so far:
+
+netlabelctl -p map del default
+
+netlabelctl unlbl add domain:radio interface:wlan0 address:<myadd> 
+label:system_u:object_r:netlabel_peer_t:s0
+netlabelctl unlbl add domain:radio interface:wlan0 address:<radioadd> 
+label:system_u:object_r:netlabel_peer_t:s0
+
+netlabelctl unlbl add domain:T.V. interface:wlan0 address:<myadd> 
+label:system_u:object_r:netlabel_peer_t:s0
+netlabelctl unlbl add domain:T.V. interface:wlan0 address:<t.v.add> 
+label:system_u:object_r:netlabel_peer_t:s0
+
+As for the new capabilities, I don't mind trying that out when
+the time comes(but first I need to figure the this out before any other 
+ways);
+
+here is what the error looks like:
+
+netlabel_tools-0.19# make
+INFO: creating the version header file
+.: 10: version_info: not found
+make: *** [include/version.h] Error 2
+
+(googling for the missing package results in a bunch of
+hits on "just do a uname -r");
+
+In any case using the default, and then just adding
+addresses is probably fine for the time being.
+
+regards;
+
+Justin P. Mattock
+
+
 
