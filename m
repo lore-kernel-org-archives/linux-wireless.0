@@ -1,71 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60237 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751902AbZAUNAd (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.170]:46124 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757019AbZANP23 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 08:00:33 -0500
-Subject: Re: Atheros (madwifi/ath5k) virtual STA support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Renzmann <mrenzmann@madwifi-project.org>
-Cc: Catalin Patulea <cat@vv.carleton.ca>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1603.217.24.1.229.1232521394.squirrel@webmail.otaku42.de> (sfid-20090121_080327_129725_D1828C1B)
-References: <9664a4720901201133g5671c7f0x718c4bd187b1d901@mail.gmail.com>
-	 <20090120200802.GF19581@tesla>
-	 <9664a4720901202016o3776205fk2a8bec6bb1331c90@mail.gmail.com>
-	 <1603.217.24.1.229.1232521394.squirrel@webmail.otaku42.de>
-	 (sfid-20090121_080327_129725_D1828C1B)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8dYUSLwu9mIdNhygV5j8"
-Date: Wed, 21 Jan 2009 13:52:45 +0100
-Message-Id: <1232542365.4106.2.camel@johannes.local> (sfid-20090121_140037_769106_700324D7)
-Mime-Version: 1.0
+	Wed, 14 Jan 2009 10:28:29 -0500
+MIME-Version: 1.0
+In-Reply-To: <d6a046090901112338s66143f5ekd03d461027407cf4@mail.gmail.com>
+References: <d6a046090901112338s66143f5ekd03d461027407cf4@mail.gmail.com>
+Date: Wed, 14 Jan 2009 10:28:28 -0500
+Message-ID: <b6c5339f0901140728p71c0223apaa7dc27bc7371a7b@mail.gmail.com> (sfid-20090114_162835_839817_3FD7BBDB)
+Subject: Re: ath5k related kernel panic in 2.6.29-rc1
+From: Bob Copeland <me@bobcopeland.com>
+To: "Sergey S. Kostyliov" <rathamahata@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jan 12, 2009 at 2:38 AM, Sergey S. Kostyliov
+<rathamahata@gmail.com> wrote:
 
---=-8dYUSLwu9mIdNhygV5j8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks for the report!
 
-On Wed, 2009-01-21 at 08:03 +0100, Michael Renzmann wrote:
-> Hi.
->=20
-> Catalin Patulea wrote:
-> > Also, I was under the impression that ath9k is only meant for
-> > 802.11n chipsets (as opposed to abg), and therefore that AR5414 would
-> > not be supported. What am I missing?
->=20
-> ath9k is for Atheros' 11n chipsets, that's true. However, if Luis says
-> that they are working on such a feature for ath9k, one can expect that
-> this work will include patches for mac80211 which then other drivers can
-> rely on to implement a similar feature.
+Apologies, I haven't had time to look into this yet, so this
+is just a response to the effect of "it's on my list."
 
-mac80211 should be fine already
+> ------------[ cut here ]------------
+> WARNING: at net/mac80211/tx.c:567 invoke_tx_handlers+0xdde/0xe30()
+> Hardware name: Aspire 5100
+> Modules linked in:
+> Pid: 3508, comm: rsync Not tainted 2.6.29-rc1 #2
+> Call Trace:
+>  [<ffffffff8023e55a>] warn_slowpath+0xea/0x160
+>  [<ffffffff8062f6ce>] invoke_tx_handlers+0xdde/0xe30
+>  [<ffffffff8062e3b6>] __ieee80211_tx_prepare+0x196/0x310
+>  [<ffffffff805933a0>] pskb_expand_head+0x110/0x180
+>  [<ffffffff80630a1a>] ieee80211_master_start_xmit+0x20a/0x4c0
+>  [<ffffffff805acb86>] __qdisc_run+0x226/0x270
+>  [<ffffffff8059b8a0>] dev_queue_xmit+0x2a0/0x5b0
+>  [<ffffffff806305b3>] ieee80211_subif_start_xmit+0x3b3/0x610
+>  [<ffffffff805acb86>] __qdisc_run+0x226/0x270
+>  [<ffffffff8059b8a0>] dev_queue_xmit+0x2a0/0x5b0
+>  [<ffffffff805bf6ce>] ip_queue_xmit+0x22e/0x430
+>  [<ffffffff802badc0>] pollwake+0x0/0x50
+>  [<ffffffff805d2f7f>] tcp_transmit_skb+0x4bf/0x760
+>  [<ffffffff805d54e9>] tcp_write_xmit+0x1f9/0xa40
+>  [<ffffffff805d5d83>] __tcp_push_pending_frames+0x23/0x80
+>  [<ffffffff805c89d5>] tcp_sendmsg+0x8b5/0xc00
+>  [<ffffffff802bbee8>] dput+0xa8/0x170
+>  [<ffffffff8058a677>] sock_aio_write+0x147/0x160
+>  [<ffffffff802aa24b>] do_sync_write+0xdb/0x120
+>  [<ffffffff80254e70>] autoremove_wake_function+0x0/0x30
+>  [<ffffffff8025c128>] getnstimeofday+0x58/0xe0
+>  [<ffffffff80258330>] ktime_get_ts+0x30/0x60
+>  [<ffffffff802b9614>] poll_select_copy_remaining+0x104/0x160
+>  [<ffffffff802aacfe>] vfs_write+0x15e/0x170
+>  [<ffffffff802aae13>] sys_write+0x53/0xa0
+>  [<ffffffff8020ba1b>] system_call_fastpath+0x16/0x1b
+> ---[ end trace bd3017b2640f5911 ]---
 
-johannes
+I think this is the "RC is busted" WARN_ON.  Other than that,
+at this point I can't say much.
 
---=-8dYUSLwu9mIdNhygV5j8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJdxqaAAoJEKVg1VMiehFYLlkQAKwBfz2KnguMZsxye/itafE4
-IjYb954kI1609HLd0BFgJxTb5eX9LL5jxBzqTpsfQU7FubUetTqPnGKqxiYp/42a
-QlGwbkpQTepVa70mKReKvc6Ezzl2HNnSgzRjLHQ5juFdFJTgb2ZjcefDHwptQ5cY
-R/YBYbzPAacKe8NEROKrhvczmVz2fR98U7CovW7NJM8D1GEctKviIZyeWYLtxR8I
-BYzGHrAUpAo0ppk2ATIS7lG2Wo/JqIFZwU7idK3CIu+SVod6igFR19ilxu4axnUy
-8Z3GlTpimxZ34CMo9P0ibCqWhu5IMEA69eo9nW0smq5cVR+RNTw18xSFKsp2+Vvm
-dmWMWikXDcQBMJNGZxD4qr4ylUgaX/6aqYtZW0zj1xFAPCzlVqk/6Bay/jQTWKqB
-Mg3AGXcvMExX07iojg9ZTLtb8ponX4yAHYiJU9bMCieIEkiTjoq59l6cVNMe3OTT
-KsIpTda2IGvnlIrl1d7jOjxGyNA4Jf3QMRDBWRxx2u28ytvKaHiXkjQGV/FBB0gX
-+be84Jm2K8B44SlFBRafSYBpMekyhsc1G/CO/Yf9yAkkynGuN33Jx5r8QX7ypXah
-y1o0FWfQmNFcNfWmywE+cx5hHjmAZjBdjmBt5bBKsBf6HGdHly1rEIz25SmRvnc9
-3ixc9b2tJayCKw+3y7eJ
-=6Pe5
------END PGP SIGNATURE-----
-
---=-8dYUSLwu9mIdNhygV5j8--
-
+-- 
+Bob Copeland %% www.bobcopeland.com
