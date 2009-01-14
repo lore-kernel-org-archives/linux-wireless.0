@@ -1,135 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:55003 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751526AbZAXOMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 09:12:01 -0500
-Subject: [PATCH 2/7 v2] airo: re-arrange WPA capability checks
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1232748914.447.2.camel@localhost.localdomain>
-References: <1232748914.447.2.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Sat, 24 Jan 2009 09:10:42 -0500
-Message-Id: <1232806242.2870.2.camel@localhost.localdomain> (sfid-20090124_151206_596125_2471FF2D)
-Mime-Version: 1.0
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37306 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754136AbZANTRM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 14:17:12 -0500
+Message-ID: <496E39C2.8040208@openwrt.org> (sfid-20090114_201728_263236_1EACCA04)
+Date: Wed, 14 Jan 2009 20:15:14 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v3 00/11] ath9k: add preliminary support for the AR913x
+ SoCs
+References: <1231854029-26810-1-git-send-email-juhosg@openwrt.org> <1231882731.21706.10.camel@dv>
+In-Reply-To: <1231882731.21706.10.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The capability register has to be read for other (upcoming) stuff, so fold
-the WPA test function back into _init_airo_card() and move the netdevice
-registration stuff above it so that the netdevice has a name by the time
-the card's capabilities are printed out.
+Pavel Roskin =EDrta:
+> On Tue, 2009-01-13 at 14:40 +0100, Gabor Juhos wrote:
+>> This patch set introduces preliminary support for the Atheros' AR913=
+0/AR9132
+>> SoCs built-in WMAC device. Tested with compat-wireless-2009-01-12 an=
+d 2.6.27.10=20
+>> kernel on the following devices:
+>>   * Atheros AP83-050 reference board (AR9132 SoC, AR9106 RF)
+>>   * TRENDnet TEW-632BRP router (AR9130 SoC, AR9102 RF)
+>>   * Mikrotik RB433 board (AR7161 SoC) + AR5416 based miniPCI card
+>=20
+> I confirm that my AR5416 miniPCI is still working with this patch on =
+top
+> of yesterdays wireless-testing (master-2009-01-12).
+>=20
+> Unfortunately, patch named "ath9k: move PCI code into separate file"
+> doesn't apply to the today's wireless-testing and needs to be rebased=
+=2E
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+Yes. I will post a new set.
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index a192c44..a08aadf 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -2734,28 +2734,6 @@ static void airo_networks_initialize(struct airo_info *ai)
- 			      &ai->network_free_list);
- }
- 
--static int airo_test_wpa_capable(struct airo_info *ai)
--{
--	int status;
--	CapabilityRid cap_rid;
--
--	status = readCapabilityRid(ai, &cap_rid, 1);
--	if (status != SUCCESS) return 0;
--
--	/* Only firmware versions 5.30.17 or better can do WPA */
--	if (le16_to_cpu(cap_rid.softVer) > 0x530
--	  || (le16_to_cpu(cap_rid.softVer) == 0x530
--	      && le16_to_cpu(cap_rid.softSubVer) >= 17)) {
--		airo_print_info("", "WPA is supported.");
--		return 1;
--	}
--
--	/* No WPA support */
--	airo_print_info("", "WPA unsupported (only firmware versions 5.30.17"
--		" and greater support WPA.  Detected %s)", cap_rid.prodVer);
--	return 0;
--}
--
- static struct net_device *_init_airo_card( unsigned short irq, int port,
- 					   int is_pcmcia, struct pci_dev *pci,
- 					   struct device *dmdev )
-@@ -2763,6 +2741,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	struct net_device *dev;
- 	struct airo_info *ai;
- 	int i, rc;
-+	CapabilityRid cap_rid;
- 
- 	/* Create the network device object. */
- 	dev = alloc_netdev(sizeof(*ai), "", ether_setup);
-@@ -2832,7 +2811,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 	}
- 
- 	if (probe) {
--		if ( setup_card( ai, dev->dev_addr, 1 ) != SUCCESS ) {
-+		if (setup_card(ai, dev->dev_addr, 1) != SUCCESS) {
- 			airo_print_err(dev->name, "MAC could not be enabled" );
- 			rc = -EIO;
- 			goto err_out_map;
-@@ -2842,28 +2821,47 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
- 		set_bit(FLAG_FLASHING, &ai->flags);
- 	}
- 
-+	strcpy(dev->name, "eth%d");
-+	rc = register_netdev(dev);
-+	if (rc) {
-+		airo_print_err(dev->name, "Couldn't register_netdev");
-+		goto err_out_map;
-+	}
-+	ai->wifidev = init_wifidev(ai, dev);
-+	if (!ai->wifidev)
-+		goto err_out_reg;
-+
-+	rc = readCapabilityRid(ai, &cap_rid, 1);
-+	if (rc != SUCCESS) {
-+		rc = -EIO;
-+		goto err_out_wifi;
-+	}
-+
-+	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
-+	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
-+	                (le16_to_cpu(cap_rid.softVer) & 0xFF),
-+	                le16_to_cpu(cap_rid.softSubVer));
-+
- 	/* Test for WPA support */
--	if (airo_test_wpa_capable(ai)) {
-+	/* Only firmware versions 5.30.17 or better can do WPA */
-+	if (le16_to_cpu(cap_rid.softVer) > 0x530
-+	 || (le16_to_cpu(cap_rid.softVer) == 0x530
-+	      && le16_to_cpu(cap_rid.softSubVer) >= 17)) {
-+		airo_print_info(ai->dev->name, "WPA supported.");
-+
- 		set_bit(FLAG_WPA_CAPABLE, &ai->flags);
- 		ai->bssListFirst = RID_WPA_BSSLISTFIRST;
- 		ai->bssListNext = RID_WPA_BSSLISTNEXT;
- 		ai->bssListRidLen = sizeof(BSSListRid);
- 	} else {
-+		airo_print_info(ai->dev->name, "WPA unsupported with firmware "
-+			"versions older than 5.30.17.");
-+
- 		ai->bssListFirst = RID_BSSLISTFIRST;
- 		ai->bssListNext = RID_BSSLISTNEXT;
- 		ai->bssListRidLen = sizeof(BSSListRid) - sizeof(BSSListRidExtra);
- 	}
- 
--	strcpy(dev->name, "eth%d");
--	rc = register_netdev(dev);
--	if (rc) {
--		airo_print_err(dev->name, "Couldn't register_netdev");
--		goto err_out_map;
--	}
--	ai->wifidev = init_wifidev(ai, dev);
--	if (!ai->wifidev)
--		goto err_out_reg;
--
- 	set_bit(FLAG_REGISTERED,&ai->flags);
- 	airo_print_info(dev->name, "MAC enabled %pM", dev->dev_addr);
- 
+>=20
+> Current checkpatch.pl gets confused by several patches because an
+> "#endif" in the unchanged part somehow causes the preprocessor stack =
+to
+> underflow:
+>=20
+> Can't use an undefined value as an ARRAY reference at
+> scripts/checkpatch.pl line 453.
+>=20
+> This appears to be a bug in checkpatch.pl and should not be considere=
+d a
+> problem in the patches.
+>=20
 
+I have noticed it, but i'm not a Perl expert, so I have checked the pat=
+ches=20
+with checkpatch.pl from 2.6.28.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
