@@ -1,85 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:18592 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:35195 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751756AbZA1USk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 15:18:40 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 12:18:40 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 3/3] ath9k: remove passive scan on 5 GHz if country IE knows better
-Date: Wed, 28 Jan 2009 12:17:49 -0800
-Message-ID: <1233173869-16512-4-git-send-email-lrodriguez@atheros.com> (sfid-20090128_211846_700818_6EBAEBBF)
-In-Reply-To: <1233173869-16512-3-git-send-email-lrodriguez@atheros.com>
-References: <1233173869-16512-1-git-send-email-lrodriguez@atheros.com>
- <1233173869-16512-2-git-send-email-lrodriguez@atheros.com>
- <1233173869-16512-3-git-send-email-lrodriguez@atheros.com>
+	id S1760693AbZANRbN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 12:31:13 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH V2] b43: Eliminate compilation warning in b43_op_set_key
+Date: Wed, 14 Jan 2009 18:30:58 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <496e1dad.5mYJIKpzG2eoWa+t%Larry.Finger@lwfinger.net>
+In-Reply-To: <496e1dad.5mYJIKpzG2eoWa+t%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200901141830.58641.mb@bu3sch.de> (sfid-20090114_183118_290720_4A62A524)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we have new found information about our location and the
-current country regulatory domain does not have passive scan
-flag requirements we should be able to actively scan now on those
-channels.
+On Wednesday 14 January 2009 18:15:25 Larry Finger wrote:
+> A recent pull from wireless testing generates the following warning:
+> =20
+>    CC [M]  drivers/net/wireless/b43/main.o
+>  drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_key=
+=E2=80=99:
+>  drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatch
+>  in conditional expression
+>=20
+> This fix was suggested by Johannes Berg <johannes@sipsolutions.net>.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Since AP functionality is not allowed where passive scan flags are
-set this means if you have a world regulatory domain and you get a
-country IE that allows that channel (with active scan) then we lift
-the passive-scan requirement so you can then use AP mode.
+ACK
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/regd.c |   16 ++++++++++++----
- 1 files changed, 12 insertions(+), 4 deletions(-)
+> ---
+>=20
+> Index: wireless-testing/drivers/net/wireless/b43/main.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
+> +++ wireless-testing/drivers/net/wireless/b43/main.c
+> @@ -3535,6 +3535,9 @@ static int b43_op_set_key(struct ieee802
+>  	u8 algorithm;
+>  	u8 index;
+>  	int err;
+> +#if B43_DEBUG
+> +	static const u8 bcast_addr[ETH_ALEN] =3D {0xff, 0xff, 0xff, 0xff, 0=
+xff, 0xff};
+> +#endif
+> =20
+>  	if (modparam_nohwcrypt)
+>  		return -ENOSPC; /* User disabled HW-crypto */
+> @@ -3633,7 +3636,7 @@ out_unlock:
+>  		b43dbg(wl, "%s hardware based encryption for keyidx: %d, "
+>  		       "mac: %pM\n",
+>  		       cmd =3D=3D SET_KEY ? "Using" : "Disabling", key->keyidx,
+> -		       sta ? sta->addr : "<group key>");
+> +		       sta ? sta->addr : bcast_addr);
+>  		b43_dump_keymemory(dev);
+>  	}
+>  	write_unlock(&wl->tx_lock);
+>=20
+>=20
 
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index cccec40..dfcc3b5 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -160,8 +160,12 @@ static bool ath9k_is_radar_freq(u16 center_freq)
- 	return (center_freq >= 5260 && center_freq <= 5700);
- }
- 
--/* Enable adhoc on 5 GHz if allowed by 11d */
--static void ath9k_reg_apply_5ghz_adhoc_flags(struct wiphy *wiphy,
-+/*
-+ * Enable adhoc on 5 GHz if allowed by 11d.
-+ * Remove passive scan if channel is allowed by 11d,
-+ * except when on radar frequencies.
-+ */
-+static void ath9k_reg_apply_5ghz_beaconing_flags(struct wiphy *wiphy,
- 					     enum reg_set_by setby)
- {
- 	struct ieee80211_supported_band *sband;
-@@ -189,6 +193,10 @@ static void ath9k_reg_apply_5ghz_adhoc_flags(struct wiphy *wiphy,
- 		 * probe */
- 		if (!(reg_rule->flags & NL80211_RRF_NO_IBSS))
- 			ch->flags &= ~NL80211_RRF_NO_IBSS;
-+		if (!ath9k_is_radar_freq(ch->center_freq))
-+			continue;
-+		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
-+			ch->flags &= ~NL80211_RRF_PASSIVE_SCAN;
- 	}
- }
- 
-@@ -283,10 +291,10 @@ void ath9k_reg_apply_world_flags(struct wiphy *wiphy, enum reg_set_by setby)
- 	case 0x63:
- 	case 0x66:
- 	case 0x67:
--		ath9k_reg_apply_5ghz_adhoc_flags(wiphy, setby);
-+		ath9k_reg_apply_5ghz_beaconing_flags(wiphy, setby);
- 		break;
- 	case 0x68:
--		ath9k_reg_apply_5ghz_adhoc_flags(wiphy, setby);
-+		ath9k_reg_apply_5ghz_beaconing_flags(wiphy, setby);
- 		ath9k_reg_apply_active_scan_flags(wiphy, setby);
- 		break;
- 	}
--- 
-1.6.1.rc3.51.g5832d
 
+
+--=20
+Greetings, Michael.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
