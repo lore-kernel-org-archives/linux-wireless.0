@@ -1,78 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f21.google.com ([209.85.217.21]:37670 "EHLO
-	mail-gx0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764239AbZAPWNC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 17:13:02 -0500
-Received: by gxk14 with SMTP id 14so1740148gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 14:13:01 -0800 (PST)
-Message-ID: <43e72e890901161413n3fdd7031lfdd0a363941b697d@mail.gmail.com> (sfid-20090116_231309_523730_F28F1671)
-Date: Fri, 16 Jan 2009 14:13:01 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH 03/13] cfg80211: add wiphy_apply_custom_regulatory()
-Cc: "Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090116163646.GG29609@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
-	 <1232097659.3854.20.camel@johannes> <20090116163646.GG29609@tesla>
+Received: from mx2.redhat.com ([66.187.237.31]:51537 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751710AbZANS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 13:59:09 -0500
+Subject: Re: Marvell 88w8385 Support
+From: Dan Williams <dcbw@redhat.com>
+To: tsr <tsr.offentlig@tsr.se>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <496E3075.6090901@tsr.se>
+References: <496C8468.4060101@tsr.se>  <20090113145213.GA3623@tuxdriver.com>
+	 <1231951654.14909.22.camel@localhost.localdomain>
+	 <496E1D6A.10505@gmail.com>  <496E3075.6090901@tsr.se>
+Content-Type: text/plain
+Date: Wed, 14 Jan 2009 13:57:52 -0500
+Message-Id: <1231959472.14909.73.camel@localhost.localdomain> (sfid-20090114_195922_760233_BB8E719B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2009 at 8:36 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Fri, Jan 16, 2009 at 01:20:59AM -0800, Johannes Berg wrote:
->> On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
->>
->> >  /**
->> >   * enum reg_set_by - Indicates who is trying to set the regulatory domain
->> > + * @REGDOM_SET_BY_PROBE: regulatory domain applied came prior to wiphy
->> > + *         registration by the driver itself using some custom regulatory
->> > + *         information.
->>
->> This is unnecessary, I think.
->
-> I'll make note of it below.
->
->> > +/**
->> > + * freq_reg_info - get regulatory information for the given frequency
->> > + * @wiphy: the wiphy for which we want to process this rule for
->> > + * @center_freq: Frequency in KHz for which we want regulatory information for
->> > + * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
->> > + *         you can set this to 0. If this frequency is allowed we then set
->> > + *         this value to the maximum allowed bandwidth.
->> > + * @reg_rule: the regulatory rule which we have for this frequency
->> > + *
->> > + * Use this function to get the regulatory rule for a specific frequency on
->> > + * a given wireless device. If the device has a specific regulatory domain
->> > + * it wants to follow we respect that unless a country IE has been received
->> > + * and processed already.
->> > + *
->> > + * Returns 0 if it was able to find a valid regulatory rule which does
->> > + * apply to the given center_freq otherwise it returns non-zero. It will
->> > + * also return -ERANGE if we determine the given center_freq does not even have
->> > + * a regulatory rule for a frequency range in the center_freq's band. See
->> > + * freq_in_rule_band() for our current definition of a band -- this is purely
->> > + * subjective and right now its 802.11 specific.
->> > + */
->> > +static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
->> > +                    const struct ieee80211_reg_rule **reg_rule)
->> > +{
->> > +   return freq_reg_info_regd(wiphy, center_freq,
->> > +           bandwidth, reg_rule, NULL);
->> > +}
->>
->> Are you not using this or am I just not seeing the user?
->
-> Yeah -- good catch, its just cruft left over from my previous work.
+On Wed, 2009-01-14 at 19:35 +0100, tsr wrote:
+> John Daiker wrote:
+> > On 01/14/2009 08:47 AM, Dan Williams wrote:
+> >> On Tue, 2009-01-13 at 09:52 -0500, John W. Linville wrote:
+> >>   
+> >>> On Tue, Jan 13, 2009 at 01:09:12PM +0100, tsr wrote:
+> >>>     
+> >>>> Hi,
+> >>>>
+> >>>> I have a FSG-3 that includes a Marvell 88w8385 card. I wonder if there
+> >>>> is support for it in recent kernels. According to
+> >>>> http://marc.info/?l=linux-wireless&m=123178916308198&w=2 (search for
+> >>>> 8385) there seems to be support but I don't want to start messing 
+> >>>> around
+> >>>> with kernels and stuff without being sure.
+> >>>>        
+> >>> That driver is for SDIO hardware.  It looks like your FSG-3 has
+> >>> mini-PCI?  Either way, we don't have a driver merged yet that would
+> >>> cover your hardware.
+> >>>      
+> >>
+> >> Looks like it's a CB35, which is actually an 88w8335 MiniPCI card.
+> >> Would be supported by the mwl8k driver ideally.  I've started on trying
+> >> to add support to mwl8k for the 8335 parts, but we'll need to split the
+> >> driver so that we can create IO hooks for the different parts.  It'll be
+> >> a bit, but we'll get there.
+> >>
+> >> Dan
+> >>    
+> > Very interested in the progress of 8335 support at some point.  My 
+> > Netgear wg311v3 is sitting on my desk... waiting for some Linux bits to 
+> > get it running!
+> > 
+> > I can assist in testing whenever bits become available ( officially or 
+> > unofficially, hint, hint! :-P )
+> > 
+> > Thanks for the hard work, and keep them bits a comin'
+> > 
+> > JD
+> > 
+> 
+> Thanks for the info, I've found something that is said to be a working 
+> drivers for 'my' card in this package: 
+> http://www.seagate.com/staticfiles/maxtor/en_us/downloads/MSSII_3.1.2.src.tgz
+> 
+> The kernel source says it's some kind of 2.6 kernel, grepping for it I 
+> found the highest number to be 2.6.14 so maybe it is possible to use 
+> something from it.
+> 
+> AFAIK it's also GPL.
 
-Actually  freq_reg_info_regd() is used by handle_channel_custom(),
-hence my comment on re-inventing the wheel. But yeah it used.
+Wow, that is the right driver...  haven't seen a driver for the 8335
+before, but there it is, and it's GPL too.  Got the firmware too, which
+I also haven't seen separately.
 
-  Luis
+The path forward with this is to port the support for the hardware over
+to mwl8k since the firmware interface is almost the same.
+
+That said, the only reason I chose that as the path forward was that we
+couldn't make any progress with the standalone driver, and figured that
+Marvell's driver would actually work where mrv8k didn't.  I still think
+it makes sense to use the same driver core for both but if that turns
+out to be too hard, we can just do a mac80211 port for this.
+
+Dan
+
+
