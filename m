@@ -1,107 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33019 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877AbZAENPh (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37544 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753571AbZANTSZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 08:15:37 -0500
-Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless
-	stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linville@tuxdriver.com, davem <davem@davemloft.net>
-In-Reply-To: <20090105132141.GO496@one.firstfloor.org>
-References: <20090104151819.GA6590@basil.nowhere.org>
-	 <1231085150.3296.3.camel@johannes>
-	 <20090104162826.GT496@one.firstfloor.org>
-	 <1231087288.3296.15.camel@johannes>
-	 <20090104174339.GX496@one.firstfloor.org>
-	 <1231090388.3296.17.camel@johannes>
-	 <20090104184136.GY496@one.firstfloor.org>
-	 <1231144574.3286.15.camel@johannes>
-	 <20090105132141.GO496@one.firstfloor.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TUZJM0+lc4BJn2x0ZZ/S"
-Date: Mon, 05 Jan 2009 14:16:19 +0100
-Message-Id: <1231161379.3334.14.camel@johannes> (sfid-20090105_141541_089754_82E75DF2)
-Mime-Version: 1.0
+	Wed, 14 Jan 2009 14:18:25 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>, Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v4 00/11] ath9k: add preliminary support for the AR913x SoCs
+Date: Wed, 14 Jan 2009 20:17:01 +0100
+Message-Id: <1231960632-4452-1-git-send-email-juhosg@openwrt.org> (sfid-20090114_201832_663639_9011F751)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch set introduces preliminary support for the Atheros' AR9130/AR9132
+SoCs built-in WMAC device. Tested with compat-wireless-2.6 and 2.6.27.10 
+kernel on the following device:
+  * Atheros AP83-050 reference board (AR9132 SoC, AR9106 RF)
+  * TRENDnet TEW-632BRP router (AR9130 SoC, AR9102 RF)
+  * Mikrotik RB433 board (AR7161 SoC) + AR5416 based miniPCI card
 
---=-TUZJM0+lc4BJn2x0ZZ/S
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Changes since v3:
+  * rebased against master-2009-01-13 of wireless-testing
 
-On Mon, 2009-01-05 at 14:21 +0100, Andi Kleen wrote:
+Changes since v2:
+  * parentheses around RTC register's names has been removed
+  * rebased against master-2009-01-12 of wireless-testing
 
-> > This statement is incompatible with your patch when you think about the
-> > exact definition of truesize and the (unconditional!) adjustments your
-> > patch makes.
->=20
-> __alloc_skb does=20
->=20
->         size =3D SKB_DATA_ALIGN(size);
->         skb->truesize =3D size + sizeof(struct sk_buff);
->=20
-> [ BTW it would be probably better if alloc_skb() just asked
-> slab what the truesize is for kmalloc instead of guessing wrong like this=
-.
-> But that's a different topic]
->=20
-> and SKB_DATA_ALIGN is=20
->=20
-> #define SKB_DATA_ALIGN(X)       (((X) + (SMP_CACHE_BYTES - 1)) & \
->                                  ~(SMP_CACHE_BYTES - 1))
->=20
-> and on my configuration SMP_CACHE_BYTES is 64
->=20
-> skb_truesize_check does=20
->=20
->  int len =3D sizeof(struct sk_buff) + skb->len;
->=20
->         if (unlikely((int)skb->truesize < len))
->                 skb_truesize_bug(skb);
->=20
-> This means if the change is less than the 64byte cache alignment=20
-> (or more commonly 128 bytes on GENERIC_CPU distro kernels)
-> it won't be reported. To my knowledge header adjustments are usually
-> smaller and that is what pskb_expand_head() is usually used for.
+Changes since v1:
+  * enabling support of the AR9100 has been moved to the end of the series
+  * bus specific cleanup routine has been rewritten
+  * PCI code converted to use 'softc.irq' as well
+  * setup of 'hw->flags' and 'hw->wiphy->interface_modes' has been removed 
+    from ath_ahb_probe()
+  * unregistering of the ath_ahb_diver has been fixed
 
-Ah, indeed, I thought I remembered that truesize had to match exactly,
-but obviously that wasn't done either. We should experiment with that
-though, and let pskb_expand_head() adjust things.
+Changes since RFC:
+  * bus specific DMA routines removed
+  * bus specific register access routines removed
+  * irq value is stored in softc
+  * rebased against master-2009-01-06 of wireless-testing
+  
+11 patches will follow as replies:
 
-> I didn't use any monitoring with this. No tcpdump, no wireless
-> sniffer tools or anything. It happened all the time during
-> normal operation.
+Gabor Juhos (11):
+      ath9k: convert to struct device
+      ath9k: convert to use bus-agnostic DMA routines
+      ath9k: introduce bus specific cache size routine
+      ath9k: introduce bus specific cleanup routine
+      ath9k: move PCI code into separate file
+      ath9k: introduce platform driver for AHB bus support
+      ath9k: get EEPROM contents from platform data on AHB bus
+      ath9k: remove (u16) casts from rtc register access
+      ath9k: fix ar5416Addac_9100 values
+      ath9k: fix null pointer dereference in ani monitor code
+      ath9k: enable support for AR9100
 
-You did have a monitor interface up though, didn't you? If nothing
-actually used those skbs then it's likely that the warning didn't result
-in any corruption at all.
-
-johannes
-
---=-TUZJM0+lc4BJn2x0ZZ/S
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJYgghAAoJEKVg1VMiehFYDxgP/iazIvan411+Tql/zQ/pdzI2
-0lOHqwOTM217fYdAXDzbmBYNosG8xy37VfjmjQjI35BDVL/bJaybZcSNvrK/DvV7
-7wW9k2AeOhKzmvPM+w+cyn7jmso+WC4ww+toPeZtbvmRwsWAFa8Ow3NwAGwNUXzS
-47b+A8bn68iZDsVh8VnxeZAQ8/DWahNjhHRoub2TfoD6IA9+nSD6Ahe1Sgccfukq
-DSI2JiBfgznJroag3w3NIvOXtn/+y6hUJ1vEsFMjEauGqQhK7RpbxK8SWvgqjQ6C
-IaboEFHgYAURwW7YR3GksxHIQ+XN0J6eErXfIYabNENYtanhmmCkpUfzh8KkW1sj
-0NsBy1NtQD6jGPYpuNmbiYI8JFW7bL7hzZvo44WW7aYKQhqm8J5CuuW90gAlz0Oc
-4RoOBHqPiEfyHxmAhYY75vk3ujC97OSfdsjzMYngHT9/A2JPvkgejk9v2N7Oscks
-8CkZh0AbhJcz2tutU72gYXlVAQ5Vv2CqbF2d1nWK1CebJOUOsoKFMO+Oc9TEpopz
-r6kXIccSWUnVjkHjc3X0qm+z6b6Npx4f6QRMI/bmFFcG3xoBEDVpj+F81NItqrW0
-JZjoyDXCuTMSN2F5NKTEdF06oJqrrBb1hWuJymuUhdVcAfzqE3nIxpJHbD09dhji
-zQEvSEu0TnGJERZGljOg
-=Q1MN
------END PGP SIGNATURE-----
-
---=-TUZJM0+lc4BJn2x0ZZ/S--
-
+ drivers/net/wireless/ath9k/Makefile   |    2 
+ drivers/net/wireless/ath9k/ahb.c      |  187 +++++++++++++++++++
+ drivers/net/wireless/ath9k/ani.c      |    6 -
+ drivers/net/wireless/ath9k/beacon.c   |   28 +--
+ drivers/net/wireless/ath9k/core.h     |   47 +++++
+ drivers/net/wireless/ath9k/eeprom.c   |   51 -----
+ drivers/net/wireless/ath9k/hw.c       |   17 +-
+ drivers/net/wireless/ath9k/initvals.h |    2 
+ drivers/net/wireless/ath9k/main.c     |  326 +++++----------------------------
+ drivers/net/wireless/ath9k/pci.c      |  305 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/recv.c     |   24 +-
+ drivers/net/wireless/ath9k/reg.h      |    4 
+ drivers/net/wireless/ath9k/xmit.c     |   14 +
+ include/linux/ath9k_platform.h        |   28 +++
+ 14 files changed, 665 insertions(+), 376 deletions(-)
+ create mode 100644 drivers/net/wireless/ath9k/ahb.c
+ create mode 100644 drivers/net/wireless/ath9k/pci.c
+ create mode 100644 include/linux/ath9k_platform.h
