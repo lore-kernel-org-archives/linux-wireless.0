@@ -1,376 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11036 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759713AbZAPANa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 19:13:30 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:13:29 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 13/13] cfg80211: Remove CONFIG_WIRELESS_OLD_REGULATORY
-Date: Thu, 15 Jan 2009 16:12:26 -0800
-Message-ID: <1232064746-17134-14-git-send-email-lrodriguez@atheros.com> (sfid-20090116_013902_630869_A1E890A6)
-In-Reply-To: <1232064746-17134-13-git-send-email-lrodriguez@atheros.com>
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-9-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-10-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-11-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-12-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-13-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37710 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756343AbZANTTT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 14:19:19 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH v4 04/11] ath9k: introduce bus specific cleanup routine
+Date: Wed, 14 Jan 2009 20:17:05 +0100
+Message-Id: <1231960632-4452-5-git-send-email-juhosg@openwrt.org> (sfid-20090114_201937_719975_122F670E)
+In-Reply-To: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
+References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removal was scheduled for 2.6.29 but we decided to
-keep it around a bit longer. Now that we are on road to
-2.6.30 lets remove it.
+We have left only some PCI specific cleanup code. We have to convert
+them as well.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Changes-licensed-under: ISC
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
 ---
- Documentation/feature-removal-schedule.txt |   18 ---
- net/wireless/Kconfig                       |   46 +++------
- net/wireless/nl80211.c                     |    5 -
- net/wireless/reg.c                         |  161 +++-------------------------
- 4 files changed, 26 insertions(+), 204 deletions(-)
+ drivers/net/wireless/ath9k/core.h |    7 +++++++
+ drivers/net/wireless/ath9k/main.c |   37 +++++++++++++++++++++++--------------
+ 2 files changed, 30 insertions(+), 14 deletions(-)
 
-diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
-index ac98851..f178d8b 100644
---- a/Documentation/feature-removal-schedule.txt
-+++ b/Documentation/feature-removal-schedule.txt
-@@ -6,24 +6,6 @@ be removed from this file.
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 8e93d11..f9fa5c6 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -695,6 +695,7 @@ enum PROT_MODE {
  
- ---------------------------
+ struct ath_bus_ops {
+ 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
++	void		(*cleanup)(struct ath_softc *sc);
+ };
  
--What:	old static regulatory information and ieee80211_regdom module parameter
--When:	2.6.29
--Why:	The old regulatory infrastructure has been replaced with a new one
--	which does not require statically defined regulatory domains. We do
--	not want to keep static regulatory domains in the kernel due to the
--	the dynamic nature of regulatory law and localization. We kept around
--	the old static definitions for the regulatory domains of:
--		* US
--		* JP
--		* EU
--	and used by default the US when CONFIG_WIRELESS_OLD_REGULATORY was
--	set. We also kept around the ieee80211_regdom module parameter in case
--	some applications were relying on it. Changing regulatory domains
--	can now be done instead by using nl80211, as is done with iw.
--Who:	Luis R. Rodriguez <lrodriguez@atheros.com>
--
-----------------------------
--
- What:	dev->power.power_state
- When:	July 2007
- Why:	Broken design for runtime control over driver power states, confusing
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index e28e2b8..bc00782 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -1,5 +1,18 @@
- config CFG80211
-         tristate "Improved wireless configuration API"
-+	---help---
-+	  cfg80211 is the new wireless driver framework. If you have a
-+	  modern wireless card you want to enable this option.
+ struct ath_softc {
+@@ -704,6 +705,7 @@ struct ath_softc {
+ 	struct tasklet_struct bcon_tasklet;
+ 	struct ath_hal *sc_ah;
+ 	void __iomem *mem;
++	int irq;
+ 	spinlock_t sc_resetlock;
+ 	struct mutex mutex;
+ 
+@@ -760,4 +762,9 @@ static inline void ath_read_cachesize(struct ath_softc *sc, int *csz)
+ 	sc->bus_ops->read_cachesize(sc, csz);
+ }
+ 
++static inline void ath_bus_cleanup(struct ath_softc *sc)
++{
++	sc->bus_ops->cleanup(sc);
++}
 +
-+	  cfg80211's regulatory framework requires a userspace application
-+	  which has the database of regulatory information (CRDA). Setting
-+	  of regulatory domains can be done by drivers, or the wireless core
-+	  based on country information elements. Users can also use userspace
-+	  applications like iw or wpa_supplicant to help compliance further.
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 884469a..dd2be26 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -39,6 +39,7 @@ static struct pci_device_id ath_pci_id_table[] __devinitdata = {
+ };
+ 
+ static void ath_detach(struct ath_softc *sc);
++static void ath_cleanup(struct ath_softc *sc);
+ 
+ /* return bus cachesize in 4B word units */
+ 
+@@ -1267,13 +1268,7 @@ static int ath_start_rfkill_poll(struct ath_softc *sc)
+ 			rfkill_free(sc->rf_kill.rfkill);
+ 
+ 			/* Deinitialize the device */
+-			ath_detach(sc);
+-			if (to_pci_dev(sc->dev)->irq)
+-				free_irq(to_pci_dev(sc->dev)->irq, sc);
+-			pci_iounmap(to_pci_dev(sc->dev), sc->mem);
+-			pci_release_region(to_pci_dev(sc->dev), 0);
+-			pci_disable_device(to_pci_dev(sc->dev));
+-			ieee80211_free_hw(sc->hw);
++			ath_cleanup(sc);
+ 			return -EIO;
+ 		} else {
+ 			sc->sc_flags |= SC_OP_RFKILL_REGISTERED;
+@@ -1284,6 +1279,14 @@ static int ath_start_rfkill_poll(struct ath_softc *sc)
+ }
+ #endif /* CONFIG_RFKILL */
+ 
++static void ath_cleanup(struct ath_softc *sc)
++{
++	ath_detach(sc);
++	free_irq(sc->irq, sc);
++	ath_bus_cleanup(sc);
++	ieee80211_free_hw(sc->hw);
++}
 +
-+	  For more information see:
-+
-+	  http://wireless.kernel.org/en/developers/Regulatory/
- 
- config CFG80211_REG_DEBUG
- 	bool "cfg80211 regulatory debugging"
-@@ -23,39 +36,6 @@ config NL80211
- 
- 	  If unsure, say Y.
- 
--config WIRELESS_OLD_REGULATORY
--	bool "Old wireless static regulatory definitions"
--	default y
--	---help---
--	  This option enables the old static regulatory information
--	  and uses it within the new framework. This is available
--	  temporarily as an option to help prevent immediate issues
--	  due to the switch to the new regulatory framework which
--	  does require a new userspace application which has the
--	  database of regulatory information (CRDA) and another for
--	  setting regulatory domains (iw).
--
--	  For more information see:
--
--	  http://wireless.kernel.org/en/developers/Regulatory/CRDA
--	  http://wireless.kernel.org/en/users/Documentation/iw
--
--	  It is important to note though that if you *do* have CRDA present
--	  and if this option is enabled CRDA *will* be called to update the
--	  regulatory domain (for US and JP only). Support for letting the user
--	  set the regulatory domain through iw is also supported. This option
--	  mainly exists to leave around for a kernel release some old static
--	  regulatory domains that were defined and to keep around the old
--	  ieee80211_regdom module parameter. This is being phased out and you
--	  should stop using them ASAP.
--
--	  Note: You will need CRDA if you want 802.11d support
--
--	  Say Y unless you have installed a new userspace application.
--	  Also say Y if have one currently depending on the ieee80211_regdom
--	  module parameter and cannot port it to use the new userspace
--	  interfaces.
--
- config WIRELESS_EXT
- 	bool "Wireless extensions"
- 	default n
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 123d3b1..2e7f9eb 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1896,11 +1896,6 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 
- 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
- 
--#ifdef CONFIG_WIRELESS_OLD_REGULATORY
--	/* We ignore world regdom requests with the old regdom setup */
--	if (is_world_regdom(data))
--		return -EINVAL;
--#endif
- 	mutex_lock(&cfg80211_drv_mutex);
- 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
- 	mutex_unlock(&cfg80211_drv_mutex);
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 271b54a..d91a046 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -110,103 +110,6 @@ static const struct ieee80211_regdomain world_regdom = {
- static const struct ieee80211_regdomain *cfg80211_world_regdom =
- 	&world_regdom;
- 
--#ifdef CONFIG_WIRELESS_OLD_REGULATORY
--static char *ieee80211_regdom = "US";
--module_param(ieee80211_regdom, charp, 0444);
--MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
--
--/* We assume 40 MHz bandwidth for the old regulatory work.
-- * We make emphasis we are using the exact same frequencies
-- * as before */
--
--static const struct ieee80211_regdomain us_regdom = {
--	.n_reg_rules = 6,
--	.alpha2 =  "US",
--	.reg_rules = {
--		/* IEEE 802.11b/g, channels 1..11 */
--		REG_RULE(2412-10, 2462+10, 40, 6, 27, 0),
--		/* IEEE 802.11a, channel 36 */
--		REG_RULE(5180-10, 5180+10, 40, 6, 23, 0),
--		/* IEEE 802.11a, channel 40 */
--		REG_RULE(5200-10, 5200+10, 40, 6, 23, 0),
--		/* IEEE 802.11a, channel 44 */
--		REG_RULE(5220-10, 5220+10, 40, 6, 23, 0),
--		/* IEEE 802.11a, channels 48..64 */
--		REG_RULE(5240-10, 5320+10, 40, 6, 23, 0),
--		/* IEEE 802.11a, channels 149..165, outdoor */
--		REG_RULE(5745-10, 5825+10, 40, 6, 30, 0),
--	}
--};
--
--static const struct ieee80211_regdomain jp_regdom = {
--	.n_reg_rules = 3,
--	.alpha2 =  "JP",
--	.reg_rules = {
--		/* IEEE 802.11b/g, channels 1..14 */
--		REG_RULE(2412-10, 2484+10, 40, 6, 20, 0),
--		/* IEEE 802.11a, channels 34..48 */
--		REG_RULE(5170-10, 5240+10, 40, 6, 20,
--			NL80211_RRF_PASSIVE_SCAN),
--		/* IEEE 802.11a, channels 52..64 */
--		REG_RULE(5260-10, 5320+10, 40, 6, 20,
--			NL80211_RRF_NO_IBSS |
--			NL80211_RRF_DFS),
--	}
--};
--
--static const struct ieee80211_regdomain eu_regdom = {
--	.n_reg_rules = 6,
--	/* This alpha2 is bogus, we leave it here just for stupid
--	 * backward compatibility */
--	.alpha2 =  "EU",
--	.reg_rules = {
--		/* IEEE 802.11b/g, channels 1..13 */
--		REG_RULE(2412-10, 2472+10, 40, 6, 20, 0),
--		/* IEEE 802.11a, channel 36 */
--		REG_RULE(5180-10, 5180+10, 40, 6, 23,
--			NL80211_RRF_PASSIVE_SCAN),
--		/* IEEE 802.11a, channel 40 */
--		REG_RULE(5200-10, 5200+10, 40, 6, 23,
--			NL80211_RRF_PASSIVE_SCAN),
--		/* IEEE 802.11a, channel 44 */
--		REG_RULE(5220-10, 5220+10, 40, 6, 23,
--			NL80211_RRF_PASSIVE_SCAN),
--		/* IEEE 802.11a, channels 48..64 */
--		REG_RULE(5240-10, 5320+10, 40, 6, 20,
--			NL80211_RRF_NO_IBSS |
--			NL80211_RRF_DFS),
--		/* IEEE 802.11a, channels 100..140 */
--		REG_RULE(5500-10, 5700+10, 40, 6, 30,
--			NL80211_RRF_NO_IBSS |
--			NL80211_RRF_DFS),
--	}
--};
--
--static const struct ieee80211_regdomain *static_regdom(char *alpha2)
--{
--	if (alpha2[0] == 'U' && alpha2[1] == 'S')
--		return &us_regdom;
--	if (alpha2[0] == 'J' && alpha2[1] == 'P')
--		return &jp_regdom;
--	if (alpha2[0] == 'E' && alpha2[1] == 'U')
--		return &eu_regdom;
--	/* Default, as per the old rules */
--	return &us_regdom;
--}
--
--static bool is_old_static_regdom(const struct ieee80211_regdomain *rd)
--{
--	if (rd == &us_regdom || rd == &jp_regdom || rd == &eu_regdom)
--		return true;
--	return false;
--}
--#else
--static inline bool is_old_static_regdom(const struct ieee80211_regdomain *rd)
--{
--	return false;
--}
--#endif
--
- static void reset_regdomains(void)
+ static void ath_detach(struct ath_softc *sc)
  {
- 	/* avoid freeing static information or freeing something twice */
-@@ -216,8 +119,6 @@ static void reset_regdomains(void)
- 		cfg80211_world_regdom = NULL;
- 	if (cfg80211_regdomain == &world_regdom)
- 		cfg80211_regdomain = NULL;
--	if (is_old_static_regdom(cfg80211_regdomain))
--		cfg80211_regdomain = NULL;
- 
- 	kfree(cfg80211_regdomain);
- 	kfree(cfg80211_world_regdom);
-@@ -1203,16 +1104,6 @@ new_request:
- 	if (r < 0)
- 		return r;
- 
--	/*
--	 * Note: When CONFIG_WIRELESS_OLD_REGULATORY is enabled
--	 * AND if CRDA is NOT present nothing will happen, if someone
--	 * wants to bother with 11d with OLD_REG you can add a timer.
--	 * If after x amount of time nothing happens you can call:
--	 *
--	 * return set_regdom(country_ie_regdomain);
--	 *
--	 * to intersect with the static rd
--	 */
- 	return call_crda(alpha2);
+ 	struct ieee80211_hw *hw = sc->hw;
+@@ -2534,8 +2537,18 @@ ath_rf_name(u16 rf_version)
+ 	return "????";
  }
  
-@@ -1467,16 +1358,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	if (!last_request)
- 		return -EINVAL;
++static void ath_pci_cleanup(struct ath_softc *sc)
++{
++	struct pci_dev *pdev = to_pci_dev(sc->dev);
++
++	pci_iounmap(pdev, sc->mem);
++	pci_release_region(pdev, 0);
++	pci_disable_device(pdev);
++}
++
+ static struct ath_bus_ops ath_pci_bus_ops = {
+ 	.read_cachesize = ath_pci_read_cachesize,
++	.cleanup = ath_pci_cleanup,
+ };
  
--	/* Lets only bother proceeding on the same alpha2 if the current
--	 * rd is non static (it means CRDA was present and was used last)
--	 * and the pending request came in from a country IE */
--	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE) {
--		/* If someone else asked us to change the rd lets only bother
--		 * checking if the alpha2 changes if CRDA was already called */
--		if (!is_old_static_regdom(cfg80211_regdomain) &&
--		    !regdom_changed(rd->alpha2))
--			return -EINVAL;
--	}
-+	/* Lets only bother proceeding on the same alpha2 if the
-+	 * pending request came in from a country IE */
-+	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
-+	    !regdom_changed(rd->alpha2))
-+		return -EINVAL;
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+@@ -2642,6 +2655,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto bad4;
+ 	}
  
- 	wiphy = last_request->wiphy;
++	sc->irq = pdev->irq;
++
+ 	ah = sc->sc_ah;
+ 	printk(KERN_INFO
+ 	       "%s: Atheros AR%s MAC/BB Rev:%x "
+@@ -2672,13 +2687,7 @@ static void ath_pci_remove(struct pci_dev *pdev)
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath_softc *sc = hw->priv;
  
-@@ -1548,24 +1434,18 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	 */
- 
- 	BUG_ON(!country_ie_regdomain);
-+	BUG_ON(rd == country_ie_regdomain);
- 
--	if (rd != country_ie_regdomain) {
--		/* Intersect what CRDA returned and our what we
--		 * had built from the Country IE received */
-+	/* Intersect what CRDA returned and our what we
-+	 * had built from the Country IE received */
- 
--		intersected_rd = regdom_intersect(rd, country_ie_regdomain);
-+	intersected_rd = regdom_intersect(rd, country_ie_regdomain);
- 
--		reg_country_ie_process_debug(rd, country_ie_regdomain,
--			intersected_rd);
-+	reg_country_ie_process_debug(rd, country_ie_regdomain,
-+		intersected_rd);
- 
--		kfree(country_ie_regdomain);
--		country_ie_regdomain = NULL;
--	} else {
--		/* This would happen when CRDA was not present and
--		 * OLD_REGULATORY was enabled. We intersect our Country
--		 * IE rd and what was set on cfg80211 originally */
--		intersected_rd = regdom_intersect(rd, cfg80211_regdomain);
--	}
-+	kfree(country_ie_regdomain);
-+	country_ie_regdomain = NULL;
- 
- 	if (!intersected_rd)
- 		return -EINVAL;
-@@ -1634,19 +1514,6 @@ int regulatory_init(void)
- 	if (IS_ERR(reg_pdev))
- 		return PTR_ERR(reg_pdev);
- 
--#ifdef CONFIG_WIRELESS_OLD_REGULATORY
--	cfg80211_regdomain = static_regdom(ieee80211_regdom);
--
--	printk(KERN_INFO "cfg80211: Using static regulatory domain info\n");
--	print_regdomain_info(cfg80211_regdomain);
--	/* The old code still requests for a new regdomain and if
--	 * you have CRDA you get it updated, otherwise you get
--	 * stuck with the static values. We ignore "EU" code as
--	 * that is not a valid ISO / IEC 3166 alpha2 */
--	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
--		err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE,
--					ieee80211_regdom, 0, ENVIRON_ANY);
--#else
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
- 	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", 0, ENVIRON_ANY);
-@@ -1654,8 +1521,6 @@ int regulatory_init(void)
- 		printk(KERN_ERR "cfg80211: calling CRDA failed - "
- 		       "unable to update world regulatory domain, "
- 		       "using static definition\n");
--#endif
--
- 	return 0;
+-	ath_detach(sc);
+-	if (pdev->irq)
+-		free_irq(pdev->irq, sc);
+-	pci_iounmap(pdev, sc->mem);
+-	pci_release_region(pdev, 0);
+-	pci_disable_device(pdev);
+-	ieee80211_free_hw(hw);
++	ath_cleanup(sc);
  }
  
+ #ifdef CONFIG_PM
 -- 
-1.6.1.rc3.51.g5832d
+1.5.3.2
 
