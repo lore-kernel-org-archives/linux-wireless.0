@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40315 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757403AbZABKFq (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37634 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754201AbZANTSr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 05:05:46 -0500
-Subject: Re: [RFC 02/11] mac80211: 802.11w - CCMP for management frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1230890697.3272.6.camel@johannes>
-References: <20081231153834.840526845@w1.fi>
-	 <20081231154203.845811912@w1.fi>  <1230890697.3272.6.camel@johannes>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PPoQK1C4sX8eahK/GmQ5"
-Date: Fri, 02 Jan 2009 11:06:22 +0100
-Message-Id: <1230890782.3272.8.camel@johannes> (sfid-20090102_110548_347812_F18F854D)
-Mime-Version: 1.0
+	Wed, 14 Jan 2009 14:18:47 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH v4 10/11] ath9k: fix null pointer dereference in ani monitor code
+Date: Wed, 14 Jan 2009 20:17:11 +0100
+Message-Id: <1231960632-4452-11-git-send-email-juhosg@openwrt.org> (sfid-20090114_201852_295433_652D1FBE)
+In-Reply-To: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
+References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In 'ath9k_ani_reset' the 'ahp->ah_curani' will be initialized only
+if 'DO_ANI(ah)' true. In 'ath9k_hw_ani_monitor' we are using
+'ahp->ah_curani' unconditionally, and it will cause a NULL pointer
+dereference on AR9100.
 
---=-PPoQK1C4sX8eahK/GmQ5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Changes-licensed-under: ISC
 
-On Fri, 2009-01-02 at 11:05 +0100, Johannes Berg wrote:
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/ani.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-> Should that be in include/linux/ieee80211.h?
-
-Ok, it is, d'oh. I guess even though it's Jan 2 already ...
-
-johannes
-
---=-PPoQK1C4sX8eahK/GmQ5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJXeccAAoJEKVg1VMiehFYR6oQAJrQwVXiUDHl2nOw77F3YlYN
-uvmvmMxyCniOJuxUSTJlHZ+VBqruIiB16to2+AI3RdZCeJ8Xxcn/Kt8K9vLpCe9v
-keJ0qTJhDzLGqkvYbTl5U2TkzOHwqIAulsXn1gtySwBpyLVCiPKrVgq/aicmYq1K
-8eWAtDQe+HEF1Y0CbvJ8h2AYOFp9C2uDnsnWdlRmdQAOTn8dXElqaC+t5uibamag
-PrmhZ9xr5EiBYQUd/ca3bm6Igb+Uj3GAtTGKYfz0hBUg4+bytzw7J3J+UbK2guN9
-r2PwQmAT/OLOmdDWfpkbvCZG8jop+XCNmMbkcBMhHOD8z2tl+b4KzuC8sHjT2+UN
-UCQpXZ5zylbG93Mw1HPRsIlAqX3VWVpc4p9jDrXFe/LO3agffZviqtlLz+igaD8p
-TkZ4FUlZa5N/phnG2h1+sAdjfxsbgEfL/dhhvXqcfdErk1+bW9AouO2aYyrV2akl
-viHhvYVwE8PwFSTXn9vzMTPCGogDD2Fx34cF/zNWl5hwVyueIRroYWe2U/aABEJo
-sNSEPkB8wH2fhodPnWQQUpV1bCfTgRRPLV9wdCRpwQGwtV1cl1RQhD2DwQSFUrvj
-AZiI/GJ4nJhX9NQul1VahqJ302e47UOnqgDRB66DTql/0yl018xIghHZkVlDXhzV
-3cwpV0rdedQjDUzp3GFC
-=V6Y/
------END PGP SIGNATURE-----
-
---=-PPoQK1C4sX8eahK/GmQ5--
+diff --git a/drivers/net/wireless/ath9k/ani.c b/drivers/net/wireless/ath9k/ani.c
+index 4dd0860..42197ff 100644
+--- a/drivers/net/wireless/ath9k/ani.c
++++ b/drivers/net/wireless/ath9k/ani.c
+@@ -551,6 +551,9 @@ void ath9k_hw_ani_monitor(struct ath_hal *ah,
+ 	struct ar5416AniState *aniState;
+ 	int32_t listenTime;
+ 
++	if (!DO_ANI(ah))
++		return;
++
+ 	aniState = ahp->ah_curani;
+ 	ahp->ah_stats.ast_nodestats = *stats;
+ 
+@@ -610,9 +613,6 @@ void ath9k_hw_ani_monitor(struct ath_hal *ah,
+ 		aniState->cckPhyErrCount = cckPhyErrCnt;
+ 	}
+ 
+-	if (!DO_ANI(ah))
+-		return;
+-
+ 	if (aniState->listenTime > 5 * ahp->ah_aniPeriod) {
+ 		if (aniState->ofdmPhyErrCount <= aniState->listenTime *
+ 		    aniState->ofdmTrigLow / 1000 &&
+-- 
+1.5.3.2
 
