@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38244 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752634AbZAPJO7 (ORCPT
+Received: from gateway16.websitewelcome.com ([69.56.183.8]:53254 "HELO
+	gateway16.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752628AbZANALG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 04:14:59 -0500
-Subject: Re: [PATCH 04/13] cfg80211: export freq_reg_info()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1232065614-18007-1-git-send-email-lrodriguez@atheros.com> (sfid-20090116_012725_745779_3C46C304)
-References: <1232065614-18007-1-git-send-email-lrodriguez@atheros.com>
-	 (sfid-20090116_012725_745779_3C46C304)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-78Dw6NdwcIfkiDErlsga"
-Date: Fri, 16 Jan 2009 10:14:26 +0100
-Message-Id: <1232097266.3854.11.camel@johannes> (sfid-20090116_101506_885567_3E5327D4)
-Mime-Version: 1.0
+	Tue, 13 Jan 2009 19:11:06 -0500
+Received: from 96-26-216-101.sea.clearwire-dns.net ([96.26.216.101]:40256 helo=Hydra.darkmatter.org)
+	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <Info@delphi-real-estate.com>)
+	id 1LMtFC-0007kj-11
+	for linux-wireless@vger.kernel.org; Tue, 13 Jan 2009 18:04:26 -0600
+From: Delphi Real Estate <Info@delphi-real-estate.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: 'N' Mode and 5GHz, Also WPA2
+Date: Tue, 13 Jan 2009 16:04:22 -0800
+References: <200901131502.01047.Info@delphi-real-estate.com> <69e28c910901131534g28404687y6bf23bdbbb233b26@mail.gmail.com>
+In-Reply-To: <69e28c910901131534g28404687y6bf23bdbbb233b26@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901131604.22355.Info@delphi-real-estate.com> (sfid-20090114_011111_376747_50450C72)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-78Dw6NdwcIfkiDErlsga
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Tuesday 13 January 2009 15:34:47 you wrote:
+> Try checking its FCC ID on the Equipment Authorization page. It has
+> internal photos.
 
-On Thu, 2009-01-15 at 16:26 -0800, Luis R. Rodriguez wrote:
+Thanks, it's here:
+https://fjallfoss.fcc.gov/prod/oet/forms/blobs/retrieve.cgi?attachment_id=979202&native_or_pdf=pdf
+... looks like an Atheros.  Not sure which one is 5GHz tho...  and I'm not sure how compatible this is with Intel's 4965AGN at 5GHz.
 
-> @@ -846,29 +846,9 @@ static int freq_reg_info_regd(struct wiphy *wiphy, u=
-32 center_freq,
-> =20
->  	return !max_bandwidth;
->  }
-> +EXPORT_SYMBOL(freq_reg_info);
 
-that kinda seems to be in the wrong spot.
+> > Also I am unable to associate in any mode in any band, with WPA2.  Has anyone got WPA2 working with the iwlagn driver?
+> 
+> Are you running the latest wpa_supplicant?
 
-I also don't quite understand what you need this for?
+The latest one that comes with updated Hardy, 0.6.0+0.5.8-0ubuntu2.  And I'm running an Intrepid kernel on Hardy, so I could get this newer iwlagn driver.
 
-johannes
 
---=-78Dw6NdwcIfkiDErlsga
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+On Tuesday 13 January 2009 15:39:20 you wrote:
+> Hi Bill.  I use WPA2 with the iwlagn driver on a daily basis, though
+> I've never used it for 5GHz.  If you are using the stock Ubuntu kernel
+> and are having trouble with WPA2 I really suggest using Ubuntu's
+> support resources and/or filing a bug there, the linux wireless
+> mailing list is probably not the right place.  If you are building the
+> wireless-testing kernel and wish to discuss your results, this
+> probably is the right place if you are very specific about your
+> configuration and post useful logs.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Thanks for being kind.  I've switched to 5GHz exclusively because I stream H.264 using MythTV, and I don't want to pollute the 2.4GHz airwaves for my neighbors. (Also it prevents interference when I'm microwaving dinner, and gives more bandwidth <g>)  But for now I'm limited to 802.11a because 'n' will not associate.
 
-iQIcBAABAgAGBQJJcE/tAAoJEKVg1VMiehFYBKQQAIUb7OhPLzXT2ja4WGk6WYpE
-gSQctaMbLRizJqCF7vOf3C6j6vEC3GcA+JpmYJ7xisyVTI47o02IJe77H4Ky965R
-lIxYQQAfWfbGLLEJPkticFsKSZKFjvdCAkv2/Ckzx6hTBEwXjdk1lOg+qzpt12wP
-/pR9FAGBPMgTYSo/agg/NZUkm02Ji3t5BZKZbGVIsW6zyRKv3dssDlIKrboHbFwF
-VWPvBIyzuwah9BWTsBo32mRkf7fHrJk0gOwhwcW2ilRyy+DoOazCrm7scpiI4e+z
-BdFEbQxxL8877TQPnacC9TkifxtFWPzOTG5oZpdT4OLyym6EckOZmSFUW1sR+FkX
-T939/uGlR1y8O68BQ80Y3XirqZVkIyQ9Ft/LvvFRUMupb2dSr9UOkzFPLYFP+a+U
-41xAyAStTAR8vOWFLUP421k2EcvCAY7FVMuRNAoo9vj29YOxXMnBFJ1QZ5hz8q0B
-35YiuRr7HkLhzLo2VYnLlGyzXKqVHpXbkH15hqJH/WeSh1RfuHzD2PXK1duc85D4
-k/ytTrc8i/B60IdsRtHmnVAY6liRVbHJzeDkgeYmmsVIKDbv52k9UhLi61VD8ayq
-S5JmirWsMxqpIu0gM+DXXAb6EJ+KkURB/y1wjMjIvFhnGRkNdEj749DpnoXN17Zs
-eLBUyzaStZ6y56yCsHfv
-=cPWu
------END PGP SIGNATURE-----
+And WPA2 will not associate under any circumstances for me with the combo 4965AGN and DIR-825.  What's your combo Andrey?
 
---=-78Dw6NdwcIfkiDErlsga--
 
