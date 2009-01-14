@@ -1,64 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:7077 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751759AbZA0WZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 17:25:08 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 6/7] iwlwifi: clean key table in iwl_clear_stations_table
-Date: Tue, 27 Jan 2009 14:27:57 -0800
-Message-Id: <1233095278-5850-7-git-send-email-reinette.chatre@intel.com> (sfid-20090127_232516_476846_16818325)
-In-Reply-To: <1233095278-5850-6-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1233095278-5850-1-git-send-email-reinette.chatre@intel.com>
- <1233095278-5850-2-git-send-email-reinette.chatre@intel.com>
- <1233095278-5850-3-git-send-email-reinette.chatre@intel.com>
- <1233095278-5850-4-git-send-email-reinette.chatre@intel.com>
- <1233095278-5850-5-git-send-email-reinette.chatre@intel.com>
- <1233095278-5850-6-git-send-email-reinette.chatre@intel.com>
+Received: from qw-out-2122.google.com ([74.125.92.25]:58402 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754286AbZANQPx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 11:15:53 -0500
+Message-ID: <496E0FB2.407@gmail.com> (sfid-20090114_171559_361596_0D8FF4CA)
+Date: Wed, 14 Jan 2009 08:15:46 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Paul Moore <paul.moore@hp.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	SE-Linux <selinux@tycho.nsa.gov>
+Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
+References: <496D759A.7010401@gmail.com> <200901140957.09722.paul.moore@hp.com>
+In-Reply-To: <200901140957.09722.paul.moore@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cleans uCode key table bit map iwl_clear_stations_table
-since all stations are cleared also the key table must be.
+Paul Moore wrote:
+> On Wednesday 14 January 2009 12:18:18 am Justin P. Mattock wrote:
+>   
+>> When using netlabelctl on a dell laptop
+>> I'm able to define the addresses that I want:
+>>
+>> netlabelctl unlbl add interface:wlan0 address:<radiostation>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>> netlabelctl unlbl add interface:wlan0 address:<myaddress>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>> netlabelctl  -p unlbl accept off
+>>
+>> {the above was from http://paulmoore.livejournal.com/1758.html };
+>>     
+>
+> Hey, somebody actually reads that stuff!  I guess I'll need to be 
+> careful what I write from now on :)
+>
+> Hi Justin, on a more serious note, if you are having problems with 
+> labeled networking it's probably a good idea to CC the SELinux, LSM 
+> and/or netdev lists depending on the issue as I often miss mail if it 
+> is only posted to LKML.  When in doubt you can just CC me personally 
+> (paul.moore@hp.com) and I'll add whatever list seems appropriate.
+>
+>   
+>> (I'm able to listen to the radio station allowed, then if I choose
+>> another station; if I haven't defined an address like the above,
+>> mplayer just sits there.denying the unlabeled packet. that is until I
+>> allow the address);
+>>     
+>
+> Good, that is how it should work give the configuration shown above.
+>
+>   
+>> The problem I have is when I do the same on my macbook pro ati
+>> chipset. with the ath9k module, I'm able to listen to any station,
+>> search the web etc..
+>> it seems netlabelctl  -p unlbl accept off makes no difference if it's
+>> on or off.
+>>
+>> Is this built into ath9k yet, or is there something I'm missing?
+>>     
+>
+> That is just plain odd, there isn't really anything that is driver 
+> specific.  Can you share any more details like kernel version, 
+> netlabel_tools verion, distro, etc?  I don't have any ath9k hardware 
+> lying around to test so I would appreciate whatever additional 
+> information you can provide.
+>
+>   
+Hey alright.(I finally got around to  trying netlabelctl out!).
 
-Since the keys are not removed properly on suspend by mac80211
-this may result in exhausting key table on resume leading
-to memory corruption during removal
+The two systems I have for this are: Dell latitude x200
+running ubuntu jaunty, kernel is 2.6.29-rc1.
+with netlabel_tools_0.18 which was an rpm packaged
+that I converted to .deb.(can't remember the repository where I grabbed 
+it from);
+The wireless card for the dell is a dell 1350
+using bcmxx(b43-phy0); works great.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
-This change originally formed part of commit
-40a9a8299116297429298e8fcee08235134883f7 "iwlwifi: clean key table in
-iwl_clear_stations_table function". After that patch this function was
-moved to iwl-sta.c with commit 565ddeb389362b42df69e26804903ecd2303bb8e.
+The results when using netlabelctl with the dell is nice, i.g. like I said
+as soon as I issue netlabelctl unlbl accept off, those addresses not defined
+are simply not allowed.(the problem with the dell is I'm not seeing
+any allow rules being generated: i.g.
 
-This change was lost between 2.6.28 and 2.6.29-rc1, so adding it back here.
+allow netlabel_peer_t netif_t:netif ingress;
+allow netlabel_peer_t node_t:node recvfrom;
+allow unlabeled_t netif_t:netif ingress;
+allow unlabeled_t node_t:node recvfrom;
 
-This will fix http://bugzilla.kernel.org/show_bug.cgi?id=12415
+The next is a macbookpro ati chipset the kernel is 2.6.29-rc1
+the o.s. is ubuntu jaunty, the netlabel_tools is the same as above.
+the only results I see out of this is the avc's it's generating
+(the allow rules above are from the macbook);
+some reason the dell doesn't generate any avc's,
+which makes me wonder is this a module issue.
 
- drivers/net/wireless/iwlwifi/iwl-sta.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Also I've gone through thinking, well maybe this is avc's driven,
+i.g. each address once added by netlabelctl receives a certain allow rule
+(like the allow rules above),
+if not either no allow rule is given to it,resulting in a denial you 
+can't see in dmesg,
+or a denial that just won't be allowed by checkpolicy.
+So after seeing if this was the case I was left with  an address defined by
+netlabel(allowed) and defined the allow rules that it had created.
+unfortunately after all of that I still was able to turn on another radio
+station  that had  no  address  in netlabelctl's  unlbl database.(and no 
+allow rule
+with SELinux);
+leading me to believe that the netlabel area or driver isn't working
+properly. or just told to not enforce the netlabel accept off option.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 7d2129c..1fae3a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -483,6 +483,9 @@ void iwl_clear_stations_table(struct iwl_priv *priv)
- 	priv->num_stations = 0;
- 	memset(priv->stations, 0, sizeof(priv->stations));
- 
-+	/* clean ucode key table bit map */
-+	priv->ucode_key_table = 0;
-+
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- }
- EXPORT_SYMBOL(iwl_clear_stations_table);
--- 
-1.5.4.3
+As for the list, I have linux-wireless in my address book(not sure which 
+is right);
+
+regards;
+
+Justin P. Mattock
+
+
 
