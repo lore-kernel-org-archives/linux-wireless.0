@@ -1,116 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37623 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754136AbZANTSn (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54102 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753458AbZANQar (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 14:18:43 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v4 03/11] ath9k: introduce bus specific cache size routine
-Date: Wed, 14 Jan 2009 20:17:04 +0100
-Message-Id: <1231960632-4452-4-git-send-email-juhosg@openwrt.org> (sfid-20090114_201848_596102_58238F47)
-In-Reply-To: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
-References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
+	Wed, 14 Jan 2009 11:30:47 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1LN8dh-0006kK-G8
+	for linux-wireless@vger.kernel.org; Wed, 14 Jan 2009 11:30:45 -0500
+Received: from linville-t43.local (linville-t43.local [127.0.0.1])
+	by linville-t43.local (8.14.2/8.14.2) with ESMTP id n0EGMpiS008445
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2009 11:22:51 -0500
+Received: (from linville@localhost)
+	by linville-t43.local (8.14.2/8.14.2/Submit) id n0EGMpi7008444
+	for linux-wireless@vger.kernel.org; Wed, 14 Jan 2009 11:22:51 -0500
+Date: Wed, 14 Jan 2009 11:22:51 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-regdb updated 2009-01-14
+Message-ID: <20090114162250.GC3854@tuxdriver.com> (sfid-20090114_173051_259617_B95BD0EF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PCI specific bus_read_cachesize routine won't work on the AHB bus,
-we have to replace it with a suitable one later.
+FYI...wireless-regdb.git has been updated with the recent patches
+from Michael, Luis, and Pavel.  In particular the Makefile is much
+better than I had previously left it. :-)
 
-Changes-licensed-under: ISC
+It is about time (or past time) that we start pushing distributions to
+pick-up CRDA and either their own version of wireless-regdb or just
+pull the version I am publishing.  I think our wireless regulatory
+compliance mechanisms are a lot more flexible than what other systems
+are offering -- it is time to get it into the hands of users and get
+userland apps (e.g. NetworkManager) to take advantage of it.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/core.h |   10 ++++++++++
- drivers/net/wireless/ath9k/main.c |    9 +++++++--
- 2 files changed, 17 insertions(+), 2 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 2256ba4..8e93d11 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -693,6 +693,10 @@ enum PROT_MODE {
- #define SC_OP_RFKILL_SW_BLOCKED	BIT(12)
- #define SC_OP_RFKILL_HW_BLOCKED	BIT(13)
- 
-+struct ath_bus_ops {
-+	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
-+};
-+
- struct ath_softc {
- 	struct ieee80211_hw *hw;
- 	struct device *dev;
-@@ -743,6 +747,7 @@ struct ath_softc {
- #ifdef CONFIG_ATH9K_DEBUG
- 	struct ath9k_debug sc_debug;
- #endif
-+	struct ath_bus_ops *bus_ops;
- };
- 
- int ath_reset(struct ath_softc *sc, bool retry_tx);
-@@ -750,4 +755,9 @@ int ath_get_hal_qnum(u16 queue, struct ath_softc *sc);
- int ath_get_mac80211_qnum(u32 queue, struct ath_softc *sc);
- int ath_cabq_update(struct ath_softc *);
- 
-+static inline void ath_read_cachesize(struct ath_softc *sc, int *csz)
-+{
-+	sc->bus_ops->read_cachesize(sc, csz);
-+}
-+
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index ebf0467..884469a 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -42,7 +42,7 @@ static void ath_detach(struct ath_softc *sc);
- 
- /* return bus cachesize in 4B word units */
- 
--static void bus_read_cachesize(struct ath_softc *sc, int *csz)
-+static void ath_pci_read_cachesize(struct ath_softc *sc, int *csz)
- {
- 	u8 u8tmp;
- 
-@@ -1338,7 +1338,7 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	 * Cache line size is used to size and align various
- 	 * structures used to communicate with the hardware.
- 	 */
--	bus_read_cachesize(sc, &csz);
-+	ath_read_cachesize(sc, &csz);
- 	/* XXX assert csz is non-zero */
- 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
- 
-@@ -2534,6 +2534,10 @@ ath_rf_name(u16 rf_version)
- 	return "????";
- }
- 
-+static struct ath_bus_ops ath_pci_bus_ops = {
-+	.read_cachesize = ath_pci_read_cachesize,
-+};
-+
- static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	void __iomem *mem;
-@@ -2622,6 +2626,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->hw = hw;
- 	sc->dev = &pdev->dev;
- 	sc->mem = mem;
-+	sc->bus_ops = &ath_pci_bus_ops;
- 
- 	if (ath_attach(id->device, sc) != 0) {
- 		ret = -ENODEV;
+John
 -- 
-1.5.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
