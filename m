@@ -1,40 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:48029 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754682AbZAMUAI (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37623 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754136AbZANTSn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 15:00:08 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Artur Skawina <art.08.09@gmail.com>
-Subject: Re: p54usb and hostapd
-Date: Tue, 13 Jan 2009 21:00:13 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <496CECD6.5060802@gmail.com>
-In-Reply-To: <496CECD6.5060802@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901132100.13345.chunkeey@web.de> (sfid-20090113_210905_413146_9FFE728D)
+	Wed, 14 Jan 2009 14:18:43 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH v4 03/11] ath9k: introduce bus specific cache size routine
+Date: Wed, 14 Jan 2009 20:17:04 +0100
+Message-Id: <1231960632-4452-4-git-send-email-juhosg@openwrt.org> (sfid-20090114_201848_596102_58238F47)
+In-Reply-To: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
+References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 13 January 2009 20:34:46 Artur Skawina wrote:
-> MGMT (TX callback) ACK
-> STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-> MGMT (TX callback) fail
-> mgmt::proberesp cb
-> STA xx:xx:xx:xx:xx:53 sent probe request for broadcast SSID
-> MGMT (TX callback) fail
-> mgmt::proberesp cb
-> STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-> MGMT (TX callback) fail
-> mgmt::proberesp cb
-> STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-> MGMT (TX callback) fail
+The PCI specific bus_read_cachesize routine won't work on the AHB bus,
+we have to replace it with a suitable one later.
 
-Oh, don't worry, this not really a failure.
-"MGMT (TX callback) fail" just says that the frame was not acked by the station.
-And this is OK for probe responds...  so nothing has run out of memory (yet). 
+Changes-licensed-under: ISC
 
-Regards,
-	Chr
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/core.h |   10 ++++++++++
+ drivers/net/wireless/ath9k/main.c |    9 +++++++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index 2256ba4..8e93d11 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -693,6 +693,10 @@ enum PROT_MODE {
+ #define SC_OP_RFKILL_SW_BLOCKED	BIT(12)
+ #define SC_OP_RFKILL_HW_BLOCKED	BIT(13)
+ 
++struct ath_bus_ops {
++	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
++};
++
+ struct ath_softc {
+ 	struct ieee80211_hw *hw;
+ 	struct device *dev;
+@@ -743,6 +747,7 @@ struct ath_softc {
+ #ifdef CONFIG_ATH9K_DEBUG
+ 	struct ath9k_debug sc_debug;
+ #endif
++	struct ath_bus_ops *bus_ops;
+ };
+ 
+ int ath_reset(struct ath_softc *sc, bool retry_tx);
+@@ -750,4 +755,9 @@ int ath_get_hal_qnum(u16 queue, struct ath_softc *sc);
+ int ath_get_mac80211_qnum(u32 queue, struct ath_softc *sc);
+ int ath_cabq_update(struct ath_softc *);
+ 
++static inline void ath_read_cachesize(struct ath_softc *sc, int *csz)
++{
++	sc->bus_ops->read_cachesize(sc, csz);
++}
++
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index ebf0467..884469a 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -42,7 +42,7 @@ static void ath_detach(struct ath_softc *sc);
+ 
+ /* return bus cachesize in 4B word units */
+ 
+-static void bus_read_cachesize(struct ath_softc *sc, int *csz)
++static void ath_pci_read_cachesize(struct ath_softc *sc, int *csz)
+ {
+ 	u8 u8tmp;
+ 
+@@ -1338,7 +1338,7 @@ static int ath_init(u16 devid, struct ath_softc *sc)
+ 	 * Cache line size is used to size and align various
+ 	 * structures used to communicate with the hardware.
+ 	 */
+-	bus_read_cachesize(sc, &csz);
++	ath_read_cachesize(sc, &csz);
+ 	/* XXX assert csz is non-zero */
+ 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
+ 
+@@ -2534,6 +2534,10 @@ ath_rf_name(u16 rf_version)
+ 	return "????";
+ }
+ 
++static struct ath_bus_ops ath_pci_bus_ops = {
++	.read_cachesize = ath_pci_read_cachesize,
++};
++
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	void __iomem *mem;
+@@ -2622,6 +2626,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	sc->hw = hw;
+ 	sc->dev = &pdev->dev;
+ 	sc->mem = mem;
++	sc->bus_ops = &ath_pci_bus_ops;
+ 
+ 	if (ath_attach(id->device, sc) != 0) {
+ 		ret = -ENODEV;
+-- 
+1.5.3.2
+
