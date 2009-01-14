@@ -1,51 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:13038 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753549AbZAMUva (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:46208 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761459AbZANPrR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 15:51:30 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so101785ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 12:51:29 -0800 (PST)
-Message-ID: <43e72e890901131251p66816689j6965dc865d616006@mail.gmail.com> (sfid-20090113_215135_902944_59E8F960)
-Date: Tue, 13 Jan 2009 12:51:28 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Subject: Re: [PATCH] ath9k: simplify regulatory code
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-In-Reply-To: <1231878042-21799-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 14 Jan 2009 10:47:17 -0500
+Message-ID: <496E08FD.9030803@lwfinger.net> (sfid-20090114_164722_082660_E1EB346F)
+Date: Wed, 14 Jan 2009 09:47:09 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: Eliminate compilation warning in b43_op_set_key
+References: <496d2fc9.UiHMYJR2melvWyoO%Larry.Finger@lwfinger.net> <20090114133417.GB18634@tuxdriver.com>
+In-Reply-To: <20090114133417.GB18634@tuxdriver.com>
 Content-Type: text/plain; charset=UTF-8
-References: <1231878042-21799-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 13, 2009 at 12:20 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> Now that cfg80211 has its own regulatory infrastructure we can
-> condense ath9k's regulatory code considerably. We only keep data
-> we need to provide our own regulatory_hint(), regulatory_set_custom_rd(),
-> reg_notifier() and information necessary for calibration.
->
-> Atheros hardware supports 12 world regulatory domains, since these
-> are custom we apply them through the the new regulatory_set_custom_rd().
-> Although we have 12 we consolidate these into 5 structures based on
-> frequency and apply a different set of flags that differentiate them
-> on a case by case basis through the reg_notifier().
->
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->
-> This patch seems to be too big (135653 bytes) for linux-wireless so
-> here a URL to it if you want to wget it:
->
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-01-13/0001-ath9k-simplify-regulatory-code.patch
+John W. Linville wrote:
+> On Tue, Jan 13, 2009 at 06:20:25PM -0600, Larry Finger wrote:
+>> A recent pull from wireless testing generates the following warning:
+>> =20
+>>    CC [M]  drivers/net/wireless/b43/main.o
+>>  drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_ke=
+y=E2=80=99:
+>>  drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatc=
+h
+>>  in conditional expression
+>>
+>> This fix was suggested by Johannes Berg <johannes@sipsolutions.net>.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>
+>> Index: wireless-testing/drivers/net/wireless/b43/main.c
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
+>> +++ wireless-testing/drivers/net/wireless/b43/main.c
+>> @@ -3630,10 +3630,12 @@ static int b43_op_set_key(struct ieee802
+>> =20
+>>  out_unlock:
+>>  	if (!err) {
+>> +		u8 bcast[ETH_ALEN];
+>> +		memset(bcast, 0xff, ETH_ALEN);
+>=20
+> Isn't there a statically-allocated array w/ the broadcast MAC in it
+> somewhere already?
+>=20
 
-Here's a new one rebased on top of the latest wl which addresses a
-conflict with:
+Not that I could find.
 
-"ath9k: Fix an operator typo in REG_DOMAIN_2GHZ_MASK"
+There are several places in mac80211 where the broadcast MAC is
+created on the fly. None of them would benefit from having a static
+array - one would just substitute memcpy for memset and possibly trash
+the cache.
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-01-13/0001-ath9k-simplify-regulatory-code-v2.patch
+There is an array broadcast[MAX_ADDR_LEN] in struct net_device, but it
+would need to be initialized with 0xFF's before usage.
 
-  Luis
+I still think that b43 needs to create this array, and that the best
+place to do it is in the error path that is unlikely to be executed.
+
+Larry
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
