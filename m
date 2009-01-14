@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3048 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbZAKOmy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2009 09:42:54 -0500
-Date: Sun, 11 Jan 2009 09:40:43 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	mabbaswireless@gmail.com, linville@tuxdriver.org
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-Message-ID: <20090111144043.GA13109@hash.localnet> (sfid-20090111_154256_963425_F6CE9C28)
-References: <20081224054951.GA32398@hash.localnet> <1230102989.16960.14.camel@californication> <1231260306.14565.21.camel@localhost.localdomain> <1231261937.5246.16.camel@californication> <1231267979.14565.34.camel@localhost.localdomain> <1231270575.14901.6.camel@californication> <1231272326.3767.2.camel@johannes> <1ba2fa240901091553s387c1a95k3576ce6a82015434@mail.gmail.com> <1231579679.3685.10.camel@johannes> <1ba2fa240901110311o47fe2311w4717f5521c98aba@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240901110311o47fe2311w4717f5521c98aba@mail.gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:36359 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762880AbZANQsx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 11:48:53 -0500
+Subject: Re: Marvell 88w8385 Support
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: tsr <tsr.offentlig@tsr.se>, linux-wireless@vger.kernel.org
+In-Reply-To: <20090113145213.GA3623@tuxdriver.com>
+References: <496C8468.4060101@tsr.se>  <20090113145213.GA3623@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 14 Jan 2009 11:47:34 -0500
+Message-Id: <1231951654.14909.22.camel@localhost.localdomain> (sfid-20090114_174858_058911_F49AD2FF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 11, 2009 at 01:11:23PM +0200, Tomas Winkler wrote:
-> On Sat, Jan 10, 2009 at 11:27 AM, Johannes Berg
-> > I say we should just put these patches in as they are.
+On Tue, 2009-01-13 at 09:52 -0500, John W. Linville wrote:
+> On Tue, Jan 13, 2009 at 01:09:12PM +0100, tsr wrote:
+> > Hi,
+> >
+> > I have a FSG-3 that includes a Marvell 88w8385 card. I wonder if there  
+> > is support for it in recent kernels. According to  
+> > http://marc.info/?l=linux-wireless&m=123178916308198&w=2 (search for  
+> > 8385) there seems to be support but I don't want to start messing around  
+> > with kernels and stuff without being sure.
 > 
-> No objections to that.
+> That driver is for SDIO hardware.  It looks like your FSG-3 has
+> mini-PCI?  Either way, we don't have a driver merged yet that would
+> cover your hardware.
 
-Ok, it doesn't sound like there are objections to the substance of
-the patches now.  
+Looks like it's a CB35, which is actually an 88w8335 MiniPCI card.
+Would be supported by the mwl8k driver ideally.  I've started on trying
+to add support to mwl8k for the 8335 parts, but we'll need to split the
+driver so that we can create IO hooks for the different parts.  It'll be
+a bit, but we'll get there.
 
-John, do you want a rebase/resend?  I have only one minor change to 
-v2 posting: adding my s-o-b to Johannes's patch.
+Dan
 
--- 
-Bob Copeland %% www.bobcopeland.com
 
