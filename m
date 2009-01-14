@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:38377 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758783AbZASL77 convert rfc822-to-8bit (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37622 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754196AbZANTSn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 06:59:59 -0500
-Received: by bwz14 with SMTP id 14so8214009bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 03:59:57 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/2] iwl3945: fix some warnings when compiled  without debug
-Date: Mon, 19 Jan 2009 12:59:34 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <200901190955.04622.helmut.schaa@gmail.com> <1232359746.3758.0.camel@johannes>
-In-Reply-To: <1232359746.3758.0.camel@johannes>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200901191259.35309.helmut.schaa@gmail.com> (sfid-20090119_130004_726419_AD2559C6)
+	Wed, 14 Jan 2009 14:18:43 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: [PATCH v4 09/11] ath9k: fix ar5416Addac_9100 values
+Date: Wed, 14 Jan 2009 20:17:10 +0100
+Message-Id: <1231960632-4452-10-git-send-email-juhosg@openwrt.org> (sfid-20090114_201846_830081_D1CDDDB0)
+In-Reply-To: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
+References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 19. Januar 2009 schrieb Johannes Berg:
-> On Mon, 2009-01-19 at 09:55 +0100, Helmut Schaa wrote:
-> > Fix the following warnings if compiled without CONFIG_IWLWIFI_DEBUG=
-=2E
-> >=20
-> > drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98i=
-wl3945_rx_reply_add_sta=E2=80=99:
-> > drivers/net/wireless/iwlwifi/iwl3945-base.c:2748: warning: unused v=
-ariable =E2=80=98pkt=E2=80=99
-> > drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98i=
-wl3945_rx_scan_results_notif=E2=80=99:
-> > drivers/net/wireless/iwlwifi/iwl3945-base.c:2903: warning: unused v=
-ariable =E2=80=98notif=E2=80=99
-> > drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98i=
-wl3945_rx_scan_complete_notif=E2=80=99:
-> > drivers/net/wireless/iwlwifi/iwl3945-base.c:2928: warning: unused v=
-ariable =E2=80=98scan_notif=E2=80=99
-> >=20
-> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> > ---
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/=
-net/wireless/iwlwifi/iwl3945-base.c
-> > index b437cac..15d36d8 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> > @@ -2744,7 +2744,9 @@ static void iwl3945_rx_reply_alive(struct iwl=
-_priv *priv,
-> >  static void iwl3945_rx_reply_add_sta(struct iwl_priv *priv,
-> >  				 struct iwl_rx_mem_buffer *rxb)
-> >  {
-> > +	#ifdef CONFIG_IWLWIFI_DEBUG
-> >  	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;
-> > +	#endif=20
->=20
-> I for one would definitely prefer you didn't indent preprocessor
-> statements, but I don't care all that much about iwl3945.
+Writing the register at offset 0x98c4 causes a deadlock on the AR913x
+SoCs. Although i don't have detailed knowledge about these registers,
+but if i change the register offset according to the 'ar5416Addac' table,
+it works. Additionally there is no reference to the 0x98c4 elsewhere.
 
-Indeed. My fault. I'll resend this one.
+Changes-licensed-under: ISC
 
-Thanks,
-Helmut
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/initvals.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/initvals.h b/drivers/net/wireless/ath9k/initvals.h
+index a1bc631..d492363 100644
+--- a/drivers/net/wireless/ath9k/initvals.h
++++ b/drivers/net/wireless/ath9k/initvals.h
+@@ -658,7 +658,7 @@ static const u32 ar5416Addac_9100[][2] = {
+     {0x0000989c,  0x00000000 },
+     {0x0000989c,  0x00000000 },
+     {0x0000989c,  0x00000000 },
+-    {0x000098c4,  0x00000000 },
++    {0x000098cc,  0x00000000 },
+ };
+ 
+ static const u32 ar5416Modes[][6] = {
+-- 
+1.5.3.2
+
