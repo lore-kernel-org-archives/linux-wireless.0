@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway04.websitewelcome.com ([67.18.144.11]:46779 "HELO
-	gateway04.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753291AbZAMX2n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 18:28:43 -0500
-Received: from 96-26-216-101.sea.clearwire-dns.net ([96.26.216.101]:36136 helo=Hydra.darkmatter.org)
-	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.69)
-	(envelope-from <Info@delphi-real-estate.com>)
-	id 1LMsGq-00086q-Hm
-	for linux-wireless@vger.kernel.org; Tue, 13 Jan 2009 17:02:04 -0600
-From: Delphi Real Estate <Info@delphi-real-estate.com>
-To: linux-wireless@vger.kernel.org
-Subject: 'N' Mode and 5GHz, Also WPA2
-Date: Tue, 13 Jan 2009 15:02:00 -0800
+Received: from mail.tpi.com ([198.107.51.143]:4842 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763867AbZANRUX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 12:20:23 -0500
+Message-ID: <496E1ED3.20500@canonical.com> (sfid-20090114_182028_606589_53C018BA)
+Date: Wed, 14 Jan 2009 10:20:19 -0700
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901131502.01047.Info@delphi-real-estate.com> (sfid-20090114_002847_398071_75BCF676)
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: wireless-regdb updated 2009-01-14
+References: <20090114162250.GC3854@tuxdriver.com>
+In-Reply-To: <20090114162250.GC3854@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John W. Linville wrote:
+> FYI...wireless-regdb.git has been updated with the recent patches
+> from Michael, Luis, and Pavel.  In particular the Makefile is much
+> better than I had previously left it. :-)
+> 
+> It is about time (or past time) that we start pushing distributions to
+> pick-up CRDA and either their own version of wireless-regdb or just
+> pull the version I am publishing.  I think our wireless regulatory
+> compliance mechanisms are a lot more flexible than what other systems
+> are offering -- it is time to get it into the hands of users and get
+> userland apps (e.g. NetworkManager) to take advantage of it.
+> 
+> Thanks,
+> 
+> John
 
-Running the Intel 4965AGP with iwlagn driver that comes in Ubuntu kernel 2.6.27.10, and DLink DIR-825 dual-mode router.
+Workin' on it... My intent is to have CRDA/REGDB packaged and ready in
+time for Jaunty (April '09). I'm just getting started this week.
 
-Despite extensive effort and research I have been unable to associate in 'n' mode at 5GHz.  I can associate and communicate in 'g' and 'n' mode at 2.4GHz, and in 'a' mode at 5GHz, but it simply does not work in 'n' at 5.  Has anyone been able to make this work?
-
-Does anyone know what chipset is in the DIR-825?  Should I crack it open?
-
-Also I am unable to associate in any mode in any band, with WPA2.  Has anyone got WPA2 working with the iwlagn driver?
-
-Best,
-
-Bill
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
