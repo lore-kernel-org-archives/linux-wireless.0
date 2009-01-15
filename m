@@ -1,48 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:17350 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753346AbZAZRBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 12:01:31 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 09:01:31 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: do not pass -EALREADY to userspace on regdomain change request
-Date: Mon, 26 Jan 2009 09:00:51 -0800
-Message-ID: <1232989251-21311-1-git-send-email-lrodriguez@atheros.com> (sfid-20090126_180147_306455_D40E7737)
+Received: from yw-out-2324.google.com ([74.125.46.29]:11657 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753230AbZAOCob (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 21:44:31 -0500
+Message-ID: <496EA2EC.7030602@gmail.com> (sfid-20090115_034453_956793_DB5AE712)
+Date: Wed, 14 Jan 2009 18:43:56 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Paul Moore <paul.moore@hp.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	SE-Linux <selinux@tycho.nsa.gov>
+Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
+References: <496D759A.7010401@gmail.com> <200901141508.58174.paul.moore@hp.com> <496E5A9D.3050105@gmail.com> <200901141736.43805.paul.moore@hp.com>
+In-Reply-To: <200901141736.43805.paul.moore@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the regulatory domain is already set it is technically not an error
-so do not pass an errno to userspace.
+Paul Moore wrote:
+> On Wednesday 14 January 2009 4:35:25 pm Justin P. Mattock wrote:
+>   
+>> Anyways heres what I'm trying to achieve:
+>>
+>> default looks like this:
+>> Configured NetLabel domain mappings(1)
+>> domain: DEFAULT
+>>     protocol: UNLABELED
+>>
+>> I want to try and have three of these for the
+>> different types of media:
+>> (in theory)
+>> Configured NetLabel domain mappings(3)
+>> domain:radio
+>>    protocol: UNLABELED
+>> domain:T.V.
+>>    protocol: UNLABELED
+>> domain:web
+>>    protocol: UNLABELED
+>> (and if possible three different tags(either 1,2,5), but probably can
+>> only do that with cipsov4);
+>>     
+>
+> Actually, in your case you are probably always going to want to send 
+> network traffic without any labels attached to the packets (no labeled 
+> IPsec or CIPSO) so you can stick with the default domain mapping 
+> configuration which sends all packets "unlabeled".  The part you should 
+> be concerned about is the static/fallback configuration which assigns 
+> network peer labels to packets which do not have labels attached to 
+> them by the remote host.
+>
+> NOTE: the domain mapping configuration only controls how outbound 
+> network traffic is labeled on-the-wire; it "maps" the 
+> LSM/SELinux "domains" to a specific labeling protocol configuration, 
+> e.g. all apache_t traffic should be labeled with CIPSO DOI 3 while all 
+> firefox_t traffic should not be labeled at all.
+>
+>   
+>> heres what I've come up with so far:
+>>
+>> netlabelctl -p map del default
+>>
+>> netlabelctl unlbl add domain:radio interface:wlan0 address:<myadd>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>> netlabelctl unlbl add domain:radio interface:wlan0 address:<radioadd>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>>
+>> netlabelctl unlbl add domain:T.V. interface:wlan0 address:<myadd>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>> netlabelctl unlbl add domain:T.V. interface:wlan0 address:<t.v.add>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>>     
+>
+> I think what you mean to type is the following:
+>
+>  # netlabelctl unlbl add interface:wlan0 address:<radioadd> \
+>        label:system_u:object_r:netlabel_peer_t:s0
+>
+> ... note there is no "domain" argument, that only exists 
+> for "netlabelctl map ..." commands.
+>
+> NOTE: if you really want to get fancy you can create new SELinux domains 
+> for each type of media and add NetLabel configurations for those new 
+> domains.  Imagine you create a new "internet_radio_t" domain/type and 
+> only allow the "netplayer_t" domain (yeah, I made that up but you get 
+> the point) access to network traffic labeled with internet_radio_t.  
+> You would then use the following command to label your incoming traffic 
+> with NetLabel:
+>
+>  # netlabelctl unlbl add interface:wlan0 address:<radioadd> \
+>        label:system_u:object_r:internet_radio_t:s0
+>
+> NOTE: you can also skip the "interface:wlan0" argument and just 
+> use "default" instead if you want the configuration to apply to all 
+> your network interfaces; although bear in mind that the "default" 
+> configuration can be overridden by the interface specific 
+> configurations.
+>
+>   
+>> As for the new capabilities, I don't mind trying that out when
+>> the time comes(but first I need to figure the this out before any
+>> other ways);
+>>     
+>
+> No problem, I understand.  Let me know if you have any more problems.
+>
+>   
+>> here is what the error looks like:
+>>
+>> netlabel_tools-0.19# make
+>> INFO: creating the version header file
+>> .: 10: version_info: not found
+>> make: *** [include/version.h] Error 2
+>>     
+>
+> Huh, can you try the following:
+>
+>  1. Open the netlabel_tools-0.19/Makefile in your favorite editor
+>  2. Change the ". version_info; \" line to "source ./version_info; \"
+>  3. Save your changes
+>  4. Try running "make" again
+>
+> Thanks.
+>
+>   
+O.k. changed . version like how you had posted.
+The package compiled like a charm.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/nl80211.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+regards;
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 09a5d0f..4baa875 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1908,6 +1908,11 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	mutex_lock(&cfg80211_drv_mutex);
- 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
- 	mutex_unlock(&cfg80211_drv_mutex);
-+	/* This means the regulatory domain was already set, however
-+	 * we don't want to confuse userspace with a "successfull error"
-+	 * message so lets just treat it as a success */
-+	if (r == -EALREADY)
-+		r = 0;
- 	return r;
- }
- 
--- 
-1.5.6.4
-
+Justin P. Mattock
