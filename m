@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:60929 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751750AbZA0JqR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 04:46:17 -0500
-Message-ID: <497ED7DD.9010102@lwfinger.net> (sfid-20090127_104620_976031_C97A8FD8)
-Date: Tue, 27 Jan 2009 03:46:05 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: htl10@users.sourceforge.net
-CC: John W Linville <linville@tuxdriver.com>, barreyromartin@gmail.com,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+Received: from bu3sch.de ([62.75.166.246]:55159 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754320AbZAOPow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2009 10:44:52 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [b43] opensource firmware
+Date: Thu, 15 Jan 2009 16:44:13 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Lorenzo Nava <navalorenx@gmail.com>, kyle@infradead.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Fix error in setting OFDM power settings for
- RTL8187L
-References: <117528.49182.qm@web23104.mail.ird.yahoo.com>
-In-Reply-To: <117528.49182.qm@web23104.mail.ird.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> <1231965922.20309.0.camel@johannes> <200901151637.58196.mb@bu3sch.de>
+In-Reply-To: <200901151637.58196.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901151644.13606.mb@bu3sch.de> (sfid-20090115_164456_549749_D2B2B052)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> --- On Tue, 27/1/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On Thursday 15 January 2009 16:37:57 Michael Buesch wrote:
+> On Wednesday 14 January 2009 21:45:22 Johannes Berg wrote:
+> > 
+> > > Initvals and new firmware version can be found at http://www.ing.unibs.it/openfwwf
+> > 
+> > I suggest that before this is packaged, we change it so b43 can
+> > recognise it and automatically disable qos and hwcrypto.
 > 
->> After reports of poor performance, a review of the latest
->> vendor driver
->> (rtl8187_linux_26.1025.0328.2007) for RTL8187L devices was
->> undertaken.
->>
->> A difference was found in the code used to index the OFDM
->> power tables. When
->> the Linux driver was changed, my unit works at a much
->> greater range than
->> before. I think this fixes Bugzilla #12380 and has been
->> tested by at least
->> two other users.
+> Yes, please introduce a feature-bitfield at some location in SHM that's unused
+> by the proprietary firmware. This bitfields would contain a bit for QoS and
+> a bit for hwcrypto.
+> Also change your firmware so the driver detects it as open-source firmware.
+> I think that's done by writing 0xFFFF to the date/time field in SHM. I don't
+> quite remember, but it's something like that.
+> Note that this might mean that the firmware watchdog in the driver will trigger,
+> as that's enabled by the open-source-firmware-flag. We might want to temporarly
+> disable the watchdog in the driver for the time being.
 > 
-> What exactly does this change do? it seems to just bias the value of ofdm into higher values:
-> 
-> 0-15 -> 10-25
-> 15-  -> 25
 
-The values of ofdm_power and cck_power are indexes into the tables
-rtl8225_tx_power_cck or rtl8225z2_tx_power_cck. The change does bias
-the value into larger numbers both for the index and the value in the
-table. Whatever happens inside the device, the bottom line is that the
-OFDM performance is greatly improved, at least for the units that use
-the rtl8225z2_tx_power_cck table. I'm not sure that any of the other
-type have been encountered.
+Ah and also note that hwcrypto is already automagically disabled, if the driver
+detects an opensource-firmware.
+To make the driver detect the firmware as opensource, write 0xFFFF to SHM_UCODEDATE
 
-After my experiences with the RTL8187B, I was careful to monitor the
-device temperature. Although it is likely that this change increased
-the power output of the radio, the device did not get any hotter.
+You need to disable the watchdog in b43_periodic_every15sec(), if you don't implement
+the watchdog mechanism in your firmware. But it's pretty easy to implement.
+It just has to write 0 to some register in the MAC loop. Of course, the register has
+to be unused in the rest of the code.
 
-> Also, the first "ofdm_power = min(ofdm_power, (u8)35);" after the change chunk has no effect, since the value from the changed code would clip at 25. You could remove that line...
-
-Thank you for seeing that. I'll submit a revised patch.
-
-Larry
+-- 
+Greetings, Michael.
