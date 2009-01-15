@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:35812 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753888AbZAENXG (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.187]:61477 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932528AbZAOUG3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 08:23:06 -0500
-Date: Mon, 5 Jan 2009 14:36:57 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linville@tuxdriver.com,
-	davem <davem@davemloft.net>
-Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless stack
-Message-ID: <20090105133657.GQ496@one.firstfloor.org> (sfid-20090105_142312_546649_4C695650)
-References: <20090104151819.GA6590@basil.nowhere.org> <1231085150.3296.3.camel@johannes> <20090104162826.GT496@one.firstfloor.org> <1231087288.3296.15.camel@johannes> <20090104174339.GX496@one.firstfloor.org> <1231090388.3296.17.camel@johannes> <20090104184136.GY496@one.firstfloor.org> <1231144574.3286.15.camel@johannes> <20090105132141.GO496@one.firstfloor.org> <1231161379.3334.14.camel@johannes>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231161379.3334.14.camel@johannes>
+	Thu, 15 Jan 2009 15:06:29 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so202194nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 12:06:26 -0800 (PST)
+Message-ID: <496F9740.5010109@gmail.com> (sfid-20090115_210644_876254_CB26DB06)
+Date: Thu, 15 Jan 2009 21:06:24 +0100
+From: Artur Skawina <art.08.09@gmail.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: Artur Skawina <art.08.09@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+References: <494698AF.4020204@gmail.com> <200901151953.49053.chunkeey@web.de> <496F8A83.8000605@gmail.com> <200901152042.42372.chunkeey@web.de>
+In-Reply-To: <200901152042.42372.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 05, 2009 at 02:16:19PM +0100, Johannes Berg wrote:
-> > I didn't use any monitoring with this. No tcpdump, no wireless
-> > sniffer tools or anything. It happened all the time during
-> > normal operation.
+Christian Lamparter wrote:
+> On Thursday 15 January 2009 20:12:03 Artur Skawina wrote:
+>>>> Upgraded to current wireless-testing/pending on the problematic box
+>>>> and almost immediately got [1]. No slab corruption this time (at least
+>>>> not yet). Will switch to GFP_ATOMIC and retry w/ the new fw.
+
+>>> yes that's a bug, p54_set_tim must use GFP_ATOMIC, do you want to post the patch?
+>> nah, too trivial :) fwiw i used this:
+> well, it should be "done", right? :-)
 > 
-> You did have a monitor interface up though, didn't you? If nothing
+> just add "John W. Linville" <linville@tuxdriver.com>" to the cc,
+> change the subject line to "[PATCH] p54: set_tim must be atomic."
+> and put a Signed-off-by: your name <your@mail> in the mail body and a "---" to seperate the commit message
+> and then the patch. And it will be in the next round of -rcX fixes.
 
-wmaster0 was up. Is that a monitoring interface? 
+well, i really meant the 'too trivial' part and was hoping you'd do it ;)
+ok, will resend.
 
-> actually used those skbs then it's likely that the warning didn't result
-> in any corruption at all.
+Is this something that could interfere w/ testing:
+> mac80211-phy0: failed to remove key (0, 00:1b:fb:12:34:56) from hardware (-12)
+?
 
-Nothing was corrupted ever to my knowledge, just lots of spam in my kernel logs.
+thanks,
 
--Andi
--- 
-ak@linux.intel.com
+artur
