@@ -1,83 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33787 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754675AbZARIra (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:58775 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053AbZAORNw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 03:47:30 -0500
-Subject: Re: [PATCH 08/13] cfg80211: save original values on regulatory
-	hints
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090116210655.GK29609@tesla>
-References: <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-9-git-send-email-lrodriguez@atheros.com>
-	 <1232097921.3854.28.camel@johannes> <20090116163100.GE29609@tesla>
-	 <1232138062.3745.6.camel@johannes>  <20090116210655.GK29609@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6EDV0luBY9ezZj8a6omD"
-Date: Sun, 18 Jan 2009 09:47:29 +0100
-Message-Id: <1232268449.3877.8.camel@johannes> (sfid-20090118_094733_246754_3978EB10)
-Mime-Version: 1.0
+	Thu, 15 Jan 2009 12:13:52 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Harvey Harrison <harvey.harrison@gmail.com>
+Subject: Re: Lots of minstrel WARN_ONS with current -git
+Date: Thu, 15 Jan 2009 18:13:57 +0100
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1231973480.5147.2.camel@brick> <200901151731.56758.chunkeey@web.de> <1232038251.5595.0.camel@brick>
+In-Reply-To: <1232038251.5595.0.camel@brick>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901151813.57146.chunkeey@web.de> (sfid-20090115_181357_755138_D86FE63C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 15 January 2009 17:50:51 Harvey Harrison wrote:
+> On Thu, 2009-01-15 at 17:31 +0100, Christian Lamparter wrote:
+> > On Thursday 15 January 2009 16:33:11 Michael Buesch wrote:
+> > > On Wednesday 14 January 2009 23:51:20 Harvey Harrison wrote:
+> > > > Seeing lots of these WARN_ONS with current -git.  Known issue?
+> > > > 
+> > > > b43 hardware.
+> > > > 
+> > > > [41850.615621] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0x92/0x3c0()
+> > > 
+> > > I think that happens, if you have a b-only AP.
+> > 
+> > erm, see : "minstrel: fix warning if lowest supported rate index is not 0"
+> > ( http://www.spinics.net/lists/linux-wireless/msg25799.html )
+> > 
+> > The fix is in wireless-testing & wireless-next since a few days now...
+> > Or is this a new bug?
+> 
+> I'll try that out shortly, report was against linus mainline.
+> 
+Oh? with 2.6.28 or the current 2.6.29-rcX line?
+If you get this WARNING with 2.6.29-rcX, you don't have to worry...
+http://patchwork.kernel.org/patch/2184/
 
---=-6EDV0luBY9ezZj8a6omD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2009-01-16 at 13:06 -0800, Luis R. Rodriguez wrote:
-
-> Well in ath9k we want this, and orig_* stuff is used only for custom
-> regulatory domains. How would we install information on orig_* from
-> a regulatory_hint() on drivers if we have drivres which may or may not
-> want to save that information on orig_* parameters?
-
-Not sure.
-
-> > We just need to have the driver set
-> > orig_flags rather than cfg80211, no?
->=20
-> Oh you mean in the reg_notifier() on REGDOM_SET_BY_DRIVER? Sure, that wor=
-ks
-> as well, if so desired.
-
-Well, I wasn't intending for anything to _ever_ touch orig_flags at
-all... I think you're hampered by not being able to simply request a
-regdomain from crda outside the normal "apply regdomain" flow, maybe we
-should think about that instead? Then ath9k could just request a
-regdomain from crda before it even registers its wiphy?
-
-johannes
-
---=-6EDV0luBY9ezZj8a6omD
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIbBAABAgAGBQJJcuyeAAoJEKVg1VMiehFYThsP91cyYsvUXSr6tGZ6trb3hzSM
-+VF8oGEJNcA6GHLI7N3o6ZATu91kn3ikA3Tk+TLfprrKAn890A8epj3qBHiLq0ax
-oQbWBkgzxgAa0VzJJD0k1ijpLVy6JUuIDZdI5+dQ3wWyDI+tr4q0bAjFeW0Qosjx
-1aL5u8PwPAUqULDPeRuTXHK4mJSyngnBQVT2y/g+MJweSoYzSodaNSle/HzUQSuL
-wuYerYyb5LAf0qmetTFCLm81hFNs7DVxiBzdnAJJHti48Et16GdGdJk/Z8biz41s
-Ju1D8++YwBlYi8DJXKCTLUryq9vFbnZ7g899AClIPeDkjQcILhjvttIFJU9Chcgb
-u1evIoaOC47TbaG2iZfZhAhTO3GLSbuh0wx9r6/b2/DEK0bbM75ddLnAjXfuQ521
-6+/f+NTmdYhvv6/cKBfCjekqQr4riQZKf69Ez7r/uP+KVqQfXXeM7Qrzqtqatz9B
-k3vLoWzcDea+43sMb4kYDfCk0Iro3CVDIGGMmmd0EZ3c6Kgfe4/wSktSgAp7imnY
-sTQMyrFxsiaYb7parsX6b97Qmk90VzsQkUi28IqIzuv/yh3x86atM3hDglTkAuSo
-f5OHA9XEdo78V+e77/ROjtQl+5oIyIVSkc7bqFrTAxCa+5XSf1R5whF4kGcmaqnh
-Unnb/WR6K58L7uVpGXg=
-=XPlQ
------END PGP SIGNATURE-----
-
---=-6EDV0luBY9ezZj8a6omD--
-
+Regards,
+	Chr
