@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48505 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750798AbZAELvw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 06:51:52 -0500
-Date: Mon, 5 Jan 2009 13:51:24 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ingo Molnar <mingo@elte.hu>, ath9k-devel@venema.h4ckr.net,
+Received: from bu3sch.de ([62.75.166.246]:60510 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758472AbZAOQK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2009 11:10:29 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [b43] opensource firmware
+Date: Thu, 15 Jan 2009 17:09:49 +0100
+Cc: bcm43xx-dev@lists.berlios.de,
+	Johannes Berg <johannes@sipsolutions.net>, kyle@infradead.org,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Enforce module build if rfkill is a module
-Message-ID: <20090105115124.GA2235@jm.kir.nu> (sfid-20090105_125156_359105_6FC16FEB)
-References: <3f9a31f40901020936l4bed87e2jb64678572d2ad45b@mail.gmail.com> <20090102180730.GA10072@elte.hu> <3f9a31f40901021040l2afb5e19sc37e61d3f9728531@mail.gmail.com> <495E6C96.3040102@kernel.org> <20090102195802.GA28494@elte.hu>
+References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> <200901151637.58196.mb@bu3sch.de> <496F5D4F.3020805@lwfinger.net>
+In-Reply-To: <496F5D4F.3020805@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090102195802.GA28494@elte.hu>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901151709.49811.mb@bu3sch.de> (sfid-20090115_171036_752341_709429F8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_ATH9K=y results in build issues if CONFIG_RFKILL=m since ath9k
-does not depend on rfkill in kconfig (i.e., CONFIG_RFKILL is used to
-select whether to enable rfkill in ath9k), but uses its functions if
-rfkill is enabled. Enforce ath9k to be build as a module if
-CONFIG_RFKILL=m to avoid this invalid configuration.
+On Thursday 15 January 2009 16:59:11 Larry Finger wrote:
+> Michael Buesch wrote:
+> > Yes, please introduce a feature-bitfield at some location in SHM that's unused
+> > by the proprietary firmware. This bitfields would contain a bit for QoS and
+> > a bit for hwcrypto.
+> > Also change your firmware so the driver detects it as open-source firmware.
+> > I think that's done by writing 0xFFFF to the date/time field in SHM. I don't
+> > quite remember, but it's something like that.
+> > Note that this might mean that the firmware watchdog in the driver will trigger,
+> > as that's enabled by the open-source-firmware-flag. We might want to temporarly
+> > disable the watchdog in the driver for the time being.
+> 
+> I like the idea of encoding the capabilities in the firmware as it
+> would be a self-documenting method as the firmware evolves.
+> 
+> Is using the Broadcom names for the firmware the best course of
+> action? What if the opensource firmware files were named something
+> like "os-ucode5.fw", etc. and b43 were coded to check for those files
+> first? It would then fall back to the standard firmware if the
+> opensource version is not found.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
----
- drivers/net/wireless/ath9k/Kconfig |    1 +
- 1 file changed, 1 insertion(+)
-
---- wireless-testing.orig/drivers/net/wireless/ath9k/Kconfig	2009-01-05 13:27:01.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/Kconfig	2009-01-05 13:36:27.000000000 +0200
-@@ -1,6 +1,7 @@
- config ATH9K
- 	tristate "Atheros 802.11n wireless cards support"
- 	depends on PCI && MAC80211 && WLAN_80211
-+	depends on RFKILL || RFKILL=n
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
+Already implemented here:
+http://bu3sch.de/patches/wireless-testing/20081227-1821/patches/008-b43-probe-open-fw.patch
+I just need to fix a leak in an error path before pushing that upstream.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings, Michael.
