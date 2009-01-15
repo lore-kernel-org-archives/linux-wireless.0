@@ -1,68 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:40414 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752193AbZACEUR (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:45233 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935191AbZAOWk6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 23:20:17 -0500
-Message-ID: <495EE775.2010506@lwfinger.net> (sfid-20090103_052026_478708_D338E5A7)
-Date: Fri, 02 Jan 2009 22:20:05 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 15 Jan 2009 17:40:58 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Artur Skawina <art.08.09@gmail.com>
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+Date: Thu, 15 Jan 2009 23:41:02 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <494698AF.4020204@gmail.com> <200901152042.42372.chunkeey@web.de> <496F9740.5010109@gmail.com>
+In-Reply-To: <496F9740.5010109@gmail.com>
 MIME-Version: 1.0
-To: Jan Engelhardt <jengelh@medozas.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: b43 depends on lots of modules
-References: <alpine.LSU.2.00.0901030349030.3914@fbirervta.pbzchgretzou.qr> <495ED57A.7080101@lwfinger.net> <alpine.LSU.2.00.0901030419390.9193@fbirervta.pbzchgretzou.qr>
-In-Reply-To: <alpine.LSU.2.00.0901030419390.9193@fbirervta.pbzchgretzou.qr>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200901152341.02130.chunkeey@web.de> (sfid-20090115_234117_205661_38CE16CA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jan Engelhardt wrote:
-> 
-> It's because the Kconfig description says SSB is for embedded systems,
-> come thinking WRT54, so I wondered what exactly requires SSB.
-> Is it some bus within the wireless chip itself?
+On Thursday 15 January 2009 21:06:24 Artur Skawina wrote:
+> Christian Lamparter wrote:
+> > On Thursday 15 January 2009 20:12:03 Artur Skawina wrote:
+> >>>> Upgraded to current wireless-testing/pending on the problematic =
+box
+> >>>> and almost immediately got [1]. No slab corruption this time (at=
+ least
+> >>>> not yet). Will switch to GFP_ATOMIC and retry w/ the new fw.
+>=20
+> >>> yes that's a bug, p54_set_tim must use GFP_ATOMIC, do you want to=
+ post the patch?
+> >> nah, too trivial :) fwiw i used this:
+> > well, it should be "done", right? :-)
+> >=20
+> > just add "John W. Linville" <linville@tuxdriver.com>" to the cc,
+> > change the subject line to "[PATCH] p54: set_tim must be atomic."
+> > and put a Signed-off-by: your name <your@mail> in the mail body and=
+ a "---" to seperate the commit message
+> > and then the patch. And it will be in the next round of -rcX fixes.
+>=20
+> well, i really meant the 'too trivial' part and was hoping you'd do i=
+t ;)
+> ok, will resend.
+>=20
+well... I'm still looking for an explanation for your other problems:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D
+BUG kmalloc-4096: Poison overwritten
+-----------------------------------------------------------------------=
+------
 
-That isn't quite what Kconfig says, which is
+=C2=A0 Object 0xddec18c0: =C2=A06b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b =
+6b 6b 6b kkkkkkkkkkkkkkkk
+=C2=A0 Object 0xddec18d0: =C2=A0>69< 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6=
+b 6b 6b 6b ikkkkkkkkkkkkkkk
+=C2=A0 Object 0xddec18e0: =C2=A06b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b =
+6b 6b 6b kkkkkkkkkkkkkkkk
 
-config SSB
-        tristate "Sonics Silicon Backplane support"
-        depends on SSB_POSSIBLE
-        help
-          Support for the Sonics Silicon Backplane bus.
-          You only need to enable this option, if you are
-          configuring a kernel for an embedded system with
-          this bus.
-          It will be auto-selected if needed in other
-          environments.
+The odd thing is here that it's only a "single" bit in the object flipp=
+ed and not more!
+And we all have slub/slab debug options enabled as well (in fact, we ha=
+d to fix the usbdriver for that,
+see patch "p54usb: rewriting rx/tx routines to make use of usb_anchor's=
+ facilities" )
 
-          The module will be called ssb.
+can you check your RAM with memtest or something?
 
-          If unsure, say N.
+--------------------------
+Disconnecting/reconnecting the wireless client resulted in this:
+> mac80211-phy0: failed to remove key (0, 00:1b:fb:12:34:56) from hardw=
+are (-12)
+followed later, when killing hostapd, by:
+> mac80211-phy0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardw=
+are (-12)
 
+well, -12 is -ENOMEM. Well we can use GFP_KERNEL in p54_set_key so its =
+unlikely that your "box"
+doesn't have enough space, but your p54usb device 'itself' has no more =
+room left... and
+this is unlikely too, so it probably stalled/crashed.
 
-The text says that it will be auto-selected if needed for other
-environments, and it will be for PCI-based BCM43XX devices.
+We fixed a something like this before for the 2nd generation devices:
+http://www.spinics.net/lists/linux-wireless/msg25692.html
 
-Most, if not all, Broadcom devices consist of several cores of
-different types that are interconnected by a Sonics Silicon Backplane
-(ssb). On a BCM43XX device, two of these will be an IEEE 802.11 core
-plus at least one bus interface. For example, in the BCM4312 now in my
-machine I get
+However, I don't know if the net2280 chip on your device needs it or no=
+t, but it should hurt if you try it.
 
-ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor 0x4243)
-ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F, vendor 0x4243)
-ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
-ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
-
-As my device does not have a PCMCIA interface, that core is presumably
-not attached, but the other 3 are active.
-
-Before b43 was developed, all communications between the 802.11 core
-and the PCI bus were handled by bcm43xx; however, that scheme meant
-that code had to be duplicated for 3 different drivers. By splitting
-out that part of the code, b43, b43legacy and b44 can share
-considerable code. That is the module named ssb.
-
-Larry
-
+Regards,
+	Chr
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
