@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54216 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757235AbZAMNuA (ORCPT
+Received: from phoenix.szarvasnet.hu ([87.101.127.3]:50685 "EHLO
+	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758315AbZAOIHf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 08:50:00 -0500
-Date: Tue, 13 Jan 2009 15:49:48 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: New command for adding extra IE(s) into
-	management frames
-Message-ID: <20090113134948.GA16694@jm.kir.nu> (sfid-20090113_145006_753391_F244C56B)
-References: <20090113115128.GA11245@jm.kir.nu> <1231853937.3671.28.camel@johannes>
+	Thu, 15 Jan 2009 03:07:35 -0500
+Message-ID: <496EEE8B.3030702@openwrt.org> (sfid-20090115_090742_583592_68763440)
+Date: Thu, 15 Jan 2009 09:06:35 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231853937.3671.28.camel@johannes>
+To: Sujith <m.sujith@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [ath9k-devel] [PATCH v4 02/11] ath9k: convert to use bus-agnostic
+ DMA routines
+References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>	<1231960632-4452-3-git-send-email-juhosg@openwrt.org> <18798.42051.400380.269490@localhost.localdomain>
+In-Reply-To: <18798.42051.400380.269490@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 13, 2009 at 02:38:57PM +0100, Johannes Berg wrote:
+Sujith =EDrta:
+> Gabor Juhos wrote:
+>> Convert to use bus-agnostic DMA routines to make it usable on AHB bu=
+s as well.
+>>
+>=20
+> This pretty much makes the previous patch redundant.
 
-> kmemdup? Might also make sense to not try the allocation if we're going
-> to refuse it anyway, but that might be complicated to do and probably
-> doesn't matter.
+Yes. Although i can merge the two patches, but in my opinion it is easi=
+er to
+review them in this way.
 
-I did not know there is such a thing as kmemdup (apparently not that
-many other people, either, taken into account it is not used anywhere in
-the generic wireless code). Anyway, yes, it would work here.
+-Gabor
 
-Moving the allocation to be done for each subtype separately would add
-quite a bit of extra code and error paths. Doing it once resulted in
-simpler implementation. The array version was much simpler on this area,
-but with separate variables for each subtype, I think it is better to
-just allocate (and deal with NULL) once even if we will immediately
-after this need to free the buffer in the case the request is going to
-be refused.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
