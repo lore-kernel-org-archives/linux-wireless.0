@@ -1,69 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46184 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752839AbZAaS4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2009 13:56:44 -0500
-Message-ID: <49849ED9.6080300@openwrt.org> (sfid-20090131_195648_533960_421712F4)
-Date: Sat, 31 Jan 2009 19:56:25 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from an-out-0708.google.com ([209.85.132.251]:30256 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752836AbZAOBy1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 20:54:27 -0500
+Message-ID: <496E974E.1040806@gmail.com> (sfid-20090115_025433_166622_7C8FFA70)
+Date: Wed, 14 Jan 2009 17:54:22 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	jirislaby@gmail.com, mcgrof@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
-References: <20090131023147.GE3342@makis>	 <20090131170802.GA16826@hash.localnet> <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>
-In-Reply-To: <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Paul Moore <paul.moore@hp.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	SE-Linux <selinux@tycho.nsa.gov>
+Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
+References: <496D759A.7010401@gmail.com> <200901141508.58174.paul.moore@hp.com> <496E5A9D.3050105@gmail.com> <200901141736.43805.paul.moore@hp.com>
+In-Reply-To: <200901141736.43805.paul.moore@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Kossifidis wrote:
->>> [...]
->>> @@ -2156,7 +2157,8 @@
->>>  #define      AR5K_PHY_ANT_CTL_TXRX_EN        0x00000001      /* Enable TX/RX (?) */
->>>  #define      AR5K_PHY_ANT_CTL_SECTORED_ANT   0x00000004      /* Sectored Antenna */
->>>  #define      AR5K_PHY_ANT_CTL_HITUNE5        0x00000008      /* Hitune5 (?) */
->>> -#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE   0x00000010      /* Switch table idle (?) */
->>> +#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE   0x000003f9      /* Switch table idle (?) */
->>> +#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE_S 4
+Paul Moore wrote:
+> On Wednesday 14 January 2009 4:35:25 pm Justin P. Mattock wrote:
+>   
+>> Anyways heres what I'm trying to achieve:
 >>
->> That doesn't look right.. should be 3f0?  (still probably works, I guess).
+>> default looks like this:
+>> Configured NetLabel domain mappings(1)
+>> domain: DEFAULT
+>>     protocol: UNLABELED
 >>
-> 
-> I know, but HAL does this...
-> 	AR_PHY_BIS(ah, 68, 0xFFFFFC06,
-> 		(ee->ee_antennaControl[0][arrayMode] << 4) | 0x1);
-> 
-> ~0xFFFFFC06 = 3F9
-How about splitting it up and making the 0x1 a separate flag?
+>> I want to try and have three of these for the
+>> different types of media:
+>> (in theory)
+>> Configured NetLabel domain mappings(3)
+>> domain:radio
+>>    protocol: UNLABELED
+>> domain:T.V.
+>>    protocol: UNLABELED
+>> domain:web
+>>    protocol: UNLABELED
+>> (and if possible three different tags(either 1,2,5), but probably can
+>> only do that with cipsov4);
+>>     
+>
+>   
+apologize for the slow response
+(had to do some external activities);
+> Actually, in your case you are probably always going to want to send 
+> network traffic without any labels attached to the packets (no labeled 
+> IPsec or CIPSO) so you can stick with the default domain mapping 
+> configuration which sends all packets "unlabeled".  The part you should 
+> be concerned about is the static/fallback configuration which assigns 
+> network peer labels to packets which do not have labels attached to 
+> them by the remote host.
+>   
+sure would be nice to use ipsec/cipsov4 with a internet radio.
+(lock down that tcp line);
+I'll have to look into making sure I have static/fallback
+configured correctly.
+> NOTE: the domain mapping configuration only controls how outbound 
+> network traffic is labeled on-the-wire; it "maps" the 
+> LSM/SELinux "domains" to a specific labeling protocol configuration, 
+> e.g. all apache_t traffic should be labeled with CIPSO DOI 3 while all 
+> firefox_t traffic should not be labeled at all.
+>
+>   
+>> heres what I've come up with so far:
+>>
+>> netlabelctl -p map del default
+>>
+>> netlabelctl unlbl add domain:radio interface:wlan0 address:<myadd>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>> netlabelctl unlbl add domain:radio interface:wlan0 address:<radioadd>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>>
+>> netlabelctl unlbl add domain:T.V. interface:wlan0 address:<myadd>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>> netlabelctl unlbl add domain:T.V. interface:wlan0 address:<t.v.add>
+>> label:system_u:object_r:netlabel_peer_t:s0
+>>     
+>
+> I think what you mean to type is the following:
+>
+>  # netlabelctl unlbl add interface:wlan0 address:<radioadd> \
+>        label:system_u:object_r:netlabel_peer_t:s0
+>
+> ... note there is no "domain" argument, that only exists 
+> for "netlabelctl map ..." commands.
+>
+> NOTE: if you really want to get fancy you can create new SELinux domains 
+> for each type of media and add NetLabel configurations for those new 
+> domains.  Imagine you create a new "internet_radio_t" domain/type and 
+> only allow the "netplayer_t" domain (yeah, I made that up but you get 
+> the point) access to network traffic labeled with internet_radio_t.  
+> You would then use the following command to label your incoming traffic 
+> with NetLabel:
+>
+>  # netlabelctl unlbl add interface:wlan0 address:<radioadd> \
+>        label:system_u:object_r:internet_radio_t:s0
+>
+> NOTE: you can also skip the "interface:wlan0" argument and just 
+> use "default" instead if you want the configuration to apply to all 
+> your network interfaces; although bear in mind that the "default" 
+> configuration can be overridden by the interface specific 
+> configurations.
+>
+>   
+Alright, I thought you could use the map option for unlbl.
 
-> My intention is to reimplement hw_htoclock to account for half/quarter
-> rate so it'll soon be
-> clock = ath5k_hw_htoclock(1, channel->hw_value);
-AFAIK Sam's HAL might have a bug there. If I remember correctly, the MAC
-runs at the same clock speed with Half/Quarter rate.
-It's done that way in the legacy HAL. Though there is a possibility of
-it being hardware dependent, I'm pretty sure that it is that way at least
-on 5413.
-
->>> +     /* Set DAC/ADC delays */
->>> +     if (ah->ah_version == AR5K_AR5212) {
->>> +             if (ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))
->>> +                     data = AR5K_PHY_SCAL_32MHZ_2417;
->>> +             else if (ath5k_eeprom_is_hb63(ah))
->>> +                     data = AR5K_PHY_SCAL_32MHZ_HB63;
->>> +             else
->>> +                     data = AR5K_PHY_SCAL_32MHZ;
->>> +             ath5k_hw_reg_write(ah, data, AR5K_PHY_SCAL);
->>> +             data = 0;
+>> As for the new capabilities, I don't mind trying that out when
+>> the time comes(but first I need to figure the this out before any
+>> other ways);
+>>     
+>
+> No problem, I understand.  Let me know if you have any more problems.
+>
+>   
+>> here is what the error looks like:
 >>
->> why data = 0; ?
->>
-> Instead of having multiple temporary variables, i use only "data". To
-> be sure that "data" is ok for use i always zero it each time i use it
-> so that we don't write any weird stuff by mistake.
-Wouldn't multiple temporary values be preferable, since the compiler
-optimizes that stuff anyway?
+>> netlabel_tools-0.19# make
+>> INFO: creating the version header file
+>> .: 10: version_info: not found
+>> make: *** [include/version.h] Error 2
+>>     
+>
+> Huh, can you try the following:
+>
+>  1. Open the netlabel_tools-0.19/Makefile in your favorite editor
+>  2. Change the ". version_info; \" line to "source ./version_info; \"
+>  3. Save your changes
+>  4. Try running "make" again
+>
+> Thanks.
+>
+>   
+Thanks for the info,
+Ill try this right away and let you know
+if the package compiles.
 
-- Felix
+regards;
+
+Justin P. Mattock
