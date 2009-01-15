@@ -1,121 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46037 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754034AbZAHNDD (ORCPT
+Received: from vms046pub.verizon.net ([206.46.252.46]:56713 "EHLO
+	vms046pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935856AbZAOWfH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 08:03:03 -0500
-Subject: Re: [PATCH 6/6] cfg80211: Fix parsed country IE info for 5 GHz
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1231379017-28363-7-git-send-email-lrodriguez@atheros.com>
-References: <1231379017-28363-1-git-send-email-lrodriguez@atheros.com>
-	 <1231379017-28363-2-git-send-email-lrodriguez@atheros.com>
-	 <1231379017-28363-3-git-send-email-lrodriguez@atheros.com>
-	 <1231379017-28363-4-git-send-email-lrodriguez@atheros.com>
-	 <1231379017-28363-5-git-send-email-lrodriguez@atheros.com>
-	 <1231379017-28363-6-git-send-email-lrodriguez@atheros.com>
-	 <1231379017-28363-7-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-E6rA+PuZV7f/srWm/15P"
-Date: Thu, 08 Jan 2009 14:04:00 +0100
-Message-Id: <1231419840.3685.12.camel@johannes> (sfid-20090108_140308_858601_589BE2DB)
-Mime-Version: 1.0
+	Thu, 15 Jan 2009 17:35:07 -0500
+Received: from depotrd.localnet ([96.237.21.85])
+ by vms046.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
+ 3 2006)) with ESMTPA id <0KDJ00F98APZPOY3@vms046.mailsrvcs.net> for
+ linux-wireless@vger.kernel.org; Thu, 15 Jan 2009 16:34:49 -0600 (CST)
+Date: Thu, 15 Jan 2009 17:34:45 -0500
+From: Glenn Burkhardt <gbburkhardt@verizon.net>
+Subject: Re: poor performance with ath5k; reverting to ath_pci
+In-reply-to: <40f31dec0901140530n7ff2029em67687dcd1eab590f@mail.gmail.com>
+To: "Nick Kossifidis" <mickflemm@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Message-id: <200901151734.46144.gbburkhardt@verizon.net> (sfid-20090115_233530_592118_8F05F9F7)
+MIME-version: 1.0
+Content-type: text/plain; charset=utf-8
+References: <200901140003.31693.gbburkhardt@verizon.net>
+ <40f31dec0901140530n7ff2029em67687dcd1eab590f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 14 January 2009 08:30:03 Nick Kossifidis wrote:
+> 2009/1/14 Glenn Burkhardt <gbburkhardt@verizon.net>:
+> > I just upgraded my system to Suse 11.1, and it installed the ath5k
+> > driver.  I started having trouble with network access, and found that the
+> > response time to the wireless router in my house was lousy:
+> >
+> > glenn@DepotRd:~> ping 192.168.2.1
+> > PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
+> > 64 bytes from 192.168.2.1: icmp_seq=1 ttl=64 time=1233 ms
+> > 64 bytes from 192.168.2.1: icmp_seq=2 ttl=64 time=1901 ms
+> > 64 bytes from 192.168.2.1: icmp_seq=3 ttl=64 time=1550 ms
+> >
+> > So I pulled the madwifi-0.9.4-1.src.rpm, and re-configured to use the
+> > ath_pci driver.  The results were much better:
+> >
+> > glenn@DepotRd:~> ping 192.168.2.1
+> > PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
+> > 64 bytes from 192.168.2.1: icmp_seq=1 ttl=64 time=0.493 ms
+> > 64 bytes from 192.168.2.1: icmp_seq=2 ttl=64 time=0.485 ms
+> > 64 bytes from 192.168.2.1: icmp_seq=3 ttl=64 time=0.501 ms
+> > 64 bytes from 192.168.2.1: icmp_seq=4 ttl=64 time=0.518 ms
+> >
+> > The card I have is the Netgear WG311T, which reports with PCI ID
+> > 0x168c:0x0013, and in the log as "Atheros Communications Inc. Atheros
+> > AR5001X+ Wireless Network Adapter (rev 01)".
+> >
+> > I'd be happy to try to help figure out why the response time is so bad
+> > with the ath5k driver, but I'm completely new to this code set.
+>
+> Can you please post the dmesg output from when ath5k loads ?
 
---=-E6rA+PuZV7f/srWm/15P
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+With ath_pci driver:
 
-On Wed, 2009-01-07 at 17:43 -0800, Luis R. Rodriguez wrote:
-> The country IE number of channels on 5 GHz specifies the number
-> of 5 GHz channels, not the number of sequential channel numbers.
-> For example, if in a country IEs if the first channel given is 36
-> and the number of channels passed is 4 then the individual channel
-> numbers defined for the 5 GHz PHY by these parameters
->=20
-> are: 36, 40, 44, 48
-> not: 36, 37, 38, 39
->=20
-> See: http://tinyurl.com/11d-clarification
->=20
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+glenn@DepotRd:~> ping 192.168.2.1
+PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
+64 bytes from 192.168.2.1: icmp_seq=1 ttl=64 time=0.974 ms
+64 bytes from 192.168.2.1: icmp_seq=2 ttl=64 time=0.946 ms
+64 bytes from 192.168.2.1: icmp_seq=3 ttl=64 time=0.964 ms
+64 bytes from 192.168.2.1: icmp_seq=4 ttl=64 time=1.39 ms
+64 bytes from 192.168.2.1: icmp_seq=5 ttl=64 time=0.964 ms
+64 bytes from 192.168.2.1: icmp_seq=6 ttl=64 time=0.956 ms
+64 bytes from 192.168.2.1: icmp_seq=7 ttl=64 time=0.948 ms
+64 bytes from 192.168.2.1: icmp_seq=8 ttl=64 time=0.963 ms
+64 bytes from 192.168.2.1: icmp_seq=9 ttl=64 time=0.957 ms
+64 bytes from 192.168.2.1: icmp_seq=10 ttl=64 time=1.71 ms
+64 bytes from 192.168.2.1: icmp_seq=11 ttl=64 time=3.62 ms
+64 bytes from 192.168.2.1: icmp_seq=12 ttl=64 time=0.958 ms
+^C
+--- 192.168.2.1 ping statistics ---
+12 packets transmitted, 12 received, 0% packet loss, time 11043ms
+rtt min/avg/max/mdev = 0.946/1.279/3.624/0.744 ms
+glenn@DepotRd:~> iwconfig
+lo        no wireless extensions.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+wifi0     no wireless extensions.
 
-> ---
->  net/wireless/reg.c |   21 +++++++++++++++++++--
->  1 files changed, 19 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index bea98ed..b34fd84 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -563,6 +563,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
-> =20
->  	/* This time around we fill in the rd */
->  	while (country_ie_len >=3D 3) {
-> +		int end_channel =3D 0;
->  		struct ieee80211_country_ie_triplet *triplet =3D
->  			(struct ieee80211_country_ie_triplet *) country_ie;
->  		struct ieee80211_reg_rule *reg_rule =3D NULL;
-> @@ -584,6 +585,23 @@ static struct ieee80211_regdomain *country_ie_2_rd(
-> =20
->  		reg_rule->flags =3D flags;
-> =20
-> +		/* 2 GHz */
-> +		if (triplet->chans.first_channel <=3D 14)
-> +			end_channel =3D triplet->chans.first_channel +
-> +				triplet->chans.num_channels;
-> +		else
-> +			/*
-> +			 * 5 GHz -- For example in country IEs if the first
-> +			 * channel given is 36 and the number of channels is 4
-> +			 * then the individual channel numbers defined for the
-> +			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
-> +			 * and not 36, 37, 38, 39.
-> +			 *
-> +			 * See: http://tinyurl.com/11d-clarification
-> +			 */
-> +			end_channel =3D  triplet->chans.first_channel +
-> +				(4 * (triplet->chans.num_channels - 1));
-> +
->  		/* The +10 is since the regulatory domain expects
->  		 * the actual band edge, not the center of freq for
->  		 * its start and end freqs, assuming 20 MHz bandwidth on
-> @@ -593,8 +611,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
->  				triplet->chans.first_channel) - 10);
->  		freq_range->end_freq_khz =3D
->  			MHZ_TO_KHZ(ieee80211_channel_to_frequency(
-> -				triplet->chans.first_channel +
-> -					triplet->chans.num_channels) + 10);
-> +				end_channel) + 10);
-> =20
->  		/* Large arbitrary values, we intersect later */
->  		/* Increment this if we ever support >=3D 40 MHz channels
+ath0      IEEE 802.11g  ESSID:"Belkin_N_Wireless_A99331"  
+          Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1C:DF:A9:93:31   
+          Bit Rate:54 Mb/s   Tx-Power:15 dBm   Sensitivity=1/1  
+          Retry:off   RTS thr:off   Fragment thr:off
+          Power Management:off
+          Link Quality=25/70  Signal level=-70 dBm  Noise level=-95 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
 
---=-E6rA+PuZV7f/srWm/15P
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+eth0      no wireless extensions.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJZfm+AAoJEKVg1VMiehFYI2AQAKqiNZhywhgls3tYJckHX9qt
-kOP3S6UfGn8gjjbHmhE7nSTVMAXnXAlGl+W26gM5tCeTupU04W4vJL3UxBoWonRp
-COOWEgcLkOMzGsY8D5Gvy4pjOvZ2R/FHDOHC8DGKfsiven5AAcCJF+kG/HPMRmp1
-Fj8aP1c+9axZbRIjayNwXkYb/SqpQcsLHcxI4dXX+pSPnbRZB24VDj1LQ27aND+d
-E9iE7P2jjkNTK8VcJLbo/9ahVL43+YEh7TFx3HReB9BnCrfkbjZDPY/hLdyTQP3p
-ylyUWthuLd02zVr7CN+++o8YQY/GcmEA5DrbLuvgpPe7klqghZygfitNxGkmX8Ao
-u9Pttd79oI3sj+zruYBnYuPpehag2rkD1vR/uIifrE0/Yfs5f2+DI8TrXKwEDUXF
-8A8DHLwTg/XKx8+Dr2rjUg0e8JzR9f5TYKLCwbrgD1Vaqwc+6tzTS4bwJ8eRfmmV
-1rrI99o4p1Cf5rws+oqtoL5MeYAM4T0/DC/cZh6P7GEJ//LFKi20tFJdVCI0zP6t
-jrs+LwWhEryVXBrD+qEm6iqG3T4gmm3Y4BYMIerAFtbnK58XB9que3KRtGO0/iqa
-BAoMbrKnigeR7/RAZ8K0x/il+BVPqrUTCitt2+9VJyghBecvG/DZNnBfD3pFXWKK
-yF7L341rgpLfTSYj3khX
-=iZ0V
------END PGP SIGNATURE-----
+Shortly thereafter, with ath5k loaded:
 
---=-E6rA+PuZV7f/srWm/15P--
+DepotRd:/home/gbb-suse # modprobe ath5k
+DepotRd:/home/gbb-suse # /etc/init.d/network restart
+Shutting down network interfaces:
+    eth0      device: Realtek Semiconductor Co., Ltd. RTL-8139/8139C/8139C+ 
+(rev 10)
+              No configuration found for eth0 
+              Nevertheless the interface will be shut down.          done
+    wlan0     device: Atheros Communications Inc. Atheros AR5001X+ Wireless 
+Network Adapter (rev 01)                                                 done
+Shutting down service network  .  .  .  .  .  .  .  .  .             done
+Hint: you may set mandatory devices in /etc/sysconfig/network/config
+Setting up network interfaces:
+    eth0      device: Realtek Semiconductor Co., Ltd. RTL-8139/8139C/8139C+ 
+(rev 10)
+              No configuration found for eth0                        unused
+    wlan0     device: Atheros Communications Inc. Atheros AR5001X+ Wireless 
+Network Adapter (rev 01)
+    wlan0     warning: WPA configured but may be unsupported
+    wlan0     warning: by this device
+    wlan0     starting wpa_supplicant
+    wlan0     Starting DHCP4 client. . . . . . . .  
+    wlan0     DHCP4 continues in background                          waiting
+Setting up service network  .  .  .  .  .  .  .  .  .  .             done
+DepotRd:/home/gbb-suse # ping 192.168.2.1
+connect: Network is unreachable
+DepotRd:/home/gbb-suse # ifconfig
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+          RX packets:62 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:62 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:4028 (3.9 Kb)  TX bytes:4028 (3.9 Kb)
+
+wlan0     Link encap:Ethernet  HWaddr 00:0F:B5:1D:93:2B  
+          inet addr:192.168.2.3  Bcast:192.168.2.255  Mask:255.255.255.0
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
+
+wmaster0  Link encap:UNSPEC  HWaddr 00-0F-
+B5-1D-93-2B-00-00-00-00-00-00-00-00-00-00  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
+
+DepotRd:/home/gbb-suse # ping 192.168.2.1
+connect: Network is unreachable
+DepotRd:/home/gbb-suse # ping 192.168.2.1
+PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=30 ttl=64 time=18.1 ms
+64 bytes from 192.168.2.1: icmp_seq=31 ttl=64 time=4.25 ms
+64 bytes from 192.168.2.1: icmp_seq=32 ttl=64 time=8.36 ms
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=34 ttl=64 time=4.24 ms
+64 bytes from 192.168.2.1: icmp_seq=35 ttl=64 time=10.1 ms
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=37 ttl=64 time=6.25 ms
+64 bytes from 192.168.2.1: icmp_seq=38 ttl=64 time=5.95 ms
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=40 ttl=64 time=7.60 ms
+64 bytes from 192.168.2.1: icmp_seq=41 ttl=64 time=5.36 ms
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=43 ttl=64 time=7.49 ms
+64 bytes from 192.168.2.1: icmp_seq=44 ttl=64 time=6.14 ms
+64 bytes from 192.168.2.1: icmp_seq=45 ttl=64 time=1.06 ms
+64 bytes from 192.168.2.1: icmp_seq=46 ttl=64 time=6.89 ms
+64 bytes from 192.168.2.1: icmp_seq=47 ttl=64 time=6.74 ms
+64 bytes from 192.168.2.1: icmp_seq=48 ttl=64 time=0.750 ms
+          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
+
+wmaster0  Link encap:UNSPEC  HWaddr 00-0F-
+B5-1D-93-2B-00-00-00-00-00-00-00-00-00-00  
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
+
+DepotRd:/home/gbb-suse # ping 192.168.2.1
+connect: Network is unreachable
+DepotRd:/home/gbb-suse # ping 192.168.2.1
+PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=30 ttl=64 time=18.1 ms
+64 bytes from 192.168.2.1: icmp_seq=31 ttl=64 time=4.25 ms
+64 bytes from 192.168.2.1: icmp_seq=32 ttl=64 time=8.36 ms
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=34 ttl=64 time=4.24 ms
+64 bytes from 192.168.2.1: icmp_seq=35 ttl=64 time=10.1 ms
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=37 ttl=64 time=6.25 ms
+64 bytes from 192.168.2.1: icmp_seq=38 ttl=64 time=5.95 ms
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=40 ttl=64 time=7.60 ms
+64 bytes from 192.168.2.1: icmp_seq=41 ttl=64 time=5.36 ms
+ping: sendmsg: Network is unreachable
+64 bytes from 192.168.2.1: icmp_seq=43 ttl=64 time=7.49 ms
+64 bytes from 192.168.2.1: icmp_seq=44 ttl=64 time=6.14 ms
+64 bytes from 192.168.2.1: icmp_seq=45 ttl=64 time=1.06 ms
+64 bytes from 192.168.2.1: icmp_seq=46 ttl=64 time=6.89 ms
+64 bytes from 192.168.2.1: icmp_seq=47 ttl=64 time=6.74 ms
+64 bytes from 192.168.2.1: icmp_seq=48 ttl=64 time=0.750 ms
+64 bytes from 192.168.2.1: icmp_seq=49 ttl=64 time=6.25 ms
+64 bytes from 192.168.2.1: icmp_seq=50 ttl=64 time=5.38 ms
+64 bytes from 192.168.2.1: icmp_seq=51 ttl=64 time=0.734 ms
+64 bytes from 192.168.2.1: icmp_seq=52 ttl=64 time=6.47 ms
+ping: sendmsg: Network is unreachable
+^C
+--- 192.168.2.1 ping statistics ---
+53 packets transmitted, 19 received, 64% packet loss, time 52164ms
+rtt min/avg/max/mdev = 0.734/6.228/18.178/3.726 ms
+DepotRd:/home/gbb-suse # emacs /var/log/messages &
+[1] 2236
+DepotRd:/home/gbb-suse # iwconfig
+lo        no wireless extensions.
+
+eth0      no wireless extensions.
+
+wmaster0  no wireless extensions.
+
+wlan0     IEEE 802.11bg  ESSID:"Belkin_N_Wireless_A99331"  
+          Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1C:DF:A9:93:31   
+          Bit Rate=54 Mb/s   Tx-Power=27 dBm   
+          Retry min limit:7   RTS thr:off   Fragment thr=2352 B   
+          Encryption key:713A-E283-4CAA-0D17-911E-A88E-B3AC-8C88-E5B3-
+AE6C-0923-FC80-5AF4-444F-08EB-4D2E [2]   Security mode:open
+          Power Management:off
+          Link Quality=37/100  Signal level:-66 dBm  Noise level=-90 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+
+Output from dmesg:
+
+NET: Registered protocol family 10
+lo: Disabled Privacy Extensions
+agpgart-sis 0000:00:00.0: AGP 3.5 bridge
+agpgart-sis 0000:00:00.0: putting AGP V3 device into 8x mode
+nvidia 0000:01:00.0: putting AGP V3 device into 8x mode
+NET: Registered protocol family 17
+ath0: no IPv6 routers present
+bootsplash: status on console 0 changed to on
+ath_pci 0000:00:07.0: PCI INT A disabled
+ath_pci: driver unloaded
+ath_rate_sample: unloaded
+wlan: driver unloaded
+ath_hal: driver unloaded
+ath5k_pci 0000:00:07.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+ath5k_pci 0000:00:07.0: registered as 'phy0'
+phy0: Selected rate control algorithm 'pid'
+ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+ath5k phy0: RF2112A 2GHz radio found (0x46)
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+wlan0: authenticate with AP 00:1c:df:a9:93:31
+wlan0: authenticated
+wlan0: associate with AP 00:1c:df:a9:93:31
+wlan0: RX AssocResp from 00:1c:df:a9:93:31 (capab=0x411 status=0 aid=1)
+wlan0: associated
+ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+padlock: VIA PadLock not detected.
+wlan0: no IPv6 routers present
+
+
 
