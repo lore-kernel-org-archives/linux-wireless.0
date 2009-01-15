@@ -1,114 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40265 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512AbZA1Nib (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:48832 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756397AbZAOIdP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 08:38:31 -0500
-Subject: Re: [RFC PATCH v2 2/2] mac80211: use ps-poll when dynamic power
-	save  mode is disabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, vivek.natraj@gmail.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240901280526m199cb01dwc5fa62a50edca853@mail.gmail.com> (sfid-20090128_142650_285609_1DE7EF72)
-References: <20090122114240.31443.18218.stgit@tikku>
-	 <20090122114546.31443.79387.stgit@tikku>
-	 <1ba2fa240901231528m21f13c1m43721f1d673e7cc7@mail.gmail.com>
-	 <874ozj964m.fsf@litku.valot.fi>
-	 <1ba2fa240901280346v6b4000b9m74eef26aabf86419@mail.gmail.com>
-	 <1233147624.4071.1.camel@johannes.local>
-	 <1ba2fa240901280526m199cb01dwc5fa62a50edca853@mail.gmail.com>
-	 (sfid-20090128_142650_285609_1DE7EF72)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XcWGNcMj+IsDVlXtY0zG"
-Date: Wed, 28 Jan 2009 14:36:41 +0100
-Message-Id: <1233149801.4071.12.camel@johannes.local> (sfid-20090128_143835_894356_98AC9364)
-Mime-Version: 1.0
+	Thu, 15 Jan 2009 03:33:15 -0500
+Received: by bwz14 with SMTP id 14so3012398bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 00:33:13 -0800 (PST)
+To: linux-wireless@vger.kernel.org
+Subject: [PATCHv2] iwl3945: report killswitch changes even if the interface is down
+Cc: linville@tuxdriver.com, ipw3945-devel@lists.sourceforge.net,
+	mabbaswireless@gmail.com, tomas.winkler@intel.com,
+	yi.zhu@intel.com, reinette.chatre@intel.com, dcbw@redhat.com,
+	samuel@sortiz.org
+Date: Thu, 15 Jan 2009 09:38:44 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901150938.45058.helmut.schaa@gmail.com> (sfid-20090115_093320_727833_3BF6BE18)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently iwl3945 is not able to report hw-killswitch events while the
+interface is down. This has implications on user space tools (like
+NetworkManager) relying on rfkill notifications to bring the interface
+up once the wireless gets enabled through a hw killswitch.
 
---=-XcWGNcMj+IsDVlXtY0zG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thus, enable the device already in iwl3945_pci_probe instead of iwl3945_up
+and poll the CSR_GP_CNTRL register to update the killswitch state every
+two seconds. The polling is only needed on 3945 hardware as this adapter
+does not use interrupts to signal rfkill changes to the driver (in case no
+firmware is loaded). The firmware loading is still done in iwl3945_up.
 
-On Wed, 2009-01-28 at 15:26 +0200, Tomas Winkler wrote:
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
 
-> > I **completely** disagree on this. The non-unit index is a **horrible**
-> > thing because it says **nothing** of interest to the user. The only
-> > approach the user can then take is try which value will give him the
-> > desired behaviour, and it will differ across all hardware combinations.
-> > Therefore, it's completely _useless_.
->=20
-> What I suggest is to have rich configuration for setting different
-> parameters so this is more flexible with different HW but in run time
-> only play with single number to create uniform interface for user
-> space.
+I did not do any power measurements but I think it is more efficient to
+leave the pci device enabled (without firmware being loaded) then to change
+NetworkManagers behaviour to keep the interface up all the time just to get
+rfkill notifications (which means the firmware has to be loaded).
 
-Which is completely pointless, as I'm saying, because the user has no
-idea what to base the decision on. This might be nice for a developer to
-play with this, but for a user it's completely useless because they
-cannot base the decision on any information.
+Changes since the first version:
+Stop polling when the firmware is loaded and start it again when the interface
+goes down.
 
-Basically, you're saying: Let us vary the blackbox parameters for you,
-and we'll give you a 0-5 scale on which to select. Except that the user
-has no idea what 0-5 mean in terms of what he's trying to do.
-
-That just means we'll end up with howtos like this:
-"If you have Intel hardware, and want to use VOIP, then you need to do
-iwconfig wlan0 power index 2, because otherwise the latency is
-unacceptable (if you have bad hearing 3 might be acceptable); if you're
-just running ICQ then 5 is fine."
-
-Can you see what I'm trying to say?
-
-> I'm not sure that you want to user jungle with all the numbers, we run
-> empirical tests for very long time how do you want to user space take
-> the decision.
-
-No, we definitely do NOT want userspace to juggle any of the numbers.
-But that's completely orthogonal. We want userspace to tell us what it
-needs, and adjust all the possible parameters based on that. We
-definitely do not want userspace to give us an arbitrary number it
-obtained by rolling a dice.
-
-> > What we really need to do is tie into the pm_qos framework and make
-> > latency guarantees.
->=20
-> Even pm_qos doesn't talk directly in language of all  PM paramters you
-> need to configure so this is just equivalent to my proposition and can
-> be staged after the legacy PM is implemented. Also PM doesn't map only
-> to traffic requirements.
-
-No, you're thinking too technical if you say this is equivalent to your
-proposition. Yes, it is similar in that userspace gives us one or two
-values and we select a number of parameters based on these values. But
-it is _completely_ different in that userspace actually has a good idea
-what the parameters it can tell us _do_. Unlike an arbitrary power index
-it can only select by rolling a dice and hoping it'll work.
-
-johannes
-
---=-XcWGNcMj+IsDVlXtY0zG
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJgF9nAAoJEKVg1VMiehFYKgoQALPmWJDSJB4XjA3NLYEWNr3J
-FfxlK2Vj71qswOrYt2pgjF0DccsAR4GgsOzwEH95wXhvA1PKW1H6Ab3B2K86BHVv
-oOe4oESg17Wp0lu0EsYfENoJFW2F4QjTE7ReBAyudhcyV0712Rv0qOGQcFLk6/i+
-rXKzi8yk81YY1XN4FJviL8Q7Cp9e7tA2ngvd/OJ9fkCxP5OxBx4bS/fVdNRoiMu5
-cRwwvckenb7IZcX6ISGMjN3kz5ZXm5R9Gl6q5vx/B8ZNkIDWpO7hHRdY2m2edzIY
-Py4wvcDt/bUzaN04b9BEMepYrSFsIdaOUXHJoOSaQDJXysTFWwJz09QZrOwdNwC1
-H8puN1i/6rOJDD5wpzk8/Ym2fvaw5Hvvo+kOQsxN50CDxzyBkLb8tFBWjg3RIXKI
-EaFLJWHBqs/QqcKdaJEf7WjC5V7l0XdwKzi6Nl79MSzR2jM1PrPmuj1j4naOB+5g
-oItpw8VD+1X/3990n7GAcs9G7rQX7qYRHZZBjbJ1taF1seInmgop3pVloCamPOsx
-IbtQ+TVFy+nGviVlnLGRdfhU3aKyYZdDQmH7Z4hub9kArygHVnLmLHyaBlY9g42L
-qvtNNIQx7p54X864//K50HJmDH0tX+3e+AFju+ThA3Y7os0J/noOuePLpFn2dLkd
-vHjtwg52oehRE4G0lwhR
-=2R7h
------END PGP SIGNATURE-----
-
---=-XcWGNcMj+IsDVlXtY0zG--
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index fd34ba8..4d437cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1041,6 +1041,7 @@ struct iwl_priv {
+ 
+ 	/*For 3945 only*/
+ 	struct delayed_work thermal_periodic;
++	struct delayed_work rfkill_poll;
+ 
+ 	/* TX Power */
+ 	s8 tx_power_user_lmt;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 15425a0..1ca417d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5479,7 +5479,8 @@ static void iwl3945_bg_rf_kill(struct work_struct *work)
+ 		IWL_DEBUG(IWL_DL_INFO | IWL_DL_RF_KILL,
+ 			  "HW and/or SW RF Kill no longer active, restarting "
+ 			  "device\n");
+-		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
++		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) && 
++		     test_bit(STATUS_ALIVE, &priv->status))
+ 			queue_work(priv->workqueue, &priv->restart);
+ 	} else {
+ 
+@@ -5496,6 +5497,25 @@ static void iwl3945_bg_rf_kill(struct work_struct *work)
+ 	iwl3945_rfkill_set_hw_state(priv);
+ }
+ 
++static void iwl3945_rfkill_poll(struct work_struct *data)
++{
++	struct iwl_priv *priv =
++	    container_of(data, struct iwl_priv, rfkill_poll.work);
++	unsigned long status = priv->status;
++
++	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
++		clear_bit(STATUS_RF_KILL_HW, &priv->status);
++	else
++		set_bit(STATUS_RF_KILL_HW, &priv->status);
++
++	if (test_bit(STATUS_RF_KILL_HW, &status) != test_bit(STATUS_RF_KILL_HW, &priv->status))
++		queue_work(priv->workqueue, &priv->rf_kill);
++
++	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
++			   round_jiffies_relative(2 * HZ));
++
++}
++
+ #define IWL_SCAN_CHECK_WATCHDOG (7 * HZ)
+ 
+ static void iwl3945_bg_scan_check(struct work_struct *data)
+@@ -5898,20 +5918,6 @@ static int iwl3945_mac_start(struct ieee80211_hw *hw)
+ 
+ 	IWL_DEBUG_MAC80211("enter\n");
+ 
+-	if (pci_enable_device(priv->pci_dev)) {
+-		IWL_ERR(priv, "Fail to pci_enable_device\n");
+-		return -ENODEV;
+-	}
+-	pci_restore_state(priv->pci_dev);
+-	pci_enable_msi(priv->pci_dev);
+-
+-	ret = request_irq(priv->pci_dev->irq, iwl3945_isr, IRQF_SHARED,
+-			  DRV_NAME, priv);
+-	if (ret) {
+-		IWL_ERR(priv, "Error allocating IRQ %d\n", priv->pci_dev->irq);
+-		goto out_disable_msi;
+-	}
+-
+ 	/* we should be verifying the device is ready to be opened */
+ 	mutex_lock(&priv->mutex);
+ 
+@@ -5957,15 +5963,15 @@ static int iwl3945_mac_start(struct ieee80211_hw *hw)
+ 		}
+ 	}
+ 
++	/* ucode is running and will send rfkill notifications,
++	 * no need to poll the killswitch state anymore */
++	cancel_delayed_work(&priv->rfkill_poll);
++	
+ 	priv->is_open = 1;
+ 	IWL_DEBUG_MAC80211("leave\n");
+ 	return 0;
+ 
+ out_release_irq:
+-	free_irq(priv->pci_dev->irq, priv);
+-out_disable_msi:
+-	pci_disable_msi(priv->pci_dev);
+-	pci_disable_device(priv->pci_dev);
+ 	priv->is_open = 0;
+ 	IWL_DEBUG_MAC80211("leave - failed\n");
+ 	return ret;
+@@ -5996,10 +6002,10 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
+ 	iwl3945_down(priv);
+ 
+ 	flush_workqueue(priv->workqueue);
+-	free_irq(priv->pci_dev->irq, priv);
+-	pci_disable_msi(priv->pci_dev);
+-	pci_save_state(priv->pci_dev);
+-	pci_disable_device(priv->pci_dev);
++
++	/* start polling the killswitch state again */
++	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
++			   round_jiffies_relative(2 * HZ));
+ 
+ 	IWL_DEBUG_MAC80211("leave\n");
+ }
+@@ -7207,6 +7213,7 @@ static void iwl3945_setup_deferred_work(struct iwl_priv *priv)
+ 	INIT_DELAYED_WORK(&priv->init_alive_start, iwl3945_bg_init_alive_start);
+ 	INIT_DELAYED_WORK(&priv->alive_start, iwl3945_bg_alive_start);
+ 	INIT_DELAYED_WORK(&priv->scan_check, iwl3945_bg_scan_check);
++	INIT_DELAYED_WORK(&priv->rfkill_poll, iwl3945_rfkill_poll);
+ 
+ 	iwl3945_hw_setup_deferred_work(priv);
+ 
+@@ -7497,6 +7504,15 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	iwl3945_disable_interrupts(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
++	pci_enable_msi(priv->pci_dev);
++
++	err = request_irq(priv->pci_dev->irq, iwl3945_isr, IRQF_SHARED,
++			  DRV_NAME, priv);
++	if (err) {
++		IWL_ERR(priv, "Error allocating IRQ %d\n", priv->pci_dev->irq);
++		goto out_disable_msi;
++	}
++
+ 	err = sysfs_create_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+ 	if (err) {
+ 		IWL_ERR(priv, "failed to create sysfs device attributes\n");
+@@ -7507,14 +7523,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	iwl3945_setup_deferred_work(priv);
+ 	iwl3945_setup_rx_handlers(priv);
+ 
+-	/***********************
+-	 * 9. Conclude
+-	 * ********************/
+-	pci_save_state(pdev);
+-	pci_disable_device(pdev);
+-
+ 	/*********************************
+-	 * 10. Setup and Register mac80211
++	 * 9. Setup and Register mac80211
+ 	 * *******************************/
+ 
+ 	err = ieee80211_register_hw(priv->hw);
+@@ -7531,6 +7541,10 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 		IWL_ERR(priv, "Unable to initialize RFKILL system. "
+ 				  "Ignoring error: %d\n", err);
+ 
++	/* Start monitoring the killswitch */
++	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
++			   2 * HZ);
++
+ 	return 0;
+ 
+  out_remove_sysfs:
+@@ -7539,10 +7553,12 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	iwl3945_free_geos(priv);
+ 
+  out_release_irq:
++	free_irq(priv->pci_dev->irq, priv);
+ 	destroy_workqueue(priv->workqueue);
+ 	priv->workqueue = NULL;
+ 	iwl3945_unset_hw_params(priv);
+-
++ out_disable_msi:
++	pci_disable_msi(priv->pci_dev);
+  out_iounmap:
+ 	pci_iounmap(pdev, priv->hw_base);
+  out_pci_release_regions:
+@@ -7587,6 +7603,8 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+ 
+ 	iwl3945_rfkill_unregister(priv);
++	cancel_delayed_work(&priv->rfkill_poll);
++
+ 	iwl3945_dealloc_ucode_pci(priv);
+ 
+ 	if (priv->rxq.bd)
+@@ -7605,6 +7623,9 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 	destroy_workqueue(priv->workqueue);
+ 	priv->workqueue = NULL;
+ 
++	free_irq(pdev->irq, priv);
++	pci_disable_msi(pdev);
++
+ 	pci_iounmap(pdev, priv->hw_base);
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+@@ -7630,7 +7651,8 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 		iwl3945_mac_stop(priv->hw);
+ 		priv->is_open = 1;
+ 	}
+-
++	pci_save_state(pdev);
++	pci_disable_device(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
+ 
+ 	return 0;
+@@ -7641,6 +7663,8 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+ 	struct iwl_priv *priv = pci_get_drvdata(pdev);
+ 
+ 	pci_set_power_state(pdev, PCI_D0);
++	pci_enable_device(pdev);
++	pci_restore_state(pdev);
+ 
+ 	if (priv->is_open)
+ 		iwl3945_mac_start(priv->hw);
