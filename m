@@ -1,27 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:60966 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755783AbZAWCIm (ORCPT
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:41011 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755715AbZAORql (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 21:08:42 -0500
-Message-ID: <4979269F.1060500@lwfinger.net> (sfid-20090123_030847_667385_46CAAB30)
-Date: Thu, 22 Jan 2009 20:08:31 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 15 Jan 2009 12:46:41 -0500
+From: Paul Moore <paul.moore@hp.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
+Date: Thu, 15 Jan 2009 12:46:38 -0500
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"SE-Linux" <selinux@tycho.nsa.gov>
+References: <496D759A.7010401@gmail.com> <200901141736.43805.paul.moore@hp.com> <496EA2EC.7030602@gmail.com>
+In-Reply-To: <496EA2EC.7030602@gmail.com>
 MIME-Version: 1.0
-To: Alina Friedrichsen <x-alina@gmx.net>
-CC: John Linville <linville@tuxdriver.com>, samuel@sortiz.org,
-	Kalle Valo <kalle.valo@iki.fi>, maximlevitsky@gmail.com,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Regression caused by commit e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901151246.38396.paul.moore@hp.com> (sfid-20090115_184646_771352_8FEF3F0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the commit of the subject, my b43 and p54usb devices stopped working. They could
-associate and authenticate with my WPA2 network, but never finish the DHCP connection and
-get an IP address. Surprisingly, my rtl8187 devices continued to work.
+On Wednesday 14 January 2009 9:43:56 pm Justin P. Mattock wrote:
+> Paul Moore wrote:
+> > On Wednesday 14 January 2009 4:35:25 pm Justin P. Mattock wrote:
+> >> here is what the error looks like:
+> >>
+> >> netlabel_tools-0.19# make
+> >> INFO: creating the version header file
+> >> .: 10: version_info: not found
+> >> make: *** [include/version.h] Error 2
+> >
+> > Huh, can you try the following:
+> >
+> >  1. Open the netlabel_tools-0.19/Makefile in your favorite editor
+> >  2. Change the ". version_info; \" line to "source ./version_info;
+> > \" 3. Save your changes
+> >  4. Try running "make" again
+> >
+> > Thanks.
+>
+> O.k. changed . version like how you had posted.
+> The package compiled like a charm.
 
-Please excuse the second sending of this. I missed wireless the first time.
+Great, I'll change the Makefile(s) in SVN ... I don't quite understand 
+the reason (what is your /bin/sh?  I'm guessing not bash?) but at least 
+we now have a solution :) 
 
-Larry
-
+-- 
+paul moore
+linux @ hp
