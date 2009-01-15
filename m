@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60359 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759534AbZAWQAt (ORCPT
+Received: from mail-ew0-f31.google.com ([209.85.219.31]:65495 "EHLO
+	mail-ew0-f31.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755935AbZAOX7a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 11:00:49 -0500
-Date: Fri, 23 Jan 2009 10:49:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Alina Friedrichsen <x-alina@gmx.net>, samuel@sortiz.org,
-	Kalle Valo <kalle.valo@iki.fi>, maximlevitsky@gmail.com,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression caused by commit
-	e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
-Message-ID: <20090123154918.GB13658@tuxdriver.com> (sfid-20090123_170111_635348_57463943)
-References: <4979269F.1060500@lwfinger.net> <200901231647.50978.mb@bu3sch.de>
+	Thu, 15 Jan 2009 18:59:30 -0500
+Received: by ewy12 with SMTP id 12so481834ewy.13
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 15:59:27 -0800 (PST)
+Message-ID: <496FCDDD.7090203@gmail.com> (sfid-20090116_005936_011424_C8B95C82)
+Date: Fri, 16 Jan 2009 00:59:25 +0100
+From: Artur Skawina <art.08.09@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200901231647.50978.mb@bu3sch.de>
+To: Christian Lamparter <chunkeey@web.de>
+CC: Artur Skawina <art.08.09@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+References: <494698AF.4020204@gmail.com> <200901152042.42372.chunkeey@web.de> <496F9740.5010109@gmail.com> <200901152341.02130.chunkeey@web.de>
+In-Reply-To: <200901152341.02130.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2009 at 04:47:50PM +0100, Michael Buesch wrote:
-> On Friday 23 January 2009 03:08:31 Larry Finger wrote:
-> > With the commit of the subject, my b43 and p54usb devices stopped working. They could
-> > associate and authenticate with my WPA2 network, but never finish the DHCP connection and
-> > get an IP address. Surprisingly, my rtl8187 devices continued to work.
-> > 
-> > Please excuse the second sending of this. I missed wireless the first time.
+Christian Lamparter wrote:
+> well... I'm still looking for an explanation for your other problems:
+> =============================================================================
+> BUG kmalloc-4096: Poison overwritten
+> -----------------------------------------------------------------------------
 > 
-> Do you have a diff of this commit? Or at least the date it was committed?
-> I have some strange AP mode issue and it might be related to this. I just want to verify.
+>   Object 0xddec18c0:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+>   Object 0xddec18d0:  >69< 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ikkkkkkkkkkkkkkk
+>   Object 0xddec18e0:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+> 
+> The odd thing is here that it's only a "single" bit in the object flipped and not more!
 
-That commit ID should still be available in wireless-testing --
-git show e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
+yes, that does not look good. i didn't find anything obvious under wireless/p54
+that could be responsible for it, didn't look at the rest of the stack yet.
+I'd say ignore this for now, until i'm able to reproduce it; one try on a very
+different machine didn't help and i didn't have a lot of time to retest after
+the kernel upgrade(s) today. 
 
-Hth!
+> And we all have slub/slab debug options enabled as well (in fact, we had to fix the usbdriver for that,
+> see patch "p54usb: rewriting rx/tx routines to make use of usb_anchor's facilities" )
+> 
+> can you check your RAM with memtest or something?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+yes, i just need to plan for enough downtime... 
+
+> --------------------------
+> Disconnecting/reconnecting the wireless client resulted in this:
+>> mac80211-phy0: failed to remove key (0, 00:1b:fb:12:34:56) from hardware (-12)
+> followed later, when killing hostapd, by:
+>> mac80211-phy0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardware (-12)
+> 
+> well, -12 is -ENOMEM. Well we can use GFP_KERNEL in p54_set_key so its unlikely that your "box"
+> doesn't have enough space, but your p54usb device 'itself' has no more room left... and
+> this is unlikely too, so it probably stalled/crashed.
+
+Hmm, could having it plugged into a full speed usb port be relevant?
+On the other computer, i tried both w/ the card connected directly (high speed)
+and through a full speed hub - didn't make any difference (no crash, same
+arp etc problems).
+
+> We fixed a something like this before for the 2nd generation devices:
+> http://www.spinics.net/lists/linux-wireless/msg25692.html
+> 
+> However, I don't know if the net2280 chip on your device needs it or not, but it should hurt if you try it.
+
+ok, will look into it.
+
+Thanks,
+
+artur
