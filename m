@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 25.mail-out.ovh.net ([91.121.27.228]:47221 "HELO
-	25.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753351AbZAWAmW (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:44795 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755875AbZAORUR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 19:42:22 -0500
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: iwl3945 regression: associates but no data is transfered
-MIME-Version: 1.0
-Date: Fri, 23 Jan 2009 01:42:15 +0100
-From: <samuel@sortiz.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <4979077B.8090804@lwfinger.net>
-References: <87priffb95.fsf@litku.valot.fi> <20090122183448.GC3646@tuxdriver.com> <d7a260e8d188b785d0d2be743c8c5461@localhost> <4979077B.8090804@lwfinger.net>
-Message-ID: <a0ea5baee379a280e5a06e81facbb631@localhost> (sfid-20090123_014231_140809_E088ADC6)
-Content-Type: text/plain; charset="UTF-8"
+	Thu, 15 Jan 2009 12:20:17 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so509559ywe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 09:20:16 -0800 (PST)
+Subject: Re: Lots of minstrel WARN_ONS with current -git
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200901151813.57146.chunkeey@web.de>
+References: <1231973480.5147.2.camel@brick>
+	 <200901151731.56758.chunkeey@web.de> <1232038251.5595.0.camel@brick>
+	 <200901151813.57146.chunkeey@web.de>
+Content-Type: text/plain
+Date: Thu, 15 Jan 2009 09:20:13 -0800
+Message-Id: <1232040014.5595.1.camel@brick> (sfid-20090115_182023_812307_A05BBB0E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Thu, 22 Jan 2009 17:55:39 -0600, Larry Finger
-
-<Larry.Finger@lwfinger.net>
-
-wrote:
-
-> samuel@sortiz.org wrote:
-
+On Thu, 2009-01-15 at 18:13 +0100, Christian Lamparter wrote:
+> On Thursday 15 January 2009 17:50:51 Harvey Harrison wrote:
+> > On Thu, 2009-01-15 at 17:31 +0100, Christian Lamparter wrote:
+> > > On Thursday 15 January 2009 16:33:11 Michael Buesch wrote:
+> > > > On Wednesday 14 January 2009 23:51:20 Harvey Harrison wrote:
+> > > > > Seeing lots of these WARN_ONS with current -git.  Known issue?
+> > > > > 
+> > > > > b43 hardware.
+> > > > > 
+> > > > > [41850.615621] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0x92/0x3c0()
+> > > > 
+> > > > I think that happens, if you have a b-only AP.
+> > > 
+> > > erm, see : "minstrel: fix warning if lowest supported rate index is not 0"
+> > > ( http://www.spinics.net/lists/linux-wireless/msg25799.html )
+> > > 
+> > > The fix is in wireless-testing & wireless-next since a few days now...
+> > > Or is this a new bug?
+> > 
+> > I'll try that out shortly, report was against linus mainline.
+> > 
+> Oh? with 2.6.28 or the current 2.6.29-rcX line?
+> If you get this WARNING with 2.6.29-rcX, you don't have to worry...
+> http://patchwork.kernel.org/patch/2184/
 > 
 
->> The bad commit seems to be e32b1b9a33759e8a83ac566c4c43f23ed5d6343b,
+Yeah, somewhere a little past 2.6.29-rc1, thanks again.
 
->> which
-
->> is not iwlwifi related.
-
->> Even though it's an mlme commit, it doesnt seem to affect other drivers
-
->> (at
-
->> least b43 and ath5k).
-
->> I'll come up soon with a proper fix, but for now iwl3945 users should
-
->> revert that commit locally.
-
-> 
-
-> Something between 2.6.29-rc1 and -rc2 killed b43 and p54usb on my WPA2
-
-> network. My rtl8187
-
-> devices work fine.
-
-> 
-
-> I'm in the process of bisecting right now. Only 1500 commits to go.
-
-Have you tried reverting that commit ?
-
-I actually found that it does break ath5k as well...
-
-
-
-Cheers,
-
-Samuel.
-
+Harvey
 
