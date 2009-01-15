@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gold.linx.net ([195.66.232.40]:41115 "EHLO gold.linx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755746AbZAXWOf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 17:14:35 -0500
-Subject: Re: [ANN] crda v1.0.1
-From: Tony Vroon <tony@linx.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Diego E. 'Flameeyes' Petteno`" <flameeyes@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090124220637.GF22475@tesla>
-References: <20090124220637.GF22475@tesla>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BQSO/yCmvfO+15/E3LRg"
-Date: Sat, 24 Jan 2009 22:15:04 +0000
-Message-Id: <1232835304.19384.4.camel@localhost> (sfid-20090124_231452_709552_4F1F73CD)
-Mime-Version: 1.0
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:39320 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753890AbZAOCQN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2009 21:16:13 -0500
+Date: Thu, 15 Jan 2009 00:16:09 -0200
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Werner Almesberger <werner@openmoko.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rfkill: how murderous can it be ?
+Message-ID: <20090115021609.GA31256@khazad-dum.debian.net> (sfid-20090115_031619_909631_86676ABF)
+References: <20090112191514.GA22112@almesberger.net> <20090113005401.GA7565@srcf.ucam.org> <20090113132159.GB27676@khazad-dum.debian.net> <1231854016.3671.29.camel@johannes>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1231854016.3671.29.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 13 Jan 2009, Johannes Berg wrote:
+> On Tue, 2009-01-13 at 11:21 -0200, Henrique de Moraes Holschuh wrote:
+> > But I DO heavily suggest that we inform userspace differently when state was
+> > lost (i.e. when it absolutely HAS to reconfigure the device or there are no
+> > chances of data passing through).
+> > 
+> > Right now, it HAS that information in a roundabout way: if the device
+> > disappears (hotunplug), state was lost (duh! :-p)   If it stays around, no
+> > state was lost...
+> > 
+> > And, as an user, I'd be rather annoyed if suddenly I couldn't easily and
+> > cheaply just hit the rfkill hotkey (softswitch) to kill and unkill my WLAN
+> > while browsing, and stopping a few minutes to read the screen... because
+> > every time I unkilled, the system would churn, deassociate and reassociate
+> > and be otherwise annoying doing a reconfiguration it didn't absolutely have
+> > to do.
+> > 
+> > In other words: make it possible to be configurable!  From the kernel POV
+> > that just means we need to have to publish to userspace the fact that it has
+> > to reconfigure when there is not a full hotunplug/hotplug being done.
+> 
+> Way overkill. Anything more than a few seconds of rfkill will require
+> the "churn" anyway.
 
---=-BQSO/yCmvfO+15/E3LRg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Then don't corrupt the interface running state in the first place.
 
-+*crda-1.0.1 (24 Jan 2009)
-+
-+  24 Jan 2009; <chainsaw@gentoo.org> +crda-1.0.1.ebuild:
-+  Version bump to stable 1.0.1; with thanks to Diego E. Flameeyes
-Petteno
-+  for --as-needed compatibility and to Luis R. Rodriguez for being
-+  responsive to patching and packaging comments. Will push this for
-stable
-+  keywords.
+If you are going to detach the device, fine.  If you are going to NOT detach
+the device but it also won't lose any state, fine.   These two situations
+happen to describe the behaviour of *ALL* the current rfkill-enabled
+drivers, AFAIK.
 
-This one is excellent :)
+And since the driver that spawned this thread will detach the device instead
+of doing something "new" (partially lose state), that hasn't changed yet...
 
-Regards,
-Tony V.
+But IMO, corrupting running state on rfkill is a rotten thing to do to the
+user.  And telling userspace authors to EXPECT that every rfkill could have
+that effect no matter the hardware, is not nice either.
 
---=-BQSO/yCmvfO+15/E3LRg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Why the should I, as an user, have to tolerate userspace needing to reset
+the entire interface for no good reason at all if my hardware and its
+drivers do NOT require it?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkl7kugACgkQp5vW4rUFj5pYZQCgi4s5vzXlh6mZKGHgpVSgK4G8
-qu0Anit7TIbWlOcWOjMWWkGSUTGBoBUC
-=T+Ib
------END PGP SIGNATURE-----
-
---=-BQSO/yCmvfO+15/E3LRg--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
