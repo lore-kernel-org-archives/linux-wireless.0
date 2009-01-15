@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:55391 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755771AbZAWTvY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 14:51:24 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Subject: Re: integration of opensource firmware with b43 kernel driver
-Date: Fri, 23 Jan 2009 20:50:27 +0100
-Cc: bcm43xx-dev@lists.berlios.de,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it> <200901232033.28470.mb@bu3sch.de> <FE3E070D-F92B-4A76-80E5-019D4735FBED@ing.unibs.it>
-In-Reply-To: <FE3E070D-F92B-4A76-80E5-019D4735FBED@ing.unibs.it>
+Received: from fmmailgate01.web.de ([217.72.192.221]:33659 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752367AbZAOQbv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2009 11:31:51 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: Re: Lots of minstrel WARN_ONS with current -git
+Date: Thu, 15 Jan 2009 17:31:56 +0100
+Cc: Harvey Harrison <harvey.harrison@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1231973480.5147.2.camel@brick> <200901151633.11794.mb@bu3sch.de>
+In-Reply-To: <200901151633.11794.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901232050.27952.mb@bu3sch.de> (sfid-20090123_205132_728772_84AE66F7)
+  charset="utf-8"
+Message-Id: <200901151731.56758.chunkeey@web.de> (sfid-20090115_173156_856358_C2F4DCD0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 January 2009 20:46:45 Francesco Gringoli wrote:
-> -- Is using the Broadcom names for the firmware the best course of
-> -- action? What if the opensource firmware files were named something
-> -- like "os-ucode5.fw", etc. and b43 were coded to check for those files
-> -- first? It would then fall back to the standard firmware if the
-> -- opensource version is not found.
+On Thursday 15 January 2009 16:33:11 Michael Buesch wrote:
+> On Wednesday 14 January 2009 23:51:20 Harvey Harrison wrote:
+> > Seeing lots of these WARN_ONS with current -git.  Known issue?
+> > 
+> > b43 hardware.
+> > 
+> > [41850.615621] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0x92/0x3c0()
+> 
+> I think that happens, if you have a b-only AP.
 
-I answered to this question with this patch:
-http://bu3sch.de/patches/wireless-testing/20081227-1821/patches/008-b43-probe-open-fw.patch
+erm, see : "minstrel: fix warning if lowest supported rate index is not 0"
+( http://www.spinics.net/lists/linux-wireless/msg25799.html )
 
-I am currently testing an updated version of the patch and I'll push it upstream tomorrow.
+The fix is in wireless-testing & wireless-next since a few days now...
+Or is this a new bug?
 
--- 
-Greetings, Michael.
+Regards,
+	Chr
