@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52396 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755085AbZAUPPu (ORCPT
+Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:13892 "EHLO
+	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755987AbZAOIeq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 10:15:50 -0500
-Date: Wed, 21 Jan 2009 10:14:35 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Glenn Burkhardt <gbburkhardt@verizon.net>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: poor performance with ath5k; reverting to ath_pci
-Message-ID: <20090121151435.GB3643@tuxdriver.com> (sfid-20090121_161555_547699_1CF15612)
-References: <200901140003.31693.gbburkhardt@verizon.net> <200901151734.46144.gbburkhardt@verizon.net> <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com> <200901202238.08756.gbburkhardt@verizon.net>
+	Thu, 15 Jan 2009 03:34:46 -0500
+Received: from hp4000.wilsoft.nl ([192.168.4.5])
+	by linux.wilsoft.nl with esmtp (Exim 4.69)
+	(envelope-from <listsrv@wilsoft.nl>)
+	id 1LNNgW-0004vE-OQ
+	for linux-wireless@vger.kernel.org; Thu, 15 Jan 2009 09:34:40 +0100
+From: "W. van den Akker" <listsrv@wilsoft.nl>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH v4 02/11] ath9k: convert to use bus-agnostic DMA routines
+Date: Thu, 15 Jan 2009 09:34:39 +0100
+References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org> <496EEE8B.3030702@openwrt.org> <18798.62140.234415.246664@gargle.gargle.HOWL>
+In-Reply-To: <18798.62140.234415.246664@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200901202238.08756.gbburkhardt@verizon.net>
+Content-Type: text/plain;
+  charset="iso-2022-jp"
+Message-Id: <200901150934.39506.listsrv@wilsoft.nl> (sfid-20090115_093451_008889_FBCDBF7D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 10:38:08PM -0500, Glenn Burkhardt wrote:
-> On Friday 16 January 2009 10:33:13 Bob Copeland wrote:
-> > On Thu, Jan 15, 2009 at 5:34 PM, Glenn Burkhardt
+On Thursday 15 January 2009, you wrote:
+> Gabor Juhos wrote:
+> > Sujith  rta:
+> > > Gabor Juhos wrote:
+> > >> Convert to use bus-agnostic DMA routines to make it usable on AHB bus
+> > >> as well.
+> > >
+> > > This pretty much makes the previous patch redundant.
 > >
-> > <gbburkhardt@verizon.net> wrote:
-> > > ath5k_pci 0000:00:07.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> > > ath5k_pci 0000:00:07.0: registered as 'phy0'
-> > > phy0: Selected rate control algorithm 'pid'
-> >
-> > Can you change the rate control algorithm to minstrel and retry?
-> 
-> I built a 2.6.28.1-9 kernel to get the minstrel code for ath5k.  The 
-> kernel for Suse 11.1 is 2.6.27.7-9.  But that means that more could have 
-> changed besides the rate control code.
-> 
-> It looks like minstrel and pid give about the same result, a bit worse that 
-> the ath_pci driver right now.  Performance seems to vary from day to day.  
-> I'll experiment some more, and switch transmission channels.  I'm not getting 
-> the really poor performance with ath5k right now.
-> 
-> I haven't looked yet - is there a way to switch to 'pid' rate control without 
-> rebuilding the kernel?
+> > Yes. Although i can merge the two patches, but in my opinion it is easier
+> > to review them in this way.
+>
+> Alright.
+> Otherwise, the series looks okay to me.
+>
 
-If you configure your kernel to include multiple rate control
-algorithms then you can use the 'ieee80211_default_rc_algo' module
-option for mac80211.  Of course, changing that only works if you
-rmmod/insmod mac80211.
+Can this perhaps a solution for superious system hangups? See also threat 
+'Still problems to get aht9k in accesspoint mode. Kernel hangs'
 
-John
+gr,
+Willem
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
+
