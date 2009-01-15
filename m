@@ -1,61 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37635 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754288AbZANTSr (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:47315 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752537AbZAOKUT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 14:18:47 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v4 11/11] ath9k: enable support for AR9100
-Date: Wed, 14 Jan 2009 20:17:12 +0100
-Message-Id: <1231960632-4452-12-git-send-email-juhosg@openwrt.org> (sfid-20090114_203902_447303_A69D371F)
-In-Reply-To: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
-References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
+	Thu, 15 Jan 2009 05:20:19 -0500
+Received: by bwz14 with SMTP id 14so3135294bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 02:20:17 -0800 (PST)
+Message-ID: <41960ccf0901150220u383f3d3fr4981bf7efc3e18de@mail.gmail.com> (sfid-20090115_112025_659001_1C17E0D8)
+Date: Thu, 15 Jan 2009 11:20:17 +0100
+From: "Lorenzo Nava" <navalorenx@gmail.com>
+To: gavron@wetwork.net
+Subject: Re: [b43] opensource firmware
+Cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+In-Reply-To: <496F05D2.9000501@wetwork.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com>
+	 <496E243F.1080500@lwfinger.net>
+	 <41960ccf0901150110l754e5b83sb85d03d43f2927b9@mail.gmail.com>
+	 <496F05D2.9000501@wetwork.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Because we have support for the AR9100 devices now, we can enable them.
+> Pardon me, but those filenames are identical and contain no numbers.  Did
+> those get stripped off somewhere?
+>>
 
-Changes-licensed-under: ISC
+I did a mistake. The correct name are b0g0bsinitvals5.fw and
+b0g0initvals5.fw for revision 5.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/hw.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Sorry
 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index ed731b9..88c8a62 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -377,6 +377,8 @@ static const char *ath9k_hw_devname(u16 devid)
- 		return "Atheros 5418";
- 	case AR9160_DEVID_PCI:
- 		return "Atheros 9160";
-+	case AR5416_AR9100_DEVID:
-+		return "Atheros 9100";
- 	case AR9280_DEVID_PCI:
- 	case AR9280_DEVID_PCIE:
- 		return "Atheros 9280";
-@@ -1179,6 +1181,7 @@ struct ath_hal *ath9k_hw_attach(u16 devid, struct ath_softc *sc,
- 	switch (devid) {
- 	case AR5416_DEVID_PCI:
- 	case AR5416_DEVID_PCIE:
-+	case AR5416_AR9100_DEVID:
- 	case AR9160_DEVID_PCI:
- 	case AR9280_DEVID_PCI:
- 	case AR9280_DEVID_PCIE:
--- 
-1.5.3.2
+Cheers
 
+Lorenzo
