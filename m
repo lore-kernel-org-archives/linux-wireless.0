@@ -1,140 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f12.google.com ([209.85.219.12]:61541 "EHLO
-	mail-ew0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764765AbZAQTty (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 14:49:54 -0500
-Received: by ewy5 with SMTP id 5so347359ewy.13
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Jan 2009 11:49:51 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: linville@tuxdriver.com
-Subject: [PATCH 2/3] rt2x00: conf_tx() only need register access for WMM queues
-Date: Sat, 17 Jan 2009 20:42:58 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200901172042.32618.IvDoorn@gmail.com>
-In-Reply-To: <200901172042.32618.IvDoorn@gmail.com>
+Received: from kroah.org ([198.145.64.141]:52058 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1765928AbZAOVFE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2009 16:05:04 -0500
+Date: Thu, 15 Jan 2009 13:02:16 -0800
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Joseph Cheek <joseph@cheek.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [stable] [ath9k-devel] 2.6.2{7, 8} with
+	compat-wireless-2008-12-3{0, 1) drops link every 2-3 minutes
+Message-ID: <20090115210216.GA22843@kroah.com> (sfid-20090115_220528_764915_4B116FC0)
+References: <495C7640.8060806@cheek.com> <20090105170432.GA6834@tesla> <20090115183703.GB10674@kroah.com> <20090115202550.GB29609@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901172042.58545.IvDoorn@gmail.com> (sfid-20090117_205003_595383_4F8F1D87)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090115202550.GB29609@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-conf_tx() in rt61pci and rt73usb only have to check once
-if the queue_idx indicates a non-WMM queue and break of
-the function immediately if that is the case.
+On Thu, Jan 15, 2009 at 12:25:50PM -0800, Luis R. Rodriguez wrote:
+> On Thu, Jan 15, 2009 at 10:37:03AM -0800, Greg KH wrote:
+> > On Mon, Jan 05, 2009 at 09:04:32AM -0800, Luis R. Rodriguez wrote:
+> > > On Wed, Dec 31, 2008 at 11:52:32PM -0800, Joseph Cheek wrote:
+> > > > Hi all,
+> > > >
+> > > > Happy New Year!  It's about 2:30 AM here and I'm up debugging my shiny
+> > > > new DWA-552 <AR5416+AR2133> XtremeN Desktop Adapter.  Stock 2.6.28 gave
+> > > > me the dreaded "No ProbeResp from current AP" in syslog with a
+> > > > disconnect every few minutes, even after updating
+> > > > |IEEE80211_MONITORING_INTERVAL to (100 * HZ).  It's highly annoying.
+> > >
+> > > This should be due to the fact that the RX filter disabled beaconing from
+> > > the current AP and mac80211 expects beacons from the AP. This was fixed
+> > > in wireless-testing but I do not see this pushed out for 2.6.28.
+> > >
+> > > Greg, this was fixed in Linus' tree via ffb826767bffda61426d964a8fc24a216a14b0bd,
+> > > merged by John on Fri, 21 Nov 2008, the patch is titled:
+> > > "ath9k: enable RXing of beacons on STA/IBSS". Just in case I've
+> > > provided the hunk below. Without this patch users will face this disconnect
+> > > issue on noisy environments where the beacons don't reach mac80211 within
+> > > a certain time frame dicated by mac80211.
+> > 
+> > Thanks, I'll queue this up for 2.6.28, but it doesn't apply to
+> > 2.6.27-stable.  If you want it there, can you please provide a backport
+> > for it?
+> 
+> Thanks Greg -- it seems this was actually present in 2.6.27 since the
+> initial commit of ath9k. From the initial commit I see:
+> 
+> --- on ath_calcrxfilter()
+>         if (sc->sc_opmode == ATH9K_M_STA || sc->sc_opmode == ATH9K_M_IBSS ||
+>             sc->sc_scanning)
+>                 rfilt |= ATH9K_RX_FILTER_BEACON;
+> ---
+> 
+> Seems we're good on 27 for this and this actually turned out to be a regression then.
 
-Only the WMM queues need to have the TX configuration written
-to the registers.
+Thanks for confirming it,
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.c |   30 +++++++++++++++---------------
- drivers/net/wireless/rt2x00/rt73usb.c |   30 +++++++++++++++---------------
- 2 files changed, 30 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index b07b41f..760821f 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2659,6 +2659,7 @@ static int rt61pci_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
- 	struct rt2x00_field32 field;
- 	int retval;
- 	u32 reg;
-+	u32 offset;
- 
- 	/*
- 	 * First pass the configuration through rt2x00lib, that will
-@@ -2670,24 +2671,23 @@ static int rt61pci_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
- 	if (retval)
- 		return retval;
- 
-+	/*
-+	 * We only need to perform additional register initialization
-+	 * for WMM queues/
-+	 */
-+	if (queue_idx >= 4)
-+		return 0;
-+
- 	queue = rt2x00queue_get_queue(rt2x00dev, queue_idx);
- 
- 	/* Update WMM TXOP register */
--	if (queue_idx < 2) {
--		field.bit_offset = queue_idx * 16;
--		field.bit_mask = 0xffff << field.bit_offset;
--
--		rt2x00pci_register_read(rt2x00dev, AC_TXOP_CSR0, &reg);
--		rt2x00_set_field32(&reg, field, queue->txop);
--		rt2x00pci_register_write(rt2x00dev, AC_TXOP_CSR0, reg);
--	} else if (queue_idx < 4) {
--		field.bit_offset = (queue_idx - 2) * 16;
--		field.bit_mask = 0xffff << field.bit_offset;
--
--		rt2x00pci_register_read(rt2x00dev, AC_TXOP_CSR1, &reg);
--		rt2x00_set_field32(&reg, field, queue->txop);
--		rt2x00pci_register_write(rt2x00dev, AC_TXOP_CSR1, reg);
--	}
-+	offset = AC_TXOP_CSR0 + (sizeof(u32) * (!!(queue_idx & 2)));
-+	field.bit_offset = (queue_idx & 1) * 16;
-+	field.bit_mask = 0xffff << field.bit_offset;
-+
-+	rt2x00pci_register_read(rt2x00dev, offset, &reg);
-+	rt2x00_set_field32(&reg, field, queue->txop);
-+	rt2x00pci_register_write(rt2x00dev, offset, reg);
- 
- 	/* Update WMM registers */
- 	field.bit_offset = queue_idx * 4;
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index d64c7cf..48057d8 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2182,6 +2182,7 @@ static int rt73usb_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
- 	struct rt2x00_field32 field;
- 	int retval;
- 	u32 reg;
-+	u32 offset;
- 
- 	/*
- 	 * First pass the configuration through rt2x00lib, that will
-@@ -2193,24 +2194,23 @@ static int rt73usb_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
- 	if (retval)
- 		return retval;
- 
-+	/*
-+	 * We only need to perform additional register initialization
-+	 * for WMM queues/
-+	 */
-+	if (queue_idx >= 4)
-+		return 0;
-+
- 	queue = rt2x00queue_get_queue(rt2x00dev, queue_idx);
- 
- 	/* Update WMM TXOP register */
--	if (queue_idx < 2) {
--		field.bit_offset = queue_idx * 16;
--		field.bit_mask = 0xffff << field.bit_offset;
--
--		rt2x00usb_register_read(rt2x00dev, AC_TXOP_CSR0, &reg);
--		rt2x00_set_field32(&reg, field, queue->txop);
--		rt2x00usb_register_write(rt2x00dev, AC_TXOP_CSR0, reg);
--	} else if (queue_idx < 4) {
--		field.bit_offset = (queue_idx - 2) * 16;
--		field.bit_mask = 0xffff << field.bit_offset;
--
--		rt2x00usb_register_read(rt2x00dev, AC_TXOP_CSR1, &reg);
--		rt2x00_set_field32(&reg, field, queue->txop);
--		rt2x00usb_register_write(rt2x00dev, AC_TXOP_CSR1, reg);
--	}
-+	offset = AC_TXOP_CSR0 + (sizeof(u32) * (!!(queue_idx & 2)));
-+	field.bit_offset = (queue_idx & 1) * 16;
-+	field.bit_mask = 0xffff << field.bit_offset;
-+
-+	rt2x00usb_register_read(rt2x00dev, offset, &reg);
-+	rt2x00_set_field32(&reg, field, queue->txop);
-+	rt2x00usb_register_write(rt2x00dev, offset, reg);
- 
- 	/* Update WMM registers */
- 	field.bit_offset = queue_idx * 4;
--- 
-1.5.6.1
-
+greg k-h
