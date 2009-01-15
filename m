@@ -1,74 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:13888 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbZAVL2o (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:51207 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753439AbZAOXRt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 06:28:44 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so666155fkf.5
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 03:28:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <200901221144.27380.helmut.schaa@gmail.com>
-References: <200901190955.32818.helmut.schaa@gmail.com>
-	 <20090121192329.GB14710@tuxdriver.com>
-	 <200901221144.27380.helmut.schaa@gmail.com>
-Date: Thu, 22 Jan 2009 13:28:42 +0200
-Message-ID: <1ba2fa240901220328s4fe65faeo35176357a19f57fa@mail.gmail.com> (sfid-20090122_122849_853900_718BA005)
-Subject: Re: [PATCH 2/2] iwl3945: Remove unused variables
-From: Tomas Winkler <tomasw@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thu, 15 Jan 2009 18:17:49 -0500
+Date: Thu, 15 Jan 2009 18:17:43 -0500
+From: Kyle McMartin <kyle@infradead.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	bcm43xx-dev@lists.berlios.de,
+	Johannes Berg <johannes@sipsolutions.net>, kyle@infradead.org,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [b43] opensource firmware
+Message-ID: <20090115231743.GC7488@bombadil.infradead.org> (sfid-20090116_001809_729155_A65183A0)
+References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> <200901151637.58196.mb@bu3sch.de> <496F5D4F.3020805@lwfinger.net> <200901151709.49811.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200901151709.49811.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 22, 2009 at 12:44 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Am Mittwoch, 21. Januar 2009 schrieb John W. Linville:
->> On Mon, Jan 19, 2009 at 09:55:32AM +0100, Helmut Schaa wrote:
->> > Fix the following warnings in iwl-3945-rs.c by removing unused variables.
->> >
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_rate_scale_flush_windows':
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:186: warning: unused variable 'priv'
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_bg_rate_scale_flush':
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:219: warning: unused variable 'priv'
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_collect_tx_data':
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: warning: unused variable 'priv'
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'rs_free_sta':
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: warning: unused variable 'priv'
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_get_adjacent_rate':
->> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:559: warning: unused variable 'priv'
->> >
->> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
->>
->> With this applied, I get these:
->>
->>   CC [M]  drivers/net/wireless/iwlwifi/iwl-3945-rs.o
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_rate_scale_flush_windows':
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: 'priv' undeclared (first use in this function)
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: (Each undeclared identifier is reported only once
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: for each function it appears in.)
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_bg_rate_scale_flush':
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:222: error: 'priv' undeclared (first use in this function)
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_collect_tx_data':
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: error: 'priv' undeclared (first use in this function)
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'rs_free_sta':
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: error: 'priv' undeclared (first use in this function)
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_get_adjacent_rate':
->> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:594: error: 'priv' undeclared (first use in this function)
->> make[2]: *** [drivers/net/wireless/iwlwifi/iwl-3945-rs.o] Error 1
->> make[1]: *** [drivers/net/wireless/iwlwifi] Error 2
->> make: *** [drivers/net/wireless/] Error 2
->>
->> Dropping...
->
-> Ah, sorry for that. I compiled without CONFIG_IWL_DEBUG. Instead of removing
-> these lines they should be surrounded by an CONFIG_IWL_DEBUG check. I'll send
-> that soon.
+On Thu, Jan 15, 2009 at 05:09:49PM +0100, Michael Buesch wrote:
+> Already implemented here:
+> http://bu3sch.de/patches/wireless-testing/20081227-1821/patches/008-b43-probe-open-fw.patch
+> I just need to fix a leak in an error path before pushing that upstream.
+> 
 
-Please use
-struct iwl_priv *priv __maybe_unused priv;
-look  at  in iwl-agn-rs.c
+Groovy, I had cooked a similar patch for Fedora but haven't gotten
+around to packaging up the fw yet. Will sub in yours.
 
-Thanks
-Tomas
+cheers, Kyle
