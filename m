@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:59388 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599AbZAJX0P (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:59962 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754288AbZAOQux (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jan 2009 18:26:15 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so1253279nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Jan 2009 15:26:13 -0800 (PST)
-To: Andrew Price <andy@andrewprice.me.uk>
-Subject: Re: [PATCH] rt2400,rt2500: init led_qual for LED_MODE_DEFAULT
-Date: Sun, 11 Jan 2009 00:26:10 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200901101345.57310.IvDoorn@gmail.com> <20090110193805.GA13086@silver.sucs.org>
-In-Reply-To: <20090110193805.GA13086@silver.sucs.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901110026.10562.IvDoorn@gmail.com> (sfid-20090111_002620_253278_29A56368)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Thu, 15 Jan 2009 11:50:53 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so1360227wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 08:50:52 -0800 (PST)
+Subject: Re: Lots of minstrel WARN_ONS with current -git
+From: Harvey Harrison <harvey.harrison@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200901151731.56758.chunkeey@web.de>
+References: <1231973480.5147.2.camel@brick>
+	 <200901151633.11794.mb@bu3sch.de>  <200901151731.56758.chunkeey@web.de>
+Content-Type: text/plain
+Date: Thu, 15 Jan 2009 08:50:51 -0800
+Message-Id: <1232038251.5595.0.camel@brick> (sfid-20090115_175058_845913_D820C609)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 10 January 2009, Andrew Price wrote:
-> Add a check for LED_MODE_DEFAULT so that we use the link LED for rt2400
-> and rt2500 devices.
+On Thu, 2009-01-15 at 17:31 +0100, Christian Lamparter wrote:
+> On Thursday 15 January 2009 16:33:11 Michael Buesch wrote:
+> > On Wednesday 14 January 2009 23:51:20 Harvey Harrison wrote:
+> > > Seeing lots of these WARN_ONS with current -git.  Known issue?
+> > > 
+> > > b43 hardware.
+> > > 
+> > > [41850.615621] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0x92/0x3c0()
+> > 
+> > I think that happens, if you have a b-only AP.
 > 
-> Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
+> erm, see : "minstrel: fix warning if lowest supported rate index is not 0"
+> ( http://www.spinics.net/lists/linux-wireless/msg25799.html )
+> 
+> The fix is in wireless-testing & wireless-next since a few days now...
+> Or is this a new bug?
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+I'll try that out shortly, report was against linus mainline.
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-> index 6a97767..b86400d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2400pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-> @@ -1365,7 +1365,7 @@ static int rt2400pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
->  
->  	rt2400pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
-> -	if (value == LED_MODE_TXRX_ACTIVITY)
-> +	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
->  		rt2400pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
->  				   LED_TYPE_ACTIVITY);
->  #endif /* CONFIG_RT2X00_LIB_LEDS */
-> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-> index d3bc218..651cb4f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-> @@ -1524,7 +1524,7 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
->  
->  	rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
-> -	if (value == LED_MODE_TXRX_ACTIVITY)
-> +	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
->  		rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
->  				   LED_TYPE_ACTIVITY);
->  #endif /* CONFIG_RT2X00_LIB_LEDS */
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index 30028e2..c8e38a5 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -1569,7 +1569,7 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
->  
->  	rt2500usb_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
-> -	if (value == LED_MODE_TXRX_ACTIVITY)
-> +	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
->  		rt2500usb_init_led(rt2x00dev, &rt2x00dev->led_qual,
->  				   LED_TYPE_ACTIVITY);
->  #endif /* CONFIG_RT2X00_LIB_LEDS */
-
+Harvey
 
