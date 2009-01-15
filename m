@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:35033 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756828AbZAAQij (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.189]:34560 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605AbZAOSAt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2009 11:38:39 -0500
-Message-ID: <495CF183.10107@lwfinger.net> (sfid-20090101_173856_692688_5BC9951C)
-Date: Thu, 01 Jan 2009 10:38:27 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 15 Jan 2009 13:00:49 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so984191rnd.17
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 10:00:48 -0800 (PST)
+Message-ID: <43e72e890901151000y4dda530aw96e76f68b72c3fd4@mail.gmail.com> (sfid-20090115_190054_000051_FB609063)
+Date: Thu, 15 Jan 2009 10:00:47 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: wireless-regdb updated 2009-01-15 (was Re: wireless-regdb updated 2009-01-14)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Helmut Schaa" <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890901150954t4bc9a390x43a30f287b609173@mail.gmail.com>
 MIME-Version: 1.0
-To: htl10@users.sourceforge.net
-CC: Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	=?ISO-8859-1?Q?Stefanik_?= =?ISO-8859-1?Q?G=E1bor?=
-	<netrolller.3d@gmail.com>, Alan Stern <stern@rowland.harvard.edu>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-References: <120849.67182.qm@web23104.mail.ird.yahoo.com>
-In-Reply-To: <120849.67182.qm@web23104.mail.ird.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+References: <20090114162250.GC3854@tuxdriver.com>
+	 <200901151011.23147.helmut.schaa@gmail.com>
+	 <20090115134928.GA3241@tuxdriver.com>
+	 <1232031893.5839.0.camel@johannes>
+	 <43e72e890901150954t4bc9a390x43a30f287b609173@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> 
-> Yes, that's the (older) non-B device. B devices says RTL8187Bv{B,D,E} . with a B before the 7; I have a rev E .The B device and the non-B device while similiar enough to share some driver code, are different enough that
-> they might suspend/resume differently - they do probe/init slightly differently. Besides, I think all the people who recently worked on that code are B-device owners, with maybe Larry who probably owns both types (or a few).
+On Thu, Jan 15, 2009 at 9:54 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> I'll set CRDA to pull this latest file upon building too by
+> default.
 
-I only have one. It is the strange device that reports an 8187 USB ID,
-but is really an 8187B.
+Actually this defeats the purpose of separating the packages, so never
+mind. It should help packaging wireless-regdb somehow I suppose
+though.
 
-Larry
+  Luis
