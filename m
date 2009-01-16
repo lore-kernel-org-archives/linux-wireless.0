@@ -1,61 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:63694 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754107AbZASVsK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38338 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758980AbZAPJRs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 16:48:10 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so1409336fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 13:48:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <200901190930.11401.Info@delphi-real-estate.com>
-References: <200901190930.11401.Info@delphi-real-estate.com>
-Date: Mon, 19 Jan 2009 22:48:08 +0100
-Message-ID: <69e28c910901191348s47c3db81teff62557055318de@mail.gmail.com> (sfid-20090119_224820_942048_FCBA66AC)
-Subject: Re: Kernel Compile Fail with 2.6.26 Drivers
-From: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
-To: Delphi Real Estate <Info@delphi-real-estate.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 16 Jan 2009 04:17:48 -0500
+Subject: Re: [PATCH 02/13] cfg80211: add option for wiphys to disregard
+	country IEs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nFh4aQYfzmBB1DSQBjHH"
+Date: Fri, 16 Jan 2009 10:17:12 +0100
+Message-Id: <1232097432.3854.15.camel@johannes> (sfid-20090116_101754_691608_6C62E0B4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 19, 2009 at 6:30 PM, Delphi Real Estate
-<Info@delphi-real-estate.com> wrote:
->
-> Can anyone tell me what I'm doing wrong?  I know that 'n' has problems in later drivers than in kernel 2.6.26, so I am trying to graft the 2.6.26 drivers into the 2.6.27 kernel.  Source:
-> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=summary
->
-> I moved the regular Ubuntu kernel 2.6.27.10's iwlwifi directory elsewhere, and copied in Reinette's.  But it will not compile, inexplicably:
-> ...
->  CC [M]  drivers/pci/hotplug/cpcihp_generic.o
->  LD [M]  drivers/pci/hotplug/pciehp.o
->  LD [M]  drivers/pci/hotplug/shpchp.o
->  CC [M]  drivers/pci/hotplug/fakephp.o
->  LD      drivers/pci/hotplug/pci_hotplug.o
->  LD [M]  drivers/media/video/uvc/uvcvideo.o
->  LD [M]  drivers/pci/hotplug/acpiphp.o
->  LD      drivers/pci/hotplug/built-in.o
->  LD      drivers/media/built-in.o
->  LD      drivers/pci/built-in.o
-> make: *** [drivers] Error 2
-> #
->
-> This kernel does compile with its normal iwlwifi directory.  In configuring I only set the iwlwifi driver to be a module, disabled the 4965, and enabled the 5000.  I can't use the git kernel because I need the Ubuntu patches.
 
-Try diffing the Ubuntu sources against the kernel.org sources, and
-merge the resulting diff into the git tree.
+--=-nFh4aQYfzmBB1DSQBjHH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->
-> Is there any other way to get 5GHz 'n'?
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
+> Country IEs can be disregarded based on regulatory policy by
+> a driver. This is only possible, of course, if the driver already
+> has its own regulatory domain.
 
+Can you say why? This doesn't seem useful to me.
 
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  include/net/wireless.h |    4 ++++
+>  net/wireless/reg.c     |   19 +++++++++++++++++--
+>  2 files changed, 21 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/include/net/wireless.h b/include/net/wireless.h
+> index 9e73aae..ea89958 100644
+> --- a/include/net/wireless.h
+> +++ b/include/net/wireless.h
+> @@ -181,6 +181,9 @@ struct ieee80211_supported_band {
+>   * struct wiphy - wireless hardware description
+>   * @idx: the wiphy index assigned to this item
+>   * @class_dev: the class device representing /sys/class/ieee80211/<wiphy=
+-name>
+> + * @ignore_country_ies: tells us the wireless core should ignore country=
+ IEs
+> + *	received by itself or by other wireless drivers. This will only
+> + *	apply if the driver has provided a regulatory_hint()
+>   * @fw_handles_regulatory: tells us the firmware for this device
+>   * 	has its own regulatory solution and cannot identify the
+>   * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
+> @@ -202,6 +205,7 @@ struct wiphy {
+>  	u16 interface_modes;
+> =20
+>  	bool fw_handles_regulatory;
+> +	bool ignore_country_ies;
+> =20
+>  	/* If multiple wiphys are registered and you're handed e.g.
+>  	 * a regular netdev with assigned ieee80211_ptr, you won't
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index ec8b3d9..01da946 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -782,6 +782,20 @@ static u32 map_regdom_flags(u32 rd_flags)
+>  	return channel_flags;
+>  }
+> =20
+> +/* Follow the driver's regulatory domain if a driver always prefers
+> + * that. If no preference is specified we follow the driver's regulatory
+> + * domain unless a country IE has been processed */
+> +static int reg_follow_driver_regd(struct wiphy *wiphy)
+> +{
+> +	if (!wiphy->regd)
+> +		return false;
+> +	if (wiphy->ignore_country_ies)
+> +		return true;
+> +	if (last_request->initiator !=3D REGDOM_SET_BY_COUNTRY_IE)
+> +		return true;
+> +	return false;
+> +}
+> +
+>  /**
+>   * freq_reg_info - get regulatory information for the given frequency
+>   * @wiphy: the wiphy for which we want to process this rule for
+> @@ -883,7 +897,7 @@ static void handle_channel(struct wiphy *wiphy, enum =
+ieee80211_band band,
+>  		 *
+>  		 * http://tinyurl.com/11d-clarification
+>  		 */
+> -		if (r =3D=3D -ERANGE &&
+> +		if (!reg_follow_driver_regd(wiphy) && r =3D=3D -ERANGE &&
+>  		    last_request->initiator =3D=3D REGDOM_SET_BY_COUNTRY_IE) {
+>  #ifdef CONFIG_CFG80211_REG_DEBUG
+>  			printk(KERN_DEBUG "cfg80211: Leaving channel %d MHz "
+> @@ -895,7 +909,8 @@ static void handle_channel(struct wiphy *wiphy, enum =
+ieee80211_band band,
+>  		/* In this case we know the country IE has at least one reg rule
+>  		 * for the band so we respect its band definitions */
+>  #ifdef CONFIG_CFG80211_REG_DEBUG
+> -			if (last_request->initiator =3D=3D REGDOM_SET_BY_COUNTRY_IE)
+> +			if (!reg_follow_driver_regd(wiphy) &&
+> +			    last_request->initiator =3D=3D REGDOM_SET_BY_COUNTRY_IE)
+>  				printk(KERN_DEBUG "cfg80211: Disabling "
+>  					"channel %d MHz on %s due to "
+>  					"Country IE\n",
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--=-nFh4aQYfzmBB1DSQBjHH
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJcFCUAAoJEKVg1VMiehFYWNQP/R0K8rxYLTQa9afaVlOWZc51
+0aPxbj/IcvckwSBwFgBiZdeoXvyclovCL288ekItd7PNnVO7IL2RO1YBXOaDr8GL
+Os+dlxeDIaNtoMGKA8DpYSL3ubZd8RKcvwlZV0FrS9PagtRqy5QlW3qb88Dmefyg
+1AI+w3VmmFo50NLmtxst6NwsdFUccrxyBQXZa83x5QGA3kmzH1Dwo7dCISFw212Z
+NrykbORfh8YGC4O51kc2OT8ysRig0xb4YYYuKFMtOGWh0o9vJk1QLMAD2pNc7qA2
+5of/tav5zfhhhOTn4nu+jyEDhbtB1Tjc2Mk/gi/b/PDGBFUKt/UPLw6xkv3JgKqW
+2F416H1/+Z2X9sCT2+kfTU2HgAaDwLjjZbcyRtKLNKKWL8r1rnHwo82kC15fgS4n
+rB0yNoAzHC2ARRcQA/ASL1cq7TCO208pB+u6VbOpGSw3YGU5tq5uHbgnh5gTCDqF
+FnxuYkcAzyfW+aI4J9VTbRtjVfbesXFwTOA/Ul+jSrH5tc/6E8pvTimk9e2ev+f8
+1g8hT0thA4lkQ58n5mmnXM8uXKePSV/Ky9JIOLLSbcMVDd8kDmi5SgVqdNVptFLD
+2j02y2g3u2qrDP0vtSi+dhEkx6czookwhXFFJEav7C9tsFAijErPiLbHhkw+he5l
+6aeiX4/ONub+m4cMHXxb
+=N7he
+-----END PGP SIGNATURE-----
+
+--=-nFh4aQYfzmBB1DSQBjHH--
+
