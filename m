@@ -1,67 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:53973 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:11011 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753974AbZATWS6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 17:18:58 -0500
-Subject: Re: [PATCHv2] iwlagn: fix hw-rfkill while the interface is down
-From: reinette chatre <reinette.chatre@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"mabbaswireless@gmail.com" <mabbaswireless@gmail.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"samuel@sortiz.org" <samuel@sortiz.org>
-In-Reply-To: <200901202225.49307.helmut.schaa@gmail.com>
-References: <200901191310.08654.helmut.schaa@gmail.com>
-	 <1232475665.11197.77.camel@rc-desk>
-	 <200901202225.49307.helmut.schaa@gmail.com>
+	id S1755670AbZAPANQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2009 19:13:16 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:13:16 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/13] cfg80211: only export disable flag on channel disablement
+Date: Thu, 15 Jan 2009 16:12:20 -0800
+Message-ID: <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> (sfid-20090116_011327_228652_9E85659E)
+In-Reply-To: <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Tue, 20 Jan 2009 13:42:53 -0800
-Message-Id: <1232487773.25665.13.camel@rc-desk> (sfid-20090120_231903_592807_F73010D8)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-01-20 at 13:25 -0800, Helmut Schaa wrote:
-> Am Dienstag, 20. Januar 2009 schrieb reinette chatre:
-> > On Mon, 2009-01-19 at 04:10 -0800, Helmut Schaa wrote:
-> > > Currently iwlagn is not able to report hw-killswitch events while the
-> > > interface is down. This has implications on user space tools (like
-> > > NetworkManager) relying on rfkill notifications to bring the interface
-> > > up once the wireless gets enabled through a hw killswitch.
-> > >
-> > > Thus, enable the device already in iwl_pci_probe instead of iwl_up
-> > > and enable interrups while the interface is down in order to get
-> > > notified about killswitch state changes. The firmware loading is still
-> > > done in iwl_up.
-> > >
-> > > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> > > ---
-> > >
-> >
-> > <...>
-> >
-> >
-> > > +               if (!test_bit(STATUS_ALIVE, &priv->status)) {
-> >
-> > Is this test necessary? If the intention is to get rfkill state updates
-> > when interface is down (and ucode is thus not loaded, and STATUS_ALIVE
-> > thus not set) then this test is not necessary.
-> 
-> You're sort of right :), we could indeed skip this check here.
-> But if the ucode is loaded (and thus STATUS_ALIVE is set) we will get
-> rfkill-notifications through iwl_rx_card_state_notif. Hence, we can simply
-> ignore the interrupt here and thus won't queue the rfkill-work twice.
+When a channel is disabled there is no need to stuff it
+with more flags.
 
-You sure studied the rfkill code :)
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
 
-Thank you very much
-
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-
-Reinette
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b7c6de1..499bbbe 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -867,7 +867,7 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
+ 			   unsigned int chan_idx)
+ {
+ 	int r;
+-	u32 flags;
++	u32 flags, rule_flags;
+ 	u32 max_bandwidth = 0;
+ 	const struct ieee80211_reg_rule *reg_rule = NULL;
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+@@ -913,15 +913,19 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
+ 					"Country IE\n",
+ 					chan->center_freq, wiphy_name(wiphy));
+ #endif
+-			flags |= IEEE80211_CHAN_DISABLED;
+-			chan->flags = flags;
++			chan->flags = IEEE80211_CHAN_DISABLED;
+ 		}
+ 		return;
+ 	}
+ 
+ 	power_rule = &reg_rule->power_rule;
+ 
+-	chan->flags = flags | map_regdom_flags(reg_rule->flags);
++	rule_flags = map_regdom_flags(reg_rule->flags);
++	if (flags & IEEE80211_CHAN_DISABLED)
++		chan->flags = IEEE80211_CHAN_DISABLED;
++	else
++		chan->flags = flags | rule_flags;
++
+ 	chan->max_antenna_gain = min(chan->orig_mag,
+ 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
+ 	chan->max_bandwidth = KHZ_TO_MHZ(max_bandwidth);
+-- 
+1.6.1.rc3.51.g5832d
 
