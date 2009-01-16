@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39959 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753296AbZAGPqE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 10:46:04 -0500
-Subject: Re: [PATCH] p54: return NETDEV_TX_OK in p54_tx and fix sparse
-	warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-In-Reply-To: <1231342997.3545.44.camel@johannes> (sfid-20090107_164257_031400_85F402D7)
-References: <200901071640.08721.chunkeey@web.de>
-	 <1231342997.3545.44.camel@johannes> (sfid-20090107_164257_031400_85F402D7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-appnIpzrJ8oH0PdrwqLE"
-Date: Wed, 07 Jan 2009 16:46:27 +0100
-Message-Id: <1231343187.3545.46.camel@johannes> (sfid-20090107_164610_729998_A59CC72D)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:20303 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754976AbZAPVCd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 16:02:33 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 13:02:33 -0800
+Date: Fri, 16 Jan 2009 13:02:04 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 10/13] cfg80211: remove check for last_request on
+	ignore_reg_update()
+Message-ID: <20090116210204.GJ29609@tesla> (sfid-20090116_220240_784129_A6C158DE)
+References: <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232064746-17134-9-git-send-email-lrodriguez@atheros.com> <1232064746-17134-10-git-send-email-lrodriguez@atheros.com> <1232064746-17134-11-git-send-email-lrodriguez@atheros.com> <1232097990.3854.31.camel@johannes> <20090116162731.GD29609@tesla> <1232137980.3745.3.camel@johannes>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1232137980.3745.3.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jan 16, 2009 at 12:33:00PM -0800, Johannes Berg wrote:
+> On Fri, 2009-01-16 at 08:27 -0800, Luis R. Rodriguez wrote:
+> > On Fri, Jan 16, 2009 at 01:26:30AM -0800, Johannes Berg wrote:
+> > > On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
+> > > > There is no need to check for last_request as the callers of
+> > > > update_all_wiphy_regulatory() ensure its present.
+> > > 
+> > > Are you sure? I had all this blow up all around me.
+> > 
+> > Interesting -- well that's the thing, where and why would it have blown up?
+> > I did test it and didn't run into it.
+> 
+> Only w/o crda and old-regulatory did I see that happen though, not sure.
 
---=-appnIpzrJ8oH0PdrwqLE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Bleh -- I suppose I'll have to retest this series with OLD_REG enabled after all...
 
-On Wed, 2009-01-07 at 16:43 +0100, Johannes Berg wrote:
-
-> > @@ -1750,7 +1750,7 @@ static int p54_set_ps(struct ieee80211_hw *dev)
-> >  	int i;
-> > =20
-> >  	if (dev->conf.flags & IEEE80211_CONF_PS)
-> > -		mode =3D cpu_to_le16(P54_PSM | P54_PSM_DTIM | P54_PSM_MCBC);
-> > +		mode =3D P54_PSM | P54_PSM_DTIM | P54_PSM_MCBC;
->=20
-> you also have to declare mode as u16, no?
-
-Sorry, you do, I got confused.
-
-johannes
-
---=-appnIpzrJ8oH0PdrwqLE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJZM5RAAoJEKVg1VMiehFYGnEP/10Anx02W9iU+PHOXji2stTb
-3N1Aq7pvDR61Z5t8q42Qa5btUWU+BuOfFAnqhrq8BP1VABLwuh74SOqaKztgOZgb
-TyPOMT05Y9ADT+0GYat2ZymAiQUtGrcwMADwC/19qaCZqRz0hnZ+i2hyxHjpf737
-pQuUtDxu38r76nSd9SC+rKr+aZdheq6ODipL8ZRH646K/kTxm82LVS5CtUWqGm8l
-Kpv7z2DiH/ev1CFYZFzHbSoJkqzk6S8xPQ5uhdGuuXHF2VCpZ6A27gx8apoPlR3c
-sVb2JACYRI+F1T+59skV1zR+U7rE3GpBeoePvN3e16tGfDwo4yCZ8TeVU7HPllVF
-odjhq8l0BT9gRhN24bqNsU1r5H8nLB/eiG85dumEaR/6xR7MAJ6S8xE+YxszwTSH
-nHrgxTR4x/jkAn/xvJi5Cke/OFTm73yFENOtcDj8DtKua37iZP2jB16NqLwE/ete
-UR91xDjN8b4ZxoXfxhfbYlTk3iqgj1CikpFCYprkiYAnpkk5c5eI6z1g6KX7kMC/
-7Nbn4BNaDQ6f5n3SEq/VYTIX3t78oTcq6s+f4cNN4q0X8bgQQOFlEh4QuvxWnnOL
-OHyU/bn2ioilv9STchz5p+H9/GIUJH86ynNAe5p6wa1ulGJ7ODnHr/6jT/ktaNM8
-LeC1L3NoDxusKF7cZp92
-=C81+
------END PGP SIGNATURE-----
-
---=-appnIpzrJ8oH0PdrwqLE--
-
+  Luis
