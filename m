@@ -1,88 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:38703 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753512AbZAFVwU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50983 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754188AbZAPTap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 16:52:20 -0500
-Received: by ewy10 with SMTP id 10so8692771ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 13:52:18 -0800 (PST)
-To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
-Date: Tue, 6 Jan 2009 22:52:15 +0100
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rt2400-devel@lists.sourceforge.net"
-	<rt2400-devel@lists.sourceforge.net>
-References: <200901042021.10904.IvDoorn@gmail.com> <200901052321.46422.IvDoorn@gmail.com> <4963BC6F.7030201@kpnplanet.nl>
-In-Reply-To: <4963BC6F.7030201@kpnplanet.nl>
+	Fri, 16 Jan 2009 14:30:45 -0500
+Date: Fri, 16 Jan 2009 14:20:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: garbaged AP mac address in dmesg in wireless-testing?
+Message-ID: <20090116192046.GD10037@tuxdriver.com> (sfid-20090116_203052_961189_17EB10C1)
+References: <3ace41890901160907w2d04da91r61744477ac64e018@mail.gmail.com> <20090116183826.GC10037@tuxdriver.com> <87ocy7xejp.fsf@litku.valot.fi> <4970DC58.3000507@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200901062252.15677.IvDoorn@gmail.com> (sfid-20090106_225225_208622_7E4778C0)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4970DC58.3000507@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >    
-> >> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
-> >>      
-> >
-> > For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
-> > comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
-> >    
+On Fri, Jan 16, 2009 at 08:13:28PM +0100, Hauke Mehrtens wrote:
+> Kalle Valo wrote:
+> > "John W. Linville" <linville@tuxdriver.com> writes:
+> > 
+> >> On Fri, Jan 16, 2009 at 05:07:50PM +0000, Hin-Tak Leung wrote:
+> >>> Since a few days ago, my dmesg is looking like this - instead of the
+> >>> older AA:BB:CC:DD:EE:FF form
+> >>> with the mac address of the AP.
+> >>> That ffff88* looks like a pointer/address to me? Is this change intentional?
+> >>>
+> >>> --------------
+> >>> wlan2 direct probe responded
+> >>> wlan2: authenticate with AP ffff880070995aa0
+> >>> wlan2: authenticated
+> >>> wlan2: associate with AP ffff880070995aa0
+> >>> wlan2: RX ReassocResp from ffff88001431f01a (capab=0x431 status=0 aid=1)
+> >>> wlan2: associated
+> > 
+> > Works for me:
+> > 
+> > [37125.111672] wlan0: authenticate with AP 00:12:17:e7:98:de
+> > [37125.113509] wlan0: authenticated
+> > [37125.113514] wlan0: associate with AP 00:12:17:e7:98:de
+> > [37125.115875] wlan0: RX AssocResp from 00:12:17:e7:98:de (capab=0x11 status=0 aid=1)
+> > [37125.115881] wlan0: associated
+> > 
+> > This is on x86 32bit with iwl3945 and latest wireless-testing.
+> > 
+> >> Odd...some problem with the "%pM" printk conversion?  What kernel
+> >> are you running?
+> > 
+> > And on what architecture?
+> > 
 > 
-> OK. But the EEPROM definitions I got from Ralink on the Country 
-> information indicate that there is only a single indication in the EEPROM.
-
-That is right, like I said the comments already indicates there the legacy code didn't contain the
-definitions (yet). ;)
-
-> > GertJan, some comments about your patch:
-> >
-> >    
-> >> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
-> >> index 9aefda4..986e428 100644
-> >> --- a/drivers/net/wireless/rt2x00/rt2400pci.h
-> >> +++ b/drivers/net/wireless/rt2x00/rt2400pci.h
-> >> @@ -806,6 +806,13 @@
-> >>   #define EEPROM_TXPOWER_2		FIELD16(0xff00)
-> >>
-> >>   /*
-> >> + * EEPROM geography.
-> >> + * GEO: Default geography setting for device.
-> >> + */
-> >> +#define EEPROM_GEOGRAPHY		0x17
-> >> +#define EEPROM_GEOGRAPHY_GEO		FIELD16(0xff00)
-> >>      
-> >
-> > Where did you find this definition? I couldn't find it in the legacy driver or the specsheets.
-> >    
+> I have got the same problem on x86_64 with rtl8187, kernel 2.6.27 and
+> compat-wireless-2008-01-16.
 > 
-> I got an excerpt from the EEPROM definition for the rt2460 chip (which I 
-> received with the help of Luis). It's defined in there.
+> [ 3064.480766] wlan0: authenticate with AP ffff8801291dfa20
+> [ 3064.482271] wlan0: authenticated
+> [ 3064.482275] wlan0: associate with AP ffff8801291dfa20
+> [ 3064.485021] wlan0: RX AssocResp from ffff88011128c01a (capab=0x411
+> status=0 aid=1)
+> [ 3064.485025] wlan0: associated
 
-I assume you mean the file RT2460_DS_P1.3.pdf, could you point me to the right pagenumber?
+compat-wireless users are probably using kernels that have printk
+implementations that do not understand "%pM".  QED. :-)
 
-> >> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.h b/drivers/net/wireless/rt2x00/rt2500pci.h
-> >> index e135247..8a69af3 100644
-> >> --- a/drivers/net/wireless/rt2x00/rt2500pci.h
-> >> +++ b/drivers/net/wireless/rt2x00/rt2500pci.h
-> >> @@ -1060,7 +1060,7 @@
-> >>    * GEO: Default geography setting for device.
-> >>    */
-> >>   #define EEPROM_GEOGRAPHY		0x12
-> >> -#define EEPROM_GEOGRAPHY_GEO		FIELD16(0x0f00)
-> >> +#define EEPROM_GEOGRAPHY_GEO		FIELD16(0xff00)
-> >>      
-> >
-> > Legacy driver uses 0x0f00, and the definition indicates the max value is 7,
-> > so extending the definition doesn't seem correct.
-> >    
-> 
-> Well, the EEPROM definition indicates that this is an 8-bit field, so 
-> updating it looked appropriate, although the max value indeed is 7.
-
-Ok, apparently I messed up the code interpretation. :S, the change from 0xf to 0xff is fine.
-
-Ivo
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
