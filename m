@@ -1,62 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55883 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754085AbZA3UhW (ORCPT
+Received: from mail-ew0-f17.google.com ([209.85.219.17]:57778 "EHLO
+	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752545AbZAPAoR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 15:37:22 -0500
-Subject: Re: [PATCH] mac80211: remove HW_SIGNAL_DB
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bruno Randolf <bruno@thinktube.com>
-In-Reply-To: <20090130165026.GD6534@tesla>
-References: <1233310386.4161.25.camel@johannes.local>
-	 <20090130165026.GD6534@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y8k86gUkqJ+4UJbINdBJ"
-Date: Fri, 30 Jan 2009 21:37:13 +0100
-Message-Id: <1233347833.4070.0.camel@johannes.local> (sfid-20090130_213726_688044_F5FA81A8)
-Mime-Version: 1.0
+	Thu, 15 Jan 2009 19:44:17 -0500
+Message-ID: <dd18b0c30901151644q4578f7d6k3023cad6f05325dd@mail.gmail.com> (sfid-20090116_014424_024414_64987438)
+Date: Thu, 15 Jan 2009 16:44:15 -0800
+From: "Justin Mattock" <justinmattock@gmail.com>
+To: "Paul Moore" <paul.moore@hp.com>
+Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	SE-Linux <selinux@tycho.nsa.gov>
+In-Reply-To: <200901151752.06622.paul.moore@hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <496D759A.7010401@gmail.com> <200901151246.38396.paul.moore@hp.com>
+	 <dd18b0c30901151400t68dfc54cu67a378ba71a2edc9@mail.gmail.com>
+	 <200901151752.06622.paul.moore@hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jan 15, 2009 at 2:52 PM, Paul Moore <paul.moore@hp.com> wrote:
+> On Thursday 15 January 2009 5:00:55 pm Justin Mattock wrote:
+>> On Thu, Jan 15, 2009 at 9:46 AM, Paul Moore <paul.moore@hp.com> wrote:
+>> > On Wednesday 14 January 2009 9:43:56 pm Justin P. Mattock wrote:
+>> >> Paul Moore wrote:
+>> >> > On Wednesday 14 January 2009 4:35:25 pm Justin P. Mattock wrote:
+>> >> >> here is what the error looks like:
+>> >> >>
+>> >> >> netlabel_tools-0.19# make
+>> >> >> INFO: creating the version header file
+>> >> >> .: 10: version_info: not found
+>> >> >> make: *** [include/version.h] Error 2
+>> >> >
+>> >> > Huh, can you try the following:
+>> >> >
+>> >> >  1. Open the netlabel_tools-0.19/Makefile in your favorite
+>> >> > editor 2. Change the ". version_info; \" line to "source
+>> >> > ./version_info; \" 3. Save your changes
+>> >> >  4. Try running "make" again
+>> >> >
+>> >> > Thanks.
+>> >>
+>> >> O.k. changed . version like how you had posted.
+>> >> The package compiled like a charm.
+>> >
+>> > Great, I'll change the Makefile(s) in SVN ... I don't quite
+>> > understand the reason (what is your /bin/sh?  I'm guessing not
+>> > bash?) but at least we now have a solution :)
+>> >
+>> > --
+>> > paul moore
+>> > linux @ hp
+>>
+>> hmm..
+>> under ps auxZ
+>> I see:
+>> 2896 tty1 S+ 0:00 /bin/bash /usr/bin/startx
+>> then open aterm for navigating.
+>>
+>> Thankfully it works(this people can install
+>> it a test it out.)
+>
+> Well, it is possible that /bin/sh points to a non-bash shell but maybe
+> not (I'm pretty sure the make command executes the scripts
+> with /bin/sh).  Either way, I checked in the fix to the SVN tree
+> earlier today so newer releases will have the fix; if needed I can
+> release a 0.19.1 or similar but I want to wait and see how widespread
+> the problem is ...
+>
+> --
+> paul moore
+> linux @ hp
+>
 
---=-y8k86gUkqJ+4UJbINdBJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Cool, If I see anybody
+struggling, I point them to the
+fix you posted.
+I also might be missing something, i.g.
+one of the boxes that gave this error I built
+with debootstrap, but then the other that gave this as well
+was built with nubuntu which seems more complete
+than debootstrap.
+but then maybe both are missing a package.
+(or it's a debian thing)
 
-On Fri, 2009-01-30 at 08:50 -0800, Luis R. Rodriguez wrote:
+regards;
 
-> We should be able to convert zd1211rw to use dBm anyway, we shall
-> release a new "vendor driver" for it which I think has some bits for this=
-.
-> Just need to get around to it.
-
-Yeah but we can start that from UNSPEC too.
-
-johannes
-
---=-y8k86gUkqJ+4UJbINdBJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJg2T3AAoJEKVg1VMiehFY3JAP+wXmqb8PG4JNnrYQ+dZo41+N
-GVcpUTrtjiB73ZVcjvcVcSe9a13qtUwu5Q9FNH1h0uxkoskSwlYwaG9Cb3BdgqWd
-9s0hhh0y4fqYAAU1Z4QZ9Xj8LJ3gUBClaVvNx7kX4LMSPZN+KtGp+oF6H4h/PKyf
-gqvvY7vFvzvvHNjeyxv5Aafon3rArbIoiFasxbzNFX6C8+kzCL0aNmEXA1T4ceUw
-iGEI/QIsgIPol3Vgmy/FNLzjt/KfNi5hNemiis4nrzOdacQoNyfS308bODNkGeNB
-PfPYBYTno/6cQyKTokPPFKA841ayxyCSyPPPQoKNMRq6CGZ2Kw3m81OH7SMjPAMS
-0iC8iveQFuA+ENgRVVcama4ZpoNOxV4tFkAtGDvgeH2G641lDswA9lwtJA8gqUbE
-OlOZRHp6f+3BxmIRBPTj6JFn1ExlAetgOeWvvt70Aiq+Ndvk0gz7ek213OuTJ7MV
-cdGwMknt35wSN3AVfV3xrqaAX3NFrutnSRQ6MeKynvZ8If6gorNQMM6XIBvCk4q6
-vL35owjiB2L9cHKBIC4ycBmwbdK3/gN3V9iQhIc07K9CDPxnfFHplw+FCuEeWY40
-F6dUI9t4Jl5l4QXFgZ8u2cmBEWqt7GMzYu4Gd1jUQYNkuVkDFGrxDEpzgyZcb1/X
-+f8dtpeCRgxNGaURlEuX
-=OGrY
------END PGP SIGNATURE-----
-
---=-y8k86gUkqJ+4UJbINdBJ--
-
+-- 
+Justin P. Mattock
