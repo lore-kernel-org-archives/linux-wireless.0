@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37360 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753994AbZAWSI7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 13:08:59 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: integration of opensource firmware with b43 kernel driver
-Date: Fri, 23 Jan 2009 19:08:05 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it> <497A05DC.4040101@lwfinger.net>
-In-Reply-To: <497A05DC.4040101@lwfinger.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47250 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756936AbZAPVPt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 16:15:49 -0500
+Date: Fri, 16 Jan 2009 16:13:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] p54usb: fix conflict with recent usb changes
+Message-ID: <20090116211351.GA15245@tuxdriver.com> (sfid-20090116_221555_703857_F49EDC2B)
+References: <200901162024.31636.chunkeey@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901231908.05835.mb@bu3sch.de> (sfid-20090123_190903_883583_4DDCE5F0)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200901162024.31636.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 23 January 2009 19:01:00 Larry Finger wrote:
-> The driver can certainly be coded to look for the open-source firmware
-> names before trying to load vendor firmware. That way there will not
-> be any confusion.
+On Fri, Jan 16, 2009 at 08:24:31PM +0100, Christian Lamparter wrote:
+> A recent change in the usb core "USB: change interface to usb_lock_device_for_reset()" 
+> conflicts with "p54usb: utilize usb_reset_device for 3887".
+> 
+> Sadly, we have to call usb_reset_device before we can upload the firmware on 3887.
+> Unless someone figures out how to reliably stop the 3887 so the hardware is still usable
+> next time we want to start it.
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
+> John,
+> 
+> I guess this patch should be in the next wireless-2.6 pull.
+> And it would be nice, if you can put "[PATCH] p54: fix p54_set_key's return code" in there too. 
 
-I already posted that, but in case you missed it:
-http://bu3sch.de/patches/wireless-testing/20081227-1821/patches/008-b43-probe-open-fw.patch
+The other patch seems fine, but this one doesn't apply to wireless-2.6
+-- p54u_device_reset_3887 doesn't seem to exist there?
 
+I'll apply this in wireless-testing and eventually to wireless-next-2.6,
+unless you send me an alternative patch based on wireless-2.6?
+
+John
 -- 
-Greetings, Michael.
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
