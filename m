@@ -1,68 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:44236 "EHLO
-	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824AbZALHrg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 02:47:36 -0500
-From: "W. van den Akker" <listsrv@wilsoft.nl>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
-Date: Mon, 12 Jan 2009 08:47:27 +0100
-References: <200901011444.20333.listsrv@wilsoft.nl> <200901101226.16007.listsrv@wilsoft.nl> <4968FC02.6010708@erley.org>
-In-Reply-To: <4968FC02.6010708@erley.org>
-Cc: pat-lkml <pat-lkml@erley.org>
+Received: from mail.atheros.com ([12.36.123.2]:11926 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752401AbZAPA1W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2009 19:27:22 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:27:22 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 04/13] cfg80211: export freq_reg_info()
+Date: Thu, 15 Jan 2009 16:26:54 -0800
+Message-ID: <1232065614-18007-1-git-send-email-lrodriguez@atheros.com> (sfid-20090116_012725_745779_3C46C304)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901120847.28201.listsrv@wilsoft.nl> (sfid-20090112_084740_448687_524BB9BD)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 10 January 2009, you wrote:
-> W. van den Akker wrote:
-> > Did some futher testing to exclude problems....
-> > The wlan0 and eth1 are both part of a bridge. I have removed the eth1
-> > interface so the the eth1-driver cannot interfer with the ath9k driver.
-> > Also no result. The server still locks.
-> >
-> > What is the right way to combine the eth1 and wlan0 into a bridge. Do I
-> > even need  a bridge? The hostapd.config says I must define a bridge when
-> > I use the nl80211driver interface.
-> > The bridge has an IP adress, wlan0 and eth1 are in the same subnet.
-> >
-> > When hostapd is started I have some error-messages. Dont know if they can
-> > hurt...
-> > Failed to set CTS protect in kernel driver
-> > Failed to set Short Slot Time option in kernel driver
-> > Could not set preamble for kernel driver
->
-> I use gentoo's init scripts, but my wlan0 and eth0 are both in a bridge
-> (br0) and it works fine.  I don't get the CTS, Short Slot Time, or
-> preamble kernel driver errors.  Perhaps you need to comment out a few
-> lines in hostapd.conf?
->
-> # preamble=1
->
-> and I have:
->
-> rts_threshold=2347
->
-> I'll send you a direct e-mail with my .config and hostapd-wep.conf files
-> to help with debugging.
+This can be used by drivers on the reg_notifier()
 
-I have used your config files for hostapd. Only change I have made is comment 
-out the CONFIG_LIBNL20 because I have no lib for the debian lenny distro. But 
-I dont think that will hurt much.
-The error messages are gone.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/wireless.h |   24 ++++++++++++++++++++++++
+ net/wireless/reg.c     |   24 ++----------------------
+ 2 files changed, 26 insertions(+), 22 deletions(-)
 
-However the system hangup still occurs. It looks like a DMA - ath9k related 
-problem.
-
-greetings
-WIllem
-
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index b724519..232047b 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -422,4 +422,28 @@ extern void wiphy_apply_custom_regulatory(
+ 	struct wiphy *wiphy,
+ 	const struct ieee80211_regdomain *regd);
+ 
++/**
++ * freq_reg_info - get regulatory information for the given frequency
++ * @wiphy: the wiphy for which we want to process this rule for
++ * @center_freq: Frequency in KHz for which we want regulatory information for
++ * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
++ * 	you can set this to 0. If this frequency is allowed we then set
++ * 	this value to the maximum allowed bandwidth.
++ * @reg_rule: the regulatory rule which we have for this frequency
++ *
++ * Use this function to get the regulatory rule for a specific frequency on
++ * a given wireless device. If the device has a specific regulatory domain
++ * it wants to follow we respect that unless a country IE has been received
++ * and processed already.
++ *
++ * Returns 0 if it was able to find a valid regulatory rule which does
++ * apply to the given center_freq otherwise it returns non-zero. It will
++ * also return -ERANGE if we determine the given center_freq does not even have
++ * a regulatory rule for a frequency range in the center_freq's band. See
++ * freq_in_rule_band() for our current definition of a band -- this is purely
++ * subjective and right now its 802.11 specific.
++ */
++extern int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
++			 const struct ieee80211_reg_rule **reg_rule);
++
+ #endif /* __NET_WIRELESS_H */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4793d22..77e45c7 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -846,29 +846,9 @@ static int freq_reg_info_regd(struct wiphy *wiphy, u32 center_freq,
+ 
+ 	return !max_bandwidth;
+ }
++EXPORT_SYMBOL(freq_reg_info);
+ 
+-/**
+- * freq_reg_info - get regulatory information for the given frequency
+- * @wiphy: the wiphy for which we want to process this rule for
+- * @center_freq: Frequency in KHz for which we want regulatory information for
+- * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
+- * 	you can set this to 0. If this frequency is allowed we then set
+- * 	this value to the maximum allowed bandwidth.
+- * @reg_rule: the regulatory rule which we have for this frequency
+- *
+- * Use this function to get the regulatory rule for a specific frequency on
+- * a given wireless device. If the device has a specific regulatory domain
+- * it wants to follow we respect that unless a country IE has been received
+- * and processed already.
+- *
+- * Returns 0 if it was able to find a valid regulatory rule which does
+- * apply to the given center_freq otherwise it returns non-zero. It will
+- * also return -ERANGE if we determine the given center_freq does not even have
+- * a regulatory rule for a frequency range in the center_freq's band. See
+- * freq_in_rule_band() for our current definition of a band -- this is purely
+- * subjective and right now its 802.11 specific.
+- */
+-static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
++int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
+ 			 const struct ieee80211_reg_rule **reg_rule)
+ {
+ 	return freq_reg_info_regd(wiphy, center_freq,
 -- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+1.6.1.rc3.51.g5832d
 
