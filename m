@@ -1,52 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:37582 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755413AbZAWRbF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 12:31:05 -0500
-Date: Fri, 23 Jan 2009 11:30:54 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] rtl8187: Increase receive queue depth
-Message-ID: <4979fece.HX6OGfl4J6hQFYsf%Larry.Finger@lwfinger.net> (sfid-20090123_183115_415791_621B82E0)
+Received: from ms6.Sony.CO.JP ([211.125.136.204]:47285 "EHLO ms6.sony.co.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755971AbZAPIxN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 03:53:13 -0500
+Date: Fri, 16 Jan 2009 17:52:55 +0900
+From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+To: jgarzik@pobox.com, linville@tuxdriver.com
+Subject: [PATCH 2/2] PS3: gelic: wireless: convert the wireless part to net_device_ops
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Geoff Levand <geoffrey.levand@am.sony.com>
+Message-Id: <20090116174726.0B70.40F06B3A@sm.sony.co.jp> (sfid-20090116_095319_653856_E123BFCE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The receive queue depth in rtl8187 may not be long enough to keep
-the pipe full.
+Convert the gelic wireless driver to net_device_ops
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
 ---
+ V2: added setting for ndo_validate_addr
 
-John,
+ drivers/net/ps3_gelic_wireless.c |   28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
 
-This patch and the locking fix helped the bug #12380 at
-http://bugzilla.kernel.org/, but the test was not clean, and the OP for
-that bug has not been able to test. Your call on when it gets included.
-
-If I get a clear indication that this patch helps the bug, I'll repost.
-
-Larry
----
-
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -390,7 +390,7 @@ static int rtl8187_init_urbs(struct ieee
- 	struct rtl8187_rx_info *info;
- 	int ret = 0;
+--- a/drivers/net/ps3_gelic_wireless.c
++++ b/drivers/net/ps3_gelic_wireless.c
+@@ -2697,6 +2697,19 @@ static int gelic_wl_stop(struct net_devi
  
--	while (skb_queue_len(&priv->rx_queue) < 8) {
-+	while (skb_queue_len(&priv->rx_queue) < 16) {
- 		skb = __dev_alloc_skb(RTL8187_MAX_RX, GFP_KERNEL);
- 		if (!skb) {
- 			ret = -ENOMEM;
+ /* -- */
+ 
++static const struct net_device_ops gelic_wl_netdevice_ops = {
++	.ndo_open = gelic_wl_open,
++	.ndo_stop = gelic_wl_stop,
++	.ndo_start_xmit = gelic_net_xmit,
++	.ndo_set_multicast_list = gelic_net_set_multi,
++	.ndo_change_mtu = gelic_net_change_mtu,
++	.ndo_tx_timeout = gelic_net_tx_timeout,
++	.ndo_validate_addr = eth_validate_addr,
++#ifdef CONFIG_NET_POLL_CONTROLLER
++	.ndo_poll_controller = gelic_net_poll_controller,
++#endif
++};
++
+ static struct ethtool_ops gelic_wl_ethtool_ops = {
+ 	.get_drvinfo	= gelic_net_get_drvinfo,
+ 	.get_link	= gelic_wl_get_link,
+@@ -2711,21 +2724,12 @@ static void gelic_wl_setup_netdev_ops(st
+ 	struct gelic_wl_info *wl;
+ 	wl = port_wl(netdev_priv(netdev));
+ 	BUG_ON(!wl);
+-	netdev->open = &gelic_wl_open;
+-	netdev->stop = &gelic_wl_stop;
+-	netdev->hard_start_xmit = &gelic_net_xmit;
+-	netdev->set_multicast_list = &gelic_net_set_multi;
+-	netdev->change_mtu = &gelic_net_change_mtu;
+-	netdev->wireless_data = &wl->wireless_data;
+-	netdev->wireless_handlers = &gelic_wl_wext_handler_def;
+-	/* tx watchdog */
+-	netdev->tx_timeout = &gelic_net_tx_timeout;
+ 	netdev->watchdog_timeo = GELIC_NET_WATCHDOG_TIMEOUT;
+ 
+ 	netdev->ethtool_ops = &gelic_wl_ethtool_ops;
+-#ifdef CONFIG_NET_POLL_CONTROLLER
+-	netdev->poll_controller = gelic_net_poll_controller;
+-#endif
++	netdev->netdev_ops = &gelic_wl_netdevice_ops;
++	netdev->wireless_data = &wl->wireless_data;
++	netdev->wireless_handlers = &gelic_wl_wext_handler_def;
+ }
+ 
+ /*
 
----
