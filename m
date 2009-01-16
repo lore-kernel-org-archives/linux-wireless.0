@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59913 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752221AbZAJJRH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jan 2009 04:17:07 -0500
-Date: Sat, 10 Jan 2009 11:16:59 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Fixed BSSID step 3: Don't merge with the same BSSID
-Message-ID: <20090110091659.GC1170@jm.kir.nu> (sfid-20090110_101713_441689_05B17BBA)
-References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu> <20090109205315.277310@gmx.net>
+Received: from mail.atheros.com ([12.36.123.2]:20721 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756003AbZAPVJ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 16:09:59 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 13:09:59 -0800
+Date: Fri, 16 Jan 2009 13:09:30 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
+	disablement
+Message-ID: <20090116210930.GL29609@tesla> (sfid-20090116_221006_106406_2615236E)
+References: <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232097827.3854.25.camel@johannes> <20090116163245.GF29609@tesla> <1232138101.3745.7.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090109205315.277310@gmx.net>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1232138101.3745.7.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 09, 2009 at 09:53:15PM +0100, Alina Friedrichsen wrote:
-
-> As I see, only the sta_info_flush_delayed() call causes the problems. I can only disable this call in the ieee80211_sta_join_ibss() function, if the BSSID is the same. Do you think this would be better?
-
-Yes, I think it would be better option than removing it and the reset_tsf()
-call. Removing STA entries for other IBSS members in any merge case,
-even if BSSID changes, does not sound correct in the first place. This
-should really only be done if the SSID changes.
-
-> > In other words, I would be fine if the calls to
-> > ieee80211_sta_join_ibss() and ieee80211_ibss_add_sta() are replaced with
-> > local->ops->reset_tsf() if BSSIDs are the same when
-> > beacon_timestamp>rx_timestamp.
+On Fri, Jan 16, 2009 at 12:35:01PM -0800, Johannes Berg wrote:
+> On Fri, 2009-01-16 at 08:32 -0800, Luis R. Rodriguez wrote:
 > 
-> This would be a way, too.
+> > > > -	chan->flags = flags | map_regdom_flags(reg_rule->flags);
+> > > > +	rule_flags = map_regdom_flags(reg_rule->flags);
+> > > > +	if (flags & IEEE80211_CHAN_DISABLED)
+> > > > +		chan->flags = IEEE80211_CHAN_DISABLED;
+> > > > +	else
+> > > > +		chan->flags = flags | rule_flags;
+> > > 
+> > > but why bother with more complicated code when adding a few more flags
+> > > doesn't hurt?
+> > 
+> > I don't see these few lines as complicated really, but if you don't like them
+> > that's fine. We can also fix this in userspace so that disable|radar|no-ibss
+> > doesn't show up. I frankly think its pointless to keep them though.
+> 
+> It's not exactly complicated, but I bet at some point we'll scratch our
+> heads why we did it ;)
 
-Looking at ieee80211_sta_join_ibss(), most of the stuff there should not
-really be needed if BSSID remains the same and we are only syncing our
-TSF. reset_tsf() call should be enough for that. Other parts of this
-function, apart from sta_info_flush_delayed(), should be run if BSSID
-changes. sta_info_flush_delayed() should be included only if SSID
-changes (or maybe if we join back to the same IBSS after a long time,
-but I'm not too concerned about that corner case).
+I can put a note, if that helps, or are you strongly opposed to this? :)
+Just an itch to scratch really, have you seen the output of iwlist on
+disabled channels? It can get long on radar/no-ibss channels. We can also
+handle this in userspace but seems pointles if the channels is disabled.
 
-I think bit more cleanup here by splitting ieee80211_sta_join_ibss()
-into pieces and only calling some of them in the merge/timesync case
-would be the best solution. For the particular problem that you are
-seeing, the minimal change would probably be just to make
-sta_info_flush_delayed() call conditional on SSID change (I don't think
-this would need to be based on BSSID change).
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
