@@ -1,34 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43514 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754339AbZAHLd2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 06:33:28 -0500
-Message-Id: <20090108113158.681894124@atheros.com> (sfid-20090108_123334_164223_0B9263EF)
-Date: Thu, 08 Jan 2009 13:31:58 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 00/16] mac80211: IEEE 802.11w (management frame protection)
+Received: from mail.atheros.com ([12.36.123.2]:11029 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756984AbZAPANY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2009 19:13:24 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:13:24 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 11/13] cfg80211: move check for ignore_reg_update() on wiphy_update_regulatory()
+Date: Thu, 15 Jan 2009 16:12:24 -0800
+Message-ID: <1232064746-17134-12-git-send-email-lrodriguez@atheros.com> (sfid-20090116_011332_615838_0C715966)
+In-Reply-To: <1232064746-17134-11-git-send-email-lrodriguez@atheros.com>
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-9-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-10-git-send-email-lrodriguez@atheros.com>
+ <1232064746-17134-11-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches adds support for IEEE 802.11w (management frame
-protection) into mac80211. It is up-to-date with the latest IEEE 802.11w
-draft (D7.0) and I do not expect any major changes to IEEE 802.11w
-anymore.
+This ensures that the initial REGDOM_SET_BY_CORE upon wiphy registration
+respects the wiphy->custom_regulatory setting. Without this and if OLD_REG
+is disabled (which will be default soon as we remove it) the
+wiphy->custom_regulatory is simply ignored.
 
-This version is ready to be applied into wireless-testing. It is against
-wireless-testing + CSA patch from Sujith + PS patches from Johannes.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-Differences to PATCH v1:
-- introduce a mechanism for drivers to indicate that they are MFP capable
-  and allow user space programs to figure out whether MFP can be used
-- mark ath9k MFP capable
-- mark mac80211_hwsim MFP capable
-- rebase against PS patches from Johannes (one of them allocated a new
-  driver hw flag that would have conflicted with an allocation for MFP)
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6c45832..271b54a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1017,13 +1017,15 @@ static void update_all_wiphy_regulatory(enum reg_set_by setby)
+ 	struct cfg80211_registered_device *drv;
+ 
+ 	list_for_each_entry(drv, &cfg80211_drv_list, list)
+-		if (!ignore_reg_update(&drv->wiphy, setby))
+-			wiphy_update_regulatory(&drv->wiphy, setby);
++		wiphy_update_regulatory(&drv->wiphy, setby);
+ }
+ 
+ void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
+ {
+ 	enum ieee80211_band band;
++
++	if (ignore_reg_update(wiphy, setby))
++		return;
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		if (wiphy->bands[band])
+ 			handle_band(wiphy, band);
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.1.rc3.51.g5832d
+
