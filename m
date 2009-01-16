@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway13.websitewelcome.com ([67.18.94.12]:53718 "HELO
-	gateway13.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751712AbZATT3k (ORCPT
+Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:42545 "EHLO
+	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737AbZAPQJa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 14:29:40 -0500
-Received: from 96-26-216-101.sea.clearwire-dns.net ([96.26.216.101]:46304 helo=Hydra.darkmatter.org)
-	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.69)
-	(envelope-from <Info@delphi-real-estate.com>)
-	id 1LPKct-0007M7-L9
-	for linux-wireless@vger.kernel.org; Tue, 20 Jan 2009 11:43:00 -0600
-From: Delphi Real Estate <Info@delphi-real-estate.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Kernel Compile Fail with 2.6.26 Drivers
-Date: Tue, 20 Jan 2009 09:42:57 -0800
+	Fri, 16 Jan 2009 11:09:30 -0500
+From: Paul Moore <paul.moore@hp.com>
+To: "Justin Mattock" <justinmattock@gmail.com>
+Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
+Date: Fri, 16 Jan 2009 11:09:27 -0500
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"SE-Linux" <selinux@tycho.nsa.gov>
+References: <496D759A.7010401@gmail.com> <200901151752.06622.paul.moore@hp.com> <dd18b0c30901151644q4578f7d6k3023cad6f05325dd@mail.gmail.com>
+In-Reply-To: <dd18b0c30901151644q4578f7d6k3023cad6f05325dd@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901200942.57618.Info@delphi-real-estate.com> (sfid-20090120_202945_508974_ABF9052D)
+  charset="iso-8859-1"
+Message-Id: <200901161109.27222.paul.moore@hp.com> (sfid-20090116_170936_296184_4F874137)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 15 January 2009 7:44:15 pm Justin Mattock wrote:
+> On Thu, Jan 15, 2009 at 2:52 PM, Paul Moore <paul.moore@hp.com> wrote:
+> > Well, it is possible that /bin/sh points to a non-bash shell but
+> > maybe not (I'm pretty sure the make command executes the scripts
+> > with /bin/sh).  Either way, I checked in the fix to the SVN tree
+> > earlier today so newer releases will have the fix; if needed I can
+> > release a 0.19.1 or similar but I want to wait and see how
+> > widespread the problem is ...
+> >
+> > --
+> > paul moore
+> > linux @ hp
+>
+> Cool, If I see anybody
+> struggling, I point them to the
+> fix you posted.
 
-Trying to get 5GHz 'n' working, but I just do not understand the advice I'm getting. (below)  I am told that TX aggregation support is not expected to be fixed until around 2.6.30.
+Great.  Also let me know, if this looks like it will be widespread 
+problem I'll make a new release; I'd hate for people to have to patch 
+the Makefile to get it to build ...
 
-Goal is to be able to get some version of the iwlagn drivers that will do 'n' mode at 5GHz, which will compile in my Ubuntu 2.6.27 kernel.  I tried just grafting in the 2.6.26 iwlwifi directory into my 2.6.27 source tree, but compile fails without explanation.
+> I also might be missing something, i.g.
+> one of the boxes that gave this error I built
+> with debootstrap, but then the other that gave this as well
+> was built with nubuntu which seems more complete
+> than debootstrap.
+> but then maybe both are missing a package.
+> (or it's a debian thing)
 
-Can anyone help?
+It could also be my rather poor understanding of bash and makefiles :)  
+If anyone out there wants to take a look and offer an explanation or a 
+better patch I'm more than happy to accept it.
 
-
-> If you want the driver with TX aggregation support then you need to use
-> the iwl5000 branch
-> ( http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=shortlog;h=iwl5000 )
-
-I guess I don't understand this.  I hit the first entry's 'snapshot', and I get a blank screen.  I click on the heading:
-"iwlwifi: fix incorrect monitor mode operation  iwl5000"
-... and it takes me to the explanation of the bugfix, but navigating to iwl-agn.c or iwl3945-base.c via tree, snapshot or blob just gives me an HTML representation of the files.  There doesn't seem to be any way to get the actual source.  Why do they prevent you from getting just individual files with this system?
-
-
-> The branch is based on kernel 2.6.26. If you do not want to give up your
-> current kernel you can take a look how compat-wireless works ... but it
-> is actually intended to take the most recent wireless-testing to work
-> with your current kernel, not an older kernel in itself as what can be
-> found in the iwl5000 branch.
-
-I don't mind running the most recent kernel, as long as it works and has Ubuntu patches.  I don't see how to get there from here though.  I am a commercial real estate broker, after all, not a coder.
-
-
-> Try diffing the Ubuntu sources against the kernel.org sources, and
-> merge the resulting diff into the git tree.
-
-LOL, thanks, but I am a commercial real estate broker, and have about as much chance of doing this as passing a calculus class.
-
-Just trying to get 'n' at 5GHz, so I don't pollute my neighbors' wifi with my MythTV streaming.  I am lucky to have working what I do...
+-- 
+paul moore
+linux @ hp
