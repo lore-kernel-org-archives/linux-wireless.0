@@ -1,60 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:43287 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752414AbZALUJj convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:59792 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752736AbZAPS7n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 15:09:39 -0500
-From: Michael Buesch <mb@bu3sch.de>
+	Fri, 16 Jan 2009 13:59:43 -0500
+Received: by bwz14 with SMTP id 14so5510246bwz.13
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 10:59:41 -0800 (PST)
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] b43: fix "=?utf-8?q?=E2=80=98gmode=E2=80=99_may_be_used?= uninitialized" warning
-Date: Mon, 12 Jan 2009 21:09:29 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <> <1231789741-13433-1-git-send-email-linville@tuxdriver.com> <1231789741-13433-2-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1231789741-13433-2-git-send-email-linville@tuxdriver.com>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: garbaged AP mac address in dmesg in wireless-testing?
+References: <3ace41890901160907w2d04da91r61744477ac64e018@mail.gmail.com>
+	<20090116183826.GC10037@tuxdriver.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 16 Jan 2009 20:59:38 +0200
+In-Reply-To: <20090116183826.GC10037@tuxdriver.com> (John W. Linville's message of "Fri\, 16 Jan 2009 13\:38\:27 -0500")
+Message-ID: <87ocy7xejp.fsf@litku.valot.fi> (sfid-20090116_195949_273331_4E44E426)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200901122109.30246.mb@bu3sch.de> (sfid-20090112_210943_405590_F6056EBB)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 January 2009 20:48:58 John W. Linville wrote:
-> drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_config=E2=
-=80=99:
-> drivers/net/wireless/b43/main.c:3264: warning: =E2=80=98gmode=E2=80=99=
- may be used uninitialized
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-Stupid gcc :P
+> On Fri, Jan 16, 2009 at 05:07:50PM +0000, Hin-Tak Leung wrote:
+>> Since a few days ago, my dmesg is looking like this - instead of the
+>> older AA:BB:CC:DD:EE:FF form
+>> with the mac address of the AP.
+>> That ffff88* looks like a pointer/address to me? Is this change intentional?
+>> 
+>> --------------
+>> wlan2 direct probe responded
+>> wlan2: authenticate with AP ffff880070995aa0
+>> wlan2: authenticated
+>> wlan2: associate with AP ffff880070995aa0
+>> wlan2: RX ReassocResp from ffff88001431f01a (capab=0x431 status=0 aid=1)
+>> wlan2: associated
 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Works for me:
 
-ACK
+[37125.111672] wlan0: authenticate with AP 00:12:17:e7:98:de
+[37125.113509] wlan0: authenticated
+[37125.113514] wlan0: associate with AP 00:12:17:e7:98:de
+[37125.115875] wlan0: RX AssocResp from 00:12:17:e7:98:de (capab=0x11 status=0 aid=1)
+[37125.115881] wlan0: associated
 
-> ---
->  drivers/net/wireless/b43/main.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b=
-43/main.c
-> index 7b31a32..c788bad 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -3261,7 +3261,7 @@ static int b43_switch_band(struct b43_wl *wl, s=
-truct ieee80211_channel *chan)
->  	struct b43_wldev *down_dev;
->  	struct b43_wldev *d;
->  	int err;
-> -	bool gmode;
-> +	bool uninitialized_var(gmode);
->  	int prev_status;
-> =20
->  	/* Find a device and PHY which supports the band. */
+This is on x86 32bit with iwl3945 and latest wireless-testing.
 
+> Odd...some problem with the "%pM" printk conversion?  What kernel
+> are you running?
 
+And on what architecture?
 
---=20
-Greetings, Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Kalle Valo
