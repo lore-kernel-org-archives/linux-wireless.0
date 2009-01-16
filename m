@@ -1,76 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:51179 "EHLO ds10.mine.nu"
+Received: from mail.atheros.com ([12.36.123.2]:20977 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755076AbZAWCWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 21:22:04 -0500
-Message-ID: <497929C1.9060804@openwrt.org> (sfid-20090123_032211_935738_FD225065)
-Date: Fri, 23 Jan 2009 03:21:53 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1756389AbZAPVNo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 16:13:44 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 13:13:44 -0800
+Date: Fri, 16 Jan 2009 13:13:15 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 02/13] cfg80211: add option for wiphys to disregard
+	country IEs
+Message-ID: <20090116211315.GN29609@tesla> (sfid-20090116_221349_023341_EFD36433)
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com> <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232097432.3854.15.camel@johannes> <20090116164004.GH29609@tesla> <1232138328.3745.13.camel@johannes>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	=?ISO-8859-1?Q?Mart=EDn_?= =?ISO-8859-1?Q?Ernesto_Barreyro?=
-	<barreyromartin@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Minstrel rate-setting question
-References: <BLU144-W4266C309A1F9CD0F4B5C21B2D90@phx.gbl>	 <496CE438.6020408@lwfinger.net>	 <BLU144-W164FB7B41C703C52AAAF9BB2D90@phx.gbl>	 <496D2772.4060104@lwfinger.net>	 <BLU144-W254C2D7845CD9E851F745DB2D60@phx.gbl>	 <496D3118.7060906@lwfinger.net>	 <BLU144-W40A7F7D25BE3B92EABD5C7B2D60@phx.gbl> <496D665A.90608@lwfinger.net>	 <BLU144-W102912CECD6EE0D07D1BD8B2D50@phx.gbl>	 <4972B1E7.7000005@lwfinger.net>	 <BLU144-W211FE279F46EA07E0D35E0B2D10@phx.gbl>	 <4977612D.7050500@lwfinger.net> <1232664643.4589.5.camel@note-tatin> <49790C43.5050100@lwfinger.net>
-In-Reply-To: <49790C43.5050100@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1232138328.3745.13.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> In the patch I just submitted, I added TX retry info to the driver for RTL8187L devices.
-> One of the testers of the patch reports that the rate is being adjusted, but that the rate
-> is overestimated and he has to limit it to 11M. His minstrel statistics and his comments
-> are as follows:
+On Fri, Jan 16, 2009 at 12:38:48PM -0800, Johannes Berg wrote:
+> On Fri, 2009-01-16 at 08:40 -0800, Luis R. Rodriguez wrote:
+> > On Fri, Jan 16, 2009 at 01:17:12AM -0800, Johannes Berg wrote:
+> > > On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
+> > > > Country IEs can be disregarded based on regulatory policy by
+> > > > a driver. This is only possible, of course, if the driver already
+> > > > has its own regulatory domain.
+> > > 
+> > > Can you say why? This doesn't seem useful to me.
+> > 
+> > Its based on our internal regulatory policy for our hardware. If you have
+> > a alpha2 map you should disregard the country IE. If you have a world regdom
+> > you can follow the IE (but not enable more). Technically I think that without
+> > this things may work now to respect the original driver stuff though with the
+> > new orig_* changes, will need to test.
 > 
->> rate     throughput  ewma prob   this prob  this succ/attempt   success
->> attempts
->>      1         0.2       29.8       12.5          1(  8)         51
->> 86
->>      2         0.4       22.6       14.2          0(  0)          6
->> 25
->>   P  5.5       2.7       54.2      100.0          0(  0)         41
->> 109
->>     11         1.9       20.5       12.5          0(  0)          6
->> 30
->>      6         2.1       38.4       20.0          0(  0)          7
->> 24
->>      9         2.0       24.8        8.3          0(  0)          6
->> 25
->>     12         2.4       21.9       12.5          0(  0)          6
->> 52
->>     18         3.2       19.9       12.5          0(  0)          6
->> 44
->>     24         4.7       22.2       12.5          0(  0)         15
->> 109
->>     36         4.4       14.5        9.0          0(  0)        495
->> 2036
->>  t  48         5.2       13.4       12.5          0(  0)        209
->> 1220
->> T   54         8.6       19.8       14.2          1(  7)        556
->> 4514
->> 
->> But It still is a little to optimistic. But I supose is the algorithm
->> fault. It gets a little laggy and I have to limit the rate to 11Mbps.
->> 
->> If I do that the conection works perfect.
->> 
->> But the algorithm is working, maybe its just how it should work.
->> What do you think?
-> 
-> The losses for all rates seem to be a little high, and I plan to see if he can change
-> channels, but I would like an expert's analysis of these data.
-I believe that it's not minstrel's fault. According to the information that
-I have about RTL8187L, the chip implements rate fallback. If the chip changes
-rates during retransmissions, the status information the way you gather it
-will not be accurate and will trick minstrel into believing that higher rates
-actually work (which in fact they don't). 
-Please do some transmissions at 54M and run a monitor mode capture on a different
-card to see if it changes the rate during transmission and how frequently it
-uses one rate before falling back (if indeed my theory is correct).
-This information could be used to provide some more accurate feedback through
-multi-rate retry status information.
+> I think it should work w/o this, yeah, and I also think we should follow
+> the 11d hint if it restricts us further rather than just ignoring it.
 
-- Felix
+I concur, will test (with OLD_REG and without it, jeesh).
+
+  Luis
