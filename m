@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:59976 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472AbZAJCNx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 21:13:53 -0500
-Message-ID: <20090110021351.MHLV4.64591.root@hrndva-web24-z02> (sfid-20090110_031357_520651_FE8ADF90)
-Date: Fri, 9 Jan 2009 21:13:51 -0500
-From: <lmage11@twcny.rr.com>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Subject: Re: Help debugging unexpected disassociations?
-Cc: linux-wireless@vger.kernel.org
+Received: from mail.atheros.com ([12.36.123.2]:46713 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755432AbZAPQLF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 11:11:05 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:11:05 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18800.45259.999815.869498@gargle.gargle.HOWL> (sfid-20090116_171112_805282_0911EB5B)
+Date: Fri, 16 Jan 2009 21:37:39 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 0/9] ath9k driver updates
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Even if you strip away privacy info (and put in xx.yy.zz) it is still
-> better than "read my mind and guess my problem".
+John,
 
-Again I REALLY think that I wasn't asking that. I'm sorry
-you interpreted it that way.
+A few driver cleanups/fixes.
+This series will apply over the 11 patch series by Gabor Juhos.
 
-The configuration for the AP I'm having trouble with looks basically
-like this:
+Sujith
 
-network={
-    ssid="MySSID"
-    psk="mypsk"
-}
+Sujith (9):
+  ath9k: rateCodeToIndex is not used, remove it
+  ath9k: Update short guard interval in rate control
+  ath9k: Reorganize code in xmit.c
+  ath9k: Remove ath_tx_stopdma and call ath9k_hw_stoptxdma directly
+  ath9k: Merge queue draining functions
+  ath9k: Add a helper function to wake mac80211 queues
+  ath9k: Handle holding descriptor in TX completion properly
+  ath9k: Revamp TX aggregation
+  ath9k: Cleanup buffer type assignment
 
-That's really it.
+ drivers/net/wireless/ath9k/beacon.c |    2 +-
+ drivers/net/wireless/ath9k/core.h   |   20 +-
+ drivers/net/wireless/ath9k/main.c   |    8 +-
+ drivers/net/wireless/ath9k/rc.c     |   17 +-
+ drivers/net/wireless/ath9k/rc.h     |    1 -
+ drivers/net/wireless/ath9k/xmit.c   | 2859 +++++++++++++++--------------------
+ 6 files changed, 1260 insertions(+), 1647 deletions(-)
 
-> For example, this is how my deauth looks like, when NetworkManager
-> cuts the connectiion, in preparation for
-> suspending to RAM:
-> 
-> wlan2: deauthenticating by local choice (reason=3)
-
-Yet again, I do not see this.
-
-> Also, it is always useful to quote versions of relevant software -
-> what version of wpa_supplicant, and networkmanager you are using; or
-> even what distribution you are using, and hardware (64-bit, 32-bit).
-> You have written 3 times and added no new info.
-
-You need only ask. :)
-
-I am using wpa_supplicant 0.5.7. I am aware that this is a really old version,
-and I can try updating it if you think that would make a difference. I am running
-on a Thinkpad T61, which is 64-bit. I think I already said which chip I'm using,
-but I'll say it again. It's an IWL4965.
-
-Ari
