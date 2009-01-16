@@ -1,114 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:19182 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755193AbZAPWGt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44828 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbZAPJYV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 17:06:49 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so915571fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 14:06:46 -0800 (PST)
-Message-ID: <3ace41890901161406r591eb519o44b41efa3d36295c@mail.gmail.com> (sfid-20090116_230653_270339_2DEB2D5C)
-Date: Fri, 16 Jan 2009 22:06:46 +0000
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: garbaged AP mac address in dmesg in wireless-testing?
-Cc: "Hauke Mehrtens" <hauke@hauke-m.de>,
-	"Kalle Valo" <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090116192046.GD10037@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <3ace41890901160907w2d04da91r61744477ac64e018@mail.gmail.com>
-	 <20090116183826.GC10037@tuxdriver.com> <87ocy7xejp.fsf@litku.valot.fi>
-	 <4970DC58.3000507@hauke-m.de> <20090116192046.GD10037@tuxdriver.com>
+	Fri, 16 Jan 2009 04:24:21 -0500
+Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
+	disablement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Np4nashr1hgSEozMclhi"
+Date: Fri, 16 Jan 2009 10:23:47 +0100
+Message-Id: <1232097827.3854.25.camel@johannes> (sfid-20090116_102426_801706_072226B5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2009 at 7:20 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Fri, Jan 16, 2009 at 08:13:28PM +0100, Hauke Mehrtens wrote:
->> Kalle Valo wrote:
->> > "John W. Linville" <linville@tuxdriver.com> writes:
->> >
->> >> On Fri, Jan 16, 2009 at 05:07:50PM +0000, Hin-Tak Leung wrote:
->> >>> Since a few days ago, my dmesg is looking like this - instead of the
->> >>> older AA:BB:CC:DD:EE:FF form
->> >>> with the mac address of the AP.
->> >>> That ffff88* looks like a pointer/address to me? Is this change intentional?
->> >>>
->> >>> --------------
->> >>> wlan2 direct probe responded
->> >>> wlan2: authenticate with AP ffff880070995aa0
->> >>> wlan2: authenticated
->> >>> wlan2: associate with AP ffff880070995aa0
->> >>> wlan2: RX ReassocResp from ffff88001431f01a (capab=0x431 status=0 aid=1)
->> >>> wlan2: associated
->> >
->> > Works for me:
->> >
->> > [37125.111672] wlan0: authenticate with AP 00:12:17:e7:98:de
->> > [37125.113509] wlan0: authenticated
->> > [37125.113514] wlan0: associate with AP 00:12:17:e7:98:de
->> > [37125.115875] wlan0: RX AssocResp from 00:12:17:e7:98:de (capab=0x11 status=0 aid=1)
->> > [37125.115881] wlan0: associated
->> >
->> > This is on x86 32bit with iwl3945 and latest wireless-testing.
->> >
->> >> Odd...some problem with the "%pM" printk conversion?  What kernel
->> >> are you running?
->> >
->> > And on what architecture?
->> >
->>
->> I have got the same problem on x86_64 with rtl8187, kernel 2.6.27 and
->> compat-wireless-2008-01-16.
->>
->> [ 3064.480766] wlan0: authenticate with AP ffff8801291dfa20
->> [ 3064.482271] wlan0: authenticated
->> [ 3064.482275] wlan0: associate with AP ffff8801291dfa20
->> [ 3064.485021] wlan0: RX AssocResp from ffff88011128c01a (capab=0x411
->> status=0 aid=1)
->> [ 3064.485025] wlan0: associated
->
-> compat-wireless users are probably using kernels that have printk
-> implementations that do not understand "%pM".  QED. :-)
->
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
->
 
-2.6.28.1-9.rc2.fc10.x86_64 and yes, I am using compat-wireless ...
-what puzzles me is
-that the as-shipped modules have the mac addresses correctly.
+--=-Np4nashr1hgSEozMclhi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Okay, sorry for the noise. I did look at git blame and, when I saw the
-date of the lines with the
-%pM commits was two months ago, I didn't bother to look further, since
-the problem is very recent...
-I was looking in the right direction but just didn't look far enough.
+On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
+> When a channel is disabled there is no need to stuff it
+> with more flags.
 
-commit 0c68ae2605dbcf67414d8d1f19af93be44b355fb
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Mon Oct 27 15:56:10 2008 -0700
+> -	u32 flags;
+> +	u32 flags, rule_flags;
+>  	u32 max_bandwidth =3D 0;
+>  	const struct ieee80211_reg_rule *reg_rule =3D NULL;
+>  	const struct ieee80211_power_rule *power_rule =3D NULL;
+> @@ -913,15 +913,19 @@ static void handle_channel(struct wiphy *wiphy, enu=
+m ieee80211_band band,
+>  					"Country IE\n",
+>  					chan->center_freq, wiphy_name(wiphy));
+>  #endif
+> -			flags |=3D IEEE80211_CHAN_DISABLED;
+> -			chan->flags =3D flags;
+> +			chan->flags =3D IEEE80211_CHAN_DISABLED;
+>  		}
+>  		return;
+>  	}
+> =20
+>  	power_rule =3D &reg_rule->power_rule;
+> =20
+> -	chan->flags =3D flags | map_regdom_flags(reg_rule->flags);
+> +	rule_flags =3D map_regdom_flags(reg_rule->flags);
+> +	if (flags & IEEE80211_CHAN_DISABLED)
+> +		chan->flags =3D IEEE80211_CHAN_DISABLED;
+> +	else
+> +		chan->flags =3D flags | rule_flags;
 
-    mac80211: convert to %pM away from print_mac
+but why bother with more complicated code when adding a few more flags
+doesn't hurt?
 
-    Also remove a few stray DECLARE_MAC_BUF that were no longer
-    used at all.
+johannes
 
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: David S. Miller <davem@davemloft.net>
+--=-Np4nashr1hgSEozMclhi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
---------------------------------
-commit dd45c9cf687682c9ce256ab14bd8914db77410bb
-Author: Harvey Harrison <harvey.harrison@gmail.com>
-Date:   Mon Oct 27 15:47:12 2008 -0700
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-    printk: add %pM format specifier for MAC addresses
---------------
+iQIcBAABAgAGBQJJcFIYAAoJEKVg1VMiehFY3DQP/0oEM+xFr41QA+6zUWC2HNJg
+4bE312WnKv2IrREwODJq0y2i6HDkwwYjXfZ23IRQUNm04SwwDaIgp7+zOQ7L7Mi3
+AxBfBXnMsDHnrjhIRw5MAR9rwbiE05a0wF5MTMYZneJ7TIWYKUpRJ5L5xG1G26SN
+crApklpI47cpaGCW4AD9svPRxdCwCqMB8DHwAtsaf9iOzWbUuwKr1nMrBRPNNTnN
+XD2I9s+aH/mKcuCaT/yI7EuX9x92HjvlTGgxULpW3B91EuF8IivRsQo2IO9a5226
+4T3yCwSJPYUvS/ey5VC3dpzaRaWotSPqICu9Yak0SDw/2yr8jXuzXKLLiMdOE5qz
+KoopAHJ/5FuCv+B1TamZEbUtxhdoElBvJhcg8TsaguLMTgKTzXL4I89rXpq9kouM
+Y2LVbqzf6/YtBB+qnMD9sRkOs+NtvMYnQfSLLIj8ySgyjTrGIu50+m2FzGpAgpQJ
+HsGFP+HeNjO3mrR4+ncipBJYr0VjVNntAEMYl8ZpZkp6K1TZZ3qQAcTHDTDQbn4w
+a3qld7wumbBkpIWZu25p80n36aetNmJ1QM166nFQaDtsA+p/vyr/FoJlwB5MKy9P
+N976IGjJ1664WmnUNV9Urk3WhwRlcHq11AVDyKBLtZKTKBRVEPkRHU95Z40YGARb
+Vl/u3LjXx1oadLd9LMIH
+=13AG
+-----END PGP SIGNATURE-----
 
-and it is in lib/vsprintf.c ...
+--=-Np4nashr1hgSEozMclhi--
 
-But I guess ideally compat-wireless should patch this in to somewhere
-under net/mac80211? (that's the whole point
-of compat-wireless, to run with older kernels?)
