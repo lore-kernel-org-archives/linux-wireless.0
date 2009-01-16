@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:33904 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736AbZAIX24 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44257 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756085AbZAPJb3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 18:28:56 -0500
-Date: Fri, 9 Jan 2009 15:25:09 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: more kernel-doc fixes
-Message-Id: <20090109152509.47d11049.randy.dunlap@oracle.com> (sfid-20090110_002902_165001_E20D2F1B)
+	Fri, 16 Jan 2009 04:31:29 -0500
+Subject: p54 build failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chr <chunkeey@web.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <E1LNgyq-0006iZ-0M@sipsolutions.net>
+References: <E1LNgyq-0006iZ-0M@sipsolutions.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vT9LEAMhsaPfwJ/izajJ"
+Date: Fri, 16 Jan 2009 10:30:59 +0100
+Message-Id: <1232098259.3854.39.camel@johannes> (sfid-20090116_103134_691552_6C8ADA89)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Fix (delete) more mac80211 kernel-doc:
+--=-vT9LEAMhsaPfwJ/izajJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Warning(linux-2.6.28-git13//include/net/mac80211.h:375): Excess struct/union/enum/typedef member 'retry_count' description in 'ieee80211_tx_info'
-Warning(linux-2.6.28-git13//net/mac80211/sta_info.h:308): Excess struct/union/enum/typedef member 'last_txrate' description in 'sta_info'
+On Fri, 2009-01-16 at 06:15 +0100, Cron Daemon wrote:
+>=20
+> +drivers/net/wireless/p54/p54spi.h:28:11: error: unable to open 'mach/boa=
+rd.h'
+> +make[2]: *** [drivers/net/wireless/p54/p54spi.o] Error 1
+> +make[1]: *** [drivers/net/wireless/p54] Error 2
+> +make: *** [_module_drivers/net/wireless] Error 2
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- include/net/mac80211.h  |    1 -
- net/mac80211/sta_info.h |    1 -
- 2 files changed, 2 deletions(-)
+p54spi only depends on SPI_MASTER, but includes arm-specific files.
 
---- linux-2.6.28-git13.orig/include/net/mac80211.h
-+++ linux-2.6.28-git13/include/net/mac80211.h
-@@ -322,7 +322,6 @@ struct ieee80211_tx_rate {
-  * @control: union for control data
-  * @status: union for status data
-  * @driver_data: array of driver_data pointers
-- * @retry_count: number of retries
-  * @ampdu_ack_len: number of aggregated frames.
-  * 	relevant only if IEEE80211_TX_STATUS_AMPDU was set.
-  * @ampdu_ack_map: block ack bit map for the aggregation.
---- linux-2.6.28-git13.orig/net/mac80211/sta_info.h
-+++ linux-2.6.28-git13/net/mac80211/sta_info.h
-@@ -195,7 +195,6 @@ struct sta_ampdu_mlme {
-  * @tx_packets: number of RX/TX MSDUs
-  * @tx_bytes: number of bytes transmitted to this STA
-  * @tx_fragments: number of transmitted MPDUs
-- * @last_txrate: description of the last used transmit rate
-  * @tid_seq: per-TID sequence numbers for sending to this STA
-  * @ampdu_mlme: A-MPDU state machine state
-  * @timer_to_tid: identity mapping to ID timers
+johannes
+
+--=-vT9LEAMhsaPfwJ/izajJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJcFPQAAoJEKVg1VMiehFYlbcP/iispe/13NVO+vlaCZf06oH6
+JNljDFX7HvtKsLdXc6JZzAz25Q1oXX7fZ7XKnwKPbpKmrtwul+V5Yd4ywLd+lqmZ
+qE1L7jOUCfkd9AVAbWeCkhglKdvj4GsumJDLOxA2xoAjtJ3WsWbX4ZAaMkiTN3gs
+D0awVCLKLbldFtcp1vC9PY82Rkp0I0v7KY+4yMm5z69cQWyy0h5aCkbnOEhurppr
+2KQQnsXLA2l7xD2o4uTqcJUg0gfXmcXF1OAZKej5UvhD8DNrmcg5F82/fXzSiFbB
+HTrhKIgpxb69GHsR+jfEAI+WRG41ray4I4+0UgveMltKzo+vuJH/VxYQOfFvQkA9
++yD5fYp2qPZKDAURjWkW5lJ+5TZ2HRnlhA2VCLBaNx7OSq4dlPuR8p1IvVn65lXk
+S2QC7l24NMSsj+7QdaEG3aKVq1lCc6TaOrEMN20X01ZVDeJOrxsA7quXUwGYAa2B
+0qDppdq3WPSfSsbSSnslUi9dO59hNBPjQwNJZkZXywGBSxZqdwK1k7ZQMifYBP4c
+EJ1GwJ8B2MbZp+HSUQ9zmA3Er/5wtAnyJ88JQnAALnk5/2XVTq2wyhYybq7ssH5k
+M4NLq/4sr03zPM/IJv43f4otJSRC/kvhN9HizuVKlwpfDZcUw2IEUJ8gEhZsu690
+ysc5MopT8cejL3l4YWFf
+=rMGt
+-----END PGP SIGNATURE-----
+
+--=-vT9LEAMhsaPfwJ/izajJ--
+
