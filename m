@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43238 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:54294 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753934AbZAVXRY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 18:17:24 -0500
+	id S1755925AbZAPSwl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 13:52:41 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 15:17:24 -0800
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 10:52:41 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+To: <Jouni.Malinen@atheros.com>, <Jouni.Malinen@atheros.com>,
+	<johannes@sipsolutions.net>, <linville@tuxdriver.com>
 CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: simplify regulatory code
-Date: Thu, 22 Jan 2009 15:16:48 -0800
-Message-ID: <1232666208-26925-1-git-send-email-lrodriguez@atheros.com> (sfid-20090123_001729_771049_09786969)
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: do not TX injected frames when not allowed
+Date: Fri, 16 Jan 2009 10:52:12 -0800
+Message-ID: <1232131932-25044-1-git-send-email-lrodriguez@atheros.com> (sfid-20090116_195246_662337_C460CDDB)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that cfg80211 has its own regulatory infrastructure we can
-condense ath9k's regulatory code considerably. We only keep data
-we need to provide our own regulatory_hint(), reg_notifier() and
-information necessary for calibration.
-
-Atheros hardware supports 12 world regulatory domains, since these
-are custom we apply them through the the new wiphy_apply_custom_regulatory().
-Although we have 12 we can consolidate these into 5 structures based on
-frequency and apply a different set of flags that differentiate them on
-a case by case basis through the reg_notifier().
-
-If CRDA is not found our own custom world regulatory domain is applied,
-this is identical to cfg80211's except we enable passive scan on most
-frequencies.
+Monitor mode is able to TX by using injected frames. We should
+not allow injected frames to be sent unless allowed by regulatory rules.
+Since AP mode uses a monitor interfaces to transmit management frames
+we have to take care to not break AP mode as well. Since hostapd
+respects 'no-ibss|radar' flags we can make use of the same policy
+statically for checking when to disable injected frames. Once AP
+mode supports radar detection we should somehow distinguish a
+regular monitor mode from an AP's monitor interface.
 
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ net/mac80211/tx.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-This patch seems to be too big (137783 bytes) for linux-wireless so
-here a URL to it if you want to wget it:
-
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-01-22/ath9k-simplify-regulatory-code.patch
-
-This patch should be applied once the 12 patches from the new series
-"cfg80211/mac80211: few fixes/enhancements for regulatory" have been
-merged as it depends on a few new cfg80211 helpers from there.
-
- drivers/net/wireless/ath9k/ath9k.h       |   44 +-
- drivers/net/wireless/ath9k/calib.c       |   41 +-
- drivers/net/wireless/ath9k/core.h        |    1 -
- drivers/net/wireless/ath9k/hw.c          |   63 +-
- drivers/net/wireless/ath9k/main.c        |  263 ++--
- drivers/net/wireless/ath9k/regd.c        | 1188 +++++-------------
- drivers/net/wireless/ath9k/regd.h        |  181 +---
- drivers/net/wireless/ath9k/regd_common.h | 2058 +++++-------------------------
- 8 files changed, 809 insertions(+), 3030 deletions(-)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 955f186..276a666 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -899,6 +899,16 @@ __ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
+ 
+ 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
+ 
++	/* Frame injection is not allowed if beaconing is not allowed
++	 * or if we need radar detection. Beaconing is usually not allowed when
++	 * the mode or operation (Adhoc, AP, Mesh) does not support DFS.
++	 * Since AP mode uses monitor interafaces to inject/TX management
++	 * frames once we have radar detection support we can change this
++	 * here */
++	if ((tx->channel->flags & (IEEE80211_CHAN_NO_IBSS |
++	    IEEE80211_CHAN_RADAR)))
++		return TX_DROP;
++
+ 	skb->do_not_encrypt = 1;
+ 	tx->flags &= ~IEEE80211_TX_FRAGMENTED;
+ 
+-- 
+1.6.1.rc3.51.g5832d
 
