@@ -1,46 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:53963 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752667AbZA2Rwc (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36815 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbZAPUhz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 12:52:32 -0500
-Received: by ewy14 with SMTP id 14so71249ewy.13
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Jan 2009 09:52:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
-References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
-Date: Thu, 29 Jan 2009 17:52:30 +0000
-Message-ID: <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com> (sfid-20090129_185237_313508_F802D261)
-Subject: Re: rtl8187 wireless issues
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 16 Jan 2009 15:37:55 -0500
+Subject: Re: [PATCH 03/13] cfg80211: add wiphy_apply_custom_regulatory()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090116163646.GG29609@tesla>
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
+	 <1232097659.3854.20.camel@johannes>  <20090116163646.GG29609@tesla>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8xVh2pmbKwHytR0p8xFi"
+Date: Fri, 16 Jan 2009 21:37:50 +0100
+Message-Id: <1232138270.3745.11.camel@johannes> (sfid-20090116_213759_885123_EA2DF750)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 29, 2009 at 12:46 PM, P.G. Richardson
-<p.g.richardson@phantomjinx.co.uk> wrote:
-> id: 0x8189 chipset: rtl8187b
 
-That's an older rtl8187b - there is no point trying mainline kernels,
-as the interesting development are happening
-in wireless-testing and takes a few months to get to mainline. i.e.
-trying 2.6.29 won't help. Can you download the current compat-wireless
-tar ball (http://linuxwireless.org/en/users/Download) and give it a
-try?
+--=-8xVh2pmbKwHytR0p8xFi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Also can you show your "dmesg | grep rtl" result ?
+On Fri, 2009-01-16 at 08:36 -0800, Luis R. Rodriguez wrote:
 
-The "can't ping" , etc behavior with multiple network interfaces is
-normal and quite simple to work around - you need to read up on
-"default route" and the "route" command.
+> > Also, I don't think calling the notifier is
+> > appropriate since the driver just called this function.
+>=20
+> Calling the notifier is why we want REGDOM_SET_BY_PROBE. We also technica=
+lly
+> do not need to call the notifier unless we want to allow for tricks like =
+the
+> one I am using in ath9k to condense the regulatory domains to 5 based on =
+frequency
+> and to let a helper sort out the flags. Without this I believe we'd be fo=
+rced to
+> use 12 full blown regds.
 
-Are you using NetworkManager or configuring by hand? If you are not
-using NetworkManager, you need to set up dhcp manually. On 2nd
-thought, I am suprised you have problem with ping, because if you are
-using NetworkManager it should switch the default route, etc if you
-choose to switch to the wired interface.
+I just don't see why the driver couldn't be like this:
 
-(You have come to the right place - Larry and Herton and I are the
-current maintainers of the rtl8187 driver).
+static void helper(...) {...}
+
+static void ath9k_reg_notifier(...) {
+	helper(...)
+}
+
+static void ath9k_something(...) {
+	apply_custom_regulatory(..)
+	helper(..)
+}
+
+so cfg80211 doesn't call back into it but it does it itself. It's
+usually deadlock prone if some called code calls back into the caller
+code.
+
+johannes
+
+--=-8xVh2pmbKwHytR0p8xFi
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJcPAcAAoJEKVg1VMiehFYgA4P+gPs02SE6/XYi2sjQSGhMHPw
+cP6vgM/c4EQqWPMvU76Nr6SjaKiCiy7XTu58ierS3YLLV0fBmjtlDu+O4u55Tp1U
+pyEUjsz8mgoYLzQoBki4RqqJj5VqWkNUW1cTvqVIuZs7cTA4IXbbtocN28Q9h9zR
+5pn+Ztc5jDKaSyTsw3uOdKXa1YbI+Kum/8OPHKOMM+S5u0bT8JPfPH4fFrEn29II
+El+wqf+UVB5Xr8YthA4RaHxS2uuquNtzwYIN6oJOXrJ6KFq4mL0vvM4zH07G5Bpl
+w3D6JIFIEub9l/ymWg44cE3kdT6Om8RCCwNxPd1hw3aZ/BdDaWCvyKHuOpuBL2U4
+zKxwu4CBehm9x+xr8DO+3hP5D3J7vWPmRQs2HHfgRvdhe8PYKO3r12zdUVb/RlDU
+MBjDqijVjp89WCLb2EHbsuBHl23x0Gv/t0peLEJXPI8TPNvbKXifphm6H8Y0Mg2B
+NgUCYyGxX8OpxaS4FZZsYWe9qx4M5o3iKjejXNdRMQ3uzqgoBO6FAd69jm2N2luZ
+7mKc3UlsoElJJi7n731jv0eBh6Jto05gGKV9X4UbdgIrzpGgkquCwzURf/lJsjo2
++bELwywlGiRcsBFtCB/3v+oS47fcd4t5shcodIP293H47BkYAUzVTkwG/7l8GW13
+I7M6T0ihU4IeuTDAGCcC
+=rU8x
+-----END PGP SIGNATURE-----
+
+--=-8xVh2pmbKwHytR0p8xFi--
+
