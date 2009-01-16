@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49115 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755354AbZADRc1 (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:57964 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756576AbZAPVuo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 12:32:27 -0500
-Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless
-	stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linville@tuxdriver.com, davem <davem@davemloft.net>
-In-Reply-To: <20090104174339.GX496@one.firstfloor.org>
-References: <20090104151819.GA6590@basil.nowhere.org>
-	 <1231085150.3296.3.camel@johannes>
-	 <20090104162826.GT496@one.firstfloor.org>
-	 <1231087288.3296.15.camel@johannes>
-	 <20090104174339.GX496@one.firstfloor.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VZmzkUQHR0WHY9gWfu8M"
-Date: Sun, 04 Jan 2009 18:33:08 +0100
-Message-Id: <1231090388.3296.17.camel@johannes> (sfid-20090104_183231_335297_4928CA8A)
-Mime-Version: 1.0
+	Fri, 16 Jan 2009 16:50:44 -0500
+Date: Fri, 16 Jan 2009 19:50:40 -0200
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Werner Almesberger <werner@openmoko.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rfkill: life after driver death
+Message-ID: <20090116215040.GF5719@khazad-dum.debian.net> (sfid-20090116_225048_786985_EAD34CAF)
+References: <20090116195247.GC13290@almesberger.net> <20090116202759.GD5719@khazad-dum.debian.net> <20090116205905.GR13288@almesberger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090116205905.GR13288@almesberger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 16 Jan 2009, Werner Almesberger wrote:
+> But then we're a few sysfs interfaces short. Is there any specific
+> reason why there is a control for setting the global default state
+> (/sys/module/rfkill/parameters) but there are no controls for:
+> 
+> - setting the default state by type,
+> - setting the current state by type, and
+> - setting the current state ?
 
---=-VZmzkUQHR0WHY9gWfu8M
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, they are sitting in my queue, but I dislike them so much I always find
+a reason not to post them and do something else in thinkpad-acpi, instead...
 
-On Sun, 2009-01-04 at 18:43 +0100, Andi Kleen wrote:
+I will see if I can bring myself to post them during the weekend.
 
-> > we need to do is figure out is why the skb has a wrong truesize.
->=20
-> Because it was expanded without truesize being adjusted (see my
-> original mail)=20
+Anyway, right now access to those is only possible through rfkill-input and
+input-events (for those types that HAVE an input event related to them...).
 
-So why is this not making trouble with all the other users?
+> > But there are other questions: why?  You *NEED* somewhere to attach the
+> > rfkill kobjects to, and that somewhere can't very well be a device that is
+> > getting hotunplugged, as it will disappear.  So, you will need something
+> > like the platform device you used, anyway...
+> 
+> In my scenario, a driver calling rfkill_detach would say "I might be
+> back".
+> 
+> But I think I like the idea of making the per-type controls more
+> powerful.
 
-johannes
+Then, it is best that we stick with what already is there (the per-type
+control).
 
---=-VZmzkUQHR0WHY9gWfu8M
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJYPLRAAoJEKVg1VMiehFYhCcQAMM1Q5cs0I/SliK7q0NcReSk
-UkS07dWgZCMFFoXAoWi0n6i+8mQapbbcpWIaRBQD1ClMAmYAxGxgWU0EuKqDyQHR
-yznGCxdaJPsnLAV2YeS4uxywjce8YCnNJF8VbHnifSUfaDvrakIUEIbutwFaQpiP
-1miqlflQKs5z2B8lyVHIuHelM4XUHttuk3KCUyax1XF8uX8+NNmiYwH+vCdtEjtF
-pNqdBdbAcmUCeVG+UZLcR3+b5IsMNyvxMDg9G5aJfmOU+3JfrLcbB7hvmx9qMHp9
-kDAQL3BFaOxBcxcQSFjCmUk/py5Uv3K7kKyf4WdvSTwczb1a6TCS2pO/GjMXQjkj
-nbyQabhh69ocGwdtMW0NsB7KhfKdF8U04A77DSuvl5Kq5EpFFlPnsjvIguH2582i
-eCCh0x/5t6k1uY7VrAN2v6q0EaTvI4rjynNPCCK4PzuqP3T9HKAeAKOIgjs6/G7B
-wu53B3rGftMSH38fm0cLGbaEuOCe6Spbcm8tO7ZbvF82tP3VMPYt+KXhBpC7U7Bc
-yo5njm8RO/xhjBDvw3X5PtH95JJQkYGPOmpBr72DmcgPo5kX1zgJ67Yqx7EE+p1T
-3UBy+9IDmncxZkNK7Pbuyum93XCqJOdIq1bWQojnF/vSlVEB/8OB5LRJ+ONNB7/U
-Vz2uF45v9EC3/NkepvKP
-=3ew7
------END PGP SIGNATURE-----
-
---=-VZmzkUQHR0WHY9gWfu8M--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
