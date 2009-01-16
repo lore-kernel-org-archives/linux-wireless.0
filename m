@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:5104 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758065AbZASL5E (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:54829 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752625AbZAPSqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 06:57:04 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so496926eye.37
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 03:57:01 -0800 (PST)
+	Fri, 16 Jan 2009 13:46:35 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] p54: fix p54_set_key's return code
+Date: Fri, 16 Jan 2009 19:46:28 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-Date: Mon, 19 Jan 2009 13:50:37 +0200
-Message-ID: <eb3ff54b0901190350o7f43e8b9w6c944779484170f6@mail.gmail.com> (sfid-20090119_125709_449239_37273D39)
-Subject: [PATCH 3/4] mac80211: trivial documentation fix (mesh_nexthop_lookup()).
-From: Rami Rosen <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	luisca@cozybit.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200901161946.28459.chunkeey@web.de> (sfid-20090116_194638_718580_98D716E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the documentation of mesh_nexthop_lookup() in mesh_hwmp.c.
+p54 doesn't support AES-128-CMAC offload.
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+This patch will fix the noisy mac80211 warnings, when 802.11w is enabled: 
+mac80211-phy189: failed to set key (4, ff:ff:ff:ff:ff:ff) to hardware (-22)
+mac80211-phy189: failed to set key (5, ff:ff:ff:ff:ff:ff) to hardware (-22)
 
---
-(wireless-testing)
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index 635b423..d706480 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -2355,7 +2355,7 @@ static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
+ 			algo = P54_CRYPTO_AESCCMP;
+ 			break;
+ 		default:
+-			return -EINVAL;
++			return -EOPNOTSUPP;
+ 		}
+ 	}
+ 
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 3f1785c..4f862b2 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -759,7 +759,7 @@ enddiscovery:
- }
-
- /**
-- * ieee80211s_lookup_nexthop - put the appropriate next hop on a mesh frame
-+ * mesh_nexthop_lookup - put the appropriate next hop on a mesh frame
-  *
-  * @skb: 802.11 frame to be sent
-  * @sdata: network subif the frame will be sent through
