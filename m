@@ -1,115 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:55862 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753301AbZA2TGW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 14:06:22 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 4/7] iwlwifi: correct API command overlap
-Date: Thu, 29 Jan 2009 11:09:14 -0800
-Message-Id: <1233256157-21290-5-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200628_026595_C7A767FD)
-In-Reply-To: <1233256157-21290-4-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
- <1233256157-21290-2-git-send-email-reinette.chatre@intel.com>
- <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
- <1233256157-21290-4-git-send-email-reinette.chatre@intel.com>
+Received: from fg-out-1718.google.com ([72.14.220.158]:19182 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755193AbZAPWGt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 17:06:49 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so915571fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 14:06:46 -0800 (PST)
+Message-ID: <3ace41890901161406r591eb519o44b41efa3d36295c@mail.gmail.com> (sfid-20090116_230653_270339_2DEB2D5C)
+Date: Fri, 16 Jan 2009 22:06:46 +0000
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: garbaged AP mac address in dmesg in wireless-testing?
+Cc: "Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Kalle Valo" <kalle.valo@iki.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090116192046.GD10037@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <3ace41890901160907w2d04da91r61744477ac64e018@mail.gmail.com>
+	 <20090116183826.GC10037@tuxdriver.com> <87ocy7xejp.fsf@litku.valot.fi>
+	 <4970DC58.3000507@hauke-m.de> <20090116192046.GD10037@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+On Fri, Jan 16, 2009 at 7:20 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Fri, Jan 16, 2009 at 08:13:28PM +0100, Hauke Mehrtens wrote:
+>> Kalle Valo wrote:
+>> > "John W. Linville" <linville@tuxdriver.com> writes:
+>> >
+>> >> On Fri, Jan 16, 2009 at 05:07:50PM +0000, Hin-Tak Leung wrote:
+>> >>> Since a few days ago, my dmesg is looking like this - instead of the
+>> >>> older AA:BB:CC:DD:EE:FF form
+>> >>> with the mac address of the AP.
+>> >>> That ffff88* looks like a pointer/address to me? Is this change intentional?
+>> >>>
+>> >>> --------------
+>> >>> wlan2 direct probe responded
+>> >>> wlan2: authenticate with AP ffff880070995aa0
+>> >>> wlan2: authenticated
+>> >>> wlan2: associate with AP ffff880070995aa0
+>> >>> wlan2: RX ReassocResp from ffff88001431f01a (capab=0x431 status=0 aid=1)
+>> >>> wlan2: associated
+>> >
+>> > Works for me:
+>> >
+>> > [37125.111672] wlan0: authenticate with AP 00:12:17:e7:98:de
+>> > [37125.113509] wlan0: authenticated
+>> > [37125.113514] wlan0: associate with AP 00:12:17:e7:98:de
+>> > [37125.115875] wlan0: RX AssocResp from 00:12:17:e7:98:de (capab=0x11 status=0 aid=1)
+>> > [37125.115881] wlan0: associated
+>> >
+>> > This is on x86 32bit with iwl3945 and latest wireless-testing.
+>> >
+>> >> Odd...some problem with the "%pM" printk conversion?  What kernel
+>> >> are you running?
+>> >
+>> > And on what architecture?
+>> >
+>>
+>> I have got the same problem on x86_64 with rtl8187, kernel 2.6.27 and
+>> compat-wireless-2008-01-16.
+>>
+>> [ 3064.480766] wlan0: authenticate with AP ffff8801291dfa20
+>> [ 3064.482271] wlan0: authenticated
+>> [ 3064.482275] wlan0: associate with AP ffff8801291dfa20
+>> [ 3064.485021] wlan0: RX AssocResp from ffff88011128c01a (capab=0x411
+>> status=0 aid=1)
+>> [ 3064.485025] wlan0: associated
+>
+> compat-wireless users are probably using kernels that have printk
+> implementations that do not understand "%pM".  QED. :-)
+>
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+>
 
-Correct the API commands where same command id used for two different
-commands. Update max api versions for affected devices.
+2.6.28.1-9.rc2.fc10.x86_64 and yes, I am using compat-wireless ...
+what puzzles me is
+that the as-shipped modules have the mac addresses correctly.
 
-TX_ANT_CONFIGURATION_CMD was already using id 0x98, so
-REPLY_TX_POWER_DBM_CMD moved to 0x95
+Okay, sorry for the noise. I did look at git blame and, when I saw the
+date of the lines with the
+%pM commits was two months ago, I didn't bother to look further, since
+the problem is very recent...
+I was looking in the right direction but just didn't look far enough.
 
-Older API interfaces may used original value so V1 defines provided.
+commit 0c68ae2605dbcf67414d8d1f19af93be44b355fb
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Mon Oct 27 15:56:10 2008 -0700
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-100.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    9 ++++++++-
- drivers/net/wireless/iwlwifi/iwl-6000.c     |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-commands.h |    4 +++-
- 4 files changed, 14 insertions(+), 5 deletions(-)
+    mac80211: convert to %pM away from print_mac
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-100.c b/drivers/net/wireless/iwlwifi/iwl-100.c
-index a5df931..11d206a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-100.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-100.c
-@@ -46,7 +46,7 @@
- #include "iwl-5000-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL100_UCODE_API_MAX 1
-+#define IWL100_UCODE_API_MAX 2
- 
- /* Lowest firmware API version supported */
- #define IWL100_UCODE_API_MIN 1
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index ee58ddb..5b59286 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -1411,12 +1411,19 @@ static int iwl5000_send_rxon_assoc(struct iwl_priv *priv)
- static int  iwl5000_send_tx_power(struct iwl_priv *priv)
- {
- 	struct iwl5000_tx_power_dbm_cmd tx_power_cmd;
-+	u8 tx_ant_cfg_cmd;
- 
- 	/* half dBm need to multiply */
- 	tx_power_cmd.global_lmt = (s8)(2 * priv->tx_power_user_lmt);
- 	tx_power_cmd.flags = IWL50_TX_POWER_NO_CLOSED;
- 	tx_power_cmd.srv_chan_lmt = IWL50_TX_POWER_AUTO;
--	return  iwl_send_cmd_pdu_async(priv, REPLY_TX_POWER_DBM_CMD,
-+
-+	if (IWL_UCODE_API(priv->ucode_ver) == 1)
-+		tx_ant_cfg_cmd = REPLY_TX_POWER_DBM_CMD_V1;
-+	else
-+		tx_ant_cfg_cmd = REPLY_TX_POWER_DBM_CMD;
-+
-+	return  iwl_send_cmd_pdu_async(priv, tx_ant_cfg_cmd,
- 				       sizeof(tx_power_cmd), &tx_power_cmd,
- 				       NULL);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 1672a98..af70070 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -46,8 +46,8 @@
- #include "iwl-5000-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL6000_UCODE_API_MAX 1
--#define IWL6050_UCODE_API_MAX 1
-+#define IWL6000_UCODE_API_MAX 2
-+#define IWL6050_UCODE_API_MAX 2
- 
- /* Lowest firmware API version supported */
- #define IWL6000_UCODE_API_MIN 1
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index e49415c..77f32ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -144,9 +144,11 @@ enum {
- 	WHO_IS_AWAKE_NOTIFICATION = 0x94,	/* not used */
- 
- 	/* Miscellaneous commands */
-+	REPLY_TX_POWER_DBM_CMD = 0x95,
- 	QUIET_NOTIFICATION = 0x96,		/* not used */
- 	REPLY_TX_PWR_TABLE_CMD = 0x97,
--	REPLY_TX_POWER_DBM_CMD = 0x98,
-+	REPLY_TX_POWER_DBM_CMD_V1 = 0x98,	/* old version of API */
-+	TX_ANT_CONFIGURATION_CMD = 0x98,	/* not used */
- 	MEASURE_ABORT_NOTIFICATION = 0x99,	/* not used */
- 
- 	/* Bluetooth device coexistence config command */
--- 
-1.5.4.3
+    Also remove a few stray DECLARE_MAC_BUF that were no longer
+    used at all.
 
+    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+
+--------------------------------
+commit dd45c9cf687682c9ce256ab14bd8914db77410bb
+Author: Harvey Harrison <harvey.harrison@gmail.com>
+Date:   Mon Oct 27 15:47:12 2008 -0700
+
+    printk: add %pM format specifier for MAC addresses
+--------------
+
+and it is in lib/vsprintf.c ...
+
+But I guess ideally compat-wireless should patch this in to somewhere
+under net/mac80211? (that's the whole point
+of compat-wireless, to run with older kernels?)
