@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33517 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759394AbZAGPbN (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:40039 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760093AbZAPRSo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 10:31:13 -0500
-Date: Wed, 7 Jan 2009 17:30:52 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: Re: [PATCH 12/14] mac80211: 802.11w - Optional software CCMP for
-	management frames
-Message-ID: <20090107153052.GA24894@jm.kir.nu> (sfid-20090107_163128_641236_7A217A8E)
-References: <20090107112346.369581673@atheros.com> <20090107112707.370907962@atheros.com> <1231330118.3545.28.camel@johannes> <20090107122427.GA20019@jm.kir.nu> <1231332428.3545.33.camel@johannes> <20090107140956.GA22424@jm.kir.nu> <1231340944.3545.38.camel@johannes>
+	Fri, 16 Jan 2009 12:18:44 -0500
+Message-ID: <4970C16E.6030107@gmail.com> (sfid-20090116_181850_979948_FBECB5AF)
+Date: Fri, 16 Jan 2009 09:18:38 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231340944.3545.38.camel@johannes>
+To: Paul Moore <paul.moore@hp.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	SE-Linux <selinux@tycho.nsa.gov>
+Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
+References: <496D759A.7010401@gmail.com> <200901151752.06622.paul.moore@hp.com> <dd18b0c30901151644q4578f7d6k3023cad6f05325dd@mail.gmail.com> <200901161109.27222.paul.moore@hp.com>
+In-Reply-To: <200901161109.27222.paul.moore@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 07, 2009 at 04:09:04PM +0100, Johannes Berg wrote:
+Paul Moore wrote:
+> On Thursday 15 January 2009 7:44:15 pm Justin Mattock wrote:
+>   
+>> On Thu, Jan 15, 2009 at 2:52 PM, Paul Moore <paul.moore@hp.com> wrote:
+>>     
+>>> Well, it is possible that /bin/sh points to a non-bash shell but
+>>> maybe not (I'm pretty sure the make command executes the scripts
+>>> with /bin/sh).  Either way, I checked in the fix to the SVN tree
+>>> earlier today so newer releases will have the fix; if needed I can
+>>> release a 0.19.1 or similar but I want to wait and see how
+>>> widespread the problem is ...
+>>>
+>>> --
+>>> paul moore
+>>> linux @ hp
+>>>       
+>> Cool, If I see anybody
+>> struggling, I point them to the
+>> fix you posted.
+>>     
+>
+> Great.  Also let me know, if this looks like it will be widespread 
+> problem I'll make a new release; I'd hate for people to have to patch 
+> the Makefile to get it to build ...
+>
+>   
+no problem.
+>> I also might be missing something, i.g.
+>> one of the boxes that gave this error I built
+>> with debootstrap, but then the other that gave this as well
+>> was built with nubuntu which seems more complete
+>> than debootstrap.
+>> but then maybe both are missing a package.
+>> (or it's a debian thing)
+>>     
+>
+> It could also be my rather poor understanding of bash and makefiles :)  
+> If anyone out there wants to take a look and offer an explanation or a 
+> better patch I'm more than happy to accept it.
+>
+>   
+here as well.
 
-> Or just adding it to nl80211, are we ever expecting to have pure wext
-> drivers with MFP capabilities??
+regards;
 
-Not that likely, I would assume. However, I would rather not start
-extending driver_wext.c in wpa_supplicant with nl80211 functionality and
-I don't see Network Manager moving away from hardcoding driver_wext
-anytime soon..
-
-> Generally, the thing is that we don't really want to require people to
-> manually enable MFP, but rather have NM set it to "enable whenever
-> possible". That seems not workable unless we know which driver/hw
-> supports it.
-
-Sure. Enabling optional MFP automatically whenever driver/hw supports it
-would be nice (there is a separate policy selection of requiring MFP and
-that's something that users will need to configure if they want it). For
-this feature, I would be fine having the optional-MFP configuration in
-wpa_supplicant mean that it will be disabled if driver does not support
-it, i.e., NM would not actually need to care and it could just always
-set ieee80211w=1 in wpa_supplicant configuration (or well, at this
-point, it would need to care a bit since wpa_supplicant would reject the
-configuration if it was not built with 802.11w support, but that is
-probably fine when done over dbus and not config file).
-
-As far as wpa_supplicant is concerned, I can make it determine this by
-trying to enable MFP mode at startup to figure out whether the driver is
-capable, so there is no need to add an explicit capability flag for this
-if we do not want to modify WEXT. For nl80211, we can add capability
-flag for MFP and then driver_nl80211.c can skip this validation step.
-However, we would still need to add a driver-mac80211 flag for
-indicating whether the driver supports MFP.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Justin P. Mattock
