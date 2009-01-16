@@ -1,134 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:55982 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530AbZASX2N (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:21004 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756320AbZAPWPh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 18:28:13 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54usb: fix nasty use after free
-Date: Tue, 20 Jan 2009 00:27:57 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Artur Skawina <art.08.09@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>
+	Fri, 16 Jan 2009 17:15:37 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so916810fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 14:15:35 -0800 (PST)
+Message-ID: <3ace41890901161415k3e0ecc0x93169b84b14c5a98@mail.gmail.com> (sfid-20090116_231542_292734_AE12B425)
+Date: Fri, 16 Jan 2009 22:15:35 +0000
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: garbaged AP mac address in dmesg in wireless-testing?
+Cc: "Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Kalle Valo" <kalle.valo@iki.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <3ace41890901161406r591eb519o44b41efa3d36295c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901200027.57128.chunkeey@web.de> (sfid-20090120_002818_495551_28F2D85B)
+Content-Type: text/plain; charset=ISO-8859-1
+References: <3ace41890901160907w2d04da91r61744477ac64e018@mail.gmail.com>
+	 <20090116183826.GC10037@tuxdriver.com> <87ocy7xejp.fsf@litku.valot.fi>
+	 <4970DC58.3000507@hauke-m.de> <20090116192046.GD10037@tuxdriver.com>
+	 <3ace41890901161406r591eb519o44b41efa3d36295c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In theory, the firmware acks the received a data frame, before signaling the driver to free it again.
-However Artur Skawina <art.08.09@gmail.com> has shown that it can happen in reverse order as well.
-This is very bad and could lead to memory corruptions, oopses and panics.
+On Fri, Jan 16, 2009 at 10:06 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> On Fri, Jan 16, 2009 at 7:20 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> On Fri, Jan 16, 2009 at 08:13:28PM +0100, Hauke Mehrtens wrote:
+>>> Kalle Valo wrote:
+>>> > "John W. Linville" <linville@tuxdriver.com> writes:
+>>> >
+>>> >> On Fri, Jan 16, 2009 at 05:07:50PM +0000, Hin-Tak Leung wrote:
+>>> >>> Since a few days ago, my dmesg is looking like this - instead of the
+>>> >>> older AA:BB:CC:DD:EE:FF form
+>>> >>> with the mac address of the AP.
+>>> >>> That ffff88* looks like a pointer/address to me? Is this change intentional?
+>>> >>>
+>>> >>> --------------
+>>> >>> wlan2 direct probe responded
+>>> >>> wlan2: authenticate with AP ffff880070995aa0
+>>> >>> wlan2: authenticated
+>>> >>> wlan2: associate with AP ffff880070995aa0
+>>> >>> wlan2: RX ReassocResp from ffff88001431f01a (capab=0x431 status=0 aid=1)
+>>> >>> wlan2: associated
+>>> >
+>>> > Works for me:
+>>> >
+>>> > [37125.111672] wlan0: authenticate with AP 00:12:17:e7:98:de
+>>> > [37125.113509] wlan0: authenticated
+>>> > [37125.113514] wlan0: associate with AP 00:12:17:e7:98:de
+>>> > [37125.115875] wlan0: RX AssocResp from 00:12:17:e7:98:de (capab=0x11 status=0 aid=1)
+>>> > [37125.115881] wlan0: associated
+>>> >
+>>> > This is on x86 32bit with iwl3945 and latest wireless-testing.
+>>> >
+>>> >> Odd...some problem with the "%pM" printk conversion?  What kernel
+>>> >> are you running?
+>>> >
+>>> > And on what architecture?
+>>> >
+>>>
+>>> I have got the same problem on x86_64 with rtl8187, kernel 2.6.27 and
+>>> compat-wireless-2008-01-16.
+>>>
+>>> [ 3064.480766] wlan0: authenticate with AP ffff8801291dfa20
+>>> [ 3064.482271] wlan0: authenticated
+>>> [ 3064.482275] wlan0: associate with AP ffff8801291dfa20
+>>> [ 3064.485021] wlan0: RX AssocResp from ffff88011128c01a (capab=0x411
+>>> status=0 aid=1)
+>>> [ 3064.485025] wlan0: associated
+>>
+>> compat-wireless users are probably using kernels that have printk
+>> implementations that do not understand "%pM".  QED. :-)
+>>
+>> --
+>> John W. Linville                Someday the world will need a hero, and you
+>> linville@tuxdriver.com                  might be all we have.  Be ready.
+>>
+>
+> 2.6.28.1-9.rc2.fc10.x86_64 and yes, I am using compat-wireless ...
+> what puzzles me is
+> that the as-shipped modules have the mac addresses correctly.
+>
+> Okay, sorry for the noise. I did look at git blame and, when I saw the
+> date of the lines with the
+> %pM commits was two months ago, I didn't bother to look further, since
+> the problem is very recent...
+> I was looking in the right direction but just didn't look far enough.
+>
+> commit 0c68ae2605dbcf67414d8d1f19af93be44b355fb
+> Author: Johannes Berg <johannes@sipsolutions.net>
+> Date:   Mon Oct 27 15:56:10 2008 -0700
+>
+>    mac80211: convert to %pM away from print_mac
+>
+>    Also remove a few stray DECLARE_MAC_BUF that were no longer
+>    used at all.
+>
+>    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>    Signed-off-by: David S. Miller <davem@davemloft.net>
+>
+> --------------------------------
+> commit dd45c9cf687682c9ce256ab14bd8914db77410bb
+> Author: Harvey Harrison <harvey.harrison@gmail.com>
+> Date:   Mon Oct 27 15:47:12 2008 -0700
+>
+>    printk: add %pM format specifier for MAC addresses
+> --------------
+>
+> and it is in lib/vsprintf.c ...
+>
+> But I guess ideally compat-wireless should patch this in to somewhere
+> under net/mac80211? (that's the whole point
+> of compat-wireless, to run with older kernels?)
+>
 
-Thanks to Artur Skawina <art.08.09@gmail.com> for reporting and debugging this issue.
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-Anyone with a p54usb device (Especially you, Artur :-) ):
-
-Please test this!
-Because it should go to wireless-2.6 / 2.6.29 as well (John?)
-
-Regards,
-	Chr
----
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index 3bfee58..364ef39 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -144,11 +144,8 @@ static void p54u_tx_cb(struct urb *urb)
- 	struct sk_buff *skb = urb->context;
- 	struct ieee80211_hw *dev = (struct ieee80211_hw *)
- 		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
--	struct p54u_priv *priv = dev->priv;
- 
--	skb_pull(skb, priv->common.tx_hdr_len);
--	if (FREE_AFTER_TX(skb))
--		p54_free_skb(dev, skb);
-+	p54_free_skb(dev, skb);
- }
- 
- static void p54u_tx_dummy_cb(struct urb *urb) { }
-@@ -230,7 +227,8 @@ static void p54u_tx_3887(struct ieee80211_hw *dev, struct sk_buff *skb)
- 			  p54u_tx_dummy_cb, dev);
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
--			  skb->data, skb->len, p54u_tx_cb, skb);
-+			  skb->data, skb->len, FREE_AFTER_TX(skb) ?
-+			  p54u_tx_cb : p54u_tx_dummy_cb, skb);
- 
- 	usb_anchor_urb(addr_urb, &priv->submitted);
- 	err = usb_submit_urb(addr_urb, GFP_ATOMIC);
-@@ -269,28 +267,24 @@ static void p54u_tx_lm87(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct p54u_priv *priv = dev->priv;
- 	struct urb *data_urb;
--	struct lm87_tx_hdr *hdr;
--	__le32 checksum;
--	__le32 addr = ((struct p54_hdr *)skb->data)->req_id;
-+	struct lm87_tx_hdr *hdr = (void *)skb->data - sizeof(*hdr);
- 
- 	data_urb = usb_alloc_urb(0, GFP_ATOMIC);
- 	if (!data_urb)
- 		return;
- 
--	checksum = p54u_lm87_chksum((__le32 *)skb->data, skb->len);
--	hdr = (struct lm87_tx_hdr *)skb_push(skb, sizeof(*hdr));
--	hdr->chksum = checksum;
--	hdr->device_addr = addr;
-+	hdr->chksum = p54u_lm87_chksum((__le32 *)skb->data, skb->len);
-+	hdr->device_addr = ((struct p54_hdr *)skb->data)->req_id;
- 
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
--			  skb->data, skb->len, p54u_tx_cb, skb);
-+			  hdr, skb->len + sizeof(*hdr),  FREE_AFTER_TX(skb) ?
-+			  p54u_tx_cb : p54u_tx_dummy_cb, skb);
- 	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 
- 	usb_anchor_urb(data_urb, &priv->submitted);
- 	if (usb_submit_urb(data_urb, GFP_ATOMIC)) {
- 		usb_unanchor_urb(data_urb);
--		skb_pull(skb, sizeof(*hdr));
- 		p54_free_skb(dev, skb);
- 	}
- 	usb_free_urb(data_urb);
-@@ -300,11 +294,9 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct p54u_priv *priv = dev->priv;
- 	struct urb *int_urb, *data_urb;
--	struct net2280_tx_hdr *hdr;
-+	struct net2280_tx_hdr *hdr = (void *)skb->data - sizeof(*hdr);
- 	struct net2280_reg_write *reg;
- 	int err = 0;
--	__le32 addr = ((struct p54_hdr *) skb->data)->req_id;
--	__le16 len = cpu_to_le16(skb->len);
- 
- 	reg = kmalloc(sizeof(*reg), GFP_ATOMIC);
- 	if (!reg)
-@@ -327,10 +319,9 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	reg->addr = cpu_to_le32(P54U_DEV_BASE);
- 	reg->val = cpu_to_le32(ISL38XX_DEV_INT_DATA);
- 
--	hdr = (void *)skb_push(skb, sizeof(*hdr));
- 	memset(hdr, 0, sizeof(*hdr));
--	hdr->len = len;
--	hdr->device_addr = addr;
-+	hdr->len = cpu_to_le16(skb->len);
-+	hdr->device_addr = ((struct p54_hdr *) skb->data)->req_id;
- 
- 	usb_fill_bulk_urb(int_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DEV), reg, sizeof(*reg),
-@@ -345,7 +336,8 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
- 
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
--			  skb->data, skb->len, p54u_tx_cb, skb);
-+			  hdr, skb->len + sizeof(*hdr), FREE_AFTER_TX(skb) ?
-+			  p54u_tx_cb : p54u_tx_dummy_cb, skb);
- 
- 	usb_anchor_urb(int_urb, &priv->submitted);
- 	err = usb_submit_urb(int_urb, GFP_ATOMIC);
+Argh, a few days ago I went from kernel-2.6.27.10-169.fc10 (heavily
+wireless-testing patched from John) to
+kernel-2.6.28-X.fc10 (mostly vanilla), as a routine tracking of what's
+on koji...
