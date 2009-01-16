@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:37200 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752808AbZANSeO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 13:34:14 -0500
-Received: by bwz14 with SMTP id 14so2219590bwz.13
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2009 10:34:12 -0800 (PST)
-To: samuel@sortiz.org
-Subject: Re: [PATCH] iwl3945: report killswitch changes even if the interface is down
-Date: Wed, 14 Jan 2009 19:39:42 +0100
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ipw3945-devel@lists.sourceforge.net, mabbaswireless@gmail.com,
-	tomas.winkler@intel.com, yi.zhu@intel.com,
-	reinette.chatre@intel.com, dcbw@redhat.com
-References: <200901141658.50842.helmut.schaa@gmail.com> <4db8d83d05d00146e1b2ad0921dbaedd@localhost>
-In-Reply-To: <4db8d83d05d00146e1b2ad0921dbaedd@localhost>
+Received: from mail.atheros.com ([12.36.123.2]:47068 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756727AbZAPQdO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 11:33:14 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:33:14 -0800
+Date: Fri, 16 Jan 2009 08:32:45 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
+	disablement
+Message-ID: <20090116163245.GF29609@tesla> (sfid-20090116_173319_950679_F7653420)
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com> <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232097827.3854.25.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901141939.43292.helmut.schaa@gmail.com> (sfid-20090114_193419_351352_4C84335A)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1232097827.3854.25.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 14. Januar 2009 schrieb samuel@sortiz.org:
+On Fri, Jan 16, 2009 at 01:23:47AM -0800, Johannes Berg wrote:
+> On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
+> > When a channel is disabled there is no need to stuff it
+> > with more flags.
 > 
-> Hi Helmut,
+> > -	u32 flags;
+> > +	u32 flags, rule_flags;
+> >  	u32 max_bandwidth = 0;
+> >  	const struct ieee80211_reg_rule *reg_rule = NULL;
+> >  	const struct ieee80211_power_rule *power_rule = NULL;
+> > @@ -913,15 +913,19 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
+> >  					"Country IE\n",
+> >  					chan->center_freq, wiphy_name(wiphy));
+> >  #endif
+> > -			flags |= IEEE80211_CHAN_DISABLED;
+> > -			chan->flags = flags;
+> > +			chan->flags = IEEE80211_CHAN_DISABLED;
+> >  		}
+> >  		return;
+> >  	}
+> >  
+> >  	power_rule = &reg_rule->power_rule;
+> >  
+> > -	chan->flags = flags | map_regdom_flags(reg_rule->flags);
+> > +	rule_flags = map_regdom_flags(reg_rule->flags);
+> > +	if (flags & IEEE80211_CHAN_DISABLED)
+> > +		chan->flags = IEEE80211_CHAN_DISABLED;
+> > +	else
+> > +		chan->flags = flags | rule_flags;
 > 
-> On Wed, 14 Jan 2009 16:58:50 +0100, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
-> > Currently iwl3945 is not able to report hw-killswitch events while the
-> > interface is down. This has implications on user space tools (like
-> > NetworkManager) relying on rfkill notifications to bring the interface
-> > up once the wireless gets enabled through a hw killswitch.
-> > 
-> > Thus enable the device already in iwl3945_pci_probe instead of iwl3945_up
-> > and poll the CSR_GP_CNTRL register to update the killswitch state every
-> > two seconds. The polling is only needed on 3945 hardware as this adapter
-> > does not use interrupts to signal rfkill changes to the driver (in case
-> no
-> > firmware is loaded). The firmware loading is still done in iwl3945_up.
+> but why bother with more complicated code when adding a few more flags
+> doesn't hurt?
 
-> The patch looks good and makes sense.
-> However, it would be nice to cancel the rfkill polling work once the
-> firmware is loaded, as we'll then get card state notifications.
+I don't see these few lines as complicated really, but if you don't like them
+that's fine. We can also fix this in userspace so that disable|radar|no-ibss
+doesn't show up. I frankly think its pointless to keep them though.
 
-Right, missed that somehow. I'll prepare a second version tomorrow.
-
-Thanks,
-Helmut
+  Luis
