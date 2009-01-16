@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:42541 "EHLO
-	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311AbZAKQxE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2009 11:53:04 -0500
-Date: Sun, 11 Jan 2009 17:53:01 +0100
-From: Andreas Mohr <andi@lisas.de>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Andreas Mohr <andi@lisas.de>, linville@tuxdriver.com,
-	maximlevitsky@gmail.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH 1/2] ath5k: support LEDs on Acer Aspire One netbook
-Message-ID: <20090111165301.GA20335@rhlx01.hs-esslingen.de> (sfid-20090111_175308_951296_92C56719)
-References: <1230840105-30960-1-git-send-email-me@bobcopeland.com> <20090111131015.GA31037@rhlx01.hs-esslingen.de> <20090111144227.GB13109@hash.localnet>
+Received: from mail.atheros.com ([12.36.123.2]:46729 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756795AbZAPQL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 11:11:59 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:11:59 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090111144227.GB13109@hash.localnet>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18800.45320.582257.574550@gargle.gargle.HOWL> (sfid-20090116_171204_068449_31629462)
+Date: Fri, 16 Jan 2009 21:38:40 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 2/9] ath9k: Update short guard interval in rate control
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 11, 2009 at 09:42:27AM -0500, Bob Copeland wrote:
-> On Sun, Jan 11, 2009 at 02:10:15PM +0100, Andreas Mohr wrote:
-> > My LED is dead again on 2.6.29-rc1 (reason: doesn't contain this patch).
-> 
-> It's in wireless-testing, it just hasn't made it through the pipeline yet.
+The rate control algorithm needs to know if a STA allows
+short guard interval, fixing this allows RC to use the correct
+table.
 
-Thanks, then consider my blurb a heads-up only ;)
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/rc.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-BTW, .29-rc1 is a veritable -rc1, there already are about 3 official
-suspend/resume regression reports and I've got yet another _different_
-one even (for me it locks up on suspend instead of on resume,
-and no_console_suspend doesn't help to debug it either...).
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index 182884a..68bda23 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -1361,6 +1361,8 @@ static void ath_rc_init(struct ath_softc *sc,
+ 		ath_rc_priv->ht_cap = (WLAN_RC_HT_FLAG | WLAN_RC_DS_FLAG);
+ 		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
+ 			ath_rc_priv->ht_cap |= WLAN_RC_40_FLAG;
++		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40)
++			ath_rc_priv->ht_cap |= WLAN_RC_SGI_FLAG;
+ 	}
+ 
+ 	/* Initial rate table size. Will change depending
+-- 
+1.6.0.3
 
-So Maxim, if you've got time to waste here's your project ;)
-
-(and if I am forced to endure yet another STR regression then my mood is
-going to blow up...)
-
-(and no, unloading microcode, ath5k, snd_hda_intel and r8169 does not work,
-plus I've got no time for debugging anyway)
-
-Andreas
