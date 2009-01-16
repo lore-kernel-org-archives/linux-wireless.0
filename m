@@ -1,70 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44924 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:39184 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755618AbZABO2b (ORCPT
+	with ESMTP id S1757117AbZAPJWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 09:28:31 -0500
-Subject: Re: mac80211 (ath9k, ath5k, etc.) set fixed BSSID + channel Patch
+	Fri, 16 Jan 2009 04:22:20 -0500
+Subject: Re: [PATCH 05/13] cfg80211: Fix sanity check on 5 GHz when
+	processing country IE
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: berlin@berlin.freifunk.net, linux-wireless@vger.kernel.org
-In-Reply-To: <20090101224144.232020@gmx.net> (sfid-20090101_234215_262569_45D2D4DC)
-References: <20081230025651.6500@gmx.net>
-	 (sfid-20081230_035657_768921_742B8565) <1230633565.3850.7.camel@johannes>
-	 <20081230223611.163110@gmx.net>
-	 (sfid-20081230_233642_601178_E4AB42EE) <1230676811.3850.22.camel@johannes>
-	 <20081230230751.163100@gmx.net>  <20090101224144.232020@gmx.net>
-	 (sfid-20090101_234215_262569_45D2D4DC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-anhLhQVASuO4GCPiwHRG"
-Date: Fri, 02 Jan 2009 15:29:06 +0100
-Message-Id: <1230906546.3586.5.camel@johannes> (sfid-20090102_152837_070890_981495F8)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-gWT59e2YTMI6vE1U3MJN"
+Date: Fri, 16 Jan 2009 10:21:48 +0100
+Message-Id: <1232097708.3854.21.camel@johannes> (sfid-20090116_102224_629552_EEE1F6AF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-anhLhQVASuO4GCPiwHRG
+--=-gWT59e2YTMI6vE1U3MJN
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-[dropping openwrt list, it ignores non-subscribers anyway]
-
-On Thu, 2009-01-01 at 23:41 +0100, Alina Friedrichsen wrote:
-> Hello,
+On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
+> This fixes two issues with the sanity check loop when processing
+> the country IE:
 >=20
-> here is a new version of this patch, that fixes a bug that manual
-> channel setting in the ad-hoc (IBSS) mode doesn't work properly, too.
+> 1. Do not use frequency for the current subband channel check,
+>    this was a big fat typo.
+> 2. Apply the 5 GHz 4-channel steps when considering max channel
+>    on each subband as was done with a recent patch.
+
+I'll just believe you here :)
+
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  net/wireless/reg.c |   30 +++++++++++++++++++-----------
+>  1 files changed, 19 insertions(+), 11 deletions(-)
 >=20
-> It would nice, if it can be committed, before it's out of sync.
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 77e45c7..0cc19e7 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -498,6 +498,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+>  	 * calculate the number of reg rules we will need. We will need one
+>  	 * for each channel subband */
+>  	while (country_ie_len >=3D 3) {
+> +		int end_channel =3D 0;
+>  		struct ieee80211_country_ie_triplet *triplet =3D
+>  			(struct ieee80211_country_ie_triplet *) country_ie;
+>  		int cur_sub_max_channel =3D 0, cur_channel =3D 0;
+> @@ -509,9 +510,25 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+>  			continue;
+>  		}
+> =20
+> +		/* 2 GHz */
+> +		if (triplet->chans.first_channel <=3D 14)
+> +			end_channel =3D triplet->chans.first_channel +
+> +				triplet->chans.num_channels;
+> +		else
+> +			/*
+> +			 * 5 GHz -- For example in country IEs if the first
+> +			 * channel given is 36 and the number of channels is 4
+> +			 * then the individual channel numbers defined for the
+> +			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
+> +			 * and not 36, 37, 38, 39.
+> +			 *
+> +			 * See: http://tinyurl.com/11d-clarification
+> +			 */
+> +			end_channel =3D  triplet->chans.first_channel +
+> +				(4 * (triplet->chans.num_channels - 1));
+> +
+>  		cur_channel =3D triplet->chans.first_channel;
+> -		cur_sub_max_channel =3D ieee80211_channel_to_frequency(
+> -			cur_channel + triplet->chans.num_channels);
+> +		cur_sub_max_channel =3D end_channel;
+> =20
+>  		/* Basic sanity check */
+>  		if (cur_sub_max_channel < cur_channel)
+> @@ -590,15 +607,6 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+>  			end_channel =3D triplet->chans.first_channel +
+>  				triplet->chans.num_channels;
+>  		else
+> -			/*
+> -			 * 5 GHz -- For example in country IEs if the first
+> -			 * channel given is 36 and the number of channels is 4
+> -			 * then the individual channel numbers defined for the
+> -			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
+> -			 * and not 36, 37, 38, 39.
+> -			 *
+> -			 * See: http://tinyurl.com/11d-clarification
+> -			 */
+>  			end_channel =3D  triplet->chans.first_channel +
+>  				(4 * (triplet->chans.num_channels - 1));
+> =20
 
-You need to provide a proper changelog that explains the changes, a
-proper subject (don't mention any drivers) and a signed-off-by, see
-http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches
-please.
-
-johannes
-
---=-anhLhQVASuO4GCPiwHRG
+--=-gWT59e2YTMI6vE1U3MJN
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJXiSwAAoJEKVg1VMiehFYE28QAKPVyX04YthnGnBOPw2QHnwq
-m+Eqa99YktkRzhS43pTMKzMI784SrFhFtkxQGUCwIkbA6Vtn5qdcnO8OJ624C2nZ
-L4EvxUuvDo/dWOXY4iP4urXdfegAeB+9asySAtQh794vPPLFDuqh71rWffQ9IEOR
-cCWIihSf4shFeGB7YhqJvMxSRpY7Tw/i3nbE3Ym3vGhmxoisotc3mrFpGdCXed0d
-smzt7rNd60c6mnWwp9yEfbm162pwT++M84zYqE9OkmgGUw3RuGBbN2BMJyEADxSV
-sg0dQqc3iJGN7gFddUaY6ReJflHACIOshxK1rbdZeUArFNNf56LMPL2JdLzrHuZV
-ATuwUyCAhog4vjg4zqFRLsPBgg221Og7z2pldyfa+DU9QtEJEpHyS/KKJ4CgPZ5e
-4C3kOoNkBcJJ5Jv2YR5276SjVN045rqrBZtVIvufPBC0D/NbB/m/j0bx/CwMRFcv
-b1swcbe/teHl0k4h5q2JR93K/D5OFsEeheZ6ZYsLSJB4PIMJX89apv9YcIV8O4GN
-/CWE0NDfKRG82K7zFWEtrQBlmEIjS5Gul1s6F7qVa7pqLIRWZWDdf6P8SInKdsm0
-Qz3ToXmFYnQbHhQmPEyYG5MI3aLm3DtiDJH8shCXKDPQQ+i0rbiBz35kRj2L/pWo
-LwfwZKu2DjezZoB8bYD6
-=PzuC
+iQIcBAABAgAGBQJJcFGqAAoJEKVg1VMiehFYSl8P/2vfb7JNT+13doLIovGGUl0q
+PwKZPiwsEjqLBoxvQqF3/2oblfFNymoG8ApKwSHSr8Sv/ynR2g9BldYxrNUu8CL9
+aXMyFq72fhuku3JUAz0viQ7EVwLvHHsS/rjVIG1XRlRxdDCmofzEPMIap0wq9I1W
+y4aMZOhADONdlD4vMSMgXYx4eh7F3L2Ajy8WxpgPTaibfTqWlqp34Bscv91ponyU
+zfhNR+eLJwBheh/MMxDMHD6SqOx+FiAaDtiMLWEU10sncuTPV2kwmQj0r/AGTfQj
+h+WNe5A/r2DfPmlSWskPp3MdnMV/E09CjX90WiYzsjOktbq85wOQnDT5N2+fSYpJ
+zeBbyFcGMFIQ+B5TFTtMtlXQZtnkUhmO0H4xjzU8YD2Oi1+ji/mN16G1tvsK6Yj5
+0jTSMfvtvd3LQ/CgFKu4+bFl7x98kKvI6xdaGU5jzoFhdjgZi1GRIIO1qcCkDo5i
+2dOL/EpDge6wm2IswWM6mARvX9CwLnMrsbr7d0UhM1UHgZ18rnM/E/ni0QePV4Nx
+Ez3v2ugIjS7Bkr48iWCNdaFyJva9EN6AXiEvBhySbyEBtErMGjpNgBI9pOmkhGTH
+j77f1uQ5EH3KmZG9Wy6qmdKlVX0v+GBKB4ap2d1fb8Dkgb3bEGtkZ8powleSKamM
+hMmj6xmAslXF+bUeZrUp
+=oPEt
 -----END PGP SIGNATURE-----
 
---=-anhLhQVASuO4GCPiwHRG--
+--=-gWT59e2YTMI6vE1U3MJN--
 
