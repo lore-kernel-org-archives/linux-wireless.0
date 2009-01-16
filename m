@@ -1,127 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40753 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752532AbZAAWlr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2009 17:41:47 -0500
-Cc: berlin@berlin.freifunk.net, linux-wireless@vger.kernel.org,
-	openwrt-devel@lists.openwrt.org
-Content-Type: multipart/mixed; boundary="========GMX232021230849704374536"
-Date: Thu, 01 Jan 2009 23:41:44 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <20081230230751.163100@gmx.net>
-Message-ID: <20090101224144.232020@gmx.net> (sfid-20090101_234150_586253_0EA2690D)
+Received: from mail.atheros.com ([12.36.123.2]:47194 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754456AbZAPQhP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 11:37:15 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:37:15 -0800
+Date: Fri, 16 Jan 2009 08:36:46 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 03/13] cfg80211: add wiphy_apply_custom_regulatory()
+Message-ID: <20090116163646.GG29609@tesla> (sfid-20090116_173722_645253_E8613A24)
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com> <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232097659.3854.20.camel@johannes>
 MIME-Version: 1.0
-References: <20081230025651.6500@gmx.net>	
- (sfid-20081230_035657_768921_742B8565) <1230633565.3850.7.camel@johannes>	
- <20081230223611.163110@gmx.net> (sfid-20081230_233642_601178_E4AB42EE)
- <1230676811.3850.22.camel@johannes> <20081230230751.163100@gmx.net>
-Subject: Re: mac80211 (ath9k, ath5k, etc.) set fixed BSSID + channel Patch
-To: "Alina Friedrichsen" <x-alina@gmx.net>, johannes@sipsolutions.net
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1232097659.3854.20.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---========GMX232021230849704374536
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8bit
+On Fri, Jan 16, 2009 at 01:20:59AM -0800, Johannes Berg wrote:
+> On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
+> 
+> >  /**
+> >   * enum reg_set_by - Indicates who is trying to set the regulatory domain
+> > + * @REGDOM_SET_BY_PROBE: regulatory domain applied came prior to wiphy
+> > + * 	registration by the driver itself using some custom regulatory
+> > + * 	information.
+> 
+> This is unnecessary, I think.
 
-Hello,
+I'll make note of it below.
 
-here is a new version of this patch, that fixes a bug that manual channel setting in the ad-hoc (IBSS) mode doesn't work properly, too.
+> > +/**
+> > + * freq_reg_info - get regulatory information for the given frequency
+> > + * @wiphy: the wiphy for which we want to process this rule for
+> > + * @center_freq: Frequency in KHz for which we want regulatory information for
+> > + * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
+> > + * 	you can set this to 0. If this frequency is allowed we then set
+> > + * 	this value to the maximum allowed bandwidth.
+> > + * @reg_rule: the regulatory rule which we have for this frequency
+> > + *
+> > + * Use this function to get the regulatory rule for a specific frequency on
+> > + * a given wireless device. If the device has a specific regulatory domain
+> > + * it wants to follow we respect that unless a country IE has been received
+> > + * and processed already.
+> > + *
+> > + * Returns 0 if it was able to find a valid regulatory rule which does
+> > + * apply to the given center_freq otherwise it returns non-zero. It will
+> > + * also return -ERANGE if we determine the given center_freq does not even have
+> > + * a regulatory rule for a frequency range in the center_freq's band. See
+> > + * freq_in_rule_band() for our current definition of a band -- this is purely
+> > + * subjective and right now its 802.11 specific.
+> > + */
+> > +static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
+> > +			 const struct ieee80211_reg_rule **reg_rule)
+> > +{
+> > +	return freq_reg_info_regd(wiphy, center_freq,
+> > +		bandwidth, reg_rule, NULL);
+> > +}
+> 
+> Are you not using this or am I just not seeing the user?
 
-It would nice, if it can be committed, before it's out of sync.
+Yeah -- good catch, its just cruft left over from my previous work.
 
-Regards
-Alina
+> > +static void handle_channel_custom(struct wiphy *wiphy,
+> > +				  enum ieee80211_band band,
+> > +				  unsigned int chan_idx,
+> > +				  const struct ieee80211_regdomain *regd)
+> > +{
+> > +	int r;
+> > +	u32 max_bandwidth = 0;
+> > +	const struct ieee80211_reg_rule *reg_rule = NULL;
+> > +	const struct ieee80211_power_rule *power_rule = NULL;
+> > +	struct ieee80211_supported_band *sband;
+> > +	struct ieee80211_channel *chan;
+> > +
+> > +	sband = wiphy->bands[band];
+> > +	BUG_ON(chan_idx >= sband->n_channels);
+> > +	chan = &sband->channels[chan_idx];
+> > +
+> > +	r = freq_reg_info_regd(wiphy, MHZ_TO_KHZ(chan->center_freq),
+> > +		&max_bandwidth, &reg_rule, regd);
+> > +
+> > +	if (r) {
+> > +		chan->flags = IEEE80211_CHAN_DISABLED;
+> > +		return;
+> > +	}
+> > +
+> > +	power_rule = &reg_rule->power_rule;
+> > +
+> > +	chan->flags |= map_regdom_flags(reg_rule->flags);
+> > +	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+> > +	chan->max_bandwidth = KHZ_TO_MHZ(max_bandwidth);
+> > +	chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
+> > +}
+> > +
+> > +
+> >  static void handle_band(struct wiphy *wiphy, enum ieee80211_band band)
+> >  {
+> >  	unsigned int i;
+> > @@ -947,6 +989,19 @@ static void handle_band(struct wiphy *wiphy, enum ieee80211_band band)
+> >  		handle_channel(wiphy, band, i);
+> >  }
+> >  
+> > +static void handle_band_custom(struct wiphy *wiphy, enum ieee80211_band band,
+> > +			       const struct ieee80211_regdomain *regd)
+> > +{
+> > +	unsigned int i;
+> > +	struct ieee80211_supported_band *sband;
+> > +
+> > +	BUG_ON(!wiphy->bands[band]);
+> > +	sband = wiphy->bands[band];
+> > +
+> > +	for (i = 0; i < sband->n_channels; i++)
+> > +		handle_channel_custom(wiphy, band, i, regd);
+> > +}
+> > +
+> >  static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
+> >  {
+> >  	if (!last_request)
+> > @@ -977,6 +1032,20 @@ void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
+> >  		wiphy->reg_notifier(wiphy, setby);
+> >  }
+> >  
+> > +/* Used by drivers prior to wiphy registration */
+> > +void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+> > +				   const struct ieee80211_regdomain *regd)
+> > +{
+> > +	enum ieee80211_band band;
+> > +	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+> > +		if (wiphy->bands[band])
+> > +			handle_band_custom(wiphy, band, regd);
+> > +	}
+> > +	if (wiphy->reg_notifier)
+> > +		wiphy->reg_notifier(wiphy, REGDOM_SET_BY_PROBE);
+> > +}
+> > +EXPORT_SYMBOL(wiphy_apply_custom_regulatory);
+> 
+> Can you group all these functions together, rather than interspersing
+> them with the others?
 
--- 
-Psssst! Schon vom neuen GMX MultiMessenger gehört? Der kann`s mit allen: http://www.gmx.net/de/go/multimessenger
+Yeah sure.
 
---========GMX232021230849704374536
-Content-Type: text/x-patch;
- charset="iso-8859-15";
- name="mac80211-setbssid-3.patch"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="mac80211-setbssid-3.patch"
+> Also, I don't think calling the notifier is
+> appropriate since the driver just called this function.
 
-diff -urN compat-wireless-2008-12-29.orig/net/mac80211/mlme.c compat-wireless-2008-12-29/net/mac80211/mlme.c
---- compat-wireless-2008-12-29.orig/net/mac80211/mlme.c	2008-12-29 06:14:35.000000000 +0100
-+++ compat-wireless-2008-12-29/net/mac80211/mlme.c	2009-01-01 23:32:46.000000000 +0100
-@@ -1660,6 +1660,7 @@
- 
- 	/* check if we need to merge IBSS */
- 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC && beacon &&
-+	    (!(sdata->u.sta.flags & IEEE80211_STA_BSSID_SET)) &&
- 	    bss->capability & WLAN_CAPABILITY_IBSS &&
- 	    bss->freq == local->oper_channel->center_freq &&
- 	    elems->ssid_len == sdata->u.sta.ssid_len &&
-@@ -1705,7 +1706,8 @@
- 		       (unsigned long long)(rx_timestamp - beacon_timestamp),
- 		       jiffies);
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
--		if (beacon_timestamp > rx_timestamp) {
-+		if (beacon_timestamp > rx_timestamp &&
-+		    memcmp(sdata->u.sta.bssid, mgmt->bssid, ETH_ALEN) != 0) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
- 			printk(KERN_DEBUG "%s: beacon TSF higher than "
- 			       "local TSF - IBSS merge with BSSID %s\n",
-@@ -2031,6 +2033,10 @@
- 	if (ieee80211_sta_active_ibss(sdata))
- 		return;
- 
-+	if ((sdata->u.sta.flags & IEEE80211_STA_BSSID_SET) &&
-+	    (!(sdata->u.sta.flags & IEEE80211_STA_AUTO_CHANNEL_SEL)))
-+		return;
-+
- 	printk(KERN_DEBUG "%s: No active IBSS STAs - trying to scan for other "
- 	       "IBSS networks with same SSID (merge)\n", sdata->dev->name);
- 	ieee80211_request_scan(sdata, ifsta->ssid, ifsta->ssid_len);
-@@ -2576,11 +2582,16 @@
- {
- 	struct ieee80211_if_sta *ifsta;
- 	int res;
-+	bool valid;
- 
- 	ifsta = &sdata->u.sta;
-+	valid = is_valid_ether_addr(bssid);
- 
- 	if (memcmp(ifsta->bssid, bssid, ETH_ALEN) != 0) {
--		memcpy(ifsta->bssid, bssid, ETH_ALEN);
-+		if(valid)
-+			memcpy(ifsta->bssid, bssid, ETH_ALEN);
-+		else
-+			memset(ifsta->bssid, 0, ETH_ALEN);
- 		res = 0;
- 		/*
- 		 * Hack! See also ieee80211_sta_set_ssid.
-@@ -2594,7 +2605,7 @@
- 		}
- 	}
- 
--	if (is_valid_ether_addr(bssid))
-+	if (valid)
- 		ifsta->flags |= IEEE80211_STA_BSSID_SET;
- 	else
- 		ifsta->flags &= ~IEEE80211_STA_BSSID_SET;
-diff -urN compat-wireless-2008-12-29.orig/net/mac80211/wext.c compat-wireless-2008-12-29/net/mac80211/wext.c
---- compat-wireless-2008-12-29.orig/net/mac80211/wext.c	2008-12-29 06:14:35.000000000 +0100
-+++ compat-wireless-2008-12-29/net/mac80211/wext.c	2009-01-01 23:07:55.000000000 +0100
-@@ -230,13 +230,15 @@
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+	if (sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+	    sdata->vif.type == NL80211_IFTYPE_STATION)
- 		sdata->u.sta.flags &= ~IEEE80211_STA_AUTO_CHANNEL_SEL;
- 
- 	/* freq->e == 0: freq->m = channel; otherwise freq = m * 10^e */
- 	if (freq->e == 0) {
- 		if (freq->m < 0) {
--			if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+			if (sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+			    sdata->vif.type == NL80211_IFTYPE_STATION)
- 				sdata->u.sta.flags |=
- 					IEEE80211_STA_AUTO_CHANNEL_SEL;
- 			return 0;
+Calling the notifier is why we want REGDOM_SET_BY_PROBE. We also technically
+do not need to call the notifier unless we want to allow for tricks like the
+one I am using in ath9k to condense the regulatory domains to 5 based on frequency
+and to let a helper sort out the flags. Without this I believe we'd be forced to
+use 12 full blown regds.
 
---========GMX232021230849704374536--
+  Luis
