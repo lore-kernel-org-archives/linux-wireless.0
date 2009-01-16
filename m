@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:38384 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757823AbZAMBPa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 20:15:30 -0500
-Received: by ewy10 with SMTP id 10so11821091ewy.13
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2009 17:15:29 -0800 (PST)
-Message-ID: <2d0a357f0901121715y2aedbeecs9819688f275df25c@mail.gmail.com> (sfid-20090113_021545_666131_B6CC9E15)
-Date: Tue, 13 Jan 2009 02:15:27 +0100
-From: "Sedat Dilek" <sedat.dilek@googlemail.com>
-To: "Randy Dunlap" <randy.dunlap@oracle.com>
-Subject: Re: [master-2009-01-12] compiler-error in 'drivers/net/irda/donauboe.c'
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-In-Reply-To: <496BE899.7010406@oracle.com>
+Received: from mail.atheros.com ([12.36.123.2]:10994 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756105AbZAPAM5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2009 19:12:57 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:12:57 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/13] cfg80211: print correct intersected regulatory domain
+Date: Thu, 15 Jan 2009 16:12:14 -0800
+Message-ID: <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> (sfid-20090116_011327_947919_EF1A6A8C)
+In-Reply-To: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <2d0a357f0901121657s1ea091b6m824e8f939be2d51d@mail.gmail.com>
-	 <496BE899.7010406@oracle.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No, it's not mainline - I checked 2.6.29-rc1-git{1|2}.
-But, it is in net-2.6.git [1] if you mean that by mainline :).
+When CONFIG_CFG80211_REG_DEBUG is enabled and an intersection
+occurs we are printing the regulatory domain passed by CRDA
+and indicating its the intersected regulatory domain. Lets fix
+this and print the intersection as originally intended.
 
--SD
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-[1] irda: fix incomplete conversation to internal stats
-http://git.kernel.org/?p=linux/kernel/git/davem/net-2.6.git;a=commit;h=216c32d4407ea6951d6832773fdb3de058e12c62
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b34fd84..ec8b3d9 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1332,7 +1332,7 @@ static void reg_country_ie_process_debug(
+ 	if (intersected_rd) {
+ 		printk(KERN_DEBUG "cfg80211: We intersect both of these "
+ 			"and get:\n");
+-		print_regdomain_info(rd);
++		print_regdomain_info(intersected_rd);
+ 		return;
+ 	}
+ 	printk(KERN_DEBUG "cfg80211: Intersection between both failed\n");
+-- 
+1.6.1.rc3.51.g5832d
 
-On Tue, Jan 13, 2009 at 2:04 AM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
-> Sedat Dilek wrote:
->> Hi,
->>
->> I could not compile latest wl.git due to problems in
->> 'drivers/net/irda/donauboe.c'.
->> A fix and description is given in [1].
->> Hope this helps other people.
->>
->> Regards,
->> Sedat
->>
->> [1] http://patchwork.kernel.org/patch/1791/
->
-> The patch was just merged into mainline.
->
->
-> --
-> ~Randy
->
