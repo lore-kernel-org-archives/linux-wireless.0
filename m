@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:56274 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754990AbZALTgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 14:36:00 -0500
-Subject: Re: rfkill: how murderous can it be ?
-From: Dan Williams <dcbw@redhat.com>
-To: Werner Almesberger <werner@openmoko.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090112191514.GA22112@almesberger.net>
-References: <20090112191514.GA22112@almesberger.net>
-Content-Type: text/plain
-Date: Mon, 12 Jan 2009 14:34:44 -0500
-Message-Id: <1231788884.28887.4.camel@localhost.localdomain> (sfid-20090112_203618_746676_F02EA570)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:48299 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753900AbZAQDj5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 22:39:57 -0500
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sat, 17 Jan 2009 04:39:55 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090110091659.GC1170@jm.kir.nu>
+Message-ID: <20090117033955.273880@gmx.net> (sfid-20090117_044004_278188_4AF6213D)
+MIME-Version: 1.0
+References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu>
+ <20090109205315.277310@gmx.net> <20090110091659.GC1170@jm.kir.nu>
+Subject: Re: [PATCH] Fixed BSSID (timesync)
+To: Jouni Malinen <j@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-01-12 at 17:15 -0200, Werner Almesberger wrote:
-> I'd like to restart a discussion from last year, namely how aggressive
-> an rfkill implementation is allowed to be when it comes to destroying
-> MAC state.
-> 
-> The design suggested in rfkill.txt and also implemented in the existing
-> drivers basically assumes a simple on/off switch that cuts power to the
-> transmitter but doesn't change anything else. The question is if this 
-> is already the full extent to which rfkill is allowed to affect MAC
-> state or if it could go further.
-> 
-> In the AR6k, we don't have such a simple switch for the transmitter. We
-> can control what the transmitter does very indirectly by temporarily
-> reconfiguring the MAC, but this creates a fair amount of complexity,
-> which also seems to be at odds with the design of rfkill.
-> 
-> Alternatively, we could just power down the whole WLAN module. That is
-> easily done and very reliable. However, MAC state (ESSID, keys, and a
-> host of other settings) is obliterated if we do this. A watchful user 
-> space (e.g., wpa_supplicant) could then restore the status quo ante.
-> 
-> Now the question is whether this is still in the spirit of the design 
-> of rfkill of if it would take things too far.
-> 
-> It seems that there is no consensus on this issue yet. I started the 
-> implementation with the assumption that rfkill should always behave as 
-> if it only cut transmitter power, so no other state of the MAC is
-> allowed to be lost. This is also what Henrique suggested I should do.
-> 
-> However, Andy and recently Michael suggested that, given that an
-> interface that has no connectivity for an extended period of time is
-> likely to get reconfigured anyway, it may be sufficient if rfkill 
-> leaves things in a state that allows user space to restore 
-> connectivity, without having to worry about details beyond that.
+Hi,
 
-Yes.  You have no guarantees about how long the RF is down when the
-switch is flipped or the checkbox ticked.  Instead of putting a bunch of
-complexity in the kernel and drivers that *already* has to be in
-userspace, just punt it out to userspace where it's already done and
-works well.
+I'm looking now for a better implementation for the IBSS fixed BSSID st=
+uff, that handles the TSF sync correctly. I think now having centralize=
+d IBSS join function ist more easy to maintain, as many little function=
+s. This function can look in the environment for the current state, so =
+that it can see what to do for the current join.
 
-If there are any latency issues with this, then we need to fix those
-latency issues in wpa_supplicant, not put complex state handling into
-the stack drivers for this.  Treat rfkill the same as suspend/resume
-from a state perspective, because they really have the same
-consequences: you have no idea where you are when you wake up, what has
-happened since RF was turned off, and whether your AP is still around.
-Better to make scanning and associate fast and foolproof, which has to
-happen in userspace anyway.
+So I have moved all my fixed BSSID stuff in this centralized function, =
+so that the TSF will be reseted, even if a fixed BSSID is set.
 
-Dan
+I will allow a channel change too, if you have a fixed BSSID but not a =
+fixed channel setting. If there is a other IBSS network with the same B=
+SSID but in an other channel.
+Like now a BSSID change is allowed, if you set a fixed channel but not =
+a fixed BSSID.
+I think this would be a more clean and consistent implementation.
 
+What do you think about it?
+I will post a beta patch tomorrow.
 
+Regards
+Alina
+
+--=20
+Sensationsangebot verl=E4ngert: GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1308T45=
+69a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
