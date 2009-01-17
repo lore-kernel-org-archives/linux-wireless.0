@@ -1,93 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:14939 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbZAUTdE convert rfc822-to-8bit (ORCPT
+Received: from ch-smtp01.sth.basefarm.net ([80.76.149.212]:45713 "EHLO
+	ch-smtp01.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757954AbZAQVCy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 14:33:04 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so400663ugf.37
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 11:33:01 -0800 (PST)
+	Sat, 17 Jan 2009 16:02:54 -0500
+Received: from c83-249-24-87.bredband.comhem.se ([83.249.24.87]:3748 helo=amin)
+	by ch-smtp01.sth.basefarm.net with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.68)
+	(envelope-from <hans@sociologi.cjb.net>)
+	id 1LOI4y-0004lN-3M
+	for linux-wireless@vger.kernel.org; Sat, 17 Jan 2009 21:47:47 +0100
+Received: from hans by amin with local (Exim 4.63)
+	(envelope-from <hans@sociologi.cjb.net>)
+	id 1LOI4H-0002QL-Sz
+	for linux-wireless@vger.kernel.org; Sat, 17 Jan 2009 21:46:58 +0100
+Date: Sat, 17 Jan 2009 21:46:57 +0100
+From: Hans Ekbrand <hans@sociologi.cjb.net>
+To: linux-wireless@vger.kernel.org
+Subject: USB 1.1, usb-dongle, NETGEAR WG111v2, timing problems in association
+Message-ID: <20090117204654.GB9079@amin> (sfid-20090117_220300_619636_AB9C3EFE)
 MIME-Version: 1.0
-In-Reply-To: <20090121191141.GA14710@tuxdriver.com>
-References: <200901140003.31693.gbburkhardt@verizon.net>
-	 <200901151734.46144.gbburkhardt@verizon.net>
-	 <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com>
-	 <200901202238.08756.gbburkhardt@verizon.net>
-	 <20090121151435.GB3643@tuxdriver.com>
-	 <69e28c910901211022j7f9c67dfv6392ce043dcff522@mail.gmail.com>
-	 <20090121191141.GA14710@tuxdriver.com>
-Date: Wed, 21 Jan 2009 20:33:01 +0100
-Message-ID: <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com> (sfid-20090121_203307_644492_54D42799)
-Subject: Re: poor performance with ath5k; reverting to ath_pci
-From: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Glenn Burkhardt <gbburkhardt@verizon.net>,
-	Bob Copeland <me@bobcopeland.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="pf9I7BMVVzbSWLtt"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 21, 2009 at 8:11 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Jan 21, 2009 at 07:22:14PM +0100, Stefanik G=E1bor wrote:
->> On Wed, Jan 21, 2009 at 4:14 PM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->> > On Tue, Jan 20, 2009 at 10:38:08PM -0500, Glenn Burkhardt wrote:
->> >> On Friday 16 January 2009 10:33:13 Bob Copeland wrote:
->> >> > On Thu, Jan 15, 2009 at 5:34 PM, Glenn Burkhardt
->> >> >
->> >> > <gbburkhardt@verizon.net> wrote:
->> >> > > ath5k_pci 0000:00:07.0: PCI INT A -> GSI 18 (level, low) -> I=
-RQ 18
->> >> > > ath5k_pci 0000:00:07.0: registered as 'phy0'
->> >> > > phy0: Selected rate control algorithm 'pid'
->> >> >
->> >> > Can you change the rate control algorithm to minstrel and retry=
-?
->> >>
->> >> I built a 2.6.28.1-9 kernel to get the minstrel code for ath5k.  =
-The
->> >> kernel for Suse 11.1 is 2.6.27.7-9.  But that means that more cou=
-ld have
->> >> changed besides the rate control code.
->> >>
->> >> It looks like minstrel and pid give about the same result, a bit =
-worse that
->> >> the ath_pci driver right now.  Performance seems to vary from day=
- to day.
->> >> I'll experiment some more, and switch transmission channels.  I'm=
- not getting
->> >> the really poor performance with ath5k right now.
->> >>
->> >> I haven't looked yet - is there a way to switch to 'pid' rate con=
-trol without
->> >> rebuilding the kernel?
->> >
->> > If you configure your kernel to include multiple rate control
->> > algorithms then you can use the 'ieee80211_default_rc_algo' module
->> > option for mac80211.  Of course, changing that only works if you
->> > rmmod/insmod mac80211.
->> >
->> > John
->>
->> Judging from this, is it really a good idea to hide pid behind EMBED=
-DED?
->
-> I've been wondering about that myself.  I'm inclined to think no.
->
-> John
 
-I think EMBEDDED is for options that replace full-featured Linux
-components with dumbed-down, "low-profile" equivalents (like SLOB) -
-PID vs. minstrel is more like SLAB vs. SLUB.
+--pf9I7BMVVzbSWLtt
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-G=E1bor
+Hi list!
+
+On an old system with only USB 1.1, I tried to use a USB-dongle:
+NETGEAR WG111v2. The device works perfectly with same kernel (2.6.26-1
+=66rom debian lenny) on a new system with USB 2.0, using the "rtl8187"
+driver.
+
+However, on USB 1.1 I get:
+
+Jan 17 17:25:17 jonspc kernel: [13991.380234] wlan1: Initial auth_alg=3D0
+Jan 17 17:25:17 jonspc kernel: [13991.380234] wlan1: authenticate with AP 0=
+0:1b:2f:0c:2f:28
+Jan 17 17:25:17 jonspc kernel: [13991.380267] wlan1: RX authentication from=
+ 00:1b:2f:0c:2f:28 (alg=3D0 transaction=3D2 status=3D0)5:17 jonspc kernel: =
+[13991.380267] wlan1: authenticated
+Jan 17 17:25:17 jonspc kernel: [13991.380267] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:17 jonspc kernel: [13991.604259] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:18 jonspc kernel: [13992.136025] wlan1: Initial auth_alg=3D0
+Jan 17 17:25:18 jonspc kernel: [13992.136025] wlan1: authenticate with AP 0=
+0:1b:2f:0c:2f:28
+Jan 17 17:25:18 jonspc kernel: [13992.136073] wlan1: association frame rece=
+ived from 00:1b:2f:0c:2f:28, but not in associate state - ignoredel: [13992=
+=2E340113] wlan1: authenticate with AP 00:1b:2f:0c:2f:28
+
+[Longer part of syslog follows later in this post]
+
+I tried to use the device on two USB 1.1 systems, both failed with the
+"association frame received ... but not in associate state - ignore",
+message.
+
+Is USB 2.0 required, or is there a workaround for this problem?
+
+Here is the output of lsusb:
+
+Bus 001 Device 066: ID 0846:6a00 NetGear, Inc. WG111v2 54 Mbps Wireless [Re=
+alTek RTL8187L]=20
+Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+
+Below is a longer exerpt from syslog:
+
+ no key needed. jonspc NetworkManager: <info>  SUP: sending command 'INTERF=
+ACE_ADD wlan1#011#011wext#011/var/run/wpa_supplicant#011'spc NetworkManager=
+: <info>  SUP: response was 'OK'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'AP_SCA=
+N 1'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was 'OK'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'ADD_NE=
+TWORK'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was '0'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'SET_NE=
+TWORK 0 ssid 48656c676573'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was 'OK'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'SET_NE=
+TWORK 0 key_mgmt NONE'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was 'OK'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'ENABLE=
+_NETWORK 0'
+Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was 'OK'
+Jan 17 17:25:01 jonspc kernel: [13975.564161] wlan1: authenticate with AP 0=
+0:1b:2f:0c:2f:28
+Jan 17 17:25:01 jonspc kernel: [13975.564194] wlan1: RX authentication from=
+ 00:1b:2f:0c:2f:28 (alg=3D0 transaction=3D2 status=3D0)5:01 jonspc kernel: =
+[13975.564194] wlan1: authenticated
+Jan 17 17:25:01 jonspc kernel: [13975.564194] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:02 jonspc kernel: [13975.788114] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:02 jonspc kernel: [13975.988110] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:02 jonspc kernel: [13976.188137] wlan1: association with AP 00=
+:1b:2f:0c:2f:28 timed out
+Jan 17 17:25:17 jonspc kernel: [13991.380234] wlan1: Initial auth_alg=3D0
+Jan 17 17:25:17 jonspc kernel: [13991.380234] wlan1: authenticate with AP 0=
+0:1b:2f:0c:2f:28
+Jan 17 17:25:17 jonspc kernel: [13991.380267] wlan1: RX authentication from=
+ 00:1b:2f:0c:2f:28 (alg=3D0 transaction=3D2 status=3D0)5:17 jonspc kernel: =
+[13991.380267] wlan1: authenticated
+Jan 17 17:25:17 jonspc kernel: [13991.380267] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:17 jonspc kernel: [13991.604259] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:18 jonspc kernel: [13992.136025] wlan1: Initial auth_alg=3D0
+Jan 17 17:25:18 jonspc kernel: [13992.136025] wlan1: authenticate with AP 0=
+0:1b:2f:0c:2f:28
+Jan 17 17:25:18 jonspc kernel: [13992.136073] wlan1: association frame rece=
+ived from 00:1b:2f:0c:2f:28, but not in associate state - ignoredel: [13992=
+=2E340113] wlan1: authenticate with AP 00:1b:2f:0c:2f:28
+Jan 17 17:25:18 jonspc kernel: [13992.343090] wlan1: RX authentication from=
+ 00:1b:2f:0c:2f:28 (alg=3D0 transaction=3D2 status=3D0)5:18 jonspc kernel: =
+[13992.343116] wlan1: authenticated
+Jan 17 17:25:18 jonspc kernel: [13992.343126] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:18 jonspc kernel: [13992.343116] wlan1: authenticated
+Jan 17 17:25:18 jonspc kernel: [13992.343126] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:18 jonspc kernel: [13992.540122] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:19 jonspc kernel: [13992.740140] wlan1: associate with AP 00:1=
+b:2f:0c:2f:28
+Jan 17 17:25:19 jonspc kernel: [13992.940143] wlan1: association with AP 00=
+:1b:2f:0c:2f:28 timed out
 
 --=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hans Ekbrand (http://sociologi.cjb.net) <hans@sociologi.cjb.net>
+Q. What is that strange attachment in this mail?
+A. My digital signature, see www.gnupg.org for info on how you could
+   use it to ensure that this mail is from me and has not been
+   altered on the way to you.
+
+--pf9I7BMVVzbSWLtt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFJckO9fCyHKnBQYU4RAhhxAKCcPBPN5xurdAKdLl//CRnB7hcxRQCfeqGl
+SEo6hlKnSPly2esxpZNnNLM=
+=JLGK
+-----END PGP SIGNATURE-----
+
+--pf9I7BMVVzbSWLtt--
