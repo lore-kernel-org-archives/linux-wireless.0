@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60066 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755487AbZAIUAn (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57322 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756410AbZAQJZ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 15:00:43 -0500
-Date: Fri, 9 Jan 2009 14:51:20 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Enable dynamic power save in ath9k.
-Message-ID: <20090109195119.GC3371@tuxdriver.com> (sfid-20090109_210052_557226_955EDFEC)
-References: <20081229235300.GA8458@myhost.users.atheros.com> <1230552660.3116.33.camel@johannes> <8e92b4100812290537q7605b39dg382fe5d42963c65a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8e92b4100812290537q7605b39dg382fe5d42963c65a@mail.gmail.com>
+	Sat, 17 Jan 2009 04:25:59 -0500
+Subject: Re: [PATCH] mac80211: decrement ref count to netdev after
+	launching mesh discovery
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Brian Cavagnolo <brian@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1232161489-29528-1-git-send-email-brian@cozybit.com> (sfid-20090117_035936_492701_222DF2F9)
+References: <mesh netdev decrement>
+	 <1232161489-29528-1-git-send-email-brian@cozybit.com>
+	 (sfid-20090117_035936_492701_222DF2F9)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-do7vCdYmY8wcHJ+qoWkU"
+Date: Sat, 17 Jan 2009 10:25:56 +0100
+Message-Id: <1232184356.3668.0.camel@johannes> (sfid-20090117_102618_125068_02EA2175)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 29, 2008 at 07:07:41PM +0530, Vivek Natarajan wrote:
-> On Mon, Dec 29, 2008 at 5:41 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Mon, 2008-12-29 at 15:53 -0800, Vivek Natarajan wrote:
-> >
-> >> +#define ATH9K_PS_WAKEUP(sc)                                                \
-> >> +     do {                                                                  \
-> >> +             if (!atomic_read(&sc->ps_usecount) &&                         \
-> >> +                (ah->ah_powerMode !=  ATH9K_PM_AWAKE)) {                   \
-> >> +                     ah->ah_restoreMode = ah->ah_powerMode;                \
-> >> +                     ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);         \
-> >> +             }                                                             \
-> >> +             atomic_inc(&sc->ps_usecount);                                 \
-> >> +     } while (0);
-> >> +
-> >> +#define ATH9K_PS_RESTORE(sc)                                               \
-> >> +     do {                                                                  \
-> >> +             if (atomic_dec_and_test(&sc->ps_usecount) &&                  \
-> >> +                (sc->hw->conf.flags & IEEE80211_CONF_PS))                  \
-> >> +                     ath9k_hw_setpower(sc->sc_ah, ah->ah_restoreMode);     \
-> >> +     } while (0);
-> >
-> > I think those would be better as static inlines rather than macros.
-> >
-> > johannes
-> 
-> Thanks Johannes. I'll change them.
-> 
-> > Also, this seems racy, shouldn't it use something like if
-> > (atomic_inc_return() == 1) ?
-> 
-> Thanks.This seems much better.
 
-Did you repost this?  I don't see it.  Please (re?)send it to the
-list w/ the requested changes.
+--=-do7vCdYmY8wcHJ+qoWkU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+On Fri, 2009-01-16 at 19:04 -0800, Brian Cavagnolo wrote:
+> After launching mesh discovery in tx path, reference count was not being
+> decremented.  This was preventing module unload.
+>=20
+> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+
+> ---
+>  net/mac80211/tx.c |    6 ++++--
+>  1 files changed, 4 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index a7392af..d0ae7f0 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1358,8 +1358,10 @@ int ieee80211_master_start_xmit(struct sk_buff *sk=
+b, struct net_device *dev)
+>  		if (is_multicast_ether_addr(hdr->addr3))
+>  			memcpy(hdr->addr1, hdr->addr3, ETH_ALEN);
+>  		else
+> -			if (mesh_nexthop_lookup(skb, osdata))
+> -				return  0;
+> +			if (mesh_nexthop_lookup(skb, osdata)) {
+> +				dev_put(odev);
+> +				return 0;
+> +			}
+>  		if (memcmp(odev->dev_addr, hdr->addr4, ETH_ALEN) !=3D 0)
+>  			IEEE80211_IFSTA_MESH_CTR_INC(&osdata->u.mesh,
+>  							    fwded_frames);
+
+--=-do7vCdYmY8wcHJ+qoWkU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJcaQhAAoJEKVg1VMiehFYurMQAJhZQ6sYnGVSbSIsJbb0fVoF
+JczpyDprx5X3OAiiONWLFFTswrRCeRKtXxodQqfnpjYNXYDuKe4GfSqTti7iqZmp
+oWIsK+lZdRiKbXHlKmAlA3fRm71bDhrhpM/HD4UMYc8dEwlGCfMJfweUL/HBV/vP
+PfkLVmZfoNqUaezn6GQczPVOhXUAMU4YlSrk6CehBB34DUUR0XWmCACod3P5zb+p
+Dhn7bfM7VOZoCGxvVgvV89ohOEl//mkft56OaPnoQRTmOF8Po1GT582lMe2JO/H2
+RQZr2BU5a0igOL0Vwr9D8sfE2PIBzNMhXv6fpOIm1JhsyNpvS0M16x5PRul5mDsc
+8J9fkYBGE1SrsRIel08KnXNsxFnVs9dHvojJQfPdIbQ9QILfb/VR0dsWTQIm4N5y
+4hTNMs3e12iCii3mwJ/oBoNHRZ5chhOF8Nqs2SbXF2UeCcvxVQgGahtKv5xwmajz
+zquN5vUeSe+7G3ResWvhPb1s5yKdS0pnaetAtSwk7CEnHZgdqJClrj8vVyjo+iQC
+ZrQiQE1M+XoQcTUzHNr5TQTfstT5Wgy46tStu377oPysr+J/tSO+n0WwUrR45V/K
+HG0DjiTRtmctIkVg+VxxqkrM6EWPXv/s9cc4dnpQuw0p52P3H53jrsKuWgX6BFq4
+kJ6KtklzBEg/phcJa5gQ
+=vgQF
+-----END PGP SIGNATURE-----
+
+--=-do7vCdYmY8wcHJ+qoWkU--
+
