@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:56649 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754265AbZAMWAQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 17:00:16 -0500
-Received: by ewy10 with SMTP id 10so305330ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 14:00:14 -0800 (PST)
+Received: from mail.gmx.net ([213.165.64.20]:51832 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754137AbZAQDvF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2009 22:51:05 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sat, 17 Jan 2009 04:51:03 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090110091659.GC1170@jm.kir.nu>
+Message-ID: <20090117035103.273820@gmx.net> (sfid-20090117_045115_052396_C1ADD024)
 MIME-Version: 1.0
-Date: Wed, 14 Jan 2009 00:00:13 +0200
-Message-ID: <eb3ff54b0901131400x64a4812fje2ee233c37546c1e@mail.gmail.com> (sfid-20090113_230022_885680_78F4243B)
-Subject: [PATCH] rt2x00: fix a wrong parameter for __test_and_clear_bit() in
-	rt2x00rfkill_free().
-From: Rami Rosen <ramirose@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	IvDoorn@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu>
+ <20090109205315.277310@gmx.net> <20090110091659.GC1170@jm.kir.nu>
+Subject: Re: [PATCH] Fixed BSSID (timesync)
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When running modprobe rt73usb, and then rmmod rt73usb, and then
-iwconfig, the wlan0 device does not disappear. When repeating this
-process again, we get a kernel Oops errors and "BUG: unable to handle
-kernel paging request..." message in the kernel log.
+Hi,
 
-The reason for this is that there is an error in rt2x00rfkill_free(),
-which is called in the process of removing the device
-(rt2x00lib_remove_dev() in rt2x00dev.c).
-rt2x00rfkill_free() clears the RFKILL_STATE_ALLOCATED bit , which is
-bit number 1 () in rt2x00dev->flags instead of in
-rt2x00dev->rfkill_state. As a result, when checking the
-DEVICE_STATE_REGISTERED_HW bit (bit number 1 in rt2x00dev->flags) in
-rt2x00lib_remove_hw() it is **unset**, and we wrongly **don't** call
-ieee80211_unregister_hw().
+I'm looking now for a better implementation for the IBSS fixed BSSID st=
+uff, that handles the TSF sync correctly. I think now having centralize=
+d IBSS join function ist more easy to maintain, as many little function=
+s. This function can look in the environment for the current state, so =
+that it can see what to do for the current join.
 
-This patch corrects this: the parameter for __test_and_clear_bit() in
-rt2x00rfkill_free() should be &rt2x00dev->rfkill_state and not
-&rt2x00dev->flags.
+So I have moved all my fixed BSSID stuff in this centralized function, =
+so that the TSF will be reseted, even if a fixed BSSID is set.
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
+I will allow a channel change too, if you have a fixed BSSID but not a =
+fixed channel setting. If there is a other IBSS network with the same B=
+SSID but in an other channel.
+Like now a BSSID change is allowed, if you set a fixed channel but not =
+a fixed BSSID.
+I think this would be a more clean and consistent implementation.
 
----
-(wireless-testing).
+What do you think about it?
+I will post a beta patch tomorrow.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-index 0b089ec..735a22d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00rfkill.c
-@@ -118,7 +118,7 @@ void rt2x00rfkill_allocate(struct rt2x00_dev *rt2x00dev)
+Regards
+Alina
 
- void rt2x00rfkill_free(struct rt2x00_dev *rt2x00dev)
- {
--	if (!__test_and_clear_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->flags))
-+	if (!__test_and_clear_bit(RFKILL_STATE_ALLOCATED, &rt2x00dev->rfkill_state))
- 		return;
-
- 	input_free_polled_device(rt2x00dev->rfkill_poll_dev);
+--=20
+Sensationsangebot verl=E4ngert: GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1308T45=
+69a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
