@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:20303 "EHLO mail.atheros.com"
+Received: from main.gmane.org ([80.91.229.2]:33015 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754976AbZAPVCd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 16:02:33 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 13:02:33 -0800
-Date: Fri, 16 Jan 2009 13:02:04 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 10/13] cfg80211: remove check for last_request on
-	ignore_reg_update()
-Message-ID: <20090116210204.GJ29609@tesla> (sfid-20090116_220240_784129_A6C158DE)
-References: <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232064746-17134-9-git-send-email-lrodriguez@atheros.com> <1232064746-17134-10-git-send-email-lrodriguez@atheros.com> <1232064746-17134-11-git-send-email-lrodriguez@atheros.com> <1232097990.3854.31.camel@johannes> <20090116162731.GD29609@tesla> <1232137980.3745.3.camel@johannes>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232137980.3745.3.camel@johannes>
+	id S1760294AbZAQXVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Jan 2009 18:21:04 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LOKTJ-0005vM-Q3
+	for linux-wireless@vger.kernel.org; Sat, 17 Jan 2009 23:20:57 +0000
+Received: from 77-21-172-36-dynip.superkabel.de ([77.21.172.36])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Jan 2009 23:20:57 +0000
+Received: from feldmann_markus by 77-21-172-36-dynip.superkabel.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Jan 2009 23:20:57 +0000
+To: linux-wireless@vger.kernel.org
+From: feldmaus <feldmann_markus@gmx.de>
+Subject: Does ACPIPHP work on my Machine
+Date: Sun, 18 Jan 2009 00:20:48 +0100
+Message-ID: <gktp4e$p6h$1@ger.gmane.org> (sfid-20090118_002111_030683_7460678C)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2009 at 12:33:00PM -0800, Johannes Berg wrote:
-> On Fri, 2009-01-16 at 08:27 -0800, Luis R. Rodriguez wrote:
-> > On Fri, Jan 16, 2009 at 01:26:30AM -0800, Johannes Berg wrote:
-> > > On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
-> > > > There is no need to check for last_request as the callers of
-> > > > update_all_wiphy_regulatory() ensure its present.
-> > > 
-> > > Are you sure? I had all this blow up all around me.
-> > 
-> > Interesting -- well that's the thing, where and why would it have blown up?
-> > I did test it and didn't run into it.
-> 
-> Only w/o crda and old-regulatory did I see that happen though, not sure.
+Hi Matthew Garrett,
 
-Bleh -- I suppose I'll have to retest this series with OLD_REG enabled after all...
+so i went home to read what you want from me to test.
+The Directory </sys/bus/pci/slots/> is empty.
+Si there something else i can test ?
 
-  Luis
+I give you some more Information.
+wes-nic:/sys/bus/pci/slots# lspci -d 14e4:4301 -vv
+02:02.0 Network controller: Broadcom Corporation BCM4303 802.11b 
+Wireless LAN Controller (rev 02)
+	Subsystem: Hewlett-Packard Company Device 12f3
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR+ FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort+ <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 64
+	Interrupt: pin A routed to IRQ 17
+	Region 0: Memory at e0104000 (32-bit, non-prefetchable) [size=8K]
+	Kernel driver in use: b43-pci-bridge
+	Kernel modules: ssb
+
+
+Regards Markus
+
