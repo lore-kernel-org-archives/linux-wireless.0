@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from berniwa.com ([88.80.197.66]:47629 "EHLO berniwa.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759581AbZAGTaq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 14:30:46 -0500
-Message-ID: <4964FBCE.1070804@berniwa.com> (sfid-20090107_203050_078144_971DEAD4)
-Date: Wed, 07 Jan 2009 20:00:30 +0100
-From: =?ISO-8859-15?Q?Bernhard_W=F6rndl-Aichriedler?= <bwa@berniwa.com>
+Received: from mail.gmx.net ([213.165.64.20]:33406 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756094AbZAQWM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Jan 2009 17:12:27 -0500
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sat, 17 Jan 2009 23:12:25 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090108091055.GA7009@jm.kir.nu>
+Message-ID: <20090117221225.301920@gmx.net> (sfid-20090117_231232_652841_83CF39F2)
 MIME-Version: 1.0
-To: andrey@cozybit.com, Colin McCabe <colin@cozybit.com>
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] libertas: Fix alignment issues in libertas core TESTED
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
+References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu>
+Subject: Re: [PATCH] Fixed BSSID step 3: Don't merge with the same BSSID
+To: Jouni Malinen <j@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hello Jouni!
 
-I'm using the AP7000 (Atmel AVR32) combined with the Marvell 88W8686 an=
-d=20
-the patch is just great,
-through that patch ([PATCH 1/3] libertas: Fix alignment issues in=20
-libertas core) i got the wireless working successfully and fully stable=
-=2E
+> I agree that merge part (updating Beacon/ProbeRsp data) can be skippe=
+d
+> for same BSSID, but this change seems to break timesync by removing c=
+all
+> to local->ops->reset_tsf(). I don't think that that should be removed
+> unconditionally.
 
-I suggest pulling it into the kernel
+I have looked in the Source of ath5k and ath9k. It seens to me that the=
+ TSF sync is done in the low-level driver and/or the hardware directly.=
+ So I see no reason to set it back to zero, if you have a dummy merge t=
+o the same BSSID and channel. (E.g. caused by TSF overflows.) I think i=
+t should only done if you change the network, so BSSID and/or channel i=
+s deferent.
 
-Thank you Colin and Andrey!
+Any doubts?
 
-Best Regards=20
-Bernhard W=F6rndl-Aichriedler
+Regards
+Alina
 
+--=20
+Sensationsangebot verl=E4ngert: GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1308T45=
+69a
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
