@@ -1,84 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58585 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754640AbZATWIQ (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:65255 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755535AbZAQIKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 17:08:16 -0500
-Date: Tue, 20 Jan 2009 17:08:10 -0500
-From: Kyle McMartin <kyle@infradead.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Greg KH <greg@kroah.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Paul Hickey <paul@christianpatriot.us>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [stable] Failed Build of modules for 2.6.27.9-159
-Message-ID: <20090120220810.GE17452@bombadil.infradead.org> (sfid-20090120_230822_801381_5C2DD3AA)
-References: <1232319854.4596.1.camel@localhost.localdomain> <20090119191138.GA4018@tesla> <1232404986.3641.2.camel@localhost.localdomain> <20090120000336.GB4018@tesla> <1232433738.3696.3.camel@localhost.localdomain> <20090120194243.GC19581@tesla> <20090120200515.GA5077@kroah.com> <20090120201316.GG19581@tesla> <20090120201613.GA5313@kroah.com> <20090120211630.GJ19581@tesla>
+	Sat, 17 Jan 2009 03:10:20 -0500
+Received: by bwz14 with SMTP id 14so6047287bwz.13
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Jan 2009 00:10:18 -0800 (PST)
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] p54spi: remove arch specific dependencies
+References: <E1LNgyq-0006iZ-0M@sipsolutions.net>
+	<200901161929.30204.chunkeey@web.de> <87k58vxcyw.fsf@litku.valot.fi>
+	<200901162234.15946.chunkeey@web.de>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 17 Jan 2009 10:10:15 +0200
+In-Reply-To: <200901162234.15946.chunkeey@web.de> (Christian Lamparter's message of "Fri\, 16 Jan 2009 22\:34\:15 +0100")
+Message-ID: <87r6322w0o.fsf@litku.valot.fi> (sfid-20090117_091026_035983_31FBDCF3)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090120211630.GJ19581@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 01:16:30PM -0800, Luis R. Rodriguez wrote:
-> As Michael pointed out -- its tough, in fact I am not sure how to do this with
-> static inlines. Advice on how to do this is welcomed. I have no clue.
-> 
+Christian Lamparter <chunkeey@web.de> writes:
 
-In this case, where a header will be providing a static inline, and you
-need to provide a stub function, and you're unable to test on a typedef,
-you'll have to use a weak function.
+> On Friday 16 January 2009 20:33:43 Kalle Valo wrote:
+>> N800 and N810 support is not on mainline yet, for stlc45xx I decided
+>> to add module parameters for the gpio numbers. Here's the commit from
+>> stlc45xx repo:
+>> 
+>> http://gitorious.org/projects/stlc45xx/repos/mainline/commits/35afc5df0027d02d49e6f5bf986dcc4deb4ee6cf
+>
+> This is the same patch for p54spi.
+> It removes all N800/N810 specific code from p54spi, so the driver can be used on
+> other architectures, or configurations as well.
+>
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
+> All in favour with these changes?
 
-kyle@phobos ~ $ cat foo.c
-#include "bar.h"
-#include "compat.h"
+No complaints from me.
 
-int main(void) {
-	int a = 0;
+> +/*
+> + * gpios should be handled in board files and provided via platform data,
+> + * but because it's currently impossible for p54spi to have a header file
+> + * in include/linux, let's use module paramaters for now
+> + */
 
-	a = foo(a);
+For stlc45xx, being an out-of-tree driver, it was impossible to have a
+header file for the platform data. But p54spi is a proper in-tree
+driver and it shouldn't have that problem. But that's the next step,
+it shouldn't hold off this patch.
 
-	return a;
-}
-
-kyle@phobos ~ $ cat compat.h
-int __attribute__((weak)) foo(int x);
-
-kyle@phobos ~ $ cat bar.h
-static inline int foo(int a) {
-	return a;
-}
-
-kyle@phobos ~ $ cat compat.c
-int __attribute__((weak)) foo(int a)
-{
-	return a+1;
-}
-
-kyle@phobos ~ $ gcc -Wall -O2 -o foo foo.c compat.c
-kyle@phobos ~ $ ./foo
-kyle@phobos ~ $ echo $?
-0
-
-Seems to work ok and not whinge about the double definition.
-
-> > > BTW are you saying the above practice of adding new stuff to headers
-> > > is OK too? I wish it wasn't...
-> > 
-> > Sure it's ok, distros can do whatever they want in their kernels, are
-> > you telling them that they are now not allowed to do that?  :)
-> 
-> Heh they can do what they want, but I think it can create issues and I personally
-> frown upon it. So I will at least bitch about it and maybe I'll create a bug report
-> to see if it gets washed away.
-> 
-
-*sigh* I don't know, and don't really want to argue about it. ;-) People
-with backports are pretty much always going to get screwed. What's the
-use case for wireless-testing backports? bugfixes or new features? Could
-we improve the stable process to help wireless stuff get into 2.6.$(x-1)
-more easily so this won't happen in the future?
-
-regards, Kyle
+-- 
+Kalle Valo
