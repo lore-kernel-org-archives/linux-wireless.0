@@ -1,70 +1,328 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54279 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752779AbZA2PTu (ORCPT
+Received: from flock1.newmail.ru ([82.204.219.207]:52063 "HELO
+	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754811AbZAQNHi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 10:19:50 -0500
-Subject: Re: [PATCH] ath9k: Fix LED blink pattern
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <bcopeland@gmail.com>
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Luis.Rodriguez@atheros.com, Jouni.Malinen@atheros.com
-In-Reply-To: <b6c5339f0901290717m760c4704x7f9df7502f772a17@mail.gmail.com> (sfid-20090129_161712_787053_46F15C75)
-References: <1233231739-4402-1-git-send-email-vasanth@atheros.com>
-	 <b6c5339f0901290717m760c4704x7f9df7502f772a17@mail.gmail.com>
-	 (sfid-20090129_161712_787053_46F15C75)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-56hyqxs5I5ZfRzYZRBIE"
-Date: Thu, 29 Jan 2009 16:19:40 +0100
-Message-Id: <1233242380.4035.12.camel@johannes.local> (sfid-20090129_161953_608348_077C68BE)
-Mime-Version: 1.0
+	Sat, 17 Jan 2009 08:07:38 -0500
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: [PATCH] Move orinoco Kconfig entries in drivers/net/wireless/orinoco/Kconfig
+Date: Sat, 17 Jan 2009 15:53:45 +0300
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart24175770.Mb21tCMEJb";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200901171554.00061.arvidjaar@mail.ru> (sfid-20090117_140744_611868_2BE6205B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-56hyqxs5I5ZfRzYZRBIE
-Content-Type: text/plain
+--nextPart24175770.Mb21tCMEJb
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Thu, 2009-01-29 at 10:17 -0500, Bob Copeland wrote:
+Subject: [PATCH] Move orinoco Kconfig entries in=20
+drivers/net/wireless/orinoco/Kconfig
+=46rom: Andrey Borzenkov <arvidjaar@mail.ru>
 
-> This is something that has come up from time to time from users for
-> ath5k as well.  Half of the drivers now have their own timers for
-> turning leds on or off.
->=20
-> Can we just add a decent blink algorithm to mac80211?  Right now for
-> rx it just toggles every other packet.  For tx, it's slightly smarter
-> but not overly so.  It seems like this is one of those things everyone
-> wants to do and we could easily make it a standard service.
+Since driver now lives in separate subdirectory, move Kconfig entries
+in own file so they can be tweaked indepndently. It complements commit
+b2e53b338b7b4608372d070bb477f3bae3971e5a.
 
-Define "decent blink algorithm"? But anyway, yes, please do, then we
-have a central way of disabling all these timers too. Might need to make
-some LED framework changes to figure out whether anything is attached to
-an LED to avoid blinking it when nothing is attached?
+Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
 
-johannes
+=2D--
 
---=-56hyqxs5I5ZfRzYZRBIE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+ drivers/net/wireless/Kconfig         |  122=20
+=2D---------------------------------
+ drivers/net/wireless/orinoco/Kconfig |  120=20
++++++++++++++++++++++++++++++++++
+ 2 files changed, 121 insertions(+), 121 deletions(-)
+ create mode 100644 drivers/net/wireless/orinoco/Kconfig
+
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index e4f9f74..4ddc11d 100644
+=2D-- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -188,127 +188,6 @@ config AIRO
+=20
+ 	  The driver can be compiled as a module and will be named "airo".
+=20
+=2Dconfig HERMES
+=2D	tristate "Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)"
+=2D	depends on (PPC_PMAC || PCI || PCMCIA) && WLAN_80211
+=2D	select WIRELESS_EXT
+=2D	select FW_LOADER
+=2D	select CRYPTO
+=2D	select CRYPTO_MICHAEL_MIC
+=2D	---help---
+=2D	  A driver for 802.11b wireless cards based on the "Hermes" or
+=2D	  Intersil HFA384x (Prism 2) MAC controller.  This includes the vast
+=2D	  majority of the PCMCIA 802.11b cards (which are nearly all rebadges)
+=2D	  - except for the Cisco/Aironet cards.  Cards supported include the
+=2D	  Apple Airport (not a PCMCIA card), WavelanIEEE/Orinoco,
+=2D	  Cabletron/EnteraSys Roamabout, ELSA AirLancer, MELCO Buffalo, Avaya,
+=2D	  IBM High Rate Wireless, Farralon Syyline, Samsung MagicLAN, Netgear
+=2D	  MA401, LinkSys WPC-11, D-Link DWL-650, 3Com AirConnect, Intel
+=2D	  IPW2011, and Symbol Spectrum24 High Rate amongst others.
+=2D
+=2D	  This option includes the guts of the driver, but in order to
+=2D	  actually use a card you will also need to enable support for PCMCIA
+=2D	  Hermes cards, PLX9052 based PCI adaptors or the Apple Airport below.
+=2D
+=2D	  You will also very likely also need the Wireless Tools in order to
+=2D	  configure your card and that /etc/pcmcia/wireless.opts works :
+=2D	  <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>
+=2D
+=2Dconfig HERMES_CACHE_FW_ON_INIT
+=2D	bool "Cache Hermes firmware on driver initialisation"
+=2D	depends on HERMES
+=2D	default y
+=2D	---help---
+=2D	  Say Y to cache any firmware required by the Hermes drivers
+=2D	  on startup.  The firmware will remain cached until the
+=2D	  driver is unloaded.  The cache uses 64K of RAM.
+=2D
+=2D	  Otherwise load the firmware from userspace as required.  In
+=2D	  this case the driver should be unloaded and restarted
+=2D	  whenever the firmware is changed.
+=2D
+=2D	  If you are not sure, say Y.
+=2D
+=2Dconfig APPLE_AIRPORT
+=2D	tristate "Apple Airport support (built-in)"
+=2D	depends on PPC_PMAC && HERMES
+=2D	help
+=2D	  Say Y here to support the Airport 802.11b wireless Ethernet hardware
+=2D	  built into the Macintosh iBook and other recent PowerPC-based
+=2D	  Macintosh machines. This is essentially a Lucent Orinoco card with=20
+=2D	  a non-standard interface.
+=2D
+=2D	  This driver does not support the Airport Extreme (802.11b/g). Use
+=2D	  the BCM43xx driver for Airport Extreme cards.
+=2D
+=2Dconfig PLX_HERMES
+=2D	tristate "Hermes in PLX9052 based PCI adaptor support (Netgear MA301=20
+etc.)"
+=2D	depends on PCI && HERMES
+=2D	help
+=2D	  Enable support for PCMCIA cards supported by the "Hermes" (aka
+=2D	  orinoco) driver when used in PLX9052 based PCI adaptors.  These
+=2D	  adaptors are not a full PCMCIA controller but act as a more limited
+=2D	  PCI <-> PCMCIA bridge.  Several vendors sell such adaptors so that
+=2D	  802.11b PCMCIA cards can be used in desktop machines.  The Netgear
+=2D	  MA301 is such an adaptor.
+=2D
+=2Dconfig TMD_HERMES
+=2D	tristate "Hermes in TMD7160 based PCI adaptor support"
+=2D	depends on PCI && HERMES
+=2D	help
+=2D	  Enable support for PCMCIA cards supported by the "Hermes" (aka
+=2D	  orinoco) driver when used in TMD7160 based PCI adaptors.  These
+=2D	  adaptors are not a full PCMCIA controller but act as a more limited
+=2D	  PCI <-> PCMCIA bridge.  Several vendors sell such adaptors so that
+=2D	  802.11b PCMCIA cards can be used in desktop machines.
+=2D
+=2Dconfig NORTEL_HERMES
+=2D	tristate "Nortel emobility PCI adaptor support"
+=2D	depends on PCI && HERMES
+=2D	help
+=2D	  Enable support for PCMCIA cards supported by the "Hermes" (aka
+=2D	  orinoco) driver when used in Nortel emobility PCI adaptors.  These
+=2D	  adaptors are not full PCMCIA controllers, but act as a more limited
+=2D	  PCI <-> PCMCIA bridge.
+=2D
+=2Dconfig PCI_HERMES
+=2D	tristate "Prism 2.5 PCI 802.11b adaptor support"
+=2D	depends on PCI && HERMES
+=2D	help
+=2D	  Enable support for PCI and mini-PCI 802.11b wireless NICs based on
+=2D	  the Prism 2.5 chipset.  These are true PCI cards, not the 802.11b
+=2D	  PCMCIA cards bundled with PCI<->PCMCIA adaptors which are also
+=2D	  common.  Some of the built-in wireless adaptors in laptops are of
+=2D	  this variety.
+=2D
+=2Dconfig PCMCIA_HERMES
+=2D	tristate "Hermes PCMCIA card support"
+=2D	depends on PCMCIA && HERMES
+=2D	---help---
+=2D	  A driver for "Hermes" chipset based PCMCIA wireless adaptors, such
+=2D	  as the Lucent WavelanIEEE/Orinoco cards and their OEM (Cabletron/
+=2D	  EnteraSys RoamAbout 802.11, ELSA Airlancer, Melco Buffalo and
+=2D	  others).  It should also be usable on various Prism II based cards
+=2D	  such as the Linksys, D-Link and Farallon Skyline.  It should also
+=2D	  work on Symbol cards such as the 3Com AirConnect and Ericsson WLAN.
+=2D
+=2D	  You will very likely need the Wireless Tools in order to
+=2D	  configure your card and that /etc/pcmcia/wireless.opts works:
+=2D	  <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>.
+=2D
+=2Dconfig PCMCIA_SPECTRUM
+=2D	tristate "Symbol Spectrum24 Trilogy PCMCIA card support"
+=2D	depends on PCMCIA && HERMES
+=2D	---help---
+=2D
+=2D	  This is a driver for 802.11b cards using RAM-loadable Symbol
+=2D	  firmware, such as Symbol Wireless Networker LA4100, CompactFlash
+=2D	  cards by Socket Communications and Intel PRO/Wireless 2011B.
+=2D
+=2D	  This driver requires firmware download on startup.  Utilities
+=2D	  for downloading Symbol firmware are available at
+=2D	  <http://sourceforge.net/projects/orinoco/>
+=2D
+ config ATMEL
+       tristate "Atmel at76c50x chipset  802.11b support"
+       depends on (PCI || PCMCIA) && WLAN_80211
+@@ -590,5 +469,6 @@ source "drivers/net/wireless/b43/Kconfig"
+ source "drivers/net/wireless/b43legacy/Kconfig"
+ source "drivers/net/wireless/zd1211rw/Kconfig"
+ source "drivers/net/wireless/rt2x00/Kconfig"
++source "drivers/net/wireless/orinoco/Kconfig"
+=20
+ endmenu
+diff --git a/drivers/net/wireless/orinoco/Kconfig=20
+b/drivers/net/wireless/orinoco/Kconfig
+new file mode 100644
+index 0000000..93031dc
+=2D-- /dev/null
++++ b/drivers/net/wireless/orinoco/Kconfig
+@@ -0,0 +1,120 @@
++config HERMES
++	tristate "Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)"
++	depends on (PPC_PMAC || PCI || PCMCIA) && WLAN_80211
++	select WIRELESS_EXT
++	select FW_LOADER
++	select CRYPTO
++	select CRYPTO_MICHAEL_MIC
++	---help---
++	  A driver for 802.11b wireless cards based on the "Hermes" or
++	  Intersil HFA384x (Prism 2) MAC controller.  This includes the vast
++	  majority of the PCMCIA 802.11b cards (which are nearly all rebadges)
++	  - except for the Cisco/Aironet cards.  Cards supported include the
++	  Apple Airport (not a PCMCIA card), WavelanIEEE/Orinoco,
++	  Cabletron/EnteraSys Roamabout, ELSA AirLancer, MELCO Buffalo, Avaya,
++	  IBM High Rate Wireless, Farralon Syyline, Samsung MagicLAN, Netgear
++	  MA401, LinkSys WPC-11, D-Link DWL-650, 3Com AirConnect, Intel
++	  IPW2011, and Symbol Spectrum24 High Rate amongst others.
++
++	  This option includes the guts of the driver, but in order to
++	  actually use a card you will also need to enable support for PCMCIA
++	  Hermes cards, PLX9052 based PCI adaptors or the Apple Airport below.
++
++	  You will also very likely also need the Wireless Tools in order to
++	  configure your card and that /etc/pcmcia/wireless.opts works :
++	  <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>
++
++config HERMES_CACHE_FW_ON_INIT
++	bool "Cache Hermes firmware on driver initialisation"
++	depends on HERMES
++	default y
++	---help---
++	  Say Y to cache any firmware required by the Hermes drivers
++	  on startup.  The firmware will remain cached until the
++	  driver is unloaded.  The cache uses 64K of RAM.
++
++	  Otherwise load the firmware from userspace as required.  In
++	  this case the driver should be unloaded and restarted
++	  whenever the firmware is changed.
++
++	  If you are not sure, say Y.
++
++config APPLE_AIRPORT
++	tristate "Apple Airport support (built-in)"
++	depends on PPC_PMAC && HERMES
++	help
++	  Say Y here to support the Airport 802.11b wireless Ethernet hardware
++	  built into the Macintosh iBook and other recent PowerPC-based
++	  Macintosh machines. This is essentially a Lucent Orinoco card with=20
++	  a non-standard interface.
++
++	  This driver does not support the Airport Extreme (802.11b/g). Use
++	  the BCM43xx driver for Airport Extreme cards.
++
++config PLX_HERMES
++	tristate "Hermes in PLX9052 based PCI adaptor support (Netgear MA301=20
+etc.)"
++	depends on PCI && HERMES
++	help
++	  Enable support for PCMCIA cards supported by the "Hermes" (aka
++	  orinoco) driver when used in PLX9052 based PCI adaptors.  These
++	  adaptors are not a full PCMCIA controller but act as a more limited
++	  PCI <-> PCMCIA bridge.  Several vendors sell such adaptors so that
++	  802.11b PCMCIA cards can be used in desktop machines.  The Netgear
++	  MA301 is such an adaptor.
++
++config TMD_HERMES
++	tristate "Hermes in TMD7160 based PCI adaptor support"
++	depends on PCI && HERMES
++	help
++	  Enable support for PCMCIA cards supported by the "Hermes" (aka
++	  orinoco) driver when used in TMD7160 based PCI adaptors.  These
++	  adaptors are not a full PCMCIA controller but act as a more limited
++	  PCI <-> PCMCIA bridge.  Several vendors sell such adaptors so that
++	  802.11b PCMCIA cards can be used in desktop machines.
++
++config NORTEL_HERMES
++	tristate "Nortel emobility PCI adaptor support"
++	depends on PCI && HERMES
++	help
++	  Enable support for PCMCIA cards supported by the "Hermes" (aka
++	  orinoco) driver when used in Nortel emobility PCI adaptors.  These
++	  adaptors are not full PCMCIA controllers, but act as a more limited
++	  PCI <-> PCMCIA bridge.
++
++config PCI_HERMES
++	tristate "Prism 2.5 PCI 802.11b adaptor support"
++	depends on PCI && HERMES
++	help
++	  Enable support for PCI and mini-PCI 802.11b wireless NICs based on
++	  the Prism 2.5 chipset.  These are true PCI cards, not the 802.11b
++	  PCMCIA cards bundled with PCI<->PCMCIA adaptors which are also
++	  common.  Some of the built-in wireless adaptors in laptops are of
++	  this variety.
++
++config PCMCIA_HERMES
++	tristate "Hermes PCMCIA card support"
++	depends on PCMCIA && HERMES
++	---help---
++	  A driver for "Hermes" chipset based PCMCIA wireless adaptors, such
++	  as the Lucent WavelanIEEE/Orinoco cards and their OEM (Cabletron/
++	  EnteraSys RoamAbout 802.11, ELSA Airlancer, Melco Buffalo and
++	  others).  It should also be usable on various Prism II based cards
++	  such as the Linksys, D-Link and Farallon Skyline.  It should also
++	  work on Symbol cards such as the 3Com AirConnect and Ericsson WLAN.
++
++	  You will very likely need the Wireless Tools in order to
++	  configure your card and that /etc/pcmcia/wireless.opts works:
++	  <http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>.
++
++config PCMCIA_SPECTRUM
++	tristate "Symbol Spectrum24 Trilogy PCMCIA card support"
++	depends on PCMCIA && HERMES
++	---help---
++
++	  This is a driver for 802.11b cards using RAM-loadable Symbol
++	  firmware, such as Symbol Wireless Networker LA4100, CompactFlash
++	  cards by Socket Communications and Intel PRO/Wireless 2011B.
++
++	  This driver requires firmware download on startup.  Utilities
++	  for downloading Symbol firmware are available at
++	  <http://sourceforge.net/projects/orinoco/>
+
+
+--nextPart24175770.Mb21tCMEJb
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJJgckJAAoJEKVg1VMiehFY6WEP/RjZZBEPBGl+V8H1N/AHWLLF
-1MLDw0h3KyjvZAAtgFO1Vil383gz3g2oLKUyPj0ap4+Rd+AqPEdheL1Az/uJupLg
-tRVyj9AtsLW9FZY8N37YSkAO7wv/CllhqVlg7Omz84wqe3yZfkwmHmS45bdzsViK
-WQUFa4ZIS1+cJKgX7dIA0a23JYAdSDuj3dwb1j/7B281zuyRglYgEWE1V/VKbjG0
-SvQiH2UePuYVGc/oxh8QNoKxAzVTfS/JrtrklY25mrkeBLAZuLLTikos8jZpR74k
-/YNBIXMH7D0H4hj5uGfKqRl7ipPKjM4LdKBgwXDQPTRX57BW+D5+o1aQ6BYjlXYs
-aqjGEdcp+9dOPkJ8pYrTbkwtU29j8oHQY1kqv7RA5jPxHqo+Wfu10R9txVvvAqdy
-fHDgZ3GidpakxgW3RqQFBSeCxPsV7dactGDkFuYxgvDvH0asHZiHHAMnhmwL52gk
-5OV4R6tpB2ASswdN5UbwXu5Wr/0H4bMkzxsCTO2myIieCv5906J4RGErup4FVrbe
-+lZ+GZL579w808MI3cyBIP1F+8N7U/wRP7Z4XEa6Ks7a4REOcLRlCRKFy43pHv3M
-i+F+qXUtD6Ce5fUfihq+kZGXBfcovfV60P06FCCcr/lmQXAkXejcsF/qbCkGUsQT
-Y+gN1gJSrPdlhwcVT6et
-=+sje
+iEYEABECAAYFAklx1N0ACgkQR6LMutpd94z7CACfehf5KfCNbmVsw8dIQQMqLYB8
+2V0AoJw47S0Nmxri7CfeguFUWl8UYmhd
+=a0Zq
 -----END PGP SIGNATURE-----
 
---=-56hyqxs5I5ZfRzYZRBIE--
-
+--nextPart24175770.Mb21tCMEJb--
