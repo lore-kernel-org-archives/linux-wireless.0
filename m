@@ -1,88 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:58601 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755092AbZAOS4h (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35037 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756337AbZAQJay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 13:56:37 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so465155ugf.37
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 10:56:35 -0800 (PST)
-Message-ID: <496F86E1.6010605@gmail.com> (sfid-20090115_195641_966726_7F1BFFE4)
-Date: Thu, 15 Jan 2009 19:56:33 +0100
-From: Artur Skawina <art.08.09@gmail.com>
-MIME-Version: 1.0
-To: Artur Skawina <art.08.09@gmail.com>
-CC: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-References: <494698AF.4020204@gmail.com> <200901131449.41189.chunkeey@web.de> <496CC514.3030307@gmail.com> <200901131906.13096.chunkeey@web.de> <496CE55F.2080506@gmail.com> <496D09F4.40209@gmail.com> <496D163B.5030307@gmail.com> <496F7887.8070203@gmail.com>
-In-Reply-To: <496F7887.8070203@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 17 Jan 2009 04:30:54 -0500
+Subject: Re: [PATCH 03/13] cfg80211: add wiphy_apply_custom_regulatory()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890901161413n3fdd7031lfdd0a363941b697d@mail.gmail.com> (sfid-20090116_231309_523730_F28F1671)
+References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
+	 <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
+	 <1232097659.3854.20.camel@johannes> <20090116163646.GG29609@tesla>
+	 <43e72e890901161413n3fdd7031lfdd0a363941b697d@mail.gmail.com>
+	 (sfid-20090116_231309_523730_F28F1671)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BYG5ydfzqjGqew2AYeoc"
+Date: Sat, 17 Jan 2009 10:30:49 +0100
+Message-Id: <1232184649.3668.2.camel@johannes> (sfid-20090117_103115_523279_46617A08)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Artur Skawina wrote:
-> Artur Skawina wrote:
->> Artur Skawina wrote:
->>>>>> reboots, but locks up after only a few packets go over the hostap driven
->>>>>> p54usb device. I need the box to be up, that limits the number of tests i can
->>> after switching from SLUB to SLAB and enabling some debugging i finally caught this:
->> and slub debugging gave something a bit more useful:
->>
->> =============================================================================
->> BUG kmalloc-4096: Poison overwritten
-> 
-> tried reproducing (using the old w-t/pending pull) on different machine,
-> but no oops or crash there...
-> (similar connectivity issues though, such as connecting only works
-> exactly once after starting hostapd, to reconnect i have to restart
-> hostapd)
-> 
-> Upgraded to current wireless-testing/pending on the problematic box
-> and almost immediately got [1]. No slab corruption this time (at least
-> not yet). Will switch to GFP_ATOMIC and retry w/ the new fw.
 
-Switching p54_set_tim to use GFP_ATOMIC seemed to help, a few
-quick tests resulted in no crashes and oopses; unfortunately
-ipv4 wasn't working all that well -- arp didn't work at all in
-fact.
+--=-BYG5ydfzqjGqew2AYeoc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Tried the newer fw, but it does not seem to like my hw:
+On Fri, 2009-01-16 at 14:13 -0800, Luis R. Rodriguez wrote:
 
-usb 1-1.1: new full speed USB device using uhci_hcd and address 6
-usb 1-1.1: New USB device found, idVendor=0846, idProduct=4200
-usb 1-1.1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
-usb 1-1.1: configuration #1 chosen from 1 choice
-usb 1-1.1: firmware: requesting isl3886usb
-phy1: p54 detected a LM86 firmware
-p54: rx_mtu reduced from 3240 to 2392
-phy1: FW rev 2.13.24.0 - Softmac protocol 5.9
-phy1: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-p54usb: probe of 1-1.1:1.0 failed with error -110
+> >> > +static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 =
+*bandwidth,
+> >> > +                    const struct ieee80211_reg_rule **reg_rule)
+> >> > +{
+> >> > +   return freq_reg_info_regd(wiphy, center_freq,
+> >> > +           bandwidth, reg_rule, NULL);
+> >> > +}
+> >>
+> >> Are you not using this or am I just not seeing the user?
+> >
+> > Yeah -- good catch, its just cruft left over from my previous work.
+>=20
+> Actually  freq_reg_info_regd() is used by handle_channel_custom(),
+> hence my comment on re-inventing the wheel. But yeah it used.
 
-Last one working is:
+Yeah but not freq_reg_info?
 
-usb 1-1.1: new full speed USB device using uhci_hcd and address 5
-usb 1-1.1: New USB device found, idVendor=0846, idProduct=4200
-usb 1-1.1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
-usb 1-1.1: configuration #1 chosen from 1 choice
-usb 1-1.1: firmware: requesting isl3886usb
-phy0: p54 detected a LM86 firmware
-p54: rx_mtu reduced from 3240 to 2392
-phy0: FW rev 2.13.1.0 - Softmac protocol 5.5
-phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-phy0: hwaddr 00:30:f1:b1:09:e6, MAC:isl3886 RF:Frisbee
-wmaster0 (p54usb): not using net_device_ops yet
-phy0: Selected rate control algorithm 'minstrel'
-wlan0 (p54usb): not using net_device_ops yet
-udev: renamed network interface wlan0 to ap0
-mon.ap0 (p54usb): not using net_device_ops yet
-cfg80211: Calling CRDA for country: US
+johannes
 
+--=-BYG5ydfzqjGqew2AYeoc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Disconnecting/reconnecting the wireless client resulted in this:
-> mac80211-phy0: failed to remove key (0, 00:1b:fb:12:34:56) from hardware (-12)
-followed later, when killing hostapd, by:
-> mac80211-phy0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardware (-12)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJJcaVGAAoJEKVg1VMiehFYGs8P/i0MoiSU1q2wsQng3J2jAE+b
+qNouA82j2bfcvEnor2Nv5YU1BVWsE0rVbkkdCR73URpaudVGpGncz5GOKksrSdjc
+m2stkVSbFI2POmKYUL9QoQzh1iDJY4JQYe3sUYH9GbHAuFohyODh2Pu4egEy57Y3
+4WUAi++XIwiexuQgITF5gcbZS+Pw9nK20sOQ3lZc0Ys7qkXQfhkfjAn8/bRitPKI
+9xfR+kIvFECD4pOPuuwT1u4e5J5DYO1fCQ3Gg1wfsyKSp9iFjQubgktudYKcebSa
+1ur774crwuXOWW+irRdvj9/NDITq0U4ePZAYGazTrmds2vt0aq8+oF3GQXAGMupm
+v4H8fvi16IDM/D0QnGIEgJh58DucLMGODx7gKNFxkKRMqtyCuawkksaZ7OLVrxM2
+59hd2v21cXe6OQHSDDDpFDav5wCyHbN+/lLRrFd+9LRBhgk/sMIOqCWSqBjkbPul
+89NJrlgv7+fyFPYHawA5yWJQaQRzL0BUA+viTk4GAxtAQG3+1Mz9WwUaJ1Iplr6r
+hqA9yxeIFRRCnQnWWFRQGPQ38nXiL9TKhqzeh3z8EcPiEO5AxhhDk2xytmJgrBx2
+GGCcnT3IsoJMH08egoujGwcf9W9GT7dxo6To2U2BzPvxNoyzdmsV5SLHIjrmzNuJ
+OCxieaopFS4y1j+H0pqF
+=dprR
+-----END PGP SIGNATURE-----
 
-artur
+--=-BYG5ydfzqjGqew2AYeoc--
+
