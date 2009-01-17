@@ -1,87 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:58777 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737AbZASNaZ (ORCPT
+Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:60820 "EHLO
+	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758618AbZAQW73 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 08:30:25 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] p54: more cryptographic accelerator fixes
-Date: Mon, 19 Jan 2009 14:30:32 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>
+	Sat, 17 Jan 2009 17:59:29 -0500
+Received: from c213-89-104-149.bredband.comhem.se ([213.89.104.149]:64229 helo=[192.168.0.142])
+	by ch-smtp02.sth.basefarm.net with esmtp (Exim 4.68)
+	(envelope-from <tsr.offentlig@tsr.se>)
+	id 1LOK8O-0006pH-8L
+	for linux-wireless@vger.kernel.org; Sat, 17 Jan 2009 23:59:26 +0100
+Message-ID: <497262C7.40105@tsr.se> (sfid-20090117_235937_074462_CA5CF617)
+Date: Sat, 17 Jan 2009 23:59:19 +0100
+From: tsr <tsr.offentlig@tsr.se>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901191430.32130.chunkeey@web.de> (sfid-20090119_143030_421243_EF44AEDA)
+To: linux-wireless@vger.kernel.org
+Subject: Re: Marvell 88w8385 Support
+References: <496C8468.4060101@tsr.se>  <20090113145213.GA3623@tuxdriver.com>	 <1231951654.14909.22.camel@localhost.localdomain>	 <496E1D6A.10505@gmail.com>  <496E3075.6090901@tsr.se>	 <1231959472.14909.73.camel@localhost.localdomain> <1232127390.22915.9.camel@174-147-64-233.pools.spcsdns.net>
+In-Reply-To: <1232127390.22915.9.camel@174-147-64-233.pools.spcsdns.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we let the firmware do the data encryption, we have to remove the ICV and
-(M)MIC at the end of the frame before we can give it back to mac80211. 
-Or, these data frames have a few trailing bytes on cooked monitor interfaces.
-   
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 9b6db82..45c2e7a 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -545,8 +545,8 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 			}
- 			if (err)
- 				goto err;
--
--		}
-+			}
-+			break;
- 		case PDR_PRISM_ZIF_TX_IQ_CALIBRATION:
- 			priv->iq_autocal = kmalloc(data_len, GFP_KERNEL);
- 			if (!priv->iq_autocal) {
-@@ -884,7 +884,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
- 		struct p54_hdr *entry_hdr;
- 		struct p54_tx_data *entry_data;
--		int pad = 0;
-+		unsigned int pad = 0, frame_len;
- 
- 		range = (void *)info->rate_driver_data;
- 		if (range->start_addr != addr) {
-@@ -907,6 +907,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
- 		__skb_unlink(entry, &priv->tx_queue);
- 		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
- 
-+		frame_len = entry->len;
- 		entry_hdr = (struct p54_hdr *) entry->data;
- 		entry_data = (struct p54_tx_data *) entry_hdr->data;
- 		priv->tx_stats[entry_data->hw_queue].len--;
-@@ -960,15 +961,28 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
- 		info->status.ack_signal = p54_rssi_to_dbm(dev,
- 				(int)payload->ack_rssi);
- 
--		if (entry_data->key_type == P54_CRYPTO_TKIPMICHAEL) {
-+		/* Undo all changes to the frame. */
-+		switch (entry_data->key_type) {
-+		case P54_CRYPTO_TKIPMICHAEL: {
- 			u8 *iv = (u8 *)(entry_data->align + pad +
--				        entry_data->crypt_offset);
-+					entry_data->crypt_offset);
- 
- 			/* Restore the original TKIP IV. */
- 			iv[2] = iv[0];
- 			iv[0] = iv[1];
- 			iv[1] = (iv[0] | 0x20) & 0x7f;	/* WEPSeed - 8.3.2.2 */
-+
-+			frame_len -= 12; /* remove TKIP_MMIC + TKIP_ICV */
-+			break;
-+			}
-+		case P54_CRYPTO_AESCCMP:
-+			frame_len -= 8; /* remove CCMP_MIC */
-+			break;
-+		case P54_CRYPTO_WEP:
-+			frame_len -= 4; /* remove WEP_ICV */
-+			break;
- 		}
-+		skb_trim(entry, frame_len);
- 		skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
- 		ieee80211_tx_status_irqsafe(dev, entry);
- 		goto out;
+Dan Williams wrote:
+> On Wed, 2009-01-14 at 13:57 -0500, Dan Williams wrote:
+>> On Wed, 2009-01-14 at 19:35 +0100, tsr wrote:
+>>> John Daiker wrote:
+>>>> On 01/14/2009 08:47 AM, Dan Williams wrote:
+>>>>> On Tue, 2009-01-13 at 09:52 -0500, John W. Linville wrote:
+>>>>>   
+>>>>>> On Tue, Jan 13, 2009 at 01:09:12PM +0100, tsr wrote:
+>>>>>>     
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>> I have a FSG-3 that includes a Marvell 88w8385 card. I wonder if there
+>>>>>>> is support for it in recent kernels. According to
+>>>>>>> http://marc.info/?l=linux-wireless&m=123178916308198&w=2 (search for
+>>>>>>> 8385) there seems to be support but I don't want to start messing 
+>>>>>>> around
+>>>>>>> with kernels and stuff without being sure.
+>>>>>>>        
+>>>>>> That driver is for SDIO hardware.  It looks like your FSG-3 has
+>>>>>> mini-PCI?  Either way, we don't have a driver merged yet that would
+>>>>>> cover your hardware.
+>>>>>>      
+>>>>> Looks like it's a CB35, which is actually an 88w8335 MiniPCI card.
+>>>>> Would be supported by the mwl8k driver ideally.  I've started on trying
+>>>>> to add support to mwl8k for the 8335 parts, but we'll need to split the
+>>>>> driver so that we can create IO hooks for the different parts.  It'll be
+>>>>> a bit, but we'll get there.
+>>>>>
+>>>>> Dan
+>>>>>    
+>>>> Very interested in the progress of 8335 support at some point.  My 
+>>>> Netgear wg311v3 is sitting on my desk... waiting for some Linux bits to 
+>>>> get it running!
+>>>>
+>>>> I can assist in testing whenever bits become available ( officially or 
+>>>> unofficially, hint, hint! :-P )
+>>>>
+>>>> Thanks for the hard work, and keep them bits a comin'
+>>>>
+>>>> JD
+>>>>
+>>> Thanks for the info, I've found something that is said to be a working 
+>>> drivers for 'my' card in this package: 
+>>> http://www.seagate.com/staticfiles/maxtor/en_us/downloads/MSSII_3.1.2.src.tgz
+>>>
+>>> The kernel source says it's some kind of 2.6 kernel, grepping for it I 
+>>> found the highest number to be 2.6.14 so maybe it is possible to use 
+>>> something from it.
+>>>
+>>> AFAIK it's also GPL.
+>> Wow, that is the right driver...  haven't seen a driver for the 8335
+>> before, but there it is, and it's GPL too.  Got the firmware too, which
+>> I also haven't seen separately.
+>>
+>> The path forward with this is to port the support for the hardware over
+>> to mwl8k since the firmware interface is almost the same.
+>>
+>> That said, the only reason I chose that as the path forward was that we
+>> couldn't make any progress with the standalone driver, and figured that
+>> Marvell's driver would actually work where mrv8k didn't.  I still think
+>> it makes sense to use the same driver core for both but if that turns
+>> out to be too hard, we can just do a mac80211 port for this.
+> 
+> As a follow-up... the driver source contained in that tarball compiles
+> after a few trivial changes to update net80211 and hardware parts to the
+> latest kernel.  However, the firmware does not successfully load.  It
+> appears that the firmware load procedure for the MSSII driver is a
+> one-stage firmware load that probably depends on a minimal bootloader on
+> firmware of the card, or something like that.  In any case, it doesn't
+> work.
+> 
+> I spent some time porting over the firmware loading from mrv8k (which is
+> known to work), and got as far as successful boot and main firmware
+> load, but I'm not having a ton of success getting the card to actually
+> boot the main firmware.  More poking required.  If the MSSII driver can
+> actually *drive* 8335 cards, then we can use that as a reference for
+> hardware/firmware API when adding support for 8335 to mwl8k.
+> 
+> Dan
+> 
+
+Ok, so both good and bad news I guess (for me the good news is that work
+is being done ;)
+
+Is there anything I can do to help, with regards to testing, etc? I'm
+extremely unexperienced with kernels, but with some help I will dare to 
+compile my own.
+
+/tsr
+
