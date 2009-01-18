@@ -1,145 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:36596 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750845AbZAHQlX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 11:41:23 -0500
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
+Received: from mail-ew0-f20.google.com ([209.85.219.20]:52788 "EHLO
+	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753046AbZARXct (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2009 18:32:49 -0500
+Received: by ewy13 with SMTP id 13so103373ewy.13
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 15:32:47 -0800 (PST)
+Message-ID: <4973BAC6.5020502@gmail.com> (sfid-20090119_003254_882567_F3D1B2CE)
+Date: Mon, 19 Jan 2009 00:27:02 +0100
+From: Artur Skawina <art.08.09@gmail.com>
+MIME-Version: 1.0
+To: Artur Skawina <art.08.09@gmail.com>
+CC: Christian Lamparter <chunkeey@web.de>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
-In-Reply-To: <1231270575.14901.6.camel@californication>
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
-	 <1229336057.4471.9.camel@johannes.berg>
-	 <1229354532.12163.24.camel@localhost.localdomain>
-	 <20081217174244.M36761@bobcopeland.com>
-	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
-	 <1230102989.16960.14.camel@californication>
-	 <1231260306.14565.21.camel@localhost.localdomain>
-	 <1231261937.5246.16.camel@californication>
-	 <1231267979.14565.34.camel@localhost.localdomain>
-	 <1231270575.14901.6.camel@californication>
-Content-Type: text/plain
-Date: Thu, 08 Jan 2009 11:39:38 -0500
-Message-Id: <1231432778.21643.40.camel@localhost.localdomain> (sfid-20090108_174127_347191_D6B30F0E)
-Mime-Version: 1.0
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+References: <494698AF.4020204@gmail.com> <496FFC9F.1000907@lwfinger.net> <1232097187.3854.9.camel@johannes> <200901162138.51855.chunkeey@web.de> <497105D1.5040906@gmail.com>
+In-Reply-To: <497105D1.5040906@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-01-06 at 20:36 +0100, Marcel Holtmann wrote:
-> Hi Dan,
+Artur Skawina wrote:
+> Christian Lamparter wrote:
+>> On Friday 16 January 2009 10:13:07 Johannes Berg wrote:
+>>> On Thu, 2009-01-15 at 21:18 -0600, Larry Finger wrote:
+>>>
+>>>>>>   Object 0xddec18d0:  >69< 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b ikkkkkkkkkkkkkkk
+>>>> I too have seen real single bit changes - in my case 6b went to 6a,
+>>>> and my memory is fine. I wouldn't necessarily blame your hardware.
+>>> 6b to 6a is often the result of a refcounting bug that happens to unref
+>>> a value _after_ it has been freed. But that doesn't explain 6b to 69,
+>>> unless you happen to have _two_ refcounting bugs. Not that I necessarily
+>>> think that memory is bad
+>> Well, this idiotic debug patch (kref-kernel-debug-patch) could shed some light into
+>> the problem who's using a freed skb. 
 > 
-> > > > > > > > Running pm-suspend from pm-utils directly also triggers the problem, 
-> > > > > > > > so that would seem to excuse gnome-power-manager at least.
-> > > > > > > 
-> > > > > > > What's the status of this? Should I look into things a bit?
-> > > > > > 
-> > > > > > Well, I guess I should have noticed this a lot earlier, but anyway the 
-> > > > > > problem was pm-utils on Fedora 10:
-> > > > > > 
-> > > > > > /usr/lib/pm-utils/sleep.d/55NetworkManager:
-> > > > > > 
-> > > > > >     suspend_nm()
-> > > > > >     {
-> > > > > >         # Tell NetworkManager to shut down networking
-> > > > > >         dbus-send --system                         \
-> > > > > >             --dest=org.freedesktop.NetworkManager  \
-> > > > > >             /org/freedesktop/NetworkManager        \
-> > > > > >             org.freedesktop.NetworkManager.sleep
-> > > > > >     }
-> > > > > > 
-> > > > > > I really don't think this is necessary (g-p-m will also do it if you 
-> > > > > > set the proper gconf setting.)
-> > > > > 
-> > > > > this should not be needed at all. I have systems running wpa_supplicant
-> > > > > and not any of the pm-utils scripts messing with it. During suspend and
-> > > > > later resume it indicates normally just only a new handshake with the AP
-> > > > > or a disconnect if the AP got out of range.
-> > > > > 
-> > > > > I think Network Manager is perfectly capable of handling state changes
-> > > > > from wpa_supplicant. I really do think that this hack only exists of
-> > > > > some broken drivers from really old kernels or for the 0.6 version of
-> > > > > Network Manager. Remember that Ubuntu's suspend/resume solution used to
-> > > > > be to unload all networking drivers on suspend.
-> > > > 
-> > > > You still want to tell NM to go to sleep so it doesn't see the
-> > > > disconnection from the supplicant (triggered by the driver because it
-> > > > was going to sleep), and thus try to reconnect, or try a different AP.
-> > > > Ideally NM would simply listen for signals from some power service such
-> > > > that we wouldn't have to have this hack, but there isn't a global power
-> > > > service yet on the system bus.
-> > > > 
-> > > > Furthermore, it's nice to know if we've gone to sleep or not so that we
-> > > > can do some optimizations on wakeup to find APs and reconnect faster.
-> > > 
-> > > actually the fastest way to re-connect is to just let wpa_supplicant do
-> > > it and then you don't even have to go through DHCP again if the lease
-> > > time is still valid. This works great if the AP is still in range.
-> > > 
-> > > What is your downside with the letting wpa_supplicant send you a
-> > > disconnect when the AP is out of range after resume?
-> > 
-> > Depends on the driver what the resume behavior is with the supplicant.
-> > But you want to alert *something* that the system is now going to sleep,
-> > so that it can clean up state before doing so.
-> > 
-> > The problem is that you have absolutely no idea how long the sleep will
-> > be.  It's at least 2 minutes with S2D, because that's how long it takes
-> > to write your state out to disk.  It's less with S2R obviously, but when
-> > you resume, there's no guarantee that you'll be in the same place.  You
-> > cannot assume that you will be.
-> > 
-> > If you keep trying to reconnect to the same AP, many times you simply
-> > won't be there and you'll spend the 10 or 20 seconds reconnecting to an
-> > AP miles away, time that could have been spent scanning for the AP
-> > that's *really* where you are.  Many people I know don't often suspend
-> > at the same location they resume, thus trying to reconnect hurts
-> > reconnection latency.
-> > 
-> > The ideal way to handle all this is to be *aware* of suspend/resume in
-> > the supplicant (or NM), and on resume, do a quick probe-scan or two to
-> > find out if the old AP is still around.  If it's not, do a full scan to
-> > find all APs, and then pick the best one, which is probably not the one
-> > you were associated with before.  Then you actually start the auth/assoc
-> > process with an AP you know exists.
-> > 
-> > So my point is that *something* needs to be aware of the suspend/resume
-> > at a userlevel, whether it's NM or the supplicant doesn't really matter
-> > as long as you can do what I describe above on resume.
+> didn't trigger anything here, just the usual:
 > 
-> since mac80211 gets suspend/resume support, I think it is the best that
-> we signal this to wpa_supplicant. In that case it can do the hard work
-> here. Either it re-connects to the last AP or signals a disconnected
-> state or trigger scanning.
-> 
-> Having the suspend scripts to tell NM to disconnect is just not a good
-> solution and especially in the embedded world this is a broken design
-> concept.
+> BUG kmalloc-4096: Poison overwritten
 
-Right; the missing piece is pushing the necessary roaming support down
-to the supplicant and letting it make the decisions about what to
-connect to.  There's a few things that I need from the supplicant before
-I can simply push the entire config set down from NM and let it go wild:
+I've run memtest, even swapped both ram and cpu, and symptoms stay the same, so it's
+very likely not bad hw.
 
-1) A 'frequency' config item that works in infrastructure mode too,
-ignoring any AP not matching that frequency
+Still haven't found the corruptor, but at least i've narrowed it down a bit;
+what i'm seeing is:
 
-2) Implementing the resume behavior that I mentioned above, with
-immediate directed scans for the last-connected AP, followed up by the
-normal non-directed scan + ap selection process that already happens.
+1) an skb "S" gets allocated in p54u_rx_cb and is submitted together w/ the urb.
+2) "S" later comes back to p54u_rx_cb, where it is given to p54_rx (eventually
+   ieee80211_rx_irqsafe) and a new one is allocated.
+3) a few (~15) rx/tx packets pass.
+4) SLUB detects modified poison in what used to be S->head in (1) and (2) above;
+   usually 0x6b turns into 0x6a, but i have also seen 0x69, just a few times.
+   (the offset from skb->head to the decremented byte seems to stay the same,
+   at least during the few times i tried w/ the same kernel, last one was eg
+   684 bytes)
 
-3) Some method of getting suspend/resume notifications to the supplicant
+This is almost 100% reproducible; sometimes the machine freezes instead.
 
-4) Ensure that the D-Bus interface has the right signals emitted to
-notify clients of what network block & exact AP it's connecting to when
-it starts to connect.
-
-I agree, the closer to the hardware this stuff happens, the better for
-reconnection latency.  I don't object to pushing roaming responsibility
-into the supplicant from NM, but more work needs to be done (probably by
-me) to support that and preserve the current level of functionality that
-NM has.
-
-Dan
-
+artur
