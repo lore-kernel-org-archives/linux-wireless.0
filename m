@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:34355 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959AbZA2GGt (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:53919 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543AbZARW4S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 01:06:49 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so8517110wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 22:06:48 -0800 (PST)
+	Sun, 18 Jan 2009 17:56:18 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so161378ugf.37
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 14:56:16 -0800 (PST)
+Message-ID: <4973B233.9040902@gmail.com> (sfid-20090118_235624_851438_1667F541)
+Date: Sun, 18 Jan 2009 23:50:27 +0100
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20090128170303.32025.21799.stgit@tikku>
-References: <20090128170215.32025.32389.stgit@tikku>
-	 <20090128170303.32025.21799.stgit@tikku>
-Date: Thu, 29 Jan 2009 11:36:48 +0530
-Message-ID: <8e92b4100901282206r64a07a9dtcc44db645d301b28@mail.gmail.com> (sfid-20090129_070702_145344_32FCF142)
-Subject: Re: [PATCH v3 2/2] mac80211: use ps-poll when dynamic power save mode
-	is disabled
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+To: mickflemm@gmail.com
+CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: [PATCH] ath5k: notice a negative keytype
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 10:33 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+To notice a negative keytype
 
-> +                                * Here is assumed that the driver will be
-> +                                * able to send ps-poll frame and receive a
-> +                                * response even though power save mode is
-> +                                * enabled, but some drivers might require
-> +                                * to disable power save here. This needs
-> +                                * to be investigated.
-
-ath9k too needs power save to be disabled to send or receive any frame. Same as
-broadcom. I hope it is the same for many others too. I'm curious about
-the design of
-stlc45xx/p54 since it is capable of sending/receiving even though power save is
-enabled. I wonder what blocks of the hw are off when ps is enabled
-since it is capable
-of doing the basic operation of Tx/Rx which is the only thing expected
-from a driver.
-I seriously doubt if NIC is saving any power at all or the hw design
-is very novel and
-interesting.
-
-Thanks,
-Vivek.
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
+index 75eb9f4..5bb8a02 100644
+--- a/drivers/net/wireless/ath5k/pcu.c
++++ b/drivers/net/wireless/ath5k/pcu.c
+@@ -1041,7 +1041,7 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+ 	__le32 key_v[5] = {};
+ 	__le32 key0 = 0, key1 = 0;
+ 	__le32 *rxmic, *txmic;
+-	u32 keytype;
++	int keytype;
+ 	u16 micentry = entry + AR5K_KEYTABLE_MIC_OFFSET;
+ 	bool is_tkip;
+ 	const u8 *key_ptr;
