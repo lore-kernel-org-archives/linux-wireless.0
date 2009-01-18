@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42989 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934101AbZARRN6 (ORCPT
+Received: from mail-bw0-f24.google.com ([209.85.218.24]:59538 "EHLO
+	mail-bw0-f24.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752395AbZARTRA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 12:13:58 -0500
-Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
-	disablement
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090118153004.GS29609@tesla>
-References: <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
-	 <1232097827.3854.25.camel@johannes> <20090116163245.GF29609@tesla>
-	 <1232138101.3745.7.camel@johannes> <20090116210930.GL29609@tesla>
-	 <1232268516.3877.10.camel@johannes>  <20090118153004.GS29609@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QeywfzICoZTA5rhtD9n5"
-Date: Sun, 18 Jan 2009 18:13:51 +0100
-Message-Id: <1232298832.3819.7.camel@johannes> (sfid-20090118_181418_968279_00437819)
-Mime-Version: 1.0
+	Sun, 18 Jan 2009 14:17:00 -0500
+Received: by bwz5 with SMTP id 5so18173bwz.17
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 11:16:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <200901181757.18648.IvDoorn@gmail.com>
+References: <c6b1100b0901180730y4d32dfabn8de0024b4fc1c749@mail.gmail.com>
+	 <200901181728.13706.IvDoorn@gmail.com>
+	 <c6b1100b0901180850w4ab737a8la09489d7bd1ef964@mail.gmail.com>
+	 <200901181757.18648.IvDoorn@gmail.com>
+Date: Sun, 18 Jan 2009 19:01:15 +0000
+Message-ID: <c6b1100b0901181101u5cbc0e14kb30f2a7bc8b31cf7@mail.gmail.com> (sfid-20090118_201704_700263_2A533EBD)
+Subject: Re: 2.6.29-rc2 - rt61pci regression
+From: Chris Clayton <chris2553@googlemail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-QeywfzICoZTA5rhtD9n5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+2009/1/18 Ivo van Doorn <ivdoorn@gmail.com>:
+> On Sunday 18 January 2009, Chris Clayton wrote:
+>> 2009/1/18 Ivo van Doorn <ivdoorn@gmail.com>:
+>> >> > Feel free to request any additional information needed to resolve this problem.
+>> >>
+>> >> Could you try below patch?
+>> >>
+>> >> Thanks,
+>> >>
+>> >> Ivo
+>> >
+>> > Hi,
+>> >
+>> > Sorry, patch won't apply correctly since rt2x00ht_create_tx_descriptor(entry, txdesc, rate); isn't
+>> > in 2.6.29 yet. Below is the correct patch
+>> >
+>> > Ivo
+>> >
+>> Sorry Ivo, that neither patch applies. The second one you sent gives
+>>
+>> [chris:~/kernel/linux-2.6]$ patch -p1 < ~/ivo.patch
+>> patching file drivers/net/wireless/rt2x00/rt2x00queue.c
+>> Hunk #1 FAILED at 186.
+>> Hunk #2 succeeded at 314 (offset 81 lines).
+>> Hunk #3 FAILED at 408.
+>> 2 out of 3 hunks FAILED -- saving rejects to file
+>> drivers/net/wireless/rt2x00/rt2x00queue.c.rej
+>>
+>> Are you preparing patches against current wireless git? -rc2 may be a
+>> bit behind that
+>
+> Ok, I just pulled linux-2.6.git so this should apply cleanly/
+>
 
-On Sun, 2009-01-18 at 07:30 -0800, Luis R. Rodriguez wrote:
-> On Sun, Jan 18, 2009 at 12:48:36AM -0800, Johannes Berg wrote:
-> > On Fri, 2009-01-16 at 13:09 -0800, Luis R. Rodriguez wrote:
-> >=20
-> > > I can put a note, if that helps, or are you strongly opposed to this?=
- :)
-> > > Just an itch to scratch really, have you seen the output of iwlist on
-> > > disabled channels? It can get long on radar/no-ibss channels. We can =
-also
-> > > handle this in userspace but seems pointles if the channels is disabl=
-ed.
-> >=20
-> > Well, come to think of it, at least for programmers it might be
-> > confusing when they know they've put some flag into orig_flags, and the=
-n
-> > it disappears? I'm not really _strongly_ opposed to this, but I really
-> > just don't see the point :)
->=20
-> Have you bothered calling iw list with a long list of crap on the channel=
-s?
+Yes, that patch applied and it has fixed the problem. Thanks for your help.
 
-Heh, no, but I rarely call iw at all. I just added a patch to iw to
-suppress it instead, I think that's more appropriate.
-
-johannes
-
---=-QeywfzICoZTA5rhtD9n5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJc2NNAAoJEKVg1VMiehFYapYQAJp6EXdpuY41Tm3FD4LCDsEZ
-TRVBTUS7Fgd48V8OrUHIDQbg87MVO9WZhaKoMXasQAkEGP82IC9eo84U+wqRF2SY
-g+XVa+BaZkJdYK/zJf9Y/EciK/KGQ1BPAqzzZVp8VNC6ncVl+oc/ZNe/zSEEqPVW
-YZ6J8k5rtSBJNE4BiH6OROAeZUxlcMCc5ctlcAVdKA7f1HDhuqRMNtl6dc0jmCfG
-9LpSXyB1FkrAI0Ap61392LCc9tREgNqYpTgKJKaeT1HAC/lwnPXvPDNZSGmwmjzl
-NTa34KGSN7QmSZRHfN0N+aZjFbrBkOMuBZfKem92PyuMsLpORTEoiV+AeBK86BvI
-qe7I5fNvt47O2uu9F8m1ux0ntQgRc/xIfjrwO3jGpZzp9C4Z8lNUcu+idxFTby3f
-n8XrmdHTpNaFbMwgx/FPywlMEkhZHIH2/+Lem13fvzsFV96atwHH75AhIAE87jQJ
-Be57yyxi/jSH/Wxmce2HOVfNa2GxFvkP2+EzN3SQrEK+VZvQIsPsoTMOwQf+IaiX
-mjJ2/FJZ0H3d1QYCjdMj4nIBn9wXeQl0L7GkX900PSHifTQidWGIzJ4nnaqxi0yJ
-XYxe3+2QrWmk/trbrKMe3hL0vBpR/4QL7mqrPuY4BsNEf6cBe2+2nKrxYpguKBvc
-3V7SIxUBvX6hPN877LPH
-=JtJ2
------END PGP SIGNATURE-----
-
---=-QeywfzICoZTA5rhtD9n5--
-
+Chris
+-- 
+In a world without walls and fences, who needs windows and gates?
