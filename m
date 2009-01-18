@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:17945 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751072AbZAFUrs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 15:47:48 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 12:47:48 -0800
-Date: Tue, 6 Jan 2009 12:47:44 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rt2400-devel@lists.sourceforge.net"
-	<rt2400-devel@lists.sourceforge.net>
-Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
-Message-ID: <20090106204744.GB21980@tesla> (sfid-20090106_214753_823231_3AC97F47)
-References: <200901042021.10904.IvDoorn@gmail.com> <20090105200809.GH6834@tesla> <49627BCB.4020200@kpnplanet.nl> <200901052321.46422.IvDoorn@gmail.com> <20090105234546.GK6834@tesla> <4963BFEF.2090006@kpnplanet.nl>
+Received: from yx-out-2324.google.com ([74.125.44.30]:2251 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753568AbZARS5l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2009 13:57:41 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so1098815yxm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 10:57:40 -0800 (PST)
+Message-ID: <43e72e890901181057n770a177ax63ba3b4ec3d7e66a@mail.gmail.com> (sfid-20090118_195815_005528_5F6BEB4E)
+Date: Sun, 18 Jan 2009 10:57:40 -0800
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "Bob Copeland" <me@bobcopeland.com>,
+	"Javier Cardona" <javier@cozybit.com>,
+	"Dan Williams" <dcbw@redhat.com>,
+	madwifi-project@lists.madwifi-project.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [madwifi-team] Using orbit
+Cc: "Ivan Seskar" <Seskar@winlab.rutgers.edu>
+In-Reply-To: <43e72e890810021037x49b0de85r6cac065720af3be@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4963BFEF.2090006@kpnplanet.nl>
+Content-Type: text/plain; charset=UTF-8
+References: <43e72e890810021037x49b0de85r6cac065720af3be@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 06, 2009 at 12:32:47PM -0800, Gertjan van Wingerde wrote:
-> On 01/06/09 00:45, Luis R. Rodriguez wrote:
-> > On Mon, Jan 05, 2009 at 02:21:46PM -0800, Ivo van Doorn wrote:
-> >
-> >> On Monday 05 January 2009, Gertjan van Wingerde wrote:
-> >>
-> >>> On 01/05/09 21:08, Luis R. Rodriguez wrote:
-> >>>
-> >>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
-> >>>
-> >> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
-> >> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
-> >>
-> >
-> > Based on the documentation from the EEPROM for all devices I read that its recommended
-> > that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
-> > windows registry be used.
-> >
-> > Based on tests for the devices with only one band, do are you seeing an actual regulatory
-> > domain in the EEPROM?
-> >
-> > To deal with the issue of having two separate EEPROM values for a regulatory domain
-> > and since the documentation indicates to not rely on it I would advise to allow users
-> > to be compliant by selecting the country they are in. wpa_supplicant has support for
-> > selecting country now, and so does iw. Eventually I see Network Manager letting users
-> > select the country. But you guys are the maintainers and developers so you will know
-> > better.
-> >
-> 
-> My tests indicate that there are devices out there that have this
-> information set in the EEPROM. Based on tests with my own patch, and my
-> own devices, I have been able to determine the following:
-> 
-> 1. rt2400pci --> don't know, don't own a rt2400pci device.
-> 2. rt2500pci --> don't know, don't own a rt2500pci device anymore.
-> 3. rt2500usb --> my e-tech device (not sure which type; the device
-> doesn't say it) has an actual domain set for the bg band.
-> 4. rt61pci --> my Sitecom WL151 device does not contain actual domain
-> information.
-> 5. rt73usb --> my Sitecom WL113-002 device does contain actual domain
-> information, and the codes for the bg band and a band are the same.
-> 6. rt2800pci --> my Sitecom WL182 device does contain actual domain
-> information, and the codes for the bg band and a band are the same.
-> 7. rt2800usb --> my Sitecom WL181 device does contain actual domain
-> information, and the codes for the bg band and a band are the same.
-> 
-> So, there are devices out there that do contain "meaningful" regulatory
-> information.
-> 
-> Luis, the definitions for the a-band EEPROM codes only give the channel
-> numbers, it doesn't indicate a real "country". Is there any way we can
-> check whether these sets of channels are actually consistent with the
-> regulations of specific countries?
+On Thu, Oct 2, 2008 at 9:37 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Oct 2, 2008 at 8:12 AM, Michael Renzmann <mrenzmann@madwifi.org> wrote:
+>
+>> Is Orbit still an option for our testbed plans?
+>
+> Absolutely, even for the "madwifi" driver, anything the team needs. In
+> fact I've extended the offer to use the grid to OpenBSD and FreeBSD
+> too. Although I don't work there fulltime I'm still part of Orbit and
+> will be managing their "open source" accounts. I intend on eventually
+> getting a test plan done but of course test stuff is always last
+> priority on the list of things to do :(. At OLS2008 Dan Williams
+> showed interest in this too.
+>
+> I should mention that most of my desires to test software are now
+> resolved through mac80211_hwsim driver -- mac80211 can be thoroughly
+> tested using this, so the grid/sandboxes are useful for real driver
+> testing and for experiments.
+>
+> I have a 2.6.27 based image there now (baseline-8.9-dev.ndz), and
+> compat-wireless available from /usr/src/, with the git tree used
+> through autofs (which is updated daily), so to update the drivers and
+> install them all you have to do run the compat-wireless
+> admin-update.sh and then compile and install.
+>
+> Testing AP for example on ath5k is ideal here too as the nodes on
+> Sanboxes are hooked up together through attenuators directly. Note
+> that there are two wireless cards on each node, and the sanboxes have
+> two nodes. Each wireless cards is paired up with the other one on the
+> other node in a sandbox. Anyway if you'd like an account let me know.
+>
+> PS. Testing mesh should be possible now too using the
+> baseline-8.9-dev.ndz (2.6.27 based) and updating compat-wireless.
 
-You can help contribute to the wireless-regdb and check that the valid
-channels apply there.
+BTW you can now request an account here:
+
+http://www.orbit-lab.org/register
+
+For organization select "Linux Wireless Networking"
 
   Luis
