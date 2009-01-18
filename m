@@ -1,96 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:49456 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752589AbZATIBT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 03:01:19 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 00:01:19 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-ew0-f20.google.com ([209.85.219.20]:38330 "EHLO
+	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753823AbZARU35 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2009 15:29:57 -0500
+Received: by ewy13 with SMTP id 13so108488ewy.18
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 12:29:54 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Chris Clayton <chris2553@googlemail.com>
+Subject: Re: [PATCH] Fix TX rate short preamble detection
+Date: Sun, 18 Jan 2009 21:29:52 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <200901182015.24298.IvDoorn@gmail.com> <c6b1100b0901181214w255355b5i9d4f098a9f96fad1@mail.gmail.com>
+In-Reply-To: <c6b1100b0901181214w255355b5i9d4f098a9f96fad1@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18805.33791.193195.755178@gargle.gargle.HOWL> (sfid-20090120_090137_912566_0F86D8CC)
-Date: Tue, 20 Jan 2009 13:27:51 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	<Jouni.Malinen@Atheros.com>
-Subject: [PATCH] mac80211: Add capability to enable/disable beaconing
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901182129.52241.IvDoorn@gmail.com> (sfid-20090118_213001_712800_8C1F5C02)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a flag to notify drivers to start and
-stop beaconing when needed, for example, during a scan run.
+On Sunday 18 January 2009, Chris Clayton wrote:
+> Hi Ivo/John,
+> 
+> 2009/1/18 Ivo van Doorn <ivdoorn@gmail.com>:
+> > Mac80211 provides 2 structures to handle bitrates, namely
+> > ieee80211_rate and ieee80211_tx_rate. To determine the short preamble
+> > mode for an outgoing frame, the flag IEEE80211_TX_RC_USE_SHORT_PREAMBLE
+> > must be checked on ieee80211_tx_rate and not ieee80211_rate (which rt2x00 did).
+> >
+> > This fixes a regression which was triggered in 2.6.29-rcX as reported by Chris Clayton.
+> >
+> 
+> I don't think the patch below will apply to 2.6.29-rc because it is
+> lagging behind wireless testing and, I would guess, is likely to stay
+> that way for 2.6.29 because the merge window is closed. Won't the
+> final patch that was provided to me at
+> http://marc.info/?l=linux-wireless&m=123229784930740&w=4 be the
+> correct one? If so, could John please add:
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- include/net/mac80211.h |    3 +++
- net/mac80211/main.c    |   10 ++++++++++
- net/mac80211/scan.c    |    3 +++
- 3 files changed, 16 insertions(+), 0 deletions(-)
+True. but usually John wants the patch to go through wireless-testing,
+which makes below patch the correct one. :)
+Anyway, in this case he has the luxoury of having both versions of the patch. ;)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9a5869e..a9f71b5 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -637,6 +637,8 @@ enum ieee80211_if_conf_change {
-  *
-  * @changed: parameters that have changed, see &enum ieee80211_if_conf_change.
-  * @bssid: BSSID of the network we are associated to/creating.
-+ * @enable_beacon: Indicates whether beacons can be sent.
-+ *	This is valid only for AP/IBSS/MESH modes.
-  *
-  * This structure is passed to the config_interface() callback of
-  * &struct ieee80211_hw.
-@@ -644,6 +646,7 @@ enum ieee80211_if_conf_change {
- struct ieee80211_if_conf {
- 	u32 changed;
- 	u8 *bssid;
-+	bool enable_beacon;
- };
- 
- /**
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index c78304d..44585c7 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -183,6 +183,16 @@ int ieee80211_if_config(struct ieee80211_sub_if_data *sdata, u32 changed)
- 		return -EINVAL;
- 	}
- 
-+	if ((changed & IEEE80211_IFCC_BEACON) &&
-+	    (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	     sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+	     sdata->vif.type == NL80211_IFTYPE_MESH_POINT)) {
-+		if (local->sw_scanning || local->hw_scanning)
-+			conf.enable_beacon = false;
-+		else
-+			conf.enable_beacon = true;
-+	}
-+
- 	if (WARN_ON(!conf.bssid && (changed & IEEE80211_IFCC_BSSID)))
- 		return -EINVAL;
- 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index a2caeed..c8be92d 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -459,6 +459,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 
- 	local->sw_scanning = false;
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-+	ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON);
- 
- 	netif_tx_lock_bh(local->mdev);
- 	netif_addr_lock(local->mdev);
-@@ -655,6 +656,8 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
- 	local->scan_band = IEEE80211_BAND_2GHZ;
- 	local->scan_sdata = scan_sdata;
- 
-+	ieee80211_if_config(scan_sdata, IEEE80211_IFCC_BEACON);
-+
- 	netif_addr_lock_bh(local->mdev);
- 	local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
- 	local->ops->configure_filter(local_to_hw(local),
--- 
-1.6.1
+> Tested-By: Chris Clayton <chris2553@googlemail.com>
+> 
+> Cheers,
+> 
+> Chris
+> 
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> >
+> > ---
+> > diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> > index c1e5a05..3dab9b4 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> > @@ -186,10 +186,11 @@ static void rt2x00queue_create_tx_descriptor_seq(struct queue_entry *entry,
+> >
+> >  static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
+> >                                                  struct txentry_desc *txdesc,
+> > -                                                 struct ieee80211_rate *rate)
+> > +                                                 const struct rt2x00_rate *hwrate)
+> >  {
+> >        struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+> > -       const struct rt2x00_rate *hwrate = rt2x00_get_rate(rate->hw_value);
+> > +       struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
+> > +       struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
+> >        unsigned int data_length;
+> >        unsigned int duration;
+> >        unsigned int residual;
+> > @@ -232,7 +233,7 @@ static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
+> >                 * When preamble is enabled we should set the
+> >                 * preamble bit for the signal.
+> >                 */
+> > -               if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+> > +               if (txrate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+> >                        txdesc->signal |= 0x08;
+> >        }
+> >  }
+> > @@ -326,7 +327,7 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
+> >         */
+> >        rt2x00crypto_create_tx_descriptor(entry, txdesc);
+> >        rt2x00queue_create_tx_descriptor_seq(entry, txdesc);
+> > -       rt2x00queue_create_tx_descriptor_plcp(entry, txdesc, rate);
+> > +       rt2x00queue_create_tx_descriptor_plcp(entry, txdesc, hwrate);
+> >  }
+> >
+> >  static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
+> >
+> 
+> 
+> 
+
 
