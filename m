@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:38662 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397AbZADLS7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 06:18:59 -0500
-Message-ID: <49609AFE.2010209@openwrt.org> (sfid-20090104_121901_588626_6C03BEE6)
-Date: Sun, 04 Jan 2009 12:18:22 +0100
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from mail.atheros.com ([12.36.123.2]:12862 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933841AbZARPag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2009 10:30:36 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 07:30:36 -0800
+Date: Sun, 18 Jan 2009 07:30:04 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
+	disablement
+Message-ID: <20090118153004.GS29609@tesla> (sfid-20090118_163054_682702_3F541694)
+References: <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232097827.3854.25.camel@johannes> <20090116163245.GF29609@tesla> <1232138101.3745.7.camel@johannes> <20090116210930.GL29609@tesla> <1232268516.3877.10.camel@johannes>
 MIME-Version: 1.0
-To: Christoph Hellwig <hch@infradead.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>, Imre Kaloz <kaloz@openwrt.org>
-Subject: Re: [RFC 07/12] ath9k: introduce platform driver for AHB bus	support
-References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org> <1230990262-22923-8-git-send-email-juhosg@openwrt.org> <20090104073022.GC12905@infradead.org>
-In-Reply-To: <20090104073022.GC12905@infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1232268516.3877.10.camel@johannes>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christoph Hellwig =EDrta:
-> On Sat, Jan 03, 2009 at 02:44:17PM +0100, Gabor Juhos wrote:
->> +static dma_addr_t ath_ahb_map_single_to_device(struct ath_softc *sc=
-,
->> +					       void *p, size_t size)
->> +{
->> +	return dma_map_single(NULL, p, size, DMA_TO_DEVICE);
->> +}
->=20
-> As said before you should just use dma_* directly.  And please make s=
-ure
-> to always pass a struct device to the dma_* routines, even if your
-> platform might currently not required it the API does.
->=20
->> +static void ath_ahb_cleanup(struct ath_softc *sc)
->> +{
->> +	struct platform_device *pdev =3D to_platform_device(sc->dev);
->> +	struct ieee80211_hw *hw =3D sc->hw;
->> +	struct resource *res;
->> +
->> +	res =3D platform_get_resource(pdev, IORESOURCE_IRQ, 0);
->> +	if (res)
->> +		free_irq(res->start, sc);
->=20
-> If you stored the irq value directly in the softc this whole thing mi=
-ght
-> be able to be done in a generic way..
->=20
->=20
+On Sun, Jan 18, 2009 at 12:48:36AM -0800, Johannes Berg wrote:
+> On Fri, 2009-01-16 at 13:09 -0800, Luis R. Rodriguez wrote:
+> 
+> > I can put a note, if that helps, or are you strongly opposed to this? :)
+> > Just an itch to scratch really, have you seen the output of iwlist on
+> > disabled channels? It can get long on radar/no-ibss channels. We can also
+> > handle this in userspace but seems pointles if the channels is disabled.
+> 
+> Well, come to think of it, at least for programmers it might be
+> confusing when they know they've put some flag into orig_flags, and then
+> it disappears? I'm not really _strongly_ opposed to this, but I really
+> just don't see the point :)
 
-I did not want to store it in the softc, because 'struct pci_dev' has i=
-t already
-and we will duplicate it. However the code will be simpler, so i can ad=
-d it of
-course.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Have you bothered calling iw list with a long list of crap on the channels?
+
+  Luis
