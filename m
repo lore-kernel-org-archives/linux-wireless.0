@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.openmoko.org ([88.198.124.205]:34434 "EHLO
-	mail.openmoko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752381AbZAMQLs (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:49956 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752483AbZAREjB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 11:11:48 -0500
-Date: Tue, 13 Jan 2009 14:11:29 -0200
-From: Werner Almesberger <werner@openmoko.org>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Hans Henry von Tresckow <hvontres@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rfkill: how murderous can it be ?
-Message-ID: <20090113161129.GB22112@almesberger.net> (sfid-20090113_171153_465406_2EA4CBD6)
-References: <20090112191514.GA22112@almesberger.net> <a7f8874a0901121131m75ffa5e0o246dee810eb29983@mail.gmail.com> <20090113131422.GA27676@khazad-dum.debian.net>
+	Sat, 17 Jan 2009 23:39:01 -0500
+Message-ID: <4972B25B.7070306@lwfinger.net> (sfid-20090118_053909_204013_68CD4AA8)
+Date: Sat, 17 Jan 2009 22:38:51 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090113131422.GA27676@khazad-dum.debian.net>
+To: Hans Ekbrand <hans@sociologi.cjb.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: USB 1.1, usb-dongle, NETGEAR WG111v2, timing problems in association
+References: <20090117204654.GB9079@amin>
+In-Reply-To: <20090117204654.GB9079@amin>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henrique de Moraes Holschuh wrote:
-> If you kick it out of the bus (cause a full hotunplug on rfkill block,
-> and a hotplug when rfkill unblocks), it is userspace.
+Hans Ekbrand wrote:
+> Hi list!
 > 
-> But what if you do it halfway?   That's what is being asked here...
+> On an old system with only USB 1.1, I tried to use a USB-dongle:
+> NETGEAR WG111v2. The device works perfectly with same kernel (2.6.26-1
+> from debian lenny) on a new system with USB 2.0, using the "rtl8187"
+> driver.
+> 
+> However, on USB 1.1 I get:
 
-If kicking it out of the bus is okay, then that's just what I'll
-do. This gives us clear and familiar semantics and avoids complex
-and fragile state preservation in the kernel.
+I just bought a WG111v2 on E-Bay last week. Once it arrives, I will be
+able to test the performance of this device.
 
-My concern about this was whether this wouldn't take things too
-far. E.g., if I can safely assume that user space will be there
-to take care of it.
+Larry
 
->From what I gather, it does indeed seem to be acceptable, even if
-it may not be ideal under all circumstances.
 
-Thanks,
-- Werner
