@@ -1,103 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34245 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755793AbZAWVmy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 16:42:54 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/15] iwlwifi: fix probe mask for 39 scan API
-Date: Fri, 23 Jan 2009 13:45:21 -0800
-Message-Id: <1232747123-7261-14-git-send-email-reinette.chatre@intel.com> (sfid-20090123_230906_749622_DE43D124)
-In-Reply-To: <1232747123-7261-13-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232747123-7261-1-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-2-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-3-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-4-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-5-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-6-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-7-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-8-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-9-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-10-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-11-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-12-git-send-email-reinette.chatre@intel.com>
- <1232747123-7261-13-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:43577 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760547AbZARQua (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2009 11:50:30 -0500
+Received: by bwz14 with SMTP id 14so7155121bwz.13
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 08:50:28 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <200901181728.13706.IvDoorn@gmail.com>
+References: <c6b1100b0901180730y4d32dfabn8de0024b4fc1c749@mail.gmail.com>
+	 <200901181723.56783.IvDoorn@gmail.com>
+	 <200901181728.13706.IvDoorn@gmail.com>
+Date: Sun, 18 Jan 2009 16:50:27 +0000
+Message-ID: <c6b1100b0901180850w4ab737a8la09489d7bd1ef964@mail.gmail.com> (sfid-20090118_175036_238128_8419780F)
+Subject: Re: 2.6.29-rc2 - rt61pci regression
+From: Chris Clayton <chris2553@googlemail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+2009/1/18 Ivo van Doorn <ivdoorn@gmail.com>:
+>> > Feel free to request any additional information needed to resolve this problem.
+>>
+>> Could you try below patch?
+>>
+>> Thanks,
+>>
+>> Ivo
+>
+> Hi,
+>
+> Sorry, patch won't apply correctly since rt2x00ht_create_tx_descriptor(entry, txdesc, rate); isn't
+> in 2.6.29 yet. Below is the correct patch
+>
+> Ivo
+>
+Sorry Ivo, that neither patch applies. The second one you sent gives
 
-This pach make use of 39 own scan probe mask
-the variables or of different types
+[chris:~/kernel/linux-2.6]$ patch -p1 < ~/ivo.patch
+patching file drivers/net/wireless/rt2x00/rt2x00queue.c
+Hunk #1 FAILED at 186.
+Hunk #2 succeeded at 314 (offset 81 lines).
+Hunk #3 FAILED at 408.
+2 out of 3 hunks FAILED -- saving rejects to file
+drivers/net/wireless/rt2x00/rt2x00queue.c.rej
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- 3 files changed, 8 insertions(+), 3 deletions(-)
+Are you preparing patches against current wireless git? -rc2 may be a
+bit behind that
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 7571110..e49415c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2432,6 +2432,9 @@ struct iwl3945_scan_channel {
- 	__le16 passive_dwell;	/* in 1024-uSec TU (time units), typ 20-500 */
- } __attribute__ ((packed));
- 
-+/* set number of direct probes u8 type */
-+#define IWL39_SCAN_PROBE_MASK(n) ((BIT(n) | (BIT(n) - BIT(1))))
-+
- struct iwl_scan_channel {
- 	/*
- 	 * type is defined as:
-@@ -2448,6 +2451,9 @@ struct iwl_scan_channel {
- 	__le16 passive_dwell;	/* in 1024-uSec TU (time units), typ 20-500 */
- } __attribute__ ((packed));
- 
-+/* set number of direct probes __le32 type */
-+#define IWL_SCAN_PROBE_MASK(n) 	cpu_to_le32((BIT(n) | (BIT(n) - BIT(1))))
-+
- /**
-  * struct iwl_ssid_ie - directed scan network information element
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index c8e1dad..3c6a4b0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -346,7 +346,6 @@ int iwl_send_scan_abort(struct iwl_priv *priv);
- #define IWL_ACTIVE_QUIET_TIME       __constant_cpu_to_le16(10)  /* msec */
- #define IWL_PLCP_QUIET_THRESH       __constant_cpu_to_le16(1)  /* packets */
- 
--#define IWL_SCAN_PROBE_MASK(n) 	cpu_to_le32((BIT(n) | (BIT(n) - BIT(1))))
- 
- /*******************************************************************************
-  * Calibrations - implemented in iwl-calib.c
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index d093255..25a3508 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3267,12 +3267,12 @@ static int iwl3945_get_channels_for_scan(struct iwl_priv *priv,
- 		 * hearing clear Rx packet).*/
- 		if (IWL_UCODE_API(priv->ucode_ver) >= 2) {
- 			if (n_probes)
--				scan_ch->type |= IWL_SCAN_PROBE_MASK(n_probes);
-+				scan_ch->type |= IWL39_SCAN_PROBE_MASK(n_probes);
- 		} else {
- 			/* uCode v1 does not allow setting direct probe bits on
- 			 * passive channel. */
- 			if ((scan_ch->type & 1) && n_probes)
--				scan_ch->type |= IWL_SCAN_PROBE_MASK(n_probes);
-+				scan_ch->type |= IWL39_SCAN_PROBE_MASK(n_probes);
- 		}
- 
- 		/* Set txpower levels to defaults */
+Thanks
+
+Chris
+
 -- 
-1.5.4.3
-
+In a world without walls and fences, who needs windows and gates?
