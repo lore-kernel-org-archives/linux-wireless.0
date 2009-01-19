@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:49689 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751361AbZAaVqC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2009 16:46:02 -0500
-Message-ID: <4984C684.5060601@openwrt.org> (sfid-20090131_224609_098565_7359E5DA)
-Date: Sat, 31 Jan 2009 22:45:40 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from rv-out-0506.google.com ([209.85.198.233]:15098 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750854AbZASNsf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 08:48:35 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so2620779rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 05:48:34 -0800 (PST)
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	jirislaby@gmail.com, mcgrof@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
-References: <20090131023147.GE3342@makis>	 <20090131170802.GA16826@hash.localnet>	 <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>	 <49849ED9.6080300@openwrt.org> <40f31dec0901311250q6a669849x1dfbf08d967787be@mail.gmail.com>
-In-Reply-To: <40f31dec0901311250q6a669849x1dfbf08d967787be@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4973B233.9040902@gmail.com>
+References: <4973B233.9040902@gmail.com>
+Date: Mon, 19 Jan 2009 08:48:34 -0500
+Message-ID: <b6c5339f0901190548n2a390ab4n8501a22cb47a0078@mail.gmail.com> (sfid-20090119_144839_251086_026C5E94)
+Subject: Re: [PATCH] ath5k: notice a negative keytype
+From: Bob Copeland <me@bobcopeland.com>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: mickflemm@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Kossifidis wrote:
->>> My intention is to reimplement hw_htoclock to account for half/quarter
->>> rate so it'll soon be
->>> clock = ath5k_hw_htoclock(1, channel->hw_value);
->> AFAIK Sam's HAL might have a bug there. If I remember correctly, the MAC
->> runs at the same clock speed with Half/Quarter rate.
->> It's done that way in the legacy HAL. Though there is a possibility of
->> it being hardware dependent, I'm pretty sure that it is that way at least
->> on 5413.
->>
-> 
-> Both HALs tweak clock this way on ar5212SetDeltaSlope on all chips. If
-> clock depends on channel bandwidth for turbo it makes sense to also
-> change on half/quarter rate operation.
-Yeah, for the delta slope it may be the same, but not for the MAC, IMHO.
-Check out ath_hal_mac_clks in the legacy HAL and Sam's HAL. I believe
-the legacy HAL variant is correct in this case.
+On Sun, Jan 18, 2009 at 5:50 PM, Roel Kluin <roel.kluin@gmail.com> wrote:
+> To notice a negative keytype
+>
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 
-- Felix
+Acked-by: Bob Copeland <me@bobcopeland.com>
+
+> ---
+> diff --git a/drivers/net/wireless/ath5k/pcu.c b/drivers/net/wireless/ath5k/pcu.c
+> index 75eb9f4..5bb8a02 100644
+> --- a/drivers/net/wireless/ath5k/pcu.c
+> +++ b/drivers/net/wireless/ath5k/pcu.c
+> @@ -1041,7 +1041,7 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
+>        __le32 key_v[5] = {};
+>        __le32 key0 = 0, key1 = 0;
+>        __le32 *rxmic, *txmic;
+> -       u32 keytype;
+> +       int keytype;
+>        u16 micentry = entry + AR5K_KEYTABLE_MIC_OFFSET;
+>        bool is_tkip;
+>        const u8 *key_ptr;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+Bob Copeland %% www.bobcopeland.com
