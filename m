@@ -1,92 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34087 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbZAIVpm (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50670
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751977AbZASFnd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 16:45:42 -0500
-Date: Fri, 9 Jan 2009 16:42:16 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH 1/1 #2] IWL: fix WARN typo
-Message-ID: <20090109214216.GG3371@tuxdriver.com> (sfid-20090109_224547_996637_901AF36B)
-References: <1231171404-22822-1-git-send-email-jirislaby@gmail.com> <1231171566-22984-1-git-send-email-jirislaby@gmail.com> <20090109201759.GE3371@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090109201759.GE3371@tuxdriver.com>
+	Mon, 19 Jan 2009 00:43:33 -0500
+Date: Sun, 18 Jan 2009 21:43:35 -0800 (PST)
+Message-Id: <20090118.214335.142183946.davem@davemloft.net> (sfid-20090119_064339_329099_644DB95E)
+To: yjwei@cn.fujitsu.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [PATCH] mac80211: cleanup kmalloc/memset -> kcalloc
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <496F04BC.3030703@cn.fujitsu.com>
+References: <496F04BC.3030703@cn.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-People have pointed-out the "kew -> key" part of the patch.
-Any thoughts on "new key" vs. "a new key"?
+From: Wei Yongjun <yjwei@cn.fujitsu.com>
+Date: Thu, 15 Jan 2009 17:41:16 +0800
 
-John
+> Transform calls kmalloc/memset to a single kcalloc.
+> 
+> Signed-off-by: Wei Yongjun <yjwei@cn.fujitsu.com>
 
-On Fri, Jan 09, 2009 at 03:18:00PM -0500, John W. Linville wrote:
-> Is the way it is now problematic for non-native English speakers?
-> Or native ones for that matter?
-> 
-> Dropping an article in a "computer-ese" statement has never bothered
-> me, so this seems like just a handful of unnecessary string bytes?
-> 
-> John
-> 
-> On Mon, Jan 05, 2009 at 05:06:06PM +0100, Jiri Slaby wrote:
-> > new kew -> a new key
-> > 
-> > Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> > Cc: Tomas Winkler <tomas.winkler@intel.com>
-> > Cc: John W. Linville <linville@tuxdriver.com>
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-sta.c |    6 +++---
-> >  1 files changed, 3 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> > index 412f66b..ce2ba40 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> > @@ -638,7 +638,7 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
-> >  	 * in uCode. */
-> >  
-> >  	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
-> > -		"no space for new kew");
-> > +		"no space for a new key");
-> >  
-> >  	priv->stations[sta_id].sta.key.key_flags = key_flags;
-> >  	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-> > @@ -686,7 +686,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
-> >  	 * in uCode. */
-> >  
-> >  	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
-> > -		"no space for new kew");
-> > +		"no space for a new key");
-> >  
-> >  	priv->stations[sta_id].sta.key.key_flags = key_flags;
-> >  	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-> > @@ -722,7 +722,7 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
-> >  	 * in uCode. */
-> >  
-> >  	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
-> > -		"no space for new kew");
-> > +		"no space for a new key");
-> >  
-> >  	/* This copy is acutally not needed: we get the key with each TX */
-> >  	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
-> > -- 
-> > 1.6.0.6
-> > 
-> > 
-> 
+Wireless, thus this goes to linux-wireless and John
+Linville, CC:'d
+
+> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+> index 5f510a1..743d530 100644
+> --- a/net/mac80211/ht.c
+> +++ b/net/mac80211/ht.c
+> @@ -949,7 +949,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+>  
+>  	/* prepare reordering buffer */
+>  	tid_agg_rx->reorder_buf =
+> -		kmalloc(buf_size * sizeof(struct sk_buff *), GFP_ATOMIC);
+> +		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_ATOMIC);
+>  	if (!tid_agg_rx->reorder_buf) {
+>  #ifdef CONFIG_MAC80211_HT_DEBUG
+>  		if (net_ratelimit())
+> @@ -959,8 +959,6 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+>  		kfree(sta->ampdu_mlme.tid_rx[tid]);
+>  		goto end;
+>  	}
+> -	memset(tid_agg_rx->reorder_buf, 0,
+> -		buf_size * sizeof(struct sk_buff *));
+>  
+>  	if (local->ops->ampdu_action)
+>  		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_START,
 > -- 
-> John W. Linville		Linux should be at the core
-> linville@tuxdriver.com			of your literate lifestyle.
+> 1.6.0.3
+> 
+> 
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
