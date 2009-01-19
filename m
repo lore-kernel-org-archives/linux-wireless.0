@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:38700 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756174AbZAMXet (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 18:34:49 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so161577fgg.17
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 15:34:47 -0800 (PST)
-Message-ID: <69e28c910901131534g28404687y6bf23bdbbb233b26@mail.gmail.com> (sfid-20090114_003453_926503_38D634E3)
-Date: Wed, 14 Jan 2009 00:34:47 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Delphi Real Estate" <Info@delphi-real-estate.com>
-Subject: Re: 'N' Mode and 5GHz, Also WPA2
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200901131502.01047.Info@delphi-real-estate.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200901131502.01047.Info@delphi-real-estate.com>
+Received: from mga14.intel.com ([143.182.124.37]:43661 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754004AbZASX2U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 18:28:20 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 13/15] iwlwifi: remove static from 5000 structures
+Date: Mon, 19 Jan 2009 15:30:33 -0800
+Message-Id: <1232407835-19451-14-git-send-email-reinette.chatre@intel.com> (sfid-20090120_003051_105389_DD9B5E50)
+In-Reply-To: <1232407835-19451-13-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1232407835-19451-1-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-2-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-3-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-4-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-5-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-6-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-7-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-8-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-9-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-10-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-11-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-12-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-13-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 14, 2009 at 12:02 AM, Delphi Real Estate
-<Info@delphi-real-estate.com> wrote:
->
-> Running the Intel 4965AGP with iwlagn driver that comes in Ubuntu kernel 2.6.27.10, and DLink DIR-825 dual-mode router.
->
-> Despite extensive effort and research I have been unable to associate in 'n' mode at 5GHz.  I can associate and communicate in 'g' and 'n' mode at 2.4GHz, and in 'a' mode at 5GHz, but it simply does not work in 'n' at 5.  Has anyone been able to make this work?
->
-> Does anyone know what chipset is in the DIR-825?  Should I crack it open?
+From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
 
-Try checking its FCC ID on the Equipment Authorization page. It has
-internal photos.
+remove static from config structures which will be used by new
+hardware that is similar to 5000.  This way the new devices
+can use them without the new structures having to be stored in the
+already overloaded iwl-5000.c file.
 
->
-> Also I am unable to associate in any mode in any band, with WPA2.  Has anyone got WPA2 working with the iwlagn driver?
+Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    4 ++++
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-Are you running the latest wpa_supplicant?
-
->
-> Best,
->
-> Bill
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index a35af67..04c2585 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1528,13 +1528,13 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	},
+ };
+ 
+-static struct iwl_ops iwl5000_ops = {
++struct iwl_ops iwl5000_ops = {
+ 	.lib = &iwl5000_lib,
+ 	.hcmd = &iwl5000_hcmd,
+ 	.utils = &iwl5000_hcmd_utils,
+ };
+ 
+-static struct iwl_mod_params iwl50_mod_params = {
++struct iwl_mod_params iwl50_mod_params = {
+ 	.num_of_queues = IWL50_NUM_QUEUES,
+ 	.num_of_ampdu_queues = IWL50_NUM_AMPDU_QUEUES,
+ 	.amsdu_size_8K = 1,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 9dc6e3c..2602944 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -58,6 +58,10 @@ extern struct iwl_cfg iwl5100_bg_cfg;
+ extern struct iwl_cfg iwl5100_abg_cfg;
+ extern struct iwl_cfg iwl5150_agn_cfg;
+ 
++/* shared structures from iwl-5000.c */
++extern struct iwl_mod_params iwl50_mod_params;
++extern struct iwl_ops iwl5000_ops;
++
+ /* CT-KILL constants */
+ #define CT_KILL_THRESHOLD	110 /* in Celsius */
+ 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.5.4.3
+
