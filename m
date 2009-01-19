@@ -1,43 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24709 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750758AbZA1Opi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 09:45:38 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 06:45:38 -0800
-Date: Wed, 28 Jan 2009 06:44:55 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: add get reg command
-Message-ID: <20090128144455.GE6174@tesla> (sfid-20090128_154544_019981_CF5F0510)
-References: <1233111125-7955-1-git-send-email-lrodriguez@atheros.com> <1233137841.3936.2.camel@johannes.local>
+Received: from 25.mail-out.ovh.net ([91.121.27.228]:41818 "HELO
+	25.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759527AbZASNI4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 08:08:56 -0500
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH 2/2] iwl3945: Remove unused variables
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1233137841.3936.2.camel@johannes.local>
+Date: Mon, 19 Jan 2009 14:06:23 +0100
+From: <samuel@sortiz.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200901190955.32818.helmut.schaa@gmail.com>
+References: <200901190955.32818.helmut.schaa@gmail.com>
+Message-ID: <726c7ab86fd8a193ef621bac113b0ab4@localhost> (sfid-20090119_140903_647219_5F2E1E12)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 02:17:21AM -0800, Johannes Berg wrote:
-> On Tue, 2009-01-27 at 18:52 -0800, Luis R. Rodriguez wrote:
-> 
-> > +	mutex_lock(&cfg80211_drv_mutex);
-> > +	regd = reg_get_current_rd();
-> > +	mutex_unlock(&cfg80211_drv_mutex);
-> > +
-> > +	if (!regd)
-> > +		goto out;
-> 
-> Any reason you need to copy and can't just build the whole thing under
-> lock?
 
-Glad you asked, we can lock the entire call or we can do the above to
-copy. I picked a copy to not let a regular user (get reg can be called
-by anyone) abuse the lock as cfg80211_drv_mutex is used in a lot of places,
-I guess its silly but other's input on this is appreciated as well. Not sure
-if the copy was the best choice.
-
-  Luis
+On Mon, 19 Jan 2009 09:55:32 +0100, Helmut Schaa=0D
+<helmut.schaa@googlemail.com> wrote:=0D
+> Fix the following warnings in iwl-3945-rs.c by removing unused variab=
+les.=0D
+> =0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function=0D
+> =E2=80=98iwl3945_rate_scale_flush_windows=E2=80=99:=0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:186: warning: unused varia=
+ble=0D
+> =E2=80=98priv=E2=80=99=0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function=0D
+> =E2=80=98iwl3945_bg_rate_scale_flush=E2=80=99:=0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:219: warning: unused varia=
+ble=0D
+> =E2=80=98priv=E2=80=99=0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function=0D
+> =E2=80=98iwl3945_collect_tx_data=E2=80=99:=0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: warning: unused varia=
+ble=0D
+> =E2=80=98priv=E2=80=99=0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function=0D
+=E2=80=98rs_free_sta=E2=80=99:=0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: warning: unused varia=
+ble=0D
+> =E2=80=98priv=E2=80=99=0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function=0D
+> =E2=80=98iwl3945_get_adjacent_rate=E2=80=99:=0D
+> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:559: warning: unused varia=
+ble=0D
+> =E2=80=98priv=E2=80=99=0D
+> =0D
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>=0D
+Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>=0D
+=0D
+Thanks Helmut.=0D
+=0D
+> ---=0D
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c=0D
+> b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c=0D
+> index ba64034..2af45f4 100644=0D
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c=0D
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c=0D
+> @@ -183,7 +183,6 @@ static int iwl3945_rate_scale_flush_windows(struc=
+t=0D
+> iwl3945_rs_sta *rs_sta)=0D
+>  	int unflushed =3D 0;=0D
+>  	int i;=0D
+>  	unsigned long flags;=0D
+> -	struct iwl_priv *priv =3D rs_sta->priv;=0D
+>  =0D
+>  	/*=0D
+>  	 * For each rate, if we have collected data on that rate=0D
+> @@ -216,7 +215,6 @@ static int iwl3945_rate_scale_flush_windows(struc=
+t=0D
+> iwl3945_rs_sta *rs_sta)=0D
+>  static void iwl3945_bg_rate_scale_flush(unsigned long data)=0D
+>  {=0D
+>  	struct iwl3945_rs_sta *rs_sta =3D (void *)data;=0D
+> -	struct iwl_priv *priv =3D rs_sta->priv;=0D
+>  	int unflushed =3D 0;=0D
+>  	unsigned long flags;=0D
+>  	u32 packet_count, duration, pps;=0D
+> @@ -290,7 +288,6 @@ static void iwl3945_collect_tx_data(struct=0D
+> iwl3945_rs_sta *rs_sta,=0D
+>  {=0D
+>  	unsigned long flags;=0D
+>  	s32 fail_count;=0D
+> -	struct iwl_priv *priv =3D rs_sta->priv;=0D
+>  =0D
+>  	if (!retries) {=0D
+>  		IWL_DEBUG_RATE("leave: retries =3D=3D 0 -- should be at least 1\n"=
+);=0D
+> @@ -438,7 +435,6 @@ static void rs_free_sta(void *iwl_priv, struct=0D
+> ieee80211_sta *sta,=0D
+>  {=0D
+>  	struct iwl3945_sta_priv *psta =3D (void *) sta->drv_priv;=0D
+>  	struct iwl3945_rs_sta *rs_sta =3D priv_sta;=0D
+> -	struct iwl_priv *priv =3D rs_sta->priv;=0D
+>  =0D
+>  	psta->rs_sta =3D NULL;=0D
+>  =0D
+> @@ -556,7 +552,6 @@ static u16 iwl3945_get_adjacent_rate(struct=0D
+> iwl3945_rs_sta *rs_sta,=0D
+>  {=0D
+>  	u8 high =3D IWL_RATE_INVALID;=0D
+>  	u8 low =3D IWL_RATE_INVALID;=0D
+> -	struct iwl_priv *priv =3D rs_sta->priv;=0D
+>  =0D
+>  	/* 802.11A walks to the next literal adjacent rate in=0D
+>  	 * the rate table */=0D
+> --=0D
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess"=0D
+> in=0D
+> the body of a message to majordomo@vger.kernel.org=0D
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
