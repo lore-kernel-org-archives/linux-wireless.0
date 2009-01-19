@@ -1,169 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:48803 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758194AbZACNoy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jan 2009 08:44:54 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [RFC 06/12] ath9k: convert to struct device
-Date: Sat,  3 Jan 2009 14:44:16 +0100
-Message-Id: <1230990262-22923-7-git-send-email-juhosg@openwrt.org> (sfid-20090103_144458_982151_24407CFF)
-In-Reply-To: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
-References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
+Received: from mga14.intel.com ([143.182.124.37]:37215 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753667AbZASX2R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 18:28:17 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/15] iwlwifi: kill scan39
+Date: Mon, 19 Jan 2009 15:30:28 -0800
+Message-Id: <1232407835-19451-9-git-send-email-reinette.chatre@intel.com> (sfid-20090120_002830_237080_1A83F304)
+In-Reply-To: <1232407835-19451-8-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1232407835-19451-1-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-2-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-3-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-4-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-5-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-6-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-7-git-send-email-reinette.chatre@intel.com>
+ <1232407835-19451-8-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that we have converted all bus specific routines to replaceable, we
-can move the PCI specific codes into a separate file.
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+scan and scan39 can be represented by void * in iwl_priv
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath9k/core.h |    5 +++--
- drivers/net/wireless/ath9k/pci.c  |   35 ++++++++++++++++++++---------------
- 2 files changed, 23 insertions(+), 17 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 +---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   10 +++++-----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 73a409b..6889df7 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -18,7 +18,8 @@
- #define CORE_H
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 4d437cf..5b5e011 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -848,7 +848,7 @@ struct iwl_priv {
+ 	unsigned long scan_start;
+ 	unsigned long scan_pass_start;
+ 	unsigned long scan_start_tsf;
+-	struct iwl_scan_cmd *scan;
++	void *scan;
+ 	int scan_bands;
+ 	int one_direct_scan;
+ 	u8 direct_ssid_len;
+@@ -1071,8 +1071,6 @@ struct iwl_priv {
+ 	s8 user_txpower_limit;
+ 	s8 max_channel_txpower_limit;
  
- #include <linux/etherdevice.h>
--#include <linux/pci.h>
-+#include <linux/device.h>
-+#include <linux/types.h>
- #include <net/mac80211.h>
- #include <linux/leds.h>
- #include <linux/rfkill.h>
-@@ -729,7 +730,7 @@ struct ath_bus_ops {
+-	struct iwl3945_scan_cmd *scan39;
+-
+ 	/* We declare this const so it can only be
+ 	 * changed via explicit cast within the
+ 	 * routines that actually update the physical
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 67f05bc..47436ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5264,15 +5264,15 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+ 		goto done;
+ 	}
  
- struct ath_softc {
- 	struct ieee80211_hw *hw;
--	struct pci_dev *pdev;
-+	struct device *dev;
- 	struct tasklet_struct intr_tq;
- 	struct tasklet_struct bcon_tasklet;
- 	struct ath_hal *sc_ah;
-diff --git a/drivers/net/wireless/ath9k/pci.c b/drivers/net/wireless/ath9k/pci.c
-index 1bb4787..314bf9d 100644
---- a/drivers/net/wireless/ath9k/pci.c
-+++ b/drivers/net/wireless/ath9k/pci.c
-@@ -15,6 +15,8 @@
-  */
+-	if (!priv->scan39) {
+-		priv->scan39 = kmalloc(sizeof(struct iwl3945_scan_cmd) +
++	if (!priv->scan) {
++		priv->scan = kmalloc(sizeof(struct iwl3945_scan_cmd) +
+ 				     IWL_MAX_SCAN_SIZE, GFP_KERNEL);
+-		if (!priv->scan39) {
++		if (!priv->scan) {
+ 			rc = -ENOMEM;
+ 			goto done;
+ 		}
+ 	}
+-	scan = priv->scan39;
++	scan = priv->scan;
+ 	memset(scan, 0, sizeof(struct iwl3945_scan_cmd) + IWL_MAX_SCAN_SIZE);
  
- #include <linux/nl80211.h>
-+#include <linux/pci.h>
-+
- #include "core.h"
- #include "reg.h"
- #include "hw.h"
-@@ -34,7 +36,8 @@ static void ath_pci_read_cachesize(struct ath_softc *sc, int *csz)
- {
- 	u8 u8tmp;
+ 	scan->quiet_plcp_th = IWL_PLCP_QUIET_THRESH;
+@@ -7292,7 +7292,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
  
--	pci_read_config_byte(sc->pdev, PCI_CACHE_LINE_SIZE, (u8 *)&u8tmp);
-+	pci_read_config_byte(to_pci_dev(sc->dev), PCI_CACHE_LINE_SIZE,
-+			     (u8 *)&u8tmp);
- 	*csz = (int)u8tmp;
- 
- 	/*
-@@ -50,49 +53,49 @@ static void ath_pci_read_cachesize(struct ath_softc *sc, int *csz)
- static dma_addr_t ath_pci_map_single_to_device(struct ath_softc *sc,
- 					       void *p, size_t size)
- {
--	return pci_map_single(sc->pdev, p, size, PCI_DMA_TODEVICE);
-+	return pci_map_single(to_pci_dev(sc->dev), p, size, PCI_DMA_TODEVICE);
- }
- 
- static void ath_pci_unmap_single_to_device(struct ath_softc *sc,
- 					   dma_addr_t da, size_t size)
- {
--	pci_unmap_single(sc->pdev, da, size, PCI_DMA_TODEVICE);
-+	pci_unmap_single(to_pci_dev(sc->dev), da, size, PCI_DMA_TODEVICE);
- }
- 
- static dma_addr_t ath_pci_map_single_from_device(struct ath_softc *sc,
- 						 void *p, size_t size)
- {
--	return pci_map_single(sc->pdev, p, size, PCI_DMA_FROMDEVICE);
-+	return pci_map_single(to_pci_dev(sc->dev), p, size, PCI_DMA_FROMDEVICE);
- }
- 
- static void ath_pci_unmap_single_from_device(struct ath_softc *sc,
- 					     dma_addr_t da, size_t size)
- {
--	pci_unmap_single(sc->pdev, da, size, PCI_DMA_FROMDEVICE);
-+	pci_unmap_single(to_pci_dev(sc->dev), da, size, PCI_DMA_FROMDEVICE);
- }
- 
- static int ath_pci_dma_mapping_error(struct ath_softc *sc, dma_addr_t da)
- {
--	return pci_dma_mapping_error(sc->pdev, da);
-+	return pci_dma_mapping_error(to_pci_dev(sc->dev), da);
- }
- 
- static void ath_pci_sync_single_for_cpu(struct ath_softc *sc, dma_addr_t da,
- 				       size_t size)
- {
--	pci_dma_sync_single_for_cpu(sc->pdev, da, size,
-+	pci_dma_sync_single_for_cpu(to_pci_dev(sc->dev), da, size,
- 				    PCI_DMA_FROMDEVICE);
- }
- 
- static void *ath_pci_dma_alloc(struct ath_softc *sc, size_t size,
- 				       dma_addr_t *pda)
- {
--	return pci_alloc_consistent(sc->pdev, size, pda);
-+	return pci_alloc_consistent(to_pci_dev(sc->dev), size, pda);
- }
- 
- static void ath_pci_dma_free(struct ath_softc *sc, size_t size,
- 				    void *p, dma_addr_t da)
- {
--	pci_free_consistent(sc->pdev, size, p, da);
-+	pci_free_consistent(to_pci_dev(sc->dev), size, p, da);
- }
- 
- static u32 ath_pci_reg_read(struct ath_hal *ah, unsigned reg)
-@@ -107,12 +110,14 @@ static void ath_pci_reg_write(struct ath_hal *ah, unsigned reg, u32 val)
- 
- static void ath_pci_cleanup(struct ath_softc *sc)
- {
-+	struct pci_dev *pdev = to_pci_dev(sc->dev);
-+
- 	ath_detach(sc);
--	if (sc->pdev->irq)
--		free_irq(sc->pdev->irq, sc);
--	pci_iounmap(sc->pdev, sc->mem);
--	pci_release_region(sc->pdev, 0);
--	pci_disable_device(sc->pdev);
-+	if (pdev->irq)
-+		free_irq(pdev->irq, sc);
-+	pci_iounmap(pdev, sc->mem);
-+	pci_release_region(pdev, 0);
-+	pci_disable_device(pdev);
- 	ieee80211_free_hw(sc->hw);
- }
- 
-@@ -221,7 +226,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	sc = hw->priv;
- 	sc->hw = hw;
--	sc->pdev = pdev;
-+	sc->dev = &pdev->dev;
- 	sc->mem = mem;
- 	sc->bus_ops = &ath_pci_bus_ops;
+ 	iwl3945_free_channel_map(priv);
+ 	iwl3945_free_geos(priv);
+-	kfree(priv->scan39);
++	kfree(priv->scan);
+ 	if (priv->ibss_beacon)
+ 		dev_kfree_skb(priv->ibss_beacon);
  
 -- 
-1.5.3.2
+1.5.4.3
 
