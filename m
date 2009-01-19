@@ -1,62 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.openmoko.org ([88.198.124.205]:35226 "EHLO
-	mail.openmoko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756200AbZALTPa (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60498 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758127AbZASMAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 14:15:30 -0500
-Received: from 175-205-16-190.fibertel.com.ar ([190.16.205.175] helo=ws)
-	by mail.openmoko.org with esmtpsa (TLS-1.0:DHE_RSA_AES_128_CBC_SHA1:16)
-	(Exim 4.63)
-	(envelope-from <werner@openmoko.org>)
-	id 1LMSLT-0005e5-Je
-	for linux-wireless@vger.kernel.org; Mon, 12 Jan 2009 19:21:09 +0000
-Date: Mon, 12 Jan 2009 17:15:14 -0200
-From: Werner Almesberger <werner@openmoko.org>
-To: linux-wireless@vger.kernel.org
-Subject: rfkill: how murderous can it be ?
-Message-ID: <20090112191514.GA22112@almesberger.net> (sfid-20090112_201553_679260_F90049FF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 19 Jan 2009 07:00:19 -0500
+Subject: Re: [PATCH 4/4] mac80211: use IEEE80211_IFSTA_MESH_CTR_INC macro
+	to increment ttl.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	luisca@cozybit.com
+In-Reply-To: <eb3ff54b0901190350w5ca5c3d0ocadbaa3c6cbac747@mail.gmail.com> (sfid-20090119_125114_759642_CD8FF056)
+References: <eb3ff54b0901190350w5ca5c3d0ocadbaa3c6cbac747@mail.gmail.com>
+	 (sfid-20090119_125114_759642_CD8FF056)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-VItTvg0j1+juZBqDr/dE"
+Date: Mon, 19 Jan 2009 12:59:43 +0100
+Message-Id: <1232366383.3864.0.camel@johannes.local> (sfid-20090119_130023_343421_C9DC52B0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'd like to restart a discussion from last year, namely how aggressive
-an rfkill implementation is allowed to be when it comes to destroying
-MAC state.
 
-The design suggested in rfkill.txt and also implemented in the existing
-drivers basically assumes a simple on/off switch that cuts power to the
-transmitter but doesn't change anything else. The question is if this 
-is already the full extent to which rfkill is allowed to affect MAC
-state or if it could go further.
+--=-VItTvg0j1+juZBqDr/dE
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-In the AR6k, we don't have such a simple switch for the transmitter. We
-can control what the transmitter does very indirectly by temporarily
-reconfiguring the MAC, but this creates a fair amount of complexity,
-which also seems to be at odds with the design of rfkill.
+On Mon, 2009-01-19 at 13:50 +0200, Rami Rosen wrote:
+> This patch replaces decrementing ttl explicitly with the
+> IEEE80211_IFSTA_MESH_CTR_INC macro in mesh_hwmp.c
+>=20
+>=20
+> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+>=20
+> --
+> (wireless-testing)
+>=20
+> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+> index 4f862b2..1828d80 100644
+> --- a/net/mac80211/mesh_hwmp.c
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -507,7 +507,7 @@ static void hwmp_prep_frame_process(struct
+> ieee80211_sub_if_data *sdata,
+>=20
+>  	ttl =3D PREP_IE_TTL(prep_elem);
+>  	if (ttl <=3D 1) {
+> -		sdata->u.mesh.mshstats.dropped_frames_ttl++;
+> +	IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,dropped_frames_ttl);
 
-Alternatively, we could just power down the whole WLAN module. That is
-easily done and very reliable. However, MAC state (ESSID, keys, and a
-host of other settings) is obliterated if we do this. A watchful user 
-space (e.g., wpa_supplicant) could then restore the status quo ante.
+For one, this is whitespace damaged, secondly, it's not necessary to use
+the macro in a mesh-only file.
 
-Now the question is whether this is still in the spirit of the design 
-of rfkill of if it would take things too far.
+johannes
 
-It seems that there is no consensus on this issue yet. I started the 
-implementation with the assumption that rfkill should always behave as 
-if it only cut transmitter power, so no other state of the MAC is
-allowed to be lost. This is also what Henrique suggested I should do.
+--=-VItTvg0j1+juZBqDr/dE
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-However, Andy and recently Michael suggested that, given that an
-interface that has no connectivity for an extended period of time is
-likely to get reconfigured anyway, it may be sufficient if rfkill 
-leaves things in a state that allows user space to restore 
-connectivity, without having to worry about details beyond that.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-rfkill.txt only specifies the minimum actions an RF kill is required
-to perform, but it's silent on how far it is allowed to go. Let's fix
-this :-)
+iQIcBAABAgAGBQJJdGssAAoJEKVg1VMiehFYWbwP/0A8KHQnrUml53SffJce1+qJ
+8cPXzdo9IEPh+++Zjrm6ygos4FuMDhZoqszQOVyQOEZt2ySHa/zFzBnj3dUW4u4j
+asE9K6ZGii9YP19xwhw1zBylUhSZzmvDn+8eKcpo7aVrnJeS8n46Phsau5I8NG2Z
+7iqmWLOhhyRjH+FQnrs0o9++u5G/MLD4xRoHclMd2/3EU9Bkrfgg9lgxunR/XDOu
+CQJZy7dt4EXFIbe7bzv3q18ZWd2BhNmyXG97xjYVGql7pILLOGfaFmZF4o37Vn2j
+4nU2BuNjHvO7fci8aer4jqjPybBiZh2Oi572ynpyIfFRyzI0VV/6axf1EAAM45TB
+mDGrR3r78lZm4+7Oav1hbu1LmQwfayipxtwtkT7oVdKaGCRYGOZSvyzNlOHUbXVG
+dA+qmZX5OGNMQRGmNO5HBBiRtSo9gC8SWFkS3oIsHZd5LHLnBlnqv9M3PgMiW2tr
+GubxinGab9T39zDIT11ACpLk57Wg5kHXagAH086si+46KWOqH7Z+UWEgsrBsa1qo
+Dq77ik0ox7d0ZuHSS3RhBPem/xvgT1uM0aWVBE8KQaejHiPw5Jr+fYRUVMHJN8SH
+bh0jW00uOc8CFIBVJ4jJMUrrQGU8DWAZMGr8BdFyqHPyrN7aNs6CcK4A983Qs/q9
+R/9L2IzoMCT2auc3b1fF
+=hDWm
+-----END PGP SIGNATURE-----
 
-Thanks,
-- Werner
+--=-VItTvg0j1+juZBqDr/dE--
+
