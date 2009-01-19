@@ -1,86 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vilya.visn.co.uk ([193.254.210.161]:42823 "EHLO
-	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758273AbZA2NoK (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:38377 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758783AbZASL77 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 08:44:10 -0500
-Received: from localhost ([127.0.0.1] helo=www.phantomjinx.co.uk)
-	by vilya.visn.co.uk with esmtpa (Exim 4.69)
-	(envelope-from <p.g.richardson@phantomjinx.co.uk>)
-	id 1LSWHp-0003jn-32
-	for linux-wireless@vger.kernel.org; Thu, 29 Jan 2009 12:46:25 +0000
-Message-ID: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk> (sfid-20090129_144420_763073_F9195D72)
-Date: Thu, 29 Jan 2009 12:46:25 -0000 (UTC)
-Subject: rtl8187 wireless issues
-From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-To: linux-wireless@vger.kernel.org
+	Mon, 19 Jan 2009 06:59:59 -0500
+Received: by bwz14 with SMTP id 14so8214009bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 03:59:57 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 1/2] iwl3945: fix some warnings when compiled  without debug
+Date: Mon, 19 Jan 2009 12:59:34 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <200901190955.04622.helmut.schaa@gmail.com> <1232359746.3758.0.camel@johannes>
+In-Reply-To: <1232359746.3758.0.camel@johannes>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200901191259.35309.helmut.schaa@gmail.com> (sfid-20090119_130004_726419_AD2559C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Am Montag, 19. Januar 2009 schrieb Johannes Berg:
+> On Mon, 2009-01-19 at 09:55 +0100, Helmut Schaa wrote:
+> > Fix the following warnings if compiled without CONFIG_IWLWIFI_DEBUG=
+=2E
+> >=20
+> > drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98i=
+wl3945_rx_reply_add_sta=E2=80=99:
+> > drivers/net/wireless/iwlwifi/iwl3945-base.c:2748: warning: unused v=
+ariable =E2=80=98pkt=E2=80=99
+> > drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98i=
+wl3945_rx_scan_results_notif=E2=80=99:
+> > drivers/net/wireless/iwlwifi/iwl3945-base.c:2903: warning: unused v=
+ariable =E2=80=98notif=E2=80=99
+> > drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98i=
+wl3945_rx_scan_complete_notif=E2=80=99:
+> > drivers/net/wireless/iwlwifi/iwl3945-base.c:2928: warning: unused v=
+ariable =E2=80=98scan_notif=E2=80=99
+> >=20
+> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> > ---
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/=
+net/wireless/iwlwifi/iwl3945-base.c
+> > index b437cac..15d36d8 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> > @@ -2744,7 +2744,9 @@ static void iwl3945_rx_reply_alive(struct iwl=
+_priv *priv,
+> >  static void iwl3945_rx_reply_add_sta(struct iwl_priv *priv,
+> >  				 struct iwl_rx_mem_buffer *rxb)
+> >  {
+> > +	#ifdef CONFIG_IWLWIFI_DEBUG
+> >  	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;
+> > +	#endif=20
+>=20
+> I for one would definitely prefer you didn't indent preprocessor
+> statements, but I don't care all that much about iwl3945.
 
-I recently bought a new laptop from Novatech.co.uk
-(http://www.novatech.co.uk/novatech/range.html?t=3Dnb&c=3Dall&r=3DX60).
+Indeed. My fault. I'll resend this one.
 
-I have installed Mandriva 2009 (2.6.27-7) on the laptop and despite bes=
-t
-efforts cannot make the internal wifi card connect to my router. The ca=
-rd
-is reported by lsusb as
-
-id: 0x8189 chipset: rtl8187b
-
-I use WPA2 with a pre-shared key on my router. Would you mind giving me
-guidance as to whether this is relibaly working with the rtl8187 driver=
-?
-
-Basically, I am unable to associate with the router. Looking at
-wpa_supplicant debug output, it indicates the card simply times out whe=
-n
-trying to associate. However, on one brief occasion a couple of days ag=
-o,
-I was able to associate according to iwconfig, yet despite best efforts=
- I
-was unable to ping anything.
-
-It seems as well that when the driver is installed (currently blacklist=
-ed
-in modprobe.conf), it stops other network interfaces operating correctl=
-y.
-=46or example, I am unable to ping from a wired ethernet and unable to
-associate with the AP with an externel wireless USB dongle.
-
-I have since tried the 2.6.29 kernel from its git repository but that
-version of the rtl8187 driver did not associate either.
-
-At this point I am constrained by lack of debugging knowledge. The only
-tools I know of is iwconfig and friends, wpa_supplicant -ddd and ifconf=
-ig.
-If someone wouldnt mind giving me an idea of how to approach debugging
-this problem then I could try and understand what is going on myself.
-
-Any help very much appreciated.
-
-Thanks
-
-P. G. Richardson
-(a.k.a phantomjinx)
-
---=20
-Laws are partly formed for the sake of good men, in order to instruct t=
-hem
-how they may live on friendly terms with one another, and partly for th=
-e
-sake of those who refuse to be instructed, whose spirit cannot be subdu=
-ed,
-or softened, or hindered from plunging into evil. [The Laws, Plato]
-
-You fiend! Never have I encountered such corrupt and foul-minded
-perversity=85 Have you ever considered a career in the church?
-Bishop of Bath and Wells (Blackadder II)
-
+Thanks,
+Helmut
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
