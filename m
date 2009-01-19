@@ -1,62 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.wellnetcz.com ([212.24.148.102]:54555 "EHLO
-	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751015AbZAEQGO (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:58777 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737AbZASNaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 11:06:14 -0500
-From: Jiri Slaby <jirislaby@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1 #2] IWL: fix WARN typo
-Date: Mon,  5 Jan 2009 17:06:06 +0100
-Message-Id: <1231171566-22984-1-git-send-email-jirislaby@gmail.com> (sfid-20090105_170617_991851_0DDC8043)
-In-Reply-To: <1231171404-22822-1-git-send-email-jirislaby@gmail.com>
-References: <1231171404-22822-1-git-send-email-jirislaby@gmail.com>
+	Mon, 19 Jan 2009 08:30:25 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] p54: more cryptographic accelerator fixes
+Date: Mon, 19 Jan 2009 14:30:32 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200901191430.32130.chunkeey@web.de> (sfid-20090119_143030_421243_EF44AEDA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-new kew -> a new key
-
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: John W. Linville <linville@tuxdriver.com>
+If we let the firmware do the data encryption, we have to remove the ICV and
+(M)MIC at the end of the frame before we can give it back to mac80211. 
+Or, these data frames have a few trailing bytes on cooked monitor interfaces.
+   
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-sta.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 412f66b..ce2ba40 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -638,7 +638,7 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
- 	 * in uCode. */
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index 9b6db82..45c2e7a 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -545,8 +545,8 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+ 			}
+ 			if (err)
+ 				goto err;
+-
+-		}
++			}
++			break;
+ 		case PDR_PRISM_ZIF_TX_IQ_CALIBRATION:
+ 			priv->iq_autocal = kmalloc(data_len, GFP_KERNEL);
+ 			if (!priv->iq_autocal) {
+@@ -884,7 +884,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
+ 		struct p54_hdr *entry_hdr;
+ 		struct p54_tx_data *entry_data;
+-		int pad = 0;
++		unsigned int pad = 0, frame_len;
  
- 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
--		"no space for new kew");
-+		"no space for a new key");
+ 		range = (void *)info->rate_driver_data;
+ 		if (range->start_addr != addr) {
+@@ -907,6 +907,7 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 		__skb_unlink(entry, &priv->tx_queue);
+ 		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
  
- 	priv->stations[sta_id].sta.key.key_flags = key_flags;
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-@@ -686,7 +686,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
- 	 * in uCode. */
++		frame_len = entry->len;
+ 		entry_hdr = (struct p54_hdr *) entry->data;
+ 		entry_data = (struct p54_tx_data *) entry_hdr->data;
+ 		priv->tx_stats[entry_data->hw_queue].len--;
+@@ -960,15 +961,28 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 		info->status.ack_signal = p54_rssi_to_dbm(dev,
+ 				(int)payload->ack_rssi);
  
- 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
--		"no space for new kew");
-+		"no space for a new key");
+-		if (entry_data->key_type == P54_CRYPTO_TKIPMICHAEL) {
++		/* Undo all changes to the frame. */
++		switch (entry_data->key_type) {
++		case P54_CRYPTO_TKIPMICHAEL: {
+ 			u8 *iv = (u8 *)(entry_data->align + pad +
+-				        entry_data->crypt_offset);
++					entry_data->crypt_offset);
  
- 	priv->stations[sta_id].sta.key.key_flags = key_flags;
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-@@ -722,7 +722,7 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
- 	 * in uCode. */
- 
- 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
--		"no space for new kew");
-+		"no space for a new key");
- 
- 	/* This copy is acutally not needed: we get the key with each TX */
- 	memcpy(priv->stations[sta_id].keyinfo.key, keyconf->key, 16);
--- 
-1.6.0.6
-
+ 			/* Restore the original TKIP IV. */
+ 			iv[2] = iv[0];
+ 			iv[0] = iv[1];
+ 			iv[1] = (iv[0] | 0x20) & 0x7f;	/* WEPSeed - 8.3.2.2 */
++
++			frame_len -= 12; /* remove TKIP_MMIC + TKIP_ICV */
++			break;
++			}
++		case P54_CRYPTO_AESCCMP:
++			frame_len -= 8; /* remove CCMP_MIC */
++			break;
++		case P54_CRYPTO_WEP:
++			frame_len -= 4; /* remove WEP_ICV */
++			break;
+ 		}
++		skb_trim(entry, frame_len);
+ 		skb_pull(entry, sizeof(*hdr) + pad + sizeof(*entry_data));
+ 		ieee80211_tx_status_irqsafe(dev, entry);
+ 		goto out;
