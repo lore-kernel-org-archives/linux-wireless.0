@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:3960 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203AbZAMFbk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 00:31:40 -0500
-Subject: Re: pull request: wireless-2.6 2009-01-12
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20090112.212345.259792227.davem@davemloft.net>
-References: <20090112201302.GB3786@tuxdriver.com>
-	 <20090112.212345.259792227.davem@davemloft.net>
+Received: from c60.cesmail.net ([216.154.195.49]:65239 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757498AbZASDNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2009 22:13:36 -0500
+Subject: Re: [Orinoco-devel] [PATCH] Move orinoco Kconfig entries in
+ drivers/net/wireless/orinoco/Kconfig
+From: Pavel Roskin <proski@gnu.org>
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+In-Reply-To: <200901171554.00061.arvidjaar@mail.ru>
+References: <200901171554.00061.arvidjaar@mail.ru>
 Content-Type: text/plain
-Date: Mon, 12 Jan 2009 21:31:17 -0800
-Message-Id: <1231824677.5405.17.camel@brick> (sfid-20090113_063145_719607_5668386B)
+Date: Sun, 18 Jan 2009 22:13:31 -0500
+Message-Id: <1232334811.5609.34.camel@dv> (sfid-20090119_041341_939080_D118DC82)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-01-12 at 21:23 -0800, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 12 Jan 2009 15:13:02 -0500
+On Sat, 2009-01-17 at 15:53 +0300, Andrey Borzenkov wrote:
+> Subject: [PATCH] Move orinoco Kconfig entries in 
+> drivers/net/wireless/orinoco/Kconfig
+> From: Andrey Borzenkov <arvidjaar@mail.ru>
 > 
-> > Please let me know if there are problems!
+> Since driver now lives in separate subdirectory, move Kconfig entries
+> in own file so they can be tweaked indepndently. It complements commit
+> b2e53b338b7b4608372d070bb477f3bae3971e5a.
 > 
-> There's something funny in this tree.   In changeset
-> 19f0a391bf9d88307e52557ff3125b24e2519bd4 there is
-> a removal of arch/arm/mach-integrator/clock.h
-> 
-> I think when you installed that commit something
-> automatically deleted zero length files it found,
-> but that's just a guess.
+> Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
 
-make clean will assume empty files should be deleted.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-Harvey
-
+-- 
+Regards,
+Pavel Roskin
