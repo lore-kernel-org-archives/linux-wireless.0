@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54822 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751732AbZAHQ26 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 11:28:58 -0500
-Subject: Re: [PATCH 1/3] libertas: Fix alignment issues in libertas core
-	TESTED
-From: Dan Williams <dcbw@redhat.com>
-To: Bernhard =?ISO-8859-1?Q?W=F6rndl-Aichriedler?= <bwa@berniwa.com>
-Cc: andrey@cozybit.com, Colin McCabe <colin@cozybit.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4964FBCE.1070804@berniwa.com>
-References: <4964FBCE.1070804@berniwa.com>
-Content-Type: text/plain; charset=utf-8
-Date: Thu, 08 Jan 2009 11:27:43 -0500
-Message-Id: <1231432063.21643.28.camel@localhost.localdomain> (sfid-20090108_172902_558013_60E26E72)
-Mime-Version: 1.0
+Received: from ey-out-2122.google.com ([74.125.78.24]:4420 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757919AbZASLua (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 06:50:30 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so496562eye.37
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 03:50:27 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 19 Jan 2009 13:50:27 +0200
+Message-ID: <eb3ff54b0901190350p1ac95afdpdb0c937a66c6c00e@mail.gmail.com> (sfid-20090119_125032_898289_CAF7EAA4)
+Subject: [PATCH 1/4] mac80211: remove mesh_plink_close() method.
+From: Rami Rosen <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	luisca@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-01-07 at 20:00 +0100, Bernhard W=C3=B6rndl-Aichriedler wro=
-te:
-> Hi!
->=20
-> I'm using the AP7000 (Atmel AVR32) combined with the Marvell 88W8686 =
-and=20
-> the patch is just great,
-> through that patch ([PATCH 1/3] libertas: Fix alignment issues in=20
-> libertas core) i got the wireless working successfully and fully stab=
-le.
->=20
-> I suggest pulling it into the kernel
+This patch removes mesh_plink_close() method as it is unused.
 
-Ok, thanks for the confirmation.
-
-Dan
-
-> Thank you Colin and Andrey!
->=20
-> Best Regards=20
-> Bernhard W=C3=B6rndl-Aichriedler
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(wireless-testing)
+
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index c197ab5..c5b0b58 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -243,7 +243,6 @@ void mesh_accept_plinks_update(struct
+ieee80211_sub_if_data *sdata);
+ void mesh_plink_broken(struct sta_info *sta);
+ void mesh_plink_deactivate(struct sta_info *sta);
+ int mesh_plink_open(struct sta_info *sta);
+-int mesh_plink_close(struct sta_info *sta);
+ void mesh_plink_block(struct sta_info *sta);
+ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 			 struct ieee80211_mgmt *mgmt, size_t len,
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 8a6c02b..c140a1b 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -361,36 +361,6 @@ void mesh_plink_block(struct sta_info *sta)
+ 	spin_unlock_bh(&sta->lock);
+ }
+
+-int mesh_plink_close(struct sta_info *sta)
+-{
+-	struct ieee80211_sub_if_data *sdata = sta->sdata;
+-	__le16 llid, plid, reason;
+-
+-	mpl_dbg("Mesh plink: closing link with %pM\n", sta->sta.addr);
+-	spin_lock_bh(&sta->lock);
+-	sta->reason = cpu_to_le16(MESH_LINK_CANCELLED);
+-	reason = sta->reason;
+-
+-	if (sta->plink_state == PLINK_LISTEN ||
+-	    sta->plink_state == PLINK_BLOCKED) {
+-		mesh_plink_fsm_restart(sta);
+-		spin_unlock_bh(&sta->lock);
+-		return 0;
+-	} else if (sta->plink_state == PLINK_ESTAB) {
+-		__mesh_plink_deactivate(sta);
+-		/* The timer should not be running */
+-		mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
+-	} else if (!mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata)))
+-		sta->ignore_plink_timer = true;
+-
+-	sta->plink_state = PLINK_HOLDING;
+-	llid = sta->llid;
+-	plid = sta->plid;
+-	spin_unlock_bh(&sta->lock);
+-	mesh_plink_frame_tx(sta->sdata, PLINK_CLOSE, sta->sta.addr, llid,
+-			    plid, reason);
+-	return 0;
+-}
+
+ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct
+ieee80211_mgmt *mgmt,
+ 			 size_t len, struct ieee80211_rx_status *rx_status)
