@@ -1,133 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26636 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754704AbZAZTOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 14:14:06 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 11:14:06 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>, <Jouni.Malinen@atheros.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [RFC] mac80211: do not TX injected frames when not allowed
-Date: Mon, 26 Jan 2009 11:13:26 -0800
-Message-ID: <1232997206-25784-1-git-send-email-lrodriguez@atheros.com> (sfid-20090126_201419_427020_27CF64F5)
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:40236 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758507AbZASMCj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 07:02:39 -0500
+Received: by bwz14 with SMTP id 14so8220462bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 04:02:37 -0800 (PST)
+Subject: [PATCHv2 1/2] iwl3945: fix some warnings when compiled  without debug
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Date: Mon, 19 Jan 2009 13:02:15 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200901191302.15719.Helmut.Schaa@gmx.de> (sfid-20090119_130242_347713_672D7B2E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Monitor mode is able to TX by using injected frames. We should
-not allow injected frames to be sent unless allowed by regulatory
-rules. Since AP mode uses a monitor interfaces to transmit
-management frames we have to take care to not break AP mode as
-well while resolving this. We deal with this by allowing compliant
-APs solutions to inform mac80211 if their monitor interface is
-intended to be used for an AP by setting a cfg80211 flag for the
-monitor interface. hostapd, for example, currently does its own
-checks to ensure AP mode is not used on channels which require radar
-detection. Once such solutions are available it can can enable this
-flag.
+=46ix the following warnings if compiled without CONFIG_IWLWIFI_DEBUG.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98iwl39=
+45_rx_reply_add_sta=E2=80=99:
+drivers/net/wireless/iwlwifi/iwl3945-base.c:2748: warning: unused varia=
+ble =E2=80=98pkt=E2=80=99
+drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98iwl39=
+45_rx_scan_results_notif=E2=80=99:
+drivers/net/wireless/iwlwifi/iwl3945-base.c:2903: warning: unused varia=
+ble =E2=80=98notif=E2=80=99
+drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98iwl39=
+45_rx_scan_complete_notif=E2=80=99:
+drivers/net/wireless/iwlwifi/iwl3945-base.c:2928: warning: unused varia=
+ble =E2=80=98scan_notif=E2=80=99
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
 
-This currently hits the WARN_ON() when using hostapd and
-a client tries to associate and I'm not sure why, hence RFC.
-Something is fishy...
+V2 fixes the indention of preprocessor statements.
 
- include/linux/nl80211.h |    3 +++
- include/net/cfg80211.h  |    4 ++++
- net/mac80211/tx.c       |   14 ++++++++++++++
- net/wireless/nl80211.c  |    1 +
- 4 files changed, 22 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 76aae3d..3357907 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -705,6 +705,8 @@ enum nl80211_reg_rule_flags {
-  * @NL80211_MNTR_FLAG_OTHER_BSS: disable BSSID filtering
-  * @NL80211_MNTR_FLAG_COOK_FRAMES: report frames after processing.
-  *	overrides all other flags.
-+ * @NL80211_MNTR_FLAG_AP_MGT: this monitor interface is used for AP mode
-+ * 	to be able to inject management frames.
-  *
-  * @__NL80211_MNTR_FLAG_AFTER_LAST: internal use
-  * @NL80211_MNTR_FLAG_MAX: highest possible monitor flag
-@@ -716,6 +718,7 @@ enum nl80211_mntr_flags {
- 	NL80211_MNTR_FLAG_CONTROL,
- 	NL80211_MNTR_FLAG_OTHER_BSS,
- 	NL80211_MNTR_FLAG_COOK_FRAMES,
-+	NL80211_MNTR_FLAG_AP_MGT,
- 
- 	/* keep last */
- 	__NL80211_MNTR_FLAG_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index dd1fd51..fe65c64 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -255,6 +255,9 @@ struct station_info {
-  * @MONITOR_FLAG_CONTROL: pass control frames
-  * @MONITOR_FLAG_OTHER_BSS: disable BSSID filtering
-  * @MONITOR_FLAG_COOK_FRAMES: report frames after processing
-+ * @MONITOR_FLAG_AP_MGT: informs us this monitor interface is
-+ *	used by a driver for AP mode to be able to inject management
-+ * 	frames.
-  */
- enum monitor_flags {
- 	MONITOR_FLAG_FCSFAIL		= 1<<NL80211_MNTR_FLAG_FCSFAIL,
-@@ -262,6 +265,7 @@ enum monitor_flags {
- 	MONITOR_FLAG_CONTROL		= 1<<NL80211_MNTR_FLAG_CONTROL,
- 	MONITOR_FLAG_OTHER_BSS		= 1<<NL80211_MNTR_FLAG_OTHER_BSS,
- 	MONITOR_FLAG_COOK_FRAMES	= 1<<NL80211_MNTR_FLAG_COOK_FRAMES,
-+	MONITOR_FLAG_AP_MGT		= 1<<NL80211_MNTR_FLAG_AP_MGT,
- };
- 
- /**
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7b013fb..eed4f49 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -898,10 +898,24 @@ __ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
- 	struct ieee80211_radiotap_header *rthdr =
- 		(struct ieee80211_radiotap_header *) skb->data;
- 	struct ieee80211_supported_band *sband;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(tx->dev);
- 	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len);
- 
- 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
- 
-+	/* Frame injection is not allowed if beaconing is not allowed
-+	 * or if we need radar detection. Beaconing is usually not allowed when
-+	 * the mode or operation (Adhoc, AP, Mesh) does not support DFS.
-+	 * Since AP mode uses monitor interfaces to inject/TX management
-+	 * frames we make AP mode the exception to this rule as its
-+	 * implementation can deal with radar detection by itself. */
-+	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_MONITOR))
-+		return TX_DROP;
-+	if (!(sdata->u.mntr_flags & MONITOR_FLAG_AP_MGT) &&
-+	   (tx->channel->flags & (IEEE80211_CHAN_NO_IBSS |
-+	   IEEE80211_CHAN_RADAR)))
-+		return TX_DROP;
-+
- 	skb->do_not_encrypt = 1;
- 	tx->flags &= ~IEEE80211_TX_FRAGMENTED;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 09a5d0f..bce964c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -537,6 +537,7 @@ static const struct nla_policy mntr_flags_policy[NL80211_MNTR_FLAG_MAX + 1] = {
- 	[NL80211_MNTR_FLAG_CONTROL] = { .type = NLA_FLAG },
- 	[NL80211_MNTR_FLAG_OTHER_BSS] = { .type = NLA_FLAG },
- 	[NL80211_MNTR_FLAG_COOK_FRAMES] = { .type = NLA_FLAG },
-+	[NL80211_MNTR_FLAG_AP_MGT] = { .type = NLA_FLAG },
- };
- 
- static int parse_monitor_flags(struct nlattr *nla, u32 *mntrflags)
--- 
-1.6.1.rc3.51.g5832d
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/=
+wireless/iwlwifi/iwl3945-base.c
+index b437cac..15d36d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2744,7 +2744,9 @@ static void iwl3945_rx_reply_alive(struct iwl_pri=
+v *priv,
+ static void iwl3945_rx_reply_add_sta(struct iwl_priv *priv,
+ 				 struct iwl_rx_mem_buffer *rxb)
+ {
++#ifdef CONFIG_IWLWIFI_DEBUG
+ 	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;
++#endif=20
+=20
+ 	IWL_DEBUG_RX("Received REPLY_ADD_STA: 0x%02X\n", pkt->u.status);
+ 	return;
+@@ -2898,9 +2900,11 @@ static void iwl3945_rx_scan_start_notif(struct i=
+wl_priv *priv,
+ static void iwl3945_rx_scan_results_notif(struct iwl_priv *priv,
+ 				      struct iwl_rx_mem_buffer *rxb)
+ {
++#ifdef CONFIG_IWLWIFI_DEBUG
+ 	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;
+ 	struct iwl_scanresults_notification *notif =3D
+ 	    (struct iwl_scanresults_notification *)pkt->u.raw;
++#endif
+=20
+ 	IWL_DEBUG_SCAN("Scan ch.res: "
+ 		       "%d [802.11%s] "
+@@ -2923,8 +2927,10 @@ static void iwl3945_rx_scan_results_notif(struct=
+ iwl_priv *priv,
+ static void iwl3945_rx_scan_complete_notif(struct iwl_priv *priv,
+ 				       struct iwl_rx_mem_buffer *rxb)
+ {
++#ifdef CONFIG_IWLWIFI_DEBUG
+ 	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;
+ 	struct iwl_scancomplete_notification *scan_notif =3D (void *)pkt->u.r=
+aw;
++#endif
+=20
+ 	IWL_DEBUG_SCAN("Scan complete: %d channels (TSF 0x%08X:%08X) - %d\n",
+ 		       scan_notif->scanned_channels,
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
