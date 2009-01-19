@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47492 "EHLO mga09.intel.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:40585 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755588AbZAHXLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 18:11:15 -0500
-Subject: Re: Help debugging unexpected disassociations?
-From: reinette chatre <reinette.chatre@intel.com>
-To: "lmage11@twcny.rr.com" <lmage11@twcny.rr.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090108224343.F9TJC.227705.root@hrndva-web20-z02>
-References: <20090108224343.F9TJC.227705.root@hrndva-web20-z02>
-Content-Type: text/plain
-Date: Thu, 08 Jan 2009 15:12:51 -0800
-Message-Id: <1231456371.7467.103.camel@rc-desk> (sfid-20090109_001119_805104_9C6BA7A9)
-Mime-Version: 1.0
+	id S932114AbZATAFg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 19:05:36 -0500
+Cc: Kernel Testers List <kernel-testers@vger.kernel.org>,
+	"Christian Lamparter" <chunkeey@web.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Linux wireless" <linux-wireless@vger.kernel.org>
+References: <KTnguC9mFUC.A.VNB.TJRdJB@chimera>
+In-Reply-To: <KTnguC9mFUC.A.VNB.TJRdJB@chimera>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <cX2gZ6Cy9nC.A.vUD.KKRdJB@chimera> (sfid-20090120_010543_541448_3993C298)
+Subject: [Bug #12260] Regression due to commit 2b80848e3818fb1c (p54usb: support LM87 firmwares)
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Mon, 19 Jan 2009 22:45:38 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-01-08 at 14:43 -0800, lmage11@twcny.rr.com wrote:
-> ---- lmage11@twcny.rr.com wrote: 
-> > Hey everyone. I'm using an Intel 4965AGN using the iwlagn
-> > driver in 2.6.28. When using a specific AP, my connection is
-> > unexpectedly dropping with nothing more than a
-> > "wlan0: deauthenticated". Any tips on how I could figure out
-> > whether this is the driver's fault or the AP's? Another problem I'm
-> > having is that dhcpcd is timing out a lot, usually after trying to
-> > reconnect from a connection drop.
-> > 
-> > The AP is a Linksys WRT54Gv1 with WPA2 and ssid broadcasting enabled.
-> > 
-> > Thanks!
-> > 
-> > Ari
-> 
-> Um... Bump?
+This message has been generated automatically as a part of a report
+of regressions introduced between 2.6.27 and 2.6.28.
 
-This is very little information to go by. Does the log print a reason
-code? Could you please provide some debug logs? Ensure driver is
-compiled with debugging and load module with debug=0x43fff. 
+The following bug entry is on the current list of known regressions
+introduced between 2.6.27 and 2.6.28.  Please verify if it still should
+be listed and let me know (either way).
 
-Reinette
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=12260
+Subject		: Regression due to commit 2b80848e3818fb1c (p54usb: support LM87 firmwares)
+Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
+Date		: 2008-12-20 10:45 (31 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2b80848e3818fb1c8ccddc105b065a86c68afa9d
+Patch		: http://bugzilla.kernel.org/show_bug.cgi?id=12260
+
 
