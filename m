@@ -1,62 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43125 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753051AbZAMTpq (ORCPT
+Received: from 25.mail-out.ovh.net ([91.121.27.228]:34707 "HELO
+	25.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1760089AbZASNMI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 14:45:46 -0500
-Date: Tue, 13 Jan 2009 14:43:25 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: darklight <darklight.xdarklight@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: ignore the return value of
-	ath5k_hw_noise_floor_calibration
-Message-ID: <20090113194325.GE3623@tuxdriver.com> (sfid-20090113_204550_554479_DE9A4B15)
-References: <888a464d0901091721l6657e755vbfe5bae0367f6413@mail.gmail.com>
+	Mon, 19 Jan 2009 08:12:08 -0500
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [PATCHv2 1/2] iwl3945: fix some warnings when compiled  without debug
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <888a464d0901091721l6657e755vbfe5bae0367f6413@mail.gmail.com>
+Date: Mon, 19 Jan 2009 14:09:35 +0100
+From: <samuel@sortiz.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200901191302.15719.Helmut.Schaa@gmx.de>
+References: <200901191302.15719.Helmut.Schaa@gmx.de>
+Message-ID: <2d7bdf406bc0a183459734d24c167492@localhost> (sfid-20090119_141217_059625_4C85F082)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 10, 2009 at 02:21:44AM +0100, darklight wrote:
-> hi,
-> 
-> some weeks ago Felix Fietkau posted a patch for the "ath5k phy0:
-> unsupported jumbo" warnings (see here:
-> http://article.gmane.org/gmane.linux.kernel.wireless.general/23430 )
-> I just had the same problem - after applying Felix' patch the warnings
-> went down from 50-100 per day to 5.
-> 
-> as a quick note: I did not just apply this patch, instead I replaced
-> Linus' upstream wireless stack with the one from wireless-testing
-> (using kernel version 2.6.28)
-> 
-> I hope Felix' patch can get into Linus' kernel (mainline) so other
-> users can profit from this
 
-It is in Linus' kernel right now:
-
-commit 8b0162a3dc5c30e862b7a73da29e32de3170f5e4
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Mon Nov 3 11:27:38 2008 +0100
-
-    ath5k: ignore the return value of ath5k_hw_noise_floor_calibration
-
-    Noise floor calibration occasionally fails on Atheros hardware.
-    This is not fatal and can happen if there's simply too much
-    noise on the air. Ignoring the calibration error is the right
-    thing to do here, because when the error is ignored, the hardware
-    will still work, whereas if the error causes the driver to bail out
-    of a bigger configuration function and does not configure the tx
-    queues or the IMR (as is the case in reset.c), the hw no longer
-    works properly until the next reset.
-
-    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Hth!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On Mon, 19 Jan 2009 13:02:15 +0100, Helmut Schaa=0D
+<helmut.schaa@googlemail.com> wrote:=0D
+> Fix the following warnings if compiled without CONFIG_IWLWIFI_DEBUG.=0D
+> =0D
+> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function=0D
+> =E2=80=98iwl3945_rx_reply_add_sta=E2=80=99:=0D
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:2748: warning: unused=0D
+variable=0D
+> =E2=80=98pkt=E2=80=99=0D
+> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function=0D
+> =E2=80=98iwl3945_rx_scan_results_notif=E2=80=99:=0D
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:2903: warning: unused=0D
+variable=0D
+> =E2=80=98notif=E2=80=99=0D
+> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function=0D
+> =E2=80=98iwl3945_rx_scan_complete_notif=E2=80=99:=0D
+> drivers/net/wireless/iwlwifi/iwl3945-base.c:2928: warning: unused=0D
+variable=0D
+> =E2=80=98scan_notif=E2=80=99=0D
+> =0D
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>=0D
+Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>=0D
+=0D
+Thanks for this one as well.=0D
+=0D
+> ---=0D
+> =0D
+> V2 fixes the indention of preprocessor statements.=0D
+> =0D
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c=0D
+> b/drivers/net/wireless/iwlwifi/iwl3945-base.c=0D
+> index b437cac..15d36d8 100644=0D
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c=0D
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c=0D
+> @@ -2744,7 +2744,9 @@ static void iwl3945_rx_reply_alive(struct iwl_p=
+riv=0D
+> *priv,=0D
+>  static void iwl3945_rx_reply_add_sta(struct iwl_priv *priv,=0D
+>  				 struct iwl_rx_mem_buffer *rxb)=0D
+>  {=0D
+> +#ifdef CONFIG_IWLWIFI_DEBUG=0D
+>  	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;=0D
+> +#endif =0D
+>  =0D
+>  	IWL_DEBUG_RX("Received REPLY_ADD_STA: 0x%02X\n", pkt->u.status);=0D
+>  	return;=0D
+> @@ -2898,9 +2900,11 @@ static void iwl3945_rx_scan_start_notif(struct=
+=0D
+> iwl_priv *priv,=0D
+>  static void iwl3945_rx_scan_results_notif(struct iwl_priv *priv,=0D
+>  				      struct iwl_rx_mem_buffer *rxb)=0D
+>  {=0D
+> +#ifdef CONFIG_IWLWIFI_DEBUG=0D
+>  	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;=0D
+>  	struct iwl_scanresults_notification *notif =3D=0D
+>  	    (struct iwl_scanresults_notification *)pkt->u.raw;=0D
+> +#endif=0D
+>  =0D
+>  	IWL_DEBUG_SCAN("Scan ch.res: "=0D
+>  		       "%d [802.11%s] "=0D
+> @@ -2923,8 +2927,10 @@ static void iwl3945_rx_scan_results_notif(stru=
+ct=0D
+> iwl_priv *priv,=0D
+>  static void iwl3945_rx_scan_complete_notif(struct iwl_priv *priv,=0D
+>  				       struct iwl_rx_mem_buffer *rxb)=0D
+>  {=0D
+> +#ifdef CONFIG_IWLWIFI_DEBUG=0D
+>  	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;=0D
+>  	struct iwl_scancomplete_notification *scan_notif =3D (void *)pkt->u=
+=2Eraw;=0D
+> +#endif=0D
+>  =0D
+>  	IWL_DEBUG_SCAN("Scan complete: %d channels (TSF 0x%08X:%08X) - %d\n=
+",=0D
+>  		       scan_notif->scanned_channels,=0D
+> --=0D
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess"=0D
+> in=0D
+> the body of a message to majordomo@vger.kernel.org=0D
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
