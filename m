@@ -1,50 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:31515 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751884AbZAUUVh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 15:21:37 -0500
-Subject: Re: [Orinoco-devel] [PATCH] orinoco: trivial cleanup in
- alloc_orinocodev
-From: Pavel Roskin <proski@gnu.org>
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-In-Reply-To: <200901212155.32754.arvidjaar@mail.ru>
-References: <200901212155.32754.arvidjaar@mail.ru>
-Content-Type: text/plain
-Date: Wed, 21 Jan 2009 15:21:32 -0500
-Message-Id: <1232569292.10843.13.camel@dv> (sfid-20090121_212142_096686_62B8CC73)
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.158]:30827 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755709AbZASXsY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 18:48:24 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so1429635fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 15:48:22 -0800 (PST)
+Message-ID: <3ace41890901191548p4b3afc4aq2c1faf7aec68000b@mail.gmail.com> (sfid-20090120_004847_345201_5B2ED81F)
+Date: Mon, 19 Jan 2009 23:48:22 +0000
+From: "Hin-Tak Leung" <hintak.leung@gmail.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] zd1211rw: adding Sitecom WL-603 (0df6:0036) to the USB id list
+Cc: "Giuseppe Cala" <jiveaxe@gmail.com>
+In-Reply-To: <1232408349-5460-1-git-send-email-HinTak.Leung@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+References: <1232408349-5460-1-git-send-email-HinTak.Leung@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-01-21 at 21:55 +0300, Andrey Borzenkov wrote:
-> Subject: [PATCH] orinoco: trivial cleanup in alloc_orinocodev
-> From: Andrey Borzenkov <arvidjaar@mail.ru>
-> 
-> Remove extra space; remove redundant cast
-> 
-> Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
+Apologies for sending the patch 3 times - was a bit confused by the
+--signed-off-by-cc option (I mis-read it as having the opposite effect
+adding "Signed-off-by:" line for --cc, rather than what it does,
+adding --cc for "Signed-ffo-by:").
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
-
-> -	if (! dev)
-> +	if (!dev)
-
-There are 41 occurrences of "(! " in drivers/net/wireless, all in
-drivers/net/wireless/orinoco.  Care to fix them all?
-
-By the way, I made a patch that adds all C sources in
-drivers/net/wireless/orinoco and ran it through checkpatch.pl.  There
-were 226 errors and 174 warnings.  That includes those spaces, trailing
-whitespace, excessively long lines and so on.  It would be great if you
-fix at least some of that.  Actually, long lines are justified in many
-cases, so please don't overdo it.
-
-> -	dev->wireless_handlers = (struct iw_handler_def *)&orinoco_handler_def;
-> +	dev->wireless_handlers = &orinoco_handler_def;
-
-That's fine.
-
--- 
-Regards,
-Pavel Roskin
+Hin-Tak
