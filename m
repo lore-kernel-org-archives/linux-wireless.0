@@ -1,29 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:45937 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752801AbZAABBs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2008 20:01:48 -0500
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/3] p54: p54spi driver
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John W Linville <linville@tuxdriver.com>
-From: Christian Lamparter <chunkeey@web.de>
-Date: Thu, 1 Jan 2009 02:01:43 +0100
+Received: from mail.atheros.com ([12.36.123.2]:28497 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752099AbZASHjV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 02:39:21 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 23:39:21 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901010201.44229.chunkeey@web.de> (sfid-20090101_020153_090476_280B3853)
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18804.11602.400684.88722@gargle.gargle.HOWL> (sfid-20090119_083932_599848_7920E8B0)
+Date: Mon, 19 Jan 2009 13:05:46 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<Jouni.Malinen@Atheros.com>
+Subject: [PATCH] mac80211: Reconfigure beacons after a merge run in IBSS mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series introduce the back-end driver p54spi for stlc4550/stlc4560 chips.
+On completion of a merge scan run in IBSS mode, beacons have
+to be reconfigured in the driver, so that the HW timers are updated
+properly when coming back to the home channel. This patch fixes this issue.
 
-So far no one complained about the patches or had any other issues...
-=> therefore it must be 100% working!
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ net/mac80211/mlme.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-[Please mind the logic gap ;-) , But I hope someone will respond
-when the whole driver can be easily built with compat-wireless.]
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 81c5cff..2b4ed5f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2295,8 +2295,9 @@ dont_join:
+ 	/* Selected IBSS not found in current scan results - try to scan */
+ 	if (ifsta->state == IEEE80211_STA_MLME_IBSS_JOINED &&
+ 	    !ieee80211_sta_active_ibss(sdata)) {
++		ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON);
+ 		mod_timer(&ifsta->timer, jiffies +
+-				      IEEE80211_IBSS_MERGE_INTERVAL);
++			  IEEE80211_IBSS_MERGE_INTERVAL);
+ 	} else if (time_after(jiffies, local->last_scan_completed +
+ 			      IEEE80211_SCAN_INTERVAL)) {
+ 		printk(KERN_DEBUG "%s: Trigger new scan to find an IBSS to "
+-- 
+1.6.1
 
-Regards,
-	Chr
