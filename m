@@ -1,135 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34296 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241AbZA2Imu (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2116 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbZASQXT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 03:42:50 -0500
-Message-Id: <20090129005808.843799105@sipsolutions.net> (sfid-20090129_094254_128060_5E7BDCBF)
-References: <20090129005450.068797016@sipsolutions.net>
-Date: Thu, 29 Jan 2009 01:54:56 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: m.sujith@gmail.com, tomasw@gmail.com
-Subject: [RFC/RFT 06/11] mac80211: document TX aggregation (and small
-	cleanup)
-Mime-Version: 1.0
+	Mon, 19 Jan 2009 11:23:19 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH v3 2/3] mac80211: add suspend/resume callbacks
+Date: Mon, 19 Jan 2009 11:20:53 -0500
+Message-Id: <1232382054-15931-3-git-send-email-me@bobcopeland.com> (sfid-20090119_172327_790254_81BB5C04)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation and move ieee80211_start_tx_ba_cb_irqsafe to right
-after ieee80211_start_tx_ba_cb.
+This patch introduces suspend and resume callbacks to mac80211,
+allowing mac80211 to quiesce its state (bringing down interfaces,
+removing keys, etc) in preparation for suspend.  cfg80211 will call
+the suspend hook before the device suspend, and resume hook after
+the device resume.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/mac80211/agg-tx.c |   76 +++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 51 insertions(+), 25 deletions(-)
+ net/mac80211/Makefile      |    2 +
+ net/mac80211/cfg.c         |   17 +++++++
+ net/mac80211/ieee80211_i.h |    4 ++
+ net/mac80211/pm.c          |  114 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 137 insertions(+), 0 deletions(-)
+ create mode 100644 net/mac80211/pm.c
 
---- wireless-testing.orig/net/mac80211/agg-tx.c	2009-01-27 23:10:04.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2009-01-27 23:10:07.000000000 +0100
-@@ -18,6 +18,31 @@
- #include "ieee80211_i.h"
- #include "wme.h"
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 5c6fadf..58c94bb 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -38,6 +38,8 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
+ 	mesh_plink.o \
+ 	mesh_hwmp.o
  
-+/**
-+ * DOC: TX aggregation
-+ *
-+ * Aggregation on the TX side requires setting the hardware flag
-+ * %IEEE80211_HW_AMPDU_AGGREGATION as well as, if present, the @ampdu_queues
-+ * hardware parameter to the number of hardware AMPDU queues. If there are no
-+ * hardware queues then the driver will (currently) have to do all frame
-+ * buffering.
-+ *
-+ * When TX aggregation is started by some subsystem (usually the rate control
-+ * control algorithm would be appropriate) by calling the
-+ * ieee80211_start_tx_ba_session() function, the driver will be notified via
-+ * its @ampdu_action function, with the %IEEE80211_AMPDU_TX_START action.
-+ *
-+ * In response to that, the driver is later required to call the
-+ * ieee80211_start_tx_ba_cb() (or ieee80211_start_tx_ba_cb_irqsafe())
-+ * function, which will start the aggregation session.
-+ *
-+ * Similarly, when the aggregation session is stopped by
-+ * ieee80211_stop_tx_ba_session(), the driver's @ampdu_action function will
-+ * be called with the action %IEEE80211_AMPDU_TX_STOP. In this case, the
-+ * call must not fail, and the driver must later call ieee80211_stop_tx_ba_cb()
-+ * (or ieee80211_stop_tx_ba_cb_irqsafe()).
-+ */
++mac80211-$(CONFIG_PM) += pm.o
 +
- static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
- 					 const u8 *da, u16 tid,
- 					 u8 dialog_token, u16 start_seq_num,
-@@ -362,6 +387,31 @@ void ieee80211_start_tx_ba_cb(struct iee
+ # objects for PID algorithm
+ rc80211_pid-y := rc80211_pid_algo.o
+ rc80211_pid-$(CONFIG_MAC80211_DEBUGFS) += rc80211_pid_debugfs.o
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index d1ac3ab..3527de2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1256,6 +1256,21 @@ static int ieee80211_set_mgmt_extra_ie(struct wiphy *wiphy,
+ 	return ret;
  }
- EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
  
-+void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
-+				      const u8 *ra, u16 tid)
++#ifdef CONFIG_PM
++static int ieee80211_suspend(struct wiphy *wiphy)
++{
++	return __ieee80211_suspend(wiphy_priv(wiphy));
++}
++
++static int ieee80211_resume(struct wiphy *wiphy)
++{
++	return __ieee80211_resume(wiphy_priv(wiphy));
++}
++#else
++#define ieee80211_suspend NULL
++#define ieee80211_resume NULL
++#endif
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1286,4 +1301,6 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.set_txq_params = ieee80211_set_txq_params,
+ 	.set_channel = ieee80211_set_channel,
+ 	.set_mgmt_extra_ie = ieee80211_set_mgmt_extra_ie,
++	.suspend = ieee80211_suspend,
++	.resume = ieee80211_resume,
+ };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5eafd3a..faa2476 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1006,6 +1006,10 @@ void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 				 u16 capab_info, u8 *pwr_constr_elem,
+ 				 u8 pwr_constr_elem_len);
+ 
++/* Suspend/resume */
++int __ieee80211_suspend(struct ieee80211_hw *hw);
++int __ieee80211_resume(struct ieee80211_hw *hw);
++
+ /* utility functions/constants */
+ extern void *mac80211_wiphy_privid; /* for wiphy privid */
+ extern const unsigned char rfc1042_header[6];
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+new file mode 100644
+index 0000000..6d17ed7
+--- /dev/null
++++ b/net/mac80211/pm.c
+@@ -0,0 +1,114 @@
++#include <net/mac80211.h>
++#include <net/rtnetlink.h>
++
++#include "ieee80211_i.h"
++#include "led.h"
++
++int __ieee80211_suspend(struct ieee80211_hw *hw)
 +{
 +	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_ra_tid *ra_tid;
-+	struct sk_buff *skb = dev_alloc_skb(0);
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_if_init_conf conf;
++	struct sta_info *sta;
 +
-+	if (unlikely(!skb)) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		if (net_ratelimit())
-+			printk(KERN_WARNING "%s: Not enough memory, "
-+			       "dropping start BA session", skb->dev->name);
-+#endif
-+		return;
++	flush_workqueue(local->hw.workqueue);
++
++	/* disable keys */
++	list_for_each_entry(sdata, &local->interfaces, list)
++		ieee80211_disable_keys(sdata);
++
++	/* remove STAs */
++	list_for_each_entry(sta, &local->sta_list, list) {
++
++		if (local->ops->sta_notify) {
++			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++				sdata = container_of(sdata->bss,
++					     struct ieee80211_sub_if_data,
++					     u.ap);
++
++			local->ops->sta_notify(hw, &sdata->vif,
++				STA_NOTIFY_REMOVE, &sta->sta);
++		}
 +	}
-+	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
-+	memcpy(&ra_tid->ra, ra, ETH_ALEN);
-+	ra_tid->tid = tid;
 +
-+	skb->pkt_type = IEEE80211_ADDBA_MSG;
-+	skb_queue_tail(&local->skb_queue, skb);
-+	tasklet_schedule(&local->tasklet);
++	/* remove all interfaces */
++	list_for_each_entry(sdata, &local->interfaces, list) {
++
++		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
++		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
++		    netif_running(sdata->dev)) {
++			conf.vif = &sdata->vif;
++			conf.type = sdata->vif.type;
++			conf.mac_addr = sdata->dev->dev_addr;
++			local->ops->remove_interface(hw, &conf);
++		}
++	}
++
++	/* stop hardware */
++	if (local->open_count) {
++		ieee80211_led_radio(local, false);
++		local->ops->stop(hw);
++	}
++	return 0;
 +}
-+EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
 +
- 
- int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
- 				 u8 *ra, u16 tid,
-@@ -491,31 +541,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
- 
--void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
--				      const u8 *ra, u16 tid)
--{
--	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_ra_tid *ra_tid;
--	struct sk_buff *skb = dev_alloc_skb(0);
--
--	if (unlikely(!skb)) {
--#ifdef CONFIG_MAC80211_HT_DEBUG
--		if (net_ratelimit())
--			printk(KERN_WARNING "%s: Not enough memory, "
--			       "dropping start BA session", skb->dev->name);
--#endif
--		return;
--	}
--	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
--	memcpy(&ra_tid->ra, ra, ETH_ALEN);
--	ra_tid->tid = tid;
--
--	skb->pkt_type = IEEE80211_ADDBA_MSG;
--	skb_queue_tail(&local->skb_queue, skb);
--	tasklet_schedule(&local->tasklet);
--}
--EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
--
- void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
- 				     const u8 *ra, u16 tid)
- {
-@@ -541,6 +566,7 @@ void ieee80211_stop_tx_ba_cb_irqsafe(str
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb_irqsafe);
- 
++int __ieee80211_resume(struct ieee80211_hw *hw)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_if_init_conf conf;
++	struct sta_info *sta;
++	int res;
 +
- void ieee80211_process_addba_resp(struct ieee80211_local *local,
- 				  struct sta_info *sta,
- 				  struct ieee80211_mgmt *mgmt,
-
++	/* restart hardware */
++	if (local->open_count) {
++		res = local->ops->start(hw);
++
++		ieee80211_led_radio(local, hw->conf.radio_enabled);
++	}
++
++	/* add interfaces */
++	list_for_each_entry(sdata, &local->interfaces, list) {
++
++		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
++		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
++		    netif_running(sdata->dev)) {
++			conf.vif = &sdata->vif;
++			conf.type = sdata->vif.type;
++			conf.mac_addr = sdata->dev->dev_addr;
++			res = local->ops->add_interface(hw, &conf);
++		}
++	}
++
++	/* add STAs back */
++	list_for_each_entry(sta, &local->sta_list, list) {
++
++		if (local->ops->sta_notify) {
++			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++				sdata = container_of(sdata->bss,
++					     struct ieee80211_sub_if_data,
++					     u.ap);
++
++			local->ops->sta_notify(hw, &sdata->vif,
++				STA_NOTIFY_ADD, &sta->sta);
++		}
++	}
++
++	/* add back keys */
++	list_for_each_entry(sdata, &local->interfaces, list)
++		if (netif_running(sdata->dev))
++			ieee80211_enable_keys(sdata);
++
++	/* setup RTS threshold */
++	if (local->ops->set_rts_threshold)
++		local->ops->set_rts_threshold(hw, local->rts_threshold);
++
++	/* reconfigure hardware */
++	ieee80211_hw_config(local, ~0);
++
++	netif_addr_lock_bh(local->mdev);
++	ieee80211_configure_filter(local);
++	netif_addr_unlock_bh(local->mdev);
++
++	return 0;
++}
 -- 
+1.6.0.6
+
 
