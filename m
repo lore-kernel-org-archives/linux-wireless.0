@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:52396 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761666AbZAQXbX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 18:31:23 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1LOKdL-0006Fm-BA
-	for linux-wireless@vger.kernel.org; Sat, 17 Jan 2009 23:31:19 +0000
-Received: from 77-21-172-36-dynip.superkabel.de ([77.21.172.36])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Jan 2009 23:31:19 +0000
-Received: from feldmann_markus by 77-21-172-36-dynip.superkabel.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Jan 2009 23:31:19 +0000
-To: linux-wireless@vger.kernel.org
-From: feldmaus <feldmann_markus@gmx.de>
-Subject: Re: Does ACPIPHP work on my Machine
-Date: Sun, 18 Jan 2009 00:31:11 +0100
-Message-ID: <gktpnt$qld$1@ger.gmane.org> (sfid-20090118_003128_532130_CD74783E)
-References: <gktp4e$p6h$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-In-Reply-To: <gktp4e$p6h$1@ger.gmane.org>
+Received: from ey-out-2122.google.com ([74.125.78.26]:5104 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758065AbZASL5E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 06:57:04 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so496926eye.37
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 03:57:01 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 19 Jan 2009 13:50:37 +0200
+Message-ID: <eb3ff54b0901190350o7f43e8b9w6c944779484170f6@mail.gmail.com> (sfid-20090119_125709_449239_37273D39)
+Subject: [PATCH 3/4] mac80211: trivial documentation fix (mesh_nexthop_lookup()).
+From: Rami Rosen <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	luisca@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maybe this is also interesting for you,
+This patch fixes the documentation of mesh_nexthop_lookup() in mesh_hwmp.c.
 
-wes-nic:/sys/bus/pci/slots# lspci -vt
--[0000:00]-+-00.0  nVidia Corporation nForce3 Host Bridge
-            +-01.0  nVidia Corporation nForce3 LPC Bridge
-            +-01.1  nVidia Corporation nForce3 SMBus
-            +-02.0  nVidia Corporation nForce3 USB 1.1
-            +-02.1  nVidia Corporation nForce3 USB 1.1
-            +-02.2  nVidia Corporation nForce3 USB 2.0
-            +-06.0  nVidia Corporation nForce3 Audio
-            +-06.1  nVidia Corporation nForce3 Audio
-            +-08.0  nVidia Corporation nForce3 IDE
-            +-0a.0-[0000:02-0a]--+-00.0  Texas Instruments TSB43AB21 
-IEEE-1394a-2000 Controller (PHY/Link)
-            |                    +-01.0  Realtek Semiconductor Co., Ltd. 
-RTL-8139/8139C/8139C+
-            |                    +-02.0  Broadcom Corporation BCM4303 
-802.11b Wireless LAN Controller
-            |                    +-04.0  Texas Instruments PCI1620 PC 
-Card Controller
-            |                    +-04.1  Texas Instruments PCI1620 PC 
-Card Controller
-            |                    \-04.2  Texas Instruments PCI1620 
-Firmware Loading Function
-            +-0b.0-[0000:01]----00.0  nVidia Corporation NV17 [GeForce4 
-440 Go 64M]
-            +-18.0  Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
-HyperTransport Technology Configuration
-            +-18.1  Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
-Address Map
-            +-18.2  Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
-DRAM Controller
-            \-18.3  Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] 
-Miscellaneous Control
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-Regards Markus
+--
+(wireless-testing)
 
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 3f1785c..4f862b2 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -759,7 +759,7 @@ enddiscovery:
+ }
+
+ /**
+- * ieee80211s_lookup_nexthop - put the appropriate next hop on a mesh frame
++ * mesh_nexthop_lookup - put the appropriate next hop on a mesh frame
+  *
+  * @skb: 802.11 frame to be sent
+  * @sdata: network subif the frame will be sent through
