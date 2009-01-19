@@ -1,125 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54835 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755769AbZATPKk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 10:10:40 -0500
-Subject: [PATCH 6/7] airo: clean up and clarify micinit()
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1232462691.22158.6.camel@localhost.localdomain>
-References: <1232462691.22158.6.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Tue, 20 Jan 2009 10:09:25 -0500
-Message-Id: <1232464165.22158.18.camel@localhost.localdomain> (sfid-20090120_161047_824142_C2E66B62)
-Mime-Version: 1.0
+Received: from ug-out-1314.google.com ([66.249.92.171]:2300 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752248AbZASSxB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 13:53:01 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so224539ugf.37
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 10:52:59 -0800 (PST)
+Message-ID: <4974CC08.2060402@gmail.com> (sfid-20090119_195309_486731_BEA171B2)
+Date: Mon, 19 Jan 2009 19:52:56 +0100
+From: Artur Skawina <art.08.09@gmail.com>
+MIME-Version: 1.0
+CC: Christian Lamparter <chunkeey@web.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+References: <494698AF.4020204@gmail.com> <497105D1.5040906@gmail.com> <4973BAC6.5020502@gmail.com> <200901190126.58392.chunkeey@web.de> <4974C32D.4030802@gmail.com>
+In-Reply-To: <4974C32D.4030802@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix some endian issues too.
+> Here's an interesting sequence:
+> 
+> 1) a TX urb is submitted.
+> 2) p54u_rx_cb() => p54_rx_frame_sent(), which does kfree_skb( the_skb_in_(1) ).
+> 3) p54u_tx_cb() for (1) is called with the same, now freed, skb. kaboom.
+> 
+> IOW the skb is freed before the usb completion runs.
+> 
+> Somehow i don't think this is the reason for the corruption, but it certainly
+> seems to be responsible for some, if not all, of the crashes/panics.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+Hmm, if it happens for beacons, it's probably also happening for other frames,
+which are not freed, but given to ieee80211_tx_status_irqsafe() and that could
+explain the corruption. Will verify, but probably not before tomorrow.
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 8fa8585..1b64da6 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -1302,6 +1302,29 @@ static void emmh32_update(emmh32_context *context, u8 *pOctets, int len);
- static void emmh32_final(emmh32_context *context, u8 digest[4]);
- static int flashpchar(struct airo_info *ai,int byte,int dwelltime);
- 
-+static void age_mic_context(miccntx *cur, miccntx *old, u8 *key, int key_len,
-+			    struct crypto_cipher *tfm)
-+{
-+	/* If the current MIC context is valid and its key is the same as
-+	 * the MIC register, there's nothing to do.
-+	 */
-+	if (cur->valid && (memcmp(cur->key, key, key_len) == 0))
-+		return;
-+
-+	/* Age current mic Context */
-+	memcpy(old, cur, sizeof(*cur));
-+
-+	/* Initialize new context */
-+	memcpy(cur->key, key, key_len);
-+	cur->window  = 33; /* Window always points to the middle */
-+	cur->rx      = 0;  /* Rx Sequence numbers */
-+	cur->tx      = 0;  /* Tx sequence numbers */
-+	cur->valid   = 1;  /* Key is now valid */
-+
-+	/* Give key to mic seed */
-+	emmh32_setseed(&cur->seed, key, key_len, tfm);
-+}
-+
- /* micinit - Initialize mic seed */
- 
- static void micinit(struct airo_info *ai)
-@@ -1312,49 +1335,26 @@ static void micinit(struct airo_info *ai)
- 	PC4500_readrid(ai, RID_MIC, &mic_rid, sizeof(mic_rid), 0);
- 	up(&ai->sem);
- 
--	ai->micstats.enabled = (mic_rid.state & 0x00FF) ? 1 : 0;
--
--	if (ai->micstats.enabled) {
--		/* Key must be valid and different */
--		if (mic_rid.multicastValid && (!ai->mod[0].mCtx.valid ||
--		    (memcmp (ai->mod[0].mCtx.key, mic_rid.multicast,
--			     sizeof(ai->mod[0].mCtx.key)) != 0))) {
--			/* Age current mic Context */
--			memcpy(&ai->mod[1].mCtx,&ai->mod[0].mCtx,sizeof(miccntx));
--			/* Initialize new context */
--			memcpy(&ai->mod[0].mCtx.key,mic_rid.multicast,sizeof(mic_rid.multicast));
--			ai->mod[0].mCtx.window  = 33; //Window always points to the middle
--			ai->mod[0].mCtx.rx      = 0;  //Rx Sequence numbers
--			ai->mod[0].mCtx.tx      = 0;  //Tx sequence numbers
--			ai->mod[0].mCtx.valid   = 1;  //Key is now valid
--  
--			/* Give key to mic seed */
--			emmh32_setseed(&ai->mod[0].mCtx.seed,mic_rid.multicast,sizeof(mic_rid.multicast), ai->tfm);
--		}
--
--		/* Key must be valid and different */
--		if (mic_rid.unicastValid && (!ai->mod[0].uCtx.valid || 
--		    (memcmp(ai->mod[0].uCtx.key, mic_rid.unicast,
--			    sizeof(ai->mod[0].uCtx.key)) != 0))) {
--			/* Age current mic Context */
--			memcpy(&ai->mod[1].uCtx,&ai->mod[0].uCtx,sizeof(miccntx));
--			/* Initialize new context */
--			memcpy(&ai->mod[0].uCtx.key,mic_rid.unicast,sizeof(mic_rid.unicast));
--	
--			ai->mod[0].uCtx.window  = 33; //Window always points to the middle
--			ai->mod[0].uCtx.rx      = 0;  //Rx Sequence numbers
--			ai->mod[0].uCtx.tx      = 0;  //Tx sequence numbers
--			ai->mod[0].uCtx.valid   = 1;  //Key is now valid
--	
--			//Give key to mic seed
--			emmh32_setseed(&ai->mod[0].uCtx.seed, mic_rid.unicast, sizeof(mic_rid.unicast), ai->tfm);
--		}
--	} else {
--      /* So next time we have a valid key and mic is enabled, we will update
--       * the sequence number if the key is the same as before.
--       */
-+	ai->micstats.enabled = (le16_to_cpu(mic_rid.state) & 0x00FF) ? 1 : 0;
-+	if (!ai->micstats.enabled) {
-+		/* So next time we have a valid key and mic is enabled, we will
-+		 * update the sequence number if the key is the same as before.
-+		 */
- 		ai->mod[0].uCtx.valid = 0;
- 		ai->mod[0].mCtx.valid = 0;
-+		return;
-+	}
-+
-+	if (mic_rid.multicastValid) {
-+		age_mic_context(&ai->mod[0].mCtx, &ai->mod[1].mCtx,
-+		                mic_rid.multicast, sizeof(mic_rid.multicast),
-+		                ai->tfm);
-+	}
-+
-+	if (mic_rid.unicastValid) {
-+		age_mic_context(&ai->mod[0].uCtx, &ai->mod[1].uCtx,
-+				mic_rid.unicast, sizeof(mic_rid.unicast),
-+				ai->tfm);
- 	}
- }
- 
-
+artur
