@@ -1,139 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45808 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222AbZADQFO (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:22884 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755402AbZASBSC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 11:05:14 -0500
-Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless
-	stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <20090104151819.GA6590@basil.nowhere.org> (sfid-20090104_161709_234776_1A23AA01)
-References: <20090104151819.GA6590@basil.nowhere.org>
-	 (sfid-20090104_161709_234776_1A23AA01)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tHlJVuWoArXUllgvWLnM"
-Date: Sun, 04 Jan 2009 17:05:50 +0100
-Message-Id: <1231085150.3296.3.camel@johannes> (sfid-20090104_170518_535718_4BF43B0F)
-Mime-Version: 1.0
+	Sun, 18 Jan 2009 20:18:02 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so469294eye.37
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 17:18:00 -0800 (PST)
+Message-ID: <4973D4C5.2000903@gmail.com> (sfid-20090119_021810_259738_AD909BE3)
+Date: Mon, 19 Jan 2009 02:17:57 +0100
+From: Artur Skawina <art.08.09@gmail.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: Artur Skawina <art.08.09@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
+References: <494698AF.4020204@gmail.com> <497105D1.5040906@gmail.com> <4973BAC6.5020502@gmail.com> <200901190126.58392.chunkeey@web.de>
+In-Reply-To: <200901190126.58392.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Christian Lamparter wrote:
+> On Monday 19 January 2009 00:27:02 Artur Skawina wrote:
+>> Artur Skawina wrote:
+>>> didn't trigger anything here, just the usual:
+>>>
+>>> BUG kmalloc-4096: Poison overwritten
+>  
+>> Still haven't found the corruptor, but at least i've narrowed it down a bit;
+>> what i'm seeing is:
+>>
+>> 1) an skb "S" gets allocated in p54u_rx_cb and is submitted together w/ the urb.
+>> 2) "S" later comes back to p54u_rx_cb, where it is given to p54_rx (eventually
+>>    ieee80211_rx_irqsafe) and a new one is allocated.
+>> 3) a few (~15) rx/tx packets pass.
+>> 4) SLUB detects modified poison in what used to be S->head in (1) and (2) above;
+>>    usually 0x6b turns into 0x6a, but i have also seen 0x69, just a few times.
+>>    (the offset from skb->head to the decremented byte seems to stay the same,
+>>    at least during the few times i tried w/ the same kernel, last one was eg
+>>    684 bytes)
+>>
+>> This is almost 100% reproducible; sometimes the machine freezes instead.
+> 
+> Do you know what is inside "S" when it handed over to ieee80211_rx_irqsafe?
+> Is it always the same content, or is it sometimes a data or mgmt frame?
 
---=-tHlJVuWoArXUllgvWLnM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Last time the urb was 88 bytes, that would make the packet <=72 bytes; i didn't
+log the content. will do.
 
-On Sun, 2009-01-04 at 16:18 +0100, Andi Kleen wrote:
-> Fix up truesize after pskb_expand_head() in wireless stack
-> =20
-> When using a zd1211rw wireless usb stick I regularly got truesize
-> warnings in the kernel log.
->=20
-> This patch fixes those up in the wireless layer. tx.c already
-> did that, but not rx.c. I think my messages only came from
-> the middle case, but I fixed up all three users in rx.c=20
->=20
-> The underlying problem seems to be that pskb_expand_head() doesn't=20
-> manipulate truesize. Perhaps it should? I suspect more users of it have=20
-> the same problem. I didn't change the low level code because
-> I was afraid to break some callers, but perhaps it would be
-> better to do it this way. Anyways here's a patch that only
-> changes it in the wireless layer with minimal risk.
->=20
-> Patch against 2.6.28, but I think linus git still has the same
-> issue.
->=20
-> I believe this is a 2.6.28 stable candidate. I even saw
-> the same problem in 2.6.27.
->=20
-> Signed-off-by: Andi Kleen <ak@linux.intel.com>
+> Another shot in the dark: do you have a daemon that listen to mon.wlan0, wmaster / "any" other than hostapd?
 
-Thanks, but I'll need to look at this in more detail, we need to make
-sure that we orphan the skb before etc. And then, we need to check
-whether it makes sense to do this in pskb_expand_head().
+I usually have tcpdump listening on wlan0, nothing else (other than dhcpd).
 
-> ---
->  net/mac80211/rx.c |   19 ++++++++++++-------
->  1 file changed, 12 insertions(+), 7 deletions(-)
->=20
-> Index: linux-2.6.28-test/net/mac80211/rx.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.28-test.orig/net/mac80211/rx.c	2008-10-24 13:35:11.00000000=
-0 +0200
-> +++ linux-2.6.28-test/net/mac80211/rx.c	2009-01-01 15:51:34.000000000 +01=
-00
-> @@ -263,10 +263,12 @@
->  		 * probably export the length to drivers so that we can have
->  		 * them allocate enough headroom to start with.
->  		 */
-> -		if (skb_headroom(skb) < needed_headroom &&
-> -		    pskb_expand_head(skb, needed_headroom, 0, GFP_ATOMIC)) {
-> -			dev_kfree_skb(skb);
-> -			return NULL;
-> +		if (skb_headroom(skb) < needed_headroom) {
-> +			if (pskb_expand_head(skb, needed_headroom, 0, GFP_ATOMIC)) {
-> +				dev_kfree_skb(skb);
-> +				return NULL;
-> +			}
-> +			skb->truesize +=3D needed_headroom;
->  		}
->  	} else {
->  		/*
-> @@ -945,6 +947,7 @@
->  			__skb_queue_purge(&entry->skb_list);
->  			return RX_DROP_UNUSABLE;
->  		}
-> +		rx->skb->truesize +=3D entry->extra_len;
->  	}
->  	while ((skb =3D __skb_dequeue(&entry->skb_list))) {
->  		memcpy(skb_put(rx->skb, skb->len), skb->data, skb->len);
-> @@ -1691,9 +1694,11 @@
->  	if (rx->flags & IEEE80211_RX_CMNTR_REPORTED)
->  		goto out_free_skb;
-> =20
-> -	if (skb_headroom(skb) < sizeof(*rthdr) &&
-> -	    pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC))
-> -		goto out_free_skb;
-> +	if (skb_headroom(skb) < sizeof(*rthdr)) {
-> +		if (pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC))
-> +			goto out_free_skb;
-> +		skb->truesize +=3D sizeof(*rthdr);
-> +	}
-> =20
->  	rthdr =3D (void *)skb_push(skb, sizeof(*rthdr));
->  	memset(rthdr, 0, sizeof(*rthdr));
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---=-tHlJVuWoArXUllgvWLnM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJYN5YAAoJEKVg1VMiehFYmNsP/0mtX4Ry+vOgCB5rckxOeE5T
-DMKtAjQHa1ZjRNoTaNzOxkoFn0EcE2ahH+3RMqCiM256lkHIGeEBSRuMnPN0I8Rj
-6+kEm7s5sCuAGvgUR3RW2AKjQx/Orog2zDkj+ufohuKogD70CXBfddMA46VZi+Hl
-DSVz4L4uHBHqqkiWu5XGiJ3aZXnn0Gxo2LL+lb4CKIjUMhWN43AOIjiLZZQWruLX
-pWY5Q2jQGPwFnKepXWgZTNYGTTZ/aNsqGytdXxDtTXpEZXuRmWCrV0Zyr2m0EHpx
-ffM2j8SjpUdr2Q4qZPd69NZ1aJJqyrZkp4inKluLtVoei2784YdjJKAaDhUfgRLj
-WJBuTt6+mRfsP3ng0upU2swf6ESmUTR/9Gnsqx7NJlQ4kDSXD+GDIwynmfWN2Ocv
-VQ+mciRoRggdIaNxuowjL5FlZ75nmzzqbcdHFAwffvwqZuVHLJd/9WbD5LTyYBl6
-vl3VdbFUWzh3IFdoxKAcwv56Be7eryNNN/fUOoDbYsKIdwhcgvw/N3OSB+SKtaWG
-xVeVqZ3Mfbvp3cM8QwioqrOQCNDeNMg9EgcgvOIhdojofPEXVWdgGnv5G+ItGhcK
-PEhK3U92DVb1cTq0GFrBLSFtPJERYhAl8ipEMTd6FYAUruVHrhLLdI84ND/GpCB0
-HBa1N7DAncjR4sEWbuJB
-=3jmV
------END PGP SIGNATURE-----
-
---=-tHlJVuWoArXUllgvWLnM--
-
+artur
