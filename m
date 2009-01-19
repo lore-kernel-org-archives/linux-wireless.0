@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:38978 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751375AbZA2Euo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 23:50:44 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 20:50:44 -0800
-Date: Wed, 28 Jan 2009 20:50:00 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: pat-lkml <pat-lkml@erley.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH resend] crda: rename nl_handle to nl_sock for libnl-2.0
-Message-ID: <20090129045000.GA30318@tesla> (sfid-20090129_055048_760124_C19B9722)
-References: <4980EDC8.4050204@erley.org>
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:33195 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751169AbZASNqr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2009 08:46:47 -0500
+Received: by bwz14 with SMTP id 14so8398700bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 05:46:45 -0800 (PST)
+Message-ID: <1ba2fa240901190546k7afc5dd0sd524df922e0b03e5@mail.gmail.com> (sfid-20090119_144652_964345_26A0A2AA)
+Date: Mon, 19 Jan 2009 15:46:44 +0200
+From: "Tomas Winkler" <tomasw@gmail.com>
+To: "David Shwatrz" <dshwatrz@gmail.com>
+Subject: Re: 802.11n status (iwlagn)
+Cc: "reinette chatre" <reinette.chatre@intel.com>,
+	"Jason Newton" <nevion@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <31436f4a0901190437o5777eb64ua859e2da04654273@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4980EDC8.4050204@erley.org>
+Content-Type: text/plain; charset=UTF-8
+References: <496C3F37.4030808@gmail.com> <1231864769.20912.2.camel@rc-desk>
+	 <31436f4a0901190437o5777eb64ua859e2da04654273@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 03:44:08PM -0800, pat-lkml wrote:
-> Upstream has renamed nl_handle to nl_sock.  Update crda to the new names
-> and add #define for libnl-1.1.
-> 
-> Signed-off-by: Pat Erley <pat-lkml@erley.org>
-> ---
-> 
-> I'm not too proud to admit that I did proofread this, twice, and still
-> missed changing iw to crda in the commit message.
-> 
-> In the future, should I keep pushing these sorts of patches, or should
-> we back them out and wait for a 'release' of libnl-2.0 and push them all
-> in then?
+On Mon, Jan 19, 2009 at 2:37 PM, David Shwatrz <dshwatrz@gmail.com> wrote:
+> Hello,
+> Two questions regarding this topic:
+>
+> 1)does latest wireless-testing git tree
+> support 802.11n in 5100AGN-based chips ?
+Yes
+>
+> 2)Is the TX aggregation problem is also the same and relevant to 5100AGN?
+Yes
 
-I'll gladly take them, sure, actually thanks!
-
-  Luis
+Tomas
