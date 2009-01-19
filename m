@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:40278 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837AbZAHFUu (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:5104 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756455AbZASL5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 00:20:50 -0500
-Received: by bwz14 with SMTP id 14so26758320bwz.13
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 21:20:48 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: localversion-wireless missing from wireless-testing
-References: <877i59q97f.fsf@litku.valot.fi>
-	<20090107205618.GB4387@tuxdriver.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 08 Jan 2009 07:20:45 +0200
-In-Reply-To: <20090107205618.GB4387@tuxdriver.com> (John W. Linville's message of "Wed\, 7 Jan 2009 15\:56\:18 -0500")
-Message-ID: <87ljtmcr0y.fsf@litku.valot.fi> (sfid-20090108_062056_349897_77DA6F15)
+	Mon, 19 Jan 2009 06:57:10 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so496926eye.37
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 03:57:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Mon, 19 Jan 2009 13:50:32 +0200
+Message-ID: <eb3ff54b0901190350j74151192he854ba579d3c8709@mail.gmail.com> (sfid-20090119_125714_099452_D66E383B)
+Subject: [PATCH 2/4] mac80211: trivial documentation fixes (enum
+	mesh_path_flags).
+From: Rami Rosen <ramirose@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	luisca@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+This patch fixes documentation of enum mesh_path_flags in mesh.h.
 
-> On Tue, Jan 06, 2009 at 07:45:08AM +0200, Kalle Valo wrote:
->
->> I noticed that after 2.6.28 update localversion-wireless file is
->> missing from wireless-testing and version doesn't contain -wl suffix
->> anymore.
->
-> Yes, sorry -- not sure what happened.  Anyway, it is there today.
+Signed-off-by: Rami Rosen <ramirose@gmail.com>
 
-Yes, it's working now:
+--
+(wireless-testing)
 
-Linux tikku 2.6.28-wl #111 SMP Wed Jan 7 11:07:11 EET 2009 i686 GNU/Linux
-
-Thanks for fixing it.
-
--- 
-Kalle Valo
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index c5b0b58..f1196f5 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -24,15 +24,15 @@
+  *
+  *
+  *
+- * @MESH_PATH_ACTIVE: the mesh path is can be used for forwarding
+- * @MESH_PATH_RESOLVED: the discovery process is running for this mesh path
++ * @MESH_PATH_ACTIVE: the mesh path can be used for forwarding
++ * @MESH_PATH_RESOLVING: the discovery process is running for this mesh path
+  * @MESH_PATH_DSN_VALID: the mesh path contains a valid destination sequence
+  * 	number
+  * @MESH_PATH_FIXED: the mesh path has been manually set and should not be
+  * 	modified
+  * @MESH_PATH_RESOLVED: the mesh path can has been resolved
+  *
+- * MESH_PATH_RESOLVED and MESH_PATH_DELETE are used by the mesh path timer to
++ * MESH_PATH_RESOLVED is used by the mesh path timer to
+  * decide when to stop or cancel the mesh path discovery.
+  */
+ enum mesh_path_flags {
