@@ -1,41 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:7077 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751404AbZA0WZH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 17:25:07 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/7] iwlwifi driver updates 01/27/2009
-Date: Tue, 27 Jan 2009 14:27:51 -0800
-Message-Id: <1233095278-5850-1-git-send-email-reinette.chatre@intel.com> (sfid-20090127_232512_633193_F4A5A55A)
-In-Reply-To: <>
-References: <>
+Received: from kroah.org ([198.145.64.141]:42818 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755928AbZATUGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 15:06:34 -0500
+Date: Tue, 20 Jan 2009 12:05:15 -0800
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
+Cc: Paul Hickey <paul@christianpatriot.us>, stable@kernel.org,
+	Kyle McMartin <kyle@mcmartin.ca>,
+	linux-wireless@vger.kernel.org,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [stable] Failed Build of modules for 2.6.27.9-159
+Message-ID: <20090120200515.GA5077@kroah.com> (sfid-20090120_210639_214303_4759E2BB)
+References: <1232319854.4596.1.camel@localhost.localdomain> <20090119191138.GA4018@tesla> <1232404986.3641.2.camel@localhost.localdomain> <20090120000336.GB4018@tesla> <1232433738.3696.3.camel@localhost.localdomain> <20090120194243.GC19581@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20090120194243.GC19581@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains two patches towards the 3945 porting effort (patch 1
-and patch 7). We include a few driver fixes identified by sparse.
+On Tue, Jan 20, 2009 at 11:42:43AM -0800, Luis R. Rodriguez wrote:
+> On Mon, Jan 19, 2009 at 10:42:18PM -0800, Paul Hickey wrote:
+> > Hi Luis,
+> >=20
+> > 2.6.27.9-159.fc10.x86_64 is the kernel. I burned the distro right f=
+rom
+> > Fedora.
+>=20
+> I am =FCber-surprised to hear that FC10 2.6.27 kernels have added
+> pci_ioremap_bar() in their kernel header include/linux/pci.h. I
+> have verified this by checking:
+>=20
+> http://download.fedora.redhat.com/pub/fedora/linux/updates/10/x86_64/=
+kernel-devel-2.6.27.9-159.fc10.x86_64.rpm
+>=20
+> I have checked upstrea 2.6.27.9 and even 2.6.27.12 and they do not ha=
+ve this. This breaks
+> compatibility projects like compat-wireless :(
 
-Patch 5 is a very big patch that changes code not to use implicit
-variables. I hope it does not cause any problems for you.
+compatibility projects should be checking for the absense or presence o=
+f
+specific functions, not triggering off of kernel release numbers :)
 
-Patch 6 adds some code back that went missing between 2.6.28 and
-2.6.29-rc1. The cause of this problem has not been identified so we hope
-that this is the only problem of this kind.
+> > Also, the ForceXPA might not be a problem, but it makes and logs it=
+s
+> > attempts 4X per minute. It may not be much of an impact on the CPU,=
+ but
+> > is it necessary? Plus the message log gets really long really fast.
+>=20
+> Good point, hopefully this is enough of an argument to make the patch
+> go into 2.6.27. The patch is already in for >=3D 2.6.28.
+>=20
+> Greg -- there is an annoying message that gets printed very often
+> when new Atheros 11n cards are used, this is printed upon hw reset
+> which occurs on channel changes (scans) and as such happens quite
+> often. The message was moved to print only when "EEPROM debugging"
+> was enaabled through upstream commit f1dc56003b23d2d5bb5a756de6b1633a=
+76c9e697.
+> Unfortunately this commit is pretty large as it refactored hw.c into
+> separate files. Below is a small one line patch that changes this. Pl=
+ease
+> let me know if this is OK for 2.6.27.x
 
-[PATCH 1/7] iwl3945: Getting rid of the *39_rxon iwl_priv fields
-[PATCH 2/7] iwlwifi: suppress unused variable warning when compiling w/o IWLWIFI_DEBUG
-[PATCH 3/7] iwlwifi: iwl3945_send_tx_power must be static
-[PATCH 4/7] iwlwifi: check return value of pci_enable_device
-[PATCH 5/7] iwlwifi: don't use implicit priv in IWL_DEBUG
-[PATCH 6/7] iwlwifi: clean key table in iwl_clear_stations_table
-[PATCH 7/7] iwlwifi: unify iwlagn and 3945 power save management
+Looks good to me, I'll queue it up for the next .27 release.
 
+thanks,
 
-Thank you
-
-Reinette
-
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
