@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:33406 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756094AbZAQWM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 17:12:27 -0500
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sat, 17 Jan 2009 23:12:25 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <20090108091055.GA7009@jm.kir.nu>
-Message-ID: <20090117221225.301920@gmx.net> (sfid-20090117_231232_652841_83CF39F2)
+Received: from mail.atheros.com ([12.36.123.2]:56466 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757200AbZATUIg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 15:08:36 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 12:08:36 -0800
+Date: Tue, 20 Jan 2009 12:08:02 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Catalin Patulea <cat@vv.carleton.ca>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Atheros (madwifi/ath5k) virtual STA support
+Message-ID: <20090120200802.GF19581@tesla> (sfid-20090120_210841_348820_F3D5AA99)
+References: <9664a4720901201133g5671c7f0x718c4bd187b1d901@mail.gmail.com>
 MIME-Version: 1.0
-References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu>
-Subject: Re: [PATCH] Fixed BSSID step 3: Don't merge with the same BSSID
-To: Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <9664a4720901201133g5671c7f0x718c4bd187b1d901@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Jouni!
+On Tue, Jan 20, 2009 at 11:33:13AM -0800, Catalin Patulea wrote:
+> Hi linux-wireless,
+> 
+> I'm interested in virtual STA support in madwifi and/or ath5k on an
+> AR5414 (AR5006XS). Specifically, I want one physical wireless adapter
+> to act as an infrastructure client on multiple networks. I understand
+> the network will most likely need to be on the same channel.
+> 
+> This is currently prohibited by the madwifi driver (haven't looked at
+> ath5k thoroughly). What's the underlying reason for this? Someone on
+> IRC mentioned powersaving, beacon handling and "other reasons". Can
+> anyone elaborate?
 
-> I agree that merge part (updating Beacon/ProbeRsp data) can be skippe=
-d
-> for same BSSID, but this change seems to break timesync by removing c=
-all
-> to local->ops->reset_tsf(). I don't think that that should be removed
-> unconditionally.
+Please use linux-wireless only for upstream drivers like ath5k or ath9k.
 
-I have looked in the Source of ath5k and ath9k. It seens to me that the=
- TSF sync is done in the low-level driver and/or the hardware directly.=
- So I see no reason to set it back to zero, if you have a dummy merge t=
-o the same BSSID and channel. (E.g. caused by TSF overflows.) I think i=
-t should only done if you change the network, so BSSID and/or channel i=
-s deferent.
+You will most likely see this first implemented in ath9k. Work is underway
+for just that.
 
-Any doubts?
+> Secondly, what is the procedure to get hardware documentation from
+> Atheros? I'm specifically interested in the AR5414 datasheet.
 
-Regards
-Alina
+Please see:
 
---=20
-Sensationsangebot verl=E4ngert: GMX FreeDSL - Telefonanschluss + DSL=20
-f=FCr nur 16,37 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1308T45=
-69a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+http://wireless.kernel.org/en/developers/Documentation/specs#Atherosspecifications
+
+  Luis
