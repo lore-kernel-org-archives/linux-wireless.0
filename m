@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:64832 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753334AbZAOJFv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 04:05:51 -0500
-Received: by bwz14 with SMTP id 14so3045713bwz.13
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 01:05:48 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: wireless-regdb updated 2009-01-14
-Date: Thu, 15 Jan 2009 10:11:22 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20090114162250.GC3854@tuxdriver.com>
-In-Reply-To: <20090114162250.GC3854@tuxdriver.com>
+Received: from mail.gmx.net ([213.165.64.20]:56897 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753477AbZATS4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 13:56:40 -0500
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Content-Type: text/plain; charset=iso-8859-1
+Date: Tue, 20 Jan 2009 19:56:35 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090120151003.GA8710@jm.kir.nu>
+Message-ID: <20090120185635.284250@gmx.net> (sfid-20090120_195646_050866_769EFD29)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901151011.23147.helmut.schaa@gmail.com> (sfid-20090115_100557_511553_E486E65E)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu>
+ <20090117221225.301920@gmx.net> <20090120151003.GA8710@jm.kir.nu>
+Subject: Re: [PATCH] Fixed BSSID step 3: Don't merge with the same BSSID
+To: Jouni Malinen <j@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hello Jouni!
 
-Am Mittwoch, 14. Januar 2009 schrieb John W. Linville:
-> FYI...wireless-regdb.git has been updated with the recent patches
-> from Michael, Luis, and Pavel.  In particular the Makefile is much
-> better than I had previously left it. :-)
+> Some hardware designs require the reset_tsf call to allow the hardwar=
+e
+> to get back in sync with the TSF based on received timestamp values i=
+n
+> some cases. I would expect this to be used in ath9k and ath5k. This d=
+oes
+> not mean that the timestamp would be reset to zero in actual Beacon
+> frames, i.e., this is just something done internally in the
+> driver/firmware/hardware and the need for reset_tsf() is to just prov=
+ide
+> the notification to the driver when this special case is needed.
 
-Do you plan to push a new tarball to [1]?
+Okay, thanks for your notice. Than I think the dummy merge detection co=
+de should in the ieee80211_sta_join_ibss() function and if so only call=
+ reset_tsf()?!
+Should it make any other thinks too in this case?
 
-Thanks,
-Helmut
+Regards
+Alina
 
-[1] http://wireless.kernel.org/download/wireless-regdb/
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
