@@ -1,135 +1,713 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53096 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023AbZA3KNO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 05:13:14 -0500
-Subject: [PATCH] mac80211: remove HW_SIGNAL_DB
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Bruno Randolf <bruno@thinktube.com>
+Received: from mx2.redhat.com ([66.187.237.31]:50431 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761800AbZATPEy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 10:04:54 -0500
+Subject: [PATCH 1/7] airo: clean up and clarify interrupt-time task handling
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1232462691.22158.6.camel@localhost.localdomain>
+References: <1232462691.22158.6.camel@localhost.localdomain>
 Content-Type: text/plain
-Date: Fri, 30 Jan 2009 11:13:06 +0100
-Message-Id: <1233310386.4161.25.camel@johannes.local> (sfid-20090130_111324_351082_DB510EAA)
+Date: Tue, 20 Jan 2009 10:03:35 -0500
+Message-Id: <1232463815.22158.8.camel@localhost.localdomain> (sfid-20090120_160515_930251_EF4215D4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Giving the signal in dB isn't much more useful to userspace
-than giving the signal in unspecified units. This removes
-some radiotap information for zd1211 (the only driver using
-this flag), but it helps a lot for getting cfg80211-based
-scanning which won't support dB, and zd1211 being dB is a
-little fishy anyway.
+Split each specific interrupt-time task out into its own function to
+make airo_interrupt() actually readable.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bruno Randolf <bruno@thinktube.com>
----
- drivers/net/wireless/zd1211rw/zd_mac.c |    2 +-
- include/net/mac80211.h                 |   22 ++++++++--------------
- net/mac80211/main.c                    |    1 -
- net/mac80211/rx.c                      |   11 +----------
- net/mac80211/wext.c                    |    3 +--
- 5 files changed, 11 insertions(+), 28 deletions(-)
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
---- wireless-testing.orig/include/net/mac80211.h	2009-01-30 10:57:26.000000000 +0100
-+++ wireless-testing/include/net/mac80211.h	2009-01-30 10:57:49.000000000 +0100
-@@ -860,11 +860,6 @@ enum ieee80211_tkip_key_type {
-  *	expect values between 0 and @max_signal.
-  *	If possible please provide dB or dBm instead.
-  *
-- * @IEEE80211_HW_SIGNAL_DB:
-- *	Hardware gives signal values in dB, decibel difference from an
-- *	arbitrary, fixed reference. We expect values between 0 and @max_signal.
-- *	If possible please provide dBm instead.
-- *
-  * @IEEE80211_HW_SIGNAL_DBM:
-  *	Hardware gives signal values in dBm, decibel difference from
-  *	one milliwatt. This is the preferred method since it is standardized
-@@ -900,15 +895,14 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE		= 1<<3,
- 	IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE	= 1<<4,
- 	IEEE80211_HW_SIGNAL_UNSPEC			= 1<<5,
--	IEEE80211_HW_SIGNAL_DB				= 1<<6,
--	IEEE80211_HW_SIGNAL_DBM				= 1<<7,
--	IEEE80211_HW_NOISE_DBM				= 1<<8,
--	IEEE80211_HW_SPECTRUM_MGMT			= 1<<9,
--	IEEE80211_HW_AMPDU_AGGREGATION			= 1<<10,
--	IEEE80211_HW_SUPPORTS_PS			= 1<<11,
--	IEEE80211_HW_PS_NULLFUNC_STACK			= 1<<12,
--	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<13,
--	IEEE80211_HW_MFP_CAPABLE			= 1<<14,
-+	IEEE80211_HW_SIGNAL_DBM				= 1<<6,
-+	IEEE80211_HW_NOISE_DBM				= 1<<7,
-+	IEEE80211_HW_SPECTRUM_MGMT			= 1<<8,
-+	IEEE80211_HW_AMPDU_AGGREGATION			= 1<<9,
-+	IEEE80211_HW_SUPPORTS_PS			= 1<<10,
-+	IEEE80211_HW_PS_NULLFUNC_STACK			= 1<<11,
-+	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
-+	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
- };
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 35f28ee..aa81f2e 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -981,6 +981,14 @@ typedef struct {
+ 	dma_addr_t host_addr;
+ } TxFid;
  
- /**
---- wireless-testing.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2009-01-30 10:58:08.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/zd1211rw/zd_mac.c	2009-01-30 10:58:15.000000000 +0100
-@@ -967,7 +967,7 @@ struct ieee80211_hw *zd_mac_alloc_hw(str
- 	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &mac->band;
++struct rx_hdr {
++	__le16 status, len;
++	u8 rssi[2];
++	u8 rate;
++	u8 freq;
++	__le16 tmp[4];
++} __attribute__ ((packed));
++
+ typedef struct {
+ 	unsigned int  ctl: 15;
+ 	unsigned int  rdy: 1;
+@@ -3127,315 +3135,355 @@ static int header_len(__le16 ctl)
+ 	return 24;
+ }
  
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
--		    IEEE80211_HW_SIGNAL_DB;
-+		    IEEE80211_HW_SIGNAL_UNSPEC;
+-static irqreturn_t airo_interrupt(int irq, void *dev_id)
++static void airo_handle_cisco_mic(struct airo_info *ai)
+ {
+-	struct net_device *dev = dev_id;
++	if (test_bit(FLAG_MIC_CAPABLE, &ai->flags)) {
++		set_bit(JOB_MIC, &ai->jobs);
++		wake_up_interruptible(&ai->thr_wait);
++	}
++}
++
++/* Airo Status codes */
++#define STAT_NOBEACON	0x8000 /* Loss of sync - missed beacons */
++#define STAT_MAXRETRIES	0x8001 /* Loss of sync - max retries */
++#define STAT_MAXARL	0x8002 /* Loss of sync - average retry level exceeded*/
++#define STAT_FORCELOSS	0x8003 /* Loss of sync - host request */
++#define STAT_TSFSYNC	0x8004 /* Loss of sync - TSF synchronization */
++#define STAT_DEAUTH	0x8100 /* low byte is 802.11 reason code */
++#define STAT_DISASSOC	0x8200 /* low byte is 802.11 reason code */
++#define STAT_ASSOC_FAIL	0x8400 /* low byte is 802.11 reason code */
++#define STAT_AUTH_FAIL	0x0300 /* low byte is 802.11 reason code */
++#define STAT_ASSOC	0x0400 /* Associated */
++#define STAT_REASSOC    0x0600 /* Reassociated?  Only on firmware >= 5.30.17 */
++
++static void airo_print_status(const char *devname, u16 status)
++{
++	u8 reason = status & 0xFF;
++
++	switch (status) {
++	case STAT_NOBEACON:
++		airo_print_dbg(devname, "link lost (missed beacons)");
++		break;
++	case STAT_MAXRETRIES:
++	case STAT_MAXARL:
++		airo_print_dbg(devname, "link lost (max retries)");
++		break;
++	case STAT_FORCELOSS:
++		airo_print_dbg(devname, "link lost (local choice)");
++		break;
++	case STAT_TSFSYNC:
++		airo_print_dbg(devname, "link lost (TSF sync lost)");
++		break;
++	case STAT_DEAUTH:
++		airo_print_dbg(devname, "deauthenticated (reason: %d)", reason);
++		break;
++	case STAT_DISASSOC:
++		airo_print_dbg(devname, "disassociated (reason: %d)", reason);
++		break;
++	case STAT_ASSOC_FAIL:
++		airo_print_dbg(devname, "association failed (reason: %d)",
++			       reason);
++		break;
++	case STAT_AUTH_FAIL:
++		airo_print_dbg(devname, "authentication failed (reason: %d)",
++			       reason);
++		break;
++	default:
++		break;
++	}
++}
++
++static void airo_handle_link(struct airo_info *ai)
++{
++	union iwreq_data wrqu;
++	int scan_forceloss = 0;
+ 	u16 status;
+-	u16 fid;
+-	struct airo_info *apriv = dev->ml_priv;
+-	u16 savedInterrupts = 0;
+-	int handled = 0;
  
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_MESH_POINT) |
---- wireless-testing.orig/net/mac80211/main.c	2009-01-30 11:04:18.000000000 +0100
-+++ wireless-testing/net/mac80211/main.c	2009-01-30 11:04:28.000000000 +0100
-@@ -888,7 +888,6 @@ int ieee80211_register_hw(struct ieee802
- 	local->hw.conf.listen_interval = local->hw.max_listen_interval;
+-	if (!netif_device_present(dev))
+-		return IRQ_NONE;
++	/* Get new status and acknowledge the link change */
++	status = le16_to_cpu(IN4500(ai, LINKSTAT));
++	OUT4500(ai, EVACK, EV_LINK);
  
- 	local->wstats_flags |= local->hw.flags & (IEEE80211_HW_SIGNAL_UNSPEC |
--						  IEEE80211_HW_SIGNAL_DB |
- 						  IEEE80211_HW_SIGNAL_DBM) ?
- 			       IW_QUAL_QUAL_UPDATED : IW_QUAL_QUAL_INVALID;
- 	local->wstats_flags |= local->hw.flags & IEEE80211_HW_NOISE_DBM ?
---- wireless-testing.orig/net/mac80211/rx.c	2009-01-30 11:07:35.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-01-30 11:08:06.000000000 +0100
-@@ -86,8 +86,7 @@ ieee80211_rx_radiotap_len(struct ieee802
+-	for (;;) {
+-		status = IN4500( apriv, EVSTAT );
+-		if ( !(status & STATUS_INTS) || status == 0xffff ) break;
++	if ((status == STAT_FORCELOSS) && (ai->scan_timeout > 0))
++		scan_forceloss = 1;
  
- 	if (status->flag & RX_FLAG_TSFT)
- 		len += 8;
--	if (local->hw.flags & IEEE80211_HW_SIGNAL_DB ||
--	    local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
-+	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
- 		len += 1;
- 	if (local->hw.flags & IEEE80211_HW_NOISE_DBM)
- 		len += 1;
-@@ -199,14 +198,6 @@ ieee80211_add_rx_radiotap_header(struct 
- 	*pos = status->antenna;
- 	pos++;
+-		handled = 1;
++	airo_print_status(ai->dev->name, status);
  
--	/* IEEE80211_RADIOTAP_DB_ANTSIGNAL */
--	if (local->hw.flags & IEEE80211_HW_SIGNAL_DB) {
--		*pos = status->signal;
--		rthdr->it_present |=
--			cpu_to_le32(1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL);
--		pos++;
--	}
+-		if ( status & EV_AWAKE ) {
+-			OUT4500( apriv, EVACK, EV_AWAKE );
+-			OUT4500( apriv, EVACK, EV_AWAKE );
+-		}
++	if ((status == STAT_ASSOC) || (status == STAT_REASSOC)) {
++		if (auto_wep)
++			ai->expires = 0;
++		if (ai->list_bss_task)
++			wake_up_process(ai->list_bss_task);
++		set_bit(FLAG_UPDATE_UNI, &ai->flags);
++		set_bit(FLAG_UPDATE_MULTI, &ai->flags);
+ 
+-		if (!savedInterrupts) {
+-			savedInterrupts = IN4500( apriv, EVINTEN );
+-			OUT4500( apriv, EVINTEN, 0 );
++		if (down_trylock(&ai->sem) != 0) {
++			set_bit(JOB_EVENT, &ai->jobs);
++			wake_up_interruptible(&ai->thr_wait);
++		} else
++			airo_send_event(ai->dev);
++	} else if (!scan_forceloss) {
++		if (auto_wep && !ai->expires) {
++			ai->expires = RUN_AT(3*HZ);
++			wake_up_interruptible(&ai->thr_wait);
+ 		}
+ 
+-		if ( status & EV_MIC ) {
+-			OUT4500( apriv, EVACK, EV_MIC );
+-			if (test_bit(FLAG_MIC_CAPABLE, &apriv->flags)) {
+-				set_bit(JOB_MIC, &apriv->jobs);
+-				wake_up_interruptible(&apriv->thr_wait);
+-			}
+-		}
+-		if ( status & EV_LINK ) {
+-			union iwreq_data	wrqu;
+-			int scan_forceloss = 0;
+-			/* The link status has changed, if you want to put a
+-			   monitor hook in, do it here.  (Remember that
+-			   interrupts are still disabled!)
+-			*/
+-			u16 newStatus = IN4500(apriv, LINKSTAT);
+-			OUT4500( apriv, EVACK, EV_LINK);
+-			/* Here is what newStatus means: */
+-#define NOBEACON 0x8000 /* Loss of sync - missed beacons */
+-#define MAXRETRIES 0x8001 /* Loss of sync - max retries */
+-#define MAXARL 0x8002 /* Loss of sync - average retry level exceeded*/
+-#define FORCELOSS 0x8003 /* Loss of sync - host request */
+-#define TSFSYNC 0x8004 /* Loss of sync - TSF synchronization */
+-#define DEAUTH 0x8100 /* Deauthentication (low byte is reason code) */
+-#define DISASS 0x8200 /* Disassociation (low byte is reason code) */
+-#define ASSFAIL 0x8400 /* Association failure (low byte is reason
+-			  code) */
+-#define AUTHFAIL 0x0300 /* Authentication failure (low byte is reason
+-			   code) */
+-#define ASSOCIATED 0x0400 /* Associated */
+-#define REASSOCIATED 0x0600 /* Reassociated?  Only on firmware >= 5.30.17 */
+-#define RC_RESERVED 0 /* Reserved return code */
+-#define RC_NOREASON 1 /* Unspecified reason */
+-#define RC_AUTHINV 2 /* Previous authentication invalid */
+-#define RC_DEAUTH 3 /* Deauthenticated because sending station is
+-		       leaving */
+-#define RC_NOACT 4 /* Disassociated due to inactivity */
+-#define RC_MAXLOAD 5 /* Disassociated because AP is unable to handle
+-			all currently associated stations */
+-#define RC_BADCLASS2 6 /* Class 2 frame received from
+-			  non-Authenticated station */
+-#define RC_BADCLASS3 7 /* Class 3 frame received from
+-			  non-Associated station */
+-#define RC_STATLEAVE 8 /* Disassociated because sending station is
+-			  leaving BSS */
+-#define RC_NOAUTH 9 /* Station requesting (Re)Association is not
+-		       Authenticated with the responding station */
+-			if (newStatus == FORCELOSS && apriv->scan_timeout > 0)
+-				scan_forceloss = 1;
+-			if(newStatus == ASSOCIATED || newStatus == REASSOCIATED) {
+-				if (auto_wep)
+-					apriv->expires = 0;
+-				if (apriv->list_bss_task)
+-					wake_up_process(apriv->list_bss_task);
+-				set_bit(FLAG_UPDATE_UNI, &apriv->flags);
+-				set_bit(FLAG_UPDATE_MULTI, &apriv->flags);
 -
- 	/* IEEE80211_RADIOTAP_DB_ANTNOISE is not used */
+-				if (down_trylock(&apriv->sem) != 0) {
+-					set_bit(JOB_EVENT, &apriv->jobs);
+-					wake_up_interruptible(&apriv->thr_wait);
+-				} else
+-					airo_send_event(dev);
+-			} else if (!scan_forceloss) {
+-				if (auto_wep && !apriv->expires) {
+-					apriv->expires = RUN_AT(3*HZ);
+-					wake_up_interruptible(&apriv->thr_wait);
+-				}
++		/* Send event to user space */
++		memset(wrqu.ap_addr.sa_data, '\0', ETH_ALEN);
++		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
++		wireless_send_event(ai->dev, SIOCGIWAP, &wrqu, NULL);
++	}
++}
  
- 	/* IEEE80211_RADIOTAP_RX_FLAGS */
---- wireless-testing.orig/net/mac80211/wext.c	2009-01-30 11:06:02.000000000 +0100
-+++ wireless-testing/net/mac80211/wext.c	2009-01-30 11:06:09.000000000 +0100
-@@ -173,8 +173,7 @@ static int ieee80211_ioctl_giwrange(stru
- 	range->num_encoding_sizes = 2;
- 	range->max_encoding_tokens = NUM_DEFAULT_KEYS;
+-				/* Send event to user space */
+-				memset(wrqu.ap_addr.sa_data, '\0', ETH_ALEN);
+-				wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+-				wireless_send_event(dev, SIOCGIWAP, &wrqu,NULL);
+-			}
+-		}
++static void airo_handle_rx(struct airo_info *ai)
++{
++	struct sk_buff *skb = NULL;
++	__le16 fc, v, *buffer, tmpbuf[4];
++	u16 len, hdrlen = 0, gap, fid;
++	struct rx_hdr hdr;
++	int success = 0;
  
--	if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC ||
--	    local->hw.flags & IEEE80211_HW_SIGNAL_DB)
-+	if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
- 		range->max_qual.level = local->hw.max_signal;
- 	else if  (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
- 		range->max_qual.level = -110;
-
+-		/* Check to see if there is something to receive */
+-		if ( status & EV_RX  ) {
+-			struct sk_buff *skb = NULL;
+-			__le16 fc, v;
+-			u16 len, hdrlen = 0;
+-#pragma pack(1)
+-			struct {
+-				__le16 status, len;
+-				u8 rssi[2];
+-				u8 rate;
+-				u8 freq;
+-				__le16 tmp[4];
+-			} hdr;
+-#pragma pack()
+-			u16 gap;
+-			__le16 tmpbuf[4];
+-			__le16 *buffer;
+-
+-			if (test_bit(FLAG_MPI,&apriv->flags)) {
+-				if (test_bit(FLAG_802_11, &apriv->flags))
+-					mpi_receive_802_11(apriv);
+-				else
+-					mpi_receive_802_3(apriv);
+-				OUT4500(apriv, EVACK, EV_RX);
+-				goto exitrx;
+-			}
++	if (test_bit(FLAG_MPI, &ai->flags)) {
++		if (test_bit(FLAG_802_11, &ai->flags))
++			mpi_receive_802_11(ai);
++		else
++			mpi_receive_802_3(ai);
++		OUT4500(ai, EVACK, EV_RX);
++		return;
++	}
+ 
+-			fid = IN4500( apriv, RXFID );
+-
+-			/* Get the packet length */
+-			if (test_bit(FLAG_802_11, &apriv->flags)) {
+-				bap_setup (apriv, fid, 4, BAP0);
+-				bap_read (apriv, (__le16*)&hdr, sizeof(hdr), BAP0);
+-				/* Bad CRC. Ignore packet */
+-				if (le16_to_cpu(hdr.status) & 2)
+-					hdr.len = 0;
+-				if (apriv->wifidev == NULL)
+-					hdr.len = 0;
+-			} else {
+-				bap_setup (apriv, fid, 0x36, BAP0);
+-				bap_read (apriv, &hdr.len, 2, BAP0);
+-			}
+-			len = le16_to_cpu(hdr.len);
++	fid = IN4500(ai, RXFID);
+ 
+-			if (len > AIRO_DEF_MTU) {
+-				airo_print_err(apriv->dev->name, "Bad size %d", len);
+-				goto badrx;
+-			}
+-			if (len == 0)
+-				goto badrx;
++	/* Get the packet length */
++	if (test_bit(FLAG_802_11, &ai->flags)) {
++		bap_setup (ai, fid, 4, BAP0);
++		bap_read (ai, (__le16*)&hdr, sizeof(hdr), BAP0);
++		/* Bad CRC. Ignore packet */
++		if (le16_to_cpu(hdr.status) & 2)
++			hdr.len = 0;
++		if (ai->wifidev == NULL)
++			hdr.len = 0;
++	} else {
++		bap_setup(ai, fid, 0x36, BAP0);
++		bap_read(ai, &hdr.len, 2, BAP0);
++	}
++	len = le16_to_cpu(hdr.len);
+ 
+-			if (test_bit(FLAG_802_11, &apriv->flags)) {
+-				bap_read (apriv, &fc, sizeof(fc), BAP0);
+-				hdrlen = header_len(fc);
+-			} else
+-				hdrlen = ETH_ALEN * 2;
++	if (len > AIRO_DEF_MTU) {
++		airo_print_err(ai->dev->name, "Bad size %d", len);
++		goto done;
++	}
++	if (len == 0)
++		goto done;
+ 
+-			skb = dev_alloc_skb( len + hdrlen + 2 + 2 );
+-			if ( !skb ) {
+-				dev->stats.rx_dropped++;
+-				goto badrx;
+-			}
+-			skb_reserve(skb, 2); /* This way the IP header is aligned */
+-			buffer = (__le16*)skb_put (skb, len + hdrlen);
+-			if (test_bit(FLAG_802_11, &apriv->flags)) {
+-				buffer[0] = fc;
+-				bap_read (apriv, buffer + 1, hdrlen - 2, BAP0);
+-				if (hdrlen == 24)
+-					bap_read (apriv, tmpbuf, 6, BAP0);
+-
+-				bap_read (apriv, &v, sizeof(v), BAP0);
+-				gap = le16_to_cpu(v);
+-				if (gap) {
+-					if (gap <= 8) {
+-						bap_read (apriv, tmpbuf, gap, BAP0);
+-					} else {
+-						airo_print_err(apriv->dev->name, "gaplen too "
+-							"big. Problems will follow...");
+-					}
+-				}
+-				bap_read (apriv, buffer + hdrlen/2, len, BAP0);
++	if (test_bit(FLAG_802_11, &ai->flags)) {
++		bap_read(ai, &fc, sizeof (fc), BAP0);
++		hdrlen = header_len(fc);
++	} else
++		hdrlen = ETH_ALEN * 2;
++
++	skb = dev_alloc_skb(len + hdrlen + 2 + 2);
++	if (!skb) {
++		ai->dev->stats.rx_dropped++;
++		goto done;
++	}
++
++	skb_reserve(skb, 2); /* This way the IP header is aligned */
++	buffer = (__le16 *) skb_put(skb, len + hdrlen);
++	if (test_bit(FLAG_802_11, &ai->flags)) {
++		buffer[0] = fc;
++		bap_read(ai, buffer + 1, hdrlen - 2, BAP0);
++		if (hdrlen == 24)
++			bap_read(ai, tmpbuf, 6, BAP0);
++
++		bap_read(ai, &v, sizeof(v), BAP0);
++		gap = le16_to_cpu(v);
++		if (gap) {
++			if (gap <= 8) {
++				bap_read(ai, tmpbuf, gap, BAP0);
+ 			} else {
+-				MICBuffer micbuf;
+-				bap_read (apriv, buffer, ETH_ALEN*2, BAP0);
+-				if (apriv->micstats.enabled) {
+-					bap_read (apriv,(__le16*)&micbuf,sizeof(micbuf),BAP0);
+-					if (ntohs(micbuf.typelen) > 0x05DC)
+-						bap_setup (apriv, fid, 0x44, BAP0);
+-					else {
+-						if (len <= sizeof(micbuf))
+-							goto badmic;
+-
+-						len -= sizeof(micbuf);
+-						skb_trim (skb, len + hdrlen);
+-					}
+-				}
+-				bap_read(apriv,buffer+ETH_ALEN,len,BAP0);
+-				if (decapsulate(apriv,&micbuf,(etherHead*)buffer,len)) {
+-badmic:
+-					dev_kfree_skb_irq (skb);
+-badrx:
+-					OUT4500( apriv, EVACK, EV_RX);
+-					goto exitrx;
++				airo_print_err(ai->dev->name, "gaplen too "
++					"big. Problems will follow...");
++			}
++		}
++		bap_read(ai, buffer + hdrlen/2, len, BAP0);
++	} else {
++		MICBuffer micbuf;
++
++		bap_read(ai, buffer, ETH_ALEN * 2, BAP0);
++		if (ai->micstats.enabled) {
++			bap_read(ai, (__le16 *) &micbuf, sizeof (micbuf), BAP0);
++			if (ntohs(micbuf.typelen) > 0x05DC)
++				bap_setup(ai, fid, 0x44, BAP0);
++			else {
++				if (len <= sizeof (micbuf)) {
++					dev_kfree_skb_irq(skb);
++					goto done;
+ 				}
++
++				len -= sizeof(micbuf);
++				skb_trim(skb, len + hdrlen);
+ 			}
++		}
++
++		bap_read(ai, buffer + ETH_ALEN, len, BAP0);
++		if (decapsulate(ai, &micbuf, (etherHead*) buffer, len))
++			dev_kfree_skb_irq (skb);
++		else
++			success = 1;
++	}
++
+ #ifdef WIRELESS_SPY
+-			if (apriv->spy_data.spy_number > 0) {
+-				char *sa;
+-				struct iw_quality wstats;
+-				/* Prepare spy data : addr + qual */
+-				if (!test_bit(FLAG_802_11, &apriv->flags)) {
+-					sa = (char*)buffer + 6;
+-					bap_setup (apriv, fid, 8, BAP0);
+-					bap_read (apriv, (__le16*)hdr.rssi, 2, BAP0);
+-				} else
+-					sa = (char*)buffer + 10;
+-				wstats.qual = hdr.rssi[0];
+-				if (apriv->rssi)
+-					wstats.level = 0x100 - apriv->rssi[hdr.rssi[1]].rssidBm;
+-				else
+-					wstats.level = (hdr.rssi[1] + 321) / 2;
+-				wstats.noise = apriv->wstats.qual.noise;
+-				wstats.updated = IW_QUAL_LEVEL_UPDATED
+-					| IW_QUAL_QUAL_UPDATED
+-					| IW_QUAL_DBM;
+-				/* Update spy records */
+-				wireless_spy_update(dev, sa, &wstats);
+-			}
++	if (success && (ai->spy_data.spy_number > 0)) {
++		char *sa;
++		struct iw_quality wstats;
++
++		/* Prepare spy data : addr + qual */
++		if (!test_bit(FLAG_802_11, &ai->flags)) {
++			sa = (char *) buffer + 6;
++			bap_setup(ai, fid, 8, BAP0);
++			bap_read(ai, (__le16 *) hdr.rssi, 2, BAP0);
++		} else
++			sa = (char *) buffer + 10;
++		wstats.qual = hdr.rssi[0];
++		if (ai->rssi)
++			wstats.level = 0x100 - ai->rssi[hdr.rssi[1]].rssidBm;
++		else
++			wstats.level = (hdr.rssi[1] + 321) / 2;
++		wstats.noise = ai->wstats.qual.noise;
++		wstats.updated =  IW_QUAL_LEVEL_UPDATED
++				| IW_QUAL_QUAL_UPDATED
++				| IW_QUAL_DBM;
++		/* Update spy records */
++		wireless_spy_update(ai->dev, sa, &wstats);
++	}
+ #endif /* WIRELESS_SPY */
+-			OUT4500( apriv, EVACK, EV_RX);
+ 
+-			if (test_bit(FLAG_802_11, &apriv->flags)) {
+-				skb_reset_mac_header(skb);
+-				skb->pkt_type = PACKET_OTHERHOST;
+-				skb->dev = apriv->wifidev;
+-				skb->protocol = htons(ETH_P_802_2);
+-			} else
+-				skb->protocol = eth_type_trans(skb,dev);
+-			skb->dev->last_rx = jiffies;
+-			skb->ip_summed = CHECKSUM_NONE;
++done:
++	OUT4500(ai, EVACK, EV_RX);
++
++	if (success) {
++		if (test_bit(FLAG_802_11, &ai->flags)) {
++			skb_reset_mac_header(skb);
++			skb->pkt_type = PACKET_OTHERHOST;
++			skb->dev = ai->wifidev;
++			skb->protocol = htons(ETH_P_802_2);
++		} else
++			skb->protocol = eth_type_trans(skb, ai->dev);
++		skb->dev->last_rx = jiffies;
++		skb->ip_summed = CHECKSUM_NONE;
++
++		netif_rx(skb);
++	}
++}
++
++static void airo_handle_tx(struct airo_info *ai, u16 status)
++{
++	int i, len = 0, index = -1;
++	u16 fid;
+ 
+-			netif_rx( skb );
++	if (test_bit(FLAG_MPI, &ai->flags)) {
++		unsigned long flags;
++
++		if (status & EV_TXEXC)
++			get_tx_error(ai, -1);
++
++		spin_lock_irqsave(&ai->aux_lock, flags);
++		if (!skb_queue_empty(&ai->txq)) {
++			spin_unlock_irqrestore(&ai->aux_lock,flags);
++			mpi_send_packet(ai->dev);
++		} else {
++			clear_bit(FLAG_PENDING_XMIT, &ai->flags);
++			spin_unlock_irqrestore(&ai->aux_lock,flags);
++			netif_wake_queue(ai->dev);
+ 		}
+-exitrx:
++		OUT4500(ai, EVACK, status & (EV_TX | EV_TXCPY | EV_TXEXC));
++		return;
++	}
+ 
+-		/* Check to see if a packet has been transmitted */
+-		if (  status & ( EV_TX|EV_TXCPY|EV_TXEXC ) ) {
+-			int i;
+-			int len = 0;
+-			int index = -1;
+-
+-			if (test_bit(FLAG_MPI,&apriv->flags)) {
+-				unsigned long flags;
+-
+-				if (status & EV_TXEXC)
+-					get_tx_error(apriv, -1);
+-				spin_lock_irqsave(&apriv->aux_lock, flags);
+-				if (!skb_queue_empty(&apriv->txq)) {
+-					spin_unlock_irqrestore(&apriv->aux_lock,flags);
+-					mpi_send_packet (dev);
+-				} else {
+-					clear_bit(FLAG_PENDING_XMIT, &apriv->flags);
+-					spin_unlock_irqrestore(&apriv->aux_lock,flags);
+-					netif_wake_queue (dev);
+-				}
+-				OUT4500( apriv, EVACK,
+-					status & (EV_TX|EV_TXCPY|EV_TXEXC));
+-				goto exittx;
+-			}
++	fid = IN4500(ai, TXCOMPLFID);
++
++	for(i = 0; i < MAX_FIDS; i++) {
++		if ((ai->fids[i] & 0xffff) == fid) {
++			len = ai->fids[i] >> 16;
++			index = i;
++		}
++	}
+ 
+-			fid = IN4500(apriv, TXCOMPLFID);
++	if (index != -1) {
++		if (status & EV_TXEXC)
++			get_tx_error(ai, index);
+ 
+-			for( i = 0; i < MAX_FIDS; i++ ) {
+-				if ( ( apriv->fids[i] & 0xffff ) == fid ) {
+-					len = apriv->fids[i] >> 16;
+-					index = i;
+-				}
+-			}
+-			if (index != -1) {
+-				if (status & EV_TXEXC)
+-					get_tx_error(apriv, index);
+-				OUT4500( apriv, EVACK, status & (EV_TX | EV_TXEXC));
+-				/* Set up to be used again */
+-				apriv->fids[index] &= 0xffff;
+-				if (index < MAX_FIDS / 2) {
+-					if (!test_bit(FLAG_PENDING_XMIT, &apriv->flags))
+-						netif_wake_queue(dev);
+-				} else {
+-					if (!test_bit(FLAG_PENDING_XMIT11, &apriv->flags))
+-						netif_wake_queue(apriv->wifidev);
+-				}
+-			} else {
+-				OUT4500( apriv, EVACK, status & (EV_TX | EV_TXCPY | EV_TXEXC));
+-				airo_print_err(apriv->dev->name, "Unallocated FID was "
+-					"used to xmit" );
+-			}
++		OUT4500(ai, EVACK, status & (EV_TX | EV_TXEXC));
++
++		/* Set up to be used again */
++		ai->fids[index] &= 0xffff;
++		if (index < MAX_FIDS / 2) {
++			if (!test_bit(FLAG_PENDING_XMIT, &ai->flags))
++				netif_wake_queue(ai->dev);
++		} else {
++			if (!test_bit(FLAG_PENDING_XMIT11, &ai->flags))
++				netif_wake_queue(ai->wifidev);
+ 		}
+-exittx:
+-		if ( status & ~STATUS_INTS & ~IGNORE_INTS )
+-			airo_print_warn(apriv->dev->name, "Got weird status %x",
++	} else {
++		OUT4500(ai, EVACK, status & (EV_TX | EV_TXCPY | EV_TXEXC));
++		airo_print_err(ai->dev->name, "Unallocated FID was used to xmit");
++	}
++}
++
++static irqreturn_t airo_interrupt(int irq, void *dev_id)
++{
++	struct net_device *dev = dev_id;
++	u16 status, savedInterrupts = 0;
++	struct airo_info *ai = dev->ml_priv;
++	int handled = 0;
++
++	if (!netif_device_present(dev))
++		return IRQ_NONE;
++
++	for (;;) {
++		status = IN4500(ai, EVSTAT);
++		if (!(status & STATUS_INTS) || (status == 0xffff))
++			break;
++
++		handled = 1;
++
++		if (status & EV_AWAKE) {
++			OUT4500(ai, EVACK, EV_AWAKE);
++			OUT4500(ai, EVACK, EV_AWAKE);
++		}
++
++		if (!savedInterrupts) {
++			savedInterrupts = IN4500(ai, EVINTEN);
++			OUT4500(ai, EVINTEN, 0);
++		}
++
++		if (status & EV_MIC) {
++			OUT4500(ai, EVACK, EV_MIC);
++			airo_handle_cisco_mic(ai);
++		}
++
++		if (status & EV_LINK) {
++			/* Link status changed */
++			airo_handle_link(ai);
++		}
++
++		/* Check to see if there is something to receive */
++		if (status & EV_RX)
++			airo_handle_rx(ai);
++
++		/* Check to see if a packet has been transmitted */
++		if (status & (EV_TX | EV_TXCPY | EV_TXEXC))
++			airo_handle_tx(ai, status);
++
++		if ( status & ~STATUS_INTS & ~IGNORE_INTS ) {
++			airo_print_warn(ai->dev->name, "Got weird status %x",
+ 				status & ~STATUS_INTS & ~IGNORE_INTS );
++		}
+ 	}
+ 
+ 	if (savedInterrupts)
+-		OUT4500( apriv, EVINTEN, savedInterrupts );
++		OUT4500(ai, EVINTEN, savedInterrupts);
+ 
+-	/* done.. */
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+@@ -3609,24 +3657,14 @@ badrx:
+ 	}
+ }
+ 
+-void mpi_receive_802_11 (struct airo_info *ai)
++static void mpi_receive_802_11 (struct airo_info *ai)
+ {
+ 	RxFid rxd;
+ 	struct sk_buff *skb = NULL;
+-	u16 len, hdrlen = 0;
++	u16 len, hdrlen = 0, gap, *buffer;
+ 	__le16 fc;
+-#pragma pack(1)
+-	struct {
+-		__le16 status, len;
+-		u8 rssi[2];
+-		u8 rate;
+-		u8 freq;
+-		__le16 tmp[4];
+-	} hdr;
+-#pragma pack()
+-	u16 gap;
+-	u16 *buffer;
+-	char *ptr = ai->rxfids[0].virtual_host_addr+4;
++	struct rx_hdr hdr;
++	char *ptr = ai->rxfids[0].virtual_host_addr + 4;
+ 
+ 	memcpy_fromio(&rxd, ai->rxfids[0].card_ram_off, sizeof(rxd));
+ 	memcpy ((char *)&hdr, ptr, sizeof(hdr));
+@@ -3694,6 +3732,7 @@ void mpi_receive_802_11 (struct airo_info *ai)
+ 	skb->dev->last_rx = jiffies;
+ 	skb->ip_summed = CHECKSUM_NONE;
+ 	netif_rx( skb );
++
+ badrx:
+ 	if (rxd.valid == 0) {
+ 		rxd.valid = 1;
 
