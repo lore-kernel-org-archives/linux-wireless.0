@@ -1,37 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53561 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757085AbZAWQvN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 11:51:13 -0500
-Subject: Re: Kernel Compile Fail with 2.6.26 Drivers
-From: reinette chatre <reinette.chatre@intel.com>
-To: Delphi Real Estate <Info@delphi-real-estate.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <200901230550.25986.Info@delphi-real-estate.com>
-References: <200901200942.57618.Info@delphi-real-estate.com>
-	 <200901230550.25986.Info@delphi-real-estate.com>
-Content-Type: text/plain
-Date: Fri, 23 Jan 2009 08:53:49 -0800
-Message-Id: <1232729629.4501.37.camel@rc-desk> (sfid-20090123_175118_752836_7D13D599)
-Mime-Version: 1.0
+Received: from fmmailgate02.web.de ([217.72.192.227]:36311 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326AbZATWLI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 17:11:08 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Greg KH gr <gregkh@suse.de>,
+	Artur Skawina <art.08.09@gmail.com>
+Subject: [PATCH -stable] p54usb: fix traffic stalls / packet drop
+Date: Tue, 20 Jan 2009 23:11:11 +0100
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Linux wireless" <linux-wireless@vger.kernel.org>
+References: <KTnguC9mFUC.A.VNB.TJRdJB@chimera> <cX2gZ6Cy9nC.A.vUD.KKRdJB@chimera>
+In-Reply-To: <cX2gZ6Cy9nC.A.vUD.KKRdJB@chimera>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901202311.11854.chunkeey@web.de> (sfid-20090120_231117_256389_7E6F1540)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-01-23 at 05:50 -0800, Delphi Real Estate wrote:
-> It seems that either no one has 'n' working at 5GHz, or are not willing to advise.  All I need is a combination that works;  I've tried 2.6's iwlwifi in 2.6.27 and it won't compile, and it seems that 2.6.28's iwlwifi doesn't work in 'n'.  I've run Debian for eleven years and have always compiled my own custom kernels, but would very much like to get 'n' working.  Scripting is no problem, although I am not an actual coder.  I wish someone could pitch in briefly.
+All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
+Else, the firmware could freeze, or simply drop the frame.
 
-As a summary of our discussion so far:
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Cc: stable <stable@kernel.org>
+---
+Attached is the patch is for the stable series only.
+Bugzilla reference: http://bugzilla.kernel.org/show_bug.cgi?id=12260
+(wireless-testing needs a different one)
 
-80211n currently works, except that you will get slower speeds because
-TX aggregation is not working.
-
-If you want TX aggregation support then you can use the iwl5000 branch
-of the iwlwifi-2.6 repo on git.kernel.org, which is based on kernel
-2.6.26.
-
-We are working on getting TX aggregation working again.
-
-Reinette
-
-
-
+Rafael, I hope we can close this bug. Greg?
+---
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 75d749b..be40369 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -214,6 +214,8 @@ static void p54u_tx_3887(struct ieee80211_hw *dev, struct p54_control_hdr *data,
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), data, len,
+ 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
++	addr_urb->transfer_flags |= URB_ZERO_PACKET;
++	data_urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+ 	usb_submit_urb(addr_urb, GFP_ATOMIC);
+ 	usb_submit_urb(data_urb, GFP_ATOMIC);
+@@ -251,6 +253,7 @@ static void p54u_tx_lm87(struct ieee80211_hw *dev,
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr,
+ 		len + sizeof(*hdr), free_on_tx ? p54u_tx_free_cb : p54u_tx_cb,
+ 		dev);
++	data_urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+ 	usb_submit_urb(data_urb, GFP_ATOMIC);
+ }
+@@ -293,11 +296,13 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct p54_control_hdr *da
+ 	usb_fill_bulk_urb(int_urb, priv->udev,
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DEV), reg, sizeof(*reg),
+ 		p54u_tx_free_cb, dev);
++	int_urb->transfer_flags |= URB_ZERO_PACKET;
+ 	usb_submit_urb(int_urb, GFP_ATOMIC);
+ 
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr, len + sizeof(*hdr),
+ 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
++	data_urb->transfer_flags |= URB_ZERO_PACKET;
+ 	usb_submit_urb(data_urb, GFP_ATOMIC);
+ }
+ 
