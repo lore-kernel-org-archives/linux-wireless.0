@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:16715 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752942AbZASTHs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 14:07:48 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so1374856fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 11:07:46 -0800 (PST)
-Message-ID: <3ace41890901191107g4100bb36j830ab31ab0202d13@mail.gmail.com> (sfid-20090119_200755_508248_98463FEF)
-Date: Mon, 19 Jan 2009 19:07:46 +0000
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: USB 1.1, usb-dongle, NETGEAR WG111v2, timing problems in association
-Cc: "Hans Ekbrand" <hans@sociologi.cjb.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4972B25B.7070306@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20090117204654.GB9079@amin> <4972B25B.7070306@lwfinger.net>
+Received: from mx2.redhat.com ([66.187.237.31]:38585 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754555AbZATPMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 10:12:17 -0500
+Subject: [PATCH 7/7] airo: remove useless #defines
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1232462691.22158.6.camel@localhost.localdomain>
+References: <1232462691.22158.6.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 20 Jan 2009 10:11:01 -0500
+Message-Id: <1232464262.22158.21.camel@localhost.localdomain> (sfid-20090120_161222_934589_15B83E3F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 18, 2009 at 4:38 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Hans Ekbrand wrote:
->> Hi list!
->>
->> On an old system with only USB 1.1, I tried to use a USB-dongle:
->> NETGEAR WG111v2. The device works perfectly with same kernel (2.6.26-1
->> from debian lenny) on a new system with USB 2.0, using the "rtl8187"
->> driver.
->>
->> However, on USB 1.1 I get:
->
-> I just bought a WG111v2 on E-Bay last week. Once it arrives, I will be
-> able to test the performance of this device.
->
-> Larry
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-Can you shut  down NetworkManager and wpa_supplicant and try
-association with iwconfig manually?
-Sounds like wpa_supplicant mis-config for me, so you might want to
-review your config.
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 1b64da6..c1c7bb3 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -1094,12 +1094,6 @@ typedef struct wep_key_t {
+ 	u8	key[16];	/* 40-bit and 104-bit keys */
+ } wep_key_t;
+ 
+-/* Backward compatibility */
+-#ifndef IW_ENCODE_NOKEY
+-#define IW_ENCODE_NOKEY         0x0800  /* Key is write only, so not present */
+-#define IW_ENCODE_MODE  (IW_ENCODE_DISABLED | IW_ENCODE_RESTRICTED | IW_ENCODE_OPEN)
+-#endif /* IW_ENCODE_NOKEY */
+-
+ /* List of Wireless Handlers (new API) */
+ static const struct iw_handler_def	airo_handler_def;
+ 
+
