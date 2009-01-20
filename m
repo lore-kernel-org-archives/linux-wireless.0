@@ -1,293 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:57815 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752239AbZAMTex (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.231]:45512 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751550AbZATF5Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 14:34:53 -0500
-Received: by ewy10 with SMTP id 10so223114ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 11:34:51 -0800 (PST)
-Message-ID: <496CECD6.5060802@gmail.com> (sfid-20090113_203459_363340_A75784E1)
-Date: Tue, 13 Jan 2009 20:34:46 +0100
-From: Artur Skawina <art.08.09@gmail.com>
+	Tue, 20 Jan 2009 00:57:25 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so2966208rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 21:57:24 -0800 (PST)
+Date: Tue, 20 Jan 2009 11:17:08 +0530
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v4] ath9k: Enable dynamic power save in ath9k.
+Message-ID: <20090120054708.GA3679@myhost.users.atheros.com> (sfid-20090120_065739_838614_D483F5C7)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@web.de>
-Subject: p54usb and hostapd
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[resend w/ correct list address this time]
+This patch implements dynamic power save feature for ath9k.
 
->> > hmm... OT: who old is your hostapd version? As far as I can tell AP-mode is still WIP.
-> 
-> hostap-0_6_6-148-g3cf8523 ie git build from ~ dec 24.
-> 
->> > Maybe you can save you alot trouble if your mobile can connect to ad-hoc wifis.
-> 
-> It can, but i'd like to try to get hostap running w/ this hw anyway...
-> 
->>>>> >>>> so to test the device further i set up hostapd, which mostly worked; after 
->>>>> >>>> a few tweaks (eg patching out country code setting in hostapd)
->>>> >>> patching out country code?! why that?
->>>> >>> currently, hostapd is the only thing that works out-of-the-box :-D
->>> >> hostapd was aborting no matter what country code i configured, so i
->>> >> disabled that, leaving figuring this out for later.
->> > have you installed crda and udev on your box?
->> > ( http://wireless.kernel.org/en/developers/Regulatory/CRDA )
-> 
-> yes, but only after patching hostapd; the lockups prevented further
-> testing...
-> 
->>> >> [also hostapd is reporting some TX failures, didn't investigate yet]
->> > TX failures? do you have hostapd's log of it?
-> 
-> I'll send it in a few minutes, as soon as i'll reproduce it.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath9k/ath9k.h |    2 +
+ drivers/net/wireless/ath9k/core.h  |   18 ++++++++++++++++
+ drivers/net/wireless/ath9k/hw.c    |    4 +-
+ drivers/net/wireless/ath9k/hw.h    |    1 -
+ drivers/net/wireless/ath9k/main.c  |   39 +++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath9k/recv.c  |    6 +++++
+ 6 files changed, 66 insertions(+), 4 deletions(-)
 
-[Hmm, hostapd seems to include sensitive info in its log like passphrase.]
-I managed to connect the client and kill hostapd before it hang and the
-log looks like this:
-
-Configuration file: /xxx/xxx/xxx/hostapd.conf
-ctrl_interface_group=0
-Opening raw packet socket for ifindex 0
-BSS count 1, BSSID mask ff:ff:ff:ff:ff:ff (0 bits)
-Failed to set country code
-SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
-nl80211: Added 802.11b mode based on 802.11g information
-Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=27 dBm
-Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=27 dBm
-RATE[0] rate=10 flags=0x6
-RATE[1] rate=20 flags=0x6
-RATE[2] rate=55 flags=0x6
-RATE[3] rate=110 flags=0x6
-RATE[4] rate=60 flags=0x0
-RATE[5] rate=90 flags=0x0
-RATE[6] rate=120 flags=0x0
-RATE[7] rate=180 flags=0x0
-RATE[8] rate=240 flags=0x0
-RATE[9] rate=360 flags=0x0
-RATE[10] rate=480 flags=0x0
-RATE[11] rate=540 flags=0x0
-Passive scanning not supported
-Flushing old station entries
-Deauthenticate all stations
-Mode: IEEE 802.11g  Channel: 6  Frequency: 2437 MHz
-Using interface ap0 with hwaddr 00:30:f1:12:34:56 and ssid 'xxxxxxxx'
-SSID - hexdump_ascii(len=3):
-[...]
-PSK (ASCII passphrase) - hexdump_ascii(len=8):
-[...]
-WPA: group state machine entering state GTK_INIT (VLAN-ID 0)
-GMK - hexdump(len=32): [REMOVED]
-GTK - hexdump(len=16): [REMOVED]
-WPA: group state machine entering state SETKEYSDONE (VLAN-ID 0)
-Using existing control interface directory.
-ap0: Setup of interface done.
-MGMT (TX callback) ACK
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:53 sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:76 sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-MGMT
-mgmt::auth
-authentication: STA=xx:xx:xx:xx:xx:76 auth_alg=0 auth_transaction=1 status_code=0 wep=0
-  New STA
-ap0: STA xx:xx:xx:xx:xx:76 IEEE 802.11: authentication OK (open system)
-ap0: STA xx:xx:xx:xx:xx:76 MLME: MLME-AUTHENTICATE.indication(xx:xx:xx:xx:xx:76, OPEN_SYSTEM)
-ap0: STA xx:xx:xx:xx:xx:76 MLME: MLME-DELETEKEYS.request(xx:xx:xx:xx:xx:76)
-authentication reply: STA=xx:xx:xx:xx:xx:76 auth_alg=0 auth_transaction=2 resp=0 (IE len=0)
-MGMT (TX callback) ACK
-mgmt::auth cb
-ap0: STA xx:xx:xx:xx:xx:76 IEEE 802.11: authenticated
-MGMT
-mgmt::assoc_req
-association request: STA=xx:xx:xx:xx:xx:76 capab_info=0x431 listen_interval=3
-WME IE - hexdump(len=7): 00 50 f2 02 00 01 00
-Validating WME IE: OUI 00:50:f2  OUI type 2  OUI sub-type 0  version 1
-  new AID 1
-ap0: STA xx:xx:xx:xx:xx:76 IEEE 802.11: association OK (aid 1)
-MGMT (TX callback) ACK
-mgmt::assoc_resp cb
-ap0: STA xx:xx:xx:xx:xx:76 IEEE 802.11: associated (aid 1)
-ap0: STA xx:xx:xx:xx:xx:76 MLME: MLME-ASSOCIATE.indication(xx:xx:xx:xx:xx:76)
-ap0: STA xx:xx:xx:xx:xx:76 MLME: MLME-DELETEKEYS.request(xx:xx:xx:xx:xx:76)
-ap0: STA xx:xx:xx:xx:xx:76 WPA: event 1 notification
-ap0: STA xx:xx:xx:xx:xx:76 WPA: start authentication
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK entering state INITIALIZE
-ap0: STA xx:xx:xx:xx:xx:76 IEEE 802.1X: unauthorizing port
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK_GROUP entering state IDLE
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK entering state AUTHENTICATION
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK entering state AUTHENTICATION2
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK entering state INITPSK
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK entering state PTKSTART
-ap0: STA xx:xx:xx:xx:xx:76 WPA: sending 1/4 msg of 4-Way Handshake
-WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8 kde_len=0 keyidx=0 encr=0)
-IEEE 802.1X: 123 bytes from xx:xx:xx:xx:xx:76
-   IEEE 802.1X: version=1 type=3 length=119
-ap0: STA xx:xx:xx:xx:xx:76 WPA: received EAPOL-Key frame (2/4 Pairwise)
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK entering state PTKCALCNEGOTIATING
-WPA: PTK derivation - A1=xx:xx:xx:xx:xx:e6 A2=xx:xx:xx:xx:xx:76
-WPA: PMK - hexdump(len=32): [REMOVED]
-WPA: PTK - hexdump(len=64): [REMOVED]
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK entering state PTKCALCNEGOTIATING2
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK entering state PTKINITNEGOTIATING
-ap0: STA xx:xx:xx:xx:xx:76 WPA: sending 3/4 msg of 4-Way Handshake
-WPA: Send EAPOL(version=2 secure=0 mic=1 ack=1 install=1 pairwise=8 kde_len=24 keyidx=0 encr=0)
-IEEE 802.1X: 99 bytes from xx:xx:xx:xx:xx:76
-   IEEE 802.1X: version=1 type=3 length=95
-ap0: STA xx:xx:xx:xx:xx:76 WPA: received EAPOL-Key frame (4/4 Pairwise)
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK entering state PTKINITDONE
-ap0: STA xx:xx:xx:xx:xx:76 IEEE 802.1X: authorizing port
-ap0: STA xx:xx:xx:xx:xx:76 RADIUS: starting accounting session 496CE665-00000000
-ap0: STA xx:xx:xx:xx:xx:76 WPA: pairwise key handshake completed (WPA)
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK_GROUP entering state REKEYNEGOTIATING
-ap0: STA xx:xx:xx:xx:xx:76 WPA: sending 1/2 msg of Group Key Handshake
-WPA: Send EAPOL(version=2 secure=1 mic=1 ack=1 install=0 pairwise=0 kde_len=16 keyidx=1 encr=1)
-Plaintext EAPOL-Key Key Data - hexdump(len=24): [REMOVED]
-ap0: STA xx:xx:xx:xx:xx:76 WPA: EAPOL-Key timeout
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK_GROUP entering state REKEYNEGOTIATING
-ap0: STA xx:xx:xx:xx:xx:76 WPA: sending 1/2 msg of Group Key Handshake
-WPA: Send EAPOL(version=2 secure=1 mic=1 ack=1 install=0 pairwise=0 kde_len=16 keyidx=1 encr=1)
-Plaintext EAPOL-Key Key Data - hexdump(len=24): [REMOVED]
-IEEE 802.1X: 99 bytes from xx:xx:xx:xx:xx:76
-   IEEE 802.1X: version=1 type=3 length=95
-ap0: STA xx:xx:xx:xx:xx:76 WPA: received EAPOL-Key frame (2/2 Group)
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK_GROUP entering state REKEYESTABLISHED
-ap0: STA xx:xx:xx:xx:xx:76 WPA: group key handshake completed (WPA)
-WPA: xx:xx:xx:xx:xx:76 WPA_PTK_GROUP entering state IDLE
-IEEE 802.1X: 99 bytes from xx:xx:xx:xx:xx:76
-   IEEE 802.1X: version=1 type=3 length=95
-ap0: STA xx:xx:xx:xx:xx:76 WPA: received EAPOL-Key 2/2 Group with unexpected replay counter
-received replay counter - hexdump(len=8): 00 00 00 00 00 00 00 04
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:53 sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:53 sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA xx:xx:xx:xx:xx:fc sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-Signal 15 received - terminating
-ap0: STA xx:xx:xx:xx:xx:76 MLME: MLME-DEAUTHENTICATE.indication(xx:xx:xx:xx:xx:76, 1)
-ap0: STA xx:xx:xx:xx:xx:76 MLME: MLME-DELETEKEYS.request(xx:xx:xx:xx:xx:76)
-Removing station xx:xx:xx:xx:xx:76
-Flushing old station entries
-Deauthenticate all stations
-
-
-artur
+diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+index 3817645..0b305b8 100644
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -793,6 +793,8 @@ struct ath_hal {
+ 	u16 ah_currentRD5G;
+ 	u16 ah_currentRD2G;
+ 	char ah_iso[4];
++	enum ath9k_power_mode ah_power_mode;
++	enum ath9k_power_mode ah_restore_mode;
+ 
+ 	struct ath9k_channel ah_channels[150];
+ 	struct ath9k_channel *ah_curchan;
+diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+index f65933d..0f50767 100644
+--- a/drivers/net/wireless/ath9k/core.h
++++ b/drivers/net/wireless/ath9k/core.h
+@@ -676,6 +676,7 @@ enum PROT_MODE {
+ #define SC_OP_RFKILL_REGISTERED	BIT(11)
+ #define SC_OP_RFKILL_SW_BLOCKED	BIT(12)
+ #define SC_OP_RFKILL_HW_BLOCKED	BIT(13)
++#define SC_OP_WAIT_FOR_BEACON	BIT(14)
+ 
+ struct ath_bus_ops {
+ 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
+@@ -709,6 +710,7 @@ struct ath_softc {
+ 	u32 sc_keymax;
+ 	DECLARE_BITMAP(sc_keymap, ATH_KEYMAX);
+ 	u8 sc_splitmic;
++	atomic_t ps_usecount;
+ 	enum ath9k_int sc_imask;
+ 	enum PROT_MODE sc_protmode;
+ 	enum ath9k_ht_extprotspacing sc_ht_extprotspacing;
+@@ -777,4 +779,20 @@ static inline int ath_ahb_init(void) { return 0; };
+ static inline void ath_ahb_exit(void) {};
+ #endif
+ 
++static inline void ath9k_ps_wakeup(struct ath_softc *sc)
++{
++	if (atomic_inc_return(&sc->ps_usecount) == 1)
++		if (sc->sc_ah->ah_power_mode !=  ATH9K_PM_AWAKE) {
++			sc->sc_ah->ah_restore_mode = sc->sc_ah->ah_power_mode;
++			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
++		}
++}
++
++static inline void ath9k_ps_restore(struct ath_softc *sc)
++{
++	if (atomic_dec_and_test(&sc->ps_usecount))
++		if (sc->hw->conf.flags & IEEE80211_CONF_PS)
++			ath9k_hw_setpower(sc->sc_ah,
++					  sc->sc_ah->ah_restore_mode);
++}
+ #endif /* CORE_H */
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 88c8a62..ab15e55 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -2698,7 +2698,7 @@ bool ath9k_hw_setpower(struct ath_hal *ah,
+ 	int status = true, setChip = true;
+ 
+ 	DPRINTF(ah->ah_sc, ATH_DBG_POWER_MGMT, "%s -> %s (%s)\n",
+-		modes[ahp->ah_powerMode], modes[mode],
++		modes[ah->ah_power_mode], modes[mode],
+ 		setChip ? "set chip " : "");
+ 
+ 	switch (mode) {
+@@ -2717,7 +2717,7 @@ bool ath9k_hw_setpower(struct ath_hal *ah,
+ 			"Unknown power mode %u\n", mode);
+ 		return false;
+ 	}
+-	ahp->ah_powerMode = mode;
++	ah->ah_power_mode = mode;
+ 
+ 	return status;
+ }
+diff --git a/drivers/net/wireless/ath9k/hw.h b/drivers/net/wireless/ath9k/hw.h
+index d44e016..087c571 100644
+--- a/drivers/net/wireless/ath9k/hw.h
++++ b/drivers/net/wireless/ath9k/hw.h
+@@ -844,7 +844,6 @@ struct ath_hal_5416 {
+ 	bool ah_chipFullSleep;
+ 	u32 ah_atimWindow;
+ 	u16 ah_antennaSwitchSwap;
+-	enum ath9k_power_mode ah_powerMode;
+ 	enum ath9k_ant_setting ah_diversityControl;
+ 
+ 	/* Calibration */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 8ad927a..b494a0d 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -237,6 +237,8 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 	if (sc->sc_flags & SC_OP_INVALID)
+ 		return -EIO;
+ 
++	ath9k_ps_wakeup(sc);
++
+ 	/*
+ 	 * This is only performed if the channel settings have
+ 	 * actually changed.
+@@ -287,6 +289,7 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+ 	ath_cache_conf_rate(sc, &hw->conf);
+ 	ath_update_txpow(sc);
+ 	ath9k_hw_set_interrupts(ah, sc->sc_imask);
++	ath9k_ps_restore(sc);
+ 	return 0;
+ }
+ 
+@@ -559,8 +562,10 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 				      ATH9K_HW_CAP_AUTOSLEEP)) {
+ 					/* Clear RxAbort bit so that we can
+ 					 * receive frames */
++					ath9k_hw_setpower(ah, ATH9K_PM_AWAKE);
+ 					ath9k_hw_setrxabort(ah, 0);
+ 					sched = true;
++					sc->sc_flags |= SC_OP_WAIT_FOR_BEACON;
+ 				}
+ 			}
+ 		}
+@@ -1044,6 +1049,7 @@ static void ath_radio_enable(struct ath_softc *sc)
+ 	struct ieee80211_channel *channel = sc->hw->conf.channel;
+ 	int r;
+ 
++	ath9k_ps_wakeup(sc);
+ 	spin_lock_bh(&sc->sc_resetlock);
+ 
+ 	r = ath9k_hw_reset(ah, ah->ah_curchan, false);
+@@ -1075,6 +1081,7 @@ static void ath_radio_enable(struct ath_softc *sc)
+ 	ath9k_hw_set_gpio(ah, ATH_LED_PIN, 0);
+ 
+ 	ieee80211_wake_queues(sc->hw);
++	ath9k_ps_restore(sc);
+ }
+ 
+ static void ath_radio_disable(struct ath_softc *sc)
+@@ -1083,6 +1090,7 @@ static void ath_radio_disable(struct ath_softc *sc)
+ 	struct ieee80211_channel *channel = sc->hw->conf.channel;
+ 	int r;
+ 
++	ath9k_ps_wakeup(sc);
+ 	ieee80211_stop_queues(sc->hw);
+ 
+ 	/* Disable LED */
+@@ -1108,6 +1116,7 @@ static void ath_radio_disable(struct ath_softc *sc)
+ 
+ 	ath9k_hw_phy_disable(ah);
+ 	ath9k_hw_setpower(ah, ATH9K_PM_FULL_SLEEP);
++	ath9k_ps_restore(sc);
+ }
+ 
+ static bool ath_is_rfkill_set(struct ath_softc *sc)
+@@ -1259,6 +1268,8 @@ void ath_detach(struct ath_softc *sc)
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	int i = 0;
+ 
++	ath9k_ps_wakeup(sc);
++
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "Detach ATH hw\n");
+ 
+ #if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+@@ -1283,6 +1294,7 @@ void ath_detach(struct ath_softc *sc)
+ 
+ 	ath9k_hw_detach(sc->sc_ah);
+ 	ath9k_exit_debug(sc);
++	ath9k_ps_restore(sc);
+ }
+ 
+ static int ath_init(u16 devid, struct ath_softc *sc)
+@@ -1526,7 +1538,9 @@ int ath_attach(u16 devid, struct ath_softc *sc)
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+ 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+ 		IEEE80211_HW_SIGNAL_DBM |
+-		IEEE80211_HW_AMPDU_AGGREGATION;
++		IEEE80211_HW_AMPDU_AGGREGATION |
++		IEEE80211_HW_SUPPORTS_PS |
++		IEEE80211_HW_PS_NULLFUNC_STACK;
+ 
+ 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah))
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+@@ -2090,6 +2104,27 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 
+ 	mutex_lock(&sc->mutex);
++	if (changed & IEEE80211_CONF_CHANGE_PS) {
++		if (conf->flags & IEEE80211_CONF_PS) {
++			if ((sc->sc_imask & ATH9K_INT_TIM_TIMER) == 0) {
++				sc->sc_imask |= ATH9K_INT_TIM_TIMER;
++				ath9k_hw_set_interrupts(sc->sc_ah,
++						sc->sc_imask);
++			}
++			ath9k_hw_setrxabort(sc->sc_ah, 1);
++			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
++		} else {
++			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
++			ath9k_hw_setrxabort(sc->sc_ah, 0);
++			sc->sc_flags &= ~SC_OP_WAIT_FOR_BEACON;
++			if (sc->sc_imask & ATH9K_INT_TIM_TIMER) {
++				sc->sc_imask &= ~ATH9K_INT_TIM_TIMER;
++				ath9k_hw_set_interrupts(sc->sc_ah,
++						sc->sc_imask);
++			}
++		}
++	}
++
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+ 		struct ieee80211_channel *curchan = hw->conf.channel;
+ 		int pos;
+@@ -2310,6 +2345,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ 	struct ath_softc *sc = hw->priv;
+ 	int ret = 0;
+ 
++	ath9k_ps_wakeup(sc);
+ 	DPRINTF(sc, ATH_DBG_KEYCACHE, "Set HW Key\n");
+ 
+ 	switch (cmd) {
+@@ -2333,6 +2369,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ 		ret = -EINVAL;
+ 	}
+ 
++	ath9k_ps_restore(sc);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 648bb49..8da08f9 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -628,6 +628,12 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
+ 		} else {
+ 			sc->rx.rxotherant = 0;
+ 		}
++
++		if (ieee80211_is_beacon(hdr->frame_control) &&
++				(sc->sc_flags & SC_OP_WAIT_FOR_BEACON)) {
++			sc->sc_flags &= ~SC_OP_WAIT_FOR_BEACON;
++			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_NETWORK_SLEEP);
++		}
+ requeue:
+ 		list_move_tail(&bf->list, &sc->rx.rxbuf);
+ 		ath_rx_buf_link(sc, bf);
+-- 
+1.6.0.1
 
