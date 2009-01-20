@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:64460 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250AbZAHXS2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 18:18:28 -0500
-Message-ID: <20090108231828.QHGIG.228066.root@hrndva-web20-z02> (sfid-20090109_001832_062022_9D980713)
-Date: Thu, 8 Jan 2009 18:18:27 -0500
-From: <lmage11@twcny.rr.com>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Subject: Re: Help debugging unexpected disassociations?
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <3ace41890901081506r7e38328apee3007b556db0cd3@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:49461 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754083AbZATIBr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 03:01:47 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 00:01:47 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18805.33820.337059.136518@gargle.gargle.HOWL> (sfid-20090120_090156_211719_E09C2C5E)
+Date: Tue, 20 Jan 2009 13:28:20 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH] ath9k: Reconfigure beacons only when enable_beacon is set
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----- Hin-Tak Leung <hintak.leung@gmail.com> wrote: 
-> On Thu, Jan 8, 2009 at 10:43 PM,  <lmage11@twcny.rr.com> wrote:
-> > ---- lmage11@twcny.rr.com wrote:
-> >> Hey everyone. I'm using an Intel 4965AGN using the iwlagn
-> >> driver in 2.6.28. When using a specific AP, my connection is
-> >> unexpectedly dropping with nothing more than a
-> >> "wlan0: deauthenticated". Any tips on how I could figure out
-> >> whether this is the driver's fault or the AP's? Another problem I'm
-> >> having is that dhcpcd is timing out a lot, usually after trying to
-> >> reconnect from a connection drop.
-> >>
-> >> The AP is a Linksys WRT54Gv1 with WPA2 and ssid broadcasting enabled.
-> >>
-> >> Thanks!
-> >>
-> >> Ari
-> >
-> > Um... Bump?
-> 
-> It is no use and quite annoying to do that - it sounds like "read my
-> mind and spoon-feed me". Your initial post has almost no useful
-> information to speak of (actual log entries, wpa_supplicant config,
-> whether using networkmanager or static config, etc).
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
-Um.
-
-Well considering as I'm not a developer and don't know how to debug
-these things, I think "spoon-feeding" is an appropriate term, no? And
-also, I didn't ask you to read my mind, I didn't even ask you to figure
-out the problem for me, I asked for the information that I would need
-to figure out the problem MYSELF. 
-
-As for "useful information", the "wlan0: deauthenticated" is *LITERALLY*
-all I get. I was not lying to you. After stripping out identifying information,
-my wpa_supplicant config would be pretty much completely empty. The config
-for this AP is about as simple as a consumer WPA2 AP config can be. I am not
-using networkmanager.
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 8ad927a..0f931c2 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -2194,13 +2194,16 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
+ 		 * causes reconfiguration; we may be called
+ 		 * with beacon transmission active.
+ 		 */
+-		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
  
-> You probably should try to run wpa_suplicant in the foreground.
+-		error = ath_beacon_alloc(sc, 0);
+-		if (error != 0)
+-			return error;
++		if (conf->enable_beacon) {
++			ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
++
++			error = ath_beacon_alloc(sc, 0);
++			if (error != 0)
++				return error;
+ 
+-		ath_beacon_sync(sc, 0);
++			ath_beacon_sync(sc, 0);
++		}
+ 	}
+ 
+ 	/* Check for WLAN_CAPABILITY_PRIVACY ? */
+-- 
+1.6.1
 
-You mean so I can see the debug messages it outputs?
-
-Ari
