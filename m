@@ -1,30 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13184 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752503AbZAVPRy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 10:17:54 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 07:17:54 -0800
-Date: Thu, 22 Jan 2009 07:17:20 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Delphi Real Estate <Info@delphi-real-estate.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel Compile Fail with 2.6.26 Drivers
-Message-ID: <20090122151720.GB9245@tesla> (sfid-20090122_161759_559279_D5AC1753)
-References: <200901200942.57618.Info@delphi-real-estate.com> <200901220558.05104.Info@delphi-real-estate.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <200901220558.05104.Info@delphi-real-estate.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:35236 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755809AbZATKxk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 05:53:40 -0500
+Subject: Re: [PATCH] mac80211: Add capability to enable/disable beaconing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@Atheros.com
+In-Reply-To: <18805.33791.193195.755178@gargle.gargle.HOWL>
+References: <18805.33791.193195.755178@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0Rhod930F51Hge6/jIkm"
+Date: Tue, 20 Jan 2009 11:52:59 +0100
+Message-Id: <1232448779.20158.4.camel@johannes.local> (sfid-20090120_115345_204075_FA067EE8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 22, 2009 at 05:58:04AM -0800, Delphi Real Estate wrote:
-> 
-> It seems that either no one has 'n' working at 5GHz
 
-As for Atheros stuff you can use ath9k or otus for 11n 5 GHz. I believe
-iwlagn should work but aggregation is not enabled as it still needs
-to be fixed.
+--=-0Rhod930F51Hge6/jIkm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+cOn Tue, 2009-01-20 at 13:27 +0530, Sujith wrote:
+> This patch adds a flag to notify drivers to start and
+> stop beaconing when needed, for example, during a scan run.
+
+
+> +	if ((changed & IEEE80211_IFCC_BEACON) &&
+> +	    (sdata->vif.type =3D=3D NL80211_IFTYPE_AP ||
+> +	     sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC ||
+> +	     sdata->vif.type =3D=3D NL80211_IFTYPE_MESH_POINT)) {
+> +		if (local->sw_scanning || local->hw_scanning)
+> +			conf.enable_beacon =3D false;
+> +		else
+> +			conf.enable_beacon =3D true;
+> +	}
+> +
+
+You really just want to do the minimal thing, right? :)
+
+That won't work when userspace disables the beacon by removing it, for
+instance, right now drivers won't know when hostapd removed the beacon
+except that ieee80211_beacon_get will start returning 0... Also, I think
+a separate change flag would be appropriate, sometimes we might just
+re-enable the beacon without having changed it, after scanning?
+
+johannes
+
+--=-0Rhod930F51Hge6/jIkm
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJda0HAAoJEKVg1VMiehFYjlMP/ixqrgYHQTDqV+bV27DHtcuB
+XDoxmrQ8w+W3UrCarYbwaS7qYflUmBrJmP37SMnRgoOEIcJSd9rbF3fXx49oK952
+4awKq9lziE5p1bQBlef60PFvLkbhBowa0bvJawLNvKNiNvkwRPS4s1fLN0lla2Tz
+dOdKaRroHZfziNjgLWYamFLHvjDFPOyA9ai/3Mh0fYXV1yKdsXQ7q62Bm1uV6wml
+4xcIVBqkKF6wfftPgcoCthd04RP+25Ia/qimocRv3lBYNvyx66o3a0atYw+k8FPk
+6SydN08nd1d972eOpFstO45lR4b8Q88QHfCW0A0noA9ZOrNflv1U4/kNvaKa/iVa
+guYijmNCTPfilkKuGHJ6w7jsQT4KlN2U4fgpbNFKRJcmvydyrLLiBLr3n5AdyAR+
+g2ITYOAfVB3Se+UEdtBpkRWjd/VvnhFaKPNSo7XtTunqjq650m6aAoXXh0iSejAC
+CdaA5FvMPrmjw9X63u2VVug8enm8c7b5xkTV3OfcMcxsfExSL2zv07HGOqr3/7GI
+VD+bT3yBwKRxhEyLQqKKAt5aIibAmnpUDz6kdT87FZTdjwX08PhBhXKM4KCSetrm
+cEWa549o2pQ6rwlY3YHPqEb7CTQsNWrR1801qfzR8Ez/MLjHKONvStQIaRMEHMCX
+0tncODykNIjfaSvEbei4
+=hwhA
+-----END PGP SIGNATURE-----
+
+--=-0Rhod930F51Hge6/jIkm--
+
