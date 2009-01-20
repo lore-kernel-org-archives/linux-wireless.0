@@ -1,103 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10999 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932686AbZAPANA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 19:13:00 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:13:00 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/13] cfg80211: add option for wiphys to disregard country IEs
-Date: Thu, 15 Jan 2009 16:12:15 -0800
-Message-ID: <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> (sfid-20090116_011328_091756_AB1FFE38)
-In-Reply-To: <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
+Received: from fmmailgate01.web.de ([217.72.192.221]:41432 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752621AbZATMcv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 07:32:51 -0500
+To: Artur Skawina <art.08.09@gmail.com>
+Subject: [PATCH v2] p54usb: fix nasty use after free
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>
+From: Christian Lamparter <chunkeey@web.de>
+Date: Tue, 20 Jan 2009 13:32:54 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901201332.54435.chunkeey@web.de> (sfid-20090120_133257_659074_94887F6A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Country IEs can be disregarded based on regulatory policy by
-a driver. This is only possible, of course, if the driver already
-has its own regulatory domain.
+In theory, the firmware acks the received a data frame, before signaling the driver to free it again.
+However Artur Skawina has shown that it can happen in reverse order as well.
+This is very bad and could lead to memory corruptions, oopses and panics.
+ 
+Thanks to Artur Skawina <art.08.09@gmail.com> for reporting and debugging this issue.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Tested-by: Artur Skawina <art.08.09@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- include/net/wireless.h |    4 ++++
- net/wireless/reg.c     |   19 +++++++++++++++++--
- 2 files changed, 21 insertions(+), 2 deletions(-)
-
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 9e73aae..ea89958 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -181,6 +181,9 @@ struct ieee80211_supported_band {
-  * struct wiphy - wireless hardware description
-  * @idx: the wiphy index assigned to this item
-  * @class_dev: the class device representing /sys/class/ieee80211/<wiphy-name>
-+ * @ignore_country_ies: tells us the wireless core should ignore country IEs
-+ *	received by itself or by other wireless drivers. This will only
-+ *	apply if the driver has provided a regulatory_hint()
-  * @fw_handles_regulatory: tells us the firmware for this device
-  * 	has its own regulatory solution and cannot identify the
-  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
-@@ -202,6 +205,7 @@ struct wiphy {
- 	u16 interface_modes;
+Changes:
+	- removed a forgotten skb_pull from p54u_tx_net2280 error - path.
+---
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 3bfee58..da3e918 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -144,11 +144,8 @@ static void p54u_tx_cb(struct urb *urb)
+ 	struct sk_buff *skb = urb->context;
+ 	struct ieee80211_hw *dev = (struct ieee80211_hw *)
+ 		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
+-	struct p54u_priv *priv = dev->priv;
  
- 	bool fw_handles_regulatory;
-+	bool ignore_country_ies;
- 
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ec8b3d9..01da946 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -782,6 +782,20 @@ static u32 map_regdom_flags(u32 rd_flags)
- 	return channel_flags;
+-	skb_pull(skb, priv->common.tx_hdr_len);
+-	if (FREE_AFTER_TX(skb))
+-		p54_free_skb(dev, skb);
++	p54_free_skb(dev, skb);
  }
  
-+/* Follow the driver's regulatory domain if a driver always prefers
-+ * that. If no preference is specified we follow the driver's regulatory
-+ * domain unless a country IE has been processed */
-+static int reg_follow_driver_regd(struct wiphy *wiphy)
-+{
-+	if (!wiphy->regd)
-+		return false;
-+	if (wiphy->ignore_country_ies)
-+		return true;
-+	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE)
-+		return true;
-+	return false;
-+}
-+
- /**
-  * freq_reg_info - get regulatory information for the given frequency
-  * @wiphy: the wiphy for which we want to process this rule for
-@@ -883,7 +897,7 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 		 *
- 		 * http://tinyurl.com/11d-clarification
- 		 */
--		if (r == -ERANGE &&
-+		if (!reg_follow_driver_regd(wiphy) && r == -ERANGE &&
- 		    last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
- #ifdef CONFIG_CFG80211_REG_DEBUG
- 			printk(KERN_DEBUG "cfg80211: Leaving channel %d MHz "
-@@ -895,7 +909,8 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 		/* In this case we know the country IE has at least one reg rule
- 		 * for the band so we respect its band definitions */
- #ifdef CONFIG_CFG80211_REG_DEBUG
--			if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
-+			if (!reg_follow_driver_regd(wiphy) &&
-+			    last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
- 				printk(KERN_DEBUG "cfg80211: Disabling "
- 					"channel %d MHz on %s due to "
- 					"Country IE\n",
--- 
-1.6.1.rc3.51.g5832d
-
+ static void p54u_tx_dummy_cb(struct urb *urb) { }
+@@ -230,7 +227,8 @@ static void p54u_tx_3887(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 			  p54u_tx_dummy_cb, dev);
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
+-			  skb->data, skb->len, p54u_tx_cb, skb);
++			  skb->data, skb->len, FREE_AFTER_TX(skb) ?
++			  p54u_tx_cb : p54u_tx_dummy_cb, skb);
+ 
+ 	usb_anchor_urb(addr_urb, &priv->submitted);
+ 	err = usb_submit_urb(addr_urb, GFP_ATOMIC);
+@@ -269,28 +267,24 @@ static void p54u_tx_lm87(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct p54u_priv *priv = dev->priv;
+ 	struct urb *data_urb;
+-	struct lm87_tx_hdr *hdr;
+-	__le32 checksum;
+-	__le32 addr = ((struct p54_hdr *)skb->data)->req_id;
++	struct lm87_tx_hdr *hdr = (void *)skb->data - sizeof(*hdr);
+ 
+ 	data_urb = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (!data_urb)
+ 		return;
+ 
+-	checksum = p54u_lm87_chksum((__le32 *)skb->data, skb->len);
+-	hdr = (struct lm87_tx_hdr *)skb_push(skb, sizeof(*hdr));
+-	hdr->chksum = checksum;
+-	hdr->device_addr = addr;
++	hdr->chksum = p54u_lm87_chksum((__le32 *)skb->data, skb->len);
++	hdr->device_addr = ((struct p54_hdr *)skb->data)->req_id;
+ 
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
+-			  skb->data, skb->len, p54u_tx_cb, skb);
++			  hdr, skb->len + sizeof(*hdr),  FREE_AFTER_TX(skb) ?
++			  p54u_tx_cb : p54u_tx_dummy_cb, skb);
+ 	data_urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+ 	usb_anchor_urb(data_urb, &priv->submitted);
+ 	if (usb_submit_urb(data_urb, GFP_ATOMIC)) {
+ 		usb_unanchor_urb(data_urb);
+-		skb_pull(skb, sizeof(*hdr));
+ 		p54_free_skb(dev, skb);
+ 	}
+ 	usb_free_urb(data_urb);
+@@ -300,11 +294,9 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct p54u_priv *priv = dev->priv;
+ 	struct urb *int_urb, *data_urb;
+-	struct net2280_tx_hdr *hdr;
++	struct net2280_tx_hdr *hdr = (void *)skb->data - sizeof(*hdr);
+ 	struct net2280_reg_write *reg;
+ 	int err = 0;
+-	__le32 addr = ((struct p54_hdr *) skb->data)->req_id;
+-	__le16 len = cpu_to_le16(skb->len);
+ 
+ 	reg = kmalloc(sizeof(*reg), GFP_ATOMIC);
+ 	if (!reg)
+@@ -327,10 +319,9 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	reg->addr = cpu_to_le32(P54U_DEV_BASE);
+ 	reg->val = cpu_to_le32(ISL38XX_DEV_INT_DATA);
+ 
+-	hdr = (void *)skb_push(skb, sizeof(*hdr));
+ 	memset(hdr, 0, sizeof(*hdr));
+-	hdr->len = len;
+-	hdr->device_addr = addr;
++	hdr->len = cpu_to_le16(skb->len);
++	hdr->device_addr = ((struct p54_hdr *) skb->data)->req_id;
+ 
+ 	usb_fill_bulk_urb(int_urb, priv->udev,
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DEV), reg, sizeof(*reg),
+@@ -345,7 +336,8 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 			  usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA),
+-			  skb->data, skb->len, p54u_tx_cb, skb);
++			  hdr, skb->len + sizeof(*hdr), FREE_AFTER_TX(skb) ?
++			  p54u_tx_cb : p54u_tx_dummy_cb, skb);
+ 
+ 	usb_anchor_urb(int_urb, &priv->submitted);
+ 	err = usb_submit_urb(int_urb, GFP_ATOMIC);
+@@ -360,14 +352,12 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 		usb_unanchor_urb(data_urb);
+ 		goto out;
+ 	}
+- out:
++out:
+ 	usb_free_urb(int_urb);
+ 	usb_free_urb(data_urb);
+ 
+-	if (err) {
+-		skb_pull(skb, sizeof(*hdr));
++	if (err)
+ 		p54_free_skb(dev, skb);
+-	}
+ }
+ 
+ static int p54u_write(struct p54u_priv *priv,
