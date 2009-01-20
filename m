@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11008 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756200AbZAPANL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 19:13:11 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:13:11 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/13] cfg80211: process user requests only after previous user/driver/core requests
-Date: Thu, 15 Jan 2009 16:12:19 -0800
-Message-ID: <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> (sfid-20090116_011326_962631_408F890B)
-In-Reply-To: <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44727 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756577AbZATXyU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 18:54:20 -0500
+Date: Tue, 20 Jan 2009 18:56:26 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Greg KH <gregkh@suse.de>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Artur Skawina <art.08.09@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Linux wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH -stable] p54usb: fix traffic stalls / packet drop
+Message-ID: <20090120235626.GA3094@tuxdriver.com> (sfid-20090121_005425_606285_F64DB95D)
+References: <KTnguC9mFUC.A.VNB.TJRdJB@chimera> <cX2gZ6Cy9nC.A.vUD.KKRdJB@chimera> <200901202311.11854.chunkeey@web.de> <20090120223957.GA6088@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090120223957.GA6088@suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This prevents user regulatory changes to be considered prior to previous
-pending user, core or driver requests which have not be applied.
+On Tue, Jan 20, 2009 at 02:39:57PM -0800, Greg KH wrote:
+> On Tue, Jan 20, 2009 at 11:11:11PM +0100, Christian Lamparter wrote:
+> > All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
+> > Else, the firmware could freeze, or simply drop the frame.
+> > 
+> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> > Cc: stable <stable@kernel.org>
+> > ---
+> > Attached is the patch is for the stable series only.
+> > Bugzilla reference: http://bugzilla.kernel.org/show_bug.cgi?id=12260
+> > (wireless-testing needs a different one)
+> 
+> What do you mean, this is for 2.6.28-stable or 2.6.27-stable only, and
+> not 2.6.29?  Why?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+At least part of that patch is already in 2.6.29.  I think Christian
+may have combined another patch into the -stable version, one that
+he posted today for -rc inclusion.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 0cc19e7..b7c6de1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1119,6 +1119,16 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 		if (last_request->initiator == REGDOM_SET_BY_USER &&
- 			  last_request->intersect)
- 			return -EOPNOTSUPP;
-+		if (last_request->initiator == REGDOM_SET_BY_CORE ||
-+		    last_request->initiator == REGDOM_SET_BY_DRIVER ||
-+		    last_request->initiator == REGDOM_SET_BY_USER) {
-+			if (alpha2_equal(last_request->alpha2,
-+			    cfg80211_regdomain->alpha2))
-+				return 0;
-+			else
-+				return -EAGAIN;
-+		}
-+
- 		return 0;
- 	}
- 
+John
 -- 
-1.6.1.rc3.51.g5832d
-
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
