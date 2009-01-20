@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:38668 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926AbZAEWYj (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:52096 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757712AbZATPKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 17:24:39 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so7812282wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 14:24:38 -0800 (PST)
-Message-ID: <b6c5339f0901051424q12d8fc14o8f20b62cfacc4e6e@mail.gmail.com> (sfid-20090105_232443_188965_90B0DB26)
-Date: Mon, 5 Jan 2009 17:24:38 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: drivers returning wrong results from their _tx op
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Daniel Drake" <dsd@gentoo.org>,
-	"Tomas Winkler" <tomasw@gmail.com>,
-	"Javier Cardona" <javier@cozybit.com>, Chr <chunkeey@web.de>
-In-Reply-To: <1231193264.3697.41.camel@johannes>
+	Tue, 20 Jan 2009 10:10:17 -0500
+Date: Tue, 20 Jan 2009 17:10:03 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Fixed BSSID step 3: Don't merge with the same BSSID
+Message-ID: <20090120151003.GA8710@jm.kir.nu> (sfid-20090120_161023_264608_9862F976)
+References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu> <20090117221225.301920@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1231193264.3697.41.camel@johannes>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090117221225.301920@gmx.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 5, 2009 at 5:07 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> spatch:
->
-> @ r1 @
-> identifier _tx, _ops;
+On Sat, Jan 17, 2009 at 11:12:25PM +0100, Alina Friedrichsen wrote:
+> > I agree that merge part (updating Beacon/ProbeRsp data) can be skipped
+> > for same BSSID, but this change seems to break timesync by removing call
+> > to local->ops->reset_tsf(). I don't think that that should be removed
+> > unconditionally.
 
-spatch is very neat...
+> I have looked in the Source of ath5k and ath9k. It seens to me that the TSF sync is done in the low-level driver and/or the hardware directly. So I see no reason to set it back to zero, if you have a dummy merge to the same BSSID and channel. (E.g. caused by TSF overflows.) I think it should only done if you change the network, so BSSID and/or channel is deferent.
 
-> First off: all those should return NETDEV_TX_OK/BUSY.
-> ath5k: returns 0/-1
-
-Can the kerneldoc for mac80211 ops structure document it?
-
-I'll send a patch for ath5k unless someone beats me to it.
+Some hardware designs require the reset_tsf call to allow the hardware
+to get back in sync with the TSF based on received timestamp values in
+some cases. I would expect this to be used in ath9k and ath5k. This does
+not mean that the timestamp would be reset to zero in actual Beacon
+frames, i.e., this is just something done internally in the
+driver/firmware/hardware and the need for reset_tsf() is to just provide
+the notification to the driver when this special case is needed.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Jouni Malinen                                            PGP id EFC895FA
