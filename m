@@ -1,59 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42660 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750921AbZAUQas (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 11:30:48 -0500
-Date: Wed, 21 Jan 2009 11:24:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: Pavel Roskin <proski@gnu.org>, orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [Orinoco-devel] [PATCH] [2.6.29-rc2] orinoco: use GFP_ATOMIC
-	in kmalloc in orinoco_ioctl_set_genie
-Message-ID: <20090121162456.GA9043@tuxdriver.com> (sfid-20090121_173053_274826_F20F9796)
-References: <200901171822.45476.arvidjaar@mail.ru> <1232334964.5609.37.camel@dv> <200901202026.49518.arvidjaar@mail.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <200901202026.49518.arvidjaar@mail.ru>
+Received: from mx2.redhat.com ([66.187.237.31]:50463 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755989AbZATPFp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 10:05:45 -0500
+Subject: [PATCH 2/7] airo: re-arrange WPA capability checks
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1232462691.22158.6.camel@localhost.localdomain>
+References: <1232462691.22158.6.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 20 Jan 2009 10:04:30 -0500
+Message-Id: <1232463870.22158.9.camel@localhost.localdomain> (sfid-20090120_160550_630787_018C74A9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 08:26:46PM +0300, Andrey Borzenkov wrote:
-> On 19 =D1=8F=D0=BD=D0=B2=D0=B0=D1=80=D1=8F 2009 06:16:04 Pavel Roskin=
- wrote:
-> > On Sat, 2009-01-17 at 18:22 +0300, Andrey Borzenkov wrote:
-> > > Subject: [PATCH] [2.6.29-rc2] orinoco: use GFP_ATOMIC in kmalloc =
-in
-> > > orinoco_ioctl_set_genie
-> > > From: Andrey Borzenkov <arvidjaar@mail.ru>
-> > >
-> > > kmalloc is called with interrupt disabled and may not sleep. This
-> > > fixes this BUG:
-> >
-> > Please move kmalloc before the lock.  I don't see any reason to
-> > allocate memory with irqs disabled.  The contention happens later,
-> > when priv->wpa_ie is freed and assigned a new value.
->=20
-> OK.
->=20
-> This looks like -stable candidate.
+The capability register has to be read for other (upcoming) stuff, so fold
+the WPA test function back into _init_airo_card() and move the netdevice
+registration stuff above it so that the netdevice has a name by the time
+the card's capabilities are printed out.
 
-Just FYI, the best way to indicate is to add a line like this after
-your Signed-off-by:
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-Cc: stable@kernel.org
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index aa81f2e..76f1364 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -2734,28 +2734,6 @@ static void airo_networks_initialize(struct airo_info *ai)
+ 			      &ai->network_free_list);
+ }
+ 
+-static int airo_test_wpa_capable(struct airo_info *ai)
+-{
+-	int status;
+-	CapabilityRid cap_rid;
+-
+-	status = readCapabilityRid(ai, &cap_rid, 1);
+-	if (status != SUCCESS) return 0;
+-
+-	/* Only firmware versions 5.30.17 or better can do WPA */
+-	if (le16_to_cpu(cap_rid.softVer) > 0x530
+-	  || (le16_to_cpu(cap_rid.softVer) == 0x530
+-	      && le16_to_cpu(cap_rid.softSubVer) >= 17)) {
+-		airo_print_info("", "WPA is supported.");
+-		return 1;
+-	}
+-
+-	/* No WPA support */
+-	airo_print_info("", "WPA unsupported (only firmware versions 5.30.17"
+-		" and greater support WPA.  Detected %s)", cap_rid.prodVer);
+-	return 0;
+-}
+-
+ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 					   int is_pcmcia, struct pci_dev *pci,
+ 					   struct device *dmdev )
+@@ -2763,6 +2741,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	struct net_device *dev;
+ 	struct airo_info *ai;
+ 	int i, rc;
++	CapabilityRid cap_rid;
+ 	DECLARE_MAC_BUF(mac);
+ 
+ 	/* Create the network device object. */
+@@ -2833,7 +2812,7 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 	}
+ 
+ 	if (probe) {
+-		if ( setup_card( ai, dev->dev_addr, 1 ) != SUCCESS ) {
++		if (setup_card(ai, dev->dev_addr, 1) != SUCCESS) {
+ 			airo_print_err(dev->name, "MAC could not be enabled" );
+ 			rc = -EIO;
+ 			goto err_out_map;
+@@ -2843,28 +2822,47 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 		set_bit(FLAG_FLASHING, &ai->flags);
+ 	}
+ 
++	strcpy(dev->name, "eth%d");
++	rc = register_netdev(dev);
++	if (rc) {
++		airo_print_err(dev->name, "Couldn't register_netdev");
++		goto err_out_map;
++	}
++	ai->wifidev = init_wifidev(ai, dev);
++	if (!ai->wifidev)
++		goto err_out_reg;
++
++	rc = readCapabilityRid(ai, &cap_rid, 1);
++	if (rc != SUCCESS) {
++		rc = -EIO;
++		goto err_out_wifi;
++	}
++
++	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
++	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
++	                (le16_to_cpu(cap_rid.softVer) & 0xFF),
++	                le16_to_cpu(cap_rid.softSubVer));
++
+ 	/* Test for WPA support */
+-	if (airo_test_wpa_capable(ai)) {
++	/* Only firmware versions 5.30.17 or better can do WPA */
++	if (le16_to_cpu(cap_rid.softVer) > 0x530
++	 || (le16_to_cpu(cap_rid.softVer) == 0x530
++	      && le16_to_cpu(cap_rid.softSubVer) >= 17)) {
++		airo_print_info(ai->dev->name, "WPA supported.");
++
+ 		set_bit(FLAG_WPA_CAPABLE, &ai->flags);
+ 		ai->bssListFirst = RID_WPA_BSSLISTFIRST;
+ 		ai->bssListNext = RID_WPA_BSSLISTNEXT;
+ 		ai->bssListRidLen = sizeof(BSSListRid);
+ 	} else {
++		airo_print_info(ai->dev->name, "WPA unsupported with firmware "
++			"versions older than 5.30.17.");
++
+ 		ai->bssListFirst = RID_BSSLISTFIRST;
+ 		ai->bssListNext = RID_BSSLISTNEXT;
+ 		ai->bssListRidLen = sizeof(BSSListRid) - sizeof(BSSListRidExtra);
+ 	}
+ 
+-	strcpy(dev->name, "eth%d");
+-	rc = register_netdev(dev);
+-	if (rc) {
+-		airo_print_err(dev->name, "Couldn't register_netdev");
+-		goto err_out_map;
+-	}
+-	ai->wifidev = init_wifidev(ai, dev);
+-	if (!ai->wifidev)
+-		goto err_out_reg;
+-
+ 	set_bit(FLAG_REGISTERED,&ai->flags);
+ 	airo_print_info(dev->name, "MAC enabled %s",
+ 			print_mac(mac, dev->dev_addr));
 
-I'll take care of this one.
-
-Thanks,
-
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
