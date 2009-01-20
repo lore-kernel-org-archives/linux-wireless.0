@@ -1,59 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4035 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444AbZAXEMg (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:54622 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753704AbZATTnS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 23:12:36 -0500
-Date: Fri, 23 Jan 2009 23:12:29 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: change workqueue back to non-freezeable
-Message-ID: <20090124041229.GA13712@hash.localnet> (sfid-20090124_051242_523910_5511026E)
+	Tue, 20 Jan 2009 14:43:18 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 11:43:18 -0800
+Date: Tue, 20 Jan 2009 11:42:43 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Paul Hickey <paul@christianpatriot.us>, <stable@kernel.org>,
+	Kyle McMartin <kyle@mcmartin.ca>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: Failed Build of modules for 2.6.27.9-159
+Message-ID: <20090120194243.GC19581@tesla> (sfid-20090120_204322_930201_4326E11E)
+References: <1232319854.4596.1.camel@localhost.localdomain> <20090119191138.GA4018@tesla> <1232404986.3641.2.camel@localhost.localdomain> <20090120000336.GB4018@tesla> <1232433738.3696.3.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1232433738.3696.3.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[apologies for resend, forgot to cc wireless]
+On Mon, Jan 19, 2009 at 10:42:18PM -0800, Paul Hickey wrote:
+> Hi Luis,
+>=20
+> 2.6.27.9-159.fc10.x86_64 is the kernel. I burned the distro right fro=
+m
+> Fedora.
 
-Commit 59959a6150c8af737898e83f727e824dbed7b0fa made the mac80211
-workqueue freezeable to prevent us from doing any work after the 
-driver went away.  This was fine before mac80211 had any suspend 
-support.
+I am =FCber-surprised to hear that FC10 2.6.27 kernels have added
+pci_ioremap_bar() in their kernel header include/linux/pci.h. I
+have verified this by checking:
 
-However, now we want to flush this workqueue in suspend().  Because
-the thread for a freezeable workqueue is stopped before the device
-class suspend() is called, flush_workqueue() will hang in the
-suspend-to-disk case.
+http://download.fedora.redhat.com/pub/fedora/linux/updates/10/x86_64/ke=
+rnel-devel-2.6.27.9-159.fc10.x86_64.rpm
 
-Converting it back to a non-freezeable queue will keep suspend from
-hanging.  Moreover, since we flush the workqueue under RTNL and
-userspace is stopped, there won't be any new work in the workqueue
-until after resume.  Thus we still don't have to worry about pinging
-the AP without hardware.
+I have checked upstrea 2.6.27.9 and even 2.6.27.12 and they do not have=
+ this. This breaks
+compatibility projects like compat-wireless :(
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- net/mac80211/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Kyle?
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index a100793..a109c06 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -859,7 +859,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	mdev->set_multicast_list = ieee80211_master_set_multicast_list;
- 
- 	local->hw.workqueue =
--		create_freezeable_workqueue(wiphy_name(local->hw.wiphy));
-+		create_singlethread_workqueue(wiphy_name(local->hw.wiphy));
- 	if (!local->hw.workqueue) {
- 		result = -ENOMEM;
- 		goto fail_workqueue;
--- 
-1.6.0.6
+> Also, the ForceXPA might not be a problem, but it makes and logs its
+> attempts 4X per minute. It may not be much of an impact on the CPU, b=
+ut
+> is it necessary? Plus the message log gets really long really fast.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Good point, hopefully this is enough of an argument to make the patch
+go into 2.6.27. The patch is already in for >=3D 2.6.28.
 
+Greg -- there is an annoying message that gets printed very often
+when new Atheros 11n cards are used, this is printed upon hw reset
+which occurs on channel changes (scans) and as such happens quite
+often. The message was moved to print only when "EEPROM debugging"
+was enaabled through upstream commit f1dc56003b23d2d5bb5a756de6b1633a76=
+c9e697.
+Unfortunately this commit is pretty large as it refactored hw.c into
+separate files. Below is a small one line patch that changes this. Plea=
+se
+let me know if this is OK for 2.6.27.x
+
+  Luis
+
+=46rom: Luis R. Rodriguez <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: quiet harmless ForceXPAon messages
+
+This is a port of one line of upstream patch
+f1dc56003b23d2d5bb5a756de6b1633a76c9e697
+
+The "ForceXPAon" messages on ath9k were not meant to be printed
+regularly, lets quiet them as this can happen quite frequently
+(scans) and will fill the logs with tons of these messages.
+
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+--- drivers/net/wireless/ath9k/hw.c.orig	2009-01-20 11:33:44.000000000 =
+-0800
++++ drivers/net/wireless/ath9k/hw.c	2009-01-20 11:34:10.000000000 -0800
+@@ -729,7 +729,7 @@
+ 					  AR_AN_TOP2_LOCALBIAS,
+ 					  AR_AN_TOP2_LOCALBIAS_S,
+ 					  pModal->local_bias);
+-		DPRINTF(ah->ah_sc, ATH_DBG_ANY, "ForceXPAon: %d\n",
++		DPRINTF(ah->ah_sc, ATH_DBG_EEPROM, "ForceXPAon: %d\n",
+ 			pModal->force_xpaon);
+ 		REG_RMW_FIELD(ah, AR_PHY_XPA_CFG, AR_PHY_FORCE_XPA_CFG,
+ 			      pModal->force_xpaon);
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
