@@ -1,88 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32895 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:49456 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751492AbZA0IEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 03:04:11 -0500
-Received: from mail.atheros.com ([10.10.20.108])
+	id S1752589AbZATIBT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 03:01:19 -0500
+Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 00:04:11 -0800
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 00:01:19 -0800
 From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18814.48933.653710.927929@gargle.gargle.HOWL> (sfid-20090127_090419_362617_18CD4A8A)
-Date: Tue, 27 Jan 2009 13:30:37 +0530
+Message-ID: <18805.33791.193195.755178@gargle.gargle.HOWL> (sfid-20090120_090137_912566_0F86D8CC)
+Date: Tue, 20 Jan 2009 13:27:51 +0530
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] ath9k: Fix station access in aggregation completion
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<Jouni.Malinen@Atheros.com>
+Subject: [PATCH] mac80211: Add capability to enable/disable beaconing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ieee80211_sta pointer in the SKB's TX control info
-area is not guaranteed to be valid after returning from the tx() callback.
-Use ieee80211_find_sta() instead and return early if the station
-is no longer present.
+This patch adds a flag to notify drivers to start and
+stop beaconing when needed, for example, during a scan run.
 
 Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath9k/xmit.c |   20 +++++++++++++++-----
- 1 files changed, 15 insertions(+), 5 deletions(-)
+ include/net/mac80211.h |    3 +++
+ net/mac80211/main.c    |   10 ++++++++++
+ net/mac80211/scan.c    |    3 +++
+ 3 files changed, 16 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 1b83673..007ca91 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -268,7 +268,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- {
- 	struct ath_node *an = NULL;
- 	struct sk_buff *skb;
--	struct ieee80211_tx_info *tx_info;
-+	struct ieee80211_sta *sta;
-+	struct ieee80211_hdr *hdr;
- 	struct ath_atx_tid *tid = NULL;
- 	struct ath_buf *bf_next, *bf_last = bf->bf_lastbf;
- 	struct ath_desc *ds = bf_last->bf_desc;
-@@ -278,13 +279,19 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	int isaggr, txfail, txpending, sendbar = 0, needreset = 0;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9a5869e..a9f71b5 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -637,6 +637,8 @@ enum ieee80211_if_conf_change {
+  *
+  * @changed: parameters that have changed, see &enum ieee80211_if_conf_change.
+  * @bssid: BSSID of the network we are associated to/creating.
++ * @enable_beacon: Indicates whether beacons can be sent.
++ *	This is valid only for AP/IBSS/MESH modes.
+  *
+  * This structure is passed to the config_interface() callback of
+  * &struct ieee80211_hw.
+@@ -644,6 +646,7 @@ enum ieee80211_if_conf_change {
+ struct ieee80211_if_conf {
+ 	u32 changed;
+ 	u8 *bssid;
++	bool enable_beacon;
+ };
  
- 	skb = (struct sk_buff *)bf->bf_mpdu;
--	tx_info = IEEE80211_SKB_CB(skb);
-+	hdr = (struct ieee80211_hdr *)skb->data;
- 
--	if (tx_info->control.sta) {
--		an = (struct ath_node *)tx_info->control.sta->drv_priv;
--		tid = ATH_AN_2_TID(an, bf->bf_tidno);
-+	rcu_read_lock();
-+
-+	sta = ieee80211_find_sta(sc->hw, hdr->addr1);
-+	if (!sta) {
-+		rcu_read_unlock();
-+		return;
+ /**
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index c78304d..44585c7 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -183,6 +183,16 @@ int ieee80211_if_config(struct ieee80211_sub_if_data *sdata, u32 changed)
+ 		return -EINVAL;
  	}
  
-+	an = (struct ath_node *)sta->drv_priv;
-+	tid = ATH_AN_2_TID(an, bf->bf_tidno);
++	if ((changed & IEEE80211_IFCC_BEACON) &&
++	    (sdata->vif.type == NL80211_IFTYPE_AP ||
++	     sdata->vif.type == NL80211_IFTYPE_ADHOC ||
++	     sdata->vif.type == NL80211_IFTYPE_MESH_POINT)) {
++		if (local->sw_scanning || local->hw_scanning)
++			conf.enable_beacon = false;
++		else
++			conf.enable_beacon = true;
++	}
 +
- 	isaggr = bf_isaggr(bf);
- 	memset(ba, 0, WME_BA_BMP_SIZE >> 3);
+ 	if (WARN_ON(!conf.bssid && (changed & IEEE80211_IFCC_BSSID)))
+ 		return -EINVAL;
  
-@@ -391,6 +398,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			/* send buffered frames as singles */
- 			ath_tx_flush_tid(sc, tid);
- 		}
-+		rcu_read_unlock();
- 		return;
- 	}
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index a2caeed..c8be92d 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -459,6 +459,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
  
-@@ -402,6 +410,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		spin_unlock_bh(&txq->axq_lock);
- 	}
+ 	local->sw_scanning = false;
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
++	ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON);
  
-+	rcu_read_unlock();
+ 	netif_tx_lock_bh(local->mdev);
+ 	netif_addr_lock(local->mdev);
+@@ -655,6 +656,8 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
+ 	local->scan_band = IEEE80211_BAND_2GHZ;
+ 	local->scan_sdata = scan_sdata;
+ 
++	ieee80211_if_config(scan_sdata, IEEE80211_IFCC_BEACON);
 +
- 	if (needreset)
- 		ath_reset(sc, false);
- }
+ 	netif_addr_lock_bh(local->mdev);
+ 	local->filter_flags |= FIF_BCN_PRBRESP_PROMISC;
+ 	local->ops->configure_filter(local_to_hw(local),
 -- 
 1.6.1
 
