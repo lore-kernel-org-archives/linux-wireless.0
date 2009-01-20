@@ -1,381 +1,389 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:47848 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325AbZAKAKg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jan 2009 19:10:36 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/4] p54: prepare the eeprom parser routines for longbow
-Date: Sun, 11 Jan 2009 01:10:33 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901110110.33501.chunkeey@web.de> (sfid-20090111_011040_190291_BA895E17)
+Received: from mx2.redhat.com ([66.187.237.31]:54751 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755234AbZATPIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 10:08:14 -0500
+Subject: [PATCH 4/7] airo: split up WEP key operations
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1232462691.22158.6.camel@localhost.localdomain>
+References: <1232462691.22158.6.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Tue, 20 Jan 2009 10:06:58 -0500
+Message-Id: <1232464018.22158.14.camel@localhost.localdomain> (sfid-20090120_160818_184004_FC89E828)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support to upload pre-calculated calibration data to the firmware.
+get_wep_key() and set_wep_key() combined both get/set of the actual WEP
+key and get/set of the transmit index into the same functions.  Split those
+out so it's clearer what is going one where.  Add error checking to WEP
+key hardware operations too.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2009-01-10 22:58:55.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2009-01-11 00:09:38.000000000 +0100
-@@ -272,13 +272,19 @@ static int p54_convert_rev0(struct ieee8
- 	unsigned int i, j;
- 	void *source, *target;
- 
--	priv->curve_data = kmalloc(cd_len, GFP_KERNEL);
-+	priv->curve_data = kmalloc(sizeof(*priv->curve_data) + cd_len,
-+				   GFP_KERNEL);
- 	if (!priv->curve_data)
- 		return -ENOMEM;
- 
--	memcpy(priv->curve_data, curve_data, sizeof(*curve_data));
-+	priv->curve_data->entries = curve_data->channels;
-+	priv->curve_data->entry_size = sizeof(__le16) +
-+		sizeof(*dst) * curve_data->points_per_channel;
-+	priv->curve_data->offset = offsetof(struct pda_pa_curve_data, data);
-+	priv->curve_data->len = cd_len;
-+	memcpy(priv->curve_data->data, curve_data, sizeof(*curve_data));
- 	source = curve_data->data;
--	target = priv->curve_data->data;
-+	target = ((struct pda_pa_curve_data *) priv->curve_data->data)->data;
- 	for (i = 0; i < curve_data->channels; i++) {
- 		__le16 *freq = source;
- 		source += sizeof(__le16);
-@@ -318,13 +324,19 @@ static int p54_convert_rev1(struct ieee8
- 	unsigned int i, j;
- 	void *source, *target;
- 
--	priv->curve_data = kmalloc(cd_len, GFP_KERNEL);
-+	priv->curve_data = kzalloc(cd_len + sizeof(*priv->curve_data),
-+				   GFP_KERNEL);
- 	if (!priv->curve_data)
- 		return -ENOMEM;
- 
--	memcpy(priv->curve_data, curve_data, sizeof(*curve_data));
-+	priv->curve_data->entries = curve_data->channels;
-+	priv->curve_data->entry_size = sizeof(__le16) +
-+		sizeof(*dst) * curve_data->points_per_channel;
-+	priv->curve_data->offset = offsetof(struct pda_pa_curve_data, data);
-+	priv->curve_data->len = cd_len;
-+	memcpy(priv->curve_data->data, curve_data, sizeof(*curve_data));
- 	source = curve_data->data;
--	target = priv->curve_data->data;
-+	target = ((struct pda_pa_curve_data *) priv->curve_data->data)->data;
- 	for (i = 0; i < curve_data->channels; i++) {
- 		__le16 *freq = source;
- 		source += sizeof(__le16);
-@@ -406,6 +418,71 @@ static void p54_parse_default_country(st
- 	}
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 4230374..d483491 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -5177,55 +5177,98 @@ static int do_writerid( struct airo_info *ai, u16 rid, const void *rid_data,
+ 	return rc;
  }
  
-+static int p54_convert_output_limits(struct ieee80211_hw *dev,
-+				     u8 *data, size_t len)
+-/* Returns the length of the key at the index.  If index == 0xffff
+- * the index of the transmit key is returned.  If the key doesn't exist,
+- * -1 will be returned.
++/* Returns the WEP key at the specified index, or -1 if that key does
++ * not exist.  The buffer is assumed to be at least 16 bytes in length.
+  */
+-static int get_wep_key(struct airo_info *ai, u16 index) {
++static int get_wep_key(struct airo_info *ai, u16 index, char *buf, u16 buflen)
 +{
-+	struct p54_common *priv = dev->priv;
+ 	WepKeyRid wkr;
+ 	int rc;
+ 	__le16 lastindex;
+ 
+ 	rc = readWepKeyRid(ai, &wkr, 1, 1);
+-	if (rc == SUCCESS) do {
++	if (rc != SUCCESS)
++		return -1;
++	do {
+ 		lastindex = wkr.kindex;
+-		if (wkr.kindex == cpu_to_le16(index)) {
+-			if (index == 0xffff) {
+-				return wkr.mac[0];
+-			}
+-			return le16_to_cpu(wkr.klen);
++		if (le16_to_cpu(wkr.kindex) == index) {
++			int klen = min_t(int, buflen, le16_to_cpu(wkr.klen));
++			memcpy(buf, wkr.key, klen);
++			return klen;
+ 		}
+-		readWepKeyRid(ai, &wkr, 0, 1);
++		rc = readWepKeyRid(ai, &wkr, 0, 1);
++		if (rc != SUCCESS)
++			return -1;
+ 	} while (lastindex != wkr.kindex);
+ 	return -1;
+ }
+ 
+-static int set_wep_key(struct airo_info *ai, u16 index,
+-		       const char *key, u16 keylen, int perm, int lock )
++static int get_wep_tx_idx(struct airo_info *ai)
++{
++	WepKeyRid wkr;
++	int rc;
++	__le16 lastindex;
 +
-+	if (len < 2)
-+		return -EINVAL;
++	rc = readWepKeyRid(ai, &wkr, 1, 1);
++	if (rc != SUCCESS)
++		return -1;
++	do {
++		lastindex = wkr.kindex;
++		if (wkr.kindex == cpu_to_le16(0xffff))
++			return wkr.mac[0];
++		rc = readWepKeyRid(ai, &wkr, 0, 1);
++		if (rc != SUCCESS)
++			return -1;
++	} while (lastindex != wkr.kindex);
++	return -1;
++}
 +
-+	if (data[0] != 0) {
-+		printk(KERN_ERR "%s: unknown output power db revision:%x\n",
-+		       wiphy_name(dev->wiphy), data[0]);
-+		return -EINVAL;
++static int set_wep_key(struct airo_info *ai, u16 index, const char *key,
++		       u16 keylen, int perm, int lock)
+ {
+ 	static const unsigned char macaddr[ETH_ALEN] = { 0x01, 0, 0, 0, 0, 0 };
+ 	WepKeyRid wkr;
++	int rc;
+ 
+-	memset(&wkr, 0, sizeof(wkr));
+ 	if (keylen == 0) {
+-// We are selecting which key to use
+-		wkr.len = cpu_to_le16(sizeof(wkr));
+-		wkr.kindex = cpu_to_le16(0xffff);
+-		wkr.mac[0] = (char)index;
+-		if (perm) ai->defindex = (char)index;
+-	} else {
+-// We are actually setting the key
+-		wkr.len = cpu_to_le16(sizeof(wkr));
+-		wkr.kindex = cpu_to_le16(index);
+-		wkr.klen = cpu_to_le16(keylen);
+-		memcpy( wkr.key, key, keylen );
+-		memcpy( wkr.mac, macaddr, ETH_ALEN );
++		airo_print_err(ai->dev->name, "%s: key length to set was zero",
++			       __func__);
++		return -1;
+ 	}
+ 
++	memset(&wkr, 0, sizeof(wkr));
++	wkr.len = cpu_to_le16(sizeof(wkr));
++	wkr.kindex = cpu_to_le16(index);
++	wkr.klen = cpu_to_le16(keylen);
++	memcpy(wkr.key, key, keylen);
++	memcpy(wkr.mac, macaddr, ETH_ALEN);
++
+ 	if (perm) disable_MAC(ai, lock);
+-	writeWepKeyRid(ai, &wkr, perm, lock);
++	rc = writeWepKeyRid(ai, &wkr, perm, lock);
+ 	if (perm) enable_MAC(ai, lock);
+-	return 0;
++	return rc;
++}
++
++static int set_wep_tx_idx(struct airo_info *ai, u16 index, int perm, int lock)
++{
++	WepKeyRid wkr;
++	int rc;
++
++	memset(&wkr, 0, sizeof(wkr));
++	wkr.len = cpu_to_le16(sizeof(wkr));
++	wkr.kindex = cpu_to_le16(0xffff);
++	wkr.mac[0] = (char)index;
++
++	if (perm) {
++		ai->defindex = (char)index;
++		disable_MAC(ai, lock);
 +	}
 +
-+	if (2 + data[1] * sizeof(struct pda_channel_output_limit) > len)
-+		return -EINVAL;
++	rc = writeWepKeyRid(ai, &wkr, perm, lock);
 +
-+	priv->output_limit = kmalloc(data[1] *
-+		sizeof(struct pda_channel_output_limit) +
-+		sizeof(*priv->output_limit), GFP_KERNEL);
-+
-+	if (!priv->output_limit)
-+		return -ENOMEM;
-+
-+	priv->output_limit->offset = 0;
-+	priv->output_limit->entries = data[1];
-+	priv->output_limit->entry_size =
-+		sizeof(struct pda_channel_output_limit);
-+	priv->output_limit->len = priv->output_limit->entry_size *
-+				  priv->output_limit->entries +
-+				  priv->output_limit->offset;
-+
-+	memcpy(priv->output_limit->data, &data[2],
-+	       data[1] * sizeof(struct pda_channel_output_limit));
-+
-+	return 0;
-+}
-+
-+static struct p54_cal_database *p54_convert_db(struct pda_custom_wrapper *src,
-+					       size_t total_len)
-+{
-+	struct p54_cal_database *dst;
-+	size_t payload_len, entries, entry_size, offset;
-+
-+	payload_len = le16_to_cpu(src->len);
-+	entries = le16_to_cpu(src->entries);
-+	entry_size = le16_to_cpu(src->entry_size);
-+	offset = le16_to_cpu(src->offset);
-+	if (((entries * entry_size + offset) != payload_len) ||
-+	     (payload_len + sizeof(*src) != total_len))
-+		return NULL;
-+
-+	dst = kmalloc(sizeof(*dst) + payload_len, GFP_KERNEL);
-+	if (!dst)
-+		return NULL;
-+
-+	dst->entries = entries;
-+	dst->entry_size = entry_size;
-+	dst->offset = offset;
-+	dst->len = payload_len;
-+
-+	memcpy(dst->data, src->data, payload_len);
-+	return dst;
-+}
-+
- static int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- {
- 	struct p54_common *priv = dev->priv;
-@@ -432,30 +509,17 @@ static int p54_parse_eeprom(struct ieee8
++	if (perm)
++		enable_MAC(ai, lock);
++	return rc;
+ }
  
- 		switch (le16_to_cpu(entry->code)) {
- 		case PDR_MAC_ADDRESS:
-+			if (data_len != ETH_ALEN)
-+				break;
- 			SET_IEEE80211_PERM_ADDR(dev, entry->data);
+ static void proc_wepkey_on_close( struct inode *inode, struct file *file ) {
+@@ -5233,7 +5276,7 @@ static void proc_wepkey_on_close( struct inode *inode, struct file *file ) {
+ 	struct proc_dir_entry *dp = PDE(inode);
+ 	struct net_device *dev = dp->data;
+ 	struct airo_info *ai = dev->ml_priv;
+-	int i;
++	int i, rc;
+ 	char key[16];
+ 	u16 index = 0;
+ 	int j = 0;
+@@ -5247,7 +5290,12 @@ static void proc_wepkey_on_close( struct inode *inode, struct file *file ) {
+ 	    (data->wbuffer[1] == ' ' || data->wbuffer[1] == '\n')) {
+ 		index = data->wbuffer[0] - '0';
+ 		if (data->wbuffer[1] == '\n') {
+-			set_wep_key(ai, index, NULL, 0, 1, 1);
++			rc = set_wep_tx_idx(ai, index, 1, 1);
++			if (rc < 0) {
++				airo_print_err(ai->dev->name, "failed to set "
++				               "WEP transmit index to %d: %d.",
++				               index, rc);
++			}
+ 			return;
+ 		}
+ 		j = 2;
+@@ -5266,7 +5314,12 @@ static void proc_wepkey_on_close( struct inode *inode, struct file *file ) {
  			break;
- 		case PDR_PRISM_PA_CAL_OUTPUT_POWER_LIMITS:
--			if (data_len < 2) {
--				err = -EINVAL;
--				goto err;
--			}
--
--			if (2 + entry->data[1]*sizeof(*priv->output_limit) > data_len) {
--				err = -EINVAL;
--				goto err;
--			}
--
--			priv->output_limit = kmalloc(entry->data[1] *
--				sizeof(*priv->output_limit), GFP_KERNEL);
--
--			if (!priv->output_limit) {
--				err = -ENOMEM;
-+			if (priv->output_limit)
-+				break;
-+			err = p54_convert_output_limits(dev, entry->data,
-+							data_len);
-+			if (err)
- 				goto err;
--			}
--
--			memcpy(priv->output_limit, &entry->data[2],
--			       entry->data[1]*sizeof(*priv->output_limit));
--			priv->output_limit_len = entry->data[1];
+ 		}
+ 	}
+-	set_wep_key(ai, index, key, i/3, 1, 1);
++
++	rc = set_wep_key(ai, index, key, i/3, 1, 1);
++	if (rc < 0) {
++		airo_print_err(ai->dev->name, "failed to set WEP key at index "
++		               "%d: %d.", index, rc);
++	}
+ }
+ 
+ static int proc_wepkey_open( struct inode *inode, struct file *file )
+@@ -5500,13 +5553,13 @@ static void timer_func( struct net_device *dev ) {
  			break;
- 		case PDR_PRISM_PA_CAL_CURVE_DATA: {
- 			struct pda_pa_curve_data *curve_data =
-@@ -507,6 +571,8 @@ static int p54_parse_eeprom(struct ieee8
+ 		case AUTH_SHAREDKEY:
+ 			if (apriv->keyindex < auto_wep) {
+-				set_wep_key(apriv, apriv->keyindex, NULL, 0, 0, 0);
++				set_wep_tx_idx(apriv, apriv->keyindex, 0, 0);
+ 				apriv->config.authType = AUTH_SHAREDKEY;
+ 				apriv->keyindex++;
+ 			} else {
+ 			        /* Drop to ENCRYPT */
+ 				apriv->keyindex = 0;
+-				set_wep_key(apriv, apriv->defindex, NULL, 0, 0, 0);
++				set_wep_tx_idx(apriv, apriv->defindex, 0, 0);
+ 				apriv->config.authType = AUTH_ENCRYPT;
  			}
  			break;
- 		case PDR_HARDWARE_PLATFORM_COMPONENT_ID:
-+			if (data_len < 2)
-+				break;
- 			priv->version = *(u8 *)(entry->data + 1);
- 			break;
- 		case PDR_RSSI_LINEAR_APPROXIMATION:
-@@ -515,6 +581,34 @@ static int p54_parse_eeprom(struct ieee8
- 			p54_parse_rssical(dev, entry->data, data_len,
- 					  le16_to_cpu(entry->code));
- 			break;
-+		case PDR_RSSI_LINEAR_APPROXIMATION_CUSTOM: {
-+			__le16 *src = (void *) entry->data;
-+			s16 *dst = (void *) &priv->rssical_db;
-+			int i;
-+
-+			if (data_len != sizeof(priv->rssical_db)) {
-+				err = -EINVAL;
-+				goto err;
-+			}
-+			for (i = 0; i < sizeof(priv->rssical_db) /
-+					sizeof(*src); i++)
-+				*(dst++) = (s16) le16_to_cpu(*(src++));
-+			}
-+			break;
-+		case PDR_PRISM_PA_CAL_OUTPUT_POWER_LIMITS_CUSTOM: {
-+			struct pda_custom_wrapper *pda = (void *) entry->data;
-+			if (priv->output_limit || data_len < sizeof(*pda))
-+				break;
-+			priv->output_limit = p54_convert_db(pda, data_len);
-+			}
-+			break;
-+		case PDR_PRISM_PA_CAL_CURVE_DATA_CUSTOM: {
-+			struct pda_custom_wrapper *pda = (void *) entry->data;
-+			if (priv->curve_data || data_len < sizeof(*pda))
-+				break;
-+			priv->curve_data = p54_convert_db(pda, data_len);
-+			}
-+			break;
- 		case PDR_END:
- 			/* make it overrun */
- 			entry_len = len;
-@@ -1611,8 +1705,8 @@ static int p54_scan(struct ieee80211_hw 
- 	struct p54_scan *chan;
- 	unsigned int i;
- 	void *entry;
--	__le16 freq = cpu_to_le16(dev->conf.channel->center_freq);
- 	int band = dev->conf.channel->band;
-+	__le16 freq = cpu_to_le16(dev->conf.channel->center_freq);
+@@ -6294,8 +6347,9 @@ static int airo_set_encode(struct net_device *dev,
+ 			   char *extra)
+ {
+ 	struct airo_info *local = dev->ml_priv;
+-	int perm = ( dwrq->flags & IW_ENCODE_TEMP ? 0 : 1 );
++	int perm = (dwrq->flags & IW_ENCODE_TEMP ? 0 : 1);
+ 	__le16 currentAuthType = local->config.authType;
++	int rc = 0;
  
- 	skb = p54_alloc_skb(dev, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*chan),
- 			    P54_CONTROL_TYPE_SCAN, GFP_ATOMIC);
-@@ -1620,7 +1714,7 @@ static int p54_scan(struct ieee80211_hw 
- 		return -ENOMEM;
+ 	if (!local->wep_capable)
+ 		return -EOPNOTSUPP;
+@@ -6311,13 +6365,17 @@ static int airo_set_encode(struct net_device *dev,
+ 	if (dwrq->length > 0) {
+ 		wep_key_t key;
+ 		int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+-		int current_index = get_wep_key(local, 0xffff);
++		int current_index;
  
- 	chan = (struct p54_scan *) skb_put(skb, sizeof(*chan));
--	memset(chan->padding1, 0, sizeof(chan->padding1));
-+	memset(chan->scan_params, 0, sizeof(chan->scan_params));
- 	chan->mode = cpu_to_le16(mode);
- 	chan->dwell = cpu_to_le16(dwell);
- 
-@@ -1635,41 +1729,45 @@ static int p54_scan(struct ieee80211_hw 
- 	if (i == priv->iq_autocal_len)
- 		goto err;
- 
--	for (i = 0; i < priv->output_limit_len; i++) {
--		if (priv->output_limit[i].freq != freq)
-+	for (i = 0; i < priv->output_limit->entries; i++) {
-+		struct pda_channel_output_limit *limits;
-+		__le16 *entry_freq = (void *) (priv->output_limit->data +
-+			priv->output_limit->entry_size * i);
-+
-+		if (*entry_freq != freq)
- 			continue;
- 
-+		limits = (void *) entry_freq;
- 		chan->val_barker = 0x38;
--		chan->val_bpsk = chan->dup_bpsk =
--			priv->output_limit[i].val_bpsk;
--		chan->val_qpsk = chan->dup_qpsk =
--			priv->output_limit[i].val_qpsk;
--		chan->val_16qam = chan->dup_16qam =
--			priv->output_limit[i].val_16qam;
--		chan->val_64qam = chan->dup_64qam =
--			priv->output_limit[i].val_64qam;
-+		chan->val_bpsk = chan->dup_bpsk = limits->val_bpsk;
-+		chan->val_qpsk = chan->dup_qpsk = limits->val_qpsk;
-+		chan->val_16qam = chan->dup_16qam = limits->val_16qam;
-+		chan->val_64qam = chan->dup_64qam = limits->val_64qam;
- 		break;
- 	}
--	if (i == priv->output_limit_len)
-+	if (i == priv->output_limit->entries)
- 		goto err;
- 
--	entry = priv->curve_data->data;
--	for (i = 0; i < priv->curve_data->channels; i++) {
-+	entry = (void *)(priv->curve_data->data + priv->curve_data->offset);
-+	for (i = 0; i < priv->curve_data->entries; i++) {
-+		struct pda_pa_curve_data *curve_data;
- 		if (*((__le16 *)entry) != freq) {
--			entry += sizeof(__le16);
--			entry += sizeof(struct p54_pa_curve_data_sample) *
--				 priv->curve_data->points_per_channel;
-+			entry += priv->curve_data->entry_size;
- 			continue;
+ 		/* Check the size of the key */
+ 		if (dwrq->length > MAX_KEY_SIZE) {
+ 			return -EINVAL;
  		}
  
- 		entry += sizeof(__le16);
- 		chan->pa_points_per_curve = 8;
- 		memset(chan->curve_data, 0, sizeof(*chan->curve_data));
-+		curve_data = (void *) priv->curve_data->data;
++		current_index = get_wep_tx_idx(local);
++		if (current_index < 0)
++			current_index = 0;
 +
- 		memcpy(chan->curve_data, entry,
- 		       sizeof(struct p54_pa_curve_data_sample) *
--		       min((u8)8, priv->curve_data->points_per_channel));
-+		       min_t(u8, 8, curve_data->points_per_channel));
- 		break;
+ 		/* Check the index (none -> use current) */
+ 		if (!valid_index(local, index))
+ 			index = current_index;
+@@ -6338,7 +6396,13 @@ static int airo_set_encode(struct net_device *dev,
+ 			/* Copy the key in the driver */
+ 			memcpy(key.key, extra, dwrq->length);
+ 			/* Send the key to the card */
+-			set_wep_key(local, index, key.key, key.len, perm, 1);
++			rc = set_wep_key(local, index, key.key, key.len, perm, 1);
++			if (rc < 0) {
++				airo_print_err(local->dev->name, "failed to set"
++				               " WEP key at index %d: %d.",
++				               index, rc);
++				return rc;
++			}
+ 		}
+ 		/* WE specify that if a valid key is set, encryption
+ 		 * should be enabled (user may turn it off later)
+@@ -6351,7 +6415,13 @@ static int airo_set_encode(struct net_device *dev,
+ 		/* Do we want to just set the transmit key index ? */
+ 		int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+ 		if (valid_index(local, index))
+-			set_wep_key(local, index, NULL, 0, perm, 1);
++			rc = set_wep_tx_idx(local, index, perm, 1);
++			if (rc < 0) {
++				airo_print_err(local->dev->name, "failed to set"
++				               " WEP transmit index to %d: %d.",
++				               index, rc);
++				return rc;
++			}
+ 		else {
+ 			/* Don't complain if only change the mode */
+ 			if (!(dwrq->flags & IW_ENCODE_MODE))
+@@ -6382,6 +6452,7 @@ static int airo_get_encode(struct net_device *dev,
+ {
+ 	struct airo_info *local = dev->ml_priv;
+ 	int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
++	u8 buf[16];
+ 
+ 	if (!local->wep_capable)
+ 		return -EOPNOTSUPP;
+@@ -6406,14 +6477,17 @@ static int airo_get_encode(struct net_device *dev,
+ 	memset(extra, 0, 16);
+ 
+ 	/* Which key do we want ? -1 -> tx index */
+-	if (!valid_index(local, index))
+-		index = get_wep_key(local, 0xffff);
++	if (!valid_index(local, index)) {
++		index = get_wep_tx_idx(local);
++		if (index < 0)
++			index = 0;
++	}
+ 	dwrq->flags |= index + 1;
++
+ 	/* Copy the key to the user buffer */
+-	dwrq->length = get_wep_key(local, index);
+-	if (dwrq->length > 16) {
+-		dwrq->length=0;
+-	}
++	dwrq->length = get_wep_key(local, index, &buf[0], sizeof(buf));
++	memcpy(extra, buf, dwrq->length);
++
+ 	return 0;
+ }
+ 
+@@ -6431,7 +6505,7 @@ static int airo_set_encodeext(struct net_device *dev,
+ 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
+ 	int perm = ( encoding->flags & IW_ENCODE_TEMP ? 0 : 1 );
+ 	__le16 currentAuthType = local->config.authType;
+-	int idx, key_len, alg = ext->alg, set_key = 1;
++	int idx, key_len, alg = ext->alg, set_key = 1, rc;
+ 	wep_key_t key;
+ 
+ 	if (!local->wep_capable)
+@@ -6445,8 +6519,11 @@ static int airo_set_encodeext(struct net_device *dev,
+ 		if (!valid_index(local, idx - 1))
+ 			return -EINVAL;
+ 		idx--;
+-	} else
+-		idx = get_wep_key(local, 0xffff);
++	} else {
++		idx = get_wep_tx_idx(local);
++		if (idx < 0)
++			idx = 0;
++	}
+ 
+ 	if (encoding->flags & IW_ENCODE_DISABLED)
+ 		alg = IW_ENCODE_ALG_NONE;
+@@ -6455,7 +6532,13 @@ static int airo_set_encodeext(struct net_device *dev,
+ 		/* Only set transmit key index here, actual
+ 		 * key is set below if needed.
+ 		 */
+-		set_wep_key(local, idx, NULL, 0, perm, 1);
++		rc = set_wep_tx_idx(local, idx, perm, 1);
++		if (rc < 0) {
++			airo_print_err(local->dev->name, "failed to set "
++			               "WEP transmit index to %d: %d.",
++			               idx, rc);
++			return rc;
++		}
+ 		set_key = ext->key_len > 0 ? 1 : 0;
  	}
-+	if (i == priv->curve_data->entries)
-+		goto err;
  
- 	if (priv->fw_var < 0x500) {
- 		chan->v1_rssi.mul = cpu_to_le16(priv->rssical_db[band].mul);
-diff -Nurp a/drivers/net/wireless/p54/p54common.h b/drivers/net/wireless/p54/p54common.h
---- a/drivers/net/wireless/p54/p54common.h	2009-01-10 16:39:15.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.h	2009-01-10 23:28:18.000000000 +0100
-@@ -186,6 +186,14 @@ struct pda_country {
- 	u8 flags;
- } __attribute__ ((packed));
+@@ -6481,7 +6564,12 @@ static int airo_set_encodeext(struct net_device *dev,
+ 			return -EINVAL;
+ 		}
+ 		/* Send the key to the card */
+-		set_wep_key(local, idx, key.key, key.len, perm, 1);
++		rc = set_wep_key(local, idx, key.key, key.len, perm, 1);
++		if (rc < 0) {
++			airo_print_err(local->dev->name, "failed to set WEP key"
++			               " at index %d: %d.", idx, rc);
++			return rc;
++		}
+ 	}
  
-+struct pda_custom_wrapper {
-+	__le16 entries;
-+	__le16 entry_size;
-+	__le16 offset;
-+	__le16 len;
-+	u8 data[0];
-+} __attribute__ ((packed));
-+
- /*
-  * this defines the PDR codes used to build PDAs as defined in document
-  * number 553155. The current implementation mirrors version 1.1 of the
-@@ -231,8 +239,13 @@ struct pda_country {
- /* reserved range (0x2000 - 0x7fff) */
+ 	/* Read the flags */
+@@ -6512,6 +6600,7 @@ static int airo_get_encodeext(struct net_device *dev,
+ 	struct iw_point *encoding = &wrqu->encoding;
+ 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
+ 	int idx, max_key_len;
++	u8 buf[16];
  
- /* customer range (0x8000 - 0xffff) */
--#define PDR_BASEBAND_REGISTERS			0x8000
--#define PDR_PER_CHANNEL_BASEBAND_REGISTERS	0x8001
-+#define PDR_BASEBAND_REGISTERS				0x8000
-+#define PDR_PER_CHANNEL_BASEBAND_REGISTERS		0x8001
-+
-+/* used by our modificated eeprom image */
-+#define PDR_RSSI_LINEAR_APPROXIMATION_CUSTOM		0xDEAD
-+#define PDR_PRISM_PA_CAL_OUTPUT_POWER_LIMITS_CUSTOM	0xBEEF
-+#define PDR_PRISM_PA_CAL_CURVE_DATA_CUSTOM		0xB05D
+ 	if (!local->wep_capable)
+ 		return -EOPNOTSUPP;
+@@ -6527,8 +6616,11 @@ static int airo_get_encodeext(struct net_device *dev,
+ 		if (!valid_index(local, idx - 1))
+ 			return -EINVAL;
+ 		idx--;
+-	} else
+-		idx = get_wep_key(local, 0xffff);
++	} else {
++		idx = get_wep_tx_idx(local);
++		if (idx < 0)
++			idx = 0;
++	}
  
- /* PDR definitions for default country & country list */
- #define PDR_COUNTRY_CERT_CODE		0x80
-@@ -434,7 +447,7 @@ struct p54_setup_mac {
- struct p54_scan {
- 	__le16 mode;
- 	__le16 dwell;
--	u8 padding1[20];
-+	u8 scan_params[20];
- 	struct pda_iq_autocal_entry iq_autocal;
- 	u8 pa_points_per_curve;
- 	u8 val_barker;
-diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
---- a/drivers/net/wireless/p54/p54.h	2009-01-10 16:39:15.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54.h	2009-01-10 23:06:56.000000000 +0100
-@@ -87,6 +87,14 @@ struct p54_rssi_linear_approximation {
- 	s16 longbow_unk2;
- };
+ 	encoding->flags = idx + 1;
+ 	memset(ext, 0, sizeof(*ext));
+@@ -6551,10 +6643,8 @@ static int airo_get_encodeext(struct net_device *dev,
+ 	memset(extra, 0, 16);
+ 	
+ 	/* Copy the key to the user buffer */
+-	ext->key_len = get_wep_key(local, idx);
+-	if (ext->key_len > 16) {
+-		ext->key_len=0;
+-	}
++	ext->key_len = get_wep_key(local, idx, &buf[0], sizeof(buf));
++	memcpy(extra, buf, ext->key_len);
  
-+struct p54_cal_database {
-+	size_t entries;
-+	size_t entry_size;
-+	size_t offset;
-+	size_t len;
-+	u8 data[0];
-+};
-+
- #define EEPROM_READBACK_LEN 0x3fc
- 
- #define ISL38XX_DEV_FIRMWARE_ADDR 0x20000
-@@ -115,9 +123,8 @@ struct p54_common {
- 	u8 tx_diversity_mask;
- 	struct pda_iq_autocal_entry *iq_autocal;
- 	unsigned int iq_autocal_len;
--	struct pda_channel_output_limit *output_limit;
--	unsigned int output_limit_len;
--	struct pda_pa_curve_data *curve_data;
-+	struct p54_cal_database *output_limit;
-+	struct p54_cal_database *curve_data;
- 	struct p54_rssi_linear_approximation rssical_db[IEEE80211_NUM_BANDS];
- 	unsigned int filter_flags;
- 	bool use_short_slot;
+ 	return 0;
+ }
+
