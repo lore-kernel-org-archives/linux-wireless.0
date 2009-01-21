@@ -1,116 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40825 "EHLO mail.atheros.com"
+Received: from mga02.intel.com ([134.134.136.20]:9435 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757547AbZAWW5E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 17:57:04 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 14:57:04 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] wireless-regdb: adds a manpage for regulatory.bin, updates Makefile
-Date: Fri, 23 Jan 2009 14:56:27 -0800
-Message-ID: <1232751387-22651-1-git-send-email-lrodriguez@atheros.com> (sfid-20090123_235707_668739_E90319D4)
+	id S1754301AbZAUOrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jan 2009 09:47:10 -0500
+Date: Wed, 21 Jan 2009 15:49:36 +0100
+From: Samuel Ortiz <samuel.ortiz@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ipw3945-devel] [PATCH 4/5] iwl3945: Use iwl-rfkill
+Message-ID: <20090121144931.GB3459@sortiz.org> (sfid-20090121_154715_398200_CA358F31)
+References: <1232516035-25524-4-git-send-email-reinette.chatre@intel.com> <1232516035-25524-5-git-send-email-reinette.chatre@intel.com> <200901210801.23236.helmut.schaa@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <200901210801.23236.helmut.schaa@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a man page for the regulatory.bin file and updates
-the Makefile to make it the install target flexible for distributions.
-As part of the install you also now get the the man page.
+Hi Helmut,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- Makefile         |   19 +++++++++++++++----
- regulatory.bin.5 |   37 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 52 insertions(+), 4 deletions(-)
- create mode 100644 regulatory.bin.5
+On Wed, Jan 21, 2009 at 12:01:22AM -0700, Helmut Schaa wrote:
+> Hi,
+> 
+> Am Mittwoch, 21. Januar 2009 schrieb Reinette Chatre:
+> > From: Samuel Ortiz <samuel.ortiz@intel.com>
+> >
+> > Here again, the rfkill routines are duplicated between agn and 3945. Let's
+> > move the agn one to iwlcore, and so we can get rid of the 3945 ones.
+> 
+> [...]
+> 
+> > +void iwl_bg_rf_kill(struct work_struct *work)
+> > +{
+> > +     struct iwl_priv *priv = container_of(work, struct iwl_priv, rf_kill);
+> > +
+> > +     wake_up_interruptible(&priv->wait_command_queue);
+> > +
+> > +     if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> > +             return;
+> > +
+> > +     mutex_lock(&priv->mutex);
+> > +
+> > +     if (!iwl_is_rfkill(priv)) {
+> > +             IWL_DEBUG(IWL_DL_RF_KILL,
+> > +                       "HW and/or SW RF Kill no longer active, restarting "
+> > +                       "device\n");
+> > +             if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
+> > +                     queue_work(priv->workqueue, &priv->restart);
+> 
+> I've changed this check in both rf-kill patches (3945 and agn) to
+> 
+> if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
+>     test_bit(STATUS_ALIVE, &priv->status))
+> 
+> in order to avoid restarting the adapter when notified about rfkill changes
+> by interrupt/polling.
+> 
+> I guess this is just an oversight, right?
+Good catch. It is an oversight, yes.
+John, Reinette, do you want a new version of this patch or an additional one
+on top of wireless-testing ?
 
-diff --git a/Makefile b/Makefile
-index 07c3030..0171196 100644
---- a/Makefile
-+++ b/Makefile
-@@ -2,12 +2,16 @@
- PREFIX = /usr
- CDRA_PATH = $(PREFIX)/lib/crda
- 
-+SBINDIR ?= /sbin/
-+MANDIR ?= $(PREFIX)/share/man/
-+
-+
- .PHONY: all clean install maintainer-clean
- 
- all: regulatory.bin key.pub.pem
- 
- clean:
--	rm -f *.pyc
-+	rm -f *.pyc *.gz
- 
- maintainer-clean: clean
- 	rm -f regulatory.bin key.pub.pem
-@@ -23,6 +27,13 @@ endif
- key.priv.pem:
- 	openssl genrsa -out key.priv.pem 2048
- 
--install:
--	install -o 0 -g 0 -m 755 -d $(CDRA_PATH)
--	install -o 0 -g 0 -m 644 regulatory.bin $(CDRA_PATH)/regulatory.bin
-+%.gz: %
-+	gzip < $< > $@
-+
-+# Distributions wishing to just use John's database
-+# can just call make install.
-+install: regulatory.bin.5.gz
-+	install -o 0 -g 0 -m 755 -d $(DESTDIR)/$(CDRA_PATH)
-+	install -o 0 -g 0 -m 644 regulatory.bin $(DESTDIR)/$(CDRA_PATH)/regulatory.bin
-+	mkdir -p $(DESTDIR)/$(MANDIR)/man5/
-+	install -m 644 -t $(DESTDIR)/$(MANDIR)/man5/ regulatory.bin.5.gz
-diff --git a/regulatory.bin.5 b/regulatory.bin.5
-new file mode 100644
-index 0000000..d4f80cb
---- /dev/null
-+++ b/regulatory.bin.5
-@@ -0,0 +1,37 @@
-+.TH regulatory.bin 8 "23 January 2009" "regulatory.bin" "Linux"
-+.SH NAME
-+regulatory.bin \- The Linux wireless regulatory database
-+
-+.ad l
-+.in +8
-+.ti -8
-+
-+.SS
-+.SH Description
-+.B regulatory.bin
-+is the file used by the Linux wireless subsystem to keep its regulatory
-+database information. It is read by
-+.B crda
-+upon the Linux kernel's request for regulatory information for a specific
-+ISO / IEC 3166 alpha2 country code. The regulatory database is kept in
-+a small binary format for size and code efficiency. The
-+.B regulatory.bin
-+file can be parsed and read in human format by using the
-+.B regdbdump
-+command. The
-+.B regulatory.bin
-+file should be updated upon regulatory changes or corrections.
-+
-+.SH Upkeeping
-+The regulatory database is maintained by the community as such
-+you are encouraged to send any corrections or updates to the
-+linux-wireless mailing list:
-+.B linux-wireless@vger.kernel.org
-+
-+.SH SEE ALSO
-+.BR regdbdump (8)
-+.BR crda (8)
-+.BR iw (8)
-+
-+.BR http://wireless.kernel.org/en/developers/Regulatory/
-+
+Cheers,
+Samuel.
+
 -- 
-1.6.1.rc3.51.g5832d
+Intel Open Source Technology Centre
+http://oss.intel.com/
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
