@@ -1,98 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f21.google.com ([209.85.217.21]:46734 "EHLO
-	mail-gx0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752279AbZAaUuN (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:14939 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbZAUTdE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2009 15:50:13 -0500
-Received: by gxk14 with SMTP id 14so789773gxk.13
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2009 12:50:12 -0800 (PST)
+	Wed, 21 Jan 2009 14:33:04 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so400663ugf.37
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 11:33:01 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <49849ED9.6080300@openwrt.org>
-References: <20090131023147.GE3342@makis>
-	 <20090131170802.GA16826@hash.localnet>
-	 <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>
-	 <49849ED9.6080300@openwrt.org>
-Date: Sat, 31 Jan 2009 22:50:11 +0200
-Message-ID: <40f31dec0901311250q6a669849x1dfbf08d967787be@mail.gmail.com> (sfid-20090131_215019_948350_6245E40D)
-Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	jirislaby@gmail.com, mcgrof@gmail.com
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20090121191141.GA14710@tuxdriver.com>
+References: <200901140003.31693.gbburkhardt@verizon.net>
+	 <200901151734.46144.gbburkhardt@verizon.net>
+	 <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com>
+	 <200901202238.08756.gbburkhardt@verizon.net>
+	 <20090121151435.GB3643@tuxdriver.com>
+	 <69e28c910901211022j7f9c67dfv6392ce043dcff522@mail.gmail.com>
+	 <20090121191141.GA14710@tuxdriver.com>
+Date: Wed, 21 Jan 2009 20:33:01 +0100
+Message-ID: <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com> (sfid-20090121_203307_644492_54D42799)
+Subject: Re: poor performance with ath5k; reverting to ath_pci
+From: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Glenn Burkhardt <gbburkhardt@verizon.net>,
+	Bob Copeland <me@bobcopeland.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/1/31 Felix Fietkau <nbd@openwrt.org>:
-> Nick Kossifidis wrote:
->>>> [...]
->>>> @@ -2156,7 +2157,8 @@
->>>>  #define      AR5K_PHY_ANT_CTL_TXRX_EN        0x00000001      /* Enable TX/RX (?) */
->>>>  #define      AR5K_PHY_ANT_CTL_SECTORED_ANT   0x00000004      /* Sectored Antenna */
->>>>  #define      AR5K_PHY_ANT_CTL_HITUNE5        0x00000008      /* Hitune5 (?) */
->>>> -#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE   0x00000010      /* Switch table idle (?) */
->>>> +#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE   0x000003f9      /* Switch table idle (?) */
->>>> +#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE_S 4
->>>
->>> That doesn't look right.. should be 3f0?  (still probably works, I guess).
->>>
+On Wed, Jan 21, 2009 at 8:11 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Jan 21, 2009 at 07:22:14PM +0100, Stefanik G=E1bor wrote:
+>> On Wed, Jan 21, 2009 at 4:14 PM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>> > On Tue, Jan 20, 2009 at 10:38:08PM -0500, Glenn Burkhardt wrote:
+>> >> On Friday 16 January 2009 10:33:13 Bob Copeland wrote:
+>> >> > On Thu, Jan 15, 2009 at 5:34 PM, Glenn Burkhardt
+>> >> >
+>> >> > <gbburkhardt@verizon.net> wrote:
+>> >> > > ath5k_pci 0000:00:07.0: PCI INT A -> GSI 18 (level, low) -> I=
+RQ 18
+>> >> > > ath5k_pci 0000:00:07.0: registered as 'phy0'
+>> >> > > phy0: Selected rate control algorithm 'pid'
+>> >> >
+>> >> > Can you change the rate control algorithm to minstrel and retry=
+?
+>> >>
+>> >> I built a 2.6.28.1-9 kernel to get the minstrel code for ath5k.  =
+The
+>> >> kernel for Suse 11.1 is 2.6.27.7-9.  But that means that more cou=
+ld have
+>> >> changed besides the rate control code.
+>> >>
+>> >> It looks like minstrel and pid give about the same result, a bit =
+worse that
+>> >> the ath_pci driver right now.  Performance seems to vary from day=
+ to day.
+>> >> I'll experiment some more, and switch transmission channels.  I'm=
+ not getting
+>> >> the really poor performance with ath5k right now.
+>> >>
+>> >> I haven't looked yet - is there a way to switch to 'pid' rate con=
+trol without
+>> >> rebuilding the kernel?
+>> >
+>> > If you configure your kernel to include multiple rate control
+>> > algorithms then you can use the 'ieee80211_default_rc_algo' module
+>> > option for mac80211.  Of course, changing that only works if you
+>> > rmmod/insmod mac80211.
+>> >
+>> > John
 >>
->> I know, but HAL does this...
->>       AR_PHY_BIS(ah, 68, 0xFFFFFC06,
->>               (ee->ee_antennaControl[0][arrayMode] << 4) | 0x1);
->>
->> ~0xFFFFFC06 = 3F9
-> How about splitting it up and making the 0x1 a separate flag?
+>> Judging from this, is it really a good idea to hide pid behind EMBED=
+DED?
 >
-
-Agree, i'll change eeprom.c too...
-
-	/* Get antenna modes */
-	ah->ah_antenna[mode][0] =
-	    (ee->ee_ant_control[mode][0] << 4) | 0x1;
-
->> My intention is to reimplement hw_htoclock to account for half/quarter
->> rate so it'll soon be
->> clock = ath5k_hw_htoclock(1, channel->hw_value);
-> AFAIK Sam's HAL might have a bug there. If I remember correctly, the MAC
-> runs at the same clock speed with Half/Quarter rate.
-> It's done that way in the legacy HAL. Though there is a possibility of
-> it being hardware dependent, I'm pretty sure that it is that way at least
-> on 5413.
+> I've been wondering about that myself.  I'm inclined to think no.
 >
+> John
 
-Both HALs tweak clock this way on ar5212SetDeltaSlope on all chips. If
-clock depends on channel bandwidth for turbo it makes sense to also
-change on half/quarter rate operation.
+I think EMBEDDED is for options that replace full-featured Linux
+components with dumbed-down, "low-profile" equivalents (like SLOB) -
+PID vs. minstrel is more like SLAB vs. SLUB.
 
->>>> +     /* Set DAC/ADC delays */
->>>> +     if (ah->ah_version == AR5K_AR5212) {
->>>> +             if (ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))
->>>> +                     data = AR5K_PHY_SCAL_32MHZ_2417;
->>>> +             else if (ath5k_eeprom_is_hb63(ah))
->>>> +                     data = AR5K_PHY_SCAL_32MHZ_HB63;
->>>> +             else
->>>> +                     data = AR5K_PHY_SCAL_32MHZ;
->>>> +             ath5k_hw_reg_write(ah, data, AR5K_PHY_SCAL);
->>>> +             data = 0;
->>>
->>> why data = 0; ?
->>>
->> Instead of having multiple temporary variables, i use only "data". To
->> be sure that "data" is ok for use i always zero it each time i use it
->> so that we don't write any weird stuff by mistake.
-> Wouldn't multiple temporary values be preferable, since the compiler
-> optimizes that stuff anyway?
->
+G=E1bor
 
-Hmm, you are right, i just opened ath5k.o with IDA and it seems
-hw_reset has too many ints so what i'm doing is probably confusing for
-gcc.
-
-
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
