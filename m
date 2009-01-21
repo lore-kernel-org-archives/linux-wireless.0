@@ -1,73 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57260 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757131AbZARIsh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 03:48:37 -0500
-Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
-	disablement
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090116210930.GL29609@tesla>
-References: <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
-	 <1232097827.3854.25.camel@johannes> <20090116163245.GF29609@tesla>
-	 <1232138101.3745.7.camel@johannes>  <20090116210930.GL29609@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9abJZlTuYZ1K9MiL6fNi"
-Date: Sun, 18 Jan 2009 09:48:36 +0100
-Message-Id: <1232268516.3877.10.camel@johannes> (sfid-20090118_094842_212569_BA127BE4)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:44165 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754943AbZAUFbb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jan 2009 00:31:31 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 5/5] iwl3945: fix deep sleep when removing the driver.
+Date: Tue, 20 Jan 2009 21:33:55 -0800
+Message-Id: <1232516035-25524-6-git-send-email-reinette.chatre@intel.com> (sfid-20090121_063156_050896_7DA7FA84)
+In-Reply-To: <1232516035-25524-5-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1232516035-25524-1-git-send-email-reinette.chatre@intel.com>
+ <1232516035-25524-2-git-send-email-reinette.chatre@intel.com>
+ <1232516035-25524-3-git-send-email-reinette.chatre@intel.com>
+ <1232516035-25524-4-git-send-email-reinette.chatre@intel.com>
+ <1232516035-25524-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Abbas, Mohamed <mohamed.abbas@intel.com>
 
---=-9abJZlTuYZ1K9MiL6fNi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+A warning message "MAC is in deep sleep" sometimes happen when user removes
+the driver.  This warning is related to card not being ready. In __iwl3945_down
+function some of the going down steps are in wrong order, to fix this this patch
+do the following:
+	1- make sure we are calling iwl3945_apm_reset and iwl3945_apm_stop
+	   in the right order.
 
-On Fri, 2009-01-16 at 13:09 -0800, Luis R. Rodriguez wrote:
+	2- make sure we set CSR_GP_CNTRL_REG_FLAG_INIT_DONE in apm_reset before
+	   poll on CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY.
 
-> I can put a note, if that helps, or are you strongly opposed to this? :)
-> Just an itch to scratch really, have you seen the output of iwlist on
-> disabled channels? It can get long on radar/no-ibss channels. We can also
-> handle this in userspace but seems pointles if the channels is disabled.
+	3- set correct polling counter.
 
-Well, come to think of it, at least for programmers it might be
-confusing when they know they've put some flag into orig_flags, and then
-it disappears? I'm not really _strongly_ opposed to this, but I really
-just don't see the point :)
+This fixes bug
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1834
 
-johannes
+Signed-off-by: mohamed abbas <mohamed.abbas@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    8 +++-----
+ drivers/net/wireless/iwlwifi/iwl-io.h       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 ++++++-
+ 3 files changed, 10 insertions(+), 7 deletions(-)
 
---=-9abJZlTuYZ1K9MiL6fNi
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJcuzhAAoJEKVg1VMiehFYbEoQAMOcvdt8c8mtBOztHjWamzym
-/KF8XKxzeCjol99kF1rKjvv9II1h8WWELC9rq3d/+41QePtShB00RGpLcn4gUGLq
-Cf8ausqDlDcnST2I0j3RJXoQ8vw1NoZ0JLYO2ekszs5j24QBlHvrSnzQkR+xIODc
-7dLwdeSXAfl9VFZpru6NT2JWXhaaynob8WbOLufQTGVb3V0LlJhPbyD2fyZr8Uc3
-HVb7T68Xboh6nj89vgy8Bj3Wd1Jlroyka2NY0w0s/bdNbSgjdwdq7hnzKENX8xQg
-eJHz+lTifremL2pvVjW8SVwcwgiMvGQtMJO1B6LiTp4BaGI8H6lSKXuxNhh0mx88
-j8/W+ORpSM2VldPfHKlqlgDUEk3r32M/NxWASBfnwCsa1noBXHrCztSaaWV2XetN
-Gd0tvNjkiLGENyF4Yj1LjFYkpI74ksXkboUM2DRm5Saxc3Qlm9LMj3qn1/UTQ2KS
-FmzR+7qGMDQe+1ldALQtZRzN6LcoCJRMTYe2u3on3yxFoZvAifm2Q0ngVsrZGrUS
-KmCkBoHBRCFp9B4PIH7oUsej7hYfqDBmaN05UmgvY7Z1Bmc7Nch82v3sRt+Chayj
-Lof4wpGAyVgT+imM4CMwkYkfUVzDDpQC4AnYL9BZliVOyw6rQTNS84QUo/qJ2js5
-cdUtrWDQaRhRH5y8lvdD
-=qqUK
------END PGP SIGNATURE-----
-
---=-9abJZlTuYZ1K9MiL6fNi--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index e6d4503..8b486c9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1332,6 +1332,9 @@ static int iwl3945_apm_reset(struct iwl_priv *priv)
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	iwl_set_bit(priv, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
++	udelay(10);
++
++	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+ 
+ 	iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
+ 			 CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
+@@ -1341,11 +1344,6 @@ static int iwl3945_apm_reset(struct iwl_priv *priv)
+ 		iwl_write_prph(priv, APMG_CLK_CTRL_REG,
+ 					 APMG_CLK_VAL_BSM_CLK_RQT);
+ 
+-		udelay(10);
+-
+-		iwl_set_bit(priv, CSR_GP_CNTRL,
+-			    CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+-
+ 		iwl_write_prph(priv, APMG_RTC_INT_MSK_REG, 0x0);
+ 		iwl_write_prph(priv, APMG_RTC_INT_STT_REG,
+ 					0xFFFFFFFF);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index bc3f3da..7341a2d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -165,7 +165,7 @@ static inline int _iwl_grab_nic_access(struct iwl_priv *priv)
+ 	ret = _iwl_poll_bit(priv, CSR_GP_CNTRL,
+ 			   CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
+ 			   (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
+-			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 50);
++			    CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
+ 	if (ret < 0) {
+ 		IWL_ERR(priv, "MAC is in deep sleep!\n");
+ 		return -EIO;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index be02272..e595c5a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5295,6 +5295,7 @@ static void __iwl3945_down(struct iwl_priv *priv)
+ 			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+ 				STATUS_EXIT_PENDING;
+ 
++	priv->cfg->ops->lib->apm_ops.reset(priv);
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+@@ -5312,7 +5313,11 @@ static void __iwl3945_down(struct iwl_priv *priv)
+ 
+ 	udelay(5);
+ 
+-	priv->cfg->ops->lib->apm_ops.reset(priv);
++	if (exit_pending || test_bit(STATUS_IN_SUSPEND, &priv->status))
++		priv->cfg->ops->lib->apm_ops.stop(priv);
++	else
++		priv->cfg->ops->lib->apm_ops.reset(priv);
++
+  exit:
+ 	memset(&priv->card_alive, 0, sizeof(struct iwl_alive_resp));
+ 
+-- 
+1.5.4.3
 
