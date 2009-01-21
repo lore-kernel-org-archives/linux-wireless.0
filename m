@@ -1,270 +1,309 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:54077 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753136AbZAMNly (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:59959 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756071AbZAUNut (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 08:41:54 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v3 06/11] ath9k: introduce platform driver for AHB bus support
-Date: Tue, 13 Jan 2009 14:40:24 +0100
-Message-Id: <1231854029-26810-7-git-send-email-juhosg@openwrt.org> (sfid-20090113_144203_032521_834E4E8B)
-In-Reply-To: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
-References: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
+	Wed, 21 Jan 2009 08:50:49 -0500
+Received: from smtp07.web.de (fmsmtp07.dlan.cinetic.de [172.20.5.215])
+	by fmmailgate02.web.de (Postfix) with ESMTP id 34DB2F938903
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 14:50:47 +0100 (CET)
+Received: from [129.13.72.197] (helo=blech.mobile)
+	by smtp07.web.de with esmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.110 #277)
+	id 1LPdTj-0001Zx-00
+	for linux-wireless@vger.kernel.org; Wed, 21 Jan 2009 14:50:47 +0100
+Received: from localhost (localhost [127.0.0.1])
+	by blech.mobile (Postfix) with ESMTP id A0E60341461
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 14:50:55 +0100 (CET)
+Received: from blech.mobile ([127.0.0.1])
+	by localhost (blech.mobile [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id tX+CP85AmsF6 for <linux-wireless@vger.kernel.org>;
+	Wed, 21 Jan 2009 14:50:54 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by blech.mobile (Postfix) with ESMTPS id 326BA341426
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 14:50:54 +0100 (CET)
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC][RFT][PATCH] p54usb: rx refill revamp
+Date: Wed, 21 Jan 2009 14:50:50 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901211450.50880.chunkeey@web.de> (sfid-20090121_145056_890396_FA3F23FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the platform_driver itself, and modifies the main driver
-to register it.
+This patch fixes a long standing issue in p54usb.
 
-Changes-licensed-under: ISC
+Under high memory pressure, dev_alloc_skb couldn't always allocate a 
+replacement skb. In such situations, we had to free the associated urb.
+And over the time all urbs were eventually gone altogether and 
+obviously the device remained mute from then on.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
 ---
- drivers/net/wireless/ath9k/Makefile |    1 +
- drivers/net/wireless/ath9k/ahb.c    |  160 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/core.h   |    8 ++
- drivers/net/wireless/ath9k/main.c   |   10 ++
- 4 files changed, 179 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath9k/ahb.c
-
-diff --git a/drivers/net/wireless/ath9k/Makefile b/drivers/net/wireless/ath9k/Makefile
-index af3f39b..0062958 100644
---- a/drivers/net/wireless/ath9k/Makefile
-+++ b/drivers/net/wireless/ath9k/Makefile
-@@ -12,6 +12,7 @@ ath9k-y +=	hw.o \
- 		rc.o
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index bf264b1..e7b99bf 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -86,6 +86,7 @@ static void p54u_rx_cb(struct urb *urb)
+ 	struct p54u_rx_info *info = (struct p54u_rx_info *)skb->cb;
+ 	struct ieee80211_hw *dev = info->dev;
+ 	struct p54u_priv *priv = dev->priv;
++	unsigned long flags;
  
- ath9k-$(CONFIG_PCI) += pci.o
-+ath9k-$(CONFIG_ATHEROS_AR71XX) += ahb.o
- ath9k-$(CONFIG_ATH9K_DEBUG) += debug.o
+ 	skb_unlink(skb, &priv->rx_queue);
  
- obj-$(CONFIG_ATH9K) += ath9k.o
-diff --git a/drivers/net/wireless/ath9k/ahb.c b/drivers/net/wireless/ath9k/ahb.c
-new file mode 100644
-index 0000000..8cbd4c2
---- /dev/null
-+++ b/drivers/net/wireless/ath9k/ahb.c
-@@ -0,0 +1,160 @@
-+/*
-+ * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2009 Gabor Juhos <juhosg@openwrt.org>
-+ * Copyright (c) 2009 Imre Kaloz <kaloz@openwrt.org>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/nl80211.h>
-+#include <linux/platform_device.h>
-+#include "core.h"
-+#include "reg.h"
-+#include "hw.h"
-+
-+/* return bus cachesize in 4B word units */
-+static void ath_ahb_read_cachesize(struct ath_softc *sc, int *csz)
-+{
-+	*csz = L1_CACHE_BYTES >> 2;
-+}
-+
-+static void ath_ahb_cleanup(struct ath_softc *sc)
-+{
-+	iounmap(sc->mem);
-+}
-+
-+static struct ath_bus_ops ath_ahb_bus_ops  = {
-+	.read_cachesize = ath_ahb_read_cachesize,
-+	.cleanup = ath_ahb_cleanup,
-+};
-+
-+static int ath_ahb_probe(struct platform_device *pdev)
-+{
-+	void __iomem *mem;
-+	struct ath_softc *sc;
-+	struct ieee80211_hw *hw;
-+	struct resource *res;
-+	int irq;
-+	int ret = 0;
-+	struct ath_hal *ah;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (res == NULL) {
-+		dev_err(&pdev->dev, "no memory resource found\n");
-+		ret = -ENXIO;
-+		goto err_out;
-+	}
-+
-+	mem = ioremap_nocache(res->start, res->end - res->start + 1);
-+	if (mem == NULL) {
-+		dev_err(&pdev->dev, "ioremap failed\n");
-+		ret = -ENOMEM;
-+		goto err_out;
-+	}
-+
-+	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-+	if (res == NULL) {
-+		dev_err(&pdev->dev, "no IRQ resource found\n");
-+		ret = -ENXIO;
-+		goto err_iounmap;
-+	}
-+
-+	irq = res->start;
-+
-+	hw = ieee80211_alloc_hw(sizeof(struct ath_softc), &ath9k_ops);
-+	if (hw == NULL) {
-+		dev_err(&pdev->dev, "no memory for ieee80211_hw\n");
-+		ret = -ENOMEM;
-+		goto err_iounmap;
-+	}
-+
-+	SET_IEEE80211_DEV(hw, &pdev->dev);
-+	platform_set_drvdata(pdev, hw);
-+
-+	sc = hw->priv;
-+	sc->hw = hw;
-+	sc->dev = &pdev->dev;
-+	sc->mem = mem;
-+	sc->bus_ops = &ath_ahb_bus_ops;
-+	sc->irq = irq;
-+
-+	ret = ath_attach(AR5416_AR9100_DEVID, sc);
-+	if (ret != 0) {
-+		dev_err(&pdev->dev, "failed to attach device, err=%d\n", ret);
-+		ret = -ENODEV;
-+		goto err_free_hw;
-+	}
-+
-+	ret = request_irq(irq, ath_isr, IRQF_SHARED, "ath9k", sc);
-+	if (ret) {
-+		dev_err(&pdev->dev, "request_irq failed, err=%d\n", ret);
-+		ret = -EIO;
-+		goto err_detach;
-+	}
-+
-+	ah = sc->sc_ah;
-+	printk(KERN_INFO
-+	       "%s: Atheros AR%s MAC/BB Rev:%x, "
-+	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
-+	       wiphy_name(hw->wiphy),
-+	       ath_mac_bb_name(ah->ah_macVersion),
-+	       ah->ah_macRev,
-+	       ath_rf_name((ah->ah_analog5GhzRev & AR_RADIO_SREV_MAJOR)),
-+	       ah->ah_phyRev,
-+	       (unsigned long)mem, irq);
-+
-+	return 0;
-+
-+ err_detach:
-+	ath_detach(sc);
-+ err_free_hw:
-+	ieee80211_free_hw(hw);
-+	platform_set_drvdata(pdev, NULL);
-+ err_iounmap:
-+	iounmap(mem);
-+ err_out:
-+	return ret;
-+}
-+
-+static int ath_ahb_remove(struct platform_device *pdev)
-+{
-+	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
-+
-+	if (hw) {
-+		struct ath_softc *sc = hw->priv;
-+
-+		ath_cleanup(sc);
-+		platform_set_drvdata(pdev, NULL);
-+	}
-+
-+	return 0;
-+}
-+
-+static struct platform_driver ath_ahb_driver = {
-+	.probe      = ath_ahb_probe,
-+	.remove     = ath_ahb_remove,
-+	.driver		= {
-+		.name	= "ath9k",
-+		.owner	= THIS_MODULE,
-+	},
-+};
-+
-+int ath_ahb_init(void)
-+{
-+	return platform_driver_register(&ath_ahb_driver);
-+}
-+
-+void ath_ahb_exit(void)
-+{
-+	platform_driver_unregister(&ath_ahb_driver);
-+}
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 1e86a9c..c5dae11 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -784,4 +784,12 @@ static inline int ath_pci_init(void) { return 0; };
- static inline void ath_pci_exit(void) {};
- #endif
+@@ -96,6 +97,7 @@ static void p54u_rx_cb(struct urb *urb)
  
-+#ifdef CONFIG_ATHEROS_AR71XX
-+int ath_ahb_init(void);
-+void ath_ahb_exit(void);
-+#else
-+static inline int ath_ahb_init(void) { return 0; };
-+static inline void ath_ahb_exit(void) {};
-+#endif
-+
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 6257790..7f4d1bb 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2527,8 +2527,17 @@ static int __init ath9k_init(void)
- 		goto err_rate_unregister;
+ 	skb_put(skb, urb->actual_length);
+ 
++	/* remove firmware/device specific headers in front of the frame */
+ 	if (priv->hw_type == P54U_NET2280)
+ 		skb_pull(skb, priv->common.tx_hdr_len);
+ 	if (priv->common.fw_interface == FW_LM87) {
+@@ -103,19 +105,12 @@ static void p54u_rx_cb(struct urb *urb)
+ 		skb_put(skb, 4);
  	}
  
-+	error = ath_ahb_init();
-+	if (error < 0) {
-+		error = -ENODEV;
-+		goto err_pci_exit;
+-	if (p54_rx(dev, skb)) {
+-		skb = dev_alloc_skb(priv->common.rx_mtu + 32);
+-		if (unlikely(!skb)) {
+-			/* TODO check rx queue length and refill *somewhere* */
+-			return;
+-		}
++	if (p54_rx(dev, skb) == 0) {
++		/*
++		 * This skb can be reused.
++		 * Undo all modifications and resubmit it.
++		 */
+ 
+-		info = (struct p54u_rx_info *) skb->cb;
+-		info->urb = urb;
+-		info->dev = dev;
+-		urb->transfer_buffer = skb_tail_pointer(skb);
+-		urb->context = skb;
+-	} else {
+ 		if (priv->hw_type == P54U_NET2280)
+ 			skb_push(skb, priv->common.tx_hdr_len);
+ 		if (priv->common.fw_interface == FW_LM87) {
+@@ -129,14 +124,47 @@ static void p54u_rx_cb(struct urb *urb)
+ 			WARN_ON(1);
+ 			urb->transfer_buffer = skb_tail_pointer(skb);
+ 		}
++
++		usb_anchor_urb(urb, &priv->submitted);
++		if (usb_submit_urb(urb, GFP_ATOMIC) == 0) {
++			skb_queue_tail(&priv->rx_queue, skb);
++			return ;
++		} else {
++			usb_unanchor_urb(urb);
++			dev_kfree_skb_irq(skb);
++		}
+ 	}
+-	skb_queue_tail(&priv->rx_queue, skb);
+-	usb_anchor_urb(urb, &priv->submitted);
+-	if (usb_submit_urb(urb, GFP_ATOMIC)) {
+-		skb_unlink(skb, &priv->rx_queue);
+-		usb_unanchor_urb(urb);
+-		dev_kfree_skb_irq(skb);
++
++	/*
++	 * This skb CANNOT be reused.
++	 * Put the now unused urb into a list and do the refilled later on in
++	 * the less critical workqueue thread. 
++	 * This eases the memory pressure and prevents latency spikes.
++	 */
++
++	urb->transfer_buffer = NULL;
++	urb->context = NULL;
++
++	spin_lock_irqsave(&priv->rx_refill_lock, flags);
++	list_add_tail(&urb->urb_list, &priv->rx_refill_list);
++	spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
++
++	/*
++	 * Don't let the usb stack free the queued urb after this completion
++	 * callback has finished.
++	 */
++	usb_get_urb(urb);
++
++	if (unlikely(!priv->common.hw->workqueue)) {
++		/*
++		 * Huh? mac80211 isn't fully initialized yet?
++		 * Please check your system, something bad is going on.
++		 */
++		WARN_ON(1);
++		return;
+ 	}
++
++	queue_work(priv->common.hw->workqueue, &priv->rx_refill_work);
+ }
+ 
+ static void p54u_tx_cb(struct urb *urb)
+@@ -150,58 +178,115 @@ static void p54u_tx_cb(struct urb *urb)
+ 
+ static void p54u_tx_dummy_cb(struct urb *urb) { }
+ 
++static void p54u_rx_refill_free_list(struct ieee80211_hw *dev)
++{
++	struct p54u_priv *priv = dev->priv;
++	struct urb *entry, *tmp;
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->rx_refill_lock, flags);
++	list_for_each_entry_safe(entry, tmp, &priv->rx_refill_list, urb_list) {
++		list_del(&entry->urb_list);
++		usb_free_urb(entry);
++	}
++	spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
++}
++
+ static void p54u_free_urbs(struct ieee80211_hw *dev)
+ {
+ 	struct p54u_priv *priv = dev->priv;
++
+ 	usb_kill_anchored_urbs(&priv->submitted);
++	cancel_work_sync(&priv->rx_refill_work);
++	p54u_rx_refill_free_list(dev);
+ }
+ 
+-static int p54u_init_urbs(struct ieee80211_hw *dev)
++static int p54u_rx_refill(struct ieee80211_hw *dev)
+ {
+ 	struct p54u_priv *priv = dev->priv;
+-	struct urb *entry = NULL;
+-	struct sk_buff *skb;
+-	struct p54u_rx_info *info;
+-	int ret = 0;
++	struct urb* entry, *tmp;
++	unsigned long flags, flags2;
+ 
+-	while (skb_queue_len(&priv->rx_queue) < 32) {
++	spin_lock_irqsave(&priv->rx_refill_lock, flags);
++	list_for_each_entry_safe(entry, tmp, &priv->rx_refill_list, urb_list) {
++		struct p54u_rx_info *info;
++		struct sk_buff *skb;
++
++		list_del(&entry->urb_list);
++		spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+ 		skb = __dev_alloc_skb(priv->common.rx_mtu + 32, GFP_KERNEL);
+-		if (!skb) {
+-			ret = -ENOMEM;
+-			goto err;
+-		}
+-		entry = usb_alloc_urb(0, GFP_KERNEL);
+-		if (!entry) {
+-			ret = -ENOMEM;
+-			goto err;
++
++		if (unlikely(!skb)) {
++			/*
++			 * In order to prevent a loop, we put the urb
++			 * back at the _front_ of the list, so we can
++			 * march on, in out-of-memory situations.
++			 */
++
++			spin_lock_irqsave(&priv->rx_refill_lock, flags);
++			list_add(&entry->urb_list, &priv->rx_refill_list);
++			continue;
+ 		}
+ 
+ 		usb_fill_bulk_urb(entry, priv->udev,
+ 				  usb_rcvbulkpipe(priv->udev, P54U_PIPE_DATA),
+ 				  skb_tail_pointer(skb),
+ 				  priv->common.rx_mtu + 32, p54u_rx_cb, skb);
++
+ 		info = (struct p54u_rx_info *) skb->cb;
+ 		info->urb = entry;
+ 		info->dev = dev;
+-		skb_queue_tail(&priv->rx_queue, skb);
++		spin_lock_irqsave(&priv->rx_queue.lock, flags2);
++		__skb_queue_tail(&priv->rx_queue, skb);
+ 
+ 		usb_anchor_urb(entry, &priv->submitted);
+-		ret = usb_submit_urb(entry, GFP_KERNEL);
+-		if (ret) {
+-			skb_unlink(skb, &priv->rx_queue);
+-			usb_unanchor_urb(entry);
+-			goto err;
++		if (usb_submit_urb(entry, GFP_ATOMIC)) {
++			/*
++			 * urb submittion failed.
++			 * free the associated skb and put the urb back into 
++			 * the front of the refill list, so we can 
++			 * try our luck next time.
++			 */
++
++			__skb_unlink(skb, &priv->rx_queue);
++			spin_unlock_irqrestore(&priv->rx_queue.lock, flags);
++			kfree_skb(skb);
++			spin_lock_irqsave(&priv->rx_refill_lock, flags);
++			list_add(&entry->urb_list, &priv->rx_refill_list);
++			spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+ 		}
++		spin_unlock_irqrestore(&priv->rx_queue.lock, flags2);
+ 		usb_free_urb(entry);
+-		entry = NULL;
++		spin_lock_irqsave(&priv->rx_refill_lock, flags);
+ 	}
+-
++	spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+ 	return 0;
++}
+ 
+- err:
+-	usb_free_urb(entry);
+-	kfree_skb(skb);
+-	p54u_free_urbs(dev);
++static int p54u_init_urbs(struct ieee80211_hw *dev)
++{
++	struct p54u_priv *priv = dev->priv;
++	struct urb *entry;
++	unsigned long flags;
++	int ret = 0;
++	int i;
++
++	for (i = 0; i < 32; i++) {
++		entry = usb_alloc_urb(0, GFP_KERNEL);
++		if (!entry) {
++			ret = -ENOMEM;
++			goto err;
++		}
++
++		spin_lock_irqsave(&priv->rx_refill_lock, flags);
++		list_add_tail(&entry->urb_list, &priv->rx_refill_list);
++		spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
 +	}
 +
- 	return 0;
- 
-+ err_pci_exit:
-+	ath_pci_exit();
++	p54u_rx_refill(dev);
 +
-  err_rate_unregister:
- 	ath_rate_control_unregister();
-  err_out:
-@@ -2538,6 +2547,7 @@ module_init(ath9k_init);
++err:
++	p54u_rx_refill_free_list(dev);
+ 	return ret;
+ }
  
- static void __exit ath9k_exit(void)
+@@ -878,6 +963,14 @@ static int p54u_upload_firmware_net2280(struct ieee80211_hw *dev)
+ 	return err;
+ }
+ 
++static void p54u_rx_refill_work(struct work_struct *work)
++{
++	struct p54u_priv *priv = container_of(work, struct p54u_priv,
++					      rx_refill_work);
++
++	p54u_rx_refill(priv->common.hw);
++}
++
+ static int p54u_open(struct ieee80211_hw *dev)
  {
-+	ath_ahb_exit();
- 	ath_pci_exit();
- 	ath_rate_control_unregister();
- 	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
--- 
-1.5.3.2
-
+ 	struct p54u_priv *priv = dev->priv;
+@@ -926,6 +1019,9 @@ static int __devinit p54u_probe(struct usb_interface *intf,
+ 	priv->intf = intf;
+ 	skb_queue_head_init(&priv->rx_queue);
+ 	init_usb_anchor(&priv->submitted);
++	INIT_WORK(&priv->rx_refill_work, p54u_rx_refill_work);
++	spin_lock_init(&priv->rx_refill_lock);
++	INIT_LIST_HEAD(&priv->rx_refill_list);
+ 
+ 	usb_get_dev(udev);
+ 
