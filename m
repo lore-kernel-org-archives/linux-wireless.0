@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50707 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751698AbZA3RJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 12:09:15 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 09:09:15 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <Jouni.Malinen@atheros.com>,
-	<johannes@sipsolutions.net>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH v6] mac80211: do not TX injected frames when not allowed
-Date: Fri, 30 Jan 2009 09:08:29 -0800
-Message-ID: <1233335309-28099-1-git-send-email-lrodriguez@atheros.com> (sfid-20090130_180917_956750_00C2D40D)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52396 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755085AbZAUPPu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jan 2009 10:15:50 -0500
+Date: Wed, 21 Jan 2009 10:14:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Glenn Burkhardt <gbburkhardt@verizon.net>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: poor performance with ath5k; reverting to ath_pci
+Message-ID: <20090121151435.GB3643@tuxdriver.com> (sfid-20090121_161555_547699_1CF15612)
+References: <200901140003.31693.gbburkhardt@verizon.net> <200901151734.46144.gbburkhardt@verizon.net> <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com> <200901202238.08756.gbburkhardt@verizon.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200901202238.08756.gbburkhardt@verizon.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Monitor mode is able to TX by using injected frames. We should
-not allow injected frames to be sent unless allowed by regulatory
-rules. Since AP mode uses a monitor interfaces to transmit
-management frames we have to take care to not break AP mode as
-well while resolving this. We can deal with this by allowing compliant
-APs solutions to inform mac80211 if their monitor interface is
-intended to be used for an AP by setting a cfg80211 flag for the
-monitor interface. hostapd, for example, currently does its own
-checks to ensure AP mode is not used on channels which require radar
-detection. Once such solutions are available it can can add this
-flag for monitor interfaces.
+On Tue, Jan 20, 2009 at 10:38:08PM -0500, Glenn Burkhardt wrote:
+> On Friday 16 January 2009 10:33:13 Bob Copeland wrote:
+> > On Thu, Jan 15, 2009 at 5:34 PM, Glenn Burkhardt
+> >
+> > <gbburkhardt@verizon.net> wrote:
+> > > ath5k_pci 0000:00:07.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+> > > ath5k_pci 0000:00:07.0: registered as 'phy0'
+> > > phy0: Selected rate control algorithm 'pid'
+> >
+> > Can you change the rate control algorithm to minstrel and retry?
+> 
+> I built a 2.6.28.1-9 kernel to get the minstrel code for ath5k.  The 
+> kernel for Suse 11.1 is 2.6.27.7-9.  But that means that more could have 
+> changed besides the rate control code.
+> 
+> It looks like minstrel and pid give about the same result, a bit worse that 
+> the ath_pci driver right now.  Performance seems to vary from day to day.  
+> I'll experiment some more, and switch transmission channels.  I'm not getting 
+> the really poor performance with ath5k right now.
+> 
+> I haven't looked yet - is there a way to switch to 'pid' rate control without 
+> rebuilding the kernel?
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+If you configure your kernel to include multiple rate control
+algorithms then you can use the 'ieee80211_default_rc_algo' module
+option for mac80211.  Of course, changing that only works if you
+rmmod/insmod mac80211.
 
-This v6 leaves the AP flag out and removes the unused sdata..
-
- net/mac80211/tx.c |   21 +++++++++++++++++++++
- 1 files changed, 21 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7b013fb..f1c726d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1433,10 +1433,31 @@ int ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 				 struct net_device *dev)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_channel *chan = local->hw.conf.channel;
- 	struct ieee80211_radiotap_header *prthdr =
- 		(struct ieee80211_radiotap_header *)skb->data;
- 	u16 len_rthdr;
- 
-+	/*
-+	 * Frame injection is not allowed if beaconing is not allowed
-+	 * or if we need radar detection. Beaconing is usually not allowed when
-+	 * the mode or operation (Adhoc, AP, Mesh) does not support DFS.
-+	 * Passive scan is also used in world regulatory domains where
-+	 * your country is not known and as such it should be treated as
-+	 * NO TX unless the channel is explicitly allowed in which case
-+	 * your current regulatory domain would not have the passive scan
-+	 * flag.
-+	 *
-+	 * Since AP mode uses monitor interfaces to inject/TX management
-+	 * frames we can make AP mode the exception to this rule once it
-+	 * supports radar detection as its implementation can deal with
-+	 * radar detection by itself. We can do that later by adding a
-+	 * monitor flag interfaces used for AP support.
-+	 */
-+	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
-+	     IEEE80211_CHAN_PASSIVE_SCAN)))
-+		goto fail;
-+
- 	/* check for not even having the fixed radiotap header part */
- 	if (unlikely(skb->len < sizeof(struct ieee80211_radiotap_header)))
- 		goto fail; /* too short to be possibly valid */
+John
 -- 
-1.6.1.2.253.ga34a
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
