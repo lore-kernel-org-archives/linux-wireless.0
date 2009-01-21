@@ -1,98 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpo-eml03.KPNXCHANGE.COM ([213.75.38.152]:14308 "EHLO
-	cpsmtpo-eml03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756482AbZAFWPP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 17:15:15 -0500
-Message-ID: <4963D7F0.3090402@kpnplanet.nl> (sfid-20090106_231536_898544_CE54DB20)
-Date: Tue, 06 Jan 2009 23:15:12 +0100
-From: Gertjan van Wingerde <gwingerde@kpnplanet.nl>
+Received: from mail.atheros.com ([12.36.123.2]:44412 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756782AbZAUEmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2009 23:42:25 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 20:42:25 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rt2400-devel@lists.sourceforge.net"
-	<rt2400-devel@lists.sourceforge.net>
-Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
-References: <200901042021.10904.IvDoorn@gmail.com> <20090105200809.GH6834@tesla> <49627BCB.4020200@kpnplanet.nl> <200901052321.46422.IvDoorn@gmail.com> <20090105234546.GK6834@tesla> <4963BFEF.2090006@kpnplanet.nl> <20090106204744.GB21980@tesla>
-In-Reply-To: <20090106204744.GB21980@tesla>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18806.42720.858590.913279@gargle.gargle.HOWL> (sfid-20090121_054230_290677_1646BFC2)
+Date: Wed, 21 Jan 2009 10:08:56 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: Add documentation bits for mac80211_rate_control_flags
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/09 21:47, Luis R. Rodriguez wrote:
-> On Tue, Jan 06, 2009 at 12:32:47PM -0800, Gertjan van Wingerde wrote:
->    
->> On 01/06/09 00:45, Luis R. Rodriguez wrote:
->>      
->>> On Mon, Jan 05, 2009 at 02:21:46PM -0800, Ivo van Doorn wrote:
->>>
->>>        
->>>> On Monday 05 January 2009, Gertjan van Wingerde wrote:
->>>>
->>>>          
->>>>> On 01/05/09 21:08, Luis R. Rodriguez wrote:
->>>>>
->>>>> The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
->>>>>
->>>>>            
->>>> For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
->>>> comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
->>>>
->>>>          
->>> Based on the documentation from the EEPROM for all devices I read that its recommended
->>> that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
->>> windows registry be used.
->>>
->>> Based on tests for the devices with only one band, do are you seeing an actual regulatory
->>> domain in the EEPROM?
->>>
->>> To deal with the issue of having two separate EEPROM values for a regulatory domain
->>> and since the documentation indicates to not rely on it I would advise to allow users
->>> to be compliant by selecting the country they are in. wpa_supplicant has support for
->>> selecting country now, and so does iw. Eventually I see Network Manager letting users
->>> select the country. But you guys are the maintainers and developers so you will know
->>> better.
->>>
->>>        
->> My tests indicate that there are devices out there that have this
->> information set in the EEPROM. Based on tests with my own patch, and my
->> own devices, I have been able to determine the following:
->>
->> 1. rt2400pci -->  don't know, don't own a rt2400pci device.
->> 2. rt2500pci -->  don't know, don't own a rt2500pci device anymore.
->> 3. rt2500usb -->  my e-tech device (not sure which type; the device
->> doesn't say it) has an actual domain set for the bg band.
->> 4. rt61pci -->  my Sitecom WL151 device does not contain actual domain
->> information.
->> 5. rt73usb -->  my Sitecom WL113-002 device does contain actual domain
->> information, and the codes for the bg band and a band are the same.
->> 6. rt2800pci -->  my Sitecom WL182 device does contain actual domain
->> information, and the codes for the bg band and a band are the same.
->> 7. rt2800usb -->  my Sitecom WL181 device does contain actual domain
->> information, and the codes for the bg band and a band are the same.
->>
->> So, there are devices out there that do contain "meaningful" regulatory
->> information.
->>
->> Luis, the definitions for the a-band EEPROM codes only give the channel
->> numbers, it doesn't indicate a real "country". Is there any way we can
->> check whether these sets of channels are actually consistent with the
->> regulations of specific countries?
->>      
->
-> You can help contribute to the wireless-regdb and check that the valid
-> channels apply there.
->    
-
-Well, the trouble I'm having is to match the allowed values and channels 
-against the regdb, to see to which countries each of the values map, if any.
-I'm a bit illiterate on channel assignments etc., so I don't know how to 
-do the math from channel number to frequency, and all the other stuff 
-that is in the regdb.
-
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
-Gertjan.
+ include/net/mac80211.h |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9a5869e..742937f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -262,6 +262,26 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(12),
+ };
+ 
++/**
++ * enum mac80211_rate_control_flags - per-rate flags set by the
++ *	Rate Control algorithm.
++ *
++ * These flags are set by the Rate control algorithm for each rate during tx,
++ * in the @flags member of struct ieee80211_tx_rate.
++ *
++ * @IEEE80211_TX_RC_USE_RTS_CTS: Use RTS/CTS exchange for this rate.
++ * @IEEE80211_TX_RC_USE_CTS_PROTECT: CTS-to-self protection is required.
++ *	This is set if the current BSS requires ERP protection.
++ * @IEEE80211_TX_RC_USE_SHORT_PREAMBLE: Use short preamble.
++ * @IEEE80211_TX_RC_MCS: HT rate.
++ * @IEEE80211_TX_RC_GREEN_FIELD: Indicates whether this rate can be used in
++ *	Greenfield mode.
++ * @IEEE80211_TX_RC_40_MHZ_WIDTH: Indicates if the Channel Width can be 40 MHz.
++ * @IEEE80211_TX_RC_DUP_DATA: the frame should be transmitted on both of the
++ *	adjacent 20 MHz channels, if the current channel type is
++ *	NL80211_CHAN_HT40MINUS or NL80211_CHAN_HT40PLUS.
++ * @IEEE80211_TX_RC_SHORT_GI: Short Guard interval can be used for this rate.
++ */
+ enum mac80211_rate_control_flags {
+ 	IEEE80211_TX_RC_USE_RTS_CTS		= BIT(0),
+ 	IEEE80211_TX_RC_USE_CTS_PROTECT		= BIT(1),
+-- 
+1.6.1
 
