@@ -1,63 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55777 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751716AbZAVOaq (ORCPT
+Received: from ik-out-1112.google.com ([66.249.90.183]:21623 "EHLO
+	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525AbZAUSmy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 09:30:46 -0500
-Date: Thu, 22 Jan 2009 09:17:35 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+	Wed, 21 Jan 2009 13:42:54 -0500
+Received: by ik-out-1112.google.com with SMTP id c28so136200ika.5
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 10:42:51 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	Glenn Burkhardt <gbburkhardt@verizon.net>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: poor performance with ath5k; reverting to ath_pci
-Message-ID: <20090122141734.GA3646@tuxdriver.com> (sfid-20090122_153052_305593_93A44537)
-References: <200901151734.46144.gbburkhardt@verizon.net> <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com> <200901202238.08756.gbburkhardt@verizon.net> <20090121151435.GB3643@tuxdriver.com> <69e28c910901211022j7f9c67dfv6392ce043dcff522@mail.gmail.com> <20090121191141.GA14710@tuxdriver.com> <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com> <40f31dec0901212032j65371fc6j5fcc1952f841d2ef@mail.gmail.com> <20090122134958.GA27560@tuxdriver.com> <1232633075.4224.6.camel@johannes.local>
+Subject: Re: [PATCH] mac80211: constify ieee80211_if_conf.bssid
+Date: Wed, 21 Jan 2009 19:42:47 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andrey Yurovsky <andrey@cozybit.com>
+References: <1232538425.4358.8.camel@johannes.local>
+In-Reply-To: <1232538425.4358.8.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1232633075.4224.6.camel@johannes.local>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200901211942.47888.IvDoorn@gmail.com> (sfid-20090121_194300_046242_A541FCDF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 22, 2009 at 03:04:35PM +0100, Johannes Berg wrote:
-> On Thu, 2009-01-22 at 08:49 -0500, John W. Linville wrote:
-> > On Thu, Jan 22, 2009 at 06:32:55AM +0200, Nick Kossifidis wrote:
-> > > 2009/1/21 Stefanik G=E1bor <netrolller.3d@gmail.com>:
-> > > >
-> > > > I think EMBEDDED is for options that replace full-featured Linu=
-x
-> > > > components with dumbed-down, "low-profile" equivalents (like SL=
-OB) -
-> > > > PID vs. minstrel is more like SLAB vs. SLUB.
-> > > >
-> > > > G=E1bor
-> > > >
-> > >=20
-> > > Minstrell performs very well even on embedded devices, i don't th=
-ink
-> > > it's that heavy compared to pid.
-> >=20
-> > I think his point was that people should be able to select multiple
-> > algorithms without having to select EMBEDDED.
->=20
-> The reason it was originally under EMBEDDED is that this allows you t=
-o
-> turn off _all_ algorithms, and that breaks, but might be desirable if
-> you have a system where you know you're using iwlagn or ath9k only wh=
-ich
-> have their own algorithms.
+On Wednesday 21 January 2009, Johannes Berg wrote:
+> Then one place can be a static const.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-I see.  But currently it limits you to only one generic algorithm, the
-one chosen as the default.  I don't think that was really the intent?
+For the rt2x00 part:
 
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+> ---
+>  drivers/net/wireless/libertas_tf/cmd.c         |    2 +-
+>  drivers/net/wireless/libertas_tf/libertas_tf.h |    2 +-
+>  drivers/net/wireless/rt2x00/rt2x00config.c     |    2 +-
+>  drivers/net/wireless/rt2x00/rt2x00lib.h        |    2 +-
+>  include/net/mac80211.h                         |    2 +-
+>  net/mac80211/main.c                            |    2 +-
+>  6 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> --- wireless-testing.orig/include/net/mac80211.h	2009-01-21 12:43:32.000000000 +0100
+> +++ wireless-testing/include/net/mac80211.h	2009-01-21 12:44:02.000000000 +0100
+> @@ -643,7 +643,7 @@ enum ieee80211_if_conf_change {
+>   */
+>  struct ieee80211_if_conf {
+>  	u32 changed;
+> -	u8 *bssid;
+> +	const u8 *bssid;
+>  };
+>  
+>  /**
+> --- wireless-testing.orig/net/mac80211/main.c	2009-01-21 12:43:33.000000000 +0100
+> +++ wireless-testing/net/mac80211/main.c	2009-01-21 12:44:02.000000000 +0100
+> @@ -176,7 +176,7 @@ int ieee80211_if_config(struct ieee80211
+>  	else if (sdata->vif.type == NL80211_IFTYPE_AP)
+>  		conf.bssid = sdata->dev->dev_addr;
+>  	else if (ieee80211_vif_is_mesh(&sdata->vif)) {
+> -		u8 zero[ETH_ALEN] = { 0 };
+> +		static const u8 zero[ETH_ALEN] = { 0 };
+>  		conf.bssid = zero;
+>  	} else {
+>  		WARN_ON(1);
+> --- wireless-testing.orig/drivers/net/wireless/libertas_tf/cmd.c	2009-01-21 12:43:32.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas_tf/cmd.c	2009-01-21 12:44:02.000000000 +0100
+> @@ -286,7 +286,7 @@ void lbtf_set_mode(struct lbtf_private *
+>  	lbtf_cmd_async(priv, CMD_802_11_SET_MODE, &cmd.hdr, sizeof(cmd));
+>  }
+>  
+> -void lbtf_set_bssid(struct lbtf_private *priv, bool activate, u8 *bssid)
+> +void lbtf_set_bssid(struct lbtf_private *priv, bool activate, const u8 *bssid)
+>  {
+>  	struct cmd_ds_set_bssid cmd;
+>  
+> --- wireless-testing.orig/drivers/net/wireless/libertas_tf/libertas_tf.h	2009-01-21 12:43:31.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/libertas_tf/libertas_tf.h	2009-01-21 12:44:02.000000000 +0100
+> @@ -463,7 +463,7 @@ int lbtf_set_radio_control(struct lbtf_p
+>  int lbtf_update_hw_spec(struct lbtf_private *priv);
+>  int lbtf_cmd_set_mac_multicast_addr(struct lbtf_private *priv);
+>  void lbtf_set_mode(struct lbtf_private *priv, enum lbtf_mode mode);
+> -void lbtf_set_bssid(struct lbtf_private *priv, bool activate, u8 *bssid);
+> +void lbtf_set_bssid(struct lbtf_private *priv, bool activate, const u8 *bssid);
+>  int lbtf_set_mac_address(struct lbtf_private *priv, uint8_t *mac_addr);
+>  
+>  int lbtf_set_channel(struct lbtf_private *priv, u8 channel);
+> --- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2x00config.c	2009-01-21 12:43:32.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/rt2x00/rt2x00config.c	2009-01-21 12:44:02.000000000 +0100
+> @@ -32,7 +32,7 @@
+>  void rt2x00lib_config_intf(struct rt2x00_dev *rt2x00dev,
+>  			   struct rt2x00_intf *intf,
+>  			   enum nl80211_iftype type,
+> -			   u8 *mac, u8 *bssid)
+> +			   const u8 *mac, const u8 *bssid)
+>  {
+>  	struct rt2x00intf_conf conf;
+>  	unsigned int flags = 0;
+> --- wireless-testing.orig/drivers/net/wireless/rt2x00/rt2x00lib.h	2009-01-21 12:43:32.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/rt2x00/rt2x00lib.h	2009-01-21 12:44:02.000000000 +0100
+> @@ -76,7 +76,7 @@ void rt2x00lib_stop(struct rt2x00_dev *r
+>  void rt2x00lib_config_intf(struct rt2x00_dev *rt2x00dev,
+>  			   struct rt2x00_intf *intf,
+>  			   enum nl80211_iftype type,
+> -			   u8 *mac, u8 *bssid);
+> +			   const u8 *mac, const u8 *bssid);
+>  void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+>  			  struct rt2x00_intf *intf,
+>  			  struct ieee80211_bss_conf *conf);
+> 
+> 
+> 
+
+
