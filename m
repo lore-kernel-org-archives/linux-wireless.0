@@ -1,177 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:39278 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754412AbZAVJmQ (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:60360 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595AbZAUQEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 04:42:16 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2097815fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 01:42:14 -0800 (PST)
+	Wed, 21 Jan 2009 11:04:40 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so370684ugf.37
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 08:04:38 -0800 (PST)
+Message-ID: <49774794.507@gmail.com> (sfid-20090121_170447_550692_599750D7)
+Date: Wed, 21 Jan 2009 17:04:36 +0100
+From: Artur Skawina <art.08.09@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <578ff7cb0901212113i73bc8113g36eb18116407ec81@mail.gmail.com>
-References: <578ff7cb0901212113i73bc8113g36eb18116407ec81@mail.gmail.com>
-Date: Thu, 22 Jan 2009 09:42:14 +0000
-Message-ID: <3ace41890901220142s9416d73q89e87fc0ae991ac@mail.gmail.com> (sfid-20090122_104223_519446_BCCEAD98)
-Subject: Re: bcm4311 who likes to disassociate (yet associates just fine using
-	knoppix)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Nate Lally <nate.lally@gmail.com>
-Cc: bcm43xx-dev@berlios.de, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
+References: <200901211450.50880.chunkeey@web.de>
+In-Reply-To: <200901211450.50880.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 22, 2009 at 5:13 AM, Nate Lally <nate.lally@gmail.com> wrote:
-> Hello,
->  I didn't actually subscribe to the bcm43 mailing list so I'm not
-> quite sure if anyone actually received the prior emails.  Nor am I
-> convinced it is actually the domain of those working on the b43
-> firmware considering the fact that the exact same kernel compile and
-> modprobe configs are being used on the non-working ubuntu distribution
-> yet associate just fine while booting knoppix under the below
-> circumstances.
->
-> Any help/direction would be appreciated.
+Christian Lamparter wrote:
+> This patch fixes a long standing issue in p54usb.
+> 
+> Under high memory pressure, dev_alloc_skb couldn't always allocate a 
+> replacement skb. In such situations, we had to free the associated urb.
+> And over the time all urbs were eventually gone altogether and 
+> obviously the device remained mute from then on.
 
-reason=3 is exactly what it says, "local choice" . That means *you*
-decided to disconnect, or some software makes that choice for you.. It
-is most likely NetworkManager/wpa_supplicant. Try to make sure they
-are not running, or at least configured to help you rather than mess
-with you. it is likely knoppix does not have NM running by default.
-Probably not a kernel problem.
+Yes, that's one of the things that is (well, was) on my todo list after 
+reading p54usb.c, so i obviously like the idea ;)
+
+I'll write down some of the other things as they are related to this.
+It will take at least a few days for me do do and properly test, hence
+if you find the comments below useful i won't mind. ;)
+
+This patch makes the usb rx path alloc-less (except for the actual urb
+submission call) which is good, but i wonder if we should try a GFP_NOWAIT
+allocation, and only fallback if that one fails. Was going to do some
+measuring before implementing it, to see if starvation was a risk. Maybe
+only alloc in irq if the rx queue shrinks too much.
+
+The net2280 tx path does at least three allocs, one tiny never-changing buffer
+and two urbs, i'd like to get rid of all of them. The constant buffer is
+easy - we can just kmalloc a cacheline-sized chunk on init, and (re)use that.
+As to the urbs, i originally wanted to put (at least one of) them in the skb
+headroom. But the fact that the skb can be freed before the completions run 
+makes that impossible. That leaves keeping them around on a list and reusing
+them. And as if you maintain a list for the rx path it comes naturally to
+reuse it for tx as well. (obviously if the list is empty we have to create a
+new urb, but the common case should be zero allocations).
 
 
->
-> -Nate Lally
->
-> On 1/8/09, Nate Lally <nate.lally@gmail.com> wrote:
->> An inspiring new development.  I boot the laptop with knoppix 5.3.1
->> utilizing kernel version 2.6.24.4, I mount the firmware for bcm43xx @ 2.6.24
->> on /lib/firmware and discover not only can I associate, I can utilize wep
->> and pull an ip.  From there I copy the /boot/config and compile a 2.6.24-4
->> kernel with those options using gcc 4.2.4 (because of a reported bug with
->> gcc 4.3 and time.h) only to find that now card does not report ready ie:
->>
->> input: b43-phy0 as /class/input/input9
->> Registered led device: b43-phy0:tx
->> Registered led device: b43-phy0:rx
->> Registered led device: b43-phy0:radio
->> ADDRCONF(NETDEV_UP): wlan0: link is not ready
->> eth0: no IPv6 routers present
->> wlan0: Initial auth_alg=0
->> wlan0: authenticate with AP 00:16:b6:55:77:b3
->> wlan0: authenticate with AP 00:16:b6:55:77:b3
->> wlan0: authenticate with AP 00:16:b6:55:77:b3
->> wlan0: authentication with AP 00:16:b6:55:77:b3 timed out
->>
->> any ideas/flames/help/suggestions would help from you guys
->>
->> thanks again
->> -Nate Lally
->>
->> On Tue, Jan 6, 2009 at 1:11 AM, Nate Lally <nate.lally@gmail.com> wrote:
->>
->>> Hi All,
->>>   I'm wondering where to get started debugging this issue, not a lot of
->>> wifi experience... I have a laptop I inherited with no pcmcia slot and a
->>> broadcom bcm4311 wifi chip.  Whenever I try to associate to an access
->>> point
->>> with no encryption, the card associates, then shortly thereafter
->>> disassociates stating reason 3 (as you'll see in the following dmesg)...
->>> I
->>> still haven't tracked down the reason 3 from the call to
->>> ieee80211_sta_disassociate   in mlme.c (I can't find what calls
->>> ieee80211_ioctl_siwmlme).
->>> but it seems to me that a ioctl call to disassociate must be stemming from
->>> a state machine that decided something was wrong or missing that the
->>> driver
->>> should be providing/correcting..
->>> any tips tricks ideas directions would be much appreciated...
->>>
->>>
->>> root@aello:/usr/src/wireless-testing# uname -a
->>> Linux aello 2.6.28 #2 Mon Jan 5 20:12:00 CST 2009 i686 GNU/Linux
->>>
->>> root@aello:/usr/src/wireless-testing# git describe
->>> v2.6.28-10356-g738910c
->>>
->>> root@aello:/usr/src/wireless-testing# lspci -vvvn | grep 43 -A7
->>> 06:00.0 0280: 14e4:4311 (rev 01)
->>>     Subsystem: 103c:1363
->>>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
->>> Stepping- SERR+ FastB2B- DisINTx-
->>>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
->>> <TAbort-
->>> <MAbort- >SERR- <PERR- INTx-
->>>     Latency: 0, Cache Line Size: 64 bytes
->>>     Interrupt: pin A routed to IRQ 18
->>>     Region 0: Memory at 30000000 (32-bit, non-prefetchable) [size=16K]
->>>     Capabilities: [40] Power Management version 2
->>> --
->>>     Kernel driver in use: b43-pci-bridge
->>>     Kernel modules: ssb
->>>
->>>
->>> dmesg output
->>>
->>> [11471.880103] b43-phy0: Loading firmware version 410.2160 (2007-05-26
->>> 15:32:10)
->>> [11471.940137] b43-phy0 debug: Chip initialized
->>> [11471.940357] b43-phy0 debug: 32-bit DMA initialized
->>> [11471.962122] Registered led device: b43-phy0::tx
->>> [11471.962145] Registered led device: b43-phy0::rx
->>> [11471.962175] Registered led device: b43-phy0::radio
->>> [11471.962256] b43-phy0 debug: Wireless interface started
->>> [11471.968608] b43-phy0 debug: Adding Interface type 2
->>> [11471.980606] ADDRCONF(NETDEV_UP): wlan0: link is not ready
->>> [11515.922066] wlan0: direct probe to AP 00:16:b6:xx:xx:xx try 1
->>> [11516.120072] wlan0: direct probe to AP 00:16:b6:xx:xx:xx try 2
->>> [11516.123276] wlan0 direct probe responded
->>> [11516.123280] wlan0: authenticate with AP 00:16:b6:xx:xx:xx
->>> [11516.125125] wlan0: authenticated
->>> [11516.125129] wlan0: associate with AP 00:16:b6:xx:xx:xx
->>> [11516.127714] wlan0: RX AssocResp from 00:16:b6:xx:xx:xx (capab=0x421
->>> status=0 aid=9)
->>> [11516.127717] wlan0: associated
->>> [11516.127722] phy0: Allocated STA 00:16:b6:xx:xx:xx
->>> [11516.128449] phy0: Inserted STA 00:16:b6:xx:xx:xx
->>> [11516.128454] wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15
->>> cWmax=1023
->>> txop=0
->>> [11516.129191] wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15
->>> cWmax=1023
->>> txop=0
->>> [11516.129287] wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15
->>> txop=94
->>> [11516.129382] wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7
->>> txop=47
->>> [11516.129471] wlan0: switched to short barker preamble
->>> (BSSID=00:16:b6:xx:xx:xx)
->>> [11516.129475] wlan0: switched to short slot (BSSID=00:16:b6:xx:xx:xx)
->>> [11516.130166] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
->>> [11516.130271] wlan0: disassociating by local choice (reason=3)
->>> [11516.136255] phy0: Removed STA 00:16:b6:xx:xx:xx
->>> [11516.136293] phy0: Destroyed STA 00:16:b6:xx:xx:xx
->>> [11526.172056] wlan0: no IPv6 routers present
->>>
->>>
->>>
->>> --
->>> Nate Lally
->>>
->>
->>
->>
->> --
->> Nate
->> (763)-607-7630
->>
->
->
-> --
-> Nate
-> (763)-607-7630
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Do you have a git tree, or some kind of patch queue, with all the pending p54
+patches? Working on top of wireless-testing makes it harder to test.
+What was this patch made against?
+
+artur
+
+[a few comments inline below]
+
+> +	if (p54_rx(dev, skb) == 0) {
+> +		/*
+> +		 * This skb can be reused.
+> +		 * Undo all modifications and resubmit it.
+> +		 */
+>  
+>  		if (priv->hw_type == P54U_NET2280)
+>  			skb_push(skb, priv->common.tx_hdr_len);
+>  		if (priv->common.fw_interface == FW_LM87) {
+> @@ -129,14 +124,47 @@ static void p54u_rx_cb(struct urb *urb)
+>  			WARN_ON(1);
+>  			urb->transfer_buffer = skb_tail_pointer(skb);
+>  		}
+> +
+> +		usb_anchor_urb(urb, &priv->submitted);
+> +		if (usb_submit_urb(urb, GFP_ATOMIC) == 0) {
+> +			skb_queue_tail(&priv->rx_queue, skb);
+> +			return ;
+> +		} else {
+> +			usb_unanchor_urb(urb);
+> +			dev_kfree_skb_irq(skb);
+> +		}
+>  	}
+> +
+> +	/*
+> +	 * This skb CANNOT be reused.
+> +	 * Put the now unused urb into a list and do the refilled later on in
+> +	 * the less critical workqueue thread. 
+> +	 * This eases the memory pressure and prevents latency spikes.
+> +	 */
+> +
+> +	urb->transfer_buffer = NULL;
+> +	urb->context = NULL;
+> +
+> +	spin_lock_irqsave(&priv->rx_refill_lock, flags);
+> +	list_add_tail(&urb->urb_list, &priv->rx_refill_list);
+> +	spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+> +
+> +	/*
+> +	 * Don't let the usb stack free the queued urb after this completion
+> +	 * callback has finished.
+> +	 */
+> +	usb_get_urb(urb);
+> +
+> +	if (unlikely(!priv->common.hw->workqueue)) {
+> +		/*
+> +		 * Huh? mac80211 isn't fully initialized yet?
+> +		 * Please check your system, something bad is going on.
+> +		 */
+> +		WARN_ON(1);
+> +		return;
+>  	}
+> +
+> +	queue_work(priv->common.hw->workqueue, &priv->rx_refill_work);
+>  }
+>  
+>  static void p54u_tx_cb(struct urb *urb)
+> @@ -150,58 +178,115 @@ static void p54u_tx_cb(struct urb *urb)
+>  
+>  static void p54u_tx_dummy_cb(struct urb *urb) { }
+>  
+> +static void p54u_rx_refill_free_list(struct ieee80211_hw *dev)
+
+the name is a bit misleading...
+s/p54u_rx_refill_free_list/p54u_free_rx_refill_list/ ?
+
+> +{
+> +	struct p54u_priv *priv = dev->priv;
+> +	struct urb *entry, *tmp;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&priv->rx_refill_lock, flags);
+> +	list_for_each_entry_safe(entry, tmp, &priv->rx_refill_list, urb_list) {
+> +		list_del(&entry->urb_list);
+> +		usb_free_urb(entry);
+> +	}
+> +	spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+> +}
+> +
+>  static void p54u_free_urbs(struct ieee80211_hw *dev)
+>  {
+>  	struct p54u_priv *priv = dev->priv;
+> +
+>  	usb_kill_anchored_urbs(&priv->submitted);
+> +	cancel_work_sync(&priv->rx_refill_work);
+> +	p54u_rx_refill_free_list(dev);
+>  }
+>  
+> +static int p54u_rx_refill(struct ieee80211_hw *dev)
+>  {
+>  	struct p54u_priv *priv = dev->priv;
+> +	struct urb* entry, *tmp;
+> +	unsigned long flags, flags2;
+>  
+> +	spin_lock_irqsave(&priv->rx_refill_lock, flags);
+> +	list_for_each_entry_safe(entry, tmp, &priv->rx_refill_list, urb_list) {
+> +		struct p54u_rx_info *info;
+> +		struct sk_buff *skb;
+> +
+> +		list_del(&entry->urb_list);
+> +		spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+>  		skb = __dev_alloc_skb(priv->common.rx_mtu + 32, GFP_KERNEL);
+> +
+> +		if (unlikely(!skb)) {
+> +			/*
+> +			 * In order to prevent a loop, we put the urb
+> +			 * back at the _front_ of the list, so we can
+> +			 * march on, in out-of-memory situations.
+> +			 */
+> +
+> +			spin_lock_irqsave(&priv->rx_refill_lock, flags);
+> +			list_add(&entry->urb_list, &priv->rx_refill_list);
+> +			continue;
+>  		}
+>  
+>  		usb_fill_bulk_urb(entry, priv->udev,
+>  				  usb_rcvbulkpipe(priv->udev, P54U_PIPE_DATA),
+>  				  skb_tail_pointer(skb),
+>  				  priv->common.rx_mtu + 32, p54u_rx_cb, skb);
+> +
+>  		info = (struct p54u_rx_info *) skb->cb;
+>  		info->urb = entry;
+>  		info->dev = dev;
+> +		spin_lock_irqsave(&priv->rx_queue.lock, flags2);
+> +		__skb_queue_tail(&priv->rx_queue, skb);
+>  
+>  		usb_anchor_urb(entry, &priv->submitted);
+> +		if (usb_submit_urb(entry, GFP_ATOMIC)) {
+
+GFP_KERNEL? [would need dropping rx_queue.lock earlier and retaking in the
+(hopefully rare) error path]
+
+> +			/*
+> +			 * urb submittion failed.
+> +			 * free the associated skb and put the urb back into 
+> +			 * the front of the refill list, so we can 
+> +			 * try our luck next time.
+> +			 */
+> +
+> +			__skb_unlink(skb, &priv->rx_queue);
+> +			spin_unlock_irqrestore(&priv->rx_queue.lock, flags);
+> +			kfree_skb(skb);
+> +			spin_lock_irqsave(&priv->rx_refill_lock, flags);
+> +			list_add(&entry->urb_list, &priv->rx_refill_list);
+> +			spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+
+'entry' is now both anchored in priv->submitted and in the rx_refill_list.
+also, a ref will be dropped by the free_urb() below.
+
+>  		}
+> +		spin_unlock_irqrestore(&priv->rx_queue.lock, flags2);
+>  		usb_free_urb(entry);
+> +		spin_lock_irqsave(&priv->rx_refill_lock, flags);
+>  	}
+> +	spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+>  	return 0;
+> +}
