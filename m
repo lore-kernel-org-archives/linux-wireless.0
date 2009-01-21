@@ -1,67 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gateway13.websitewelcome.com ([67.18.94.12]:39363 "HELO
-	gateway13.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752005AbZAVOYr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 09:24:47 -0500
-Received: from 96-26-216-101.sea.clearwire-dns.net ([96.26.216.101]:52711 helo=Hydra.darkmatter.org)
-	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.69)
-	(envelope-from <Info@delphi-real-estate.com>)
-	id 1LQ04L-0003h1-TR
-	for linux-wireless@vger.kernel.org; Thu, 22 Jan 2009 07:58:06 -0600
-From: Delphi Real Estate <Info@delphi-real-estate.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Kernel Compile Fail with 2.6.26 Drivers
-Date: Thu, 22 Jan 2009 05:58:04 -0800
-References: <200901200942.57618.Info@delphi-real-estate.com>
-In-Reply-To: <200901200942.57618.Info@delphi-real-estate.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901220558.05104.Info@delphi-real-estate.com> (sfid-20090122_152452_404263_56831EEE)
+Received: from c60.cesmail.net ([216.154.195.49]:22630 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750880AbZAUQsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jan 2009 11:48:22 -0500
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix typo in chip version check
+From: Pavel Roskin <proski@gnu.org>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
+	Jouni.Malinen@atheros.com, linux-wireless@vger.kernel.org,
+	Luis.Rodriguez@atheros.com
+In-Reply-To: <1232538528-14289-1-git-send-email-vasanth@atheros.com>
+References: <1232538528-14289-1-git-send-email-vasanth@atheros.com>
+Content-Type: text/plain
+Date: Wed, 21 Jan 2009 11:48:15 -0500
+Message-Id: <1232556495.17147.4.camel@dv> (sfid-20090121_174827_078204_1BADBC9E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello, Vasanthakumar!
 
-It seems that either no one has 'n' working at 5GHz, or are not willing to advise.  All I need is a combination that works;  I've tried 2.6's iwlwifi in 2.6.27 and it won't compile, and it seems that 2.6.28's iwlwifi doesn't work in 'n'.  I've run Debian for eleven years and have always compiled my own custom kernels, but would very much like to get 'n' working.  Scripting is no problem, although I am not an actual coder.  I wish someone could pitch in briefly.
+On Wed, 2009-01-21 at 17:18 +0530, Vasanthakumar Thiagarajan wrote:
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+>  drivers/net/wireless/ath9k/hw.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 
+I'm not a developer of ath9k, and I don't know much about the hardware.
+However, I think your patch should be better explained.
 
+> -	if (AR_SREV_9280(ah)) {
+> +	if (AR_SREV_9280_10_OR_LATER(ah)) {
 
-On Tuesday 20 January 2009 9:42:57 Delphi Real Estate wrote:
-> 
-> Trying to get 5GHz 'n' working, but I just do not understand the advice I'm getting. (below)  I am told that TX aggregation support is not expected to be fixed until around 2.6.30.
-> 
-> Goal is to be able to get some version of the iwlagn drivers that will do 'n' mode at 5GHz, which will compile in my Ubuntu 2.6.27 kernel.  I tried just grafting in the 2.6.26 iwlwifi directory into my 2.6.27 source tree, but compile fails without explanation.
-> 
-> Can anyone help?
-> 
-> 
-> > If you want the driver with TX aggregation support then you need to use
-> > the iwl5000 branch
-> > ( http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=shortlog;h=iwl5000 )
-> 
-> I guess I don't understand this.  I hit the first entry's 'snapshot', and I get a blank screen.  I click on the heading:
-> "iwlwifi: fix incorrect monitor mode operation  iwl5000"
-> ... and it takes me to the explanation of the bugfix, but navigating to iwl-agn.c or iwl3945-base.c via tree, snapshot or blob just gives me an HTML representation of the files.  There doesn't seem to be any way to get the actual source.  Why do they prevent you from getting just individual files with this system?
-> 
-> 
-> > The branch is based on kernel 2.6.26. If you do not want to give up your
-> > current kernel you can take a look how compat-wireless works ... but it
-> > is actually intended to take the most recent wireless-testing to work
-> > with your current kernel, not an older kernel in itself as what can be
-> > found in the iwl5000 branch.
-> 
-> I don't mind running the most recent kernel, as long as it works and has Ubuntu patches.  I don't see how to get there from here though.  I am a commercial real estate broker, after all, not a coder.
-> 
-> 
-> > Try diffing the Ubuntu sources against the kernel.org sources, and
-> > merge the resulting diff into the git tree.
-> 
-> LOL, thanks, but I am a commercial real estate broker, and have about as much chance of doing this as passing a calculus class.
-> 
-> Just trying to get 'n' at 5GHz, so I don't pollute my neighbors' wifi with my MythTV streaming.  I am lucky to have working what I do...
-> 
-> 
-
-
+It's not a typo.  A typo would be something like AR_SREV_9380, that is
+never defined.  Or maybe a message like "foudn AR9280".  AR_SREV_9280 is
+defined and has valid uses.  If you think it needs to be changed in this
+particular case, an explanation is needed.  It would be nice if you
+mentioned that it fixes something for some hardware.
+ 
+-- 
+Regards,
+Pavel Roskin
