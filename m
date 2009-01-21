@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:49576 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbZABOV2 (ORCPT
+Received: from vms173009pub.verizon.net ([206.46.173.9]:35730 "EHLO
+	vms173009pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756782AbZAUEiT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 09:21:28 -0500
-Received: by ewy10 with SMTP id 10so6769715ewy.13
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2009 06:21:25 -0800 (PST)
-To: Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: [PATCH] rt2x00: Fix radio LED type check
-Date: Fri, 2 Jan 2009 15:21:20 +0100
-Cc: Andrew Price <andy@andrewprice.me.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
+	Tue, 20 Jan 2009 23:38:19 -0500
+Received: from depotrd.localnet ([96.237.19.106]) by vms173009.mailsrvcs.net
+ (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
+ with ESMTPA id <0KDS00AFSXVNRN92@vms173009.mailsrvcs.net> for
+ linux-wireless@vger.kernel.org; Tue, 20 Jan 2009 21:33:23 -0600 (CST)
+Date: Tue, 20 Jan 2009 22:38:08 -0500
+From: Glenn Burkhardt <gbburkhardt@verizon.net>
+Subject: Re: poor performance with ath5k; reverting to ath_pci
+In-reply-to: <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
 	linux-wireless@vger.kernel.org
-References: <20090102080527.GA16585@silver.sucs.org> <a32f33a40901020314h3f33347dw6433e485abd627e5@mail.gmail.com> <1230905414.15391.39.camel@californication>
-In-Reply-To: <1230905414.15391.39.camel@californication>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200901021521.20500.IvDoorn@gmail.com> (sfid-20090102_152131_642571_4E6F9806)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Message-id: <200901202238.08756.gbburkhardt@verizon.net> (sfid-20090121_053839_776648_DA19422F)
+MIME-version: 1.0
+Content-type: text/plain; charset=iso-8859-1
+References: <200901140003.31693.gbburkhardt@verizon.net>
+ <200901151734.46144.gbburkhardt@verizon.net>
+ <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 02 January 2009, Marcel Holtmann wrote:
-> Hi Ivo,
-> 
-> > > Since commit 9a95dba32735534bda59def40c747bf606fedf05 "rt2x00: Fix LED
-> > > state handling", rt2x00leds_led_radio wrongly checks that the LED type
-> > > is LED_TYPE_ASSOC. This patch makes it check for LED_TYPE_RADIO once
-> > > again.
-> > >
-> > > Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
-> > 
-> > Good catch. Thanks.
-> > 
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> 
-> small comment from my side here. Signed-off-by is only suppose to be
-> used if you pick up the patch and then send it to John by yourself. If
-> you just wanna indicate that it is fine for John to pick up this patch,
-> then it should be an Acked-by: line.
-> 
-> The Signed-off-by should indicate the steps (aka persons) this patch
-> when through until it reached Linus. This doesn't include people testing
-> or acknowledging a patch.
+On Friday 16 January 2009 10:33:13 Bob Copeland wrote:
+> On Thu, Jan 15, 2009 at 5:34 PM, Glenn Burkhardt
+>
+> <gbburkhardt@verizon.net> wrote:
+> > ath5k_pci 0000:00:07.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+> > ath5k_pci 0000:00:07.0: registered as 'phy0'
+> > phy0: Selected rate control algorithm 'pid'
+>
+> Can you change the rate control algorithm to minstrel and retry?
 
-Ok, feel free to change it to a Acked-by then. ;)
+I built a 2.6.28.1-9 kernel to get the minstrel code for ath5k.  The 
+kernel for Suse 11.1 is 2.6.27.7-9.  But that means that more could have 
+changed besides the rate control code.
 
-Ivo
+It looks like minstrel and pid give about the same result, a bit worse that 
+the ath_pci driver right now.  Performance seems to vary from day to day.  
+I'll experiment some more, and switch transmission channels.  I'm not getting 
+the really poor performance with ath5k right now.
+
+I haven't looked yet - is there a way to switch to 'pid' rate control without 
+rebuilding the kernel?
 
