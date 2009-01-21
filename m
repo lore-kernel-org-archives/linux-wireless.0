@@ -1,53 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:48301 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127AbZANP5M (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41203 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759234AbZAUMod (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 10:57:12 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so584462rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2009 07:57:09 -0800 (PST)
-Message-ID: <30c8a83c0901140757w5ee3c859wd0685d0b5f3a2e29@mail.gmail.com> (sfid-20090114_165717_092883_D9090B62)
-Date: Wed, 14 Jan 2009 09:57:09 -0600
-From: "Buran Ayuthia" <the.ayuthias@googlemail.com>
-To: "Lorenzo Nava" <navalorenx@gmail.com>
-Subject: Re: [b43] opensource firmware
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com>
+	Wed, 21 Jan 2009 07:44:33 -0500
+Subject: Re: [PATCH] mac80211: Add documentation bits for
+	mac80211_rate_control_flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <18806.42720.858590.913279@gargle.gargle.HOWL>
+References: <18806.42720.858590.913279@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-JE2RQESnaCVydXLeSI0p"
+Date: Wed, 21 Jan 2009 13:44:13 +0100
+Message-Id: <1232541853.4106.0.camel@johannes.local> (sfid-20090121_134436_118294_A4B01260)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My 4311 rev 01 card still works with the new initvals and firmware
-using WPA2-personal (both TKIP and CCMP) and without encyrption.  I am
-still loading the module using modprobe b43 qos=0.
 
-Buran Ayuthia
+--=-JE2RQESnaCVydXLeSI0p
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jan 14, 2009 at 9:30 AM, Lorenzo Nava <navalorenx@gmail.com> wrote:
-> Hello everybody,
->
-> we completed the 1st version of initvals. They are available at http://www.ing.unibs.it/openfwwf
-> . Currently only binary version is available: don't worry, we will
-> publish source code as soon as possible!! This first version is a
-> "test version": please try it and let us know if everythink is ok...
->
-> Today we have also tested a new firmware version that works with WPA2-
-> personal (both TKIP and CCMP) and WPA2-enterprise (EAP-TTLS) (tested
-> on 4306 and 4318 PCI device). If anybody was interested please try new
-> firmware with encryption and let us know if it works correctly, thanks!
->
-> Initvals and new firmware version can be found at http://www.ing.unibs.it/openfwwf
->
-> Cheers
->
-> Lorenzo Nava
-> Francesco Gringoli
->
->
-> _______________________________________________
-> Bcm43xx-dev mailing list
-> Bcm43xx-dev@lists.berlios.de
-> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
->
+On Wed, 2009-01-21 at 10:08 +0530, Sujith wrote:
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+>  include/net/mac80211.h |   20 ++++++++++++++++++++
+>  1 files changed, 20 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 9a5869e..742937f 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -262,6 +262,26 @@ enum mac80211_tx_control_flags {
+>  	IEEE80211_TX_CTL_RATE_CTRL_PROBE	=3D BIT(12),
+>  };
+> =20
+> +/**
+> + * enum mac80211_rate_control_flags - per-rate flags set by the
+> + *	Rate Control algorithm.
+> + *
+> + * These flags are set by the Rate control algorithm for each rate durin=
+g tx,
+> + * in the @flags member of struct ieee80211_tx_rate.
+> + *
+> + * @IEEE80211_TX_RC_USE_RTS_CTS: Use RTS/CTS exchange for this rate.
+> + * @IEEE80211_TX_RC_USE_CTS_PROTECT: CTS-to-self protection is required.
+> + *	This is set if the current BSS requires ERP protection.
+> + * @IEEE80211_TX_RC_USE_SHORT_PREAMBLE: Use short preamble.
+> + * @IEEE80211_TX_RC_MCS: HT rate.
+> + * @IEEE80211_TX_RC_GREEN_FIELD: Indicates whether this rate can be used=
+ in
+> + *	Greenfield mode.
+> + * @IEEE80211_TX_RC_40_MHZ_WIDTH: Indicates if the Channel Width can be =
+40 MHz.
+> + * @IEEE80211_TX_RC_DUP_DATA: the frame should be transmitted on both of=
+ the
+> + *	adjacent 20 MHz channels, if the current channel type is
+> + *	NL80211_CHAN_HT40MINUS or NL80211_CHAN_HT40PLUS.
+> + * @IEEE80211_TX_RC_SHORT_GI: Short Guard interval can be used for this =
+rate.
+> + */
+
+Are you sure all this should say "can" rather than "should"? I'm
+thinking that the driver should just follow whatever the rc algorithm
+said here?
+
+johannes
+
+--=-JE2RQESnaCVydXLeSI0p
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJdxiaAAoJEKVg1VMiehFYdaQP/0wZcfzuReZEmGbQFaSZNu9o
+9I4CJfiTuucTPx4oIics5dV6tQL91a1fFIDJpxAx5tQqhfzitXiJ34yHB/LWNRo3
+IUxC/95fbYlscPoS0AfZj1k+NY/hI3uy3J4YPhIgZyz7mJSv8TZ8F9gc6QJmwcfC
+9sF1z+ytkCP2zuXCWD3TT9NJNUy09W63qSDGe1c8UNeeqvjV31ZkeYkAUwtFqkpN
+QT4nMjWuLKiNJqEtOPYpMQpe9z0LaPIGdVyi7+/QkYsjctcCj5jwtbSV0AtaOcDz
+z3lplaTT+ZT8TCEr0cFd1ZwAgvLRT8wRZbfDyDxK9P79NAuq0Z9DG9d85WdOZLho
+8US+MKd16o7deveZj6L2sP85xsDV8jB3sz4Bj5Ftrqt9gt8X3RZPeeDGkKBezr5j
+EmcNGrwYVtyywoxbrntauQlWymc6CYNCRcEmiV566IcVT8/nr92TEWg9UZjFJ3Ax
+nDMZK8XDAoOU3BJEsjORFqkt78JFprhIbmSsScZdxuEeVrszOZmoAYpHAMHuLToC
+GMi5fhejcdXNvlZwovJW2JoJWxhTadprv8Seq+83PxxSXmeAl4XO2q7WstimA0uF
+4cGk9yZjLJagEXaRVynnqLqTblJVBhmK/GAbOzxXIlsHruFZzk8bn58mJtGG3gmQ
+/XaadNBC8NyZwjNkqH8K
+=TH98
+-----END PGP SIGNATURE-----
+
+--=-JE2RQESnaCVydXLeSI0p--
+
