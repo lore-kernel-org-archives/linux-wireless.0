@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53756 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753160AbZAIM6e convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:51910 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752642AbZAUODG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 07:58:34 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 04:58:34 -0800
-From: Vivek Natarajan <Vivek.Natarajan@Atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 9 Jan 2009 18:26:01 +0530
-Subject: RE: multicast traffic and ath9k
-Message-ID: <44EE5C37ADC36343B0625A05DD408C4845A77DAF07@CHEXMB-01.global.atheros.com> (sfid-20090109_135839_795342_B0722525)
-References: <1231346161.3545.52.camel@johannes>
-In-Reply-To: <1231346161.3545.52.camel@johannes>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 21 Jan 2009 09:03:06 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH -stable] p54usb: fix traffic stalls / packet drop
+Date: Wed, 21 Jan 2009 15:03:11 +0100
+Cc: Greg KH <gregkh@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Artur Skawina <art.08.09@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Linux wireless <linux-wireless@vger.kernel.org>
+References: <KTnguC9mFUC.A.VNB.TJRdJB@chimera> <20090120223957.GA6088@suse.de> <20090120235626.GA3094@tuxdriver.com>
+In-Reply-To: <20090120235626.GA3094@tuxdriver.com>
 MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901211503.11849.chunkeey@web.de> (sfid-20090121_150313_762381_121B6B48)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
+On Wednesday 21 January 2009 00:56:26 John W. Linville wrote:
+> On Tue, Jan 20, 2009 at 02:39:57PM -0800, Greg KH wrote:
+> > On Tue, Jan 20, 2009 at 11:11:11PM +0100, Christian Lamparter wrote:
+> > > All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
+> > > Else, the firmware could freeze, or simply drop the frame.
+> > > 
+> > > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> > > Cc: stable <stable@kernel.org>
+> > > ---
+> > > Attached is the patch is for the stable series only.
+> > > Bugzilla reference: http://bugzilla.kernel.org/show_bug.cgi?id=12260
+> > > (wireless-testing needs a different one)
+> > 
+> > What do you mean, this is for 2.6.28-stable or 2.6.27-stable only, and
+> > not 2.6.29?  Why?
+> 
+> At least part of that patch is already in 2.6.29.  I think Christian
+> may have combined another patch into the -stable version, one that
+> he posted today for -rc inclusion.
 
-> I'm inclined to ask you to remove that multicast checking from mac80211
-> and do it closer to the hardware, and simply require from the
-> driver/hardware that mac80211 needs not do anything for multicast
-> traffic. Mostly because I'm thinking that once we start relying on the
-> software implementation in mac80211 the delay may be too large.
+Yup, the -stable patch includes the diff "hunks" for all devices.
 
-I'm curious to know how this is implemented in other vendor drivers because
-beacon processing is shared between the hw and sw. mc bit is processed in
-the hw whereas tim bit and timestamp update need sw's help. Is the mc bit
-checking done only on enabling power save? if set and mc packets are received,
-how does it automatically go back to sleep and wouldn't there be any conflict
-between mac80211 and the hw regarding power state since mac80211 is not aware
-of the mc bit induced state change?
+linux-wireless is a different affair, because the fix for LM87
+(aka "p54usb: fix random traffic stalls (LM87)" ) is already merged.
+So the patch I posted on linux-wirelss (-rc inclusion) only has the
+diffs for the 1st generation and 2nd generation with old firmwares.
 
-Vivek.
+Regards,
+	Chr
