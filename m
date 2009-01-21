@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:36669 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751056AbZAZOBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 09:01:33 -0500
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Mon, 26 Jan 2009 15:01:30 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <b6c5339f0901250847i5f9f98bcl4ebec04027d7c93c@mail.gmail.com>
-Message-ID: <20090126140130.14450@gmx.net> (sfid-20090126_150137_980049_0FE129DE)
+Received: from wf-out-1314.google.com ([209.85.200.170]:32390 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752415AbZAUNYM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jan 2009 08:24:12 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so4351419wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 05:24:11 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-References: <20090124081223.50440@gmx.net>	
- <b6c5339f0901250841r22635bd7q40532891293a6744@mail.gmail.com>	
- <1232901917.3837.0.camel@johannes.local>
- <b6c5339f0901250847i5f9f98bcl4ebec04027d7c93c@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: Set TSF fix
-To: Bob Copeland <bcopeland@gmail.com>, johannes@sipsolutions.net
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18807.8570.438280.892581@localhost.localdomain> (sfid-20090121_142417_592572_38771C90)
+Date: Wed, 21 Jan 2009 18:52:02 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add documentation bits for mac80211_rate_control_flags
+In-Reply-To: <1232541853.4106.0.camel@johannes.local>
+References: <18806.42720.858590.913279@gargle.gargle.HOWL>
+	<1232541853.4106.0.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Johannes Berg wrote:
+> On Wed, 2009-01-21 at 10:08 +0530, Sujith wrote:
+> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> > ---
+> >  include/net/mac80211.h |   20 ++++++++++++++++++++
+> >  1 files changed, 20 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> > index 9a5869e..742937f 100644
+> > --- a/include/net/mac80211.h
+> > +++ b/include/net/mac80211.h
+> > @@ -262,6 +262,26 @@ enum mac80211_tx_control_flags {
+> >  	IEEE80211_TX_CTL_RATE_CTRL_PROBE	= BIT(12),
+> >  };
+> >  
+> > +/**
+> > + * enum mac80211_rate_control_flags - per-rate flags set by the
+> > + *	Rate Control algorithm.
+> > + *
+> > + * These flags are set by the Rate control algorithm for each rate during tx,
+> > + * in the @flags member of struct ieee80211_tx_rate.
+> > + *
+> > + * @IEEE80211_TX_RC_USE_RTS_CTS: Use RTS/CTS exchange for this rate.
+> > + * @IEEE80211_TX_RC_USE_CTS_PROTECT: CTS-to-self protection is required.
+> > + *	This is set if the current BSS requires ERP protection.
+> > + * @IEEE80211_TX_RC_USE_SHORT_PREAMBLE: Use short preamble.
+> > + * @IEEE80211_TX_RC_MCS: HT rate.
+> > + * @IEEE80211_TX_RC_GREEN_FIELD: Indicates whether this rate can be used in
+> > + *	Greenfield mode.
+> > + * @IEEE80211_TX_RC_40_MHZ_WIDTH: Indicates if the Channel Width can be 40 MHz.
+> > + * @IEEE80211_TX_RC_DUP_DATA: the frame should be transmitted on both of the
+> > + *	adjacent 20 MHz channels, if the current channel type is
+> > + *	NL80211_CHAN_HT40MINUS or NL80211_CHAN_HT40PLUS.
+> > + * @IEEE80211_TX_RC_SHORT_GI: Short Guard interval can be used for this rate.
+> > + */
+> 
+> Are you sure all this should say "can" rather than "should"? I'm
+> thinking that the driver should just follow whatever the rc algorithm
+> said here?
 
-> > Either way, I think the changelog should back up the claim by
-> > _something_. Even if it's just "tested on device XXX, old way doesn=
-'t
-> > work, new way does" or "looked at legacy HAL code" or ...
->=20
-> Agreed, "tested on..." would be good.  I looked at the HAL and it
-> doesn't have a set tsf function, only reset.
+Right, I'll change the wording.
 
-The old code does not work on:
-AR5418+AR2122 (ath9k)
-AR5416+AR2133 (ath9k)
-
-The new code is tested on:
-AR5418+AR2122 (ath9k)
-AR5416+AR2133 (ath9k)
-AR5001X+ (ath5k)
-AR5007EG (ath5k)
-
-The old code was taken from:
-https://dev.openwrt.org/browser/trunk/package/madwifi/patches/383-ibss_=
-hostap.patch
-(by Sven-Ola Tuecke)
-
-Regards
-Alina
-
---=20
-NUR NOCH BIS 31.01.! GMX FreeDSL - Telefonanschluss + DSL=20
-f=FCr nur 16,37 EURO/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
-569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sujith
