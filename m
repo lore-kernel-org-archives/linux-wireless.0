@@ -1,84 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48570 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554AbZAEIfd (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47577 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954AbZAUTpr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 03:35:33 -0500
-Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless
-	stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linville@tuxdriver.com, davem <davem@davemloft.net>
-In-Reply-To: <20090104184136.GY496@one.firstfloor.org>
-References: <20090104151819.GA6590@basil.nowhere.org>
-	 <1231085150.3296.3.camel@johannes>
-	 <20090104162826.GT496@one.firstfloor.org>
-	 <1231087288.3296.15.camel@johannes>
-	 <20090104174339.GX496@one.firstfloor.org>
-	 <1231090388.3296.17.camel@johannes>
-	 <20090104184136.GY496@one.firstfloor.org>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-XG+m6QfDIuW39io5uPJL"
-Date: Mon, 05 Jan 2009 09:36:14 +0100
-Message-Id: <1231144574.3286.15.camel@johannes> (sfid-20090105_093536_719135_CEC5C885)
-Mime-Version: 1.0
+	Wed, 21 Jan 2009 14:45:47 -0500
+Date: Wed, 21 Jan 2009 14:34:31 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefanik =?iso-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
+Cc: Glenn Burkhardt <gbburkhardt@verizon.net>,
+	Bob Copeland <me@bobcopeland.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: poor performance with ath5k; reverting to ath_pci
+Message-ID: <20090121193431.GC14710@tuxdriver.com> (sfid-20090121_204553_141306_E43BDCAE)
+References: <200901140003.31693.gbburkhardt@verizon.net> <200901151734.46144.gbburkhardt@verizon.net> <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com> <200901202238.08756.gbburkhardt@verizon.net> <20090121151435.GB3643@tuxdriver.com> <69e28c910901211022j7f9c67dfv6392ce043dcff522@mail.gmail.com> <20090121191141.GA14710@tuxdriver.com> <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jan 21, 2009 at 08:33:01PM +0100, Stefanik G=E1bor wrote:
+> On Wed, Jan 21, 2009 at 8:11 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Wed, Jan 21, 2009 at 07:22:14PM +0100, Stefanik G=E1bor wrote:
+> >> On Wed, Jan 21, 2009 at 4:14 PM, John W. Linville
+> >> <linville@tuxdriver.com> wrote:
+> >> > On Tue, Jan 20, 2009 at 10:38:08PM -0500, Glenn Burkhardt wrote:
+> >> >> On Friday 16 January 2009 10:33:13 Bob Copeland wrote:
+> >> >> > On Thu, Jan 15, 2009 at 5:34 PM, Glenn Burkhardt
+> >> >> >
+> >> >> > <gbburkhardt@verizon.net> wrote:
+> >> >> > > ath5k_pci 0000:00:07.0: PCI INT A -> GSI 18 (level, low) ->=
+ IRQ 18
+> >> >> > > ath5k_pci 0000:00:07.0: registered as 'phy0'
+> >> >> > > phy0: Selected rate control algorithm 'pid'
+> >> >> >
+> >> >> > Can you change the rate control algorithm to minstrel and ret=
+ry?
+> >> >>
+> >> >> I built a 2.6.28.1-9 kernel to get the minstrel code for ath5k.=
+  The
+> >> >> kernel for Suse 11.1 is 2.6.27.7-9.  But that means that more c=
+ould have
+> >> >> changed besides the rate control code.
+> >> >>
+> >> >> It looks like minstrel and pid give about the same result, a bi=
+t worse that
+> >> >> the ath_pci driver right now.  Performance seems to vary from d=
+ay to day.
+> >> >> I'll experiment some more, and switch transmission channels.  I=
+'m not getting
+> >> >> the really poor performance with ath5k right now.
+> >> >>
+> >> >> I haven't looked yet - is there a way to switch to 'pid' rate c=
+ontrol without
+> >> >> rebuilding the kernel?
+> >> >
+> >> > If you configure your kernel to include multiple rate control
+> >> > algorithms then you can use the 'ieee80211_default_rc_algo' modu=
+le
+> >> > option for mac80211.  Of course, changing that only works if you
+> >> > rmmod/insmod mac80211.
+> >> >
+> >> > John
+> >>
+> >> Judging from this, is it really a good idea to hide pid behind EMB=
+EDDED?
+> >
+> > I've been wondering about that myself.  I'm inclined to think no.
+> >
+> > John
+>=20
+> I think EMBEDDED is for options that replace full-featured Linux
+> components with dumbed-down, "low-profile" equivalents (like SLOB) -
+> PID vs. minstrel is more like SLAB vs. SLUB.
 
---=-XG+m6QfDIuW39io5uPJL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Patches welcome.  Bonus points if you find a way to switch algorithms
+without module unloading and/or to pick different algorithms for
+different interfaces.
 
-On Sun, 2009-01-04 at 19:41 +0100, Andi Kleen wrote:
-
-> I think most adjustments are too small to be noticed. Typically
-> they are just for a few bytes in the header. truesize
-> is already larger, so it can tolerate some slag.
-
-This statement is incompatible with your patch when you think about the
-exact definition of truesize and the (unconditional!) adjustments your
-patch makes.
-
-> I also only see it occasionally (maybe 5-10 times/day) when
-> the wireless stack appends a lot of data.
-
-Except the data it appends should generally be of the same or very
-similar size under unchanging conditions, so that doesn't make a lot of
-sense either.
-
-> My proposal would be to include this patch for 2.6.28/2.6.29
-> and investigate fixing pskb_expand_head for 2.6.30.
-
-I disagree, obviously. I knew there was some truesize corruption, and I
-think you for tracing down where it occurs. I'll investigate a proper
-fix when I get around to that, meanwhile I don't think the problem is
-awfully urgent since we've had this going on for quite a while and, if
-any, it probably only affects/corrupts the raw monitor sockets.
-
-johannes
-
---=-XG+m6QfDIuW39io5uPJL
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJYcZ7AAoJEKVg1VMiehFYmHMP/RhvtkeYWZgv/mctgmTsxrbN
-GaFyHsExlrB/2JvpHJRCZy61jmHRG9b3YWfO8ZI9W4mR9a0WO3/8cT2YGp2H3+6Y
-upO+V9N8KUTcuqtvRFnYW0jcEmyCL7PqE8haYAklYVYwarbhGt9llugznqJlLtql
-o2j+aLRVSSvjs11M2KhDGcUTeQtZ9Xw6nygJSAs2KMf3pFwIgdmC8uFh/4Mrt8C7
-wFb//nJyBzmA/GYdesOk44/dJUwoLiUCueN9hqflSAEmRgUU3aQJBSZp4dqZhsBx
-fsM0OXOl4KWgjMSQmb5KS/NBMGh0DkEUV9WZawAK3EnSv+c/6orQluJ+78/FdgwU
-Ov3ASZV3QxTGWOmWcQ7JlzPOXW8LRxtRaYS9Aq31hGyymKdpBNBrFp1TKsPczGuz
-G51m23McWRRIn0bcWKTzHzhGBc1XZbco60nLlFuTwC5tsLAdv9hj9IJcZNVs5ufQ
-d1cyeTswDTAUPEPWn+2Tkg3+KxEE6FEel2MZnD38vagqLiIwipvr/4ENkGc4WkT7
-BiwcKooBmQwzqp7Las1v5PIJvShB5mFjdXd6sYminauZAEonHzmqH4gj0Uj/40KZ
-TJuRwGTlJZFeq+shbEKYhuWw5zsfKQ2hdSO7idY48xIaNp2gNU4yUaXAceT0VcCi
-pBN1Y3c7D/UTco7Zab9a
-=GmMd
------END PGP SIGNATURE-----
-
---=-XG+m6QfDIuW39io5uPJL--
-
+John
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
