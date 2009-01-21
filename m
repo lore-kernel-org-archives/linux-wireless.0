@@ -1,94 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:41318 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753047AbZAVWMZ (ORCPT
+Received: from mail-ew0-f20.google.com ([209.85.219.20]:44592 "EHLO
+	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308AbZAUSWV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 17:12:25 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Artur Skawina <art.08.09@gmail.com>
-Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
-Date: Thu, 22 Jan 2009 23:12:31 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200901211450.50880.chunkeey@web.de> <200901222239.29656.chunkeey@web.de> <4978E908.4060103@gmail.com>
-In-Reply-To: <4978E908.4060103@gmail.com>
+	Wed, 21 Jan 2009 13:22:21 -0500
+Received: by ewy13 with SMTP id 13so1690903ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 10:22:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901222312.31063.chunkeey@web.de> (sfid-20090122_231230_069168_EFC35094)
+In-Reply-To: <20090121151435.GB3643@tuxdriver.com>
+References: <200901140003.31693.gbburkhardt@verizon.net>
+	 <200901151734.46144.gbburkhardt@verizon.net>
+	 <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com>
+	 <200901202238.08756.gbburkhardt@verizon.net>
+	 <20090121151435.GB3643@tuxdriver.com>
+Date: Wed, 21 Jan 2009 19:22:14 +0100
+Message-ID: <69e28c910901211022j7f9c67dfv6392ce043dcff522@mail.gmail.com> (sfid-20090121_192246_273597_7002A0E3)
+Subject: Re: poor performance with ath5k; reverting to ath_pci
+From: =?ISO-8859-1?Q?Stefanik_G=E1bor?= <netrolller.3d@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Glenn Burkhardt <gbburkhardt@verizon.net>,
+	Bob Copeland <me@bobcopeland.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 22 January 2009 22:45:44 Artur Skawina wrote:
-> Christian Lamparter wrote:
-> > On Thursday 22 January 2009 16:43:20 Artur Skawina wrote:
-> >> Christian Lamparter wrote:
-> >>> On Thursday 22 January 2009 00:22:16 Artur Skawina wrote:
-> >>> +	if (unlikely(!priv->common.hw->workqueue)) {
-> >>> +		/*
-> >>> +		 * Huh? mac80211 isn't fully initialized yet?
-> >>> +		 * Please check your system, something bad is going on.
-> >>> +		 */
-> >>> +		WARN_ON(1);
-> >> please do not add WARN_ON's unless you're actually interested in the
-> >> stacktrace, In this case it's a usb completion, so in most cases the
-> >> backtrace isn't very interesting, wouldn't a printk be enough?
-> >> [i was hitting this when testing, and it took several seconds to 
-> >> get all the data to the console]
-> > 
-> > Ahh, wait!
-> > 
-> > In fact we "should" call BUG_ON here, as mac80211 is not fully initialized at
-> > this point and we might have accidently submitted a dataframe to the stack.
-> > (Of course, this attempt by the device to send garbage to the stack is
-> > caught by the common-code... so no oops here)
-> 
-> Wouldn't you then want to catch it _before_ p54_rx()?
-Well neither the device's MAC/BBP nor radio is initialized... so its garbage. 
-but I hoped the
-+        if (unlikely(urb->status)) {
-+                return;
-+      }
-        if (unlikely(!priv->common.hw->workqueue)) {
-                /*
-resolved this issue when usb_kill_anchored_urbs is called...
-(the urb completion callback is always called, even if we don't want it...
-that's why we don't reschedule a p54u_rx_refill_work and wait until urb
-with a good status arrives.. )
+On Wed, Jan 21, 2009 at 4:14 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Tue, Jan 20, 2009 at 10:38:08PM -0500, Glenn Burkhardt wrote:
+>> On Friday 16 January 2009 10:33:13 Bob Copeland wrote:
+>> > On Thu, Jan 15, 2009 at 5:34 PM, Glenn Burkhardt
+>> >
+>> > <gbburkhardt@verizon.net> wrote:
+>> > > ath5k_pci 0000:00:07.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+>> > > ath5k_pci 0000:00:07.0: registered as 'phy0'
+>> > > phy0: Selected rate control algorithm 'pid'
+>> >
+>> > Can you change the rate control algorithm to minstrel and retry?
+>>
+>> I built a 2.6.28.1-9 kernel to get the minstrel code for ath5k.  The
+>> kernel for Suse 11.1 is 2.6.27.7-9.  But that means that more could have
+>> changed besides the rate control code.
+>>
+>> It looks like minstrel and pid give about the same result, a bit worse that
+>> the ath_pci driver right now.  Performance seems to vary from day to day.
+>> I'll experiment some more, and switch transmission channels.  I'm not getting
+>> the really poor performance with ath5k right now.
+>>
+>> I haven't looked yet - is there a way to switch to 'pid' rate control without
+>> rebuilding the kernel?
+>
+> If you configure your kernel to include multiple rate control
+> algorithms then you can use the 'ieee80211_default_rc_algo' module
+> option for mac80211.  Of course, changing that only works if you
+> rmmod/insmod mac80211.
+>
+> John
 
-> > However, I wonder if the WARN_ON gets triggered under normal operation or not.
-> > (Just in case, no it does not trigger with the ISL3887 chips)
-> 
-> i have never seen it, after the initial 32 times.
-> As-is, it currently triggers on every init however...
+Judging from this, is it really a good idea to hide pid behind EMBEDDED?
 
-well, it clearly shouldn't do that.... 
-
-Off topic:
-
-On Thursday 22 January 2009 16:43:20 Artur Skawina wrote:
-> Christian Lamparter wrote:
-> > On Thursday 22 January 2009 00:22:16 Artur Skawina wrote:
-> >> Christian Lamparter wrote:
-> >>>         reg = kmalloc(sizeof(*reg), GFP_ATOMIC);
-> >>>         if (!reg) {
-> >>>                 printk(KERN_INFO "tx_net2280 kmalloc(reg), txqlen = %d\n",
-> >>>                           skb_queue_len(&priv->common.tx_queue) );
-> >>>                 return;
-> >>>         }
-> >>> [...]
-> >>>         reg->port = cpu_to_le16(NET2280_DEV_U32);
-> >>>         reg->addr = cpu_to_le32(P54U_DEV_BASE);
-> >>>         reg->val = cpu_to_le32(ISL38XX_DEV_INT_DATA);
-> >> does not need to happen for every single tx-ed frame.
-> > Ah, yes that's true. what do you say about this...
-> > Instead of using kmalloc in the init procedure, we let gcc already do it.
-> 
-> apparently there are archs where dmaing from not-kmalloced areas doesn't work
-> that well, this mostly applies to the stack, but i'd rather be safe and 
-> stick to a kmalloc buffer. one allocation on device init isn't worth avoiding.
-
-agreed, the static definition is not a good idea and the usb stack also recommends
-to use usb_buffer_alloc over kmalloc to avoid DMA bounce buffers usage etc...
-
-Regards,
-	Chr
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
