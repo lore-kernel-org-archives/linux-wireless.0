@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f29.google.com ([209.85.219.29]:34477 "EHLO
-	mail-ew0-f29.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756119AbZATLpS (ORCPT
+Received: from mail-bw0-f21.google.com ([209.85.218.21]:49148 "EHLO
+	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752478AbZAUHBt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 06:45:18 -0500
-Received: by ewy10 with SMTP id 10so140065ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 03:45:15 -0800 (PST)
-Message-ID: <4975B948.2010808@gmail.com> (sfid-20090120_124533_470660_05BD6257)
-Date: Tue, 20 Jan 2009 12:45:12 +0100
-From: Artur Skawina <art.08.09@gmail.com>
+	Wed, 21 Jan 2009 02:01:49 -0500
+Received: by bwz14 with SMTP id 14so12109244bwz.13
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 23:01:47 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] [PATCH 4/5] iwl3945: Use iwl-rfkill
+Date: Wed, 21 Jan 2009 08:01:22 +0100
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linville@tuxdriver.com, Samuel Ortiz <samuel.ortiz@intel.com>,
+	linux-wireless@vger.kernel.org
+References: <> <1232516035-25524-4-git-send-email-reinette.chatre@intel.com> <1232516035-25524-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1232516035-25524-5-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] p54usb: fix nasty use after free
-References: <200901200027.57128.chunkeey@web.de>
-In-Reply-To: <200901200027.57128.chunkeey@web.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901210801.23236.helmut.schaa@gmail.com> (sfid-20090121_080205_964531_A64F6390)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> In theory, the firmware acks the received a data frame, before signaling the driver to free it again.
-> However Artur Skawina <art.08.09@gmail.com> has shown that it can happen in reverse order as well.
-> This is very bad and could lead to memory corruptions, oopses and panics.
+Hi,
+
+Am Mittwoch, 21. Januar 2009 schrieb Reinette Chatre:
+> From: Samuel Ortiz <samuel.ortiz@intel.com>
 > 
-> Thanks to Artur Skawina <art.08.09@gmail.com> for reporting and debugging this issue.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> Anyone with a p54usb device (Especially you, Artur :-) ):
-> 
-> Please test this!
-> Because it should go to wireless-2.6 / 2.6.29 as well (John?)
+> Here again, the rfkill routines are duplicated between agn and 3945. Let's
+> move the agn one to iwlcore, and so we can get rid of the 3945 ones.
 
-good news: i've run a few tests w/ it and didn't see any memory corruption warnings,
-previously i used to get them almost immediately, usually during association, now
-i was able to transfer ~1M of data w/ no sign of corruption.
+[...]
 
-The large packet loss is still there and the device is still unusable (because of
-the extremely low throughput, that 1M took several minutes to transfer and three
-attempts to associate before it worked). But no crashes, that's a huge improvement :)
+> +void iwl_bg_rf_kill(struct work_struct *work)
+> +{
+> +	struct iwl_priv *priv = container_of(work, struct iwl_priv, rf_kill);
+> +
+> +	wake_up_interruptible(&priv->wait_command_queue);
+> +
+> +	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> +		return;
+> +
+> +	mutex_lock(&priv->mutex);
+> +
+> +	if (!iwl_is_rfkill(priv)) {
+> +		IWL_DEBUG(IWL_DL_RF_KILL,
+> +			  "HW and/or SW RF Kill no longer active, restarting "
+> +			  "device\n");
+> +		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
+> +			queue_work(priv->workqueue, &priv->restart);
 
-Tested-by: Artur Skawina <art.08.09@gmail.com>
+I've changed this check in both rf-kill patches (3945 and agn) to
 
-artur
+if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
+    test_bit(STATUS_ALIVE, &priv->status))
 
+in order to avoid restarting the adapter when notified about rfkill changes
+by interrupt/polling.
+
+I guess this is just an oversight, right?
+
+Thanks,
+Helmut
