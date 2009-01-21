@@ -1,79 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:40968 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495AbZASWyQ (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.187]:53657 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751740AbZAUUc1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 17:54:16 -0500
-Received: by ewy13 with SMTP id 13so651656ewy.13
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 14:54:14 -0800 (PST)
-Message-ID: <49750494.8000408@gmail.com> (sfid-20090119_235420_919859_06BE8EBF)
-Date: Mon, 19 Jan 2009 23:54:12 +0100
-From: Artur Skawina <art.08.09@gmail.com>
+	Wed, 21 Jan 2009 15:32:27 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so601531nfc.21
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 12:32:25 -0800 (PST)
+Message-ID: <49778657.8020902@gmail.com> (sfid-20090121_213234_252797_44689B2B)
+Date: Wed, 21 Jan 2009 20:32:23 +0000
+From: Dave <kilroyd@googlemail.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: Artur Skawina <art.08.09@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-References: <494698AF.4020204@gmail.com> <200901191948.57069.chunkeey@web.de> <4974F63F.4050302@gmail.com> <200901192338.09646.chunkeey@web.de>
-In-Reply-To: <200901192338.09646.chunkeey@web.de>
-Content-Type: text/plain; charset=UTF-8
+To: Pavel Roskin <proski@gnu.org>
+CC: Andrey Borzenkov <arvidjaar@mail.ru>,
+	orinoco-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Subject: Re: [Orinoco-devel] [PATCH] orinoco: trivial cleanup in alloc_orinocodev
+References: <200901212155.32754.arvidjaar@mail.ru> <1232569292.10843.13.camel@dv>
+In-Reply-To: <1232569292.10843.13.camel@dv>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> On Monday 19 January 2009 22:53:03 Artur Skawina wrote:
->>>> Here's an interesting sequence:
->>>>
->>>> 1) a TX urb is submitted.
->>>> 2) p54u_rx_cb() => p54_rx_frame_sent(), which does kfree_skb( the_skb_in_(1) ).
->>>> 3) p54u_tx_cb() for (1) is called with the same, now freed, skb. kaboom.
->>>>
->>>> IOW the skb is freed before the usb completion runs.
->>> Well, the sequence should be:
->>>
->>> 1) p54_tx gets called
->>> 1.1) one IRQ urb is submitted
->>> 1.2) one BULK urb is submitted
->>> 2) the firmware acks that it got the urbs
->>> 2.1) p54u_tx_cb is called for the IRQ urb. which frees the small buffer
->>> 2.2) p54u_tx_cb is called for the BULK urb. which only removes the net2280_tx_hdr from the skb.
->>> [time passes]
->>> 3) firmware is finished sending.
->>> 3.1) p54u_rx_cb gets called
->>>        => p54_rx_frame_sent passed the feedback to mac80211
->> That's what one would expect, and is probably why i couldn't see anything
->> wrong in the code despite going over it several times. Until i got a crash
->> which left no doubt as to what happened, and made me notice the "wrong"
->> completion order, log attached [1].
->> In theory, theory and practice do not differ, in practice...
+Pavel Roskin wrote:
+> On Wed, 2009-01-21 at 21:55 +0300, Andrey Borzenkov wrote:
+>> Subject: [PATCH] orinoco: trivial cleanup in alloc_orinocodev
+>> From: Andrey Borzenkov <arvidjaar@mail.ru>
 >>
->>>> Somehow i don't think this is the reason for the corruption, but it certainly
->>>> seems to be responsible for some, if not all, of the crashes/panics.
->>> dunno... we should see a bit more fallout, because skb_pull changes skb->data and skb->len. 
->> Doing an skb_pull in p54u_tx_cb on skbs that have already been given to mac80211
->> cannot be good.
->> We can move the FREE_AFTER_TX(skb) check from the completion to the submission
->> path, right? Then find a way to do the pull _before_ giving away the skbs.
->> I can't shutdown the machine where i can reproduce this today, so it will have
->> to wait until at least tomorrow.
+>> Remove extra space; remove redundant cast
 >>
->> artur
+>> Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
 > 
-> Like this?
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
 > 
-yes, that's what i was thinking. Will FREE_AFTER_TX(skb) be false for all skbs
-that are dropped in p54_rx_frame_sent()?
-Also most of the push/pull business in completions can probably go, we just have to set
-up the pointers right on submission, ie transfer the rx header into the headroom, then
-no skb manipulations in completions should be needed, and these kind of races should
-be harmless.
-Will test this; it's still possible that what i saw was the result of the tons of
-debugging i put into that kernel. But this kind of problem could explain everything
-i'm seeing, including the huge packet loss.
+>> -	if (! dev)
+>> +	if (!dev)
+> 
+> There are 41 occurrences of "(! " in drivers/net/wireless, all in
+> drivers/net/wireless/orinoco.  Care to fix them all?
+> 
+> By the way, I made a patch that adds all C sources in
+> drivers/net/wireless/orinoco and ran it through checkpatch.pl.  There
+> were 226 errors and 174 warnings.  That includes those spaces, trailing
+> whitespace, excessively long lines and so on.  It would be great if you
+> fix at least some of that.  Actually, long lines are justified in many
+> cases, so please don't overdo it.
+
+I've a patch series reorganising the orinoco driver a bit to help with
+future changes. It should fix a good proportion of those warnings. I
+plan to post it soon - so I'd appreciate it if you held off submitting
+further cleanup patches until I get it done (I'll try for the end of
+this week).
+
+I should be able to rebase around this one.
+
 
 Thanks,
 
-artur
-
+Dave.
