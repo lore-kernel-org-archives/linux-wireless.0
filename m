@@ -1,101 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22933 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751328AbZA0JkP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 04:40:15 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 01:40:15 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from smtp.nokia.com ([192.100.105.134]:57466 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753030AbZAVLp7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 06:45:59 -0500
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [RFC PATCH v2 0/2] mac80211: ps-poll implementation
+To: johannes@sipsolutions.net, vivek.natraj@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 22 Jan 2009 13:45:32 +0200
+Message-ID: <20090122114240.31443.18218.stgit@tikku> (sfid-20090122_124603_945386_6F5F4102)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18814.54694.118398.164348@gargle.gargle.HOWL> (sfid-20090127_104020_562638_04D2E36F)
-Date: Tue, 27 Jan 2009 15:06:38 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] ath9k: Fix bug in TX DMA termination
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing the module was slow because ath9k_hw_stopdma()
-was looping for a long time quantum. Use reasonable
-values now to fix this issue.
+Here's my suggestion for how to implement ps-poll in mac80211. Also
+this fixes the case when dynamic_ps_timeout is zero.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+I decided to use ps-polling when dynamic_ps_timeout is zero. If
+userspace sets timeout to zero, it means that it's ready to sacrifice
+throughput over power consumption. But in case there throughput is
+more, userspace can set timeout to a non-zero value and null frame
+wakeup is used instead, throughput is higher but power consumption
+also increases.
+
+Most probably this patchset breaks ath9k multicast handling. I
+recommend ath9k to try do multicast tim bit handling in hardware, I
+would really assume that to be possible. But if that's really
+impossible, then it can be done in the driver. But having support for
+waking up multicast tim bits in mac80211 is unreliable and complicated
+the implementation, I just recommend dropping it.
+
+Open question is that should power save be disabled whenever mac80211
+is ps-polling the frames. For example, p54/stlc45xx does not require to
+disable power save in that case, it just stays awake long enough to
+receive the data frame from the AP. So I did not disable power save
+mode in this case, but I would like to hear comments what other
+hardware needs.
+
+v2:
+
+o RX_CONTINUE after sending ps-poll frame in ieee80211_rx_h_check_more_data()
+o remove leftover debug printk
+o use ps-poll only when dynamic_ps_timeout is zero, otherwise null frame
+  wakeup is used
+
 ---
- drivers/net/wireless/ath9k/mac.c |   31 +++++++++++++++++++++++++------
- 1 files changed, 25 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/mac.c b/drivers/net/wireless/ath9k/mac.c
-index af32d09..ef832a5 100644
---- a/drivers/net/wireless/ath9k/mac.c
-+++ b/drivers/net/wireless/ath9k/mac.c
-@@ -107,14 +107,32 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hal *ah, bool bIncTrigLevel)
- 
- bool ath9k_hw_stoptxdma(struct ath_hal *ah, u32 q)
- {
-+#define ATH9K_TX_STOP_DMA_TIMEOUT	4000    /* usec */
-+#define ATH9K_TIME_QUANTUM		100     /* usec */
-+
-+	struct ath_hal_5416 *ahp = AH5416(ah);
-+	struct ath9k_hw_capabilities *pCap = &ah->ah_caps;
-+	struct ath9k_tx_queue_info *qi;
- 	u32 tsfLow, j, wait;
-+	u32 wait_time = ATH9K_TX_STOP_DMA_TIMEOUT / ATH9K_TIME_QUANTUM;
-+
-+	if (q >= pCap->total_queues) {
-+		DPRINTF(ah->ah_sc, ATH_DBG_QUEUE, "invalid queue num %u\n", q);
-+		return false;
-+	}
-+
-+	qi = &ahp->ah_txq[q];
-+	if (qi->tqi_type == ATH9K_TX_QUEUE_INACTIVE) {
-+		DPRINTF(ah->ah_sc, ATH_DBG_QUEUE, "inactive queue\n");
-+		return false;
-+	}
- 
- 	REG_WRITE(ah, AR_Q_TXD, 1 << q);
- 
--	for (wait = 1000; wait != 0; wait--) {
-+	for (wait = wait_time; wait != 0; wait--) {
- 		if (ath9k_hw_numtxpending(ah, q) == 0)
- 			break;
--		udelay(100);
-+		udelay(ATH9K_TIME_QUANTUM);
- 	}
- 
- 	if (ath9k_hw_numtxpending(ah, q)) {
-@@ -144,8 +162,7 @@ bool ath9k_hw_stoptxdma(struct ath_hal *ah, u32 q)
- 		udelay(200);
- 		REG_CLR_BIT(ah, AR_TIMER_MODE, AR_QUIET_TIMER_EN);
- 
--		wait = 1000;
--
-+		wait = wait_time;
- 		while (ath9k_hw_numtxpending(ah, q)) {
- 			if ((--wait) == 0) {
- 				DPRINTF(ah->ah_sc, ATH_DBG_XMIT,
-@@ -153,15 +170,17 @@ bool ath9k_hw_stoptxdma(struct ath_hal *ah, u32 q)
- 					"msec after killing last frame\n");
- 				break;
- 			}
--			udelay(100);
-+			udelay(ATH9K_TIME_QUANTUM);
- 		}
- 
- 		REG_CLR_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
- 	}
- 
- 	REG_WRITE(ah, AR_Q_TXD, 0);
--
- 	return wait != 0;
-+
-+#undef ATH9K_TX_STOP_DMA_TIMEOUT
-+#undef ATH9K_TIME_QUANTUM
- }
- 
- bool ath9k_hw_filltxdesc(struct ath_hal *ah, struct ath_desc *ds,
--- 
-1.6.1
+Kalle Valo (2):
+      mac80211: use ps-poll when dynamic power save mode is disabled
+      mac80211: remove multicast check from check_tim()
 
+
+ net/mac80211/ieee80211_i.h |    3 ++
+ net/mac80211/mlme.c        |   69 +++++++++++++++++++++++++++++++++++++-------
+ net/mac80211/rx.c          |   34 ++++++++++++++++++++++
+ 3 files changed, 95 insertions(+), 11 deletions(-)
