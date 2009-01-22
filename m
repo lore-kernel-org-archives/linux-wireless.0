@@ -1,131 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34032 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752585AbZAGL2N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:28:13 -0500
-Message-Id: <20090107112703.013615238@atheros.com> (sfid-20090107_123901_655367_9747BD43)
-References: <20090107112346.369581673@atheros.com>
-Date: Wed, 07 Jan 2009 13:23:57 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 11/14] mac80211: 802.11w - Implement Association Comeback processing
+Received: from mail.atheros.com ([12.36.123.2]:42508 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759559AbZAVXGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 18:06:41 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 15:06:41 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 04/12] cfg80211: Fix sanity check on 5 GHz when processing country IE
+Date: Thu, 22 Jan 2009 15:05:46 -0800
+Message-ID: <1232665554-26132-5-git-send-email-lrodriguez@atheros.com> (sfid-20090123_000703_900413_EF0FA4A9)
+In-Reply-To: <1232665554-26132-4-git-send-email-lrodriguez@atheros.com>
+References: <1232665554-26132-1-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-2-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-4-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When MFP is enabled, the AP does not allow a STA to associate if an
-existing security association exists without first going through SA
-Query process. When this happens, the association request is denied
-with a new status code ("temporarily rejected") ans Association
-Comeback IE is used to notify when the association may be tried again
-(i.e., when the SA Query procedure has timed out).
+This fixes two issues with the sanity check loop when processing
+the country IE:
 
-Use the comeback time to update the mac80211 client MLME timer for
-next association attempt to minimize waiting time if association is
-temporarily rejected.
+1. Do not use frequency for the current subband channel check,
+   this was a big fat typo.
+2. Apply the 5 GHz 4-channel steps when considering max channel
+   on each subband as was done with a recent patch.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
-
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- include/linux/ieee80211.h  |    4 ++++
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/mlme.c        |   20 +++++++++++++++++---
- net/mac80211/util.c        |    4 ++++
- 4 files changed, 27 insertions(+), 3 deletions(-)
+ net/wireless/reg.c |   30 +++++++++++++++++++-----------
+ 1 files changed, 19 insertions(+), 11 deletions(-)
 
---- wireless-testing.orig/include/linux/ieee80211.h	2009-01-07 13:07:59.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2009-01-07 13:08:05.000000000 +0200
-@@ -914,6 +914,9 @@ enum ieee80211_statuscode {
- 	/* 802.11g */
- 	WLAN_STATUS_ASSOC_DENIED_NOSHORTTIME = 25,
- 	WLAN_STATUS_ASSOC_DENIED_NODSSSOFDM = 26,
-+	/* 802.11w */
-+	WLAN_STATUS_ASSOC_REJECTED_TEMPORARILY = 30,
-+	WLAN_STATUS_ROBUST_MGMT_FRAME_POLICY_VIOLATION = 31,
- 	/* 802.11i */
- 	WLAN_STATUS_INVALID_IE = 40,
- 	WLAN_STATUS_INVALID_GROUP_CIPHER = 41,
-@@ -1034,6 +1037,7 @@ enum ieee80211_eid {
- 	/* 802.11i */
- 	WLAN_EID_RSN = 48,
- 	WLAN_EID_MMIE = 76 /* 802.11w */,
-+	WLAN_EID_ASSOC_COMEBACK_TIME = 77,
- 	WLAN_EID_WPA = 221,
- 	WLAN_EID_GENERIC = 221,
- 	WLAN_EID_VENDOR_SPECIFIC = 221,
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-07 13:07:56.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-07 13:08:05.000000000 +0200
-@@ -820,6 +820,7 @@ struct ieee802_11_elems {
- 	u8 *country_elem;
- 	u8 *pwr_constr_elem;
- 	u8 *quiet_elem; 	/* first quite element */
-+	u8 *assoc_comeback;
- 
- 	/* length of them, respectively */
- 	u8 ssid_len;
-@@ -847,6 +848,7 @@ struct ieee802_11_elems {
- 	u8 pwr_constr_elem_len;
- 	u8 quiet_elem_len;
- 	u8 num_of_quiet_elem;	/* can be more the one */
-+	u8 assoc_comeback_len;
- };
- 
- static inline struct ieee80211_local *hw_to_local(
---- wireless-testing.orig/net/mac80211/mlme.c	2009-01-07 13:07:56.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-01-07 13:08:05.000000000 +0200
-@@ -1287,6 +1287,23 @@ static void ieee80211_rx_mgmt_assoc_resp
- 	       sdata->dev->name, reassoc ? "Rea" : "A", print_mac(mac, mgmt->sa),
- 	       capab_info, status_code, (u16)(aid & ~(BIT(15) | BIT(14))));
- 
-+	pos = mgmt->u.assoc_resp.variable;
-+	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
-+
-+	if (status_code == WLAN_STATUS_ASSOC_REJECTED_TEMPORARILY &&
-+	    elems.assoc_comeback && elems.assoc_comeback_len == 4) {
-+		u32 tu, ms;
-+		tu = get_unaligned_le32(elems.assoc_comeback);
-+		ms = tu * 1024 / 1000;
-+		printk(KERN_DEBUG "%s: AP rejected association temporarily; "
-+		       "comeback duration %u TU (%u ms)\n",
-+		       sdata->dev->name, tu, ms);
-+		if (ms > IEEE80211_ASSOC_TIMEOUT)
-+			mod_timer(&ifsta->timer,
-+				  jiffies + msecs_to_jiffies(ms));
-+		return;
-+	}
-+
- 	if (status_code != WLAN_STATUS_SUCCESS) {
- 		printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
- 		       sdata->dev->name, status_code);
-@@ -1302,9 +1319,6 @@ static void ieee80211_rx_mgmt_assoc_resp
- 		       "set\n", sdata->dev->name, aid);
- 	aid &= ~(BIT(15) | BIT(14));
- 
--	pos = mgmt->u.assoc_resp.variable;
--	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), &elems);
--
- 	if (!elems.supp_rates) {
- 		printk(KERN_DEBUG "%s: no SuppRates element in AssocResp\n",
- 		       sdata->dev->name);
---- wireless-testing.orig/net/mac80211/util.c	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2009-01-07 13:08:05.000000000 +0200
-@@ -653,6 +653,10 @@ void ieee802_11_parse_elems(u8 *start, s
- 			elems->pwr_constr_elem = pos;
- 			elems->pwr_constr_elem_len = elen;
- 			break;
-+		case WLAN_EID_ASSOC_COMEBACK_TIME:
-+			elems->assoc_comeback = pos;
-+			elems->assoc_comeback_len = elen;
-+			break;
- 		default:
- 			break;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 70691de..c744788 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -498,6 +498,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 	 * calculate the number of reg rules we will need. We will need one
+ 	 * for each channel subband */
+ 	while (country_ie_len >= 3) {
++		int end_channel = 0;
+ 		struct ieee80211_country_ie_triplet *triplet =
+ 			(struct ieee80211_country_ie_triplet *) country_ie;
+ 		int cur_sub_max_channel = 0, cur_channel = 0;
+@@ -509,9 +510,25 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 			continue;
  		}
-
+ 
++		/* 2 GHz */
++		if (triplet->chans.first_channel <= 14)
++			end_channel = triplet->chans.first_channel +
++				triplet->chans.num_channels;
++		else
++			/*
++			 * 5 GHz -- For example in country IEs if the first
++			 * channel given is 36 and the number of channels is 4
++			 * then the individual channel numbers defined for the
++			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
++			 * and not 36, 37, 38, 39.
++			 *
++			 * See: http://tinyurl.com/11d-clarification
++			 */
++			end_channel =  triplet->chans.first_channel +
++				(4 * (triplet->chans.num_channels - 1));
++
+ 		cur_channel = triplet->chans.first_channel;
+-		cur_sub_max_channel = ieee80211_channel_to_frequency(
+-			cur_channel + triplet->chans.num_channels);
++		cur_sub_max_channel = end_channel;
+ 
+ 		/* Basic sanity check */
+ 		if (cur_sub_max_channel < cur_channel)
+@@ -590,15 +607,6 @@ static struct ieee80211_regdomain *country_ie_2_rd(
+ 			end_channel = triplet->chans.first_channel +
+ 				triplet->chans.num_channels;
+ 		else
+-			/*
+-			 * 5 GHz -- For example in country IEs if the first
+-			 * channel given is 36 and the number of channels is 4
+-			 * then the individual channel numbers defined for the
+-			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
+-			 * and not 36, 37, 38, 39.
+-			 *
+-			 * See: http://tinyurl.com/11d-clarification
+-			 */
+ 			end_channel =  triplet->chans.first_channel +
+ 				(4 * (triplet->chans.num_channels - 1));
+ 
 -- 
+1.6.1.rc3.51.g5832d
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
