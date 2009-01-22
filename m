@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.openmoko.org ([88.198.124.205]:52306 "EHLO
-	mail.openmoko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753880AbZALVN3 (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:1495 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755430AbZAVRcf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 16:13:29 -0500
-Date: Mon, 12 Jan 2009 19:13:13 -0200
-From: Werner Almesberger <werner@openmoko.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rfkill: how murderous can it be ?
-Message-ID: <20090112211313.GK13290@almesberger.net> (sfid-20090112_221335_712234_92EE3EEA)
-References: <20090112191514.GA22112@almesberger.net> <1231788884.28887.4.camel@localhost.localdomain>
+	Thu, 22 Jan 2009 12:32:35 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linville@tuxdriver.com, jirislaby@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH 2/6] ath5k: set up rf_banks array at attach time
+Date: Thu, 22 Jan 2009 12:32:23 -0500
+Message-Id: <20090122172911.M57854@bobcopeland.com> (sfid-20090122_183239_675427_8814FB00)
+In-Reply-To: <40f31dec0901220921seb222efw35e35281a5d4a583@mail.gmail.com>
+References: <1232631861-6028-3-git-send-email-me@bobcopeland.com> <40f31dec0901220921seb222efw35e35281a5d4a583@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231788884.28887.4.camel@localhost.localdomain>
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> Instead of putting a bunch of
-> complexity in the kernel and drivers that *already* has to be in
-> userspace, just punt it out to userspace where it's already done and
-> works well.
+On Thu, 22 Jan 2009 19:21:18 +0200, Nick Kossifidis wrote
+> 2009/1/22 Bob Copeland <me@bobcopeland.com>:
+> > ah_rf_banks was being created lazily the first time we did a reset,
+> > and the function pointer was also determined every time we reloaded the
+> > registers.  
+> I've updated phy.c etc on my local tree (check out
+> http://www.linuxwireless.org/en/users/Drivers/ath5k#ath5kTODO) and
+> i've already fixed that (also fixed the whole rf buffer thing). Please
+> give me some time to test it and i'll submit the patches.
 
-That's the way I like things :-) Can the information user space may
-have to recover include DHCP leases and routes ? I.e., can an rfkill
-implementation choose to just restart the network interface ?
+Ok, great :)  This patch can be dropped then.
 
-Next: what happens while the device is rfkill'ed ? E.g., is it okay to
-just remove the interface, so any attempt to configure the interface
-while it's rfkill'ed would yield an ENODEV ?
+-- 
+Bob Copeland %% www.bobcopeland.com
 
-Basically, could rfkill block/unblock semantics just be equivalent to
-removal and reloading of the module containing the respective WLAN
-device driver ? (Ignoring any response time issues for now.)
-
-- Werner
