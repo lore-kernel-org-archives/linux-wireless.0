@@ -1,62 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47068 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756727AbZAPQdO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 11:33:14 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:33:14 -0800
-Date: Fri, 16 Jan 2009 08:32:45 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
-	disablement
-Message-ID: <20090116163245.GF29609@tesla> (sfid-20090116_173319_950679_F7653420)
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com> <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232097827.3854.25.camel@johannes>
+Received: from mail.deathmatch.net ([70.167.247.36]:4575 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751714AbZAVUHA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 15:07:00 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linville@tuxdriver.com, jirislaby@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH 3/6] ath5k: continue reset sequence if gain calibration fails
+Date: Thu, 22 Jan 2009 15:06:50 -0500
+Message-Id: <20090122194551.M1478@bobcopeland.com> (sfid-20090122_210704_072364_1EC26916)
+In-Reply-To: <40f31dec0901221103t10c433f4h7eea23b98a69cd70@mail.gmail.com>
+References: <1232631861-6028-4-git-send-email-me@bobcopeland.com> <40f31dec0901220936n27736162vade7e7c53e35a490@mail.gmail.com> <20090122174721.M76206@bobcopeland.com> <40f31dec0901221103t10c433f4h7eea23b98a69cd70@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232097827.3854.25.camel@johannes>
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2009 at 01:23:47AM -0800, Johannes Berg wrote:
-> On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
-> > When a channel is disabled there is no need to stuff it
-> > with more flags.
+On Thu, 22 Jan 2009 21:03:17 +0200, Nick Kossifidis wrote
+> > OTOH, I'm pretty sure miscalibrated phy is responsible for all the
+> > "unsupported jumbo" errors; I hexdumped some of those and they're all
+> > just noise.
+> >
 > 
-> > -	u32 flags;
-> > +	u32 flags, rule_flags;
-> >  	u32 max_bandwidth = 0;
-> >  	const struct ieee80211_reg_rule *reg_rule = NULL;
-> >  	const struct ieee80211_power_rule *power_rule = NULL;
-> > @@ -913,15 +913,19 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
-> >  					"Country IE\n",
-> >  					chan->center_freq, wiphy_name(wiphy));
-> >  #endif
-> > -			flags |= IEEE80211_CHAN_DISABLED;
-> > -			chan->flags = flags;
-> > +			chan->flags = IEEE80211_CHAN_DISABLED;
-> >  		}
-> >  		return;
-> >  	}
-> >  
-> >  	power_rule = &reg_rule->power_rule;
-> >  
-> > -	chan->flags = flags | map_regdom_flags(reg_rule->flags);
-> > +	rule_flags = map_regdom_flags(reg_rule->flags);
-> > +	if (flags & IEEE80211_CHAN_DISABLED)
-> > +		chan->flags = IEEE80211_CHAN_DISABLED;
-> > +	else
-> > +		chan->flags = flags | rule_flags;
+> Don't we get a phy error interrupt ?  I haven't looked into this ;-(
+
+I printk-ed rs.rs_status, it's 0, so AR5K_RXERR_PHY is unset.  
+
+I think the jumbo flag is supposed to indicate the packet is larger
+than the buffer size.  However, we have a buffer size of 2500 so that
+shouldn't happen for standard frames.  I did check into whether there
+was a corruption issue, like skb_tailroom was smaller than a full 
+packet because of an skb reuse bug or something like that.  But no, 
+all were > 2500 bytes (incl roundup for cache line).  That's when 
+I did the unmap and a hexdump and saw they have no 802.11 headers or
+anything of the sort.  Felix suggested we just drop the warning.
+
+> > (Side note, any reason we call reset() from ath5k_config_interface?
+> > We're not changing channels, just setting the bssid.)
+> >
 > 
-> but why bother with more complicated code when adding a few more flags
-> doesn't hurt?
+> Hmm, i'll check that and come back to you, i think we have to
+> re-initialize PCU but i'm not sure. Also if it's supposed to set the
+> bssid on a virtual if, we also have to set bssid mask to allow all
+> configured bssids for all vifs.
 
-I don't see these few lines as complicated really, but if you don't like them
-that's fine. We can also fix this in userspace so that disable|radar|no-ibss
-doesn't show up. I frankly think its pointless to keep them though.
+Cool, let me know.  Yeah, configure_interface() doesn't do anything
+with the bssid mask (other than reloading it inside hw_set_associd);
+in fact it's all-1s forever right now, it seems.
 
-  Luis
+--  
+Bob Copeland %% www.bobcopeland.com
+
+
