@@ -1,68 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:59575 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbZAEKgS (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36534 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754200AbZAVNAW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 05:36:18 -0500
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-To: linux-wireless@vger.kernel.org
-Subject: 2.6.28-git: WARNING: at drivers/net/wireless/iwlwifi/iwl-sta.c:689
-Date: Mon, 5 Jan 2009 11:36:13 +0100
-Cc: linux-kernel@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901051136.13519.borntraeger@de.ibm.com> (sfid-20090105_113622_331736_F89EA3EE)
+	Thu, 22 Jan 2009 08:00:22 -0500
+Subject: Re: [PATCH 1/2 v2.6.29] iwlwifi: fix rs_get_rate WARN_ON()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>
+In-Reply-To: <1232564283-18008-2-git-send-email-reinette.chatre@intel.com> (sfid-20090121_195542_734853_62E08E0F)
+References: <> <1232564283-18008-1-git-send-email-reinette.chatre@intel.com>
+	 <1232564283-18008-2-git-send-email-reinette.chatre@intel.com>
+	 (sfid-20090121_195542_734853_62E08E0F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xApRP9vtReX5XIGJe+Dx"
+Date: Thu, 22 Jan 2009 11:57:33 +0100
+Message-Id: <1232621853.30174.19.camel@johannes.local> (sfid-20090122_140024_734199_D7E12784)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, 
 
-on my Thinkpad T61p I get several of the following warnings. The warning seems to happen on some reassociations 
-(like after resume) but not on all. I have never seen this message with 2.6.28-rc9. Since I cannot reliably trigger 
-this warning I am unable to bisect it...
+--=-xApRP9vtReX5XIGJe+Dx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Christian
+On Wed, 2009-01-21 at 10:58 -0800, Reinette Chatre wrote:
+> From: Abbas, Mohamed <mohamed.abbas@intel.com>
+>=20
+> In ieee80211_sta structure there is u64 supp_rates[IEEE80211_NUM_BANDS]
+> this is filled with all support rate from assoc_resp.  If we associate
+> with G-band AP only supp_rates of G-band will be set the other band
+> supp_rates will be set to 0. If the user type this command
+> this will cause mac80211 to set to new channel, mac80211
+> does not disassociate in setting new channel, so the active
+> band is now A-band. then in handling the new essid mac80211 will
+> kick in the assoc steps which involve sending disassociation frame.
+> in this mac80211 will WARN_ON sta->supp_rates[A_BAND] =3D=3D 0.
 
-[ 3850.807734] Restarting tasks ... done.
-[ 3858.346160] wlan0: deauthenticated (Reason: 7)
-[ 3859.345135] wlan0: direct probe to AP .. try 1
-[ 3859.347476] wlan0 direct probe responded
-[ 3859.347483] wlan0: authenticate with AP ...
-[ 3859.349471] wlan0: authenticated
-[ 3859.349476] wlan0: associate with AP ..
-[ 3859.351984] wlan0: RX ReassocResp from .. (capab=0x431 status=0 aid=1)
-[ 3859.351990] wlan0: associated
-[ 3861.347111] ------------[ cut here ]------------
-[ 3861.347119] WARNING: at drivers/net/wireless/iwlwifi/iwl-sta.c:689 iwl_set_dynamic_key+0x48e/0x4a0()
-[ 3861.347125] Hardware name: 64575GG
-[ 3861.347129] no space for new kewModules linked in: psmouse
-[ 3861.347142] Pid: 16225, comm: events/1 Not tainted 2.6.28-self-05692-g7d3b56b #64
-[ 3861.347148] Call Trace:
-[ 3861.347159]  [<c014c7d3>] warn_slowpath+0x73/0xd0
-[ 3861.347169]  [<c036b99f>] ? iwl_send_cmd_async+0x3f/0x90
-[ 3861.347178]  [<c0146219>] ? finish_task_switch+0x29/0xc0
-[ 3861.347186]  [<c036bd15>] ? iwl_send_cmd+0x15/0x20
-[ 3861.347193]  [<c037047d>] ? iwl_send_add_sta+0x6d/0x110
-[ 3861.347204]  [<c016cbe3>] ? tick_dev_program_event+0x33/0xb0
-[ 3861.347212]  [<c013a7c8>] ? default_spin_lock_flags+0x8/0x10
-[ 3861.347222]  [<c053ce8e>] ? _spin_lock_irqsave+0x3e/0x50
-[ 3861.347230]  [<c03712ee>] iwl_set_dynamic_key+0x48e/0x4a0
-[ 3861.347237]  [<c053d288>] ? _spin_unlock_irq+0x8/0x40
-[ 3861.347244]  [<c03700fa>] ? iwl_find_station+0xda/0x120
-[ 3861.347252]  [<c03735c8>] ? iwl_scan_cancel_timeout+0x18/0x80
-[ 3861.347261]  [<c03749b3>] iwl_mac_set_key+0xf3/0x130
-[ 3861.347269]  [<c0525337>] __ieee80211_key_todo+0xd7/0x260
-[ 3861.347277]  [<c015df34>] ? queue_delayed_work_on+0xb4/0xe0
-[ 3861.347284]  [<c03748c0>] ? iwl_mac_set_key+0x0/0x130
-[ 3861.347291]  [<c05255d2>] ieee80211_key_todo+0x12/0x20
-[ 3861.347298]  [<c05255e8>] key_todo+0x8/0x10
-[ 3861.347307]  [<c015d6c1>] run_workqueue+0x81/0x150
-[ 3861.347313]  [<c05255e0>] ? key_todo+0x0/0x10
-[ 3861.347321]  [<c015d818>] worker_thread+0x88/0xf0
-[ 3861.347329]  [<c0161490>] ? autoremove_wake_function+0x0/0x40
-[ 3861.347337]  [<c015d790>] ? worker_thread+0x0/0xf0
-[ 3861.347344]  [<c01610bc>] kthread+0x3c/0x70
-[ 3861.347351]  [<c0161080>] ? kthread+0x0/0x70
-[ 3861.347359]  [<c0120d13>] kernel_thread_helper+0x7/0x14
-[ 3861.347365] ---[ end trace 0f088f1dccf29d2c ]---
+Sounds like we should fix mac80211 to disassociate _before_ switching
+the channel? It won't help anyway if we're on another channel?
+
+johannes
+
+--=-xApRP9vtReX5XIGJe+Dx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJeFEaAAoJEKVg1VMiehFYavwQALD2feOp+eBE7UR37ggJtJQg
+LCMQmgqtJrkvIG/R1yHNZTIzCtCXcaKVsXaOJPvVhlOPdJM4DEukLD+WHT0IZWMT
+H7SOQMVIOxrzR9Wk1OWjGzq2eA7AH/AoPILNVsQenH7GgFSfKDXDfSbE0CLPGW/S
+DbOlMpW9sVmN5BZbVVM1CYDkdVg2ngWTIwLiO+qN8wHCeXcMnAGrVRb6Y9b05gd9
+34Bna0+3LVkX7th4XdVMCRlwhLe9pcNNDVUVdJ8z/VX22KYXZr+ofqCy1wip+z02
+9SVrp4JtEGnEu4JbnH6biPHiW7iyPDn2nHIce27rGS/VnVZpRhcUOmPzctcgNg9o
+Dd0PH82E3hlbkwZVldlrv98As/vzWd8OozwlEwVgEPr9aB9ODMLCtBKpWtBXI2ZZ
+Ws3h+6L2kI42ABg1rPaj+iI9HSIZtXxH592NMEVStBUjwUO+3urvjTlsGHhrLmWT
+RPK+2BWGeUXWXCxMuhybZwRtl5F7mXOlKeVshgL8dXY6q+YSQXuIdGTIzeybTxCM
+zI6lVic9SZopHKQdhascM2P1PSIMmTpr2rhBJUpw131StK/pppFT050uknLYkOoX
+iqJptMJHKp7qH+lgFBBt6G9qSszcFJV0PPuob3WexnqN63NgIRTepzzkNJpyeGW8
+YgKDO89b2w11NhXPhdqH
+=/aSj
+-----END PGP SIGNATURE-----
+
+--=-xApRP9vtReX5XIGJe+Dx--
+
