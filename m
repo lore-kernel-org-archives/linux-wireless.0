@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pD9E7DD47.dip.t-dialin.net ([217.231.221.71]:32932 "EHLO
-	apo2k4.ath.cx" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751526AbZAXOJM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 09:09:12 -0500
-Received: from lucien (unknown [10.8.1.2])
-	by apo2k4.ath.cx (Postfix) with ESMTPA id A02DC150076
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 15:00:57 +0100 (CET)
-Date: Sat, 24 Jan 2009 15:01:03 +0100
-From: Valentin <apo@apo2k4.ath.cx>
-To: linux-wireless@vger.kernel.org
-Subject: p54 + ISL3887 + master mode?
-Message-ID: <20090124150103.612d8985@lucien> (sfid-20090124_150917_424339_ED631A5B)
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/PCk0G7s_KPclZxReKPMArd.";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
+Received: from yw-out-2324.google.com ([74.125.46.30]:10880 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754184AbZAVEc5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jan 2009 23:32:57 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so1866707ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 20:32:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com>
+References: <200901140003.31693.gbburkhardt@verizon.net>
+	 <200901151734.46144.gbburkhardt@verizon.net>
+	 <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com>
+	 <200901202238.08756.gbburkhardt@verizon.net>
+	 <20090121151435.GB3643@tuxdriver.com>
+	 <69e28c910901211022j7f9c67dfv6392ce043dcff522@mail.gmail.com>
+	 <20090121191141.GA14710@tuxdriver.com>
+	 <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com>
+Date: Thu, 22 Jan 2009 06:32:55 +0200
+Message-ID: <40f31dec0901212032j65371fc6j5fcc1952f841d2ef@mail.gmail.com> (sfid-20090122_053650_200994_AAE815C2)
+Subject: Re: poor performance with ath5k; reverting to ath_pci
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: =?UTF-8?Q?Stefanik_G=C3=A1bor?= <netrolller.3d@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Glenn Burkhardt <gbburkhardt@verizon.net>,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/PCk0G7s_KPclZxReKPMArd.
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+2009/1/21 Stefanik G=C3=A1bor <netrolller.3d@gmail.com>:
+>
+> I think EMBEDDED is for options that replace full-featured Linux
+> components with dumbed-down, "low-profile" equivalents (like SLOB) -
+> PID vs. minstrel is more like SLAB vs. SLUB.
+>
+> G=C3=A1bor
+>
 
-Hi, I recently got a Dell Wireless 1450 USB and am now trying to put it
-into master mode, but to no avail... I've tried this:
-
-./iw phy phy6 interface add dell type (master|ap)
-
-but both just give me the help. Trying to add a device in e.g. monitor
-or managed mode works. If I then try
-
-iwconfig dell mode master
-
-I get
-
-Error for wireless request "Set Mode" (8B06) :
-    SET failed on device dell ; Invalid argument.
-
-Now I'm pretty much out of ideas. Is it actually possible to get this
-into master mode? :|
-
---Valentin
+Minstrell performs very well even on embedded devices, i don't think
+it's that heavy compared to pid.
 
 
-PS: Same results with ubuntu hardy's 2.6.24-22-generic kernel and debian
-lenny's 2.6.26-1-486.
 
---Sig_/PCk0G7s_KPclZxReKPMArd.
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkl7Hx8ACgkQ22z6WcGtDs9vfwCfeGbqyr/vqe5wFu9A0PVDN6zS
-1cMAoJlT7dUf1/fDUoiKh1eUXOUI2mIZ
-=Z8HK
------END PGP SIGNATURE-----
-
---Sig_/PCk0G7s_KPclZxReKPMArd.--
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
