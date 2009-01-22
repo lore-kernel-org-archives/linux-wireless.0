@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from warsl404pip6.highway.telekom.at ([195.3.96.89]:16017 "EHLO
-	email.aon.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758507AbZABTMS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 14:12:18 -0500
-To: Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: status of at76-usb driver
-Message-ID: <1230923532.495e670ca90b6@webmail.aon.at> (sfid-20090102_201221_174337_91635604)
-Date: Fri, 02 Jan 2009 20:12:12 +0100 (CET)
-From: Claudio <der.claudio@aon.at>
-Cc: linux-wireless@vger.kernel.org
-References: <11844363.2869.1230645164289.JavaMail.root@WARSBL214.highway.telekom.at> <87fxk1902j.fsf@litku.valot.fi>
-In-Reply-To: <87fxk1902j.fsf@litku.valot.fi>
+Received: from gateway13.websitewelcome.com ([67.18.94.12]:39363 "HELO
+	gateway13.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752005AbZAVOYr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 09:24:47 -0500
+Received: from 96-26-216-101.sea.clearwire-dns.net ([96.26.216.101]:52711 helo=Hydra.darkmatter.org)
+	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <Info@delphi-real-estate.com>)
+	id 1LQ04L-0003h1-TR
+	for linux-wireless@vger.kernel.org; Thu, 22 Jan 2009 07:58:06 -0600
+From: Delphi Real Estate <Info@delphi-real-estate.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Kernel Compile Fail with 2.6.26 Drivers
+Date: Thu, 22 Jan 2009 05:58:04 -0800
+References: <200901200942.57618.Info@delphi-real-estate.com>
+In-Reply-To: <200901200942.57618.Info@delphi-real-estate.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901220558.05104.Info@delphi-real-estate.com> (sfid-20090122_152452_404263_56831EEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kalle.valo@iki.fi> wrote:
-> Claudio <der.claudio@aon.at> writes:
->
->> my at76 hardware: Netgear MA101 rev.B
->>
->> experiences:
->> - works with Ubuntu 7.10 with stand-alone at76-usb-0.17 package
->> - AFAIR didn\'t work with Ubuntu 7.10 out-of-the-box
->> - didn\'t work with Ubuntu 8.10 (even didn\'t when I tried to install the
->>   old stand-alone version)
 
-Last one is wrong. See below.
+It seems that either no one has 'n' working at 5GHz, or are not willing to advise.  All I need is a combination that works;  I've tried 2.6's iwlwifi in 2.6.27 and it won't compile, and it seems that 2.6.28's iwlwifi doesn't work in 'n'.  I've run Debian for eleven years and have always compiled my own custom kernels, but would very much like to get 'n' working.  Scripting is no problem, although I am not an actual coder.  I wish someone could pitch in briefly.
 
-> I tried twice with latest Ubuntu 8.10 (updated yesterday) and kernel
-> oopsed both time for me:
 
-So it did for me.
 
-But the at76_usb that comes with Ubuntu 8.10 is actually a (very old)
-0.14beta1 version. Try $ strings /lib/modules/`uname \\
--r`/kernel/ubuntu/misc/wireless/at76/at76_usb.ko | egrep \'0.1[47]\'
+On Tuesday 20 January 2009 9:42:57 Delphi Real Estate wrote:
+> 
+> Trying to get 5GHz 'n' working, but I just do not understand the advice I'm getting. (below)  I am told that TX aggregation support is not expected to be fixed until around 2.6.30.
+> 
+> Goal is to be able to get some version of the iwlagn drivers that will do 'n' mode at 5GHz, which will compile in my Ubuntu 2.6.27 kernel.  I tried just grafting in the 2.6.26 iwlwifi directory into my 2.6.27 source tree, but compile fails without explanation.
+> 
+> Can anyone help?
+> 
+> 
+> > If you want the driver with TX aggregation support then you need to use
+> > the iwl5000 branch
+> > ( http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=shortlog;h=iwl5000 )
+> 
+> I guess I don't understand this.  I hit the first entry's 'snapshot', and I get a blank screen.  I click on the heading:
+> "iwlwifi: fix incorrect monitor mode operation  iwl5000"
+> ... and it takes me to the explanation of the bugfix, but navigating to iwl-agn.c or iwl3945-base.c via tree, snapshot or blob just gives me an HTML representation of the files.  There doesn't seem to be any way to get the actual source.  Why do they prevent you from getting just individual files with this system?
+> 
+> 
+> > The branch is based on kernel 2.6.26. If you do not want to give up your
+> > current kernel you can take a look how compat-wireless works ... but it
+> > is actually intended to take the most recent wireless-testing to work
+> > with your current kernel, not an older kernel in itself as what can be
+> > found in the iwl5000 branch.
+> 
+> I don't mind running the most recent kernel, as long as it works and has Ubuntu patches.  I don't see how to get there from here though.  I am a commercial real estate broker, after all, not a coder.
+> 
+> 
+> > Try diffing the Ubuntu sources against the kernel.org sources, and
+> > merge the resulting diff into the git tree.
+> 
+> LOL, thanks, but I am a commercial real estate broker, and have about as much chance of doing this as passing a calculus class.
+> 
+> Just trying to get 'n' at 5GHz, so I don't pollute my neighbors' wifi with my MythTV streaming.  I am lucky to have working what I do...
+> 
+> 
 
-Ad 1: It seems like Ubuntu ships an outdated version of the old
-stand-alone driver.
 
-Ad 2: I\'ve found a work-around (I\'ve tried this earlier but it did not
-work for any reason): adapting and compiling the 0.17 version of the old
-stand-alone driver (http://developer.berlios.de/projects/at76c503a/) ->
-It works again.
-
-Since this is not the perfect solution I would like to find out how to
-enable the at76 driver from the staging tree and then vote for doing the
-same in the Ubuntu kernel package. Well, how do I enable this driver
-anyway?
-
-Or what do you think we should do?
-
-Claudio
