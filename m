@@ -1,37 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37401 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622AbZA2Iiz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 03:38:55 -0500
-Message-Id: <20090129005807.684525064@sipsolutions.net> (sfid-20090129_093900_786181_B52E3FE0)
-References: <20090129005450.068797016@sipsolutions.net>
-Date: Thu, 29 Jan 2009 01:54:51 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: m.sujith@gmail.com, tomasw@gmail.com
-Subject: [RFC/RFT 01/11] mac80211: remove stray aggregation debugfs
-	definition
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:42498 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759448AbZAVXGi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 18:06:38 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 15:06:38 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/12] cfg80211: export freq_reg_info()
+Date: Thu, 22 Jan 2009 15:05:45 -0800
+Message-ID: <1232665554-26132-4-git-send-email-lrodriguez@atheros.com> (sfid-20090123_000642_729968_20A0281C)
+In-Reply-To: <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
+References: <1232665554-26132-1-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-2-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+This can be used by drivers on the reg_notifier()
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/sta_info.h |    1-
- net/mac80211/sta_info.h |    1 -
- 1 file changed, 1 deletion(-)
+ include/net/wireless.h |   24 ++++++++++++++++++++++++
+ net/wireless/reg.c     |   24 ++----------------------
+ 2 files changed, 26 insertions(+), 22 deletions(-)
 
---- wireless-testing.orig/net/mac80211/sta_info.h	2009-01-26 13:25:46.000000000 +0100
-+++ wireless-testing/net/mac80211/sta_info.h	2009-01-26 13:25:49.000000000 +0100
-@@ -65,7 +65,6 @@ enum ieee80211_sta_info_flags {
- #define HT_AGG_STATE_OPERATIONAL	(HT_ADDBA_REQUESTED_MSK |	\
- 					 HT_ADDBA_DRV_READY_MSK |	\
- 					 HT_ADDBA_RECEIVED_MSK)
--#define HT_AGG_STATE_DEBUGFS_CTL	BIT(7)
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index 585caad..a8971f6 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -418,4 +418,28 @@ extern void wiphy_apply_custom_regulatory(
+ 	struct wiphy *wiphy,
+ 	const struct ieee80211_regdomain *regd);
  
- /**
-  * struct tid_ampdu_tx - TID aggregation information (Tx).
-
++/**
++ * freq_reg_info - get regulatory information for the given frequency
++ * @wiphy: the wiphy for which we want to process this rule for
++ * @center_freq: Frequency in KHz for which we want regulatory information for
++ * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
++ * 	you can set this to 0. If this frequency is allowed we then set
++ * 	this value to the maximum allowed bandwidth.
++ * @reg_rule: the regulatory rule which we have for this frequency
++ *
++ * Use this function to get the regulatory rule for a specific frequency on
++ * a given wireless device. If the device has a specific regulatory domain
++ * it wants to follow we respect that unless a country IE has been received
++ * and processed already.
++ *
++ * Returns 0 if it was able to find a valid regulatory rule which does
++ * apply to the given center_freq otherwise it returns non-zero. It will
++ * also return -ERANGE if we determine the given center_freq does not even have
++ * a regulatory rule for a frequency range in the center_freq's band. See
++ * freq_in_rule_band() for our current definition of a band -- this is purely
++ * subjective and right now its 802.11 specific.
++ */
++extern int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
++			 const struct ieee80211_reg_rule **reg_rule);
++
+ #endif /* __NET_WIRELESS_H */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2f2f6f5..70691de 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -833,29 +833,9 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
+ 
+ 	return !max_bandwidth;
+ }
++EXPORT_SYMBOL(freq_reg_info);
+ 
+-/**
+- * freq_reg_info - get regulatory information for the given frequency
+- * @wiphy: the wiphy for which we want to process this rule for
+- * @center_freq: Frequency in KHz for which we want regulatory information for
+- * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
+- * 	you can set this to 0. If this frequency is allowed we then set
+- * 	this value to the maximum allowed bandwidth.
+- * @reg_rule: the regulatory rule which we have for this frequency
+- *
+- * Use this function to get the regulatory rule for a specific frequency on
+- * a given wireless device. If the device has a specific regulatory domain
+- * it wants to follow we respect that unless a country IE has been received
+- * and processed already.
+- *
+- * Returns 0 if it was able to find a valid regulatory rule which does
+- * apply to the given center_freq otherwise it returns non-zero. It will
+- * also return -ERANGE if we determine the given center_freq does not even have
+- * a regulatory rule for a frequency range in the center_freq's band. See
+- * freq_in_rule_band() for our current definition of a band -- this is purely
+- * subjective and right now its 802.11 specific.
+- */
+-static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
++int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
+ 			 const struct ieee80211_reg_rule **reg_rule)
+ {
+ 	return freq_reg_info_regd(wiphy, center_freq,
 -- 
+1.6.1.rc3.51.g5832d
 
