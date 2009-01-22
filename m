@@ -1,63 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:62012 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754616AbZAWR0d (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35532 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751124AbZAVOyY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 12:26:33 -0500
-Received: by ewy13 with SMTP id 13so3803795ewy.13
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 09:26:31 -0800 (PST)
-Message-ID: <4979FDC5.4030100@gmail.com> (sfid-20090123_182638_920039_78829E3F)
-Date: Fri, 23 Jan 2009 18:26:29 +0100
-From: Artur Skawina <art.08.09@gmail.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] p54usb: fix nasty use after free
-References: <200901201332.54435.chunkeey@web.de>
-In-Reply-To: <200901201332.54435.chunkeey@web.de>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 22 Jan 2009 09:54:24 -0500
+Subject: Re: porting open source mac to linux 2.6.13.0
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Bharat Bhushan <bharat.b.bhushan@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87eiyvl8ex.fsf@litku.valot.fi> (sfid-20090122_153106_546807_B2AA31E6)
+References: <d9360e520901212124j7bf196c3sf4e29d8fd3650f9b@mail.gmail.com>
+	 <1232621606.30174.16.camel@johannes.local>  <87eiyvl8ex.fsf@litku.valot.fi>
+	 (sfid-20090122_153106_546807_B2AA31E6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0NnYVjKohyg7wLUw+AZR"
+Date: Thu, 22 Jan 2009 15:54:20 +0100
+Message-Id: <1232636060.4224.16.camel@johannes.local> (sfid-20090122_155428_788190_EF570FE0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently an earlier version of this patch went into w-t, the
-committed version is still missing the skb_pull removal shown below.
-It's an error path so it doesn't usually get executed.
 
-Also, Christian's patch http://www.spinics.net/lists/linux-wireless/msg27282.html
-which makes net2280 devices work still hasn't made it. (it fixes an
-unrelated c&p bug it seems, but that change is obviously correct).
+--=-0NnYVjKohyg7wLUw+AZR
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-artur
+On Thu, 2009-01-22 at 16:31 +0200, Kalle Valo wrote:
 
-Christian Lamparter wrote:
-> In theory, the firmware acks the received a data frame, before signaling the driver to free it again.
-> However Artur Skawina has shown that it can happen in reverse order as well.
-> This is very bad and could lead to memory corruptions, oopses and panics.
->  
-> Thanks to Artur Skawina <art.08.09@gmail.com> for reporting and debugging this issue.
-> 
-> Tested-by: Artur Skawina <art.08.09@gmail.com>
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> Changes:
-> 	- removed a forgotten skb_pull from p54u_tx_net2280 error - path.
+> > Then cancel the contract with your embedded vendor and find a decent
+> > one.
+>=20
+> Just out of curiousity, is there an embedded vendor who adds support
+> to the mainline kernels and maintains it? To me it looks like more or
+> less everyone want to fork their own kernel and then forget it.
 
-> @@ -360,14 +352,12 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
->  		usb_unanchor_urb(data_urb);
->  		goto out;
->  	}
-> - out:
-> +out:
->  	usb_free_urb(int_urb);
->  	usb_free_urb(data_urb);
->  
-> -	if (err) {
-> -		skb_pull(skb, sizeof(*hdr));
-> +	if (err)
->  		p54_free_skb(dev, skb);
-> -	}
->  }
+Depends what you mean by "maintain", and what you're looking for. I know
+many powerpc boards are supported in the kernel, so if you look in that
+space I'm sure you'll find something. I don't think you'll find a vendor
+that maintains their entire range of boards very long into the future,
+but once it's in the kernel it's much less likely to break, and if it
+does easier to fix.
+
+johannes
+
+--=-0NnYVjKohyg7wLUw+AZR
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJeIiZAAoJEKVg1VMiehFY1ScQAL2GFG0j75aUFc0XPDV9/GhP
+oMjJFCauXiXfP5eoLx71H2IVWaOBucnnjC2oaKtk0BrGPNK/o9X8ApkM9uz5jpjG
+tFa9cdquaOSmhV6mzKmG197rvCXEFctlsSRaqQG20psPU0sc/wKT3yLn93z86utk
+PL+7axZFFbYqBS3kg6aCpfXuDtbK1purZzkcYEtXr5FDn96sGumqJb9nFyFcfr83
+ZSb672vu63ULKH6Tm73QOdMR1G+9T0l9Oxfw4l6fIF7wzuDyf9caTIGkvcqBFdhh
+2TjOdtZk2NELIbIOtLv4MwVIrP5EI6fRmYxyaf1s+K7k254oFs5pA13KJq5AVli/
+TRe66/e/9W+B7c2+dlpl6IAjtt+9pRoFBQUrEfw4S4DXdW57jRvly6lya5Ols997
+Y1CXdzZwW93cKaDFyjaFXIb0PPyABcdV8y1F2WcxKVxQP51ie2NfZGztnqwmbAib
+VaV+GvlbdtSF6mQ4mnlJBwFThdmbOVN56zuIwdPUDRcHc70h6VyBP/t5ys1yct4m
+NiW+CMkXLmzR6h59TK9ANLQIcv4fgFoSOms2kn+DkPG0H5P2+nxKpAmpoAAojJdi
+rd7kIH/A0e+tcpgv0JwyJQsKBzjoG+bkrVF0Njr1h8zKN1/lfl7k2rT+CelRg+jH
+GcuktyGyxGiPDJtjl3vr
+=5hFk
+-----END PGP SIGNATURE-----
+
+--=-0NnYVjKohyg7wLUw+AZR--
 
