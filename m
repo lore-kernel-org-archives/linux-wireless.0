@@ -1,54 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:35831 "EHLO c60.cesmail.net"
+Received: from mail.atheros.com ([12.36.123.2]:42520 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751771AbZAMViy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 16:38:54 -0500
-Subject: Re: [PATCH v3 00/11] ath9k: add preliminary support for the AR913x
- SoCs
-From: Pavel Roskin <proski@gnu.org>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
-References: <1231854029-26810-1-git-send-email-juhosg@openwrt.org>
+	id S1759803AbZAVXGs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 18:06:48 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 15:06:48 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/12] cfg80211: rename fw_handles_regulatory to custom_regulatory
+Date: Thu, 22 Jan 2009 15:05:49 -0800
+Message-ID: <1232665554-26132-8-git-send-email-lrodriguez@atheros.com> (sfid-20090123_000706_369623_A61FA643)
+In-Reply-To: <1232665554-26132-7-git-send-email-lrodriguez@atheros.com>
+References: <1232665554-26132-1-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-2-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-4-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-5-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-6-git-send-email-lrodriguez@atheros.com>
+ <1232665554-26132-7-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Tue, 13 Jan 2009 16:38:51 -0500
-Message-Id: <1231882731.21706.10.camel@dv> (sfid-20090113_223859_372241_7D2B094A)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-01-13 at 14:40 +0100, Gabor Juhos wrote:
-> This patch set introduces preliminary support for the Atheros' AR9130/AR9132
-> SoCs built-in WMAC device. Tested with compat-wireless-2009-01-12 and 2.6.27.10 
-> kernel on the following devices:
->   * Atheros AP83-050 reference board (AR9132 SoC, AR9106 RF)
->   * TRENDnet TEW-632BRP router (AR9130 SoC, AR9102 RF)
->   * Mikrotik RB433 board (AR7161 SoC) + AR5416 based miniPCI card
+Drivers without firmware can also have custom regulatory maps
+which do not map to a specific ISO / IEC alpha2 country code.
 
-I confirm that my AR5416 miniPCI is still working with this patch on top
-of yesterdays wireless-testing (master-2009-01-12).
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ include/net/wireless.h                      |    6 +++---
+ net/wireless/reg.c                          |    2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-Unfortunately, patch named "ath9k: move PCI code into separate file"
-doesn't apply to the today's wireless-testing and needs to be rebased.
-
-Current checkpatch.pl gets confused by several patches because an
-"#endif" in the unchanged part somehow causes the preprocessor stack to
-underflow:
-
-Can't use an undefined value as an ARRAY reference at
-scripts/checkpatch.pl line 453.
-
-This appears to be a bug in checkpatch.pl and should not be considered a
-problem in the patches.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index d2ef3e1..1d568ac 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -811,7 +811,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 
+-	hw->wiphy->fw_handles_regulatory = true;
++	hw->wiphy->custom_regulatory = true;
+ 
+ 	/* Default value; 4 EDCA QOS priorities */
+ 	hw->queues = 4;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c9f6f8e..b48ee3f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -7039,7 +7039,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 
+-	hw->wiphy->fw_handles_regulatory = true;
++	hw->wiphy->custom_regulatory = true;
+ 
+ 	/* 4 EDCA QOS priorities */
+ 	hw->queues = 4;
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index a8971f6..438cba9 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -181,8 +181,8 @@ struct ieee80211_supported_band {
+  * struct wiphy - wireless hardware description
+  * @idx: the wiphy index assigned to this item
+  * @class_dev: the class device representing /sys/class/ieee80211/<wiphy-name>
+- * @fw_handles_regulatory: tells us the firmware for this device
+- * 	has its own regulatory solution and cannot identify the
++ * @custom_regulatory: tells us the driver for this device
++ * 	has its own custom regulatory domain and cannot identify the
+  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
+  * 	we will disregard the first regulatory hint (when the
+  * 	initiator is %REGDOM_SET_BY_CORE).
+@@ -201,7 +201,7 @@ struct wiphy {
+ 	/* Supported interface modes, OR together BIT(NL80211_IFTYPE_...) */
+ 	u16 interface_modes;
+ 
+-	bool fw_handles_regulatory;
++	bool custom_regulatory;
+ 
+ 	/* If multiple wiphys are registered and you're handed e.g.
+ 	 * a regular netdev with assigned ieee80211_ptr, you won't
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 421c5b3..2a94dc0 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -935,7 +935,7 @@ static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
+ 	if (!last_request)
+ 		return true;
+ 	if (setby == REGDOM_SET_BY_CORE &&
+-		  wiphy->fw_handles_regulatory)
++		  wiphy->custom_regulatory)
+ 		return true;
+ 	return false;
+ }
 -- 
-Regards,
-Pavel Roskin
+1.6.1.rc3.51.g5832d
+
