@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21102 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752751AbZAMUVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 15:21:08 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 12:21:08 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: simplify regulatory code
-Date: Tue, 13 Jan 2009 12:20:42 -0800
-Message-ID: <1231878042-21799-1-git-send-email-lrodriguez@atheros.com> (sfid-20090113_212112_675180_4F7695D3)
+Received: from mail-ew0-f20.google.com ([209.85.219.20]:35179 "EHLO
+	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752852AbZAVTTU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 14:19:20 -0500
+Received: by ewy13 with SMTP id 13so2930121ewy.13
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 11:19:18 -0800 (PST)
+Message-ID: <4978C6B4.80601@gmail.com> (sfid-20090122_201924_988895_82BE8B46)
+Date: Thu, 22 Jan 2009 20:19:16 +0100
+From: Artur Skawina <art.08.09@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Christian Lamparter <chunkeey@web.de>
+CC: Artur Skawina <art.08.09@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
+References: <200901211450.50880.chunkeey@web.de> <200901221609.27401.chunkeey@web.de> <4978964C.8000301@gmail.com> <200901221701.59190.chunkeey@web.de>
+In-Reply-To: <200901221701.59190.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that cfg80211 has its own regulatory infrastructure we can
-condense ath9k's regulatory code considerably. We only keep data
-we need to provide our own regulatory_hint(), regulatory_set_custom_rd(),
-reg_notifier() and information necessary for calibration.
+Christian Lamparter wrote:
+> On Thursday 22 January 2009 16:52:44 Artur Skawina wrote:
+>> Christian Lamparter wrote:
+>>> On Thursday 22 January 2009 06:40:56 Artur Skawina wrote:
+>>> was this with your patch to use rx_refills urb pool for tx, or without?
+>> just your patch plus the fixes that i needed to get it to work, all
+>> of them were in that email. The subject said RFT... ;)
+>> [the line #s were off, because of some extra printks logging the queue len]
+>>
+> all right, could you please put a commit message in your mail as well?
 
-Atheros hardware supports 12 world regulatory domains, since these
-are custom we apply them through the the new regulatory_set_custom_rd().
-Although we have 12 we consolidate these into 5 structures based on
-frequency and apply a different set of flags that differentiate them
-on a case by case basis through the reg_notifier().
+I thought you had already merged the changes, but i see you only took the
+first hunk. There's no point in splitting the commit, as the intermediate
+result wouldn't work. You can add my s-o-b, if you feel that's necessary.
+This last version seems fine, just one thing: I can't convince myself
+that not queuing the work after an urb fails with urb->status==true is
+safe -- what if some temporary error condition causes the rx queue to
+drain? Nothing will resubmit the urbs. 
+Wouldn't a usb_poison_anchored_urbs() instead of usb_kill_anchored_urbs()
+in p54u_free_urbs() prevent p54u_rx_refill from resubmitting, and that early
+return in the completion could then go? Or did i miss a case where it's
+needed, other than stop()?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-
-This patch seems to be too big (135653 bytes) for linux-wireless so
-here a URL to it if you want to wget it:
-
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-01-13/0001-ath9k-simplify-regulatory-code.patch
-
-This patch should be applied once the 12 patches from my series
-"cfg80211/mac80211: fixes/enhancements for reg_notifier()" have been
-merged as it depends on a few new cfg80211 helpers from there.
-
- drivers/net/wireless/ath9k/ath9k.h       |   41 +-
- drivers/net/wireless/ath9k/calib.c       |   41 +-
- drivers/net/wireless/ath9k/core.h        |    1 -
- drivers/net/wireless/ath9k/hw.c          |   63 +-
- drivers/net/wireless/ath9k/main.c        |  248 ++--
- drivers/net/wireless/ath9k/regd.c        | 1164 +++++-------------
- drivers/net/wireless/ath9k/regd.h        |  181 +---
- drivers/net/wireless/ath9k/regd_common.h | 2058 +++++-------------------------
- 8 files changed, 761 insertions(+), 3036 deletions(-)
+artur
