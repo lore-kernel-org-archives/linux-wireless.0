@@ -1,55 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:57964 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756576AbZAPVuo (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:38989 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758398AbZAVTln (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 16:50:44 -0500
-Date: Fri, 16 Jan 2009 19:50:40 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Werner Almesberger <werner@openmoko.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rfkill: life after driver death
-Message-ID: <20090116215040.GF5719@khazad-dum.debian.net> (sfid-20090116_225048_786985_EAD34CAF)
-References: <20090116195247.GC13290@almesberger.net> <20090116202759.GD5719@khazad-dum.debian.net> <20090116205905.GR13288@almesberger.net>
+	Thu, 22 Jan 2009 14:41:43 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so866576eye.37
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 11:41:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090116205905.GR13288@almesberger.net>
+In-Reply-To: <87priffb95.fsf@litku.valot.fi>
+References: <87priffb95.fsf@litku.valot.fi>
+Date: Thu, 22 Jan 2009 20:41:41 +0100
+Message-ID: <2d0a357f0901221141k7e0c3979y1e42561b2e8636ec@mail.gmail.com> (sfid-20090122_204149_310147_2ED49164)
+Subject: Re: iwl3945 regression: associates but no data is transfered
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 16 Jan 2009, Werner Almesberger wrote:
-> But then we're a few sysfs interfaces short. Is there any specific
-> reason why there is a control for setting the global default state
-> (/sys/module/rfkill/parameters) but there are no controls for:
-> 
-> - setting the default state by type,
-> - setting the current state by type, and
-> - setting the current state ?
+Hi Kalle,
 
-Yeah, they are sitting in my queue, but I dislike them so much I always find
-a reason not to post them and do something else in thinkpad-acpi, instead...
+I noticed the same regression here with iwl3945 and static-IP with
+wl.git master 2009-01-21.
 
-I will see if I can bring myself to post them during the weekend.
+I tried to apply the iwlwifi-updates from 20-Jan-2009 (5 patches,
+without the iwl3945-rfkill one, see below).
+As far as I can see the patchset as of 19-Jan-2009 (15 patches) seem
+to be all included in latest master.
 
-Anyway, right now access to those is only possible through rfkill-input and
-input-events (for those types that HAVE an input event related to them...).
+There were two patches specially for 2.6.29 [1], but they were not
+applicable in my case, so I took the ones from the older patchset.
+But no luck here.
 
-> > But there are other questions: why?  You *NEED* somewhere to attach the
-> > rfkill kobjects to, and that somewhere can't very well be a device that is
-> > getting hotunplugged, as it will disappear.  So, you will need something
-> > like the platform device you used, anyway...
-> 
-> In my scenario, a driver calling rfkill_detach would say "I might be
-> back".
-> 
-> But I think I like the idea of making the per-type controls more
-> powerful.
+Johannes and Mohamed are discussing mac80211 disassociation on [2].
 
-Then, it is best that we stick with what already is there (the per-type
-control).
+Hope these infos help.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Kind Regards,
+Sedat
+
+[1] http://marc.info/?l=linux-wireless&m=123256418517083&w=2
+[2] http://marc.info/?l=linux-wireless&m=123264308904962&w=2
+
+
+----- BEGIN series -----
+
+# 00xx-series: All patches against wireless-testing (master-2009-01-21)
+0000-patches-against-wl-v2.6.29-rc2-11925-g88e5942
+#
+# 01xx-series: Patches from <kernel.org>
+0100-patch-2.6.29-rc2-git1
+#
+# 02xx-series: Patches from wl-mailing-list
+0200-0_5-iwlwifi-driver-updates-01_20_2009.patch
+0201-1_5-iwlwifi-fix-rs_get_rate-WARN_ON.patch
+0202-2_5-iwlwifi-allow-user-to-set-max-rate.patch
+0203-3_5-iwlagn-fix-agn-rate-scaling.patch
+# Disabled - included in wl (master-2009-01-21)
+#0204-4_5-iwl3945-Use-iwl-rfkill-v2.patch
+0205-5_5-iwl3945-fix-deep-sleep-when-removing-the-driver.patch
+
+----- END series -----
+
+On Thu, Jan 22, 2009 at 7:26 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> Hello,
+>
+> I upgraded to the latest wireless-testing and my iwl3945 is now
+> broken. It can associate but no data is transfered after that. Tried
+> with open and wep modes. With dhcp I cannot get ip and with static ip
+> ping to the gateway doesn't work.
+>
+> Any hints?
+>
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
