@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:64336 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328AbZA1Qzg (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:4876 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861AbZAVNof (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 11:55:36 -0500
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: vivek.natraj@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v2 2/2] mac80211: use ps-poll when dynamic power save mode is disabled
-References: <20090122114240.31443.18218.stgit@tikku>
-	<20090122114546.31443.79387.stgit@tikku>
-	<1232643729.5819.3.camel@johannes.local>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 28 Jan 2009 18:49:34 +0200
-In-Reply-To: <1232643729.5819.3.camel@johannes.local> (ext Johannes Berg's message of "Thu\, 22 Jan 2009 18\:02\:09 +0100")
-Message-ID: <87hc3jgyu9.fsf@nokia.com> (sfid-20090128_175540_755314_8F4E1F33)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 22 Jan 2009 08:44:35 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/6] ath5k: fix locking in ath5k_config
+Date: Thu, 22 Jan 2009 08:44:16 -0500
+Message-Id: <1232631861-6028-2-git-send-email-me@bobcopeland.com> (sfid-20090122_144441_820910_161A4CBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+ath5k_config updates the software context without taking sc->lock.
 
-> On Thu, 2009-01-22 at 13:45 +0200, Kalle Valo wrote:
->
->> +	printk(KERN_DEBUG "sending ps-poll");
->
-> remove one, add another? Or forgot quilt refresh? :)
+Changes-licensed-under: 3-Clause-BSD
 
-I have no idea what happened :) I'll fix that.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/base.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-> If we receive a frame, but don't send any, we'll still stay awake.
-> Should receiving update the dynamic timer as well, to avoid that case?
-> Here, I mean:
->
->> @@ -1816,9 +1851,24 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
-> ...
->> +                       if (local->hw.conf.dynamic_ps_timeout > 0) {
->> +                               local->hw.conf.flags &= ~IEEE80211_CONF_PS;
->> +                               ieee80211_hw_config(local,
->> +                                                   IEEE80211_CONF_CHANGE_PS);
->> +                               ieee80211_send_nullfunc(local, sdata, 0);
-
-You mean case where directed_time is set, dynamic_ps_timeout is zero
-and station doesn't transmit anything? That's not a problem because in
-that case power save is not disabled at all, ps-poll is sent while
-power save mode is enabled. So there won't any problem.
-
-Like I said last week, I need to revisit this case later to get proper
-support for other hw designs, eg. broadcom.
-
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 747b496..1e1222c 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1021,6 +1021,8 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+  * it's done by reseting the chip.  To accomplish this we must
+  * first cleanup any pending DMA, then restart stuff after a la
+  * ath5k_init.
++ *
++ * Called with sc->lock.
+  */
+ static int
+ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+@@ -2825,11 +2827,17 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct ath5k_softc *sc = hw->priv;
+ 	struct ieee80211_conf *conf = &hw->conf;
++	int ret;
++
++	mutex_lock(&sc->lock);
+ 
+ 	sc->bintval = conf->beacon_int;
+ 	sc->power_level = conf->power_level;
+ 
+-	return ath5k_chan_set(sc, conf->channel);
++	ret = ath5k_chan_set(sc, conf->channel);
++
++	mutex_unlock(&sc->lock);
++	return ret;
+ }
+ 
+ static int
 -- 
-Kalle Valo
+1.6.0.6
+
+
