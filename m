@@ -1,70 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:24991 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbZAVSk4 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42355 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755898AbZAWQfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 13:40:56 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so720617nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 10:40:54 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 22 Jan 2009 20:40:54 +0200
-Message-ID: <147a89290901221040o510820c6re226b386748da706@mail.gmail.com> (sfid-20090122_194102_882964_49A1EEA8)
-Subject: PS Poll
-From: Andy Johnson <johnsonzjo@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kalle.valo@iki.fi
-Content-Type: text/plain; charset=UTF-8
+	Fri, 23 Jan 2009 11:35:11 -0500
+Subject: [PATCH] mac80211: add interface list lock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 22 Jan 2009 18:04:39 +0100
+Message-Id: <1232643879.5819.5.camel@johannes.local> (sfid-20090123_173515_930290_E25D97D9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Using only the RTNL has a number of problems, most notably that
+ieee80211_iterate_active_interfaces() and other interface list
+traversals cannot be done from the internal workqueue because it
+needs to be flushed under the RTNL.
 
-I had encountered the recent PS-POLL patches from
-Kalle Valo and  I have three questions about PS-Poll mechanism. I hope
-that I did not miss something.
-In fact, the first question, which is about the design of this
-mechanism, seems to me the most important.
+This patch introduces a new mutex that protects the interface list
+against modifications. A more detailed explanation is part of the
+code change.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Need this for the scan stuff I'm doing next, but this has the side
+effect of allowing you to call ieee80211_iterate_active_interfaces()
+from mac80211's workqueue, which might be interesting. Ivo, that's
+the reason you got a copy of this.
+
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/iface.c       |   31 +++++++++++++++++++++++++++++++
+ net/mac80211/main.c        |    3 +++
+ net/mac80211/util.c        |    4 ++--
+ 4 files changed, 38 insertions(+), 2 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-21 12:48:12.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-21 13:57:49.000000000 +0100
+@@ -643,7 +643,9 @@ struct ieee80211_local {
+ 	struct crypto_blkcipher *wep_rx_tfm;
+ 	u32 wep_iv;
+ 
++	/* see iface.c */
+ 	struct list_head interfaces;
++	struct mutex iflist_mtx;
+ 
+ 	/*
+ 	 * Key lock, protects sdata's key_list and sta_info's
+--- wireless-testing.orig/net/mac80211/iface.c	2009-01-21 12:48:12.000000000 +0100
++++ wireless-testing/net/mac80211/iface.c	2009-01-21 13:57:49.000000000 +0100
+@@ -21,6 +21,23 @@
+ #include "mesh.h"
+ #include "led.h"
+ 
++/**
++ * DOC: Interface list locking
++ *
++ * The interface list in each struct ieee80211_local is protected
++ * three-fold:
++ *
++ * (1) modifications may only be done under the RTNL
++ * (2) modifications and readers are protected against each other by
++ *     the iflist_mtx.
++ * (3) modifications are done in an RCU manner so atomic readers
++ *     can traverse the list in RCU-safe blocks.
++ *
++ * As a consequence, reads (traversals) of the list can be protected
++ * by either the RTNL, the iflist_mtx or RCU.
++ */
++
++
+ static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
+ {
+ 	int meshhdrlen;
+@@ -800,7 +817,9 @@ int ieee80211_if_add(struct ieee80211_lo
+ 					    params->mesh_id_len,
+ 					    params->mesh_id);
+ 
++	mutex_lock(&local->iflist_mtx);
+ 	list_add_tail_rcu(&sdata->list, &local->interfaces);
++	mutex_unlock(&local->iflist_mtx);
+ 
+ 	if (new_dev)
+ 		*new_dev = ndev;
+@@ -816,7 +835,10 @@ void ieee80211_if_remove(struct ieee8021
+ {
+ 	ASSERT_RTNL();
+ 
++	mutex_lock(&sdata->local->iflist_mtx);
+ 	list_del_rcu(&sdata->list);
++	mutex_unlock(&sdata->local->iflist_mtx);
++
+ 	synchronize_rcu();
+ 	unregister_netdevice(sdata->dev);
+ }
+@@ -832,7 +854,16 @@ void ieee80211_remove_interfaces(struct 
+ 	ASSERT_RTNL();
+ 
+ 	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
++		/*
++		 * we cannot hold the iflist_mtx across unregister_netdevice,
++		 * but we only need to hold it for list modifications to lock
++		 * out readers since we're under the RTNL here as all other
++		 * writers.
++		 */
++		mutex_lock(&local->iflist_mtx);
+ 		list_del(&sdata->list);
++		mutex_unlock(&local->iflist_mtx);
++
+ 		unregister_netdevice(sdata->dev);
+ 	}
+ }
+--- wireless-testing.orig/net/mac80211/main.c	2009-01-21 12:48:21.000000000 +0100
++++ wireless-testing/net/mac80211/main.c	2009-01-21 13:57:50.000000000 +0100
+@@ -718,6 +718,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	local->hw.conf.radio_enabled = true;
+ 
+ 	INIT_LIST_HEAD(&local->interfaces);
++	mutex_init(&local->iflist_mtx);
+ 
+ 	spin_lock_init(&local->key_lock);
+ 
+@@ -968,6 +969,8 @@ void ieee80211_free_hw(struct ieee80211_
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
++	mutex_destroy(&local->iflist_mtx);
++
+ 	wiphy_free(local->hw.wiphy);
+ }
+ EXPORT_SYMBOL(ieee80211_free_hw);
+--- wireless-testing.orig/net/mac80211/util.c	2009-01-21 12:48:12.000000000 +0100
++++ wireless-testing/net/mac80211/util.c	2009-01-21 12:48:21.000000000 +0100
+@@ -459,7 +459,7 @@ void ieee80211_iterate_active_interfaces
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+-	rtnl_lock();
++	mutex_lock(&local->iflist_mtx);
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		switch (sdata->vif.type) {
+@@ -480,7 +480,7 @@ void ieee80211_iterate_active_interfaces
+ 				 &sdata->vif);
+ 	}
+ 
+-	rtnl_unlock();
++	mutex_unlock(&local->iflist_mtx);
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces);
+ 
 
 
-As I understand, when a station in power save mode (dozed) gets a
-beacon TIM from its AP which tells it
-that the AP has kept unicast packets for it, that station wakes up and
-starts sending PS-Poll frames. It sends PS-POLL one by one; each such
-packet, which is received in the AP, will cause it to send an skb from
-its buffer (ps_tx_buf skb queue, in sta_info struct). This packet has
-a MOREDATA flag set.
-
-The stations send PS Poll packets one by one, until the ps_tx_buf is
-emptied; when the last skb from ps_tx_buf is sent from the AP, it does
-not have the MOREDATA flag set, as opposed to all the previous
-sk_buffs which were retrieved from the ps_tx_buf.
-
-(I believe that it should be the IEEE80211_FCTL_MOREDATA flag, not sure).
-
-In the period from when the first skb is retrieved to when the last
-skb, the station must not got to sleep. After the last one is
-received, it may go to sleep or stay awake (I wonder on what this
-depends).
-
-
-My questions are:
-
-
-1) Why not send **one** PS-POLL which will signal the AP to start
-sending sk_buffs from the ps_tx_buf until is it emptied ? why do we
-send PS Poll packets
-one by one ? Sending only one PS poll, as suggested, will reduce
-traffic (take in accordance that we have ACKs also).
-
-2) In the sceario depicted above, when sending PS polls one by one,
-what happens if there are packets sent to that station from the same
-source as packets
-that were kept in the buffer - will they be received in the
-destination (the client that awoke)? don't we loose here the order of
-the packets?
-
-3) should the station send ACK to the AP  for each skb it receives (as
-a response to PS Poll) using this mechanism?
-
-Regards,
-Andy
