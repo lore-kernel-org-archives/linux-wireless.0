@@ -1,36 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:12312 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753380AbZA3Wdh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 17:33:37 -0500
-Subject: [PATCH] iw: report if no supported version of libnl is found
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-From: Pavel Roskin <proski@gnu.org>
-Date: Fri, 30 Jan 2009 17:33:34 -0500
-Message-ID: <20090130223334.15961.45110.stgit@dv.roinet.com> (sfid-20090130_233341_046216_98F41A7D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.deathmatch.net ([70.167.247.36]:4886 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754028AbZAVNoh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 08:44:37 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/6] ath5k: set up rf_banks array at attach time
+Date: Thu, 22 Jan 2009 08:44:17 -0500
+Message-Id: <1232631861-6028-3-git-send-email-me@bobcopeland.com> (sfid-20090122_144446_207188_43C81680)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise, the error messase would be very confusing.
----
- Makefile |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ah_rf_banks was being created lazily the first time we did a reset,
+and the function pointer was also determined every time we reloaded the
+registers.  This change moves the initialization portion into a function
+called at attach time and adds the function pointer to the ath5k_hw
+struct so that reset can be called from atomic context.
 
-diff --git a/Makefile b/Makefile
-index 4de66e8..89ebd7f 100644
---- a/Makefile
-+++ b/Makefile
-@@ -29,6 +29,10 @@ LIBS += -lnl-genl
- NLLIBNAME = libnl-2.0
- endif
+Changes to attach.c, phy.c, reset.c
+Changes-licensed-under: ISC
+
+Changes to ath5k.h
+Changes-licensed-under: 3-Clause-BSD
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/ath5k.h  |    4 +++-
+ drivers/net/wireless/ath5k/attach.c |    4 ++++
+ drivers/net/wireless/ath5k/phy.c    |   28 ++++++++++------------------
+ drivers/net/wireless/ath5k/reset.c  |    3 ++-
+ 4 files changed, 19 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
+index 183ffc8..71426ea 100644
+--- a/drivers/net/wireless/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath5k/ath5k.h
+@@ -1149,6 +1149,8 @@ struct ath5k_hw {
+ 		struct ath5k_tx_status *);
+ 	int (*ah_proc_rx_desc)(struct ath5k_hw *, struct ath5k_desc *,
+ 		struct ath5k_rx_status *);
++	int (*ah_hw_load_rfregs)(struct ath5k_hw *, struct ieee80211_channel *,
++		unsigned int mode);
+ };
  
-+ifeq ($(NLLIBNAME),)
-+$(error Cannot find development files for any supported version of libnl)
-+endif
+ /*
+@@ -1260,7 +1262,7 @@ extern int ath5k_hw_disable_pspoll(struct ath5k_hw *ah);
+ extern int ath5k_hw_write_initvals(struct ath5k_hw *ah, u8 mode, bool change_channel);
+ 
+ /* Initialize RF */
+-extern int ath5k_hw_rfregs(struct ath5k_hw *ah, struct ieee80211_channel *channel, unsigned int mode);
++extern int ath5k_hw_init_rfregs(struct ath5k_hw *ah);
+ extern int ath5k_hw_rfgain(struct ath5k_hw *ah, unsigned int freq);
+ extern enum ath5k_rfgain ath5k_hw_get_rf_gain(struct ath5k_hw *ah);
+ extern int ath5k_hw_set_rfgain_opt(struct ath5k_hw *ah);
+diff --git a/drivers/net/wireless/ath5k/attach.c b/drivers/net/wireless/ath5k/attach.c
+index dea378f..59e7e46 100644
+--- a/drivers/net/wireless/ath5k/attach.c
++++ b/drivers/net/wireless/ath5k/attach.c
+@@ -333,6 +333,10 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 
+ 	ath5k_hw_set_rfgain_opt(ah);
+ 
++	ret = ath5k_hw_init_rfregs(ah);
++	if (ret)
++		goto err_free;
 +
- LIBS += $(shell pkg-config --libs $(NLLIBNAME))
- CFLAGS += $(shell pkg-config --cflags $(NLLIBNAME))
+ 	return ah;
+ err_free:
+ 	kfree(ah);
+diff --git a/drivers/net/wireless/ath5k/phy.c b/drivers/net/wireless/ath5k/phy.c
+index 7ba18e0..a12a085 100644
+--- a/drivers/net/wireless/ath5k/phy.c
++++ b/drivers/net/wireless/ath5k/phy.c
+@@ -1583,13 +1583,12 @@ static int ath5k_hw_rf5413_rfregs(struct ath5k_hw *ah,
+ }
  
+ /*
+- * Initialize RF
++ * Initialize RF function pointers
+  */
+-int ath5k_hw_rfregs(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+-		unsigned int mode)
++int ath5k_hw_init_rfregs(struct ath5k_hw *ah)
+ {
+-	int (*func)(struct ath5k_hw *, struct ieee80211_channel *, unsigned int);
+-	int ret;
++	int (*func)(struct ath5k_hw *, struct ieee80211_channel *,
++		unsigned int);
+ 
+ 	switch (ah->ah_radio) {
+ 	case AR5K_RF5111:
+@@ -1619,20 +1618,13 @@ int ath5k_hw_rfregs(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (ah->ah_rf_banks == NULL) {
+-		/* XXX do extra checks? */
+-		ah->ah_rf_banks = kmalloc(ah->ah_rf_banks_size, GFP_KERNEL);
+-		if (ah->ah_rf_banks == NULL) {
+-			ATH5K_ERR(ah->ah_sc, "out of memory\n");
+-			return -ENOMEM;
+-		}
++	ah->ah_rf_banks = kmalloc(ah->ah_rf_banks_size, GFP_KERNEL);
++	if (!ah->ah_rf_banks) {
++		ATH5K_ERR(ah->ah_sc, "out of memory\n");
++		return -ENOMEM;
+ 	}
+-
+-	ret = func(ah, channel, mode);
+-	if (!ret)
+-		ah->ah_rf_gain = AR5K_RFGAIN_INACTIVE;
+-
+-	return ret;
++	ah->ah_hw_load_rfregs = func;
++	return 0;
+ }
+ 
+ int ath5k_hw_rfgain(struct ath5k_hw *ah, unsigned int freq)
+diff --git a/drivers/net/wireless/ath5k/reset.c b/drivers/net/wireless/ath5k/reset.c
+index dc2d7d8..c7cd380 100644
+--- a/drivers/net/wireless/ath5k/reset.c
++++ b/drivers/net/wireless/ath5k/reset.c
+@@ -603,9 +603,10 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 		/*
+ 		 * Write RF registers
+ 		 */
+-		ret = ath5k_hw_rfregs(ah, channel, mode);
++		ret = ah->ah_hw_load_rfregs(ah, channel, mode);
+ 		if (ret)
+ 			return ret;
++		ah->ah_rf_gain = AR5K_RFGAIN_INACTIVE;
+ 
+ 		/*
+ 		 * Configure additional registers
+-- 
+1.6.0.6
+
+
