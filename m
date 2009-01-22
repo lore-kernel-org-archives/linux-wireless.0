@@ -1,35 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:55862 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753068AbZA2TGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 14:06:20 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from mail.deathmatch.net ([70.167.247.36]:4877 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752697AbZAVNof (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 08:44:35 -0500
+From: Bob Copeland <me@bobcopeland.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/7] iwlwifi driver updates 01/29/2009
-Date: Thu, 29 Jan 2009 11:09:10 -0800
-Message-Id: <1233256157-21290-1-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200624_910393_51EC0BF0)
-In-Reply-To: <>
-References: <>
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 6/6] ath5k: honor the RTS/CTS bits
+Date: Thu, 22 Jan 2009 08:44:21 -0500
+Message-Id: <1232631861-6028-7-git-send-email-me@bobcopeland.com> (sfid-20090122_144442_516782_3559F435)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains updates to iwlwifi for support of new hardware.
+The ath5k driver didn't use set_rts_threshold or use_cts_prot, and also
+didn't check the IEEE80211_TX_RC_USE_{RTS_CTS,CTS_PROTECT} RC flags.
+Tell the hardware about these so RTS/CTS will work, and so the device
+will work better in mixed b/g environments.
 
-We also include one Kconfig patch for ipw2x00 to fix a display
-problem.
+Changes-licensed-under: 3-Clause-BSD
 
-[PATCH 1/7] iwlwifi: add new HW_REV_TYPEs for Intel WiFi Link 100, 6000 and 6050 Series
-[PATCH 2/7] iwlwifi: simplify parameter setting to allow support for 6000 series
-[PATCH 3/7] iwlwifi: parametrize configuration of the PLL for exclusion on 6000
-[PATCH 4/7] iwlwifi: correct API command overlap
-[PATCH 5/7] iwlwifi: define structures and functions externally for customization
-[PATCH 6/7] iwlwifi: remove chain noise calibration functions from 6000 family
-[PATCH 7/7] ipw2x00: correct Kconfig to prevent following entries from not indenting
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/base.c |   18 +++++++++++++++++-
+ 1 files changed, 17 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 85f7f07..57971a9 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1182,6 +1182,8 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 	unsigned int mrr_rate[3], mrr_tries[3];
+ 	int i, ret;
+ 	u16 hw_rate;
++	u16 cts_rate = 0;
++	u16 duration = 0;
+ 	u8 rc_flags;
+ 
+ 	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
+@@ -1201,6 +1203,19 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 
+ 	pktlen = skb->len;
+ 
++	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
++		flags |= AR5K_TXDESC_RTSENA;
++		cts_rate = ieee80211_get_rts_cts_rate(sc->hw, info)->hw_value;
++		duration = le16_to_cpu(ieee80211_rts_duration(sc->hw,
++			sc->vif, pktlen, info));
++	}
++	if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++		flags |= AR5K_TXDESC_CTSENA;
++		cts_rate = ieee80211_get_rts_cts_rate(sc->hw, info)->hw_value;
++		duration = le16_to_cpu(ieee80211_ctstoself_duration(sc->hw,
++			sc->vif, pktlen, info));
++	}
++
+ 	if (info->control.hw_key) {
+ 		keyidx = info->control.hw_key->hw_key_idx;
+ 		pktlen += info->control.hw_key->icv_len;
+@@ -1209,7 +1224,8 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 		ieee80211_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
+ 		(sc->power_level * 2),
+ 		hw_rate,
+-		info->control.rates[0].count, keyidx, 0, flags, 0, 0);
++		info->control.rates[0].count, keyidx, 0, flags,
++		cts_rate, duration);
+ 	if (ret)
+ 		goto err_unmap;
+ 
+-- 
+1.6.0.6
 
 
-Thank you
-
-Reinette
