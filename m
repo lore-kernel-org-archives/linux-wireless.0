@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:14355 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758930AbZAIB2m (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36444 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbZAVSpq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 20:28:42 -0500
-Received: by wf-out-1314.google.com with SMTP id 27so9575321wfd.4
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2009 17:28:41 -0800 (PST)
-Subject: Re: Thoughts about the b43 RNG
-From: Harvey Harrison <harvey.harrison@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <200901090211.03937.mb@bu3sch.de>
-References: <200901090211.03937.mb@bu3sch.de>
-Content-Type: text/plain
-Date: Thu, 08 Jan 2009 17:28:39 -0800
-Message-Id: <1231464519.5715.32.camel@brick> (sfid-20090109_022855_239051_DF872052)
-Mime-Version: 1.0
+	Thu, 22 Jan 2009 13:45:46 -0500
+Date: Thu, 22 Jan 2009 13:34:48 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 regression: associates but no data is transfered
+Message-ID: <20090122183448.GC3646@tuxdriver.com> (sfid-20090122_194550_810004_4BC79383)
+References: <87priffb95.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87priffb95.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-01-09 at 02:11 +0100, Michael Buesch wrote:
-> I was doing some random tests on the b43 hardware RNG.
-> These are the results.
+On Thu, Jan 22, 2009 at 08:26:14PM +0200, Kalle Valo wrote:
+> Hello,
 > 
-> I patched the firmware to not access the RNG register anymore.
-> The unpatched firmware does two things. It reads the RNG register to get random values
-> and it writes 0 to the register every now and then for whatever reason.
-> Both reads and writes were patched out during my test. So the driver was
-> the only one accessing the RNG.
+> I upgraded to the latest wireless-testing and my iwl3945 is now
+> broken. It can associate but no data is transfered after that. Tried
+> with open and wep modes. With dhcp I cannot get ip and with static ip
+> ping to the gateway doesn't work.
 > 
-> This is the result of reading a few bytes from the RNG with the patched fw:
+> Any hints?
 
-> I'm not sure about this. There aren't any obvious patterns.
-> But maybe I'm just blind. Does somebody else see some pattern or
-> has some RNG test program to recognize such patterns?
-> 
-> So let's do another test. Let's modify the previous test to
-> write 0xFFFF instead of 0:
-> 
+Lots of iwlwifi stuff merged yesterday...
 
-NIST has a pretty good test suite I think.
+Chatre, Reinette (1):
+      iwl3945: add debugging for wrong command queue
 
-Harvey
+Helmut Schaa (2):
+      iwl3945: fix some warnings when compiled without debug
+      iwlagn: fix hw-rfkill while the interface is down
 
+Jay Sternberg (4):
+      iwlwifi: correct Kconfig to prevent following entries from not indenting
+      iwlwifi: remove static from 5000 structures
+      iwlwifi: add recognition of Intel WiFi Link 6000 and 6050 Series
+      iwlwifi: add recognition of Intel WiFi Link 100 Series
+
+Reinette Chatre (1):
+      iwlwifi: return NETDEV_TX_OK from _tx ops
+
+Samuel Ortiz (3):
+      iwl3945: Use iwl_txq_update_write_ptr
+      iwlwifi: Add TFD library operations
+      iwl3945: Use iwl-hcmd host command routines
+
+Winkler, Tomas (6):
+      iwlwifi: make iwl-power.c more readable
+      iwlwifi: fix iwl_mac_set_key and iwl3945_mac_set_key
+      iwlwifi: kill iwl3945_scan_cancel and iwl3945_scan_cancel_timeout
+      iwlwifi: kill scan39
+      iwlwifi: remove unused or twice defined members in iwl_priv
+      iwlwifi: eliminate power_data_39.
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
