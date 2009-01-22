@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38198 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756459AbZAPJNk (ORCPT
+Received: from smtp4.int-evry.fr ([157.159.10.71]:40301 "EHLO
+	smtp4.int-evry.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161AbZAVPrM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 04:13:40 -0500
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Artur Skawina <art.08.09@gmail.com>,
-	Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <496FFC9F.1000907@lwfinger.net> (sfid-20090116_041915_786732_D1E4D0C4)
-References: <494698AF.4020204@gmail.com>
-	 <200901152042.42372.chunkeey@web.de> <496F9740.5010109@gmail.com>
-	 <200901152341.02130.chunkeey@web.de> <496FCDDD.7090203@gmail.com>
-	 <496FFC9F.1000907@lwfinger.net> (sfid-20090116_041915_786732_D1E4D0C4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Zvrh8VOno1Tq67Ng9wAF"
-Date: Fri, 16 Jan 2009 10:13:07 +0100
-Message-Id: <1232097187.3854.9.camel@johannes> (sfid-20090116_101348_944450_133EF42D)
-Mime-Version: 1.0
+	Thu, 22 Jan 2009 10:47:12 -0500
+Received: from smtp2.int-evry.fr (smtp2.int-evry.fr [157.159.10.45])
+	by smtp4.int-evry.fr (Postfix) with ESMTP id 227CFFE409C
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 16:19:50 +0100 (CET)
+Received: from smtp-ext.int-evry.fr (smtp-ext.int-evry.fr [157.159.11.17])
+	by smtp2.int-evry.fr (Postfix) with ESMTP id 89954405043
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 16:19:44 +0100 (CET)
+Received: from [127.0.0.1] (unknown [157.159.100.239])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp-ext.int-evry.fr (Postfix) with ESMTP id 7E08490004
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 16:19:42 +0100 (CET)
+Message-ID: <49788E88.5000608@telecom-sudparis.eu> (sfid-20090122_164716_230276_D922DB9D)
+Date: Thu, 22 Jan 2009 16:19:36 +0100
+From: Chanthearith HUON <chanthearith.huon@telecom-sudparis.eu>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: SIOCSIFFLAGS: Name not unique on network
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello everyone,
 
---=-Zvrh8VOno1Tq67Ng9wAF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I would like to build a small mesh network based on 802.11s using 
+open80211s for performance testing.
+After reading linuxwireless.org <http://linuxwireless.org>, I came up 
+with "iw" command to create new virtual interface and MP.
 
-On Thu, 2009-01-15 at 21:18 -0600, Larry Finger wrote:
+Here is my wireless card
+"Intel PRO/Wireless 3845ABG"
 
-> >>   Object 0xddec18d0:  >69< 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6=
-b ikkkkkkkkkkkkkkk
+Its installed driver
+"iwl3945"
 
-> I too have seen real single bit changes - in my case 6b went to 6a,
-> and my memory is fine. I wouldn't necessarily blame your hardware.
+This wireless card is not listed 
+in http://linuxwireless.org/en/users/Devices 
+<http://linuxwireless.org/en/users/Devices>
+but the driver is in the 
+list http://linuxwireless.org/en/developers/Documentation/mac80211#mac80211drivers 
+<http://linuxwireless.org/en/developers/Documentation/mac80211#mac80211drivers>
 
-6b to 6a is often the result of a refcounting bug that happens to unref
-a value _after_ it has been freed. But that doesn't explain 6b to 69,
-unless you happen to have _two_ refcounting bugs. Not that I necessarily
-think that memory is bad
+The OS is ubuntu Intrepid Ibex 8.10 with kernel 2.6.27-9-generic
 
-johannes
+After creating new interface for mesh "iw dev wlan0 interface add mesh 
+type mp mesh_id 100". I turned the mesh interface up by "ifconfig mesh up".
+I got following error message
+" SIOCSIFFLAGS: Name not unique on network "
 
---=-Zvrh8VOno1Tq67Ng9wAF
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+I got the same error message for " ifconfig mesh 192.168.1.1 "
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+I search on the net but not much help.
 
-iQIcBAABAgAGBQJJcE+gAAoJEKVg1VMiehFYkmQP/2hNG5nSoumYYzre2OTDyDjl
-Vf7ZqwhFar8vewcGtWm5uGTBoloSAZSQSgekmU2ecsSYtmHDBqdsTCwpfhDWMH6q
-7oJVbfwW7KsvqTPao+rDUyly2YIuGqr6tdCEz/NacTEwITdwwFCh+ozkbLB0au1y
-uJPMkJrvnTWj7qj+nfneexn6IMmQ4ScaQRh3aN6wJovqUimjfqY24vqFy2RTXB8q
-W5DfjZAOuVhkmERfwh7A/DQqwiPBdBcQRR2Jg1ActFdE+kJ+ezkxz/Q3KSFZc6cX
-LAGTdWbQHsHNMg4/6ynO1HUCxaB6p4mCLMLS6uLsl6CQmuCdSb4DfSX2DVMF0Znn
-B1vkVJ7VIwH6GOzgrOwfGnWuPr+tLh5Iah0tXCC1iIHiKD9SBmn+k6es/Sro1eyi
-SANYlTDFGdef35sS7+UuR6fYHu7F4IFKb+RHDfGUEsbACmc+dZKS7s0ETb/rHwTT
-Hbb87JI5iPR3q24oNLY2QQi8/id5GLPoUQAGZoWRdXh281WgmjV+xcoVwgTenGvS
-8yH4ST1tISHo4VFZrDVSe88htY/shTUTYPxT7KkSKjmDEQV73OLkprTcJQiGCdSL
-HQ756FOMDJR5B/zRqmZAvcvVtlQ914GZRsnmLre9gp89F+YjM0jw5jTyEPu32e0i
-Z6RNHEHnaGYM+N7Q6Icn
-=nDVp
------END PGP SIGNATURE-----
-
---=-Zvrh8VOno1Tq67Ng9wAF--
-
+Thank very much,
+Thierry
