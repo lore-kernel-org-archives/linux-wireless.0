@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35256 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752817AbZAPPQV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 10:16:21 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Kyle McMartin <kyle@infradead.org>
-Subject: Re: [b43] opensource firmware
-Date: Fri, 16 Jan 2009 16:15:42 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> <200901151709.49811.mb@bu3sch.de> <20090115231743.GC7488@bombadil.infradead.org>
-In-Reply-To: <20090115231743.GC7488@bombadil.infradead.org>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:41815 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758838AbZAVXzu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 18:55:50 -0500
+Message-ID: <4979077B.8090804@lwfinger.net> (sfid-20090123_005557_893369_3B1D7D40)
+Date: Thu, 22 Jan 2009 17:55:39 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901161615.42546.mb@bu3sch.de> (sfid-20090116_161624_482580_07981CE1)
+To: samuel@sortiz.org
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 regression: associates but no data is transfered
+References: <87priffb95.fsf@litku.valot.fi> <20090122183448.GC3646@tuxdriver.com> <d7a260e8d188b785d0d2be743c8c5461@localhost>
+In-Reply-To: <d7a260e8d188b785d0d2be743c8c5461@localhost>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 16 January 2009 00:17:43 Kyle McMartin wrote:
-> On Thu, Jan 15, 2009 at 05:09:49PM +0100, Michael Buesch wrote:
-> > Already implemented here:
-> > http://bu3sch.de/patches/wireless-testing/20081227-1821/patches/008-b43-probe-open-fw.patch
-> > I just need to fix a leak in an error path before pushing that upstream.
-> > 
-> 
-> Groovy, I had cooked a similar patch for Fedora but haven't gotten
-> around to packaging up the fw yet. Will sub in yours.
+samuel@sortiz.org wrote:
 
-I think we can actually push my patch upstream. The remaining FIXME is not relevant
-for the common case and it only matters in rare circumstances (I think A-PHY only, which
-isn't implemented anyway). So we can fix it later.
-The patch should work properly as-is for G/N/LP-PHY.
+> The bad commit seems to be e32b1b9a33759e8a83ac566c4c43f23ed5d6343b, which
+> is not iwlwifi related.
+> Even though it's an mlme commit, it doesnt seem to affect other drivers (at
+> least b43 and ath5k).
+> I'll come up soon with a proper fix, but for now iwl3945 users should
+> revert that commit locally.
 
-It probably needs a rediff against a current b43, however.
+Something between 2.6.29-rc1 and -rc2 killed b43 and p54usb on my WPA2 network. My rtl8187
+devices work fine.
 
--- 
-Greetings, Michael.
+I'm in the process of bisecting right now. Only 1500 commits to go.
+
+Larry
+
+
