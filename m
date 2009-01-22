@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16723 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751323AbZA2TiX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2009 14:38:23 -0500
-Subject: Re: [PATCH] fix led device naming for iwl driver
-From: reinette chatre <reinette.chatre@intel.com>
-To: Danny Kukawka <dkukawka@suse.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Helmut Schaa <hschaa@suse.de>
-In-Reply-To: <200901292029.34976.dkukawka@suse.de>
-References: <200901292029.34976.dkukawka@suse.de>
-Content-Type: text/plain
-Date: Thu, 29 Jan 2009 11:41:21 -0800
-Message-Id: <1233258081.2411.65.camel@rc-desk> (sfid-20090129_203827_365809_8050B996)
-Mime-Version: 1.0
+Received: from mail-ew0-f20.google.com ([209.85.219.20]:62642 "EHLO
+	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753346AbZAVWJ1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 17:09:27 -0500
+Received: by ewy13 with SMTP id 13so3114375ewy.13
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 14:09:24 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Distributions shipping CRDA
+Date: Thu, 22 Jan 2009 23:09:01 +0100
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <43e72e890901221352n1f0d04adscaf3f6a76abf83b4@mail.gmail.com>
+In-Reply-To: <43e72e890901221352n1f0d04adscaf3f6a76abf83b4@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901222309.01565.helmut.schaa@gmail.com> (sfid-20090122_230931_347968_FC10893F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-01-29 at 11:29 -0800, Danny Kukawka wrote:
-> From: Danny Kukawka <dkukawka@suse.de>
-> Subject: fix led device naming for iwl driver
->     
-> Fixed led device naming for the iwl driver. Due to the
-> documentation of the led subsystem/class the naming should be
-> "devicename:colour:function" while not applying sections
-> should be left blank.
->     
-> This should lead to e.g. "iwl-phy0::RX" instead of "iwl-phy0:RX".
-> 
-> Signed-off-by: Danny Kukawka <dkukawka@suse.de>
+Am Donnerstag, 22. Januar 2009 schrieb Luis R. Rodriguez:
+> I'd like to review which distributions are already packaging CRDA already.
+[...]
+> SuSe - ?
 
-Sorry - I missed this in your original submission. The subject does not
-identify iwlwifi. Subject could be:
+Not yet. However, packages are available in my buildservice repo at [1]
+and I will merge these for the next release.
 
-iwlwifi: fix led naming
+Helmut
 
-Looks good otherwise.
-
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-
-
-It may be easier for John if you resubmit with the correct subject - you
-can just add my ack when you do.
-
-Thanks
-
-Reinette
-
-
+[1] http://download.opensuse.org/repositories/home://hschaa:/CRDA/
