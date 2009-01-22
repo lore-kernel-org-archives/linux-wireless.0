@@ -1,55 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:23724 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171AbZAVICt (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:58844 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753789AbZAVWjy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 03:02:49 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: porting open source mac to linux 2.6.13.0
-Date: Thu, 22 Jan 2009 09:02:14 +0100
-Cc: Bharat Bhushan <bharat.b.bhushan@gmail.com>
-References: <d9360e520901212124j7bf196c3sf4e29d8fd3650f9b@mail.gmail.com>
-In-Reply-To: <d9360e520901212124j7bf196c3sf4e29d8fd3650f9b@mail.gmail.com>
+	Thu, 22 Jan 2009 17:39:54 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Artur Skawina <art.08.09@gmail.com>
+Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
+Date: Thu, 22 Jan 2009 23:39:59 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200901211450.50880.chunkeey@web.de> <200901222202.48226.chunkeey@web.de> <4978EDB1.502@gmail.com>
+In-Reply-To: <4978EDB1.502@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901220902.14160.hs4233@mail.mn-solutions.de> (sfid-20090122_090257_864154_A12C2D4D)
+  charset="utf-8"
+Message-Id: <200901222339.59965.chunkeey@web.de> (sfid-20090122_233959_347923_59CB8E33)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> hi all,
->          Is there any possible way to port open source mac
-> stck on linux kernel 2.6.13.0 . Problem is, i am using a
-> embedded platform which is supporting only 2.6.13. 0 and now
-> assigned job is to make it working for open source mac stack
-> without porting any other changes of linux kernel .
->
-> Any help is much appreciated.
+On Thursday 22 January 2009 23:05:37 Artur Skawina wrote:
+> Christian Lamparter wrote:
+> > On Thursday 22 January 2009 20:19:16 Artur Skawina wrote:
+> >> This last version seems fine, just one thing: I can't convince myself
+> >> that not queuing the work after an urb fails with urb->status==true is
+> >> safe -- what if some temporary error condition causes the rx queue to
+> >> drain? Nothing will resubmit the urbs.
+> > well, the usb->status has to be "=! 0" 32 times in a row.
+> > So either the device, the system, or both have more serious problem and need
+> > some user attention/reset. However yes a few more unlikely paths wont hurt. ;-) 
+> > 
+> >> Wouldn't a usb_poison_anchored_urbs() instead of usb_kill_anchored_urbs()
+> >> in p54u_free_urbs() prevent p54u_rx_refill from resubmitting, and that early
+> >> return in the completion could then go? Or did i miss a case where it's
+> >> needed, other than stop()?
+> > size of the patch? because then we have to rewrite the p54u_start and
+> > p54u_stop to go a different path for ifdown/ifup (poison/unpoison) or
+> > suspend / disconnect (here we probably want kill).
+> > 
+> > But if you want to do that, you're welcome your post patches.
+> 
+> How about this? Can you see anything wrong w/ it? Survives a quick test here.
+> 
+> Yes, unpoisoning the urbs would make things much more complicated.
+> (mostly because usb_anchor_urb() poisons the urb, while usb_unanchor_urb()
+>  doesn't unpoison, so it would either have to done manually (extra locking
+>  to get the state of the anchor itself) or the un-/poisoning rules become
+>  quite complex)
+> 
+> This simple approach frees all urbs on stop() and reallocates them on open().
+> All urbs go through the completion, and all are moved to the refill list,
+> even the ones that failed. If they are not supposed to be resubmitted, all
+> currently in flight ones are killed and poisoned, and when they arrive in 
+> p54u_rx_refill() the submission will fail.
+> 
+> artur
+> 
+well, I took a quick look into the usb code...
+(I know this isn't "usb_poison_anchored_urbs", or usb_kill_anchored_urbs,
+but they have to use this ones!)
 
-I think you won't get much help (at least not free help), because 
-the managers of this embedded product made same grave design 
-decision errors some years ago.
+void usb_kill_urb(struct urb *urb)
+{
+        might_sleep();
+        if (!(urb && urb->dev && urb->ep))
+                return;
+        atomic_inc(&urb->reject);
 
-They developed (or let develop) against what was current at that 
-time, 2.6.13.0. But they never tried to get their changes 
-upstream, into the main kernel. So the put themselves onto an 
-island. Hey, they even didn't update their kernel to get the 
-security updates of 2.6.13.5. Looks like a "fire-and-forget" 
-approach, which might in some cases save money, but often 
-backfires.
+        usb_hcd_unlink_urb(urb, -ENOENT);
+        wait_event(usb_kill_urb_queue, atomic_read(&urb->use_count) == 0);
 
-If their work would have been included upstream, it would had got
+        atomic_dec(&urb->reject);
+}
 
-a) a cost-free peer-review at the time of submission
-   (good for code quality)
-b) cost-free updates to newer kernel versions, at least in the
-   area of infrastructure changes and compile-tests. This might
-   not guarantee that it still runs, but it's better than doing
-   it all by yourself :-)
+vs.
 
-It would then be trivial to use a modern kernel on this embedded 
-target, with mac80211 on this device. Now it's almost 
-impossible, because so much of the in-kernel infrastructure has 
-changed in the meantime, see 
-http://lwn.net/Articles/2.6-kernel-api/
+void usb_poison_urb(struct urb *urb)
+{
+        might_sleep();
+        if (!(urb && urb->dev && urb->ep))
+                return;
+        atomic_inc(&urb->reject);
+
+        usb_hcd_unlink_urb(urb, -ENOENT);
+        wait_event(usb_kill_urb_queue, atomic_read(&urb->use_count) == 0);
+}
+
+it looks like usb_poison_urb doesn't do what I though it does...
+In fact the way I see it now... there's no advantage if we use it,
+we can stick usb_kill_anchored_urb, right?
+
+Well, let's make a 2nd RFC/RFT tomorrow.
+
+Good night,
+	Chr
