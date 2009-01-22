@@ -1,48 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:58775 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbZAORNw (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.188]:11356 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753164AbZAVTIm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 12:13:52 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Harvey Harrison <harvey.harrison@gmail.com>
-Subject: Re: Lots of minstrel WARN_ONS with current -git
-Date: Thu, 15 Jan 2009 18:13:57 +0100
-Cc: Michael Buesch <mb@bu3sch.de>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1231973480.5147.2.camel@brick> <200901151731.56758.chunkeey@web.de> <1232038251.5595.0.camel@brick>
-In-Reply-To: <1232038251.5595.0.camel@brick>
+	Thu, 22 Jan 2009 14:08:42 -0500
+Received: by mu-out-0910.google.com with SMTP id g7so2514793muf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 11:08:40 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Subject: Re: [PATCH 2/2] iwl3945: Remove unused variables
+Date: Thu, 22 Jan 2009 20:08:14 +0100
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200901190955.32818.helmut.schaa@gmail.com> <200901221144.27380.helmut.schaa@gmail.com> <1ba2fa240901220328s4fe65faeo35176357a19f57fa@mail.gmail.com>
+In-Reply-To: <1ba2fa240901220328s4fe65faeo35176357a19f57fa@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
-Message-Id: <200901151813.57146.chunkeey@web.de> (sfid-20090115_181357_755138_D86FE63C)
+Message-Id: <200901222008.14597.helmut.schaa@gmail.com> (sfid-20090122_200847_104260_73ABBA53)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 January 2009 17:50:51 Harvey Harrison wrote:
-> On Thu, 2009-01-15 at 17:31 +0100, Christian Lamparter wrote:
-> > On Thursday 15 January 2009 16:33:11 Michael Buesch wrote:
-> > > On Wednesday 14 January 2009 23:51:20 Harvey Harrison wrote:
-> > > > Seeing lots of these WARN_ONS with current -git.  Known issue?
-> > > > 
-> > > > b43 hardware.
-> > > > 
-> > > > [41850.615621] WARNING: at net/mac80211/rc80211_minstrel.c:69 minstrel_rate_init+0x92/0x3c0()
-> > > 
-> > > I think that happens, if you have a b-only AP.
-> > 
-> > erm, see : "minstrel: fix warning if lowest supported rate index is not 0"
-> > ( http://www.spinics.net/lists/linux-wireless/msg25799.html )
-> > 
-> > The fix is in wireless-testing & wireless-next since a few days now...
-> > Or is this a new bug?
+Am Donnerstag, 22. Januar 2009 schrieb Tomas Winkler:
+> On Thu, Jan 22, 2009 at 12:44 PM, Helmut Schaa
+> <helmut.schaa@googlemail.com> wrote:
+> > Am Mittwoch, 21. Januar 2009 schrieb John W. Linville:
+> >> On Mon, Jan 19, 2009 at 09:55:32AM +0100, Helmut Schaa wrote:
+> >> > Fix the following warnings in iwl-3945-rs.c by removing unused variables.
+> >> >
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_rate_scale_flush_windows':
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:186: warning: unused variable 'priv'
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_bg_rate_scale_flush':
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:219: warning: unused variable 'priv'
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_collect_tx_data':
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: warning: unused variable 'priv'
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'rs_free_sta':
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: warning: unused variable 'priv'
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_get_adjacent_rate':
+> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:559: warning: unused variable 'priv'
+> >> >
+> >> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> >>
+> >> With this applied, I get these:
+> >>
+> >>   CC [M]  drivers/net/wireless/iwlwifi/iwl-3945-rs.o
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_rate_scale_flush_windows':
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: 'priv' undeclared (first use in this function)
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: (Each undeclared identifier is reported only once
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: for each function it appears in.)
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_bg_rate_scale_flush':
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:222: error: 'priv' undeclared (first use in this function)
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_collect_tx_data':
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: error: 'priv' undeclared (first use in this function)
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'rs_free_sta':
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: error: 'priv' undeclared (first use in this function)
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_get_adjacent_rate':
+> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:594: error: 'priv' undeclared (first use in this function)
+> >> make[2]: *** [drivers/net/wireless/iwlwifi/iwl-3945-rs.o] Error 1
+> >> make[1]: *** [drivers/net/wireless/iwlwifi] Error 2
+> >> make: *** [drivers/net/wireless/] Error 2
+> >>
+> >> Dropping...
+> >
+> > Ah, sorry for that. I compiled without CONFIG_IWL_DEBUG. Instead of removing
+> > these lines they should be surrounded by an CONFIG_IWL_DEBUG check. I'll send
+> > that soon.
 > 
-> I'll try that out shortly, report was against linus mainline.
-> 
-Oh? with 2.6.28 or the current 2.6.29-rcX line?
-If you get this WARNING with 2.6.29-rcX, you don't have to worry...
-http://patchwork.kernel.org/patch/2184/
+> Please use
+> struct iwl_priv *priv __maybe_unused priv;
+> look  at  in iwl-agn-rs.c
 
-Regards,
-	Chr
+Will do. Thanks for the hint.
+
+Helmut
