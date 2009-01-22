@@ -1,199 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:48221 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756622AbZAWAD5 (ORCPT
+Received: from mail37.messagelabs.com ([216.82.241.83]:47250 "EHLO
+	mail37.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753916AbZAVW05 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 19:03:57 -0500
-Date: Thu, 22 Jan 2009 18:03:45 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8187: Fix driver to return TX retry info for RTL8187L
-Message-ID: <49790961.JdcKIZyYlMNFSiuO%Larry.Finger@lwfinger.net> (sfid-20090123_010402_771348_1BC7706C)
+	Thu, 22 Jan 2009 17:26:57 -0500
+From: "Gordon, Charles" <Charles.Gordon@digi.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 22 Jan 2009 16:26:53 -0600
+Subject: RE: Question on tx field of struct ieee80211_ops
+Message-ID: <8DCC153EAFE67A4B990A840E829F704B010A451E5DEF@mtk-sms-exch01.digi.com> (sfid-20090122_232702_425061_00BB0D85)
+References: <8DCC153EAFE67A4B990A840E829F704B010A451E5DE9@mtk-sms-exch01.digi.com>
+In-Reply-To: <8DCC153EAFE67A4B990A840E829F704B010A451E5DE9@mtk-sms-exch01.digi.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current code for the RTL8187 is not returning valid retry information, =
-thus the
-rate-setting mechanism is not functioning. As a further complication, t=
-his info
-is only obtained by reading a register, which cannot be read while in i=
-nterrupt
-context.
+A follow up question on this is if my transmit routine does not have its own queue and the H/W can only transmit 1 packet at a time, should the transmit routine call ieee80211_stop_queue() when it starts the transmit procedure, and then call ieee80211_wake_queue() when the hardware indicates it has finished transmitting the packet.
 
-This patch implements the TX status return to mac80211 through the use =
-of a
-work queue.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Tested-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Tested-by: Mart=C3=ADn Ernesto Barreyro <barreyromartin@gmail.com>
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
----
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Gordon, Charles
+Sent: Thursday, January 22, 2009 4:53 PM
+To: linux-wireless@vger.kernel.org
+Subject: Question on tx field of struct ieee80211_ops
 
-John,
+I'm writing a wireless driver that will use the mac80211 API.  My hardware = allows me to send one packet at a time.  The driver is suppose to set the t= x field (among others) in the struct ieee80211_ops argument passed to ieee8= 0211_alloc_hw().  The tx field should be loaded with a pointer to a low lev= el transmit routine.  However, it's not clear from the documentation if thi= s routine should maintain a packet queue or not.  Is it okay for the low le= vel transmit routine to only allow one packet to be transmitted at a time, = or should it maintain a queue of tx packets?  It seems like the mac80211 AP= I is already maintaining a queue, so I'm not sure that the low level driver=  should maintain a second one.
 
-This patch fixes a long-standing bug for the RTL8187 that has been pres=
-ent
-since the driver was made to work with mac80211. Technically, it is not=
- a
-regression, but it would be nice if we could get it into 2.6.29 so that=
- it
-could be pushed to stable. I have not Cc'd stable as the patch will nee=
-d
-rebasing to work with 2.6.28, or older.
+Thanks for any information you can provide.
 
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
-@@ -100,6 +100,8 @@ struct rtl8187_priv {
- 	struct usb_device *udev;
- 	u32 rx_conf;
- 	struct usb_anchor anchored;
-+	struct delayed_work work;
-+	struct ieee80211_hw *dev;
- 	u16 txpwr_base;
- 	u8 asic_rev;
- 	u8 is_rtl8187b;
-@@ -117,7 +119,7 @@ struct rtl8187_priv {
- 	struct {
- 		__le64 buf;
- 		struct sk_buff_head queue;
--	} b_tx_status;
-+	} b_tx_status; /* This queue is used by both -b and non-b devices */
- };
-=20
- void rtl8187_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -177,25 +177,33 @@ static void rtl8187_tx_cb(struct urb *ur
- 					  sizeof(struct rtl8187_tx_hdr));
- 	ieee80211_tx_info_clear_status(info);
-=20
--	if (!urb->status &&
--	    !(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
--	    priv->is_rtl8187b) {
--		skb_queue_tail(&priv->b_tx_status.queue, skb);
--
--		/* queue is "full", discard last items */
--		while (skb_queue_len(&priv->b_tx_status.queue) > 5) {
--			struct sk_buff *old_skb;
--
--			dev_dbg(&priv->udev->dev,
--				"transmit status queue full\n");
--
--			old_skb =3D skb_dequeue(&priv->b_tx_status.queue);
--			ieee80211_tx_status_irqsafe(hw, old_skb);
--		}
--	} else {
--		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) && !urb->status)
-+	if (!(urb->status) && !(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
-+		if (priv->is_rtl8187b) {
-+			skb_queue_tail(&priv->b_tx_status.queue, skb);
-+
-+			/* queue is "full", discard last items */
-+			while (skb_queue_len(&priv->b_tx_status.queue) > 5) {
-+				struct sk_buff *old_skb;
-+
-+				dev_dbg(&priv->udev->dev,
-+					"transmit status queue full\n");
-+
-+				old_skb =3D skb_dequeue(&priv->b_tx_status.queue);
-+				ieee80211_tx_status_irqsafe(hw, old_skb);
-+			}
-+			return;
-+		} else {
- 			info->flags |=3D IEEE80211_TX_STAT_ACK;
-+		}
-+	}
-+	if (priv->is_rtl8187b)
- 		ieee80211_tx_status_irqsafe(hw, skb);
-+	else {
-+		/* Retry information for the RTI8187 is only available by
-+		 * reading a register in the device. We are in interrupt mode
-+		 * here, thus queue the skb and finish on a work queue. */
-+		skb_queue_tail(&priv->b_tx_status.queue, skb);
-+		queue_delayed_work(hw->workqueue, &priv->work, 0);
- 	}
- }
-=20
-@@ -854,6 +862,34 @@ static int rtl8187b_init_hw(struct ieee8
- 	return 0;
- }
-=20
-+static void rtl8187_work(struct work_struct *work)
-+{
-+	/* The RTL8187 returns the retry count through register 0xFFFA. In
-+	 * addition, it appears to be a cumulative retry count, not the
-+	 * value for the current TX packet. When multiple TX entries are
-+	 * queued, the retry count will be valid for the last one in the queu=
-e.
-+	 * The "error" should not matter for purposes of rate setting. */
-+	struct rtl8187_priv *priv =3D container_of(work, struct rtl8187_priv,
-+				    work.work);
-+	struct ieee80211_tx_info *info;
-+	struct ieee80211_hw *dev =3D priv->dev;
-+	static u16 retry;
-+	u16 tmp;
-+
-+	mutex_lock(&priv->conf_mutex);
-+	tmp =3D rtl818x_ioread16(priv, (__le16 *)0xFFFA);
-+	while (skb_queue_len(&priv->b_tx_status.queue) > 0) {
-+		struct sk_buff *old_skb;
-+
-+		old_skb =3D skb_dequeue(&priv->b_tx_status.queue);
-+		info =3D IEEE80211_SKB_CB(old_skb);
-+		info->status.rates[0].count =3D tmp - retry + 1;
-+		ieee80211_tx_status_irqsafe(dev, old_skb);
-+	}
-+	retry =3D tmp;
-+	mutex_unlock(&priv->conf_mutex);
-+}
-+
- static int rtl8187_start(struct ieee80211_hw *dev)
- {
- 	struct rtl8187_priv *priv =3D dev->priv;
-@@ -868,6 +904,7 @@ static int rtl8187_start(struct ieee8021
- 	mutex_lock(&priv->conf_mutex);
-=20
- 	init_usb_anchor(&priv->anchored);
-+	priv->dev =3D dev;
-=20
- 	if (priv->is_rtl8187b) {
- 		reg =3D RTL818X_RX_CONF_MGMT |
-@@ -935,6 +972,7 @@ static int rtl8187_start(struct ieee8021
- 	reg |=3D RTL818X_CMD_TX_ENABLE;
- 	reg |=3D RTL818X_CMD_RX_ENABLE;
- 	rtl818x_iowrite8(priv, &priv->map->CMD, reg);
-+	INIT_DELAYED_WORK(&priv->work, rtl8187_work);
- 	mutex_unlock(&priv->conf_mutex);
-=20
- 	return 0;
-@@ -965,6 +1003,8 @@ static void rtl8187_stop(struct ieee8021
- 		dev_kfree_skb_any(skb);
-=20
- 	usb_kill_anchored_urbs(&priv->anchored);
-+	if (!priv->is_rtl8187b)
-+		cancel_delayed_work_sync(&priv->work);
- 	mutex_unlock(&priv->conf_mutex);
- }
-=20
 --
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
