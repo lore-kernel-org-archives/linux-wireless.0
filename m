@@ -1,158 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch-smtp01.sth.basefarm.net ([80.76.149.212]:45713 "EHLO
-	ch-smtp01.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757954AbZAQVCy (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:23724 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752171AbZAVICt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 16:02:54 -0500
-Received: from c83-249-24-87.bredband.comhem.se ([83.249.24.87]:3748 helo=amin)
-	by ch-smtp01.sth.basefarm.net with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <hans@sociologi.cjb.net>)
-	id 1LOI4y-0004lN-3M
-	for linux-wireless@vger.kernel.org; Sat, 17 Jan 2009 21:47:47 +0100
-Received: from hans by amin with local (Exim 4.63)
-	(envelope-from <hans@sociologi.cjb.net>)
-	id 1LOI4H-0002QL-Sz
-	for linux-wireless@vger.kernel.org; Sat, 17 Jan 2009 21:46:58 +0100
-Date: Sat, 17 Jan 2009 21:46:57 +0100
-From: Hans Ekbrand <hans@sociologi.cjb.net>
+	Thu, 22 Jan 2009 03:02:49 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
 To: linux-wireless@vger.kernel.org
-Subject: USB 1.1, usb-dongle, NETGEAR WG111v2, timing problems in association
-Message-ID: <20090117204654.GB9079@amin> (sfid-20090117_220300_619636_AB9C3EFE)
+Subject: Re: porting open source mac to linux 2.6.13.0
+Date: Thu, 22 Jan 2009 09:02:14 +0100
+Cc: Bharat Bhushan <bharat.b.bhushan@gmail.com>
+References: <d9360e520901212124j7bf196c3sf4e29d8fd3650f9b@mail.gmail.com>
+In-Reply-To: <d9360e520901212124j7bf196c3sf4e29d8fd3650f9b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="pf9I7BMVVzbSWLtt"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901220902.14160.hs4233@mail.mn-solutions.de> (sfid-20090122_090257_864154_A12C2D4D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> hi all,
+>          Is there any possible way to port open source mac
+> stck on linux kernel 2.6.13.0 . Problem is, i am using a
+> embedded platform which is supporting only 2.6.13. 0 and now
+> assigned job is to make it working for open source mac stack
+> without porting any other changes of linux kernel .
+>
+> Any help is much appreciated.
 
---pf9I7BMVVzbSWLtt
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I think you won't get much help (at least not free help), because 
+the managers of this embedded product made same grave design 
+decision errors some years ago.
 
-Hi list!
+They developed (or let develop) against what was current at that 
+time, 2.6.13.0. But they never tried to get their changes 
+upstream, into the main kernel. So the put themselves onto an 
+island. Hey, they even didn't update their kernel to get the 
+security updates of 2.6.13.5. Looks like a "fire-and-forget" 
+approach, which might in some cases save money, but often 
+backfires.
 
-On an old system with only USB 1.1, I tried to use a USB-dongle:
-NETGEAR WG111v2. The device works perfectly with same kernel (2.6.26-1
-=66rom debian lenny) on a new system with USB 2.0, using the "rtl8187"
-driver.
+If their work would have been included upstream, it would had got
 
-However, on USB 1.1 I get:
+a) a cost-free peer-review at the time of submission
+   (good for code quality)
+b) cost-free updates to newer kernel versions, at least in the
+   area of infrastructure changes and compile-tests. This might
+   not guarantee that it still runs, but it's better than doing
+   it all by yourself :-)
 
-Jan 17 17:25:17 jonspc kernel: [13991.380234] wlan1: Initial auth_alg=3D0
-Jan 17 17:25:17 jonspc kernel: [13991.380234] wlan1: authenticate with AP 0=
-0:1b:2f:0c:2f:28
-Jan 17 17:25:17 jonspc kernel: [13991.380267] wlan1: RX authentication from=
- 00:1b:2f:0c:2f:28 (alg=3D0 transaction=3D2 status=3D0)5:17 jonspc kernel: =
-[13991.380267] wlan1: authenticated
-Jan 17 17:25:17 jonspc kernel: [13991.380267] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:17 jonspc kernel: [13991.604259] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:18 jonspc kernel: [13992.136025] wlan1: Initial auth_alg=3D0
-Jan 17 17:25:18 jonspc kernel: [13992.136025] wlan1: authenticate with AP 0=
-0:1b:2f:0c:2f:28
-Jan 17 17:25:18 jonspc kernel: [13992.136073] wlan1: association frame rece=
-ived from 00:1b:2f:0c:2f:28, but not in associate state - ignoredel: [13992=
-=2E340113] wlan1: authenticate with AP 00:1b:2f:0c:2f:28
-
-[Longer part of syslog follows later in this post]
-
-I tried to use the device on two USB 1.1 systems, both failed with the
-"association frame received ... but not in associate state - ignore",
-message.
-
-Is USB 2.0 required, or is there a workaround for this problem?
-
-Here is the output of lsusb:
-
-Bus 001 Device 066: ID 0846:6a00 NetGear, Inc. WG111v2 54 Mbps Wireless [Re=
-alTek RTL8187L]=20
-Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-
-Below is a longer exerpt from syslog:
-
- no key needed. jonspc NetworkManager: <info>  SUP: sending command 'INTERF=
-ACE_ADD wlan1#011#011wext#011/var/run/wpa_supplicant#011'spc NetworkManager=
-: <info>  SUP: response was 'OK'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'AP_SCA=
-N 1'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was 'OK'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'ADD_NE=
-TWORK'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was '0'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'SET_NE=
-TWORK 0 ssid 48656c676573'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was 'OK'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'SET_NE=
-TWORK 0 key_mgmt NONE'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was 'OK'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: sending command 'ENABLE=
-_NETWORK 0'
-Jan 17 17:25:01 jonspc NetworkManager: <info>  SUP: response was 'OK'
-Jan 17 17:25:01 jonspc kernel: [13975.564161] wlan1: authenticate with AP 0=
-0:1b:2f:0c:2f:28
-Jan 17 17:25:01 jonspc kernel: [13975.564194] wlan1: RX authentication from=
- 00:1b:2f:0c:2f:28 (alg=3D0 transaction=3D2 status=3D0)5:01 jonspc kernel: =
-[13975.564194] wlan1: authenticated
-Jan 17 17:25:01 jonspc kernel: [13975.564194] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:02 jonspc kernel: [13975.788114] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:02 jonspc kernel: [13975.988110] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:02 jonspc kernel: [13976.188137] wlan1: association with AP 00=
-:1b:2f:0c:2f:28 timed out
-Jan 17 17:25:17 jonspc kernel: [13991.380234] wlan1: Initial auth_alg=3D0
-Jan 17 17:25:17 jonspc kernel: [13991.380234] wlan1: authenticate with AP 0=
-0:1b:2f:0c:2f:28
-Jan 17 17:25:17 jonspc kernel: [13991.380267] wlan1: RX authentication from=
- 00:1b:2f:0c:2f:28 (alg=3D0 transaction=3D2 status=3D0)5:17 jonspc kernel: =
-[13991.380267] wlan1: authenticated
-Jan 17 17:25:17 jonspc kernel: [13991.380267] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:17 jonspc kernel: [13991.604259] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:18 jonspc kernel: [13992.136025] wlan1: Initial auth_alg=3D0
-Jan 17 17:25:18 jonspc kernel: [13992.136025] wlan1: authenticate with AP 0=
-0:1b:2f:0c:2f:28
-Jan 17 17:25:18 jonspc kernel: [13992.136073] wlan1: association frame rece=
-ived from 00:1b:2f:0c:2f:28, but not in associate state - ignoredel: [13992=
-=2E340113] wlan1: authenticate with AP 00:1b:2f:0c:2f:28
-Jan 17 17:25:18 jonspc kernel: [13992.343090] wlan1: RX authentication from=
- 00:1b:2f:0c:2f:28 (alg=3D0 transaction=3D2 status=3D0)5:18 jonspc kernel: =
-[13992.343116] wlan1: authenticated
-Jan 17 17:25:18 jonspc kernel: [13992.343126] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:18 jonspc kernel: [13992.343116] wlan1: authenticated
-Jan 17 17:25:18 jonspc kernel: [13992.343126] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:18 jonspc kernel: [13992.540122] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:19 jonspc kernel: [13992.740140] wlan1: associate with AP 00:1=
-b:2f:0c:2f:28
-Jan 17 17:25:19 jonspc kernel: [13992.940143] wlan1: association with AP 00=
-:1b:2f:0c:2f:28 timed out
-
---=20
-Hans Ekbrand (http://sociologi.cjb.net) <hans@sociologi.cjb.net>
-Q. What is that strange attachment in this mail?
-A. My digital signature, see www.gnupg.org for info on how you could
-   use it to ensure that this mail is from me and has not been
-   altered on the way to you.
-
---pf9I7BMVVzbSWLtt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFJckO9fCyHKnBQYU4RAhhxAKCcPBPN5xurdAKdLl//CRnB7hcxRQCfeqGl
-SEo6hlKnSPly2esxpZNnNLM=
-=JLGK
------END PGP SIGNATURE-----
-
---pf9I7BMVVzbSWLtt--
+It would then be trivial to use a modern kernel on this embedded 
+target, with mac80211 on this device. Now it's almost 
+impossible, because so much of the in-kernel infrastructure has 
+changed in the meantime, see 
+http://lwn.net/Articles/2.6-kernel-api/
