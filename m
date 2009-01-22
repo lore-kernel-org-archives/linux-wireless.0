@@ -1,293 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:42361 "EHLO
-	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbZAGPmY (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:24491 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751190AbZAVFNX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 10:42:24 -0500
-Received: from hp4000.wilsoft.nl ([192.168.4.5])
-	by linux.wilsoft.nl with esmtp (Exim 4.69)
-	(envelope-from <listsrv@wilsoft.nl>)
-	id 1LKaXp-0001Km-G6
-	for linux-wireless@vger.kernel.org; Wed, 07 Jan 2009 16:42:09 +0100
-From: "W. van den Akker" <listsrv@wilsoft.nl>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
-Date: Wed, 7 Jan 2009 16:42:04 +0100
-References: <200901011444.20333.listsrv@wilsoft.nl> <4963C43D.1080209@erley.org> <200901062342.22935.listsrv@wilsoft.nl>
-In-Reply-To: <200901062342.22935.listsrv@wilsoft.nl>
+	Thu, 22 Jan 2009 00:13:23 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2024702fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 21:13:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901071642.04310.listsrv@wilsoft.nl> (sfid-20090107_164228_815282_F5A71E1E)
+Date: Thu, 22 Jan 2009 00:13:21 -0500
+Message-ID: <578ff7cb0901212113i73bc8113g36eb18116407ec81@mail.gmail.com> (sfid-20090122_061330_086918_2C63A418)
+Subject: Re: bcm4311 who likes to disassociate (yet associates just fine using
+	knoppix)
+From: Nate Lally <nate.lally@gmail.com>
+To: bcm43xx-dev@berlios.de
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 06 January 2009, you wrote:
-> On Tuesday 06 January 2009 21:51:09 you wrote:
-> > W. van den Akker wrote:
-> > --- Snip ---
-> >
-> > >> However, after starting a internet session and Kmail session the
-> > >> server hangs again without any output. Does the NMI-handler not
-> > >> process per CPU? So if one CPU hangs, the other would still proceed?
-> > >>
-> > >> I have no 802.11n enabled, nor X.
-> > >>
-> > >> This means I think the system halted hard 'hlt-instruction'
-> > >>
-> > >> Any further suggestion? I am little bit hopeless now. I have placed
-> > >> the PCI card into another slot, no result.
-> > >
-> > > Some additional information:
-> > > I have booted the server at approx 16:00. Hostapd was started at
-> > > boot-time. After 5 hours without any connection from any computers the
-> > > server hangs.
-> >
-> > Just as a data point, I'm running master mode with ath9k on 64bit with
-> > multiple clients and have no problems.  Perhaps it's hardware version
-> > related?  Here's the info for my system:
-> >
-> > kernel: 2.6.28-gentoo
-> > compat-wireless-2.6: cedd75beb269e2b559a5174ee628ebd01f63a4040
-> > wireless-testing: fd1dae5fbc7a260b0ddfab7d4939a766a82ef3f3
-> > hostapd: 2c04820d80b5c489576cb735c3be8f026a035a5b
-> >
-> > I have 80211n enabled for my device with this config:
-> >
-> > ht_capab=[HT40-][SHORT-GI-40][DSSS_CCK-40]
-> >
-> > my device:
-> >
-> > Network controller: Atheros Communications, Inc. AR5416 802.11a/b/g/n
-> > Wireless PCI Adapter (rev 01)
-> >
-> > phy0: Atheros AR5416 MAC/BB Rev:2 AR2133 RF Rev:81:
-> > mem=0xffffc20000060000, irq=17
-> >
-> > Currently I'm using my ps3, axim, laptop, and a netbook at the same
-> > time, and have no disconnects.  Any additional testing I could do that
-> > might help you out, or more information I could provide you?
+Hello,
+  I didn't actually subscribe to the bcm43 mailing list so I'm not
+quite sure if anyone actually received the prior emails.  Nor am I
+convinced it is actually the domain of those working on the b43
+firmware considering the fact that the exact same kernel compile and
+modprobe configs are being used on the non-working ubuntu distribution
+yet associate just fine while booting knoppix under the below
+circumstances.
+
+Any help/direction would be appreciated.
+
+-Nate Lally
+
+On 1/8/09, Nate Lally <nate.lally@gmail.com> wrote:
+> An inspiring new development.  I boot the laptop with knoppix 5.3.1
+> utilizing kernel version 2.6.24.4, I mount the firmware for bcm43xx @ 2.6.24
+> on /lib/firmware and discover not only can I associate, I can utilize wep
+> and pull an ip.  From there I copy the /boot/config and compile a 2.6.24-4
+> kernel with those options using gcc 4.2.4 (because of a reported bug with
+> gcc 4.3 and time.h) only to find that now card does not report ready ie:
 >
-> My system:
-> kernel: 2.6.28-rc9-wl (wireless testing): 2.6.28-rc9-1-686-wl #1 SMP Fri
-> Jan 2 19:38:20 CET 2009 i686 GNU/Linux
-> hostapd: 0.6.6
-> Have no 80211n enabled
-> Processor  Intel(R) Pentium(R) 4 CPU 3.00GHz 1024 KB
+> input: b43-phy0 as /class/input/input9
+> Registered led device: b43-phy0:tx
+> Registered led device: b43-phy0:rx
+> Registered led device: b43-phy0:radio
+> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> eth0: no IPv6 routers present
+> wlan0: Initial auth_alg=0
+> wlan0: authenticate with AP 00:16:b6:55:77:b3
+> wlan0: authenticate with AP 00:16:b6:55:77:b3
+> wlan0: authenticate with AP 00:16:b6:55:77:b3
+> wlan0: authentication with AP 00:16:b6:55:77:b3 timed out
 >
-> my device:
-> 04:08.0 Network controller: Atheros Communications Inc. AR5416 802.11abgn
-> Wireless PCI Adapter (rev 01)
->         Subsystem: Linksys Device 0061
->         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+
-> Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 168, Cache Line Size: 32 bytes
->         Interrupt: pin A routed to IRQ 21
->         Region 0: Memory at d0310000 (32-bit, non-prefetchable) [size=64K]
->        Capabilities: [40] #80 [0000]
->         Kernel driver in use: ath9k
->         Kernel modules: ath9k
+> any ideas/flames/help/suggestions would help from you guys
 >
-> System hangsup depending on the number of devices or cennections are
-> opened: - only hostapd (no devices connected). system hangs after approx 5
-> hours. (ifconfig shows wlan0 up)
-> - only a laptop with a browsing session, system did nog hang after a few
-> hours.
-> - only a laptop with a browsing session and kmail, system hangs directly.
-> No logging to console. Nmi watchdog enabled...
+> thanks again
+> -Nate Lally
+>
+> On Tue, Jan 6, 2009 at 1:11 AM, Nate Lally <nate.lally@gmail.com> wrote:
+>
+>> Hi All,
+>>   I'm wondering where to get started debugging this issue, not a lot of
+>> wifi experience... I have a laptop I inherited with no pcmcia slot and a
+>> broadcom bcm4311 wifi chip.  Whenever I try to associate to an access
+>> point
+>> with no encryption, the card associates, then shortly thereafter
+>> disassociates stating reason 3 (as you'll see in the following dmesg)...
+>> I
+>> still haven't tracked down the reason 3 from the call to
+>> ieee80211_sta_disassociate   in mlme.c (I can't find what calls
+>> ieee80211_ioctl_siwmlme).
+>> but it seems to me that a ioctl call to disassociate must be stemming from
+>> a state machine that decided something was wrong or missing that the
+>> driver
+>> should be providing/correcting..
+>> any tips tricks ideas directions would be much appreciated...
+>>
+>>
+>> root@aello:/usr/src/wireless-testing# uname -a
+>> Linux aello 2.6.28 #2 Mon Jan 5 20:12:00 CST 2009 i686 GNU/Linux
+>>
+>> root@aello:/usr/src/wireless-testing# git describe
+>> v2.6.28-10356-g738910c
+>>
+>> root@aello:/usr/src/wireless-testing# lspci -vvvn | grep 43 -A7
+>> 06:00.0 0280: 14e4:4311 (rev 01)
+>>     Subsystem: 103c:1363
+>>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+>> Stepping- SERR+ FastB2B- DisINTx-
+>>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>> <TAbort-
+>> <MAbort- >SERR- <PERR- INTx-
+>>     Latency: 0, Cache Line Size: 64 bytes
+>>     Interrupt: pin A routed to IRQ 18
+>>     Region 0: Memory at 30000000 (32-bit, non-prefetchable) [size=16K]
+>>     Capabilities: [40] Power Management version 2
+>> --
+>>     Kernel driver in use: b43-pci-bridge
+>>     Kernel modules: ssb
+>>
+>>
+>> dmesg output
+>>
+>> [11471.880103] b43-phy0: Loading firmware version 410.2160 (2007-05-26
+>> 15:32:10)
+>> [11471.940137] b43-phy0 debug: Chip initialized
+>> [11471.940357] b43-phy0 debug: 32-bit DMA initialized
+>> [11471.962122] Registered led device: b43-phy0::tx
+>> [11471.962145] Registered led device: b43-phy0::rx
+>> [11471.962175] Registered led device: b43-phy0::radio
+>> [11471.962256] b43-phy0 debug: Wireless interface started
+>> [11471.968608] b43-phy0 debug: Adding Interface type 2
+>> [11471.980606] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> [11515.922066] wlan0: direct probe to AP 00:16:b6:xx:xx:xx try 1
+>> [11516.120072] wlan0: direct probe to AP 00:16:b6:xx:xx:xx try 2
+>> [11516.123276] wlan0 direct probe responded
+>> [11516.123280] wlan0: authenticate with AP 00:16:b6:xx:xx:xx
+>> [11516.125125] wlan0: authenticated
+>> [11516.125129] wlan0: associate with AP 00:16:b6:xx:xx:xx
+>> [11516.127714] wlan0: RX AssocResp from 00:16:b6:xx:xx:xx (capab=0x421
+>> status=0 aid=9)
+>> [11516.127717] wlan0: associated
+>> [11516.127722] phy0: Allocated STA 00:16:b6:xx:xx:xx
+>> [11516.128449] phy0: Inserted STA 00:16:b6:xx:xx:xx
+>> [11516.128454] wmaster0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15
+>> cWmax=1023
+>> txop=0
+>> [11516.129191] wmaster0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15
+>> cWmax=1023
+>> txop=0
+>> [11516.129287] wmaster0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15
+>> txop=94
+>> [11516.129382] wmaster0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7
+>> txop=47
+>> [11516.129471] wlan0: switched to short barker preamble
+>> (BSSID=00:16:b6:xx:xx:xx)
+>> [11516.129475] wlan0: switched to short slot (BSSID=00:16:b6:xx:xx:xx)
+>> [11516.130166] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+>> [11516.130271] wlan0: disassociating by local choice (reason=3)
+>> [11516.136255] phy0: Removed STA 00:16:b6:xx:xx:xx
+>> [11516.136293] phy0: Destroyed STA 00:16:b6:xx:xx:xx
+>> [11526.172056] wlan0: no IPv6 routers present
+>>
+>>
+>>
+>> --
+>> Nate Lally
+>>
+>
+>
+>
+> --
+> Nate
+> (763)-607-7630
+>
 
-I have tested today with the latest wireless testing 2.6.28-wl and tested with 
-WPA and without WPA. It didnt make any difference.
-
-I am getting pretty hopeless now. Because nothing seems to work or give any
-progress.
-
-
-This is the hostapd log:
-mgmt::auth
-authentication: STA=00:1d:e0:48:a0:a3 auth_alg=0 auth_transaction=1 
-status_code=0 wep=0
-  New STA
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: authentication OK (open system)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: 
-MLME-AUTHENTICATE.indication(00:1d:e0:48:a0:a3, OPEN_SYSTEM)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: MLME-DELETEKEYS.request(00:1d:e0:48:a0:a3)
-authentication reply: STA=00:1d:e0:48:a0:a3 auth_alg=0 auth_transaction=2 
-resp=0 (IE len=0)
-MGMT (TX callback) ACK
-mgmt::auth cb
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: authenticated
-MGMT
-mgmt::auth
-authentication: STA=00:1d:e0:48:a0:a3 auth_alg=0 auth_transaction=1 
-status_code=0 wep=0
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: authentication OK (open system)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: 
-MLME-AUTHENTICATE.indication(00:1d:e0:48:a0:a3, OPEN_SYSTEM)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: MLME-DELETEKEYS.request(00:1d:e0:48:a0:a3)
-authentication reply: STA=00:1d:e0:48:a0:a3 auth_alg=0 auth_transaction=2 
-resp=0 (IE len=0)
-MGMT
-mgmt::assoc_req
-association request: STA=00:1d:e0:48:a0:a3 capab_info=0x421 listen_interval=10
-  new AID 1
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: association OK (aid 1)
-MGMT (TX callback) ACK
-mgmt::auth cb
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: authenticated
-MGMT (TX callback) ACK
-mgmt::assoc_resp cb
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: associated (aid 1)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: 
-MLME-ASSOCIATE.indication(00:1d:e0:48:a0:a3)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: MLME-DELETEKEYS.request(00:1d:e0:48:a0:a3)
-wlan0: STA 00:1d:e0:48:a0:a3 RADIUS: starting accounting session 
-4964CA2A-00000000
-DATA
-.......
-DATA
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-DATA
-DATA
-DATA
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-STA 00:01:db:08:6b:5a sent probe request for our SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-MGMT (TX callback) fail
-mgmt::proberesp cb
-DATA
-DATA
-DATA
-DATA
-DATA
-DATA
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:01:db:08:6b:5a sent probe request for broadcast SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT (TX callback) fail
-mgmt::proberesp cb
-DATA
-....
-DATA
-STA 00:1d:e0:48:a0:a3 sent probe request for our SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-MGMT
-mgmt::auth
-authentication: STA=00:1d:e0:48:a0:a3 auth_alg=0 auth_transaction=1 
-status_code=0 wep=0
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: authentication OK (open system)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: 
-MLME-AUTHENTICATE.indication(00:1d:e0:48:a0:a3, OPEN_SYSTEM)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: MLME-DELETEKEYS.request(00:1d:e0:48:a0:a3)
-authentication reply: STA=00:1d:e0:48:a0:a3 auth_alg=0 auth_transaction=2 
-resp=0 (IE len=0)
-MGMT (TX callback) ACK
-mgmt::auth cb
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: authenticated
-MGMT
-mgmt::reassoc_req
-reassociation request: STA=00:1d:e0:48:a0:a3 capab_info=0x421 
-listen_interval=10 current_ap=00:18:39:19:7f:87
-  old AID 1
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: association OK (aid 1)
-MGMT (TX callback) ACK
-mgmt::reassoc_resp cb
-wlan0: STA 00:1d:e0:48:a0:a3 IEEE 802.11: associated (aid 1)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: 
-MLME-REASSOCIATE.indication(00:1d:e0:48:a0:a3)
-wlan0: STA 00:1d:e0:48:a0:a3 MLME: MLME-DELETEKEYS.request(00:1d:e0:48:a0:a3)
-wlan0: STA 00:1d:e0:48:a0:a3 RADIUS: starting accounting session 
-4964CA2A-00000001
-DATA
-DATA
-DATA
-------------------->> hang
-                                                                                                              
 
 -- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+Nate
+(763)-607-7630
