@@ -1,51 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.mail.elte.hu ([157.181.151.9]:35890 "EHLO mx2.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754106AbZAEOE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 09:04:29 -0500
-Date: Mon, 5 Jan 2009 15:04:13 +0100
-From: Ingo Molnar <mingo@elte.hu>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Enforce module build if rfkill is a module
-Message-ID: <20090105140413.GE4190@elte.hu> (sfid-20090105_150432_863294_6DFF296B)
-References: <3f9a31f40901020936l4bed87e2jb64678572d2ad45b@mail.gmail.com> <20090102180730.GA10072@elte.hu> <3f9a31f40901021040l2afb5e19sc37e61d3f9728531@mail.gmail.com> <495E6C96.3040102@kernel.org> <20090102195802.GA28494@elte.hu> <20090105115124.GA2235@jm.kir.nu>
+Received: from fk-out-0910.google.com ([209.85.128.190]:13888 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621AbZAVL2o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 06:28:44 -0500
+Received: by fk-out-0910.google.com with SMTP id f33so666155fkf.5
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 03:28:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090105115124.GA2235@jm.kir.nu>
+In-Reply-To: <200901221144.27380.helmut.schaa@gmail.com>
+References: <200901190955.32818.helmut.schaa@gmail.com>
+	 <20090121192329.GB14710@tuxdriver.com>
+	 <200901221144.27380.helmut.schaa@gmail.com>
+Date: Thu, 22 Jan 2009 13:28:42 +0200
+Message-ID: <1ba2fa240901220328s4fe65faeo35176357a19f57fa@mail.gmail.com> (sfid-20090122_122849_853900_718BA005)
+Subject: Re: [PATCH 2/2] iwl3945: Remove unused variables
+From: Tomas Winkler <tomasw@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jan 22, 2009 at 12:44 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Am Mittwoch, 21. Januar 2009 schrieb John W. Linville:
+>> On Mon, Jan 19, 2009 at 09:55:32AM +0100, Helmut Schaa wrote:
+>> > Fix the following warnings in iwl-3945-rs.c by removing unused variables.
+>> >
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_rate_scale_flush_windows':
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:186: warning: unused variable 'priv'
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_bg_rate_scale_flush':
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:219: warning: unused variable 'priv'
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_collect_tx_data':
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: warning: unused variable 'priv'
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'rs_free_sta':
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: warning: unused variable 'priv'
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_get_adjacent_rate':
+>> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:559: warning: unused variable 'priv'
+>> >
+>> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>>
+>> With this applied, I get these:
+>>
+>>   CC [M]  drivers/net/wireless/iwlwifi/iwl-3945-rs.o
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_rate_scale_flush_windows':
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: 'priv' undeclared (first use in this function)
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: (Each undeclared identifier is reported only once
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: for each function it appears in.)
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_bg_rate_scale_flush':
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:222: error: 'priv' undeclared (first use in this function)
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_collect_tx_data':
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: error: 'priv' undeclared (first use in this function)
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'rs_free_sta':
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: error: 'priv' undeclared (first use in this function)
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_get_adjacent_rate':
+>> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:594: error: 'priv' undeclared (first use in this function)
+>> make[2]: *** [drivers/net/wireless/iwlwifi/iwl-3945-rs.o] Error 1
+>> make[1]: *** [drivers/net/wireless/iwlwifi] Error 2
+>> make: *** [drivers/net/wireless/] Error 2
+>>
+>> Dropping...
+>
+> Ah, sorry for that. I compiled without CONFIG_IWL_DEBUG. Instead of removing
+> these lines they should be surrounded by an CONFIG_IWL_DEBUG check. I'll send
+> that soon.
 
-* Jouni Malinen <jouni.malinen@atheros.com> wrote:
+Please use
+struct iwl_priv *priv __maybe_unused priv;
+look  at  in iwl-agn-rs.c
 
-> CONFIG_ATH9K=y results in build issues if CONFIG_RFKILL=m since ath9k
-> does not depend on rfkill in kconfig (i.e., CONFIG_RFKILL is used to
-> select whether to enable rfkill in ath9k), but uses its functions if
-> rfkill is enabled. Enforce ath9k to be build as a module if
-> CONFIG_RFKILL=m to avoid this invalid configuration.
-> 
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-> 
-> ---
->  drivers/net/wireless/ath9k/Kconfig |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- wireless-testing.orig/drivers/net/wireless/ath9k/Kconfig	2009-01-05 13:27:01.000000000 +0200
-> +++ wireless-testing/drivers/net/wireless/ath9k/Kconfig	2009-01-05 13:36:27.000000000 +0200
-> @@ -1,6 +1,7 @@
->  config ATH9K
->  	tristate "Atheros 802.11n wireless cards support"
->  	depends on PCI && MAC80211 && WLAN_80211
-> +	depends on RFKILL || RFKILL=n
->  	select MAC80211_LEDS
->  	select LEDS_CLASS
->  	select NEW_LEDS
-
-thanks - i'll let you know if there's still any build failures in this 
-area. (Sidenote: next time around please also add a Reported-by line 
-crediting bugreporters. Doesnt matter to me but matters to contributors 
-and testers in general.)
-
-	Ingo
+Thanks
+Tomas
