@@ -1,64 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:49900
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760672AbZA2APa (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:41318 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047AbZAVWMZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 19:15:30 -0500
-Message-ID: <4980F51C.1000700@erley.org> (sfid-20090129_011536_387145_588883A5)
-Date: Wed, 28 Jan 2009 19:15:24 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Thu, 22 Jan 2009 17:12:25 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: Artur Skawina <art.08.09@gmail.com>
+Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
+Date: Thu, 22 Jan 2009 23:12:31 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <200901211450.50880.chunkeey@web.de> <200901222239.29656.chunkeey@web.de> <4978E908.4060103@gmail.com>
+In-Reply-To: <4978E908.4060103@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iw: rename nl_handle to nl_sock for libnl-2.0
-References: <4980E60D.9060505@erley.org>	 (sfid-20090129_001116_800094_6F18B713) <1233187487.16048.93.camel@johannes.local>
-In-Reply-To: <1233187487.16048.93.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901222312.31063.chunkeey@web.de> (sfid-20090122_231230_069168_EFC35094)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Wed, 2009-01-28 at 18:11 -0500, pat-lkml wrote:
->> Upstream has renamed nl_handle to nl_sock.  Update iw to the new names
->> and add #define for libnl-1.1.
+On Thursday 22 January 2009 22:45:44 Artur Skawina wrote:
+> Christian Lamparter wrote:
+> > On Thursday 22 January 2009 16:43:20 Artur Skawina wrote:
+> >> Christian Lamparter wrote:
+> >>> On Thursday 22 January 2009 00:22:16 Artur Skawina wrote:
+> >>> +	if (unlikely(!priv->common.hw->workqueue)) {
+> >>> +		/*
+> >>> +		 * Huh? mac80211 isn't fully initialized yet?
+> >>> +		 * Please check your system, something bad is going on.
+> >>> +		 */
+> >>> +		WARN_ON(1);
+> >> please do not add WARN_ON's unless you're actually interested in the
+> >> stacktrace, In this case it's a usb completion, so in most cases the
+> >> backtrace isn't very interesting, wouldn't a printk be enough?
+> >> [i was hitting this when testing, and it took several seconds to 
+> >> get all the data to the console]
+> > 
+> > Ahh, wait!
+> > 
+> > In fact we "should" call BUG_ON here, as mac80211 is not fully initialized at
+> > this point and we might have accidently submitted a dataframe to the stack.
+> > (Of course, this attempt by the device to send garbage to the stack is
+> > caught by the common-code... so no oops here)
 > 
-> I fixed this already, no?
+> Wouldn't you then want to catch it _before_ p54_rx()?
+Well neither the device's MAC/BBP nor radio is initialized... so its garbage. 
+but I hoped the
++        if (unlikely(urb->status)) {
++                return;
++      }
+        if (unlikely(!priv->common.hw->workqueue)) {
+                /*
+resolved this issue when usb_kill_anchored_urbs is called...
+(the urb completion callback is always called, even if we don't want it...
+that's why we don't reschedule a p54u_rx_refill_work and wait until urb
+with a good status arrives.. )
+
+> > However, I wonder if the WARN_ON gets triggered under normal operation or not.
+> > (Just in case, no it does not trigger with the ISL3887 chips)
 > 
-> And renaming nl_handle to nl_sock means that it won't work with older,
-> released libs, afaict.
+> i have never seen it, after the initial 32 times.
+> As-is, it currently triggers on every init however...
+
+well, it clearly shouldn't do that.... 
+
+Off topic:
+
+On Thursday 22 January 2009 16:43:20 Artur Skawina wrote:
+> Christian Lamparter wrote:
+> > On Thursday 22 January 2009 00:22:16 Artur Skawina wrote:
+> >> Christian Lamparter wrote:
+> >>>         reg = kmalloc(sizeof(*reg), GFP_ATOMIC);
+> >>>         if (!reg) {
+> >>>                 printk(KERN_INFO "tx_net2280 kmalloc(reg), txqlen = %d\n",
+> >>>                           skb_queue_len(&priv->common.tx_queue) );
+> >>>                 return;
+> >>>         }
+> >>> [...]
+> >>>         reg->port = cpu_to_le16(NET2280_DEV_U32);
+> >>>         reg->addr = cpu_to_le32(P54U_DEV_BASE);
+> >>>         reg->val = cpu_to_le32(ISL38XX_DEV_INT_DATA);
+> >> does not need to happen for every single tx-ed frame.
+> > Ah, yes that's true. what do you say about this...
+> > Instead of using kmalloc in the init procedure, we let gcc already do it.
 > 
-> johannes
-Unless my build chain is major league broken, it doesn't build for my
-system without doing this.
+> apparently there are archs where dmaing from not-kmalloced areas doesn't work
+> that well, this mostly applies to the stack, but i'd rather be safe and 
+> stick to a kmalloc buffer. one allocation on device init isn't worth avoiding.
 
-Lots of these warnings:
+agreed, the static definition is not a good idea and the usb stack also recommends
+to use usb_buffer_alloc over kmalloc to avoid DMA bounce buffers usage etc...
 
-
-In file included from info.c:11:
-iw.h:70: warning: 'struct nl_handle' declared inside parameter list
-iw.h:70: warning: its scope is only this definition or declaration,
-which is probably not what you want
-
-and this error/warning combo that finally fails:
-
-CC   genl.o
-In file included from genl.c:12:
-iw.h:70: warning: 'struct nl_handle' declared inside parameter list
-iw.h:70: warning: its scope is only this definition or declaration,
-which is probably not what you want
-genl.c:67: warning: 'struct nl_handle' declared inside parameter list
-genl.c:68: error: conflicting types for 'nl_get_multicast_id'
-iw.h:70: error: previous declaration of 'nl_get_multicast_id' was here
-genl.c: In function 'nl_get_multicast_id':
-genl.c:87: warning: passing argument 1 of 'genl_ctrl_resolve' from
-incompatible pointer type
-genl.c:95: warning: passing argument 1 of 'nl_send_auto_complete' from
-incompatible pointer type
-genl.c:106: warning: passing argument 1 of 'nl_recvmsgs' from
-incompatible pointer type
-make: *** [genl.o] Error 1
-
-After this patch, it compiles cleanly.  I'll revert to libnl-1.1
-quickly, but I believe that it will work fine with this patch as well.
-
-Pat
+Regards,
+	Chr
