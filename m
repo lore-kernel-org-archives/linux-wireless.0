@@ -1,67 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42939 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbZALNJK (ORCPT
+Received: from mail-ew0-f20.google.com ([209.85.219.20]:35381 "EHLO
+	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752809AbZAVFlA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 08:09:10 -0500
-Subject: Re: [RFC] nl80211: New command for adding extra IE(s) into
-	management frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090112122605.GB9153@jm.kir.nu>
-References: <20090112122605.GB9153@jm.kir.nu>
-Content-Type: text/plain
-Date: Mon, 12 Jan 2009 14:08:44 +0100
-Message-Id: <1231765724.2998.10.camel@home.berg> (sfid-20090112_140915_535207_2B9DA592)
-Mime-Version: 1.0
+	Thu, 22 Jan 2009 00:41:00 -0500
+Received: by ewy13 with SMTP id 13so2150603ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 21:40:58 -0800 (PST)
+Message-ID: <497806E8.1060709@gmail.com> (sfid-20090122_064107_158535_791AC497)
+Date: Thu, 22 Jan 2009 06:40:56 +0100
+From: Artur Skawina <art.08.09@gmail.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
+References: <200901211450.50880.chunkeey@web.de> <49774794.507@gmail.com> <200901211924.54660.chunkeey@web.de> <4977785B.7020009@gmail.com>
+In-Reply-To: <4977785B.7020009@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-01-12 at 14:26 +0200, Jouni Malinen wrote:
-> A new nl80211 command, NL80211_CMD_SET_MGMT_EXTRA_IE, can be used to
-> add arbitrary IE data into the end of management frames in client
-> modes. The interface allows extra IEs to be configured for each
-> management frame subtype, but only some of them (ProbeReq, ProbeResp,
-> Auth, (Re)AssocReq, Deauth, Disassoc) are currently used.
+Artur Skawina wrote:
+> Christian Lamparter wrote:
+>> A updated patch is attached (as file)
 > 
-> This makes it easier to implement IEEE 802.11 extensions like WPS and
-> FT that add IE(s) into some management frames. In addition, this can
-> be useful for testing and experimentation purposes.
+> Will test.
 
-Looks sane to me. Would it make sense to provide support for getting
-this information as well?
+Did a quick test of your patch on top of
+  current w-t/pending
++
+  "p54usb: fix packet loss with first generation devices"
++ this:
 
-> +	if (!drv->ops->set_mgmt_extra_ie) {
-> +		err = -EOPNOTSUPP;
-> +		goto out;
-> +	}
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index f754798..20818d6 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -92,7 +92,7 @@ static void p54u_rx_cb(struct urb *urb)
+ 
+        if (unlikely(urb->status)) {
+                dev_kfree_skb_irq(skb);
+-           return;
++         goto stash_urb;
+        }
+ 
+        skb_put(skb, urb->actual_length);
+@@ -141,7 +141,7 @@ static void p54u_rx_cb(struct urb *urb)
+         * the less critical workqueue thread.
+         * This eases the memory pressure and prevents latency spikes.
+         */
+-
++stash_urb:
+        urb->transfer_buffer = NULL;
+        urb->context = NULL;
+ 
+That didn't work, various symptoms such as hostapd getting stuck, other unrelated
+usb devices breaking, machine frozen etc.
 
-You could check for that earlier and avoid the goto, I think.
+After applying the changes below it seemed to work alright, but i only tested for
+a few minutes.
+[line #s are wrong]
 
-> +/**
-> + * struct mgmt_extra_ie_params - Extra management frame IE parameters
-> + *
-> + * Used to add extra IE(s) into management frames in client modes.
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 20818d6..643d517 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -160,7 +173,7 @@ stash_urb:
+ 		 * Huh? mac80211 isn't fully initialized yet?
+ 		 * Please check your system, something bad is going on.
+ 		 */
+-		WARN_ON(1);
++		printk(KERN_WARNING "p54u_rx_cb workqueue missing\n");
+ 		return;
+ 	}
+ 
+@@ -196,9 +210,9 @@ static void p54u_free_urbs(struct ieee80211_hw *dev)
+ {
+ 	struct p54u_priv *priv = dev->priv;
+ 
+ 	cancel_work_sync(&priv->rx_refill_work);
+-	p54u_free_rx_refill_list(dev);
+ 	usb_kill_anchored_urbs(&priv->submitted);
++	p54u_free_rx_refill_list(dev);
+ }
+ 
+ static int p54u_rx_refill(struct ieee80211_hw *dev)
+@@ -281,9 +297,9 @@ static int p54u_init_urbs(struct ieee80211_hw *dev)
+ 	}
+ 
+ 	p54u_rx_refill(dev);
+-
+ err:
+-	p54u_free_rx_refill_list(dev);
++	if (ret)
++		p54u_free_rx_refill_list(dev);
+ 	return ret;
+ }
+ 
+The 'workqueue-missing' warnings appear on module init; there are several
+p54u_init_urbs(), p54u_free_urbs() call sequences.
+p54u_free_urbs() triggers the unlikely(urb->status) path while killing
+the urbs, and the first time this happens you get 32 warnings.
+After that everything's fine.
 
-That could be a little more specific, I think. You seem to implement it
-only for STA/IBSS, but it could make sense for mesh as well, for
-instance to add things into the beacon there? Same with IBSS I guess?
+I put the machine under some load and while there was usually 28..31 RX
+urbs queued, at one point the refilling stalled and the number went down
+from 31 to 1, then 6, slowly grew to ~30, then fell to 13, then recovered.
+All of this within ~5 mins of testing, w/ only a small amount of http 
+traffic generated by the client. it looks like i will have to try 
+allocating in the interrupt after all.
 
-I think we should provide, to userspace, a guarantee such as:
-
-  If this operation completes successfully, then any frame generated by
-  the kernel or hardware with that subtype will include the information.
-
-This obviously excludes injected frames and that could be stated
-explicitly. Also means that the "client modes" above should be removed
-and instead the handler has to just fail in other modes and for
-unsupported frame types.
-
-Therefore, beacons should include it in ibss/mesh, and mac80211's cfg
-handler should reject attempts to configure anything it doesn't support.
-Since then you need to do things based on the frame type, I think I'd
-rather open code the subtypes array into ie_presp, ie_preq, etc.
-
-johannes
-
+artur
