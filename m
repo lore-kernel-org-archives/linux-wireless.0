@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:49968 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674AbZAIUl2 (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.185]:50437 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754943AbZAWDR2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 15:41:28 -0500
-Message-ID: <4967B62C.1050203@openwrt.org> (sfid-20090109_214133_256008_5B61E350)
-Date: Fri, 09 Jan 2009 21:40:12 +0100
-From: Gabor Juhos <juhosg@openwrt.org>
+	Thu, 22 Jan 2009 22:17:28 -0500
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [ath9k-devel] [PATCH v2 08/11] ath9k: remove (u16) casts from
- rtc register access
-References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>	 <1231503868-29226-9-git-send-email-juhosg@openwrt.org> <1231519108.24032.1.camel@dv>
-In-Reply-To: <1231519108.24032.1.camel@dv>
-Content-Type: text/plain; charset=ISO-8859-2
+In-Reply-To: <20090121.165820.171747430.davem@davemloft.net>
+References: <20090121.165820.171747430.davem@davemloft.net>
+Date: Thu, 22 Jan 2009 19:17:26 -0800
+Message-ID: <9929d2390901221917s606489c3wfe77612c9c989433@mail.gmail.com> (sfid-20090123_041735_098140_FBC04F1B)
+Subject: Re: net-next-2.6 is live
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin =EDrta:
-> On Fri, 2009-01-09 at 13:24 +0100, Gabor Juhos wrote:
->> The RTC register offsets don't fit into 'u16' on the AR913x, so we h=
-ave
->> to remove the existing casts.
->>
->> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
->> Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
->> ---
->>  drivers/net/wireless/ath9k/hw.c |   14 +++++++-------
->>  1 files changed, 7 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/=
-ath9k/hw.c
->> index 088d968..742ecc1 100644
->> --- a/drivers/net/wireless/ath9k/hw.c
->> +++ b/drivers/net/wireless/ath9k/hw.c
->> @@ -1008,7 +1008,7 @@ static void ath9k_hw_init_pll(struct ath_hal *=
-ah,
->>  				pll |=3D SM(0xb, AR_RTC_PLL_DIV);
->>  		}
->>  	}
->> -	REG_WRITE(ah, (u16) (AR_RTC_PLL_CONTROL), pll);
->> +	REG_WRITE(ah, (AR_RTC_PLL_CONTROL), pll);
->=20
-> Perhaps you could remove the parentheses as well?  It looks weird
-> otherwise.
->=20
+On Wed, Jan 21, 2009 at 4:58 PM, David Miller <davem@davemloft.net> wrote:
+>
+> Ok, I've pushed all of the patches I've applied for 2.6.30 off to:
+>
+>        master.kernel.org:/pub/scm/linux/kernel/git/davem/net-next-2.6.git
+>
+> Enjoy.
+> --
 
-Yes. I will do it.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave, the net-next tree seems to be missing this patch...
+
+
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Date: Mon, 19 Jan 2009 16:17:08 -0800
+
+e1000e: drop lltx, remove unnecessary lock
+
+ LLTX is deprecated and complicated, don't use it.  It was observed by Don Ash
+ <donash4@gmail.com> that e1000e was acquiring this lock in the NAPI cleanup
+ path.  This is obviously a bug, as this is a leftover from when e1000
+ supported multiple tx queues and fake netdevs.
+
+ another user reported this to us and tested routing with the 2.6.27 kernel and
+ this patch and reported a 3.5 % improvement in packets forwarded in a
+ multi-port test on 82571 parts.
+
+ Signed-off-by: Jesse Brandeburg <jesse.brandeburg@intel.com>
+ Signed-off-by: Bruce Allan <bruce.w.allan@intel.com>
+ Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+
+-- 
+Cheers,
+Jeff
