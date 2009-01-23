@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12867 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765352AbZARPcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 10:32:05 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 07:32:05 -0800
-Date: Sun, 18 Jan 2009 07:31:34 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 03/13] cfg80211: add wiphy_apply_custom_regulatory()
-Message-ID: <20090118153134.GT29609@tesla> (sfid-20090118_163212_366969_AB04A35D)
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com> <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232097659.3854.20.camel@johannes> <20090116163646.GG29609@tesla> <43e72e890901161413n3fdd7031lfdd0a363941b697d@mail.gmail.com> <1232184649.3668.2.camel@johannes> <20090117220636.GO29609@tesla> <1232268557.3877.12.camel@johannes>
+Received: from mail.gmx.net ([213.165.64.20]:45108 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754551AbZAWEdj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 23:33:39 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Fri, 23 Jan 2009 05:33:37 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090123043337.270720@gmx.net> (sfid-20090123_053344_719360_EF0306AB)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232268557.3877.12.camel@johannes>
+Subject: [PATCH v2] mac80211: Read the TSF via debugfs
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 18, 2009 at 12:49:17AM -0800, Johannes Berg wrote:
-> On Sat, 2009-01-17 at 14:06 -0800, Luis R. Rodriguez wrote:
-> 
-> > > > >> > +static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
-> > > > >> > +                    const struct ieee80211_reg_rule **reg_rule)
-> > > > >> > +{
-> > > > >> > +   return freq_reg_info_regd(wiphy, center_freq,
-> > > > >> > +           bandwidth, reg_rule, NULL);
-> > > > >> > +}
-> > > > >>
-> > > > >> Are you not using this or am I just not seeing the user?
-> > > > >
-> > > > > Yeah -- good catch, its just cruft left over from my previous work.
-> > > > 
-> > > > Actually  freq_reg_info_regd() is used by handle_channel_custom(),
-> > > > hence my comment on re-inventing the wheel. But yeah it used.
-> > > 
-> > > Yeah but not freq_reg_info?
-> > 
-> > That one is used by the reg_notifier() in ath9k to inspect the country IE
-> > regulatory domain processed.
-> 
-> ?? It's static and not exported, so how can ath9k use it?
+This patch adds an low-level driver independent entry to read the TSF v=
+alue into the debugfs of mac80211. This makes debugging the IBSS handli=
+ng of wifi drivers easier.
 
-Patch 04 in this series fixes that.
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+---
+diff -urN compat-wireless-2009-01-22.orig/net/mac80211/debugfs.c compat=
+-wireless-2009-01-22/net/mac80211/debugfs.c
+--- compat-wireless-2009-01-22.orig/net/mac80211/debugfs.c	2009-01-22 2=
+0:51:46.000000000 +0100
++++ compat-wireless-2009-01-22/net/mac80211/debugfs.c	2009-01-23 03:49:=
+45.000000000 +0100
+@@ -61,6 +61,8 @@
+ 		      local->wep_iv & 0xffffff);
+ DEBUGFS_READONLY_FILE(rate_ctrl_alg, 100, "%s",
+ 		      local->rate_ctrl ? local->rate_ctrl->ops->name : "<unset>");
++DEBUGFS_READONLY_FILE(tsf, 20, "%#018llx",
++                      (unsigned long long) (local->ops->get_tsf ? loca=
+l->ops->get_tsf(local_to_hw(local)) : 0));
+=20
+ /* statistics stuff */
+=20
+@@ -202,6 +204,7 @@
+ 	DEBUGFS_ADD(long_retry_limit);
+ 	DEBUGFS_ADD(total_ps_buffered);
+ 	DEBUGFS_ADD(wep_iv);
++	DEBUGFS_ADD(tsf);
+=20
+ 	statsd =3D debugfs_create_dir("statistics", phyd);
+ 	local->debugfs.statistics =3D statsd;
+@@ -255,6 +258,7 @@
+ 	DEBUGFS_DEL(long_retry_limit);
+ 	DEBUGFS_DEL(total_ps_buffered);
+ 	DEBUGFS_DEL(wep_iv);
++	DEBUGFS_DEL(tsf);
+=20
+ 	DEBUGFS_STATS_DEL(transmitted_fragment_count);
+ 	DEBUGFS_STATS_DEL(multicast_transmitted_frame_count);
+diff -urN compat-wireless-2009-01-22.orig/net/mac80211/ieee80211_i.h co=
+mpat-wireless-2009-01-22/net/mac80211/ieee80211_i.h
+--- compat-wireless-2009-01-22.orig/net/mac80211/ieee80211_i.h	2009-01-=
+22 20:51:46.000000000 +0100
++++ compat-wireless-2009-01-22/net/mac80211/ieee80211_i.h	2009-01-23 03=
+:55:44.000000000 +0100
+@@ -744,6 +744,7 @@
+ 		struct dentry *long_retry_limit;
+ 		struct dentry *total_ps_buffered;
+ 		struct dentry *wep_iv;
++		struct dentry *tsf;
+ 		struct dentry *statistics;
+ 		struct local_debugfsdentries_statsdentries {
+ 			struct dentry *transmitted_fragment_count;
 
-  Luis
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
