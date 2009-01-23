@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50046 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754267AbZANUyv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 15:54:51 -0500
-Subject: Re: [b43] opensource firmware
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Nava <navalorenx@gmail.com>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
-	John Linville <linville@tuxdriver.com>, kyle@infradead.org
-In-Reply-To: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> (sfid-20090114_163057_845343_D172C897)
-References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com>
-	 (sfid-20090114_163057_845343_D172C897)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-n1crzoATPgWwMcc6i+a1"
-Date: Wed, 14 Jan 2009 21:45:22 +0100
-Message-Id: <1231965922.20309.0.camel@johannes> (sfid-20090114_215456_016222_871292B8)
+Received: from mx2.redhat.com ([66.187.237.31]:35345 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751328AbZAWUBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 15:01:36 -0500
+Subject: Re: [PATCH 0/7] airo: cleanups and simplifications
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090123194010.GD30486@tuxdriver.com>
+References: <1232462691.22158.6.camel@localhost.localdomain>
+	 <20090123194010.GD30486@tuxdriver.com>
+Content-Type: text/plain
+Date: Fri, 23 Jan 2009 14:59:52 -0500
+Message-Id: <1232740792.2577.49.camel@localhost.localdomain> (sfid-20090123_210150_447266_6CB96E45)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2009-01-23 at 14:40 -0500, John W. Linville wrote:
+> On Tue, Jan 20, 2009 at 09:44:51AM -0500, Dan Williams wrote:
+> > airo needs some hot sexy love.  come and get your love come and get your
+> > love now.
+> > 
+> > [PATCH 1/7] airo: clean up and clarify interrupt-time task handling
+> > [PATCH 2/7] airo: re-arrange WPA capability checks
+> > [PATCH 3/7] airo: simplify WEP index and capability checks
+> > [PATCH 4/7] airo: clean up WEP key operations
+> > [PATCH 5/7] airo: use __attribute__ ((packed)) not #pragma
+> > [PATCH 6/7] airo: clean up and clarify micinit()
+> > [PATCH 7/7] airo: remove useless #defines
+> 
+> 1-4 (v2 of #4) don't seem to apply to wireless-testing anymore.  #1 in
+> particular was a big reject, so I didn't try too hard on the rest.
+> I'll drop 5-7 too just in case there are dependencies.
+> 
+> Would you mind rebasing and reposting?
 
---=-n1crzoATPgWwMcc6i+a1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Will do.
 
+Dan
 
-> Initvals and new firmware version can be found at http://www.ing.unibs.it=
-/openfwwf
-
-I suggest that before this is packaged, we change it so b43 can
-recognise it and automatically disable qos and hwcrypto.
-
-johannes
-
---=-n1crzoATPgWwMcc6i+a1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJbk7fAAoJEKVg1VMiehFYHfkP/27B+S5UMdms1qqIAWV3Hi03
-Ivi6cno+twNFtMCrppaTVWcfsV1l0VqAuIyu1Bg2JrjNQ5fKX378/ZesoWQJ0Z82
-IbBj1KYTdn3dUja7/6wPLKn1sc/YOQSRAmN3TjzUWZquOT4pjEKI4VsrcJugsBPY
-jHEyGW1PLLaWwS9sd86K5Q//7dm6DHu0f+M/04pDkqdTkVyJ1MfrFkgbcVJ0+J3J
-XimYZG+z3FP0QyM5g2zDcDBiSFf3+W294cinV0RYsr2vUPLYGfGRtuZD/BloDkFs
-hz2guVl93weZ3Sl9CtY3Xn4fdFZRADBPQwzDnzYm8WVzgVu/Y49czhTMui5czKXo
-mUbw+xdULeGoV/is5w0qG0zfc2jTW8u6Mi8T0sRvniuHAt8uFk5ZewDxHJifyAKA
-QITl4RIgi1ZHVAPyGKzfpv3jOCutaYZSr/mCD87KuhsHaoZdicjq/JFlVoIhHhPt
-IlDbNCb2jjzGdAHxd+j+U1XKj3pq3WhQEUrT75UTPRet/pdkMFoYphJq0w0wZ8CX
-kw9JwX+frGQKtHZeXoEADDPi3x6dG32xfAQUKcXdfkUWVRnqlVhmCVBtqjxSTNWA
-C1aM4FQc3zA0keJgsq240d9rFo4R7qcjATOPPAKRBYG5+YWjgtpf4ARnH4FLar4o
-rwn/PN946nmvx/yCRdLo
-=7WLY
------END PGP SIGNATURE-----
-
---=-n1crzoATPgWwMcc6i+a1--
 
