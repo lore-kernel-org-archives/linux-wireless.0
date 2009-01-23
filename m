@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms13-1.Sony.CO.JP ([211.125.136.229]:45960 "EHLO
-	ms13.sony.co.jp" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758376AbZAPJzJ (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:24583 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757473AbZAWW43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 04:55:09 -0500
-Received: from ms6.sony.co.jp (ms6.Sony.CO.JP [211.125.136.204])
- by ms13.sony.co.jp (R8/Sony) with ESMTP id n0G8lgQX011903
- for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 17:47:42 +0900 (JST)
-Date: Fri, 16 Jan 2009 17:45:51 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: jgarzik@pobox.com, linville@tuxdriver.com
-Subject: [PATCH 0/2] PS3: gelic: convert to net_device_ops
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Geoff Levand <geoffrey.levand@am.sony.com>
-Message-Id: <20090116173633.0B69.40F06B3A@sm.sony.co.jp> (sfid-20090116_105517_970158_27F93679)
+	Fri, 23 Jan 2009 17:56:29 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so5803705wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 14:56:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <b6c5339f0901231027j22c9c797x6ad3a29b719eee99@mail.gmail.com>
+References: <1232672850.7913.6.camel@maxim-laptop>
+	 <1232733061.6513.2.camel@maxim-laptop>
+	 <b6c5339f0901231027j22c9c797x6ad3a29b719eee99@mail.gmail.com>
+Date: Fri, 23 Jan 2009 17:56:28 -0500
+Message-ID: <b6c5339f0901231456g1b749430v28890b95e1c06337@mail.gmail.com> (sfid-20090123_235634_253372_A196C43B)
+Subject: Re: [BUG] latest wireless-testing (compat-wireless) doesn't work with
+	iwl3945
+From: Bob Copeland <bcopeland@gmail.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+[dropped ipw3945 from cc, not intel specific, and I didn't want the
+ moderation bounce]
 
-This patchset converts the gelic driver to net_device_ops
+On Fri, Jan 23, 2009 at 1:27 PM, Bob Copeland <bcopeland@gmail.com> wrote:
+> On Fri, Jan 23, 2009 at 12:51 PM, Maxim Levitsky
+> <maximlevitsky@gmail.com> wrote:
+>> On Fri, 2009-01-23 at 03:07 +0200, Maxim Levitsky wrote:
+>>
+>>
+>> I noticed another wierd bug, somehow iwl3945 manages now to break
+>> suspend to disk (hands on suspend) but not suspend to ram.
+>
+> Probably related to my mac80211 changes :(  Can you boot with
+> no_console_suspend=1?
 
-	#1	PS3: gelic: convert the ethernet part to net_device_ops
-	#2	PS3: gelic: wireless: convert the wireless part to
-	  	net_device_ops
-
-regards
+Actually... I have a pretty good idea why this happens and a nice one
+liner fix.  Can you try changing "create_freezeable_workqueue" in
+net/mac80211/main.c (there's only one) to "create_singlethread_workqueue"?
 
 -- 
-Masakazu Mokuno
-
+Bob Copeland %% www.bobcopeland.com
