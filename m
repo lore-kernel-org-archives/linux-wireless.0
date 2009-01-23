@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34146 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756956AbZASJ1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 04:27:16 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 01:27:16 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from yx-out-2324.google.com ([74.125.44.28]:50405 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756027AbZAWNaW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 08:30:22 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so2142596yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 05:30:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18804.18086.697692.203973@gargle.gargle.HOWL> (sfid-20090119_102722_272595_3105CDAE)
-Date: Mon, 19 Jan 2009 14:53:50 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>
-Subject: Re: [PATCH] mac80211: Reconfigure beacons after a merge run in IBSS mode
-In-Reply-To: <1232355388.3799.12.camel@johannes>
-References: <18804.11602.400684.88722@gargle.gargle.HOWL>
-	<1232353772.3799.1.camel@johannes>
-	<18804.16004.937429.850079@gargle.gargle.HOWL>
-	<1232355388.3799.12.camel@johannes>
+Date: Fri, 23 Jan 2009 13:30:21 +0000
+Message-ID: <e27b78a40901230530h192a8030l6905089df2a5822d@mail.gmail.com> (sfid-20090123_143030_485292_592B857C)
+Subject: ath5k mesh in 2.6.28?
+From: Keir <keirlawson@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> > Yep, I did remember the earlier discussion, this seemed like a quick fix
-> > for my IBSS troubles :)
-> 
-> :)
-> How do you disable beaconing to start with though?
+Hi,
 
-We don't, and it seems to work, except that the beacons have to be reconfigured
-on returning to the home channel.
+According to the 802.11s website it seems to claim that mesh
+networking is supported for ath5k devices in kernel 2.6.28, however,
+upon running ifconfig mesh0 up (having previously created the mesh
+device using iw) I get "SIOCSIFFLAGS: Operation not supported".  I
+have made sure to compile my kernel with the o11s stack, and a
+previous wireless-testing kernel had mesh working on the same
+hardware.  Anyone have any idea as to what might be wrong?
 
-Sujith
+Cheers
+
+Keir
