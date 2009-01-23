@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f13.google.com ([209.85.217.13]:59277 "EHLO
-	mail-gx0-f13.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757681AbZAFWgf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 17:36:35 -0500
-Received: by gxk6 with SMTP id 6so6419090gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 14:36:34 -0800 (PST)
-Message-ID: <445f43ac0901061436t29cd66acy8ad35181e4430ce6@mail.gmail.com> (sfid-20090106_233654_130851_C23C0860)
-Date: Tue, 6 Jan 2009 14:36:34 -0800
-From: "Javier Cardona" <javier@cozybit.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: firmware for GSPI '8686 available
-Cc: "Andrey Yurovsky" <andrey@cozybit.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	libertas-dev@lists.infradead.org,
-	"Colin McCabe" <colin@cozybit.com>
-In-Reply-To: <1231280724.3767.15.camel@johannes>
+Received: from mail.atheros.com ([12.36.123.2]:41248 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757406AbZAWXDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 18:03:15 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 15:03:15 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] iw: fix typo, add few references
+Date: Fri, 23 Jan 2009 15:02:38 -0800
+Message-ID: <1232751758-23329-1-git-send-email-lrodriguez@atheros.com> (sfid-20090124_000320_851339_7C3D56DE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <45e8e6c40901061413n1a984e58n8e1643caa1fd481e@mail.gmail.com>
-	 <1231280724.3767.15.camel@johannes>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+This fixes a small typo s/ip/iw, and adds references
+to the other new wireless subsystem userspace applications/files.
+Lets also point users to the iw wiki as it has lots of good stuff.
 
-On Tue, Jan 6, 2009 at 2:25 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2009-01-06 at 14:13 -0800, Andrey Yurovsky wrote:
->> Marvell will make the 88W8686 GSPI firmware available for public
->> download on their website in the next weeks.  In the meantime we've
->> uploaded it to our website:
->> http://cozybit.com/projects/gspi8686
->>
->> Please note that you must accept Marvell's license before downloading the files.
->
-> That license seems suitable for inclusion into the linux-firmware
-> repository, would that be doable?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ iw.8 |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-A lawyer could tell.  Not us ;)
-
-Javier
-
+diff --git a/iw.8 b/iw.8
+index 4d13667..2dc57a9 100644
+--- a/iw.8
++++ b/iw.8
+@@ -6,7 +6,7 @@ iw \- show / manipulate wireless devices and their configuration
+ .ad l
+ .in +8
+ .ti -8
+-.B ip
++.B iw
+ .RI [ " OPTIONS " ] " " { " 
+ .BR help " |"
+ .RI ""OBJECT " " COMMAND " }"
+@@ -57,3 +57,8 @@ will print all supported commands.
+ 
+ .SH SEE ALSO
+ .BR ip (8)
++.BR crda (8)
++.BR regdbdump (8)
++.BR regulatory.bin (5)
++
++.BR http://wireless.kernel.org/en/users/Documentation/iw
 -- 
-Javier Cardona
-cozybit Inc.
+1.6.1.rc3.51.g5832d
+
