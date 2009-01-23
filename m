@@ -1,166 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38308 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756612AbZAHSSY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 13:18:24 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 06/11] iwl3945: use hw_params.rx_buf_size
-Date: Thu,  8 Jan 2009 10:19:57 -0800
-Message-Id: <1231438802-10991-7-git-send-email-reinette.chatre@intel.com> (sfid-20090108_191840_860249_4D38B4F6)
-In-Reply-To: <1231438802-10991-6-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1231438802-10991-1-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-2-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-3-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-4-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-5-git-send-email-reinette.chatre@intel.com>
- <1231438802-10991-6-git-send-email-reinette.chatre@intel.com>
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:49982 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757975AbZAWTvd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 14:51:33 -0500
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Message-Id: <A10073B8-ED72-4333-B042-D181DE0A0026@ing.unibs.it> (sfid-20090123_205151_735218_F4ED40CC)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+To: Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <200901232037.42512.mb@bu3sch.de>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: integration of opensource firmware with b43 kernel driver
+Date: Fri, 23 Jan 2009 20:51:28 +0100
+References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it> <497A05DC.4040101@lwfinger.net> <01F0FEC9-8ECF-4284-9428-701B976286D6@ing.unibs.it> <200901232037.42512.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Winkler, Tomas <tomas.winkler@intel.com>
+On Jan 23, 2009, at 8:37 PM, Michael Buesch wrote:
 
-This patch makes 3945 use of hw_params.rx_buf_size instead of
-IWL_RX_BUF_SIZE. It also renames IWL_RX_BUF_SIZE to IWL_RX_BUF_SIZE_3K
-and moves rx buffer defines into iwl-fh.h.
+> On Friday 23 January 2009 20:24:47 Francesco Gringoli wrote:
+>> On Jan 23, 2009, at 7:01 PM, Larry Finger wrote:
+>>
+>>> Francesco Gringoli wrote:
+>>>> Hello,
+>>>>
+>>>> we have been testing the firmware for a week now and it seems
+>>>> stable. I
+>>>> personally tested it also on a Linksys WRT54GL and it works both in
+>>>> station and in AP modes. I collected the feedbacks that some of you
+>>>> sent
+>>>> and it seems that the firmware now runs on these board:
+>>>>
+>>>> - 4306, 4311, 4318, 4320
+>>>
+>>> As a point of clarification, I think this is restricted to the  
+>>> 4311/1
+>>> as the 4311/2 uses ucode13, not ucode5. If you need a tester for an
+>>> open-source version of the 13 firmware, I'm available.
+>> Damn... that would be a very hard writing.... We do not have any
+>> 4311/2 board: at first glance there are more condition registers  
+>> whose
+>> meaning we do not know. Very different hardware, didn't know. Thank
+>> you for the feedback.
+>
+> Well, if you didn't notice it already, there are a zillion different  
+> flavors
+> of the broadcom wireless chip out there. So if you buy a random  
+> device, you're almost
+> guaranteed that you don't have that flavor already. ;)
+Ehm... I begin to notice now... we were so engaged in understanding  
+the tx state machine that we lost this _huge_  detail(!). They  
+(Broadcom) should have plenty of engineers to design so many different  
+chipsets.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |   13 -------------
- drivers/net/wireless/iwlwifi/iwl-fh.h       |   15 +++++++++++++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   15 +++++++++------
- 5 files changed, 25 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index fc34a42..1b712e3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2486,7 +2486,7 @@ int iwl3945_hw_set_hw_params(struct iwl_priv *priv)
- 		return -ENOMEM;
- 	}
- 
--	priv->hw_params.rx_buf_size = IWL_RX_BUF_SIZE;
-+	priv->hw_params.rx_buf_size = IWL_RX_BUF_SIZE_3K;
- 	priv->hw_params.max_pkt_size = 2342;
- 	priv->hw_params.max_rxq_size = RX_QUEUE_SIZE;
- 	priv->hw_params.max_rxq_log = RX_QUEUE_SIZE_LOG;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index be30134..491313b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -96,7 +96,6 @@ enum iwl3945_antenna {
-  * else RTS for data/management frames where MPDU is larger
-  *   than RTS value.
-  */
--#define IWL_RX_BUF_SIZE           3000U
- #define DEFAULT_RTS_THRESHOLD     2347U
- #define MIN_RTS_THRESHOLD         0U
- #define MAX_RTS_THRESHOLD         2347U
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-index e751c53..ed6baa5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965-hw.h
-@@ -110,19 +110,6 @@
- 
- #define IWL_DEFAULT_TX_RETRY  15
- 
--#define RX_QUEUE_SIZE                         256
--#define RX_QUEUE_MASK                         255
--#define RX_QUEUE_SIZE_LOG                     8
--
--/*
-- * RX related structures and functions
-- */
--#define RX_FREE_BUFFERS 64
--#define RX_LOW_WATERMARK 8
--
--/* Size of one Rx buffer in host DRAM */
--#define IWL_RX_BUF_SIZE_4K (4 * 1024)
--#define IWL_RX_BUF_SIZE_8K (8 * 1024)
- 
- /* Sizes and addresses for instruction and data memory (SRAM) in
-  * 4965's embedded processor.  Driver access is via HBUS_TARG_MEM_* regs. */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index a72aa1b..ad5a24e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -399,6 +399,21 @@
-  */
- #define FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN	(0x00000002)
- 
-+#define RX_QUEUE_SIZE                         256
-+#define RX_QUEUE_MASK                         255
-+#define RX_QUEUE_SIZE_LOG                     8
-+
-+/*
-+ * RX related structures and functions
-+ */
-+#define RX_FREE_BUFFERS 64
-+#define RX_LOW_WATERMARK 8
-+
-+/* Size of one Rx buffer in host DRAM */
-+#define IWL_RX_BUF_SIZE_3K (3 * 1000) /* 3945 only */
-+#define IWL_RX_BUF_SIZE_4K (4 * 1024)
-+#define IWL_RX_BUF_SIZE_8K (8 * 1024)
-+
- /**
-  * struct iwl_rb_status - reseve buffer status
-  * 	host memory mapped FH registers
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index f72ec15..a4c44d2 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3287,7 +3287,8 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv)
- 
- 		/* Alloc a new receive buffer */
- 		rxb->skb =
--		    alloc_skb(IWL_RX_BUF_SIZE, __GFP_NOWARN | GFP_ATOMIC);
-+		    alloc_skb(priv->hw_params.rx_buf_size,
-+				__GFP_NOWARN | GFP_ATOMIC);
- 		if (!rxb->skb) {
- 			if (net_ratelimit())
- 				IWL_CRIT(priv, ": Can not allocate SKB buffers\n");
-@@ -3309,9 +3310,10 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv)
- 		list_del(element);
- 
- 		/* Get physical address of RB/SKB */
--		rxb->real_dma_addr =
--		    pci_map_single(priv->pci_dev, rxb->skb->data,
--				   IWL_RX_BUF_SIZE, PCI_DMA_FROMDEVICE);
-+		rxb->real_dma_addr = pci_map_single(priv->pci_dev,
-+						rxb->skb->data,
-+						priv->hw_params.rx_buf_size,
-+						PCI_DMA_FROMDEVICE);
- 		list_add_tail(&rxb->list, &rxq->rx_free);
- 		rxq->free_count++;
- 	}
-@@ -3460,7 +3462,7 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
- 		rxq->queue[i] = NULL;
- 
- 		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->real_dma_addr,
--					    IWL_RX_BUF_SIZE,
-+					    priv->hw_params.rx_buf_size,
- 					    PCI_DMA_FROMDEVICE);
- 		pkt = (struct iwl_rx_packet *)rxb->skb->data;
- 
-@@ -3510,7 +3512,8 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
- 		}
- 
- 		pci_unmap_single(priv->pci_dev, rxb->real_dma_addr,
--				 IWL_RX_BUF_SIZE, PCI_DMA_FROMDEVICE);
-+				priv->hw_params.rx_buf_size,
-+				PCI_DMA_FROMDEVICE);
- 		spin_lock_irqsave(&rxq->lock, flags);
- 		list_add_tail(&rxb->list, &priv->rxq.rx_used);
- 		spin_unlock_irqrestore(&rxq->lock, flags);
--- 
-1.5.4.3
-
+Cheers,
+-FG
