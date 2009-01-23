@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:42095 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756957AbZAWQEO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 11:04:14 -0500
-Received: by ewy13 with SMTP id 13so3698997ewy.13
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 08:04:12 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 1/3] rt2x00: rt2x00_rev() should return u32
-Date: Fri, 23 Jan 2009 17:03:06 +0100
-Cc: rt2400-devel@lists.sourceforge.net,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:42536 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755076AbZAWCVC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 21:21:02 -0500
+Cc: linux-wireless@vger.kernel.org, maximlevitsky@gmail.com,
+	kalle.valo@iki.fi, samuel@sortiz.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Fri, 23 Jan 2009 03:21:00 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090123021413.GB3177@tuxdriver.com>
+Message-ID: <20090123022100.270690@gmx.net> (sfid-20090123_032113_717868_48792263)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901231703.06609.IvDoorn@gmail.com> (sfid-20090123_170419_416005_0783BDF2)
+References: <4979269F.1060500@lwfinger.net>
+ <20090123021413.GB3177@tuxdriver.com>
+Subject: Re: Regression caused by commit
+	e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Larry.Finger@lwfinger.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The "rev" field in chipset definition is an u32,
-which means that rt2x00_rev() which returns that field
-should be of the same type.
+Hello!
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> I reverted this in wireless-testing (and it never went anywhere
+> upstream).  Of course, now it looks like Samuel has a fix...maybe
+> I'll combine them...
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index cc56637..d39e834 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -868,7 +868,7 @@ static inline char rt2x00_rf(const struct rt2x00_chip *chipset, const u16 chip)
- 	return (chipset->rf == chip);
- }
- 
--static inline u16 rt2x00_rev(const struct rt2x00_chip *chipset)
-+static inline u32 rt2x00_rev(const struct rt2x00_chip *chipset)
- {
- 	return chipset->rev;
- }
--- 
-1.5.6.1
+I will check this problem and look for the cleanest solution.
 
+Sorry, for the trouble. :(
+
+Regards
+Alina
+
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
