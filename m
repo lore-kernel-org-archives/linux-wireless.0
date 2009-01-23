@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:57287 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752036AbZASSsw (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:49112 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754704AbZAWDjg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 13:48:52 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Artur Skawina <art.08.09@gmail.com>
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-Date: Mon, 19 Jan 2009 19:48:57 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <494698AF.4020204@gmail.com> <200901190126.58392.chunkeey@web.de> <4974C32D.4030802@gmail.com>
-In-Reply-To: <4974C32D.4030802@gmail.com>
+	Thu, 22 Jan 2009 22:39:36 -0500
+Message-ID: <49793BE7.3020509@lwfinger.net> (sfid-20090123_043941_213202_831B7915)
+Date: Thu, 22 Jan 2009 21:39:19 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901191948.57069.chunkeey@web.de> (sfid-20090119_194857_338440_D7D57883)
+To: Felix Fietkau <nbd@openwrt.org>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	=?ISO-8859-1?Q?Mart=EDn_?= =?ISO-8859-1?Q?Ernesto_Barreyro?=
+	<barreyromartin@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Minstrel rate-setting question
+References: <BLU144-W4266C309A1F9CD0F4B5C21B2D90@phx.gbl>	 <496CE438.6020408@lwfinger.net>	 <BLU144-W164FB7B41C703C52AAAF9BB2D90@phx.gbl>	 <496D2772.4060104@lwfinger.net>	 <BLU144-W254C2D7845CD9E851F745DB2D60@phx.gbl>	 <496D3118.7060906@lwfinger.net>	 <BLU144-W40A7F7D25BE3B92EABD5C7B2D60@phx.gbl> <496D665A.90608@lwfinger.net>	 <BLU144-W102912CECD6EE0D07D1BD8B2D50@phx.gbl>	 <4972B1E7.7000005@lwfinger.net>	 <BLU144-W211FE279F46EA07E0D35E0B2D10@phx.gbl>	 <4977612D.7050500@lwfinger.net> <1232664643.4589.5.camel@note-tatin> <49790C43.5050100@lwfinger.net> <497929C1.9060804@openwrt.org>
+In-Reply-To: <497929C1.9060804@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 19 January 2009 19:15:09 Artur Skawina wrote:
-> Christian Lamparter wrote:
-> > On Monday 19 January 2009 00:27:02 Artur Skawina wrote:
-> >> Artur Skawina wrote:
-> >>> didn't trigger anything here, just the usual:
-> >>>
-> >>> BUG kmalloc-4096: Poison overwritten
-> 
-> >> This is almost 100% reproducible; sometimes the machine freezes instead.
-> 
-> Here's an interesting sequence:
-> 
-> 1) a TX urb is submitted.
-> 2) p54u_rx_cb() => p54_rx_frame_sent(), which does kfree_skb( the_skb_in_(1) ).
-> 3) p54u_tx_cb() for (1) is called with the same, now freed, skb. kaboom.
-> 
-> IOW the skb is freed before the usb completion runs.
+Felix Fietkau wrote:
+> I believe that it's not minstrel's fault. According to the information that
+> I have about RTL8187L, the chip implements rate fallback. If the chip changes
+> rates during retransmissions, the status information the way you gather it
+> will not be accurate and will trick minstrel into believing that higher rates
+> actually work (which in fact they don't). 
+> Please do some transmissions at 54M and run a monitor mode capture on a different
+> card to see if it changes the rate during transmission and how frequently it
+> uses one rate before falling back (if indeed my theory is correct).
+> This information could be used to provide some more accurate feedback through
+> multi-rate retry status information.
 
-Well, the sequence should be:
 
-1) p54_tx gets called
-1.1) one IRQ urb is submitted
-1.2) one BULK urb is submitted
-2) the firmware acks that it got the urbs
-2.1) p54u_tx_cb is called for the IRQ urb. which frees the small buffer
-2.2) p54u_tx_cb is called for the BULK urb. which only removes the net2280_tx_hdr from the skb.
-[time passes]
-3) firmware is finished sending.
-3.1) p54u_rx_cb gets called
-       => p54_rx_frame_sent passed the feedback to mac80211
+I believe you have the clue. There is a register named RATE_FALLBACK
+and a bit called RTL818X_RATE_FALLBACK_ENABLE. I'm testing a patch
+that leaves this bit unset.
 
-> Somehow i don't think this is the reason for the corruption, but it certainly
-> seems to be responsible for some, if not all, of the crashes/panics.
-dunno... we should see a bit more fallout, because skb_pull changes skb->data and skb->len. 
+Thanks,
 
-Regards,
-	Chr
+Larry
