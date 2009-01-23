@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54882 "EHLO mx2.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:34241 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753934AbZA0QnY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 11:43:24 -0500
-Subject: Re: [PATCH 0/7 v2] airo: cleanups and simplifications
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1233047115.4012.10.camel@johannes.local>
-References: <1232748914.447.2.camel@localhost.localdomain>
-	 (sfid-20090123_231647_256810_FBC442D8)  <1233047115.4012.10.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 27 Jan 2009 11:41:50 -0500
-Message-Id: <1233074510.25367.9.camel@localhost.localdomain> (sfid-20090127_174329_009202_B6F46950)
-Mime-Version: 1.0
+	id S1755793AbZAWVmr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 16:42:47 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/15] iwlwifi driver updates 01/23/2009
+Date: Fri, 23 Jan 2009 13:45:08 -0800
+Message-Id: <1232747123-7261-1-git-send-email-reinette.chatre@intel.com> (sfid-20090123_224257_444134_E3EECBA9)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-01-27 at 10:05 +0100, Johannes Berg wrote:
-> On Fri, 2009-01-23 at 17:15 -0500, Dan Williams wrote:
-> > airo needs some hot sexy love.  come and get your love come and get your
-> > love now.
-> 
-> Still needs some!
+This series contains mostly patches for the 3945 porting effort.
+In addition this series contains the following:
+- a workaround to reduce off channel reception for 4965 when in monitor
+mode (patches 1 and 2)
+- a kernel oops fix (patch 14) tracked in
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1861
+- a printk formatting fix (patch 15)
 
-What are you using to generate the warnings below?  I couldn't get them
-with C=2 and sparse...
+[PATCH 01/15] iwlwifi: add test to determine if interface in monitor mode
+[PATCH 02/15] iwlagn: reduce off channel reception for 4965
+[PATCH 03/15] iwl3945: Define send_tx_power
+[PATCH 04/15] iwl3945: Use iwlcore scan code
+[PATCH 05/15] iwlwifi: make iwl_tx_queue->tfds void*
+[PATCH 06/15] iwl3945: Use iwlcore TX queue management routines
+[PATCH 07/15] iwl3945: Use iwl-eeprom.c routines
+[PATCH 08/15] iwl3945: Use the iwlcore geos routines
+[PATCH 09/15] iwlwifi: Remove IWL3945_DEBUG
+[PATCH 10/15] iwl3945: Getting rid of priv->antenna
+[PATCH 11/15] iwl3945: Add restart_fw module parameter
+[PATCH 12/15] iwl3945: Remaining host command cleanups
+[PATCH 13/15] iwlwifi: fix probe mask for 39 scan API
+[PATCH 14/15] iwlwifi: fix kernel oops when ucode DMA memory allocation failure
+[PATCH 15/15] iwlwifi: iwl_tx_queue_alloc : fix warning in printk formatting
 
-Dan
 
-> 
-> +drivers/net/wireless/airo.c:3846:8: warning: symbol 'i' shadows an earlier one
-> +drivers/net/wireless/airo.c:3757:6: originally declared here
-> +drivers/net/wireless/airo.c:3853:8: warning: symbol 'i' shadows an earlier one
-> +drivers/net/wireless/airo.c:3757:6: originally declared here
-> +drivers/net/wireless/airo.c:3867:7: warning: symbol 'i' shadows an earlier one
-> +drivers/net/wireless/airo.c:3757:6: originally declared here
-> +drivers/net/wireless/airo.c:1315:33: warning: restricted degrades to integer
-> +drivers/net/wireless/airo.c:2056:10: warning: incorrect type in assignment (different base types)
-> +drivers/net/wireless/airo.c:2056:10:    expected restricted unsigned short [usertype] status
-> +drivers/net/wireless/airo.c:2056:10:    got unsigned short [unsigned] [usertype] status
-> +drivers/net/wireless/airo.c:2108:14: warning: incorrect type in initializer (different signedness)
-> +drivers/net/wireless/airo.c:2108:14:    expected unsigned int [usertype] *fids
-> +drivers/net/wireless/airo.c:2108:14:    got int *<noident>
-> +drivers/net/wireless/airo.c:2132:14: warning: incorrect type in initializer (different signedness)
-> +drivers/net/wireless/airo.c:2132:14:    expected unsigned int [usertype] *fids
-> +drivers/net/wireless/airo.c:2132:14:    got int *<noident>
-> +drivers/net/wireless/airo.c:2173:14: warning: incorrect type in initializer (different signedness)
-> +drivers/net/wireless/airo.c:2173:14:    expected unsigned int [usertype] *fids
-> +drivers/net/wireless/airo.c:2173:14:    got int *<noident>
-> +drivers/net/wireless/airo.c:2197:14: warning: incorrect type in initializer (different signedness)
-> +drivers/net/wireless/airo.c:2197:14:    expected unsigned int [usertype] *fids
-> +drivers/net/wireless/airo.c:2197:14:    got int *<noident>
-> +drivers/net/wireless/airo.c:3211:11: warning: cast to restricted type
-> 
-> johannes
+Thank you
 
+Reinette
