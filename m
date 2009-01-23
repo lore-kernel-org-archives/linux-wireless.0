@@ -1,40 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12862 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:61315 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933841AbZARPag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 10:30:36 -0500
-Received: from mail.atheros.com ([10.10.20.108])
+	id S1750904AbZAWFyO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 00:54:14 -0500
+Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 07:30:36 -0800
-Date: Sun, 18 Jan 2009 07:30:04 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
-	disablement
-Message-ID: <20090118153004.GS29609@tesla> (sfid-20090118_163054_682702_3F541694)
-References: <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232097827.3854.25.camel@johannes> <20090116163245.GF29609@tesla> <1232138101.3745.7.camel@johannes> <20090116210930.GL29609@tesla> <1232268516.3877.10.camel@johannes>
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 21:54:14 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232268516.3877.10.camel@johannes>
+Message-ID: <18809.23220.284686.330512@gargle.gargle.HOWL> (sfid-20090123_065434_307785_B87D42F7)
+Date: Fri, 23 Jan 2009 11:20:44 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 1/3] ath9k: Fix MCS rates registration bug for AR9285
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 18, 2009 at 12:48:36AM -0800, Johannes Berg wrote:
-> On Fri, 2009-01-16 at 13:09 -0800, Luis R. Rodriguez wrote:
-> 
-> > I can put a note, if that helps, or are you strongly opposed to this? :)
-> > Just an itch to scratch really, have you seen the output of iwlist on
-> > disabled channels? It can get long on radar/no-ibss channels. We can also
-> > handle this in userspace but seems pointles if the channels is disabled.
-> 
-> Well, come to think of it, at least for programmers it might be
-> confusing when they know they've put some flag into orig_flags, and then
-> it disappears? I'm not really _strongly_ opposed to this, but I really
-> just don't see the point :)
+AR9285 based devices support only single stream MCS rates.
+This patch fixes a bug where dual stream stream rates were
+also being registered.
 
-Have you bothered calling iw list with a long list of crap on the channels?
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   23 ++++++++++++++++++-----
+ 1 files changed, 18 insertions(+), 5 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 8ad927a..4ff266b 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -860,7 +860,8 @@ static void ath_key_delete(struct ath_softc *sc, struct ieee80211_key_conf *key)
+ 	}
+ }
+ 
+-static void setup_ht_cap(struct ieee80211_sta_ht_cap *ht_info)
++static void setup_ht_cap(struct ath_softc *sc,
++			 struct ieee80211_sta_ht_cap *ht_info)
+ {
+ #define	ATH9K_HT_CAP_MAXRXAMPDU_65536 0x3	/* 2 ^ 16 */
+ #define	ATH9K_HT_CAP_MPDUDENSITY_8 0x6		/* 8 usec */
+@@ -873,10 +874,22 @@ static void setup_ht_cap(struct ieee80211_sta_ht_cap *ht_info)
+ 
+ 	ht_info->ampdu_factor = ATH9K_HT_CAP_MAXRXAMPDU_65536;
+ 	ht_info->ampdu_density = ATH9K_HT_CAP_MPDUDENSITY_8;
++
+ 	/* set up supported mcs set */
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
+-	ht_info->mcs.rx_mask[0] = 0xff;
+-	ht_info->mcs.rx_mask[1] = 0xff;
++
++	switch(sc->sc_rx_chainmask) {
++	case 1:
++		ht_info->mcs.rx_mask[0] = 0xff;
++		break;
++	case 5:
++	case 7:
++	default:
++		ht_info->mcs.rx_mask[0] = 0xff;
++		ht_info->mcs.rx_mask[1] = 0xff;
++		break;
++	}
++
+ 	ht_info->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
+ }
+ 
+@@ -1545,9 +1558,9 @@ int ath_attach(u16 devid, struct ath_softc *sc)
+ 	hw->rate_control_algorithm = "ath9k_rate_control";
+ 
+ 	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_HT) {
+-		setup_ht_cap(&sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
++		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+ 		if (test_bit(ATH9K_MODE_11A, sc->sc_ah->ah_caps.wireless_modes))
+-			setup_ht_cap(&sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
++			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+ 	}
+ 
+ 	hw->wiphy->bands[IEEE80211_BAND_2GHZ] =	&sc->sbands[IEEE80211_BAND_2GHZ];
+-- 
+1.6.1
+
