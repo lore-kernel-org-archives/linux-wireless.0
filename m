@@ -1,54 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:34772 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756912AbZALUre convert rfc822-to-8bit (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:31706 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756041AbZAWQD7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 15:47:34 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] p54: fix "=?utf-8?q?=E2=80=98ret=E2=80=99_may_be_used?= uninitialized" warning
-Date: Mon, 12 Jan 2009 21:47:39 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <> <1231789741-13433-4-git-send-email-linville@tuxdriver.com> <1231789741-13433-5-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1231789741-13433-5-git-send-email-linville@tuxdriver.com>
+	Fri, 23 Jan 2009 11:03:59 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so2174695yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 08:03:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200901122147.39055.chunkeey@web.de> (sfid-20090112_214745_209846_B541D918)
+Date: Fri, 23 Jan 2009 16:03:58 +0000
+Message-ID: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com> (sfid-20090123_170405_462674_D7D24DD9)
+Subject: Crashing on ping?
+From: Keir <keirlawson@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 January 2009 20:49:01 John W. Linville wrote:
-> drivers/net/wireless/p54/p54common.c: In function =E2=80=98p54_config=
-=E2=80=99:
-> drivers/net/wireless/p54/p54common.c:1853: warning: =E2=80=98ret=E2=80=
-=99 may be used uninitialized in this function
->=20
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-ACK
+I just pulled the latest wireless-testing kernel, however, much like
+the previous wireless-testing kernel I was working on, when attempting
+to ping one node from another on a mesh, using ath5k, the node
+attempting to ping completely freezes after about 7 pings are
+(succesfully) sent.  Anyone have any idea what is going wrong here?
 
-> ---
->  drivers/net/wireless/p54/p54common.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wirel=
-ess/p54/p54common.c
-> index cba89ed..c6a370f 100644
-> --- a/drivers/net/wireless/p54/p54common.c
-> +++ b/drivers/net/wireless/p54/p54common.c
-> @@ -1850,7 +1850,7 @@ static void p54_remove_interface(struct ieee802=
-11_hw *dev,
-> =20
->  static int p54_config(struct ieee80211_hw *dev, u32 changed)
->  {
-> -	int ret;
-> +	int ret =3D 0;
->  	struct p54_common *priv =3D dev->priv;
->  	struct ieee80211_conf *conf =3D &dev->conf;
-> =20
+Cheers
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Keir
