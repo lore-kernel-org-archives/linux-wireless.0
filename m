@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43378 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754672AbZANAGj (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:4896 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352AbZAWR3Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 19:06:39 -0500
-Subject: Re: Warning in latest wireless-testing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <496D2AE4.7000808@lwfinger.net> (sfid-20090114_005957_740853_8987481F)
-References: <496D2AE4.7000808@lwfinger.net>
-	 (sfid-20090114_005957_740853_8987481F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-0/am2KggItvOcPKRRCdR"
-Date: Wed, 14 Jan 2009 01:06:10 +0100
-Message-Id: <1231891570.28311.0.camel@johannes> (sfid-20090114_010644_013014_26857313)
-Mime-Version: 1.0
+	Fri, 23 Jan 2009 12:29:24 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2622482fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 09:29:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <b6c5339f0901230717h605d2fbaibda8b720c6191abf@mail.gmail.com>
+References: <e27b78a40901230530h192a8030l6905089df2a5822d@mail.gmail.com>
+	 <b6c5339f0901230717h605d2fbaibda8b720c6191abf@mail.gmail.com>
+Date: Fri, 23 Jan 2009 09:29:22 -0800
+Message-ID: <45e8e6c40901230929r6efbf19xbe2c32bef92db8e@mail.gmail.com> (sfid-20090123_182929_457435_650E3377)
+Subject: Re: ath5k mesh in 2.6.28?
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Keir <keirlawson@gmail.com>, linux-wireless@vger.kernel.org,
+	greg@kroah.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Sorry, looks like that's my mistake (I thought the patch had made it
+in).  Greg -- thanks for queuing the patch.
 
---=-0/am2KggItvOcPKRRCdR
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+For completeness, I should note that ath5k mesh is later broken by
+"ath5k: Update PCU code" and fixed again (hopefully both in by
+2.6.29!) by "ath5k: Correct usage of AR5K_CFG_ADHOC"
 
-On Tue, 2009-01-13 at 17:59 -0600, Larry Finger wrote:
-> In the latest pull from wireless testing, I get the following warning:
->=20
->   CC [M]  drivers/net/wireless/b43/main.o
-> drivers/net/wireless/b43/main.c: In function =E2=80=98b43_op_set_key=E2=
-=80=99:
-> drivers/net/wireless/b43/main.c:3636: warning: pointer type mismatch
-> in conditional expression
+Greg and Keir -- I also suggest Brian's patch, "mac80211: decrement
+ref count to netdev after launching mesh discovery", commit
+05188d21d21dc8976bff13a9ca73a230eef86d40 for stable as it should apply
+there and fixes a bug that will sometimes prevent module unload if a
+mesh interface was active.
 
-That looks like a merge error:
+Thanks,
 
-                b43dbg(wl, "%s hardware based encryption for keyidx: %d, "
-                       "mac: %pM\n",
-                       cmd =3D=3D SET_KEY ? "Using" : "Disabling", key->key=
-idx,
-                       sta ? sta->addr : "<group key>");
-
-It should be something like
-
-u8 bcast[ETH_ALEN] =3D {0xff,...}
-
-sta ? sta->addr : bcast
-
-there.
-
-johannes
-
---=-0/am2KggItvOcPKRRCdR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJbSxqAAoJEKVg1VMiehFYJZMP/1GNLAujvNFKtinP7X6IN+k6
-zB6Unjn9+sm2WQvbyGsnuWlbFQ6fGZyxeYgVAo1f1dhHDyT9Z6kvGE7FIHe9nklv
-9tPWGFNdq96cTNeWKVauYS9M69osiCjdYtz8bkCUCNomDvJygV4IQoRF8rqB8eQP
-0gqL8D2Qjr4FMFNXVUpyx44MXHpQeFBxuVn1BZDFVs3LaTo0crx/bTzKPQMuThYP
-lhNknad8KzVg8eKVOJIukSEYD2XRpzyuW23TnlJ73/8DuwzUPNsYShHfLM6uA0qs
-UjLEupLvBmpa5TYB7pYJAW1UcgQjaXhzBFU/YPEXXWS0Kf24w3nq0d+95NnV2lIc
-SQy4Z5na0bmD2eXxuTo/ivfgP6Ujj2sT7U2s2XLvQfYG9fmhJDYAP34id/nOKhaK
-718u2dGkQ9TNxYeQcWFnFZIIcQgnirpBSCnuLsLQlK9Xx2sMEOcisUh8PNbb3Ft3
-teSEjyKf7TK6kGVUu3c9U1WX43K9g5/51UffCSpobhzuvsewdSm50V2X7Yl48T0G
-RjMYTztCeL2yXBTpsTBBsF1sSr1WJGzaKnQoUgW9lurmqCb1bRAWs4VDDpoMWuof
-9uBXgY9GLKBI4q4tqu1kfGhh2IurR0hCQ4wF7oueIcntlTnH/36qPgMZvygc+eZT
-wjOsail8s2IPM4t7clMs
-=6fNW
------END PGP SIGNATURE-----
-
---=-0/am2KggItvOcPKRRCdR--
-
+On Fri, Jan 23, 2009 at 7:17 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Fri, Jan 23, 2009 at 8:30 AM, Keir <keirlawson@gmail.com> wrote:
+>> Hi,
+>>
+>> According to the 802.11s website it seems to claim that mesh
+>> networking is supported for ath5k devices in kernel 2.6.28, however,
+>> upon running ifconfig mesh0 up (having previously created the mesh
+>> device using iw) I get "SIOCSIFFLAGS: Operation not supported".
+>
+> 2.6.28 does not support mesh, at least from looking at the code,
+> ath5k_add_interface has:
+>
+>    switch (conf->type) {
+>    case NL80211_IFTYPE_STATION:
+>    case NL80211_IFTYPE_ADHOC:
+>    case NL80211_IFTYPE_MONITOR:
+>        sc->opmode = conf->type;
+>        break;
+>    default:
+>        ret = -EOPNOTSUPP;
+>        goto end;
+>    }
+>
+> It needs to at least also have NL80211_IFTYPE_MESH_POINT.
+>
+> Mesh was enabled for 2.6.29 via b706e65b40417e03c2451bb3f92488f3736843fa,
+> so if you need it in 2.6.28 you can ask Greg to pick it up for stable.
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
