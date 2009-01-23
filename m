@@ -1,74 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42328 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757661AbZAWXQy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 18:16:54 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 15:16:54 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless-regdb: add example spec file
-Date: Fri, 23 Jan 2009 15:16:17 -0800
-Message-ID: <1232752577-24011-1-git-send-email-lrodriguez@atheros.com> (sfid-20090124_001658_484065_531ED06B)
+Received: from mail-ew0-f20.google.com ([209.85.219.20]:45883 "EHLO
+	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756752AbZAWJ42 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 04:56:28 -0500
+Received: by ewy13 with SMTP id 13so3350246ewy.13
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 01:56:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20090123071345.270730@gmx.net>
+References: <4979269F.1060500@lwfinger.net>
+	 <20090123021413.GB3177@tuxdriver.com> <4979567D.2020005@lwfinger.net>
+	 <20090123071345.270730@gmx.net>
+Date: Fri, 23 Jan 2009 10:56:25 +0100
+Message-ID: <2d0a357f0901230156w365b16a6n7f7e4444f0d6c297@mail.gmail.com> (sfid-20090123_105634_055243_0A4DCDFA)
+Subject: Re: Regression caused by commit e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, maximlevitsky@gmail.com,
+	kalle.valo@iki.fi, samuel@sortiz.org
+Content-Type: multipart/mixed; boundary=0015174be630f2649204612366f9
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a simple example spec file which can be used
-by RPM distributions. Note that the man page isn't yet
-installed as it has not yet been commited.
+--0015174be630f2649204612366f9
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- wireless-regdb.spec |   35 +++++++++++++++++++++++++++++++++++
- 1 files changed, 35 insertions(+), 0 deletions(-)
- create mode 100644 wireless-regdb.spec
+Hi Alina,
 
-diff --git a/wireless-regdb.spec b/wireless-regdb.spec
-new file mode 100644
-index 0000000..b76d391
---- /dev/null
-+++ b/wireless-regdb.spec
-@@ -0,0 +1,35 @@
-+Summary: Linux wireless regulatory database
-+Name: wireless-regdb
-+Version: 2009.01.15
-+Release: 1
-+License: ISC
-+Group: System Enviroment/Base
-+Source: http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009-01-15.tar.bz2
-+URL: http://wireless.kernel.org/en/developers/Regulatory/
-+Packager: Luis R. Rodriguez <mcgrof@gmail.com>
-+BuildRoot : /var/tmp/%{name}-buildroot
-+Requires: python
-+BuildArch: noarch
-+
-+%define crda_lib /usr/lib/crda
-+
-+%description
-+This package contains the wireless regulatory database used by all
-+cfg80211 based Linux wireless drivers. The wireless database being
-+used is maintained by John Linville, the Linux wireless kernel maintainer
-+http://wireless.kernel.org/en/developers/Regulatory/
-+
-+%prep
-+%setup -n %name-2009-01-15
-+%build
-+%install
-+install -m 755 -d %buildroot/%crda_lib
-+install -m 644 regulatory.bin %buildroot/%{crda_lib}/regulatory.bin
-+%files
-+%crda_lib/regulatory.bin
-+%doc README LICENSE
-+
-+%changelog
-+* Fri Jan 23 2009 - mcgrof@gmail.com
-+- Started wireless-regdb package
-+
--- 
-1.6.1.rc3.51.g5832d
+Version 4 of your patch is working for me against wl
+(master-2009-01-22) and with iwl3945.
+Samuel's patch is obsolete.
 
+Could you please send a separate email containing your new patch v4?
+>>> [PATCH v4] mac80211: Fixed BSSID handling revisited. <<<
+
+My 2nd request is just cosmetics:
+Can you please patch next time against wireless directory (patch is attache=
+d).
+This is just a proposal.
+
+Thanks for your help.
+
+Kind Regards,
+Sedat
+
+On Fri, Jan 23, 2009 at 8:13 AM, Alina Friedrichsen <x-alina@gmx.net> wrote=
+:
+> Hello!
+>
+>> > I reverted this in wireless-testing (and it never went anywhere
+>> > upstream).  Of course, now it looks like Samuel has a fix...maybe
+>> > I'll combine them...
+>>
+>> Samuel's fix works for me.
+>
+> If this works for the others too, I would propose the following patch. Wi=
+thout it, e.g. the beacon messages in IBSS mode are broken, if you set a fi=
+xed BSSID.
+>
+> (The iwl4965 low level driver sends back an error code, if you want to se=
+t a fixed BSSID, so I think, we should simply ignore it, as it will be trie=
+d the next time when the initiated new network join is complete.)
+>
+> Regards
+> Alina
+>
+> --
+> Psssst! Schon vom neuen GMX MultiMessenger geh=C3=B6rt? Der kann`s mit al=
+len: http://www.gmx.net/de/go/multimessenger
+>
+
+--0015174be630f2649204612366f9
+Content-Type: text/x-diff; charset=US-ASCII;
+	name="mac80211-Fixed-BSSID-handling-revisited-v4.patch"
+Content-Disposition: attachment;
+	filename="mac80211-Fixed-BSSID-handling-revisited-v4.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fqaoblgo1
+
+SW5kZXg6IHdpcmVsZXNzLXRlc3RpbmcvbmV0L21hYzgwMjExL21sbWUuYwo9PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0t
+LSB3aXJlbGVzcy10ZXN0aW5nLm9yaWcvbmV0L21hYzgwMjExL21sbWUuYworKysgd2lyZWxlc3Mt
+dGVzdGluZy9uZXQvbWFjODAyMTEvbWxtZS5jCkBAIC0xNjE0LDYgKzE2MTQsNyBAQAogCiAJaWVl
+ZTgwMjExX3N0YV9kZWZfd21tX3BhcmFtcyhzZGF0YSwgYnNzKTsKIAorCWlmc3RhLT5mbGFncyB8
+PSBJRUVFODAyMTFfU1RBX1BSRVZfQlNTSURfU0VUOwogCWlmc3RhLT5zdGF0ZSA9IElFRUU4MDIx
+MV9TVEFfTUxNRV9JQlNTX0pPSU5FRDsKIAltb2RfdGltZXIoJmlmc3RhLT50aW1lciwgamlmZmll
+cyArIElFRUU4MDIxMV9JQlNTX01FUkdFX0lOVEVSVkFMKTsKIApAQCAtMjE3NywxOSArMjE3OCwx
+OCBAQAogCWludCBpOwogCWludCByZXQ7CiAKLSNpZiAwCi0JLyogRWFzaWVyIHRlc3RpbmcsIHVz
+ZSBmaXhlZCBCU1NJRC4gKi8KLQltZW1zZXQoYnNzaWQsIDB4ZmUsIEVUSF9BTEVOKTsKLSNlbHNl
+Ci0JLyogR2VuZXJhdGUgcmFuZG9tLCBub3QgYnJvYWRjYXN0LCBsb2NhbGx5IGFkbWluaXN0ZXJl
+ZCBCU1NJRC4gTWl4IGluCi0JICogb3duIE1BQyBhZGRyZXNzIHRvIG1ha2Ugc3VyZSB0aGF0IGRl
+dmljZXMgdGhhdCBkbyBub3QgaGF2ZSBwcm9wZXIKLQkgKiByYW5kb20gbnVtYmVyIGdlbmVyYXRv
+ciBnZXQgZGlmZmVyZW50IEJTU0lELiAqLwotCWdldF9yYW5kb21fYnl0ZXMoYnNzaWQsIEVUSF9B
+TEVOKTsKLQlmb3IgKGkgPSAwOyBpIDwgRVRIX0FMRU47IGkrKykKLQkJYnNzaWRbaV0gXj0gc2Rh
+dGEtPmRldi0+ZGV2X2FkZHJbaV07Ci0JYnNzaWRbMF0gJj0gfjB4MDE7Ci0JYnNzaWRbMF0gfD0g
+MHgwMjsKLSNlbmRpZgorCWlmIChzZGF0YS0+dS5zdGEuZmxhZ3MgJiBJRUVFODAyMTFfU1RBX0JT
+U0lEX1NFVCkgeworCQltZW1jcHkoYnNzaWQsIGlmc3RhLT5ic3NpZCwgRVRIX0FMRU4pOworCX0g
+ZWxzZSB7CisJCS8qIEdlbmVyYXRlIHJhbmRvbSwgbm90IGJyb2FkY2FzdCwgbG9jYWxseSBhZG1p
+bmlzdGVyZWQgQlNTSUQuIE1peCBpbgorCQkgKiBvd24gTUFDIGFkZHJlc3MgdG8gbWFrZSBzdXJl
+IHRoYXQgZGV2aWNlcyB0aGF0IGRvIG5vdCBoYXZlIHByb3BlcgorCQkgKiByYW5kb20gbnVtYmVy
+IGdlbmVyYXRvciBnZXQgZGlmZmVyZW50IEJTU0lELiAqLworCQlnZXRfcmFuZG9tX2J5dGVzKGJz
+c2lkLCBFVEhfQUxFTik7CisJCWZvciAoaSA9IDA7IGkgPCBFVEhfQUxFTjsgaSsrKQorCQkJYnNz
+aWRbaV0gXj0gc2RhdGEtPmRldi0+ZGV2X2FkZHJbaV07CisJCWJzc2lkWzBdICY9IH4weDAxOwor
+CQlic3NpZFswXSB8PSAweDAyOworCX0KIAogCXByaW50ayhLRVJOX0RFQlVHICIlczogQ3JlYXRp
+bmcgbmV3IElCU1MgbmV0d29yaywgQlNTSUQgJXBNXG4iLAogCSAgICAgICBzZGF0YS0+ZGV2LT5u
+YW1lLCBic3NpZCk7CkBAIC0yMjUwLDYgKzIyNTAsOSBAQAogCQkgICAgbWVtY21wKGlmc3RhLT5z
+c2lkLCBic3MtPnNzaWQsIGJzcy0+c3NpZF9sZW4pICE9IDAKIAkJICAgIHx8ICEoYnNzLT5jYXBh
+YmlsaXR5ICYgV0xBTl9DQVBBQklMSVRZX0lCU1MpKQogCQkJY29udGludWU7CisJCWlmICgoaWZz
+dGEtPmZsYWdzICYgSUVFRTgwMjExX1NUQV9CU1NJRF9TRVQpICYmCisJCSAgICBtZW1jbXAoaWZz
+dGEtPmJzc2lkLCBic3MtPmJzc2lkLCBFVEhfQUxFTikgIT0gMCkKKwkJCWNvbnRpbnVlOwogI2lm
+ZGVmIENPTkZJR19NQUM4MDIxMV9JQlNTX0RFQlVHCiAJCXByaW50ayhLRVJOX0RFQlVHICIgICBi
+c3NpZD0lcE0gZm91bmRcbiIsIGJzcy0+YnNzaWQpOwogI2VuZGlmIC8qIENPTkZJR19NQUM4MDIx
+MV9JQlNTX0RFQlVHICovCkBAIC0yMjY2LDcgKzIyNjksOSBAQAogCQkgICAgICAgIiVwTVxuIiwg
+YnNzaWQsIGlmc3RhLT5ic3NpZCk7CiAjZW5kaWYgLyogQ09ORklHX01BQzgwMjExX0lCU1NfREVC
+VUcgKi8KIAotCWlmIChmb3VuZCAmJiBtZW1jbXAoaWZzdGEtPmJzc2lkLCBic3NpZCwgRVRIX0FM
+RU4pICE9IDApIHsKKwlpZiAoZm91bmQgJiYKKwkgICAgKCghKGlmc3RhLT5mbGFncyAmIElFRUU4
+MDIxMV9TVEFfUFJFVl9CU1NJRF9TRVQpKSB8fAorCSAgICAgbWVtY21wKGlmc3RhLT5ic3NpZCwg
+YnNzaWQsIEVUSF9BTEVOKSAhPSAwKSkgewogCQlpbnQgcmV0OwogCQlpbnQgc2VhcmNoX2ZyZXE7
+CiAKQEAgLTI2MDQsMTYgKzI2MDksMTYgQEAKIAkJbWVtc2V0KGlmc3RhLT5zc2lkLCAwLCBzaXpl
+b2YoaWZzdGEtPnNzaWQpKTsKIAkJbWVtY3B5KGlmc3RhLT5zc2lkLCBzc2lkLCBsZW4pOwogCQlp
+ZnN0YS0+c3NpZF9sZW4gPSBsZW47Ci0JCWlmc3RhLT5mbGFncyAmPSB+SUVFRTgwMjExX1NUQV9Q
+UkVWX0JTU0lEX1NFVDsKIAl9CiAKKwlpZnN0YS0+ZmxhZ3MgJj0gfklFRUU4MDIxMV9TVEFfUFJF
+Vl9CU1NJRF9TRVQ7CisKIAlpZiAobGVuKQogCQlpZnN0YS0+ZmxhZ3MgfD0gSUVFRTgwMjExX1NU
+QV9TU0lEX1NFVDsKIAllbHNlCiAJCWlmc3RhLT5mbGFncyAmPSB+SUVFRTgwMjExX1NUQV9TU0lE
+X1NFVDsKIAotCWlmIChzZGF0YS0+dmlmLnR5cGUgPT0gTkw4MDIxMV9JRlRZUEVfQURIT0MgJiYK
+LQkgICAgIShpZnN0YS0+ZmxhZ3MgJiBJRUVFODAyMTFfU1RBX0JTU0lEX1NFVCkpIHsKKwlpZiAo
+c2RhdGEtPnZpZi50eXBlID09IE5MODAyMTFfSUZUWVBFX0FESE9DKSB7CiAJCWlmc3RhLT5pYnNz
+X2pvaW5fcmVxID0gamlmZmllczsKIAkJaWZzdGEtPnN0YXRlID0gSUVFRTgwMjExX1NUQV9NTE1F
+X0lCU1NfU0VBUkNIOwogCQlyZXR1cm4gaWVlZTgwMjExX3N0YV9maW5kX2lic3Moc2RhdGEsIGlm
+c3RhKTsKQEAgLTI2MzMsMzYgKzI2MzgsMjEgQEAKIGludCBpZWVlODAyMTFfc3RhX3NldF9ic3Np
+ZChzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwgdTggKmJzc2lkKQogewogCXN0
+cnVjdCBpZWVlODAyMTFfaWZfc3RhICppZnN0YTsKLQlpbnQgcmVzOwotCWJvb2wgdmFsaWQ7CiAK
+IAlpZnN0YSA9ICZzZGF0YS0+dS5zdGE7Ci0JdmFsaWQgPSBpc192YWxpZF9ldGhlcl9hZGRyKGJz
+c2lkKTsKIAotCWlmIChtZW1jbXAoaWZzdGEtPmJzc2lkLCBic3NpZCwgRVRIX0FMRU4pICE9IDAp
+IHsKLQkJaWYodmFsaWQpCi0JCQltZW1jcHkoaWZzdGEtPmJzc2lkLCBic3NpZCwgRVRIX0FMRU4p
+OwotCQllbHNlCi0JCQltZW1zZXQoaWZzdGEtPmJzc2lkLCAwLCBFVEhfQUxFTik7Ci0JCXJlcyA9
+IDA7Ci0JCS8qCi0JCSAqIEhhY2shIFNlZSBhbHNvIGllZWU4MDIxMV9zdGFfc2V0X3NzaWQuCi0J
+CSAqLwotCQlpZiAobmV0aWZfcnVubmluZyhzZGF0YS0+ZGV2KSkKLQkJCXJlcyA9IGllZWU4MDIx
+MV9pZl9jb25maWcoc2RhdGEsIElFRUU4MDIxMV9JRkNDX0JTU0lEKTsKLQkJaWYgKHJlcykgewot
+CQkJcHJpbnRrKEtFUk5fREVCVUcgIiVzOiBGYWlsZWQgdG8gY29uZmlnIG5ldyBCU1NJRCB0byAi
+Ci0JCQkgICAgICAgInRoZSBsb3ctbGV2ZWwgZHJpdmVyXG4iLCBzZGF0YS0+ZGV2LT5uYW1lKTsK
+LQkJCXJldHVybiByZXM7Ci0JCX0KLQl9Ci0KLQlpZiAodmFsaWQpCisJaWYgKGlzX3ZhbGlkX2V0
+aGVyX2FkZHIoYnNzaWQpKSB7CisJCW1lbWNweShpZnN0YS0+YnNzaWQsIGJzc2lkLCBFVEhfQUxF
+Tik7CiAJCWlmc3RhLT5mbGFncyB8PSBJRUVFODAyMTFfU1RBX0JTU0lEX1NFVDsKLQllbHNlCisJ
+fSBlbHNlIHsKKwkJbWVtc2V0KGlmc3RhLT5ic3NpZCwgMCwgRVRIX0FMRU4pOwogCQlpZnN0YS0+
+ZmxhZ3MgJj0gfklFRUU4MDIxMV9TVEFfQlNTSURfU0VUOworCX0KIAotCXJldHVybiAwOworCWlm
+IChuZXRpZl9ydW5uaW5nKHNkYXRhLT5kZXYpKQorCQlpZWVlODAyMTFfaWZfY29uZmlnKHNkYXRh
+LCBJRUVFODAyMTFfSUZDQ19CU1NJRCk7CisKKwlyZXR1cm4gaWVlZTgwMjExX3N0YV9zZXRfc3Np
+ZChzZGF0YSwgaWZzdGEtPnNzaWQsIGlmc3RhLT5zc2lkX2xlbik7CiB9CiAKIGludCBpZWVlODAy
+MTFfc3RhX3NldF9leHRyYV9pZShzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSwg
+Y2hhciAqaWUsIHNpemVfdCBsZW4pCg==
+--0015174be630f2649204612366f9--
