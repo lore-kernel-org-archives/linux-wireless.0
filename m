@@ -1,99 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43945 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753663AbZAGPIy (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:54745 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755640AbZAWAHV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 10:08:54 -0500
-Subject: Re: [PATCH 12/14] mac80211: 802.11w - Optional software CCMP for
-	management frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
+	Thu, 22 Jan 2009 19:07:21 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so754623nfc.21
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 16:07:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <d7a260e8d188b785d0d2be743c8c5461@localhost>
+References: <87priffb95.fsf@litku.valot.fi>
+	 <20090122183448.GC3646@tuxdriver.com>
+	 <d7a260e8d188b785d0d2be743c8c5461@localhost>
+Date: Fri, 23 Jan 2009 01:07:19 +0100
+Message-ID: <2d0a357f0901221607o8f77ff4tf735135200fcea66@mail.gmail.com> (sfid-20090123_010727_266295_4434ED29)
+Subject: Re: iwl3945 regression: associates but no data is transfered
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: samuel@sortiz.org
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-In-Reply-To: <20090107140956.GA22424@jm.kir.nu>
-References: <20090107112346.369581673@atheros.com>
-	 <20090107112707.370907962@atheros.com> <1231330118.3545.28.camel@johannes>
-	 <20090107122427.GA20019@jm.kir.nu> <1231332428.3545.33.camel@johannes>
-	 <20090107140956.GA22424@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rF18+Yd0HCJ27jM02iwE"
-Date: Wed, 07 Jan 2009 16:09:04 +0100
-Message-Id: <1231340944.3545.38.camel@johannes> (sfid-20090107_160858_753438_4A124742)
-Mime-Version: 1.0
+	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-rF18+Yd0HCJ27jM02iwE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+BTW, v2 of Alina's fix is *NOT* fixing the problem (not on my machine).
 
-On Wed, 2009-01-07 at 16:09 +0200, Jouni Malinen wrote:
-> On Wed, Jan 07, 2009 at 01:47:08PM +0100, Johannes Berg wrote:
->=20
-> > Ok, I guess in that case it doesn't really matter much, though it'd be
-> > good to not randomly associate to an AP that has MFP enabled when we
-> > don't know the hardware can handle it.
->=20
-> Yes and that why I was considering of a flag to notify hostapd and
-> wpa_supplicant about the capability.. But that would mean modifying WEXT
-> even more ;-).
+Kind Regards,
+Sedat
 
-Or just adding it to nl80211, are we ever expecting to have pure wext
-drivers with MFP capabilities??
+[1] [PATCH v2] mac80211: Fixed BSSID handling revisited
+http://marc.info/?l=linux-wireless&m=123259183328417&w=2
 
-> > You seem to be concerned only about AP mode, while I'm not much
-> > concerned about that, there it's always tested explicitly by the person
-> > setting up the AP, but someone who's just using STA mode would now
-> > suddenly potentially run into problems when using an AP that is
-> > MFP-enabled, no?
->=20
-> It is similar for both ends.. For example, wpa_supplicant does not
-> enable MFP on the client side by default, i.e., both hostapd and
-> wpa_supplicant behave the same in the sense that MFP needs to be
-> explicitly enabled.
->=20
-> > Hence, I think adding an explicit flag (whether it needs to be exported
-> > to userspace I don't know) would probably be good so if the driver/hw
-> > really cannot handle MFP at all then we don't associate using it, no?
->=20
-> MFP is negotiated in RSN IE and in case of mac80211, it would need to be
-> going to userspace since wpa_supplicant builds the RSN IE (and well,
-> hostapd obviously does the same for Authenticator side). We could a new
-> WEXT capability (e.g., IW_ENC_CAPA_MFP) for this, if desired.. It would
-> also be possible already with the current patchset to probe for this by
-> setting IW_AUTH_MFP and see whether the driver returns EOPNOTSUPP, so in
-> that sense, wpa_supplicant (and hostapd) could already figure this out
-> before trying to associate.
-
-Generally, the thing is that we don't really want to require people to
-manually enable MFP, but rather have NM set it to "enable whenever
-possible". That seems not workable unless we know which driver/hw
-supports it.
-
-johannes
-
---=-rF18+Yd0HCJ27jM02iwE
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJZMWNAAoJEKVg1VMiehFYXBUP/RguzEXzCCFgnfjEjm1dSXS7
-n5ZgaOqU2hxpaKDv9iPuEHW5aGmSFqcpkCzpLznc3HV0T3fVaVG99q6BhmH1v2RC
-AQzqkElAY5dR5itrxiEqezSLlhVq8wVt34IMWRBeId3ALHcu4l8EwMZeYgVKO19s
-thRNvSg9RRZu4MpwTX6SCDSRMxZTLFS8QAYO04fukemQmm+gZdTmxB4/8Mcx/gzV
-et8s8jKiQU95zn3GkC4E+8/7LTPODytRhQfHb5GM3rctKj6kHDW2HYEuJq2wNSuX
-EE1g37qOjUQsm+yyC96G3g7OfMolvpCZtY/pudPTjIRWlCDYWfWg0TdNZkS41jQ9
-qEK48sfXHB+vKtkZ0QbMq2BbWvpOLie2ZJVCnjUxFv276nY1buO6dxNT+rYMe9z7
-DiKZQELBj6ZuavCsDrazTuwtCZy7dmFiU3r++pBX6GkQe8F3ZBWjlSygNsPM9Reb
-i93Y/70qefT+6aWG6usM5A0JgGPPBsZIOyUswMRQMDyU1NYIZPFA5YyhTLlwTENQ
-A6FqUn33qn/L+gt4z0QC5yB1Mb57qgUJzmLSi0Cofj3NPlYc1m8wAwc26Ervcr3b
-psdmsAxNOGRRUbB9c/DJr8aINPPtDyUGCsTsYQKdTAj3sC5Ws/nKpfx+vpVeUJS+
-nZkcFLQWljyA2+cS3VgE
-=A64Z
------END PGP SIGNATURE-----
-
---=-rF18+Yd0HCJ27jM02iwE--
-
+On Fri, Jan 23, 2009 at 12:41 AM,  <samuel@sortiz.org> wrote:
+>
+> On Thu, 22 Jan 2009 13:34:48 -0500, "John W. Linville"
+> <linville@tuxdriver.com> wrote:
+>> On Thu, Jan 22, 2009 at 08:26:14PM +0200, Kalle Valo wrote:
+>>> Hello,
+>>>
+>>> I upgraded to the latest wireless-testing and my iwl3945 is now
+>>> broken. It can associate but no data is transfered after that. Tried
+>>> with open and wep modes. With dhcp I cannot get ip and with static ip
+>>> ping to the gateway doesn't work.
+>>>
+>>> Any hints?
+>>
+>> Lots of iwlwifi stuff merged yesterday...
+> The bad commit seems to be e32b1b9a33759e8a83ac566c4c43f23ed5d6343b, which
+> is not iwlwifi related.
+> Even though it's an mlme commit, it doesnt seem to affect other drivers (at
+> least b43 and ath5k).
+> I'll come up soon with a proper fix, but for now iwl3945 users should
+> revert that commit locally.
+>
+> Cheers,
+> Samuel.
+>
+>>
+>> Chatre, Reinette (1):
+>>       iwl3945: add debugging for wrong command queue
+>>
+>> Helmut Schaa (2):
+>>       iwl3945: fix some warnings when compiled without debug
+>>       iwlagn: fix hw-rfkill while the interface is down
+>>
+>> Jay Sternberg (4):
+>>       iwlwifi: correct Kconfig to prevent following entries from not
+>>       indenting
+>>       iwlwifi: remove static from 5000 structures
+>>       iwlwifi: add recognition of Intel WiFi Link 6000 and 6050 Series
+>>       iwlwifi: add recognition of Intel WiFi Link 100 Series
+>>
+>> Reinette Chatre (1):
+>>       iwlwifi: return NETDEV_TX_OK from _tx ops
+>>
+>> Samuel Ortiz (3):
+>>       iwl3945: Use iwl_txq_update_write_ptr
+>>       iwlwifi: Add TFD library operations
+>>       iwl3945: Use iwl-hcmd host command routines
+>>
+>> Winkler, Tomas (6):
+>>       iwlwifi: make iwl-power.c more readable
+>>       iwlwifi: fix iwl_mac_set_key and iwl3945_mac_set_key
+>>       iwlwifi: kill iwl3945_scan_cancel and iwl3945_scan_cancel_timeout
+>>       iwlwifi: kill scan39
+>>       iwlwifi: remove unused or twice defined members in iwl_priv
+>>       iwlwifi: eliminate power_data_39.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
