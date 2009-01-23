@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34036 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752497AbZAGL2U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:28:20 -0500
-Message-Id: <20090107112711.698791712@atheros.com> (sfid-20090107_123903_784505_94133E93)
-References: <20090107112346.369581673@atheros.com>
-Date: Wed, 07 Jan 2009 13:23:59 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 13/14] ath9k: Fix set_key error codes
+Received: from mx2.redhat.com ([66.187.237.31]:41964 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752676AbZAWSwV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 13:52:21 -0500
+Subject: Re: integration of opensource firmware with b43 kernel driver
+From: Dan Williams <dcbw@redhat.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200901231908.05835.mb@bu3sch.de>
+References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it>
+	 <497A05DC.4040101@lwfinger.net>  <200901231908.05835.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Fri, 23 Jan 2009 13:50:37 -0500
+Message-Id: <1232736637.2577.40.camel@localhost.localdomain> (sfid-20090123_195226_132301_6198EC8C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return -EOPNOTSUPP if the algorithm is not supported and -ENOSPC if
-there is no room in the key cache. This avoids KERN_ERR printk in
-mac80211 for "errors" that are actually expected to happen in normal
-operating conditions.
+On Fri, 2009-01-23 at 19:08 +0100, Michael Buesch wrote:
+> On Friday 23 January 2009 19:01:00 Larry Finger wrote:
+> > The driver can certainly be coded to look for the open-source firmware
+> > names before trying to load vendor firmware. That way there will not
+> > be any confusion.
+> 
+> I already posted that, but in case you missed it:
+> http://bu3sch.de/patches/wireless-testing/20081227-1821/patches/008-b43-probe-open-fw.patch
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Preferring the proprietary firmware over the open firmware (for now)
+seems like the best approach at this time.  Many people will be quite
+happy with the open firmware that we can actually ship in distros, and
+those that aren't can do the fwcutter stuff and get their own
+proprietary firmware.  If for some reason the open firmware isn't
+working, use fwcutter and get the proprietary firmware, which you would
+have had to do before anyway.  And those people with chips that aren't
+supported by the proprietary firmware yet still have to use the
+fwcutter, which they would have had to do anyway.  Win all around.
+
+If in the future there's a set of chips that the open firmware is known
+to work exceptionally well on, it could be preferred over the
+proprietary firmware at that point.
+
+Dan
 
 
----
- drivers/net/wireless/ath9k/main.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-01-07 13:08:10.000000000 +0200
-@@ -815,7 +815,7 @@ static int ath_key_config(struct ath_sof
- 		hk.kv_type = ATH9K_CIPHER_AES_CCM;
- 		break;
- 	default:
--		return -EINVAL;
-+		return -EOPNOTSUPP;
- 	}
- 
- 	hk.kv_len = key->keylen;
-@@ -849,7 +849,7 @@ static int ath_key_config(struct ath_sof
- 		else
- 			idx = ath_reserve_key_cache_slot(sc);
- 		if (idx < 0)
--			return -EIO; /* no free key cache entries */
-+			return -ENOSPC; /* no free key cache entries */
- 	}
- 
- 	if (key->alg == ALG_TKIP)
-
--- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
