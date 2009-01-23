@@ -1,95 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:58844 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753789AbZAVWjy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54554 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756811AbZAWWOG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 17:39:54 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Artur Skawina <art.08.09@gmail.com>
-Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
-Date: Thu, 22 Jan 2009 23:39:59 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200901211450.50880.chunkeey@web.de> <200901222202.48226.chunkeey@web.de> <4978EDB1.502@gmail.com>
-In-Reply-To: <4978EDB1.502@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901222339.59965.chunkeey@web.de> (sfid-20090122_233959_347923_59CB8E33)
+	Fri, 23 Jan 2009 17:14:06 -0500
+Subject: Re: [PATCH] ath9k: Read and write the TSF via debugfs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20090123044421.270720@gmx.net> (sfid-20090123_054428_080982_2340614F)
+References: <20090123044421.270720@gmx.net>
+	 (sfid-20090123_054428_080982_2340614F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dSe76Edtp+37vFjmEaoI"
+Date: Fri, 23 Jan 2009 23:14:01 +0100
+Message-Id: <1232748841.3977.10.camel@johannes.local> (sfid-20090123_231411_600733_2F4D7F14)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 22 January 2009 23:05:37 Artur Skawina wrote:
-> Christian Lamparter wrote:
-> > On Thursday 22 January 2009 20:19:16 Artur Skawina wrote:
-> >> This last version seems fine, just one thing: I can't convince myself
-> >> that not queuing the work after an urb fails with urb->status==true is
-> >> safe -- what if some temporary error condition causes the rx queue to
-> >> drain? Nothing will resubmit the urbs.
-> > well, the usb->status has to be "=! 0" 32 times in a row.
-> > So either the device, the system, or both have more serious problem and need
-> > some user attention/reset. However yes a few more unlikely paths wont hurt. ;-) 
-> > 
-> >> Wouldn't a usb_poison_anchored_urbs() instead of usb_kill_anchored_urbs()
-> >> in p54u_free_urbs() prevent p54u_rx_refill from resubmitting, and that early
-> >> return in the completion could then go? Or did i miss a case where it's
-> >> needed, other than stop()?
-> > size of the patch? because then we have to rewrite the p54u_start and
-> > p54u_stop to go a different path for ifdown/ifup (poison/unpoison) or
-> > suspend / disconnect (here we probably want kill).
-> > 
-> > But if you want to do that, you're welcome your post patches.
-> 
-> How about this? Can you see anything wrong w/ it? Survives a quick test here.
-> 
-> Yes, unpoisoning the urbs would make things much more complicated.
-> (mostly because usb_anchor_urb() poisons the urb, while usb_unanchor_urb()
->  doesn't unpoison, so it would either have to done manually (extra locking
->  to get the state of the anchor itself) or the un-/poisoning rules become
->  quite complex)
-> 
-> This simple approach frees all urbs on stop() and reallocates them on open().
-> All urbs go through the completion, and all are moved to the refill list,
-> even the ones that failed. If they are not supposed to be resubmitted, all
-> currently in flight ones are killed and poisoned, and when they arrive in 
-> p54u_rx_refill() the submission will fail.
-> 
-> artur
-> 
-well, I took a quick look into the usb code...
-(I know this isn't "usb_poison_anchored_urbs", or usb_kill_anchored_urbs,
-but they have to use this ones!)
 
-void usb_kill_urb(struct urb *urb)
-{
-        might_sleep();
-        if (!(urb && urb->dev && urb->ep))
-                return;
-        atomic_inc(&urb->reject);
+--=-dSe76Edtp+37vFjmEaoI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-        usb_hcd_unlink_urb(urb, -ENOENT);
-        wait_event(usb_kill_urb_queue, atomic_read(&urb->use_count) == 0);
+On Fri, 2009-01-23 at 05:44 +0100, Alina Friedrichsen wrote:
+> This patch adds an ath9k specific entry to read, write and reset the
+> TSF into the debugfs, like in ath5k. This makes debugging the IBSS
+> handling of wifi drivers _much_ easier.
 
-        atomic_dec(&urb->reject);
-}
+Ok, read I can understand, but write??
 
-vs.
+johannes
 
-void usb_poison_urb(struct urb *urb)
-{
-        might_sleep();
-        if (!(urb && urb->dev && urb->ep))
-                return;
-        atomic_inc(&urb->reject);
+--=-dSe76Edtp+37vFjmEaoI
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-        usb_hcd_unlink_urb(urb, -ENOENT);
-        wait_event(usb_kill_urb_queue, atomic_read(&urb->use_count) == 0);
-}
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-it looks like usb_poison_urb doesn't do what I though it does...
-In fact the way I see it now... there's no advantage if we use it,
-we can stick usb_kill_anchored_urb, right?
+iQIcBAABAgAGBQJJekEmAAoJEKVg1VMiehFY0QQP/jIdkq8aUOvoe+IuDBBdZKf2
+bqh2A221DtXW4fgkPZ/OfX6Ppuz6L/JR2cO/cx7xxmWlKAP2D6we8JKoGgV72e1U
+yd44C9LsKQUxY8mLmTN/AZQzxVwHI1TBv7SxFnzMNGE5totfpUa/wWghoA+as/H5
+hUtFsvsI8pf3N+9L6u456xBetAaOl+i+q807ns73fxp4hZKORpFIvYBMbrYVz/Wd
+VeEw5AAcyHFyzMa/rJRgbG7R+851REhh2C5lPxvy0251F+nOeix4iEEmoffGzGaF
+gjYyKAgP+SSU6/e9720f6roZ5Yg9+LX1pKIcBY9UphKMQn2Ff7ddSZ5mIU9/TZFl
+njRWPeU6zA5bJ2p2VCAN8iU02xmUqiL24ZvIs5IHgfgjJnYsp8HZwfM6Kz7rnC13
+RmtY2i8DxBtaokDCso6JRXb6qiX9hGzn+/M/jfVd4maXF/1mUKDzy+cQ6ne+n4X3
+Ylhy5HXz4btpgksfKPmJ4CdDxWwUEYMsQQTw524mHiDhzm9OTRbB6JGoyzaYUrJD
+KaqNliIxDuQrIP33fMDM4hAQyHb1lKdFLBuB9snOeMUYiuYLlPU+a2Kefhm8uhZP
+HmXQhslWHNOux11YCC2RFsq1AeozdpMenekoJzFakrNk3QsAsX3nm837LQZ0B2hj
+GYdl/INhrXtSCXxFrJSu
+=iu6h
+-----END PGP SIGNATURE-----
 
-Well, let's make a 2nd RFC/RFT tomorrow.
+--=-dSe76Edtp+37vFjmEaoI--
 
-Good night,
-	Chr
