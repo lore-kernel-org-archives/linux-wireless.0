@@ -1,111 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:56867 "EHLO
-	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927AbZAFOxG (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.188]:3774 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757913AbZAWX2p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 09:53:06 -0500
-Received: from hp4000.wilsoft.nl ([192.168.4.5])
-	by linux.wilsoft.nl with esmtp (Exim 4.69)
-	(envelope-from <listsrv@wilsoft.nl>)
-	id 1LKDIW-0004n6-Ma
-	for linux-wireless@vger.kernel.org; Tue, 06 Jan 2009 15:52:48 +0100
-From: "W. van den Akker" <listsrv@wilsoft.nl>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
-Date: Tue, 6 Jan 2009 15:52:45 +0100
-References: <200901011444.20333.listsrv@wilsoft.nl> <20090105094102.GA27836@jm.kir.nu> <200901060857.41357.listsrv@wilsoft.nl>
-In-Reply-To: <200901060857.41357.listsrv@wilsoft.nl>
+	Fri, 23 Jan 2009 18:28:45 -0500
+Received: by fk-out-0910.google.com with SMTP id f33so1471836fkf.5
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 15:28:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901061552.45729.listsrv@wilsoft.nl> (sfid-20090106_155311_941857_A18BFEC1)
+In-Reply-To: <20090122114546.31443.79387.stgit@tikku>
+References: <20090122114240.31443.18218.stgit@tikku>
+	 <20090122114546.31443.79387.stgit@tikku>
+Date: Sat, 24 Jan 2009 01:28:43 +0200
+Message-ID: <1ba2fa240901231528m21f13c1m43721f1d673e7cc7@mail.gmail.com> (sfid-20090124_002850_750884_A6C4E41E)
+Subject: Re: [RFC PATCH v2 2/2] mac80211: use ps-poll when dynamic power save
+	mode is disabled
+From: Tomas Winkler <tomasw@gmail.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: johannes@sipsolutions.net, vivek.natraj@gmail.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 06 January 2009, you wrote:
-> On Monday 05 January 2009, you wrote:
-> > On Thu, Jan 01, 2009 at 02:44:20PM +0100, W. van den Akker wrote:
-> > > I have tested on the server  with the latest wireless-testing the past
-> > > days (2.6.28-rc9-wl). The wireless-testing looks somewhat more stable
-> > > then the compat-wireless.
-> > >
-> > > I have also installed the netconsole module to watch any kernel prints.
-> > > After running hostapd (v0.6.6) from command line the AP is
-> > > up-and-running. Then if I connect with the laptop (tested it with
-> > > kernel .26 and .28 on the laptop) I get a connection and can start a
-> > > browser en explore the internet. If I start a second session (Kmail or
-> > > second browser) the
-> > > server hangs within a minute. Leaving again no trace on the console,
-> > > hostapd-log or netconsole.
-> >
-> > Just to make sure I understood this correctly.. Does this happen with
-> > just a single association station (your laptop)? What are you referring
-> > to with a "session"? Just another program using network (i.e., no new
-> > wireless associations, etc.)? As far as the ath9k driver is concerned,
-> > new applications (e.g., new TCP connection) should not really matter
-> > much.. If you have IEEE 802.11n enabled, could you please run a test
-> > with it disabled to make sure this is not related to frame aggregation?
-> >
-> > As far as getting any output from the system is concerned, the next step
-> > could be to see if NMI watchdog would be able to provide any help.
-> > Please take a look at Documentation/nmi_watchdog.txt in the kernel
-> > source code and see if you could use that on the AP to get some output
-> > when the system hangs (running without X on console to make sure you see
-> > the output).
+On Thu, Jan 22, 2009 at 1:45 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
+> When a directed tim bit is set, mac80211 currently disables power save
+> ands sends a null frame to the AP. But if dynamic power save is
+> disabled, mac80211 will not enable power save ever gain.
+
+Why not?
+
+Fix this by
+> adding ps-poll functionality to mac80211. When a directed tim bit is
+> set, mac80211 sends a ps-poll frame to the AP and checks for the more
+> data bit in the returned data frames.
+
+Still have to see the implementation but this sounds strange.
+
+> Using ps-poll is slower than waking up with null frame, but it's saves more
+> power in cases where the traffic is low. Userspace can control if either
+> ps-poll or null wakeup method is used by enabling and disabling dynamic
+> power save.
+
+Do you have numbers how much power you save?. With PS-Poll you must
+stay awak longer not saying that issueing TX (PS-poll) also consume
+power.Ususally TXing has higher power consumption then RX.Instead of
+tx(null PM=0) rx tx(ack)...rx tx(ack) tx(null PM=1) you have now
+tx(ps-poll) rx tx (ack) tx(ps-poll) rx tx(ack).  So if the AP holds
+more then 3 packetes PS poll will consume more power in this very
+simplified computation.
+
+Do you measure power consumption on of the NIC or the whole system?
+
+Thanks
+Tomas
+
+
 >
-> Hi Jouni,
+> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+> ---
 >
-> Yes you understood correctly. Only a laptop, start a browser then start
-> Kmail over the same wireless connection. Then it hangs. This is always
-> reproducable. There are also other sorts or hangups (for example when
-> starting hostapd, but that is not always reproducable when it happens).
+>  net/mac80211/ieee80211_i.h |    3 ++
+>  net/mac80211/mlme.c        |   56 ++++++++++++++++++++++++++++++++++++++++++--
+>  net/mac80211/rx.c          |   34 +++++++++++++++++++++++++++
+>  3 files changed, 90 insertions(+), 3 deletions(-)
 >
-> I will try today the watchdog-suggestion. Hope that it will provide some
-> help.
-
-I have enabled the NMI_watchdog (see below)
-          CPU0       CPU1
-  0:     322372          0   IO-APIC-edge      timer
-  1:         12          0   IO-APIC-edge      i8042
-  4:        101          0   IO-APIC-edge      serial
-  6:          3          0   IO-APIC-edge      floppy
-  7:          0          0   IO-APIC-edge      parport0
-  8:          2          0   IO-APIC-edge      rtc0
-  9:          0          0   IO-APIC-fasteoi   acpi
- 12:          4          0   IO-APIC-edge      i8042
- 16:          0          0   IO-APIC-fasteoi   uhci_hcd:usb1
- 17:       6282          0   IO-APIC-fasteoi   eth1
- 18:     364152          0   IO-APIC-fasteoi   ata_piix, ata_piix, eth0
- 19:          0          0   IO-APIC-fasteoi   uhci_hcd:usb2
- 21:       1727          0   IO-APIC-fasteoi   ath
- 23:          0          0   IO-APIC-fasteoi   ehci_hcd:usb3
- 27:         89          0   IO-APIC-fasteoi   aic79xx
-NMI:     322364     322307   Non-maskable interrupts
-LOC:          0     322302   Local timer interrupts
-RES:      10695      24691   Rescheduling interrupts
-CAL:         36        112   Function call interrupts
-TLB:       2371       3165   TLB shootdowns
-TRM:          0          0   Thermal event interrupts
-SPU:          0          0   Spurious interrupts
-ERR:          0
-MIS:          0
-
-However, after starting a internet session and Kmail session the server hangs 
-again without any output. Does the NMI-handler not process per CPU? So if one 
-CPU hangs, the other would still proceed?
-
-I have no 802.11n enabled, nor X.
-
-This means I think the system halted hard 'hlt-instruction'
-
-Any further suggestion? I am little bit hopeless now. I have placed the PCI 
-card into another slot, no result.
-
-gr,
-Willem
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index c9ffadb..76814e9 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -710,6 +710,7 @@ struct ieee80211_local {
+>        unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
+>
+>        bool powersave;
+> +       bool pspolling;
+>        struct work_struct dynamic_ps_enable_work;
+>        struct work_struct dynamic_ps_disable_work;
+>        struct timer_list dynamic_ps_timer;
+> @@ -902,6 +903,8 @@ u64 ieee80211_sta_get_rates(struct ieee80211_local *local,
+>                            enum ieee80211_band band);
+>  void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+>                              u8 *ssid, size_t ssid_len);
+> +void ieee80211_send_pspoll(struct ieee80211_local *local,
+> +                          struct ieee80211_sub_if_data *sdata);
+>
+>  /* scan/BSS handling */
+>  int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index c7e61e2..26b3ed4 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -475,6 +475,41 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+>        ieee80211_tx_skb(sdata, skb, ifsta->flags & IEEE80211_STA_MFP_ENABLED);
+>  }
+>
+> +void ieee80211_send_pspoll(struct ieee80211_local *local,
+> +                          struct ieee80211_sub_if_data *sdata)
+> +{
+> +       struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+> +       struct ieee80211_pspoll *pspoll;
+> +       struct sk_buff *skb;
+> +       u16 fc;
+> +
+> +       skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*pspoll));
+> +       if (!skb) {
+> +               printk(KERN_DEBUG "%s: failed to allocate buffer for "
+> +                      "pspoll frame\n", sdata->dev->name);
+> +               return;
+> +       }
+> +       skb_reserve(skb, local->hw.extra_tx_headroom);
+> +
+> +       pspoll = (struct ieee80211_pspoll *) skb_put(skb, sizeof(*pspoll));
+> +       memset(pspoll, 0, sizeof(*pspoll));
+> +       fc = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_PSPOLL | IEEE80211_FCTL_PM;
+> +       pspoll->frame_control = cpu_to_le16(fc);
+> +       pspoll->aid = cpu_to_le16(ifsta->aid);
+> +
+> +       /* aid in PS-Poll has its two MSBs each set to 1 */
+> +       pspoll->aid |= cpu_to_le16(1 << 15 | 1 << 14);
+> +
+> +       memcpy(pspoll->bssid, ifsta->bssid, ETH_ALEN);
+> +       memcpy(pspoll->ta, sdata->dev->dev_addr, ETH_ALEN);
+> +
+> +       printk(KERN_DEBUG "sending ps-poll");
+> +
+> +       ieee80211_tx_skb(sdata, skb, 0);
+> +
+> +       return;
+> +}
+> +
+>  /* MLME */
+>  static void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+>                                         struct ieee80211_bss *bss)
+> @@ -1816,9 +1851,24 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+>                directed_tim = ieee80211_check_tim(&elems, ifsta->aid);
+>
+>                if (directed_tim) {
+> -                       local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+> -                       ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+> -                       ieee80211_send_nullfunc(local, sdata, 0);
+> +                       if (local->hw.conf.dynamic_ps_timeout > 0) {
+> +                               local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+> +                               ieee80211_hw_config(local,
+> +                                                   IEEE80211_CONF_CHANGE_PS);
+> +                               ieee80211_send_nullfunc(local, sdata, 0);
+> +                       } else {
+> +                               local->pspolling = true;
+> +
+> +                               /*
+> +                                * Here is assumed that the driver will be
+> +                                * able to send ps-poll frame and receive a
+> +                                * response even though power save mode is
+> +                                * enabled, but some drivers might require
+> +                                * to disable power save here. This needs
+> +                                * to be investigated.
+> +                                */
+> +                               ieee80211_send_pspoll(local, sdata);
+> +                       }
+>                }
+>        }
+>
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 9fd9d21..59b0a50 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -740,6 +740,39 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+>        return result;
+>  }
+>
+> +static ieee80211_rx_result debug_noinline
+> +ieee80211_rx_h_check_more_data(struct ieee80211_rx_data *rx)
+> +{
+> +       struct ieee80211_local *local;
+> +       struct ieee80211_hdr *hdr;
+> +       struct sk_buff *skb;
+> +
+> +       local = rx->local;
+> +       skb = rx->skb;
+> +       hdr = (struct ieee80211_hdr *) skb->data;
+> +
+> +       if (!local->pspolling)
+> +               return RX_CONTINUE;
+> +
+> +       if (!ieee80211_has_fromds(hdr->frame_control))
+> +               /* this is not from AP */
+> +               return RX_CONTINUE;
+> +
+> +       if (!ieee80211_is_data(hdr->frame_control))
+> +               return RX_CONTINUE;
+> +
+> +       if (!ieee80211_has_moredata(hdr->frame_control)) {
+> +               /* AP has no more frames buffered for us */
+> +               local->pspolling = false;
+> +               return RX_CONTINUE;
+> +       }
+> +
+> +       /* more data bit is set, let's request a new frame from the AP */
+> +       ieee80211_send_pspoll(local, rx->sdata);
+> +
+> +       return RX_CONTINUE;
+> +}
+> +
+>  static void ap_sta_ps_start(struct sta_info *sta)
+>  {
+>        struct ieee80211_sub_if_data *sdata = sta->sdata;
+> @@ -2006,6 +2039,7 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+>        CALL_RXH(ieee80211_rx_h_passive_scan)
+>        CALL_RXH(ieee80211_rx_h_check)
+>        CALL_RXH(ieee80211_rx_h_decrypt)
+> +       CALL_RXH(ieee80211_rx_h_check_more_data)
+>        CALL_RXH(ieee80211_rx_h_sta_process)
+>        CALL_RXH(ieee80211_rx_h_defragment)
+>        CALL_RXH(ieee80211_rx_h_ps_poll)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
