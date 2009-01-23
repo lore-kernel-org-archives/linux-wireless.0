@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet14.oracle.com ([148.87.113.126]:60932 "EHLO
-	rgminet14.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757225AbZAMBFs (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55957 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbZAWAej (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 20:05:48 -0500
-Received: from rgminet13.oracle.com (rcsinet13.oracle.com [148.87.113.125])
-	by rgminet14.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n0D186gd016793
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 01:08:07 GMT
-Message-ID: <496BE899.7010406@oracle.com> (sfid-20090113_020554_657969_25B95813)
-Date: Mon, 12 Jan 2009 17:04:25 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Thu, 22 Jan 2009 19:34:39 -0500
+Date: Thu, 22 Jan 2009 19:36:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Distributions shipping CRDA
+Message-ID: <20090123003655.GA3177@tuxdriver.com> (sfid-20090123_013444_258631_9E86B827)
+References: <43e72e890901221352n1f0d04adscaf3f6a76abf83b4@mail.gmail.com>
 MIME-Version: 1.0
-To: Sedat Dilek <sedat.dilek@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [master-2009-01-12] compiler-error in 'drivers/net/irda/donauboe.c'
-References: <2d0a357f0901121657s1ea091b6m824e8f939be2d51d@mail.gmail.com>
-In-Reply-To: <2d0a357f0901121657s1ea091b6m824e8f939be2d51d@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890901221352n1f0d04adscaf3f6a76abf83b4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sedat Dilek wrote:
-> Hi,
+On Thu, Jan 22, 2009 at 01:52:39PM -0800, Luis R. Rodriguez wrote:
+> I'd like to review which distributions are already packaging CRDA already.
 > 
-> I could not compile latest wl.git due to problems in
-> 'drivers/net/irda/donauboe.c'.
-> A fix and description is given in [1].
-> Hope this helps other people.
+> So far this is what I know:
 > 
-> Regards,
-> Sedat
+> Ubuntu Jaunty - Yes
+> Arch Linux - Yes
+> Gentoo - Yes
 > 
-> [1] http://patchwork.kernel.org/patch/1791/
+> Fedora Core 11  - ?
 
-The patch was just merged into mainline.
-
+I'm working-out the details of package for Fedora 11.
 
 -- 
-~Randy
+John W. Linville		Linux should be at the core
+linville@tuxdriver.com			of your literate lifestyle.
