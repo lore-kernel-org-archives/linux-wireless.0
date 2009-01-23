@@ -1,111 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:56237 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751449AbZAFSyh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 13:54:37 -0500
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
-In-Reply-To: <1231261937.5246.16.camel@californication>
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
-	 <1229336057.4471.9.camel@johannes.berg>
-	 <1229354532.12163.24.camel@localhost.localdomain>
-	 <20081217174244.M36761@bobcopeland.com>
-	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
-	 <1230102989.16960.14.camel@californication>
-	 <1231260306.14565.21.camel@localhost.localdomain>
-	 <1231261937.5246.16.camel@californication>
-Content-Type: text/plain
-Date: Tue, 06 Jan 2009 13:52:59 -0500
-Message-Id: <1231267979.14565.34.camel@localhost.localdomain> (sfid-20090106_195441_651581_D06E4958)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:53728 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754312AbZAWWnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 17:43:16 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Fri, 23 Jan 2009 23:43:15 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <43e72e890901230547w1ca9b24cp632df359e619c980@mail.gmail.com>
+Message-ID: <20090123224315.50450@gmx.net> (sfid-20090123_234321_861479_94D60D14)
+MIME-Version: 1.0
+References: <20090123043337.270720@gmx.net>
+ <43e72e890901230547w1ca9b24cp632df359e619c980@mail.gmail.com>
+Subject: Re: [PATCH v2] mac80211: Read the TSF via debugfs
+To: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-01-06 at 18:12 +0100, Marcel Holtmann wrote:
-> Hi Dan,
-> 
-> > > > > > Running pm-suspend from pm-utils directly also triggers the problem, 
-> > > > > > so that would seem to excuse gnome-power-manager at least.
-> > > > > 
-> > > > > What's the status of this? Should I look into things a bit?
-> > > > 
-> > > > Well, I guess I should have noticed this a lot earlier, but anyway the 
-> > > > problem was pm-utils on Fedora 10:
-> > > > 
-> > > > /usr/lib/pm-utils/sleep.d/55NetworkManager:
-> > > > 
-> > > >     suspend_nm()
-> > > >     {
-> > > >         # Tell NetworkManager to shut down networking
-> > > >         dbus-send --system                         \
-> > > >             --dest=org.freedesktop.NetworkManager  \
-> > > >             /org/freedesktop/NetworkManager        \
-> > > >             org.freedesktop.NetworkManager.sleep
-> > > >     }
-> > > > 
-> > > > I really don't think this is necessary (g-p-m will also do it if you 
-> > > > set the proper gconf setting.)
-> > > 
-> > > this should not be needed at all. I have systems running wpa_supplicant
-> > > and not any of the pm-utils scripts messing with it. During suspend and
-> > > later resume it indicates normally just only a new handshake with the AP
-> > > or a disconnect if the AP got out of range.
-> > > 
-> > > I think Network Manager is perfectly capable of handling state changes
-> > > from wpa_supplicant. I really do think that this hack only exists of
-> > > some broken drivers from really old kernels or for the 0.6 version of
-> > > Network Manager. Remember that Ubuntu's suspend/resume solution used to
-> > > be to unload all networking drivers on suspend.
-> > 
-> > You still want to tell NM to go to sleep so it doesn't see the
-> > disconnection from the supplicant (triggered by the driver because it
-> > was going to sleep), and thus try to reconnect, or try a different AP.
-> > Ideally NM would simply listen for signals from some power service such
-> > that we wouldn't have to have this hack, but there isn't a global power
-> > service yet on the system bus.
-> > 
-> > Furthermore, it's nice to know if we've gone to sleep or not so that we
-> > can do some optimizations on wakeup to find APs and reconnect faster.
-> 
-> actually the fastest way to re-connect is to just let wpa_supplicant do
-> it and then you don't even have to go through DHCP again if the lease
-> time is still valid. This works great if the AP is still in range.
-> 
-> What is your downside with the letting wpa_supplicant send you a
-> disconnect when the AP is out of range after resume?
+Hello Luis!
 
-Depends on the driver what the resume behavior is with the supplicant.
-But you want to alert *something* that the system is now going to sleep,
-so that it can clean up state before doing so.
+> Alina, a few notes on this series. I see you have used the mac80211
+> ops get_tsf via debugfs, and then added one for ath5k and ath9k. It
+> would seem a driver-specific get tsf from debugfs is not needed then.
+> The set_tsf is the only one that seems to be driver specific and coul=
+d
+> probably go into their own debugfs.  Anyway how about instead of all
+> this just adding a new mac80211 ops for set_tsf for mac80211 as well
+> and then just add nl80211 commands to be able to get/set/reset them?
+> This way if the driver implements them it'll be through a generic
+> interface and also we can start using it via iw.
 
-The problem is that you have absolutely no idea how long the sleep will
-be.  It's at least 2 minutes with S2D, because that's how long it takes
-to write your state out to disk.  It's less with S2R obviously, but when
-you resume, there's no guarantee that you'll be in the same place.  You
-cannot assume that you will be.
+If the others agree I would very happy to implement it. :)
 
-If you keep trying to reconnect to the same AP, many times you simply
-won't be there and you'll spend the 10 or 20 seconds reconnecting to an
-AP miles away, time that could have been spent scanning for the AP
-that's *really* where you are.  Many people I know don't often suspend
-at the same location they resume, thus trying to reconnect hurts
-reconnection latency.
+I only don't want to change to much in the infrastructure, but this wou=
+ld be the nicest way to implement it.
 
-The ideal way to handle all this is to be *aware* of suspend/resume in
-the supplicant (or NM), and on resume, do a quick probe-scan or two to
-find out if the old AP is still around.  If it's not, do a full scan to
-find all APs, and then pick the best one, which is probably not the one
-you were associated with before.  Then you actually start the auth/assoc
-process with an AP you know exists.
+Regards
+Alina
 
-So my point is that *something* needs to be aware of the suspend/resume
-at a userlevel, whether it's NM or the supplicant doesn't really matter
-as long as you can do what I describe above on resume.
-
-Dan
-
-
+--=20
+NUR NOCH BIS 31.01.! GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 16,37 EURO/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
+569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
