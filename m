@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:51207 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753439AbZAOXRt (ORCPT
+Received: from mail-ew0-f20.google.com ([209.85.219.20]:63881 "EHLO
+	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758565AbZAWRvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 18:17:49 -0500
-Date: Thu, 15 Jan 2009 18:17:43 -0500
-From: Kyle McMartin <kyle@infradead.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de,
-	Johannes Berg <johannes@sipsolutions.net>, kyle@infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [b43] opensource firmware
-Message-ID: <20090115231743.GC7488@bombadil.infradead.org> (sfid-20090116_001809_729155_A65183A0)
-References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> <200901151637.58196.mb@bu3sch.de> <496F5D4F.3020805@lwfinger.net> <200901151709.49811.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200901151709.49811.mb@bu3sch.de>
+	Fri, 23 Jan 2009 12:51:09 -0500
+Received: by ewy13 with SMTP id 13so3836849ewy.13
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 09:51:07 -0800 (PST)
+Subject: Re: [BUG] latest wireless-testing (compat-wireless) doesn't work
+ with iwl3945
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1232672850.7913.6.camel@maxim-laptop>
+References: <1232672850.7913.6.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Fri, 23 Jan 2009 19:51:01 +0200
+Message-Id: <1232733061.6513.2.camel@maxim-laptop> (sfid-20090123_185121_093641_6465F9E9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2009 at 05:09:49PM +0100, Michael Buesch wrote:
-> Already implemented here:
-> http://bu3sch.de/patches/wireless-testing/20081227-1821/patches/008-b43-probe-open-fw.patch
-> I just need to fix a leak in an error path before pushing that upstream.
-> 
+On Fri, 2009-01-23 at 03:07 +0200, Maxim Levitsky wrote:
 
-Groovy, I had cooked a similar patch for Fedora but haven't gotten
-around to packaging up the fw yet. Will sub in yours.
 
-cheers, Kyle
+I noticed another wierd bug, somehow iwl3945 manages now to break
+suspend to disk (hands on suspend) but not suspend to ram.
+
+Also, if I suspend via pm-hibernate on console, it works, but doesn't
+work when I use ubuntu's menu.
+
+System hangs on suspend to disk, I still can switch consoles, but can't
+type anything there. will need to use ssh I guess.
+
+Maxim Levitsky
+
+
