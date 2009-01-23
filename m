@@ -1,105 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42498 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759448AbZAVXGi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 18:06:38 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 15:06:38 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/12] cfg80211: export freq_reg_info()
-Date: Thu, 22 Jan 2009 15:05:45 -0800
-Message-ID: <1232665554-26132-4-git-send-email-lrodriguez@atheros.com> (sfid-20090123_000642_729968_20A0281C)
-In-Reply-To: <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
-References: <1232665554-26132-1-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-2-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
+Received: from gateway14.websitewelcome.com ([67.18.44.10]:52385 "HELO
+	gateway14.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756084AbZAWN5I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 08:57:08 -0500
+Received: from 96-26-216-101.sea.clearwire-dns.net ([96.26.216.101]:44531 helo=Hydra.darkmatter.org)
+	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <Info@delphi-real-estate.com>)
+	id 1LQMQU-0005Wc-GH
+	for linux-wireless@vger.kernel.org; Fri, 23 Jan 2009 07:50:27 -0600
+From: Delphi Real Estate <Info@delphi-real-estate.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Kernel Compile Fail with 2.6.26 Drivers
+Date: Fri, 23 Jan 2009 05:50:25 -0800
+References: <200901200942.57618.Info@delphi-real-estate.com>
+In-Reply-To: <200901200942.57618.Info@delphi-real-estate.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901230550.25986.Info@delphi-real-estate.com> (sfid-20090123_145718_265923_0A72BAC7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be used by drivers on the reg_notifier()
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/wireless.h |   24 ++++++++++++++++++++++++
- net/wireless/reg.c     |   24 ++----------------------
- 2 files changed, 26 insertions(+), 22 deletions(-)
+It seems that either no one has 'n' working at 5GHz, or are not willing to advise.  All I need is a combination that works;  I've tried 2.6's iwlwifi in 2.6.27 and it won't compile, and it seems that 2.6.28's iwlwifi doesn't work in 'n'.  I've run Debian for eleven years and have always compiled my own custom kernels, but would very much like to get 'n' working.  Scripting is no problem, although I am not an actual coder.  I wish someone could pitch in briefly.
 
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 585caad..a8971f6 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -418,4 +418,28 @@ extern void wiphy_apply_custom_regulatory(
- 	struct wiphy *wiphy,
- 	const struct ieee80211_regdomain *regd);
- 
-+/**
-+ * freq_reg_info - get regulatory information for the given frequency
-+ * @wiphy: the wiphy for which we want to process this rule for
-+ * @center_freq: Frequency in KHz for which we want regulatory information for
-+ * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
-+ * 	you can set this to 0. If this frequency is allowed we then set
-+ * 	this value to the maximum allowed bandwidth.
-+ * @reg_rule: the regulatory rule which we have for this frequency
-+ *
-+ * Use this function to get the regulatory rule for a specific frequency on
-+ * a given wireless device. If the device has a specific regulatory domain
-+ * it wants to follow we respect that unless a country IE has been received
-+ * and processed already.
-+ *
-+ * Returns 0 if it was able to find a valid regulatory rule which does
-+ * apply to the given center_freq otherwise it returns non-zero. It will
-+ * also return -ERANGE if we determine the given center_freq does not even have
-+ * a regulatory rule for a frequency range in the center_freq's band. See
-+ * freq_in_rule_band() for our current definition of a band -- this is purely
-+ * subjective and right now its 802.11 specific.
-+ */
-+extern int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
-+			 const struct ieee80211_reg_rule **reg_rule);
-+
- #endif /* __NET_WIRELESS_H */
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2f2f6f5..70691de 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -833,29 +833,9 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
- 
- 	return !max_bandwidth;
- }
-+EXPORT_SYMBOL(freq_reg_info);
- 
--/**
-- * freq_reg_info - get regulatory information for the given frequency
-- * @wiphy: the wiphy for which we want to process this rule for
-- * @center_freq: Frequency in KHz for which we want regulatory information for
-- * @bandwidth: the bandwidth requirement you have in KHz, if you do not have one
-- * 	you can set this to 0. If this frequency is allowed we then set
-- * 	this value to the maximum allowed bandwidth.
-- * @reg_rule: the regulatory rule which we have for this frequency
-- *
-- * Use this function to get the regulatory rule for a specific frequency on
-- * a given wireless device. If the device has a specific regulatory domain
-- * it wants to follow we respect that unless a country IE has been received
-- * and processed already.
-- *
-- * Returns 0 if it was able to find a valid regulatory rule which does
-- * apply to the given center_freq otherwise it returns non-zero. It will
-- * also return -ERANGE if we determine the given center_freq does not even have
-- * a regulatory rule for a frequency range in the center_freq's band. See
-- * freq_in_rule_band() for our current definition of a band -- this is purely
-- * subjective and right now its 802.11 specific.
-- */
--static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
-+int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 *bandwidth,
- 			 const struct ieee80211_reg_rule **reg_rule)
- {
- 	return freq_reg_info_regd(wiphy, center_freq,
--- 
-1.6.1.rc3.51.g5832d
+
+
+On Tuesday 20 January 2009 9:42:57 Delphi Real Estate wrote:
+> 
+> Trying to get 5GHz 'n' working, but I just do not understand the advice I'm getting. (below)  I am told that TX aggregation support is not expected to be fixed until around 2.6.30.
+> 
+> Goal is to be able to get some version of the iwlagn drivers that will do 'n' mode at 5GHz, which will compile in my Ubuntu 2.6.27 kernel.  I tried just grafting in the 2.6.26 iwlwifi directory into my 2.6.27 source tree, but compile fails without explanation.
+> 
+> Can anyone help?
+> 
+> 
+> > If you want the driver with TX aggregation support then you need to use
+> > the iwl5000 branch
+> > ( http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=shortlog;h=iwl5000 )
+> 
+> I guess I don't understand this.  I hit the first entry's 'snapshot', and I get a blank screen.  I click on the heading:
+> "iwlwifi: fix incorrect monitor mode operation  iwl5000"
+> ... and it takes me to the explanation of the bugfix, but navigating to iwl-agn.c or iwl3945-base.c via tree, snapshot or blob just gives me an HTML representation of the files.  There doesn't seem to be any way to get the actual source.  Why do they prevent you from getting just individual files with this system?
+> 
+> 
+> > The branch is based on kernel 2.6.26. If you do not want to give up your
+> > current kernel you can take a look how compat-wireless works ... but it
+> > is actually intended to take the most recent wireless-testing to work
+> > with your current kernel, not an older kernel in itself as what can be
+> > found in the iwl5000 branch.
+> 
+> I don't mind running the most recent kernel, as long as it works and has Ubuntu patches.  I don't see how to get there from here though.  I am a commercial real estate broker, after all, not a coder.
+> 
+> 
+> > Try diffing the Ubuntu sources against the kernel.org sources, and
+> > merge the resulting diff into the git tree.
+> 
+> LOL, thanks, but I am a commercial real estate broker, and have about as much chance of doing this as passing a calculus class.
+> 
+> Just trying to get 'n' at 5GHz, so I don't pollute my neighbors' wifi with my MythTV streaming.  I am lucky to have working what I do...
+> 
+> 
+
 
