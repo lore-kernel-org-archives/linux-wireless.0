@@ -1,63 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48222 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751068AbZAHUTs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 15:19:48 -0500
-Subject: Re: James sent you a Greeting!
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c910901081215l43dec6d3i1323423e5a19bcca@mail.gmail.com> (sfid-20090108_211552_577102_6D43C324)
-References: <20090108105933.7070001@Binary>
-	 <69e28c910901081215l43dec6d3i1323423e5a19bcca@mail.gmail.com>
-	 (sfid-20090108_211552_577102_6D43C324)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-w5uRXBswSueVbhc2gstK"
-Date: Thu, 08 Jan 2009 21:20:18 +0100
-Message-Id: <1231446018.8398.20.camel@johannes> (sfid-20090108_211952_772530_AD3BA01C)
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:50664 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755943AbZAWBPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 20:15:05 -0500
+Date: Thu, 22 Jan 2009 17:12:26 -0800
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>,
+	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Dave Jones <davej@redhat.com>,
+	Chuck Wolber <chuckw@quantumlinux.com>,
+	Chris Wedgwood <reviews@ml.cw.f00f.org>,
+	Michael Krufky <mkrufky@linuxtv.org>,
+	Chuck Ebbert <cebbert@redhat.com>,
+	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
+	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
+	Jake Edge <jake@lwn.net>, Eugene Teo <eteo@redhat.com>,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk, Larry Finger <Larry.Finger@lwfinger.net>,
+	Linux wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@web.de>
+Subject: [patch 27/46] p54usb: fix traffic stalls / packet drop
+Message-ID: <20090123011226.GB19756@kroah.com> (sfid-20090123_021518_586339_072237AE)
+References: <20090123010651.683741823@mini.kroah.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090123011110.GA19756@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2.6.28-stable review patch.  If anyone has any objections, please let us know.
 
---=-w5uRXBswSueVbhc2gstK
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+------------------
 
-On Thu, 2009-01-08 at 21:15 +0100, Stefanik G=C3=A1bor wrote:
-> \   / | | > |  |  < |
->  \ /  | | \  \_/  > !
-> <jokemode>
-> Uncensor the link to check your virus scanner.
-> Disclaimer: use at your own risk! :-)
-> </jokemode>
+From: Christian Lamparter <chunkeey@web.de>
 
-Can you please not reply to spam that my spam filter happily removes
-from my view? thanks :)
+commit 00627f229c9807e4cb825a7ce36b886e2adf2229 upstream.
 
-johannes
+All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
+Else, the firmware could freeze, or simply drop the frame.
 
---=-w5uRXBswSueVbhc2gstK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+---
+ drivers/net/wireless/p54/p54usb.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-iQIcBAABAgAGBQJJZl/4AAoJEKVg1VMiehFYvKEP/3R/DR8uGpMqP4mNskKPSGYp
-ztkMQqG4U3UztoCxWWP6HZMheiI+fvL4Xcr9N+UkNH3lsD4AqNUjBec9Z9oKkY6N
-UY3yWkWBjzCz2ph/HUeG7H4TbHlUJ4MQPmI8z0/xYe7Rl3XPcyUaRwsg3zn3ADcR
-9/0MraHX3qJrSVQPOhh0n0t3QfSej0hhqPpzil7phY6feQg843gz6dQ+Yo6WUw37
-l7OoRPYu3OLkukz6UV48JvK5UhIfI9m3uylmu/aUcvZDe7SaDNDCL0qcLiE2uPA6
-fDaPOuITCwHYlxLXlkKjg+Z/tmRIh8kpk8QxvX/+xzTlTjrT9uc6HY3yoe6wrTqp
-c2Kly8jBxNb86cLNoVWuCoGFeysY6oWj5twpI7Clgjv8OpcDAZQ3B1Rx21WHuJEc
-ysfdjbuzoClwUaCcZq7l35EjShx/u0a2vCZOzTwgkKMM8B/tIJgo2wHp3NSMPzH6
-UuEGjHOZgruj7jln6PEDf0KQHOuj+27BsPIsD0gWNmXGBHbgyfnkKKsw++n78gJe
-tBlUCb+GtB/xJbppTVUtxSYmzaIm4QnfMW2I+9j6vYj8L/YsZy0Y4hkUEfMh9hjx
-/xD+PWYYRtwL46wqzZzldOrePL97CDg8jU3Uzby+cNabu585QkCSFhqy1ZH4+kax
-D4xUXJPs8Y9dUrMJH+uG
-=agT1
------END PGP SIGNATURE-----
-
---=-w5uRXBswSueVbhc2gstK--
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -215,6 +215,8 @@ static void p54u_tx_3887(struct ieee8021
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), data, len,
+ 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
++	addr_urb->transfer_flags |= URB_ZERO_PACKET;
++	data_urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+ 	usb_submit_urb(addr_urb, GFP_ATOMIC);
+ 	usb_submit_urb(data_urb, GFP_ATOMIC);
+@@ -252,6 +254,7 @@ static void p54u_tx_lm87(struct ieee8021
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr,
+ 		len + sizeof(*hdr), free_on_tx ? p54u_tx_free_cb : p54u_tx_cb,
+ 		dev);
++	data_urb->transfer_flags |= URB_ZERO_PACKET;
+ 
+ 	usb_submit_urb(data_urb, GFP_ATOMIC);
+ }
+@@ -294,11 +297,13 @@ static void p54u_tx_net2280(struct ieee8
+ 	usb_fill_bulk_urb(int_urb, priv->udev,
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DEV), reg, sizeof(*reg),
+ 		p54u_tx_free_cb, dev);
++	int_urb->transfer_flags |= URB_ZERO_PACKET;
+ 	usb_submit_urb(int_urb, GFP_ATOMIC);
+ 
+ 	usb_fill_bulk_urb(data_urb, priv->udev,
+ 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr, len + sizeof(*hdr),
+ 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
++	data_urb->transfer_flags |= URB_ZERO_PACKET;
+ 	usb_submit_urb(data_urb, GFP_ATOMIC);
+ }
+ 
 
