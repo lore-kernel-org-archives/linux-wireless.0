@@ -1,152 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g1t0028.austin.hp.com ([15.216.28.35]:20474 "EHLO
-	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755568AbZANUEk (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.184]:33514 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571AbZAWTGY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 15:04:40 -0500
-From: Paul Moore <paul.moore@hp.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
-Date: Wed, 14 Jan 2009 15:04:30 -0500
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"SE-Linux" <selinux@tycho.nsa.gov>
-References: <496D759A.7010401@gmail.com> <200901141205.26904.paul.moore@hp.com> <496E21B3.3070206@gmail.com>
-In-Reply-To: <496E21B3.3070206@gmail.com>
+	Fri, 23 Jan 2009 14:06:24 -0500
+Received: by fk-out-0910.google.com with SMTP id f33so1370532fkf.5
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 11:06:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901141504.30674.paul.moore@hp.com> (sfid-20090114_210458_116727_BADDE0AD)
+In-Reply-To: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
+References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
+Date: Fri, 23 Jan 2009 11:06:22 -0800
+Message-ID: <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com> (sfid-20090123_200628_735488_1DC7A071)
+Subject: Re: Crashing on ping?
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Keir <keirlawson@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 January 2009 12:32:35 pm Justin P. Mattock wrote:
-> Paul Moore wrote:
-> > On Wednesday 14 January 2009 11:15:46 am Justin P. Mattock wrote:
+Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
+93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
+2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
+chance to try head of wireless-testing this week.
 
-...
+  -Andrey
 
-> yep, it is pretty cool.
-> ultimately my goal with netlabel is to see if I can setup the network
-> namespace(if this is proper to say).
-
-I understand what you are trying to say but I don't believe "namespace" 
-is the term you want to use since it is already used by the container 
-folks for something completely different.
-
->  i.g. have all the radio stations in its own domain,(and possibly
-> it's own tag,doi etc..)
-> and then have all T.V. stations running in its own domain. and then
-> web searching in its own domain.
-
-Yep, you can do that with NetLabel and the fallback/static labels like 
-you've been doing.  Based on what I've seen from you so far, Secmark 
-would also likely work for you but it takes a slightly different 
-approach (configuration with iptables, different allow rules).
-
-> I see cipsov4 does this, but not sure if it does what the UNLABEL
-> domain/protocol does.
-> (just looking at cipsov4; look like ipsec, you need two computers
-> setup with the same domain and tag etc..)
-> not too sure though.
-
-Yep, CIPSO is a labeling protocol like labeled IPsec.  Both have their 
-advantages and disadvantages but both require that the other end of the 
-connection support the labeling protocol.  Since you are talking about 
-labeling public network traffic it is almost certain that the other end 
-of your connections don't support a network labeling protocol.  The 
-fallback/static labeling capabilities of NetLabel (that is 
-the "unlabeled/unlbl" protocol in NetLabel, it is "unlabeled" because 
-there is no label present on the network traffic) was designed to solve 
-this case for the network peer label case.  Secmark was designed to 
-solve this for the iptables label case.
-
-If you don't understand the difference between a network peer label and 
-a network iptables label here is the executive summary:
-
- "A network peer label represents the security attributes of the
-  traffic's sender, a iptables label represents the network
-  attributes of the traffic."
-
-... which basically means the peer label tells you about the 
-process/host which generated the data (SELinux context, Smack label, 
-etc.) while the iptables label tells you about the network headers of 
-the traffic (destination address, protocol, port, anything that 
-iptables/netfilter can match on).
-
-> >> The two systems I have for this are: Dell latitude x200
-> >> running ubuntu jaunty, kernel is 2.6.29-rc1.
-> >> with netlabel_tools_0.18 which was an rpm packaged
-> >> that I converted to .deb.(can't remember the repository where I
-> >> grabbed it from);
-> >> The wireless card for the dell is a dell 1350
-> >> using bcmxx(b43-phy0); works great.
-> >
-> > Great.  I'm not a debian user so I can't be of much help on the
-> > packaging side, but you can get raw tarballs from the NetLabel
-> > project site on SF (the current release is 0.19 which includes
-> > support for all the goodies in 2.6.28):
-> >
-> >  * http://netlabel.sf.net
+On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
+> I just pulled the latest wireless-testing kernel, however, much like
+> the previous wireless-testing kernel I was working on, when attempting
+> to ping one node from another on a mesh, using ath5k, the node
+> attempting to ping completely freezes after about 7 pings are
+> (succesfully) sent.  Anyone have any idea what is going wrong here?
 >
-> I did grab that package but ran into the version_info
-> error,(resorted to the rpm out of desperation);
-
-Hmm, can you show me the error?  I'd like to make sure it is fixed ...
-
-> >> The results when using netlabelctl with the dell is nice, i.g.
-> >> like I said as soon as I issue netlabelctl unlbl accept off, those
-> >> addresses not defined are simply not allowed.(the problem with the
-> >> dell is I'm not seeing any allow rules being generated: i.g.
-> >>
-> >> allow netlabel_peer_t netif_t:netif ingress;
-> >> allow netlabel_peer_t node_t:node recvfrom;
-> >> allow unlabeled_t netif_t:netif ingress;
-> >> allow unlabeled_t node_t:node recvfrom;
-> >
-> > [NOTE: the rules/permissions you list above are the "newer"
-> > network_peer permissions which are likely not active unless you are
-> > running a custom SELinux policy as the default Reference Policy
-> > hasn't made the switch yet to the newer system]
-> >
-> > The netlabelctl tool doesn't generate any allow rules, all it does
-> > is configure the NetLabel subsystem which is all that is necessary
-> > because, this is important, NetLabel doesn't actually do any
-> > network traffic enforcement.  NetLabel is a network labeling
-> > framework, which means that it only deals with setting labels on
-> > outbound network packets and retrieving labels from inbound network
-> > packets (the "netlabel unlbl accept on|off" option is a gray area).
-> >  The decision about wether to accept or reject inbound network
-> > traffic is left to the LSM (NetLabel supports both SELinux and
-> > Smack).  If you want I can go into more detail but it would
-> > probably be rather boring and not really provide you much in the
-> > way of answering your question.
+> Cheers
 >
-> boring to others, but to me, it's awesome.
-
-I think so too :)
-
-> >> The next is a macbookpro ati chipset the kernel is 2.6.29-rc1
-> >> the o.s. is ubuntu jaunty, the netlabel_tools is the same as
-> >> above. the only results I see out of this is the avc's it's
-> >> generating (the allow rules above are from the macbook);
-> >> some reason the dell doesn't generate any avc's,
-> >> which makes me wonder is this a module issue.
-> >
-> > Huh.  Just so I'm clear on this ... on the macbook you see avc
-> > denials that correspond to the allow rules you posted above, but on
-> > the dell you don't see the same avc denials?  Are you running the
-> > same SELinux policy on both systems (version numbers)?  What is the
-> > output of the following command on both systems?
-> >
-> >  # cat /selinux/policy_capabilities/network_peer_controls
+> Keir
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> for both systems I'm running the refpolicy(svn) from tresys.
-> the new ubac options, and newrole mechanism etc..
-> doing cat /selinux/policy_capabilities_netowork_peer_controls says
-> "1" should be for both.
-
-Ahhhh!  How did that happen?!  (see my response to your other email)
-
--- 
-paul moore
-linux @ hp
