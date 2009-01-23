@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:41298 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709AbZAEMYQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60359 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759534AbZAWQAt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 07:24:16 -0500
-Message-ID: <4961FBD1.4030103@openwrt.org> (sfid-20090105_132420_384760_77F2C3AF)
-Date: Mon, 05 Jan 2009 13:23:45 +0100
-From: Gabor Juhos <juhosg@openwrt.org>
+	Fri, 23 Jan 2009 11:00:49 -0500
+Date: Fri, 23 Jan 2009 10:49:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Alina Friedrichsen <x-alina@gmx.net>, samuel@sortiz.org,
+	Kalle Valo <kalle.valo@iki.fi>, maximlevitsky@gmail.com,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Regression caused by commit
+	e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
+Message-ID: <20090123154918.GB13658@tuxdriver.com> (sfid-20090123_170111_635348_57463943)
+References: <4979269F.1060500@lwfinger.net> <200901231647.50978.mb@bu3sch.de>
 MIME-Version: 1.0
-To: Sujith <Sujith.Manoharan@atheros.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>, Imre Kaloz <kaloz@openwrt.org>
-Subject: Re: [RFC 08/12] ath9k: get EEPROM contents from platform data on
- AHB bus
-References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>	<1230990262-22923-9-git-send-email-juhosg@openwrt.org> <18785.57618.47120.669270@gargle.gargle.HOWL>
-In-Reply-To: <18785.57618.47120.669270@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200901231647.50978.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith =EDrta:
-> Gabor Juhos wrote:
->> +#ifndef _LINUX_ATH9K_PLATFORM_H
->> +#define _LINUX_ATH9L_PLATFORM_H
->=20
-> Typo ?
+On Fri, Jan 23, 2009 at 04:47:50PM +0100, Michael Buesch wrote:
+> On Friday 23 January 2009 03:08:31 Larry Finger wrote:
+> > With the commit of the subject, my b43 and p54usb devices stopped working. They could
+> > associate and authenticate with my WPA2 network, but never finish the DHCP connection and
+> > get an IP address. Surprisingly, my rtl8187 devices continued to work.
+> > 
+> > Please excuse the second sending of this. I missed wireless the first time.
+> 
+> Do you have a diff of this commit? Or at least the date it was committed?
+> I have some strange AP mode issue and it might be related to this. I just want to verify.
 
-Oops, yes.
+That commit ID should still be available in wireless-testing --
+git show e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
 
-> Also, after addressing Christopher's comments, I don't think too many
-> bus specific routines would remain. In that case would it be reasonab=
-le
-> to just have a single file (bus.c, with appropriate ifdefs), instead
-> of pci.c and ahb.c ?
+Hth!
 
-We will have 3 of them actually (read_cachesize, read_eeprom, cleanup),=
- but here
-is the whole {pci,platform}_driver specific stuff. Of course we can mov=
-e all of
-this into one file, but i would like to avoid the unnecessary ifdefs wh=
-ere it is
-possible. Apart from this, if we will put the PCI and AHB stuff into on=
-e file,
-we could put it into main.c simply.
-
--Gabor
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
