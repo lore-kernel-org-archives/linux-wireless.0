@@ -1,69 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:9414 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756132AbZAANkk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2009 08:40:40 -0500
-Message-ID: <69e28c910901010540r5e79431cjf6ad1a76f06ff0fd@mail.gmail.com> (sfid-20090101_144045_213890_06C66E20)
-Date: Thu, 1 Jan 2009 14:40:31 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Alan Jenkins" <alan-jenkins@tuffmail.co.uk>
-Subject: Re: [linux-pm] rtl8187 usb wifi adaptor causes suspend hang
-Cc: htl10@users.sourceforge.net,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Alan Stern" <stern@rowland.harvard.edu>,
-	"Bob Copeland" <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org,
-	linux-pm@lists.linux-foundation.org,
-	"USB list" <linux-usb@vger.kernel.org>,
-	"Herton Ronaldo Krzesinski" <herton@mandriva.com.br>
-In-Reply-To: <495CC024.9020009@tuffmail.co.uk>
+Received: from kroah.org ([198.145.64.141]:53782 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752331AbZAWRmt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 12:42:49 -0500
+Date: Fri, 23 Jan 2009 09:40:50 -0800
+From: Greg KH <greg@kroah.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: Bob Copeland <me@bobcopeland.com>, Keir <keirlawson@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath5k mesh in 2.6.28?
+Message-ID: <20090123174050.GA12042@kroah.com> (sfid-20090123_184253_352770_662CC3C8)
+References: <e27b78a40901230530h192a8030l6905089df2a5822d@mail.gmail.com> <b6c5339f0901230717h605d2fbaibda8b720c6191abf@mail.gmail.com> <45e8e6c40901230929r6efbf19xbe2c32bef92db8e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <471208.74701.qm@web23104.mail.ird.yahoo.com>
-	 <495CC024.9020009@tuffmail.co.uk>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <45e8e6c40901230929r6efbf19xbe2c32bef92db8e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 1, 2009 at 2:07 PM, Alan Jenkins
-<alan-jenkins@tuffmail.co.uk> wrote:
-> Hin-Tak Leung wrote:
->> --- On Wed, 31/12/08, Alan Jenkins <alan-jenkins@tuffmail.co.uk> wrote:
->>
->>
->>> Thanks for the patch.  I tested STD too, and it doesn't
->>> seem to hang
->>> anymore.  I even tested removing the adaptor while the
->>> system was
->>> hibernated.  However, after resume the interface is
->>> useless.
->>>
->>
->> Wierd - do you have NetworkManager running?
->>
->
-> Yes, but it's not managing the wireless interface - I'm still using the
-> wired network.  When I tested, I didn't use the wireless interface at
-> all before I hibernated.
->
->> These days I leave NM running - besides the occasional /etc/rc.d/init.d/{wpa_supplicant/NetworkManager} stop/start to re-establish connectivity (seems to be some timing issue with dhcp taking too long and nm ifconfig up/down the device wrongly) - and *when STD/STR works*, NM usually just re-connect within a minute on resume/defrost.
->>
->> I don't have the choice of unhooking the device - integrated to laptop. BTW, is it a B device or a non-B device that didn't work?
->>
->
-> I think it's a B device.
->
-> phy0: hwaddr 00:1b:2f:76:02:bc, RTL8187vB (default) V1 + rtl8225z2
->
->
-> Alan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On Fri, Jan 23, 2009 at 09:29:22AM -0800, Andrey Yurovsky wrote:
+> Sorry, looks like that's my mistake (I thought the patch had made it
+> in).  Greg -- thanks for queuing the patch.
+> 
+> For completeness, I should note that ath5k mesh is later broken by
+> "ath5k: Update PCU code" and fixed again (hopefully both in by
+> 2.6.29!) by "ath5k: Correct usage of AR5K_CFG_ADHOC"
+> 
+> Greg and Keir -- I also suggest Brian's patch, "mac80211: decrement
+> ref count to netdev after launching mesh discovery", commit
+> 05188d21d21dc8976bff13a9ca73a230eef86d40 for stable as it should apply
+> there and fixes a bug that will sometimes prevent module unload if a
+> mesh interface was active.
 
-That is an RTL8187L, rev. B. It is not an RTL8187B.
+Which stable kernel should this be for, .27 or .28 or both?
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+thanks,
+
+greg k-h
