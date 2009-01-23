@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.190]:62204 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754295AbZAXQEe (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:56167 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754948AbZAWRqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 11:04:34 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so1364646rnd.17
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 08:04:31 -0800 (PST)
+	Fri, 23 Jan 2009 12:46:42 -0500
+Date: Fri, 23 Jan 2009 11:46:32 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8187: Add termination packet to prevent stall
+Message-ID: <497a0278.fRVcNq75DBBbCg4K%Larry.Finger@lwfinger.net> (sfid-20090123_184700_224005_429B8AC1)
 MIME-Version: 1.0
-In-Reply-To: <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com>
-References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
-	 <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com>
-Date: Sat, 24 Jan 2009 16:04:31 +0000
-Message-ID: <e27b78a40901240804m1acd3a83o7bf6d01f81ec3397@mail.gmail.com> (sfid-20090124_170439_365143_19B7351B)
-Subject: Re: Crashing on ping?
-From: Keir <keirlawson@gmail.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tried that commit, still no luck :( It consistently freezes up on
-ping, though sometimes it's the machine doing the pining, and other
-times it's the machine being pinged.  Wondering what I can do to help
-debug this?
+The RTL8187 and RTL8187B devices can stall unless an explicit termination
+packet is sent.
 
-Keir
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-2009/1/23 Andrey Yurovsky <andrey@cozybit.com>:
-> Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
-> 93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
-> 2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
-> chance to try head of wireless-testing this week.
->
->  -Andrey
->
-> On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
->> I just pulled the latest wireless-testing kernel, however, much like
->> the previous wireless-testing kernel I was working on, when attempting
->> to ping one node from another on a mesh, using ath5k, the node
->> attempting to ping completely freezes after about 7 pings are
->> (succesfully) sent.  Anyone have any idea what is going wrong here?
->>
->> Cheers
->>
->> Keir
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
+John,
+
+With this patch my RTL8187L was able to perform a major git pull for a
+tree mounted on an NFS volume, and do a multi-job kernel compilation. Without
+the patch, the wireless would hang. I think this is 2.6.29 material.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -281,6 +281,7 @@ static int rtl8187_tx(struct ieee80211_h
+ 
+ 	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, ep),
+ 			  buf, skb->len, rtl8187_tx_cb, skb);
++	urb->transfer_flags |= URB_ZERO_PACKET;
+ 	usb_anchor_urb(urb, &priv->anchored);
+ 	rc = usb_submit_urb(urb, GFP_ATOMIC);
+ 	if (rc < 0) {
+
+---
