@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:42545 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737AbZAPQJa (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.170]:18815 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983AbZAWMkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 11:09:30 -0500
-From: Paul Moore <paul.moore@hp.com>
-To: "Justin Mattock" <justinmattock@gmail.com>
-Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
-Date: Fri, 16 Jan 2009 11:09:27 -0500
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"SE-Linux" <selinux@tycho.nsa.gov>
-References: <496D759A.7010401@gmail.com> <200901151752.06622.paul.moore@hp.com> <dd18b0c30901151644q4578f7d6k3023cad6f05325dd@mail.gmail.com>
-In-Reply-To: <dd18b0c30901151644q4578f7d6k3023cad6f05325dd@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901161109.27222.paul.moore@hp.com> (sfid-20090116_170936_296184_4F874137)
+	Fri, 23 Jan 2009 07:40:17 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so2981ugf.37
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 04:40:15 -0800 (PST)
+Subject: Re: [BUG] latest wireless-testing (compat-wireless) doesn't work
+ with iwl3945
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <49792772.7020206@lwfinger.net>
+References: <1232672850.7913.6.camel@maxim-laptop>
+	 <1232674156.4112.1.camel@maxim-laptop>  <49792772.7020206@lwfinger.net>
+Content-Type: text/plain
+Date: Fri, 23 Jan 2009 14:40:10 +0200
+Message-Id: <1232714410.32703.0.camel@maxim-laptop> (sfid-20090123_134023_250845_E997F5A8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 January 2009 7:44:15 pm Justin Mattock wrote:
-> On Thu, Jan 15, 2009 at 2:52 PM, Paul Moore <paul.moore@hp.com> wrote:
-> > Well, it is possible that /bin/sh points to a non-bash shell but
-> > maybe not (I'm pretty sure the make command executes the scripts
-> > with /bin/sh).  Either way, I checked in the fix to the SVN tree
-> > earlier today so newer releases will have the fix; if needed I can
-> > release a 0.19.1 or similar but I want to wait and see how
-> > widespread the problem is ...
-> >
-> > --
-> > paul moore
-> > linux @ hp
->
-> Cool, If I see anybody
-> struggling, I point them to the
-> fix you posted.
+On Thu, 2009-01-22 at 20:12 -0600, Larry Finger wrote:
+> Maxim Levitsky wrote:
+> > I just installed it again with all default options, and still same thing
+> > I also noticed wierd AP names like:
+> > 
+> >  wlan0: associate with AP ffff88005463a9e0
+> 
+> As you have seen, the commit with the bug that prevents a connection has been found.
+> 
+> The funny printing of MAC addresses is due to the newer code using the %pM formatting that
+> is not present in older kernels. You can ignore that.
+> 
+> Larry
+Thanks, works fine now
 
-Great.  Also let me know, if this looks like it will be widespread 
-problem I'll make a new release; I'd hate for people to have to patch 
-the Makefile to get it to build ...
+Best regards,
+	Maxim Levitsky
 
-> I also might be missing something, i.g.
-> one of the boxes that gave this error I built
-> with debootstrap, but then the other that gave this as well
-> was built with nubuntu which seems more complete
-> than debootstrap.
-> but then maybe both are missing a package.
-> (or it's a debian thing)
-
-It could also be my rather poor understanding of bash and makefiles :)  
-If anyone out there wants to take a look and offer an explanation or a 
-better patch I'm more than happy to accept it.
-
--- 
-paul moore
-linux @ hp
