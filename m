@@ -1,133 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:44435 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbZAENHv (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.230]:33578 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753556AbZAWPR1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 08:07:51 -0500
-Date: Mon, 5 Jan 2009 14:21:41 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linville@tuxdriver.com,
-	davem <davem@davemloft.net>
-Subject: Re: [PATCH] Fix up truesize after pskb_expand_head() in wireless stack
-Message-ID: <20090105132141.GO496@one.firstfloor.org> (sfid-20090105_140755_825263_A330E4A6)
-References: <20090104151819.GA6590@basil.nowhere.org> <1231085150.3296.3.camel@johannes> <20090104162826.GT496@one.firstfloor.org> <1231087288.3296.15.camel@johannes> <20090104174339.GX496@one.firstfloor.org> <1231090388.3296.17.camel@johannes> <20090104184136.GY496@one.firstfloor.org> <1231144574.3286.15.camel@johannes>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231144574.3286.15.camel@johannes>
+	Fri, 23 Jan 2009 10:17:27 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so4744612rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 07:17:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <e27b78a40901230530h192a8030l6905089df2a5822d@mail.gmail.com>
+References: <e27b78a40901230530h192a8030l6905089df2a5822d@mail.gmail.com>
+Date: Fri, 23 Jan 2009 10:17:26 -0500
+Message-ID: <b6c5339f0901230717h605d2fbaibda8b720c6191abf@mail.gmail.com> (sfid-20090123_161732_029381_4B68A89A)
+Subject: Re: ath5k mesh in 2.6.28?
+From: Bob Copeland <me@bobcopeland.com>
+To: Keir <keirlawson@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 05, 2009 at 09:36:14AM +0100, Johannes Berg wrote:
-> On Sun, 2009-01-04 at 19:41 +0100, Andi Kleen wrote:
-> 
-> > I think most adjustments are too small to be noticed. Typically
-> > they are just for a few bytes in the header. truesize
-> > is already larger, so it can tolerate some slag.
-> 
-> This statement is incompatible with your patch when you think about the
-> exact definition of truesize and the (unconditional!) adjustments your
-> patch makes.
+On Fri, Jan 23, 2009 at 8:30 AM, Keir <keirlawson@gmail.com> wrote:
+> Hi,
+>
+> According to the 802.11s website it seems to claim that mesh
+> networking is supported for ath5k devices in kernel 2.6.28, however,
+> upon running ifconfig mesh0 up (having previously created the mesh
+> device using iw) I get "SIOCSIFFLAGS: Operation not supported".
 
-__alloc_skb does 
+2.6.28 does not support mesh, at least from looking at the code,
+ath5k_add_interface has:
 
-        size = SKB_DATA_ALIGN(size);
-        skb->truesize = size + sizeof(struct sk_buff);
+    switch (conf->type) {
+    case NL80211_IFTYPE_STATION:
+    case NL80211_IFTYPE_ADHOC:
+    case NL80211_IFTYPE_MONITOR:
+        sc->opmode = conf->type;
+        break;
+    default:
+        ret = -EOPNOTSUPP;
+        goto end;
+    }
 
-[ BTW it would be probably better if alloc_skb() just asked
-slab what the truesize is for kmalloc instead of guessing wrong like this.
-But that's a different topic]
+It needs to at least also have NL80211_IFTYPE_MESH_POINT.
 
-and SKB_DATA_ALIGN is 
-
-#define SKB_DATA_ALIGN(X)       (((X) + (SMP_CACHE_BYTES - 1)) & \
-                                 ~(SMP_CACHE_BYTES - 1))
-
-and on my configuration SMP_CACHE_BYTES is 64
-
-skb_truesize_check does 
-
- int len = sizeof(struct sk_buff) + skb->len;
-
-        if (unlikely((int)skb->truesize < len))
-                skb_truesize_bug(skb);
-
-This means if the change is less than the 64byte cache alignment 
-(or more commonly 128 bytes on GENERIC_CPU distro kernels)
-it won't be reported. To my knowledge header adjustments are usually
-smaller and that is what pskb_expand_head() is usually used for.
-
-
-> > I also only see it occasionally (maybe 5-10 times/day) when
-> > the wireless stack appends a lot of data.
-> 
-> Except the data it appends should generally be of the same or very
-> similar size under unchanging conditions, so that doesn't make a lot of
-> sense either.
-
-I don't know too much about the packet dynamics of the wireless stack,
-but I can only report what my machine printed out.  
-
-Here are some excerpts:
-
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=769, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1404, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=769, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=920, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=462, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=1452, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=1452, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=1452, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=1452, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=1452, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=468, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=820, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=820, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=468, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=533, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=468, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=542, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (600) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1349, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
- SKB BUG: Invalid truesize (920) len=1440, sizeof(sk_buff)=216
-
-> I disagree, obviously. I knew there was some truesize corruption, and I
-> think you for tracing down where it occurs. I'll investigate a proper
-> fix when I get around to that, meanwhile I don't think the problem is
-> awfully urgent since we've had this going on for quite a while and, if
-> any, it probably only affects/corrupts the raw monitor sockets.
-
-I didn't use any monitoring with this. No tcpdump, no wireless
-sniffer tools or anything. It happened all the time during
-normal operation.
-
--Andi
+Mesh was enabled for 2.6.29 via b706e65b40417e03c2451bb3f92488f3736843fa,
+so if you need it in 2.6.28 you can ask Greg to pick it up for stable.
 
 -- 
-ak@linux.intel.com
+Bob Copeland %% www.bobcopeland.com
