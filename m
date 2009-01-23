@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.189]:21689 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754410AbZA0Jeo (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:56810 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbZAWFRc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 04:34:44 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so4422007muf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 01:34:42 -0800 (PST)
+	Fri, 23 Jan 2009 00:17:32 -0500
+Received: by fg-out-1718.google.com with SMTP id 19so2410390fgg.17
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 21:17:30 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1233047705.4012.12.camel@johannes.local>
-References: <1233047705.4012.12.camel@johannes.local>
-Date: Tue, 27 Jan 2009 11:34:42 +0200
-Message-ID: <1ba2fa240901270134x50b4daej9fb600ac1d8311ef@mail.gmail.com> (sfid-20090127_103452_836416_20E1C6C2)
-Subject: Re: iwlwifi warnings
-From: Tomas Winkler <tomasw@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4979269F.1060500@lwfinger.net>
+References: <4979269F.1060500@lwfinger.net>
+Date: Fri, 23 Jan 2009 05:17:30 +0000
+Message-ID: <3ace41890901222117q55040043lfcab89fc928422ed@mail.gmail.com> (sfid-20090123_061736_371761_D587BEB8)
+Subject: Re: Regression caused by commit e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Alina Friedrichsen <x-alina@gmx.net>,
+	John Linville <linville@tuxdriver.com>, samuel@sortiz.org,
+	Kalle Valo <kalle.valo@iki.fi>, maximlevitsky@gmail.com,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 27, 2009 at 11:15 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> drivers/net/wireless/iwlwifi/iwl3945-base.c: In function
-> 'iwl3945_pci_resume':
-> drivers/net/wireless/iwlwifi/iwl3945-base.c:6319: warning: ignoring
-> return value of 'pci_enable_device', declared with attribute
-> warn_unused_result
->
-> drivers/net/wireless/iwlwifi/iwl-agn.c: In function 'iwl_pci_resume':
-> drivers/net/wireless/iwlwifi/iwl-agn.c:4128: warning: ignoring return
-> value of 'pci_enable_device', declared with attribute warn_unused_result
->
-> drivers/net/wireless/iwlwifi/iwl-tx.c: In function 'iwl_tx_queue_alloc':
-> drivers/net/wireless/iwlwifi/iwl-tx.c:302: warning: format '%zd' expects
-> type 'signed size_t', but argument 4 has type 'u32'
+On Fri, Jan 23, 2009 at 2:08 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> With the commit of the subject, my b43 and p54usb devices stopped working. They could
+> associate and authenticate with my WPA2 network, but never finish the DHCP connection and
+> get an IP address. Surprisingly, my rtl8187 devices continued to work.
 
-Patch already queued.
-Tomas
+I don't want to do a "me too", but my rtl8187B broke yesterday after
+upgrading to wireless-testing/compat-wireless head,
+and it worked again today. There are only two patches between
+yesterday and today and one of them is John's revert, so it is
+possible that the rtl8187B is also affected.
+
+The symptom is as you said, I can associate and authenticate, but dhcp
+won't finish and wpa_suplicant ifdown the device.
+I tried that a few times and restarting NM, modprobe -r/-v, etc. In
+the end it was easier just to blow away the compat-wireless update
+redirectory and revert back to the vendor-shipped kernel modules - and
+hope that it is just a transient problem and the problem would go away
+when I git fetch next time :-).
