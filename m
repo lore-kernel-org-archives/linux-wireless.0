@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:40180 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751098AbZAWRLR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 12:11:17 -0500
-Date: Fri, 23 Jan 2009 09:09:29 -0800
-From: Greg KH <greg@kroah.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: stable@kernel.org, andrey@cozybit.com,
-	linux-wireless@vger.kernel.org, Keir <keirlawson@gmail.com>
-Subject: Re: [stable] ath5k mesh in 2.6.28?
-Message-ID: <20090123170929.GA11662@kroah.com> (sfid-20090123_181121_462603_1373C86C)
-References: <e27b78a40901230530h192a8030l6905089df2a5822d@mail.gmail.com> <b6c5339f0901230717h605d2fbaibda8b720c6191abf@mail.gmail.com> <e27b78a40901230725r4dc40975t8e4cb9f481df1702@mail.gmail.com> <20090123153305.M33802@bobcopeland.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090123153305.M33802@bobcopeland.com>
+Received: from mx2.redhat.com ([66.187.237.31]:46514 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755935AbZAWWQm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 17:16:42 -0500
+Subject: [PATCH 0/7 v2] airo: cleanups and simplifications
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Fri, 23 Jan 2009 17:15:14 -0500
+Message-Id: <1232748914.447.2.camel@localhost.localdomain> (sfid-20090123_231647_256810_FBC442D8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2009 at 11:26:15AM -0500, Bob Copeland wrote:
-> Hi stable hackers,
-> 
-> Would you consider taking b706e65b40417e03c2451bb3f92488f3736843fa,
-> "ath5k: fix mesh point operation" for 2.6.28-stable?  It's a new feature 
-> compared to 2.6.27, so not a regression per se; however, ath5k advertises
-> mesh support in wiphy->interface_modes but doesn't make good on that 
-> promise when it comes to actually setting up such an interface.
+airo needs some hot sexy love.  come and get your love come and get your
+love now.
 
-Based on your patch, I don't have an objection to taking it for the next
-2.6.28 release (will have to be after 2.6.28.2 comes out.)  I'll queue
-it up for the next review cycle.
+[PATCH 1/7 v2] airo: clean up and clarify interrupt-time task handling
+[PATCH 2/7 v2] airo: re-arrange WPA capability checks
+[PATCH 3/7 v2] airo: simplify WEP index and capability checks
+[PATCH 4/7 v2] airo: clean up WEP key operations
+[PATCH 5/7 v2] airo: use __attribute__ ((packed)) not #pragma
+[PATCH 6/7 v2] airo: clean up and clarify micinit()
+[PATCH 7/7 v2] airo: remove useless #defines
 
-thanks,
+(v2 changes: rebased onto wireless-testing 2008-01-23)
 
-greg k-h
+
