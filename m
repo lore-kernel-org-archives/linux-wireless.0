@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flock1.newmail.ru ([82.204.219.207]:55815 "HELO
-	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759818AbZAHSzY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 13:55:24 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: Dave <kilroyd@googlemail.com>
-Subject: Re: [PATCH] orinoco: take the driver lock in the rx tasklet
-Date: Thu, 8 Jan 2009 21:55:14 +0300
-Cc: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-References: <1231287835-17707-1-git-send-email-kilroyd@googlemail.com> <200901081128.30143.arvidjaar@mail.ru> <496644D0.6050301@gmail.com>
-In-Reply-To: <496644D0.6050301@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:41092 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755126AbZAWQEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 11:04:24 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Regression caused by commit e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
+Date: Fri, 23 Jan 2009 17:03:28 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Alina Friedrichsen <x-alina@gmx.net>, samuel@sortiz.org,
+	Kalle Valo <kalle.valo@iki.fi>, maximlevitsky@gmail.com,
+	wireless <linux-wireless@vger.kernel.org>
+References: <4979269F.1060500@lwfinger.net> <200901231647.50978.mb@bu3sch.de> <20090123154918.GB13658@tuxdriver.com>
+In-Reply-To: <20090123154918.GB13658@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart15226211.t0LQKgWvT4";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200901082155.15657.arvidjaar@mail.ru> (sfid-20090108_195529_090933_A2F0A61E)
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901231703.28904.mb@bu3sch.de> (sfid-20090123_170428_050822_BB4E3474)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart15226211.t0LQKgWvT4
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Friday 23 January 2009 16:49:18 John W. Linville wrote:
+> On Fri, Jan 23, 2009 at 04:47:50PM +0100, Michael Buesch wrote:
+> > On Friday 23 January 2009 03:08:31 Larry Finger wrote:
+> > > With the commit of the subject, my b43 and p54usb devices stopped working. They could
+> > > associate and authenticate with my WPA2 network, but never finish the DHCP connection and
+> > > get an IP address. Surprisingly, my rtl8187 devices continued to work.
+> > > 
+> > > Please excuse the second sending of this. I missed wireless the first time.
+> > 
+> > Do you have a diff of this commit? Or at least the date it was committed?
+> > I have some strange AP mode issue and it might be related to this. I just want to verify.
+> 
+> That commit ID should still be available in wireless-testing --
+> git show e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
 
-On =D0=A7=D0=B5=D1=82=D0=B2=D0=B5=D1=80=D0=B3 08 =D1=8F=D0=BD=D0=B2=D0=B0=
-=D1=80=D1=8F 2009 21:24:16 Dave wrote:
-> The move to the RX tasklet was not motivated by improved performance,
-> but the requirements of the crypto library (can't call from
-> interrupt) and the need to do MIC calculations on RX.
->
-> Unless the crypto routines have changed, reverting that commit will
-> break WPA support.
+Oh ok. I thought you just took it out and rebased.
+Thanks :)
 
-Thank you for clarification.
-
---nextPart15226211.t0LQKgWvT4
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAklmTBMACgkQR6LMutpd94yKMACgokphX6yE5V8C4CCPe7oz+iRB
-2/gAn385ZudvXbyUERxOJlDqjZzLVuJh
-=GduK
------END PGP SIGNATURE-----
-
---nextPart15226211.t0LQKgWvT4--
+-- 
+Greetings, Michael.
