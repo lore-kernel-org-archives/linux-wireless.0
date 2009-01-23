@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c1.cosetrain.com ([213.239.209.213]:53596 "EHLO
-	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752009AbZAZUvU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 15:51:20 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mail.cosetrain.com (Postfix) with ESMTP id 6D249A18BC7
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 21:22:41 +0100 (CET)
-Received: from [192.168.30.40] (ppp-93-104-122-51.dynamic.mnet-online.de [93.104.122.51])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.cosetrain.com (Postfix) with ESMTP id 42784A18BC6
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 21:22:41 +0100 (CET)
-Message-ID: <497E1B90.4060803@cosetrain.com> (sfid-20090126_215126_101930_ED89AC85)
-Date: Mon, 26 Jan 2009 21:22:40 +0100
-From: Florian Sesser <flomaillist@cosetrain.com>
+Received: from mail.gmx.net ([213.165.64.20]:42965 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757615AbZAWXQM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 18:16:12 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sat, 24 Jan 2009 00:16:10 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090123122921.GA2745@sortiz.org>
+Message-ID: <20090123231610.50410@gmx.net> (sfid-20090124_001617_436761_FCD66EBE)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [RFC][RFT] mac80211 / mesh: Modularize Path Selection Protocol
-Content-Type: text/plain; charset=ISO-8859-1
+References: <4979269F.1060500@lwfinger.net>
+ <20090123021413.GB3177@tuxdriver.com> <4979567D.2020005@lwfinger.net>
+ <20090123071345.270730@gmx.net> <20090123122921.GA2745@sortiz.org>
+Subject: Re: Regression caused by commit
+	e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
+To: kalle.valo@iki.fi, maximlevitsky@gmail.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Larry.Finger@lwfinger.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all!
+Hi Samuel!
 
-As I mentioned some time ago on linux-wireless [1], I am trying to
-extend o11s so I can include Scalable Source Routing. Towards that goal,
-I first need a method to be able to exchange the used mesh path
-selection protocol.
+> I dont think we should ignore the if_config() return value.
 
-In this patch series, you can see my first approach to an API that
-enables users to exchange the path selection protocol at runtime.
+I can write a warning in the kernel log, to help the low-level driver d=
+evelopers to debug this problem, but I don't want to stop the new mergi=
+ng process, so that the driver hangs in a mostly undefined state.
 
-What I have done so far is mostly borrowing source code from
-block/elevator.c for most of the registration, finding and inserting
-glue code. Also, I have wrapped mesh_hwmp into an own module and written
-a test module (pptest) so the module switching can be tried out. To that
-end, I also have patched iw.
+> Is the 4965 error code sent when trying to set a fixed BSSID in IBSS =
+?
+> I dont see it in STA mode, when associating to my AP.
 
-For completeness, I will post the patch to iw in reply to this eMail on
-this list, as it is quite simple, short and affects only two files
-(compared to 14 or so for the API in the kernel).
+I unfortunately don't know the error code, because I don't have the car=
+d, but I think if the setting of the BSSID fails here, I should work in=
+ the new initiated normal joining process, even in broken low-level dri=
+vers.
 
-This is my first patch not only to the kernel, but to any open source
-project, so please be gentle ;) I am open to suggestions for
-improvement; please also remind me on any coding style or other errors
-you may find.
+Regards
+Alina
 
-I would be very glad if some of the experts here could review it and
-give me advice on:
-
- * If my selection of functions for the abstraction ops-struct is
-somewhat sane or if I am missing critical parts (this is most important
-to me)
-
- * Which is the best location for the path selection protocol ID
-(cfg80211 and iw suggest having the value in struct mesh_params. o11s
-currently stores it in ieee80211_if_mesh->mesh_pp_id, which is in use at
-least by mesh_matches_local. And finally it obviously needs to be stored
-in the path selection protocol modules.)
-
-Greetings from Munich!
-
-Florian
-
-
-[1] http://marc.info/?l=linux-wireless&m=122600107811517&w=2
-
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
