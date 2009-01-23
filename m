@@ -1,98 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42508 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759559AbZAVXGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 18:06:41 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 15:06:41 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/12] cfg80211: Fix sanity check on 5 GHz when processing country IE
-Date: Thu, 22 Jan 2009 15:05:46 -0800
-Message-ID: <1232665554-26132-5-git-send-email-lrodriguez@atheros.com> (sfid-20090123_000703_900413_EF0FA4A9)
-In-Reply-To: <1232665554-26132-4-git-send-email-lrodriguez@atheros.com>
-References: <1232665554-26132-1-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-2-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-4-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:53173 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752476AbZAWTYw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 14:24:52 -0500
+Cc: Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Message-Id: <01F0FEC9-8ECF-4284-9428-701B976286D6@ing.unibs.it> (sfid-20090123_202456_466433_E0170644)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <497A05DC.4040101@lwfinger.net>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: Re: integration of opensource firmware with b43 kernel driver
+Date: Fri, 23 Jan 2009 20:24:47 +0100
+References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it> <497A05DC.4040101@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes two issues with the sanity check loop when processing
-the country IE:
+On Jan 23, 2009, at 7:01 PM, Larry Finger wrote:
 
-1. Do not use frequency for the current subband channel check,
-   this was a big fat typo.
-2. Apply the 5 GHz 4-channel steps when considering max channel
-   on each subband as was done with a recent patch.
+> Francesco Gringoli wrote:
+>> Hello,
+>>
+>> we have been testing the firmware for a week now and it seems  
+>> stable. I
+>> personally tested it also on a Linksys WRT54GL and it works both in
+>> station and in AP modes. I collected the feedbacks that some of you  
+>> sent
+>> and it seems that the firmware now runs on these board:
+>>
+>> - 4306, 4311, 4318, 4320
+>
+> As a point of clarification, I think this is restricted to the 4311/1
+> as the 4311/2 uses ucode13, not ucode5. If you need a tester for an
+> open-source version of the 13 firmware, I'm available.
+Damn... that would be a very hard writing.... We do not have any  
+4311/2 board: at first glance there are more condition registers whose  
+meaning we do not know. Very different hardware, didn't know. Thank  
+you for the feedback.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   30 +++++++++++++++++++-----------
- 1 files changed, 19 insertions(+), 11 deletions(-)
+By the way: is that device inside an AP? If yes what? if not which  
+brand has the board on? I can look around.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 70691de..c744788 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -498,6 +498,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 	 * calculate the number of reg rules we will need. We will need one
- 	 * for each channel subband */
- 	while (country_ie_len >= 3) {
-+		int end_channel = 0;
- 		struct ieee80211_country_ie_triplet *triplet =
- 			(struct ieee80211_country_ie_triplet *) country_ie;
- 		int cur_sub_max_channel = 0, cur_channel = 0;
-@@ -509,9 +510,25 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 			continue;
- 		}
- 
-+		/* 2 GHz */
-+		if (triplet->chans.first_channel <= 14)
-+			end_channel = triplet->chans.first_channel +
-+				triplet->chans.num_channels;
-+		else
-+			/*
-+			 * 5 GHz -- For example in country IEs if the first
-+			 * channel given is 36 and the number of channels is 4
-+			 * then the individual channel numbers defined for the
-+			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
-+			 * and not 36, 37, 38, 39.
-+			 *
-+			 * See: http://tinyurl.com/11d-clarification
-+			 */
-+			end_channel =  triplet->chans.first_channel +
-+				(4 * (triplet->chans.num_channels - 1));
-+
- 		cur_channel = triplet->chans.first_channel;
--		cur_sub_max_channel = ieee80211_channel_to_frequency(
--			cur_channel + triplet->chans.num_channels);
-+		cur_sub_max_channel = end_channel;
- 
- 		/* Basic sanity check */
- 		if (cur_sub_max_channel < cur_channel)
-@@ -590,15 +607,6 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 			end_channel = triplet->chans.first_channel +
- 				triplet->chans.num_channels;
- 		else
--			/*
--			 * 5 GHz -- For example in country IEs if the first
--			 * channel given is 36 and the number of channels is 4
--			 * then the individual channel numbers defined for the
--			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
--			 * and not 36, 37, 38, 39.
--			 *
--			 * See: http://tinyurl.com/11d-clarification
--			 */
- 			end_channel =  triplet->chans.first_channel +
- 				(4 * (triplet->chans.num_channels - 1));
- 
--- 
-1.6.1.rc3.51.g5832d
-
+Cheers,
+-FG
