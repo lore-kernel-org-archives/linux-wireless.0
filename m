@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f29.google.com ([209.85.218.29]:47495 "EHLO
-	mail-bw0-f29.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630AbZAHMIt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 07:08:49 -0500
-Received: by bwz10 with SMTP id 10so6544841bwz.13
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2009 04:08:46 -0800 (PST)
-To: Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH 12/14] mac80211: 802.11w - Optional software CCMP for management frames
-Date: Thu, 8 Jan 2009 13:08:21 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>,
-	Dan Williams <dcbw@redhat.com>
-References: <20090107112346.369581673@atheros.com> <200901081057.46495.helmut.schaa@gmail.com> <20090108104822.GA12480@jm.kir.nu>
-In-Reply-To: <20090108104822.GA12480@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901081308.23046.helmut.schaa@gmail.com> (sfid-20090108_130855_272442_CBAB2CE3)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:35208 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753562AbZAWT5P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 14:57:15 -0500
+Subject: Re: [PATCH] libertas: fix CF firmware loading for some cards
+From: Dan Williams <dcbw@redhat.com>
+To: Ryan Mallon <ryan@bluewatersys.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Cyril HAENEL <chaenel@free.fr>,
+	libertas-dev@lists.infradead.org
+In-Reply-To: <497AD344.5080900@bluewatersys.com>
+References: <1232729733.2577.13.camel@localhost.localdomain>
+	 <497AD344.5080900@bluewatersys.com>
+Content-Type: text/plain
+Date: Fri, 23 Jan 2009 14:54:22 -0500
+Message-Id: <1232740462.2577.48.camel@localhost.localdomain> (sfid-20090123_205720_102258_0D103D15)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag, 8. Januar 2009 schrieb Jouni Malinen:
-> On Thu, Jan 08, 2009 at 10:57:45AM +0100, Helmut Schaa wrote:
+On Sat, 2009-01-24 at 21:37 +1300, Ryan Mallon wrote:
+> Dan Williams wrote:
+> > if_cs_poll_while_fw_download() returned the number of iterations
+> > remaining on success, which in turn got returned as the value from
+> > if_cs_prog_real() and if_cs_prog_helper().  But since if_cs_probe()
+> > interprets non-zero return values from firmware load functions as an
+> > error, this sometimes caused spurious firmware load failures.
+> > 
+> > Signed-off-by: Dan Williams <dcbw@redhat.com>
+> > ---
+> > 
+> > diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+> > index 842a08d..8f8934a 100644
+> > --- a/drivers/net/wireless/libertas/if_cs.c
+> > +++ b/drivers/net/wireless/libertas/if_cs.c
+> > @@ -151,7 +151,7 @@ static int if_cs_poll_while_fw_download(struct if_cs_card *card, uint addr, u8 r
+> >  	for (i = 0; i < 100000; i++) {
+> >  		u8 val = if_cs_read8(card, addr);
+> >  		if (val == reg)
+> > -			return i;
+> > +			return 0;
+> >  		udelay(5);
+> >  	}
+> >  	return -ETIME;
+> > 
+> > 
 > 
-> > Jouni, what do you think about extending wpa_supplicant to allow mutliple
-> > drivers to be set on the commandline (-Dnl80211,wext). The supplicant would
-> > then try to register the first driver and only if that fails it takes the next
-> > one (e.g. try nl80211 first and if that fails use wext). That way NM could
-> > use nl80211 for drivers that support nl80211 (mainly mac80211-drivers) and
-> > wext for the other drivers by passing "-Dnl80211,wext" to the supplicant.
-> 
-> Well, that could be done inside wpa_supplicant, but more or less the
-> same effect should already be doable by NM trying to first add the
-> interface with nl80211 as the driver interface and if that fails, fall
-> back to wext.
+> Hmmm, I posted this same patch here a couple of months ago
+> (http://lists.infradead.org/pipermail/libertas-dev/2008-October/002019.html),
+> did I get something wrong in the submission process, or did it just get
+> lost in the woodwork? Anyway:
 
-True. However, other consumers of wpa_supplicant (e.g. Yast in SUSE) could
-also benefit from this feature if implemented inside the supplicant. But as
-I wrote, this was just a quick thought on how to make the transition from
-wext to nl80211 smoother.
+Apparently I didn't read enough down that thread to find the second
+patch; I only found the one that changed if_cs_prog_helper() and
+if_cs_prog_real().  My mistake, this patch is yours.
 
-Helmut
+John; when you apply, please credit Ryan.
+
+Dan
+
+
