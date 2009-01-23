@@ -1,92 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:7152 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754904AbZAGMlB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 07:41:01 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2993705fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 04:40:59 -0800 (PST)
-Message-ID: <3ace41890901070440w63fbb06fy39e3bcb387f08d60@mail.gmail.com> (sfid-20090107_134109_596342_64D1285C)
-Date: Wed, 7 Jan 2009 12:40:59 +0000
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Rodrigo Fresneda" <fresneda@gmail.com>
-Subject: Re: trouble with compat-old
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <e6236e5f0901061740s20d817b1s2befb66cefbf72b0@mail.gmail.com>
+Received: from nbd.name ([88.198.39.176]:51179 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755076AbZAWCWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2009 21:22:04 -0500
+Message-ID: <497929C1.9060804@openwrt.org> (sfid-20090123_032211_935738_FD225065)
+Date: Fri, 23 Jan 2009 03:21:53 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	=?ISO-8859-1?Q?Mart=EDn_?= =?ISO-8859-1?Q?Ernesto_Barreyro?=
+	<barreyromartin@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Minstrel rate-setting question
+References: <BLU144-W4266C309A1F9CD0F4B5C21B2D90@phx.gbl>	 <496CE438.6020408@lwfinger.net>	 <BLU144-W164FB7B41C703C52AAAF9BB2D90@phx.gbl>	 <496D2772.4060104@lwfinger.net>	 <BLU144-W254C2D7845CD9E851F745DB2D60@phx.gbl>	 <496D3118.7060906@lwfinger.net>	 <BLU144-W40A7F7D25BE3B92EABD5C7B2D60@phx.gbl> <496D665A.90608@lwfinger.net>	 <BLU144-W102912CECD6EE0D07D1BD8B2D50@phx.gbl>	 <4972B1E7.7000005@lwfinger.net>	 <BLU144-W211FE279F46EA07E0D35E0B2D10@phx.gbl>	 <4977612D.7050500@lwfinger.net> <1232664643.4589.5.camel@note-tatin> <49790C43.5050100@lwfinger.net>
+In-Reply-To: <49790C43.5050100@lwfinger.net>
 Content-Type: text/plain; charset=ISO-8859-1
-References: <e6236e5f0901060312h6946f9a1p49e299e723cb0190@mail.gmail.com>
-	 <3ace41890901061536k7722b63h906962283ce9e4ad@mail.gmail.com>
-	 <e6236e5f0901061740s20d817b1s2befb66cefbf72b0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 7, 2009 at 1:40 AM, Rodrigo Fresneda <fresneda@gmail.com> wrote:
-> Thanks for your answer. Now, what exactly am I supposed to do? Take a
-> look at the IWL section in config.mk:
+Larry Finger wrote:
+> In the patch I just submitted, I added TX retry info to the driver for RTL8187L devices.
+> One of the testers of the patch reports that the rate is being adjusted, but that the rate
+> is overestimated and he has to limit it to 11M. His minstrel statistics and his comments
+> are as follows:
+> 
+>> rate     throughput  ewma prob   this prob  this succ/attempt   success
+>> attempts
+>>      1         0.2       29.8       12.5          1(  8)         51
+>> 86
+>>      2         0.4       22.6       14.2          0(  0)          6
+>> 25
+>>   P  5.5       2.7       54.2      100.0          0(  0)         41
+>> 109
+>>     11         1.9       20.5       12.5          0(  0)          6
+>> 30
+>>      6         2.1       38.4       20.0          0(  0)          7
+>> 24
+>>      9         2.0       24.8        8.3          0(  0)          6
+>> 25
+>>     12         2.4       21.9       12.5          0(  0)          6
+>> 52
+>>     18         3.2       19.9       12.5          0(  0)          6
+>> 44
+>>     24         4.7       22.2       12.5          0(  0)         15
+>> 109
+>>     36         4.4       14.5        9.0          0(  0)        495
+>> 2036
+>>  t  48         5.2       13.4       12.5          0(  0)        209
+>> 1220
+>> T   54         8.6       19.8       14.2          1(  7)        556
+>> 4514
+>> 
+>> But It still is a little to optimistic. But I supose is the algorithm
+>> fault. It gets a little laggy and I have to limit the rate to 11Mbps.
+>> 
+>> If I do that the conection works perfect.
+>> 
+>> But the algorithm is working, maybe its just how it should work.
+>> What do you think?
+> 
+> The losses for all rates seem to be a little high, and I plan to see if he can change
+> channels, but I would like an expert's analysis of these data.
+I believe that it's not minstrel's fault. According to the information that
+I have about RTL8187L, the chip implements rate fallback. If the chip changes
+rates during retransmissions, the status information the way you gather it
+will not be accurate and will trick minstrel into believing that higher rates
+actually work (which in fact they don't). 
+Please do some transmissions at 54M and run a monitor mode capture on a different
+card to see if it changes the rate during transmission and how frequently it
+uses one rate before falling back (if indeed my theory is correct).
+This information could be used to provide some more accurate feedback through
+multi-rate retry status information.
 
-That's a bit wrong... how about try changing the 4965 "y" to "m"?
-
->
-> CONFIG_IWL3945=m
-> CONFIG_IWL3945_DEBUG=n
-> CONFIG_IWL3945_LEDS=y
-> # CONFIG_IWL3945_RFKILL=y
-> CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
-> CONFIG_IWL4965=y
-> CONFIG_IWL5000=y
-> CONFIG_IWLAGN=m
-> CONFIG_IWLAGN_LEDS=y
-> CONFIG_IWLAGN_SPECTRUM_MEASUREMENT=y
-> CONFIG_IWLCORE=m
-> CONFIG_IWLWIFI=m
-> CONFIG_IWLWIFI_DEBUG=n
-> CONFIG_IWLWIFI_LEDS=y
->
-> It seems CONFIG_IWL4965 is selected by default. Do you think there is
-> a better selection than the default one? An unrelated question, is
-> there a way to instruct make to build only the modules I want, i.e.,
-> iwlagn?
-
-yes and no... "y" sometimes means it assumes *your current kernel* has
-it built-in (i.e. = "ignore this option").
-A shame you aren't using the latest compat-wireless.
-
-Well, if you want to skip some modules, you just put comment it out,
-e.g. edit drivers/net/wireless/Makefile and put a "#" before any line
-that doesn't contain obj-$(CONFIG_IWL*
-
->
-> thanks again,
-> rodrigo.
->
->
->
-> On Wed, Jan 7, 2009 at 12:36 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
->> On Tue, Jan 6, 2009 at 11:12 AM, Rodrigo Fresneda <fresneda@gmail.com> wrote:
->>
->>> WARNING: "iwl4965_agn_cfg"
->>> [/home/fresneda/compat-wireless-2.6-old/drivers/net/wireless/iwlwifi/iwlagn.ko]
->>> undefined!
->>>
->>> The module is built, but it cannot be inserted:
->>>
->>> FATAL: Error inserting iwlagn
->>> (/lib/modules/2.6.26-1-amd64/updates/drivers/net/wireless/iwlwifi/iwlagn.ko):
->>> Unknown symbol in module, or unknown parameter (see
->>> dmesg)
->>>
->>> And the output of dmesg:
->>>
->>> iwlagn: Unknown symbol iwl4965_agn_cfg
->>
->>
->> symbol iwl4965_agn_cfg is enabled if you select "Intel Wireless WiFi
->> 4965AGN" support also.
->> config IWL4965 . Try selecting that when you build compat-wireless.old
->> . (seems that in some older version of
->> conpat-wireless, the 5000 code depends on the 4965 code).
->>
->> Also, make sure that you do "depmod -a"
->>
->
+- Felix
