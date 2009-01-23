@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:43953 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754053AbZAEOJw (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:49553 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754397AbZAWBGu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 09:09:52 -0500
-Date: Mon, 5 Jan 2009 15:23:43 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Andi Kleen <andi@firstfloor.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: rate instability in wireless stack
-Message-ID: <20090105142343.GS496@one.firstfloor.org> (sfid-20090105_150954_758966_64FE00C6)
-References: <20090104164649.GV496@one.firstfloor.org> <200901041736.47650.mb@bu3sch.de> <20090104174123.GW496@one.firstfloor.org> <49615465.4090604@lwfinger.net> <20090105025302.GF496@one.firstfloor.org> <49618497.50809@lwfinger.net> <20090105050248.GG496@one.firstfloor.org> <496193A6.3040608@lwfinger.net> <20090105054830.GJ496@one.firstfloor.org> <49620BE5.9030507@openwrt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49620BE5.9030507@openwrt.org>
+	Thu, 22 Jan 2009 20:06:50 -0500
+Message-ID: <4979181E.1070401@lwfinger.net> (sfid-20090123_020654_940088_A67D0D27)
+Date: Thu, 22 Jan 2009 19:06:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: samuel@sortiz.org
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 regression: associates but no data is transfered
+References: <87priffb95.fsf@litku.valot.fi> <20090122183448.GC3646@tuxdriver.com> <d7a260e8d188b785d0d2be743c8c5461@localhost> <4979077B.8090804@lwfinger.net> <a0ea5baee379a280e5a06e81facbb631@localhost>
+In-Reply-To: <a0ea5baee379a280e5a06e81facbb631@localhost>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 05, 2009 at 02:32:21PM +0100, Felix Fietkau wrote:
-> It looks like mac80211 is not getting proper feedback from the tx
-> status of the device. Is this with the patch that Larry suggested?
-> If so, please revert that patch and post an updated version of the
-> same stats.
+samuel@sortiz.org wrote:
+> Have you tried reverting that commit ?
+> I actually found that it does break ath5k as well...
 
-With Larry's patch reverted. Rate is still at 1Mbit/s of course.
-This is all only with rtl8180, I didn't try everything on the realtek
-card too. 
+No - as I was bisecting, I thought I'd keep going; however, that sounds like a good idea
+that might save some time.
 
--Andi
+I'll report ASAP.
 
-rate     throughput  ewma prob   this prob  this succ/attempt   success    attempts
-TtP  1         0.9       99.2      100.0          1(  1)         23          32
-     2         0.0        0.0        0.0          0(  0)          0           0
-     5.5       0.0        0.0        0.0          0(  0)          0           1
-    11         0.0        0.0        0.0          0(  0)          0           0
-     6         0.0        0.0        0.0          0(  0)          0           0
-     9         0.0        0.0        0.0          0(  0)          0           0
-    12         0.0        0.0        0.0          0(  0)          0           0
-    18         0.0        0.0        0.0          0(  0)          0           0
-    24         0.0        0.0        0.0          0(  0)          0           0
-    36         0.0        0.0        0.0          0(  0)          0           0
-    48         0.0        0.0        0.0          0(  0)          0           0
-    54         0.0        0.0        0.0          0(  0)          0           0
-
-Total packet count::    ideal 25      lookaround 1
-
-
-
--- 
-ak@linux.intel.com
+Larry
