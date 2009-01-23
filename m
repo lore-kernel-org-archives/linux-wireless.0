@@ -1,76 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30107 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753571AbZA0F3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2009 00:29:21 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 21:29:21 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:55049 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756048AbZAWSBR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 13:01:17 -0500
+Message-ID: <497A05DC.4040101@lwfinger.net> (sfid-20090123_190121_939304_65875625)
+Date: Fri, 23 Jan 2009 12:01:00 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18814.39650.476444.154467@gargle.gargle.HOWL> (sfid-20090127_062944_829626_A52E70DC)
-Date: Tue, 27 Jan 2009 10:55:54 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH] ath9k: Reconfigure beacons on getting a notification from mac80211
+To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+CC: Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: integration of opensource firmware with b43 kernel driver
+References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it>
+In-Reply-To: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |   35 +++++++++++++++++++----------------
- 1 files changed, 19 insertions(+), 16 deletions(-)
+Francesco Gringoli wrote:
+> Hello,
+> 
+> we have been testing the firmware for a week now and it seems stable. I
+> personally tested it also on a Linksys WRT54GL and it works both in
+> station and in AP modes. I collected the feedbacks that some of you sent
+> and it seems that the firmware now runs on these board:
+> 
+> - 4306, 4311, 4318, 4320
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index d92da13..e659c36 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2253,24 +2253,27 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	if ((conf->changed & IEEE80211_IFCC_BEACON) &&
--	    ((vif->type == NL80211_IFTYPE_ADHOC) ||
--	     (vif->type == NL80211_IFTYPE_AP))) {
--		/*
--		 * Allocate and setup the beacon frame.
--		 *
--		 * Stop any previous beacon DMA.  This may be
--		 * necessary, for example, when an ibss merge
--		 * causes reconfiguration; we may be called
--		 * with beacon transmission active.
--		 */
--		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
-+	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
-+	    (vif->type == NL80211_IFTYPE_AP)) {
-+		if ((conf->changed & IEEE80211_IFCC_BEACON) ||
-+		    (conf->changed & IEEE80211_IFCC_BEACON_ENABLED &&
-+		     conf->enable_beacon)) {
-+			/*
-+			 * Allocate and setup the beacon frame.
-+			 *
-+			 * Stop any previous beacon DMA.  This may be
-+			 * necessary, for example, when an ibss merge
-+			 * causes reconfiguration; we may be called
-+			 * with beacon transmission active.
-+			 */
-+			ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
- 
--		error = ath_beacon_alloc(sc, 0);
--		if (error != 0)
--			return error;
-+			error = ath_beacon_alloc(sc, 0);
-+			if (error != 0)
-+				return error;
- 
--		ath_beacon_sync(sc, 0);
-+			ath_beacon_sync(sc, 0);
-+		}
- 	}
- 
- 	/* Check for WLAN_CAPABILITY_PRIVACY ? */
--- 
-1.6.1
+As a point of clarification, I think this is restricted to the 4311/1
+as the 4311/2 uses ucode13, not ucode5. If you need a tester for an
+open-source version of the 13 firmware, I'm available.
 
+> I was considering the suggestions you all gave me a few days ago and
+> other questions related to the possible integration of this firmware
+> into the kernel, and I came to these conclusions/questions (please
+> forgive me for this long message :-) )
+> 
+> - change the name of the initvals for the opensource firmware: this
+> seems a little bit complicated as now the decision about the
+> initval-files' names and the detection of the firmware type are
+> respectively based on the phy type and on the firmware date. This means
+> that initval-files' names can be determine as soon as the hardware type
+> has been probed, while the firmware needs to be started before the
+> kernel can determine if it is opensource or not: at this time, however,
+> the initvals have already been uploaded. What can we do?
+
+The driver can certainly be coded to look for the open-source firmware
+names before trying to load vendor firmware. That way there will not
+be any confusion.
+
+> - detection of the opensource firmware capabilities: are you really sure
+> we cannot use a shm location that the bcm proprietary firmware uses for
+> some other purpose? Once, in fact, the kernel has determined that the
+> firmware is opensource it can also use a given location in a different
+> manner than it would do for a proprietary firmware. However this is not
+> a problem at all :-) as we can use one location in the "high" shm-memory
+> area, let's say > 0xb00, just choose one.
+
+I think it best to choose an unused location.
+
+Larry
