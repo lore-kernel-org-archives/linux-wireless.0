@@ -1,42 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:44685 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753918AbZANVcl (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:60966 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755783AbZAWCIm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 16:32:41 -0500
-Date: Wed, 14 Jan 2009 16:32:34 -0500
-From: Kyle McMartin <kyle@infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Lorenzo Nava <navalorenx@gmail.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
-	kyle@infradead.org
-Subject: Re: [b43] opensource firmware
-Message-ID: <20090114213234.GB25473@bombadil.infradead.org> (sfid-20090114_223246_442611_904E421A)
-References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> <1231965922.20309.0.camel@johannes> <20090114210902.GD3643@tuxdriver.com> <1231968050.21021.3.camel@johannes>
+	Thu, 22 Jan 2009 21:08:42 -0500
+Message-ID: <4979269F.1060500@lwfinger.net> (sfid-20090123_030847_667385_46CAAB30)
+Date: Thu, 22 Jan 2009 20:08:31 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1231968050.21021.3.camel@johannes>
+To: Alina Friedrichsen <x-alina@gmx.net>
+CC: John Linville <linville@tuxdriver.com>, samuel@sortiz.org,
+	Kalle Valo <kalle.valo@iki.fi>, maximlevitsky@gmail.com,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Regression caused by commit e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 14, 2009 at 10:20:50PM +0100, Johannes Berg wrote:
-> On Wed, 2009-01-14 at 16:09 -0500, John W. Linville wrote:
-> > On Wed, Jan 14, 2009 at 09:45:22PM +0100, Johannes Berg wrote:
-> > > 
-> > > > Initvals and new firmware version can be found at http://www.ing.unibs.it/openfwwf
-> > > 
-> > > I suggest that before this is packaged, we change it so b43 can
-> > > recognise it and automatically disable qos and hwcrypto.
-> > 
-> > That's a good idea.  Is that simply a driver patch?
-> 
-> Should be fairly simple, yeah.
-> 
+With the commit of the subject, my b43 and p54usb devices stopped working. They could
+associate and authenticate with my WPA2 network, but never finish the DHCP connection and
+get an IP address. Surprisingly, my rtl8187 devices continued to work.
 
-Testing a patch now, I'll fire it off to the list when I've made
-sure it works alright. (Damn, my cardbus b43 card appears to have bought
-the farm recently. Oh well. I'll figure something out)
+Please excuse the second sending of this. I missed wireless the first time.
 
-regards, Kyle
+Larry
+
