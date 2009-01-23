@@ -1,815 +1,541 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34020 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752492AbZAGL15 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:27:57 -0500
-Message-Id: <20090107112633.578539996@atheros.com> (sfid-20090107_122802_742551_775CFA40)
-References: <20090107112346.369581673@atheros.com>
-Date: Wed, 07 Jan 2009 13:23:50 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [PATCH 04/14] mac80211: 802.11w - Use BIP (AES-128-CMAC)
+Received: from mga09.intel.com ([134.134.136.24]:34245 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755925AbZAWVmt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 16:42:49 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Samuel Ortiz <samuel.ortiz@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/15] iwl3945: Use iwlcore TX queue management routines
+Date: Fri, 23 Jan 2009 13:45:14 -0800
+Message-Id: <1232747123-7261-7-git-send-email-reinette.chatre@intel.com> (sfid-20090123_224258_656302_D42AB0A0)
+In-Reply-To: <1232747123-7261-6-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1232747123-7261-1-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-2-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-3-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-4-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-5-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add mechanism for managing BIP keys (IGTK) and integrate BIP into the
-TX/RX paths.
+From: Samuel Ortiz <samuel.ortiz@intel.com>
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+By adding an additional hw_params (tfd_size) and a new iwl_lib ops (txq_init),
+we can now use the iwlcore TX queue management routines.
+We had to add a new hw_params because we need to allocate the right DMA buffer
+for TFDs, and those have a different sizes depending if you're on 3945 or agn.
 
-
+Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath5k/pcu.c |    3 +
- include/linux/ieee80211.h        |    1 
- include/linux/nl80211.h          |    6 +-
- include/net/cfg80211.h           |    5 ++
- include/net/mac80211.h           |    2 
- net/mac80211/cfg.c               |   31 +++++++++++++
- net/mac80211/debugfs_key.c       |   79 +++++++++++++++++++++++++++++++++-
- net/mac80211/debugfs_key.h       |   10 ++++
- net/mac80211/ieee80211_i.h       |    5 +-
- net/mac80211/key.c               |   62 ++++++++++++++++++++++++++
- net/mac80211/key.h               |    6 ++
- net/mac80211/rx.c                |   90 +++++++++++++++++++++++++++++++++++----
- net/mac80211/tx.c                |    9 +++
- net/wireless/nl80211.c           |   29 +++++++++---
- 14 files changed, 317 insertions(+), 21 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   32 ++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    7 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |   49 ++-----
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |  204 ---------------------------
+ 8 files changed, 60 insertions(+), 246 deletions(-)
 
---- wireless-testing.orig/include/linux/ieee80211.h	2009-01-07 13:07:46.000000000 +0200
-+++ wireless-testing/include/linux/ieee80211.h	2009-01-07 13:07:49.000000000 +0200
-@@ -1139,6 +1139,7 @@ enum ieee80211_back_parties {
- /* reserved: 				0x000FAC03 */
- #define WLAN_CIPHER_SUITE_CCMP		0x000FAC04
- #define WLAN_CIPHER_SUITE_WEP104	0x000FAC05
-+#define WLAN_CIPHER_SUITE_AES_CMAC	0x000FAC06
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 22770f4..2689113 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1068,8 +1068,8 @@ static int iwl3945_txq_ctx_reset(struct iwl_priv *priv)
+ 	for (txq_id = 0; txq_id < TFD_QUEUE_MAX; txq_id++) {
+ 		slots_num = (txq_id == IWL_CMD_QUEUE_NUM) ?
+ 				TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
+-		rc = iwl3945_tx_queue_init(priv, &priv->txq[txq_id], slots_num,
+-				txq_id);
++		rc = iwl_tx_queue_init(priv, &priv->txq[txq_id], slots_num,
++				       txq_id);
+ 		if (rc) {
+ 			IWL_ERR(priv, "Tx %d queue init failed\n", txq_id);
+ 			goto error;
+@@ -1258,7 +1258,7 @@ void iwl3945_hw_txq_ctx_free(struct iwl_priv *priv)
  
- #define WLAN_MAX_KEY_LEN		32
+ 	/* Tx queues */
+ 	for (txq_id = 0; txq_id < TFD_QUEUE_MAX; txq_id++)
+-		iwl3945_tx_queue_free(priv, &priv->txq[txq_id]);
++		iwl_tx_queue_free(priv, txq_id);
+ }
  
---- wireless-testing.orig/include/net/mac80211.h	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-01-07 13:07:49.000000000 +0200
-@@ -657,11 +657,13 @@ struct ieee80211_if_conf {
-  * @ALG_WEP: WEP40 or WEP104
-  * @ALG_TKIP: TKIP
-  * @ALG_CCMP: CCMP (AES)
-+ * @ALG_AES_CMAC: AES-128-CMAC
-  */
- enum ieee80211_key_alg {
- 	ALG_WEP,
- 	ALG_TKIP,
- 	ALG_CCMP,
-+	ALG_AES_CMAC,
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/cfg.c	2009-01-07 13:07:41.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-01-07 13:07:49.000000000 +0200
-@@ -133,6 +133,9 @@ static int ieee80211_add_key(struct wiph
- 	case WLAN_CIPHER_SUITE_CCMP:
- 		alg = ALG_CCMP;
- 		break;
-+	case WLAN_CIPHER_SUITE_AES_CMAC:
-+		alg = ALG_AES_CMAC;
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -275,6 +278,17 @@ static int ieee80211_get_key(struct wiph
- 		else
- 			params.cipher = WLAN_CIPHER_SUITE_WEP104;
- 		break;
-+	case ALG_AES_CMAC:
-+		params.cipher = WLAN_CIPHER_SUITE_AES_CMAC;
-+		seq[0] = key->u.aes_cmac.tx_pn[5];
-+		seq[1] = key->u.aes_cmac.tx_pn[4];
-+		seq[2] = key->u.aes_cmac.tx_pn[3];
-+		seq[3] = key->u.aes_cmac.tx_pn[2];
-+		seq[4] = key->u.aes_cmac.tx_pn[1];
-+		seq[5] = key->u.aes_cmac.tx_pn[0];
-+		params.seq = seq;
-+		params.seq_len = 6;
-+		break;
+ void iwl3945_hw_txq_ctx_stop(struct iwl_priv *priv)
+@@ -2491,6 +2491,7 @@ int iwl3945_hw_set_hw_params(struct iwl_priv *priv)
+ 		return -ENOMEM;
  	}
  
- 	params.key = key->conf.key;
-@@ -304,6 +318,22 @@ static int ieee80211_config_default_key(
++	priv->hw_params.tfd_size = sizeof(struct iwl3945_tfd);
+ 	priv->hw_params.rx_buf_size = IWL_RX_BUF_SIZE_3K;
+ 	priv->hw_params.max_pkt_size = 2342;
+ 	priv->hw_params.max_rxq_size = RX_QUEUE_SIZE;
+@@ -2705,6 +2706,7 @@ static int iwl3945_load_bsm(struct iwl_priv *priv)
+ static struct iwl_lib_ops iwl3945_lib = {
+ 	.txq_attach_buf_to_tfd = iwl3945_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl3945_hw_txq_free_tfd,
++	.txq_init = iwl3945_hw_tx_queue_init,
+ 	.load_ucode = iwl3945_load_bsm,
+ 	.apm_ops = {
+ 		.init = iwl3945_apm_init,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index b2985e2..d7d956d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -815,6 +815,7 @@ static int iwl4965_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.dma_chnl_num = FH49_TCSR_CHNL_NUM;
+ 	priv->hw_params.scd_bc_tbls_size =
+ 			IWL49_NUM_QUEUES * sizeof(struct iwl4965_scd_bc_tbl);
++	priv->hw_params.tfd_size = sizeof(struct iwl_tfd);
+ 	priv->hw_params.max_stations = IWL4965_STATION_COUNT;
+ 	priv->hw_params.bcast_sta_id = IWL4965_BROADCAST_ID;
+ 	priv->hw_params.max_data_size = IWL49_RTC_DATA_SIZE;
+@@ -2297,6 +2298,7 @@ static struct iwl_lib_ops iwl4965_lib = {
+ 	.txq_agg_disable = iwl4965_txq_agg_disable,
+ 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl_hw_txq_free_tfd,
++	.txq_init = iwl_hw_tx_queue_init,
+ 	.rx_handler_setup = iwl4965_rx_handler_setup,
+ 	.setup_deferred_work = iwl4965_setup_deferred_work,
+ 	.cancel_deferred_work = iwl4965_cancel_deferred_work,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 04c2585..89d92a8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -837,6 +837,7 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.dma_chnl_num = FH50_TCSR_CHNL_NUM;
+ 	priv->hw_params.scd_bc_tbls_size =
+ 			IWL50_NUM_QUEUES * sizeof(struct iwl5000_scd_bc_tbl);
++	priv->hw_params.tfd_size = sizeof(struct iwl_tfd);
+ 	priv->hw_params.max_stations = IWL5000_STATION_COUNT;
+ 	priv->hw_params.bcast_sta_id = IWL5000_BROADCAST_ID;
+ 	priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
+@@ -1494,6 +1495,7 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.txq_agg_disable = iwl5000_txq_agg_disable,
+ 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl_hw_txq_free_tfd,
++	.txq_init = iwl_hw_tx_queue_init,
+ 	.rx_handler_setup = iwl5000_rx_handler_setup,
+ 	.setup_deferred_work = iwl5000_setup_deferred_work,
+ 	.is_valid_rtc_data_addr = iwl5000_hw_valid_rtc_data_addr,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 4ce3d6a..5c6b3fe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -592,6 +592,38 @@ int iwl_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv,
  	return 0;
  }
  
-+static int ieee80211_config_default_mgmt_key(struct wiphy *wiphy,
-+					     struct net_device *dev,
-+					     u8 key_idx)
++/*
++ * Tell nic where to find circular buffer of Tx Frame Descriptors for
++ * given Tx queue, and enable the DMA channel used for that queue.
++ *
++ * 4965 supports up to 16 Tx queues in DRAM, mapped to up to 8 Tx DMA
++ * channels supported in hardware.
++ */
++int iwl_hw_tx_queue_init(struct iwl_priv *priv,
++			 struct iwl_tx_queue *txq)
 +{
-+	struct ieee80211_sub_if_data *sdata;
++	int ret;
++	unsigned long flags;
++	int txq_id = txq->q.id;
 +
-+	rcu_read_lock();
++	spin_lock_irqsave(&priv->lock, flags);
++	ret = iwl_grab_nic_access(priv);
++	if (ret) {
++		spin_unlock_irqrestore(&priv->lock, flags);
++		return ret;
++	}
 +
-+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	ieee80211_set_default_mgmt_key(sdata, key_idx);
++	/* Circular buffer (TFD queue in DRAM) physical base address */
++	iwl_write_direct32(priv, FH_MEM_CBBC_QUEUE(txq_id),
++			     txq->q.dma_addr >> 8);
 +
-+	rcu_read_unlock();
++	iwl_release_nic_access(priv);
++	spin_unlock_irqrestore(&priv->lock, flags);
 +
 +	return 0;
 +}
 +
- static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-@@ -1153,6 +1183,7 @@ struct cfg80211_ops mac80211_config_ops 
- 	.del_key = ieee80211_del_key,
- 	.get_key = ieee80211_get_key,
- 	.set_default_key = ieee80211_config_default_key,
-+	.set_default_mgmt_key = ieee80211_config_default_mgmt_key,
- 	.add_beacon = ieee80211_add_beacon,
- 	.set_beacon = ieee80211_set_beacon,
- 	.del_beacon = ieee80211_del_beacon,
---- wireless-testing.orig/net/mac80211/debugfs_key.c	2008-12-31 17:33:37.000000000 +0200
-+++ wireless-testing/net/mac80211/debugfs_key.c	2009-01-07 13:07:49.000000000 +0200
-@@ -76,6 +76,9 @@ static ssize_t key_algorithm_read(struct
- 	case ALG_CCMP:
- 		alg = "CCMP\n";
- 		break;
-+	case ALG_AES_CMAC:
-+		alg = "AES-128-CMAC\n";
-+		break;
- 	default:
- 		return 0;
- 	}
-@@ -105,6 +108,12 @@ static ssize_t key_tx_spec_read(struct f
- 		len = scnprintf(buf, sizeof(buf), "%02x%02x%02x%02x%02x%02x\n",
- 				tpn[0], tpn[1], tpn[2], tpn[3], tpn[4], tpn[5]);
- 		break;
-+	case ALG_AES_CMAC:
-+		tpn = key->u.aes_cmac.tx_pn;
-+		len = scnprintf(buf, sizeof(buf), "%02x%02x%02x%02x%02x%02x\n",
-+				tpn[0], tpn[1], tpn[2], tpn[3], tpn[4],
-+				tpn[5]);
-+		break;
- 	default:
- 		return 0;
- 	}
-@@ -142,6 +151,14 @@ static ssize_t key_rx_spec_read(struct f
- 		}
- 		len = p - buf;
- 		break;
-+	case ALG_AES_CMAC:
-+		rpn = key->u.aes_cmac.rx_pn;
-+		p += scnprintf(p, sizeof(buf)+buf-p,
-+			       "%02x%02x%02x%02x%02x%02x\n",
-+			       rpn[0], rpn[1], rpn[2],
-+			       rpn[3], rpn[4], rpn[5]);
-+		len = p - buf;
-+		break;
- 	default:
- 		return 0;
- 	}
-@@ -156,13 +173,40 @@ static ssize_t key_replays_read(struct f
- 	char buf[20];
- 	int len;
- 
--	if (key->conf.alg != ALG_CCMP)
-+	switch (key->conf.alg) {
-+	case ALG_CCMP:
-+		len = scnprintf(buf, sizeof(buf), "%u\n", key->u.ccmp.replays);
-+		break;
-+	case ALG_AES_CMAC:
-+		len = scnprintf(buf, sizeof(buf), "%u\n",
-+				key->u.aes_cmac.replays);
-+		break;
-+	default:
- 		return 0;
--	len = scnprintf(buf, sizeof(buf), "%u\n", key->u.ccmp.replays);
-+	}
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
- }
- KEY_OPS(replays);
- 
-+static ssize_t key_icverrors_read(struct file *file, char __user *userbuf,
-+				  size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_key *key = file->private_data;
-+	char buf[20];
-+	int len;
 +
-+	switch (key->conf.alg) {
-+	case ALG_AES_CMAC:
-+		len = scnprintf(buf, sizeof(buf), "%u\n",
-+				key->u.aes_cmac.icverrors);
-+		break;
-+	default:
-+		return 0;
-+	}
-+	return simple_read_from_buffer(userbuf, count, ppos, buf, len);
-+}
-+KEY_OPS(icverrors);
-+
- static ssize_t key_key_read(struct file *file, char __user *userbuf,
- 			    size_t count, loff_t *ppos)
- {
-@@ -224,6 +268,7 @@ void ieee80211_debugfs_key_add(struct ie
- 	DEBUGFS_ADD(tx_spec);
- 	DEBUGFS_ADD(rx_spec);
- 	DEBUGFS_ADD(replays);
-+	DEBUGFS_ADD(icverrors);
- 	DEBUGFS_ADD(key);
- 	DEBUGFS_ADD(ifindex);
- };
-@@ -245,6 +290,7 @@ void ieee80211_debugfs_key_remove(struct
- 	DEBUGFS_DEL(tx_spec);
- 	DEBUGFS_DEL(rx_spec);
- 	DEBUGFS_DEL(replays);
-+	DEBUGFS_DEL(icverrors);
- 	DEBUGFS_DEL(key);
- 	DEBUGFS_DEL(ifindex);
- 
-@@ -282,6 +328,35 @@ void ieee80211_debugfs_key_remove_defaul
- 	sdata->common_debugfs.default_key = NULL;
- }
- 
-+void ieee80211_debugfs_key_add_mgmt_default(struct ieee80211_sub_if_data *sdata)
-+{
-+	char buf[50];
-+	struct ieee80211_key *key;
-+
-+	if (!sdata->debugfsdir)
-+		return;
-+
-+	/* this is running under the key lock */
-+
-+	key = sdata->default_mgmt_key;
-+	if (key) {
-+		sprintf(buf, "../keys/%d", key->debugfs.cnt);
-+		sdata->common_debugfs.default_mgmt_key =
-+			debugfs_create_symlink("default_mgmt_key",
-+					       sdata->debugfsdir, buf);
-+	} else
-+		ieee80211_debugfs_key_remove_mgmt_default(sdata);
-+}
-+
-+void ieee80211_debugfs_key_remove_mgmt_default(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (!sdata)
-+		return;
-+
-+	debugfs_remove(sdata->common_debugfs.default_mgmt_key);
-+	sdata->common_debugfs.default_mgmt_key = NULL;
-+}
-+
- void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
- 				   struct sta_info *sta)
- {
---- wireless-testing.orig/net/mac80211/key.h	2009-01-07 13:07:46.000000000 +0200
-+++ wireless-testing/net/mac80211/key.h	2009-01-07 13:07:49.000000000 +0200
-@@ -46,6 +46,8 @@ struct sta_info;
-  *	acceleration.
-  * @KEY_FLAG_TODO_DEFKEY: Key is default key and debugfs needs to be updated.
-  * @KEY_FLAG_TODO_ADD_DEBUGFS: Key needs to be added to debugfs.
-+ * @KEY_FLAG_TODO_DEFMGMTKEY: Key is default management key and debugfs needs
-+ *	to be updated.
+ /******************************************************************************
+  *
+  * Misc. internal state and helper functions
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 409caaa..9a35080 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -116,6 +116,8 @@ struct iwl_lib_ops {
+ 				     u16 len, u8 reset, u8 pad);
+ 	void (*txq_free_tfd)(struct iwl_priv *priv,
+ 			     struct iwl_tx_queue *txq);
++	int (*txq_init)(struct iwl_priv *priv,
++			struct iwl_tx_queue *txq);
+ 	/* aggregations */
+ 	int (*txq_agg_enable)(struct iwl_priv *priv, int txq_id, int tx_fifo,
+ 			      int sta_id, int tid, u16 ssn_idx);
+@@ -264,7 +266,12 @@ int iwl_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv,
+ 				 dma_addr_t addr, u16 len, u8 reset, u8 pad);
+ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb);
+ void iwl_hw_txq_ctx_free(struct iwl_priv *priv);
++int iwl_hw_tx_queue_init(struct iwl_priv *priv,
++			 struct iwl_tx_queue *txq);
+ int iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq);
++int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
++		      int slots_num, u32 txq_id);
++void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id);
+ int iwl_tx_agg_start(struct iwl_priv *priv, const u8 *ra, u16 tid, u16 *ssn);
+ int iwl_tx_agg_stop(struct iwl_priv *priv , const u8 *ra, u16 tid);
+ int iwl_txq_check_empty(struct iwl_priv *priv, int sta_id, u8 tid, int txq_id);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 78ce4f4..5aa22d6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -567,6 +567,7 @@ struct iwl_sensitivity_ranges {
+  * @max_txq_num: Max # Tx queues supported
+  * @dma_chnl_num: Number of Tx DMA/FIFO channels
+  * @scd_bc_tbls_size: size of scheduler byte count tables
++ * @tfd_size: TFD size
+  * @tx/rx_chains_num: Number of TX/RX chains
+  * @valid_tx/rx_ant: usable antennas
+  * @max_rxq_size: Max # Rx frames in Rx queue (must be power-of-2)
+@@ -587,6 +588,7 @@ struct iwl_hw_params {
+ 	u8 max_txq_num;
+ 	u8 dma_chnl_num;
+ 	u16 scd_bc_tbls_size;
++	u32 tfd_size;
+ 	u8  tx_chains_num;
+ 	u8  rx_chains_num;
+ 	u8  valid_tx_ant;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 83e9f32..58118c8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -131,7 +131,7 @@ EXPORT_SYMBOL(iwl_txq_update_write_ptr);
+  * Free all buffers.
+  * 0-fill, but do not free "txq" descriptor structure.
   */
- enum ieee80211_internal_key_flags {
- 	KEY_FLAG_UPLOADED_TO_HARDWARE	= BIT(0),
-@@ -54,6 +56,7 @@ enum ieee80211_internal_key_flags {
- 	KEY_FLAG_TODO_HWACCEL_REMOVE	= BIT(3),
- 	KEY_FLAG_TODO_DEFKEY		= BIT(4),
- 	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(5),
-+	KEY_FLAG_TODO_DEFMGMTKEY	= BIT(6),
- };
- 
- struct tkip_ctx {
-@@ -124,6 +127,7 @@ struct ieee80211_key {
- 		struct dentry *tx_spec;
- 		struct dentry *rx_spec;
- 		struct dentry *replays;
-+		struct dentry *icverrors;
- 		struct dentry *key;
- 		struct dentry *ifindex;
- 		int cnt;
-@@ -150,6 +154,8 @@ void ieee80211_key_link(struct ieee80211
- 			struct sta_info *sta);
- void ieee80211_key_free(struct ieee80211_key *key);
- void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx);
-+void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
-+				    int idx);
- void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata);
- void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata);
- void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata);
---- wireless-testing.orig/net/mac80211/rx.c	2009-01-07 13:07:38.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2009-01-07 13:07:49.000000000 +0200
-@@ -435,6 +435,52 @@ ieee80211_rx_h_passive_scan(struct ieee8
- 	return RX_CONTINUE;
- }
- 
-+
-+static int ieee80211_is_unicast_robust_mgmt_frame(struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+
-+	if (skb->len < 24 || is_multicast_ether_addr(hdr->addr1))
-+		return 0;
-+
-+	return ieee80211_is_robust_mgmt_frame(hdr);
-+}
-+
-+
-+static int ieee80211_is_multicast_robust_mgmt_frame(struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+
-+	if (skb->len < 24 || !is_multicast_ether_addr(hdr->addr1))
-+		return 0;
-+
-+	return ieee80211_is_robust_mgmt_frame(hdr);
-+}
-+
-+
-+/* Get the BIP key index from MMIE; return -1 if this is not a BIP frame */
-+static int ieee80211_get_mmie_keyidx(struct sk_buff *skb)
-+{
-+	struct ieee80211_mgmt *hdr = (struct ieee80211_mgmt *) skb->data;
-+	struct ieee80211_mmie *mmie;
-+
-+	if (skb->len < 24 + sizeof(*mmie) ||
-+	    !is_multicast_ether_addr(hdr->da))
-+		return -1;
-+
-+	if (!ieee80211_is_robust_mgmt_frame((struct ieee80211_hdr *) hdr))
-+		return -1; /* not a robust management frame */
-+
-+	mmie = (struct ieee80211_mmie *)
-+		(skb->data + skb->len - sizeof(*mmie));
-+	if (mmie->element_id != WLAN_EID_MMIE ||
-+	    mmie->length != sizeof(*mmie) - 2)
-+		return -1;
-+
-+	return le16_to_cpu(mmie->key_id);
-+}
-+
-+
- static ieee80211_rx_result
- ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
+-static void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id)
++void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id)
  {
-@@ -550,21 +596,23 @@ ieee80211_rx_h_decrypt(struct ieee80211_
- 	int hdrlen;
- 	ieee80211_rx_result result = RX_DROP_UNUSABLE;
- 	struct ieee80211_key *stakey = NULL;
-+	int mmie_keyidx = -1;
+ 	struct iwl_tx_queue *txq = &priv->txq[txq_id];
+ 	struct iwl_queue *q = &txq->q;
+@@ -154,7 +154,7 @@ static void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id)
  
- 	/*
- 	 * Key selection 101
- 	 *
--	 * There are three types of keys:
-+	 * There are four types of keys:
- 	 *  - GTK (group keys)
-+	 *  - IGTK (group keys for management frames)
- 	 *  - PTK (pairwise keys)
- 	 *  - STK (station-to-station pairwise keys)
- 	 *
- 	 * When selecting a key, we have to distinguish between multicast
- 	 * (including broadcast) and unicast frames, the latter can only
--	 * use PTKs and STKs while the former always use GTKs. Unless, of
--	 * course, actual WEP keys ("pre-RSNA") are used, then unicast
--	 * frames can also use key indizes like GTKs. Hence, if we don't
--	 * have a PTK/STK we check the key index for a WEP key.
-+	 * use PTKs and STKs while the former always use GTKs and IGTKs.
-+	 * Unless, of course, actual WEP keys ("pre-RSNA") are used, then
-+	 * unicast frames can also use key indices like GTKs. Hence, if we
-+	 * don't have a PTK/STK we check the key index for a WEP key.
- 	 *
- 	 * Note that in a regular BSS, multicast frames are sent by the
- 	 * AP only, associated stations unicast the frame to the AP first
-@@ -577,8 +625,14 @@ ieee80211_rx_h_decrypt(struct ieee80211_
- 	 * possible.
- 	 */
+ 	/* De-alloc circular buffer of TFDs */
+ 	if (txq->q.n_bd)
+-		pci_free_consistent(dev, sizeof(struct iwl_tfd) *
++		pci_free_consistent(dev, priv->hw_params.tfd_size *
+ 				    txq->q.n_bd, txq->tfds, txq->q.dma_addr);
  
--	if (!ieee80211_has_protected(hdr->frame_control))
--		return RX_CONTINUE;
-+	if (!ieee80211_has_protected(hdr->frame_control)) {
-+		if (!ieee80211_is_mgmt(hdr->frame_control) ||
-+		    rx->sta == NULL || !test_sta_flags(rx->sta, WLAN_STA_MFP))
-+			return RX_CONTINUE;
-+		mmie_keyidx = ieee80211_get_mmie_keyidx(rx->skb);
-+		if (mmie_keyidx < 0)
-+			return RX_CONTINUE;
-+	}
- 
- 	/*
- 	 * No point in finding a key and decrypting if the frame is neither
-@@ -592,6 +646,16 @@ ieee80211_rx_h_decrypt(struct ieee80211_
- 
- 	if (!is_multicast_ether_addr(hdr->addr1) && stakey) {
- 		rx->key = stakey;
-+	} else if (mmie_keyidx >= 0) {
-+		/* Broadcast/multicast robust management frame / BIP */
-+		if ((rx->status->flag & RX_FLAG_DECRYPTED) &&
-+		    (rx->status->flag & RX_FLAG_IV_STRIPPED))
-+			return RX_CONTINUE;
-+
-+		if (mmie_keyidx < NUM_DEFAULT_KEYS ||
-+		    mmie_keyidx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS)
-+			return RX_DROP_MONITOR; /* unexpected BIP keyidx */
-+		rx->key = rcu_dereference(rx->sdata->keys[mmie_keyidx]);
- 	} else {
- 		/*
- 		 * The device doesn't give us the IV so we won't be
-@@ -654,6 +718,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_
- 	case ALG_CCMP:
- 		result = ieee80211_crypto_ccmp_decrypt(rx);
- 		break;
-+	case ALG_AES_CMAC:
-+		result = ieee80211_crypto_aes_cmac_decrypt(rx);
-+		break;
- 	}
- 
- 	/* either the frame has been decrypted or will be dropped */
-@@ -1108,6 +1175,15 @@ ieee80211_drop_unencrypted(struct ieee80
- 	/* Drop unencrypted frames if key is set. */
- 	if (unlikely(!ieee80211_has_protected(fc) &&
- 		     !ieee80211_is_nullfunc(fc) &&
-+		     (!ieee80211_is_mgmt(fc) ||
-+		      (ieee80211_is_unicast_robust_mgmt_frame(rx->skb) &&
-+		       rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP))) &&
-+		     (rx->key || rx->sdata->drop_unencrypted)))
-+		return -EACCES;
-+	/* BIP does not use Protected field, so need to check MMIE */
-+	if (unlikely(rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP) &&
-+		     ieee80211_is_multicast_robust_mgmt_frame(rx->skb) &&
-+		     ieee80211_get_mmie_keyidx(rx->skb) < 0 &&
- 		     (rx->key || rx->sdata->drop_unencrypted)))
- 		return -EACCES;
- 
---- wireless-testing.orig/net/mac80211/tx.c	2009-01-07 13:07:44.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-01-07 13:07:49.000000000 +0200
-@@ -427,6 +427,9 @@ ieee80211_tx_h_select_key(struct ieee802
- 		tx->key = NULL;
- 	else if (tx->sta && (key = rcu_dereference(tx->sta->key)))
- 		tx->key = key;
-+	else if (ieee80211_is_mgmt(hdr->frame_control) &&
-+		 (key = rcu_dereference(tx->sdata->default_mgmt_key)))
-+		tx->key = key;
- 	else if ((key = rcu_dereference(tx->sdata->default_key)))
- 		tx->key = key;
- 	else if (tx->sdata->drop_unencrypted &&
-@@ -455,6 +458,10 @@ ieee80211_tx_h_select_key(struct ieee802
- 					       tx->skb))
- 				tx->key = NULL;
- 			break;
-+		case ALG_AES_CMAC:
-+			if (!ieee80211_is_mgmt(hdr->frame_control))
-+				tx->key = NULL;
-+			break;
- 		}
- 	}
- 
-@@ -810,6 +817,8 @@ ieee80211_tx_h_encrypt(struct ieee80211_
- 		return ieee80211_crypto_tkip_encrypt(tx);
- 	case ALG_CCMP:
- 		return ieee80211_crypto_ccmp_encrypt(tx);
-+	case ALG_AES_CMAC:
-+		return ieee80211_crypto_aes_cmac_encrypt(tx);
- 	}
- 
- 	/* not reached */
---- wireless-testing.orig/net/mac80211/key.c	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/net/mac80211/key.c	2009-01-07 13:07:49.000000000 +0200
-@@ -18,6 +18,7 @@
- #include "ieee80211_i.h"
- #include "debugfs_key.h"
- #include "aes_ccm.h"
-+#include "aes_cmac.h"
- 
+ 	/* De-alloc array of per-TFD driver data */
+@@ -164,7 +164,7 @@ static void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id)
+ 	/* 0-fill queue descriptor structure */
+ 	memset(txq, 0, sizeof(*txq));
+ }
+-
++EXPORT_SYMBOL(iwl_tx_queue_free);
  
  /**
-@@ -219,13 +220,38 @@ void ieee80211_set_default_key(struct ie
- 	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
+  * iwl_cmd_queue_free - Deallocate DMA queue.
+@@ -295,12 +295,12 @@ static int iwl_tx_queue_alloc(struct iwl_priv *priv,
+ 	/* Circular buffer of transmit frame descriptors (TFDs),
+ 	 * shared with device */
+ 	txq->tfds = pci_alloc_consistent(dev,
+-			sizeof(struct iwl_tfd) * TFD_QUEUE_SIZE_MAX,
++			priv->hw_params.tfd_size * TFD_QUEUE_SIZE_MAX,
+ 			&txq->q.dma_addr);
+ 
+ 	if (!txq->tfds) {
+ 		IWL_ERR(priv, "pci_alloc_consistent(%zd) failed\n",
+-			  sizeof(struct iwl_tfd) * TFD_QUEUE_SIZE_MAX);
++			  priv->hw_params.tfd_size * TFD_QUEUE_SIZE_MAX);
+ 		goto error;
+ 	}
+ 	txq->q.id = id;
+@@ -314,42 +314,11 @@ static int iwl_tx_queue_alloc(struct iwl_priv *priv,
+ 	return -ENOMEM;
  }
  
-+static void
-+__ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata, int idx)
-+{
-+	struct ieee80211_key *key = NULL;
-+
-+	if (idx >= NUM_DEFAULT_KEYS &&
-+	    idx < NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS)
-+		key = sdata->keys[idx];
-+
-+	rcu_assign_pointer(sdata->default_mgmt_key, key);
-+
-+	if (key)
-+		add_todo(key, KEY_FLAG_TODO_DEFMGMTKEY);
-+}
-+
-+void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
-+				    int idx)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sdata->local->key_lock, flags);
-+	__ieee80211_set_default_mgmt_key(sdata, idx);
-+	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
-+}
-+
- 
- static void __ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 				    struct sta_info *sta,
- 				    struct ieee80211_key *old,
- 				    struct ieee80211_key *new)
+-/*
+- * Tell nic where to find circular buffer of Tx Frame Descriptors for
+- * given Tx queue, and enable the DMA channel used for that queue.
+- *
+- * 4965 supports up to 16 Tx queues in DRAM, mapped to up to 8 Tx DMA
+- * channels supported in hardware.
+- */
+-static int iwl_hw_tx_queue_init(struct iwl_priv *priv,
+-				struct iwl_tx_queue *txq)
+-{
+-	int ret;
+-	unsigned long flags;
+-	int txq_id = txq->q.id;
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-	ret = iwl_grab_nic_access(priv);
+-	if (ret) {
+-		spin_unlock_irqrestore(&priv->lock, flags);
+-		return ret;
+-	}
+-
+-	/* Circular buffer (TFD queue in DRAM) physical base address */
+-	iwl_write_direct32(priv, FH_MEM_CBBC_QUEUE(txq_id),
+-			     txq->q.dma_addr >> 8);
+-
+-	iwl_release_nic_access(priv);
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	return 0;
+-}
+-
+ /**
+  * iwl_tx_queue_init - Allocate and initialize one tx/cmd queue
+  */
+-static int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+-			     int slots_num, u32 txq_id)
++int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
++		      int slots_num, u32 txq_id)
  {
--	int idx, defkey;
-+	int idx, defkey, defmgmtkey;
+ 	int i, len;
+ 	int ret;
+@@ -391,7 +360,7 @@ static int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+ 	iwl_queue_init(priv, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
  
- 	if (new)
- 		list_add(&new->list, &sdata->key_list);
-@@ -241,13 +267,19 @@ static void __ieee80211_key_replace(stru
- 			idx = new->conf.keyidx;
+ 	/* Tell device where to find queue */
+-	iwl_hw_tx_queue_init(priv, txq);
++	priv->cfg->ops->lib->txq_init(priv, txq);
  
- 		defkey = old && sdata->default_key == old;
-+		defmgmtkey = old && sdata->default_mgmt_key == old;
- 
- 		if (defkey && !new)
- 			__ieee80211_set_default_key(sdata, -1);
-+		if (defmgmtkey && !new)
-+			__ieee80211_set_default_mgmt_key(sdata, -1);
- 
- 		rcu_assign_pointer(sdata->keys[idx], new);
- 		if (defkey && new)
- 			__ieee80211_set_default_key(sdata, new->conf.keyidx);
-+		if (defmgmtkey && new)
-+			__ieee80211_set_default_mgmt_key(sdata,
-+							 new->conf.keyidx);
+ 	return 0;
+ err:
+@@ -406,6 +375,8 @@ err:
  	}
- 
- 	if (old) {
-@@ -266,7 +298,7 @@ struct ieee80211_key *ieee80211_key_allo
- {
- 	struct ieee80211_key *key;
- 
--	BUG_ON(idx < 0 || idx >= NUM_DEFAULT_KEYS);
-+	BUG_ON(idx < 0 || idx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS);
- 
- 	key = kzalloc(sizeof(struct ieee80211_key) + key_len, GFP_KERNEL);
- 	if (!key)
-@@ -295,6 +327,10 @@ struct ieee80211_key *ieee80211_key_allo
- 		key->conf.iv_len = CCMP_HDR_LEN;
- 		key->conf.icv_len = CCMP_MIC_LEN;
- 		break;
-+	case ALG_AES_CMAC:
-+		key->conf.iv_len = 0;
-+		key->conf.icv_len = sizeof(struct ieee80211_mmie);
-+		break;
- 	}
- 	memcpy(key->conf.key, key_data, key_len);
- 	INIT_LIST_HEAD(&key->list);
-@@ -312,6 +348,19 @@ struct ieee80211_key *ieee80211_key_allo
- 		}
- 	}
- 
-+	if (alg == ALG_AES_CMAC) {
-+		/*
-+		 * Initialize AES key state here as an optimization so that
-+		 * it does not need to be initialized for every packet.
-+		 */
-+		key->u.aes_cmac.tfm =
-+			ieee80211_aes_cmac_key_setup(key_data);
-+		if (!key->u.aes_cmac.tfm) {
-+			kfree(key);
-+			return NULL;
-+		}
-+	}
-+
- 	return key;
+ 	return -ENOMEM;
  }
- 
-@@ -465,6 +514,8 @@ static void __ieee80211_key_destroy(stru
- 
- 	if (key->conf.alg == ALG_CCMP)
- 		ieee80211_aes_key_free(key->u.ccmp.tfm);
-+	if (key->conf.alg == ALG_AES_CMAC)
-+		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
- 	ieee80211_debugfs_key_remove(key);
- 
- 	kfree(key);
-@@ -487,6 +538,7 @@ static void __ieee80211_key_todo(void)
- 		list_del_init(&key->todo);
- 		todoflags = key->flags & (KEY_FLAG_TODO_ADD_DEBUGFS |
- 					  KEY_FLAG_TODO_DEFKEY |
-+					  KEY_FLAG_TODO_DEFMGMTKEY |
- 					  KEY_FLAG_TODO_HWACCEL_ADD |
- 					  KEY_FLAG_TODO_HWACCEL_REMOVE |
- 					  KEY_FLAG_TODO_DELETE);
-@@ -504,6 +556,11 @@ static void __ieee80211_key_todo(void)
- 			ieee80211_debugfs_key_add_default(key->sdata);
- 			work_done = true;
- 		}
-+		if (todoflags & KEY_FLAG_TODO_DEFMGMTKEY) {
-+			ieee80211_debugfs_key_remove_mgmt_default(key->sdata);
-+			ieee80211_debugfs_key_add_mgmt_default(key->sdata);
-+			work_done = true;
-+		}
- 		if (todoflags & KEY_FLAG_TODO_HWACCEL_ADD) {
- 			ieee80211_key_enable_hw_accel(key);
- 			work_done = true;
-@@ -539,6 +596,7 @@ void ieee80211_free_keys(struct ieee8021
- 	ieee80211_key_lock();
- 
- 	ieee80211_debugfs_key_remove_default(sdata);
-+	ieee80211_debugfs_key_remove_mgmt_default(sdata);
- 
- 	spin_lock_irqsave(&sdata->local->key_lock, flags);
- 	list_for_each_entry_safe(key, tmp, &sdata->key_list, list)
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-07 13:07:46.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-07 13:07:49.000000000 +0200
-@@ -409,8 +409,10 @@ struct ieee80211_sub_if_data {
- 	unsigned int fragment_next;
- 
- #define NUM_DEFAULT_KEYS 4
--	struct ieee80211_key *keys[NUM_DEFAULT_KEYS];
-+#define NUM_DEFAULT_MGMT_KEYS 2
-+	struct ieee80211_key *keys[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
- 	struct ieee80211_key *default_key;
-+	struct ieee80211_key *default_mgmt_key;
- 
- 	u16 sequence_number;
- 
-@@ -482,6 +484,7 @@ struct ieee80211_sub_if_data {
- 	} debugfs;
- 	struct {
- 		struct dentry *default_key;
-+		struct dentry *default_mgmt_key;
- 	} common_debugfs;
- 
- #ifdef CONFIG_MAC80211_MESH
---- wireless-testing.orig/include/net/cfg80211.h	2009-01-07 13:07:41.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-01-07 13:07:49.000000000 +0200
-@@ -473,6 +473,8 @@ struct ieee80211_channel;
-  *
-  * @set_default_key: set the default key on an interface
-  *
-+ * @set_default_mgmt_key: set the default management frame key on an interface
-+ *
-  * @add_beacon: Add a beacon with given parameters, @head, @interval
-  *	and @dtim_period will be valid, @tail is optional.
-  * @set_beacon: Change the beacon parameters for an access point mode
-@@ -520,6 +522,9 @@ struct cfg80211_ops {
- 	int	(*set_default_key)(struct wiphy *wiphy,
- 				   struct net_device *netdev,
- 				   u8 key_index);
-+	int	(*set_default_mgmt_key)(struct wiphy *wiphy,
-+					struct net_device *netdev,
-+					u8 key_index);
- 
- 	int	(*add_beacon)(struct wiphy *wiphy, struct net_device *dev,
- 			      struct beacon_parameters *info);
---- wireless-testing.orig/net/mac80211/debugfs_key.h	2008-12-31 17:33:37.000000000 +0200
-+++ wireless-testing/net/mac80211/debugfs_key.h	2009-01-07 13:07:49.000000000 +0200
-@@ -6,6 +6,10 @@ void ieee80211_debugfs_key_add(struct ie
- void ieee80211_debugfs_key_remove(struct ieee80211_key *key);
- void ieee80211_debugfs_key_add_default(struct ieee80211_sub_if_data *sdata);
- void ieee80211_debugfs_key_remove_default(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_debugfs_key_add_mgmt_default(
-+	struct ieee80211_sub_if_data *sdata);
-+void ieee80211_debugfs_key_remove_mgmt_default(
-+	struct ieee80211_sub_if_data *sdata);
- void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
- 				   struct sta_info *sta);
- #else
-@@ -19,6 +23,12 @@ static inline void ieee80211_debugfs_key
- static inline void ieee80211_debugfs_key_remove_default(
- 	struct ieee80211_sub_if_data *sdata)
- {}
-+static inline void ieee80211_debugfs_key_add_mgmt_default(
-+	struct ieee80211_sub_if_data *sdata)
-+{}
-+static inline void ieee80211_debugfs_key_remove_mgmt_default(
-+	struct ieee80211_sub_if_data *sdata)
-+{}
- static inline void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
- 						 struct sta_info *sta)
- {}
---- wireless-testing.orig/net/wireless/nl80211.c	2008-12-31 17:33:37.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-01-07 13:07:49.000000000 +0200
-@@ -738,7 +738,7 @@ static int nl80211_get_key(struct sk_buf
- 	if (info->attrs[NL80211_ATTR_KEY_IDX])
- 		key_idx = nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
- 
--	if (key_idx > 3)
-+	if (key_idx > 5)
- 		return -EINVAL;
- 
- 	if (info->attrs[NL80211_ATTR_MAC])
-@@ -804,30 +804,41 @@ static int nl80211_set_key(struct sk_buf
- 	int err;
- 	struct net_device *dev;
- 	u8 key_idx;
-+	int (*func)(struct wiphy *wiphy, struct net_device *netdev,
-+		    u8 key_index);
- 
- 	if (!info->attrs[NL80211_ATTR_KEY_IDX])
- 		return -EINVAL;
- 
- 	key_idx = nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
- 
--	if (key_idx > 3)
-+	if (info->attrs[NL80211_ATTR_KEY_DEFAULT_MGMT]) {
-+		if (key_idx < 4 || key_idx > 5)
-+			return -EINVAL;
-+	} else if (key_idx > 3)
- 		return -EINVAL;
- 
- 	/* currently only support setting default key */
--	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT])
-+	if (!info->attrs[NL80211_ATTR_KEY_DEFAULT] &&
-+	    !info->attrs[NL80211_ATTR_KEY_DEFAULT_MGMT])
- 		return -EINVAL;
- 
- 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
- 		return err;
- 
--	if (!drv->ops->set_default_key) {
-+	if (info->attrs[NL80211_ATTR_KEY_DEFAULT])
-+		func = drv->ops->set_default_key;
-+	else
-+		func = drv->ops->set_default_mgmt_key;
++EXPORT_SYMBOL(iwl_tx_queue_init);
 +
-+	if (!func) {
- 		err = -EOPNOTSUPP;
- 		goto out;
- 	}
- 
- 	rtnl_lock();
--	err = drv->ops->set_default_key(&drv->wiphy, dev, key_idx);
-+	err = func(&drv->wiphy, dev, key_idx);
- 	rtnl_unlock();
- 
-  out:
-@@ -863,7 +874,7 @@ static int nl80211_new_key(struct sk_buf
- 	if (info->attrs[NL80211_ATTR_MAC])
- 		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	if (key_idx > 3)
-+	if (key_idx > 5)
- 		return -EINVAL;
- 
- 	/*
-@@ -894,6 +905,10 @@ static int nl80211_new_key(struct sk_buf
- 		if (params.key_len != 13)
- 			return -EINVAL;
- 		break;
-+	case WLAN_CIPHER_SUITE_AES_CMAC:
-+		if (params.key_len != 16)
-+			return -EINVAL;
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -928,7 +943,7 @@ static int nl80211_del_key(struct sk_buf
- 	if (info->attrs[NL80211_ATTR_KEY_IDX])
- 		key_idx = nla_get_u8(info->attrs[NL80211_ATTR_KEY_IDX]);
- 
--	if (key_idx > 3)
-+	if (key_idx > 5)
- 		return -EINVAL;
- 
- 	if (info->attrs[NL80211_ATTR_MAC])
---- wireless-testing.orig/include/linux/nl80211.h	2009-01-07 13:07:41.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2009-01-07 13:07:49.000000000 +0200
-@@ -72,8 +72,8 @@
+ /**
+  * iwl_hw_txq_ctx_free - Free TXQ Context
   *
-  * @NL80211_CMD_GET_KEY: Get sequence counter information for a key specified
-  *	by %NL80211_ATTR_KEY_IDX and/or %NL80211_ATTR_MAC.
-- * @NL80211_CMD_SET_KEY: Set key attributes %NL80211_ATTR_KEY_DEFAULT or
-- *	%NL80211_ATTR_KEY_THRESHOLD.
-+ * @NL80211_CMD_SET_KEY: Set key attributes %NL80211_ATTR_KEY_DEFAULT,
-+ *	%NL80211_ATTR_KEY_DEFAULT_MGMT, or %NL80211_ATTR_KEY_THRESHOLD.
-  * @NL80211_CMD_NEW_KEY: add a key with given %NL80211_ATTR_KEY_DATA,
-  *	%NL80211_ATTR_KEY_IDX, %NL80211_ATTR_MAC and %NL80211_ATTR_KEY_CIPHER
-  *	attributes.
-@@ -346,6 +346,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_WIPHY_FREQ,
- 	NL80211_ATTR_WIPHY_CHANNEL_TYPE,
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index bc10e2a..14f9523 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -93,210 +93,6 @@ struct iwl_mod_params iwl3945_mod_params = {
+ 	/* the rest are 0 by default */
+ };
  
-+	NL80211_ATTR_KEY_DEFAULT_MGMT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
---- wireless-testing.orig/drivers/net/wireless/ath5k/pcu.c	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath5k/pcu.c	2009-01-07 13:07:49.000000000 +0200
-@@ -1026,6 +1026,9 @@ int ath5k_keycache_type(const struct iee
- 			return AR5K_KEYTABLE_TYPE_40;
- 		else if (key->keylen == LEN_WEP104)
- 			return AR5K_KEYTABLE_TYPE_104;
-+		return -EINVAL;
-+	default:
-+		return -EINVAL;
- 	}
- 	return -EINVAL;
- }
-
+-/*************** DMA-QUEUE-GENERAL-FUNCTIONS  *****
+- * DMA services
+- *
+- * Theory of operation
+- *
+- * A Tx or Rx queue resides in host DRAM, and is comprised of a circular buffer
+- * of buffer descriptors, each of which points to one or more data buffers for
+- * the device to read from or fill.  Driver and device exchange status of each
+- * queue via "read" and "write" pointers.  Driver keeps minimum of 2 empty
+- * entries in each circular buffer, to protect against confusing empty and full
+- * queue states.
+- *
+- * The device reads or writes the data in the queues via the device's several
+- * DMA/FIFO channels.  Each queue is mapped to a single DMA channel.
+- *
+- * For Tx queue, there are low mark and high mark limits. If, after queuing
+- * the packet for Tx, free space become < low mark, Tx queue stopped. When
+- * reclaiming packets (on 'tx done IRQ), if free space become > high mark,
+- * Tx queue resumed.
+- *
+- * The 3945 operates with six queues:  One receive queue, one transmit queue
+- * (#4) for sending commands to the device firmware, and four transmit queues
+- * (#0-3) for data tx via EDCA.  An additional 2 HCCA queues are unused.
+- ***************************************************/
+-
+-/**
+- * iwl3945_queue_init - Initialize queue's high/low-water and read/write indexes
+- */
+-static int iwl3945_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
+-			  int count, int slots_num, u32 id)
+-{
+-	q->n_bd = count;
+-	q->n_window = slots_num;
+-	q->id = id;
+-
+-	/* count must be power-of-two size, otherwise iwl_queue_inc_wrap
+-	 * and iwl_queue_dec_wrap are broken. */
+-	BUG_ON(!is_power_of_2(count));
+-
+-	/* slots_num must be power-of-two size, otherwise
+-	 * get_cmd_index is broken. */
+-	BUG_ON(!is_power_of_2(slots_num));
+-
+-	q->low_mark = q->n_window / 4;
+-	if (q->low_mark < 4)
+-		q->low_mark = 4;
+-
+-	q->high_mark = q->n_window / 8;
+-	if (q->high_mark < 2)
+-		q->high_mark = 2;
+-
+-	q->write_ptr = q->read_ptr = 0;
+-
+-	return 0;
+-}
+-
+-/**
+- * iwl3945_tx_queue_alloc - Alloc driver data and TFD CB for one Tx/cmd queue
+- */
+-static int iwl3945_tx_queue_alloc(struct iwl_priv *priv,
+-			      struct iwl_tx_queue *txq, u32 id)
+-{
+-	struct pci_dev *dev = priv->pci_dev;
+-
+-	/* Driver private data, only for Tx (not command) queues,
+-	 * not shared with device. */
+-	if (id != IWL_CMD_QUEUE_NUM) {
+-		txq->txb = kmalloc(sizeof(txq->txb[0]) *
+-				   TFD_QUEUE_SIZE_MAX, GFP_KERNEL);
+-		if (!txq->txb) {
+-			IWL_ERR(priv, "kmalloc for auxiliary BD "
+-				  "structures failed\n");
+-			goto error;
+-		}
+-	} else
+-		txq->txb = NULL;
+-
+-	/* Circular buffer of transmit frame descriptors (TFDs),
+-	 * shared with device */
+-	txq->tfds = pci_alloc_consistent(dev,
+-				sizeof(struct iwl3945_tfd) * TFD_QUEUE_SIZE_MAX,
+-				&txq->q.dma_addr);
+-
+-	if (!txq->tfds) {
+-		IWL_ERR(priv, "pci_alloc_consistent(%zd) failed\n",
+-			  sizeof(struct iwl3945_tfd) * TFD_QUEUE_SIZE_MAX);
+-		goto error;
+-	}
+-	txq->q.id = id;
+-
+-	return 0;
+-
+- error:
+-	kfree(txq->txb);
+-	txq->txb = NULL;
+-
+-	return -ENOMEM;
+-}
+-
+-/**
+- * iwl3945_tx_queue_init - Allocate and initialize one tx/cmd queue
+- */
+-int iwl3945_tx_queue_init(struct iwl_priv *priv,
+-		      struct iwl_tx_queue *txq, int slots_num, u32 txq_id)
+-{
+-	int len, i;
+-	int rc = 0;
+-
+-	/*
+-	 * Alloc buffer array for commands (Tx or other types of commands).
+-	 * For the command queue (#4), allocate command space + one big
+-	 * command for scan, since scan command is very huge; the system will
+-	 * not have two scans at the same time, so only one is needed.
+-	 * For data Tx queues (all other queues), no super-size command
+-	 * space is needed.
+-	 */
+-	len = sizeof(struct iwl_cmd);
+-	for (i = 0; i <= slots_num; i++) {
+-		if (i == slots_num) {
+-			if (txq_id == IWL_CMD_QUEUE_NUM)
+-				len += IWL_MAX_SCAN_SIZE;
+-			else
+-				continue;
+-		}
+-
+-		txq->cmd[i] = kmalloc(len, GFP_KERNEL);
+-		if (!txq->cmd[i])
+-			goto err;
+-	}
+-
+-	/* Alloc driver data array and TFD circular buffer */
+-	rc = iwl3945_tx_queue_alloc(priv, txq, txq_id);
+-	if (rc)
+-		goto err;
+-
+-	txq->need_update = 0;
+-
+-	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
+-	 * iwl_queue_inc_wrap and iwl_queue_dec_wrap are broken. */
+-	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
+-
+-	/* Initialize queue high/low-water, head/tail indexes */
+-	iwl3945_queue_init(priv, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
+-
+-	/* Tell device where to find queue, enable DMA channel. */
+-	iwl3945_hw_tx_queue_init(priv, txq);
+-
+-	return 0;
+-err:
+-	for (i = 0; i < slots_num; i++) {
+-		kfree(txq->cmd[i]);
+-		txq->cmd[i] = NULL;
+-	}
+-
+-	if (txq_id == IWL_CMD_QUEUE_NUM) {
+-		kfree(txq->cmd[slots_num]);
+-		txq->cmd[slots_num] = NULL;
+-	}
+-	return -ENOMEM;
+-}
+-
+-/**
+- * iwl3945_tx_queue_free - Deallocate DMA queue.
+- * @txq: Transmit queue to deallocate.
+- *
+- * Empty queue by removing and destroying all BD's.
+- * Free all buffers.
+- * 0-fill, but do not free "txq" descriptor structure.
+- */
+-void iwl3945_tx_queue_free(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+-{
+-	struct iwl_queue *q = &txq->q;
+-	struct pci_dev *dev = priv->pci_dev;
+-	int len, i;
+-
+-	if (q->n_bd == 0)
+-		return;
+-
+-	/* first, empty all BD's */
+-	for (; q->write_ptr != q->read_ptr;
+-	     q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd))
+-		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
+-
+-	len = sizeof(struct iwl_cmd) * q->n_window;
+-	if (q->id == IWL_CMD_QUEUE_NUM)
+-		len += IWL_MAX_SCAN_SIZE;
+-
+-	/* De-alloc array of command/tx buffers */
+-	for (i = 0; i < TFD_TX_CMD_SLOTS; i++)
+-		kfree(txq->cmd[i]);
+-
+-	/* De-alloc circular buffer of TFDs */
+-	if (txq->q.n_bd)
+-		pci_free_consistent(dev, sizeof(struct iwl3945_tfd) *
+-				    txq->q.n_bd, txq->tfds, txq->q.dma_addr);
+-
+-	/* De-alloc array of per-TFD driver data */
+-	kfree(txq->txb);
+-	txq->txb = NULL;
+-
+-	/* 0-fill queue descriptor structure */
+-	memset(txq, 0, sizeof(*txq));
+-}
+-
+ /*************** STATION TABLE MANAGEMENT ****
+  * mac80211 should be examined to determine if sta_info is duplicating
+  * the functionality provided here
 -- 
+1.5.4.3
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
