@@ -1,86 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:40236 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758507AbZASMCj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 07:02:39 -0500
-Received: by bwz14 with SMTP id 14so8220462bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 04:02:37 -0800 (PST)
-Subject: [PATCHv2 1/2] iwl3945: fix some warnings when compiled  without debug
+Received: from mga09.intel.com ([134.134.136.24]:34245 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756136AbZAWVm4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 16:42:56 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-Date: Mon, 19 Jan 2009 13:02:15 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200901191302.15719.Helmut.Schaa@gmx.de> (sfid-20090119_130242_347713_672D7B2E)
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, "Zhu, Yi" <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 14/15] iwlwifi: fix kernel oops when ucode DMA memory allocation failure
+Date: Fri, 23 Jan 2009 13:45:22 -0800
+Message-Id: <1232747123-7261-15-git-send-email-reinette.chatre@intel.com> (sfid-20090123_230906_179195_73552654)
+In-Reply-To: <1232747123-7261-14-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1232747123-7261-1-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-2-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-3-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-4-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-5-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-6-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-7-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-8-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-9-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-10-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-11-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-12-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-13-git-send-email-reinette.chatre@intel.com>
+ <1232747123-7261-14-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=46ix the following warnings if compiled without CONFIG_IWLWIFI_DEBUG.
+From: Zhu, Yi <yi.zhu@intel.com>
 
-drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98iwl39=
-45_rx_reply_add_sta=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl3945-base.c:2748: warning: unused varia=
-ble =E2=80=98pkt=E2=80=99
-drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98iwl39=
-45_rx_scan_results_notif=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl3945-base.c:2903: warning: unused varia=
-ble =E2=80=98notif=E2=80=99
-drivers/net/wireless/iwlwifi/iwl3945-base.c: In function =E2=80=98iwl39=
-45_rx_scan_complete_notif=E2=80=99:
-drivers/net/wireless/iwlwifi/iwl3945-base.c:2928: warning: unused varia=
-ble =E2=80=98scan_notif=E2=80=99
+The patch fixes memcpy to NULL address when the ucode DMA allocation failure.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+This is a fix to bug
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1861
+
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-V2 fixes the indention of preprocessor statements.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 757a9bd..6b7120a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1866,6 +1866,10 @@ static int iwl_read_ucode(struct iwl_priv *priv)
+ 	priv->ucode_data_backup.len = data_size;
+ 	iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_data_backup);
+ 
++	if (!priv->ucode_code.v_addr || !priv->ucode_data.v_addr ||
++	    !priv->ucode_data_backup.v_addr)
++		goto err_pci_alloc;
++
+ 	/* Initialization instructions and data */
+ 	if (init_size && init_data_size) {
+ 		priv->ucode_init.len = init_size;
+-- 
+1.5.4.3
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/=
-wireless/iwlwifi/iwl3945-base.c
-index b437cac..15d36d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2744,7 +2744,9 @@ static void iwl3945_rx_reply_alive(struct iwl_pri=
-v *priv,
- static void iwl3945_rx_reply_add_sta(struct iwl_priv *priv,
- 				 struct iwl_rx_mem_buffer *rxb)
- {
-+#ifdef CONFIG_IWLWIFI_DEBUG
- 	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;
-+#endif=20
-=20
- 	IWL_DEBUG_RX("Received REPLY_ADD_STA: 0x%02X\n", pkt->u.status);
- 	return;
-@@ -2898,9 +2900,11 @@ static void iwl3945_rx_scan_start_notif(struct i=
-wl_priv *priv,
- static void iwl3945_rx_scan_results_notif(struct iwl_priv *priv,
- 				      struct iwl_rx_mem_buffer *rxb)
- {
-+#ifdef CONFIG_IWLWIFI_DEBUG
- 	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;
- 	struct iwl_scanresults_notification *notif =3D
- 	    (struct iwl_scanresults_notification *)pkt->u.raw;
-+#endif
-=20
- 	IWL_DEBUG_SCAN("Scan ch.res: "
- 		       "%d [802.11%s] "
-@@ -2923,8 +2927,10 @@ static void iwl3945_rx_scan_results_notif(struct=
- iwl_priv *priv,
- static void iwl3945_rx_scan_complete_notif(struct iwl_priv *priv,
- 				       struct iwl_rx_mem_buffer *rxb)
- {
-+#ifdef CONFIG_IWLWIFI_DEBUG
- 	struct iwl_rx_packet *pkt =3D (void *)rxb->skb->data;
- 	struct iwl_scancomplete_notification *scan_notif =3D (void *)pkt->u.r=
-aw;
-+#endif
-=20
- 	IWL_DEBUG_SCAN("Scan complete: %d channels (TSF 0x%08X:%08X) - %d\n",
- 		       scan_notif->scanned_channels,
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
