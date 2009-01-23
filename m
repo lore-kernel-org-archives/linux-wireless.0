@@ -1,85 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:50664 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755943AbZAWBPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 20:15:05 -0500
-Date: Thu, 22 Jan 2009 17:12:26 -0800
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: Justin Forbes <jmforbes@linuxtx.org>,
-	Zwane Mwaikambo <zwane@arm.linux.org.uk>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Dave Jones <davej@redhat.com>,
-	Chuck Wolber <chuckw@quantumlinux.com>,
-	Chris Wedgwood <reviews@ml.cw.f00f.org>,
-	Michael Krufky <mkrufky@linuxtv.org>,
-	Chuck Ebbert <cebbert@redhat.com>,
-	Domenico Andreoli <cavokz@gmail.com>, Willy Tarreau <w@1wt.eu>,
-	Rodrigo Rubira Branco <rbranco@la.checkpoint.com>,
-	Jake Edge <jake@lwn.net>, Eugene Teo <eteo@redhat.com>,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, Larry Finger <Larry.Finger@lwfinger.net>,
-	Linux wireless <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@web.de>
-Subject: [patch 27/46] p54usb: fix traffic stalls / packet drop
-Message-ID: <20090123011226.GB19756@kroah.com> (sfid-20090123_021518_586339_072237AE)
-References: <20090123010651.683741823@mini.kroah.org>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:64437 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751296AbZAWFc4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 00:32:56 -0500
+Message-ID: <4979567D.2020005@lwfinger.net> (sfid-20090123_063300_660813_B9DC773B)
+Date: Thu, 22 Jan 2009 23:32:45 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090123011110.GA19756@kroah.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Alina Friedrichsen <x-alina@gmx.net>, samuel@sortiz.org,
+	Kalle Valo <kalle.valo@iki.fi>, maximlevitsky@gmail.com,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Regression caused by commit	e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
+References: <4979269F.1060500@lwfinger.net> <20090123021413.GB3177@tuxdriver.com>
+In-Reply-To: <20090123021413.GB3177@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.28-stable review patch.  If anyone has any objections, please let us know.
+John W. Linville wrote:
+> 
+> I reverted this in wireless-testing (and it never went anywhere
+> upstream).  Of course, now it looks like Samuel has a fix...maybe
+> I'll combine them...
 
-------------------
+Samuel's fix works for me.
 
-From: Christian Lamparter <chunkeey@web.de>
-
-commit 00627f229c9807e4cb825a7ce36b886e2adf2229 upstream.
-
-All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
-Else, the firmware could freeze, or simply drop the frame.
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/net/wireless/p54/p54usb.c |    5 +++++
- 1 file changed, 5 insertions(+)
-
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -215,6 +215,8 @@ static void p54u_tx_3887(struct ieee8021
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), data, len,
- 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
-+	addr_urb->transfer_flags |= URB_ZERO_PACKET;
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 
- 	usb_submit_urb(addr_urb, GFP_ATOMIC);
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
-@@ -252,6 +254,7 @@ static void p54u_tx_lm87(struct ieee8021
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr,
- 		len + sizeof(*hdr), free_on_tx ? p54u_tx_free_cb : p54u_tx_cb,
- 		dev);
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
- }
-@@ -294,11 +297,13 @@ static void p54u_tx_net2280(struct ieee8
- 	usb_fill_bulk_urb(int_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DEV), reg, sizeof(*reg),
- 		p54u_tx_free_cb, dev);
-+	int_urb->transfer_flags |= URB_ZERO_PACKET;
- 	usb_submit_urb(int_urb, GFP_ATOMIC);
- 
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr, len + sizeof(*hdr),
- 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
- }
- 
-
+Larry
