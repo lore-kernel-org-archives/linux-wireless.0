@@ -1,42 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:59302 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753258AbZAURhL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 12:37:11 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Subject: Re: [b43] opensource firmware
-Date: Wed, 21 Jan 2009 18:36:03 +0100
-Cc: bcm43xx-dev@lists.berlios.de,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>, kyle@infradead.org,
-	linux-wireless@vger.kernel.org
-References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com> <200901161612.24288.mb@bu3sch.de> <FBC507F3-1CD3-4AD7-9A6D-4D61A5B63DF0@ing.unibs.it>
-In-Reply-To: <FBC507F3-1CD3-4AD7-9A6D-4D61A5B63DF0@ing.unibs.it>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901211836.04281.mb@bu3sch.de> (sfid-20090121_183716_932003_B7F08D78)
+Received: from xc.sipsolutions.net ([83.246.72.84]:33894 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756668AbZAWWVd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 17:21:33 -0500
+Subject: Re: SIOCSIFFLAGS: Name not unique on network
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chanthearith HUON <chanthearith.huon@telecom-sudparis.eu>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <49788E88.5000608@telecom-sudparis.eu> (sfid-20090122_164716_230276_D922DB9D)
+References: <49788E88.5000608@telecom-sudparis.eu>
+	 (sfid-20090122_164716_230276_D922DB9D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-yjnvxU+vhFnH1Us6uQWf"
+Date: Fri, 23 Jan 2009 23:21:28 +0100
+Message-Id: <1232749288.3977.14.camel@johannes.local> (sfid-20090123_232137_546763_1DE11378)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 January 2009 18:29:40 Francesco Gringoli wrote:
-> Hello everyone,
-> 
-> we just made available a new opensource firmware version, download at http://www.ing.unibs.it/openfwwf
-> 
-> New features:
-> - initvals source code added, initvals files are encoded by make process
-> - firmware is now recognized as opensource, though still as version  
-> 351 (old format). Firmware's date switched to FFFF
-> - watchdog implemented
 
-Note that the debug-IRQ feature is now also available to you.
-It enables you to panic, dump SHM, dump regs and print a marker message
-from within the firmware. See my openfw repository and handle_irq_ucode_debug() in b43 for details.
-Note that the debug-IRQ is synchronous, so it will disturb MAC functionality.
-But you only want to use it for debugging anyway. And for debugging it is _very_ convenient
-to be able to issue printks and memory dumps from within the firmware code.
+--=-yjnvxU+vhFnH1Us6uQWf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Greetings, Michael.
+On Thu, 2009-01-22 at 16:19 +0100, Chanthearith HUON wrote:
+
+> This wireless card is not listed=20
+> in http://linuxwireless.org/en/users/Devices=20
+> <http://linuxwireless.org/en/users/Devices>
+> but the driver is in the=20
+> list http://linuxwireless.org/en/developers/Documentation/mac80211#mac802=
+11drivers=20
+> <http://linuxwireless.org/en/developers/Documentation/mac80211#mac80211dr=
+ivers>
+
+But it's listed here:
+http://linuxwireless.org/en/users/Drivers
+
+-- as not supporting mesh.
+
+> The OS is ubuntu Intrepid Ibex 8.10 with kernel 2.6.27-9-generic
+>=20
+> After creating new interface for mesh "iw dev wlan0 interface add mesh=20
+> type mp mesh_id 100". I turned the mesh interface up by "ifconfig mesh up=
+".
+> I got following error message
+> " SIOCSIFFLAGS: Name not unique on network "
+
+That's strange, it should not have allowed you to add the interface in
+the first place. But then, you're using an ancient kernel anyway...
+
+johannes
+
+--=-yjnvxU+vhFnH1Us6uQWf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJekLlAAoJEKVg1VMiehFYBQ4QAJN7MejcDBrAgaXcqtuW+htV
+OjQ6TJ9a+/xru1ves1dRq7lsiJ/WrqS5QJ77fux+/u3wwEYGUxzvcFCQGjO3soWl
+fwXxt+ZeVIgbjZdTmZQPXwUi+itXICXollQLpulB6sbOM3DXfh1O+PknhgPZrYTz
+WKb6BrmCq3BP7J+HPBBwwLr+pWh6fXOtf4vhuHmphC2/O9vzX70L4puVITTsOk4B
+WxiWka+R8TLPBlhJH7IRgdL9Eg1aWiq2mro4qVWCinCfYuYUK+Gv6wr6ytbk7V03
+ICAOrv0Oq7inmG5n2ct7PauphRaTECmF8lPUW35FbDHWFpHSyY1pQySjpd0/Lalr
+au2qh+OshgS4en2BGh8Xav9WIFAbR7GRsYCU5qEY3S/qUB+PA0YujkhbGgiAAbfl
+lRQHUcfuWQTGpaKJtMoh1Ej5vwxOIqkeAGisrSIvmZsxlM1hsa5E5T//vjWZvhYH
+hoZujAvgbtVKZ7tIaJPWPRei7myOsse4qjX8Dnn0+LnB7N5PiMLAQN63LZclUn5m
+Vo6H+eKZjY+JnzbhRjuiT4FTh+YkK2zINps99V/r5E0Xu1P0UeyM1/6NIsOgtTVd
+jhe9RssLlQVXvcrysZGOii7y4k26lG8gzOxUDPUDTZGWYF3a4PaUJZ/oMOc8QNgc
+XJS7WZNGnaS1D/kvBPkj
+=h6bd
+-----END PGP SIGNATURE-----
+
+--=-yjnvxU+vhFnH1Us6uQWf--
+
