@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:48207 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373AbZAZOZa (ORCPT
+Received: from mail-ew0-f20.google.com ([209.85.219.20]:45792 "EHLO
+	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756079AbZAWCo5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 09:25:30 -0500
-Received: by wa-out-1112.google.com with SMTP id v33so519051wah.21
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 06:25:29 -0800 (PST)
+	Thu, 22 Jan 2009 21:44:57 -0500
+Received: by ewy13 with SMTP id 13so3225000ewy.13
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 18:44:54 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <45e8e6c40901240956g68a5364tdbacc1e49410c9cc@mail.gmail.com>
-References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
-	 <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com>
-	 <e27b78a40901240804m1acd3a83o7bf6d01f81ec3397@mail.gmail.com>
-	 <45e8e6c40901240956g68a5364tdbacc1e49410c9cc@mail.gmail.com>
-Date: Mon, 26 Jan 2009 14:25:29 +0000
-Message-ID: <e27b78a40901260625w53acd646xeb5a9ca85555c74d@mail.gmail.com> (sfid-20090126_152536_414633_A9FC5C4D)
-Subject: Re: Crashing on ping?
-From: Keir <keirlawson@gmail.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20090123013000.GA5604@sortiz.org>
+References: <20090123013000.GA5604@sortiz.org>
+Date: Fri, 23 Jan 2009 03:44:53 +0100
+Message-ID: <2d0a357f0901221844h1849f4fanc577dcc2c5037101@mail.gmail.com> (sfid-20090123_034513_028039_499E8174)
+Subject: Re: [PATCH] mac80211: ieee80211_sta_set_bssid should call
+	config_interface()
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Samuel Ortiz <samuel@sortiz.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Alina Friedrichsen <x-alina@gmx.net>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"sudo cat /proc/kmsg > log" doesnt produce anything of interest.
+Just to clarify:
+The revert-patch of Alina's fix (causing regression) is no more needed?
 
-Will look into the serial console thing, never done it before.
+-SD
 
-Keir
-
-2009/1/24 Andrey Yurovsky <andrey@cozybit.com>:
-> Can you post logs of the crash (dmesg output)?  You may need to
-> connect a serial console to the PC in question to get them if the
-> machine is really hard-locking, otherwise see if you can capture the
-> output of dmesg
+On Fri, Jan 23, 2009 at 2:30 AM, Samuel Ortiz <samuel@sortiz.org> wrote:
+> From: Samuel Ortiz <samuel.ortiz@intel.com>
 >
-> On Sat, Jan 24, 2009 at 8:04 AM, Keir <keirlawson@gmail.com> wrote:
->> Tried that commit, still no luck :( It consistently freezes up on
->> ping, though sometimes it's the machine doing the pining, and other
->> times it's the machine being pinged.  Wondering what I can do to help
->> debug this?
->>
->> Keir
->>
->> 2009/1/23 Andrey Yurovsky <andrey@cozybit.com>:
->>> Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
->>> 93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
->>> 2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
->>> chance to try head of wireless-testing this week.
->>>
->>>  -Andrey
->>>
->>> On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
->>>> I just pulled the latest wireless-testing kernel, however, much like
->>>> the previous wireless-testing kernel I was working on, when attempting
->>>> to ping one node from another on a mesh, using ath5k, the node
->>>> attempting to ping completely freezes after about 7 pings are
->>>> (succesfully) sent.  Anyone have any idea what is going wrong here?
->>>>
->>>> Cheers
->>>>
->>>> Keir
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>
+> With commit e32b1b9a33759e8a83ac566c4c43f23ed5d6343b, we end up not calling
+> config_interface() when we're in STA, but not Ad-Hoc. This breaks several
+> drivers, and the fix is to get ieee80211_sta_set_bssid() to call
+> ieee80211_if_config() again.
+>
+> Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> ---
+>  net/mac80211/mlme.c |   12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+>
+> Index: wireless-testing/net/mac80211/mlme.c
+> ===================================================================
+> --- wireless-testing.orig/net/mac80211/mlme.c   2009-01-23 01:33:54.000000000 +0100
+> +++ wireless-testing/net/mac80211/mlme.c        2009-01-23 01:36:51.000000000 +0100
+> @@ -2650,6 +2650,18 @@ int ieee80211_sta_set_bssid(struct ieee8
+>                ifsta->flags &= ~IEEE80211_STA_BSSID_SET;
+>        }
+>
+> +       if (netif_running(sdata->dev)) {
+> +               int ret;
+> +
+> +               ret = ieee80211_if_config(sdata, IEEE80211_IFCC_BSSID);
+> +
+> +               if (ret) {
+> +                       printk(KERN_DEBUG "%s: Failed to config new BSSID to "
+> +                              "the low-level driver\n", sdata->dev->name);
+> +                       return ret;
+> +               }
+> +       }
+> +
+>        return ieee80211_sta_set_ssid(sdata, ifsta->ssid, ifsta->ssid_len);
+>  }
+>
+> --
+> Intel Open Source Technology Centre
+> http://oss.intel.com/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
