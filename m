@@ -1,134 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exchange07.timesys.com ([209.114.137.35]:9771 "EHLO
-	exchange07.timesys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbZAESBr (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:24880 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757570AbZAWW7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 13:01:47 -0500
-Message-ID: <49624B10.70400@cheek.com> (sfid-20090105_190151_996007_96663033)
-Date: Mon, 5 Jan 2009 13:01:52 -0500
-From: Joseph Cheek <joseph@cheek.com>
+	Fri, 23 Jan 2009 17:59:14 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so866715nfc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 14:59:11 -0800 (PST)
+Message-ID: <497A4BBB.30809@gmail.com> (sfid-20090123_235917_313198_D63A95DC)
+Date: Fri, 23 Jan 2009 23:59:07 +0100
+From: Artur Skawina <art.08.09@gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] 2.6.27 with compat-wireless-2008-12-31 stops transmitting
- every 2-3 minutes
-References: <495C7640.8060806@cheek.com> <20090105170432.GA6834@tesla>
-In-Reply-To: <20090105170432.GA6834@tesla>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org,
+	Artur Skawina <art.08.09@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC][PATCH v2] p54usb: rx refill revamp
+References: <200901232245.15216.chunkeey@web.de>
+In-Reply-To: <200901232245.15216.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Luis!  Comments below...
+Christian Lamparter wrote:
+> This patch fixes a long standing issue in p54usb.
+> 
+> Under high memory pressure, dev_alloc_skb couldn't always allocate a 
+> replacement skb. In such situations, we had to free the associated urb.
+> And over the time all urbs were eventually gone altogether and 
+> obviously the device remained mute from then on.
+> 
+> Thanks go out to Artur Skawina for all the reviews, ideas and code! 
+> ---
+> Changes:
+> 	- remove workqueue check (now, the workqueue is always there!)
+> 	- added Artur's comments
+> 	- added Artur's ideas (use poison & unpoison, emergency refill etc...)
+> 	- handle urb->status error codes
+> 		So now it depends on the error-code if we resubmit the urb & skb,
+> 		or queue it in rx_refill_list and free it later.
+> 
+> I hope Artur, I could meet all of your demands this time.;-)
 
-Luis R. Rodriguez wrote:
-> On Wed, Dec 31, 2008 at 11:52:32PM -0800, Joseph Cheek wrote:
->   
->> Hi all,
->>
->> Happy New Year!  It's about 2:30 AM here and I'm up debugging my shiny
->> new DWA-552 <AR5416+AR2133> XtremeN Desktop Adapter.  Stock 2.6.28 gave
->> me the dreaded "No ProbeResp from current AP" in syslog with a
->> disconnect every few minutes, even after updating
->> |IEEE80211_MONITORING_INTERVAL to (100 * HZ).  It's highly annoying.
->>     
->
-> This should be due to the fact that the RX filter disabled beaconing from
-> the current AP and mac80211 expects beacons from the AP. This was fixed
-> in wireless-testing but I do not see this pushed out for 2.6.28.
->
-> Greg, this was fixed in Linus' tree via ffb826767bffda61426d964a8fc24a216a14b0bd,
-> merged by John on Fri, 21 Nov 2008, the patch is titled:
-> "ath9k: enable RXing of beacons on STA/IBSS". Just in case I've
-> provided the hunk below. Without this patch users will face this disconnect
-> issue on noisy environments where the beacons don't reach mac80211 within
-> a certain time frame dicated by mac80211.
->
->   
->> I thought compat-wireless might help.
->>     
->
-> It should resolve the "No ProbeResp from current AP" in" issue at least.
->   
+There never were any 'demands', I had to spend way too much time hunting
+that data corruption bug, and in the process had to learn more than i ever
+wanted about the driver ;) So responding to your rfc was the obvious thing
+to do; feel free to ignore any comments that you think aren't useful.
+I have absolutely no problem with doing the work myself, it's just that you
+were fixing bugs that affected my device faster than i was able to run tests;
+so i never got around to send patches. In fact, i'll be waiting until this
+patch goes in, before even starting to work on some other changes, some of
+which i've already mentioned (and others that, afaict, would require changes
+to the usb stack, don't ask ;))
 
-I haven't been getting that message in syslog recently (since the 2nd). 
-I moved back to 2.6.27 with compat-wireless-12-31 as that seems the most
-stable with the highest speeds.  I also specified the AP on the iwconfig
-command line, thinking that perhaps that would help.
->> It seems to do a little bit better
->> but that's subjective.  I still get a disconnect every few minutes.
->> iwconfig and my DIR-655 show plenty of signal strength but it doesn't
->> respond to pings and my ssh sessions all get stuck in limbo.
->>
->> What can I do to debug this?  This is an old Athlon XP 2000+ box running
->> Gentoo (if it helps).  I've seen a few other probs on this list recently
->> but they don't seem similar to mine enough to warrant tacking this msg
->> on to an existing thread.
->>     
->
-> That may be due to a separate issue, but to review that we need more information,
-> such as the type of AP you are connecting to, encryption options used, mode
-> of operation (11n, 11b or 11a), your type of environment (noisy or a quiet home).
-> To review this issue you can remove stable@kernel.org from the To or Cc list.
->   
+This patch reorganizes the code so much, i'll have to read it in context
+later, this time only a few comments/questions, i hope you don't mind :)
 
-based on my recent observations, I believe you are correct - this is a
-separate issue.  I no longer get the noProbeResp error but I still get
-transmission problems every 2 minutes or so under heavy loads.  They
-don't result in actual disconnects - ifconfig shows the interface up and
-iwconfig shows it connected to the AP.  So the link is no longer being
-dropped.  But for about 30 seconds, I can neither ping nor ssh in or out
-of that box.  If leave the system up and don't cancel anything, the
-transmission resumes after the 30 seconds and then stalls again after 2
-minutes or so.
+> +static void p54u_cancel_urbs(struct ieee80211_hw *dev)
+> +{
+> +	struct p54u_priv *priv = dev->priv;
+> +
+> +	usb_poison_anchored_urbs(&priv->submitted);
+> +	/*
+> +	 * By now every RX URB has either finished or been canceled;
+> +	 * the p54u_rx_cb() completion has placed it on the refill
+> +	 * list; any attempts to resubmit from p54u_rx_refill(),
+> +	 * which could still be scheduled to run, will fail.
+> +	 */
+> +	cancel_work_sync(&priv->rx_refill_work);
+> +
+> +	/*
+> +	 * Unpoison all URBs in the rx_refill_list, so they can be reused.
+> +	 */
+> +	p54u_unpoison_rx_refill_list(dev);
 
-My AP is a D-Link DIR-655 running 1.21 firmware in g/n mode.  No
-encryption is enabled currently (I do have MAC filtering on, but nothing
-else).  The particular box with the problem is downstairs and there is
-some interference between it and AP, although the DIR-655 generally
-shows 60-80% signal and up to 81Mb/s connection speed.  It doesn't
-happen with light traffic, I have to be watching a streaming video or
-scp-ing a file across the network.  Then it is 100% repeatable.
+I'm curious why you keep the urbs around in the stopped state?
+The alloc/free/alloc sequence on init may not be that pretty, but
+is there some other reason?
 
-If I restart the network (/etc/init.d/wlan0 restart) I can get a good
-connection/signal with good traffic without having to wait 30 seconds -
-for two minutes again 8-(.
-
-This is at home and most of my neighbors have 80211g wireless set up.  I
-generally see at least two other APs from iwlist wlan0 scanning.  I
-haven't pinned either the AP or the NIC to a channel (6 is normal for US
-but they are connecting on 3).  Not sure if that makes a difference.
-
-My laptop right next to the AP has no problems staying connected and
-transmitting and receiving with stock 2.6.27.  It's running a DWL-652
-(AR5416).
-
-btw, when i do get good transmission, I only get about 1.25MB/s at the
-most.  I can get that from my old g card 8-(.
-
-I can try anything you need me to with respect to ath9k drivers or
-kernels.  does it matter if bluetooth and/or ipv6 is enabled?  both are
-enabled on this box but not on my laptop?
-
-thanks!
-
-Joseph Cheek
-
->   Luis
->
-> --- drivers/net/wireless/ath9k/recv.c.orig	2009-01-05 08:44:45.000000000 -0800
-> +++ drivers/net/wireless/ath9k/recv.c	2009-01-05 08:46:40.000000000 -0800
-> @@ -627,9 +627,8 @@
->  		rfilt &= ~ATH9K_RX_FILTER_UCAST;
->  	}
+> +	/*
+> +	 * Unpoison the anchor itself; the old URBs are already gone,
+> +	 * p54u_rx_cb() has moved them all to the refill list.
+> +	 * Prevents new URBs from being poisoned when anchored.
+> +	 */
+> +	usb_unpoison_anchored_urbs(&priv->submitted);
+> +}
+> +
+> +static int p54u_rx_refill(struct ieee80211_hw *dev)
+> +{
+> +	struct p54u_priv *priv = dev->priv;
+> +	struct urb *entry, *tmp;
+> +	unsigned long flags;
+> +	unsigned int refilled_urbs = 0;
+> +	int err = -EINVAL;
+> +
+> +	spin_lock_irqsave(&priv->rx_refill_lock, flags);
+> +	list_for_each_entry_safe(entry, tmp, &priv->rx_refill_list, urb_list) {
+> +		struct p54u_rx_info *info;
+> +		struct sk_buff *skb;
+> +
+> +		list_del(&entry->urb_list);
+> +		spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+>  		skb = __dev_alloc_skb(priv->common.rx_mtu + 32, GFP_KERNEL);
+> +
+> +		if (unlikely(!skb)) {
+> +			/*
+> +			 * In order to prevent a loop, we put the URB
+> +			 * back at the _front_ of the list, so we can
+> +			 * march on, in out-of-memory situations.
+> +			 */
+> +
+> +			spin_lock_irqsave(&priv->rx_refill_lock, flags);
+> +			list_add(&entry->urb_list, &priv->rx_refill_list);
+> +			err = -ENOMEM;
+> +			continue;
+>  		}
 >  
-> -	if (((sc->sc_ah->ah_opmode == ATH9K_M_STA) &&
-> -	     (sc->rx_filter & FIF_BCN_PRBRESP_PROMISC)) ||
-> -	    (sc->sc_ah->ah_opmode == ATH9K_M_IBSS))
-> +	if (sc->sc_ah->ah_opmode == ATH9K_M_STA ||
-> +	    sc->sc_ah->ah_opmode == ATH9K_M_IBSS)
->  		rfilt |= ATH9K_RX_FILTER_BEACON;
+>  		usb_fill_bulk_urb(entry, priv->udev,
+>  				  usb_rcvbulkpipe(priv->udev, P54U_PIPE_DATA),
+>  				  skb_tail_pointer(skb),
+>  				  priv->common.rx_mtu + 32, p54u_rx_cb, skb);
+> +
+>  		info = (struct p54u_rx_info *) skb->cb;
+>  		info->urb = entry;
+>  		info->dev = dev;
 >  
->  	/* If in HOSTAP mode, want to enable reception of PSPOLL frames
->
->   
+>  		usb_anchor_urb(entry, &priv->submitted);
+> +		err = usb_submit_urb(entry, GFP_KERNEL);
+> +		if (err) {
+
+Hmm, won't this path (ie the foreach loop) be executed many times when
+canceling the urbs? (that's why i was returning early on -EPERM in my
+patch, but have not actually checked if it's an issue. yet.)
+
+> +			/*
+> +			 * URB submission failed.
+> +			 * Free the associated skb and put the URB back into
+> +			 * the front of the refill list, so we can try our luck
+> +			 * next time.
+> +			 */
+> +
+>  			usb_unanchor_urb(entry);
+> +			kfree_skb(skb);
+> +			spin_lock_irqsave(&priv->rx_refill_lock, flags);
+> +			list_add(&entry->urb_list, &priv->rx_refill_list);
+> +		} else {
+> +			skb_queue_tail(&priv->rx_queue, skb);
+> +			refilled_urbs++;
+> +			spin_lock_irqsave(&priv->rx_refill_lock, flags);
+>  		}
+> +	}
+> +	spin_unlock_irqrestore(&priv->rx_refill_lock, flags);
+> +	return refilled_urbs ? 0 : err;
+> +}
+> +
+> +static int p54u_open(struct ieee80211_hw *dev)
+> +{
+> +	struct p54u_priv *priv = dev->priv;
+> +	int err;
+> +
+> +	err = p54u_rx_refill(dev);
+> +	if (err)
+> +		return err;
+> +
+> +	if (skb_queue_len(&priv->rx_queue) != 32) {
+> +		dev_err(&priv->udev->dev, "Not enough useable transfer buffers "
+> +			"available to initialize the device.");
+> +		p54u_cancel_urbs(dev);
+> +		return -ENOMEM;
+
+Why 32 urbs?
+And why should open() fail if, say, only 28 got successfully allocated?
+Shouldn't the device function nonetheless?
+
+artur
