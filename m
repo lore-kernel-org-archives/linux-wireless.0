@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55899 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754216AbZA3Uhp (ORCPT
+Received: from gateway05.websitewelcome.com ([64.5.38.5]:41229 "HELO
+	gateway05.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753716AbZAXCRN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 15:37:45 -0500
-Subject: Re: [PATCH] mac80211: remove HW_SIGNAL_DB
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Bruno Randolf <bruno@thinktube.com>
-In-Reply-To: <69e28c910901300950m2f74a302y6a0dbfc60b3236ed@mail.gmail.com> (sfid-20090130_185059_988423_1247885C)
-References: <1233310386.4161.25.camel@johannes.local>
-	 <20090130165026.GD6534@tesla>
-	 <69e28c910901300950m2f74a302y6a0dbfc60b3236ed@mail.gmail.com>
-	 (sfid-20090130_185059_988423_1247885C)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GfbwyfaEShuBz0A10wyU"
-Date: Fri, 30 Jan 2009 21:37:39 +0100
-Message-Id: <1233347859.4070.2.camel@johannes.local> (sfid-20090130_213748_367308_B7AA9B83)
-Mime-Version: 1.0
+	Fri, 23 Jan 2009 21:17:13 -0500
+Received: from 96-26-216-101.sea.clearwire-dns.net ([96.26.216.101]:41569 helo=Hydra.darkmatter.org)
+	by solstice.websitewelcome.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <Info@delphi-real-estate.com>)
+	id 1LQXyj-000185-UF
+	for linux-wireless@vger.kernel.org; Fri, 23 Jan 2009 20:10:34 -0600
+From: Delphi Real Estate <Info@delphi-real-estate.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Kernel Compile Fail with 2.6.26 Drivers
+Date: Fri, 23 Jan 2009 18:10:31 -0800
+References: <200901200942.57618.Info@delphi-real-estate.com> <200901230550.25986.Info@delphi-real-estate.com> <1232729629.4501.37.camel@rc-desk>
+In-Reply-To: <1232729629.4501.37.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200901231810.31206.Info@delphi-real-estate.com> (sfid-20090124_031721_595138_381B066C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-GfbwyfaEShuBz0A10wyU
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Haven't lost track of what we've discussed.  
 
-On Fri, 2009-01-30 at 18:50 +0100, G=C3=A1bor Stefanik wrote:
+I am unable to make the iwlwifi branch compile in kernel 2.6.27 or .28 with Ubuntu patches.  It simply will not compile.  I am just looking for a way to make this work.
 
-> While you are at it, please also add the ability to disable in-HW
-> sequence number generation on a per-packet basis.
+With the iwlwifi driver that comes with kernel Ubuntu 2.6.27.10 I can not associate in 'n' at 5.2GHz with the 4965AGN and DLink DIR-825.  Will not associate.  But does in 'a' and works fairly well. 
 
-Probably not possible.
 
-johannes
-
---=-GfbwyfaEShuBz0A10wyU
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJg2URAAoJEKVg1VMiehFYEaMQAJ9CIsSkvWktip7Bdw+m7F6F
-m+6uOvIoIZSsYINgfO35luvbOIfbnTkGeJTE9uCXuChMCPZ7jGnNJgrZecuf7uf4
-YcxcN+pzHJTzHxSRoBFiJVTrxsPcijg9B6Itdt6YWFV9LseD0dIrLiir/YEVs/Zw
-S/ZfmKvzNvctJFTaKfBFISjidfzOtLA80RHVj7PxZwntXyCVJ3gZNsGxN2Og0occ
-KSGSTuTlrXRP8az6sdGwnUmwxsi1JnPjGJV/s/BDpMYumR8HiQbxV7OvoPWMZ25r
-E82xkl/mHU1TX2ptkv2bpkjy7v9dhiI5aVCbf5Zg/1QrxtHbNmBc33CDq+MyEtiY
-RAy/1ezGw/INy6SOVUU8wfRZCDFvKpwpmDtm4wUKv7cNMHBmrwSHI/0LUut8N9SA
-aUZ8OFArPZX4Aooks40cyWt2JzCdJem/6oFSJdU5MfT0anMYD/QGw55fYxdbj+Lq
-RuGTrIYX4masrjp92S9uUcW8Zd4bjVw7YIJBAo0w9dpz+ksooa0pROht9G9PNA4T
-8fZq8JynhMpyicD72qQyIymhbWvKbQN7HibUk8Pues1Z2BjOqhsYObdo+s6qyIYK
-fMOo9palFcOlhoOz9ajmI7qBKPJ48lzQunYfgyRhPChct6JzTc/OEltpOtBlqS3e
-N+DCm9E4D2NVLzqhkCgK
-=o9c/
------END PGP SIGNATURE-----
-
---=-GfbwyfaEShuBz0A10wyU--
+On Friday 23 January 2009 8:53:49 you wrote:
+> On Fri, 2009-01-23 at 05:50 -0800, Delphi Real Estate wrote:
+> > It seems that either no one has 'n' working at 5GHz, or are not willing to advise.  All I need is a combination that works;  I've tried 2.6's iwlwifi in 2.6.27 and it won't compile, and it seems that 2.6.28's iwlwifi doesn't work in 'n'.  I've run Debian for eleven years and have always compiled my own custom kernels, but would very much like to get 'n' working.  Scripting is no problem, although I am not an actual coder.  I wish someone could pitch in briefly.
+> 
+> As a summary of our discussion so far:
+> 
+> 80211n currently works, except that you will get slower speeds because
+> TX aggregation is not working.
+> 
+> If you want TX aggregation support then you can use the iwl5000 branch
+> of the iwlwifi-2.6 repo on git.kernel.org, which is based on kernel
+> 2.6.26.
+> 
+> We are working on getting TX aggregation working again.
+> 
+> Reinette
 
