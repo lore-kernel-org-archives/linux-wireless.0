@@ -1,77 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35037 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:53205 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756337AbZAQJay (ORCPT
+	with ESMTP id S1755893AbZAXWOk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2009 04:30:54 -0500
-Subject: Re: [PATCH 03/13] cfg80211: add wiphy_apply_custom_regulatory()
+	Sat, 24 Jan 2009 17:14:40 -0500
+Subject: Re: [PATCH] mac80211: Generic TSF debugging
 From: Johannes Berg <johannes@sipsolutions.net>
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890901161413n3fdd7031lfdd0a363941b697d@mail.gmail.com> (sfid-20090116_231309_523730_F28F1671)
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
-	 <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
-	 <1232097659.3854.20.camel@johannes> <20090116163646.GG29609@tesla>
-	 <43e72e890901161413n3fdd7031lfdd0a363941b697d@mail.gmail.com>
-	 (sfid-20090116_231309_523730_F28F1671)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BYG5ydfzqjGqew2AYeoc"
-Date: Sat, 17 Jan 2009 10:30:49 +0100
-Message-Id: <1232184649.3668.2.camel@johannes> (sfid-20090117_103115_523279_46617A08)
+Cc: Alina Friedrichsen <x-alina@gmx.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <20090124203836.GC22475@tesla>
+References: <20090124060959.50440@gmx.net>
+	 <1232806359.4036.3.camel@johannes.local>
+	 <1232807228.4036.12.camel@johannes.local>  <20090124203836.GC22475@tesla>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-QHAtlDQnYY3+I7sYgJyW"
+Date: Sat, 24 Jan 2009 23:14:33 +0100
+Message-Id: <1232835273.4619.0.camel@johannes.local> (sfid-20090124_231457_215865_5DD3AD20)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-BYG5ydfzqjGqew2AYeoc
+--=-QHAtlDQnYY3+I7sYgJyW
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-01-16 at 14:13 -0800, Luis R. Rodriguez wrote:
-
-> >> > +static int freq_reg_info(struct wiphy *wiphy, u32 center_freq, u32 =
-*bandwidth,
-> >> > +                    const struct ieee80211_reg_rule **reg_rule)
-> >> > +{
-> >> > +   return freq_reg_info_regd(wiphy, center_freq,
-> >> > +           bandwidth, reg_rule, NULL);
-> >> > +}
-> >>
-> >> Are you not using this or am I just not seeing the user?
-> >
-> > Yeah -- good catch, its just cruft left over from my previous work.
+On Sat, 2009-01-24 at 12:38 -0800, Luis R. Rodriguez wrote:
+> On Sat, Jan 24, 2009 at 06:27:08AM -0800, Johannes Berg wrote:
+> > On Sat, 2009-01-24 at 15:12 +0100, Johannes Berg wrote:
+> > > On Sat, 2009-01-24 at 07:09 +0100, Alina Friedrichsen wrote:
+> > > > This patch enables low-level driver independent debugging of the TS=
+F
+> > > > and remove the driver specific things of ath5k and ath9k from the
+> > > > debugfs.
+> > >=20
+> > > NACK.
+> > >=20
+> > > You still haven't explained why you need set_tsf support and why it
+> > > should be a generic mac80211 functionality.
+> >=20
+> > Ok, I guess you have, I'm still not sure it's the best approach.
+> >=20
+> > Other opinions?
 >=20
-> Actually  freq_reg_info_regd() is used by handle_channel_custom(),
-> hence my comment on re-inventing the wheel. But yeah it used.
+> Seems reasonable to me instead of having different drivers implement diff=
+erent
+> APIs/debugfs solutions.
 
-Yeah but not freq_reg_info?
+Ok, since get_tsf is mostly debugging too, maybe it doesn't matter.
+Let's go with this then, I'll make the kernel-doc a little clearer
+later.
 
 johannes
 
---=-BYG5ydfzqjGqew2AYeoc
+--=-QHAtlDQnYY3+I7sYgJyW
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJcaVGAAoJEKVg1VMiehFYGs8P/i0MoiSU1q2wsQng3J2jAE+b
-qNouA82j2bfcvEnor2Nv5YU1BVWsE0rVbkkdCR73URpaudVGpGncz5GOKksrSdjc
-m2stkVSbFI2POmKYUL9QoQzh1iDJY4JQYe3sUYH9GbHAuFohyODh2Pu4egEy57Y3
-4WUAi++XIwiexuQgITF5gcbZS+Pw9nK20sOQ3lZc0Ys7qkXQfhkfjAn8/bRitPKI
-9xfR+kIvFECD4pOPuuwT1u4e5J5DYO1fCQ3Gg1wfsyKSp9iFjQubgktudYKcebSa
-1ur774crwuXOWW+irRdvj9/NDITq0U4ePZAYGazTrmds2vt0aq8+oF3GQXAGMupm
-v4H8fvi16IDM/D0QnGIEgJh58DucLMGODx7gKNFxkKRMqtyCuawkksaZ7OLVrxM2
-59hd2v21cXe6OQHSDDDpFDav5wCyHbN+/lLRrFd+9LRBhgk/sMIOqCWSqBjkbPul
-89NJrlgv7+fyFPYHawA5yWJQaQRzL0BUA+viTk4GAxtAQG3+1Mz9WwUaJ1Iplr6r
-hqA9yxeIFRRCnQnWWFRQGPQ38nXiL9TKhqzeh3z8EcPiEO5AxhhDk2xytmJgrBx2
-GGCcnT3IsoJMH08egoujGwcf9W9GT7dxo6To2U2BzPvxNoyzdmsV5SLHIjrmzNuJ
-OCxieaopFS4y1j+H0pqF
-=dprR
+iQIcBAABAgAGBQJJe5LGAAoJEKVg1VMiehFY2+wP/AsoEa8hy024oEYoM/nqxqZX
+mFZdm8fdFWz0Ct9Rx9Sp51VmzhO39wIqdUcRkWiQ5Zhi1u7AzH8CzPB1DCPf794j
+lHeOSJNzKbLe003MarOxKSti8ttVioAOeVINe1Xc/Hcl+R0+vloXd9m2YJFbRJD1
+aH4RaRN7GucH22faRBSMOODKWqCObu5RH8sWqxx19/1MHN3HFzUm+VmAgRvR1kXR
+F5hhR/taiUtGf8f9UiqHSu9SF4ewKAvYTFegGjfQr3YJCTV4sPVOlbgrcsx1NPHj
+R4DN235PYkISwGlmXp+ZGC36zqePZm36svU0sDu84thz7nAJ8zfES8I6RqFCDjlF
+8x5fIGQ1+VplH5R70HpGXRH4wbEy15izDgXHQ6O2Jotmgw/9r4InzxZ26OAuaXL0
+jP7nhI/1A1xmQWs0OqpVQVMO8aNsyDlDO8U9pDDAjexN9jgE5Y9rAHAXXQNOgE7o
+vRGcVleJfbNw00PZb2CotO2aK3JjE2fSS5jedgY+TZip4lsGH64iUa4AfgGe7Csg
+ezOxfN/dMyuqiexTD9bn1dLJIE4gDhWcBG2/PbhpkSM6I1gcQEkMH0DBdphUfKcH
+a8xK/6ZwXGTlm1T2IB4NywkeKGDUxHGdOJLMcpo5s1F7L6LMM5u1V2Pv4GCDaE2j
+dPZaNiNJiRutQDzBPDZ7
+=RMzg
 -----END PGP SIGNATURE-----
 
---=-BYG5ydfzqjGqew2AYeoc--
+--=-QHAtlDQnYY3+I7sYgJyW--
 
