@@ -1,66 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:55269 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750954AbZAYUGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 15:06:33 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: regulatory: Operation already in progress
-Date: Sun, 25 Jan 2009 21:05:37 +0100
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <200901251422.42616.mb@bu3sch.de> <20090125184517.GH22475@tesla> <20090125193656.GI22475@tesla>
-In-Reply-To: <20090125193656.GI22475@tesla>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55008 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751519AbZAXMMt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 07:12:49 -0500
+Message-ID: <497B05AF.5050701@hauke-m.de> (sfid-20090124_131254_983321_2F939864)
+Date: Sat, 24 Jan 2009 13:12:31 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901252105.37604.mb@bu3sch.de> (sfid-20090125_210650_584565_CA0AA6FB)
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Fix driver to return TX retry info for	RTL8187L
+References: <49790961.JdcKIZyYlMNFSiuO%Larry.Finger@lwfinger.net> <4979DD39.9000601@hauke-m.de> <20090123153144.GA13658@tuxdriver.com>
+In-Reply-To: <20090123153144.GA13658@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigDCAC72547602E187E081D20A"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 25 January 2009 20:36:56 Luis R. Rodriguez wrote:
-> On Sun, Jan 25, 2009 at 10:45:17AM -0800, Luis Rodriguez wrote:
-> > On Sun, Jan 25, 2009 at 10:41:38AM -0800, Michael Buesch wrote:
-> > > On Sunday 25 January 2009 19:21:07 Luis R. Rodriguez wrote:
-> > > > On Sun, Jan 25, 2009 at 05:22:42AM -0800, Michael Buesch wrote:
-> > > > > mb@quimby:~/kernel$ sudo iw reg set DE
-> > > > > command failed: Operation already in progress (-114)
-> > > > >
-> > > > > I wonder why this happens.
-> > > > > What I just did was install 2.6.28.2 and install today's compat-wireless.
-> > > > >
-> > > > > In dmesg I can see it succeeded once but it doesn't work anymore now.
-> > > > > [  973.992710] cfg80211: Calling CRDA for country: DE
-> > > > > [  973.998576] cfg80211: Regulatory domain changed to country: DE
-> > > > > [  973.998630]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> > > > > [  973.998691]  (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> > > > > [  973.998738]  (5150000 KHz - 5255000 KHz @ 40000 KHz), (N/A, 2301 mBm)
-> > > > > [  973.998785]  (5470000 KHz - 5650000 KHz @ 40000 KHz), (N/A, 3000 mBm)
-> > > >
-> > > > Had you called twice?
-> > >
-> > > yeah, once manually with iw and once with hostapd.
-> > >
-> > > > If so we now tell userspace when its there by -EALREADY,
-> > > > we were just silently accepting two consecutive calls before.
-> > >
-> > > Well, but it makes hostapd fail.
-> > > I think it's a bit weird to throw and error code. In general most programs
-> > > silently return success early, if an operation was already done.
-> > 
-> > We can prevent to propagate -EALREADY to userspace -- sure, I'll cook
-> > up the patch.
-> 
-> Actually we could also patch hostapd to deal with -EALREADY as a success too.
-> Its either that or we have nl80211 return 0 instead of -EALREADY. Jouni, any
-> preference?
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigDCAC72547602E187E081D20A
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-I think returning an error doesn't make sense.
-All the set-regulatory nl80211 command does is "set the domain to X". So why does it
-fail, if it was already X before the call. All the caller wants is to select domain X.
-That's what he gets in any case. Whether it was set to X or not before the call shouldn't matter.
-It's also confusing to get a "command failed" from iw.
+John W. Linville wrote:
+> Just curious if you tried limiting the rate to 11Mb as Larry said
+> someone else had done?  Did that work any better?
+>=20
+> John
+I did some more testing with and without the patch. With the patch it
+works when the rate is limited to 11M with pid and with minstrel
+algorithm. Without this limitation it works only with pid.
 
--- 
-Greetings, Michael.
+Without this patch it also works with the limiting the rate to 11M with
+both rate control algorithms, but with minstrel it also works without
+limiting the rate.
+
+Without the patch, without limiting the rate and with minstrel iwconfig
+reports a rate of 1Mb/s, but I get 3Mb/s with wget, properly an other
+bug. With pid the rate goes up to 54Mb/s and it does not work.
+
+With the patch, without limiting the rate and with minstrel iwconfig
+reports a rate of 24Mb/s and it does not work. With pid it starts with
+1Mb/s and the connection is stable. The rate is changing between 1mb/s,
+2Mb/s, 5.5Mb/s and 9Mb/s.
+
+I will do more testing with pid and with this patch.
+
+I have tested with compat-wireless-2009-01-24 and reversed the patch.
+
+Hauke
+
+
+--------------enigDCAC72547602E187E081D20A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iQIcBAEBAgAGBQJJewWzAAoJEIZ0px9YPRMyyGEP/2u97Aizg1c7L3e+0jykp5m/
+HZ9H/lnJJruGeH4Uj2ckTNsSuPkfInxdYSZDIvT0l/1DOgzN45reLp0zk8iMq9Vj
+EPzBT381kjw2CEXtncY8MbOgAlFl1IfRUxp3rwhmV4T2LATkbANx1j1Y2+vYDpY3
+oRyPljRQs1YmBgWYBCQlyCp4ZcAc234UhEJQXFFez3FHYKcKQM8qr592mo9GohPf
++tLtAyXuYYL+y9iFt5xYqAQDM7DfVu4tUPEhuz2UEwlb8QW7fv0t7kSvekQ9wXGQ
+PA4vDuf6zWmTdmBS1117XzcPw1AbAdqqjKx8lhE9SH/ZhAa9q4TFVrsgYFcTjYkQ
+POCkQVtgd8wvOm6OiFgq00pl3068Kj44Ivos6HpyciZ0uGeibnmPzdVivGSoGQv/
+QpHlOw0YXlWBTjMBYioSbxKCFYh+XWzbg81czlqztgRldYpwZJQZi11vwkIwgUAF
+DFGcaXQsuCPBoo6oJYn5gJEeB1MJFllevusk/kDkX5zsoTheNW+74+hVOE0KV4X7
+kLvCEMCJ/atoJx1q6YOSazRUOhfYeCHGECR2yTeTow6s6k4guYe44e7np8hieutA
+rEkyYqXAdXqquNdgRlF+YFTre3ZD6+pulFKkb4rrwyNnFUTBwDUMH/Y7QMQFIGBh
+b7d6/xoDtrW9hHWsNXIV
+=napd
+-----END PGP SIGNATURE-----
+
+--------------enigDCAC72547602E187E081D20A--
