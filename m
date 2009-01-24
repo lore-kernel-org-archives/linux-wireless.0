@@ -1,64 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:52058 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1765928AbZAOVFE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 16:05:04 -0500
-Date: Thu, 15 Jan 2009 13:02:16 -0800
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Joseph Cheek <joseph@cheek.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [stable] [ath9k-devel] 2.6.2{7, 8} with
-	compat-wireless-2008-12-3{0, 1) drops link every 2-3 minutes
-Message-ID: <20090115210216.GA22843@kroah.com> (sfid-20090115_220528_764915_4B116FC0)
-References: <495C7640.8060806@cheek.com> <20090105170432.GA6834@tesla> <20090115183703.GB10674@kroah.com> <20090115202550.GB29609@tesla>
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:34777 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751126AbZAXRpr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 12:45:47 -0500
+Message-ID: <497B53B4.5060302@lwfinger.net> (sfid-20090124_184553_887037_EFAF7197)
+Date: Sat, 24 Jan 2009 11:45:24 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090115202550.GB29609@tesla>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Fix driver to return TX retry info for	RTL8187L
+References: <49790961.JdcKIZyYlMNFSiuO%Larry.Finger@lwfinger.net> <4979DD39.9000601@hauke-m.de> <20090123153144.GA13658@tuxdriver.com> <497B05AF.5050701@hauke-m.de>
+In-Reply-To: <497B05AF.5050701@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2009 at 12:25:50PM -0800, Luis R. Rodriguez wrote:
-> On Thu, Jan 15, 2009 at 10:37:03AM -0800, Greg KH wrote:
-> > On Mon, Jan 05, 2009 at 09:04:32AM -0800, Luis R. Rodriguez wrote:
-> > > On Wed, Dec 31, 2008 at 11:52:32PM -0800, Joseph Cheek wrote:
-> > > > Hi all,
-> > > >
-> > > > Happy New Year!  It's about 2:30 AM here and I'm up debugging my shiny
-> > > > new DWA-552 <AR5416+AR2133> XtremeN Desktop Adapter.  Stock 2.6.28 gave
-> > > > me the dreaded "No ProbeResp from current AP" in syslog with a
-> > > > disconnect every few minutes, even after updating
-> > > > |IEEE80211_MONITORING_INTERVAL to (100 * HZ).  It's highly annoying.
-> > >
-> > > This should be due to the fact that the RX filter disabled beaconing from
-> > > the current AP and mac80211 expects beacons from the AP. This was fixed
-> > > in wireless-testing but I do not see this pushed out for 2.6.28.
-> > >
-> > > Greg, this was fixed in Linus' tree via ffb826767bffda61426d964a8fc24a216a14b0bd,
-> > > merged by John on Fri, 21 Nov 2008, the patch is titled:
-> > > "ath9k: enable RXing of beacons on STA/IBSS". Just in case I've
-> > > provided the hunk below. Without this patch users will face this disconnect
-> > > issue on noisy environments where the beacons don't reach mac80211 within
-> > > a certain time frame dicated by mac80211.
-> > 
-> > Thanks, I'll queue this up for 2.6.28, but it doesn't apply to
-> > 2.6.27-stable.  If you want it there, can you please provide a backport
-> > for it?
-> 
-> Thanks Greg -- it seems this was actually present in 2.6.27 since the
-> initial commit of ath9k. From the initial commit I see:
-> 
-> --- on ath_calcrxfilter()
->         if (sc->sc_opmode == ATH9K_M_STA || sc->sc_opmode == ATH9K_M_IBSS ||
->             sc->sc_scanning)
->                 rfilt |= ATH9K_RX_FILTER_BEACON;
-> ---
-> 
-> Seems we're good on 27 for this and this actually turned out to be a regression then.
+Hauke Mehrtens wrote:
+> I did some more testing with and without the patch. With the patch it
+> works when the rate is limited to 11M with pid and with minstrel
+> algorithm. Without this limitation it works only with pid.
 
-Thanks for confirming it,
+Of course, when you set a manual rate, the rate-setting method is
+immaterial.
 
-greg k-h
+> Without this patch it also works with the limiting the rate to 11M with
+> both rate control algorithms, but with minstrel it also works without
+> limiting the rate.
+
+Without the patch, minstrel is internally limited to 1 Mb/s TX rate.
+
+> Without the patch, without limiting the rate and with minstrel iwconfig
+> reports a rate of 1Mb/s, but I get 3Mb/s with wget, properly an other
+> bug. With pid the rate goes up to 54Mb/s and it does not work.
+
+The rate reported by iwconfig is for TX. The throughput from wget is
+dependent on the TX rate of the AP. This info is useful, but the rates
+from wput, or any other transmitting program, are more instructive to
+find TX problems.
+
+> With the patch, without limiting the rate and with minstrel iwconfig
+> reports a rate of 24Mb/s and it does not work. With pid it starts with
+> 1Mb/s and the connection is stable. The rate is changing between 1mb/s,
+> 2Mb/s, 5.5Mb/s and 9Mb/s.
+
+Please submit your rc_stats data for the minstrel case.
+
+It is obvious that the RTL8187L does not do as well as other wireless
+chips in low S/N conditions. It is also possible that some flavors of
+the chips are better than others. In my Netgear WG111v2 with the patch
+and using the minstrel algorithm, I get a TX rate between 21 and 22
+Mb/s as measured with tcpperf at a distance of 2 m from my AP. The
+rate reported by iwconfig is 54 Mb/s. When I move to ~15 m from the
+AP, the rate falls off to ~12 Mb/s with iwconfig reporting 24-48 Mb/s.
+At 20 m, the connection is essentially unusable - sounds like yours
+the iwconfig rate is 24 Mb/s.
+
+We are clearly flying blind here as we do not have a data sheet for
+the RTL8187L. I got some help from the Realtek engineer regarding the
+retry info, but that is the limit of my info. I do have what I think
+is the latest version of the vendor driver, and I will compare the
+power setting code with theirs.
+
+The patch definitely helps my device as long as the reported signal
+level is above -60 dBm. With lower signals, then it doesn't work very
+well. Your device must be in that range.
+
+Larry
+
