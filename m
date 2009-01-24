@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:11356 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753164AbZAVTIm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 14:08:42 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so2514793muf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 11:08:40 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Subject: Re: [PATCH 2/2] iwl3945: Remove unused variables
-Date: Thu, 22 Jan 2009 20:08:14 +0100
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <200901190955.32818.helmut.schaa@gmail.com> <200901221144.27380.helmut.schaa@gmail.com> <1ba2fa240901220328s4fe65faeo35176357a19f57fa@mail.gmail.com>
-In-Reply-To: <1ba2fa240901220328s4fe65faeo35176357a19f57fa@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901222008.14597.helmut.schaa@gmail.com> (sfid-20090122_200847_104260_73ABBA53)
+Received: from mx2.redhat.com ([66.187.237.31]:58299 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756765AbZAXOcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 09:32:13 -0500
+Subject: Re: p54 + ISL3887 + master mode?
+From: Dan Williams <dcbw@redhat.com>
+To: Valentin <apo@apo2k4.ath.cx>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090124150103.612d8985@lucien>
+References: <20090124150103.612d8985@lucien>
+Content-Type: text/plain
+Date: Sat, 24 Jan 2009 09:30:52 -0500
+Message-Id: <1232807452.2870.27.camel@localhost.localdomain> (sfid-20090124_153216_908067_8FF0063A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag, 22. Januar 2009 schrieb Tomas Winkler:
-> On Thu, Jan 22, 2009 at 12:44 PM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
-> > Am Mittwoch, 21. Januar 2009 schrieb John W. Linville:
-> >> On Mon, Jan 19, 2009 at 09:55:32AM +0100, Helmut Schaa wrote:
-> >> > Fix the following warnings in iwl-3945-rs.c by removing unused variables.
-> >> >
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_rate_scale_flush_windows':
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:186: warning: unused variable 'priv'
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_bg_rate_scale_flush':
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:219: warning: unused variable 'priv'
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_collect_tx_data':
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: warning: unused variable 'priv'
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'rs_free_sta':
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: warning: unused variable 'priv'
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_get_adjacent_rate':
-> >> > drivers/net/wireless/iwlwifi/iwl-3945-rs.c:559: warning: unused variable 'priv'
-> >> >
-> >> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> >>
-> >> With this applied, I get these:
-> >>
-> >>   CC [M]  drivers/net/wireless/iwlwifi/iwl-3945-rs.o
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_rate_scale_flush_windows':
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: 'priv' undeclared (first use in this function)
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: (Each undeclared identifier is reported only once
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:199: error: for each function it appears in.)
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_bg_rate_scale_flush':
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:222: error: 'priv' undeclared (first use in this function)
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_collect_tx_data':
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:293: error: 'priv' undeclared (first use in this function)
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'rs_free_sta':
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:441: error: 'priv' undeclared (first use in this function)
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c: In function 'iwl3945_get_adjacent_rate':
-> >> drivers/net/wireless/iwlwifi/iwl-3945-rs.c:594: error: 'priv' undeclared (first use in this function)
-> >> make[2]: *** [drivers/net/wireless/iwlwifi/iwl-3945-rs.o] Error 1
-> >> make[1]: *** [drivers/net/wireless/iwlwifi] Error 2
-> >> make: *** [drivers/net/wireless/] Error 2
-> >>
-> >> Dropping...
-> >
-> > Ah, sorry for that. I compiled without CONFIG_IWL_DEBUG. Instead of removing
-> > these lines they should be surrounded by an CONFIG_IWL_DEBUG check. I'll send
-> > that soon.
+On Sat, 2009-01-24 at 15:01 +0100, Valentin wrote:
+> Hi, I recently got a Dell Wireless 1450 USB and am now trying to put it
+> into master mode, but to no avail... I've tried this:
 > 
-> Please use
-> struct iwl_priv *priv __maybe_unused priv;
-> look  at  in iwl-agn-rs.c
+> ./iw phy phy6 interface add dell type (master|ap)
+> 
+> but both just give me the help. Trying to add a device in e.g. monitor
+> or managed mode works. If I then try
+> 
+> iwconfig dell mode master
+> 
+> I get
+> 
+> Error for wireless request "Set Mode" (8B06) :
+>     SET failed on device dell ; Invalid argument.
+> 
+> Now I'm pretty much out of ideas. Is it actually possible to get this
+> into master mode? :|
 
-Will do. Thanks for the hint.
+One thing to try: make sure the interface is down first, since mac80211
+doesn't allow mode switches while the interface is up.
 
-Helmut
+Dan
+
+
