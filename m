@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mxm.seznam.cz ([77.75.72.45]:34649 "EHLO mxm.seznam.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757446AbZABMJy convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:20689 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755513AbZAXU4u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 07:09:54 -0500
-Cc: linux-wireless@vger.kernel.org,
-	=?us-ascii?Q?Michael=20Green?= <Michael.Green@atheros.com>,
-	=?us-ascii?Q?Luis=20R=2E=20Rodriguez?= <mcgrof@gmail.com>
-To: linville@tuxdriver.com
-Date: Fri, 02 Jan 2009 13:09:41 +0100 (CET)
-From: =?iso-8859-2?Q?Carlos=20Lau=E9?= <CarlosL@seznam.cz>
-Subject: =?us-ascii?Q?=5BPATCH=20v3=5D=20wireless=2Dregdb=3A=20Update=20regulatory=20rules=20for=20Czech=20Republic=20=28CZ=29=20on=205GHz?=
-Mime-Version: 1.0
-Message-Id: <272.644-30384-2075382930-1230898181@seznam.cz> (sfid-20090102_131021_406737_1E9F3985)
-Content-Type: text/plain; charset=utf-8
+	Sat, 24 Jan 2009 15:56:50 -0500
+Received: by ey-out-2122.google.com with SMTP id 22so1111749eye.37
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 12:56:48 -0800 (PST)
+Message-ID: <497B808F.6060009@gmail.com> (sfid-20090124_215655_334774_C68D1B6E)
+Date: Sat, 24 Jan 2009 21:56:47 +0100
+From: Artur Skawina <art.08.09@gmail.com>
+MIME-Version: 1.0
+To: Artur Skawina <art.08.09@gmail.com>
+CC: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC][PATCH v2] p54usb: rx refill revamp
+References: <200901232245.15216.chunkeey@web.de> <200901240215.44226.chunkeey@web.de> <497A967F.2010900@gmail.com> <200901241206.18690.chunkeey@web.de> <497B71E9.6080703@gmail.com>
+In-Reply-To: <497B71E9.6080703@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Artur Skawina wrote:
+> Christian Lamparter wrote:
+>> On Saturday 24 January 2009 05:18:07 Artur Skawina wrote:
+>>> [My version schedules the work for every urb, even the poisoned ones]
+>> well, there's now a hard limit... no change of a endless loop now.
+> 
+> The whole point of the poisoning was to prevent resubmission when
+> canceling the urbs -- if you work around that manually, you could just
+> as well kill them, instead of poisoning.
+> I don't understand why want to add extra code to the rx irq just to
+> avoid scheduling a work when downing the i/f, and keep a nasty failure
+> case. The difference in down() performance is not going to be measurable,
+> and even if it was, it wouldn't matter.
 
-This patch updates the frequency table for Czech Republic to include 80=
-2.11a. It should be in conformance with all EU & Czech laws.Thanks  Mic=
-hael Green &   Luis R. Rodriguez for explaining some details about TPC =
-compliance. It does not penalize by 3dB, nor includes the dubious  freq=
-uencies 5,725=E2=80=935,875 GHz.
+Oh, and we could always do something like
 
-Signed-off-by: Carlos Lau=C3=A9 <carlosl@seznam.cz>
+        if (likely(atomic_read(&urb->reject)==0))
+                queue_work(priv->common.hw->workqueue, &priv->rx_refill_work);
 
-diff --git a/db.txt b/db.txt
-index 6a282b6..55d928a 100644
---- a/db.txt
-+++ b/db.txt
-@@ -141,10 +141,13 @@ country CY:
-        (5250 - 5330 @ 40), (N/A, 20), DFS
-        (5490 - 5710 @ 40), (N/A, 27), DFS
+which should catch most cases then urbs are either killed or poisoned.
 
-+# Data from http://www.ctu.eu/164/download/VOR/VOR-12-08-2005-34.pdf
-+# and http://www.ctu.eu/164/download/VOR/VOR-12-05-2007-6-AN.pdf
- country CZ:
--       (2402 - 2482 @ 40), (N/A, 20)
--       (5170 - 5250 @ 40), (N/A, 20)
--       (5250 - 5330 @ 40), (N/A, 20), DFS
-+       (2400 - 2483.5 @ 40), (N/A, 100 mW)
-+       (5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
-+       (5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
-+       (5470 - 5725 @ 40), (N/A, 1000 mW), DFS
-
- # Data from "Frequenznutzungsplan" (as published in April 2008),
- # downloaded from http://www.bundesnetzagentur.de/media/archive/13358.=
-pdf
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+artur
