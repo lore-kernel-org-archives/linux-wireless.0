@@ -1,31 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:45620 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755663AbZAUIpX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59909 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752156AbZAXOMn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 03:45:23 -0500
-Date: Wed, 21 Jan 2009 10:45:09 +0200
-From: Jouni Malinen <j@w1.fi>
+	Sat, 24 Jan 2009 09:12:43 -0500
+Subject: Re: [PATCH] mac80211: Generic TSF debugging
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH] Fixed BSSID step 3: Don't merge with the same BSSID
-Message-ID: <20090121084509.GA11265@jm.kir.nu> (sfid-20090121_094528_336122_D7DEBC82)
-References: <20090106020130.302750@gmx.net> <20090108091055.GA7009@jm.kir.nu> <20090117221225.301920@gmx.net> <20090120151003.GA8710@jm.kir.nu> <20090120185635.284250@gmx.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090120185635.284250@gmx.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20090124060959.50440@gmx.net> (sfid-20090124_071031_925716_84EFAC47)
+References: <20090124060959.50440@gmx.net>
+	 (sfid-20090124_071031_925716_84EFAC47)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9OFmbd92cDz3XFFKiE0Q"
+Date: Sat, 24 Jan 2009 15:12:39 +0100
+Message-Id: <1232806359.4036.3.camel@johannes.local> (sfid-20090124_151246_101797_74F9E228)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 07:56:35PM +0100, Alina Friedrichsen wrote:
 
-> Okay, thanks for your notice. Than I think the dummy merge detection code should in the ieee80211_sta_join_ibss() function and if so only call reset_tsf()?!
-> Should it make any other thinks too in this case?
+--=-9OFmbd92cDz3XFFKiE0Q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-That is probably enough, but I have to admit I have not gone through all
-the details here. It certainly should not need to remove existing STA
-entries or reconfigure beacon data etc. that may have been there in the
-past.
+On Sat, 2009-01-24 at 07:09 +0100, Alina Friedrichsen wrote:
+> This patch enables low-level driver independent debugging of the TSF
+> and remove the driver specific things of ath5k and ath9k from the
+> debugfs.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+NACK.
+
+You still haven't explained why you need set_tsf support and why it
+should be a generic mac80211 functionality.
+
+johannes
+
+--=-9OFmbd92cDz3XFFKiE0Q
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJeyHUAAoJEKVg1VMiehFYnn4P/jD1jTePuttYIyCPVgh8W2lR
+V2Zg0eWqLT02SsYGfxOa8ZU8i+dC0TdUpnHeARypGKhQbjlMd75Czww4xarMR+8h
+lXmW4EU0IcruFrRY/hH4/a5V+/v1kPcFr0X6tYFTP/n9LsJ2R4DeQWN/0cQ6fhuC
+69OGOSeRL4pdUUGYPLSzxKarlRIiW3BHx+9OEYorInrkrJlZslFggyJ84iop7Q3l
+iQ1lSd8FxubNHtJ3G1JI3o1iQh8qXO1dGTbgoqV5AdRp2+m34wTYlCM3MPtj6fDD
+dvVZNagg3VrPwb7jFsMBDai5vILBI+27h2Pd65H8R+Y1CxmP6nkJHYPNxiE3v6+2
+eF6noBtUcgRVYebeGQpteuV17G/08AYpzdOF+4n7L0fi19sA+P7hYGjkvcKpXZPa
+kg0pgHr6rOrqHGQy1ipu98zP40WxEacW4LS851beAwl+7dR+Qn/RhsTCFuE8IWpp
+y6YWv9zfvjhXOZ7YT6CUSe4a6DDMnt1w1H+alpYKj2okC87MxU0LkpRCmPl0E4Xx
+g/HTcoU9GIxzevwxZZks1jJgR4CNa8OJQr3q9Va0lQbLWAOIth1rFkZVY0ztbrRC
+zQWYFpR5WkV0qIxNDWMxMv5HXYx/YEfwTrVHXbjCIbhcgSVcRDlR1gOQNcCBB49c
+UgerO3HuDofLezHNnfW2
+=nJkH
+-----END PGP SIGNATURE-----
+
+--=-9OFmbd92cDz3XFFKiE0Q--
+
