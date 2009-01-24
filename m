@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:63714 "EHLO mga03.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:64296 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763321AbZATALR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 19:11:17 -0500
-Subject: Re: [PATCH 14/15] iwlwifi: add recognition of Intel WiFi Link 6000
-	and 6050 Series
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>
-In-Reply-To: <1232408084.8866.29.camel@johannes.local>
-References: <> <1232407835-19451-1-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-2-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-3-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-4-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-5-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-6-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-7-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-8-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-9-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-10-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-11-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-12-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-13-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-14-git-send-email-reinette.chatre@intel.com>
-	 <1232407835-19451-15-git-send-email-reinette.chatre@intel.com>
-	 (sfid-20090120_003051_399866_7436A6F3)  <1232408084.8866.29.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 19 Jan 2009 16:13:38 -0800
-Message-Id: <1232410418.11197.53.camel@rc-desk> (sfid-20090120_011141_836718_20C52D78)
-Mime-Version: 1.0
+	id S1755414AbZAXUiY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 15:38:24 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 12:38:24 -0800
+Date: Sat, 24 Jan 2009 12:37:46 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless-regdb: add example spec file
+Message-ID: <20090124203746.GB22475@tesla> (sfid-20090124_213827_932939_69495892)
+References: <1232752577-24011-1-git-send-email-lrodriguez@atheros.com> <200901241227.48939.helmut.schaa@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <200901241227.48939.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-01-19 at 15:34 -0800, Johannes Berg wrote:
-> On Mon, 2009-01-19 at 15:30 -0800, Reinette Chatre wrote:
-> > From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
-> > 
-> > add configuration for new Intel WiFi Link Series as part of the iwlagn
-> > driver under the umbrella of 5000 family of devices.
+On Sat, Jan 24, 2009 at 03:27:48AM -0800, Helmut Schaa wrote:
+> Am Samstag, 24. Januar 2009 schrieb Luis R. Rodriguez:
+> > This is a simple example spec file which can be used
+> > by RPM distributions. Note that the man page isn't yet
+> > installed as it has not yet been commited.
+> >
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
 > 
-> Shouldn't the 6000 be mentioned in Kconfig too then?
+> [...]
+> 
+> > +%install
+> > +install -m 755 -d %buildroot/%crda_lib
+> > +install -m 644 regulatory.bin %buildroot/%{crda_lib}/regulatory.bin
+> 
+> Why not make use of "make DESTDIR=%buildroot install" here?
 
-yes it should - we will add it when the support can be more visible
+Since its in the spec file you have direct control over that, what would
+be best is to get wireless-regdb makefile to use DESTDIR and then just
+have the spec file call make install. I sent the patch for the first part
+already, so the spec file can be changed once that goes in.
 
-Reinette
-
+  Luis
