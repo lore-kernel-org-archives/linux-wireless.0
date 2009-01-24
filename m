@@ -1,79 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44168 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756850AbZAMN4S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 08:56:18 -0500
-Subject: Re: [PATCH] nl80211: New command for adding extra IE(s) into
-	management frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090113134948.GA16694@jm.kir.nu>
-References: <20090113115128.GA11245@jm.kir.nu>
-	 <1231853937.3671.28.camel@johannes>  <20090113134948.GA16694@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LEzv+0g3KTW/I07y/atd"
-Date: Tue, 13 Jan 2009 14:55:47 +0100
-Message-Id: <1231854947.3671.33.camel@johannes> (sfid-20090113_145624_771377_8DB4528B)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:42389 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755501AbZAXUlA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 15:41:00 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 12:41:00 -0800
+Date: Sat, 24 Jan 2009 12:40:22 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Tony Vroon <tony@linx.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Diego =?iso-8859-1?Q?E=2E_'Flameeyes'_Petten=F2?=
+	<flameeyes@gmail.com>
+Subject: Re: [PATCH] CRDA 0.1.0: Fix building with --as-needed
+Message-ID: <20090124204022.GD22475@tesla> (sfid-20090124_214106_674562_FA6FCAFE)
+References: <1232826895.19384.3.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1232826895.19384.3.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Jan 24, 2009 at 11:54:55AM -0800, Tony Vroon wrote:
+> It seems mails from Flameeyes just do not make it through to
+> linux-wireless, so there it is. Please apply this and consider releasing
+> 1.0.1 (without a v in the tarball name, if at all possible).
 
---=-LEzv+0g3KTW/I07y/atd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks! Can you please resend without signing the patch e-mail?
 
-On Tue, 2009-01-13 at 15:49 +0200, Jouni Malinen wrote:
-> On Tue, Jan 13, 2009 at 02:38:57PM +0100, Johannes Berg wrote:
->=20
-> > kmemdup? Might also make sense to not try the allocation if we're going
-> > to refuse it anyway, but that might be complicated to do and probably
-> > doesn't matter.
->=20
-> I did not know there is such a thing as kmemdup (apparently not that
-> many other people, either, taken into account it is not used anywhere in
-> the generic wireless code). Anyway, yes, it would work here.
+http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches#Priortosendingpatches
 
-Heh. Yeah, I think it's a fairly recent addition to the API, maybe two
-years old or so.
-
-> Moving the allocation to be done for each subtype separately would add
-> quite a bit of extra code and error paths. Doing it once resulted in
-> simpler implementation. The array version was much simpler on this area,
-> but with separate variables for each subtype, I think it is better to
-> just allocate (and deal with NULL) once even if we will immediately
-> after this need to free the buffer in the case the request is going to
-> be refused.
-
-Good point. The only other solution I could come up with was having
-set_mgmt_extra_ie_sta return a u8 ** and size_t * that are assigned, but
-that seems too ugly.
-
-johannes
-
---=-LEzv+0g3KTW/I07y/atd
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJbJ1gAAoJEKVg1VMiehFYiNEQALfNosZII9+NO28QZlhXaupa
-ePLMowp7seO9sKy2sBvwRrJzF2AEtMVspMr8rTNOtWAadxrx3sSa0xG699pFa17S
-pCEyT99hsgj8fpakY6KCTJvaBmBiMnxDMkK36gwpzYrF6cSfI8c1eCkWKjSNGUpv
-5TscVf72eR1edsqGLXA+7CR8Pu5TBNYf0/wgw/3IyaCXjzYVoDxqSXVgsBCsbCLp
-U6h1VZVOLb9bHDjXEfrboidWWSmYAfFIs5QQFjefxhPo1OryNJxBylq6s+n/W7NK
-xQWh8XJzB7qropGsP2vAYo8APussLgjI09doJ0BiN2WEW8BjU7lNvNS8mgvL3Up6
-8oMa7qzQKO+EuGAzafKpH8HW6lU+pg6aDBAyXcrSTMc5G9VDLHVkne5hc62HMhUY
-ul1wVhfWNpEEi6w2OBYeZq7eMt8OyP4eapu9/601TqXZmJEaIhunO04ZBpt8Zl+6
-+QSuIR2kyvDyIh7OfDMOJ4vxMLu7uW58fHQKBLxgYVKynOGswl/dfZJe+JbIHs/H
-zwgzBZfuUz5tx51t5jxsp/2K2yqhujEpcsYpWdle95sMMUWD7WSOnWWBbDLfjMLt
-oQgtaekhpchtUILkKwhj6U0JDuwY4gg6qeLAFqM1/RHHH0FPvFG4ER0up78S8iZ6
-QxlupcR+4qRBJlYx4TvW
-=jj9E
------END PGP SIGNATURE-----
-
---=-LEzv+0g3KTW/I07y/atd--
-
+  Luis
