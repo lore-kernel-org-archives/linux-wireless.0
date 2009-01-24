@@ -1,265 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:40011 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753254AbZAIMZy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59863 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751457AbZAXOLZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 07:25:54 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v2 02/11] ath9k: convert to use bus-agnostic DMA routines
-Date: Fri,  9 Jan 2009 13:24:19 +0100
-Message-Id: <1231503868-29226-3-git-send-email-juhosg@openwrt.org> (sfid-20090109_133904_180641_F547850D)
-In-Reply-To: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
-References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
+	Sat, 24 Jan 2009 09:11:25 -0500
+Subject: Re: SIOCSIFFLAGS: Name not unique on network
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: Chanthearith HUON <chanthearith.huon@telecom-sudparis.eu>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <45e8e6c40901231457x57625153wad49b4869a1627bd@mail.gmail.com> (sfid-20090123_235736_918517_D9893DD8)
+References: <49788E88.5000608@telecom-sudparis.eu>
+	 <1232749288.3977.14.camel@johannes.local>
+	 <45e8e6c40901231457x57625153wad49b4869a1627bd@mail.gmail.com>
+	 (sfid-20090123_235736_918517_D9893DD8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uzuGL6jbZmBj/l8BGJfL"
+Date: Sat, 24 Jan 2009 15:11:18 +0100
+Message-Id: <1232806278.4036.1.camel@johannes.local> (sfid-20090124_151129_857358_2A51A8E4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert to use bus-agnostic DMA routines to make it usable on AHB bus as well.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/beacon.c |   31 ++++++++++++++-----------------
- drivers/net/wireless/ath9k/main.c   |   13 ++++++-------
- drivers/net/wireless/ath9k/recv.c   |   27 ++++++++++++---------------
- drivers/net/wireless/ath9k/xmit.c   |   15 ++++++---------
- 4 files changed, 38 insertions(+), 48 deletions(-)
+--=-uzuGL6jbZmBj/l8BGJfL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
-index f02b099..be1d84a 100644
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -164,9 +164,9 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
- 	bf = avp->av_bcbuf;
- 	skb = (struct sk_buff *)bf->bf_mpdu;
- 	if (skb) {
--		pci_unmap_single(to_pci_dev(sc->dev), bf->bf_dmacontext,
-+		dma_unmap_single(sc->dev, bf->bf_dmacontext,
- 				 skb->len,
--				 PCI_DMA_TODEVICE);
-+				 DMA_TO_DEVICE);
- 		dev_kfree_skb_any(skb);
- 	}
- 
-@@ -188,15 +188,14 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
- 	}
- 
- 	bf->bf_buf_addr = bf->bf_dmacontext =
--		pci_map_single(to_pci_dev(sc->dev), skb->data,
-+		dma_map_single(sc->dev, skb->data,
- 			       skb->len,
--			       PCI_DMA_TODEVICE);
--	if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
--					   bf->bf_buf_addr))) {
-+			       DMA_TO_DEVICE);
-+	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
- 		dev_kfree_skb_any(skb);
- 		bf->bf_mpdu = NULL;
- 		DPRINTF(sc, ATH_DBG_CONFIG,
--			"pci_dma_mapping_error() on beaconing\n");
-+			"dma_mapping_error() on beaconing\n");
- 		return NULL;
- 	}
- 
-@@ -344,9 +343,9 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
- 	bf = avp->av_bcbuf;
- 	if (bf->bf_mpdu != NULL) {
- 		skb = (struct sk_buff *)bf->bf_mpdu;
--		pci_unmap_single(to_pci_dev(sc->dev), bf->bf_dmacontext,
-+		dma_unmap_single(sc->dev, bf->bf_dmacontext,
- 				 skb->len,
--				 PCI_DMA_TODEVICE);
-+				 DMA_TO_DEVICE);
- 		dev_kfree_skb_any(skb);
- 		bf->bf_mpdu = NULL;
- 	}
-@@ -403,15 +402,14 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
- 
- 	bf->bf_mpdu = skb;
- 	bf->bf_buf_addr = bf->bf_dmacontext =
--		pci_map_single(to_pci_dev(sc->dev), skb->data,
-+		dma_map_single(sc->dev, skb->data,
- 			       skb->len,
--			       PCI_DMA_TODEVICE);
--	if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
--					   bf->bf_buf_addr))) {
-+			       DMA_TO_DEVICE);
-+	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
- 		dev_kfree_skb_any(skb);
- 		bf->bf_mpdu = NULL;
- 		DPRINTF(sc, ATH_DBG_CONFIG,
--			"pci_dma_mapping_error() on beacon alloc\n");
-+			"dma_mapping_error() on beacon alloc\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -431,10 +429,9 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vap *avp)
- 		bf = avp->av_bcbuf;
- 		if (bf->bf_mpdu != NULL) {
- 			struct sk_buff *skb = (struct sk_buff *)bf->bf_mpdu;
--			pci_unmap_single(to_pci_dev(sc->dev),
--					 bf->bf_dmacontext,
-+			dma_unmap_single(sc->dev, bf->bf_dmacontext,
- 					 skb->len,
--					 PCI_DMA_TODEVICE);
-+					 DMA_TO_DEVICE);
- 			dev_kfree_skb_any(skb);
- 			bf->bf_mpdu = NULL;
- 		}
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 3313459..9acd968 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1709,9 +1709,8 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 	}
- 
- 	/* allocate descriptors */
--	dd->dd_desc = pci_alloc_consistent(to_pci_dev(sc->dev),
--			      dd->dd_desc_len,
--			      &dd->dd_desc_paddr);
-+	dd->dd_desc = dma_alloc_coherent(sc->dev, dd->dd_desc_len,
-+					 &dd->dd_desc_paddr, GFP_ATOMIC);
- 	if (dd->dd_desc == NULL) {
- 		error = -ENOMEM;
- 		goto fail;
-@@ -1757,8 +1756,8 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 	}
- 	return 0;
- fail2:
--	pci_free_consistent(to_pci_dev(sc->dev),
--		dd->dd_desc_len, dd->dd_desc, dd->dd_desc_paddr);
-+	dma_free_coherent(sc->dev, dd->dd_desc_len, dd->dd_desc,
-+			  dd->dd_desc_paddr);
- fail:
- 	memset(dd, 0, sizeof(*dd));
- 	return error;
-@@ -1771,8 +1770,8 @@ void ath_descdma_cleanup(struct ath_softc *sc,
- 			 struct ath_descdma *dd,
- 			 struct list_head *head)
- {
--	pci_free_consistent(to_pci_dev(sc->dev),
--		dd->dd_desc_len, dd->dd_desc, dd->dd_desc_paddr);
-+	dma_free_coherent(sc->dev, dd->dd_desc_len, dd->dd_desc,
-+			  dd->dd_desc_paddr);
- 
- 	INIT_LIST_HEAD(head);
- 	kfree(dd->dd_bufptr);
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index d7774d1..1fc4dd9 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -291,16 +291,15 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 			}
- 
- 			bf->bf_mpdu = skb;
--			bf->bf_buf_addr = pci_map_single(to_pci_dev(sc->dev),
--							 skb->data,
-+			bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
- 							 sc->rx.bufsize,
--							 PCI_DMA_FROMDEVICE);
--			if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
-+							 DMA_FROM_DEVICE);
-+			if (unlikely(dma_mapping_error(sc->dev,
- 				  bf->bf_buf_addr))) {
- 				dev_kfree_skb_any(skb);
- 				bf->bf_mpdu = NULL;
- 				DPRINTF(sc, ATH_DBG_CONFIG,
--					"pci_dma_mapping_error() on RX init\n");
-+					"dma_mapping_error() on RX init\n");
- 				error = -ENOMEM;
- 				break;
- 			}
-@@ -525,10 +524,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		 * 1. accessing the frame
- 		 * 2. requeueing the same buffer to h/w
- 		 */
--		pci_dma_sync_single_for_cpu(to_pci_dev(sc->dev),
--				bf->bf_buf_addr,
-+		dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
- 				sc->rx.bufsize,
--				PCI_DMA_FROMDEVICE);
-+				DMA_FROM_DEVICE);
- 
- 		/*
- 		 * If we're asked to flush receive queue, directly
-@@ -559,9 +557,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 			goto requeue;
- 
- 		/* Unmap the frame */
--		pci_unmap_single(to_pci_dev(sc->dev), bf->bf_buf_addr,
-+		dma_unmap_single(sc->dev, bf->bf_buf_addr,
- 				 sc->rx.bufsize,
--				 PCI_DMA_FROMDEVICE);
-+				 DMA_FROM_DEVICE);
- 
- 		skb_put(skb, ds->ds_rxstat.rs_datalen);
- 		skb->protocol = cpu_to_be16(ETH_P_CONTROL);
-@@ -601,16 +599,15 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 
- 		/* We will now give hardware our shiny new allocated skb */
- 		bf->bf_mpdu = requeue_skb;
--		bf->bf_buf_addr = pci_map_single(to_pci_dev(sc->dev),
--					 requeue_skb->data,
-+		bf->bf_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
- 					 sc->rx.bufsize,
--					 PCI_DMA_FROMDEVICE);
--		if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
-+					 DMA_FROM_DEVICE);
-+		if (unlikely(dma_mapping_error(sc->dev,
- 			  bf->bf_buf_addr))) {
- 			dev_kfree_skb_any(requeue_skb);
- 			bf->bf_mpdu = NULL;
- 			DPRINTF(sc, ATH_DBG_CONFIG,
--				"pci_dma_mapping_error() on RX\n");
-+				"dma_mapping_error() on RX\n");
- 			break;
- 		}
- 		bf->bf_dmacontext = bf->bf_buf_addr;
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 27cb9d5..522078d 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -340,10 +340,8 @@ static void ath_tx_complete_buf(struct ath_softc *sc,
- 	}
- 
- 	/* Unmap this frame */
--	pci_unmap_single(to_pci_dev(sc->dev),
--			 bf->bf_dmacontext,
--			 skb->len,
--			 PCI_DMA_TODEVICE);
-+	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
-+
- 	/* complete this frame */
- 	ath_tx_complete(sc, skb, &tx_status);
- 
-@@ -1716,13 +1714,12 @@ static int ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
- 	/* DMA setup */
- 	bf->bf_mpdu = skb;
- 
--	bf->bf_dmacontext = pci_map_single(to_pci_dev(sc->dev), skb->data,
--					   skb->len, PCI_DMA_TODEVICE);
--	if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
--					   bf->bf_dmacontext))) {
-+	bf->bf_dmacontext = dma_map_single(sc->dev, skb->data,
-+					   skb->len, DMA_TO_DEVICE);
-+	if (unlikely(dma_mapping_error(sc->dev, bf->bf_dmacontext))) {
- 		bf->bf_mpdu = NULL;
- 		DPRINTF(sc, ATH_DBG_CONFIG,
--			"pci_dma_mapping_error() on TX\n");
-+			"dma_mapping_error() on TX\n");
- 		return -ENOMEM;
- 	}
- 
--- 
-1.5.3.2
+On Fri, 2009-01-23 at 14:57 -0800, Andrey Yurovsky wrote:
+
+> That's indeed strange: the iwl3945 (along with the other Intel cards)
+> definitely doesn't support mesh but I was able to add an interface as
+> well on my Ubuntu box (2.6.27-9).  I think the reason is that iwlwifi
+> doesn't explicitly test for interfaces it actually supports:
+>=20
+> static int iwl3945_mac_add_interface(struct ieee80211_hw *hw,
+>                                  struct ieee80211_if_init_conf *conf)
+> {
+>         struct iwl_priv *priv =3D hw->priv;
+>         unsigned long flags;
+>=20
+>         IWL_DEBUG_MAC80211("enter: type %d\n", conf->type);
+>=20
+>         if (priv->vif) {
+>                 IWL_DEBUG_MAC80211("leave - vif !=3D NULL\n");
+>                 return -EOPNOTSUPP;
+>         }
+
+Yes, that was a long-standing bug in those drivers that was really only
+fixed when we introduced the cfg80211 supported interfaces thing.
+
+johannes
+
+--=-uzuGL6jbZmBj/l8BGJfL
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJeyGDAAoJEKVg1VMiehFYI9cP/32upbSCBFnkpZBPnj/b4C0z
+VxSNaAzwbE/5deGyf39eqRLxy1sTshMX04aDsy594Rnmy9x0oLtJSJkI6b997Y3O
+XwcxrO49YB1wBXBFxThlNKggZnN1QSZtXVd3dGCTzV/tASQGy/k2kbgw2hz+EBQ+
+AHsiy4XPt46kM1iw/3Y8w8ueWw8jPgvUxeJWb0YKwZ9zi2YlscPpIhpaYtd2pL/F
+mRYYM1qDPlzfobAcqV4c08gzUgWCwUGCI+AtCRqh67DzUlj7TeW5jaIolmFHp5Rt
+szrUiux+TTQPBK7/hKk65R0lDa4yeWtdcrryNiiQagUEJEkmc+SQveTr/Y3dKSTZ
+RcECuyGaUSoIRx0c/E1bsSRMDhpnxecOPj4fKYZ/Z1Okw0yK3ZqR3K3mUYjjsVKl
+ed8lPYzbgugv3RsKk8heEZR8zg3AKfYZdN9V6o+/G5nOYRzon3svr9CIWjlIFHIY
+lfC5u7AviyF5E/Tl2LEOcNg9DrId6ssova83df1zZECIPyws4CzVpdT3No/LEYfG
+pIOA4VWq9BEpSrQLPE0tmTMqNNnmHe5ztjKuhsyNMnIkimsRJFmg9KeUfbzcnpwf
+SBkHfqZZH9VhjDmZa0dPIT5GxkktLij4avGTEgZAEO6kg+0JMVGHGJ+TvfqGO0N7
+uXZoPslX5yLBoONEv5XC
+=drrp
+-----END PGP SIGNATURE-----
+
+--=-uzuGL6jbZmBj/l8BGJfL--
 
