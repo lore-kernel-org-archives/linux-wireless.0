@@ -1,61 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:18587 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:49026 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751727AbZA1USh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 15:18:37 -0500
+	id S1755185AbZAXUjO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 15:39:14 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 12:18:37 -0800
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 12:39:14 -0800
+Date: Sat, 24 Jan 2009 12:38:36 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 2/3] ath9k: move check for radar freqs into a helper
-Date: Wed, 28 Jan 2009 12:17:48 -0800
-Message-ID: <1233173869-16512-3-git-send-email-lrodriguez@atheros.com> (sfid-20090128_211845_940348_9E43D6DD)
-In-Reply-To: <1233173869-16512-2-git-send-email-lrodriguez@atheros.com>
-References: <1233173869-16512-1-git-send-email-lrodriguez@atheros.com>
- <1233173869-16512-2-git-send-email-lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Alina Friedrichsen <x-alina@gmx.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH] mac80211: Generic TSF debugging
+Message-ID: <20090124203836.GC22475@tesla> (sfid-20090124_213917_189844_00812097)
+References: <20090124060959.50440@gmx.net> <1232806359.4036.3.camel@johannes.local> <1232807228.4036.12.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1232807228.4036.12.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will be used later.
+On Sat, Jan 24, 2009 at 06:27:08AM -0800, Johannes Berg wrote:
+> On Sat, 2009-01-24 at 15:12 +0100, Johannes Berg wrote:
+> > On Sat, 2009-01-24 at 07:09 +0100, Alina Friedrichsen wrote:
+> > > This patch enables low-level driver independent debugging of the TSF
+> > > and remove the driver specific things of ath5k and ath9k from the
+> > > debugfs.
+> > 
+> > NACK.
+> > 
+> > You still haven't explained why you need set_tsf support and why it
+> > should be a generic mac80211 functionality.
+> 
+> Ok, I guess you have, I'm still not sure it's the best approach.
+> 
+> Other opinions?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/regd.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+Seems reasonable to me instead of having different drivers implement different
+APIs/debugfs solutions.
 
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index b84fbe3..cccec40 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -154,6 +154,12 @@ const struct ieee80211_regdomain *ath9k_world_regdomain(struct ath_hal *ah)
- 	}
- }
- 
-+/* Frequency is one where radar detection is required */
-+static bool ath9k_is_radar_freq(u16 center_freq)
-+{
-+	return (center_freq >= 5260 && center_freq <= 5700);
-+}
-+
- /* Enable adhoc on 5 GHz if allowed by 11d */
- static void ath9k_reg_apply_5ghz_adhoc_flags(struct wiphy *wiphy,
- 					     enum reg_set_by setby)
-@@ -247,9 +253,7 @@ void ath9k_reg_apply_radar_flags(struct wiphy *wiphy)
- 
- 	for (i = 0; i < sband->n_channels; i++) {
- 		ch = &sband->channels[i];
--		if (ch->center_freq < 5260)
--			continue;
--		if (ch->center_freq > 5700)
-+		if (!ath9k_is_radar_freq(ch->center_freq))
- 			continue;
- 		/* We always enable radar detection/DFS on this
- 		 * frequency range. Additionally we also apply on
--- 
-1.6.1.rc3.51.g5832d
-
+  Luis
