@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:63521 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765997AbZARRjx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 12:39:53 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 09:39:53 -0800
-Date: Sun, 18 Jan 2009 09:39:21 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
-	disablement
-Message-ID: <20090118173921.GZ29609@tesla> (sfid-20090118_183956_116871_93B16D5F)
-References: <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232097827.3854.25.camel@johannes> <20090116163245.GF29609@tesla> <1232138101.3745.7.camel@johannes> <20090116210930.GL29609@tesla> <1232268516.3877.10.camel@johannes> <20090118153004.GS29609@tesla> <1232298832.3819.7.camel@johannes>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:56754 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750706AbZAXFE6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 00:04:58 -0500
+Message-ID: <497AA16F.30409@lwfinger.net> (sfid-20090124_060513_712816_24F6184F)
+Date: Fri, 23 Jan 2009 23:04:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232298832.3819.7.camel@johannes>
+To: Michael Buesch <mb@bu3sch.de>
+CC: linville@tuxdriver.com, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: Automatically probe for opensource firmware
+References: <200901232121.52012.mb@bu3sch.de>
+In-Reply-To: <200901232121.52012.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 18, 2009 at 09:13:51AM -0800, Johannes Berg wrote:
-> On Sun, 2009-01-18 at 07:30 -0800, Luis R. Rodriguez wrote:
-> > On Sun, Jan 18, 2009 at 12:48:36AM -0800, Johannes Berg wrote:
-> > > On Fri, 2009-01-16 at 13:09 -0800, Luis R. Rodriguez wrote:
-> > > 
-> > > > I can put a note, if that helps, or are you strongly opposed to this? :)
-> > > > Just an itch to scratch really, have you seen the output of iwlist on
-> > > > disabled channels? It can get long on radar/no-ibss channels. We can also
-> > > > handle this in userspace but seems pointles if the channels is disabled.
-> > > 
-> > > Well, come to think of it, at least for programmers it might be
-> > > confusing when they know they've put some flag into orig_flags, and then
-> > > it disappears? I'm not really _strongly_ opposed to this, but I really
-> > > just don't see the point :)
-> > 
-> > Have you bothered calling iw list with a long list of crap on the channels?
+Michael Buesch wrote:
+> First probe for proprietary firmware and then probe for opensource firmware.
+> This way around it's a win-win situation.
+> 1) If proprietary fw is available, it will work.
+> 2) If opensource firmware is available, but no proprietary (Distros can only ship open fw)
+>    it might work.
+> 3) If both open and proprietary are available, it will work, because it selects
+>    the proprietary. We currently don't prefer the open fw in this case, because it doesn't
+>    work on all devices. It would introduce a regression otherwise.
 > 
-> Heh, no, but I rarely call iw at all. I just added a patch to iw to
-> suppress it instead, I think that's more appropriate.
+> The remaining FIXMEs in this patch are harmless, because they only matter on multiband
+> devices, which are not implemented yet anyway.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> ---
+> 
+> John, please queue for the next feature round.
 
-:) alright, fine by me.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-  Luis
+I made one temporary change to search for open-source firmware before
+the proprietary version because I boot kernels that are not changed to
+handle the o-s version, but still want to test when I can.
+
+I understand and approve of your logic - it just doesn't fit my
+current agenda.
+
+Larry
