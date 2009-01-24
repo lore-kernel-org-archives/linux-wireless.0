@@ -1,231 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:59447 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525AbZAUSbV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 13:31:21 -0500
-Received: by ewy13 with SMTP id 13so1703052ewy.13
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2009 10:31:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20090121175537.GF3459@sortiz.org>
-References: <1232516035-25524-4-git-send-email-reinette.chatre@intel.com>
-	 <1232516035-25524-5-git-send-email-reinette.chatre@intel.com>
-	 <200901210801.23236.helmut.schaa@gmail.com>
-	 <2d0a357f0901210532v3ac57896ia3a75c9911267edb@mail.gmail.com>
-	 <20090121154120.GC3459@sortiz.org>
-	 <2d0a357f0901210857p2c3503fdwa2be5d87ee4b15e8@mail.gmail.com>
-	 <20090121175537.GF3459@sortiz.org>
-Date: Wed, 21 Jan 2009 19:31:17 +0100
-Message-ID: <2d0a357f0901211031t7fb85bc0x6fd51ce89c50edc4@mail.gmail.com> (sfid-20090121_193126_022583_8088D8B7)
-Subject: Re: [ipw3945-devel] [PATCH 4/5] iwl3945: Use iwl-rfkill
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Samuel Ortiz <samuel.ortiz@intel.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx2.redhat.com ([66.187.237.31]:55009 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753002AbZAXOMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 09:12:54 -0500
+Subject: [PATCH 3/7 v2] airo: simplify WEP index and capability checks
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1232748914.447.2.camel@localhost.localdomain>
+References: <1232748914.447.2.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Sat, 24 Jan 2009 09:11:35 -0500
+Message-Id: <1232806295.2870.4.camel@localhost.localdomain> (sfid-20090124_151257_618100_8D3AD8D1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-THX for the detailed explanations.
+Do the computation once at init time; don't ask the hardware
+every time.
 
--SD
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-On Wed, Jan 21, 2009 at 6:58 PM, Samuel Ortiz <samuel.ortiz@intel.com> wrote:
-> Hi Sedat,
->
-> On Wed, Jan 21, 2009 at 09:57:16AM -0700, Sedat Dilek wrote:
->>
->> >> What does error-code "-5" mean?
->> > That's -EIO, see iwl_enqueue_hcmd() in iwl-tx.c.
->> >
->>
->> drivers/net/wireless/iwlwifi/iwl-tx.c says:
->> [...]
->> iwl_enqueue_hcmd - enqueue a uCode command
->> [...]
->> The function returns < 0 values to indicate the operation is failed.
->> [...]
->>
->> So is this a ucode-problem?
-> No, the problem is the following one:
-> 1) You're associated with an AP
-> 2) You turn the rf kill switch on
-> 3) mac80211 detects the AP is not there anymore
-> 4) iwl3945 calls the association led handler, which tries to send a
-> REPLY_LEDS_CMD host command.
-> 5) Since we're RF killed, enqueue_hcmd cancels the command sending and returns
-> -EIO.
->
-> This is not a bug, as we dont want to be sending host commands while being RF
-> killed.
-> I bet you can reproduce this behaviour on wireless-testing without the 2
-> latest iwlwifi patch sets.
->
-> Cheers,
-> Samuel.
->
->>
->> Kind regards,
->> Sedat
->>
->> > Cheers,
->> > Samuel.
->> >
->> >
->> >> Is this maybe a 2.6.29 kernel issue?
->> >>
->> >> Turning LED on, the wlan-connection is established automatically and Internet connection works fine again.
->> >>
->> >> Full report is attached.
->> >>
->> >> Kind Regards,
->> >> Sedat
->> >>
->> >> ----- SNIP -----
->> >>
->> >> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl-core.c
->> >> ===================================================================
->> >> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl-core.c.orig
->> >> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl-core.c
->> >> @@ -1481,7 +1481,8 @@
->> >>          IWL_DEBUG(IWL_DL_RF_KILL,
->> >>                "HW and/or SW RF Kill no longer active, restarting "
->> >>                "device\n");
->> >> -        if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
->> >> +        if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
->> >> +            test_bit(STATUS_ALIVE, &priv->status))
->> >>              queue_work(priv->workqueue, &priv->restart);
->> >>      } else {
->> >>          /* make sure mac80211 stop sending Tx frame */
->> >>
->> >> ----- SNAP -----
->> >>
->> >> On Wed, Jan 21, 2009 at 8:01 AM, Helmut Schaa <helmut.schaa@googlemail.com<mailto:helmut.schaa@googlemail.com>> wrote:
->> >> Hi,
->> >>
->> >> Am Mittwoch, 21. Januar 2009 schrieb Reinette Chatre:
->> >> > From: Samuel Ortiz <samuel.ortiz@intel.com<mailto:samuel.ortiz@intel.com>>
->> >> >
->> >> > Here again, the rfkill routines are duplicated between agn and 3945. Let's
->> >> > move the agn one to iwlcore, and so we can get rid of the 3945 ones.
->> >>
->> >> [...]
->> >>
->> >> > +void iwl_bg_rf_kill(struct work_struct *work)
->> >> > +{
->> >> > +     struct iwl_priv *priv = container_of(work, struct iwl_priv, rf_kill);
->> >> > +
->> >> > +     wake_up_interruptible(&priv->wait_command_queue);
->> >> > +
->> >> > +     if (test_bit(STATUS_EXIT_PENDING, &priv->status))
->> >> > +             return;
->> >> > +
->> >> > +     mutex_lock(&priv->mutex);
->> >> > +
->> >> > +     if (!iwl_is_rfkill(priv)) {
->> >> > +             IWL_DEBUG(IWL_DL_RF_KILL,
->> >> > +                       "HW and/or SW RF Kill no longer active, restarting "
->> >> > +                       "device\n");
->> >> > +             if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
->> >> > +                     queue_work(priv->workqueue, &priv->restart);
->> >>
->> >> I've changed this check in both rf-kill patches (3945 and agn) to
->> >>
->> >> if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
->> >>    test_bit(STATUS_ALIVE, &priv->status))
->> >>
->> >> in order to avoid restarting the adapter when notified about rfkill changes
->> >> by interrupt/polling.
->> >>
->> >> I guess this is just an oversight, right?
->> >>
->> >> Thanks,
->> >> Helmut
->> >> --
->> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> >> the body of a message to majordomo@vger.kernel.org<mailto:majordomo@vger.kernel.org>
->> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >>
->> >
->> > Content-Description: report_iwlwifi_rfkill_2.6.29-rc2-git1-iniza-4.txt
->> >> ----- BEGIN LED OFF -----
->> >>
->> >> Jan 21 14:13:27 seduxbox kernel: iwl3945 0000:10:00.0: Radio Frequency Kill Switch is On:
->> >> Jan 21 14:13:27 seduxbox kernel: Kill switch must be turned off for wireless networking to work.
->> >> Jan 21 14:13:28 seduxbox kernel: usb 1-2: USB disconnect, address 2
->> >> Jan 21 14:13:28 seduxbox kernel: sierra ttyUSB0: Sierra USB modem converter now disconnected from ttyUSB0
->> >> Jan 21 14:13:28 seduxbox kernel: sierra ttyUSB1: Sierra USB modem converter now disconnected from ttyUSB1
->> >> Jan 21 14:13:28 seduxbox kernel: sierra ttyUSB2: Sierra USB modem converter now disconnected from ttyUSB2
->> >> Jan 21 14:13:28 seduxbox kernel: sierra 1-2:1.0: device disconnected
->> >> Jan 21 14:13:32 seduxbox kernel: wlan0: No ProbeResp from current AP 00:04:0e:e4:00:3d - assume out of range
->> >> Jan 21 14:13:32 seduxbox kernel: iwl3945 0000:10:00.0: Error sending REPLY_LEDS_CMD: enqueue_hcmd failed: -5
->> >>
->> >> ----- END LED OFF -----
->> >>
->> >>
->> >> ----- BEGIN LED ON -----
->> >>
->> >> Jan 21 14:14:47 seduxbox kernel: Registered led device: iwl-phy0:radio
->> >> Jan 21 14:14:47 seduxbox kernel: Registered led device: iwl-phy0:assoc
->> >> Jan 21 14:14:47 seduxbox kernel: Registered led device: iwl-phy0:RX
->> >> Jan 21 14:14:47 seduxbox kernel: Registered led device: iwl-phy0:TX
->> >> Jan 21 14:14:50 seduxbox kernel: usb 1-2: new full speed USB device using uhci_hcd and address 3
->> >> Jan 21 14:14:50 seduxbox kernel: usb 1-2: New USB device found, idVendor=03f0, idProduct=1e1d
->> >> Jan 21 14:14:50 seduxbox kernel: usb 1-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
->> >> Jan 21 14:14:50 seduxbox kernel: usb 1-2: Product: HP hs2300 HSDPA Broadband Wireless Module
->> >> Jan 21 14:14:50 seduxbox kernel: usb 1-2: Manufacturer: HP
->> >> Jan 21 14:14:50 seduxbox kernel: usb 1-2: configuration #1 chosen from 1 choice
->> >> Jan 21 14:14:50 seduxbox kernel: sierra 1-2:1.0: Sierra USB modem converter detected
->> >> Jan 21 14:14:50 seduxbox kernel: usb 1-2: Sierra USB modem converter now attached to ttyUSB0
->> >> Jan 21 14:14:50 seduxbox kernel: usb 1-2: Sierra USB modem converter now attached to ttyUSB1
->> >> Jan 21 14:14:50 seduxbox kernel: usb 1-2: Sierra USB modem converter now attached to ttyUSB2
->> >> Jan 21 14:15:18 seduxbox kernel: wlan0: authenticate with AP 00:04:0e:e4:00:3d
->> >> Jan 21 14:15:18 seduxbox kernel: wlan0: authenticate with AP 00:04:0e:e4:00:3d
->> >> Jan 21 14:15:18 seduxbox kernel: wlan0: authenticated
->> >> Jan 21 14:15:18 seduxbox kernel: wlan0: associate with AP 00:04:0e:e4:00:3d
->> >> Jan 21 14:15:18 seduxbox kernel: wlan0: RX ReassocResp from 00:04:0e:e4:00:3d (capab=0x411 status=0 aid=1)
->> >> Jan 21 14:15:18 seduxbox kernel: wlan0: associated
->> >>
->> >> ----- END LED ON -----
->> >>
->> >
->> >
->> > --
->> > Intel Open Source Technology Centre
->> > http://oss.intel.com/
->> > ---------------------------------------------------------------------
->> > Intel Corporation SAS (French simplified joint stock company)
->> > Registered headquarters: "Les Montalets"- 2, rue de Paris,
->> > 92196 Meudon Cedex, France
->> > Registration Number:  302 456 199 R.C.S. NANTERRE
->> > Capital: 4,572,000 Euros
->> >
->> > This e-mail and any attachments may contain confidential material for
->> > the sole use of the intended recipient(s). Any review or distribution
->> > by others is strictly prohibited. If you are not the intended
->> > recipient, please contact the sender and delete all copies.
->> >
->> >
->
->
->
-> --
-> Intel Open Source Technology Centre
-> http://oss.intel.com/
-> ---------------------------------------------------------------------
-> Intel Corporation SAS (French simplified joint stock company)
-> Registered headquarters: "Les Montalets"- 2, rue de Paris,
-> 92196 Meudon Cedex, France
-> Registration Number:  302 456 199 R.C.S. NANTERRE
-> Capital: 4,572,000 Euros
->
-> This e-mail and any attachments may contain confidential material for
-> the sole use of the intended recipient(s). Any review or distribution
-> by others is strictly prohibited. If you are not the intended
-> recipient, please contact the sender and delete all copies.
->
->
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index a08aadf..e4ca5f8 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -1233,6 +1233,9 @@ struct airo_info {
+ #define	PCI_SHARED_LEN		2*MPI_MAX_FIDS*PKTSIZE+RIDSIZE
+ 	char			proc_name[IFNAMSIZ];
+ 
++	int			wep_capable;
++	int			max_wep_idx;
++
+ 	/* WPA-related stuff */
+ 	unsigned int bssListFirst;
+ 	unsigned int bssListNext;
+@@ -2836,6 +2839,9 @@ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 		rc = -EIO;
+ 		goto err_out_wifi;
+ 	}
++	/* WEP capability discovery */
++	ai->wep_capable = (cap_rid.softCap & cpu_to_le16(0x02)) ? 1 : 0;
++	ai->max_wep_idx = (cap_rid.softCap & cpu_to_le16(0x80)) ? 3 : 0;
+ 
+ 	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
+ 	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
+@@ -6265,11 +6271,9 @@ static int airo_get_mode(struct net_device *dev,
+ 	return 0;
+ }
+ 
+-static inline int valid_index(CapabilityRid *p, int index)
++static inline int valid_index(struct airo_info *ai, int index)
+ {
+-	if (index < 0)
+-		return 0;
+-	return index < (p->softCap & cpu_to_le16(0x80) ? 4 : 1);
++	return (index >= 0) && (index <= ai->max_wep_idx);
+ }
+ 
+ /*------------------------------------------------------------------*/
+@@ -6282,16 +6286,12 @@ static int airo_set_encode(struct net_device *dev,
+ 			   char *extra)
+ {
+ 	struct airo_info *local = dev->ml_priv;
+-	CapabilityRid cap_rid;		/* Card capability info */
+ 	int perm = ( dwrq->flags & IW_ENCODE_TEMP ? 0 : 1 );
+ 	__le16 currentAuthType = local->config.authType;
+ 
+-	/* Is WEP supported ? */
+-	readCapabilityRid(local, &cap_rid, 1);
+-	/* Older firmware doesn't support this...
+-	if(!(cap_rid.softCap & cpu_to_le16(2))) {
++	if (!local->wep_capable)
+ 		return -EOPNOTSUPP;
+-	} */
++
+ 	readConfigRid(local, 1);
+ 
+ 	/* Basic checking: do we have a key to set ?
+@@ -6304,13 +6304,16 @@ static int airo_set_encode(struct net_device *dev,
+ 		wep_key_t key;
+ 		int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+ 		int current_index = get_wep_key(local, 0xffff);
++
+ 		/* Check the size of the key */
+ 		if (dwrq->length > MAX_KEY_SIZE) {
+ 			return -EINVAL;
+ 		}
++
+ 		/* Check the index (none -> use current) */
+-		if (!valid_index(&cap_rid, index))
++		if (!valid_index(local, index))
+ 			index = current_index;
++
+ 		/* Set the length */
+ 		if (dwrq->length > MIN_KEY_SIZE)
+ 			key.len = MAX_KEY_SIZE;
+@@ -6339,12 +6342,13 @@ static int airo_set_encode(struct net_device *dev,
+ 	} else {
+ 		/* Do we want to just set the transmit key index ? */
+ 		int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+-		if (valid_index(&cap_rid, index)) {
++		if (valid_index(local, index))
+ 			set_wep_key(local, index, NULL, 0, perm, 1);
+-		} else
++		else {
+ 			/* Don't complain if only change the mode */
+ 			if (!(dwrq->flags & IW_ENCODE_MODE))
+ 				return -EINVAL;
++		}
+ 	}
+ 	/* Read the flags */
+ 	if(dwrq->flags & IW_ENCODE_DISABLED)
+@@ -6370,14 +6374,12 @@ static int airo_get_encode(struct net_device *dev,
+ {
+ 	struct airo_info *local = dev->ml_priv;
+ 	int index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+-	CapabilityRid cap_rid;		/* Card capability info */
+ 
+-	/* Is it supported ? */
+-	readCapabilityRid(local, &cap_rid, 1);
+-	if(!(cap_rid.softCap & cpu_to_le16(2))) {
++	if (!local->wep_capable)
+ 		return -EOPNOTSUPP;
+-	}
++
+ 	readConfigRid(local, 1);
++
+ 	/* Check encryption mode */
+ 	switch(local->config.authType)	{
+ 		case AUTH_ENCRYPT:
+@@ -6396,7 +6398,7 @@ static int airo_get_encode(struct net_device *dev,
+ 	memset(extra, 0, 16);
+ 
+ 	/* Which key do we want ? -1 -> tx index */
+-	if (!valid_index(&cap_rid, index))
++	if (!valid_index(local, index))
+ 		index = get_wep_key(local, 0xffff);
+ 	dwrq->flags |= index + 1;
+ 	/* Copy the key to the user buffer */
+@@ -6419,24 +6421,20 @@ static int airo_set_encodeext(struct net_device *dev,
+ 	struct airo_info *local = dev->ml_priv;
+ 	struct iw_point *encoding = &wrqu->encoding;
+ 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
+-	CapabilityRid cap_rid;		/* Card capability info */
+ 	int perm = ( encoding->flags & IW_ENCODE_TEMP ? 0 : 1 );
+ 	__le16 currentAuthType = local->config.authType;
+ 	int idx, key_len, alg = ext->alg, set_key = 1;
+ 	wep_key_t key;
+ 
+-	/* Is WEP supported ? */
+-	readCapabilityRid(local, &cap_rid, 1);
+-	/* Older firmware doesn't support this...
+-	if(!(cap_rid.softCap & cpu_to_le16(2))) {
++	if (!local->wep_capable)
+ 		return -EOPNOTSUPP;
+-	} */
++
+ 	readConfigRid(local, 1);
+ 
+ 	/* Determine and validate the key index */
+ 	idx = encoding->flags & IW_ENCODE_INDEX;
+ 	if (idx) {
+-		if (!valid_index(&cap_rid, idx - 1))
++		if (!valid_index(local, idx - 1))
+ 			return -EINVAL;
+ 		idx--;
+ 	} else
+@@ -6505,14 +6503,11 @@ static int airo_get_encodeext(struct net_device *dev,
+ 	struct airo_info *local = dev->ml_priv;
+ 	struct iw_point *encoding = &wrqu->encoding;
+ 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
+-	CapabilityRid cap_rid;		/* Card capability info */
+ 	int idx, max_key_len;
+ 
+-	/* Is it supported ? */
+-	readCapabilityRid(local, &cap_rid, 1);
+-	if(!(cap_rid.softCap & cpu_to_le16(2))) {
++	if (!local->wep_capable)
+ 		return -EOPNOTSUPP;
+-	}
++
+ 	readConfigRid(local, 1);
+ 
+ 	max_key_len = encoding->length - sizeof(*ext);
+@@ -6521,7 +6516,7 @@ static int airo_get_encodeext(struct net_device *dev,
+ 
+ 	idx = encoding->flags & IW_ENCODE_INDEX;
+ 	if (idx) {
+-		if (!valid_index(&cap_rid, idx - 1))
++		if (!valid_index(local, idx - 1))
+ 			return -EINVAL;
+ 		idx--;
+ 	} else
+
+
