@@ -1,122 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:56586 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507AbZAVPJW (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52045 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758681AbZAXOW6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 10:09:22 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Artur Skawina <art.08.09@gmail.com>
-Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
-Date: Thu, 22 Jan 2009 16:09:27 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200901211450.50880.chunkeey@web.de> <4977785B.7020009@gmail.com> <497806E8.1060709@gmail.com>
-In-Reply-To: <497806E8.1060709@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901221609.27401.chunkeey@web.de> (sfid-20090122_160935_134291_4A2DBDE8)
+	Sat, 24 Jan 2009 09:22:58 -0500
+Subject: Re: [PATCH] ath9k: Set TSF fix
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20090124081542.50450@gmx.net> (sfid-20090124_091614_136619_417AC6BC)
+References: <20090124081542.50450@gmx.net>
+	 (sfid-20090124_091614_136619_417AC6BC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-b+AehhYd4SgNFDfUp9/Y"
+Date: Sat, 24 Jan 2009 15:22:52 +0100
+Message-Id: <1232806972.4036.10.camel@johannes.local> (sfid-20090124_152306_497010_396F5DE8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 22 January 2009 06:40:56 Artur Skawina wrote:
-> Artur Skawina wrote:
-> > Christian Lamparter wrote:
-> >> A updated patch is attached (as file)
-> > 
-> > Will test.
-> 
-> Did a quick test of your patch on top of
->   current w-t/pending
-> +
->   "p54usb: fix packet loss with first generation devices"
-> + this:
-> 
-> diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-> index f754798..20818d6 100644
-> --- a/drivers/net/wireless/p54/p54usb.c
-> +++ b/drivers/net/wireless/p54/p54usb.c
-> @@ -92,7 +92,7 @@ static void p54u_rx_cb(struct urb *urb)
->  
->         if (unlikely(urb->status)) {
->                 dev_kfree_skb_irq(skb);
-> -           return;
-> +         goto stash_urb;
->         }
->  
->         skb_put(skb, urb->actual_length);
-> @@ -141,7 +141,7 @@ static void p54u_rx_cb(struct urb *urb)
->          * the less critical workqueue thread.
->          * This eases the memory pressure and prevents latency spikes.
->          */
-> -
-> +stash_urb:
->         urb->transfer_buffer = NULL;
->         urb->context = NULL;
->  
-> That didn't work, various symptoms such as hostapd getting stuck, other unrelated
-> usb devices breaking, machine frozen etc.
-> 
-> After applying the changes below it seemed to work alright, but i only tested for
-> a few minutes.
-> [line #s are wrong]
-> 
-> diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-> index 20818d6..643d517 100644
-> --- a/drivers/net/wireless/p54/p54usb.c
-> +++ b/drivers/net/wireless/p54/p54usb.c
-> @@ -160,7 +173,7 @@ stash_urb:
->  		 * Huh? mac80211 isn't fully initialized yet?
->  		 * Please check your system, something bad is going on.
->  		 */
-> -		WARN_ON(1);
-> +		printk(KERN_WARNING "p54u_rx_cb workqueue missing\n");
->  		return;
->  	}
->  
-> @@ -196,9 +210,9 @@ static void p54u_free_urbs(struct ieee80211_hw *dev)
->  {
->  	struct p54u_priv *priv = dev->priv;
->  
->  	cancel_work_sync(&priv->rx_refill_work);
-> -	p54u_free_rx_refill_list(dev);
->  	usb_kill_anchored_urbs(&priv->submitted);
-> +	p54u_free_rx_refill_list(dev);
->  }
->  
->  static int p54u_rx_refill(struct ieee80211_hw *dev)
-> @@ -281,9 +297,9 @@ static int p54u_init_urbs(struct ieee80211_hw *dev)
->  	}
->  
->  	p54u_rx_refill(dev);
-> -
->  err:
-> -	p54u_free_rx_refill_list(dev);
-> +	if (ret)
-> +		p54u_free_rx_refill_list(dev);
->  	return ret;
->  }
->  
-> The 'workqueue-missing' warnings appear on module init; there are several
-> p54u_init_urbs(), p54u_free_urbs() call sequences.
-> p54u_free_urbs() triggers the unlikely(urb->status) path while killing
-> the urbs, and the first time this happens you get 32 warnings.
-> After that everything's fine.
 
-the workqueue is available as soon as ieee80211_register_hw completed,
-however before we can do that, we have to get the eeprom for the MAC...
+--=-b+AehhYd4SgNFDfUp9/Y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The reason why this works without "warning" is that we recycle the skb
-of the eeprom readback... so the queue_work is never executed on start up
-and if it is then something is very wrong with the device itself.
- 
-> I put the machine under some load and while there was usually 28..31 RX
-> urbs queued, at one point the refilling stalled and the number went down
-> from 31 to 1, then 6, slowly grew to ~30, then fell to 13, then recovered.
-> All of this within ~5 mins of testing, w/ only a small amount of http 
-> traffic generated by the client. it looks like i will have to try 
-> allocating in the interrupt after all.
+On Sat, 2009-01-24 at 09:15 +0100, Alina Friedrichsen wrote:
+> It seems that some Atheros hardware more like this code for setting the T=
+SF.
 
-was this with your patch to use rx_refills urb pool for tx, or without?
+Why don't you back that claim by something more substantial?
 
-Regards,
-	Chr
+johannes
+
+--=-b+AehhYd4SgNFDfUp9/Y
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJeyQ6AAoJEKVg1VMiehFYLAsP/2SS+4FiKhUmzsKb401zGU1A
+tUU0Nsl8uncJxBDlMObEG4dbPDabAaF6CWiXnuZhhVaHqT+itu1q36sCRqV2789O
+IWA18R4bUm1JA4ryWtiqoXYEYGkCbzQ7TZh4SI2LryYDyhg6mhlIqMJtnQJ5n7Nh
+5AdVTODVkaVcKtIPS8fVF3H57dImFlMqLhmMzf7vns5sZUwOLiX/ljIdSOLA49Rn
+aIxMojVIYoPCGP7k3QpIUEOLdt9p6Y4d3UO2r6XaYxj9mXc/52Rt9QJb4MMR0tgs
+dawMoJD61OVlwST36wt0+JE9s2PekxP+e2Ay7yA/4lMh15HMP5wWCm+GPXhEkJoi
+jpa3HfFRIWxkKtYSqk9SFFTitmhEFieHQGHi2l0rZFXIbSIBmRP49Wb9a+xO+o2M
+no91tm1BM2E8/iMLpD1MJw8Und4Xt2PebeVwxE89S3t2CIzfJy3LqmbXslXmAi4T
+0nC6xYQ0Wzf64xFxZJxp4EpMEJ8iKnnzksBdyo6It5RwhzfgJw8kNtIHrK9IBfSe
+8GMV7cJ0rhy23YoUx8otDuVo6yjjjoqWmzvoesYCZifwUV804ynX3t7bafaEsa6d
+jxpwDLL7zreHuXASXnMo6nfYfPR72/NEVDzq4lLoKShZuTOITSp7xWjVPBtji4TF
+R2PFQVgjvyPyi23hvLnX
+=jJsz
+-----END PGP SIGNATURE-----
+
+--=-b+AehhYd4SgNFDfUp9/Y--
+
