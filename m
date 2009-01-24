@@ -1,123 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41324 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738AbZAFTgS (ORCPT
+Received: from ug-out-1314.google.com ([66.249.92.172]:59180 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752284AbZAXTyW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 14:36:18 -0500
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
-In-Reply-To: <1231267979.14565.34.camel@localhost.localdomain>
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
-	 <1229336057.4471.9.camel@johannes.berg>
-	 <1229354532.12163.24.camel@localhost.localdomain>
-	 <20081217174244.M36761@bobcopeland.com>
-	 <1230064216.31228.46.camel@johannes> <20081224054951.GA32398@hash.localnet>
-	 <1230102989.16960.14.camel@californication>
-	 <1231260306.14565.21.camel@localhost.localdomain>
-	 <1231261937.5246.16.camel@californication>
-	 <1231267979.14565.34.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Tue, 06 Jan 2009 20:36:15 +0100
-Message-Id: <1231270575.14901.6.camel@californication> (sfid-20090106_203622_844997_B8F175D5)
-Mime-Version: 1.0
+	Sat, 24 Jan 2009 14:54:22 -0500
+Received: by ug-out-1314.google.com with SMTP id 39so62499ugf.37
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 11:54:21 -0800 (PST)
+Message-ID: <497B71E9.6080703@gmail.com> (sfid-20090124_205447_331335_DE871F7B)
+Date: Sat, 24 Jan 2009 20:54:17 +0100
+From: Artur Skawina <art.08.09@gmail.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: Artur Skawina <art.08.09@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC][PATCH v2] p54usb: rx refill revamp
+References: <200901232245.15216.chunkeey@web.de> <200901240215.44226.chunkeey@web.de> <497A967F.2010900@gmail.com> <200901241206.18690.chunkeey@web.de>
+In-Reply-To: <200901241206.18690.chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Christian Lamparter wrote:
+> On Saturday 24 January 2009 05:18:07 Artur Skawina wrote:
+>> Christian Lamparter wrote:
+>>> 4) urb_unpoison_anchored_urb is called
+>>> 	1) unpoison the anchor structure
+>>> 	2) tries to unpoison the anchored urbs... But there's not a single one in the anchor_list,
+>>> 	     since step 2.1 (usb_hcd_giveback_urb) killed them off. 
+>> I assume that's just how it's supposed to be. You could always anchor
+>> the urbs to another anchor in the completion_. Or free any buffers and
+>> drop the last ref before leaving the completion. (in fact, the former
+>> is basically what you're doing, just using a list instead)
+> true! In fact --- behold the clean up patch which uses another anchor instead of the list ---
 
-> > > > > > > Running pm-suspend from pm-utils directly also triggers the problem, 
-> > > > > > > so that would seem to excuse gnome-power-manager at least.
-> > > > > > 
-> > > > > > What's the status of this? Should I look into things a bit?
-> > > > > 
-> > > > > Well, I guess I should have noticed this a lot earlier, but anyway the 
-> > > > > problem was pm-utils on Fedora 10:
-> > > > > 
-> > > > > /usr/lib/pm-utils/sleep.d/55NetworkManager:
-> > > > > 
-> > > > >     suspend_nm()
-> > > > >     {
-> > > > >         # Tell NetworkManager to shut down networking
-> > > > >         dbus-send --system                         \
-> > > > >             --dest=org.freedesktop.NetworkManager  \
-> > > > >             /org/freedesktop/NetworkManager        \
-> > > > >             org.freedesktop.NetworkManager.sleep
-> > > > >     }
-> > > > > 
-> > > > > I really don't think this is necessary (g-p-m will also do it if you 
-> > > > > set the proper gconf setting.)
-> > > > 
-> > > > this should not be needed at all. I have systems running wpa_supplicant
-> > > > and not any of the pm-utils scripts messing with it. During suspend and
-> > > > later resume it indicates normally just only a new handshake with the AP
-> > > > or a disconnect if the AP got out of range.
-> > > > 
-> > > > I think Network Manager is perfectly capable of handling state changes
-> > > > from wpa_supplicant. I really do think that this hack only exists of
-> > > > some broken drivers from really old kernels or for the 0.6 version of
-> > > > Network Manager. Remember that Ubuntu's suspend/resume solution used to
-> > > > be to unload all networking drivers on suspend.
-> > > 
-> > > You still want to tell NM to go to sleep so it doesn't see the
-> > > disconnection from the supplicant (triggered by the driver because it
-> > > was going to sleep), and thus try to reconnect, or try a different AP.
-> > > Ideally NM would simply listen for signals from some power service such
-> > > that we wouldn't have to have this hack, but there isn't a global power
-> > > service yet on the system bus.
-> > > 
-> > > Furthermore, it's nice to know if we've gone to sleep or not so that we
-> > > can do some optimizations on wakeup to find APs and reconnect faster.
-> > 
-> > actually the fastest way to re-connect is to just let wpa_supplicant do
-> > it and then you don't even have to go through DHCP again if the lease
-> > time is still valid. This works great if the AP is still in range.
-> > 
-> > What is your downside with the letting wpa_supplicant send you a
-> > disconnect when the AP is out of range after resume?
+will try to look at this tomorrow, or the day after.
+
+>> ok. (i don't know about most wlans being always up, but it seems a
+>> reasonable compromise. still, that's 100k+ wasted ram in the down
+>> state.)
 > 
-> Depends on the driver what the resume behavior is with the supplicant.
-> But you want to alert *something* that the system is now going to sleep,
-> so that it can clean up state before doing so.
+> ??? We don't waste 100k+.
+> We recycle the skbs, so the only thing left is 32 urb structures.
+
+I need a weekend off ;), you're right, of course.
+
+>>> well, we don't schedule the workqueue if we canceling the urbs now,
+>>> ( that's what the urb->status switch is supposed to do/( or in this context )stop...)
+>> yep, noticed that later, see below.
+
+>> [My version schedules the work for every urb, even the poisoned ones]
+> well, there's now a hard limit... no change of a endless loop now.
+
+The whole point of the poisoning was to prevent resubmission when
+canceling the urbs -- if you work around that manually, you could just
+as well kill them, instead of poisoning.
+I don't understand why want to add extra code to the rx irq just to
+avoid scheduling a work when downing the i/f, and keep a nasty failure
+case. The difference in down() performance is not going to be measurable,
+and even if it was, it wouldn't matter.
+Just four consecutive rx failures could make the device completely death,
+requiring a down/up sequence to restore it to working condition. Before
+you merged the emergency alloc-in-irq, even just one error could have
+killed the card. Yes, it's going to be rare, but bugs that trigger once
+a year during 24/7 operation are the absolutely worst kind of bugs.
+And it may even be remotely exploitable, eg by flooding the card with
+a large number of frames when the host experiences memory pressure or
+has some cabling or power supply issues.
+
+>> I looked at your v2 briefly yesterday and even wrote a reply, but
+>> didn't send it. I really liked your v1 much better, the new version
+>> makes the code much harder to follow, and still can stall the device
+>> after a few consecutive urb completion or submission (this is new)
+>> errors happen. Uhm, i probably should shut up now ;)
 > 
-> The problem is that you have absolutely no idea how long the sleep will
-> be.  It's at least 2 minutes with S2D, because that's how long it takes
-> to write your state out to disk.  It's less with S2R obviously, but when
-> you resume, there's no guarantee that you'll be in the same place.  You
-> cannot assume that you will be.
+> be prepared to write the reply again ;-)
 > 
-> If you keep trying to reconnect to the same AP, many times you simply
-> won't be there and you'll spend the 10 or 20 seconds reconnecting to an
-> AP miles away, time that could have been spent scanning for the AP
-> that's *really* where you are.  Many people I know don't often suspend
-> at the same location they resume, thus trying to reconnect hurts
-> reconnection latency.
-> 
-> The ideal way to handle all this is to be *aware* of suspend/resume in
-> the supplicant (or NM), and on resume, do a quick probe-scan or two to
-> find out if the old AP is still around.  If it's not, do a full scan to
-> find all APs, and then pick the best one, which is probably not the one
-> you were associated with before.  Then you actually start the auth/assoc
-> process with an AP you know exists.
-> 
-> So my point is that *something* needs to be aware of the suspend/resume
-> at a userlevel, whether it's NM or the supplicant doesn't really matter
-> as long as you can do what I describe above on resume.
+> Yeah, it's always easier to follow your own code, however its sometimes
+> harder to find bugs, because you assumed you did everything right in the first place...
 
-since mac80211 gets suspend/resume support, I think it is the best that
-we signal this to wpa_supplicant. In that case it can do the hard work
-here. Either it re-connects to the last AP or signals a disconnected
-state or trigger scanning.
+In this case it was mostly your code in _both_ cases :)
+You can argue it's a matter of taste, but try to compare the old version
+of p54u_rx_cb() with your new one side-by-side; probably the last patch
+I sent vs your previous v2 one are the best candidates, as those are mostly
+equivalent, with the difference being the work scheduling on status!=0,
+which doesn't change the flow significantly.
+Even though i know exactly what that completion is supposed to do, looking
+at the maze of 'returns' and 'breaks', I can't immediately tell whether it
+does just that or not. Gotos aren't evil.
+Imagine you're looking at the code for the first time, which one would
+you understand faster?...
 
-Having the suspend scripts to tell NM to disconnect is just not a good
-solution and especially in the embedded world this is a broken design
-concept.
+After staring at the new function for ~ a minute, i think the new one 
+does approximately the same as the old one. 'approximately' because you
+changed the code to _not_ resubmit an urb from the workqueue after it
+fails to be submitted in the irq. This doesn't seem right; if it failed
+because of eg -ENOMEM it could succeed later. The previous version would
+have deferred the work in this case. This change wasn't in the changelog,
+was it intentional?
 
-Regards
+Again, feel free to ignore me, i'd just like to have a robust AP, and the
+best way to achieve that is to attract more p54 developers :),  simpler,
+more obvious code lowers the entry cost significantly...
 
-Marcel
-
+artur
 
