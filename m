@@ -1,112 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.int-evry.fr ([157.159.10.71]:51561 "EHLO
-	smtp4.int-evry.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbZAXIYf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 03:24:35 -0500
-Message-ID: <497AD024.2050301@telecom-sudparis.eu> (sfid-20090124_092440_056900_E2AA0D93)
-Date: Sat, 24 Jan 2009 09:24:04 +0100
-From: Chanthearith HUON <chanthearith.huon@telecom-sudparis.eu>
-MIME-Version: 1.0
-To: Andrey Yurovsky <andrey@cozybit.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Hakima.Chaouchi@it-sudparis.eu
-Subject: Re: SIOCSIFFLAGS: Name not unique on network
-References: <49788E88.5000608@telecom-sudparis.eu>	 <1232749288.3977.14.camel@johannes.local> <45e8e6c40901231457x57625153wad49b4869a1627bd@mail.gmail.com>
-In-Reply-To: <45e8e6c40901231457x57625153wad49b4869a1627bd@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from pD9E7DD47.dip.t-dialin.net ([217.231.221.71]:47868 "EHLO
+	apo2k4.ath.cx" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750947AbZAXPyv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 10:54:51 -0500
+Received: from lucien (unknown [10.8.1.2])
+	by apo2k4.ath.cx (Postfix) with ESMTPA id 70BF7150076
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 16:54:47 +0100 (CET)
+Date: Sat, 24 Jan 2009 16:54:50 +0100
+From: Valentin <apo@apo2k4.ath.cx>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [linux-wireless] Re: p54 + ISL3887 + master mode?
+Message-ID: <20090124165450.338387b9@lucien> (sfid-20090124_165455_818897_B6C2CD05)
+In-Reply-To: <497B38FD.9010408@gmail.com>
+References: <20090124150103.612d8985@lucien>
+	<497B36D5.3080609@gmail.com>
+	<497B38FD.9010408@gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/Q+jAZE/OOO0=w6L0=vJDmUQ";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you very much, this problem also occured with supported cards.
-I solved this problem with both broadcom and intel wireless cards.
+--Sig_/Q+jAZE/OOO0=w6L0=vJDmUQ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I deactivated the physical interface first before using mesh interfaces 
-and no more error message.
-However, since you mentionned that non of Intel card support mesh, now I 
-only use broadcom wireless cards for testing.
+On Sat, 24 Jan 2009 16:51:25 +0100
+Artur Skawina <art.08.09@gmail.com> wrote:
 
-I followed the howto http://www.open80211s.org/trac/wiki/HOWTO
-but things did not work as expected.
+> > you probably want a kernel w/ at least this=20
+> > http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
+commit;h=3De5ea92a7528d304e8e327d0d261653e98b163e8a
+> > hence 2.6.29+ or even newer to get the other p54 fixes.
+>=20
+> meant 2.6.28+, of course.
 
-my broadcom wireless cards
-"
-card: Broadcom Corporation BCM4306
-driver: b43legacy
-"
+Right, I'm going to try that. Thanks :)
 
-Here are commands for all my pcs except mesh interface name and ip which 
-are different thereby i replace them here by X.
-"
-Killall NetworkManager
-iw dev wlan0 interface add meshX type mp mesh_id mymesh
-ifconfig wlan0 down
-iwconfig meshX mode Ad-hoc
-ifconfig meshX up
-iwconfig meshX channel 2.462G
-ifconfig meshX inet 192.168.1.X netmask 255.255.255.0
-"
+--Sig_/Q+jAZE/OOO0=w6L0=vJDmUQ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-However, with "iw dev meshX station dump" in all experiement machines, 
-nothing displayed on the screen as a result. I waited and no route 
-constructed between them. Thus, I can not ping any mesh neighbors.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-I would like to know ur suggestion? what is missing or...?
+iEYEARECAAYFAkl7OcoACgkQ22z6WcGtDs95qwCgl/x3Vm6IrtX6Sklmd08gb5Sd
+pCgAnR9Y5uMKdeXnSTnXtisjYl077Tq+
+=3a9Q
+-----END PGP SIGNATURE-----
 
-Thank,
-Thierry
-
-Andrey Yurovsky wrote:
-> On Fri, Jan 23, 2009 at 2:21 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->   
->> On Thu, 2009-01-22 at 16:19 +0100, Chanthearith HUON wrote:
->>
->>     
->>> This wireless card is not listed
->>> in http://linuxwireless.org/en/users/Devices
->>> <http://linuxwireless.org/en/users/Devices>
->>> but the driver is in the
->>> list http://linuxwireless.org/en/developers/Documentation/mac80211#mac80211drivers
->>> <http://linuxwireless.org/en/developers/Documentation/mac80211#mac80211drivers>
->>>       
->> But it's listed here:
->> http://linuxwireless.org/en/users/Drivers
->>
->> -- as not supporting mesh.
->>
->>     
->>> The OS is ubuntu Intrepid Ibex 8.10 with kernel 2.6.27-9-generic
->>>
->>> After creating new interface for mesh "iw dev wlan0 interface add mesh
->>> type mp mesh_id 100". I turned the mesh interface up by "ifconfig mesh up".
->>> I got following error message
->>> " SIOCSIFFLAGS: Name not unique on network "
->>>       
->> That's strange, it should not have allowed you to add the interface in
->> the first place. But then, you're using an ancient kernel anyway...
->>
->> johannes
->>
->>     
->
-> That's indeed strange: the iwl3945 (along with the other Intel cards)
-> definitely doesn't support mesh but I was able to add an interface as
-> well on my Ubuntu box (2.6.27-9).  I think the reason is that iwlwifi
-> doesn't explicitly test for interfaces it actually supports:
->
-> static int iwl3945_mac_add_interface(struct ieee80211_hw *hw,
->                                  struct ieee80211_if_init_conf *conf)
-> {
->         struct iwl_priv *priv = hw->priv;
->         unsigned long flags;
->
->         IWL_DEBUG_MAC80211("enter: type %d\n", conf->type);
->
->         if (priv->vif) {
->                 IWL_DEBUG_MAC80211("leave - vif != NULL\n");
->                 return -EOPNOTSUPP;
->         }
-> <snip>
->   
-
+--Sig_/Q+jAZE/OOO0=w6L0=vJDmUQ--
