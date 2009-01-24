@@ -1,268 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:37632 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754257AbZANTSp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2009 14:18:45 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v4 02/11] ath9k: convert to use bus-agnostic DMA routines
-Date: Wed, 14 Jan 2009 20:17:03 +0100
-Message-Id: <1231960632-4452-3-git-send-email-juhosg@openwrt.org> (sfid-20090114_201851_526380_5375EFA1)
-In-Reply-To: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
-References: <1231960632-4452-1-git-send-email-juhosg@openwrt.org>
+Received: from mail.gmx.net ([213.165.64.20]:59809 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755938AbZAXATH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2009 19:19:07 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sat, 24 Jan 2009 01:19:04 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090124001904.50440@gmx.net> (sfid-20090124_011914_124670_0757F259)
+MIME-Version: 1.0
+Subject: [PATCH v5] mac80211: Fixed BSSID handling revisited
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert to use bus-agnostic DMA routines to make it usable on AHB bus as well.
+This patch cleanup the fixed BSSID handling, that ieee80211_sta_set_bss=
+id() works like ieee80211_sta_set_ssid(). So that the BSSID is only a s=
+econd selection criterion besides the SSID. This allows us to create ne=
+w IBSS networks with fixed BSSIDs, which was broken before.
 
-Changes-licensed-under: ISC
+In the second version of this patch the handling of the stupid merges t=
+o the same BSSID is moved out to get reworked into an other patch.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+And this version hopefully solves the problems with some low-level driv=
+ers and re-adds the config BSSID warning to help debugging the low-leve=
+l drivers.
+
+Much thanks to all who have helped testing! :)
+
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
 ---
- drivers/net/wireless/ath9k/beacon.c |   31 ++++++++++++++-----------------
- drivers/net/wireless/ath9k/main.c   |   13 ++++++-------
- drivers/net/wireless/ath9k/recv.c   |   27 ++++++++++++---------------
- drivers/net/wireless/ath9k/xmit.c   |   15 ++++++---------
- 4 files changed, 38 insertions(+), 48 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
-index f02b099..be1d84a 100644
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -164,9 +164,9 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
- 	bf = avp->av_bcbuf;
- 	skb = (struct sk_buff *)bf->bf_mpdu;
- 	if (skb) {
--		pci_unmap_single(to_pci_dev(sc->dev), bf->bf_dmacontext,
-+		dma_unmap_single(sc->dev, bf->bf_dmacontext,
- 				 skb->len,
--				 PCI_DMA_TODEVICE);
-+				 DMA_TO_DEVICE);
- 		dev_kfree_skb_any(skb);
+diff -urN wireless-testing.orig/net/mac80211/mlme.c wireless-testing/ne=
+t/mac80211/mlme.c
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-01-23 22:54:06.00000=
+0000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2009-01-24 01:03:28.000000000 =
++0100
+@@ -1615,6 +1615,7 @@
+=20
+ 	ieee80211_sta_def_wmm_params(sdata, bss);
+=20
++	ifsta->flags |=3D IEEE80211_STA_PREV_BSSID_SET;
+ 	ifsta->state =3D IEEE80211_STA_MLME_IBSS_JOINED;
+ 	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
+=20
+@@ -2178,19 +2179,18 @@
+ 	int i;
+ 	int ret;
+=20
+-#if 0
+-	/* Easier testing, use fixed BSSID. */
+-	memset(bssid, 0xfe, ETH_ALEN);
+-#else
+-	/* Generate random, not broadcast, locally administered BSSID. Mix in
+-	 * own MAC address to make sure that devices that do not have proper
+-	 * random number generator get different BSSID. */
+-	get_random_bytes(bssid, ETH_ALEN);
+-	for (i =3D 0; i < ETH_ALEN; i++)
+-		bssid[i] ^=3D sdata->dev->dev_addr[i];
+-	bssid[0] &=3D ~0x01;
+-	bssid[0] |=3D 0x02;
+-#endif
++	if (sdata->u.sta.flags & IEEE80211_STA_BSSID_SET) {
++		memcpy(bssid, ifsta->bssid, ETH_ALEN);
++	} else {
++		/* Generate random, not broadcast, locally administered BSSID. Mix i=
+n
++		 * own MAC address to make sure that devices that do not have proper
++		 * random number generator get different BSSID. */
++		get_random_bytes(bssid, ETH_ALEN);
++		for (i =3D 0; i < ETH_ALEN; i++)
++			bssid[i] ^=3D sdata->dev->dev_addr[i];
++		bssid[0] &=3D ~0x01;
++		bssid[0] |=3D 0x02;
++	}
+=20
+ 	printk(KERN_DEBUG "%s: Creating new IBSS network, BSSID %pM\n",
+ 	       sdata->dev->name, bssid);
+@@ -2251,6 +2251,9 @@
+ 		    memcmp(ifsta->ssid, bss->ssid, bss->ssid_len) !=3D 0
+ 		    || !(bss->capability & WLAN_CAPABILITY_IBSS))
+ 			continue;
++		if ((ifsta->flags & IEEE80211_STA_BSSID_SET) &&
++		    memcmp(ifsta->bssid, bss->bssid, ETH_ALEN) !=3D 0)
++			continue;
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 		printk(KERN_DEBUG "   bssid=3D%pM found\n", bss->bssid);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+@@ -2267,7 +2270,9 @@
+ 		       "%pM\n", bssid, ifsta->bssid);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+=20
+-	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0) {
++	if (found &&
++	    ((!(ifsta->flags & IEEE80211_STA_PREV_BSSID_SET)) ||
++	     memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0)) {
+ 		int ret;
+ 		int search_freq;
+=20
+@@ -2605,16 +2610,16 @@
+ 		memset(ifsta->ssid, 0, sizeof(ifsta->ssid));
+ 		memcpy(ifsta->ssid, ssid, len);
+ 		ifsta->ssid_len =3D len;
+-		ifsta->flags &=3D ~IEEE80211_STA_PREV_BSSID_SET;
  	}
- 
-@@ -188,15 +188,14 @@ static struct ath_buf *ath_beacon_generate(struct ath_softc *sc, int if_id)
- 	}
- 
- 	bf->bf_buf_addr = bf->bf_dmacontext =
--		pci_map_single(to_pci_dev(sc->dev), skb->data,
-+		dma_map_single(sc->dev, skb->data,
- 			       skb->len,
--			       PCI_DMA_TODEVICE);
--	if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
--					   bf->bf_buf_addr))) {
-+			       DMA_TO_DEVICE);
-+	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
- 		dev_kfree_skb_any(skb);
- 		bf->bf_mpdu = NULL;
- 		DPRINTF(sc, ATH_DBG_CONFIG,
--			"pci_dma_mapping_error() on beaconing\n");
-+			"dma_mapping_error() on beaconing\n");
- 		return NULL;
- 	}
- 
-@@ -344,9 +343,9 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
- 	bf = avp->av_bcbuf;
- 	if (bf->bf_mpdu != NULL) {
- 		skb = (struct sk_buff *)bf->bf_mpdu;
--		pci_unmap_single(to_pci_dev(sc->dev), bf->bf_dmacontext,
-+		dma_unmap_single(sc->dev, bf->bf_dmacontext,
- 				 skb->len,
--				 PCI_DMA_TODEVICE);
-+				 DMA_TO_DEVICE);
- 		dev_kfree_skb_any(skb);
- 		bf->bf_mpdu = NULL;
- 	}
-@@ -403,15 +402,14 @@ int ath_beacon_alloc(struct ath_softc *sc, int if_id)
- 
- 	bf->bf_mpdu = skb;
- 	bf->bf_buf_addr = bf->bf_dmacontext =
--		pci_map_single(to_pci_dev(sc->dev), skb->data,
-+		dma_map_single(sc->dev, skb->data,
- 			       skb->len,
--			       PCI_DMA_TODEVICE);
--	if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
--					   bf->bf_buf_addr))) {
-+			       DMA_TO_DEVICE);
-+	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
- 		dev_kfree_skb_any(skb);
- 		bf->bf_mpdu = NULL;
- 		DPRINTF(sc, ATH_DBG_CONFIG,
--			"pci_dma_mapping_error() on beacon alloc\n");
-+			"dma_mapping_error() on beacon alloc\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -431,10 +429,9 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vap *avp)
- 		bf = avp->av_bcbuf;
- 		if (bf->bf_mpdu != NULL) {
- 			struct sk_buff *skb = (struct sk_buff *)bf->bf_mpdu;
--			pci_unmap_single(to_pci_dev(sc->dev),
--					 bf->bf_dmacontext,
-+			dma_unmap_single(sc->dev, bf->bf_dmacontext,
- 					 skb->len,
--					 PCI_DMA_TODEVICE);
-+					 DMA_TO_DEVICE);
- 			dev_kfree_skb_any(skb);
- 			bf->bf_mpdu = NULL;
- 		}
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 44931e4..ebf0467 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1715,9 +1715,8 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 	}
- 
- 	/* allocate descriptors */
--	dd->dd_desc = pci_alloc_consistent(to_pci_dev(sc->dev),
--			      dd->dd_desc_len,
--			      &dd->dd_desc_paddr);
-+	dd->dd_desc = dma_alloc_coherent(sc->dev, dd->dd_desc_len,
-+					 &dd->dd_desc_paddr, GFP_ATOMIC);
- 	if (dd->dd_desc == NULL) {
- 		error = -ENOMEM;
- 		goto fail;
-@@ -1763,8 +1762,8 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 	}
- 	return 0;
- fail2:
--	pci_free_consistent(to_pci_dev(sc->dev),
--		dd->dd_desc_len, dd->dd_desc, dd->dd_desc_paddr);
-+	dma_free_coherent(sc->dev, dd->dd_desc_len, dd->dd_desc,
-+			  dd->dd_desc_paddr);
- fail:
- 	memset(dd, 0, sizeof(*dd));
- 	return error;
-@@ -1777,8 +1776,8 @@ void ath_descdma_cleanup(struct ath_softc *sc,
- 			 struct ath_descdma *dd,
- 			 struct list_head *head)
- {
--	pci_free_consistent(to_pci_dev(sc->dev),
--		dd->dd_desc_len, dd->dd_desc, dd->dd_desc_paddr);
-+	dma_free_coherent(sc->dev, dd->dd_desc_len, dd->dd_desc,
-+			  dd->dd_desc_paddr);
- 
- 	INIT_LIST_HEAD(head);
- 	kfree(dd->dd_bufptr);
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index 645fae2..648bb49 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -291,16 +291,15 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 			}
- 
- 			bf->bf_mpdu = skb;
--			bf->bf_buf_addr = pci_map_single(to_pci_dev(sc->dev),
--							 skb->data,
-+			bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
- 							 sc->rx.bufsize,
--							 PCI_DMA_FROMDEVICE);
--			if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
-+							 DMA_FROM_DEVICE);
-+			if (unlikely(dma_mapping_error(sc->dev,
- 				  bf->bf_buf_addr))) {
- 				dev_kfree_skb_any(skb);
- 				bf->bf_mpdu = NULL;
- 				DPRINTF(sc, ATH_DBG_CONFIG,
--					"pci_dma_mapping_error() on RX init\n");
-+					"dma_mapping_error() on RX init\n");
- 				error = -ENOMEM;
- 				break;
- 			}
-@@ -525,10 +524,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 		 * 1. accessing the frame
- 		 * 2. requeueing the same buffer to h/w
- 		 */
--		pci_dma_sync_single_for_cpu(to_pci_dev(sc->dev),
--				bf->bf_buf_addr,
-+		dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
- 				sc->rx.bufsize,
--				PCI_DMA_FROMDEVICE);
-+				DMA_FROM_DEVICE);
- 
- 		/*
- 		 * If we're asked to flush receive queue, directly
-@@ -559,9 +557,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 			goto requeue;
- 
- 		/* Unmap the frame */
--		pci_unmap_single(to_pci_dev(sc->dev), bf->bf_buf_addr,
-+		dma_unmap_single(sc->dev, bf->bf_buf_addr,
- 				 sc->rx.bufsize,
--				 PCI_DMA_FROMDEVICE);
-+				 DMA_FROM_DEVICE);
- 
- 		skb_put(skb, ds->ds_rxstat.rs_datalen);
- 		skb->protocol = cpu_to_be16(ETH_P_CONTROL);
-@@ -607,16 +605,15 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 
- 		/* We will now give hardware our shiny new allocated skb */
- 		bf->bf_mpdu = requeue_skb;
--		bf->bf_buf_addr = pci_map_single(to_pci_dev(sc->dev),
--					 requeue_skb->data,
-+		bf->bf_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
- 					 sc->rx.bufsize,
--					 PCI_DMA_FROMDEVICE);
--		if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
-+					 DMA_FROM_DEVICE);
-+		if (unlikely(dma_mapping_error(sc->dev,
- 			  bf->bf_buf_addr))) {
- 			dev_kfree_skb_any(requeue_skb);
- 			bf->bf_mpdu = NULL;
- 			DPRINTF(sc, ATH_DBG_CONFIG,
--				"pci_dma_mapping_error() on RX\n");
-+				"dma_mapping_error() on RX\n");
- 			break;
- 		}
- 		bf->bf_dmacontext = bf->bf_buf_addr;
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 27cb9d5..522078d 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -340,10 +340,8 @@ static void ath_tx_complete_buf(struct ath_softc *sc,
- 	}
- 
- 	/* Unmap this frame */
--	pci_unmap_single(to_pci_dev(sc->dev),
--			 bf->bf_dmacontext,
--			 skb->len,
--			 PCI_DMA_TODEVICE);
-+	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
+=20
++	ifsta->flags &=3D ~IEEE80211_STA_PREV_BSSID_SET;
 +
- 	/* complete this frame */
- 	ath_tx_complete(sc, skb, &tx_status);
- 
-@@ -1716,13 +1714,12 @@ static int ath_tx_setup_buffer(struct ath_softc *sc, struct ath_buf *bf,
- 	/* DMA setup */
- 	bf->bf_mpdu = skb;
- 
--	bf->bf_dmacontext = pci_map_single(to_pci_dev(sc->dev), skb->data,
--					   skb->len, PCI_DMA_TODEVICE);
--	if (unlikely(pci_dma_mapping_error(to_pci_dev(sc->dev),
--					   bf->bf_dmacontext))) {
-+	bf->bf_dmacontext = dma_map_single(sc->dev, skb->data,
-+					   skb->len, DMA_TO_DEVICE);
-+	if (unlikely(dma_mapping_error(sc->dev, bf->bf_dmacontext))) {
- 		bf->bf_mpdu = NULL;
- 		DPRINTF(sc, ATH_DBG_CONFIG,
--			"pci_dma_mapping_error() on TX\n");
-+			"dma_mapping_error() on TX\n");
- 		return -ENOMEM;
+ 	if (len)
+ 		ifsta->flags |=3D IEEE80211_STA_SSID_SET;
+ 	else
+ 		ifsta->flags &=3D ~IEEE80211_STA_SSID_SET;
+=20
+-	if (sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC &&
+-	    !(ifsta->flags & IEEE80211_STA_BSSID_SET)) {
++	if (sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC) {
+ 		ifsta->ibss_join_req =3D jiffies;
+ 		ifsta->state =3D IEEE80211_STA_MLME_IBSS_SEARCH;
+ 		return ieee80211_sta_find_ibss(sdata, ifsta);
+@@ -2634,36 +2639,25 @@
+ int ieee80211_sta_set_bssid(struct ieee80211_sub_if_data *sdata, u8 *b=
+ssid)
+ {
+ 	struct ieee80211_if_sta *ifsta;
+-	int res;
+-	bool valid;
+=20
+ 	ifsta =3D &sdata->u.sta;
+-	valid =3D is_valid_ether_addr(bssid);
+=20
+-	if (memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0) {
+-		if(valid)
+-			memcpy(ifsta->bssid, bssid, ETH_ALEN);
+-		else
+-			memset(ifsta->bssid, 0, ETH_ALEN);
+-		res =3D 0;
+-		/*
+-		 * Hack! See also ieee80211_sta_set_ssid.
+-		 */
+-		if (netif_running(sdata->dev))
+-			res =3D ieee80211_if_config(sdata, IEEE80211_IFCC_BSSID);
+-		if (res) {
++	if (is_valid_ether_addr(bssid)) {
++		memcpy(ifsta->bssid, bssid, ETH_ALEN);
++		ifsta->flags |=3D IEEE80211_STA_BSSID_SET;
++	} else {
++		memset(ifsta->bssid, 0, ETH_ALEN);
++		ifsta->flags &=3D ~IEEE80211_STA_BSSID_SET;
++	}
++
++	if (netif_running(sdata->dev)) {
++		if (ieee80211_if_config(sdata, IEEE80211_IFCC_BSSID)) {
+ 			printk(KERN_DEBUG "%s: Failed to config new BSSID to "
+ 			       "the low-level driver\n", sdata->dev->name);
+-			return res;
+ 		}
  	}
- 
--- 
-1.5.3.2
+=20
+-	if (valid)
+-		ifsta->flags |=3D IEEE80211_STA_BSSID_SET;
+-	else
+-		ifsta->flags &=3D ~IEEE80211_STA_BSSID_SET;
+-
+-	return 0;
++	return ieee80211_sta_set_ssid(sdata, ifsta->ssid, ifsta->ssid_len);
+ }
+=20
+ int ieee80211_sta_set_extra_ie(struct ieee80211_sub_if_data *sdata, ch=
+ar *ie, size_t len)
 
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
