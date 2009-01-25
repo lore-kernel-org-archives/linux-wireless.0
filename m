@@ -1,33 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:15971 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101AbZAZHqz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 02:46:55 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: fix CF firmware loading for some cards
-Date: Mon, 26 Jan 2009 08:46:05 +0100
-Cc: Dan Williams <dcbw@redhat.com>, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org,
-	ryan@bluewatersys.com, Cyril HAENEL <chaenel@free.fr>
-References: <1232729733.2577.13.camel@localhost.localdomain> <200901231801.19570.mb@bu3sch.de> <1232733214.2577.24.camel@localhost.localdomain>
-In-Reply-To: <1232733214.2577.24.camel@localhost.localdomain>
+Received: from bu3sch.de ([62.75.166.246]:36011 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754170AbZAYM4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 07:56:43 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Alina Friedrichsen" <x-alina@gmx.net>
+Subject: Re: [PATCH] b43: Accessing the TSF via mac80211
+Date: Sun, 25 Jan 2009 13:55:49 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+References: <20090125124151.115210@gmx.net> <200901251351.50230.mb@bu3sch.de>
+In-Reply-To: <200901251351.50230.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200901260846.05912.hs4233@mail.mn-solutions.de> (sfid-20090126_084706_903156_FDB0D62D)
+  charset="iso-8859-1"
+Message-Id: <200901251355.49220.mb@bu3sch.de> (sfid-20090125_135647_296311_F1C68E4D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Could be, Holger did the initial patch and I'm not sure if the
-> udelay was intentional.  Note that this happens at PCMCIA/CF
-> hardware probe time (if that has any constraints that might
-> apply here).
+On Sunday 25 January 2009 13:51:50 Michael Buesch wrote:
+> On Sunday 25 January 2009 13:41:51 Alina Friedrichsen wrote:
+> > This allows the mac80211 high level code to access the TSF. This is e.g. needed for BSSID merges in the IBSS mode.
+> 
+> Thanks, can you also remove our private debugfs hook?
+> 
+> > Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+> > ---
+> > diff -urN wireless-testing.orig/drivers/net/wireless/b43/main.c wireless-testing/drivers/net/wireless/b43/main.c
+> > --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-01-25 06:12:13.000000000 +0100
+> > +++ wireless-testing/drivers/net/wireless/b43/main.c	2009-01-25 13:09:35.000000000 +0100
+> > @@ -3177,6 +3177,25 @@
+> >  	return 0;
+> >  }
+> >  
+> > +static u64 b43_op_get_tsf(struct ieee80211_hw *hw)
+> > +{
+> > +	struct b43_wl *wl = hw_to_b43_wl(hw);
+> > +	struct b43_wldev *dev = wl->current_dev;
+> > +	u64 tsf;
+> > +
+> 
+> You must add a check and locking here.
+> 
+> 	if (dev && (b43_status(dev) >= B43_STAT_INITIALIZED)) {
+> 		mutex_lock(&wl->mutex);
+> 		spin_lock_irq(&wl->irq_lock);
+> 
+> > +	b43_tsf_read(dev, &tsf);
+> 
+> 		spin_unlock_irq(&wl->irq_lock);
+> 		mutex_unlock(&wl->mutex);
+> 	} else
+> 		tsf = 0; //FIXME what to do on error?
+> 
+> > +	return tsf;
+> > +}
 
-I'm used the card on an ARM architecture, and there long mdelay 
-won't work as on i386, so I used udelay.
+Whoops, I got it wrong :D
+This is what it should look like:
 
-In practice, the "expensive loop" isn't that expensive, because 
-the real number of iterations is quite low (contrary to what the 
-manual states).
+static u64 b43_op_get_tsf(struct ieee80211_hw *hw)
+{
+       struct b43_wl *wl = hw_to_b43_wl(hw);
+       struct b43_wldev *dev = wl->current_dev;
+       u64 tsf;
+
+	mutex_lock(&wl->mutex);
+	spin_lock_irq(&wl->irq_lock);
+	if (dev && (b43_status(dev) >= B43_STAT_INITIALIZED))
+		b43_tsf_read(dev, &tsf);
+	else
+		tsf = 0;//FIXME? what to do on error?
+	spin_unlock_irq(&wl->irq_lock);
+	mutex_unlock(&wl->mutex);
+
+       return tsf;
+}
+
+-- 
+Greetings, Michael.
