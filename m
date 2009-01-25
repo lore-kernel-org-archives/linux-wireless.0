@@ -1,74 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:60964 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751194AbZAZDT1 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:30184 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056AbZAYQrd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 22:19:27 -0500
-Message-ID: <497D2BB3.9000002@lwfinger.net> (sfid-20090126_041933_507912_B3B88CBA)
-Date: Sun, 25 Jan 2009 21:19:15 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 25 Jan 2009 11:47:33 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so6499217wfd.4
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 08:47:32 -0800 (PST)
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
-Subject: [RFT V2] rtl8187: Fix OFDM power settings for RTL8187L
-References: <49790961.JdcKIZyYlMNFSiuO%Larry.Finger@lwfinger.net> <4979DD39.9000601@hauke-m.de> <20090123153144.GA13658@tuxdriver.com> <497B05AF.5050701@hauke-m.de>
-In-Reply-To: <497B05AF.5050701@hauke-m.de>
+In-Reply-To: <1232901917.3837.0.camel@johannes.local>
+References: <20090124081223.50440@gmx.net>
+	 <b6c5339f0901250841r22635bd7q40532891293a6744@mail.gmail.com>
+	 <1232901917.3837.0.camel@johannes.local>
+Date: Sun, 25 Jan 2009 11:47:31 -0500
+Message-ID: <b6c5339f0901250847i5f9f98bcl4ebec04027d7c93c@mail.gmail.com> (sfid-20090125_174738_481629_9C3F206C)
+Subject: Re: [PATCH] ath5k: Set TSF fix
+From: Bob Copeland <bcopeland@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alina Friedrichsen <x-alina@gmx.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hauke,
+On Sun, Jan 25, 2009 at 11:45 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>> Perhaps there is an internal latch on this pair; that may explain why
+>> you need to write low->high order.
+>
+> Either way, I think the changelog should back up the claim by
+> _something_. Even if it's just "tested on device XXX, old way doesn't
+> work, new way does" or "looked at legacy HAL code" or ...
 
-Please apply this patch on top of current wireless-testing, or
-compat-wireless.
+Agreed, "tested on..." would be good.  I looked at the HAL and it
+doesn't have a set tsf function, only reset.
 
-V1 only did one of the two kinds of radios.
-
-Larry
-====================
-
-
-After reports of poor performance, a review of the latest vendor
-driver (rtl8187_linux_26.1025.0328.2007) for RTL8187L devices was
-undertaken.
-
-A difference was found in the code used to index the OFDM power
-tables. When the Linux driver was changed, my unit works at a much
-greater range than before.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
-@@ -285,6 +285,10 @@ static void rtl8225_rf_set_tx_power(stru
- 	ofdm_power = priv->channels[channel - 1].hw_value >> 4;
-
- 	cck_power = min(cck_power, (u8)11);
-+	if (ofdm_power > (u8)15)
-+		ofdm_power = 25;
-+	else
-+		ofdm_power += 10;
- 	ofdm_power = min(ofdm_power, (u8)35);
-
- 	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK,
-@@ -536,7 +540,10 @@ static void rtl8225z2_rf_set_tx_power(st
- 	cck_power += priv->txpwr_base & 0xF;
- 	cck_power = min(cck_power, (u8)35);
-
--	ofdm_power = min(ofdm_power, (u8)15);
-+	if (ofdm_power > (u8)15)
-+		ofdm_power = 25;
-+	else
-+		ofdm_power += 10;
- 	ofdm_power += priv->txpwr_base >> 4;
- 	ofdm_power = min(ofdm_power, (u8)35);
-
-
+-- 
+Bob Copeland %% www.bobcopeland.com
