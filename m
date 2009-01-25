@@ -1,77 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.248]:4926 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754681AbZAGBkG (ORCPT
+Received: from mail-ew0-f10.google.com ([209.85.219.10]:43139 "EHLO
+	mail-ew0-f10.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747AbZAYShn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 20:40:06 -0500
-Received: by an-out-0708.google.com with SMTP id d40so2636018and.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 17:40:05 -0800 (PST)
-Message-ID: <e6236e5f0901061740s20d817b1s2befb66cefbf72b0@mail.gmail.com> (sfid-20090107_024012_645378_CAD0DD81)
-Date: Wed, 7 Jan 2009 02:40:05 +0100
-From: "Rodrigo Fresneda" <fresneda@gmail.com>
-To: "Hin-Tak Leung" <hintak.leung@gmail.com>
-Subject: Re: trouble with compat-old
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <3ace41890901061536k7722b63h906962283ce9e4ad@mail.gmail.com>
+	Sun, 25 Jan 2009 13:37:43 -0500
+Received: by ewy3 with SMTP id 3so553622ewy.13
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 10:37:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <e6236e5f0901060312h6946f9a1p49e299e723cb0190@mail.gmail.com>
-	 <3ace41890901061536k7722b63h906962283ce9e4ad@mail.gmail.com>
+In-Reply-To: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com>
+References: <9FB118DA-845D-4708-84F3-4D51837D8C68@gmail.com>
+Date: Sun, 25 Jan 2009 19:37:40 +0100
+Message-ID: <14b026160901251037m43efe6efjde4a185a517ddf66@mail.gmail.com> (sfid-20090125_193749_198590_A893AB4E)
+Subject: Re: [b43] opensource firmware
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5polish@gmail.com>
+To: Lorenzo Nava <navalorenx@gmail.com>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for your answer. Now, what exactly am I supposed to do? Take a
-look at the IWL section in config.mk:
-
-CONFIG_IWL3945=m
-CONFIG_IWL3945_DEBUG=n
-CONFIG_IWL3945_LEDS=y
-# CONFIG_IWL3945_RFKILL=y
-CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
-CONFIG_IWL4965=y
-CONFIG_IWL5000=y
-CONFIG_IWLAGN=m
-CONFIG_IWLAGN_LEDS=y
-CONFIG_IWLAGN_SPECTRUM_MEASUREMENT=y
-CONFIG_IWLCORE=m
-CONFIG_IWLWIFI=m
-CONFIG_IWLWIFI_DEBUG=n
-CONFIG_IWLWIFI_LEDS=y
-
-It seems CONFIG_IWL4965 is selected by default. Do you think there is
-a better selection than the default one? An unrelated question, is
-there a way to instruct make to build only the modules I want, i.e.,
-iwlagn?
-
-thanks again,
-rodrigo.
-
-
-
-On Wed, Jan 7, 2009 at 12:36 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-> On Tue, Jan 6, 2009 at 11:12 AM, Rodrigo Fresneda <fresneda@gmail.com> wrote:
+2009/1/14 Lorenzo Nava <navalorenx@gmail.com>:
+> we completed the 1st version of initvals. They are available at http:=
+//www.ing.unibs.it/openfwwf
+> . Currently only binary version is available: don't worry, we will
+> publish source code as soon as possible!! This first version is a
+> "test version": please try it and let us know if everythink is ok...
 >
->> WARNING: "iwl4965_agn_cfg"
->> [/home/fresneda/compat-wireless-2.6-old/drivers/net/wireless/iwlwifi/iwlagn.ko]
->> undefined!
->>
->> The module is built, but it cannot be inserted:
->>
->> FATAL: Error inserting iwlagn
->> (/lib/modules/2.6.26-1-amd64/updates/drivers/net/wireless/iwlwifi/iwlagn.ko):
->> Unknown symbol in module, or unknown parameter (see
->> dmesg)
->>
->> And the output of dmesg:
->>
->> iwlagn: Unknown symbol iwl4965_agn_cfg
+> Today we have also tested a new firmware version that works with WPA2=
+-
+> personal (both TKIP and CCMP) and WPA2-enterprise (EAP-TTLS) (tested
+> on 4306 and 4318 PCI device). If anybody was interested please try ne=
+w
+> firmware with encryption and let us know if it works correctly, thank=
+s!
 >
->
-> symbol iwl4965_agn_cfg is enabled if you select "Intel Wireless WiFi
-> 4965AGN" support also.
-> config IWL4965 . Try selecting that when you build compat-wireless.old
-> . (seems that in some older version of
-> conpat-wireless, the 5000 code depends on the 4965 code).
->
-> Also, make sure that you do "depmod -a"
->
+> Initvals and new firmware version can be found at http://www.ing.unib=
+s.it/openfwwf
+
+I belive you still need testing?
+
+I used openfwwf-5.0.tar.gz and initvals.tar.gz for my bcm4318 card  in
+Acer Aspire 5024 (qos=3D0). Scanning works fine, connecting to WPA
+Personal network also. I can't check speed performance as I don't have
+antenna connected to my card (notebook lid just gone... I belive
+"Acer" explains that situation to you?). As for stability it's great.
+I downloaded 100MB, left notebook for 24h and then downloaded another
+50MB.
+
+So to sum up: I don't feel any difference between opensource and
+broardcom's firmware.
+
+--=20
+Rafa=C5=82 Mi=C5=82ecki
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
