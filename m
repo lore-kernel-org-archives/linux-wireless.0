@@ -1,73 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41426 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752949AbZAEWJR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 17:09:17 -0500
-Subject: Re: Problem with rtl8187
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <496283F7.7010902@lwfinger.net>
-References: <496273D4.6020600@lwfinger.net>
-	 <1231189302.3697.25.camel@johannes>  <4962775B.2040205@lwfinger.net>
-	 <1231190634.3697.32.camel@johannes>  <496283F7.7010902@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wQZ/g3yiIRrj7DFhf/oV"
-Date: Mon, 05 Jan 2009 23:09:36 +0100
-Message-Id: <1231193376.3697.44.camel@johannes> (sfid-20090105_230921_594466_69058A06)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:36217 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753977AbZAYM57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 07:57:59 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Alina Friedrichsen" <x-alina@gmx.net>
+Subject: Re: [PATCH] b43: Accessing the TSF via mac80211
+Date: Sun, 25 Jan 2009 13:57:04 +0100
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+References: <20090125124151.115210@gmx.net> <200901251351.50230.mb@bu3sch.de> <200901251355.49220.mb@bu3sch.de>
+In-Reply-To: <200901251355.49220.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901251357.05020.mb@bu3sch.de> (sfid-20090125_135802_111962_D36DBF75)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sunday 25 January 2009 13:55:49 Michael Buesch wrote:
+> On Sunday 25 January 2009 13:51:50 Michael Buesch wrote:
+> > On Sunday 25 January 2009 13:41:51 Alina Friedrichsen wrote:
+> > > This allows the mac80211 high level code to access the TSF. This is e.g. needed for BSSID merges in the IBSS mode.
+> > 
+> > Thanks, can you also remove our private debugfs hook?
+> > 
+> > > Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+> > > ---
+> > > diff -urN wireless-testing.orig/drivers/net/wireless/b43/main.c wireless-testing/drivers/net/wireless/b43/main.c
+> > > --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-01-25 06:12:13.000000000 +0100
+> > > +++ wireless-testing/drivers/net/wireless/b43/main.c	2009-01-25 13:09:35.000000000 +0100
+> > > @@ -3177,6 +3177,25 @@
+> > >  	return 0;
+> > >  }
+> > >  
+> > > +static u64 b43_op_get_tsf(struct ieee80211_hw *hw)
+> > > +{
+> > > +	struct b43_wl *wl = hw_to_b43_wl(hw);
+> > > +	struct b43_wldev *dev = wl->current_dev;
+> > > +	u64 tsf;
+> > > +
+> > 
+> > You must add a check and locking here.
+> > 
+> > 	if (dev && (b43_status(dev) >= B43_STAT_INITIALIZED)) {
+> > 		mutex_lock(&wl->mutex);
+> > 		spin_lock_irq(&wl->irq_lock);
+> > 
+> > > +	b43_tsf_read(dev, &tsf);
+> > 
+> > 		spin_unlock_irq(&wl->irq_lock);
+> > 		mutex_unlock(&wl->mutex);
+> > 	} else
+> > 		tsf = 0; //FIXME what to do on error?
+> > 
+> > > +	return tsf;
+> > > +}
+> 
+> Whoops, I got it wrong :D
+> This is what it should look like:
+> 
+> static u64 b43_op_get_tsf(struct ieee80211_hw *hw)
+> {
+>        struct b43_wl *wl = hw_to_b43_wl(hw);
+>        struct b43_wldev *dev = wl->current_dev;
+>        u64 tsf;
+> 
+> 	mutex_lock(&wl->mutex);
+> 	spin_lock_irq(&wl->irq_lock);
+> 	if (dev && (b43_status(dev) >= B43_STAT_INITIALIZED))
+> 		b43_tsf_read(dev, &tsf);
+> 	else
+> 		tsf = 0;//FIXME? what to do on error?
+> 	spin_unlock_irq(&wl->irq_lock);
+> 	mutex_unlock(&wl->mutex);
+> 
+>        return tsf;
+> }
+> 
 
---=-wQZ/g3yiIRrj7DFhf/oV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Damn, I'm not awake, yet.
+The   dev = wl->current_dev   also must be inside of the mutex.
 
-On Mon, 2009-01-05 at 16:04 -0600, Larry Finger wrote:
-
-> Thanks. That took care of the WARN_ON message and the SLUB debug messages=
-;
-
-Ok, good. Want to adopt that patch and formally submit it, or want me
-to?
-
-> however, the device will not scan until it has been powered down. I'm sti=
-ll
-> looking for something there.
-
-That's a bit odd, but I'm not sure I know how to help you. I've seen
-things like that with ar9170 too though, if I rmmod/modprobe then I need
-to unplug it to make it work again.
-
-> Are there any other mac80211 routines that should be fed other than error=
- codes?
-
-I don't think so, no.
-
-johannesNone that I'm aware of, no.
-
---=-wQZ/g3yiIRrj7DFhf/oV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJYoUdAAoJEKVg1VMiehFY9oEQAKWH8CjkqvhK+e49jP782Rg7
-CcMIdvagNnCDmx3jjEUO7diQ9GAjnglisDFLvxZ1WVyz6vIJO7BJYC+yHMBtQDi3
-SNJi+/rF0h9GMrg0pcOQq+9lKo8qiQ6GVOVBsTFrG5ut33+LIu2CYe+5Dc5RLyXr
-UT3Cl/fQGo/0sQPUx/zcYGdJ8RZaiMNqvrPnAfP3L0Uog5r4Co3NWp7TBPXFD456
-WyUMVf/aebwZUeFz/wVLquFYSrV1gb6pc1yJb/VPofEu3uqZAydvWJZg5zaWZ1/8
-KYpxzdS8Bq8IS3tys6E3AZ5V4h3JI/rwOCE2HXm48LXVqa9RuuXQiGKCn6Nd5tpw
-2RUotibpbeP21OL7xFqwU4dJTKThagv6OEsqX3bsAD5EZ52hvreDYVq7aW+QsciD
-flwkIYaIgKXBNmp/dDsVVDvlCrCmVKoLtH6ROP8d+kGbP6T41LpBYhal+QSPzkyx
-HO1rTn3Si4nAHj5XyrN9eTyzHlLVytz3v/m6VboI6oARNVcfUOYr+4+gsmpnrhLz
-XkNc6lvnva9yZOfDfeJ2DbIKelX6w6+gd5DRHfxCIzrmowbqd9z4PdxZ0xU3uE23
-ny7vqaRufEnWvEmYQqThK0izloKLdAT7bzEHBl/9kir9SYYifRIUBO4db54Pf48E
-4rBo6GxM3UZkerrmRrdQ
-=xVva
------END PGP SIGNATURE-----
-
---=-wQZ/g3yiIRrj7DFhf/oV--
-
+-- 
+Greetings, Michael.
