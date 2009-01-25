@@ -1,77 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:47799 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753906AbZAUUvM convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53556 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971AbZAYQ3V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 15:51:12 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
-Date: Wed, 21 Jan 2009 21:51:16 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200901211450.50880.chunkeey@web.de> <4977805E.70906@lwfinger.net>
-In-Reply-To: <4977805E.70906@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200901212151.16503.chunkeey@web.de> (sfid-20090121_215139_316825_B7D6390E)
+	Sun, 25 Jan 2009 11:29:21 -0500
+Subject: RE: [PATCH 1/2 v2.6.29] iwlwifi: fix rs_get_rate WARN_ON()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Abbas, Mohamed" <mohamed.abbas@intel.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <26E9B811E137AB4B95200FD4C950886B1C8F7AC9@orsmsx507.amr.corp.intel.com>
+References: <> <1232564283-18008-1-git-send-email-reinette.chatre@intel.com>
+	 <1232564283-18008-2-git-send-email-reinette.chatre@intel.com>
+	 (sfid-20090121_195542_734853_62E08E0F) <1232621853.30174.19.camel@johannes.local>
+	 <26E9B811E137AB4B95200FD4C950886B1C8F7AC9@orsmsx507.amr.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GPaompsiEzKSto/HLnDO"
+Date: Sun, 25 Jan 2009 17:29:11 +0100
+Message-Id: <1232900951.3952.12.camel@johannes.local> (sfid-20090125_172925_308530_5D8B56BF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 January 2009 21:06:54 Larry Finger wrote:
-> Christian Lamparter wrote:
-> > This patch fixes a long standing issue in p54usb.
-> >=20
-> > Under high memory pressure, dev_alloc_skb couldn't always allocate =
-a=20
-> > replacement skb. In such situations, we had to free the associated =
-urb.
-> > And over the time all urbs were eventually gone altogether and=20
-> > obviously the device remained mute from then on.
->=20
-> With this patch, I get lots of missing rx_refill_* messages such as
->=20
-> drivers/net/wireless/p54/p54usb.c:1024: error: =E2=80=98struct p54u_p=
-riv=E2=80=99 has no member named
-> =E2=80=98rx_refill_work=E2=80=99
-> drivers/net/wireless/p54/p54usb.c:1025: error: =E2=80=98struct p54u_p=
-riv=E2=80=99 has no member named
-> =E2=80=98rx_refill_lock=E2=80=99
-> drivers/net/wireless/p54/p54usb.c:1026: error: =E2=80=98struct p54u_p=
-riv=E2=80=99 has no member named
-> =E2=80=98rx_refill_list=E2=80=99
->=20
-> Did I miss a patch? I did a search for the string "rx_refill" in my e=
-ntire mailbox and
-> found only this mail and Artur's reply.
->=20
-No, you don't miss anything... here's the other p54usb.h change.
 
-Sorry!
+--=-GPaompsiEzKSto/HLnDO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-	Chr
----
-diff --git a/drivers/net/wireless/p54/p54usb.h b/drivers/net/wireless/p=
-54/p54usb.h
-index 8bc5898..04c7258 100644
---- a/drivers/net/wireless/p54/p54usb.h
-+++ b/drivers/net/wireless/p54/p54usb.h
-@@ -134,6 +134,10 @@ struct p54u_priv {
-=20
- 	spinlock_t lock;
- 	struct sk_buff_head rx_queue;
-+	spinlock_t rx_refill_lock;
-+	struct list_head rx_refill_list;
-+	struct work_struct rx_refill_work;
-+
- 	struct usb_anchor submitted;
- };
-=20
+On Thu, 2009-01-22 at 08:51 -0800, Abbas, Mohamed wrote:
 
+> Sounds like we should fix mac80211 to disassociate _before_ switching
+> the channel? It won't help anyway if we're on another channel?
 
+> [mabbas]=20
+> I totally agree, all the disassociation frame will happen in the new chan=
+nel that AP wont hear.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So any idea how to fix it? I'm not all that familiar with the MLME.
+
+johannes
+
+--=-GPaompsiEzKSto/HLnDO
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJfJNUAAoJEKVg1VMiehFYuvEQALrwVfMmq3W5ykwMsjGJclXe
+dNW70SVDySZ6cZqq6KNtoi1vJR/y3aU5QZNGfpEL6636iZuXApPA8i2vupFjNnWe
+/4v6thOjZ0b4mWe0pnaxFun4jAIUXBhNMkrSpVFquFKiJCnsPBf/U74l2wK3n8JE
+WLrBgtz6oiuu6NHS/SHFKdens8QvMTBqutSYXgXK9lNPuYr0E8at98dpCU2499/V
+0zakH1tk/xb2TZOFHo39bw2UzkqDD87GihUfZYxjIm2uBvOYX7YrSJHB0sSwpIFy
+5AuYuuj5CXz6PLbq3eg5AkslQyBPLnoSve6xb0gPO0tz616MShJYAx4ZlV2xao1S
+iXc8ogo0PXI+xQy/doyOxfxKNUx6K4JvGu2fxYuEgOPazoUxmiQ8cRdbsBtRwCx4
+kpl5lfGRkgQhPdjoYiOBts6gynlU5x+9dq1QcxnKeIyU9l/9l/SSCO6Drhnuz+Dp
+rDbAySXUnX+BUq5BSgYWzU57iFFEhmB3w1XAkkzA7ZNkYYbJXVDpKYNCY3svzOco
+O/mIP5PjdYNvp74Gkoe7f3g16EDKCwK67l/ZPp+tfMMNKCdIsxQlgxl4ATRdw11v
+APiLYae2HIaWcHEGJQDNSskD4jnz9mhGzzlN0BRPZ1PMUXklggNMqbpwcJM1NSrl
+ImShYucDol/Jdfnf9Eby
+=37Qq
+-----END PGP SIGNATURE-----
+
+--=-GPaompsiEzKSto/HLnDO--
+
