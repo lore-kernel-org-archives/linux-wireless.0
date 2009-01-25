@@ -1,62 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51428 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754417AbZAZVJe (ORCPT
+Received: from mail-ew0-f10.google.com ([209.85.219.10]:41980 "EHLO
+	mail-ew0-f10.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751768AbZAYLhx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 16:09:34 -0500
-Subject: Re: [RFC][RFT] mac80211 / mesh: Modularize Path Selection Protocol
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Florian Sesser <flomaillist@cosetrain.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <497E1B90.4060803@cosetrain.com> (sfid-20090126_215126_101930_ED89AC85)
-References: <497E1B90.4060803@cosetrain.com>
-	 (sfid-20090126_215126_101930_ED89AC85)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hWehwszuIQXubydToDTy"
-Date: Mon, 26 Jan 2009 22:09:10 +0100
-Message-Id: <1233004150.4533.35.camel@johannes.local> (sfid-20090126_220949_030151_DC921653)
-Mime-Version: 1.0
+	Sun, 25 Jan 2009 06:37:53 -0500
+Received: by ewy3 with SMTP id 3so425844ewy.13
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 03:37:51 -0800 (PST)
+Message-ID: <497C4F0C.3060908@tuffmail.co.uk> (sfid-20090125_123811_959925_8904D108)
+Date: Sun, 25 Jan 2009 11:37:48 +0000
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Tobias Doerffel <tobias.doerffel@gmail.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] ath5k: initial RFKILL support for Atheros 5xxx
+ cards
+References: <1232812567-11014-1-git-send-email-tobias.doerffel@gmail.com>
+In-Reply-To: <1232812567-11014-1-git-send-email-tobias.doerffel@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Tobias Doerffel wrote:
+> Hi,
+>
+> as announced here's a reworked patch for RFKILL support. It now features
+> actually reading RFKILL state from according GPIO. Furthermore it's not
+> a polled input device anymore (and thus does not depend on polled input device
+> support in kernel anymore) and handles interrupts instead. Everything for this
+> is in place, however it probably still needs some tweaking by someone else as
+> I don't have a physical rfkill switch with my netbook.
+>
+> The same applies for GPIO configuration (pin/polarity) which is read from
+> EEPROM. It at least works for me reliably but might not work on other machines.
+>
+> The LED patches are not included anymore as the radio LED seems to be controlled
+> automatically when changing RFKILL state in hardware.
+>
+> One note on behaviour: rfkill is enabled (i.e. radio disabled) in 3 cases
+> - interface is not up
+> - "0" is written to /sys/class/rfkill/rfkillX/state
+> - physical rf-switch switched off 
+>
+> As mentioned above, I can't guarantee the third case to actually work.
+>
+> When rfkill is enabled my netbook consumes about 0.8 watts less compared to
+> being up, associated and idle.
+>   
 
---=-hWehwszuIQXubydToDTy
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+How can I check if the ath5k device on my netbook will be able to
+support this?  I worry that if this works on my netbook, it is going to
+interact badly with the eeepc-laptop platform driver, which also has
+rfkill support. 
 
-On Mon, 2009-01-26 at 21:22 +0100, Florian Sesser wrote:
 
-> This is my first patch not only to the kernel, but to any open source
-> project, so please be gentle ;) I am open to suggestions for
-> improvement; please also remind me on any coding style or other errors
-> you may find.
+eeepc-laptop uses a somewhat unique mechanism.  It's a sort of
+platform-specific pci hotplug.  Here is my concern:
 
-If you haven't seen it,
-http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches
-contains some useful hints. I'll look over your patches later.
+- When an rfkill device is created, the rfkill core forces it into the
+default state (for that type of rfkill switch, e.g. WLAN).
 
-johannes
+- eeepc-laptop calls rfkill_set_default() on startup.  This effectively
+allows the global rfkill state to be preserved while the system is
+turned off, and restored on startup.
 
---=-hWehwszuIQXubydToDTy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Consider the case where the system starts up with rkfill enabled (i.e.
+radio disabled).  The ath5k PCI device will not exist.  The default
+rfkill state will be set to "radio disabled".
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+As a user of rfkill-input, I press the wireless toggle hotkey.  The
+global rfkill state changes to disabled (radio enabled).  All *existing*
+rfkill devices are switched to disabled (radio enabled).  The only
+rfkill device is eeepc-laptop; so this is disabled, and the PCI device
+appears...
 
-iQIcBAABAgAGBQJJfiZzAAoJEKVg1VMiehFYjJMP/212CYugFLcMy33AFTkaRJkM
-qVm28b0WeKTUFWBxY/U5bii3N/JZf8b8IO+jsbN/UZdDfkDNYL+1c7mX0UuN0JdC
-mhIyP0lh2fTBs8vvMcFVnOVe3eXg9+RkhxSGJHJQJer82LdpyabhwMk56CaQ/yO6
-S/RoYw3RpG++aFHpdAHiFWcmuswdA+hR23ZFWGuLmVkkc//W/YaAhPs9NxWUfr15
-BfgJQbdPYxC9KmkQpxUMV789yIyJtDRpJ24qGAmZ9CSyYudWd4EbxIIdmBFPwhm8
-IlzkeZPHMIiJOLY2veq3PxxFHaNmp112pRNeY92tFQQBrDY3u6RPiqzMlC3vZo7j
-Th/Soxt+p+/yDfrX9c8rlAlqRBLRM1N+uE6hYYV5K9bmkGVdWmTjyFTpKf6bj2W8
-6XKLn2XtZPekNZYPMP493rHSXLEeHW72VXIujaNklJQF8s0pzd9AvQxwVGsAtTCL
-AAFfAgKqDl4l+dnYoIBNBz2NdJ+asvthKiiDFwoGvX4MA6mNhUl1VrAY/Gc5Tjvt
-GEMILEPVkgkpJJ8O/o0+dFxVG47hLB2NOCyTpGG9ijL9MBtfV88QrkOGZ0tjRdgV
-AxYbw/aMcbdVzchs9USAKHuJYCYKDPUuLDKa//tsonQ4ZnN88PWR1Fjgwxasjyc7
-NkO3d/o/r5ztsDE3tsgJ
-=AhNt
------END PGP SIGNATURE-----
+When ath5k binds to the PCI device and creates it's rfkill device, it
+will inherit the *default* rfkill state, which was set on startup - to
+enabled (radio disabled).
 
---=-hWehwszuIQXubydToDTy--
-
+Thanks
+Alan
