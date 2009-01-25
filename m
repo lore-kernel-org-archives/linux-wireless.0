@@ -1,108 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34027 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752510AbZAGL2E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:28:04 -0500
-Message-Id: <20090107112654.907639495@atheros.com> (sfid-20090107_122810_014087_D8A20391)
-References: <20090107112346.369581673@atheros.com>
-Date: Wed, 07 Jan 2009 13:23:55 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 09/14] mac80211: 802.11w - Do not force Action frames to disable encryption
+Received: from bu3sch.de ([62.75.166.246]:55269 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750954AbZAYUGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 15:06:33 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: regulatory: Operation already in progress
+Date: Sun, 25 Jan 2009 21:05:37 +0100
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <200901251422.42616.mb@bu3sch.de> <20090125184517.GH22475@tesla> <20090125193656.GI22475@tesla>
+In-Reply-To: <20090125193656.GI22475@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901252105.37604.mb@bu3sch.de> (sfid-20090125_210650_584565_CA0AA6FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending out Action frames, allow ieee80211_tx_skb() to send them
-without enforcing do_not_encrypt. These frames will be encrypted if
-MFP has been negotiated.
+On Sunday 25 January 2009 20:36:56 Luis R. Rodriguez wrote:
+> On Sun, Jan 25, 2009 at 10:45:17AM -0800, Luis Rodriguez wrote:
+> > On Sun, Jan 25, 2009 at 10:41:38AM -0800, Michael Buesch wrote:
+> > > On Sunday 25 January 2009 19:21:07 Luis R. Rodriguez wrote:
+> > > > On Sun, Jan 25, 2009 at 05:22:42AM -0800, Michael Buesch wrote:
+> > > > > mb@quimby:~/kernel$ sudo iw reg set DE
+> > > > > command failed: Operation already in progress (-114)
+> > > > >
+> > > > > I wonder why this happens.
+> > > > > What I just did was install 2.6.28.2 and install today's compat-wireless.
+> > > > >
+> > > > > In dmesg I can see it succeeded once but it doesn't work anymore now.
+> > > > > [  973.992710] cfg80211: Calling CRDA for country: DE
+> > > > > [  973.998576] cfg80211: Regulatory domain changed to country: DE
+> > > > > [  973.998630]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> > > > > [  973.998691]  (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > > > > [  973.998738]  (5150000 KHz - 5255000 KHz @ 40000 KHz), (N/A, 2301 mBm)
+> > > > > [  973.998785]  (5470000 KHz - 5650000 KHz @ 40000 KHz), (N/A, 3000 mBm)
+> > > >
+> > > > Had you called twice?
+> > >
+> > > yeah, once manually with iw and once with hostapd.
+> > >
+> > > > If so we now tell userspace when its there by -EALREADY,
+> > > > we were just silently accepting two consecutive calls before.
+> > >
+> > > Well, but it makes hostapd fail.
+> > > I think it's a bit weird to throw and error code. In general most programs
+> > > silently return success early, if an operation was already done.
+> > 
+> > We can prevent to propagate -EALREADY to userspace -- sure, I'll cook
+> > up the patch.
+> 
+> Actually we could also patch hostapd to deal with -EALREADY as a success too.
+> Its either that or we have nl80211 return 0 instead of -EALREADY. Jouni, any
+> preference?
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
-
----
- net/mac80211/ht.c         |    6 +++---
- net/mac80211/mesh_hwmp.c  |    4 ++--
- net/mac80211/mesh_plink.c |    2 +-
- net/mac80211/spectmgmt.c  |    2 +-
- 4 files changed, 7 insertions(+), 7 deletions(-)
-
---- wireless-testing.orig/net/mac80211/ht.c	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/net/mac80211/ht.c	2009-01-07 13:08:01.000000000 +0200
-@@ -200,7 +200,7 @@ static void ieee80211_send_addba_request
- 	mgmt->u.action.u.addba_req.start_seq_num =
- 					cpu_to_le16(start_seq_num << 4);
- 
--	ieee80211_tx_skb(sdata, skb, 0);
-+	ieee80211_tx_skb(sdata, skb, 1);
- }
- 
- static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
-@@ -246,7 +246,7 @@ static void ieee80211_send_addba_resp(st
- 	mgmt->u.action.u.addba_resp.timeout = cpu_to_le16(timeout);
- 	mgmt->u.action.u.addba_resp.status = cpu_to_le16(status);
- 
--	ieee80211_tx_skb(sdata, skb, 0);
-+	ieee80211_tx_skb(sdata, skb, 1);
- }
- 
- static void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
-@@ -289,7 +289,7 @@ static void ieee80211_send_delba(struct 
- 	mgmt->u.action.u.delba.params = cpu_to_le16(params);
- 	mgmt->u.action.u.delba.reason_code = cpu_to_le16(reason_code);
- 
--	ieee80211_tx_skb(sdata, skb, 0);
-+	ieee80211_tx_skb(sdata, skb, 1);
- }
- 
- void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn)
---- wireless-testing.orig/net/mac80211/mesh_hwmp.c	2008-12-31 17:33:35.000000000 +0200
-+++ wireless-testing/net/mac80211/mesh_hwmp.c	2009-01-07 13:08:01.000000000 +0200
-@@ -149,7 +149,7 @@ static int mesh_path_sel_frame_tx(enum m
- 	pos += ETH_ALEN;
- 	memcpy(pos, &dst_dsn, 4);
- 
--	ieee80211_tx_skb(sdata, skb, 0);
-+	ieee80211_tx_skb(sdata, skb, 1);
- 	return 0;
- }
- 
-@@ -198,7 +198,7 @@ int mesh_path_error_tx(u8 *dst, __le32 d
- 	pos += ETH_ALEN;
- 	memcpy(pos, &dst_dsn, 4);
- 
--	ieee80211_tx_skb(sdata, skb, 0);
-+	ieee80211_tx_skb(sdata, skb, 1);
- 	return 0;
- }
- 
---- wireless-testing.orig/net/mac80211/mesh_plink.c	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/net/mac80211/mesh_plink.c	2009-01-07 13:08:01.000000000 +0200
-@@ -218,7 +218,7 @@ static int mesh_plink_frame_tx(struct ie
- 		memcpy(pos, &reason, 2);
- 	}
- 
--	ieee80211_tx_skb(sdata, skb, 0);
-+	ieee80211_tx_skb(sdata, skb, 1);
- 	return 0;
- }
- 
---- wireless-testing.orig/net/mac80211/spectmgmt.c	2009-01-07 13:07:38.000000000 +0200
-+++ wireless-testing/net/mac80211/spectmgmt.c	2009-01-07 13:08:01.000000000 +0200
-@@ -65,7 +65,7 @@ static void ieee80211_send_refuse_measur
- 			IEEE80211_SPCT_MSR_RPRT_MODE_REFUSED;
- 	msr_report->u.action.u.measurement.msr_elem.type = request_ie->type;
- 
--	ieee80211_tx_skb(sdata, skb, 0);
-+	ieee80211_tx_skb(sdata, skb, 1);
- }
- 
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+I think returning an error doesn't make sense.
+All the set-regulatory nl80211 command does is "set the domain to X". So why does it
+fail, if it was already X before the call. All the caller wants is to select domain X.
+That's what he gets in any case. Whether it was set to X or not before the call shouldn't matter.
+It's also confusing to get a "command failed" from iw.
 
 -- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings, Michael.
