@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:39989 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752959AbZAIMZu (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2253 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935AbZAYV5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 07:25:50 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v2 10/11] ath9k: fix null pointer dereference in ani monitor code
-Date: Fri,  9 Jan 2009 13:24:27 +0100
-Message-Id: <1231503868-29226-11-git-send-email-juhosg@openwrt.org> (sfid-20090109_132556_039446_2C7520C3)
-In-Reply-To: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
-References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
+	Sun, 25 Jan 2009 16:57:04 -0500
+Date: Sun, 25 Jan 2009 16:56:46 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: support LED's on emachines E510 notebok
+Message-ID: <20090125215646.GA8247@hash.localnet> (sfid-20090125_225712_076061_A6F126CC)
+References: <1232914461-19607-1-git-send-email-tuliom@gmail.com> <20090125212044.GA3592@hash.localnet> <d94c510d0901251333u3d5baec5nb0d51977fd82b620@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d94c510d0901251333u3d5baec5nb0d51977fd82b620@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In 'ath9k_ani_reset' the 'ahp->ah_curani' will be initialized only
-if 'DO_ANI(ah)' true. In 'ath9k_hw_ani_monitor' we are using
-'ahp->ah_curani' unconditionally, and it will cause a NULL pointer
-dereference on AR9100.
+On Sun, Jan 25, 2009 at 10:33:54PM +0100, Tulio Magno Quites Machado Filho wrote:
+> Sorry... I haven't seen that.
+> After the changes, should I submit them as a new mail? And to all lists?
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/ani.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Sure, just resend the whole, corrected patch to everyone.  For small 
+changes like this, you can make a note of it before the diffstat like
+so:
 
-diff --git a/drivers/net/wireless/ath9k/ani.c b/drivers/net/wireless/ath9k/ani.c
-index 4dd0860..42197ff 100644
---- a/drivers/net/wireless/ath9k/ani.c
-+++ b/drivers/net/wireless/ath9k/ani.c
-@@ -551,6 +551,9 @@ void ath9k_hw_ani_monitor(struct ath_hal *ah,
- 	struct ar5416AniState *aniState;
- 	int32_t listenTime;
- 
-+	if (!DO_ANI(ah))
-+		return;
-+
- 	aniState = ahp->ah_curani;
- 	ahp->ah_stats.ast_nodestats = *stats;
- 
-@@ -610,9 +613,6 @@ void ath9k_hw_ani_monitor(struct ath_hal *ah,
- 		aniState->cckPhyErrCount = cckPhyErrCnt;
- 	}
- 
--	if (!DO_ANI(ah))
--		return;
--
- 	if (aniState->listenTime > 5 * ahp->ah_aniPeriod) {
- 		if (aniState->ofdmPhyErrCount <= aniState->listenTime *
- 		    aniState->ofdmTrigLow / 1000 &&
+   Signed-off-by: ...
+   ---
+   
+   v2: fixed order of pci_ids.h
+   
+   drivers/net/wireless/ath5k/base.c |    8 ++++++--
+   include/linux/pci_ids.h           |    2 ++
+   2 files changed, 8 insertions(+), 2 deletions(-)
+   
+   diff ...
+
+Anything between that first '---' and the patch gets thrown away when
+the patch is applied, but it helps upstream (John) know what changed.
+
 -- 
-1.5.3.2
+Bob Copeland %% www.bobcopeland.com
 
