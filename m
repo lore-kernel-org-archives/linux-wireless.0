@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:49026 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755185AbZAXUjO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 15:39:14 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 12:39:14 -0800
-Date: Sat, 24 Jan 2009 12:38:36 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Alina Friedrichsen <x-alina@gmx.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: Generic TSF debugging
-Message-ID: <20090124203836.GC22475@tesla> (sfid-20090124_213917_189844_00812097)
-References: <20090124060959.50440@gmx.net> <1232806359.4036.3.camel@johannes.local> <1232807228.4036.12.camel@johannes.local>
+Received: from mail-ew0-f10.google.com ([209.85.219.10]:50357 "EHLO
+	mail-ew0-f10.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756112AbZAYKmE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 05:42:04 -0500
+Received: by ewy3 with SMTP id 3so409508ewy.13
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 02:42:01 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH] wireless-regdb: add example spec file
+Date: Sun, 25 Jan 2009 11:41:26 +0100
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1232752577-24011-1-git-send-email-lrodriguez@atheros.com> <200901241227.48939.helmut.schaa@gmail.com> <20090124203746.GB22475@tesla>
+In-Reply-To: <20090124203746.GB22475@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232807228.4036.12.camel@johannes.local>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200901251141.27669.helmut.schaa@gmail.com> (sfid-20090125_114221_601069_FCF0A682)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 24, 2009 at 06:27:08AM -0800, Johannes Berg wrote:
-> On Sat, 2009-01-24 at 15:12 +0100, Johannes Berg wrote:
-> > On Sat, 2009-01-24 at 07:09 +0100, Alina Friedrichsen wrote:
-> > > This patch enables low-level driver independent debugging of the TSF
-> > > and remove the driver specific things of ath5k and ath9k from the
-> > > debugfs.
+Am Samstag, 24. Januar 2009 schrieb Luis R. Rodriguez:
+> On Sat, Jan 24, 2009 at 03:27:48AM -0800, Helmut Schaa wrote:
+> > Am Samstag, 24. Januar 2009 schrieb Luis R. Rodriguez:
+> > > This is a simple example spec file which can be used
+> > > by RPM distributions. Note that the man page isn't yet
+> > > installed as it has not yet been commited.
+> > >
+> > > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > > ---
 > > 
-> > NACK.
+> > [...]
 > > 
-> > You still haven't explained why you need set_tsf support and why it
-> > should be a generic mac80211 functionality.
+> > > +%install
+> > > +install -m 755 -d %buildroot/%crda_lib
+> > > +install -m 644 regulatory.bin %buildroot/%{crda_lib}/regulatory.bin
+> > 
+> > Why not make use of "make DESTDIR=%buildroot install" here?
 > 
-> Ok, I guess you have, I'm still not sure it's the best approach.
-> 
-> Other opinions?
+> Since its in the spec file you have direct control over that, what would
+> be best is to get wireless-regdb makefile to use DESTDIR and then just
+> have the spec file call make install. I sent the patch for the first part
+> already, so the spec file can be changed once that goes in.
 
-Seems reasonable to me instead of having different drivers implement different
-APIs/debugfs solutions.
+Yes, I saw your patch that allows DESTDIR usage and was just wondering why
+not make use of it.
 
-  Luis
+Thanks,
+Helmut
