@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:12148 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827AbZAKO63 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2009 09:58:29 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so3755754fgg.17
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2009 06:58:28 -0800 (PST)
-Message-ID: <3ace41890901110658x663aedabi6720d22b57f06b2d@mail.gmail.com> (sfid-20090111_155834_303641_F84B1361)
-Date: Sun, 11 Jan 2009 14:58:28 +0000
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Ari Entlich" <lmage11@twcny.rr.com>
-Subject: Re: Help debugging unexpected disassociations?
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1231649926.21931.5.camel@g4mdd.entnet>
+Received: from bu3sch.de ([62.75.166.246]:40609 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750721AbZAYSm7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 13:42:59 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: Re: regulatory: Operation already in progress
+Date: Sun, 25 Jan 2009 19:41:38 +0100
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <200901251422.42616.mb@bu3sch.de> <20090125182107.GG22475@tesla>
+In-Reply-To: <20090125182107.GG22475@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20090110021351.MHLV4.64591.root@hrndva-web24-z02>
-	 <3ace41890901100516mc2e1ee1h42c4f67b552f7d73@mail.gmail.com>
-	 <1231649926.21931.5.camel@g4mdd.entnet>
+Message-Id: <200901251941.38228.mb@bu3sch.de> (sfid-20090125_194304_480687_59B3B32D)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 11, 2009 at 4:58 AM, Ari Entlich <lmage11@twcny.rr.com> wrote:
-<snipped>
-> Most people want to improve the software they write. If they didn't,
-> posting to this mailing list would be pointless.
+On Sunday 25 January 2009 19:21:07 Luis R. Rodriguez wrote:
+> On Sun, Jan 25, 2009 at 05:22:42AM -0800, Michael Buesch wrote:
+> > mb@quimby:~/kernel$ sudo iw reg set DE
+> > command failed: Operation already in progress (-114)
+> > 
+> > I wonder why this happens.
+> > What I just did was install 2.6.28.2 and install today's compat-wireless.
+> > 
+> > In dmesg I can see it succeeded once but it doesn't work anymore now.
+> > [  973.992710] cfg80211: Calling CRDA for country: DE
+> > [  973.998576] cfg80211: Regulatory domain changed to country: DE
+> > [  973.998630]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> > [  973.998691]  (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > [  973.998738]  (5150000 KHz - 5255000 KHz @ 40000 KHz), (N/A, 2301 mBm)
+> > [  973.998785]  (5470000 KHz - 5650000 KHz @ 40000 KHz), (N/A, 3000 mBm)
+> 
+> Had you called twice?
 
-This exchange is not really very productive. While most like to
-improve the software they write, a piece of software does not exist to
-serve the need of only one person (you). You are just *one* of *many*
-users. If you try to make yourself difficult and try to take up too
-much time of others, *in proportion to other users*, you will get
-ignored. Time is just better spent on other more rewarding or urgent
-matters than serving the need of one person.
+yeah, once manually with iw and once with hostapd.
+
+> If so we now tell userspace when its there by -EALREADY, 
+> we were just silently accepting two consecutive calls before.
+
+Well, but it makes hostapd fail.
+I think it's a bit weird to throw and error code. In general most programs
+silently return success early, if an operation was already done.
+
+-- 
+Greetings, Michael.
