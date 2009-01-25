@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:49533 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752612AbZAILf5 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35083 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752062AbZAYQX4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 06:35:57 -0500
-Received: by bwz14 with SMTP id 14so28777682bwz.13
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2009 03:35:55 -0800 (PST)
-Message-ID: <41960ccf0901090335s3db5dc58x80047ea3085a6838@mail.gmail.com> (sfid-20090109_123601_559829_991F65C7)
-Date: Fri, 9 Jan 2009 12:35:54 +0100
-From: "Lorenzo Nava" <navalorenx@gmail.com>
-To: "Michael Buesch" <mb@bu3sch.de>
-Subject: Re: [b43] opensource firmware
-Cc: "Francesco Gringoli" <francesco.gringoli@ing.unibs.it>,
-	linux-wireless@vger.kernel.org,
-	"David Woodhouse" <dwmw2@infradead.org>
-In-Reply-To: <200901091206.09736.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de>
-	 <9F70A0D3-6334-45FB-9DAF-263FE89C847E@ing.unibs.it>
-	 <200901091206.09736.mb@bu3sch.de>
+	Sun, 25 Jan 2009 11:23:56 -0500
+Subject: Re: [PATCH 10/12] cfg80211: Allow for strict regulatory settings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1232665554-26132-11-git-send-email-lrodriguez@atheros.com>
+References: <1232665554-26132-1-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-2-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-4-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-5-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-6-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-7-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-8-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-9-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-10-git-send-email-lrodriguez@atheros.com>
+	 <1232665554-26132-11-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+qtGJTZ4N8dIbjQ9ROJN"
+Date: Sun, 25 Jan 2009 17:23:46 +0100
+Message-Id: <1232900626.3952.8.camel@johannes.local> (sfid-20090125_172400_312137_2959AD86)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Yep, it doesn't work.
-> So I'll first try to (partially) merge it into my git repository and give it an extra review.
 
-Can you tell us which kind of problem did you have?
+--=-+qtGJTZ4N8dIbjQ9ROJN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thank
+On Thu, 2009-01-22 at 15:05 -0800, Luis R. Rodriguez wrote:
+> This allows drivers to request strict regulatory settings to
+> be applied to its devices. This is desirable for devices where
+> proper calibration and compliance can only be gauranteed for
 
-regards
+You typoed "guaranteed" all over :)
 
-Lorenzo.
+johannes
 
->
-> --
-> Greetings, Michael.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+--=-+qtGJTZ4N8dIbjQ9ROJN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJfJIQAAoJEKVg1VMiehFY2xMP/1bwBNWU3o1gb4Mp2uZgup+C
+TEsjt5dVK4bMJgIrTn8uKfET34IVj69c85kAdngIO3Rii8zs/0ReHjxLDp9nn50V
+A2MxOI2+/LHCGwiv/ZCKnXDvAudCBTsnKeeTUdjay6C/t80HcFeQ/tjtgXHziRmB
+40F2ddKxg5rn4dlnJcELzhiXHJiPoQGmXPxikQDBanpyCdKn/wk9ymdyM/ZApS9F
+Mab+s6L1GcQH3jUIfPhrMl/GsaevLf8Z/2NWedUE1ml2yUN9DAfbrwIIJ25sllXI
+OAD8hswaDATSw6VPW2xBTNcmxgBTRswlL9ivUUQFQtxvdBWJ6b0+6va7pQxLWPfp
+W5PxYvl+mtJ/7kDbBlgUmeyhQRz77bZLurDhID0KVnt3sgxmNXnyvyO8Pghr7FvJ
+y5sjW0nWmn0bLjIjLVjEsOyu2KM6Tg2yrqe4j4lYA0/3Q5nKSZR0+6cMbpnbYGw2
+vjPVQR/PzXNdvz5d5PpvH7QspH0GmGu8t4hbgV3AD+UttlVU+4xC9O3ZPsYh5r2R
+DzyOsbPXqwU4aiAYZbsAatlzJQH3gYQ6Egx81rubgT/PVoxPfpuUeO+tie2ipPoh
+Wtc1LodZXgqyvk7Pw/3A8r23tyq2X8Ga7vwqoRsGUfTwcZiote1BzZ4hJlnpwpHj
+6gQ3yWk7rMDSJBJJTT3l
+=jlc+
+-----END PGP SIGNATURE-----
+
+--=-+qtGJTZ4N8dIbjQ9ROJN--
+
