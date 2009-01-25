@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:34856 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751547AbZAKRKZ (ORCPT
+Received: from shawmail.shawcable.com ([64.59.128.220]:20546 "EHLO
+	mail.shawcable.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053AbZAYV2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2009 12:10:25 -0500
-Message-ID: <496A27FA.5030508@lwfinger.net> (sfid-20090111_181100_563123_30D8FBDE)
-Date: Sun, 11 Jan 2009 11:10:18 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jayant Sane <jayant_sane@hotmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Newbie question on 2.6.28-rc8-wl
-References: <BLU129-W39120C9D5D733AC53C210180DB0@phx.gbl>
-In-Reply-To: <BLU129-W39120C9D5D733AC53C210180DB0@phx.gbl>
-Content-Type: text/plain; charset=windows-1252
+	Sun, 25 Jan 2009 16:28:13 -0500
+Received: from tad.lat (unknown [216.113.200.202])
+	by raf.campcoop.com (Postfix) with ESMTPSA id 1A562BFABE
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 13:11:23 -0800 (PST)
+Received: from jablko by tad.lat with local (Exim 4.69)
+	(envelope-from <ms419@freezone.co.uk>)
+	id 1LRCMy-0001lg-8b
+	for linux-wireless@vger.kernel.org; Sun, 25 Jan 2009 13:18:16 -0800
+Subject: [PATCH] compat-wireless-old redefinition of
+	'ieee80211_install_qdisc'
+From: Jack Bates <ms419@freezone.co.uk>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Sun, 25 Jan 2009 13:18:15 -0800
+Message-Id: <1232918295.3448.9.camel@tad.lat> (sfid-20090125_222817_426053_CB08333C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jayant Sane wrote:
-> Bear with a miserable newbie... 
->  
-> I have been asked to compile against the 2.6.28-rc8-wl version of kernel (as printed by uname -r). How and where can I get this specific kernel version from? 
->  
-> I figured how to get the patch for 2.6.28-rc8 but the "-wl" part stumps me. 
+http://cgi.sfu.ca/~jdbates/tmp/linux/200901250/patch
 
-That is the kernel from the wireless-testing git tree. The only way to
-get it is to install the git package from your distro and issue the
-command
+I installed Debian Lenny on my new Eee PC 1000HA this weekend, and to
+get the Atheros AR242x working, I compiled the compat-wireless-old
+package.
 
-git clone \
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+I installed the Debian linux-headers-2.6.26-1-686 package, version
+2.6.26-13 but got errors such as this compiling compat-wireless-old:
 
+[...]/wme.c:594: error: redefinition of 'ieee80211_install_qdisc'
+[...]/wme.h:39: error: previous definition of 'ieee80211_install_qdisc'
+was here
 
-Be aware that the download is roughly 200 MB. In addition, the above
-will get you 2.6.28-wl. If you really need -rc8 (which I doubt), then
-you will need to issue the additional command
-
-git checkout v2.6.28-rc8
-
-The -wl part is not needed here.
-
-Larry
-
+After applying the linked patch to wme.c, I successfully compiled
+compat-wireless-old, and am sending this message from my Eee PC with
+wireless : )
