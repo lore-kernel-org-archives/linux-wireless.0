@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4925 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754802AbZAHSSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 13:18:22 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:41784 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781AbZAYWqM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 17:46:12 -0500
+Received: by ewy14 with SMTP id 14so80987ewy.13
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 14:46:09 -0800 (PST)
+From: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/11] iwlwifi driver updates
-Date: Thu,  8 Jan 2009 10:19:51 -0800
-Message-Id: <1231438802-10991-1-git-send-email-reinette.chatre@intel.com> (sfid-20090108_191827_531153_1D30981F)
-In-Reply-To: <>
-References: <>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+Subject: [PATCH] ath5k: support LED's on emachines E510 notebook
+Date: Sun, 25 Jan 2009 23:54:25 +0100
+Message-Id: <1232924065-28556-1-git-send-email-tuliom@gmail.com> (sfid-20090125_234617_914545_D859BF8B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series continues with the cleanup of 3945. It also contains fixes 
-for the following bugs:
-http://bugzilla.kernel.org/show_bug.cgi?id=11326
-  "iwl3945: Error: Response NULL in 'REPLY_ADD_STA', followed by fault"
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1872
-  "can not connect with WPA2 enabled AP"
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1873
-  "IBSS Cell can be established but can't work, lose more than 50% ping
-   packets and scp can't work either"
+Add vendor ID for AMBIT and use it to set the ath5k LED gpio.
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12377 appears to be a duplicate
-of bug 11326, so patch 7 will fix both.
+base.c:
+Changes-licensed-under: 3-Clause-BSD
 
-We also update the copyright year.
+Signed-off-by: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+Acked-by: Bob Copeland <me@bobcopeland.com>
+---
 
-[PATCH 01/11] iwl3945: kill hw_params.tx_ant_num
-[PATCH 02/11] iwl3945: kill iwl3945_rx_queue_restock
-[PATCH 03/11] iwl3945: kill iwl3945_rx_queue_space
-[PATCH 04/11] iwl3945: kill iwl3945_x2_queue_used
-[PATCH 05/11] iwl3945: remove double defined 3945 tfd structures
-[PATCH 06/11] iwl3945: use hw_params.rx_buf_size
-[PATCH 07/11] iwlwifi: remove CMD_WANT_SKB flag if send_cmd_sync failure
-[PATCH 08/11] iwl3945: Change crypto parameter name
-[PATCH 09/11] iwlwifi: Fix get_cmd_string() for REPLY_3945_RX
-[PATCH 10/11] iwl3945: Fix iwl3945_init_drv()
-[PATCH 11/11] iwlwifi: update copyright year to 2009
+v2: fixed order of pci_ids.h
 
+ drivers/net/wireless/ath5k/base.c |    8 ++++++--
+ include/linux/pci_ids.h           |    2 ++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-Thank you
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 57971a9..180518c 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2626,8 +2626,12 @@ ath5k_init_leds(struct ath5k_softc *sc)
+ 		sc->led_pin = 1;
+ 		sc->led_on = 1;  /* active high */
+ 	}
+-	/* Pin 3 on Foxconn chips used in Acer Aspire One (0x105b:e008) */
+-	if (pdev->subsystem_vendor == PCI_VENDOR_ID_FOXCONN) {
++	/*
++	 * Pin 3 on Foxconn chips used in Acer Aspire One (0x105b:e008) and
++	 * in emachines notebooks with AMBIT subsystem.
++	 */
++	if (pdev->subsystem_vendor == PCI_VENDOR_ID_FOXCONN ||
++	    pdev->subsystem_vendor == PCI_VENDOR_ID_AMBIT) {
+ 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
+ 		sc->led_pin = 3;
+ 		sc->led_on = 0;  /* active low */
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 02e6046..42cc884 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1967,6 +1967,8 @@
+ 
+ #define PCI_VENDOR_ID_SAMSUNG		0x144d
+ 
++#define PCI_VENDOR_ID_AMBIT		0x1468
++
+ #define PCI_VENDOR_ID_MYRICOM		0x14c1
+ 
+ #define PCI_VENDOR_ID_TITAN		0x14D2
+-- 
+1.6.0.2
 
-Reinette
