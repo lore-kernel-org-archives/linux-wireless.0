@@ -1,40 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:33794 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752647AbZAEUPM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 15:15:12 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 12:15:12 -0800
-Date: Mon, 5 Jan 2009 12:15:09 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Joseph Cheek <joseph@cheek.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] 2.6.27 with compat-wireless-2008-12-31 stops
-	transmitting every 2-3 minutes
-Message-ID: <20090105201509.GI6834@tesla> (sfid-20090105_211518_221992_B47699DB)
-References: <495C7640.8060806@cheek.com> <20090105170432.GA6834@tesla> <49624B10.70400@cheek.com> <20090105181250.GD6834@tesla> <496263BC.5020707@cheek.com> <20090105195124.GF6834@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090105195124.GF6834@tesla>
+Received: from pD9E7DD47.dip.t-dialin.net ([217.231.221.71]:53745 "EHLO
+	apo2k4.ath.cx" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753247AbZAYBHa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2009 20:07:30 -0500
+Received: from lucien (unknown [10.8.1.2])
+	by apo2k4.ath.cx (Postfix) with ESMTPA id E86CE150076
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 02:07:27 +0100 (CET)
+Date: Sun, 25 Jan 2009 02:07:27 +0100
+From: Valentin <apo@apo2k4.ath.cx>
+To: linux-wireless@vger.kernel.org
+Subject: Fw: [linux-wireless] Re: p54 + ISL3887 + master mode?
+Message-ID: <20090125020727.544a6819@lucien> (sfid-20090125_020737_198414_A37CA60F)
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/X62VAW74fxqTsiDiHIZIJ79";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 05, 2009 at 11:51:24AM -0800, Luis Rodriguez wrote:
-> On Mon, Jan 05, 2009 at 11:47:08AM -0800, Joseph Cheek wrote:
-> > Is this page up to date?  I found the latest 802.11n NIC that I could
-> > find for my machine...
-> >
-> > http://wireless.kernel.org/en/users/Drivers/ath9k#ProductsintheretailmarketcontainingAtheros11nsolutions
-> >
-> > I bought my card after specifically consulting this page.
-> 
-> Yes.
+--Sig_/X62VAW74fxqTsiDiHIZIJ79
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Just FYI the Bluetooth coexistance stuff seems to be a feature of at least
-AR9280 revision 10 and later so if you have an older card than you don't have
-BT coexistance, at least from what I can tell.
+> On Sat, 24 Jan 2009 16:51:25 +0100
+> Artur Skawina <art.08.09@gmail.com> wrote:
+>=20
+> > > you probably want a kernel w/ at least this=20
+> > > http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=
+=3Dcommit;h=3De5ea92a7528d304e8e327d0d261653e98b163e8a
+> > > hence 2.6.29+ or even newer to get the other p54 fixes.
+> >=20
+> > meant 2.6.28+, of course.
+>=20
+> Right, I'm going to try that. Thanks :)
 
-  Luis
+That did help, thanks :) But it's not working completely yet:
+
+When I start hostapd, it create a mon.wlan# interface and sets wlan#
+into master mode, but other boxes don't see the network. Here's
+hostapd's output:
+
+Configuration file: .conf
+ctrl_interface_group=3D0
+Opening raw packet socket for ifindex 209
+BSS count 1, BSSID mask ff:ff:ff:ff:ff:ff (0 bits)
+SIOCGIWRANGE: WE(compiled)=3D22 WE(source)=3D21 enc_capa=3D0xf
+nl80211: Added 802.11b mode based on 802.11g information
+Allowed channel: mode=3D1 chan=3D1 freq=3D2412 MHz max_tx_power=3D27 dBm
+...
+Allowed channel: mode=3D0 chan=3D11 freq=3D2462 MHz max_tx_power=3D27 dBm
+RATE[0] rate=3D10 flags=3D0x6
+RATE[1] rate=3D20 flags=3D0x6
+RATE[2] rate=3D55 flags=3D0x4
+RATE[3] rate=3D110 flags=3D0x4
+Passive scanning not supported
+Flushing old station entries
+Deauthenticate all stations
+Using interface wlan1 with hwaddr ... and ssid '...'
+SSID - hexdump_ascii(len=3D6):
+...
+PSK (ASCII passphrase) - hexdump_ascii(len=3D13):
+...
+PSK (from passphrase) - hexdump(len=3D32): ...
+WPA: group state machine entering state GTK_INIT (VLAN-ID 0)
+GMK - hexdump(len=3D32): [REMOVED]
+GTK - hexdump(len=3D32): [REMOVED]
+WPA: group state machine entering state SETKEYSDONE (VLAN-ID 0)
+Failed to set beacon head/tail
+wlan1: Setup of interface done.
+
+The only interesting part here seems to be "Failed to set beacon
+head/tail", but I can't find anything helpful about that on google.
+
+This is my hostapd config:
+
+interface=3Dwlan1
+driver=3Dnl80211
+logger_syslog=3D-1
+logger_syslog_level=3D1
+logger_stdout=3D-1
+logger_stdout_level=3D0
+dump_file=3D/tmp/hostapd.dump
+ctrl_interface=3D/var/run/hostapd
+ctrl_interface_group=3D0
+auth_algs=3D3
+ssid=3D...
+wpa=3D2
+wpa_passphrase=3D...
+wpa_key_mgmt=3DWPA-PSK
+wpa_pairwise=3DTKIP CCMP
+
+
+Any new ideas? Sorry if my questions are stupid...
+
+--Valentin
+
+
+--Sig_/X62VAW74fxqTsiDiHIZIJ79
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkl7u08ACgkQ22z6WcGtDs+8eQCgtrEra3g02NHwSxATqefClIBE
+gQ0AnAsqtZHuso08uRbiPnx3IySNbR9x
+=BnNy
+-----END PGP SIGNATURE-----
+
+--Sig_/X62VAW74fxqTsiDiHIZIJ79--
