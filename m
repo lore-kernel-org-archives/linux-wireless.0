@@ -1,186 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:51531 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751376AbZA3R1c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 12:27:32 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 09:27:32 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH v4] cfg80211: add get reg command
-Date: Fri, 30 Jan 2009 09:26:42 -0800
-Message-ID: <1233336402-29156-1-git-send-email-lrodriguez@atheros.com> (sfid-20090130_182737_275687_BDE0D65A)
+Received: from mail.gmx.net ([213.165.64.20]:40710 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751812AbZAYOGC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 09:06:02 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 25 Jan 2009 15:06:00 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090125140600.136270@gmx.net> (sfid-20090125_150624_896319_493FFCEE)
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: [PATCH] b43: Accessing the TSF via mac80211
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This lets userspace request to get the currently set
-regulatory domain.
+This allows the mac80211 high level code to access the TSF. This is e.g=
+=2E needed for BSSID merges in the IBSS mode.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+The second version adds locking and removes the now unnecessary debugfs=
+ entries.
+
+Thanks to Michael Buesch! :)
+
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
 ---
-
-This is rebased on top of the new inject v6, which doesn't add
-stuff to nl80211 now. Offsets change by 1 line.
-
- include/linux/nl80211.h |    4 ++
- net/wireless/nl80211.c  |   81 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/reg.c      |    2 +-
- net/wireless/reg.h      |    2 +
- 4 files changed, 88 insertions(+), 1 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 76aae3d..4bc2704 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -113,6 +113,8 @@
-  * @NL80211_CMD_SET_BSS: Set BSS attributes for BSS identified by
-  *	%NL80211_ATTR_IFINDEX.
-  *
-+ * @NL80211_CMD_GET_REG: ask the wireless core to send us its currently set
-+ * 	regulatory domain.
-  * @NL80211_CMD_SET_REG: Set current regulatory domain. CRDA sends this command
-  *	after being queried by the kernel. CRDA replies by sending a regulatory
-  *	domain structure which consists of %NL80211_ATTR_REG_ALPHA set to our
-@@ -188,6 +190,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_SET_MGMT_EXTRA_IE,
- 
-+	NL80211_CMD_GET_REG,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e69da8d..d452396 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2093,6 +2093,81 @@ static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
- 
- #undef FILL_IN_MESH_PARAM_IF_SET
- 
-+static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+diff -urN wireless-testing.orig/drivers/net/wireless/b43/debugfs.c wire=
+less-testing/drivers/net/wireless/b43/debugfs.c
+--- wireless-testing.orig/drivers/net/wireless/b43/debugfs.c	2009-01-25=
+ 06:12:13.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/debugfs.c	2009-01-25 14:3=
+8:30.000000000 +0100
+@@ -367,34 +367,6 @@
+ 	return 0;
+ }
+=20
+-/* wl->irq_lock is locked */
+-static ssize_t tsf_read_file(struct b43_wldev *dev,
+-			     char *buf, size_t bufsize)
+-{
+-	ssize_t count =3D 0;
+-	u64 tsf;
+-
+-	b43_tsf_read(dev, &tsf);
+-	fappend("0x%08x%08x\n",
+-		(unsigned int)((tsf & 0xFFFFFFFF00000000ULL) >> 32),
+-		(unsigned int)(tsf & 0xFFFFFFFFULL));
+-
+-	return count;
+-}
+-
+-/* wl->irq_lock is locked */
+-static int tsf_write_file(struct b43_wldev *dev,
+-			  const char *buf, size_t count)
+-{
+-	u64 tsf;
+-
+-	if (sscanf(buf, "%llu", (unsigned long long *)(&tsf)) !=3D 1)
+-		return -EINVAL;
+-	b43_tsf_write(dev, tsf);
+-
+-	return 0;
+-}
+-
+ static ssize_t txstat_read_file(struct b43_wldev *dev,
+ 				char *buf, size_t bufsize)
+ {
+@@ -691,7 +663,6 @@
+ B43_DEBUGFS_FOPS(mmio16write, NULL, mmio16write__write_file, 1);
+ B43_DEBUGFS_FOPS(mmio32read, mmio32read__read_file, mmio32read__write_=
+file, 1);
+ B43_DEBUGFS_FOPS(mmio32write, NULL, mmio32write__write_file, 1);
+-B43_DEBUGFS_FOPS(tsf, tsf_read_file, tsf_write_file, 1);
+ B43_DEBUGFS_FOPS(txstat, txstat_read_file, NULL, 0);
+ B43_DEBUGFS_FOPS(restart, NULL, restart_write_file, 1);
+ B43_DEBUGFS_FOPS(loctls, loctls_read_file, NULL, 0);
+@@ -805,7 +776,6 @@
+ 	ADD_FILE(mmio16write, 0200);
+ 	ADD_FILE(mmio32read, 0600);
+ 	ADD_FILE(mmio32write, 0200);
+-	ADD_FILE(tsf, 0600);
+ 	ADD_FILE(txstat, 0400);
+ 	ADD_FILE(restart, 0200);
+ 	ADD_FILE(loctls, 0400);
+@@ -834,7 +804,6 @@
+ 	debugfs_remove(e->file_mmio16write.dentry);
+ 	debugfs_remove(e->file_mmio32read.dentry);
+ 	debugfs_remove(e->file_mmio32write.dentry);
+-	debugfs_remove(e->file_tsf.dentry);
+ 	debugfs_remove(e->file_txstat.dentry);
+ 	debugfs_remove(e->file_restart.dentry);
+ 	debugfs_remove(e->file_loctls.dentry);
+diff -urN wireless-testing.orig/drivers/net/wireless/b43/debugfs.h wire=
+less-testing/drivers/net/wireless/b43/debugfs.h
+--- wireless-testing.orig/drivers/net/wireless/b43/debugfs.h	2009-01-25=
+ 06:12:13.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/debugfs.h	2009-01-25 14:3=
+9:33.000000000 +0100
+@@ -46,7 +46,6 @@
+ 	struct b43_dfs_file file_mmio16write;
+ 	struct b43_dfs_file file_mmio32read;
+ 	struct b43_dfs_file file_mmio32write;
+-	struct b43_dfs_file file_tsf;
+ 	struct b43_dfs_file file_txstat;
+ 	struct b43_dfs_file file_txpower_g;
+ 	struct b43_dfs_file file_restart;
+diff -urN wireless-testing.orig/drivers/net/wireless/b43/main.c wireles=
+s-testing/drivers/net/wireless/b43/main.c
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-01-25 06=
+:12:13.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-01-25 14:35:5=
+1.000000000 +0100
+@@ -3177,6 +3177,45 @@
+ 	return 0;
+ }
+=20
++static u64 b43_op_get_tsf(struct ieee80211_hw *hw)
 +{
-+	struct sk_buff *msg;
-+	void *hdr = NULL;
-+	struct nlattr *nl_reg_rules;
-+	unsigned int i;
-+	int err = -EINVAL;
++	struct b43_wl *wl =3D hw_to_b43_wl(hw);
++	unsigned long flags;
++	struct b43_wldev *dev;
++	u64 tsf;
 +
-+	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&wl->mutex);
++	spin_lock_irqsave(&wl->irq_lock, flags);
++	dev =3D wl->current_dev;
 +
-+	if (!cfg80211_regdomain)
-+		goto out;
++	if(dev && (b43_status(dev) >=3D B43_STAT_INITIALIZED))
++		b43_tsf_read(dev, &tsf);
++	else
++		tsf =3D 0;
 +
-+	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-+	if (!msg) {
-+		err = -ENOBUFS;
-+		goto out;
-+	}
++	spin_unlock_irqrestore(&wl->irq_lock, flags);
++	mutex_unlock(&wl->mutex);
 +
-+	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
-+			     NL80211_CMD_GET_REG);
-+	if (!hdr)
-+		goto nla_put_failure;
-+
-+	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2,
-+		cfg80211_regdomain->alpha2);
-+
-+	nl_reg_rules = nla_nest_start(msg, NL80211_ATTR_REG_RULES);
-+	if (!nl_reg_rules)
-+		goto nla_put_failure;
-+
-+	for (i = 0; i < cfg80211_regdomain->n_reg_rules; i++) {
-+		struct nlattr *nl_reg_rule;
-+		const struct ieee80211_reg_rule *reg_rule;
-+		const struct ieee80211_freq_range *freq_range;
-+		const struct ieee80211_power_rule *power_rule;
-+
-+		reg_rule = &cfg80211_regdomain->reg_rules[i];
-+		freq_range = &reg_rule->freq_range;
-+		power_rule = &reg_rule->power_rule;
-+
-+		nl_reg_rule = nla_nest_start(msg, i);
-+		if (!nl_reg_rule)
-+			goto nla_put_failure;
-+
-+		NLA_PUT_U32(msg, NL80211_ATTR_REG_RULE_FLAGS,
-+			reg_rule->flags);
-+		NLA_PUT_U32(msg, NL80211_ATTR_FREQ_RANGE_START,
-+			freq_range->start_freq_khz);
-+		NLA_PUT_U32(msg, NL80211_ATTR_FREQ_RANGE_END,
-+			freq_range->end_freq_khz);
-+		NLA_PUT_U32(msg, NL80211_ATTR_FREQ_RANGE_MAX_BW,
-+			freq_range->max_bandwidth_khz);
-+		NLA_PUT_U32(msg, NL80211_ATTR_POWER_RULE_MAX_ANT_GAIN,
-+			power_rule->max_antenna_gain);
-+		NLA_PUT_U32(msg, NL80211_ATTR_POWER_RULE_MAX_EIRP,
-+			power_rule->max_eirp);
-+
-+		nla_nest_end(msg, nl_reg_rule);
-+	}
-+
-+	nla_nest_end(msg, nl_reg_rules);
-+
-+	genlmsg_end(msg, hdr);
-+	err = genlmsg_unicast(msg, info->snd_pid);
-+	goto out;
-+
-+nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	err = -EMSGSIZE;
-+out:
-+	mutex_unlock(&cfg80211_drv_mutex);
-+	return err;
++	return tsf;
 +}
 +
- static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct nlattr *tb[NL80211_REG_RULE_ATTR_MAX + 1];
-@@ -2333,6 +2408,12 @@ static struct genl_ops nl80211_ops[] = {
- 		.flags = GENL_ADMIN_PERM,
- 	},
- 	{
-+		.cmd = NL80211_CMD_GET_REG,
-+		.doit = nl80211_get_reg,
-+		.policy = nl80211_policy,
-+		/* can be retrieved by unprivileged users */
-+	},
-+	{
- 		.cmd = NL80211_CMD_SET_REG,
- 		.doit = nl80211_set_reg,
- 		.policy = nl80211_policy,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f643d39..2323644 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -57,7 +57,7 @@ static u32 supported_bandwidths[] = {
- /* Central wireless core regulatory domains, we only need two,
-  * the current one and a world regulatory domain in case we have no
-  * information to give us an alpha2 */
--static const struct ieee80211_regdomain *cfg80211_regdomain;
-+const struct ieee80211_regdomain *cfg80211_regdomain;
- 
- /* We use this as a place for the rd structure built from the
-  * last parsed country IE to rest until CRDA gets back to us with
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index eb1dd5b..fe8c83f 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -1,6 +1,8 @@
- #ifndef __NET_WIRELESS_REG_H
- #define __NET_WIRELESS_REG_H
- 
-+extern const struct ieee80211_regdomain *cfg80211_regdomain;
++static void b43_op_set_tsf(struct ieee80211_hw *hw, u64 tsf)
++{
++	struct b43_wl *wl =3D hw_to_b43_wl(hw);
++	unsigned long flags;
++	struct b43_wldev *dev;
 +
- bool is_world_regdom(const char *alpha2);
- bool reg_is_valid_request(const char *alpha2);
- 
--- 
-1.6.1.2.253.ga34a
++	mutex_lock(&wl->mutex);
++	spin_lock_irqsave(&wl->irq_lock, flags);
++	dev =3D wl->current_dev;
++
++	if(dev && (b43_status(dev) >=3D B43_STAT_INITIALIZED))
++		b43_tsf_write(dev, tsf);
++
++	spin_unlock_irqrestore(&wl->irq_lock, flags);
++	mutex_unlock(&wl->mutex);
++}
++
+ static void b43_put_phy_into_reset(struct b43_wldev *dev)
+ {
+ 	struct ssb_device *sdev =3D dev->dev;
+@@ -4296,6 +4335,8 @@
+ 	.set_key		=3D b43_op_set_key,
+ 	.get_stats		=3D b43_op_get_stats,
+ 	.get_tx_stats		=3D b43_op_get_tx_stats,
++	.get_tsf		=3D b43_op_get_tsf,
++	.set_tsf		=3D b43_op_set_tsf,
+ 	.start			=3D b43_op_start,
+ 	.stop			=3D b43_op_stop,
+ 	.set_tim		=3D b43_op_beacon_set_tim,
 
+--=20
+NUR NOCH BIS 31.01.! GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 16,37 EURO/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
+569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
