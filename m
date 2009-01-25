@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:46507 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S937052AbZAPS3d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 13:29:33 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] p54spi: fix build dependencies
-Date: Fri, 16 Jan 2009 19:29:29 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <E1LNgyq-0006iZ-0M@sipsolutions.net> <1232098259.3854.39.camel@johannes>
-In-Reply-To: <1232098259.3854.39.camel@johannes>
+Received: from mail.atheros.com ([12.36.123.2]:33731 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750974AbZAYThg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 14:37:36 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 11:37:36 -0800
+Date: Sun, 25 Jan 2009 11:36:56 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: regulatory: Operation already in progress
+Message-ID: <20090125193656.GI22475@tesla> (sfid-20090125_203742_016688_DB3062BE)
+References: <200901251422.42616.mb@bu3sch.de> <20090125182107.GG22475@tesla> <200901251941.38228.mb@bu3sch.de> <20090125184517.GH22475@tesla>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200901161929.30204.chunkeey@web.de> (sfid-20090116_192953_828755_ADE89C5D)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090125184517.GH22475@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 16 January 2009 10:30:59 Johannes Berg wrote:
-> On Fri, 2009-01-16 at 06:15 +0100, Cron Daemon wrote:
-> > 
-> > +drivers/net/wireless/p54/p54spi.h:28:11: error: unable to open 'mach/board.h'
-> > +make[2]: *** [drivers/net/wireless/p54/p54spi.o] Error 1
-> > +make[1]: *** [drivers/net/wireless/p54] Error 2
-> > +make: *** [_module_drivers/net/wireless] Error 2
+On Sun, Jan 25, 2009 at 10:45:17AM -0800, Luis Rodriguez wrote:
+> On Sun, Jan 25, 2009 at 10:41:38AM -0800, Michael Buesch wrote:
+> > On Sunday 25 January 2009 19:21:07 Luis R. Rodriguez wrote:
+> > > On Sun, Jan 25, 2009 at 05:22:42AM -0800, Michael Buesch wrote:
+> > > > mb@quimby:~/kernel$ sudo iw reg set DE
+> > > > command failed: Operation already in progress (-114)
+> > > >
+> > > > I wonder why this happens.
+> > > > What I just did was install 2.6.28.2 and install today's compat-wireless.
+> > > >
+> > > > In dmesg I can see it succeeded once but it doesn't work anymore now.
+> > > > [  973.992710] cfg80211: Calling CRDA for country: DE
+> > > > [  973.998576] cfg80211: Regulatory domain changed to country: DE
+> > > > [  973.998630]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> > > > [  973.998691]  (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > > > [  973.998738]  (5150000 KHz - 5255000 KHz @ 40000 KHz), (N/A, 2301 mBm)
+> > > > [  973.998785]  (5470000 KHz - 5650000 KHz @ 40000 KHz), (N/A, 3000 mBm)
+> > >
+> > > Had you called twice?
+> >
+> > yeah, once manually with iw and once with hostapd.
+> >
+> > > If so we now tell userspace when its there by -EALREADY,
+> > > we were just silently accepting two consecutive calls before.
+> >
+> > Well, but it makes hostapd fail.
+> > I think it's a bit weird to throw and error code. In general most programs
+> > silently return success early, if an operation was already done.
 > 
-> p54spi only depends on SPI_MASTER, but includes arm-specific files.
+> We can prevent to propagate -EALREADY to userspace -- sure, I'll cook
+> up the patch.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
-index cfc5f41..131dba3 100644
---- a/drivers/net/wireless/p54/Kconfig
-+++ b/drivers/net/wireless/p54/Kconfig
-@@ -64,7 +64,8 @@ config P54_PCI
- 
- config P54_SPI
- 	tristate "Prism54 SPI (stlc45xx) support"
--	depends on P54_COMMON && SPI_MASTER
-+	depends on P54_COMMON && SPI_MASTER && ARCH_OMAP && \
-+		   (MACH_NOKIA_N800 || MACH_NOKIA_N810)
- 	---help---
- 	  This driver is for stlc4550 or stlc4560 based wireless chips.
- 	  This driver is experimental, untested and will probably only work on
+Actually we could also patch hostapd to deal with -EALREADY as a success too.
+Its either that or we have nl80211 return 0 instead of -EALREADY. Jouni, any
+preference?
+
+  Luis
