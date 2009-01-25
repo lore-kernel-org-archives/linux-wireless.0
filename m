@@ -1,28 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:44729 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754846AbZAXQFm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 11:05:42 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2924923fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2009 08:05:41 -0800 (PST)
-From: "Diego E. 'Flameeyes' Petteno`" <flameeyes@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Tony Vroon <tony@linx.net>
-Subject: Re: [ANN] crda v1.0.0
-Date: Sat, 24 Jan 2009 17:05:38 +0100
-Message-Id: <1232813139-21462-1-git-send-email-flameeyes@gmail.com> (sfid-20090124_170545_913297_01FD1F1B)
-In-Reply-To: <1232812557.19657.6.camel@localhost>
-References: <1232812557.19657.6.camel@localhost>
+Received: from mail.atheros.com ([12.36.123.2]:18098 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750901AbZAYSp4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 13:45:56 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 10:45:56 -0800
+Date: Sun, 25 Jan 2009 10:45:17 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: regulatory: Operation already in progress
+Message-ID: <20090125184517.GH22475@tesla> (sfid-20090125_194600_961085_6B534D09)
+References: <200901251422.42616.mb@bu3sch.de> <20090125182107.GG22475@tesla> <200901251941.38228.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <200901251941.38228.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rather than parallel build there is a change in Makefile that breaks
-building with --as-needed, I've fixed it in the patch I'm sending.
+On Sun, Jan 25, 2009 at 10:41:38AM -0800, Michael Buesch wrote:
+> On Sunday 25 January 2009 19:21:07 Luis R. Rodriguez wrote:
+> > On Sun, Jan 25, 2009 at 05:22:42AM -0800, Michael Buesch wrote:
+> > > mb@quimby:~/kernel$ sudo iw reg set DE
+> > > command failed: Operation already in progress (-114)
+> > >
+> > > I wonder why this happens.
+> > > What I just did was install 2.6.28.2 and install today's compat-wireless.
+> > >
+> > > In dmesg I can see it succeeded once but it doesn't work anymore now.
+> > > [  973.992710] cfg80211: Calling CRDA for country: DE
+> > > [  973.998576] cfg80211: Regulatory domain changed to country: DE
+> > > [  973.998630]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> > > [  973.998691]  (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > > [  973.998738]  (5150000 KHz - 5255000 KHz @ 40000 KHz), (N/A, 2301 mBm)
+> > > [  973.998785]  (5470000 KHz - 5650000 KHz @ 40000 KHz), (N/A, 3000 mBm)
+> >
+> > Had you called twice?
+> 
+> yeah, once manually with iw and once with hostapd.
+> 
+> > If so we now tell userspace when its there by -EALREADY,
+> > we were just silently accepting two consecutive calls before.
+> 
+> Well, but it makes hostapd fail.
+> I think it's a bit weird to throw and error code. In general most programs
+> silently return success early, if an operation was already done.
 
-HTH,
-Diego
+We can prevent to propagate -EALREADY to userspace -- sure, I'll cook
+up the patch.
 
-P.S.: resending, I start to get pretty angry with git-send-email just
-as well as stg-mail ...
-
+  Luis
