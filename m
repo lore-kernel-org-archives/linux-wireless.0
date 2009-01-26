@@ -1,86 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:39986 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753007AbZAIMZv (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:48270 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750919AbZAZBhO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 07:25:51 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH v2 08/11] ath9k: remove (u16) casts from rtc register access
-Date: Fri,  9 Jan 2009 13:24:25 +0100
-Message-Id: <1231503868-29226-9-git-send-email-juhosg@openwrt.org> (sfid-20090109_132557_008436_C2A353D9)
-In-Reply-To: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
-References: <1231503868-29226-1-git-send-email-juhosg@openwrt.org>
+	Sun, 25 Jan 2009 20:37:14 -0500
+Message-ID: <497D13B8.5090308@lwfinger.net> (sfid-20090126_023723_719139_85EFD328)
+Date: Sun, 25 Jan 2009 19:36:56 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
+Subject: [RFT] rtl8187: Fix OFDM power settings for RTL8187L
+References: <49790961.JdcKIZyYlMNFSiuO%Larry.Finger@lwfinger.net> <4979DD39.9000601@hauke-m.de> <20090123153144.GA13658@tuxdriver.com> <497B05AF.5050701@hauke-m.de>
+In-Reply-To: <497B05AF.5050701@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RTC register offsets don't fit into 'u16' on the AR913x, so we have
-to remove the existing casts.
+Hauke,
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+Please apply this patch on top of current wireless-testing, or
+compat-wireless.
+
+Larry
+====================
+
+
+After reports of poor performance, a review of the latest vendor
+driver (rtl8187_linux_26.1025.0328.2007) for RTL8187L devices was
+undertaken.
+
+A difference was found in the code used to index the OFDM power
+tables. When the Linux driver was changed, my unit works at a much
+greater range than before.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath9k/hw.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index 088d968..742ecc1 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -1008,7 +1008,7 @@ static void ath9k_hw_init_pll(struct ath_hal *ah,
- 				pll |= SM(0xb, AR_RTC_PLL_DIV);
- 		}
- 	}
--	REG_WRITE(ah, (u16) (AR_RTC_PLL_CONTROL), pll);
-+	REG_WRITE(ah, (AR_RTC_PLL_CONTROL), pll);
- 
- 	udelay(RTC_PLL_SETTLE_DELAY);
- 
-@@ -1547,11 +1547,11 @@ static bool ath9k_hw_set_reset(struct ath_hal *ah, int type)
- 			rst_flags |= AR_RTC_RC_MAC_COLD;
- 	}
- 
--	REG_WRITE(ah, (u16) (AR_RTC_RC), rst_flags);
-+	REG_WRITE(ah, (AR_RTC_RC), rst_flags);
- 	udelay(50);
- 
--	REG_WRITE(ah, (u16) (AR_RTC_RC), 0);
--	if (!ath9k_hw_wait(ah, (u16) (AR_RTC_RC), AR_RTC_RC_M, 0)) {
-+	REG_WRITE(ah, (AR_RTC_RC), 0);
-+	if (!ath9k_hw_wait(ah, (AR_RTC_RC), AR_RTC_RC_M, 0)) {
- 		DPRINTF(ah->ah_sc, ATH_DBG_RESET,
- 			"RTC stuck in MAC reset\n");
- 		return false;
-@@ -1573,8 +1573,8 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hal *ah)
- 	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN |
- 		  AR_RTC_FORCE_WAKE_ON_INT);
- 
--	REG_WRITE(ah, (u16) (AR_RTC_RESET), 0);
--	REG_WRITE(ah, (u16) (AR_RTC_RESET), 1);
-+	REG_WRITE(ah, (AR_RTC_RESET), 0);
-+	REG_WRITE(ah, (AR_RTC_RESET), 1);
- 
- 	if (!ath9k_hw_wait(ah,
- 			   AR_RTC_STATUS,
-@@ -2599,7 +2599,7 @@ static void ath9k_set_power_sleep(struct ath_hal *ah, int setChip)
- 		if (!AR_SREV_9100(ah))
- 			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
- 
--		REG_CLR_BIT(ah, (u16) (AR_RTC_RESET),
-+		REG_CLR_BIT(ah, (AR_RTC_RESET),
- 			    AR_RTC_RESET_EN);
- 	}
- }
--- 
-1.5.3.2
+
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+@@ -536,7 +536,10 @@ static void rtl8225z2_rf_set_tx_power(st
+ 	cck_power += priv->txpwr_base & 0xF;
+ 	cck_power = min(cck_power, (u8)35);
+
+-	ofdm_power = min(ofdm_power, (u8)15);
++	if (ofdm_power > (u8)15)
++		ofdm_power = 25;
++	else
++		ofdm_power += 10;
+ 	ofdm_power += priv->txpwr_base >> 4;
+ 	ofdm_power = min(ofdm_power, (u8)35);
+
+
 
