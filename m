@@ -1,70 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33930 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:34398 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599AbZAMWva (ORCPT
+	with ESMTP id S1751732AbZAZSwZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 17:51:30 -0500
-Subject: Re: [PATCH 12/12] cfg80211: Remove CONFIG_WIRELESS_OLD_REGULATORY
+	Mon, 26 Jan 2009 13:52:25 -0500
+Message-Id: <20090126184925.500822996@sipsolutions.net> (sfid-20090126_195229_608528_A11909E9)
+References: <20090126184740.036240879@sipsolutions.net>
+Date: Mon, 26 Jan 2009 19:47:45 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1231876675-20518-13-git-send-email-lrodriguez@atheros.com>
-References: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-2-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-3-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-4-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-5-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-6-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-7-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-8-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-9-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-10-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-11-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-12-git-send-email-lrodriguez@atheros.com>
-	 <1231876675-20518-13-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z2bztm/OepFRwewbzg/Z"
-Date: Tue, 13 Jan 2009 23:50:58 +0100
-Message-Id: <1231887058.3728.6.camel@johannes> (sfid-20090113_235134_232433_BF2B5351)
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@gmail.com, Sujith.Manoharan@atheros.com, tomasw@gmail.com
+Subject: [RFC/RFT 5/7] mac80211: fix race in TX aggregation
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When disabling TX aggregation because it was rejected, there
+is a window where we first set the state to operation. unlock,
+and then undo the whole thing. Avoid that by splitting up the
+stop function.
 
---=-z2bztm/OepFRwewbzg/Z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/agg-tx.c |   69 +++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 43 insertions(+), 26 deletions(-)
 
-On Tue, 2009-01-13 at 11:57 -0800, Luis R. Rodriguez wrote:
-> This removal was scheduled for 2.6.29 but we decided to
-> keep it around a bit longer. Now that we are on road to
-> 2.6.30 lets remove it.
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2009-01-26 12:37:13.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2009-01-26 12:45:13.000000000 +0100
+@@ -186,6 +186,9 @@ int ieee80211_start_tx_ba_session(struct
+ 	u8 *state;
+ 	int ret = 0;
+ 
++	if (WARN_ON(!local->ops->ampdu_action))
++		return -EINVAL;
++
+ 	if ((tid >= STA_TID_NUM) || !(hw->flags & IEEE80211_HW_AMPDU_AGGREGATION))
+ 		return -EINVAL;
+ 
+@@ -266,9 +269,8 @@ int ieee80211_start_tx_ba_session(struct
+ 	/* This is slightly racy because the queue isn't stopped */
+ 	start_seq_num = sta->tid_seq[tid];
+ 
+-	if (local->ops->ampdu_action)
+-		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
+-					       &sta->sta, tid, &start_seq_num);
++	ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
++				       &sta->sta, tid, &start_seq_num);
+ 
+ 	if (ret) {
+ 		/* No need to requeue the packets in the agg queue, since we
+@@ -400,6 +402,34 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
+ EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
+ 
+ 
++static int __ieee80211_stop_tx_ba_session(struct ieee80211_local *local,
++					  struct sta_info *sta, u16 tid,
++					  enum ieee80211_back_parties initiator)
++{
++	int ret;
++	u8 *state;
++
++	state = &sta->ampdu_mlme.tid_state_tx[tid];
++
++	if (local->hw.ampdu_queues)
++		ieee80211_stop_queue(&local->hw, sta->tid_to_tx_q[tid]);
++
++	*state = HT_AGG_STATE_REQ_STOP_BA_MSK |
++		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
++
++	ret = local->ops->ampdu_action(&local->hw, IEEE80211_AMPDU_TX_STOP,
++				       &sta->sta, tid, NULL);
++
++	/* HW shall not deny going back to legacy */
++	if (WARN_ON(ret)) {
++		*state = HT_AGG_STATE_OPERATIONAL;
++		if (local->hw.ampdu_queues)
++			ieee80211_wake_queue(&local->hw, sta->tid_to_tx_q[tid]);
++	}
++
++	return ret;
++}
++
+ int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
+ 				 u8 *ra, u16 tid,
+ 				 enum ieee80211_back_parties initiator)
+@@ -409,6 +439,9 @@ int ieee80211_stop_tx_ba_session(struct 
+ 	u8 *state;
+ 	int ret = 0;
+ 
++	if (WARN_ON(!local->ops->ampdu_action))
++		return -EINVAL;
++
+ 	if (tid >= STA_TID_NUM)
+ 		return -EINVAL;
+ 
+@@ -425,7 +458,7 @@ int ieee80211_stop_tx_ba_session(struct 
+ 
+ 	if (*state != HT_AGG_STATE_OPERATIONAL) {
+ 		ret = -ENOENT;
+-		goto stop_BA_exit;
++		goto unlock;
+ 	}
+ 
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+@@ -433,27 +466,13 @@ int ieee80211_stop_tx_ba_session(struct 
+ 	       ra, tid);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+ 
+-	if (hw->ampdu_queues)
+-		ieee80211_stop_queue(hw, sta->tid_to_tx_q[tid]);
+-
+-	*state = HT_AGG_STATE_REQ_STOP_BA_MSK |
+-		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
++	ret = __ieee80211_stop_tx_ba_session(local, sta, tid, initiator);
+ 
+-	if (local->ops->ampdu_action)
+-		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_STOP,
+-					       &sta->sta, tid, NULL);
+-
+-	/* HW shall not deny going back to legacy */
+-	if (WARN_ON(ret)) {
+-		*state = HT_AGG_STATE_OPERATIONAL;
+-		if (hw->ampdu_queues)
+-			ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
+-		goto stop_BA_exit;
+-	}
+-
+-stop_BA_exit:
++ unlock:
+ 	spin_unlock_bh(&sta->lock);
++
+ 	rcu_read_unlock();
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
+@@ -609,10 +628,8 @@ void ieee80211_process_addba_resp(struct
+ 		spin_unlock_bh(&sta->lock);
+ 	} else {
+ 		sta->ampdu_mlme.addba_req_num[tid]++;
+-		/* this will allow the state check in stop_BA_session */
+-		*state = HT_AGG_STATE_OPERATIONAL;
++		__ieee80211_stop_tx_ba_session(local, sta, tid,
++					       WLAN_BACK_INITIATOR);
+ 		spin_unlock_bh(&sta->lock);
+-		ieee80211_stop_tx_ba_session(hw, sta->sta.addr, tid,
+-					     WLAN_BACK_INITIATOR);
+ 	}
+ }
 
-Don't like this much, it's not really biting us (yet) to have this code
-around still.
-
-johannes
-
---=-z2bztm/OepFRwewbzg/Z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJbRrPAAoJEKVg1VMiehFY9kEP/0c3NHNi6c1HOqcrIPopyWVr
-qIRu60ogbb80K4KcWh4i/j07q0g5ebt/xhoYWEQnZahzY6lCbJ/8tnEd3fBwCcMZ
-garNe6lt8SCkOSMcB48RbmDBYAwP5/ff/feE6O2eRcXmJKmkGyPMbux8xToUgP+M
-hoLLcHB1zgcCvDNDDizYcUwLN0wRRoNBzBQ3A2c7r4ShdQiXyS+O9MzBBSnVjWpQ
-w/6K2a9oXufdIW5SNb9R3u5Si4t+SUupA0oRFoM+ART0LIDwgmAqVy6kTNa2aKhF
-CRnNtK/E7163bZY+zL5a2xcmplXcQfG85K0wnnvkGdaFdXqUJ8EgrKwZvojXwEwp
-jWxW9Vc4AwUT4PXI9ItjY5rHngIURlXtT71taXTEpwOTcsdQn5mYrwWMuBux5g/3
-8Tj7mUAgi9e0NW2OL3gXlm8hnHU5cJ4TeqAQalADbVnj0hGNPlcGoZdXYw6yruvZ
-K4kZ8390d3c3aQnJWVbPkQwp1A5uxPIBLqCsenNwCsgmIzmUQcAXU9oYxOWsZbUV
-JVxoy1PfLPyPhmZM3IRJapwH0zL92WRcz1ttHxfNTeL5vy9al1ueDqUr4RQg+A52
-S/W7umYFmZiIBoLlOeZIsEmTb6DjeLBIdAAxvr9Ff3AbTWIfU56IJNbZoHTP5ms0
-c3pH+7ZkkK8ZCeetph8i
-=Z12r
------END PGP SIGNATURE-----
-
---=-z2bztm/OepFRwewbzg/Z--
+-- 
 
