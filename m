@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:58729 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbZASNaU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 08:30:20 -0500
-From: Chr <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] p54: add missing break in eeprom parser
-Date: Mon, 19 Jan 2009 14:30:26 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901191430.26101.chunkeey@web.de> (sfid-20090119_143026_304095_2F10D100)
+Received: from c60.cesmail.net ([216.154.195.49]:15257 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751240AbZAZDqI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 22:46:08 -0500
+Subject: Re: [Orinoco-devel] [PATCH] orinoco: checkpatch cleanup
+From: Pavel Roskin <proski@gnu.org>
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+In-Reply-To: <200901252308.45889.arvidjaar@mail.ru>
+References: <200901252254.32137.arvidjaar@mail.ru>
+	 <1232913575.3837.16.camel@johannes.local>
+	 <200901252308.45889.arvidjaar@mail.ru>
+Content-Type: text/plain; charset=UTF-8
+Date: Sun, 25 Jan 2009 22:46:02 -0500
+Message-Id: <1232941562.1604.4.camel@dv> (sfid-20090126_044613_692897_98C69895)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a obvious memory leak in the eeprom parser.
+On Sun, 2009-01-25 at 23:08 +0300, Andrey Borzenkov wrote:
+> On 25 =D1=8F=D0=BD=D0=B2=D0=B0=D1=80=D1=8F 2009 22:59:35 Johannes Ber=
+g wrote:
+>=20
+> > unfortunately, your patch was line-wrapped. Cf.
+> > Documentation/email-clients.txt
+> >
+>=20
+> This should be updated to indicate that kmail from KDE4 is broken. I=20
+> suspected that but so far it worked.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-John,
+I suggest that you try STGit.  It sends patches by itself.
 
-can you please add this patch and "p54: more cryptographic accelerator fixes" to wireless-2.6 as well?
----
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 6203105..2a515ef 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -545,8 +545,8 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 			}
- 			if (err)
- 				goto err;
--
--		}
-+			}
-+			break;
- 		case PDR_PRISM_ZIF_TX_IQ_CALIBRATION:
- 			priv->iq_autocal = kmalloc(data_len, GFP_KERNEL);
- 			if (!priv->iq_autocal) {
+Please run the patch itself through checkpatch.  It finds two errors:
+
+ERROR: trailing statements should be on next line
+#163: FILE: drivers/net/wireless/orinoco/hermes.c:65:
++                       printk(stuff); } while (0)
++                       printk(stuff); } while (0)
+ERROR: do not use assignment in if condition
+#698: FILE: drivers/net/wireless/orinoco/orinoco_cs.c:167:
++       if ((last_ret =3D (ret)) !=3D 0) \
+
+total: 2 errors, 0 warnings, 786 lines checked
+
+--=20
+Regards,
+Pavel Roskin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
