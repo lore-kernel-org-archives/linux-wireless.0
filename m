@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:46960 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:12407 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751503AbZAPQ2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 11:28:00 -0500
+	id S1750859AbZAZPan (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 10:30:43 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:28:00 -0800
-Date: Fri, 16 Jan 2009 08:27:31 -0800
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 07:30:43 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 10/13] cfg80211: remove check for last_request on
-	ignore_reg_update()
-Message-ID: <20090116162731.GD29609@tesla> (sfid-20090116_172807_696440_FAEA5BCD)
-References: <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232064746-17134-9-git-send-email-lrodriguez@atheros.com> <1232064746-17134-10-git-send-email-lrodriguez@atheros.com> <1232064746-17134-11-git-send-email-lrodriguez@atheros.com> <1232097990.3854.31.camel@johannes>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: remove useless ath9k driver version information
+Date: Mon, 26 Jan 2009 07:30:03 -0800
+Message-ID: <1232983803-18125-1-git-send-email-lrodriguez@atheros.com> (sfid-20090126_163049_631662_AEA5954E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232097990.3854.31.camel@johannes>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2009 at 01:26:30AM -0800, Johannes Berg wrote:
-> On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
-> > There is no need to check for last_request as the callers of
-> > update_all_wiphy_regulatory() ensure its present.
-> 
-> Are you sure? I had all this blow up all around me.
+Versioning for ath9k is pointless we have kept it at 0.1
+since the initial release so its meaningless. We put more emphasis
+on kernel release or dated wireless-testing master tag
+as per John's tagging.
 
-Interesting -- well that's the thing, where and why would it have blown up?
-I did test it and didn't run into it.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-  Luis
-
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
-> >  net/wireless/reg.c |    2 --
-> >  1 files changed, 0 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> > index 8bf999d..6c45832 100644
-> > --- a/net/wireless/reg.c
-> > +++ b/net/wireless/reg.c
-> > @@ -1006,8 +1006,6 @@ static void handle_band_custom(struct wiphy *wiphy, enum ieee80211_band band,
-> >  
-> >  static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
-> >  {
-> > -	if (!last_request)
-> > -		return true;
-> >  	if (setby == REGDOM_SET_BY_CORE &&
-> >  		  wiphy->custom_regulatory)
-> >  		return true;
-
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 15a7f90..db76016 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -2579,13 +2579,12 @@ static int __init ath9k_init(void)
+ {
+ 	int error;
+ 
+-	printk(KERN_INFO "%s: %s\n", dev_info, ATH_PCI_VERSION);
+-
+ 	/* Register rate control algorithm */
+ 	error = ath_rate_control_register();
+ 	if (error != 0) {
+ 		printk(KERN_ERR
+-			"Unable to register rate control algorithm: %d\n",
++			"ath9k: Unable to register rate control "
++			"algorithm: %d\n",
+ 			error);
+ 		goto err_out;
+ 	}
+@@ -2593,7 +2592,7 @@ static int __init ath9k_init(void)
+ 	error = ath_pci_init();
+ 	if (error < 0) {
+ 		printk(KERN_ERR
+-			"ath_pci: No devices found, driver not installed.\n");
++			"ath9k: No PCI devices found, driver not installed.\n");
+ 		error = -ENODEV;
+ 		goto err_rate_unregister;
+ 	}
+-- 
+1.5.6.4
 
