@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:52803 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759607AbZAMKlk (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:50323 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752990AbZAZTzv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 05:41:40 -0500
-Received: by mu-out-0910.google.com with SMTP id g7so4480954muf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 02:41:38 -0800 (PST)
-Message-ID: <b25312890901130241l635ffe78na10d2aa468365e7e@mail.gmail.com> (sfid-20090113_114153_530368_1DA396AB)
-Date: Tue, 13 Jan 2009 12:41:38 +0200
-From: "Rami Rosen" <roszenrami@gmail.com>
-To: "Jason Newton" <nevion@gmail.com>
-Subject: Re: 802.11n status (iwlagn)
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <496C3F37.4030808@gmail.com>
+	Mon, 26 Jan 2009 14:55:51 -0500
+Received: from localhost (perninha.conectiva.com.br [127.0.0.1])
+	by perninha.conectiva.com.br (Postfix) with ESMTP id 052993EB3
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 14:30:33 -0500 (EST)
+Received: from perninha.conectiva.com.br ([127.0.0.1])
+	by localhost (perninha.conectiva.com.br [127.0.0.1]) (amavisd-new, port 10025)
+	with LMTP id 5WDeF2+yIeqm for <linux-wireless@vger.kernel.org>;
+	Mon, 26 Jan 2009 14:30:32 -0500 (EST)
+Received: from fox.conectiva (fox.conectiva [10.0.2.195])
+	by perninha.conectiva.com.br (Postfix) with ESMTP id 9FD1B3EAB
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 14:30:32 -0500 (EST)
+Received: from gotham.conectiva (gotham.conectiva [10.0.2.23])
+	by fox.conectiva (Postfix) with ESMTP id 2087D2F3F0
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 16:30:14 -0300 (BRT)
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Subject: Invalid JP regulatory domain
+Date: Mon, 26 Jan 2009 17:30:28 -0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <496C3F37.4030808@gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200901261730.29555.herton@mandriva.com.br> (sfid-20090126_205556_487714_77097A40)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
->  what the current status of 802.11n is in linux as a whole
+Hi,
 
-In http://www.linuxwireless.org/en/users/Drivers, there
-is a table of drivers; some of them do support 802.11n,
-as you can see form the PHY modes column
-(there might be more such drivers, take into account that this table
-might not be always up to date).
+While trying to set JP as regulatory domain I get in my kernel log:
+cfg80211: Calling CRDA for country: JP
+cfg80211: Invalid regulatory domain detected:
+cfg80211: Regulatory domain: JP
+        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+        (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+        (2457000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+        (2474000 KHz - 2494000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+        (4910000 KHz - 4930000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+        (4910000 KHz - 4990000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+        (4930000 KHz - 4950000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+        (5030000 KHz - 5045000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+        (5030000 KHz - 5090000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+        (5050000 KHz - 5060000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+        (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+        (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+        (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2300 mBm)
 
- Intel iwl4965 is among them;  I did not perform any tests with
-4965-based iwlagn devices with 80211.n though.
+Looks like the check "freq_range->max_bandwidth_khz > freq_diff" fails in 
+net/wireless/reg.c (is_valid_reg_rule function) for the second and third 
+ranges. Got this with wireless-regdb-2009-01-15 and kernel 2.6.28.1
 
-- I believe that you are aware that the 80211.n spec is expected
-only at the end of 2009 (December 2009) or later.
+Is there some error in regulatory domain ranges for JP, or kernel check 
+missing something additional? I couldn't find proper information about the 
+rules.
 
-Rgs,
-Rami Rosen
-
-
-
-
-On Tue, Jan 13, 2009 at 9:13 AM, Jason Newton <nevion@gmail.com> wrote:
-> Hi all,
->
-> I've been searching around for a long time now and I find it difficult
-> to understand what the current status of 802.11n is in linux as a whole
-> and what it is with respect to iwlagn (4965 chipset specifically).  I
-> want high-speed and reliable wireless :-)
->
-> Also, it would seem iwlagn n/ht still isn't working in 2.6.28?
->
-> To anyone who can clear all this up for me, I'd be much appreciative.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+--
+[]'s
+Herton
