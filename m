@@ -1,67 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35083 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062AbZAYQX4 (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:13402 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663AbZAZR47 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 11:23:56 -0500
-Subject: Re: [PATCH 10/12] cfg80211: Allow for strict regulatory settings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1232665554-26132-11-git-send-email-lrodriguez@atheros.com>
-References: <1232665554-26132-1-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-2-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-4-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-5-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-6-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-7-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-8-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-9-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-10-git-send-email-lrodriguez@atheros.com>
-	 <1232665554-26132-11-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+qtGJTZ4N8dIbjQ9ROJN"
-Date: Sun, 25 Jan 2009 17:23:46 +0100
-Message-Id: <1232900626.3952.8.camel@johannes.local> (sfid-20090125_172400_312137_2959AD86)
-Mime-Version: 1.0
+	Mon, 26 Jan 2009 12:56:59 -0500
+Received: by wa-out-1112.google.com with SMTP id v33so560420wah.21
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 09:56:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <e27b78a40901260625w53acd646xeb5a9ca85555c74d@mail.gmail.com>
+References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
+	 <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com>
+	 <e27b78a40901240804m1acd3a83o7bf6d01f81ec3397@mail.gmail.com>
+	 <45e8e6c40901240956g68a5364tdbacc1e49410c9cc@mail.gmail.com>
+	 <e27b78a40901260625w53acd646xeb5a9ca85555c74d@mail.gmail.com>
+Date: Mon, 26 Jan 2009 17:56:58 +0000
+Message-ID: <e27b78a40901260956w4e69d33s7db60defc026c8d7@mail.gmail.com> (sfid-20090126_185704_058946_5F6C9604)
+Subject: Re: Crashing on ping?
+From: Keir <keirlawson@gmail.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Right, managed to set up a serial terminal, ran cat /proc/kmsg, but
+still no output of interest (just mesh plink stuff leading up to the
+connection being established), what should I do next?
 
---=-+qtGJTZ4N8dIbjQ9ROJN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Cheers
 
-On Thu, 2009-01-22 at 15:05 -0800, Luis R. Rodriguez wrote:
-> This allows drivers to request strict regulatory settings to
-> be applied to its devices. This is desirable for devices where
-> proper calibration and compliance can only be gauranteed for
+Keir
 
-You typoed "guaranteed" all over :)
-
-johannes
-
---=-+qtGJTZ4N8dIbjQ9ROJN
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJfJIQAAoJEKVg1VMiehFY2xMP/1bwBNWU3o1gb4Mp2uZgup+C
-TEsjt5dVK4bMJgIrTn8uKfET34IVj69c85kAdngIO3Rii8zs/0ReHjxLDp9nn50V
-A2MxOI2+/LHCGwiv/ZCKnXDvAudCBTsnKeeTUdjay6C/t80HcFeQ/tjtgXHziRmB
-40F2ddKxg5rn4dlnJcELzhiXHJiPoQGmXPxikQDBanpyCdKn/wk9ymdyM/ZApS9F
-Mab+s6L1GcQH3jUIfPhrMl/GsaevLf8Z/2NWedUE1ml2yUN9DAfbrwIIJ25sllXI
-OAD8hswaDATSw6VPW2xBTNcmxgBTRswlL9ivUUQFQtxvdBWJ6b0+6va7pQxLWPfp
-W5PxYvl+mtJ/7kDbBlgUmeyhQRz77bZLurDhID0KVnt3sgxmNXnyvyO8Pghr7FvJ
-y5sjW0nWmn0bLjIjLVjEsOyu2KM6Tg2yrqe4j4lYA0/3Q5nKSZR0+6cMbpnbYGw2
-vjPVQR/PzXNdvz5d5PpvH7QspH0GmGu8t4hbgV3AD+UttlVU+4xC9O3ZPsYh5r2R
-DzyOsbPXqwU4aiAYZbsAatlzJQH3gYQ6Egx81rubgT/PVoxPfpuUeO+tie2ipPoh
-Wtc1LodZXgqyvk7Pw/3A8r23tyq2X8Ga7vwqoRsGUfTwcZiote1BzZ4hJlnpwpHj
-6gQ3yWk7rMDSJBJJTT3l
-=jlc+
------END PGP SIGNATURE-----
-
---=-+qtGJTZ4N8dIbjQ9ROJN--
-
+2009/1/26 Keir <keirlawson@gmail.com>:
+> "sudo cat /proc/kmsg > log" doesnt produce anything of interest.
+>
+> Will look into the serial console thing, never done it before.
+>
+> Keir
+>
+> 2009/1/24 Andrey Yurovsky <andrey@cozybit.com>:
+>> Can you post logs of the crash (dmesg output)?  You may need to
+>> connect a serial console to the PC in question to get them if the
+>> machine is really hard-locking, otherwise see if you can capture the
+>> output of dmesg
+>>
+>> On Sat, Jan 24, 2009 at 8:04 AM, Keir <keirlawson@gmail.com> wrote:
+>>> Tried that commit, still no luck :( It consistently freezes up on
+>>> ping, though sometimes it's the machine doing the pining, and other
+>>> times it's the machine being pinged.  Wondering what I can do to help
+>>> debug this?
+>>>
+>>> Keir
+>>>
+>>> 2009/1/23 Andrey Yurovsky <andrey@cozybit.com>:
+>>>> Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
+>>>> 93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
+>>>> 2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
+>>>> chance to try head of wireless-testing this week.
+>>>>
+>>>>  -Andrey
+>>>>
+>>>> On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
+>>>>> I just pulled the latest wireless-testing kernel, however, much like
+>>>>> the previous wireless-testing kernel I was working on, when attempting
+>>>>> to ping one node from another on a mesh, using ath5k, the node
+>>>>> attempting to ping completely freezes after about 7 pings are
+>>>>> (succesfully) sent.  Anyone have any idea what is going wrong here?
+>>>>>
+>>>>> Cheers
+>>>>>
+>>>>> Keir
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>
+>>>>
+>>>
+>>
+>
