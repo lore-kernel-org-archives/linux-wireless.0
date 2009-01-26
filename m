@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:42007 "EHLO
-	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753479AbZAMMJQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 07:09:16 -0500
-Received: from c213-89-101-100.bredband.comhem.se ([213.89.101.100]:62845 helo=[192.168.0.142])
-	by ch-smtp02.sth.basefarm.net with esmtp (Exim 4.68)
-	(envelope-from <tsr.offentlig@tsr.se>)
-	id 1LMi54-0002Iy-9A
-	for linux-wireless@vger.kernel.org; Tue, 13 Jan 2009 13:09:15 +0100
-Message-ID: <496C8468.4060101@tsr.se> (sfid-20090113_130925_050327_F067411B)
-Date: Tue, 13 Jan 2009 13:09:12 +0100
-From: tsr <tsr.offentlig@tsr.se>
+Received: from mail.atheros.com ([12.36.123.2]:47503 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751390AbZAZOtE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 09:49:04 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 06:49:04 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: fix debug print on regd
+Date: Mon, 26 Jan 2009 06:48:10 -0800
+Message-ID: <1232981290-16741-1-git-send-email-lrodriguez@atheros.com> (sfid-20090126_154910_057478_BA4CA9B4)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Marvell 88w8385 Support
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+With debugging enabled and with ATH_DBG_REGULATORY
+selected we wouldn't get the full print out of one line,
+reason is we used "," instead of nothing to separate two
+lines.
 
-I have a FSG-3 that includes a Marvell 88w8385 card. I wonder if there 
-is support for it in recent kernels. According to 
-http://marc.info/?l=linux-wireless&m=123178916308198&w=2 (search for 
-8385) there seems to be support but I don't want to start messing around 
-with kernels and stuff without being sure.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/regd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-(I'm quite new to actually trying to make things work that don't work 
-out of the box, so please have that in mind)
+diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
+index 90f0c98..ec88f78 100644
+--- a/drivers/net/wireless/ath9k/regd.c
++++ b/drivers/net/wireless/ath9k/regd.c
+@@ -447,7 +447,7 @@ int ath9k_regd_init(struct ath_hal *ah)
+ 	}
+ 
+ 	DPRINTF(ah->ah_sc, ATH_DBG_REGULATORY,
+-		"Country alpha2 being used: %c%c\n",
++		"Country alpha2 being used: %c%c\n"
+ 		"Regpair detected: 0x%0x\n",
+ 		ah->alpha2[0], ah->alpha2[1],
+ 		ah->regpair->regDmnEnum);
+-- 
+1.5.6.4
 
-/tsr
