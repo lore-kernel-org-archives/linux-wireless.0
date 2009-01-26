@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:36311 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754326AbZATWLI (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:19179 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753053AbZAZRbp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 17:11:08 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, Greg KH gr <gregkh@suse.de>,
-	Artur Skawina <art.08.09@gmail.com>
-Subject: [PATCH -stable] p54usb: fix traffic stalls / packet drop
-Date: Tue, 20 Jan 2009 23:11:11 +0100
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Linux wireless" <linux-wireless@vger.kernel.org>
-References: <KTnguC9mFUC.A.VNB.TJRdJB@chimera> <cX2gZ6Cy9nC.A.vUD.KKRdJB@chimera>
-In-Reply-To: <cX2gZ6Cy9nC.A.vUD.KKRdJB@chimera>
+	Mon, 26 Jan 2009 12:31:45 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 09:31:45 -0800
+Date: Mon, 26 Jan 2009 09:31:05 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: do not pass -EALREADY to userspace on
+	regdomain  change request
+Message-ID: <20090126173105.GA19242@tesla> (sfid-20090126_183201_459794_428D61C9)
+References: <1232989251-21311-1-git-send-email-lrodriguez@atheros.com> <69e28c910901260927uaeedb6fpd8b14c7f93f51a80@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901202311.11854.chunkeey@web.de> (sfid-20090120_231117_256389_7E6F1540)
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c910901260927uaeedb6fpd8b14c7f93f51a80@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
-Else, the firmware could freeze, or simply drop the frame.
+On Mon, Jan 26, 2009 at 09:27:37AM -0800, G=E1bor Stefanik wrote:
+> On Mon, Jan 26, 2009 at 6:00 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > +        * we don't want to confuse userspace with a "successfull e=
+rror"
+>=20
+> Typo.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
-Cc: stable <stable@kernel.org>
----
-Attached is the patch is for the stable series only.
-Bugzilla reference: http://bugzilla.kernel.org/show_bug.cgi?id=12260
-(wireless-testing needs a different one)
+successful, thanks.
 
-Rafael, I hope we can close this bug. Greg?
----
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index 75d749b..be40369 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -214,6 +214,8 @@ static void p54u_tx_3887(struct ieee80211_hw *dev, struct p54_control_hdr *data,
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), data, len,
- 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
-+	addr_urb->transfer_flags |= URB_ZERO_PACKET;
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 
- 	usb_submit_urb(addr_urb, GFP_ATOMIC);
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
-@@ -251,6 +253,7 @@ static void p54u_tx_lm87(struct ieee80211_hw *dev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr,
- 		len + sizeof(*hdr), free_on_tx ? p54u_tx_free_cb : p54u_tx_cb,
- 		dev);
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
- }
-@@ -293,11 +296,13 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct p54_control_hdr *da
- 	usb_fill_bulk_urb(int_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DEV), reg, sizeof(*reg),
- 		p54u_tx_free_cb, dev);
-+	int_urb->transfer_flags |= URB_ZERO_PACKET;
- 	usb_submit_urb(int_urb, GFP_ATOMIC);
- 
- 	usb_fill_bulk_urb(data_urb, priv->udev,
- 		usb_sndbulkpipe(priv->udev, P54U_PIPE_DATA), hdr, len + sizeof(*hdr),
- 		free_on_tx ? p54u_tx_free_cb : p54u_tx_cb, dev);
-+	data_urb->transfer_flags |= URB_ZERO_PACKET;
- 	usb_submit_urb(data_urb, GFP_ATOMIC);
- }
- 
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
