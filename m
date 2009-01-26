@@ -1,179 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:59809 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755938AbZAXATH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 19:19:07 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sat, 24 Jan 2009 01:19:04 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090124001904.50440@gmx.net> (sfid-20090124_011914_124670_0757F259)
-MIME-Version: 1.0
-Subject: [PATCH v5] mac80211: Fixed BSSID handling revisited
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Received: from xc.sipsolutions.net ([83.246.72.84]:53015 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957AbZAZVQl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 16:16:41 -0500
+Subject: Re: [PATCH 4/6] mac80211: More small changes for modularization
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Sesser <flomaillist@cosetrain.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <79a59b62a4378b8b88cb3a33b1ec3cbd3808906e.1233001802.git.flomaillist@cosetrain.com> (sfid-20090126_213927_757374_C1421A9C)
+References: <497E1B90.4060803@cosetrain.com>
+	 <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
+	 <3202b18e8531aa78c29636c163de20875ae1a9cf.1233001802.git.flomaillist@cosetrain.com>
+	 <e236615740b8ce8c9515c14aac3a2d9d93806a98.1233001802.git.flomaillist@cosetrain.com>
+	 <79a59b62a4378b8b88cb3a33b1ec3cbd3808906e.1233001802.git.flomaillist@cosetrain.com>
+	 (sfid-20090126_213927_757374_C1421A9C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-tJfQ00wmnrHOJ6wa5zZ4"
+Date: Mon, 26 Jan 2009 22:16:38 +0100
+Message-Id: <1233004598.4533.37.camel@johannes.local> (sfid-20090126_221645_566847_3FD0D908)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch cleanup the fixed BSSID handling, that ieee80211_sta_set_bss=
-id() works like ieee80211_sta_set_ssid(). So that the BSSID is only a s=
-econd selection criterion besides the SSID. This allows us to create ne=
-w IBSS networks with fixed BSSIDs, which was broken before.
 
-In the second version of this patch the handling of the stupid merges t=
-o the same BSSID is moved out to get reworked into an other patch.
+--=-tJfQ00wmnrHOJ6wa5zZ4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-And this version hopefully solves the problems with some low-level driv=
-ers and re-adds the config BSSID warning to help debugging the low-leve=
-l drivers.
+On Mon, 2009-01-26 at 21:39 +0100, Florian Sesser wrote:
+> Some rather small changes in various files.
+> After this patch, i was able to do a clean compile.
 
-Much thanks to all who have helped testing! :)
+You need to ensure that after _every_ single patch.
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
----
-diff -urN wireless-testing.orig/net/mac80211/mlme.c wireless-testing/ne=
-t/mac80211/mlme.c
---- wireless-testing.orig/net/mac80211/mlme.c	2009-01-23 22:54:06.00000=
-0000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2009-01-24 01:03:28.000000000 =
-+0100
-@@ -1615,6 +1615,7 @@
-=20
- 	ieee80211_sta_def_wmm_params(sdata, bss);
-=20
-+	ifsta->flags |=3D IEEE80211_STA_PREV_BSSID_SET;
- 	ifsta->state =3D IEEE80211_STA_MLME_IBSS_JOINED;
- 	mod_timer(&ifsta->timer, jiffies + IEEE80211_IBSS_MERGE_INTERVAL);
-=20
-@@ -2178,19 +2179,18 @@
- 	int i;
- 	int ret;
-=20
--#if 0
--	/* Easier testing, use fixed BSSID. */
--	memset(bssid, 0xfe, ETH_ALEN);
--#else
--	/* Generate random, not broadcast, locally administered BSSID. Mix in
--	 * own MAC address to make sure that devices that do not have proper
--	 * random number generator get different BSSID. */
--	get_random_bytes(bssid, ETH_ALEN);
--	for (i =3D 0; i < ETH_ALEN; i++)
--		bssid[i] ^=3D sdata->dev->dev_addr[i];
--	bssid[0] &=3D ~0x01;
--	bssid[0] |=3D 0x02;
--#endif
-+	if (sdata->u.sta.flags & IEEE80211_STA_BSSID_SET) {
-+		memcpy(bssid, ifsta->bssid, ETH_ALEN);
-+	} else {
-+		/* Generate random, not broadcast, locally administered BSSID. Mix i=
-n
-+		 * own MAC address to make sure that devices that do not have proper
-+		 * random number generator get different BSSID. */
-+		get_random_bytes(bssid, ETH_ALEN);
-+		for (i =3D 0; i < ETH_ALEN; i++)
-+			bssid[i] ^=3D sdata->dev->dev_addr[i];
-+		bssid[0] &=3D ~0x01;
-+		bssid[0] |=3D 0x02;
-+	}
-=20
- 	printk(KERN_DEBUG "%s: Creating new IBSS network, BSSID %pM\n",
- 	       sdata->dev->name, bssid);
-@@ -2251,6 +2251,9 @@
- 		    memcmp(ifsta->ssid, bss->ssid, bss->ssid_len) !=3D 0
- 		    || !(bss->capability & WLAN_CAPABILITY_IBSS))
- 			continue;
-+		if ((ifsta->flags & IEEE80211_STA_BSSID_SET) &&
-+		    memcmp(ifsta->bssid, bss->bssid, ETH_ALEN) !=3D 0)
-+			continue;
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
- 		printk(KERN_DEBUG "   bssid=3D%pM found\n", bss->bssid);
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
-@@ -2267,7 +2270,9 @@
- 		       "%pM\n", bssid, ifsta->bssid);
- #endif /* CONFIG_MAC80211_IBSS_DEBUG */
-=20
--	if (found && memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0) {
-+	if (found &&
-+	    ((!(ifsta->flags & IEEE80211_STA_PREV_BSSID_SET)) ||
-+	     memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0)) {
- 		int ret;
- 		int search_freq;
-=20
-@@ -2605,16 +2610,16 @@
- 		memset(ifsta->ssid, 0, sizeof(ifsta->ssid));
- 		memcpy(ifsta->ssid, ssid, len);
- 		ifsta->ssid_len =3D len;
--		ifsta->flags &=3D ~IEEE80211_STA_PREV_BSSID_SET;
- 	}
-=20
-+	ifsta->flags &=3D ~IEEE80211_STA_PREV_BSSID_SET;
-+
- 	if (len)
- 		ifsta->flags |=3D IEEE80211_STA_SSID_SET;
- 	else
- 		ifsta->flags &=3D ~IEEE80211_STA_SSID_SET;
-=20
--	if (sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC &&
--	    !(ifsta->flags & IEEE80211_STA_BSSID_SET)) {
-+	if (sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC) {
- 		ifsta->ibss_join_req =3D jiffies;
- 		ifsta->state =3D IEEE80211_STA_MLME_IBSS_SEARCH;
- 		return ieee80211_sta_find_ibss(sdata, ifsta);
-@@ -2634,36 +2639,25 @@
- int ieee80211_sta_set_bssid(struct ieee80211_sub_if_data *sdata, u8 *b=
-ssid)
- {
- 	struct ieee80211_if_sta *ifsta;
--	int res;
--	bool valid;
-=20
- 	ifsta =3D &sdata->u.sta;
--	valid =3D is_valid_ether_addr(bssid);
-=20
--	if (memcmp(ifsta->bssid, bssid, ETH_ALEN) !=3D 0) {
--		if(valid)
--			memcpy(ifsta->bssid, bssid, ETH_ALEN);
--		else
--			memset(ifsta->bssid, 0, ETH_ALEN);
--		res =3D 0;
--		/*
--		 * Hack! See also ieee80211_sta_set_ssid.
--		 */
--		if (netif_running(sdata->dev))
--			res =3D ieee80211_if_config(sdata, IEEE80211_IFCC_BSSID);
--		if (res) {
-+	if (is_valid_ether_addr(bssid)) {
-+		memcpy(ifsta->bssid, bssid, ETH_ALEN);
-+		ifsta->flags |=3D IEEE80211_STA_BSSID_SET;
-+	} else {
-+		memset(ifsta->bssid, 0, ETH_ALEN);
-+		ifsta->flags &=3D ~IEEE80211_STA_BSSID_SET;
-+	}
-+
-+	if (netif_running(sdata->dev)) {
-+		if (ieee80211_if_config(sdata, IEEE80211_IFCC_BSSID)) {
- 			printk(KERN_DEBUG "%s: Failed to config new BSSID to "
- 			       "the low-level driver\n", sdata->dev->name);
--			return res;
- 		}
- 	}
-=20
--	if (valid)
--		ifsta->flags |=3D IEEE80211_STA_BSSID_SET;
--	else
--		ifsta->flags &=3D ~IEEE80211_STA_BSSID_SET;
--
--	return 0;
-+	return ieee80211_sta_set_ssid(sdata, ifsta->ssid, ifsta->ssid_len);
- }
-=20
- int ieee80211_sta_set_extra_ie(struct ieee80211_sub_if_data *sdata, ch=
-ar *ie, size_t len)
+johannes
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-tJfQ00wmnrHOJ6wa5zZ4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJfig0AAoJEKVg1VMiehFY65oQAILZLDCaCJ8qz4cg2D0zfnfT
+oUnKvDBdYnOKlLhfOCqNNV7gT8YvnPx3LZZTuK8ww8mOQLMMPIV1Zz96o/aR29Lz
+H8pGm2OtLemH1Rp8Pq3aQa695EFQMhwRLO2+LkqNU8oWOxa8Lzx+IZzERji3RuUF
+6MGunGy6yNRyjMAUf9d/fROx9Kps3Mvsk1T91fOcReI/NV7Pjc+U9nJbQ0APxq41
+zLIQ0pbKsPvVIkDetEm41ktSWOb1afwDsyhffS4X3buT7Im74LsYp7M/9CTkv9Rs
+B574pOMSF+gVRyfpIOMm0bFZvKnOmbt8K5kYIqLe5sEHseSgBvU3pMXhrAaZzFEX
+3M0ENC4gpM1/ZN0gmhE0UMLcO1jmZtbDBtGw+bDzwXBGJCSTQoCOpMQQtcdVtKPB
+mkJ174TZpK2enpyZry0xLF8OTTpNeRfkHPyB8UvqUAbaRZuWouU4fUjSQhmWdBwV
+dlXnX6TXdhKKl0ruUAGKJcxc326L27Urddm4du/WD5kc+IqHNAQO+81J3v6VzJyE
+t8ZZSEmofrkryT/l1xngAR+Sx0bPACpkm0nPpwAEio3y8u6mt2VZe6XMjEhIPkPI
+9kQ340kW7Pb18o/HOWR52+M2s/HMuQMyCwUe1DB8ieNdU7TcnxFjrfECMJcPovKl
+vxmZR5njNKd0Nh53wDwo
+=Tth/
+-----END PGP SIGNATURE-----
+
+--=-tJfQ00wmnrHOJ6wa5zZ4--
+
