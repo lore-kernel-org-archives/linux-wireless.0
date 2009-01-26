@@ -1,74 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms6.Sony.CO.JP ([211.125.136.204]:47285 "EHLO ms6.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755971AbZAPIxN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 03:53:13 -0500
-Date: Fri, 16 Jan 2009 17:52:55 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: jgarzik@pobox.com, linville@tuxdriver.com
-Subject: [PATCH 2/2] PS3: gelic: wireless: convert the wireless part to net_device_ops
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Geoff Levand <geoffrey.levand@am.sony.com>
-Message-Id: <20090116174726.0B70.40F06B3A@sm.sony.co.jp> (sfid-20090116_095319_653856_E123BFCE)
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:60964 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751194AbZAZDT1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2009 22:19:27 -0500
+Message-ID: <497D2BB3.9000002@lwfinger.net> (sfid-20090126_041933_507912_B3B88CBA)
+Date: Sun, 25 Jan 2009 21:19:15 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
+Subject: [RFT V2] rtl8187: Fix OFDM power settings for RTL8187L
+References: <49790961.JdcKIZyYlMNFSiuO%Larry.Finger@lwfinger.net> <4979DD39.9000601@hauke-m.de> <20090123153144.GA13658@tuxdriver.com> <497B05AF.5050701@hauke-m.de>
+In-Reply-To: <497B05AF.5050701@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert the gelic wireless driver to net_device_ops
+Hauke,
 
-Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Please apply this patch on top of current wireless-testing, or
+compat-wireless.
+
+V1 only did one of the two kinds of radios.
+
+Larry
+====================
+
+
+After reports of poor performance, a review of the latest vendor
+driver (rtl8187_linux_26.1025.0328.2007) for RTL8187L devices was
+undertaken.
+
+A difference was found in the code used to index the OFDM power
+tables. When the Linux driver was changed, my unit works at a much
+greater range than before.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- V2: added setting for ndo_validate_addr
 
- drivers/net/ps3_gelic_wireless.c |   28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
 
---- a/drivers/net/ps3_gelic_wireless.c
-+++ b/drivers/net/ps3_gelic_wireless.c
-@@ -2697,6 +2697,19 @@ static int gelic_wl_stop(struct net_devi
- 
- /* -- */
- 
-+static const struct net_device_ops gelic_wl_netdevice_ops = {
-+	.ndo_open = gelic_wl_open,
-+	.ndo_stop = gelic_wl_stop,
-+	.ndo_start_xmit = gelic_net_xmit,
-+	.ndo_set_multicast_list = gelic_net_set_multi,
-+	.ndo_change_mtu = gelic_net_change_mtu,
-+	.ndo_tx_timeout = gelic_net_tx_timeout,
-+	.ndo_validate_addr = eth_validate_addr,
-+#ifdef CONFIG_NET_POLL_CONTROLLER
-+	.ndo_poll_controller = gelic_net_poll_controller,
-+#endif
-+};
-+
- static struct ethtool_ops gelic_wl_ethtool_ops = {
- 	.get_drvinfo	= gelic_net_get_drvinfo,
- 	.get_link	= gelic_wl_get_link,
-@@ -2711,21 +2724,12 @@ static void gelic_wl_setup_netdev_ops(st
- 	struct gelic_wl_info *wl;
- 	wl = port_wl(netdev_priv(netdev));
- 	BUG_ON(!wl);
--	netdev->open = &gelic_wl_open;
--	netdev->stop = &gelic_wl_stop;
--	netdev->hard_start_xmit = &gelic_net_xmit;
--	netdev->set_multicast_list = &gelic_net_set_multi;
--	netdev->change_mtu = &gelic_net_change_mtu;
--	netdev->wireless_data = &wl->wireless_data;
--	netdev->wireless_handlers = &gelic_wl_wext_handler_def;
--	/* tx watchdog */
--	netdev->tx_timeout = &gelic_net_tx_timeout;
- 	netdev->watchdog_timeo = GELIC_NET_WATCHDOG_TIMEOUT;
- 
- 	netdev->ethtool_ops = &gelic_wl_ethtool_ops;
--#ifdef CONFIG_NET_POLL_CONTROLLER
--	netdev->poll_controller = gelic_net_poll_controller;
--#endif
-+	netdev->netdev_ops = &gelic_wl_netdevice_ops;
-+	netdev->wireless_data = &wl->wireless_data;
-+	netdev->wireless_handlers = &gelic_wl_wext_handler_def;
- }
- 
- /*
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+@@ -285,6 +285,10 @@ static void rtl8225_rf_set_tx_power(stru
+ 	ofdm_power = priv->channels[channel - 1].hw_value >> 4;
+
+ 	cck_power = min(cck_power, (u8)11);
++	if (ofdm_power > (u8)15)
++		ofdm_power = 25;
++	else
++		ofdm_power += 10;
+ 	ofdm_power = min(ofdm_power, (u8)35);
+
+ 	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK,
+@@ -536,7 +540,10 @@ static void rtl8225z2_rf_set_tx_power(st
+ 	cck_power += priv->txpwr_base & 0xF;
+ 	cck_power = min(cck_power, (u8)35);
+
+-	ofdm_power = min(ofdm_power, (u8)15);
++	if (ofdm_power > (u8)15)
++		ofdm_power = 25;
++	else
++		ofdm_power += 10;
+ 	ofdm_power += priv->txpwr_base >> 4;
+ 	ofdm_power = min(ofdm_power, (u8)35);
+
 
