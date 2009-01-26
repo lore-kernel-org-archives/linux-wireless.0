@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:60758 "EHLO
-	terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168AbZABTgY (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34389 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751883AbZAZSwR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 14:36:24 -0500
-Message-ID: <495E6C96.3040102@kernel.org> (sfid-20090102_203626_917615_D8AD4691)
-Date: Fri, 02 Jan 2009 11:35:50 -0800
-From: "H. Peter Anvin" <hpa@kernel.org>
-MIME-Version: 1.0
-To: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>
-CC: Ingo Molnar <mingo@elte.hu>, x86 maintainers <x86@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: tip - Solution of ath9k: turn off temporarily (66b5c4a2c638b5a69d3e41abe4a2bae55035a92e)
-References: <3f9a31f40901020936l4bed87e2jb64678572d2ad45b@mail.gmail.com>	 <20090102180730.GA10072@elte.hu> <3f9a31f40901021040l2afb5e19sc37e61d3f9728531@mail.gmail.com>
-In-Reply-To: <3f9a31f40901021040l2afb5e19sc37e61d3f9728531@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 26 Jan 2009 13:52:17 -0500
+Message-Id: <20090126184925.080610122@sipsolutions.net> (sfid-20090126_195229_004853_1B243251)
+References: <20090126184740.036240879@sipsolutions.net>
+Date: Mon, 26 Jan 2009 19:47:43 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@gmail.com, Sujith.Manoharan@atheros.com, tomasw@gmail.com
+Subject: [RFC/RFT 3/7] mac80211: hardware should not deny going back to
+	legacy
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jaswinder Singh Rajput wrote:
->>
->> diff --git a/drivers/net/wireless/ath9k/Kconfig b/drivers/net/wireless/ath9k/Kconfig
->> index c43bd32..b849a45 100644
->> --- a/drivers/net/wireless/ath9k/Kconfig
->> +++ b/drivers/net/wireless/ath9k/Kconfig
->> @@ -1,6 +1,8 @@
->>  config ATH9K
->>        tristate "Atheros 802.11n wireless cards support"
->>        depends on PCI && MAC80211 && WLAN_80211
->> +       # build failures
->> +       depends on 0
->>        select MAC80211_LEDS
->>        select LEDS_CLASS
->>        select NEW_LEDS
->>
-> 
+Doing so would be an MLME protocol violation when the peer disabled
+the aggregation session. Quick driver review indicates that there are
+error codes passed all over the drivers but cannot ever be nonzero
+except in error conditions that would indicate mac80211 bugs.
 
-I thought the proper way to do this was "depends on BROKEN"...
+No real changes here, since no drivers currently can return -EBUSY.
 
-	-hpa
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/agg-tx.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2009-01-26 19:41:36.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2009-01-26 19:41:47.000000000 +0100
+@@ -393,9 +393,8 @@ int ieee80211_stop_tx_ba_session(struct 
+ 		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_STOP,
+ 					       &sta->sta, tid, NULL);
+ 
+-	/* case HW denied going back to legacy */
+-	if (ret) {
+-		WARN_ON(ret != -EBUSY);
++	/* HW shall not deny going back to legacy */
++	if (WARN_ON(ret)) {
+ 		*state = HT_AGG_STATE_OPERATIONAL;
+ 		if (hw->ampdu_queues)
+ 			ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
+
+-- 
 
