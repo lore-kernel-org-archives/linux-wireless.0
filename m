@@ -1,28 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sovereign.computergmbh.de ([85.214.69.204]:55748 "EHLO
-	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758728AbZACCuz (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:15971 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101AbZAZHqz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 21:50:55 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by sovereign.computergmbh.de (Postfix) with ESMTP id 2C0B21C067216
-	for <linux-wireless@vger.kernel.org>; Sat,  3 Jan 2009 03:50:52 +0100 (CET)
-Date: Sat, 3 Jan 2009 03:50:52 +0100 (CET)
-From: Jan Engelhardt <jengelh@medozas.de>
+	Mon, 26 Jan 2009 02:46:55 -0500
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
 To: linux-wireless@vger.kernel.org
-Subject: b43 depends on lots of modules
-Message-ID: <alpine.LSU.2.00.0901030349030.3914@fbirervta.pbzchgretzou.qr> (sfid-20090103_035059_724251_DBBBA065)
+Subject: Re: [PATCH] libertas: fix CF firmware loading for some cards
+Date: Mon, 26 Jan 2009 08:46:05 +0100
+Cc: Dan Williams <dcbw@redhat.com>, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org,
+	ryan@bluewatersys.com, Cyril HAENEL <chaenel@free.fr>
+References: <1232729733.2577.13.camel@localhost.localdomain> <200901231801.19570.mb@bu3sch.de> <1232733214.2577.24.camel@localhost.localdomain>
+In-Reply-To: <1232733214.2577.24.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200901260846.05912.hs4233@mail.mn-solutions.de> (sfid-20090126_084706_903156_FDB0D62D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> Could be, Holger did the initial patch and I'm not sure if the
+> udelay was intentional.  Note that this happens at PCMCIA/CF
+> hardware probe time (if that has any constraints that might
+> apply here).
 
-I noticed that the b43 module has a lot of dependencies, among:
+I'm used the card on an ARM architecture, and there long mdelay 
+won't work as on i386, so I used udelay.
 
-depends:        pcmcia,mac80211,ssb,input-polldev,pcmcia_core,led-class,rfkill,rng-core,firmware_class
-
-Why does it depend on PCMCIA when I hear that b43 devices are also 
-available in PCI variants? Similarly, is SSB needed on x86en which
-usually don't have such?
+In practice, the "expensive loop" isn't that expensive, because 
+the real number of iterations is quite low (contrary to what the 
+manual states).
