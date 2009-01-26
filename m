@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.189]:34560 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751605AbZAOSAt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 13:00:49 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so984191rnd.17
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 10:00:48 -0800 (PST)
-Message-ID: <43e72e890901151000y4dda530aw96e76f68b72c3fd4@mail.gmail.com> (sfid-20090115_190054_000051_FB609063)
-Date: Thu, 15 Jan 2009 10:00:47 -0800
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: wireless-regdb updated 2009-01-15 (was Re: wireless-regdb updated 2009-01-14)
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Helmut Schaa" <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890901150954t4bc9a390x43a30f287b609173@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:46928 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752471AbZAZXSO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 18:18:14 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 15:18:14 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] wireless-regdb: correct allowed width for JP
+Date: Mon, 26 Jan 2009 15:17:34 -0800
+Message-ID: <1233011854-31346-1-git-send-email-lrodriguez@atheros.com> (sfid-20090127_001818_215249_C578EDAC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <20090114162250.GC3854@tuxdriver.com>
-	 <200901151011.23147.helmut.schaa@gmail.com>
-	 <20090115134928.GA3241@tuxdriver.com>
-	 <1232031893.5839.0.camel@johannes>
-	 <43e72e890901150954t4bc9a390x43a30f287b609173@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2009 at 9:54 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> I'll set CRDA to pull this latest file upon building too by
-> default.
+It is bogus to have
 
-Actually this defeats the purpose of separating the packages, so never
-mind. It should help packaging wireless-regdb somehow I suppose
-though.
+end_freq - start_freq < max_width
 
-  Luis
+I have tested this.
+
+Reported-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ db.txt |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 91df808..89a9d52 100644
+--- a/db.txt
++++ b/db.txt
+@@ -295,8 +295,8 @@ country JM:
+ 
+ country JP:
+ 	(2402 - 2472 @ 40), (N/A, 20)
+-	(2457 - 2482 @ 40), (N/A, 20)
+-	(2474 - 2494 @ 40), (N/A, 20), NO-OFDM
++	(2457 - 2482 @ 20), (N/A, 20)
++	(2474 - 2494 @ 20), (N/A, 20), NO-OFDM
+ 	(4910 - 4930 @ 10), (N/A, 23)
+ 	(4910 - 4990 @ 40), (N/A, 23)
+ 	(4930 - 4950 @ 10), (N/A, 23)
+-- 
+1.6.1.rc3.51.g5832d
+
