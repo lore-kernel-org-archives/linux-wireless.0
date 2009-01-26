@@ -1,86 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36217 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753977AbZAYM57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 07:57:59 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Alina Friedrichsen" <x-alina@gmx.net>
-Subject: Re: [PATCH] b43: Accessing the TSF via mac80211
-Date: Sun, 25 Jan 2009 13:57:04 +0100
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-References: <20090125124151.115210@gmx.net> <200901251351.50230.mb@bu3sch.de> <200901251355.49220.mb@bu3sch.de>
-In-Reply-To: <200901251355.49220.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901251357.05020.mb@bu3sch.de> (sfid-20090125_135802_111962_D36DBF75)
+Received: from c1.cosetrain.com ([213.239.209.213]:40900 "EHLO
+	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752215AbZAZUjT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 15:39:19 -0500
+From: Florian Sesser <flomaillist@cosetrain.com>
+To: linux-wireless@vger.kernel.org
+Cc: Florian Sesser <flomaillist@cosetrain.com>
+Subject: [PATCH 4/6] mac80211: More small changes for modularization
+Date: Mon, 26 Jan 2009 21:39:13 +0100
+Message-Id: <79a59b62a4378b8b88cb3a33b1ec3cbd3808906e.1233001802.git.flomaillist@cosetrain.com> (sfid-20090126_213927_757374_C1421A9C)
+In-Reply-To: <e236615740b8ce8c9515c14aac3a2d9d93806a98.1233001802.git.flomaillist@cosetrain.com>
+References: <497E1B90.4060803@cosetrain.com>
+ <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
+ <3202b18e8531aa78c29636c163de20875ae1a9cf.1233001802.git.flomaillist@cosetrain.com>
+ <e236615740b8ce8c9515c14aac3a2d9d93806a98.1233001802.git.flomaillist@cosetrain.com>
+In-Reply-To: <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
+References: <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 25 January 2009 13:55:49 Michael Buesch wrote:
-> On Sunday 25 January 2009 13:51:50 Michael Buesch wrote:
-> > On Sunday 25 January 2009 13:41:51 Alina Friedrichsen wrote:
-> > > This allows the mac80211 high level code to access the TSF. This is e.g. needed for BSSID merges in the IBSS mode.
-> > 
-> > Thanks, can you also remove our private debugfs hook?
-> > 
-> > > Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
-> > > ---
-> > > diff -urN wireless-testing.orig/drivers/net/wireless/b43/main.c wireless-testing/drivers/net/wireless/b43/main.c
-> > > --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-01-25 06:12:13.000000000 +0100
-> > > +++ wireless-testing/drivers/net/wireless/b43/main.c	2009-01-25 13:09:35.000000000 +0100
-> > > @@ -3177,6 +3177,25 @@
-> > >  	return 0;
-> > >  }
-> > >  
-> > > +static u64 b43_op_get_tsf(struct ieee80211_hw *hw)
-> > > +{
-> > > +	struct b43_wl *wl = hw_to_b43_wl(hw);
-> > > +	struct b43_wldev *dev = wl->current_dev;
-> > > +	u64 tsf;
-> > > +
-> > 
-> > You must add a check and locking here.
-> > 
-> > 	if (dev && (b43_status(dev) >= B43_STAT_INITIALIZED)) {
-> > 		mutex_lock(&wl->mutex);
-> > 		spin_lock_irq(&wl->irq_lock);
-> > 
-> > > +	b43_tsf_read(dev, &tsf);
-> > 
-> > 		spin_unlock_irq(&wl->irq_lock);
-> > 		mutex_unlock(&wl->mutex);
-> > 	} else
-> > 		tsf = 0; //FIXME what to do on error?
-> > 
-> > > +	return tsf;
-> > > +}
-> 
-> Whoops, I got it wrong :D
-> This is what it should look like:
-> 
-> static u64 b43_op_get_tsf(struct ieee80211_hw *hw)
-> {
->        struct b43_wl *wl = hw_to_b43_wl(hw);
->        struct b43_wldev *dev = wl->current_dev;
->        u64 tsf;
-> 
-> 	mutex_lock(&wl->mutex);
-> 	spin_lock_irq(&wl->irq_lock);
-> 	if (dev && (b43_status(dev) >= B43_STAT_INITIALIZED))
-> 		b43_tsf_read(dev, &tsf);
-> 	else
-> 		tsf = 0;//FIXME? what to do on error?
-> 	spin_unlock_irq(&wl->irq_lock);
-> 	mutex_unlock(&wl->mutex);
-> 
->        return tsf;
-> }
-> 
+Some rather small changes in various files.
+After this patch, i was able to do a clean compile.
 
-Damn, I'm not awake, yet.
-The   dev = wl->current_dev   also must be inside of the mutex.
+Signed-off-by: Florian Sesser <flomaillist@cosetrain.com>
+---
+ include/net/cfg80211.h     |    4 ++++
+ net/mac80211/Makefile      |    8 ++++++--
+ net/mac80211/ieee80211_i.h |    5 +++++
+ net/mac80211/sta_info.c    |    1 +
+ net/mac80211/util.c        |    2 ++
+ 5 files changed, 18 insertions(+), 2 deletions(-)
 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index dd1fd51..83eb2a1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -458,6 +458,10 @@ struct mesh_config {
+ 	u32 dot11MeshHWMPactivePathTimeout;
+ 	u16 dot11MeshHWMPpreqMinInterval;
+ 	u16 dot11MeshHWMPnetDiameterTraversalTime;
++	/* Mesh IDs */
++	u32 mesh_path_selection_protocol_id;
++	u32 mesh_path_selection_metric_id;
++	u32 mesh_congestion_control_mode_id;
+ };
+ 
+ /**
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 58c94bb..796e7a6 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -35,8 +35,12 @@ mac80211-$(CONFIG_MAC80211_DEBUGFS) += \
+ mac80211-$(CONFIG_MAC80211_MESH) += \
+ 	mesh.o \
+ 	mesh_pathtbl.o \
+-	mesh_plink.o \
+-	mesh_hwmp.o
++	mesh_plink.o
++
++# HWMP routing is a requirement for 80211s
++ifdef CONFIG_MAC80211_MESH
++obj-m += mesh_hwmp.o
++endif
+ 
+ mac80211-$(CONFIG_PM) += pm.o
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index eaf3603..5490ba1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -365,6 +365,8 @@ struct ieee80211_if_mesh {
+ 	u8 mesh_pm_id[4];
+ 	/* Congestion Control Mode Identifier */
+ 	u8 mesh_cc_id[4];
++	/* Active Path Selection Protocol */
++	struct mesh_path_sel_algo* mesh_pp;
+ 	/* Local mesh Destination Sequence Number */
+ 	u32 dsn;
+ 	/* Last used PREQ ID */
+@@ -534,6 +536,9 @@ struct ieee80211_sub_if_data {
+ 		struct dentry *dot11MeshHWMPmaxPREQretries;
+ 		struct dentry *path_refresh_time;
+ 		struct dentry *min_discovery_timeout;
++		struct dentry *mesh_path_selection_protocol_id;
++		struct dentry *mesh_path_selection_metric_id;
++		struct dentry *mesh_congestion_mode_control_id;
+ 	} mesh_config;
+ #endif
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 10c5539..b10d754 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -105,6 +105,7 @@ struct sta_info *sta_info_get(struct ieee80211_local *local, const u8 *addr)
+ 	}
+ 	return sta;
+ }
++EXPORT_SYMBOL(sta_info_get);
+ 
+ struct sta_info *sta_info_get_by_idx(struct ieee80211_local *local, int idx,
+ 				     struct net_device *dev)
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 73c7d73..c579606 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -674,6 +674,7 @@ void ieee802_11_parse_elems(u8 *start, size_t len,
+ 		pos += elen;
+ 	}
+ }
++EXPORT_SYMBOL(ieee802_11_parse_elems);
+ 
+ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ {
+@@ -714,6 +715,7 @@ void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
+ 
+ 	dev_queue_xmit(skb);
+ }
++EXPORT_SYMBOL(ieee80211_tx_skb);
+ 
+ int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freqMHz)
+ {
 -- 
-Greetings, Michael.
+1.5.6.5
+
