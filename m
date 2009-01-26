@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:32593 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935608AbZAOWwJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 17:52:09 -0500
-From: Paul Moore <paul.moore@hp.com>
-To: "Justin Mattock" <justinmattock@gmail.com>
-Subject: Re: netlabel: UNLABELED ath9k not denying unlabeled traffic
-Date: Thu, 15 Jan 2009 17:52:06 -0500
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"SE-Linux" <selinux@tycho.nsa.gov>
-References: <496D759A.7010401@gmail.com> <200901151246.38396.paul.moore@hp.com> <dd18b0c30901151400t68dfc54cu67a378ba71a2edc9@mail.gmail.com>
-In-Reply-To: <dd18b0c30901151400t68dfc54cu67a378ba71a2edc9@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:46738 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752210AbZAZXRM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 18:17:12 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 15:17:12 -0800
+Date: Mon, 26 Jan 2009 15:16:31 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Invalid JP regulatory domain
+Message-ID: <20090126231631.GD19242@tesla> (sfid-20090127_001717_461429_42D9DF5D)
+References: <200901261730.29555.herton@mandriva.com.br>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901151752.06622.paul.moore@hp.com> (sfid-20090115_235219_725764_30692906)
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <200901261730.29555.herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 January 2009 5:00:55 pm Justin Mattock wrote:
-> On Thu, Jan 15, 2009 at 9:46 AM, Paul Moore <paul.moore@hp.com> wrote:
-> > On Wednesday 14 January 2009 9:43:56 pm Justin P. Mattock wrote:
-> >> Paul Moore wrote:
-> >> > On Wednesday 14 January 2009 4:35:25 pm Justin P. Mattock wrote:
-> >> >> here is what the error looks like:
-> >> >>
-> >> >> netlabel_tools-0.19# make
-> >> >> INFO: creating the version header file
-> >> >> .: 10: version_info: not found
-> >> >> make: *** [include/version.h] Error 2
-> >> >
-> >> > Huh, can you try the following:
-> >> >
-> >> >  1. Open the netlabel_tools-0.19/Makefile in your favorite
-> >> > editor 2. Change the ". version_info; \" line to "source
-> >> > ./version_info; \" 3. Save your changes
-> >> >  4. Try running "make" again
-> >> >
-> >> > Thanks.
-> >>
-> >> O.k. changed . version like how you had posted.
-> >> The package compiled like a charm.
-> >
-> > Great, I'll change the Makefile(s) in SVN ... I don't quite
-> > understand the reason (what is your /bin/sh?  I'm guessing not
-> > bash?) but at least we now have a solution :)
-> >
-> > --
-> > paul moore
-> > linux @ hp
+On Mon, Jan 26, 2009 at 11:30:28AM -0800, Herton Ronaldo Krzesinski wrote:
+> Hi,
+> 
+> While trying to set JP as regulatory domain I get in my kernel log:
+> cfg80211: Calling CRDA for country: JP
+> cfg80211: Invalid regulatory domain detected:
+> cfg80211: Regulatory domain: JP
+>         (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+>         (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>         (2457000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>         (2474000 KHz - 2494000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>         (4910000 KHz - 4930000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+>         (4910000 KHz - 4990000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+>         (4930000 KHz - 4950000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+>         (5030000 KHz - 5045000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+>         (5030000 KHz - 5090000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+>         (5050000 KHz - 5060000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+>         (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>         (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>         (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+> 
+> Looks like the check "freq_range->max_bandwidth_khz > freq_diff" fails in
+> net/wireless/reg.c (is_valid_reg_rule function) for the second and third
+> ranges. Got this with wireless-regdb-2009-01-15 and kernel 2.6.28.1
 >
-> hmm..
-> under ps auxZ
-> I see:
-> 2896 tty1 S+ 0:00 /bin/bash /usr/bin/startx
-> then open aterm for navigating.
->
-> Thankfully it works(this people can install
-> it a test it out.)
+> Is there some error in regulatory domain ranges for JP, or kernel check
+> missing something additional?
 
-Well, it is possible that /bin/sh points to a non-bash shell but maybe 
-not (I'm pretty sure the make command executes the scripts 
-with /bin/sh).  Either way, I checked in the fix to the SVN tree 
-earlier today so newer releases will have the fix; if needed I can 
-release a 0.19.1 or similar but I want to wait and see how widespread 
-the problem is ...
+You are right, the bandwidth was the issue, I'll send a patch now. Thanks for
+reporting this!
 
--- 
-paul moore
-linux @ hp
+> I couldn't find proper information about the
+> rules.
+
+I'll try add documentation for that, thanks.
+
+  Luis
