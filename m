@@ -1,216 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2116 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508AbZASQXT (ORCPT
+Received: from c1.cosetrain.com ([213.239.209.213]:40890 "EHLO
+	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752009AbZAZUjS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 11:23:19 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH v3 2/3] mac80211: add suspend/resume callbacks
-Date: Mon, 19 Jan 2009 11:20:53 -0500
-Message-Id: <1232382054-15931-3-git-send-email-me@bobcopeland.com> (sfid-20090119_172327_790254_81BB5C04)
+	Mon, 26 Jan 2009 15:39:18 -0500
+From: Florian Sesser <flomaillist@cosetrain.com>
+To: linux-wireless@vger.kernel.org
+Cc: Florian Sesser <flomaillist@cosetrain.com>
+Subject: [PATCH 2/6] mac80211: Registration of path selection protocols
+Date: Mon, 26 Jan 2009 21:39:11 +0100
+Message-Id: <3202b18e8531aa78c29636c163de20875ae1a9cf.1233001802.git.flomaillist@cosetrain.com> (sfid-20090126_213926_605732_6CF3BE60)
+In-Reply-To: <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
+References: <497E1B90.4060803@cosetrain.com>
+ <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
+In-Reply-To: <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
+References: <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces suspend and resume callbacks to mac80211,
-allowing mac80211 to quiesce its state (bringing down interfaces,
-removing keys, etc) in preparation for suspend.  cfg80211 will call
-the suspend hook before the device suspend, and resume hook after
-the device resume.
+(Un)registering of path selection protocols
+and some other functions for supporting the
+change of PP at runtime.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Florian Sesser <flomaillist@cosetrain.com>
 ---
- net/mac80211/Makefile      |    2 +
- net/mac80211/cfg.c         |   17 +++++++
- net/mac80211/ieee80211_i.h |    4 ++
- net/mac80211/pm.c          |  114 ++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 137 insertions(+), 0 deletions(-)
- create mode 100644 net/mac80211/pm.c
+ net/mac80211/mesh.c |  162 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 158 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index 5c6fadf..58c94bb 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -38,6 +38,8 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
- 	mesh_plink.o \
- 	mesh_hwmp.o
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 8a1fcae..c0aaabd 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -9,6 +9,7 @@
+  */
  
-+mac80211-$(CONFIG_PM) += pm.o
-+
- # objects for PID algorithm
- rc80211_pid-y := rc80211_pid_algo.o
- rc80211_pid-$(CONFIG_MAC80211_DEBUGFS) += rc80211_pid_debugfs.o
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d1ac3ab..3527de2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1256,6 +1256,21 @@ static int ieee80211_set_mgmt_extra_ie(struct wiphy *wiphy,
- 	return ret;
+ #include <asm/unaligned.h>
++#include <linux/module.h>
+ #include "ieee80211_i.h"
+ #include "mesh.h"
+ 
+@@ -23,6 +24,8 @@
+ 
+ int mesh_allocated;
+ static struct kmem_cache *rm_cache;
++static DEFINE_SPINLOCK(path_sel_list_lock);
++static LIST_HEAD(mesh_path_sel_algo_list);
+ 
+ void ieee80211s_init(void)
+ {
+@@ -112,14 +115,149 @@ void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_mesh_housekeeping_timer((unsigned long) sdata);
  }
  
-+#ifdef CONFIG_PM
-+static int ieee80211_suspend(struct wiphy *wiphy)
++struct mesh_path_sel_algo* mesh_path_sel_algo_find_by_name (const char* name)
 +{
-+	return __ieee80211_suspend(wiphy_priv(wiphy));
++	struct mesh_path_sel_algo *a;
++
++	list_for_each_entry(a, &mesh_path_sel_algo_list, list) {
++		if (!strcmp(a->name, name))
++			return a;
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL(mesh_path_sel_algo_find_by_name);
++
++struct mesh_path_sel_algo* mesh_path_sel_algo_find_by_id (u32 id)
++{
++	struct mesh_path_sel_algo *a;
++
++	list_for_each_entry(a, &mesh_path_sel_algo_list, list) {
++		if (a->id == id)
++			return a;
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL(mesh_path_sel_algo_find_by_id);
++
++static struct mesh_path_sel_algo* mesh_path_sel_algo_load(const char *name)
++{
++	struct mesh_path_sel_algo *a;
++	spin_lock(&path_sel_list_lock);
++	a = mesh_path_sel_algo_find_by_name(name);
++	if (!a) {
++		spin_unlock(&path_sel_list_lock);
++		request_module("%s", name);
++		spin_lock(&path_sel_list_lock);
++		a = mesh_path_sel_algo_find_by_name(name);
++	}
++
++	if (a && !try_module_get(a->owner))
++		a = NULL;
++	spin_unlock(&path_sel_list_lock);
++	return a;
 +}
 +
-+static int ieee80211_resume(struct wiphy *wiphy)
++void mesh_path_sel_algo_set (struct ieee80211_if_mesh *sta, struct mesh_path_sel_algo* algo)
 +{
-+	return __ieee80211_resume(wiphy_priv(wiphy));
-+}
-+#else
-+#define ieee80211_suspend NULL
-+#define ieee80211_resume NULL
-+#endif
++	/* first, check if algo has been properly registered */
++	if (mesh_path_sel_algo_find_by_name(algo->name)) {
 +
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -1286,4 +1301,6 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.set_txq_params = ieee80211_set_txq_params,
- 	.set_channel = ieee80211_set_channel,
- 	.set_mgmt_extra_ie = ieee80211_set_mgmt_extra_ie,
-+	.suspend = ieee80211_suspend,
-+	.resume = ieee80211_resume,
- };
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5eafd3a..faa2476 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1006,6 +1006,10 @@ void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 				 u16 capab_info, u8 *pwr_constr_elem,
- 				 u8 pwr_constr_elem_len);
++		if (!sta->mesh_pp) {
++			/* set all three locations (duh): */
++			/* this connects an interface to its mesh pp algo */
++			sta->mesh_pp = algo;
++			/* this is used to compare mesh configs (see mesh_matches_local) */
++			memcpy(sta->mesh_pp_id, &(algo->id), 4);
++			/* this is used by the nl80211 layer */
++			sta->mshcfg.mesh_path_selection_protocol_id = algo->id;
++
++			printk(KERN_INFO "Initial mesh path selection algorithm %s / %08X.\n", algo->name, algo->id);
++			return;
++		}
++
++		if (sta->mesh_pp == algo) {
++			printk(KERN_INFO "Mesh path selection algorithm %s / %08X already active.\n", algo->name, algo->id);
++			return;
++		}
++
++		printk(KERN_INFO "Stopping mesh path selection algorithm %s / %08X ...\n", sta->mesh_pp->name, sta->mesh_pp->id);
++		sta->mesh_pp->ops->path_sel_stop_fn(sta);
++
++		sta->mesh_pp = algo;
++		memcpy(sta->mesh_pp_id, &algo->id, 4);
++		printk(KERN_INFO "Chosen mesh path selection algorithm %s / %08X.\n", sta->mesh_pp->name, sta->mesh_pp->id);
++
++		printk(KERN_INFO "Starting mesh path selection algorithm %s / %08X ...\n", sta->mesh_pp->name, sta->mesh_pp->id);
++		sta->mesh_pp->ops->path_sel_start_fn(sta);
++	}
++}
++EXPORT_SYMBOL(mesh_path_sel_algo_set);
++
++void mesh_path_sel_algo_register (struct mesh_path_sel_algo* algo)
++{
++	/* Sanity checks */
++	BUG_ON(!algo->ops->path_start_discovery_fn);
++	BUG_ON(!algo->ops->nexthop_lookup_fn);
++	BUG_ON(!algo->ops->path_error_tx_fn);
++	BUG_ON(!algo->ops->path_timer_fn);
++	BUG_ON(!algo->ops->queue_preq_fn);
++	BUG_ON(!algo->ops->rx_path_sel_frame_fn);
++	BUG_ON(!algo->ops->path_sel_start_fn);
++	BUG_ON(!algo->ops->path_sel_stop_fn);
++
++	spin_lock(&path_sel_list_lock);
++	if (!mesh_path_sel_algo_find_by_name(algo->name)) {
++		list_add_tail(&algo->list, &mesh_path_sel_algo_list);
++		spin_unlock(&path_sel_list_lock);
++		printk(KERN_INFO "Mesh path selection algorithm %s / %08X registered.\n", algo->name, algo->id);
++	} else {
++		spin_unlock(&path_sel_list_lock);
++		printk(KERN_WARNING "Error: Couldn't register mesh path selection algorithm %s / %08X.\n", algo->name, algo->id);
++	}
++}
++EXPORT_SYMBOL(mesh_path_sel_algo_register);
++
++void mesh_path_sel_algo_unregister (struct mesh_path_sel_algo *algo) {
++	if (mesh_path_sel_algo_find_by_name(algo->name)) {
++		list_del(&algo->list);
++		printk(KERN_INFO "Mesh path selection algorithm %s / %08X unregistered.\n", algo->name, algo->id);
++	} else {
++		printk(KERN_WARNING "Error: Couldn't unregister mesh path selection algorithm %s / %08X.\n", algo->name, algo->id);
++	}
++}
++EXPORT_SYMBOL(mesh_path_sel_algo_unregister);
++
+ void mesh_ids_set_default(struct ieee80211_if_mesh *sta)
+ {
+-	u8 def_id[4] = {0x00, 0x0F, 0xAC, 0xff};
++	u8 def_id[4] = {0x00, 0x0F, 0xAC, 0xFF};
  
-+/* Suspend/resume */
-+int __ieee80211_suspend(struct ieee80211_hw *hw);
-+int __ieee80211_resume(struct ieee80211_hw *hw);
-+
- /* utility functions/constants */
- extern void *mac80211_wiphy_privid; /* for wiphy privid */
- extern const unsigned char rfc1042_header[6];
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-new file mode 100644
-index 0000000..6d17ed7
---- /dev/null
-+++ b/net/mac80211/pm.c
-@@ -0,0 +1,114 @@
-+#include <net/mac80211.h>
-+#include <net/rtnetlink.h>
-+
-+#include "ieee80211_i.h"
-+#include "led.h"
-+
-+int __ieee80211_suspend(struct ieee80211_hw *hw)
+ 	memcpy(sta->mesh_pp_id, def_id, 4);
+ 	memcpy(sta->mesh_pm_id, def_id, 4);
+ 	memcpy(sta->mesh_cc_id, def_id, 4);
+ }
++/* Set path selection protocol ID: OUI followed by arbitrary 2 bytes */
++void mesh_ids_set_pp(struct ieee80211_if_mesh *sta, u32 pp)
 +{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_if_init_conf conf;
-+	struct sta_info *sta;
++	struct mesh_path_sel_algo *nalgo = mesh_path_sel_algo_find_by_id(pp);
 +
-+	flush_workqueue(local->hw.workqueue);
-+
-+	/* disable keys */
-+	list_for_each_entry(sdata, &local->interfaces, list)
-+		ieee80211_disable_keys(sdata);
-+
-+	/* remove STAs */
-+	list_for_each_entry(sta, &local->sta_list, list) {
-+
-+		if (local->ops->sta_notify) {
-+			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+				sdata = container_of(sdata->bss,
-+					     struct ieee80211_sub_if_data,
-+					     u.ap);
-+
-+			local->ops->sta_notify(hw, &sdata->vif,
-+				STA_NOTIFY_REMOVE, &sta->sta);
-+		}
++	if(nalgo) {
++		mesh_path_sel_algo_set(sta, nalgo);
++	} else {
++		printk(KERN_WARNING "Could not find mesh path selection protocol with ID %08X.\n", pp);
 +	}
-+
-+	/* remove all interfaces */
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+
-+		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
-+		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
-+		    netif_running(sdata->dev)) {
-+			conf.vif = &sdata->vif;
-+			conf.type = sdata->vif.type;
-+			conf.mac_addr = sdata->dev->dev_addr;
-+			local->ops->remove_interface(hw, &conf);
-+		}
-+	}
-+
-+	/* stop hardware */
-+	if (local->open_count) {
-+		ieee80211_led_radio(local, false);
-+		local->ops->stop(hw);
-+	}
-+	return 0;
 +}
-+
-+int __ieee80211_resume(struct ieee80211_hw *hw)
++/* Set path selection metric ID: OUI followed by arbitrary 2 bytes */
++void mesh_ids_set_pm(struct ieee80211_if_mesh *sta, u32 pm)
 +{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_if_init_conf conf;
-+	struct sta_info *sta;
-+	int res;
-+
-+	/* restart hardware */
-+	if (local->open_count) {
-+		res = local->ops->start(hw);
-+
-+		ieee80211_led_radio(local, hw->conf.radio_enabled);
-+	}
-+
-+	/* add interfaces */
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+
-+		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
-+		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
-+		    netif_running(sdata->dev)) {
-+			conf.vif = &sdata->vif;
-+			conf.type = sdata->vif.type;
-+			conf.mac_addr = sdata->dev->dev_addr;
-+			res = local->ops->add_interface(hw, &conf);
-+		}
-+	}
-+
-+	/* add STAs back */
-+	list_for_each_entry(sta, &local->sta_list, list) {
-+
-+		if (local->ops->sta_notify) {
-+			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+				sdata = container_of(sdata->bss,
-+					     struct ieee80211_sub_if_data,
-+					     u.ap);
-+
-+			local->ops->sta_notify(hw, &sdata->vif,
-+				STA_NOTIFY_ADD, &sta->sta);
-+		}
-+	}
-+
-+	/* add back keys */
-+	list_for_each_entry(sdata, &local->interfaces, list)
-+		if (netif_running(sdata->dev))
-+			ieee80211_enable_keys(sdata);
-+
-+	/* setup RTS threshold */
-+	if (local->ops->set_rts_threshold)
-+		local->ops->set_rts_threshold(hw, local->rts_threshold);
-+
-+	/* reconfigure hardware */
-+	ieee80211_hw_config(local, ~0);
-+
-+	netif_addr_lock_bh(local->mdev);
-+	ieee80211_configure_filter(local);
-+	netif_addr_unlock_bh(local->mdev);
-+
-+	return 0;
++	memcpy(sta->mesh_pm_id, &pm, 4);
 +}
++/* Set congestion control mode ID: OUI followed by arbitrary 2 bytes */
++void mesh_ids_set_cc(struct ieee80211_if_mesh *sta, u32 cc)
++{
++	memcpy(sta->mesh_cc_id, &cc, 4);
++}
+ 
+ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
+ {
+@@ -246,7 +384,7 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 	memcpy(pos, sdata->u.mesh.mesh_pp_id, 4);
+ 	pos += 4;
+ 
+-	/* Active path selection metric ID   */
++	/* Active path selection metric ID */
+ 	memcpy(pos, sdata->u.mesh.mesh_pm_id, 4);
+ 	pos += 4;
+ 
+@@ -444,6 +582,16 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	queue_work(local->hw.workqueue, &ifmsh->work);
+ 	ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON |
+ 				   IEEE80211_IFCC_BEACON_ENABLED);
++
++	/* Register default path selection algorithm */
++	if (!ifmsh->mesh_pp) {
++		if(!(ifmsh->mesh_pp = mesh_path_sel_algo_find_by_name("mesh_hwmp"))) {
++			if (!(ifmsh->mesh_pp = mesh_path_sel_algo_load("mesh_hwmp"))) {
++				printk(KERN_WARNING "Could not load mesh_hwmp, aborting.\n");
++				ieee80211_stop_mesh(sdata);
++			}
++		}
++	}
+ }
+ 
+ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+@@ -523,7 +671,7 @@ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
+ 		mesh_rx_plink_frame(sdata, mgmt, len, rx_status);
+ 		break;
+ 	case MESH_PATH_SEL_CATEGORY:
+-		mesh_rx_path_sel_frame(sdata, mgmt, len);
++		sdata->u.mesh.mesh_pp->ops->rx_path_sel_frame_fn(sdata, mgmt, len);
+ 		break;
+ 	}
+ }
+@@ -576,7 +724,7 @@ static void ieee80211_mesh_work(struct work_struct *work)
+ 	if (ifmsh->preq_queue_len &&
+ 	    time_after(jiffies,
+ 		       ifmsh->last_preq + msecs_to_jiffies(ifmsh->mshcfg.dot11MeshHWMPpreqMinInterval)))
+-		mesh_path_start_discovery(sdata);
++		ifmsh->mesh_pp->ops->path_start_discovery_fn(sdata);
+ 
+ 	if (ifmsh->housekeeping)
+ 		ieee80211_mesh_housekeeping(sdata, ifmsh);
+@@ -617,6 +765,12 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+ 		MESH_PREQ_MIN_INT;
+ 	ifmsh->mshcfg.dot11MeshHWMPnetDiameterTraversalTime =
+ 		MESH_DIAM_TRAVERSAL_TIME;
++	ifmsh->mshcfg.mesh_path_selection_protocol_id =
++		MESH_PATH_SELECTION_PROTOCOL_ID;
++	ifmsh->mshcfg.mesh_path_selection_metric_id =
++		MESH_PATH_SELECTION_METRIC_ID;
++	ifmsh->mshcfg.mesh_congestion_control_mode_id =
++		MESH_CONGESTION_CONTROL_MODE_ID;
+ 	ifmsh->mshcfg.dot11MeshHWMPmaxPREQretries =
+ 		MESH_MAX_PREQ_RETRIES;
+ 	ifmsh->mshcfg.path_refresh_time =
 -- 
-1.6.0.6
-
+1.5.6.5
 
