@@ -1,69 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:39805 "EHLO
-	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711AbZAFH5t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 02:57:49 -0500
-From: "W. van den Akker" <listsrv@wilsoft.nl>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Still problems to get ath9k in accessmode. Kernel hangs
-Date: Tue, 6 Jan 2009 08:57:41 +0100
-References: <200901011444.20333.listsrv@wilsoft.nl> <20090105094102.GA27836@jm.kir.nu>
-In-Reply-To: <20090105094102.GA27836@jm.kir.nu>
-Cc: Jouni Malinen <j@w1.fi>
+Received: from mail.atheros.com ([12.36.123.2]:40061 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751302AbZAZO6T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 09:58:19 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 06:58:19 -0800
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <Jouni.Malinen@Atheros.com>, <Luis.Rodriguez@Atheros.com>,
+	<linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH] ath9k: Fix AR9285 specific noise floor eeprom reads.
+Date: Mon, 26 Jan 2009 20:28:14 +0530
+Message-ID: <1232981894-5829-1-git-send-email-senthilkumar@atheros.com> (sfid-20090126_155823_315636_13191E52)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901060857.41357.listsrv@wilsoft.nl> (sfid-20090106_085754_708489_23E0A11F)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 05 January 2009, you wrote:
-> On Thu, Jan 01, 2009 at 02:44:20PM +0100, W. van den Akker wrote:
-> > I have tested on the server  with the latest wireless-testing the past
-> > days (2.6.28-rc9-wl). The wireless-testing looks somewhat more stable
-> > then the compat-wireless.
-> >
-> > I have also installed the netconsole module to watch any kernel prints.
-> > After running hostapd (v0.6.6) from command line the AP is
-> > up-and-running. Then if I connect with the laptop (tested it with kernel
-> > .26 and .28 on the laptop) I get a connection and can start a browser en
-> > explore the internet. If I start a second session (Kmail or second
-> > browser) the
-> > server hangs within a minute. Leaving again no trace on the console,
-> > hostapd-log or netconsole.
->
-> Just to make sure I understood this correctly.. Does this happen with
-> just a single association station (your laptop)? What are you referring
-> to with a "session"? Just another program using network (i.e., no new
-> wireless associations, etc.)? As far as the ath9k driver is concerned,
-> new applications (e.g., new TCP connection) should not really matter
-> much.. If you have IEEE 802.11n enabled, could you please run a test
-> with it disabled to make sure this is not related to frame aggregation?
->
-> As far as getting any output from the system is concerned, the next step
-> could be to see if NMI watchdog would be able to provide any help.
-> Please take a look at Documentation/nmi_watchdog.txt in the kernel
-> source code and see if you could use that on the AP to get some output
-> when the system hangs (running without X on console to make sure you see
-> the output).
+Fix AR9285 specific noise floor reads and initialize tx and rx
+chainmask during reset. This along with the following earlier
+patches of ath9k fixes an issue with association noticed in
+noisy environment.
 
-Hi Jouni,
+ath9k: Fix typo in chip version check
+ath9k: Remove unnecessary gpio configuration in ath9k_hw_reset()
+ath9k: Fix bug in NF calibration
 
-Yes you understood correctly. Only a laptop, start a browser then start Kmail 
-over the same wireless connection. Then it hangs. This is always 
-reproducable. There are also other sorts or hangups (for example when 
-starting hostapd, but that is not always reproducable when it happens).
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath9k/calib.c |   78 +++++++++++++++++------------------
+ drivers/net/wireless/ath9k/hw.c    |    5 ++-
+ 2 files changed, 42 insertions(+), 41 deletions(-)
 
-I will try today the watchdog-suggestion. Hope that it will provide some help.
-
-To be continued....
-
-gr,
-Willem
-
+diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
+index c6d1de0..69ff01c 100644
+--- a/drivers/net/wireless/ath9k/calib.c
++++ b/drivers/net/wireless/ath9k/calib.c
+@@ -105,27 +105,29 @@ static void ath9k_hw_do_getnf(struct ath_hal *ah,
+ 		"NF calibrated [ctl] [chain 0] is %d\n", nf);
+ 	nfarray[0] = nf;
+ 
+-	if (AR_SREV_9280_10_OR_LATER(ah))
+-		nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
+-			AR9280_PHY_CH1_MINCCA_PWR);
+-	else
+-		nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
+-			AR_PHY_CH1_MINCCA_PWR);
+-
+-	if (nf & 0x100)
+-		nf = 0 - ((nf ^ 0x1ff) + 1);
+-	DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+-		"NF calibrated [ctl] [chain 1] is %d\n", nf);
+-	nfarray[1] = nf;
++	if (!AR_SREV_9285(ah)) {
++		if (AR_SREV_9280_10_OR_LATER(ah))
++			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
++					AR9280_PHY_CH1_MINCCA_PWR);
++		else
++			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
++					AR_PHY_CH1_MINCCA_PWR);
+ 
+-	if (!AR_SREV_9280(ah)) {
+-		nf = MS(REG_READ(ah, AR_PHY_CH2_CCA),
+-			AR_PHY_CH2_MINCCA_PWR);
+ 		if (nf & 0x100)
+ 			nf = 0 - ((nf ^ 0x1ff) + 1);
+ 		DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+-			"NF calibrated [ctl] [chain 2] is %d\n", nf);
+-		nfarray[2] = nf;
++				"NF calibrated [ctl] [chain 1] is %d\n", nf);
++		nfarray[1] = nf;
++
++		if (!AR_SREV_9280(ah)) {
++			nf = MS(REG_READ(ah, AR_PHY_CH2_CCA),
++					AR_PHY_CH2_MINCCA_PWR);
++			if (nf & 0x100)
++				nf = 0 - ((nf ^ 0x1ff) + 1);
++			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
++				"NF calibrated [ctl] [chain 2] is %d\n", nf);
++			nfarray[2] = nf;
++		}
+ 	}
+ 
+ 	if (AR_SREV_9280_10_OR_LATER(ah))
+@@ -141,27 +143,29 @@ static void ath9k_hw_do_getnf(struct ath_hal *ah,
+ 		"NF calibrated [ext] [chain 0] is %d\n", nf);
+ 	nfarray[3] = nf;
+ 
+-	if (AR_SREV_9280_10_OR_LATER(ah))
+-		nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
+-			AR9280_PHY_CH1_EXT_MINCCA_PWR);
+-	else
+-		nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
+-			AR_PHY_CH1_EXT_MINCCA_PWR);
++	if (!AR_SREV_9285(ah)) {
++		if (AR_SREV_9280_10_OR_LATER(ah))
++			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
++					AR9280_PHY_CH1_EXT_MINCCA_PWR);
++		else
++			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
++					AR_PHY_CH1_EXT_MINCCA_PWR);
+ 
+-	if (nf & 0x100)
+-		nf = 0 - ((nf ^ 0x1ff) + 1);
+-	DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+-		"NF calibrated [ext] [chain 1] is %d\n", nf);
+-	nfarray[4] = nf;
+-
+-	if (!AR_SREV_9280(ah)) {
+-		nf = MS(REG_READ(ah, AR_PHY_CH2_EXT_CCA),
+-			AR_PHY_CH2_EXT_MINCCA_PWR);
+ 		if (nf & 0x100)
+ 			nf = 0 - ((nf ^ 0x1ff) + 1);
+ 		DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+-			"NF calibrated [ext] [chain 2] is %d\n", nf);
+-		nfarray[5] = nf;
++				"NF calibrated [ext] [chain 1] is %d\n", nf);
++		nfarray[4] = nf;
++
++		if (!AR_SREV_9280(ah)) {
++			nf = MS(REG_READ(ah, AR_PHY_CH2_EXT_CCA),
++					AR_PHY_CH2_EXT_MINCCA_PWR);
++			if (nf & 0x100)
++				nf = 0 - ((nf ^ 0x1ff) + 1);
++			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
++				"NF calibrated [ext] [chain 2] is %d\n", nf);
++			nfarray[5] = nf;
++		}
+ 	}
+ }
+ 
+@@ -668,12 +672,6 @@ int16_t ath9k_hw_getnf(struct ath_hal *ah,
+ 	int16_t nfarray[NUM_NF_READINGS] = { 0 };
+ 	struct ath9k_nfcal_hist *h;
+ 	struct ieee80211_channel *c = chan->chan;
+-	u8 chainmask;
+-
+-	if (AR_SREV_9280(ah))
+-		chainmask = 0x1B;
+-	else
+-		chainmask = 0x3F;
+ 
+ 	chan->channelFlags &= (~CHANNEL_CW_INT);
+ 	if (REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF) {
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index bb8628c..7728234 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -2165,7 +2165,10 @@ int ath9k_hw_reset(struct ath_hal *ah, struct ath9k_channel *chan,
+ 	ahp->ah_txchainmask = sc->sc_tx_chainmask;
+ 	ahp->ah_rxchainmask = sc->sc_rx_chainmask;
+ 
+-	if (AR_SREV_9280(ah)) {
++	if (AR_SREV_9285(ah)) {
++		ahp->ah_txchainmask &= 0x1;
++		ahp->ah_rxchainmask &= 0x1;
++	} else if (AR_SREV_9280(ah)) {
+ 		ahp->ah_txchainmask &= 0x3;
+ 		ahp->ah_rxchainmask &= 0x3;
+ 	}
 -- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+1.6.0.4
 
