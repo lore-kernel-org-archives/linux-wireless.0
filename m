@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42356 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752578AbZAJJrH (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:37630 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818AbZAZSos (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jan 2009 04:47:07 -0500
-Date: Sat, 10 Jan 2009 11:46:53 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Mark ieee80211_process_sa_query_req() static
-Message-ID: <20090110094653.GA5217@jm.kir.nu> (sfid-20090110_104712_611217_AF971207)
+	Mon, 26 Jan 2009 13:44:48 -0500
+Received: by ewy14 with SMTP id 14so896696ewy.13
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 10:44:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090127053357.689baabe@s6510>
+References: <20090127053357.689baabe@s6510>
+Date: Mon, 26 Jan 2009 19:44:46 +0100
+Message-ID: <69e28c910901261044r1a078240rb7d16306ef5a2b09@mail.gmail.com> (sfid-20090126_194454_248268_ABFC2487)
+Subject: Re: [PATCH] hostap: convert to net_device_ops
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function is only used within rx.c, so mark it static.
+On Mon, Jan 26, 2009 at 7:33 PM, Stephen Hemminger
+<shemminger@vyatta.com> wrote:
+> +       dev->netdev_ops = &hostap_netdev-ops;
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
-
-
----
- net/mac80211/rx.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---- wireless-testing.orig/net/mac80211/rx.c	2009-01-10 11:39:35.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2009-01-10 11:40:08.000000000 +0200
-@@ -1675,9 +1675,9 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
- 	return RX_CONTINUE;
- }
- 
--void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
--				    struct ieee80211_mgmt *mgmt,
--				    size_t len)
-+static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,
-+					   struct ieee80211_mgmt *mgmt,
-+					   size_t len)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
+I guess this should be
++       dev->netdev_ops = &hostap_netdev_ops;
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
