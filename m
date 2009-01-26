@@ -1,157 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:59713 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755456AbZAWEoW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 23:44:22 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Fri, 23 Jan 2009 05:44:21 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090123044421.270720@gmx.net> (sfid-20090123_054428_080982_2340614F)
-MIME-Version: 1.0
-Subject: [PATCH] ath9k: Read and write the TSF via debugfs
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Received: from c1.cosetrain.com ([213.239.209.213]:40887 "EHLO
+	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751768AbZAZUjS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 15:39:18 -0500
+From: Florian Sesser <flomaillist@cosetrain.com>
+To: linux-wireless@vger.kernel.org
+Cc: Florian Sesser <flomaillist@cosetrain.com>
+Subject: [PATCH 1/6] mac80211: Virtualize mesh path selection ops
+Date: Mon, 26 Jan 2009 21:39:10 +0100
+Message-Id: <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com> (sfid-20090126_213923_880048_39A8C833)
+In-Reply-To: <497E1B90.4060803@cosetrain.com>
+References: <497E1B90.4060803@cosetrain.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds an ath9k specific entry to read, write and reset the TS=
-=46 into the debugfs, like in ath5k. This makes debugging the IBSS hand=
-ling of wifi drivers _much_ easier.
+Struct mesh_path_sel_ops, central to the abstraction
+of the Path Selection Protocol.
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+Signed-off-by: Florian Sesser <flomaillist@cosetrain.com>
 ---
-diff -urN compat-wireless-2009-01-19/drivers/net/wireless/ath9k/ath9k.h=
- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath9k/ath9k.h
---- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath9k/ath9k.h	=
-2009-01-19 20:07:21.000000000 +0100
-+++ compat-wireless-2009-01-19/drivers/net/wireless/ath9k/ath9k.h	2009-=
-01-23 01:54:41.000000000 +0100
-@@ -916,6 +916,7 @@
- bool ath9k_hw_setbssidmask(struct ath_hal *ah, const u8 *mask);
- void ath9k_hw_write_associd(struct ath_hal *ah, const u8 *bssid, u16 a=
-ssocId);
- u64 ath9k_hw_gettsf64(struct ath_hal *ah);
-+void ath9k_hw_settsf64(struct ath_hal *ah, u64 tsf64);
- void ath9k_hw_reset_tsf(struct ath_hal *ah);
- bool ath9k_hw_set_tsfadjust(struct ath_hal *ah, u32 setting);
- bool ath9k_hw_setslottime(struct ath_hal *ah, u32 us);
-diff -urN compat-wireless-2009-01-19/drivers/net/wireless/ath9k/core.h =
-compat-wireless-2009-01-19.orig/drivers/net/wireless/ath9k/core.h
---- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath9k/core.h	2=
-009-01-19 20:07:21.000000000 +0100
-+++ compat-wireless-2009-01-19/drivers/net/wireless/ath9k/core.h	2009-0=
-1-23 02:40:53.000000000 +0100
-@@ -141,6 +141,7 @@
- 	struct dentry *debugfs_phy;
- 	struct dentry *debugfs_dma;
- 	struct dentry *debugfs_interrupt;
-+	struct dentry *debugfs_tsf;
- 	struct ath_stats stats;
- };
-=20
-diff -urN compat-wireless-2009-01-19/drivers/net/wireless/ath9k/debug.c=
- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath9k/debug.c
---- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath9k/debug.c	=
-2009-01-19 20:07:21.000000000 +0100
-+++ compat-wireless-2009-01-19/drivers/net/wireless/ath9k/debug.c	2009-=
-01-23 02:45:34.000000000 +0100
-@@ -222,6 +222,49 @@
- 	.owner =3D THIS_MODULE
- };
-=20
+ net/mac80211/mesh.h |   78 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 75 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 9e064ee..a4141d8 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -169,6 +169,72 @@ struct mesh_rmc {
+  */
+ #define MESH_PREQ_MIN_INT	10
+ #define MESH_DIAM_TRAVERSAL_TIME 50
 +
-+static ssize_t read_file_tsf(struct file *file, char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc =3D file->private_data;
-+	char buf[100];
-+	snprintf(buf, sizeof(buf), "0x%016llx\n",
-+		 (unsigned long long)ath9k_hw_gettsf64(sc->sc_ah));
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, 19);
-+}
++/* Default Path Selection, Path Metric, Congestion Control Mode */
++#define MESH_PATH_SELECTION_PROTOCOL_ID 0x000FACFF
++#define MESH_PATH_SELECTION_METRIC_ID 0x000FACFF
++#define MESH_CONGESTION_CONTROL_MODE_ID 0x000FACFF
 +
-+static ssize_t write_file_tsf(struct file *file,
-+                              const char __user *user_buf,
-+                              size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc =3D file->private_data;
-+	char buf[21];
-+	unsigned long long tsf;
-+
-+	if (copy_from_user(buf, user_buf, min(count, sizeof(buf) - 1)))
-+		return -EFAULT;
-+	buf[sizeof(buf) - 1] =3D '\0';
-+
-+	if (strncmp(buf, "reset", 5) =3D=3D 0) {
-+		ath9k_hw_reset_tsf(sc->sc_ah);
-+		printk(KERN_INFO "debugfs reset TSF\n");
-+	} else {
-+		tsf =3D simple_strtoul(buf, NULL, 0);
-+		ath9k_hw_settsf64(sc->sc_ah, tsf);
-+		printk(KERN_INFO "debugfs set TSF to %#018llx\n", tsf);
-+	}
-+
-+	return count;
-+}
-+
-+static const struct file_operations fops_tsf =3D {
-+	.read =3D read_file_tsf,
-+	.write =3D write_file_tsf,
-+	.open =3D ath9k_debugfs_open,
-+	.owner =3D THIS_MODULE
++/* From mesh_hwmp.c: */
++enum mpath_frame_type {
++	MPATH_PREQ = 0,
++	MPATH_PREP,
++	MPATH_PERR
++};
++/* Function pointer typedefs for struct mesh_path_sel_ops */
++typedef void (mesh_path_start_discovery_fn) (struct ieee80211_sub_if_data *sdata);
++typedef int (mesh_nexthop_lookup_fn) (struct sk_buff *skb, struct ieee80211_sub_if_data *sdata);
++typedef void (mesh_queue_preq_fn) (struct mesh_path *mpath, u8 flags);
++typedef int (mesh_path_sel_frame_tx_fn) (enum mpath_frame_type action, u8 flags,
++		u8 *orig_addr, __le32 orig_dsn, u8 dst_flags, u8 *dst, __le32 dst_dsn, u8 *da,
++		u8 hop_count, u8 ttl, __le32 lifetime, __le32 metric, __le32 preq_id,
++		struct ieee80211_sub_if_data *sdata);
++typedef int (mesh_path_error_tx_fn) (u8 *dst, __le32 dst_dsn, u8 *ra,
++		struct ieee80211_sub_if_data *sdata);
++typedef void (mesh_path_timer_fn) (unsigned long data);
++typedef u32 (mesh_route_info_get_fn) (struct ieee80211_sub_if_data *sdata,
++		struct ieee80211_mgmt *mgmt, u8 *ie);
++typedef void (mesh_rx_path_sel_frame_fn) (struct ieee80211_sub_if_data *sdata,
++		struct ieee80211_mgmt *mgmt, size_t len);
++typedef void (mesh_preq_frame_process_fn) (struct ieee80211_sub_if_data *sdata,
++		struct ieee80211_mgmt *mgmt, u8 *preq_elem, u32 metric);
++typedef void (mesh_prep_frame_process_fn) (struct ieee80211_sub_if_data *sdata,
++		struct ieee80211_mgmt *mgmt, u8 *prep_elem, u32 metric);
++typedef void (mesh_perr_frame_process_fn) (struct ieee80211_sub_if_data *sdata,
++		struct ieee80211_mgmt *mgmt, u8 *perr_elem);
++typedef void (mesh_path_sel_start_fn) (struct ieee80211_if_mesh *sta);
++typedef void (mesh_path_sel_stop_fn) (struct ieee80211_if_mesh *sta);
++struct mesh_path_sel_ops {
++	mesh_path_start_discovery_fn *path_start_discovery_fn;
++	mesh_nexthop_lookup_fn *nexthop_lookup_fn;
++	/* Needed by mesh_path_timer from mesh_pathtbl.c */
++	mesh_queue_preq_fn *queue_preq_fn;
++	/* To my surprise this seems to not be needed:
++	mesh_path_sel_frame_tx_fn *path_sel_frame_tx_fn; */
++	mesh_path_error_tx_fn *path_error_tx_fn;
++	/* Doesn't this timer belong into mesh.c? */
++	mesh_path_timer_fn *path_timer_fn;
++	mesh_rx_path_sel_frame_fn *rx_path_sel_frame_fn;
++	/* Belongs into the mesh routing protocol module
++	mesh_preq_frame_process_fn *preq_frame_process_fn;
++	mesh_prep_frame_process_fn *prep_frame_process_fn;
++	mesh_perr_frame_process_fn *perr_frame_process_fn; */
++	mesh_path_sel_start_fn *path_sel_start_fn;
++	mesh_path_sel_stop_fn *path_sel_stop_fn;
 +};
 +
++#define MESH_ALGO_NAME_MAX    (16)
++struct mesh_path_sel_algo {
++	struct list_head list;
++	char name[MESH_ALGO_NAME_MAX];
++	u32 id;
++	struct mesh_path_sel_ops* ops;
++	struct module* owner;
++};
 +
- int ath9k_init_debug(struct ath_softc *sc)
- {
- 	sc->sc_debug.debug_mask =3D ath9k_debug;
-@@ -247,6 +290,11 @@
- 	if (!sc->sc_debug.debugfs_interrupt)
- 		goto err;
-=20
-+	sc->sc_debug.debugfs_tsf =3D debugfs_create_file("tsf", S_IRUGO,
-+				       sc->sc_debug.debugfs_phy, sc, &fops_tsf);
-+	if (!sc->sc_debug.debugfs_tsf)
-+		goto err;
++void mesh_path_sel_algo_register (struct mesh_path_sel_algo *algo);
++void mesh_path_sel_algo_unregister (struct mesh_path_sel_algo *algo);
 +
- 	return 0;
- err:
- 	ath9k_exit_debug(sc);
-@@ -255,6 +303,7 @@
-=20
- void ath9k_exit_debug(struct ath_softc *sc)
- {
-+	debugfs_remove(sc->sc_debug.debugfs_tsf);
- 	debugfs_remove(sc->sc_debug.debugfs_interrupt);
- 	debugfs_remove(sc->sc_debug.debugfs_dma);
- 	debugfs_remove(sc->sc_debug.debugfs_phy);
-diff -urN compat-wireless-2009-01-19/drivers/net/wireless/ath9k/hw.c co=
-mpat-wireless-2009-01-19.orig/drivers/net/wireless/ath9k/hw.c
---- compat-wireless-2009-01-19.orig/drivers/net/wireless/ath9k/hw.c	200=
-9-01-19 20:07:21.000000000 +0100
-+++ compat-wireless-2009-01-19/drivers/net/wireless/ath9k/hw.c	2009-01-=
-23 02:39:11.000000000 +0100
-@@ -3810,6 +3810,13 @@
- 	return tsf;
- }
-=20
-+void ath9k_hw_settsf64(struct ath_hal *ah, u64 tsf64)
-+{
-+	REG_WRITE(ah, AR_TSF_L32, 0x00000000);
-+	REG_WRITE(ah, AR_TSF_U32, (tsf64 >> 32) & 0xffffffff);
-+	REG_WRITE(ah, AR_TSF_L32, tsf64 & 0xffffffff);
-+}
+ /* Paths will be refreshed if they are closer than PATH_REFRESH_TIME to their
+  * expiration
+  */
+@@ -205,6 +271,9 @@ int mesh_rmc_check(u8 *addr, struct ieee80211s_hdr *mesh_hdr,
+ bool mesh_matches_local(struct ieee802_11_elems *ie,
+ 		struct ieee80211_sub_if_data *sdata);
+ void mesh_ids_set_default(struct ieee80211_if_mesh *mesh);
++void mesh_ids_set_pp(struct ieee80211_if_mesh *sta, u32 pp);
++void mesh_ids_set_pm(struct ieee80211_if_mesh *sta, u32 pm);
++void mesh_ids_set_cc(struct ieee80211_if_mesh *sta, u32 cc);
+ void mesh_mgmt_ies_add(struct sk_buff *skb,
+ 		struct ieee80211_sub_if_data *sdata);
+ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
+@@ -219,9 +288,9 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata);
+ 
+ /* Mesh paths */
+-int mesh_nexthop_lookup(struct sk_buff *skb,
+-		struct ieee80211_sub_if_data *sdata);
+-void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata);
++struct mesh_path_sel_algo* mesh_path_sel_algo_find_by_name (const char* name);
++struct mesh_path_sel_algo* mesh_path_sel_algo_find_by_id (u32 id);
++void mesh_path_sel_algo_set (struct ieee80211_if_mesh *sta, struct mesh_path_sel_algo* algo);
+ struct mesh_path *mesh_path_lookup(u8 *dst,
+ 		struct ieee80211_sub_if_data *sdata);
+ struct mesh_path *mpp_path_lookup(u8 *dst,
+@@ -293,6 +362,9 @@ static inline void mesh_path_activate(struct mesh_path *mpath)
+ 	for (i = 0; i <= x->hash_mask; i++) \
+ 		hlist_for_each_entry_rcu(node, p, &x->hash_buckets[i], list)
+ 
++/* Moved here from mesh_hwmp.c */
++#define max_preq_retries(s) (s->u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries)
 +
- void ath9k_hw_reset_tsf(struct ath_hal *ah)
- {
- 	int count;
+ void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local);
+ 
+ #else
+-- 
+1.5.6.5
 
---=20
-NUR NOCH BIS 31.01.! GMX FreeDSL - Telefonanschluss + DSL=20
-f=FCr nur 16,37 EURO/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
-569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
