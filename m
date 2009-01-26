@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57829 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907AbZA3LRm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 06:17:42 -0500
-Subject: Re: [PATCH] mac80211: convert to net_device_ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
-In-Reply-To: <20090127052926.44d3fd5f@s6510>
-References: <20090127052926.44d3fd5f@s6510>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-m6hntm9XxKhiUWkWXxNB"
-Date: Fri, 30 Jan 2009 12:17:37 +0100
-Message-Id: <1233314257.30970.6.camel@johannes.local> (sfid-20090130_121747_128792_58F3B8C4)
+Received: from mail.vyatta.com ([76.74.103.46]:41250 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751747AbZAZSeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 13:34:36 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.vyatta.com (Postfix) with ESMTP id 469674F46FD
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 10:34:39 -0800 (PST)
+Received: from mail.vyatta.com ([127.0.0.1])
+	by localhost (mail.vyatta.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id qh+yD+-4BRCT for <linux-wireless@vger.kernel.org>;
+	Mon, 26 Jan 2009 10:34:39 -0800 (PST)
+Received: from s6510 (pool-96-225-207-155.ptldor.fios.verizon.net [96.225.207.155])
+	by mail.vyatta.com (Postfix) with ESMTP id E99D64F46E7
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 10:34:38 -0800 (PST)
+Date: Tue, 27 Jan 2009 05:33:57 +1100
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] hostap: convert to net_device_ops
+Message-ID: <20090127053357.689baabe@s6510> (sfid-20090126_193440_513507_1E7A82F0)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Convert to net_device_ops, compile tested only.
 
---=-m6hntm9XxKhiUWkWXxNB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2009-01-27 at 05:29 +1100, Stephen Hemminger wrote:
-> Convert to new net_device_ops in 2.6.28 and later.
->=20
-> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
-
-John, please revert this commit for now, it's breaking monitor mode
-injection (and thus AP mode) because the xmit handler assignment in
-ieee80211_setup_sdata is not effective.
-
-johannes
-
---=-m6hntm9XxKhiUWkWXxNB
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJguHOAAoJEKVg1VMiehFYaewP/iuI8j+D9Ffyp6k70E63zymx
-7xfT0iswrCtbsiWJSLO1pjgUQpkg6ME8GRJBIHhTuOrtpy5i3vkzd1ENPCEczzcd
-/Hx8GvqyuepeKuVhl9/OLlup0jmP8ysE8yApPqYiTb+DzXn+M3Us+4beWdUZaphS
-DGuvUyASjJ/YP0BASBnmqYU3uDV3z/5IbCG6kwlXzKu5qV2ZyUvhgsl5UGe4w0cu
-hA4HQlEt2hC77eS00z3oXLupPRDeMwpbhX/Rtw7wR+l/XWGJJWDWVp8YwZHaoJ+F
-Jhf7pviCTftN6H7H1Zli4DwLP6v8iWlepOkiSbLXObLlbwqPStn4x13BZJlxct3P
-9F53a8jux8krQj4bkrjrgo8h16Fmf9YoFKqFdNu7Atq6G+opY2qmeNbSZIBAU7T2
-V+u1va8yIVTeU/zqcJuxcUGavZaOKKY5jDx6jvODlMZp5No2/ynntKBxX3c4Xn8+
-mkuYa2FFuRW0D8TGuVJ3oXG6M4k719/l3Q7uzInVJ4RGyDIGUGeIHMPKx4GTlZPd
-FRkwUqYbtvE0w8Dp3oPXtEI/rgYZezwwu03wjmb8Gv6ZD6Zy3Ussv6P0Q7gdSGbk
-zVZ/nAXQi3KaJzP/KKvJuLDN2U5SPZXSrPKi10hb0TAyA7egc/2e1oAO0OsrUaGE
-Oc7UGMFYkwKRMnnmKq2L
-=6ykP
------END PGP SIGNATURE-----
-
---=-m6hntm9XxKhiUWkWXxNB--
-
+--- a/drivers/net/wireless/hostap/hostap_hw.c	2009-01-07 03:03:33.000000000 +1100
++++ b/drivers/net/wireless/hostap/hostap_hw.c	2009-01-25 21:10:43.977634507 +1100
+@@ -3075,6 +3075,13 @@ static void prism2_set_lockdep_class(str
+ 	netdev_for_each_tx_queue(dev, prism2_set_lockdep_class_one, NULL);
+ }
+ 
++static const struct net_device_ops hostap_netdev_ops = {
++	.ndo_start_xmit 	= hostap_master_start_xmit,
++	.ndo_change_mtu		= eth_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
+ static struct net_device *
+ prism2_init_local_data(struct prism2_helper_functions *funcs, int card_idx,
+ 		       struct device *sdev)
+@@ -3228,9 +3235,9 @@ while (0)
+ 
+ 	hostap_setup_dev(dev, local, HOSTAP_INTERFACE_MASTER);
+ 
+-	dev->hard_start_xmit = hostap_master_start_xmit;
+ 	dev->type = ARPHRD_IEEE80211;
+ 	dev->header_ops = &hostap_80211_ops;
++	dev->netdev_ops = &hostap_netdev-ops;
+ 
+ 	rtnl_lock();
+ 	ret = dev_alloc_name(dev, "wifi%d");
