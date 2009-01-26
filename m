@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:42536 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755076AbZAWCVC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 21:21:02 -0500
-Cc: linux-wireless@vger.kernel.org, maximlevitsky@gmail.com,
-	kalle.valo@iki.fi, samuel@sortiz.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Fri, 23 Jan 2009 03:21:00 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <20090123021413.GB3177@tuxdriver.com>
-Message-ID: <20090123022100.270690@gmx.net> (sfid-20090123_032113_717868_48792263)
-MIME-Version: 1.0
-References: <4979269F.1060500@lwfinger.net>
- <20090123021413.GB3177@tuxdriver.com>
-Subject: Re: Regression caused by commit
-	e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Larry.Finger@lwfinger.net
+Received: from xc.sipsolutions.net ([83.246.72.84]:51428 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754417AbZAZVJe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2009 16:09:34 -0500
+Subject: Re: [RFC][RFT] mac80211 / mesh: Modularize Path Selection Protocol
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Sesser <flomaillist@cosetrain.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <497E1B90.4060803@cosetrain.com> (sfid-20090126_215126_101930_ED89AC85)
+References: <497E1B90.4060803@cosetrain.com>
+	 (sfid-20090126_215126_101930_ED89AC85)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hWehwszuIQXubydToDTy"
+Date: Mon, 26 Jan 2009 22:09:10 +0100
+Message-Id: <1233004150.4533.35.camel@johannes.local> (sfid-20090126_220949_030151_DC921653)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
 
-> I reverted this in wireless-testing (and it never went anywhere
-> upstream).  Of course, now it looks like Samuel has a fix...maybe
-> I'll combine them...
+--=-hWehwszuIQXubydToDTy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I will check this problem and look for the cleanest solution.
+On Mon, 2009-01-26 at 21:22 +0100, Florian Sesser wrote:
 
-Sorry, for the trouble. :(
+> This is my first patch not only to the kernel, but to any open source
+> project, so please be gentle ;) I am open to suggestions for
+> improvement; please also remind me on any coding style or other errors
+> you may find.
 
-Regards
-Alina
+If you haven't seen it,
+http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches
+contains some useful hints. I'll look over your patches later.
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-hWehwszuIQXubydToDTy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJfiZzAAoJEKVg1VMiehFYjJMP/212CYugFLcMy33AFTkaRJkM
+qVm28b0WeKTUFWBxY/U5bii3N/JZf8b8IO+jsbN/UZdDfkDNYL+1c7mX0UuN0JdC
+mhIyP0lh2fTBs8vvMcFVnOVe3eXg9+RkhxSGJHJQJer82LdpyabhwMk56CaQ/yO6
+S/RoYw3RpG++aFHpdAHiFWcmuswdA+hR23ZFWGuLmVkkc//W/YaAhPs9NxWUfr15
+BfgJQbdPYxC9KmkQpxUMV789yIyJtDRpJ24qGAmZ9CSyYudWd4EbxIIdmBFPwhm8
+IlzkeZPHMIiJOLY2veq3PxxFHaNmp112pRNeY92tFQQBrDY3u6RPiqzMlC3vZo7j
+Th/Soxt+p+/yDfrX9c8rlAlqRBLRM1N+uE6hYYV5K9bmkGVdWmTjyFTpKf6bj2W8
+6XKLn2XtZPekNZYPMP493rHSXLEeHW72VXIujaNklJQF8s0pzd9AvQxwVGsAtTCL
+AAFfAgKqDl4l+dnYoIBNBz2NdJ+asvthKiiDFwoGvX4MA6mNhUl1VrAY/Gc5Tjvt
+GEMILEPVkgkpJJ8O/o0+dFxVG47hLB2NOCyTpGG9ijL9MBtfV88QrkOGZ0tjRdgV
+AxYbw/aMcbdVzchs9USAKHuJYCYKDPUuLDKa//tsonQ4ZnN88PWR1Fjgwxasjyc7
+NkO3d/o/r5ztsDE3tsgJ
+=AhNt
+-----END PGP SIGNATURE-----
+
+--=-hWehwszuIQXubydToDTy--
+
