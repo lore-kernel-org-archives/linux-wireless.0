@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:11206 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752715AbZAKLLZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2009 06:11:25 -0500
-Received: by fk-out-0910.google.com with SMTP id 18so5141094fkq.5
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2009 03:11:23 -0800 (PST)
-Message-ID: <1ba2fa240901110311o47fe2311w4717f5521c98aba@mail.gmail.com> (sfid-20090111_121149_817488_0BD8E316)
-Date: Sun, 11 Jan 2009 13:11:23 +0200
-From: "Tomas Winkler" <tomasw@gmail.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2 0/3] mac80211 suspend/resume
-Cc: "Marcel Holtmann" <marcel@holtmann.org>,
-	"Dan Williams" <dcbw@redhat.com>,
-	"Bob Copeland" <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org, mabbaswireless@gmail.com
-In-Reply-To: <1231579679.3685.10.camel@johannes>
+Received: from mail.atheros.com ([12.36.123.2]:30106 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753503AbZA0F3T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2009 00:29:19 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 21:29:19 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-References: <1229313039-5544-1-git-send-email-me@bobcopeland.com>
-	 <20081224054951.GA32398@hash.localnet>
-	 <1230102989.16960.14.camel@californication>
-	 <1231260306.14565.21.camel@localhost.localdomain>
-	 <1231261937.5246.16.camel@californication>
-	 <1231267979.14565.34.camel@localhost.localdomain>
-	 <1231270575.14901.6.camel@californication>
-	 <1231272326.3767.2.camel@johannes>
-	 <1ba2fa240901091553s387c1a95k3576ce6a82015434@mail.gmail.com>
-	 <1231579679.3685.10.camel@johannes>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18814.39627.812389.908725@gargle.gargle.HOWL> (sfid-20090127_062939_176910_CD3956E3)
+Date: Tue, 27 Jan 2009 10:55:31 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH] ath9k: Handle chainmask for A9280
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 10, 2009 at 11:27 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2009-01-10 at 01:53 +0200, Tomas Winkler wrote:
->
->> I second this by stressing another issue. in the point that
->> suspend/resume events shell be present to user space regardless of
->> mac80211 specific talk with wpa_supplicant. Not only Wifi but also in
->> my knowledge BT and other coms need user space application
->> to close gracefully connection before kernel shuts in down.
->
-> But userspace is usually the one _invoking_ the suspend, so what I was
-> trying to say is that we don't care what userspace did right before
-> invoking suspend.
+The default chainmask for AR9280 is 3, so handle that when setting
+the supported MCS rates. Also, check for the HW supported chainmask
+when choosing single/dual stream.
 
-Exactly, so routing suspend event from mac80211 to wpa_supplicant or
-NM just doesn't look right to me, if I understood properly Marcel
-suggestion.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |    1 +
+ drivers/net/wireless/ath9k/rc.c   |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
->
->> Even sometime leavening shutting down interface managing application
->> may reduce the crosstalk so that driver doesn't have go guess when
->> application has finished it's shutdown. rtnl is probably not enough as
->> there is still race who grabs it first.
->
-> No, the rtnl definitely is enough right now since userspace will do
-> whatever it needs to _before_ invoking the kernel suspend.
->
-> I say we should just put these patches in as they are.
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 15a7f90..d92da13 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -876,6 +876,7 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 	case 1:
+ 		ht_info->mcs.rx_mask[0] = 0xff;
+ 		break;
++	case 3:
+ 	case 5:
+ 	case 7:
+ 	default:
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index 8e1528d..eb557ad 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -1359,7 +1359,7 @@ static void ath_rc_init(struct ath_softc *sc,
+ 
+ 	if (sta->ht_cap.ht_supported) {
+ 		ath_rc_priv->ht_cap = WLAN_RC_HT_FLAG;
+-		if (sc->sc_tx_chainmask != 1)
++		if (sc->sc_ah->ah_caps.tx_chainmask != 1)
+ 			ath_rc_priv->ht_cap |= WLAN_RC_DS_FLAG;
+ 		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
+ 			ath_rc_priv->ht_cap |= WLAN_RC_40_FLAG;
+-- 
+1.6.1
 
-No objections to that.
-
-Tomas
