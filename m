@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:23409 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899AbZAETdU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 14:33:20 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2681449fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2009 11:33:17 -0800 (PST)
-Message-ID: <3ace41890901051133t13c827ubcd0416503b7b878@mail.gmail.com> (sfid-20090105_203324_613455_8F6D56B4)
-Date: Mon, 5 Jan 2009 19:33:17 +0000
-From: "Hin-Tak Leung" <hintak.leung@gmail.com>
-To: "Felix Fietkau" <nbd@openwrt.org>
-Subject: Re: rate instability in wireless stack
-Cc: "Andi Kleen" <andi@firstfloor.org>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Michael Buesch" <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	"John Linville" <linville@tuxdriver.com>
-In-Reply-To: <49623CEA.4080407@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20090105050248.GG496@one.firstfloor.org>
-	 <49620BE5.9030507@openwrt.org>
-	 <20090105142343.GS496@one.firstfloor.org> <49621C36.70602@openwrt.org>
-	 <20090105152410.GT496@one.firstfloor.org>
-	 <49622686.9050005@openwrt.org>
-	 <20090105163553.GU496@one.firstfloor.org>
-	 <49623712.4060106@openwrt.org>
-	 <20090105171105.GW496@one.firstfloor.org>
-	 <49623CEA.4080407@openwrt.org>
+Received: from mga02.intel.com ([134.134.136.20]:7077 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751601AbZA0WZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2009 17:25:08 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Winkler, Tomas" <tomas.winkler@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/7] iwlwifi: check return value of pci_enable_device
+Date: Tue, 27 Jan 2009 14:27:55 -0800
+Message-Id: <1233095278-5850-5-git-send-email-reinette.chatre@intel.com> (sfid-20090127_232515_781270_F60E3553)
+In-Reply-To: <1233095278-5850-4-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1233095278-5850-1-git-send-email-reinette.chatre@intel.com>
+ <1233095278-5850-2-git-send-email-reinette.chatre@intel.com>
+ <1233095278-5850-3-git-send-email-reinette.chatre@intel.com>
+ <1233095278-5850-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This sounds a bit like what is mentioned in this bug report - (no solution yet,
-but the symptom seem similiar).
-http://bugzilla.kernel.org/show_bug.cgi?id=12131
+From: Winkler, Tomas <tomas.winkler@intel.com>
 
-On Mon, Jan 5, 2009 at 5:01 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Andi Kleen wrote:
->>> According to the rate control's view, only the 1M has a usable
->>> success probability. It's rather insteresting that 11M is the only
->>> other rate that had some successes. With this kind of results, the
->>> only two options that I can think of are either a systematic tx
->>> status reporting error (false negative for the IEEE80211_TX_STAT_ACK
->>> flag), or something PHY related.
->>
->> Ok. Any more data I should provide to help tracking this down?
->> Do you want the same from the RaLink?
-> Yes, It'd be interesting to see if the table looks similar or if
-> more rates work.
->
-> - Felix
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+pci_enable_device is tagged with __must_check therefore
+don't ignore the return value in pci_resume handlers
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    5 ++++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 2307c75..eab238e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3763,9 +3763,12 @@ static int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ static int iwl_pci_resume(struct pci_dev *pdev)
+ {
+ 	struct iwl_priv *priv = pci_get_drvdata(pdev);
++	int ret;
+ 
+ 	pci_set_power_state(pdev, PCI_D0);
+-	pci_enable_device(pdev);
++	ret = pci_enable_device(pdev);
++	if (ret)
++		return ret;
+ 	pci_restore_state(pdev);
+ 	iwl_enable_interrupts(priv);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 72ff20e..346a301 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5824,9 +5824,12 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ static int iwl3945_pci_resume(struct pci_dev *pdev)
+ {
+ 	struct iwl_priv *priv = pci_get_drvdata(pdev);
++	int ret;
+ 
+ 	pci_set_power_state(pdev, PCI_D0);
+-	pci_enable_device(pdev);
++	ret = pci_enable_device(pdev);
++	if (ret)
++		return ret;
+ 	pci_restore_state(pdev);
+ 
+ 	if (priv->is_open)
+-- 
+1.5.4.3
+
