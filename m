@@ -1,86 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39124 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753179AbZAVOEs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 09:04:48 -0500
-Subject: Re: poor performance with ath5k; reverting to ath_pci
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Stefanik =?ISO-8859-1?Q?G=E1bor?= <netrolller.3d@gmail.com>,
-	Glenn Burkhardt <gbburkhardt@verizon.net>,
-	Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090122134958.GA27560@tuxdriver.com> (sfid-20090122_150113_735117_2FF31F66)
-References: <200901140003.31693.gbburkhardt@verizon.net>
-	 <200901151734.46144.gbburkhardt@verizon.net>
-	 <b6c5339f0901160733u433b1154sfb8b5662c4fe991c@mail.gmail.com>
-	 <200901202238.08756.gbburkhardt@verizon.net>
-	 <20090121151435.GB3643@tuxdriver.com>
-	 <69e28c910901211022j7f9c67dfv6392ce043dcff522@mail.gmail.com>
-	 <20090121191141.GA14710@tuxdriver.com>
-	 <69e28c910901211133n25c1a151nc9ca7172a9de7d3a@mail.gmail.com>
-	 <40f31dec0901212032j65371fc6j5fcc1952f841d2ef@mail.gmail.com>
-	 <20090122134958.GA27560@tuxdriver.com>
-	 (sfid-20090122_150113_735117_2FF31F66)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UsHCBraYiATLVklmpE1+"
-Date: Thu, 22 Jan 2009 15:04:35 +0100
-Message-Id: <1232633075.4224.6.camel@johannes.local> (sfid-20090122_150459_769846_7D5D17D1)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:32895 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751492AbZA0IEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2009 03:04:11 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 00:04:11 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18814.48933.653710.927929@gargle.gargle.HOWL> (sfid-20090127_090419_362617_18CD4A8A)
+Date: Tue, 27 Jan 2009 13:30:37 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH] ath9k: Fix station access in aggregation completion
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The ieee80211_sta pointer in the SKB's TX control info
+area is not guaranteed to be valid after returning from the tx() callback.
+Use ieee80211_find_sta() instead and return early if the station
+is no longer present.
 
---=-UsHCBraYiATLVklmpE1+
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/xmit.c |   20 +++++++++++++++-----
+ 1 files changed, 15 insertions(+), 5 deletions(-)
 
-On Thu, 2009-01-22 at 08:49 -0500, John W. Linville wrote:
-> On Thu, Jan 22, 2009 at 06:32:55AM +0200, Nick Kossifidis wrote:
-> > 2009/1/21 Stefanik G=C3=A1bor <netrolller.3d@gmail.com>:
-> > >
-> > > I think EMBEDDED is for options that replace full-featured Linux
-> > > components with dumbed-down, "low-profile" equivalents (like SLOB) -
-> > > PID vs. minstrel is more like SLAB vs. SLUB.
-> > >
-> > > G=C3=A1bor
-> > >
-> >=20
-> > Minstrell performs very well even on embedded devices, i don't think
-> > it's that heavy compared to pid.
->=20
-> I think his point was that people should be able to select multiple
-> algorithms without having to select EMBEDDED.
-
-The reason it was originally under EMBEDDED is that this allows you to
-turn off _all_ algorithms, and that breaks, but might be desirable if
-you have a system where you know you're using iwlagn or ath9k only which
-have their own algorithms.
-
-johannes
-
---=-UsHCBraYiATLVklmpE1+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJeHzxAAoJEKVg1VMiehFYgzMP/ideMhkghI/sxdonof4QVBPK
-juwhnAGo6JHbbj/StSDasT1/ivO1svz+Y4ik0HjwaJaB4N6TUNqVWI/WGs112Ddz
-ZrsZmpAFmvwk7rsQTIbrNM+u5TUtI3ZOq7zBVLAQ0lowO20l7cUGsAmiG1pshtWe
-3hW0KKzNQDQ+cuyMcxI/6fv9FCeZtpTs/JKPQvT6wVAIxfCNYrJdxZUz4jmdCVXY
-r9GFGqa8E/Vm0QYJ714q/4eTURacbcQ2kXH8mL8S5PlmnvjnMpBVuXDLz5PMKxLB
-Xi5Bk7xZJFoIhgJu6L37lU/SwolpYBO7xzLdfhAO/VGyzIjcdi3GEVULvhZipBdd
-lIIUksIb8lFjzYwkbf6mSfQhzlTa+6mqYEcGNDOMYQ8zpMjrmtgMBxxB/HfW3gC5
-pqlHFoZxeskP6iB5ugOKnFuajdRvqXIJhy2rx61JA1q4xENGuEosKsj4yPfqTv+7
-eSGLpg039nwwSUcmNAagFsCgJIjpM8y642Hzn8Z1McMhb7/eLgui2jWmLSdI9SBJ
-7Ht2pNHTk63lAneGxuSExucK4TKjeYS43XB2r7I9m5IA0wFojZbyoUHp6ZzQDWzQ
-6zTzT79wjf5bLrv17hwd5L/mHNHsWcHdnRq5RnFma0nQrZhonA5185/z5QYKApws
-u03XXuAfu9WZy3D4G3zX
-=Xn16
------END PGP SIGNATURE-----
-
---=-UsHCBraYiATLVklmpE1+--
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 1b83673..007ca91 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -268,7 +268,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ {
+ 	struct ath_node *an = NULL;
+ 	struct sk_buff *skb;
+-	struct ieee80211_tx_info *tx_info;
++	struct ieee80211_sta *sta;
++	struct ieee80211_hdr *hdr;
+ 	struct ath_atx_tid *tid = NULL;
+ 	struct ath_buf *bf_next, *bf_last = bf->bf_lastbf;
+ 	struct ath_desc *ds = bf_last->bf_desc;
+@@ -278,13 +279,19 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	int isaggr, txfail, txpending, sendbar = 0, needreset = 0;
+ 
+ 	skb = (struct sk_buff *)bf->bf_mpdu;
+-	tx_info = IEEE80211_SKB_CB(skb);
++	hdr = (struct ieee80211_hdr *)skb->data;
+ 
+-	if (tx_info->control.sta) {
+-		an = (struct ath_node *)tx_info->control.sta->drv_priv;
+-		tid = ATH_AN_2_TID(an, bf->bf_tidno);
++	rcu_read_lock();
++
++	sta = ieee80211_find_sta(sc->hw, hdr->addr1);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
+ 	}
+ 
++	an = (struct ath_node *)sta->drv_priv;
++	tid = ATH_AN_2_TID(an, bf->bf_tidno);
++
+ 	isaggr = bf_isaggr(bf);
+ 	memset(ba, 0, WME_BA_BMP_SIZE >> 3);
+ 
+@@ -391,6 +398,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			/* send buffered frames as singles */
+ 			ath_tx_flush_tid(sc, tid);
+ 		}
++		rcu_read_unlock();
+ 		return;
+ 	}
+ 
+@@ -402,6 +410,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		spin_unlock_bh(&txq->axq_lock);
+ 	}
+ 
++	rcu_read_unlock();
++
+ 	if (needreset)
+ 		ath_reset(sc, false);
+ }
+-- 
+1.6.1
 
