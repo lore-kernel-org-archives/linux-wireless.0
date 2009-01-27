@@ -1,51 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:30164 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753490AbZA1Fav (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 00:30:51 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so6785712rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 21:30:51 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:22933 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751328AbZA0JkP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2009 04:40:15 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 01:40:15 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20090127151326.GH19242@tesla>
-References: <d9360e520901270334p332b09e9sefbf1f861ecbe907@mail.gmail.com>
-	 <20090127151326.GH19242@tesla>
-Date: Wed, 28 Jan 2009 11:00:51 +0530
-Message-ID: <d9360e520901272130t5c4112e3ya86ef92b735bb679@mail.gmail.com> (sfid-20090128_063113_779720_87052452)
-Subject: Re: 802.11k support in open source mac
-From: Bharat Bhushan <bharat.b.bhushan@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18814.54694.118398.164348@gargle.gargle.HOWL> (sfid-20090127_104020_562638_04D2E36F)
+Date: Tue, 27 Jan 2009 15:06:38 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH] ath9k: Fix bug in TX DMA termination
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes you are right signal strength stats constitute major part of
-802.11k but there are other feature like neighbour element report and
-some other features are there which if implemented may help us in
-taking roaming related decisions in open source mac. What do you say
-?
-bharat
+Removing the module was slow because ath9k_hw_stopdma()
+was looping for a long time quantum. Use reasonable
+values now to fix this issue.
 
-On Tue, Jan 27, 2009 at 8:43 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Tue, Jan 27, 2009 at 03:34:57AM -0800, Bharat Bhushan wrote:
->> hi
->>
->>           Do open source mac support 802.11 K in main line kernel
->> source tree ? further does any one working on it ?
->>
->> Thanks in anticipation
->
-> IIRC last I looked into this it seemd 802.11k is more of a device
-> requirement on affinity for reporting signal amongst other things.
-> At least for signal we already try to report stuff in dBm when we can,
-> the resolution guarantee would be up to the device. It should be
-> relatively easily to do the conversion to the 11k range but not
-> sure which devices are capable of ensuring the affinity at the moment.
->
-> I'm sure there is more to 11k than just signal measurement, what else
-> was on it that you are interested? Too lazy to check right now.
->
->  Luis
->
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/mac.c |   31 +++++++++++++++++++++++++------
+ 1 files changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/mac.c b/drivers/net/wireless/ath9k/mac.c
+index af32d09..ef832a5 100644
+--- a/drivers/net/wireless/ath9k/mac.c
++++ b/drivers/net/wireless/ath9k/mac.c
+@@ -107,14 +107,32 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hal *ah, bool bIncTrigLevel)
+ 
+ bool ath9k_hw_stoptxdma(struct ath_hal *ah, u32 q)
+ {
++#define ATH9K_TX_STOP_DMA_TIMEOUT	4000    /* usec */
++#define ATH9K_TIME_QUANTUM		100     /* usec */
++
++	struct ath_hal_5416 *ahp = AH5416(ah);
++	struct ath9k_hw_capabilities *pCap = &ah->ah_caps;
++	struct ath9k_tx_queue_info *qi;
+ 	u32 tsfLow, j, wait;
++	u32 wait_time = ATH9K_TX_STOP_DMA_TIMEOUT / ATH9K_TIME_QUANTUM;
++
++	if (q >= pCap->total_queues) {
++		DPRINTF(ah->ah_sc, ATH_DBG_QUEUE, "invalid queue num %u\n", q);
++		return false;
++	}
++
++	qi = &ahp->ah_txq[q];
++	if (qi->tqi_type == ATH9K_TX_QUEUE_INACTIVE) {
++		DPRINTF(ah->ah_sc, ATH_DBG_QUEUE, "inactive queue\n");
++		return false;
++	}
+ 
+ 	REG_WRITE(ah, AR_Q_TXD, 1 << q);
+ 
+-	for (wait = 1000; wait != 0; wait--) {
++	for (wait = wait_time; wait != 0; wait--) {
+ 		if (ath9k_hw_numtxpending(ah, q) == 0)
+ 			break;
+-		udelay(100);
++		udelay(ATH9K_TIME_QUANTUM);
+ 	}
+ 
+ 	if (ath9k_hw_numtxpending(ah, q)) {
+@@ -144,8 +162,7 @@ bool ath9k_hw_stoptxdma(struct ath_hal *ah, u32 q)
+ 		udelay(200);
+ 		REG_CLR_BIT(ah, AR_TIMER_MODE, AR_QUIET_TIMER_EN);
+ 
+-		wait = 1000;
+-
++		wait = wait_time;
+ 		while (ath9k_hw_numtxpending(ah, q)) {
+ 			if ((--wait) == 0) {
+ 				DPRINTF(ah->ah_sc, ATH_DBG_XMIT,
+@@ -153,15 +170,17 @@ bool ath9k_hw_stoptxdma(struct ath_hal *ah, u32 q)
+ 					"msec after killing last frame\n");
+ 				break;
+ 			}
+-			udelay(100);
++			udelay(ATH9K_TIME_QUANTUM);
+ 		}
+ 
+ 		REG_CLR_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
+ 	}
+ 
+ 	REG_WRITE(ah, AR_Q_TXD, 0);
+-
+ 	return wait != 0;
++
++#undef ATH9K_TX_STOP_DMA_TIMEOUT
++#undef ATH9K_TIME_QUANTUM
+ }
+ 
+ bool ath9k_hw_filltxdesc(struct ath_hal *ah, struct ath_desc *ds,
+-- 
+1.6.1
+
