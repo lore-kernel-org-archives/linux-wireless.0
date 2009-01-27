@@ -1,68 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:41784 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbZAYWqM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38455 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056AbZA0JFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2009 17:46:12 -0500
-Received: by ewy14 with SMTP id 14so80987ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2009 14:46:09 -0800 (PST)
-From: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-Subject: [PATCH] ath5k: support LED's on emachines E510 notebook
-Date: Sun, 25 Jan 2009 23:54:25 +0100
-Message-Id: <1232924065-28556-1-git-send-email-tuliom@gmail.com> (sfid-20090125_234617_914545_D859BF8B)
+	Tue, 27 Jan 2009 04:05:24 -0500
+Subject: Re: [PATCH 0/7 v2] airo: cleanups and simplifications
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1232748914.447.2.camel@localhost.localdomain> (sfid-20090123_231647_256810_FBC442D8)
+References: <1232748914.447.2.camel@localhost.localdomain>
+	 (sfid-20090123_231647_256810_FBC442D8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-BoKsCq088SDsVTUG8hcU"
+Date: Tue, 27 Jan 2009 10:05:15 +0100
+Message-Id: <1233047115.4012.10.camel@johannes.local> (sfid-20090127_100529_988298_EEF98B53)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add vendor ID for AMBIT and use it to set the ath5k LED gpio.
 
-base.c:
-Changes-licensed-under: 3-Clause-BSD
+--=-BoKsCq088SDsVTUG8hcU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-Acked-by: Bob Copeland <me@bobcopeland.com>
----
+On Fri, 2009-01-23 at 17:15 -0500, Dan Williams wrote:
+> airo needs some hot sexy love.  come and get your love come and get your
+> love now.
 
-v2: fixed order of pci_ids.h
+Still needs some!
 
- drivers/net/wireless/ath5k/base.c |    8 ++++++--
- include/linux/pci_ids.h           |    2 ++
- 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 57971a9..180518c 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -2626,8 +2626,12 @@ ath5k_init_leds(struct ath5k_softc *sc)
- 		sc->led_pin = 1;
- 		sc->led_on = 1;  /* active high */
- 	}
--	/* Pin 3 on Foxconn chips used in Acer Aspire One (0x105b:e008) */
--	if (pdev->subsystem_vendor == PCI_VENDOR_ID_FOXCONN) {
-+	/*
-+	 * Pin 3 on Foxconn chips used in Acer Aspire One (0x105b:e008) and
-+	 * in emachines notebooks with AMBIT subsystem.
-+	 */
-+	if (pdev->subsystem_vendor == PCI_VENDOR_ID_FOXCONN ||
-+	    pdev->subsystem_vendor == PCI_VENDOR_ID_AMBIT) {
- 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
- 		sc->led_pin = 3;
- 		sc->led_on = 0;  /* active low */
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 02e6046..42cc884 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1967,6 +1967,8 @@
- 
- #define PCI_VENDOR_ID_SAMSUNG		0x144d
- 
-+#define PCI_VENDOR_ID_AMBIT		0x1468
-+
- #define PCI_VENDOR_ID_MYRICOM		0x14c1
- 
- #define PCI_VENDOR_ID_TITAN		0x14D2
--- 
-1.6.0.2
++drivers/net/wireless/airo.c:3846:8: warning: symbol 'i' shadows an earlier=
+ one
++drivers/net/wireless/airo.c:3757:6: originally declared here
++drivers/net/wireless/airo.c:3853:8: warning: symbol 'i' shadows an earlier=
+ one
++drivers/net/wireless/airo.c:3757:6: originally declared here
++drivers/net/wireless/airo.c:3867:7: warning: symbol 'i' shadows an earlier=
+ one
++drivers/net/wireless/airo.c:3757:6: originally declared here
++drivers/net/wireless/airo.c:1315:33: warning: restricted degrades to integ=
+er
++drivers/net/wireless/airo.c:2056:10: warning: incorrect type in assignment=
+ (different base types)
++drivers/net/wireless/airo.c:2056:10:    expected restricted unsigned short=
+ [usertype] status
++drivers/net/wireless/airo.c:2056:10:    got unsigned short [unsigned] [use=
+rtype] status
++drivers/net/wireless/airo.c:2108:14: warning: incorrect type in initialize=
+r (different signedness)
++drivers/net/wireless/airo.c:2108:14:    expected unsigned int [usertype] *=
+fids
++drivers/net/wireless/airo.c:2108:14:    got int *<noident>
++drivers/net/wireless/airo.c:2132:14: warning: incorrect type in initialize=
+r (different signedness)
++drivers/net/wireless/airo.c:2132:14:    expected unsigned int [usertype] *=
+fids
++drivers/net/wireless/airo.c:2132:14:    got int *<noident>
++drivers/net/wireless/airo.c:2173:14: warning: incorrect type in initialize=
+r (different signedness)
++drivers/net/wireless/airo.c:2173:14:    expected unsigned int [usertype] *=
+fids
++drivers/net/wireless/airo.c:2173:14:    got int *<noident>
++drivers/net/wireless/airo.c:2197:14: warning: incorrect type in initialize=
+r (different signedness)
++drivers/net/wireless/airo.c:2197:14:    expected unsigned int [usertype] *=
+fids
++drivers/net/wireless/airo.c:2197:14:    got int *<noident>
++drivers/net/wireless/airo.c:3211:11: warning: cast to restricted type
+
+johannes
+
+--=-BoKsCq088SDsVTUG8hcU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJfs5FAAoJEKVg1VMiehFY9HEP/1vH7zTJBIf0JBE/lBSUG1wC
+KxH5zbDqJz5zuPptLZOZ17yBJjroa1Hb9LbnFOLKu8eVQBocJpIZhHcZPycHPmNo
+9YHCiaWOZw+38Nyu7H6qLmEy6NS7hbEN5x6FlRCe2G4s0vpuuujrBABxECUQK5Jm
+ab7xbAPtmJyGtwaivgbjdzZmxY5dtLavQMYLocg7LC+5FqvvKR1xDQr238y4KQvM
+fujVPmY/ra9WKEedIBE+mF/ve4DxgdOxsrnepafDrH96V67a9cSmGLVqeVEe8Hbx
+Ahc+8Lg4nGm3bQnJ+sQwX5vlxdiVSPyo/w+KolXa04hSWgJ3jnZveKhois447aTH
+EMRM953IAbFnYxg+0556AxhiRMSAi8CZ/SqaZXqXRdF/0tnyayc6IyZwzw1vO0xS
+qMXeePxRzBUiUUPLGI+ji/7OxJNO+uvf6JvGW9mJTDA5iczyCEtOo8VPcApY0yWz
+vIbaIibp5B3dD1Tmk5Lv2M3xwQfI9LLiAHD+xHs0XFUyNeiM3x5tJNnER6LpRiH3
+JCfEpiwmCCyJRlR4fErulcslw7WUZ5dWu7lvjwivOGJKKyy5YDkGVlPCbAqk8Tmz
+2y4NUFc5vFprELArF8c5j06ryGUlJ4sE6RPhKFwXijHQwL2vb6lj4+eojbqN+2Ao
+jjshtUuEgheKrFEohl1B
+=CbWP
+-----END PGP SIGNATURE-----
+
+--=-BoKsCq088SDsVTUG8hcU--
 
