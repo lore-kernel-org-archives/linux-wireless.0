@@ -1,120 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37367 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751497AbZAUSzf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 13:55:35 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/2 v2.6.29] iwlagn: fix agn rate scaling
-Date: Wed, 21 Jan 2009 10:58:03 -0800
-Message-Id: <1232564283-18008-3-git-send-email-reinette.chatre@intel.com> (sfid-20090121_195542_490527_B15F2D8C)
-In-Reply-To: <1232564283-18008-2-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1232564283-18008-1-git-send-email-reinette.chatre@intel.com>
- <1232564283-18008-2-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:58215 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751443AbZA0Jw1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2009 04:52:27 -0500
+Subject: Re: [RFC/RFT 7/7] mac80211: fix aggregation timer lockups
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
+	Sujith.Manoharan@atheros.com
+In-Reply-To: <1ba2fa240901270141y7361d332p7a0423e105afaec3@mail.gmail.com> (sfid-20090127_104143_179901_EAA30897)
+References: <20090126184740.036240879@sipsolutions.net>
+	 <20090126184925.913285565@sipsolutions.net>
+	 <1ba2fa240901270141y7361d332p7a0423e105afaec3@mail.gmail.com>
+	 (sfid-20090127_104143_179901_EAA30897)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jGd2nywQ2NIi9WlkBzvB"
+Date: Tue, 27 Jan 2009 10:52:22 +0100
+Message-Id: <1233049942.4012.21.camel@johannes.local> (sfid-20090127_105232_134109_D968BBD0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abbas, Mohamed <mohamed.abbas@intel.com>
 
-Sometime Tx reply rate different than what rate scale expecting
-causing rate scale to bail out. This could cause failing to
-commit LQ cmd. This patch will try to solve this instead of just
-bail out. It also make sure we start with a valid rate.
+--=-jGd2nywQ2NIi9WlkBzvB
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: mohamed abbas <mohamed.abbas@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   31 +++++++++++++++++++++-------
- 1 files changed, 23 insertions(+), 8 deletions(-)
+On Tue, 2009-01-27 at 11:41 +0200, Tomas Winkler wrote:
+> On Mon, Jan 26, 2009 at 8:47 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > As far as I can tell, there are possible lockups because both the RX
+> > session_timer and TX addba_resp_timer are del_timer_sync'ed under
+> > the sta spinlock which both timer functions take. Additionally, the
+> > TX agg code seems to leak memory when TX aggregation is not disabled
+> > before the sta_info is freed.
+>=20
+> Funny,  it was your deed to replaced the two locks with one. Woudn;t
+> be better just put it back?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 27f5047..720a9d6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -49,6 +49,8 @@
- #define IWL_RATE_MIN_FAILURE_TH		6	/* min failures to calc tpt */
- #define IWL_RATE_MIN_SUCCESS_TH		8	/* min successes to calc tpt */
- 
-+/* max allowed rate miss before sync LQ cmd */
-+#define IWL_MISSED_RATE_MAX		15
- /* max time to accum history 2 seconds */
- #define IWL_RATE_SCALE_FLUSH_INTVL   (2*HZ)
- 
-@@ -148,6 +150,7 @@ struct iwl_lq_sta {
- 	u16 active_mimo2_rate;
- 	u16 active_mimo3_rate;
- 	u16 active_rate_basic;
-+	u8 missed_rate_counter;
- 
- 	struct iwl_link_quality_cmd lq;
- 	struct iwl_scale_tbl_info lq_info[LQ_SIZE]; /* "active", "search" */
-@@ -839,10 +842,15 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
- 		/* the last LQ command could failed so the LQ in ucode not
- 		 * the same in driver sync up
- 		 */
--		iwl_send_lq_cmd(priv, &lq_sta->lq, CMD_ASYNC);
-+		lq_sta->missed_rate_counter++;
-+		if (lq_sta->missed_rate_counter > IWL_MISSED_RATE_MAX) {
-+			lq_sta->missed_rate_counter = 0;
-+			iwl_send_lq_cmd(priv, &lq_sta->lq, CMD_ASYNC);
-+		}
- 		goto out;
- 	}
- 
-+	lq_sta->missed_rate_counter = 0;
- 	/* Update frame history window with "failure" for each Tx retry. */
- 	while (retries) {
- 		/* Look up the rate and other info used for each tx attempt.
-@@ -2182,6 +2190,8 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
- 	struct ieee80211_conf *conf = &priv->hw->conf;
- 	struct iwl_lq_sta *lq_sta = priv_sta;
- 	u16 mask_bit = 0;
-+	int count;
-+	int start_rate = 0;
- 
- 	lq_sta->flush_timer = 0;
- 	lq_sta->supp_rates = sta->supp_rates[sband->band];
-@@ -2216,6 +2226,7 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
- 	}
- 
- 	lq_sta->is_dup = 0;
-+	lq_sta->missed_rate_counter = IWL_MISSED_RATE_MAX;
- 	lq_sta->is_green = rs_use_green(priv, conf);
- 	lq_sta->active_legacy_rate = priv->active_rate & ~(0x1000);
- 	lq_sta->active_rate_basic = priv->active_rate_basic;
-@@ -2254,16 +2265,20 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
- 	lq_sta->drv = priv;
- 
- 	/* Find highest tx rate supported by hardware and destination station */
--	mask_bit = sta->supp_rates[sband->band] & lq_sta->active_legacy_rate;
--	lq_sta->last_txrate_idx = 3;
--	for (i = 0; i < sband->n_bitrates; i++)
-+	mask_bit = sta->supp_rates[sband->band];
-+	count = sband->n_bitrates;
-+	if (sband->band == IEEE80211_BAND_5GHZ) {
-+		count += IWL_FIRST_OFDM_RATE;
-+		start_rate = IWL_FIRST_OFDM_RATE;
-+		mask_bit <<= IWL_FIRST_OFDM_RATE;
-+	}
-+
-+	mask_bit = mask_bit & lq_sta->active_legacy_rate;
-+	lq_sta->last_txrate_idx = 4;
-+	for (i = start_rate; i < count; i++)
- 		if (mask_bit & BIT(i))
- 			lq_sta->last_txrate_idx = i;
- 
--	/* For MODE_IEEE80211A, skip over cck rates in global rate table */
--	if (sband->band == IEEE80211_BAND_5GHZ)
--		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
--
- 	rs_initialize_lq(priv, conf, sta, lq_sta);
- }
- 
--- 
-1.5.4.3
+Not sure. The problem here seems to be that ever since the agg
+structures are dynamically allocated (my pushing, I know) we need to
+protect sta->ampdu_mlme.tid_tx[i]/sta->ampdu_mlme.tid_rx[i] with the
+corresponding spinlock. Hence, if you look at my earlier patch closely,
+it didn't actually introduce this problem, it just shifted it from one
+lock to another.
+
+johannes
+
+--=-jGd2nywQ2NIi9WlkBzvB
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJftlTAAoJEKVg1VMiehFYquwQAKNDjsHiB/nsfLFYJoI4jZbn
+oeIeSfpCsAg/TnPfS/RssVTrEKy7MdhoPt3viJCF9p689PG8FZBxsY4i3XOYj+Hm
+GsjC8sXDB1xPJ628z8olIhfbPDtFoNYigj5q56sBqHQqzQFfRVtytOor5HR0OrQM
+qlXg3SxxIGJ8dX20kmyC29Fv7nX7Q95iolCnSePdNsp8Rm8ug0P+DxwCL1PbMoex
+CpQ6WWeVi/Ungzi2RxomP+zYacVOFrVO4p7TlmEslyxruU6v+YC4UMLiQQtw4jyX
+LyaFdtw513q/CWkh3ri2mTY51IAXQYQcpjPSMYcHF4Xv+sRvOd4NIlhdiy13Eol4
+mjFIfzOKOFr+RGChjmp8LsZ0tZuEcxsFTGfzDtgGWWQhNoN/B1qG/pe7SpqNM8oD
+GdIEK+maHul/Omt4TzDM0o4WmNOT1il9jQGUVRavi5XzLgdrZ0BwAgEwrVQcALrt
+sO5t9SNmaQeKg/OFahjif8RtjzuXhg9w855LyaPiPLCk5wfhr4b6aoVmZC8xb5ON
+a40m4UNcScVumXSeMU/1JA1tnmlgVVKU6XP3aftlTdQxboKmx5o952/bd1pzLmuu
+GXWgFQN2GhpXOroU+BS3bAAF2LupW1Gv5eOwBiDFBro3FE15Y8dYNXBTcp1OHwJj
+dPcVoLOS5hv9fv6P6JPO
+=+ESm
+-----END PGP SIGNATURE-----
+
+--=-jGd2nywQ2NIi9WlkBzvB--
 
