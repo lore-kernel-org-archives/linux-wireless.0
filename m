@@ -1,61 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:50323 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752990AbZAZTzv (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:31800 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703AbZA0Jda (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2009 14:55:51 -0500
-Received: from localhost (perninha.conectiva.com.br [127.0.0.1])
-	by perninha.conectiva.com.br (Postfix) with ESMTP id 052993EB3
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 14:30:33 -0500 (EST)
-Received: from perninha.conectiva.com.br ([127.0.0.1])
-	by localhost (perninha.conectiva.com.br [127.0.0.1]) (amavisd-new, port 10025)
-	with LMTP id 5WDeF2+yIeqm for <linux-wireless@vger.kernel.org>;
-	Mon, 26 Jan 2009 14:30:32 -0500 (EST)
-Received: from fox.conectiva (fox.conectiva [10.0.2.195])
-	by perninha.conectiva.com.br (Postfix) with ESMTP id 9FD1B3EAB
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 14:30:32 -0500 (EST)
-Received: from gotham.conectiva (gotham.conectiva [10.0.2.23])
-	by fox.conectiva (Postfix) with ESMTP id 2087D2F3F0
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2009 16:30:14 -0300 (BRT)
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: linux-wireless@vger.kernel.org
-Subject: Invalid JP regulatory domain
-Date: Mon, 26 Jan 2009 17:30:28 -0200
+	Tue, 27 Jan 2009 04:33:30 -0500
+Received: by fg-out-1718.google.com with SMTP id 13so61344fge.17
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 01:33:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901261730.29555.herton@mandriva.com.br> (sfid-20090126_205556_487714_77097A40)
+In-Reply-To: <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
+References: <497E1B90.4060803@cosetrain.com>
+	 <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
+Date: Tue, 27 Jan 2009 11:33:28 +0200
+Message-ID: <b25312890901270133j9feb53fie773c7c27cb8d181@mail.gmail.com> (sfid-20090127_103336_350917_8250A818)
+Subject: Re: [PATCH 1/6] mac80211: Virtualize mesh path selection ops
+From: Rami Rosen <roszenrami@gmail.com>
+To: Florian Sesser <flomaillist@cosetrain.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello,
 
-While trying to set JP as regulatory domain I get in my kernel log:
-cfg80211: Calling CRDA for country: JP
-cfg80211: Invalid regulatory domain detected:
-cfg80211: Regulatory domain: JP
-        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-        (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-        (2457000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-        (2474000 KHz - 2494000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-        (4910000 KHz - 4930000 KHz @ 10000 KHz), (N/A, 2300 mBm)
-        (4910000 KHz - 4990000 KHz @ 40000 KHz), (N/A, 2300 mBm)
-        (4930000 KHz - 4950000 KHz @ 10000 KHz), (N/A, 2300 mBm)
-        (5030000 KHz - 5045000 KHz @ 10000 KHz), (N/A, 2300 mBm)
-        (5030000 KHz - 5090000 KHz @ 40000 KHz), (N/A, 2300 mBm)
-        (5050000 KHz - 5060000 KHz @ 10000 KHz), (N/A, 2300 mBm)
-        (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-        (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-        (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+A little comment:
 
-Looks like the check "freq_range->max_bandwidth_khz > freq_diff" fails in 
-net/wireless/reg.c (is_valid_reg_rule function) for the second and third 
-ranges. Got this with wireless-regdb-2009-01-15 and kernel 2.6.28.1
+Maybe it is better to omit from the patch the remark :
+/* From mesh_hwmp.c: */
+ (which appears twice)
+and add to the changelog an item like this:
 
-Is there some error in regulatory domain ranges for JP, or kernel check 
-missing something additional? I couldn't find proper information about the 
-rules.
+-Moved mpath_frame_type enum definition and max_preq_retries() macro
+definition from mesh_hwmp.c to mesh.h.
 
---
-[]'s
-Herton
+
+Regards,
+Rami Rosen
+
+
+
+On Mon, Jan 26, 2009 at 10:39 PM, Florian Sesser
+<flomaillist@cosetrain.com> wrote:
+> Struct mesh_path_sel_ops, central to the abstraction
+> of the Path Selection Protocol.
+>
+> Signed-off-by: Florian Sesser <flomaillist@cosetrain.com>
+> ---
+>  net/mac80211/mesh.h |   78 +++++++++++++++++++++++++++++++++++++++++++++++++--
+>  1 files changed, 75 insertions(+), 3 deletions(-)
+>
+> diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+> index 9e064ee..a4141d8 100644
+> --- a/net/mac80211/mesh.h
+> +++ b/net/mac80211/mesh.h
+> @@ -169,6 +169,72 @@ struct mesh_rmc {
+>  */
+>  #define MESH_PREQ_MIN_INT      10
+>  #define MESH_DIAM_TRAVERSAL_TIME 50
+> +
+> +/* Default Path Selection, Path Metric, Congestion Control Mode */
+> +#define MESH_PATH_SELECTION_PROTOCOL_ID 0x000FACFF
+> +#define MESH_PATH_SELECTION_METRIC_ID 0x000FACFF
+> +#define MESH_CONGESTION_CONTROL_MODE_ID 0x000FACFF
+> +
+> +/* From mesh_hwmp.c: */
+> +enum mpath_frame_type {
+> +       MPATH_PREQ = 0,
+> +       MPATH_PREP,
+> +       MPATH_PERR
+> +};
+> +/* Function pointer typedefs for struct mesh_path_sel_ops */
+> +typedef void (mesh_path_start_discovery_fn) (struct ieee80211_sub_if_data *sdata);
+> +typedef int (mesh_nexthop_lookup_fn) (struct sk_buff *skb, struct ieee80211_sub_if_data *sdata);
+> +typedef void (mesh_queue_preq_fn) (struct mesh_path *mpath, u8 flags);
+> +typedef int (mesh_path_sel_frame_tx_fn) (enum mpath_frame_type action, u8 flags,
+> +               u8 *orig_addr, __le32 orig_dsn, u8 dst_flags, u8 *dst, __le32 dst_dsn, u8 *da,
+> +               u8 hop_count, u8 ttl, __le32 lifetime, __le32 metric, __le32 preq_id,
+> +               struct ieee80211_sub_if_data *sdata);
+> +typedef int (mesh_path_error_tx_fn) (u8 *dst, __le32 dst_dsn, u8 *ra,
+> +               struct ieee80211_sub_if_data *sdata);
+> +typedef void (mesh_path_timer_fn) (unsigned long data);
+> +typedef u32 (mesh_route_info_get_fn) (struct ieee80211_sub_if_data *sdata,
+> +               struct ieee80211_mgmt *mgmt, u8 *ie);
+> +typedef void (mesh_rx_path_sel_frame_fn) (struct ieee80211_sub_if_data *sdata,
+> +               struct ieee80211_mgmt *mgmt, size_t len);
+> +typedef void (mesh_preq_frame_process_fn) (struct ieee80211_sub_if_data *sdata,
+> +               struct ieee80211_mgmt *mgmt, u8 *preq_elem, u32 metric);
+> +typedef void (mesh_prep_frame_process_fn) (struct ieee80211_sub_if_data *sdata,
+> +               struct ieee80211_mgmt *mgmt, u8 *prep_elem, u32 metric);
+> +typedef void (mesh_perr_frame_process_fn) (struct ieee80211_sub_if_data *sdata,
+> +               struct ieee80211_mgmt *mgmt, u8 *perr_elem);
+> +typedef void (mesh_path_sel_start_fn) (struct ieee80211_if_mesh *sta);
+> +typedef void (mesh_path_sel_stop_fn) (struct ieee80211_if_mesh *sta);
+> +struct mesh_path_sel_ops {
+> +       mesh_path_start_discovery_fn *path_start_discovery_fn;
+> +       mesh_nexthop_lookup_fn *nexthop_lookup_fn;
+> +       /* Needed by mesh_path_timer from mesh_pathtbl.c */
+> +       mesh_queue_preq_fn *queue_preq_fn;
+> +       /* To my surprise this seems to not be needed:
+> +       mesh_path_sel_frame_tx_fn *path_sel_frame_tx_fn; */
+> +       mesh_path_error_tx_fn *path_error_tx_fn;
+> +       /* Doesn't this timer belong into mesh.c? */
+> +       mesh_path_timer_fn *path_timer_fn;
+> +       mesh_rx_path_sel_frame_fn *rx_path_sel_frame_fn;
+> +       /* Belongs into the mesh routing protocol module
+> +       mesh_preq_frame_process_fn *preq_frame_process_fn;
+> +       mesh_prep_frame_process_fn *prep_frame_process_fn;
+> +       mesh_perr_frame_process_fn *perr_frame_process_fn; */
+> +       mesh_path_sel_start_fn *path_sel_start_fn;
+> +       mesh_path_sel_stop_fn *path_sel_stop_fn;
+> +};
+> +
+> +#define MESH_ALGO_NAME_MAX    (16)
+> +struct mesh_path_sel_algo {
+> +       struct list_head list;
+> +       char name[MESH_ALGO_NAME_MAX];
+> +       u32 id;
+> +       struct mesh_path_sel_ops* ops;
+> +       struct module* owner;
+> +};
+> +
+> +void mesh_path_sel_algo_register (struct mesh_path_sel_algo *algo);
+> +void mesh_path_sel_algo_unregister (struct mesh_path_sel_algo *algo);
+> +
+>  /* Paths will be refreshed if they are closer than PATH_REFRESH_TIME to their
+>  * expiration
+>  */
+> @@ -205,6 +271,9 @@ int mesh_rmc_check(u8 *addr, struct ieee80211s_hdr *mesh_hdr,
+>  bool mesh_matches_local(struct ieee802_11_elems *ie,
+>                struct ieee80211_sub_if_data *sdata);
+>  void mesh_ids_set_default(struct ieee80211_if_mesh *mesh);
+> +void mesh_ids_set_pp(struct ieee80211_if_mesh *sta, u32 pp);
+> +void mesh_ids_set_pm(struct ieee80211_if_mesh *sta, u32 pm);
+> +void mesh_ids_set_cc(struct ieee80211_if_mesh *sta, u32 cc);
+>  void mesh_mgmt_ies_add(struct sk_buff *skb,
+>                struct ieee80211_sub_if_data *sdata);
+>  void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
+> @@ -219,9 +288,9 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata);
+>  void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata);
+>
+>  /* Mesh paths */
+> -int mesh_nexthop_lookup(struct sk_buff *skb,
+> -               struct ieee80211_sub_if_data *sdata);
+> -void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata);
+> +struct mesh_path_sel_algo* mesh_path_sel_algo_find_by_name (const char* name);
+> +struct mesh_path_sel_algo* mesh_path_sel_algo_find_by_id (u32 id);
+> +void mesh_path_sel_algo_set (struct ieee80211_if_mesh *sta, struct mesh_path_sel_algo* algo);
+>  struct mesh_path *mesh_path_lookup(u8 *dst,
+>                struct ieee80211_sub_if_data *sdata);
+>  struct mesh_path *mpp_path_lookup(u8 *dst,
+> @@ -293,6 +362,9 @@ static inline void mesh_path_activate(struct mesh_path *mpath)
+>        for (i = 0; i <= x->hash_mask; i++) \
+>                hlist_for_each_entry_rcu(node, p, &x->hash_buckets[i], list)
+>
+> +/* Moved here from mesh_hwmp.c */
+> +#define max_preq_retries(s) (s->u.mesh.mshcfg.dot11MeshHWMPmaxPREQretries)
+> +
+>  void ieee80211_mesh_notify_scan_completed(struct ieee80211_local *local);
+>
+>  #else
+> --
+> 1.5.6.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
