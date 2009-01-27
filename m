@@ -1,92 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:35797 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900AbZAKE6u (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59993 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152AbZA0JiJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jan 2009 23:58:50 -0500
-Subject: Re: Help debugging unexpected disassociations?
-From: Ari Entlich <lmage11@twcny.rr.com>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <3ace41890901100516mc2e1ee1h42c4f67b552f7d73@mail.gmail.com>
-References: <20090110021351.MHLV4.64591.root@hrndva-web24-z02>
-	 <3ace41890901100516mc2e1ee1h42c4f67b552f7d73@mail.gmail.com>
-Content-Type: text/plain
-Date: Sat, 10 Jan 2009 23:58:46 -0500
-Message-Id: <1231649926.21931.5.camel@g4mdd.entnet> (sfid-20090111_055853_066625_95CBB434)
+	Tue, 27 Jan 2009 04:38:09 -0500
+Subject: Re: iwlwifi warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1ba2fa240901270134x50b4daej9fb600ac1d8311ef@mail.gmail.com> (sfid-20090127_103443_996284_47980106)
+References: <1233047705.4012.12.camel@johannes.local>
+	 <1ba2fa240901270134x50b4daej9fb600ac1d8311ef@mail.gmail.com>
+	 (sfid-20090127_103443_996284_47980106)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-fS1u/Wf0PUGNzpp9ddUt"
+Date: Tue, 27 Jan 2009 10:38:05 +0100
+Message-Id: <1233049085.4012.14.camel@johannes.local> (sfid-20090127_103815_151824_DD0DA7F8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-01-10 at 13:16 +0000, Hin-Tak Leung wrote:
-> On Sat, Jan 10, 2009 at 2:13 AM,  <lmage11@twcny.rr.com> wrote:
-> <snipped>
-> >> Also, it is always useful to quote versions of relevant software -
-> >> what version of wpa_supplicant, and networkmanager you are using; or
-> >> even what distribution you are using, and hardware (64-bit, 32-bit).
-> >> You have written 3 times and added no new info.
+
+--=-fS1u/Wf0PUGNzpp9ddUt
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2009-01-27 at 11:34 +0200, Tomas Winkler wrote:
+> On Tue, Jan 27, 2009 at 11:15 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > drivers/net/wireless/iwlwifi/iwl3945-base.c: In function
+> > 'iwl3945_pci_resume':
+> > drivers/net/wireless/iwlwifi/iwl3945-base.c:6319: warning: ignoring
+> > return value of 'pci_enable_device', declared with attribute
+> > warn_unused_result
 > >
-> > You need only ask. :)
-> 
-> That info should have been in your first post, or the 2nd...
+> > drivers/net/wireless/iwlwifi/iwl-agn.c: In function 'iwl_pci_resume':
+> > drivers/net/wireless/iwlwifi/iwl-agn.c:4128: warning: ignoring return
+> > value of 'pci_enable_device', declared with attribute warn_unused_resul=
+t
+> >
+> > drivers/net/wireless/iwlwifi/iwl-tx.c: In function 'iwl_tx_queue_alloc'=
+:
+> > drivers/net/wireless/iwlwifi/iwl-tx.c:302: warning: format '%zd' expect=
+s
+> > type 'signed size_t', but argument 4 has type 'u32'
+>=20
+> Patch already queued.
 
-The first post contained all the information that I felt at the time was
-relevant. The second post existed solely to get people to notice me (by
-the way, how was it "no use"? I seem to have gotten someone to listen to
-me...). If I was wrong in my initial assumption, it is completely within
-your capability to correct me without sounding as if I've put some sort
-of terrible burden on your head for no reason.
+Ok, cool.
 
-> And you still have not answered one: what distro - that alone would
-> have answered or at least hinted at most of the software versions,
-> etc.
+johannes
 
-I'm sorry for not answering this question, somehow I overlooked it. I'm
-using Gentoo, which is why my wpa_supplicant is so old - 0.5.7 is the
-newest stable version in Gentoo (no idea why).
+--=-fS1u/Wf0PUGNzpp9ddUt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-> 'read my mind'... you are the person asking for help, why do you
-> expect others to *chase after you* for info?
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Please quit with this "read my mind" crap. If I were asking you to read
-my mind, I would not be telling you the information you ask me for or
-demanding results before I tell you the required information. I am doing
-neither of these things. And also, the fact that you've had to ask me
-some questions hardly means you're having to "chase after" anything.
+iQIcBAABAgAGBQJJftX4AAoJEKVg1VMiehFYb14P/iHN9mBjDTOBmOn8zkQz1s61
+ZP3cyAD6P8oVlA1SuggE96quzc3V9SxiV1j59tznLrTyVUcseDe03lJM65nrV+yG
+dJU9WyGCLd70oVTu8iwDojOhYSGf4dDPiiWUW5w7Oyai4w3clBLvVujPjwqv8IIu
+Kd+jW/YnRVcqIH6mM9yFky2bqKL1pxbvlAlQCsm4kI12+krHSsIaJN+gnZf+gO4W
+zZPPJmABjhyEOZVKKs2TDHffYA6ee5mwnYuGOdvulp7JCOVAKAiaMLR27lsqBr0E
+is9lRjAaLX6Wku5GiXbw62Em/8oSYDDFDqZVp4S5gzzYl9jEEiYwiq9uMpXpJ8dv
+ggc0PXx1BIPn6GXKjVH7BZLRRYEyW9/MGTR8OpjkB7ze1Pe7W7WNkVIwOltPxtWm
+FwyxSQfkX5Lxjpn9qapuwMRSBofFIJgRKEeRtA4myCSfC1/WJo2Tfnkd3FM4i8yJ
+xe2NebMx87QR5FRiyE6OvxtGV8vqznhfzPctcW3iwfgLw888j+CaUmd2fm522QP/
+2OTMwyDbxRyfvvJKrkOxQmBBDz9QuK2iP1K+shB5uuLBzfo++Y1OGpFRJnmqffy7
+71JU/p5Jn+8XkuR1UdLfioS0gzo4DaH9k6itRb3CYjsmRnGkRP6ARVEjUuM2QZ+v
+S5195mVpoMePLB4D6Xb7
+=BSfS
+-----END PGP SIGNATURE-----
 
-> Most people won't bother.
-
-Most people want to improve the software they write. If they didn't,
-posting to this mailing list would be pointless.
-
-> > I am using wpa_supplicant 0.5.7. I am aware that this is a really old version,
-> > and I can try updating it if you think that would make a difference. I am running
-> > on a Thinkpad T61, which is 64-bit. I think I already said which chip I'm using,
-> > but I'll say it again. It's an IWL4965.
-> 
-> Now we are getting somewhere - and my first reply did ask you to run
-> wpa_supplicant in the foreground.
-> Even for the 0.5.x series, 0.5.10 is current... and most people are
-> using 0.6.x . wpa_supplicant (not the driver) is responsible for
-> encryption and authentication, and you had a deauthentication problem.
-> Hello, anybody home??!!
-
-Given that the version I'm using *CAN* authenticate, it doesn't
-immediately make sense to me why wpa_supplicant would be causing this
-problem, unless wpa_supplicant is intentionally trying to screw me up by
-deauthenticating me. I will try updating, but would you please try a
-little harder to hide the fact that you consider me a retard for no
-reason next time? Thanks.
-
-> So, as you yourself suggested, you should update. And while you are at
-> it, read wpa_supplicant's doc, and work out the debug options and what
-> I meant by 'run it in the foreground'.
-
-I know what foreground means. If you look at my response, I guessed that
-you meant in order to get debugging messages, which clearly shows that I
-knew what you were talking about. And I have in fact tried this (even
-before you suggested it), but have run into other problems. I'll try
-again.
-
-Ari
+--=-fS1u/Wf0PUGNzpp9ddUt--
 
