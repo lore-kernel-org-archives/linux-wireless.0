@@ -1,292 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:43981 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751748AbZAGKLF (ORCPT
+Received: from 213-239-195-126.clients.your-server.de ([213.239.195.126]:57997
+	"EHLO bercruz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbZA0JLc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 05:11:05 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [PATCH 06/11] ath9k: introduce platform driver for AHB bus support
-Date: Wed,  7 Jan 2009 11:09:27 +0100
-Message-Id: <1231322972-24094-7-git-send-email-juhosg@openwrt.org> (sfid-20090107_111121_380447_DB25D717)
-In-Reply-To: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
-References: <1231322972-24094-1-git-send-email-juhosg@openwrt.org>
+	Tue, 27 Jan 2009 04:11:32 -0500
+Received: from [192.168.2.199] (dslb-088-074-056-210.pools.arcor-ip.net [88.74.56.210])
+	by bercruz.com (Postfix) with ESMTP id 6A5591FA4044
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 09:51:11 +0100 (CET)
+Message-ID: <497ECAFE.8030900@bercruz.com> (sfid-20090127_101138_052861_7B39BB5F)
+Date: Tue, 27 Jan 2009 09:51:10 +0100
+From: Thorsten Maus <maus@bercruz.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Problems with latest driver and iwl4965
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the platform_driver itself, and modifies the main driver
-to register it.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/Makefile |    1 +
- drivers/net/wireless/ath9k/ahb.c    |  179 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/core.h   |    9 ++
- drivers/net/wireless/ath9k/main.c   |   10 ++
- 4 files changed, 199 insertions(+), 0 deletions(-)
+My environment:
 
-diff --git a/drivers/net/wireless/ath9k/Makefile b/drivers/net/wireless/ath9k/Makefile
-index af3f39b..0062958 100644
---- a/drivers/net/wireless/ath9k/Makefile
-+++ b/drivers/net/wireless/ath9k/Makefile
-@@ -12,6 +12,7 @@ ath9k-y +=	hw.o \
- 		rc.o
- 
- ath9k-$(CONFIG_PCI) += pci.o
-+ath9k-$(CONFIG_ATHEROS_AR71XX) += ahb.o
- ath9k-$(CONFIG_ATH9K_DEBUG) += debug.o
- 
- obj-$(CONFIG_ATH9K) += ath9k.o
-diff --git a/drivers/net/wireless/ath9k/ahb.c b/drivers/net/wireless/ath9k/ahb.c
-new file mode 100644
-index 0000000..0a6fa0e
---- /dev/null
-+++ b/drivers/net/wireless/ath9k/ahb.c
-@@ -0,0 +1,179 @@
-+/*
-+ * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2009 Gabor Juhos <juhosg@openwrt.org>
-+ * Copyright (c) 2009 Imre Kaloz <kaloz@openwrt.org>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/nl80211.h>
-+#include <linux/platform_device.h>
-+#include "core.h"
-+#include "reg.h"
-+#include "hw.h"
-+
-+/* return bus cachesize in 4B word units */
-+static void ath_ahb_read_cachesize(struct ath_softc *sc, int *csz)
-+{
-+	*csz = L1_CACHE_BYTES >> 2;
-+}
-+
-+static void ath_ahb_cleanup(struct ath_softc *sc)
-+{
-+	struct ieee80211_hw *hw = sc->hw;
-+
-+	free_irq(sc->irq, sc);
-+
-+	ath_detach(sc);
-+	iounmap(sc->mem);
-+	ieee80211_free_hw(hw);
-+}
-+
-+static struct ath_bus_ops ath_ahb_bus_ops  = {
-+	.read_cachesize = ath_ahb_read_cachesize,
-+	.cleanup = ath_ahb_cleanup,
-+};
-+
-+static int ath_ahb_probe(struct platform_device *pdev)
-+{
-+	void __iomem *mem;
-+	struct ath_softc *sc;
-+	struct ieee80211_hw *hw;
-+	struct resource *res;
-+	int irq;
-+	int ret = 0;
-+	struct ath_hal *ah;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (res == NULL) {
-+		dev_err(&pdev->dev, "no memory resource found\n");
-+		ret = -ENXIO;
-+		goto err_out;
-+	}
-+
-+	mem = ioremap_nocache(res->start, res->end - res->start + 1);
-+	if (mem == NULL) {
-+		dev_err(&pdev->dev, "ioremap failed\n");
-+		ret = -ENOMEM;
-+		goto err_out;
-+	}
-+
-+	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-+	if (res == NULL) {
-+		dev_err(&pdev->dev, "no IRQ resource found\n");
-+		ret = -ENXIO;
-+		goto err_iounmap;
-+	}
-+
-+	irq = res->start;
-+
-+	hw = ieee80211_alloc_hw(sizeof(struct ath_softc), &ath9k_ops);
-+	if (hw == NULL) {
-+		dev_err(&pdev->dev, "no memory for ieee80211_hw\n");
-+		ret = -ENOMEM;
-+		goto err_iounmap;
-+	}
-+
-+	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
-+		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-+		IEEE80211_HW_SIGNAL_DBM |
-+		IEEE80211_HW_NOISE_DBM;
-+
-+	hw->wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_AP) |
-+		BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_ADHOC);
-+
-+	SET_IEEE80211_DEV(hw, &pdev->dev);
-+	platform_set_drvdata(pdev, hw);
-+
-+	sc = hw->priv;
-+	sc->hw = hw;
-+	sc->dev = &pdev->dev;
-+	sc->mem = mem;
-+	sc->bus_ops = &ath_ahb_bus_ops;
-+	sc->irq = irq;
-+
-+	ret = ath_attach(AR5416_AR9100_DEVID, sc);
-+	if (ret != 0) {
-+		dev_err(&pdev->dev, "failed to attach device, err=%d\n", ret);
-+		ret = -ENODEV;
-+		goto err_free_hw;
-+	}
-+
-+	ret = request_irq(irq, ath_isr, IRQF_SHARED, "ath9k", sc);
-+	if (ret) {
-+		dev_err(&pdev->dev, "request_irq failed, err=%d\n", ret);
-+		ret = -EIO;
-+		goto err_detach;
-+	}
-+
-+	ah = sc->sc_ah;
-+	printk(KERN_INFO
-+	       "%s: Atheros AR%s MAC/BB Rev:%x, "
-+	       "AR%s RF Rev:%x, mem=0x%lx, irq=%d\n",
-+	       wiphy_name(hw->wiphy),
-+	       ath_mac_bb_name(ah->ah_macVersion),
-+	       ah->ah_macRev,
-+	       ath_rf_name((ah->ah_analog5GhzRev & AR_RADIO_SREV_MAJOR)),
-+	       ah->ah_phyRev,
-+	       (unsigned long)mem, irq);
-+
-+	return 0;
-+
-+ err_detach:
-+	ath_detach(sc);
-+ err_free_hw:
-+	ieee80211_free_hw(hw);
-+	platform_set_drvdata(pdev, NULL);
-+ err_iounmap:
-+	iounmap(mem);
-+ err_out:
-+	return ret;
-+}
-+
-+static int ath_ahb_remove(struct platform_device *pdev)
-+{
-+	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
-+
-+	if (hw) {
-+		struct ath_softc *sc = hw->priv;
-+
-+		free_irq(sc->irq, sc);
-+		ath_detach(sc);
-+		iounmap(sc->mem);
-+		ieee80211_free_hw(hw);
-+		platform_set_drvdata(pdev, NULL);
-+	}
-+
-+	return 0;
-+}
-+
-+static struct platform_driver ath_ahb_driver = {
-+	.probe      = ath_ahb_probe,
-+	.remove     = ath_ahb_remove,
-+	.driver		= {
-+		.name	= "ath9k",
-+		.owner	= THIS_MODULE,
-+	},
-+};
-+
-+int ath_ahb_init(void)
-+{
-+	return platform_driver_register(&ath_ahb_driver);
-+}
-+
-+void ath_ahb_exit(void)
-+{
-+	platform_driver_register(&ath_ahb_driver);
-+}
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index a7cdbed..e162ab1 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -705,6 +705,7 @@ struct ath_softc {
- 	struct tasklet_struct bcon_tasklet;
- 	struct ath_hal *sc_ah;
- 	void __iomem *mem;
-+	int irq;
- 	spinlock_t sc_resetlock;
- 	struct mutex mutex;
- 
-@@ -782,4 +783,12 @@ static inline int ath_pci_init(void) { return 0; };
- static inline void ath_pci_exit(void) {};
- #endif
- 
-+#ifdef CONFIG_ATHEROS_AR71XX
-+int ath_ahb_init(void);
-+void ath_ahb_exit(void);
-+#else
-+static inline int ath_ahb_init(void) { return 0; };
-+static inline void ath_ahb_exit(void) {};
-+#endif
-+
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index a1b3f82..f2dc538 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2514,8 +2514,17 @@ static int __init ath9k_init(void)
- 		goto err_rate_unregister;
- 	}
- 
-+	error = ath_ahb_init();
-+	if (error < 0) {
-+		error = -ENODEV;
-+		goto err_pci_exit;
-+	}
-+
- 	return 0;
- 
-+ err_pci_exit:
-+	ath_pci_exit();
-+
-  err_rate_unregister:
- 	ath_rate_control_unregister();
-  err_out:
-@@ -2525,6 +2534,7 @@ module_init(ath9k_init);
- 
- static void __exit ath9k_exit(void)
- {
-+	ath_ahb_exit();
- 	ath_pci_exit();
- 	ath_rate_control_unregister();
- 	printk(KERN_INFO "%s: Driver unloaded\n", dev_info);
--- 
-1.5.3.2
+Ubuntu 08.10
+uname -a: Linux dell5400 2.6.27-9-generic #1 SMP Thu Nov 20 21:57:00 UTC
+2008 i686 GNU/Linu
+
+wifie:
+ls -la  compat-wireless-2009-01-19 -> latest driver
+
+dmesg | grep iwl
+ dmesg | grep iwl
+[   12.148010] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux,
+1.3.27ks
+[   12.148012] iwlagn: Copyright(c) 2003-2008 Intel Corporation
+[   12.148068] iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) ->
+IRQ 17
+[   12.148076] iwlagn 0000:0c:00.0: setting latency timer to 64
+[   12.148093] iwlagn: Detected Intel Wireless WiFi Link 5300AGN REV=0x24
+[   12.177631] iwlagn: Tunable channels: 13 802.11bg, 24 802.11a channels
+[   12.233747] iwlagn 0000:0c:00.0: PCI INT A disabled
+[   12.234132] phy0: Selected rate control algorithm 'iwl-agn-rs'
+[   33.849292] iwlagn 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) ->
+IRQ 17
+[   33.849370] iwlagn 0000:0c:00.0: restoring config space at offset 0x1
+(was 0x100102, writing 0x100106)
+[   33.849542] firmware: requesting iwlwifi-5000-1-lbm.ucode
+[   36.301423] Registered led device: iwl-phy0:radio
+[   36.302226] Registered led device: iwl-phy0:assoc
+[   36.302629] Registered led device: iwl-phy0:RX
+[   36.303297] Registered led device: iwl-phy0:TX
+
+
+dmesg | grep Intel
+ dmesg | grep Intel
+[    0.342534] CPU0: Intel(R) Core(TM)2 Duo CPU     P9500  @ 2.53GHz
+stepping 06
+[    0.428944] CPU1: Intel(R) Core(TM)2 Duo CPU     P9500  @ 2.53GHz
+stepping 06
+[   10.971737] agpgart-intel 0000:00:00.0: Intel Mobile Intel? GM45
+Express Chipset
+[   11.686362] HDA Intel 0000:00:1b.0: PCI INT A -> GSI 21 (level, low)
+-> IRQ 21
+[   11.686379] HDA Intel 0000:00:1b.0: setting latency timer to 64
+[   12.148010] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux,
+1.3.27ks
+[   12.148012] iwlagn: Copyright(c) 2003-2008 Intel Corporation
+[   12.148093] iwlagn: Detected Intel Wireless WiFi Link 5300AGN REV=0x24
+
+lsmod | grep iwl
+ lsmod | grep iwl
+iwlagn                 99844  0
+iwlcore                92672  1 iwlagn
+rfkill                 17176  2 iwlcore
+led_class              12164  1 iwlcore
+lbm_cw_mac80211       210728  2 iwlagn,iwlcore
+lbm_cw_cfg80211        39696  3 iwlagn,iwlcore,lbm_cw_mac80211
+
+The problems ONLY occur on this kernel version using the latest driver
+as mentioned earlier.
+A former kernel (2.6.19) as well as the alternative windows installation
+do not show any uncommon behavior.
+
+
+Problem description:
+Directly after starting the device, the internet connection is stable.
+>From time to time however the connection for at least the http based
+protocol as well as the protocol used for mail stops working.
+None of the available log-files produce any additional output during
+off-time.
+
+
+A wget request like the following produces:
+tmaus@dell5400:~$ wget yahoo.com
+--2009-01-27 09:42:47--  http://yahoo.com/
+Resolving yahoo.com... 68.180.206.184, 206.190.60.37
+Connecting to yahoo.com|68.180.206.184|:80... connected.
+HTTP request sent, awaiting response... 301 Moved Permanently
+Location: http://www.yahoo.com/ [following]
+--2009-01-27 09:42:47--  http://www.yahoo.com/
+Resolving www.yahoo.com... 87.248.113.14
+Connecting to www.yahoo.com|87.248.113.14|:80... connected.
+HTTP request sent, awaiting response...
+
+where at the same time a ping request produces:
+tmaus@dell5400:~$ ping yahoo.com
+PING yahoo.com (68.180.206.184) 56(84) bytes of data.
+64 bytes from w2.rc.vip.sp1.yahoo.com (68.180.206.184): icmp_seq=1
+ttl=49 time=191 ms
+64 bytes from w2.rc.vip.sp1.yahoo.com (68.180.206.184): icmp_seq=2
+ttl=49 time=189 ms
+64 bytes from w2.rc.vip.sp1.yahoo.com (68.180.206.184): icmp_seq=3
+ttl=49 time=190 ms
+
+
+My instant messaging clients do work properly all the time without
+exception.
+
+>From my point of view, this must be a bug within the latest driver ...
+but as my knowledge on this topic is not deep, I kindly ask you to have
+a look at my mail and to respond to me ..
+
+thanks in advance and greetings from berlin
+
+thorsten maus
 
