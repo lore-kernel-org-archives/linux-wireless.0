@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50409 "EHLO mail.atheros.com"
+Received: from mga02.intel.com ([134.134.136.20]:7077 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932754AbZAOU0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 15:26:19 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 12:26:19 -0800
-Date: Thu, 15 Jan 2009 12:25:50 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Greg KH <greg@kroah.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Joseph Cheek <joseph@cheek.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [stable] [ath9k-devel] 2.6.2{7, 8} with
-	compat-wireless-2008-12-3{0, 1) drops link every 2-3 minutes
-Message-ID: <20090115202550.GB29609@tesla> (sfid-20090115_212628_673056_FA498B2E)
-References: <495C7640.8060806@cheek.com> <20090105170432.GA6834@tesla> <20090115183703.GB10674@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090115183703.GB10674@kroah.com>
+	id S1751404AbZA0WZH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2009 17:25:07 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/7] iwlwifi driver updates 01/27/2009
+Date: Tue, 27 Jan 2009 14:27:51 -0800
+Message-Id: <1233095278-5850-1-git-send-email-reinette.chatre@intel.com> (sfid-20090127_232512_633193_F4A5A55A)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2009 at 10:37:03AM -0800, Greg KH wrote:
-> On Mon, Jan 05, 2009 at 09:04:32AM -0800, Luis R. Rodriguez wrote:
-> > On Wed, Dec 31, 2008 at 11:52:32PM -0800, Joseph Cheek wrote:
-> > > Hi all,
-> > >
-> > > Happy New Year!  It's about 2:30 AM here and I'm up debugging my shiny
-> > > new DWA-552 <AR5416+AR2133> XtremeN Desktop Adapter.  Stock 2.6.28 gave
-> > > me the dreaded "No ProbeResp from current AP" in syslog with a
-> > > disconnect every few minutes, even after updating
-> > > |IEEE80211_MONITORING_INTERVAL to (100 * HZ).  It's highly annoying.
-> >
-> > This should be due to the fact that the RX filter disabled beaconing from
-> > the current AP and mac80211 expects beacons from the AP. This was fixed
-> > in wireless-testing but I do not see this pushed out for 2.6.28.
-> >
-> > Greg, this was fixed in Linus' tree via ffb826767bffda61426d964a8fc24a216a14b0bd,
-> > merged by John on Fri, 21 Nov 2008, the patch is titled:
-> > "ath9k: enable RXing of beacons on STA/IBSS". Just in case I've
-> > provided the hunk below. Without this patch users will face this disconnect
-> > issue on noisy environments where the beacons don't reach mac80211 within
-> > a certain time frame dicated by mac80211.
-> 
-> Thanks, I'll queue this up for 2.6.28, but it doesn't apply to
-> 2.6.27-stable.  If you want it there, can you please provide a backport
-> for it?
+This series contains two patches towards the 3945 porting effort (patch 1
+and patch 7). We include a few driver fixes identified by sparse.
 
-Thanks Greg -- it seems this was actually present in 2.6.27 since the
-initial commit of ath9k. From the initial commit I see:
+Patch 5 is a very big patch that changes code not to use implicit
+variables. I hope it does not cause any problems for you.
 
---- on ath_calcrxfilter()
-        if (sc->sc_opmode == ATH9K_M_STA || sc->sc_opmode == ATH9K_M_IBSS ||
-            sc->sc_scanning)
-                rfilt |= ATH9K_RX_FILTER_BEACON;
----
+Patch 6 adds some code back that went missing between 2.6.28 and
+2.6.29-rc1. The cause of this problem has not been identified so we hope
+that this is the only problem of this kind.
 
-Seems we're good on 27 for this and this actually turned out to be a regression then.
+[PATCH 1/7] iwl3945: Getting rid of the *39_rxon iwl_priv fields
+[PATCH 2/7] iwlwifi: suppress unused variable warning when compiling w/o IWLWIFI_DEBUG
+[PATCH 3/7] iwlwifi: iwl3945_send_tx_power must be static
+[PATCH 4/7] iwlwifi: check return value of pci_enable_device
+[PATCH 5/7] iwlwifi: don't use implicit priv in IWL_DEBUG
+[PATCH 6/7] iwlwifi: clean key table in iwl_clear_stations_table
+[PATCH 7/7] iwlwifi: unify iwlagn and 3945 power save management
 
-  Luis
+
+Thank you
+
+Reinette
+
