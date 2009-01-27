@@ -1,91 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f29.google.com ([209.85.218.29]:47670 "EHLO
-	mail-bw0-f29.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbZAHCiA (ORCPT
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:41593 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423AbZA0Jlo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 21:38:00 -0500
-Received: by bwz10 with SMTP id 10so6420407bwz.13
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 18:37:58 -0800 (PST)
-Message-ID: <45e8e6c40901071837o56dba8f1w6db5c7e982f698da@mail.gmail.com> (sfid-20090108_033807_508954_742B81DA)
-Date: Wed, 7 Jan 2009 18:37:58 -0800
-From: "Andrey Yurovsky" <andrey@cozybit.com>
-To: libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: libertas: BUG: unable to handle paging request
-Cc: wangchen@cn.fujitsu.com
-In-Reply-To: <45e8e6c40901071658j6a22fcc7gedcc41d73a61ff2a@mail.gmail.com>
+	Tue, 27 Jan 2009 04:41:44 -0500
+Received: by fxm13 with SMTP id 13so1717438fxm.13
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 01:41:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <45e8e6c40901071658j6a22fcc7gedcc41d73a61ff2a@mail.gmail.com>
+In-Reply-To: <20090126184925.913285565@sipsolutions.net>
+References: <20090126184740.036240879@sipsolutions.net>
+	 <20090126184925.913285565@sipsolutions.net>
+Date: Tue, 27 Jan 2009 11:41:42 +0200
+Message-ID: <1ba2fa240901270141y7361d332p7a0423e105afaec3@mail.gmail.com> (sfid-20090127_104147_909865_6191A7B6)
+Subject: Re: [RFC/RFT 7/7] mac80211: fix aggregation timer lockups
+From: Tomas Winkler <tomasw@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com,
+	Sujith.Manoharan@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit that caused this regression is
-29726d85d7b98558a8bc8e69b859bf12e1347f9f "netdevice libertas: Fix
-directly reference of netdev->priv" by Wang Chen.  It probably causes
-a problem with netdev->priv's offset and then we get a pointer
-dereference problem when lbs_get_freq() tries to use its priv data.
+On Mon, Jan 26, 2009 at 8:47 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> As far as I can tell, there are possible lockups because both the RX
+> session_timer and TX addba_resp_timer are del_timer_sync'ed under
+> the sta spinlock which both timer functions take. Additionally, the
+> TX agg code seems to leak memory when TX aggregation is not disabled
+> before the sta_info is freed.
 
-  -Andrey
+Funny,  it was your deed to replaced the two locks with one. Woudn;t
+be better just put it back?
 
-On Wed, Jan 7, 2009 at 4:58 PM, Andrey Yurovsky <andrey@cozybit.com> wrote:
-> Hello.  I noticed that the libertas driver causes a kernel oops in
-> more recent wireless-testing kernels (I am bisecting right now to
-> narrow this down).  To reproduce, load the driver and run iwconfig,
-> causing lbs_get_freq() to be called.
+
 >
-> So far I know that this problem doesn't exist at the 2.6.28-rc2 tag
-> (commit 0173a3265b228da319ceb9c1ec6a5682fd1b2d92)  but I have seen it
-> in -rc7 and up through today's wireless-testing.  It seems that
-> there's a regression somewhere after -rc2.  I've reproduced this with
-> the USB hardware as well as an SDIO board.
+> Fix this by making the free code a little smarter in the RX agg case,
+> and actually make the sta_info_destroy code free the TX agg info in
+> the TX agg case. We won't notify the peer, but it'll notice something
+> is wrong anyway, and normally this only happens after we've told it
+> in some other way we will no longer talk to it.
 >
-> [  118.571205] BUG: unable to handle kernel paging request at 00001e01
-> [  118.578500] IP: [<c81fddda>] lbs_get_freq+0x1a/0x160 [libertas]
-> [  118.585417] *pde = 00000000
-> [  118.588877] Oops: 0000 [#1]
-> [  118.592092] last sysfs file: /sys/block/ram9/range
-> [  118.592385] Modules linked in: usb8xxx libertas lib80211
-> [  118.592385]
-> [  118.592385] Pid: 2317, comm: iwconfig Not tainted (2.6.28-wl #65) Uknown
-> [  118.592385] EIP: 0060:[<c81fddda>] EFLAGS: 00010293 CPU: 0
-> [  118.592385] EIP is at lbs_get_freq+0x1a/0x160 [libertas]
-> [  118.592385] EAX: 00000000 EBX: 00000000 ECX: c6891ef8 EDX: c6891e98
-> [  118.592385] ESI: c6891ef8 EDI: c6891ef8 EBP: c7295000 ESP: c6891e10
-> [  118.592385]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-> [  118.592385] Process iwconfig (pid: 2317, ti=c6890000 task=c7349880
-> task.ti=c6890000)
-> [  118.592385] Stack:
-> [  118.592385]  c8201b4b c6891ef8 00000010 ffffffa1 00008b05 c038aa20
-> 00000000 c03c691c
-> [  118.592385]  00000000 c04bc7e0 c0301287 b7f01d70 c68ce000 c6895000
-> c04c8260 00000c04
-> [  118.592385]  c68c7b7c 00000000 c7295000 c6891ee8 c0300325 c6891ee8
-> c7295000 c6891ee8
-> [  118.592385] Call Trace:
-> [  118.592385]  [<c8201b4b>] lbs_get_name+0x2b/0xb0 [libertas]
-> [  118.592385]  [<c038aa20>] ioctl_standard_call+0x60/0x3a0
-> [  118.592385]  [<c0301287>] netif_receive_skb+0x1d7/0x3e0
-> [  118.592385]  [<c0300325>] __dev_get_by_name+0x75/0x90
-> [  118.592385]  [<c0300325>] __dev_get_by_name+0x75/0x90
-> [  118.592385]  [<c038a687>] wext_handle_ioctl+0x157/0x230
-> [  118.592385]  [<c81fddc0>] lbs_get_freq+0x0/0x160 [libertas]
-> [  118.592385]  [<c03034c4>] dev_ioctl+0x304/0x4f0
-> [  118.592385]  [<c02ffdd2>] net_rx_action+0x92/0x140
-> [  118.592385]  [<c027ca89>] pty_write+0x39/0x60
-> [  118.592385]  [<c02f4280>] sock_ioctl+0x0/0x260
-> [  118.592385]  [<c017e27f>] vfs_ioctl+0x1f/0x70
-> [  118.592385]  [<c017e65b>] do_vfs_ioctl+0x24b/0x490
-> [  118.592385]  [<c011654e>] update_curr+0x13e/0x190
-> [  118.592385]  [<c0117fab>] set_next_entity+0x2b/0x70
-> [  118.592385]  [<c0397c64>] schedule+0x1b4/0x350
-> [  118.592385]  [<c017e906>] sys_ioctl+0x66/0x70
-> [  118.592385]  [<c0103cd2>] syscall_call+0x7/0xb
-> [  118.592385] Code: e9 38 ff ff ff 8d b6 00 00 00 00 8d bf 00 00 00
-> 00 56 89 ce 53 83 ec 0c 8b 98 a4 01 00 00 a1 80 19 22 c8 83 e0 21 83
-> f8 21 74 42 <0f> b6 8b 01 1e 00 00 31 d2 89 d8 e8 a6 fe ff ff 85 c0 0f
-> 84 cd
-> [  118.592385] EIP: [<c81fddda>] lbs_get_freq+0x1a/0x160 [libertas]
-> SS:ESP 0068:c6891e10
-> [  118.594153] ---[ end trace f426cd49b2b378f4 ]---
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  net/mac80211/agg-rx.c   |   11 +++++-
+>  net/mac80211/agg-tx.c   |   77 +++++++++++++++++++-----------------------------
+>  net/mac80211/sta_info.c |   29 +++++++++++++++---
+>  net/mac80211/sta_info.h |    1
+>  4 files changed, 67 insertions(+), 51 deletions(-)
+>
+> --- wireless-testing.orig/net/mac80211/agg-rx.c 2009-01-26 16:55:48.000000000 +0100
+> +++ wireless-testing/net/mac80211/agg-rx.c      2009-01-26 17:09:17.000000000 +0100
+> @@ -78,11 +78,18 @@ void ieee80211_sta_stop_rx_ba_session(st
+>                        sta->ampdu_mlme.tid_rx[tid]->reorder_buf[i] = NULL;
+>                }
+>        }
+> +
+> +       spin_lock_bh(&sta->lock);
+>        /* free resources */
+>        kfree(sta->ampdu_mlme.tid_rx[tid]->reorder_buf);
+> -       kfree(sta->ampdu_mlme.tid_rx[tid]);
+> -       sta->ampdu_mlme.tid_rx[tid] = NULL;
+> +
+> +       if (!sta->ampdu_mlme.tid_rx[tid]->shutdown) {
+> +               kfree(sta->ampdu_mlme.tid_rx[tid]);
+> +               sta->ampdu_mlme.tid_rx[tid] = NULL;
+> +       }
+> +
+>        sta->ampdu_mlme.tid_state_rx[tid] = HT_AGG_STATE_IDLE;
+> +       spin_unlock_bh(&sta->lock);
+>
+>        rcu_read_unlock();
+>  }
+> --- wireless-testing.orig/net/mac80211/sta_info.c       2009-01-26 16:55:48.000000000 +0100
+> +++ wireless-testing/net/mac80211/sta_info.c    2009-01-26 17:13:06.000000000 +0100
+> @@ -194,12 +194,33 @@ void sta_info_destroy(struct sta_info *s
+>                dev_kfree_skb_any(skb);
+>
+>        for (i = 0; i <  STA_TID_NUM; i++) {
+> +               struct tid_ampdu_rx *tid_rx;
+> +               struct tid_ampdu_tx *tid_tx;
+> +
+>                spin_lock_bh(&sta->lock);
+> -               if (sta->ampdu_mlme.tid_rx[i])
+> -                 del_timer_sync(&sta->ampdu_mlme.tid_rx[i]->session_timer);
+> -               if (sta->ampdu_mlme.tid_tx[i])
+> -                 del_timer_sync(&sta->ampdu_mlme.tid_tx[i]->addba_resp_timer);
+> +               tid_rx = sta->ampdu_mlme.tid_rx[i];
+> +               if (tid_rx)
+> +                       tid_rx->shutdown = true;
+> +               tid_tx = sta->ampdu_mlme.tid_tx[i];
+> +               if (tid_tx) {
+> +                       /*
+> +                        * XXX: in this case, ieee80211_stop_tx_ba_session
+> +                        *      cannot do anything since the sta_info won't
+> +                        *      be found... free the aggregation info here.
+> +                        */
+> +                       del_timer(&tid_tx->addba_resp_timer);
+> +                       kfree(tid_tx);
+> +               }
+>                spin_unlock_bh(&sta->lock);
+> +
+> +               /*
+> +                * outside spinlock - shutdown is true now so
+> +                * that the timer won't free tid_rx.
+> +                */
+> +               if (tid_rx) {
+> +                       del_timer_sync(&tid_rx->session_timer);
+> +                       kfree(tid_rx);
+> +               }
+>        }
+>
+>        __sta_info_free(local, sta);
+> --- wireless-testing.orig/net/mac80211/sta_info.h       2009-01-26 16:56:10.000000000 +0100
+> +++ wireless-testing/net/mac80211/sta_info.h    2009-01-26 17:07:16.000000000 +0100
+> @@ -100,6 +100,7 @@ struct tid_ampdu_rx {
+>        u16 buf_size;
+>        u16 timeout;
+>        u8 dialog_token;
+> +       bool shutdown;
+>  };
+>
+>  /**
+> --- wireless-testing.orig/net/mac80211/agg-tx.c 2009-01-26 16:55:48.000000000 +0100
+> +++ wireless-testing/net/mac80211/agg-tx.c      2009-01-26 17:07:16.000000000 +0100
+> @@ -122,6 +122,34 @@ void ieee80211_send_bar(struct ieee80211
+>        ieee80211_tx_skb(sdata, skb, 0);
+>  }
+>
+> +static int __ieee80211_stop_tx_ba_session(struct ieee80211_local *local,
+> +                                         struct sta_info *sta, u16 tid,
+> +                                         enum ieee80211_back_parties initiator)
+> +{
+> +       int ret;
+> +       u8 *state;
+> +
+> +       state = &sta->ampdu_mlme.tid_state_tx[tid];
+> +
+> +       if (local->hw.ampdu_queues)
+> +               ieee80211_stop_queue(&local->hw, sta->tid_to_tx_q[tid]);
+> +
+> +       *state = HT_AGG_STATE_REQ_STOP_BA_MSK |
+> +               (initiator << HT_AGG_STATE_INITIATOR_SHIFT);
+> +
+> +       ret = local->ops->ampdu_action(&local->hw, IEEE80211_AMPDU_TX_STOP,
+> +                                      &sta->sta, tid, NULL);
+> +
+> +       /* HW shall not deny going back to legacy */
+> +       if (WARN_ON(ret)) {
+> +               *state = HT_AGG_STATE_OPERATIONAL;
+> +               if (local->hw.ampdu_queues)
+> +                       ieee80211_wake_queue(&local->hw, sta->tid_to_tx_q[tid]);
+> +       }
+> +
+> +       return ret;
+> +}
+> +
+>  /*
+>  * After sending add Block Ack request we activated a timer until
+>  * add Block Ack response will arrive from the recipient.
+> @@ -134,23 +162,13 @@ static void sta_addba_resp_timer_expired
+>         * flow in sta_info_create gives the TID as data, while the timer_to_id
+>         * array gives the sta through container_of */
+>        u16 tid = *(u8 *)data;
+> -       struct sta_info *temp_sta = container_of((void *)data,
+> +       struct sta_info *sta = container_of((void *)data,
+>                struct sta_info, timer_to_tid[tid]);
+> -
+> -       struct ieee80211_local *local = temp_sta->local;
+> -       struct ieee80211_hw *hw = &local->hw;
+> -       struct sta_info *sta;
+> +       struct ieee80211_local *local = sta->local;
+>        u8 *state;
+>
+> -       rcu_read_lock();
+> -
+> -       sta = sta_info_get(local, temp_sta->sta.addr);
+> -       if (!sta) {
+> -               rcu_read_unlock();
+> -               return;
+> -       }
+> -
+>        state = &sta->ampdu_mlme.tid_state_tx[tid];
+> +
+>        /* check if the TID waits for addBA response */
+>        spin_lock_bh(&sta->lock);
+>        if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
+> @@ -167,11 +185,8 @@ static void sta_addba_resp_timer_expired
+>        printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
+>  #endif
+>
+> -       /* go through the state check in stop_BA_session */
+> -       *state = HT_AGG_STATE_OPERATIONAL;
+> +       __ieee80211_stop_tx_ba_session(local, sta, tid, WLAN_BACK_INITIATOR);
+>        spin_unlock_bh(&sta->lock);
+> -       ieee80211_stop_tx_ba_session(hw, temp_sta->sta.addr, tid,
+> -                                    WLAN_BACK_INITIATOR);
+>
+>  timer_expired_exit:
+>        rcu_read_unlock();
+> @@ -402,34 +417,6 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
+>  EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
+>
+>
+> -static int __ieee80211_stop_tx_ba_session(struct ieee80211_local *local,
+> -                                         struct sta_info *sta, u16 tid,
+> -                                         enum ieee80211_back_parties initiator)
+> -{
+> -       int ret;
+> -       u8 *state;
+> -
+> -       state = &sta->ampdu_mlme.tid_state_tx[tid];
+> -
+> -       if (local->hw.ampdu_queues)
+> -               ieee80211_stop_queue(&local->hw, sta->tid_to_tx_q[tid]);
+> -
+> -       *state = HT_AGG_STATE_REQ_STOP_BA_MSK |
+> -               (initiator << HT_AGG_STATE_INITIATOR_SHIFT);
+> -
+> -       ret = local->ops->ampdu_action(&local->hw, IEEE80211_AMPDU_TX_STOP,
+> -                                      &sta->sta, tid, NULL);
+> -
+> -       /* HW shall not deny going back to legacy */
+> -       if (WARN_ON(ret)) {
+> -               *state = HT_AGG_STATE_OPERATIONAL;
+> -               if (local->hw.ampdu_queues)
+> -                       ieee80211_wake_queue(&local->hw, sta->tid_to_tx_q[tid]);
+> -       }
+> -
+> -       return ret;
+> -}
+> -
+>  int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
+>                                 u8 *ra, u16 tid,
+>                                 enum ieee80211_back_parties initiator)
+>
+> --
+>
 >
