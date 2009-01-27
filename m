@@ -1,94 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flock1.newmail.ru ([82.204.219.207]:48128 "HELO
-	flock1.newmail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756488AbZAVECv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53552 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755111AbZA0LWW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 23:02:51 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: Dave <kilroyd@googlemail.com>
-Subject: Re: [PATCH] orinoco: take the driver lock in the rx tasklet
-Date: Thu, 22 Jan 2009 07:02:03 +0300
-Cc: orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-References: <1231287835-17707-1-git-send-email-kilroyd@googlemail.com> <200901081128.30143.arvidjaar@mail.ru> <496644D0.6050301@gmail.com>
-In-Reply-To: <496644D0.6050301@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart7957227.OCnt6USIjV";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200901220702.14152.arvidjaar@mail.ru> (sfid-20090122_050256_484936_CF805B17)
+	Tue, 27 Jan 2009 06:22:22 -0500
+Subject: Re: [PATCH 4/6] mac80211: More small changes for modularization
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Sesser <flomaillist@cosetrain.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <497EECED.1020106@cosetrain.com>
+References: <497E1B90.4060803@cosetrain.com>
+	 <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>
+	 <3202b18e8531aa78c29636c163de20875ae1a9cf.1233001802.git.flomaillist@cosetrain.com>
+	 <e236615740b8ce8c9515c14aac3a2d9d93806a98.1233001802.git.flomaillist@cosetrain.com>
+	 <79a59b62a4378b8b88cb3a33b1ec3cbd3808906e.1233001802.git.flomaillist@cosetrain.com>
+	 (sfid-20090126_213927_757374_C1421A9C) <1233004598.4533.37.camel@johannes.local>
+	 <497EECED.1020106@cosetrain.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-V5bxJmzbpfaZ2ZbBwjEs"
+Date: Tue, 27 Jan 2009 12:22:18 +0100
+Message-Id: <1233055338.4012.36.camel@johannes.local> (sfid-20090127_122238_244540_12D3B09D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart7957227.OCnt6USIjV
-Content-Type: text/plain;
-  charset="utf-8"
+
+--=-V5bxJmzbpfaZ2ZbBwjEs
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-On 8 =D1=8F=D0=BD=D0=B2=D0=B0=D1=80=D1=8F 2009 21:24:16 Dave wrote:
-> Andrey Borzenkov wrote:
-> > On 07 January 2009 03:23:55 David Kilroy wrote:
-> >> Fix the warning reproduced below.
-> >>
-> >> We add to rx_list in interrupt context and remove elements in
-> >> tasklet context. While removing elements we need to prevent the
-> >> interrupt modifying the list.
-> >>
-> >> Note that commit 31afcef385bb8bf528c6fbe05b359af9f456f02a did not
-> >> preserve locking semantics on what is now orinoco_rx.
-> >>
-> >> This patch reinstates the locking semantics and ensures it covers
-> >> rx_list as well.
-> >
-> > [...]
-> >
-> >> --- a/drivers/net/wireless/orinoco/orinoco.c
-> >> +++ b/drivers/net/wireless/orinoco/orinoco.c
-> >> @@ -1613,6 +1613,16 @@ static void orinoco_rx_isr_tasklet(unsigned
-> >
-> > [...]
-> >
-> >> +	if (orinoco_lock(priv, &flags) !=3D 0)
-> >> +		return;
-> >
-> > this effectively serializes rx list processing with the rest of
-> > driver (specifically orinoco_interrupt) eliminating any benefit
-> > from doing it in separate tasklet. It is more simple and less
-> > confusing to just revert commit
-> > 31afcef385bb8bf528c6fbe05b359af9f456f02a then.
->
-> [adding orinoco-devel, who I missed of the original patch submission]
->
-> The move to the RX tasklet was not motivated by improved performance,
-> but the requirements of the crypto library (can't call from
-> interrupt) and the need to do MIC calculations on RX.
->
+On Tue, 2009-01-27 at 12:15 +0100, Florian Sesser wrote:
+> Hi!
+>=20
+> Thanks for your comment. My intention was having a logical seperation to
+> enable better discussion of my patch, which I think is pretty much of a
+> monster and not yet ready for inclusion?
+>=20
+> What do you think about my selection of mesh_path_sel_ops and the
+> storing of mesh PP/PM/CC id?
+>=20
+> If you deem it OK I would be happy to reformat the patch (into three or
+> so seperatly compiling patches) and include KConfigs.
 
-What exactly prevents crypto library being called from interrupt (aka=20
-can it sleep)? Because now it runs under spinlock with interrupts=20
-disabled; how exactly does it differ from being called from interrupt=20
-context?
+I also see a lot of EXPORT_SYMBOLs that should not be necessary, but I
+need to look through it in more detail. I think your layering may be
+broken in some parts. Why, for example, do you need to look up path
+selection algorithms by name?
 
-> Unless the crypto routines have changed, reverting that commit will
-> break WPA support.
->
+I also think you should wrap things like
 
-=46or all I can tell, code now is functionally identical to code before=20
-moving rx processing to tasklet. Meaning, if it was wrong before it=20
-became just as wrong now.
+osdata->u.mesh.mesh_pp->ops->nexthop_lookup_fn
 
---nextPart7957227.OCnt6USIjV
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+into small static inlines that can go away if only one algorithm is
+built in, for example.
+
+johannes
+
+--=-V5bxJmzbpfaZ2ZbBwjEs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Johannes Berg (powerbook)
 
-iEYEABECAAYFAkl3770ACgkQR6LMutpd94xx4ACcCaS4mRtuvPLeh7fenVM3V166
-0pkAn2Pd7MJyGNwQr+WnQ+w8Pro8H6bI
-=Wvu9
+iQIcBAABAgAGBQJJfu5oAAoJEKVg1VMiehFYyAAQALKoDFSUW0F6dv3g0xrB1/kO
+e08fGt89WS0AvRhsKZv6QMHE0nmJ5R+G+tOeyO9Yzj38hFoRl4dcXJXDidkEGm+n
+JL59nXVFRwYaB6FwHYYDQBkLKdh1EHKQ9ahOCapTalpOH9M9UlLhJBeeKvhMZAF5
+aLMt8QO/9n3mkX60dK+C/SN4b3DY5xlXRTvwDgFW/ww9uDifoCA2CVL4PF1J8HCu
+BMp3iyWvezncGBb8sO3jcBQFQTKvA5lGUxpD97a8WIQzTy8BuU0C2ZbDBq4LnTg4
+uP7Q7Ws77gfSe3fdo56YBtAEX+mXiDRLtj4ffm1kwvWmo5l8gSxALv480gtejT9n
+KXBE1uonAuFFmnWvSCXAM5bH0m/+ExEVztlad3IMX/2sg8t6eiJ9S2OXftozUpgm
+8P8zIBSKGruAkXrt45h9JTqPqza1WRYgj8stxSis590I6PA6S9o2e0WQw5mjoV1N
+hNTQ/4TuTi2165gH1evQ8iSCuHCzpjRndiTgvXCHAolwe+Qhk+EmT6h04rv9jLh6
+snWeJUMLFciQDi2NL24BxQzzUImkGHGIWR9sroJcjPayoIbArTQjvhva/dDT7Q7V
+nOoBN2SQATjfHyAqf4TrA9V3dZiSxl3k3redjq05gJhtN1YKqpuoEg+UoezkZTaW
+VCIx/njeSTOGGiGZZQwo
+=csgV
 -----END PGP SIGNATURE-----
 
---nextPart7957227.OCnt6USIjV--
+--=-V5bxJmzbpfaZ2ZbBwjEs--
+
