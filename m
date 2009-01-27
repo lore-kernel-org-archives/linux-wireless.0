@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:48312 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751739AbZATWhI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 17:37:08 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Christian Lamparter <chunkeey@web.de>
-Subject: Re: [PATCH -stable] p54usb: fix traffic stalls / packet drop
-Date: Tue, 20 Jan 2009 23:36:29 +0100
-Cc: Greg KH gr <gregkh@suse.de>, Artur Skawina <art.08.09@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Linux wireless" <linux-wireless@vger.kernel.org>
-References: <KTnguC9mFUC.A.VNB.TJRdJB@chimera> <cX2gZ6Cy9nC.A.vUD.KKRdJB@chimera> <200901202311.11854.chunkeey@web.de>
-In-Reply-To: <200901202311.11854.chunkeey@web.de>
+Received: from c1.cosetrain.com ([213.239.209.213]:43580 "EHLO
+	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752220AbZA0LQD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2009 06:16:03 -0500
+Message-ID: <497EECED.1020106@cosetrain.com> (sfid-20090127_121609_270806_57D96C0A)
+Date: Tue, 27 Jan 2009 12:15:57 +0100
+From: Florian Sesser <flomaillist@cosetrain.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901202336.30083.rjw@sisk.pl> (sfid-20090120_233714_181013_EB7E88B3)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/6] mac80211: More small changes for modularization
+References: <497E1B90.4060803@cosetrain.com>	 <abd4234c03d59a65d3eb9259821d705899a08612.1233001802.git.flomaillist@cosetrain.com>	 <3202b18e8531aa78c29636c163de20875ae1a9cf.1233001802.git.flomaillist@cosetrain.com>	 <e236615740b8ce8c9515c14aac3a2d9d93806a98.1233001802.git.flomaillist@cosetrain.com>	 <79a59b62a4378b8b88cb3a33b1ec3cbd3808906e.1233001802.git.flomaillist@cosetrain.com>	 (sfid-20090126_213927_757374_C1421A9C) <1233004598.4533.37.camel@johannes.local>
+In-Reply-To: <1233004598.4533.37.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 20 January 2009, Christian Lamparter wrote:
-> All p54usb devices need a explicit termination packet, in oder to finish the pending transfer properly.
-> Else, the firmware could freeze, or simply drop the frame.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> Cc: stable <stable@kernel.org>
-> ---
-> Attached is the patch is for the stable series only.
-> Bugzilla reference: http://bugzilla.kernel.org/show_bug.cgi?id=12260
-> (wireless-testing needs a different one)
-> 
-> Rafael, I hope we can close this bug. Greg?
+Hi!
 
-Sure, we can.
+Thanks for your comment. My intention was having a logical seperation to
+enable better discussion of my patch, which I think is pretty much of a
+monster and not yet ready for inclusion?
+
+What do you think about my selection of mesh_path_sel_ops and the
+storing of mesh PP/PM/CC id?
+
+If you deem it OK I would be happy to reformat the patch (into three or
+so seperatly compiling patches) and include KConfigs.
 
 Thanks,
-Rafael
+
+Florian
+
+
+Johannes Berg wrote:
+> On Mon, 2009-01-26 at 21:39 +0100, Florian Sesser wrote:
+>> Some rather small changes in various files.
+>> After this patch, i was able to do a clean compile.
+> 
+> You need to ensure that after _every_ single patch.
+> 
+> johannes
