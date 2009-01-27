@@ -1,60 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:56553 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751094AbZALMY6 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:65012 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753866AbZA0Sbg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 07:24:58 -0500
-Date: Mon, 12 Jan 2009 14:24:40 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Fix documentation errors
-Message-ID: <20090112122440.GA9153@jm.kir.nu> (sfid-20090112_132506_711280_E2250608)
+	Tue, 27 Jan 2009 13:31:36 -0500
+Date: Tue, 27 Jan 2009 12:31:23 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	barreyromartin@gmail.com, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] rtl8187: Fix error in setting OFDM power settings for
+ RTL8187L
+Message-ID: <497f52fb.ABh5zgEKaz63Z7Lu%Larry.Finger@lwfinger.net> (sfid-20090127_193141_404393_587BE9B8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Couple of '_ATTR's were missing and SEC_CHAN_OFFSET to CHANNEL_TYPE
-rename was missed in couple of places.
+After reports of poor performance, a review of the latest vendor driver
+(rtl8187_linux_26.1025.0328.2007) for RTL8187L devices was undertaken.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+A difference was found in the code used to index the OFDM power tables.=
+ When
+the Linux driver was changed, my unit works at a much greater range tha=
+n
+before. I think this fixes Bugzilla #12380 and has been tested by at le=
+ast
+two other users.
 
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Tested-by: Mart=C3=ADn Ernesto Barreyro <barreyromartin@gmail.com>
+Cc: Stable <stable@kernel.org>
 ---
- include/linux/nl80211.h |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
---- wireless-testing.orig/include/linux/nl80211.h	2009-01-12 13:12:49.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2009-01-12 13:14:19.000000000 +0200
-@@ -47,7 +47,7 @@
-  * @NL80211_CMD_SET_WIPHY: set wiphy parameters, needs %NL80211_ATTR_WIPHY or
-  *	%NL80211_ATTR_IFINDEX; can be used to set %NL80211_ATTR_WIPHY_NAME,
-  *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ, and/or
-- *	%NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET.
-+ *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
-  * @NL80211_CMD_NEW_WIPHY: Newly created wiphy, response to get request
-  *	or rename notification. Has attributes %NL80211_ATTR_WIPHY and
-  *	%NL80211_ATTR_WIPHY_NAME.
-@@ -84,7 +84,7 @@
-  *	%NL80222_CMD_NEW_BEACON message)
-  * @NL80211_CMD_SET_BEACON: set the beacon on an access point interface
-  *	using the %NL80211_ATTR_BEACON_INTERVAL, %NL80211_ATTR_DTIM_PERIOD,
-- *	%NL80211_BEACON_HEAD and %NL80211_BEACON_TAIL attributes.
-+ *	%NL80211_ATTR_BEACON_HEAD and %NL80211_ATTR_BEACON_TAIL attributes.
-  * @NL80211_CMD_NEW_BEACON: add a new beacon to an access point interface,
-  *	parameters are like for %NL80211_CMD_SET_BEACON.
-  * @NL80211_CMD_DEL_BEACON: remove the beacon, stop sending it
-@@ -362,7 +362,7 @@ enum nl80211_attrs {
- #define NL80211_ATTR_BSS_BASIC_RATES NL80211_ATTR_BSS_BASIC_RATES
- #define NL80211_ATTR_WIPHY_TXQ_PARAMS NL80211_ATTR_WIPHY_TXQ_PARAMS
- #define NL80211_ATTR_WIPHY_FREQ NL80211_ATTR_WIPHY_FREQ
--#define NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET NL80211_ATTR_WIPHY_SEC_CHAN_OFFSET
-+#define NL80211_ATTR_WIPHY_CHANNEL_TYPE NL80211_ATTR_WIPHY_CHANNEL_TYPE
- 
- #define NL80211_MAX_SUPP_RATES			32
- #define NL80211_MAX_SUPP_REG_RULES		32
+John,
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+This material should be included in 2.6.29. Although I have Cc'd stable=
+, the
+patch will need to be respun due to the file renaming.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_rtl8225.=
+c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_rtl8225.c
+@@ -285,7 +285,10 @@ static void rtl8225_rf_set_tx_power(stru
+ 	ofdm_power =3D priv->channels[channel - 1].hw_value >> 4;
+=20
+ 	cck_power =3D min(cck_power, (u8)11);
+-	ofdm_power =3D min(ofdm_power, (u8)35);
++	if (ofdm_power > (u8)15)
++		ofdm_power =3D 25;
++	else
++		ofdm_power +=3D 10;
+=20
+ 	rtl818x_iowrite8(priv, &priv->map->TX_GAIN_CCK,
+ 			 rtl8225_tx_gain_cck_ofdm[cck_power / 6] >> 1);
+@@ -536,7 +539,10 @@ static void rtl8225z2_rf_set_tx_power(st
+ 	cck_power +=3D priv->txpwr_base & 0xF;
+ 	cck_power =3D min(cck_power, (u8)35);
+=20
+-	ofdm_power =3D min(ofdm_power, (u8)15);
++	if (ofdm_power > (u8)15)
++		ofdm_power =3D 25;
++	else
++		ofdm_power +=3D 10;
+ 	ofdm_power +=3D priv->txpwr_base >> 4;
+ 	ofdm_power =3D min(ofdm_power, (u8)35);
+=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
