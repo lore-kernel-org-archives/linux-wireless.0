@@ -1,89 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:46737 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757398AbZAPQMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 11:12:10 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:12:10 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from smtp.nokia.com ([192.100.122.230]:65052 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075AbZA1RDU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jan 2009 12:03:20 -0500
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH v3 2/2] mac80211: use ps-poll when dynamic power save mode is
+	disabled
+To: johannes@sipsolutions.net, vivek.natraj@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 28 Jan 2009 19:03:03 +0200
+Message-ID: <20090128170303.32025.21799.stgit@tikku> (sfid-20090128_180326_432867_C3833D34)
+In-Reply-To: <20090128170215.32025.32389.stgit@tikku>
+References: <20090128170215.32025.32389.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18800.45331.603420.153148@gargle.gargle.HOWL> (sfid-20090116_171218_128875_306098E5)
-Date: Fri, 16 Jan 2009 21:38:51 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 7/9] ath9k: Handle holding descriptor in TX completion properly
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the current holding descriptor is the last one in the TX queue,
-*and* it has been marked as STALE, then move it to the free list
-and bail out, as it has already been processed.
+When a directed tim bit is set, mac80211 currently disables power save
+ands sends a null frame to the AP. But if dynamic power save is
+disabled, mac80211 will not enable power save ever gain. Fix this by
+adding ps-poll functionality to mac80211. When a directed tim bit is
+set, mac80211 sends a ps-poll frame to the AP and checks for the more
+data bit in the returned data frames.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Using ps-poll is slower than waking up with null frame, but it's saves more
+power in cases where the traffic is low. Userspace can control if either
+ps-poll or null wakeup method is used by enabling and disabling dynamic
+power save.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/ath9k/xmit.c |   19 +++++++++++--------
- 1 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 841bd9c..d7cec0f 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -2082,16 +2082,23 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		if (bf->bf_status & ATH_BUFSTATUS_STALE) {
- 			bf_held = bf;
- 			if (list_is_last(&bf_held->list, &txq->axq_q)) {
--				/* FIXME:
-+				txq->axq_link = NULL;
-+				txq->axq_linkbuf = NULL;
-+				spin_unlock_bh(&txq->axq_lock);
+ net/mac80211/ieee80211_i.h |    3 ++
+ net/mac80211/mlme.c        |   54 ++++++++++++++++++++++++++++++++++++++++++--
+ net/mac80211/rx.c          |   34 ++++++++++++++++++++++++++++
+ 3 files changed, 88 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index eaf3603..1f5d162 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -728,6 +728,7 @@ struct ieee80211_local {
+ 	unsigned int wmm_acm; /* bit field of ACM bits (BIT(802.1D tag)) */
+ 
+ 	bool powersave;
++	bool pspolling;
+ 	struct work_struct dynamic_ps_enable_work;
+ 	struct work_struct dynamic_ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
+@@ -921,6 +922,8 @@ u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
+ 			    enum ieee80211_band band);
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      u8 *ssid, size_t ssid_len);
++void ieee80211_send_pspoll(struct ieee80211_local *local,
++			   struct ieee80211_sub_if_data *sdata);
+ 
+ /* scan/BSS handling */
+ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1bf72e6..0399afc 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -511,6 +511,39 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb(sdata, skb, ifsta->flags & IEEE80211_STA_MFP_ENABLED);
+ }
+ 
++void ieee80211_send_pspoll(struct ieee80211_local *local,
++			   struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++	struct ieee80211_pspoll *pspoll;
++	struct sk_buff *skb;
++	u16 fc;
++
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*pspoll));
++	if (!skb) {
++		printk(KERN_DEBUG "%s: failed to allocate buffer for "
++		       "pspoll frame\n", sdata->dev->name);
++		return;
++	}
++	skb_reserve(skb, local->hw.extra_tx_headroom);
++
++	pspoll = (struct ieee80211_pspoll *) skb_put(skb, sizeof(*pspoll));
++	memset(pspoll, 0, sizeof(*pspoll));
++	fc = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_PSPOLL | IEEE80211_FCTL_PM;
++	pspoll->frame_control = cpu_to_le16(fc);
++	pspoll->aid = cpu_to_le16(ifsta->aid);
++
++	/* aid in PS-Poll has its two MSBs each set to 1 */
++	pspoll->aid |= cpu_to_le16(1 << 15 | 1 << 14);
++
++	memcpy(pspoll->bssid, ifsta->bssid, ETH_ALEN);
++	memcpy(pspoll->ta, sdata->dev->dev_addr, ETH_ALEN);
++
++	ieee80211_tx_skb(sdata, skb, 0);
++
++	return;
++}
++
+ /* MLME */
+ static void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_bss *bss)
+@@ -1843,9 +1876,24 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		directed_tim = ieee80211_check_tim(&elems, ifsta->aid);
+ 
+ 		if (directed_tim) {
+-			local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+-			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+-			ieee80211_send_nullfunc(local, sdata, 0);
++			if (local->hw.conf.dynamic_ps_timeout > 0) {
++				local->hw.conf.flags &= ~IEEE80211_CONF_PS;
++				ieee80211_hw_config(local,
++						    IEEE80211_CONF_CHANGE_PS);
++				ieee80211_send_nullfunc(local, sdata, 0);
++			} else {
++				local->pspolling = true;
 +
 +				/*
- 				 * The holding descriptor is the last
- 				 * descriptor in queue. It's safe to remove
- 				 * the last holding descriptor in BH context.
- 				 */
--				spin_unlock_bh(&txq->axq_lock);
-+				spin_lock_bh(&sc->tx.txbuflock);
-+				list_move_tail(&bf_held->list, &sc->tx.txbuf);
-+				spin_unlock_bh(&sc->tx.txbuflock);
++				 * Here is assumed that the driver will be
++				 * able to send ps-poll frame and receive a
++				 * response even though power save mode is
++				 * enabled, but some drivers might require
++				 * to disable power save here. This needs
++				 * to be investigated.
++				 */
++				ieee80211_send_pspoll(local, sdata);
++			}
+ 		}
+ 	}
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 19ffc8e..72a6d7b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -740,6 +740,39 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 	return result;
+ }
+ 
++static ieee80211_rx_result debug_noinline
++ieee80211_rx_h_check_more_data(struct ieee80211_rx_data *rx)
++{
++	struct ieee80211_local *local;
++	struct ieee80211_hdr *hdr;
++	struct sk_buff *skb;
 +
- 				break;
- 			} else {
- 				bf = list_entry(bf_held->list.next,
--					struct ath_buf, list);
-+						struct ath_buf, list);
- 			}
- 		}
- 
-@@ -2115,24 +2122,20 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		 */
- 		lastbf->bf_status |= ATH_BUFSTATUS_STALE;
- 		INIT_LIST_HEAD(&bf_head);
--
- 		if (!list_is_singular(&lastbf->list))
- 			list_cut_position(&bf_head,
- 				&txq->axq_q, lastbf->list.prev);
- 
- 		txq->axq_depth--;
--
- 		if (bf_isaggr(bf))
- 			txq->axq_aggr_depth--;
- 
- 		txok = (ds->ds_txstat.ts_status == 0);
--
- 		spin_unlock_bh(&txq->axq_lock);
- 
- 		if (bf_held) {
--			list_del(&bf_held->list);
- 			spin_lock_bh(&sc->tx.txbuflock);
--			list_add_tail(&bf_held->list, &sc->tx.txbuf);
-+			list_move_tail(&bf_held->list, &sc->tx.txbuf);
- 			spin_unlock_bh(&sc->tx.txbuflock);
- 		}
- 
--- 
-1.6.0.3
++	local = rx->local;
++	skb = rx->skb;
++	hdr = (struct ieee80211_hdr *) skb->data;
++
++	if (!local->pspolling)
++		return RX_CONTINUE;
++
++	if (!ieee80211_has_fromds(hdr->frame_control))
++		/* this is not from AP */
++		return RX_CONTINUE;
++
++	if (!ieee80211_is_data(hdr->frame_control))
++		return RX_CONTINUE;
++
++	if (!ieee80211_has_moredata(hdr->frame_control)) {
++		/* AP has no more frames buffered for us */
++		local->pspolling = false;
++		return RX_CONTINUE;
++	}
++
++	/* more data bit is set, let's request a new frame from the AP */
++	ieee80211_send_pspoll(local, rx->sdata);
++
++	return RX_CONTINUE;
++}
++
+ static void ap_sta_ps_start(struct sta_info *sta)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -1996,6 +2029,7 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+ 	CALL_RXH(ieee80211_rx_h_passive_scan)
+ 	CALL_RXH(ieee80211_rx_h_check)
+ 	CALL_RXH(ieee80211_rx_h_decrypt)
++	CALL_RXH(ieee80211_rx_h_check_more_data)
+ 	CALL_RXH(ieee80211_rx_h_sta_process)
+ 	CALL_RXH(ieee80211_rx_h_defragment)
+ 	CALL_RXH(ieee80211_rx_h_ps_poll)
 
