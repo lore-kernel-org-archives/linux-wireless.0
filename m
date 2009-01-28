@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:20721 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756003AbZAPVJ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 16:09:59 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 13:09:59 -0800
-Date: Fri, 16 Jan 2009 13:09:30 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/13] cfg80211: only export disable flag on channel
-	disablement
-Message-ID: <20090116210930.GL29609@tesla> (sfid-20090116_221006_106406_2615236E)
-References: <1232064746-17134-2-git-send-email-lrodriguez@atheros.com> <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232097827.3854.25.camel@johannes> <20090116163245.GF29609@tesla> <1232138101.3745.7.camel@johannes>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43505 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbZA1Sat (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jan 2009 13:30:49 -0500
+Date: Wed, 28 Jan 2009 13:26:56 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Alina Friedrichsen <x-alina@gmx.net>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH v2] mac80211: Creating new IBSS with fixed BSSID
+Message-ID: <20090128182656.GA4198@tuxdriver.com> (sfid-20090128_193053_115171_E75085BD)
+References: <20090128153012.138700@gmx.net> <87k58f74dk.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232138101.3745.7.camel@johannes>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87k58f74dk.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2009 at 12:35:01PM -0800, Johannes Berg wrote:
-> On Fri, 2009-01-16 at 08:32 -0800, Luis R. Rodriguez wrote:
+On Wed, Jan 28, 2009 at 07:00:07PM +0200, Kalle Valo wrote:
+> "Alina Friedrichsen" <x-alina@gmx.net> writes:
 > 
-> > > > -	chan->flags = flags | map_regdom_flags(reg_rule->flags);
-> > > > +	rule_flags = map_regdom_flags(reg_rule->flags);
-> > > > +	if (flags & IEEE80211_CHAN_DISABLED)
-> > > > +		chan->flags = IEEE80211_CHAN_DISABLED;
-> > > > +	else
-> > > > +		chan->flags = flags | rule_flags;
-> > > 
-> > > but why bother with more complicated code when adding a few more flags
-> > > doesn't hurt?
-> > 
-> > I don't see these few lines as complicated really, but if you don't like them
-> > that's fine. We can also fix this in userspace so that disable|radar|no-ibss
-> > doesn't show up. I frankly think its pointless to keep them though.
+> > This fixes a bug when creating a new IBSS network with a fixed BSSID. The fixed BSSID situation is now with one of my last patches handled in ieee80211_sta_find_ibss() function.
+> >
+> > It's more robust to test against (ifsta->flags & IEEE80211_STA_PREV_BSSID_SET), because ifsta->state is not seted right in every situation and so the creating of the new IBSS network sometimes hangs after the first try to scan for a network to merge.
 > 
-> It's not exactly complicated, but I bet at some point we'll scratch our
-> heads why we did it ;)
+> Please line wrap your commit logs. Now you had very long lines.
 
-I can put a note, if that helps, or are you strongly opposed to this? :)
-Just an itch to scratch really, have you seen the output of iwlist on
-disabled channels? It can get long on radar/no-ibss channels. We can also
-handle this in userspace but seems pointles if the channels is disabled.
+ACK, please.
 
-  Luis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
