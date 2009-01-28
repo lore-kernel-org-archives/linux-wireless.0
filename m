@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:54829 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752625AbZAPSqf (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:64336 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751328AbZA1Qzg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 13:46:35 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: fix p54_set_key's return code
-Date: Fri, 16 Jan 2009 19:46:28 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>
+	Wed, 28 Jan 2009 11:55:36 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: vivek.natraj@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH v2 2/2] mac80211: use ps-poll when dynamic power save mode is disabled
+References: <20090122114240.31443.18218.stgit@tikku>
+	<20090122114546.31443.79387.stgit@tikku>
+	<1232643729.5819.3.camel@johannes.local>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 28 Jan 2009 18:49:34 +0200
+In-Reply-To: <1232643729.5819.3.camel@johannes.local> (ext Johannes Berg's message of "Thu\, 22 Jan 2009 18\:02\:09 +0100")
+Message-ID: <87hc3jgyu9.fsf@nokia.com> (sfid-20090128_175540_755314_8F4E1F33)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200901161946.28459.chunkeey@web.de> (sfid-20090116_194638_718580_98D716E5)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-p54 doesn't support AES-128-CMAC offload.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-This patch will fix the noisy mac80211 warnings, when 802.11w is enabled: 
-mac80211-phy189: failed to set key (4, ff:ff:ff:ff:ff:ff) to hardware (-22)
-mac80211-phy189: failed to set key (5, ff:ff:ff:ff:ff:ff) to hardware (-22)
+> On Thu, 2009-01-22 at 13:45 +0200, Kalle Valo wrote:
+>
+>> +	printk(KERN_DEBUG "sending ps-poll");
+>
+> remove one, add another? Or forgot quilt refresh? :)
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 635b423..d706480 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -2355,7 +2355,7 @@ static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
- 			algo = P54_CRYPTO_AESCCMP;
- 			break;
- 		default:
--			return -EINVAL;
-+			return -EOPNOTSUPP;
- 		}
- 	}
- 
+I have no idea what happened :) I'll fix that.
 
+> If we receive a frame, but don't send any, we'll still stay awake.
+> Should receiving update the dynamic timer as well, to avoid that case?
+> Here, I mean:
+>
+>> @@ -1816,9 +1851,24 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+> ...
+>> +                       if (local->hw.conf.dynamic_ps_timeout > 0) {
+>> +                               local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+>> +                               ieee80211_hw_config(local,
+>> +                                                   IEEE80211_CONF_CHANGE_PS);
+>> +                               ieee80211_send_nullfunc(local, sdata, 0);
+
+You mean case where directed_time is set, dynamic_ps_timeout is zero
+and station doesn't transmit anything? That's not a problem because in
+that case power save is not disabled at all, ps-poll is sent while
+power save mode is enabled. So there won't any problem.
+
+Like I said last week, I need to revisit this case later to get proper
+support for other hw designs, eg. broadcom.
+
+-- 
+Kalle Valo
