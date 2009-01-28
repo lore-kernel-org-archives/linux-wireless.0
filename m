@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:49875 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752384AbZA3Qka (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 11:40:30 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 08:40:30 -0800
-Date: Fri, 30 Jan 2009 08:39:44 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] mac80211: do not TX injected frames when not allowed
-Message-ID: <20090130163944.GC6534@tesla> (sfid-20090130_174038_016810_8C7436B8)
-References: <1233111019-7827-1-git-send-email-lrodriguez@atheros.com> <1233313382.30970.3.camel@johannes.local>
+Received: from smtp.nokia.com ([192.100.122.230]:57813 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994AbZA1QH2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jan 2009 11:07:28 -0500
+To: "Vivek Natarajan" <vivek.natraj@gmail.com>
+Cc: "johannes\@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC PATCH v2 1/2] mac80211: remove multicast check from check_tim()
+References: <20090122114240.31443.18218.stgit@tikku>
+	<20090122114539.31443.45201.stgit@tikku>
+	<8e92b4100901280659t444486b2v27efffe7224d17b@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 28 Jan 2009 18:06:22 +0200
+In-Reply-To: <8e92b4100901280659t444486b2v27efffe7224d17b@mail.gmail.com> (ext Vivek Natarajan's message of "Wed\, 28 Jan 2009 15\:59\:20 +0100")
+Message-ID: <87pri7h0u9.fsf@nokia.com> (sfid-20090128_170732_709593_D47743BA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1233313382.30970.3.camel@johannes.local>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 30, 2009 at 03:03:02AM -0800, Johannes Berg wrote:
-> On Tue, 2009-01-27 at 18:50 -0800, Luis R. Rodriguez wrote:
-> > Monitor mode is able to TX by using injected frames. We should
-> > not allow injected frames to be sent unless allowed by regulatory
-> > rules. Since AP mode uses a monitor interfaces to transmit
-> > management frames we have to take care to not break AP mode as
-> > well while resolving this. We deal with this by allowing compliant
-> > APs solutions to inform mac80211 if their monitor interface is
-> > intended to be used for an AP by setting a cfg80211 flag for the
-> > monitor interface. hostapd, for example, currently does its own
-> > checks to ensure AP mode is not used on channels which require radar
-> > detection. Once such solutions are available it can can enable this
-> > flag.
-> 
-> > + * @NL80211_MNTR_FLAG_AP_MGT: this monitor interface is used for AP mode
-> > + * 	to be able to inject management frames.
-> 
-> Come to think of it, is that really a good name? The intention is "will
-> check for radar" but then we don't even have a way to check for radar
-> yet!
-> 
-> So maybe we should leave that out, and introduce it with proper radar
-> support later?
+Vivek Natarajan <vivek.natraj@gmail.com> writes:
 
-Dude, that's the approach I had in my first patch for this, you had suggested
-to add this so I did. Anyway yeah I agree, heh. I'll send v5.
+> On Thu, Jan 22, 2009 at 5:15 PM, Kalle Valo <kalle.valo@nokia.com>
+> wrote:
+>> Currently mac80211 checks for the multicast tim bit from beacons,
+>> disables power save and sends a null frame if the bit is set. This
+>> was added to support ath9k. But this is a bit controversial because
+>> the AP will send multicast frames immediately after the beacon and
+>> the time constraints are really high. Relying mac80211 to be fast
+>> enough here might not be reliable in all situations.
+>
+> I agree that mac80211 is not fast enough to disable power save when
+> multicast bit is set. But a quick testing with multicast traffic with
+> power save enabled shows me that the traffic is passing without much
+> failures(97% passes through and this is not a small number considering
+> my high traffic/noisy channel conditions). 
 
-  Luis
+I'm still not convinced. Even if it works for your setup, somebody
+else might have problems.
+
+> So, the reason is not strong enough or the mac80211 is not too slow
+> to respond to a mc traffic in practical conditions and hence the
+> check need not be removed.
+
+Well, we have to do something because stlc45xx/p54spi doesn't need
+this. Either we need to do add a yet another hw flag or move the
+functionality to ath9k. And I don't see the benefit of adding a new hw
+flag just for one driver. If there are more hardware designs requiring
+this, then adding support to mac80211 might make sense.
+
+There's also a third option: do this in hardware. Are you really sure
+that your hardware doesn't support waking up for broadcast/multicast
+frames? It would only need to check two bits, multicast tim bit from
+beacons and moredata bits from received broadcast/multicast frames.
+
+>> And there's no need to send a null frame, AP will send the frames
+>> immediately after the dtim beacon no matter what.
+>
+> You are right. In that case, if mc bit is set, we can change the code
+> to just disable ps and not to send a null frame.
+
+Like I said earlier, I don't like this approach. 
+
+> But this pops up another issue! How to enable ps after waking up for
+> mc traffic?
+
+Just go back to sleep after receiving a broadcast/multicast frame with
+moredata bit not set.
+
+> For this we have got to have the dynamic_ps_timer called from the rx
+> path also. This enables ps after the specified timeout. I don't see
+> any good reason for not to have this timer in Rx path also.
+
+Please take into account that dynamic_ps_timeout can be zero, you
+cannot rely on dynamic_ps_timer.
+
+Having dynamic timeout in rx path also is possible, but that's a
+separate issue from multicast/broadcast problem. I haven't considered
+it myself, though.
+
+-- 
+Kalle Valo
