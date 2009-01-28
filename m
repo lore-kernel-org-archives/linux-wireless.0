@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:20588 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752697AbZAPVHY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 16:07:24 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 13:07:24 -0800
-Date: Fri, 16 Jan 2009 13:06:55 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 08/13] cfg80211: save original values on regulatory
-	hints
-Message-ID: <20090116210655.GK29609@tesla> (sfid-20090116_220729_241466_FDBA49F1)
-References: <1232064746-17134-3-git-send-email-lrodriguez@atheros.com> <1232064746-17134-4-git-send-email-lrodriguez@atheros.com> <1232064746-17134-5-git-send-email-lrodriguez@atheros.com> <1232064746-17134-6-git-send-email-lrodriguez@atheros.com> <1232064746-17134-7-git-send-email-lrodriguez@atheros.com> <1232064746-17134-8-git-send-email-lrodriguez@atheros.com> <1232064746-17134-9-git-send-email-lrodriguez@atheros.com> <1232097921.3854.28.camel@johannes> <20090116163100.GE29609@tesla> <1232138062.3745.6.camel@johannes>
+Received: from wf-out-1314.google.com ([209.85.200.168]:34283 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758AbZA1QN6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jan 2009 11:13:58 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so8150312wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 08:13:57 -0800 (PST)
+Date: Wed, 28 Jan 2009 21:33:32 +0530
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: kalle.valo@nokia.com
+Cc: linux-wireless@vger.kernel.org
+Subject: WARN_ON message hit on enabling power save.
+Message-ID: <20090128160332.GA10883@myhost.users.atheros.com> (sfid-20090128_171402_155147_C597B1A1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232138062.3745.6.camel@johannes>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2009 at 12:34:22PM -0800, Johannes Berg wrote:
-> On Fri, 2009-01-16 at 08:31 -0800, Luis R. Rodriguez wrote:
-> > On Fri, Jan 16, 2009 at 01:25:21AM -0800, Johannes Berg wrote:
-> > > On Thu, 2009-01-15 at 16:12 -0800, Luis R. Rodriguez wrote:
-> > > > When a driver issues a regulatory_hint() lets save the received
-> > > > values as original channel settings. This allows users to change
-> > > > regulatory domains multiple times while always respecting the driver's
-> > > > own regulatory setings.
-> > > 
-> > > This definitely isn't the right way to do things here. This means that
-> > > my card that's programmed to US can never do channel 13 here, something
-> > > which on b43 we definitely want to allow.
-> > 
-> > Ah -- are you sure you want to allow for that? 
-> 
-> Yes.
-> 
-> > It seems I was misunderstanding a bit
-> > how things would be done for 11d in ath9k and the fact is that we *don't* allow
-> > for channels beyond what the programmed regulatory domain allows. This is because
-> > calibration stuff has only been tested/ensured/certified/call-it-what you want
-> > for the channels in that regulatory domain SKU. 
-> 
-> Yes, I know why you want this, but I think you should do it slightly
-> differently.
-> 
-> > Are you certain that b43 can operate
-> > well on channels not in their regulatory domain SKU? If so then how about a wiphy flag
-> > to let drivers pick this.
-> 
-> I don't see a need for a flag. 
+Hello Kalle,
 
-Well in ath9k we want this, and orig_* stuff is used only for custom
-regulatory domains. How would we install information on orig_* from
-a regulatory_hint() on drivers if we have drivres which may or may not
-want to save that information on orig_* parameters?
+In the function 'ieee80211_master_start_xmit',
+ieee80211_stop_queues_by_reason is called and a  ps_disable_work is
+queued where wake_queues is called. Can you please clarify me on why the
+queues are stopped and started. If at all that needs to be stopped,
+wouldn't ieee80211_dynamic_ps_enable_work be a better place to do it?
 
-> We just need to have the driver set
-> orig_flags rather than cfg80211, no?
+The issue is  while this ps_disable_work is queued,
+netif_subqueue_stopped() is checked in _ieee80211_tx which ultimately
+results in a WARN_ON(info->flags & IEEE80211_TX_CTL_AMPDU) in
+ieee80211_tx. Please see the code for clarification.
 
-Oh you mean in the reg_notifier() on REGDOM_SET_BY_DRIVER? Sure, that works
-as well, if so desired.
+So, while I try to ping after enabling power save, the packets are
+dropped due to this warning.
+The warning message is not at all related to the issue and hence I feel
+that this is an inappropriate place for that WARN_ON. 
 
-  Luis
+The fix for the issue is to remove the stop/start queues if it is not
+really needed or the better fix is to remove this inappropriate warning
+message. Please clarify me if I'm wrong.
+
+
+Thanks for your time,
+Vivek.
