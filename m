@@ -1,31 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:54473 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752645AbZAIOAb (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.233]:14564 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbZA1Pdr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 09:00:31 -0500
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Thoughts about the b43 RNG
-Date: Fri, 9 Jan 2009 15:00:04 +0100
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-References: <200901090211.03937.mb@bu3sch.de>
-In-Reply-To: <200901090211.03937.mb@bu3sch.de>
+	Wed, 28 Jan 2009 10:33:47 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so6998846rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 07:33:46 -0800 (PST)
+Date: Wed, 28 Jan 2009 20:53:27 +0530
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] ath9k: Enable MIB and TIM interrupts for station mode.
+Message-ID: <20090128152327.GA10832@myhost.users.atheros.com> (sfid-20090128_163350_906751_94572AA9)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901091500.04173.hs4233@mail.mn-solutions.de> (sfid-20090109_150037_559783_11849C47)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I was doing some random tests on the b43 hardware RNG.
-> These are the results.
+Enable operating mode specific interrupts in ath9k_add_interface instead
+of ath9k_start.
 
-As you're german, you should get a look at the current c't 
-2/2009. At page 172 it has a in-depth articel about randomness 
-tests. They also have some tools to download, see
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   40 +++++++++++++++++++-----------------
+ 1 files changed, 21 insertions(+), 19 deletions(-)
 
-http://von-und-fuer-lau.de/random-tools.html
-
-http://www.heise.de/ct/09/02/links/172.shtml
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index d8e8266..91f7a7b 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1957,25 +1957,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_HT)
+ 		sc->sc_imask |= ATH9K_INT_CST;
+ 
+-	/*
+-	 * Enable MIB interrupts when there are hardware phy counters.
+-	 * Note we only do this (at the moment) for station mode.
+-	 */
+-	if (ath9k_hw_phycounters(sc->sc_ah) &&
+-	    ((sc->sc_ah->ah_opmode == NL80211_IFTYPE_STATION) ||
+-	     (sc->sc_ah->ah_opmode == NL80211_IFTYPE_ADHOC)))
+-		sc->sc_imask |= ATH9K_INT_MIB;
+-	/*
+-	 * Some hardware processes the TIM IE and fires an
+-	 * interrupt when the TIM bit is set.  For hardware
+-	 * that does, if not overridden by configuration,
+-	 * enable the TIM interrupt when operating as station.
+-	 */
+-	if ((sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_ENHANCEDPM) &&
+-	    (sc->sc_ah->ah_opmode == NL80211_IFTYPE_STATION) &&
+-	    !sc->sc_config.swBeaconProcess)
+-		sc->sc_imask |= ATH9K_INT_TIM;
+-
+ 	ath_cache_conf_rate(sc, &hw->conf);
+ 
+ 	sc->sc_flags &= ~SC_OP_INVALID;
+@@ -2124,6 +2105,27 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	/* Set the device opmode */
+ 	sc->sc_ah->ah_opmode = ic_opmode;
+ 
++	/*
++	 * Enable MIB interrupts when there are hardware phy counters.
++	 * Note we only do this (at the moment) for station mode.
++	 */
++	if (ath9k_hw_phycounters(sc->sc_ah) &&
++	    ((conf->type == NL80211_IFTYPE_STATION) ||
++	     (conf->type == NL80211_IFTYPE_ADHOC)))
++		sc->sc_imask |= ATH9K_INT_MIB;
++	/*
++	 * Some hardware processes the TIM IE and fires an
++	 * interrupt when the TIM bit is set.  For hardware
++	 * that does, if not overridden by configuration,
++	 * enable the TIM interrupt when operating as station.
++	 */
++	if ((sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_ENHANCEDPM) &&
++	    (conf->type == NL80211_IFTYPE_STATION) &&
++	    !sc->sc_config.swBeaconProcess)
++		sc->sc_imask |= ATH9K_INT_TIM;
++
++	ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_imask);
++
+ 	if (conf->type == NL80211_IFTYPE_AP) {
+ 		/* TODO: is this a suitable place to start ANI for AP mode? */
+ 		/* Start ANI */
+-- 
+1.6.0.1
 
