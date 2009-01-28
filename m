@@ -1,116 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:18822 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753128AbZAGGrA (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.229]:54390 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011AbZA1Jpx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 01:47:00 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so2613152yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 22:46:59 -0800 (PST)
-Subject: Re: rate instability in wireless stack
-From: =?ISO-8859-1?Q?Mart=EDn?= Ernesto Barreyro
-	<barreyromartin@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 07 Jan 2009 04:46:53 -0200
-Message-Id: <1231310813.23835.1.camel@note-tatin> (sfid-20090107_074705_974626_48F6D216)
-Mime-Version: 1.0
+	Wed, 28 Jan 2009 04:45:53 -0500
+Received: by rv-out-0506.google.com with SMTP id k40so6869707rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 01:45:53 -0800 (PST)
+Date: Wed, 28 Jan 2009 15:05:39 +0530
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Enable MIB and TIM interrupts for station mode.
+Message-ID: <20090128093538.GA5799@myhost.users.atheros.com> (sfid-20090128_104558_523809_8F4DED26)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, I've rtl8187 usb wifi card on board (at less is inside my laptop=
-)
-and
-I've some problems with the rate control.
+Enable operating mode specific interrupts in ath9k_add_interface instead
+of ath9k_start.
 
-When I use the PID algorithm with 2.6.26-1-686(debian) or 2.6.28 kernel=
-s
-or
-minstrel with 2.6.28 it always goes to 54Mb/s, and it doesn't work. If =
-I
-run
-iwconfig wlan0 rate 11M auto, it starts working. Its a little
-"optimistic".
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   40 +++++++++++++++++++-----------------
+ 1 files changed, 21 insertions(+), 19 deletions(-)
 
-This is the rc_stats output
-rate     throughput  ewma prob   this prob  this succ/attempt   success
-attempts
-  P  1         0.9       99.9      100.0          0(  0)        382
-382
-     2         1.9       99.9      100.0          0(  0)        222
-222
-     5.5       5.0       99.9      100.0          0(  0)        222
-222
-    11         9.5       99.9      100.0          4(  4)      48070
-48070
-     6         1.4       25.0      100.0          0(  0)          1
-1
-     9         3.6       43.7      100.0          0(  0)          2
-2
- t  12        11.0       99.9      100.0          0(  0)        228
-228
-    18         4.0       25.0      100.0          0(  0)          1
-1
-    24         5.3       25.0      100.0          0(  0)          1
-1
-    36         7.6       25.0      100.0          0(  0)          1
-1
-    48         9.7       25.0      100.0          0(  0)          1
-1
-T   54        20.0       99.9      100.0          0(  0)         53
-53
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index d8e8266..8b149ef 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1957,25 +1957,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	if (sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_HT)
+ 		sc->sc_imask |= ATH9K_INT_CST;
+ 
+-	/*
+-	 * Enable MIB interrupts when there are hardware phy counters.
+-	 * Note we only do this (at the moment) for station mode.
+-	 */
+-	if (ath9k_hw_phycounters(sc->sc_ah) &&
+-	    ((sc->sc_ah->ah_opmode == NL80211_IFTYPE_STATION) ||
+-	     (sc->sc_ah->ah_opmode == NL80211_IFTYPE_ADHOC)))
+-		sc->sc_imask |= ATH9K_INT_MIB;
+-	/*
+-	 * Some hardware processes the TIM IE and fires an
+-	 * interrupt when the TIM bit is set.  For hardware
+-	 * that does, if not overridden by configuration,
+-	 * enable the TIM interrupt when operating as station.
+-	 */
+-	if ((sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_ENHANCEDPM) &&
+-	    (sc->sc_ah->ah_opmode == NL80211_IFTYPE_STATION) &&
+-	    !sc->sc_config.swBeaconProcess)
+-		sc->sc_imask |= ATH9K_INT_TIM;
+-
+ 	ath_cache_conf_rate(sc, &hw->conf);
+ 
+ 	sc->sc_flags &= ~SC_OP_INVALID;
+@@ -2124,6 +2105,27 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	/* Set the device opmode */
+ 	sc->sc_ah->ah_opmode = ic_opmode;
+ 
++	/*
++	 * Enable MIB interrupts when there are hardware phy counters.
++	 * Note we only do this (at the moment) for station mode.
++	 */
++	if (ath9k_hw_phycounters(sc->sc_ah) &&
++	    ((sc->sc_ah->ah_opmode == NL80211_IFTYPE_STATION) ||
++	     (sc->sc_ah->ah_opmode == NL80211_IFTYPE_ADHOC)))
++		sc->sc_imask |= ATH9K_INT_MIB;
++	/*
++	 * Some hardware processes the TIM IE and fires an
++	 * interrupt when the TIM bit is set.  For hardware
++	 * that does, if not overridden by configuration,
++	 * enable the TIM interrupt when operating as station.
++	 */
++	if ((sc->sc_ah->ah_caps.hw_caps & ATH9K_HW_CAP_ENHANCEDPM) &&
++	    (sc->sc_ah->ah_opmode == NL80211_IFTYPE_STATION) &&
++	    !sc->sc_config.swBeaconProcess)
++		sc->sc_imask |= ATH9K_INT_TIM;
++
++	ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_imask);
++
+ 	if (conf->type == NL80211_IFTYPE_AP) {
+ 		/* TODO: is this a suitable place to start ANI for AP mode? */
+ 		/* Start ANI */
+-- 
+1.6.0.1
 
-Total packet count::    ideal 8384      lookaround 441
-
-All the attemps succeed, this is after I use iwconfig wlan0 rate 11M
-auto,
-otherwhise I couldn't write this, couse it stays at 54Mb/s and doesn't
-works.
-
-Today, january 7, I updated the driver with the compat-wireless tarball=
-=2E
-Now the
-driver just stays in 1Mb/s.
-
-rate     throughput  ewma prob   this prob  this succ/attempt   success
-attempts
-TtP  1         0.0        0.0        0.0          1(  0)          0
-0
-     2         0.0        0.0        0.0          0(  0)          0
-0
-     5.5       0.0        0.0        0.0          0(  0)          0
-0
-    11         0.0        0.0        0.0          0(  0)          0
-0
-     6         0.0        0.0        0.0          0(  0)          0
-0
-     9         0.0        0.0        0.0          0(  0)          0
-0
-    12         0.0        0.0        0.0          0(  0)          0
-0
-    18         0.0        0.0        0.0          0(  0)          0
-0
-    24         0.0        0.0        0.0          0(  0)          0
-0
-    36         0.0        0.0        0.0          0(  0)          0
-0
-    48         0.0        0.0        0.0          0(  0)          0
-0
-    54         0.0        0.0        0.0          0(  0)          0
-0
-
-Total packet count::    ideal 3546      lookaround 186
-
-I send this problem to Larry, but since someone posted something simila=
-r
-I
-thought it would be useful.
-
-Mart=C3=ADn
---=20
-Mart=C3=ADn Ernesto Barreyro <barreyromartin@gmail.com>
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
