@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11029 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756984AbZAPANY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 19:13:24 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:13:24 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/13] cfg80211: move check for ignore_reg_update() on wiphy_update_regulatory()
-Date: Thu, 15 Jan 2009 16:12:24 -0800
-Message-ID: <1232064746-17134-12-git-send-email-lrodriguez@atheros.com> (sfid-20090116_011332_615838_0C715966)
-In-Reply-To: <1232064746-17134-11-git-send-email-lrodriguez@atheros.com>
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-9-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-10-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-11-git-send-email-lrodriguez@atheros.com>
+Received: from an-out-0708.google.com ([209.85.132.242]:13304 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751403AbZA1AKI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2009 19:10:08 -0500
+Received: by an-out-0708.google.com with SMTP id c2so1570673anc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 16:10:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <c4d76b3b0901261944r13baf3d7o4a06f0372c88f087@mail.gmail.com>
+References: <c4d76b3b0901261942v23a84b65jab3cf59215c45307@mail.gmail.com>
+	 <c4d76b3b0901261944r13baf3d7o4a06f0372c88f087@mail.gmail.com>
+Date: Tue, 27 Jan 2009 19:10:06 -0500
+Message-ID: <c4d76b3b0901271610g7868913egc22de8f6577caee7@mail.gmail.com> (sfid-20090128_011013_685090_5FBCAAF8)
+Subject: Re: p54usb and 2.13.24.0 Firmware fail to probe 1st generation
+	(ISL3886 + net2280)
+From: Jason Andryuk <jandryuk@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This ensures that the initial REGDOM_SET_BY_CORE upon wiphy registration
-respects the wiphy->custom_regulatory setting. Without this and if OLD_REG
-is disabled (which will be default soon as we remove it) the
-wiphy->custom_regulatory is simply ignored.
+With the below patch, -ETIMEDOUT is returned from usb_interrupt_msg in
+addition to alen != sizeof(__le32)
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+[   53.876103] usb 4-2: new high speed USB device using ehci_hcd and address 2
+[   54.008792] usb 4-2: configuration #1 chosen from 1 choice
+[   54.131230] usb 4-2: firmware: requesting isl3886usb
+[   54.148759] phy1: p54 detected a LM86 firmware
+[   54.148765] p54: rx_mtu reduced from 3240 to 2392
+[   54.148770] phy1: FW rev 2.13.24.0 - Softmac protocol 5.9
+[   54.148775] phy1: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+[   56.316196] usb 4-2: (p54usb) err=-110, alen=0, size=4
+[   56.316311] p54usb: probe of 4-2:1.0 failed with error -110
+[   56.316356] usbcore: registered new interface driver p54usb
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6c45832..271b54a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1017,13 +1017,15 @@ static void update_all_wiphy_regulatory(enum reg_set_by setby)
- 	struct cfg80211_registered_device *drv;
- 
- 	list_for_each_entry(drv, &cfg80211_drv_list, list)
--		if (!ignore_reg_update(&drv->wiphy, setby))
--			wiphy_update_regulatory(&drv->wiphy, setby);
-+		wiphy_update_regulatory(&drv->wiphy, setby);
- }
- 
- void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
- {
- 	enum ieee80211_band band;
-+
-+	if (ignore_reg_update(wiphy, setby))
-+		return;
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (wiphy->bands[band])
- 			handle_band(wiphy, band);
--- 
-1.6.1.rc3.51.g5832d
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb
+index 9539ddc..3e26085 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -652,6 +652,7 @@ static int p54u_upload_firmware_net2280(struct ieee80211_hw
 
+        err = p54_parse_firmware(dev, fw_entry);
+        if (err) {
++               dev_err(&priv->udev->dev, "(p54usb) cannot parse firmware\n");
+                kfree(buf);
+                release_firmware(fw_entry);
+                return err;
+@@ -858,8 +859,11 @@ static int p54u_upload_firmware_net2280(struct ieee80211_hw
+        err = usb_interrupt_msg(priv->udev,
+                                usb_rcvbulkpipe(priv->udev, P54U_PIPE_INT),
+                                buf, sizeof(__le32), &alen, 1000);
+-       if (err || alen != sizeof(__le32))
++       if (err || alen != sizeof(__le32)) {
++               dev_err(&priv->udev->dev, "(p54usb) err=%d, alen=%d, size=%d\n",
++                       err, alen, sizeof(__le32));
+                goto fail;
++       }
+
+        P54U_READ(NET2280_DEV_U32, &devreg->int_ident);
+        P54U_WRITE(NET2280_DEV_U32, &devreg->int_ack, reg);
