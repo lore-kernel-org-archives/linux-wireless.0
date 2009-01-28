@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:44886 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750897AbZAEFel (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:37887 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850AbZA1Qq0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2009 00:34:41 -0500
-Date: Mon, 5 Jan 2009 06:48:30 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andi Kleen <andi@firstfloor.org>, Michael Buesch <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: rate instability in wireless stack
-Message-ID: <20090105054830.GJ496@one.firstfloor.org> (sfid-20090105_063443_765612_53379AB1)
-References: <20090104164649.GV496@one.firstfloor.org> <200901041736.47650.mb@bu3sch.de> <20090104174123.GW496@one.firstfloor.org> <49615465.4090604@lwfinger.net> <20090105025302.GF496@one.firstfloor.org> <49618497.50809@lwfinger.net> <20090105050248.GG496@one.firstfloor.org> <496193A6.3040608@lwfinger.net>
-Mime-Version: 1.0
+	Wed, 28 Jan 2009 11:46:26 -0500
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: vivek.natraj@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH v2 0/2] mac80211: ps-poll implementation
+References: <20090122114240.31443.18218.stgit@tikku>
+	<1232629209.4224.2.camel@johannes.local> <87prie8j30.fsf@nokia.com>
+	<1232748717.3977.8.camel@johannes.local>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 28 Jan 2009 18:40:22 +0200
+In-Reply-To: <1232748717.3977.8.camel@johannes.local> (ext Johannes Berg's message of "Fri\, 23 Jan 2009 23\:11\:57 +0100")
+Message-ID: <87ljsvgz9l.fsf@nokia.com> (sfid-20090128_174631_195974_1F0EDC57)
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <496193A6.3040608@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 04, 2009 at 10:59:18PM -0600, Larry Finger wrote:
-> Andi Kleen wrote:
-> > On Sun, Jan 04, 2009 at 09:55:03PM -0600, Larry Finger wrote:
-> > 
-> > Minstrel stays constantly at 1 Mbit/s
-> 
-> Do you have mac80211 debugging turned on? If so, then do a
-> 
-> sudo cat /sys/kernel/debug/ieee80211/phyXX/stations/<MAC ADDR>/rc_stats
-> 
-> and post them.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Lots of zeroes.
+> On Fri, 2009-01-23 at 11:31 +0200, Kalle Valo wrote:
+>
+>> Ok. The problem is that stlc45xx/p54spi requires us to send a null
+>> frame every time we enable power save and that's causing problems, at
+>> least that's my current theory. So I need to solve this somehow, I
+>> need to think this more.
+>
+> True.
+>
+>> But can we still apply these patches? Because b43 doesn't support
+>> power save at all, and ath9k with dynamic power save disabled was
+>> already broken before my patches, I consider these patches as a step
+>> forward. And I would like to go forward one small step at a time,
+>> maintaining huge patches myself until all issues are fixed is quite
+>> difficult.
+>
+> Yes, agree, can you repost without RFC and the printk removed (and
+> possibly rebased)?
 
--Andi
-
-rate     throughput  ewma prob   this prob  this succ/attempt   success    attempts
-TtP  1         0.0        0.0        0.0          1(  0)          0           0
-     2         0.0        0.0        0.0          0(  0)          0           0
-     5.5       0.0        0.0        0.0          0(  0)          0           0
-    11         0.0        0.0        0.0          0(  0)          0           0
-     6         0.0        0.0        0.0          0(  0)          0           0
-     9         0.0        0.0        0.0          0(  0)          0           0
-    12         0.0        0.0        0.0          0(  0)          0           0
-    18         0.0        0.0        0.0          0(  0)          0           0
-    24         0.0        0.0        0.0          0(  0)          0           0
-    36         0.0        0.0        0.0          0(  0)          0           0
-    48         0.0        0.0        0.0          0(  0)          0           0
-    54         0.0        0.0        0.0          0(  0)          0           2
-
-Total packet count::    ideal 46      lookaround 2
-
+Sure thing. I'm rebasing it right now.
 
 -- 
-ak@linux.intel.com
+Kalle Valo
