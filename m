@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:56167 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754948AbZAWRqm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 12:46:42 -0500
-Date: Fri, 23 Jan 2009 11:46:32 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8187: Add termination packet to prevent stall
-Message-ID: <497a0278.fRVcNq75DBBbCg4K%Larry.Finger@lwfinger.net> (sfid-20090123_184700_224005_429B8AC1)
+Received: from mail.atheros.com ([12.36.123.2]:18587 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751727AbZA1USh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jan 2009 15:18:37 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 12:18:37 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 2/3] ath9k: move check for radar freqs into a helper
+Date: Wed, 28 Jan 2009 12:17:48 -0800
+Message-ID: <1233173869-16512-3-git-send-email-lrodriguez@atheros.com> (sfid-20090128_211845_940348_9E43D6DD)
+In-Reply-To: <1233173869-16512-2-git-send-email-lrodriguez@atheros.com>
+References: <1233173869-16512-1-git-send-email-lrodriguez@atheros.com>
+ <1233173869-16512-2-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RTL8187 and RTL8187B devices can stall unless an explicit termination
-packet is sent.
+This will be used later.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath9k/regd.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-John,
-
-With this patch my RTL8187L was able to perform a major git pull for a
-tree mounted on an NFS volume, and do a multi-job kernel compilation. Without
-the patch, the wireless would hang. I think this is 2.6.29 material.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -281,6 +281,7 @@ static int rtl8187_tx(struct ieee80211_h
+diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
+index b84fbe3..cccec40 100644
+--- a/drivers/net/wireless/ath9k/regd.c
++++ b/drivers/net/wireless/ath9k/regd.c
+@@ -154,6 +154,12 @@ const struct ieee80211_regdomain *ath9k_world_regdomain(struct ath_hal *ah)
+ 	}
+ }
  
- 	usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, ep),
- 			  buf, skb->len, rtl8187_tx_cb, skb);
-+	urb->transfer_flags |= URB_ZERO_PACKET;
- 	usb_anchor_urb(urb, &priv->anchored);
- 	rc = usb_submit_urb(urb, GFP_ATOMIC);
- 	if (rc < 0) {
++/* Frequency is one where radar detection is required */
++static bool ath9k_is_radar_freq(u16 center_freq)
++{
++	return (center_freq >= 5260 && center_freq <= 5700);
++}
++
+ /* Enable adhoc on 5 GHz if allowed by 11d */
+ static void ath9k_reg_apply_5ghz_adhoc_flags(struct wiphy *wiphy,
+ 					     enum reg_set_by setby)
+@@ -247,9 +253,7 @@ void ath9k_reg_apply_radar_flags(struct wiphy *wiphy)
+ 
+ 	for (i = 0; i < sband->n_channels; i++) {
+ 		ch = &sband->channels[i];
+-		if (ch->center_freq < 5260)
+-			continue;
+-		if (ch->center_freq > 5700)
++		if (!ath9k_is_radar_freq(ch->center_freq))
+ 			continue;
+ 		/* We always enable radar detection/DFS on this
+ 		 * frequency range. Additionally we also apply on
+-- 
+1.6.1.rc3.51.g5832d
 
----
