@@ -1,65 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48796 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751368AbZA3L1U (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:56899 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454AbZA1A2J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 06:27:20 -0500
-Subject: Re: [PATCH] mac80211: convert to net_device_ops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
-In-Reply-To: <1233314257.30970.6.camel@johannes.local> (sfid-20090130_121747_128792_58F3B8C4)
-References: <20090127052926.44d3fd5f@s6510>
-	 <1233314257.30970.6.camel@johannes.local>
-	 (sfid-20090130_121747_128792_58F3B8C4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-FWBgDkt2DMP7CD7Uz42W"
-Date: Fri, 30 Jan 2009 12:27:17 +0100
-Message-Id: <1233314837.30970.8.camel@johannes.local> (sfid-20090130_122724_511882_CAD8D802)
-Mime-Version: 1.0
+	Tue, 27 Jan 2009 19:28:09 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so2903619yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2009 16:28:08 -0800 (PST)
+MIME-Version: 1.0
+Date: Tue, 27 Jan 2009 19:28:07 -0500
+Message-ID: <c4d76b3b0901271628q7710a272xdcf487ee5779f154@mail.gmail.com> (sfid-20090128_012814_710002_E143841B)
+Subject: at76_usb fails to load firmware on Linksys WUSB11
+From: Jason Andryuk <jandryuk@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A change is preventing my old Linksys WUSB11 from loading its
+firmware.  It was working in 2.6.28.
 
---=-FWBgDkt2DMP7CD7Uz42W
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Below are two dmesg snippets.  The first is the 2.6.29-rc2-wl failure
+to load and the second is the successful 2.6.28 era.  Notice that the
+firmware reported in 2.6.28 is different from the one that the kernel
+attempts to load.
 
-On Fri, 2009-01-30 at 12:17 +0100, Johannes Berg wrote:
-> On Tue, 2009-01-27 at 05:29 +1100, Stephen Hemminger wrote:
-> > Convert to new net_device_ops in 2.6.28 and later.
-> >=20
-> > Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
->=20
-> John, please revert this commit for now, it's breaking monitor mode
-> injection (and thus AP mode) because the xmit handler assignment in
-> ieee80211_setup_sdata is not effective.
+I believe the WUSB11 actually has firmware stored in flash on the
+device.  Linksys downloads for WUSB11 v1 include a firmware update for
+WUSB11 v. 1 which I believe the device to be.  No explicit version is
+reported.
 
-This also broke calling our uninit function so we have memory and
-debugfs file leaks.
+Tested on wireless-testing master-2009-01-26.
 
-johannes
+Jason
 
---=-FWBgDkt2DMP7CD7Uz42W
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+2.6.29-rc2-wl
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+[  121.704098] usb 5-1: new full speed USB device using uhci_hcd and address 2
+[  121.857426] usb 5-1: configuration #1 chosen from 1 choice
+[  121.950007] at76_usb: module is from the staging directory, the
+quality is unknown, you have been warned.
+[  121.957247] Atmel at76x USB Wireless LAN Driver 0.17 loading
+[  121.957304] usb 5-1: firmware: requesting atmel_at76c503-i3861.bin
+[  121.984135] usb 5-1: using firmware atmel_at76c503-i3861.bin
+(version 0.90.0-44)
+[  121.987186] usb 5-1: downloading internal fw failed with -22
+[  121.987204] at76_usb 5-1:1.0: error -22 downloading internal firmware
+[  121.987223] at76_usb: probe of 5-1:1.0 failed with error -22
+[  121.987270] usbcore: registered new interface driver at76_usb
 
-iQIcBAABAgAGBQJJguQTAAoJEKVg1VMiehFYdawQALn21ySHBKUG6GOhPKBeJpXN
-Ulu5M9+Lt4WQvTGgMhywgP4yBe66lnRv0a/6XNQwWc4uZ+izrlR1Eil43Gah1jjO
-6hoVqvPHxx+sK1sEiPPY8MG+bxx9aqfgsWZp+fRzyayrjnXsojOgVUZRYjgrkgqN
-1CFpys5uxfJoGDFy8OXskSjm+0CqlVTDrHgeC/L/z1+4SJxvO8yxa0KB3uo8Wh6G
-P+VpKqHYmhJVacJRGsswXg2NJ79dGoeJt0ykL8F0rVszFLVkMALmzAwJap7YSCoA
-nXDKw5Pp4VTEV8WkgYbTIqsuH+fZqUfM7wOo/K3WDXiuiseMAXjUi3mab4zaApwa
-Us9qBQlIC1heN1ZEUTOVlkvqpsM48WxkWNS6jIhv4l2GWXV+rS2cwAAQRuBcOwGQ
-QSmDxUE/ncXwxx94nrbLaS48bzOdhD+VxlhAJlDBgEwE0UqMdGSZ/JOTDA5F6B74
-gCM+34WVqLUYL0OUjNFJ+vNjHa+kzWwUgDLftvuPErE4d5RmxqpFXCI8NIPHgq1b
-W9IwFQJwWvlKC8roFbj60poXGEzn4dOZXwkG+rlNkFte1RpKbvKZ+cJaqs7ax+mF
-kEpj7l2owQoba2GFGPbrMl2YIf5cxU4qhM+duMib/uNukMLRq1+TsHNkjLcA/g+c
-0dHhD8KND+x9zzUnbkPY
-=n6tB
------END PGP SIGNATURE-----
+2.6.28:
 
---=-FWBgDkt2DMP7CD7Uz42W--
-
+Jan 12 20:47:35 rainbow kernel: [  509.084123] usb 4-2: new full speed
+USB device using uhci_hcd and address 2
+Jan 12 20:47:35 rainbow kernel: [  509.233741] usb 4-2: configuration
+#1 chosen from 1 choice
+Jan 12 20:47:35 rainbow kernel: [  509.360214] at76_usb: module is
+from the staging directory, the quality is unknown, you have been
+warned.
+Jan 12 20:47:35 rainbow kernel: [  509.367532] Atmel at76x USB
+Wireless LAN Driver 0.17 loading
+Jan 12 20:47:35 rainbow kernel: [  509.367587] usb 4-2: firmware:
+requesting atmel_at76c503-i3861.bin
+Jan 12 20:47:35 rainbow kernel: [  509.399173] usb 4-2: using firmware
+atmel_at76c503-i3861.bin (version 0.90.0-44)
+Jan 12 20:47:35 rainbow kernel: [  509.403102] wlan1: USB 4-2:1.0, MAC
+00:06:25:00:6a:7a, firmware 0.90.0-2
+Jan 12 20:47:35 rainbow kernel: [  509.403108] wlan1: regulatory
+domain 0x10: FCC (USA)
+Jan 12 20:47:35 rainbow kernel: [  509.403579] usbcore: registered new
+interface driver at76_usb
