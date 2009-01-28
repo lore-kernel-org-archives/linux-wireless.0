@@ -1,68 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:40339 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756137AbZAWAQZ (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59344 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751104AbZA1SFb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 19:16:25 -0500
-Message-ID: <49790C43.5050100@lwfinger.net> (sfid-20090123_011629_406173_1B8775FB)
-Date: Thu, 22 Jan 2009 18:16:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 28 Jan 2009 13:05:31 -0500
+Date: Wed, 28 Jan 2009 20:04:25 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] ath9k: Set TSF fix
+Message-ID: <20090128180425.GA5069@jm.kir.nu> (sfid-20090128_190535_392928_AE387F8D)
+References: <20090124081542.50450@gmx.net> <1232806972.4036.10.camel@johannes.local> <1232807356.2870.23.camel@localhost.localdomain> <20090124215322.259390@gmx.net>
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-CC: =?ISO-8859-1?Q?Mart=EDn_Ernesto_Barreyro?=
-	<barreyromartin@gmail.com>, Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Minstrel rate-setting question
-References: <BLU144-W4266C309A1F9CD0F4B5C21B2D90@phx.gbl>	 <496CE438.6020408@lwfinger.net>	 <BLU144-W164FB7B41C703C52AAAF9BB2D90@phx.gbl>	 <496D2772.4060104@lwfinger.net>	 <BLU144-W254C2D7845CD9E851F745DB2D60@phx.gbl>	 <496D3118.7060906@lwfinger.net>	 <BLU144-W40A7F7D25BE3B92EABD5C7B2D60@phx.gbl> <496D665A.90608@lwfinger.net>	 <BLU144-W102912CECD6EE0D07D1BD8B2D50@phx.gbl>	 <4972B1E7.7000005@lwfinger.net>	 <BLU144-W211FE279F46EA07E0D35E0B2D10@phx.gbl>	 <4977612D.7050500@lwfinger.net> <1232664643.4589.5.camel@note-tatin>
-In-Reply-To: <1232664643.4589.5.camel@note-tatin>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090124215322.259390@gmx.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the patch I just submitted, I added TX retry info to the driver for RTL8187L devices.
-One of the testers of the patch reports that the rate is being adjusted, but that the rate
-is overestimated and he has to limit it to 11M. His minstrel statistics and his comments
-are as follows:
+On Sat, Jan 24, 2009 at 10:53:22PM +0100, Alina Friedrichsen wrote:
+> Hallo Dan!
 
-> rate     throughput  ewma prob   this prob  this succ/attempt   success
-> attempts
->      1         0.2       29.8       12.5          1(  8)         51
-> 86
->      2         0.4       22.6       14.2          0(  0)          6
-> 25
->   P  5.5       2.7       54.2      100.0          0(  0)         41
-> 109
->     11         1.9       20.5       12.5          0(  0)          6
-> 30
->      6         2.1       38.4       20.0          0(  0)          7
-> 24
->      9         2.0       24.8        8.3          0(  0)          6
-> 25
->     12         2.4       21.9       12.5          0(  0)          6
-> 52
->     18         3.2       19.9       12.5          0(  0)          6
-> 44
->     24         4.7       22.2       12.5          0(  0)         15
-> 109
->     36         4.4       14.5        9.0          0(  0)        495
-> 2036
->  t  48         5.2       13.4       12.5          0(  0)        209
-> 1220
-> T   54         8.6       19.8       14.2          1(  7)        556
-> 4514
-> 
-> But It still is a little to optimistic. But I supose is the algorithm
-> fault. It gets a little laggy and I have to limit the rate to 11Mbps.
-> 
-> If I do that the conection works perfect.
-> 
-> But the algorithm is working, maybe its just how it should work.
-> What do you think?
+Uhm.. Dan was not on To: or Cc: field.. Anyway..
 
-The losses for all rates seem to be a little high, and I plan to see if he can change
-channels, but I would like an expert's analysis of these data.
+> The old version I have taken from an several years old madwifi patch. It works only with old ath5k hardware. With my new Atheros-Cards the lower 32 bits of the TSF are only set to zero, not set to the new value. The new code does work with all my ath5k and ath9k cards.
 
-Thanks,
+The proposed ath9k change looks fine. The AR_TSF_L32 write does not
+actually change TSF and hardware will just store the value temporarily.
+The actual change is started by writing the AR_TSF_U32.
 
-Larry
+It looks like there are some corner cases where the TSF may not actually
+change if it is being updated (e.g., a Beacon is received) or we are
+waking up from sleep mode etc., but I would hope they do not matter too
+much with this debugging need.
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
