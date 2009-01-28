@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server.klug.on.ca ([205.189.48.131]:4831 "EHLO
-	server.klug.on.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756854AbZAWSEK (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.190]:13558 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812AbZA1N0v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 13:04:10 -0500
-Subject: Re: integration of opensource firmware with b43 kernel driver
-From: "Brian J. Murrell" <brian@interlinx.bc.ca>
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-In-Reply-To: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it>
-References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-F20fwiYfy8CSSbiyHOOF"
-Date: Fri, 23 Jan 2009 12:44:09 -0500
-Message-Id: <1232732649.7440.42.camel@pc.interlinx.bc.ca> (sfid-20090123_190413_928958_6A74E0EB)
-Mime-Version: 1.0
+	Wed, 28 Jan 2009 08:26:51 -0500
+Received: by fk-out-0910.google.com with SMTP id f33so3750141fkf.5
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 05:26:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1233147624.4071.1.camel@johannes.local>
+References: <20090122114240.31443.18218.stgit@tikku>
+	 <20090122114546.31443.79387.stgit@tikku>
+	 <1ba2fa240901231528m21f13c1m43721f1d673e7cc7@mail.gmail.com>
+	 <874ozj964m.fsf@litku.valot.fi>
+	 <1ba2fa240901280346v6b4000b9m74eef26aabf86419@mail.gmail.com>
+	 <1233147624.4071.1.camel@johannes.local>
+Date: Wed, 28 Jan 2009 15:26:49 +0200
+Message-ID: <1ba2fa240901280526m199cb01dwc5fa62a50edca853@mail.gmail.com> (sfid-20090128_142656_631201_0AB571A0)
+Subject: Re: [RFC PATCH v2 2/2] mac80211: use ps-poll when dynamic power save
+	mode is disabled
+From: Tomas Winkler <tomasw@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kalle.valo@iki.fi>, vivek.natraj@gmail.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jan 28, 2009 at 3:00 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Just for the record, and I was still planning to reply to your other
+> mail, not trying to hijack this thread at all.
+>
+>> I would suggest to expose to user space non-unit index of power save
+>> aggressiveness which can be mapped to different methods such as
+>> PS-Poll, dynamic power save or iwlwifi firmware implementation by
+>> other more reach configurable interface
+>
+> I **completely** disagree on this. The non-unit index is a **horrible**
+> thing because it says **nothing** of interest to the user. The only
+> approach the user can then take is try which value will give him the
+> desired behaviour, and it will differ across all hardware combinations.
+> Therefore, it's completely _useless_.
 
---=-F20fwiYfy8CSSbiyHOOF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What I suggest is to have rich configuration for setting different
+parameters so this is more flexible with different HW but in run time
+only play with single number to create uniform interface for user
+space.
+I'm not sure that you want to user jungle with all the numbers, we run
+empirical tests for very long time how do you want to user space take
+the decision.
 
-On Fri, 2009-01-23 at 18:36 +0100, Francesco Gringoli wrote:
-> Hello,
->=20
-> we have been testing the firmware for a week now and it seems stable. =20
-> I personally tested it also on a Linksys WRT54GL and it works both in =20
-> station and in AP modes.
+> What we really need to do is tie into the pm_qos framework and make
+> latency guarantees.
 
-Did you try pushing it hard?  i.e. doing a nice big bulk transfer
-through it?  Did it reach decent speeds without pegging the CPU with
-softirqs?
+Even pm_qos doesn't talk directly in language of all  PM paramters you
+need to configure so this is just equivalent to my proposition and can
+be staged after the legacy PM is implemented. Also PM doesn't map only
+to traffic requirements.
 
-Can you give details on which kernel(s) and how you built/configured the
-router firmware(s)?
-
-b.
-
-
---=-F20fwiYfy8CSSbiyHOOF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkl6AegACgkQl3EQlGLyuXCiKwCgkhKczXZIGgfdZrX3F6qRxySe
-oEcAn2pksS1BSEpgHiDshXPTAwXNAGT7
-=Q9SA
------END PGP SIGNATURE-----
-
---=-F20fwiYfy8CSSbiyHOOF--
-
+Tomas
