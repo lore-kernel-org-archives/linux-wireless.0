@@ -1,42 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:56810 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750800AbZAWFRc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 00:17:32 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2410390fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 21:17:30 -0800 (PST)
+Received: from kroah.org ([198.145.64.141]:54653 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751961AbZA1CBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2009 21:01:17 -0500
+Date: Tue, 27 Jan 2009 17:36:35 -0800
+From: Greg KH <greg@kroah.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: stable@kernel.org, andrey@cozybit.com,
+	linux-wireless@vger.kernel.org, Keir <keirlawson@gmail.com>
+Subject: Re: [stable] ath5k mesh in 2.6.28?
+Message-ID: <20090128013635.GA12223@kroah.com> (sfid-20090128_030123_197340_0BAC4C8C)
+References: <e27b78a40901230530h192a8030l6905089df2a5822d@mail.gmail.com> <b6c5339f0901230717h605d2fbaibda8b720c6191abf@mail.gmail.com> <e27b78a40901230725r4dc40975t8e4cb9f481df1702@mail.gmail.com> <20090123153305.M33802@bobcopeland.com>
 MIME-Version: 1.0
-In-Reply-To: <4979269F.1060500@lwfinger.net>
-References: <4979269F.1060500@lwfinger.net>
-Date: Fri, 23 Jan 2009 05:17:30 +0000
-Message-ID: <3ace41890901222117q55040043lfcab89fc928422ed@mail.gmail.com> (sfid-20090123_061736_371761_D587BEB8)
-Subject: Re: Regression caused by commit e32b1b9a33759e8a83ac566c4c43f23ed5d6343b
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Alina Friedrichsen <x-alina@gmx.net>,
-	John Linville <linville@tuxdriver.com>, samuel@sortiz.org,
-	Kalle Valo <kalle.valo@iki.fi>, maximlevitsky@gmail.com,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090123153305.M33802@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2009 at 2:08 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> With the commit of the subject, my b43 and p54usb devices stopped working. They could
-> associate and authenticate with my WPA2 network, but never finish the DHCP connection and
-> get an IP address. Surprisingly, my rtl8187 devices continued to work.
+On Fri, Jan 23, 2009 at 11:26:15AM -0500, Bob Copeland wrote:
+> > 2009/1/23 Bob Copeland <me@bobcopeland.com>:
+> > > On Fri, Jan 23, 2009 at 8:30 AM, Keir <keirlawson@gmail.com> wrote:
+> > >> Hi,
+> > >>
+> > >> According to the 802.11s website it seems to claim that mesh
+> > >> networking is supported for ath5k devices in kernel 2.6.28, however,
+> > >> upon running ifconfig mesh0 up (having previously created the mesh
+> > >> device using iw) I get "SIOCSIFFLAGS: Operation not supported".
+> [...]
+> > >
+> > > Mesh was enabled for 2.6.29 via b706e65b40417e03c2451bb3f92488f3736843fa,
+> > > so if you need it in 2.6.28 you can ask Greg to pick it up for stable.
+> >
+> > I would really like support in 2.6.28, but I don't want to
+> > inconvenience anyone... who's Greg?  What I would really like is ath5k
+> > mesh support in a stable kernel, the wireless-testing kernel I'm
+> > currently using is too unstable for my testing.
+> 
+> Your other option is to use compat-wireless with 2.6.28.  That might
+> be easier.  However, fixing mesh in 2.6.28 isn't a huge change and it
+> doesn't change any paths for any other opmode, so we might as well
+> ask...
+> 
+> Hi stable hackers,
+> 
+> Would you consider taking b706e65b40417e03c2451bb3f92488f3736843fa,
+> "ath5k: fix mesh point operation" for 2.6.28-stable?  It's a new feature 
+> compared to 2.6.27, so not a regression per se; however, ath5k advertises
+> mesh support in wiphy->interface_modes but doesn't make good on that 
+> promise when it comes to actually setting up such an interface.
+> 
+> Here's a rebased patch on top of 2.6.28:
+> 
+> >From 8569edccf7c900aecfaa32ccd4e84c56fb0460c4 Mon Sep 17 00:00:00 2001
+> From: Andrey Yurovsky <andrey@cozybit.com>
+> Date: Mon, 13 Oct 2008 18:23:07 -0700
+> Subject: [PATCH] ath5k: fix mesh point operation
+> 
+> This patch fixes mesh point operation (thanks to YanBo for pointing
+> out the problem): make mesh point interfaces start beaconing when
+> they come up and configure the RX filter in mesh mode so that mesh
+> beacons and action frames are received.  Add mesh point to the check
+> in ath5k_add_interface.  Tested with multiple AR5211 cards.
+> 
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+> Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-I don't want to do a "me too", but my rtl8187B broke yesterday after
-upgrading to wireless-testing/compat-wireless head,
-and it worked again today. There are only two patches between
-yesterday and today and one of them is John's revert, so it is
-possible that the rtl8187B is also affected.
+Now queued up, thanks for the backport.
 
-The symptom is as you said, I can associate and authenticate, but dhcp
-won't finish and wpa_suplicant ifdown the device.
-I tried that a few times and restarting NM, modprobe -r/-v, etc. In
-the end it was easier just to blow away the compat-wireless update
-redirectory and revert back to the vendor-shipped kernel modules - and
-hope that it is just a transient problem and the problem would go away
-when I git fetch next time :-).
+greg k-h
