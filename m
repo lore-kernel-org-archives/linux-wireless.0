@@ -1,70 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:53354 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750751AbZADQdD (ORCPT
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:60251
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752241AbZA1XMq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 11:33:03 -0500
-Date: Sun, 4 Jan 2009 17:46:49 +0100
-From: Andi Kleen <andi@firstfloor.org>
-To: linux-wireless@vger.kernel.org
-Subject: rate instability in wireless stack
-Message-ID: <20090104164649.GV496@one.firstfloor.org> (sfid-20090104_173308_672652_EAF5F2F2)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 28 Jan 2009 18:12:46 -0500
+Received: from [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7] (unknown [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by s0be.servebeer.com (Postfix) with ESMTPSA id 03EC3252323
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 18:12:44 -0500 (EST)
+Message-ID: <4980E66C.9090003@erley.org> (sfid-20090129_001254_076374_5E3B5DBB)
+Date: Wed, 28 Jan 2009 18:12:44 -0500
+From: pat-lkml <pat-lkml@erley.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] crda: rename nl_handle to nl_sock for libnl-2.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Upstream has renamed nl_handle to nl_sock.  Update iw to the new names
+and add #define for libnl-1.1.
 
-Hi,
+Signed-off-by: Pat Erley <pat-lkml@erley.org>
+---
 
-I recently had to switch my desktop over to use wireless to connect
-to my DSL line. Unfortunately it was not a entirely happy experience.
+In the future, should I keep pushing these sorts of patches, or should
+we back them out and wait for a 'release' of libnl-2.0 and push them all
+in then?
 
-I have the following setup:
-- One zd1211rw usb stick taped to a desk.
-- A wireless antenna next to it, connected to PCI wireless cards
+diff --git a/crda.c b/crda.c
+index afc5df1..f2c471f 100644
+--- a/crda.c
++++ b/crda.c
+@@ -43,10 +43,11 @@ static inline int __genl_ctrl_alloc_cache(struct
+nl_handle *h, struct nl_cache *
+ }
 
-I'm using the zd1211rw stick, which works (54Mbit/s connection
-with no apparent packet loss through two walls from a 16Mbit/s DSL line).  
-Unfortunately it has horrible queueing behaviour under load: when I have 
-multiple download streams going the connection gets extremly laggy. 
-The problem seems to be in the client here, when I do the same from a laptop
-with Intel wireless there is no significant lag.
+ #define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
++#define nl_sock nl_handle
+ #endif /* CONFIG_LIBNL20 */
 
-To avoid this problem I was trying to switch over to PCI cards.
-I tried two different ones:
+ struct nl80211_state {
+-	struct nl_handle *nl_handle;
++	struct nl_sock *nl_sock;
+ 	struct nl_cache *nl_cache;
+ 	struct genl_family *nl80211;
+ };
+@@ -55,22 +56,22 @@ static int nl80211_init(struct nl80211_state *state)
+ {
+ 	int err;
 
-05:02.0 Network controller: RaLink RT2561/RT61 802.11g PCI
+-	state->nl_handle = nl_socket_alloc();
+-	if (!state->nl_handle) {
+-		fprintf(stderr, "Failed to allocate netlink handle.\n");
++	state->nl_sock = nl_socket_alloc();
++	if (!state->nl_sock) {
++		fprintf(stderr, "Failed to allocate netlink sock.\n");
+ 		return -ENOMEM;
+ 	}
 
-and 
+-	if (genl_connect(state->nl_handle)) {
++	if (genl_connect(state->nl_sock)) {
+ 		fprintf(stderr, "Failed to connect to generic netlink.\n");
+ 		err = -ENOLINK;
+-		goto out_handle_destroy;
++		goto out_sock_destroy;
+ 	}
 
-06:02.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL-8185 IEEE 802.11a/b/g Wireless LAN Controller (rev 20)
+-	if (genl_ctrl_alloc_cache(state->nl_handle, &state->nl_cache)) {
++	if (genl_ctrl_alloc_cache(state->nl_sock, &state->nl_cache)) {
+ 		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
+ 		err = -ENOMEM;
+-		goto out_handle_destroy;
++		goto out_sock_destroy;
+ 	}
 
-in different machines. The reception should be about the same
-or better than with the USB stick: they are connected to a real
-antenna which is sitting next to the USB stick on a desk.
+ 	state->nl80211 = genl_ctrl_search_by_name(state->nl_cache, "nl80211");
+@@ -84,8 +85,8 @@ static int nl80211_init(struct nl80211_state *state)
 
-Unfortunately they both show the same problem. The connection
-works, but quickly goes down to 1Mbit/s after setup and is then very slow.
-I tried to manually lock it to 54Mbit/s, but then no data
-is transferred. When it's set back to auto it quickly goes
-down to 1Mbit/s again.
+  out_cache_free:
+ 	nl_cache_free(state->nl_cache);
+- out_handle_destroy:
+-	nl_socket_free(state->nl_handle);
++ out_sock_destroy:
++	nl_socket_free(state->nl_sock);
+ 	return err;
+ }
 
-The USB stick happily stays at 54Mbit/s on its own (and works
-well except for the lag behaviour). Both to the same AP.
+@@ -93,7 +94,7 @@ static void nl80211_cleanup(struct nl80211_state *state)
+ {
+ 	genl_family_put(state->nl80211);
+ 	nl_cache_free(state->nl_cache);
+-	nl_socket_free(state->nl_handle);
++	nl_socket_free(state->nl_sock);
+ }
 
-Since I see this with two different chipsets I suppose it's
-some general problem in the midlevel layer. There are no special
-messages in dmesg. My laptops which have Intel wireless (ipw2200)
-don't show this problem. So it must be in some part that 
-is used by the RTL and RT drivers, but not by Intel or zd1211rw.
+ static int reg_handler(struct nl_msg __attribute__((unused)) *msg,
+@@ -294,7 +295,7 @@ int main(int argc, char **argv)
+ 	if (!cb)
+ 		goto cb_out;
 
-Kernels I tried: 2.6.27, 2.6.28, current 2.6.29-git (now with Larry's
-patch). All same behaviour. 
+-	r = nl_send_auto_complete(nlstate.nl_handle, msg);
++	r = nl_send_auto_complete(nlstate.nl_sock, msg);
 
-Any ideas?
+ 	if (r < 0) {
+ 		fprintf(stderr, "Failed to send regulatory request: %d\n", r);
+@@ -306,7 +307,7 @@ int main(int argc, char **argv)
+ 	nl_cb_err(cb, NL_CB_CUSTOM, error_handler, NULL);
 
--Andi
+ 	if (!finished) {
+-		r = nl_wait_for_ack(nlstate.nl_handle);
++		r = nl_wait_for_ack(nlstate.nl_sock);
+ 		if (r < 0) {
+ 			fprintf(stderr, "Failed to set regulatory domain: "
+ 				"%d\n", r);
 
--- 
-ak@linux.intel.com
