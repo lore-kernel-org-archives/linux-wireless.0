@@ -1,38 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:33250 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974AbZAWS6J (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:49901 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754551AbZA1Ryi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 13:58:09 -0500
-Received: by ewy13 with SMTP id 13so3907155ewy.13
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2009 10:58:07 -0800 (PST)
-Message-Id: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> (sfid-20090123_195815_623277_F89DAAA0)
-From: Antonio Marques <froz@icix.org>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: rt2x00 mesh support
-Date: Fri, 23 Jan 2009 18:58:04 +0000
+	Wed, 28 Jan 2009 12:54:38 -0500
+Received: by fg-out-1718.google.com with SMTP id 13so639386fge.17
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 09:54:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <e27b78a40901260956w4e69d33s7db60defc026c8d7@mail.gmail.com>
+References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
+	 <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com>
+	 <e27b78a40901240804m1acd3a83o7bf6d01f81ec3397@mail.gmail.com>
+	 <45e8e6c40901240956g68a5364tdbacc1e49410c9cc@mail.gmail.com>
+	 <e27b78a40901260625w53acd646xeb5a9ca85555c74d@mail.gmail.com>
+	 <e27b78a40901260956w4e69d33s7db60defc026c8d7@mail.gmail.com>
+Date: Wed, 28 Jan 2009 09:54:35 -0800
+Message-ID: <45e8e6c40901280954l42bbe788y8723141d673bb7b3@mail.gmail.com> (sfid-20090128_185457_325229_F0491ADE)
+Subject: Re: Crashing on ping?
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Keir <keirlawson@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Keir.  If the system really crashes, you should have some output.
+Can you please set:
 
-I have been trying to setup a mesh network using the 802.11s stack, but
-unfortunately the only hardware that I have readily available are rt2x00
-usb dongles and an ath5k mini-pci card. Since support for rt2x00
-driver is listed on o11s.org as being in development, what is the  
-current status
-of mesh support for this driver?
+echo 8 > /proc/sys/kernel/printk
 
-I see recent commit activity such as  
-fdc26201323eb8ba543ac5624f8d71e55b6f7352,
-"rt2x00: Add mesh support" but I am still unable to establish mesh  
-links using
-rt2x00 devices. An rt2x00 device can see the ath5k device according to
-'iw dev mesh station dump', but the link state never changes to ESTAB.
+...and use your serial console and try to reproduce this?  Thanks,
 
-Thanks,
-Antonio Marques
+ -Andrey
 
-
+On Mon, Jan 26, 2009 at 9:56 AM, Keir <keirlawson@gmail.com> wrote:
+> Right, managed to set up a serial terminal, ran cat /proc/kmsg, but
+> still no output of interest (just mesh plink stuff leading up to the
+> connection being established), what should I do next?
+>
+> Cheers
+>
+> Keir
+>
+> 2009/1/26 Keir <keirlawson@gmail.com>:
+>> "sudo cat /proc/kmsg > log" doesnt produce anything of interest.
+>>
+>> Will look into the serial console thing, never done it before.
+>>
+>> Keir
+>>
+>> 2009/1/24 Andrey Yurovsky <andrey@cozybit.com>:
+>>> Can you post logs of the crash (dmesg output)?  You may need to
+>>> connect a serial console to the PC in question to get them if the
+>>> machine is really hard-locking, otherwise see if you can capture the
+>>> output of dmesg
+>>>
+>>> On Sat, Jan 24, 2009 at 8:04 AM, Keir <keirlawson@gmail.com> wrote:
+>>>> Tried that commit, still no luck :( It consistently freezes up on
+>>>> ping, though sometimes it's the machine doing the pining, and other
+>>>> times it's the machine being pinged.  Wondering what I can do to help
+>>>> debug this?
+>>>>
+>>>> Keir
+>>>>
+>>>> 2009/1/23 Andrey Yurovsky <andrey@cozybit.com>:
+>>>>> Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
+>>>>> 93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
+>>>>> 2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
+>>>>> chance to try head of wireless-testing this week.
+>>>>>
+>>>>>  -Andrey
+>>>>>
+>>>>> On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
+>>>>>> I just pulled the latest wireless-testing kernel, however, much like
+>>>>>> the previous wireless-testing kernel I was working on, when attempting
+>>>>>> to ping one node from another on a mesh, using ath5k, the node
+>>>>>> attempting to ping completely freezes after about 7 pings are
+>>>>>> (succesfully) sent.  Anyone have any idea what is going wrong here?
+>>>>>>
+>>>>>> Cheers
+>>>>>>
+>>>>>> Keir
+>>>>>> --
+>>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>>
+>>>>>
+>>>>
+>>>
+>>
+>
