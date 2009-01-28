@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:55172 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502AbZALPsw (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37856 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757964AbZA1UhI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 10:48:52 -0500
-Cc: Lorenzo Nava <navalorenx@gmail.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Michael Buesch <mb@bu3sch.de>
-Message-Id: <2CB1EEC3-40EB-41D4-9A4C-E240359F05AA@ing.unibs.it> (sfid-20090112_164901_523230_F85592EE)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: "John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20090112153949.GC31525@tuxdriver.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: [b43] opensource firmware
-Date: Mon, 12 Jan 2009 16:48:48 +0100
-References: <200901091129.22708.mb@bu3sch.de> <200901091149.28683.mb@bu3sch.de> <9F70A0D3-6334-45FB-9DAF-263FE89C847E@ing.unibs.it> <200901091206.09736.mb@bu3sch.de> <AE7A4FD8-1728-4CE2-8CC7-DCE699C3B6C9@gmail.com> <20090112153949.GC31525@tuxdriver.com>
+	Wed, 28 Jan 2009 15:37:08 -0500
+Subject: Re: [PATCH v2.6.29] iwlwifi: clean key table in
+	iwl_clear_stations_table
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <1233164310-22770-1-git-send-email-reinette.chatre@intel.com> (sfid-20090128_183539_794013_573635C8)
+References: <> <1233164310-22770-1-git-send-email-reinette.chatre@intel.com>
+	 (sfid-20090128_183539_794013_573635C8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-scaF4O3Gxb4OBGSjjAmp"
+Date: Wed, 28 Jan 2009 20:05:37 +0100
+Message-Id: <1233169537.16048.4.camel@johannes.local> (sfid-20090128_213729_623040_E4F45627)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 12, 2009, at 4:39 PM, John W. Linville wrote:
 
-> On Sat, Jan 10, 2009 at 06:37:43PM +0100, Lorenzo Nava wrote:
->> Hello everybody,
->>
->> today I tried OpenFWWF with kernel 2.6.28 on a Siemens wifi device  
->> with
->> Broadcom 4306 chipset:
->>
->> BCM94306 802.11g (rev 03)
->> PHY: Analog 2, Type 2, Revision 2
->> Radio: Manuf 0x17F, Version 0x2050, Revision 2
->>
->> I did some tests and everything seems to work fine.
->>
->> I remember, once again, that OpenFWWF needs v480 initvals to work
->> properly, and was tested on 2.6.27-rc5 kernel.
->
-> Any chance on getting a set of initvals packaged with the open source
-> firmware?  That would allow distros like Fedora to package this...
->
-> John
-> -- 
-> John W. Linville		Linux should be at the core
-> linville@tuxdriver.com			of your literate lifestyle.
-Yes, we have it now. Still testing as several values can be cut out.  
-Posting ASAP.
-Cheers.
--FG
+--=-scaF4O3Gxb4OBGSjjAmp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2009-01-28 at 09:38 -0800, Reinette Chatre wrote:
+> Cleans uCode key table bit map iwl_clear_stations_table
+> since all stations are cleared also the key table must be.
+>=20
+> Since the keys are not removed properly on suspend by mac80211
+> this may result in exhausting key table on resume leading
+> to memory corruption during removal
+
+Just FYI, this is fixed now in mac80211.
+
+johannes
+
+--=-scaF4O3Gxb4OBGSjjAmp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJgKx+AAoJEKVg1VMiehFYfWAQAJS6r+ZQ3aF269F0UD9bTYRQ
+EMZgSV/NwboeMcc6DqpJHt9gslHfh92A9SKdY3qpEM0qmWRkDmM10yRXbz9/sSqM
+QfjXRohd+Ml4KYDvbTvpAhAaDY2OddGt26UrGj/ft43P4ogDkxszhbgYnfw99GcD
+LCKovdgL4bDRlJ/AzMhjqW6qD1VP5AOJc8TxPCuXGRKregMCjhZkKrnM0OsoYKOi
+ROsNDVPajrGe2tJDFTEMKDcZd6AYVfJ6EzEv38Dl+2H47qCSHQeezf+llLh/20pv
+/TCmnm44gZiRmTCl/xTKTJe5dKy4dU4SGZGwFMVsUDbQxmNxGdV3/lI2cAXP1nca
+uzIvM6s98E99AJwz4OKpZJzggl4ZtsU9nhfDaC+xyLqn4Y+yQk9pOzwY/DOrtPhn
+owKV3Nna5kJbXadKA9tvV/ykRhUqKTg6SrQXIfpY3CDS+bobZBydxnfa2VGK5Ixa
+fLiJ8Jor+KMCKQQm7+osdvH+H4jZmf6PNc08p24mFQJt/B6NNXwFoARghwgAeC4y
+7fk4RRw39kzi7epdiojPHkas8xPEDCouJj/qFuk7uc7z8yDKnibbjXZEJEGyna4S
+N6tfBAVJULnM1PyEKvKr/vziL2fBIeoJUKPT2D26d1SlJtYDAF5bz7CziNSH9ZWd
+BCHYvYo+ZmWXFdoq9i+e
+=kMe3
+-----END PGP SIGNATURE-----
+
+--=-scaF4O3Gxb4OBGSjjAmp--
+
