@@ -1,35 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54036 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753594AbZAWTAr (ORCPT
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:60249
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065AbZA1XLp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 14:00:47 -0500
-Date: Fri, 23 Jan 2009 13:46:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH v2] mac80211: Fixed BSSID handling revisited
-Message-ID: <20090123184643.GA30486@tuxdriver.com> (sfid-20090123_200051_333732_A2FED2AF)
-References: <20090122023630.269690@gmx.net>
+	Wed, 28 Jan 2009 18:11:45 -0500
+Received: from [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7] (unknown [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by s0be.servebeer.com (Postfix) with ESMTPSA id C098B252323
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 18:11:44 -0500 (EST)
+Message-ID: <4980E630.1080105@erley.org> (sfid-20090129_001150_035846_4035691A)
+Date: Wed, 28 Jan 2009 18:11:44 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090122023630.269690@gmx.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] iw: rename nl_handle to nl_sock for libnl-2.0
+References: <4980E5CC.9040607@erley.org>
+In-Reply-To: <4980E5CC.9040607@erley.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 22, 2009 at 03:36:30AM +0100, Alina Friedrichsen wrote:
-> This patch cleanup the fixed BSSID handling, that ieee80211_sta_set_bssid() works like ieee80211_sta_set_ssid(). So that the BSSID is only a second selection criterion besides the SSID. This allows us to create new IBSS networks with fixed BSSIDs, which was broken before.
-> 
-> In the second version of this patch the handling of the stupid merges to the same BSSID is moved out to get reworked into an other patch.
-> 
-> Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+Oops, this patch is the crda one I was about to send... teach me to pay
+attention.
 
-This is based on the patch I had to revert?  I'm going to drop this
-one and wait for you to repost, just to avoid confusion.
-
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Pat Erley
