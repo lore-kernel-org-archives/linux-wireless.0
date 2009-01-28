@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:17018 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756943AbZABLOU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2009 06:14:20 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so1978303yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2009 03:14:17 -0800 (PST)
-Message-ID: <a32f33a40901020314h3f33347dw6433e485abd627e5@mail.gmail.com> (sfid-20090102_121425_147815_E43B2150)
-Date: Fri, 2 Jan 2009 12:14:17 +0100
-From: "Ivo Van Doorn" <ivdoorn@gmail.com>
-To: "Andrew Price" <andy@andrewprice.me.uk>
-Subject: Re: [PATCH] rt2x00: Fix radio LED type check
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090102080527.GA16585@silver.sucs.org>
+Received: from mail.gmx.net ([213.165.64.20]:36679 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751332AbZA1PaP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jan 2009 10:30:15 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Wed, 28 Jan 2009 16:30:12 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090128153012.138700@gmx.net> (sfid-20090128_163020_284083_7710C01F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <20090102080527.GA16585@silver.sucs.org>
+Subject: [PATCH v2] mac80211: Creating new IBSS with fixed BSSID
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 2, 2009 at 9:05 AM, Andrew Price <andy@andrewprice.me.uk> wrote:
-> Since commit 9a95dba32735534bda59def40c747bf606fedf05 "rt2x00: Fix LED
-> state handling", rt2x00leds_led_radio wrongly checks that the LED type
-> is LED_TYPE_ASSOC. This patch makes it check for LED_TYPE_RADIO once
-> again.
->
-> Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
+This fixes a bug when creating a new IBSS network with a fixed BSSID. T=
+he fixed BSSID situation is now with one of my last patches handled in =
+ieee80211_sta_find_ibss() function.
 
-Good catch. Thanks.
+It's more robust to test against (ifsta->flags & IEEE80211_STA_PREV_BSS=
+ID_SET), because ifsta->state is not seted right in every situation and=
+ so the creating of the new IBSS network sometimes hangs after the firs=
+t try to scan for a network to merge.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+---
+diff -urN wireless-testing.orig/net/mac80211/mlme.c wireless-testing/ne=
+t/mac80211/mlme.c
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-01-27 05:12:43.00000=
+0000 +0000
++++ wireless-testing/net/mac80211/mlme.c	2009-01-28 15:47:19.000000000 =
++0000
+@@ -2720,9 +2720,8 @@
+=20
+ 	if (sdata && sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC) {
+ 		ifsta =3D &sdata->u.sta;
+-		if (!(ifsta->flags & IEEE80211_STA_BSSID_SET) ||
+-		    (!(ifsta->state =3D=3D IEEE80211_STA_MLME_IBSS_JOINED) &&
+-		    !ieee80211_sta_active_ibss(sdata)))
++		if ((!(ifsta->flags & IEEE80211_STA_PREV_BSSID_SET)) ||
++		    !ieee80211_sta_active_ibss(sdata))
+ 			ieee80211_sta_find_ibss(sdata, ifsta);
+ 	}
+=20
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00leds.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
-> index 68f4e0f..a0cd35b 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00leds.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
-> @@ -97,7 +97,7 @@ void rt2x00leds_led_assoc(struct rt2x00_dev *rt2x00dev, bool enabled)
->
->  void rt2x00leds_led_radio(struct rt2x00_dev *rt2x00dev, bool enabled)
->  {
-> -       if (rt2x00dev->led_radio.type == LED_TYPE_ASSOC)
-> +       if (rt2x00dev->led_radio.type == LED_TYPE_RADIO)
->                rt2x00led_led_simple(&rt2x00dev->led_radio, enabled);
->  }
->
-> --
-> 1.5.6.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
