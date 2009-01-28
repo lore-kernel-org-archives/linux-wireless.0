@@ -1,254 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix.szarvasnet.hu ([87.101.127.3]:48825 "EHLO
-	phoenix.szarvas.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758581AbZACNoy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60321 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbZA1SuG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jan 2009 08:44:54 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [RFC 08/12] ath9k: get EEPROM contents from platform data on AHB bus
-Date: Sat,  3 Jan 2009 14:44:18 +0100
-Message-Id: <1230990262-22923-9-git-send-email-juhosg@openwrt.org> (sfid-20090103_144510_263108_B8C713D2)
-In-Reply-To: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
-References: <1230990262-22923-1-git-send-email-juhosg@openwrt.org>
+	Wed, 28 Jan 2009 13:50:06 -0500
+Subject: Re: [PATCH v2] cfg80211: add get reg command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1233161043-26721-1-git-send-email-lrodriguez@atheros.com>
+References: <1233161043-26721-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sGe8yTy1tiRo+y+bCIAw"
+Date: Wed, 28 Jan 2009 19:47:42 +0100
+Message-Id: <1233168462.4811.13.camel@johannes.local> (sfid-20090128_195010_365074_D8F3C70A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the AR913x SOCs we have to provide EEPROM contents via platform_data,
-because accessing the flash via MMIO is not safe. Additionally different
-boards may store the radio calibration data at different locations.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/ahb.c    |   27 ++++++++++++++++++
- drivers/net/wireless/ath9k/core.h   |    2 +
- drivers/net/wireless/ath9k/eeprom.c |   51 ++--------------------------------
- drivers/net/wireless/ath9k/pci.c    |   19 +++++++++++++
- include/linux/ath9k_platform.h      |   28 +++++++++++++++++++
- 5 files changed, 79 insertions(+), 48 deletions(-)
+--=-sGe8yTy1tiRo+y+bCIAw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath9k/ahb.c b/drivers/net/wireless/ath9k/ahb.c
-index bf37a9e..7fece47 100644
---- a/drivers/net/wireless/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath9k/ahb.c
-@@ -18,6 +18,7 @@
- 
- #include <linux/nl80211.h>
- #include <linux/platform_device.h>
-+#include <linux/ath9k_platform.h>
- #include "core.h"
- #include "reg.h"
- #include "hw.h"
-@@ -101,6 +102,24 @@ static void ath_ahb_cleanup(struct ath_softc *sc)
- 	platform_set_drvdata(pdev, NULL);
- }
- 
-+static bool ath_ahb_eeprom_read(struct ath_hal *ah, u32 off, u16 *data)
-+{
-+	struct ath_softc *sc = ah->ah_sc;
-+	struct platform_device *pdev = to_platform_device(sc->dev);
-+	struct ath9k_platform_data *pdata;
-+
-+	pdata = (struct ath9k_platform_data *) pdev->dev.platform_data;
-+	if (off >= (ARRAY_SIZE(pdata->eeprom_data))) {
-+		DPRINTF(ah->ah_sc, ATH_DBG_FATAL,
-+			"%s: flash read failed, offset %08x is out of range\n",
-+				__func__, off);
-+		return false;
-+	}
-+
-+	*data = pdata->eeprom_data[off];
-+	return true;
-+}
-+
- static struct ath_bus_ops ath_ahb_bus_ops  = {
- 	.dma_map_single_to_device = ath_ahb_map_single_to_device,
- 	.dma_unmap_single_to_device = ath_ahb_unmap_single_to_device,
-@@ -118,6 +137,8 @@ static struct ath_bus_ops ath_ahb_bus_ops  = {
- 	.read_cachesize = ath_ahb_read_cachesize,
- 
- 	.cleanup = ath_ahb_cleanup,
-+
-+	.eeprom_read = ath_ahb_eeprom_read,
- };
- 
- static int ath_ahb_probe(struct platform_device *pdev)
-@@ -130,6 +151,12 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	int ret = 0;
- 	struct ath_hal *ah;
- 
-+	if (!pdev->dev.platform_data) {
-+		dev_err(&pdev->dev, "no platform data specified\n");
-+		ret = -EINVAL;
-+		goto err_out;
-+	}
-+
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	if (res == NULL) {
- 		dev_err(&pdev->dev, "no memory resource found\n");
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index bb8b45b..4f915d8 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -726,6 +726,8 @@ struct ath_bus_ops {
- 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
- 
- 	void		(*cleanup)(struct ath_softc *sc);
-+
-+	bool		(*eeprom_read)(struct ath_hal *ah, u32 off, u16 *data);
- };
- 
- struct ath_softc {
-diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
-index 14f8d40..73a480e 100644
---- a/drivers/net/wireless/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath9k/eeprom.c
-@@ -91,53 +91,11 @@ static inline bool ath9k_hw_get_lower_upper_index(u8 target, u8 *pList,
- 	return false;
- }
- 
--static bool ath9k_hw_eeprom_read(struct ath_hal *ah, u32 off, u16 *data)
--{
--	(void)REG_READ(ah, AR5416_EEPROM_OFFSET + (off << AR5416_EEPROM_S));
--
--	if (!ath9k_hw_wait(ah,
--			   AR_EEPROM_STATUS_DATA,
--			   AR_EEPROM_STATUS_DATA_BUSY |
--			   AR_EEPROM_STATUS_DATA_PROT_ACCESS, 0)) {
--		return false;
--	}
--
--	*data = MS(REG_READ(ah, AR_EEPROM_STATUS_DATA),
--		   AR_EEPROM_STATUS_DATA_VAL);
--
--	return true;
--}
--
--static int ath9k_hw_flash_map(struct ath_hal *ah)
--{
--	struct ath_hal_5416 *ahp = AH5416(ah);
--
--	ahp->ah_cal_mem = ioremap(AR5416_EEPROM_START_ADDR, AR5416_EEPROM_MAX);
--
--	if (!ahp->ah_cal_mem) {
--		DPRINTF(ah->ah_sc, ATH_DBG_EEPROM,
--			"cannot remap eeprom region \n");
--		return -EIO;
--	}
--
--	return 0;
--}
--
--static bool ath9k_hw_flash_read(struct ath_hal *ah, u32 off, u16 *data)
--{
--	struct ath_hal_5416 *ahp = AH5416(ah);
--
--	*data = ioread16(ahp->ah_cal_mem + off);
--
--	return true;
--}
--
- static inline bool ath9k_hw_nvram_read(struct ath_hal *ah, u32 off, u16 *data)
- {
--	if (ath9k_hw_use_flash(ah))
--		return ath9k_hw_flash_read(ah, off, data);
--	else
--		return ath9k_hw_eeprom_read(ah, off, data);
-+	struct ath_softc *sc = ah->ah_sc;
-+
-+	return sc->bus_ops->eeprom_read(ah, off, data);
- }
- 
- static bool ath9k_hw_fill_4k_eeprom(struct ath_hal *ah)
-@@ -2805,9 +2763,6 @@ int ath9k_hw_eeprom_attach(struct ath_hal *ah)
- 	int status;
- 	struct ath_hal_5416 *ahp = AH5416(ah);
- 
--	if (ath9k_hw_use_flash(ah))
--		ath9k_hw_flash_map(ah);
--
- 	if (AR_SREV_9285(ah))
- 		ahp->ah_eep_map = EEP_MAP_4KBITS;
- 	else
-diff --git a/drivers/net/wireless/ath9k/pci.c b/drivers/net/wireless/ath9k/pci.c
-index 314bf9d..68b2ea1 100644
---- a/drivers/net/wireless/ath9k/pci.c
-+++ b/drivers/net/wireless/ath9k/pci.c
-@@ -121,6 +121,23 @@ static void ath_pci_cleanup(struct ath_softc *sc)
- 	ieee80211_free_hw(sc->hw);
- }
- 
-+static bool ath_pci_eeprom_read(struct ath_hal *ah, u32 off, u16 *data)
-+{
-+	(void)REG_READ(ah, AR5416_EEPROM_OFFSET + (off << AR5416_EEPROM_S));
-+
-+	if (!ath9k_hw_wait(ah,
-+			   AR_EEPROM_STATUS_DATA,
-+			   AR_EEPROM_STATUS_DATA_BUSY |
-+			   AR_EEPROM_STATUS_DATA_PROT_ACCESS, 0)) {
-+		return false;
-+	}
-+
-+	*data = MS(REG_READ(ah, AR_EEPROM_STATUS_DATA),
-+		   AR_EEPROM_STATUS_DATA_VAL);
-+
-+	return true;
-+}
-+
- static struct ath_bus_ops ath_pci_bus_ops  = {
- 	.dma_map_single_to_device = ath_pci_map_single_to_device,
- 	.dma_unmap_single_to_device = ath_pci_unmap_single_to_device,
-@@ -138,6 +155,8 @@ static struct ath_bus_ops ath_pci_bus_ops  = {
- 	.read_cachesize = ath_pci_read_cachesize,
- 
- 	.cleanup = ath_pci_cleanup,
-+
-+	.eeprom_read = ath_pci_eeprom_read,
- };
- 
- static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
-new file mode 100644
-index 0000000..06b7461
---- /dev/null
-+++ b/include/linux/ath9k_platform.h
-@@ -0,0 +1,28 @@
-+/*
-+ * Copyright (c) 2008 Atheros Communications Inc.
-+ * Copyright (c) 2009 Gabor Juhos <juhosg@openwrt.org>
-+ * Copyright (c) 2009 Imre Kaloz <kaloz@openwrt.org>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _LINUX_ATH9K_PLATFORM_H
-+#define _LINUX_ATH9L_PLATFORM_H
-+
-+#define ATH9K_PLAT_EEP_MAX_WORDS	2048
-+
-+struct ath9k_platform_data {
-+	u16 eeprom_data[ATH9K_PLAT_EEP_MAX_WORDS];
-+};
-+
-+#endif /* _LINUX_ATH9K_PLATFORM_H */
--- 
-1.5.3.2
+On Wed, 2009-01-28 at 08:44 -0800, Luis R. Rodriguez wrote:
+
+> +/* caller is reponsible for locking while accessing this */
+> +const struct ieee80211_regdomain *reg_get_current_rd(void)
+> +{
+> +	return cfg80211_regdomain;
+> +}
+
+why not make the symbol cfg80211_regdomain non-static and use it
+directly?
+
+johannes
+
+--=-sGe8yTy1tiRo+y+bCIAw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJgKhIAAoJEKVg1VMiehFY2zAP/3tjnJMU6IfkrLHUvrnSgFI5
+Ihif9bqbAW9zAnZKogvVhcj24Lc1rm1tG8JvtWrC/t2TSZ+8UZ+Bga3Fq4l4au6Z
+2IHRJYsdx39g8hhxVxpI0Of8zeI+zexR9lMIH7SnEuCmY03Uo+Ay20oHs30vaW0+
+hurKuOefg2dsZJigfNKRbdp17/mB5YzkamwmZw9Z/9zR4T5p1x5OOjMf+T4ELD64
+rIxgvFv+e7eUif0sBP98viamcKc2TYqeQ1GJfhWKtqWADjDGEUWxnmDuy8vmsJKU
+Xs9kRnPB+w/C/jpMb/4fvfw0Tk1apHZbunXA8O49mZGl/Xp9X65rJdOPhMBTRkel
+bKDwxgbJqYVxOZVOMhD474+QbhXhAVC/KhRbyILJ0t1xn2I30BCb/6WDyRpe3jcK
+MI6QFLja/QlmXw010F+u47SEPalgMjMiftgHtyUCw259Nn6FDVyeMgUv5ryYJwKg
+rLVIKEecj37iCW/JuBgdGElUvNd7mrQ/NpaTpNsGHBTWX1r3G+Z+BZPaYt0oVFqc
+dr1O0V+0SNMDwvpXuj008c2kw1KTGdiU1/M3XYhtFhvsVwip56UsXZ11spENenZy
+zelNcsD+Y5N2KEhIDQFU/vf+MhixuZlqPNvTMKjXNRHY+AM61d75ZuZty7RG35UE
+gM68aG/3Vr+vsZRB25VP
+=Aa0G
+-----END PGP SIGNATURE-----
+
+--=-sGe8yTy1tiRo+y+bCIAw--
 
