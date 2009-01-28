@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:53173 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752476AbZAWTYw (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:28000 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbZA1LyO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 14:24:52 -0500
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Message-Id: <01F0FEC9-8ECF-4284-9428-701B976286D6@ing.unibs.it> (sfid-20090123_202456_466433_E0170644)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <497A05DC.4040101@lwfinger.net>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v929.2)
-Subject: Re: integration of opensource firmware with b43 kernel driver
-Date: Fri, 23 Jan 2009 20:24:47 +0100
-References: <FF33C500-6653-4A69-B34D-FBE47B2136D3@ing.unibs.it> <497A05DC.4040101@lwfinger.net>
+	Wed, 28 Jan 2009 06:54:14 -0500
+Received: by fg-out-1718.google.com with SMTP id 13so527359fge.17
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 03:54:12 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1233137791.3936.0.camel@johannes.local>
+References: <1233095278-5850-1-git-send-email-reinette.chatre@intel.com>
+	 <1233095278-5850-2-git-send-email-reinette.chatre@intel.com>
+	 <1233095278-5850-3-git-send-email-reinette.chatre@intel.com>
+	 <1233095278-5850-4-git-send-email-reinette.chatre@intel.com>
+	 <1233095278-5850-5-git-send-email-reinette.chatre@intel.com>
+	 <1233095278-5850-6-git-send-email-reinette.chatre@intel.com>
+	 <1233095278-5850-7-git-send-email-reinette.chatre@intel.com>
+	 <1233095278-5850-8-git-send-email-reinette.chatre@intel.com>
+	 <1233137791.3936.0.camel@johannes.local>
+Date: Wed, 28 Jan 2009 13:54:12 +0200
+Message-ID: <1ba2fa240901280354g2c5d47e1q93ed9e9a747d381f@mail.gmail.com> (sfid-20090128_125416_509423_B1FE35F0)
+Subject: Re: [PATCH 7/7] iwlwifi: unify iwlagn and 3945 power save management
+From: Tomas Winkler <tomasw@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linville@tuxdriver.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Jan 23, 2009, at 7:01 PM, Larry Finger wrote:
-
-> Francesco Gringoli wrote:
->> Hello,
+On Wed, Jan 28, 2009 at 12:16 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2009-01-27 at 14:27 -0800, Reinette Chatre wrote:
+>> From: Winkler, Tomas <tomas.winkler@intel.com>
 >>
->> we have been testing the firmware for a week now and it seems  
->> stable. I
->> personally tested it also on a Linksys WRT54GL and it works both in
->> station and in AP modes. I collected the feedbacks that some of you  
->> sent
->> and it seems that the firmware now runs on these board:
->>
->> - 4306, 4311, 4318, 4320
+>> This patch unifies 3945 and iwlagn power save management
+>> This patch also better separates system state from user setting.
+>> System state shall be removed later as this shall be shifted to user space
 >
-> As a point of clarification, I think this is restricted to the 4311/1
-> as the 4311/2 uses ucode13, not ucode5. If you need a tester for an
-> open-source version of the 13 firmware, I'm available.
-Damn... that would be a very hard writing.... We do not have any  
-4311/2 board: at first glance there are more condition registers whose  
-meaning we do not know. Very different hardware, didn't know. Thank  
-you for the feedback.
+> I've got a patch to remove much of the cruft (system state and
+> associated variables etc) somewhere, can dig that up if you want.
 
-By the way: is that device inside an AP? If yes what? if not which  
-brand has the board on? I can look around.
-
-Cheers,
--FG
+Send it over, better if it's rebased upon this one
+Tomas
