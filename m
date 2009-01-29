@@ -1,108 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f17.google.com ([209.85.219.17]:34423 "EHLO
-	mail-ew0-f17.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756089AbZADTVQ (ORCPT
+Received: from vilya.visn.co.uk ([193.254.210.161]:42823 "EHLO
+	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758273AbZA2NoK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 14:21:16 -0500
-Received: by ewy10 with SMTP id 10so7545608ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2009 11:21:13 -0800 (PST)
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
-Date: Sun, 4 Jan 2009 20:21:10 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+	Thu, 29 Jan 2009 08:44:10 -0500
+Received: from localhost ([127.0.0.1] helo=www.phantomjinx.co.uk)
+	by vilya.visn.co.uk with esmtpa (Exim 4.69)
+	(envelope-from <p.g.richardson@phantomjinx.co.uk>)
+	id 1LSWHp-0003jn-32
+	for linux-wireless@vger.kernel.org; Thu, 29 Jan 2009 12:46:25 +0000
+Message-ID: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk> (sfid-20090129_144420_763073_F9195D72)
+Date: Thu, 29 Jan 2009 12:46:25 -0000 (UTC)
+Subject: rtl8187 wireless issues
+From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200901042021.10904.IvDoorn@gmail.com> (sfid-20090104_202135_840070_E0B394B8)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2500pci and rt2500usb contain a special field in the EEPROM
-which indicates which regulatory domain the card belongs to.
-This code can easily be translated into a country code which
-we can send as alpha2 hint for CRDA.
+Hello,
 
-Please note that most cards will have 0xffff as EEPROM value,
-and thus do not provide a regulatory hint through the EEPROM.
+I recently bought a new laptop from Novatech.co.uk
+(http://www.novatech.co.uk/novatech/range.html?t=3Dnb&c=3Dall&r=3DX60).
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 76f016d..98d3c6c 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1512,6 +1512,17 @@ static int rt2500pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	return 0;
- }
- 
-+static const char* reg_domain_map[] = {
-+	"US",	/* REGION_FCC: 1-11 */
-+	"CA",	/* REGION_IC: 1-11 */
-+	"DE",	/* REGION_ETSI: 1-13 */
-+	"ES",	/* REGION_SPAIN: 10-11 */
-+	"FR",	/* REGION_FRANCE: 10-13 */
-+	"JP",	/* REGION_MKK: 14 */
-+	"JP",	/* REGION_MKK1: 1-14 */
-+	"IL",	/* REGION_ISRAEL: 3-9 */
-+};
-+
- static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	u32 reg;
-@@ -1577,6 +1588,16 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 		__set_bit(CONFIG_DISABLE_LINK_TUNING, &rt2x00dev->flags);
- 
- 	/*
-+	 * Read Geography information, if it contains valid data we should
-+	 * send the regulatory hint as alpha2 value to cfg80211.
-+	 */
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_GEOGRAPHY, &eeprom);
-+	if (eeprom != 0xffff) {
-+		value = rt2x00_get_field16(eeprom, EEPROM_GEOGRAPHY_GEO);
-+		regulatory_hint(rt2x00dev->hw->wiphy, reg_domain_map[value]);
-+	}
-+
-+	/*
- 	 * Read the RSSI <-> dBm offset information.
- 	 */
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_CALIBRATE_OFFSET, &eeprom);
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 2bc4e46..7f364dd 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1546,6 +1546,17 @@ static int rt2500usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	return 0;
- }
- 
-+static const char* reg_domain_map[] = {
-+	"US",	/* REGION_FCC: 1-11 */
-+	"CA",	/* REGION_IC: 1-11 */
-+	"DE",	/* REGION_ETSI: 1-13 */
-+	"ES",	/* REGION_SPAIN: 10-11 */
-+	"FR",	/* REGION_FRANCE: 10-13 */
-+	"JP",	/* REGION_MKK: 14 */
-+	"JP",	/* REGION_MKK1: 1-14 */
-+	"IL",	/* REGION_ISRAEL: 3-9 */
-+};
-+
- static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	u16 reg;
-@@ -1626,6 +1637,16 @@ static int rt2500usb_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 		__set_bit(CONFIG_DISABLE_LINK_TUNING, &rt2x00dev->flags);
- 
- 	/*
-+	 * Read Geography information, if it contains valid data we should
-+	 * send the regulatory hint as alpha2 value to cfg80211.
-+	 */
-+	rt2x00_eeprom_read(rt2x00dev, EEPROM_GEOGRAPHY, &eeprom);
-+	if (eeprom != 0xffff) {
-+		value = rt2x00_get_field16(eeprom, EEPROM_GEOGRAPHY_GEO);
-+		regulatory_hint(rt2x00dev->hw->wiphy, reg_domain_map[value]);
-+	}
-+
-+	/*
- 	 * Read the RSSI <-> dBm offset information.
- 	 */
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_CALIBRATE_OFFSET, &eeprom);
+I have installed Mandriva 2009 (2.6.27-7) on the laptop and despite bes=
+t
+efforts cannot make the internal wifi card connect to my router. The ca=
+rd
+is reported by lsusb as
+
+id: 0x8189 chipset: rtl8187b
+
+I use WPA2 with a pre-shared key on my router. Would you mind giving me
+guidance as to whether this is relibaly working with the rtl8187 driver=
+?
+
+Basically, I am unable to associate with the router. Looking at
+wpa_supplicant debug output, it indicates the card simply times out whe=
+n
+trying to associate. However, on one brief occasion a couple of days ag=
+o,
+I was able to associate according to iwconfig, yet despite best efforts=
+ I
+was unable to ping anything.
+
+It seems as well that when the driver is installed (currently blacklist=
+ed
+in modprobe.conf), it stops other network interfaces operating correctl=
+y.
+=46or example, I am unable to ping from a wired ethernet and unable to
+associate with the AP with an externel wireless USB dongle.
+
+I have since tried the 2.6.29 kernel from its git repository but that
+version of the rtl8187 driver did not associate either.
+
+At this point I am constrained by lack of debugging knowledge. The only
+tools I know of is iwconfig and friends, wpa_supplicant -ddd and ifconf=
+ig.
+If someone wouldnt mind giving me an idea of how to approach debugging
+this problem then I could try and understand what is going on myself.
+
+Any help very much appreciated.
+
+Thanks
+
+P. G. Richardson
+(a.k.a phantomjinx)
+
+--=20
+Laws are partly formed for the sake of good men, in order to instruct t=
+hem
+how they may live on friendly terms with one another, and partly for th=
+e
+sake of those who refuse to be instructed, whose spirit cannot be subdu=
+ed,
+or softened, or hindered from plunging into evil. [The Laws, Plato]
+
+You fiend! Never have I encountered such corrupt and foul-minded
+perversity=85 Have you ever considered a career in the church?
+Bishop of Bath and Wells (Blackadder II)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
