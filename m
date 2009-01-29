@@ -1,62 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:22511 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519AbZA1UBv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 15:01:51 -0500
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: WARN_ON message hit on enabling power save.
-References: <20090128160332.GA10883@myhost.users.atheros.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 28 Jan 2009 21:59:15 +0200
-In-Reply-To: <20090128160332.GA10883@myhost.users.atheros.com> (ext Vivek Natarajan's message of "Wed\, 28 Jan 2009 17\:03\:32 +0100")
-Message-ID: <87wscffbho.fsf@nokia.com> (sfid-20090128_210154_909807_FD792550)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([143.182.124.21]:7292 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753483AbZA2TGW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 14:06:22 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 6/7] iwlwifi: remove chain noise calibration functions from 6000 family
+Date: Thu, 29 Jan 2009 11:09:16 -0800
+Message-Id: <1233256157-21290-7-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200630_968829_FCB863A1)
+In-Reply-To: <1233256157-21290-6-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-2-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-4-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-5-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan <vivek.natraj@gmail.com> writes:
+From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
 
-> Hello Kalle,
+redefine structures that contain function pointer for chain noise reset
+and chain noise gain for the 6000 family since these are not needed.
 
-Hi Vivek,
+Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c  |   23 ++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-calib.c |    5 +++--
+ 2 files changed, 21 insertions(+), 7 deletions(-)
 
-> In the function 'ieee80211_master_start_xmit',
-> ieee80211_stop_queues_by_reason is called and a  ps_disable_work is
-> queued where wake_queues is called. Can you please clarify me on why the
-> queues are stopped and started.
-
-Originally they were in ieee80211_subif_start_xmit() before you moved
-them. The reason why added them was to preserve the order of first
-disabling IEEE80211_CONF_PS and after that sending the data frames.
-Because ieee80211_hw_config() must sleep, I decided to do it in a
-workqueue.
-
-> If at all that needs to be stopped, wouldn't
-> ieee80211_dynamic_ps_enable_work be a better place to do it?
-
-That's was too late. In that case some of the date frames might have
-been already transmitted to the driver before IEEE80211_CONF_PS is
-disabled.
-
-> The issue is  while this ps_disable_work is queued,
-> netif_subqueue_stopped() is checked in _ieee80211_tx which ultimately
-> results in a WARN_ON(info->flags & IEEE80211_TX_CTL_AMPDU) in
-> ieee80211_tx. Please see the code for clarification.
->
-> So, while I try to ping after enabling power save, the packets are
-> dropped due to this warning. The warning message is not at all
-> related to the issue and hence I feel that this is an inappropriate
-> place for that WARN_ON.
->
-> The fix for the issue is to remove the stop/start queues if it is not
-> really needed or the better fix is to remove this inappropriate warning
-> message. Please clarify me if I'm wrong.
-
-Unfortunately I'm not familiar with the 11n implementation. I will
-take a look at this more closely tomorrow and will get back to you.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index af70070..edfa5e1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -61,13 +61,26 @@
+ #define _IWL6050_MODULE_FIRMWARE(api) IWL6050_FW_PRE #api ".ucode"
+ #define IWL6050_MODULE_FIRMWARE(api) _IWL6050_MODULE_FIRMWARE(api)
+ 
++static struct iwl_hcmd_utils_ops iwl6000_hcmd_utils = {
++	.get_hcmd_size = iwl5000_get_hcmd_size,
++	.build_addsta_hcmd = iwl5000_build_addsta_hcmd,
++	.rts_tx_cmd_flag = iwl5000_rts_tx_cmd_flag,
++	.calc_rssi = iwl5000_calc_rssi,
++};
++
++static struct iwl_ops iwl6000_ops = {
++	.lib = &iwl5000_lib,
++	.hcmd = &iwl5000_hcmd,
++	.utils = &iwl6000_hcmd_utils,
++};
++
+ struct iwl_cfg iwl6000_2ag_cfg = {
+ 	.name = "6000 Series 2x2 AG",
+ 	.fw_name_pre = IWL6000_FW_PRE,
+ 	.ucode_api_max = IWL6000_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6000_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G,
+-	.ops = &iwl5000_ops,
++	.ops = &iwl6000_ops,
+ 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+@@ -83,7 +96,7 @@ struct iwl_cfg iwl6000_2agn_cfg = {
+ 	.ucode_api_max = IWL6000_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6000_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+-	.ops = &iwl5000_ops,
++	.ops = &iwl6000_ops,
+ 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+@@ -99,7 +112,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.ucode_api_max = IWL6050_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6050_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+-	.ops = &iwl5000_ops,
++	.ops = &iwl6000_ops,
+ 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+@@ -115,7 +128,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.ucode_api_max = IWL6000_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6000_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+-	.ops = &iwl5000_ops,
++	.ops = &iwl6000_ops,
+ 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+@@ -131,7 +144,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.ucode_api_max = IWL6050_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6050_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+-	.ops = &iwl5000_ops,
++	.ops = &iwl6000_ops,
+ 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
+index d06c577..d95797a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-calib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
+@@ -846,8 +846,9 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv,
+ 	IWL_DEBUG_CALIB(priv, "min_average_noise = %d, antenna %d\n",
+ 			min_average_noise, min_average_noise_antenna_i);
+ 
+-	priv->cfg->ops->utils->gain_computation(priv, average_noise,
+-		min_average_noise_antenna_i, min_average_noise);
++	if (priv->cfg->ops->utils->gain_computation)
++		priv->cfg->ops->utils->gain_computation(priv, average_noise,
++			min_average_noise_antenna_i, min_average_noise);
+ 
+ 	/* Some power changes may have been made during the calibration.
+ 	 * Update and commit the RXON
 -- 
-Kalle Valo
+1.5.4.3
+
