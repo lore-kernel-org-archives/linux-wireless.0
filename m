@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34241 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755793AbZAWVmr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 16:42:47 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/15] iwlwifi driver updates 01/23/2009
-Date: Fri, 23 Jan 2009 13:45:08 -0800
-Message-Id: <1232747123-7261-1-git-send-email-reinette.chatre@intel.com> (sfid-20090123_224257_444134_E3EECBA9)
-In-Reply-To: <>
-References: <>
+Received: from mu-out-0910.google.com ([209.85.134.188]:42817 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026AbZA2UT5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 15:19:57 -0500
+Received: by mu-out-0910.google.com with SMTP id g7so71269muf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jan 2009 12:19:55 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "vivek.natraj\@gmail.com" <vivek.natraj@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC PATCH v2 2/2] mac80211: use ps-poll when dynamic power	save mode is disabled
+References: <20090122114240.31443.18218.stgit@tikku>
+	<20090122114546.31443.79387.stgit@tikku>
+	<1232643729.5819.3.camel@johannes.local> <87hc3jgyu9.fsf@nokia.com>
+	<1233168737.4811.18.camel@johannes.local> <4981F232.5000801@nokia.com>
+	<1233253941.4067.2.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 29 Jan 2009 22:19:52 +0200
+In-Reply-To: <1233253941.4067.2.camel@johannes.local> (Johannes Berg's message of "Thu\, 29 Jan 2009 19\:32\:21 +0100")
+Message-ID: <87y6wtlv9z.fsf@litku.valot.fi> (sfid-20090129_212002_154710_C9A35412)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains mostly patches for the 3945 porting effort.
-In addition this series contains the following:
-- a workaround to reduce off channel reception for 4965 when in monitor
-mode (patches 1 and 2)
-- a kernel oops fix (patch 14) tracked in
-http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1861
-- a printk formatting fix (patch 15)
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-[PATCH 01/15] iwlwifi: add test to determine if interface in monitor mode
-[PATCH 02/15] iwlagn: reduce off channel reception for 4965
-[PATCH 03/15] iwl3945: Define send_tx_power
-[PATCH 04/15] iwl3945: Use iwlcore scan code
-[PATCH 05/15] iwlwifi: make iwl_tx_queue->tfds void*
-[PATCH 06/15] iwl3945: Use iwlcore TX queue management routines
-[PATCH 07/15] iwl3945: Use iwl-eeprom.c routines
-[PATCH 08/15] iwl3945: Use the iwlcore geos routines
-[PATCH 09/15] iwlwifi: Remove IWL3945_DEBUG
-[PATCH 10/15] iwl3945: Getting rid of priv->antenna
-[PATCH 11/15] iwl3945: Add restart_fw module parameter
-[PATCH 12/15] iwl3945: Remaining host command cleanups
-[PATCH 13/15] iwlwifi: fix probe mask for 39 scan API
-[PATCH 14/15] iwlwifi: fix kernel oops when ucode DMA memory allocation failure
-[PATCH 15/15] iwlwifi: iwl_tx_queue_alloc : fix warning in printk formatting
+> On Thu, 2009-01-29 at 20:15 +0200, Kalle Valo wrote:
+>
+>> > No, I mean in the timeout > 0 case, what vivek mentioned too. We never
+>> > go back to sleep unless we send a packet.
+>> 
+>> First of all, this patchset doesn't change the logic for timeout > 0 
+>> case. But that case was working already earlier, here's my analysis:
+>> 
+>> 1. tim bit is set
+>> 2. if timeout > 0 disable power save and send null frame
+>> 3. null frame enables dynamic_ps_timer in ieee80211_master_start_xmit()
+>> 4. after dynamic_ps_timer triggers, power save is enabled again
+>> 
+>> I understood that this was the reason why Vivek moved the running of 
+>> dynamic_ps_timer from subif to the master interface. Or did I miss 
+>> something?
+>
+> Hah, no, you're right, sorry, I got confused.
 
+It confused me also. I would prefer to have the dynamic_ps_timer stuff
+in subif and have an explicit timer for the null frames, just to avoid
+confusion. I'll try to see if I can come up with a patch later on.
 
-Thank you
-
-Reinette
+-- 
+Kalle Valo
