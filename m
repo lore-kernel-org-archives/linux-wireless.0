@@ -1,93 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41673 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757361AbZAHBoO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 20:44:14 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2009 17:44:14 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/6] cfg80211: Fix parsed country IE info for 5 GHz
-Date: Wed, 7 Jan 2009 17:43:37 -0800
-Message-ID: <1231379017-28363-7-git-send-email-lrodriguez@atheros.com> (sfid-20090108_024418_736251_58BFAA58)
-In-Reply-To: <1231379017-28363-6-git-send-email-lrodriguez@atheros.com>
-References: <1231379017-28363-1-git-send-email-lrodriguez@atheros.com>
- <1231379017-28363-2-git-send-email-lrodriguez@atheros.com>
- <1231379017-28363-3-git-send-email-lrodriguez@atheros.com>
- <1231379017-28363-4-git-send-email-lrodriguez@atheros.com>
- <1231379017-28363-5-git-send-email-lrodriguez@atheros.com>
- <1231379017-28363-6-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:45140 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759776AbZA2AFZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jan 2009 19:05:25 -0500
+Subject: Re: [PATCH] iw: rename nl_handle to nl_sock for libnl-2.0
+From: Johannes Berg <johannes@sipsolutions.net>
+To: pat-lkml <pat-lkml@erley.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4980E60D.9060505@erley.org> (sfid-20090129_001116_800094_6F18B713)
+References: <4980E60D.9060505@erley.org>
+	 (sfid-20090129_001116_800094_6F18B713)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/BfzVuiX+8KykxBZksEn"
+Date: Thu, 29 Jan 2009 01:04:47 +0100
+Message-Id: <1233187487.16048.93.camel@johannes.local> (sfid-20090129_010532_371723_16B71DF9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The country IE number of channels on 5 GHz specifies the number
-of 5 GHz channels, not the number of sequential channel numbers.
-For example, if in a country IEs if the first channel given is 36
-and the number of channels passed is 4 then the individual channel
-numbers defined for the 5 GHz PHY by these parameters
 
-are: 36, 40, 44, 48
-not: 36, 37, 38, 39
+--=-/BfzVuiX+8KykxBZksEn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-See: http://tinyurl.com/11d-clarification
+On Wed, 2009-01-28 at 18:11 -0500, pat-lkml wrote:
+> Upstream has renamed nl_handle to nl_sock.  Update iw to the new names
+> and add #define for libnl-1.1.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   21 +++++++++++++++++++--
- 1 files changed, 19 insertions(+), 2 deletions(-)
+I fixed this already, no?
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index bea98ed..b34fd84 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -563,6 +563,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 
- 	/* This time around we fill in the rd */
- 	while (country_ie_len >= 3) {
-+		int end_channel = 0;
- 		struct ieee80211_country_ie_triplet *triplet =
- 			(struct ieee80211_country_ie_triplet *) country_ie;
- 		struct ieee80211_reg_rule *reg_rule = NULL;
-@@ -584,6 +585,23 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 
- 		reg_rule->flags = flags;
- 
-+		/* 2 GHz */
-+		if (triplet->chans.first_channel <= 14)
-+			end_channel = triplet->chans.first_channel +
-+				triplet->chans.num_channels;
-+		else
-+			/*
-+			 * 5 GHz -- For example in country IEs if the first
-+			 * channel given is 36 and the number of channels is 4
-+			 * then the individual channel numbers defined for the
-+			 * 5 GHz PHY by these parameters are: 36, 40, 44, and 48
-+			 * and not 36, 37, 38, 39.
-+			 *
-+			 * See: http://tinyurl.com/11d-clarification
-+			 */
-+			end_channel =  triplet->chans.first_channel +
-+				(4 * (triplet->chans.num_channels - 1));
-+
- 		/* The +10 is since the regulatory domain expects
- 		 * the actual band edge, not the center of freq for
- 		 * its start and end freqs, assuming 20 MHz bandwidth on
-@@ -593,8 +611,7 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 				triplet->chans.first_channel) - 10);
- 		freq_range->end_freq_khz =
- 			MHZ_TO_KHZ(ieee80211_channel_to_frequency(
--				triplet->chans.first_channel +
--					triplet->chans.num_channels) + 10);
-+				end_channel) + 10);
- 
- 		/* Large arbitrary values, we intersect later */
- 		/* Increment this if we ever support >= 40 MHz channels
--- 
-1.6.1.rc3.51.g5832d
+And renaming nl_handle to nl_sock means that it won't work with older,
+released libs, afaict.
+
+johannes
+
+--=-/BfzVuiX+8KykxBZksEn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJgPKdAAoJEKVg1VMiehFYRmgP/iL532hrwZLdHiT3hhYyO2nH
+WiYVsZXwpa2Y69fVwGmBVLPxLpceBJ0w60TyOjUN1sJjJ4JGwlzmLJUnVqmBhr/4
+deRRl3+ORdDXAnZNTdCmNLJ+zVJrWTgKE4Oez6ITIxXmL+A2LTPBlyBHbN/d6DRs
+L3rIT5y01vL6qvveQfEILIW/2xwxjAEHYdwQDFsG3Bb3YGLPGa00rcX6aOiOt6Sl
+Uo82DR9AG9d9DI4LAcuwDdejXVxnDAY5We6cXHqzQUxxXWKP7DSq5gpXF5T0fb71
+XNp+12KCleUVTC1Q/46ec8mwwM8ukbJRxPYYoRnsyEFYAFilTEmctGbTKaBY6TlN
+pR90zWGuCiXEKT+ksc3Xqe1B/5IKM3hpgqUjFyROKYeqHc8OkEDVKvFTjULSl7wl
+Pw+MNtEv8lFELtAkaFS9b9k6lgYiSlf+mclhThoBwyvKwwTEgnVvl6jzWlEX73vZ
+BIolFt5ZTGzTd8sgqE9QzcW6uZCpntSZ+RXb2wHa4lvpDJAmB8g7JVI5BYb8K2yG
+o8J6wRX4NNRP83e9Qff3aYZdpEH0izAtRwj9z9fI1tKZxOGbjerElD5mvzS4QKAE
+ekd/wsZ0sTlmYq/OZSuzbPq/scp7EExlaDRFsisQrqEDyCmI2D++jTZqm90ADtAt
+8J7i5AuCDgsn2SNfxNzX
+=y6TA
+-----END PGP SIGNATURE-----
+
+--=-/BfzVuiX+8KykxBZksEn--
 
