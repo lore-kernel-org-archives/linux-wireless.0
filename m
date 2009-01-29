@@ -1,63 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:30176 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752424AbZAJMqC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jan 2009 07:46:02 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so1229257nfc.21
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Jan 2009 04:45:59 -0800 (PST)
-To: Andrew Price <andy@andrewprice.me.uk>
-Subject: Re: [RFC] rt2500pci: turn on led_qual for default LED mode
-Date: Sat, 10 Jan 2009 13:45:57 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20090110100751.GA29761@silver.sucs.org>
-In-Reply-To: <20090110100751.GA29761@silver.sucs.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901101345.57310.IvDoorn@gmail.com> (sfid-20090110_134609_626813_C8D13585)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:23398 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753468AbZA2TGW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 14:06:22 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 5/7] iwlwifi: define structures and functions externally for customization
+Date: Thu, 29 Jan 2009 11:09:15 -0800
+Message-Id: <1233256157-21290-6-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200630_366207_04E31837)
+In-Reply-To: <1233256157-21290-5-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-2-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-4-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 10 January 2009, Andrew Price wrote:
-> Add a check for LED_MODE_DEFAULT so that we initialise the link LED.
-> 
-> Signed-off-by: Andrew Price <andy@andrewprice.me.uk>
-> ---
-> 
-> I'm submitting this patch just as an RFC as I have no idea whether it works
-> with all rt2500pci devices. With my card, value holds 0 after the call to
-> rt2x00_get_field16() and so the added check for LED_MODE_DEFAULT (which is 0)
-> is needed for the link LED to work.
-> 
-> My card is a "RaLink RT2500 802.11g Cardbus/mini-PCI [1814:0201]" Belkin
-> F5D7010 according to lspci.
-> 
-> Any advice would be much appreciated. Does this patch look reasonable? Are
-> there any docs/specs which I could read to learn how this should be handled?
-> 
-> P.S. This is not related to my previous LED patch. This one is for the other
-> LED which has never worked as far as I can remember, until now :-)
+From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
 
-Ok, I just checked legacy driver and LED_MODE_DEFAULT indeed can be considered
-as LED_MODE_TXRX_ACTIVITY. Could you resend this patch as normal patch,
-but with the same change for rt2400pci and rt2500usb.
+defined the structures and functions as extern to alter behavior used by
+5000 series for other products including 100 and 6000 series
 
-Thanks,
+Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   14 +++++++-------
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |   12 ++++++++++++
+ 2 files changed, 19 insertions(+), 7 deletions(-)
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-> index d3bc218..651cb4f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-> @@ -1524,7 +1524,7 @@ static int rt2500pci_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	value = rt2x00_get_field16(eeprom, EEPROM_ANTENNA_LED_MODE);
->  
->  	rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_radio, LED_TYPE_RADIO);
-> -	if (value == LED_MODE_TXRX_ACTIVITY)
-> +	if (value == LED_MODE_TXRX_ACTIVITY || value == LED_MODE_DEFAULT)
->  		rt2500pci_init_led(rt2x00dev, &rt2x00dev->led_qual,
->  				   LED_TYPE_ACTIVITY);
->  #endif /* CONFIG_RT2X00_LIB_LEDS */
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 5b59286..2b37aa7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -394,7 +394,7 @@ static void iwl5000_chain_noise_reset(struct iwl_priv *priv)
+ 	}
+ }
+ 
+-static void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
++void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
+ 			__le32 *tx_flags)
+ {
+ 	if ((info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
+@@ -1105,7 +1105,7 @@ static int iwl5000_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
+ 	return 0;
+ }
+ 
+-static u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
++u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
+ {
+ 	u16 size = (u16)sizeof(struct iwl_addsta_cmd);
+ 	memcpy(data, cmd, size);
+@@ -1334,7 +1334,7 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
+ }
+ 
+ /* Currently 5000 is the superset of everything */
+-static u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len)
++u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len)
+ {
+ 	return len;
+ }
+@@ -1435,7 +1435,7 @@ static void iwl5000_temperature(struct iwl_priv *priv)
+ }
+ 
+ /* Calc max signal level (dBm) among 3 possible receivers */
+-static int iwl5000_calc_rssi(struct iwl_priv *priv,
++int iwl5000_calc_rssi(struct iwl_priv *priv,
+ 			     struct iwl_rx_phy_res *rx_resp)
+ {
+ 	/* data from PHY/DSP regarding signal strength, etc.,
+@@ -1472,11 +1472,11 @@ static int iwl5000_calc_rssi(struct iwl_priv *priv,
+ 	return max_rssi - agc - IWL49_RSSI_OFFSET;
+ }
+ 
+-static struct iwl_hcmd_ops iwl5000_hcmd = {
++struct iwl_hcmd_ops iwl5000_hcmd = {
+ 	.rxon_assoc = iwl5000_send_rxon_assoc,
+ };
+ 
+-static struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
++struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
+ 	.get_hcmd_size = iwl5000_get_hcmd_size,
+ 	.build_addsta_hcmd = iwl5000_build_addsta_hcmd,
+ 	.gain_computation = iwl5000_gain_computation,
+@@ -1485,7 +1485,7 @@ static struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
+ 	.calc_rssi = iwl5000_calc_rssi,
+ };
+ 
+-static struct iwl_lib_ops iwl5000_lib = {
++struct iwl_lib_ops iwl5000_lib = {
+ 	.set_hw_params = iwl5000_hw_set_hw_params,
+ 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
+ 	.txq_inval_byte_cnt_tbl = iwl5000_txq_inval_byte_cnt_tbl,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index b9954bc..afde713 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -67,6 +67,18 @@ extern struct iwl_cfg iwl100_bgn_cfg;
+ /* shared structures from iwl-5000.c */
+ extern struct iwl_mod_params iwl50_mod_params;
+ extern struct iwl_ops iwl5000_ops;
++extern struct iwl_lib_ops iwl5000_lib;
++extern struct iwl_hcmd_ops iwl5000_hcmd;
++extern struct iwl_hcmd_utils_ops iwl5000_hcmd_utils;
++
++/* shared functions from iwl-5000.c */
++extern u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len);
++extern u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd,
++				     u8 *data);
++extern void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
++				    __le32 *tx_flags);
++extern int iwl5000_calc_rssi(struct iwl_priv *priv,
++			     struct iwl_rx_phy_res *rx_resp);
+ 
+ /* CT-KILL constants */
+ #define CT_KILL_THRESHOLD	110 /* in Celsius */
+-- 
+1.5.4.3
 
