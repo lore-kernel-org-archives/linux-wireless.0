@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47672 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753825AbZAMMfN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 07:35:13 -0500
-Date: Tue, 13 Jan 2009 14:35:08 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Fix an operator typo in REG_DOMAIN_2GHZ_MASK
-Message-ID: <20090113123508.GC14346@jm.kir.nu> (sfid-20090113_133518_686133_D4791526)
+Received: from mail.atheros.com ([12.36.123.2]:44536 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751698AbZA2GYA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 01:24:00 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 22:24:00 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18817.19108.810825.356686@gargle.gargle.HOWL> (sfid-20090129_072407_161405_8332709C)
+Date: Thu, 29 Jan 2009 11:50:20 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH] ath9k: Remove a bunch of unused macros
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Incorrect operator causes the REG_DOMAIN_2GHZ_MASK to be zero which
-surely was not the goal of this definition. Mask out the 11a flags
-correctly.
+RX filter masks are already defined in enum ath9k_rx_filter
+in ath9k.h
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath9k/regd_common.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath9k/reg.h |   11 -----------
+ 1 files changed, 0 insertions(+), 11 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/regd_common.h	2009-01-13 14:12:20.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/regd_common.h	2009-01-13 14:13:54.000000000 +0200
-@@ -228,7 +228,7 @@ enum {
- };
+diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
+index 150eda5..c967b79 100644
+--- a/drivers/net/wireless/ath9k/reg.h
++++ b/drivers/net/wireless/ath9k/reg.h
+@@ -1198,18 +1198,7 @@ enum {
+ #define AR_CFP_VAL          0x0000FFFF
  
- #define REG_DOMAIN_2GHZ_MASK    (REQ_MASK & \
--	(!(ADHOC_NO_11A | DISALLOW_ADHOC_11A | DISALLOW_ADHOC_11A_TURB)))
-+	(~(ADHOC_NO_11A | DISALLOW_ADHOC_11A | DISALLOW_ADHOC_11A_TURB)))
- #define REG_DOMAIN_5GHZ_MASK    REQ_MASK
+ #define AR_RX_FILTER        0x803C
+-#define AR_RX_FILTER_ALL    0x00000000
+-#define AR_RX_UCAST         0x00000001
+-#define AR_RX_MCAST         0x00000002
+-#define AR_RX_BCAST         0x00000004
+-#define AR_RX_CONTROL       0x00000008
+-#define AR_RX_BEACON        0x00000010
+-#define AR_RX_PROM          0x00000020
+-#define AR_RX_PROBE_REQ     0x00000080
+-#define AR_RX_MY_BEACON     0x00000200
+ #define AR_RX_COMPR_BAR     0x00000400
+-#define AR_RX_COMPR_BA      0x00000800
+-#define AR_RX_UNCOM_BA_BAR  0x00001000
  
- static struct reg_dmn_pair_mapping regDomainPairs[] = {
-
+ #define AR_MCAST_FIL0       0x8040
+ #define AR_MCAST_FIL1       0x8044
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.1
+
