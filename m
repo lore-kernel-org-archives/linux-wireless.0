@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40544 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851AbZAURLU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 12:11:20 -0500
-Message-ID: <49774F6B.2000105@candelatech.com> (sfid-20090121_181130_674882_D301F1DD)
-Date: Wed, 21 Jan 2009 08:38:03 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Catalin Patulea <cat@vv.carleton.ca>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Atheros (madwifi/ath5k) virtual STA support
-References: <9664a4720901201133g5671c7f0x718c4bd187b1d901@mail.gmail.com>
-In-Reply-To: <9664a4720901201133g5671c7f0x718c4bd187b1d901@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga03.intel.com ([143.182.124.21]:55862 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753178AbZA2TGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 14:06:20 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/7] iwlwifi: add new HW_REV_TYPEs for Intel WiFi Link 100, 6000 and 6050 Series
+Date: Thu, 29 Jan 2009 11:09:11 -0800
+Message-Id: <1233256157-21290-2-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200625_632877_AF75949A)
+In-Reply-To: <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Catalin Patulea wrote:
-> Hi linux-wireless,
->
-> I'm interested in virtual STA support in madwifi and/or ath5k on an
-> AR5414 (AR5006XS). Specifically, I want one physical wireless adapter
-> to act as an infrastructure client on multiple networks. I understand
-> the network will most likely need to be on the same channel.
->
-> This is currently prohibited by the madwifi driver (haven't looked at
-> ath5k thoroughly). What's the underlying reason for this? Someone on
-> IRC mentioned powersaving, beacon handling and "other reasons". Can
-> anyone elaborate?
->
-> Secondly, what is the procedure to get hardware documentation from
-> Atheros? I'm specifically interested in the AR5414 datasheet.
->   
-I have an old hacked up madwifi driver that supports this, and I'm currently
-funding the development of this feature for ath5k, so hopefully it will
-be available soon.  We will be integrating this feature set into our network
-traffic generator tool, but I also hope that the patches get into the 
-main kernel
-for all to use freely.
+From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
 
-Thanks,
-Ben
+simply add definitions for the HW_REV_TYPEs for the new devices.
 
-> Thanks,
->
-> Catalin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
+Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-csr.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 74d3d43..5028c78 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -211,6 +211,9 @@
+ #define CSR_HW_REV_TYPE_5350           (0x0000030)
+ #define CSR_HW_REV_TYPE_5100           (0x0000050)
+ #define CSR_HW_REV_TYPE_5150           (0x0000040)
++#define CSR_HW_REV_TYPE_100            (0x0000060)
++#define CSR_HW_REV_TYPE_6x00           (0x0000070)
++#define CSR_HW_REV_TYPE_6x50           (0x0000080)
+ #define CSR_HW_REV_TYPE_NONE           (0x00000F0)
+ 
+ /* EEPROM REG */
 -- 
-Ben Greear <greearb@candelatech.com> 
-Candela Technologies Inc  http://www.candelatech.com
-
+1.5.4.3
 
