@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:55646 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752356AbZAMU4v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 15:56:51 -0500
-Date: Tue, 13 Jan 2009 18:56:46 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Werner Almesberger <werner@openmoko.org>
-Cc: Hans Henry von Tresckow <hvontres@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rfkill: how murderous can it be ?
-Message-ID: <20090113205646.GA17214@khazad-dum.debian.net> (sfid-20090113_215655_519104_AD009FE2)
-References: <20090112191514.GA22112@almesberger.net> <a7f8874a0901121131m75ffa5e0o246dee810eb29983@mail.gmail.com> <20090113131422.GA27676@khazad-dum.debian.net> <20090113161129.GB22112@almesberger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090113161129.GB22112@almesberger.net>
+Received: from mga03.intel.com ([143.182.124.21]:55862 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753068AbZA2TGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 14:06:20 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/7] iwlwifi driver updates 01/29/2009
+Date: Thu, 29 Jan 2009 11:09:10 -0800
+Message-Id: <1233256157-21290-1-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200624_910393_51EC0BF0)
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 13 Jan 2009, Werner Almesberger wrote:
-> Henrique de Moraes Holschuh wrote:
-> > If you kick it out of the bus (cause a full hotunplug on rfkill block,
-> > and a hotplug when rfkill unblocks), it is userspace.
-> > 
-> > But what if you do it halfway?   That's what is being asked here...
-> 
-> If kicking it out of the bus is okay, then that's just what I'll
-> do. This gives us clear and familiar semantics and avoids complex
-> and fragile state preservation in the kernel.
+This series contains updates to iwlwifi for support of new hardware.
 
-Yes, it is okay.  It has to be, many devices absolutely require it.
+We also include one Kconfig patch for ipw2x00 to fix a display
+problem.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+[PATCH 1/7] iwlwifi: add new HW_REV_TYPEs for Intel WiFi Link 100, 6000 and 6050 Series
+[PATCH 2/7] iwlwifi: simplify parameter setting to allow support for 6000 series
+[PATCH 3/7] iwlwifi: parametrize configuration of the PLL for exclusion on 6000
+[PATCH 4/7] iwlwifi: correct API command overlap
+[PATCH 5/7] iwlwifi: define structures and functions externally for customization
+[PATCH 6/7] iwlwifi: remove chain noise calibration functions from 6000 family
+[PATCH 7/7] ipw2x00: correct Kconfig to prevent following entries from not indenting
+
+
+Thank you
+
+Reinette
