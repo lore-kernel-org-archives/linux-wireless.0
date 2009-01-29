@@ -1,257 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f21.google.com ([209.85.218.21]:48832 "EHLO
-	mail-bw0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756397AbZAOIdP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 03:33:15 -0500
-Received: by bwz14 with SMTP id 14so3012398bwz.13
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 00:33:13 -0800 (PST)
-To: linux-wireless@vger.kernel.org
-Subject: [PATCHv2] iwl3945: report killswitch changes even if the interface is down
-Cc: linville@tuxdriver.com, ipw3945-devel@lists.sourceforge.net,
-	mabbaswireless@gmail.com, tomas.winkler@intel.com,
-	yi.zhu@intel.com, reinette.chatre@intel.com, dcbw@redhat.com,
-	samuel@sortiz.org
-Date: Thu, 15 Jan 2009 09:38:44 +0100
+Received: from mail.gmx.net ([213.165.64.20]:33213 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751135AbZA2M4W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 07:56:22 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Thu, 29 Jan 2009 13:56:20 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090129125620.278940@gmx.net> (sfid-20090129_135628_555264_6BD444E6)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901150938.45058.helmut.schaa@gmail.com> (sfid-20090115_093320_727833_3BF6BE18)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] mac80211: IBSS join rework
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently iwl3945 is not able to report hw-killswitch events while the
-interface is down. This has implications on user space tools (like
-NetworkManager) relying on rfkill notifications to bring the interface
-up once the wireless gets enabled through a hw killswitch.
+I hold back this patch for around a week to avoid
+confusion. This is the second step of
+"mac80211: Fixed BSSID handling revisited".
 
-Thus, enable the device already in iwl3945_pci_probe instead of iwl3945_up
-and poll the CSR_GP_CNTRL register to update the killswitch state every
-two seconds. The polling is only needed on 3945 hardware as this adapter
-does not use interrupts to signal rfkill changes to the driver (in case no
-firmware is loaded). The firmware loading is still done in iwl3945_up.
+With it, in the situation of a strange merge to the
+same BSSID (e.g. caused by a TSF overflow) only
+reset_tsf() is called.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+And sta_info_flush_delayed() is only called if you
+change the network manually, not on an automatic
+BSSID merge.
+
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
 ---
-
-I did not do any power measurements but I think it is more efficient to
-leave the pci device enabled (without firmware being loaded) then to change
-NetworkManagers behaviour to keep the interface up all the time just to get
-rfkill notifications (which means the firmware has to be loaded).
-
-Changes since the first version:
-Stop polling when the firmware is loaded and start it again when the interface
-goes down.
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index fd34ba8..4d437cf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1041,6 +1041,7 @@ struct iwl_priv {
- 
- 	/*For 3945 only*/
- 	struct delayed_work thermal_periodic;
-+	struct delayed_work rfkill_poll;
- 
- 	/* TX Power */
- 	s8 tx_power_user_lmt;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 15425a0..1ca417d 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -5479,7 +5479,8 @@ static void iwl3945_bg_rf_kill(struct work_struct *work)
- 		IWL_DEBUG(IWL_DL_INFO | IWL_DL_RF_KILL,
- 			  "HW and/or SW RF Kill no longer active, restarting "
- 			  "device\n");
--		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) && 
-+		     test_bit(STATUS_ALIVE, &priv->status))
- 			queue_work(priv->workqueue, &priv->restart);
- 	} else {
- 
-@@ -5496,6 +5497,25 @@ static void iwl3945_bg_rf_kill(struct work_struct *work)
- 	iwl3945_rfkill_set_hw_state(priv);
- }
- 
-+static void iwl3945_rfkill_poll(struct work_struct *data)
-+{
-+	struct iwl_priv *priv =
-+	    container_of(data, struct iwl_priv, rfkill_poll.work);
-+	unsigned long status = priv->status;
-+
-+	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
-+		clear_bit(STATUS_RF_KILL_HW, &priv->status);
-+	else
-+		set_bit(STATUS_RF_KILL_HW, &priv->status);
-+
-+	if (test_bit(STATUS_RF_KILL_HW, &status) != test_bit(STATUS_RF_KILL_HW, &priv->status))
-+		queue_work(priv->workqueue, &priv->rf_kill);
-+
-+	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
-+			   round_jiffies_relative(2 * HZ));
-+
-+}
-+
- #define IWL_SCAN_CHECK_WATCHDOG (7 * HZ)
- 
- static void iwl3945_bg_scan_check(struct work_struct *data)
-@@ -5898,20 +5918,6 @@ static int iwl3945_mac_start(struct ieee80211_hw *hw)
- 
- 	IWL_DEBUG_MAC80211("enter\n");
- 
--	if (pci_enable_device(priv->pci_dev)) {
--		IWL_ERR(priv, "Fail to pci_enable_device\n");
--		return -ENODEV;
--	}
--	pci_restore_state(priv->pci_dev);
--	pci_enable_msi(priv->pci_dev);
--
--	ret = request_irq(priv->pci_dev->irq, iwl3945_isr, IRQF_SHARED,
--			  DRV_NAME, priv);
--	if (ret) {
--		IWL_ERR(priv, "Error allocating IRQ %d\n", priv->pci_dev->irq);
--		goto out_disable_msi;
--	}
--
- 	/* we should be verifying the device is ready to be opened */
- 	mutex_lock(&priv->mutex);
- 
-@@ -5957,15 +5963,15 @@ static int iwl3945_mac_start(struct ieee80211_hw *hw)
- 		}
- 	}
- 
-+	/* ucode is running and will send rfkill notifications,
-+	 * no need to poll the killswitch state anymore */
-+	cancel_delayed_work(&priv->rfkill_poll);
-+	
- 	priv->is_open = 1;
- 	IWL_DEBUG_MAC80211("leave\n");
- 	return 0;
- 
- out_release_irq:
--	free_irq(priv->pci_dev->irq, priv);
--out_disable_msi:
--	pci_disable_msi(priv->pci_dev);
--	pci_disable_device(priv->pci_dev);
- 	priv->is_open = 0;
- 	IWL_DEBUG_MAC80211("leave - failed\n");
- 	return ret;
-@@ -5996,10 +6002,10 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
- 	iwl3945_down(priv);
- 
- 	flush_workqueue(priv->workqueue);
--	free_irq(priv->pci_dev->irq, priv);
--	pci_disable_msi(priv->pci_dev);
--	pci_save_state(priv->pci_dev);
--	pci_disable_device(priv->pci_dev);
-+
-+	/* start polling the killswitch state again */
-+	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
-+			   round_jiffies_relative(2 * HZ));
- 
- 	IWL_DEBUG_MAC80211("leave\n");
- }
-@@ -7207,6 +7213,7 @@ static void iwl3945_setup_deferred_work(struct iwl_priv *priv)
- 	INIT_DELAYED_WORK(&priv->init_alive_start, iwl3945_bg_init_alive_start);
- 	INIT_DELAYED_WORK(&priv->alive_start, iwl3945_bg_alive_start);
- 	INIT_DELAYED_WORK(&priv->scan_check, iwl3945_bg_scan_check);
-+	INIT_DELAYED_WORK(&priv->rfkill_poll, iwl3945_rfkill_poll);
- 
- 	iwl3945_hw_setup_deferred_work(priv);
- 
-@@ -7497,6 +7504,15 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	iwl3945_disable_interrupts(priv);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
-+	pci_enable_msi(priv->pci_dev);
-+
-+	err = request_irq(priv->pci_dev->irq, iwl3945_isr, IRQF_SHARED,
-+			  DRV_NAME, priv);
-+	if (err) {
-+		IWL_ERR(priv, "Error allocating IRQ %d\n", priv->pci_dev->irq);
-+		goto out_disable_msi;
+diff -urN wireless-testing.orig/net/mac80211/mlme.c wireless-testing/ne=
+t/mac80211/mlme.c
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-01-27 06:12:43.00000=
+0000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2009-01-29 13:32:52.000000000 =
++0100
+@@ -1503,13 +1503,22 @@
+ 				   struct ieee80211_bss *bss)
+ {
+ 	struct ieee80211_local *local =3D sdata->local;
+-	int res, rates, i, j;
++	int res =3D 0, rates, i, j;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+ 	u8 *pos;
+ 	struct ieee80211_supported_band *sband;
+ 	union iwreq_data wrqu;
+=20
++	if (local->ops->reset_tsf) {
++		/* Reset own TSF to allow time synchronization work. */
++		local->ops->reset_tsf(local_to_hw(local));
 +	}
 +
- 	err = sysfs_create_group(&pdev->dev.kobj, &iwl3945_attribute_group);
- 	if (err) {
- 		IWL_ERR(priv, "failed to create sysfs device attributes\n");
-@@ -7507,14 +7523,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	iwl3945_setup_deferred_work(priv);
- 	iwl3945_setup_rx_handlers(priv);
- 
--	/***********************
--	 * 9. Conclude
--	 * ********************/
--	pci_save_state(pdev);
--	pci_disable_device(pdev);
++	if ((ifsta->flags & IEEE80211_STA_PREV_BSSID_SET) &&
++	   memcmp(ifsta->bssid, bss->bssid, ETH_ALEN) =3D=3D 0)
++		return res;
++
+ 	skb =3D dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
+ 			    sdata->u.sta.ie_proberesp_len);
+ 	if (!skb) {
+@@ -1520,13 +1529,11 @@
+=20
+ 	sband =3D local->hw.wiphy->bands[local->hw.conf.channel->band];
+=20
+-	/* Remove possible STA entries from other IBSS networks. */
+-	sta_info_flush_delayed(sdata);
 -
- 	/*********************************
--	 * 10. Setup and Register mac80211
-+	 * 9. Setup and Register mac80211
- 	 * *******************************/
- 
- 	err = ieee80211_register_hw(priv->hw);
-@@ -7531,6 +7541,10 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 		IWL_ERR(priv, "Unable to initialize RFKILL system. "
- 				  "Ignoring error: %d\n", err);
- 
-+	/* Start monitoring the killswitch */
-+	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
-+			   2 * HZ);
-+
- 	return 0;
- 
-  out_remove_sysfs:
-@@ -7539,10 +7553,12 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	iwl3945_free_geos(priv);
- 
-  out_release_irq:
-+	free_irq(priv->pci_dev->irq, priv);
- 	destroy_workqueue(priv->workqueue);
- 	priv->workqueue = NULL;
- 	iwl3945_unset_hw_params(priv);
--
-+ out_disable_msi:
-+	pci_disable_msi(priv->pci_dev);
-  out_iounmap:
- 	pci_iounmap(pdev, priv->hw_base);
-  out_pci_release_regions:
-@@ -7587,6 +7603,8 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
- 
- 	iwl3945_rfkill_unregister(priv);
-+	cancel_delayed_work(&priv->rfkill_poll);
-+
- 	iwl3945_dealloc_ucode_pci(priv);
- 
- 	if (priv->rxq.bd)
-@@ -7605,6 +7623,9 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 	destroy_workqueue(priv->workqueue);
- 	priv->workqueue = NULL;
- 
-+	free_irq(pdev->irq, priv);
-+	pci_disable_msi(pdev);
-+
- 	pci_iounmap(pdev, priv->hw_base);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
-@@ -7630,7 +7651,8 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 		iwl3945_mac_stop(priv->hw);
- 		priv->is_open = 1;
+-	if (local->ops->reset_tsf) {
+-		/* Reset own TSF to allow time synchronization work. */
+-		local->ops->reset_tsf(local_to_hw(local));
++	if (!(ifsta->flags & IEEE80211_STA_PREV_BSSID_SET)) {
++		/* Remove possible STA entries from other IBSS networks. */
++		sta_info_flush_delayed(sdata);
  	}
--
-+	pci_save_state(pdev);
-+	pci_disable_device(pdev);
- 	pci_set_power_state(pdev, PCI_D3hot);
- 
- 	return 0;
-@@ -7641,6 +7663,8 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
- 	struct iwl_priv *priv = pci_get_drvdata(pdev);
- 
- 	pci_set_power_state(pdev, PCI_D0);
-+	pci_enable_device(pdev);
-+	pci_restore_state(pdev);
- 
- 	if (priv->is_open)
- 		iwl3945_mac_start(priv->hw);
++
+ 	memcpy(ifsta->bssid, bss->bssid, ETH_ALEN);
+ 	res =3D ieee80211_if_config(sdata, IEEE80211_IFCC_BSSID);
+ 	if (res)
+
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
