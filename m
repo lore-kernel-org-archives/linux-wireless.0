@@ -1,50 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:49610 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751549AbZAUUHE (ORCPT
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:58167
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764123AbZA2AVV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2009 15:07:04 -0500
-Message-ID: <4977805E.70906@lwfinger.net> (sfid-20090121_210710_769759_7324E6FE)
-Date: Wed, 21 Jan 2009 14:06:54 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 28 Jan 2009 19:21:21 -0500
+Message-ID: <4980F67C.70207@erley.org> (sfid-20090129_012127_935579_19CF0EA7)
+Date: Wed, 28 Jan 2009 19:21:16 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC][RFT][PATCH] p54usb: rx refill revamp
-References: <200901211450.50880.chunkeey@web.de>
-In-Reply-To: <200901211450.50880.chunkeey@web.de>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH resend] crda: rename nl_handle to nl_sock for libnl-2.0
+References: <4980EDC8.4050204@erley.org>	 (sfid-20090129_004437_360979_B9D4728F) <1233187526.16048.95.camel@johannes.local>
+In-Reply-To: <1233187526.16048.95.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> This patch fixes a long standing issue in p54usb.
->=20
-> Under high memory pressure, dev_alloc_skb couldn't always allocate a=20
-> replacement skb. In such situations, we had to free the associated ur=
-b.
-> And over the time all urbs were eventually gone altogether and=20
-> obviously the device remained mute from then on.
+Johannes Berg wrote:
+> On Wed, 2009-01-28 at 18:44 -0500, pat-lkml wrote:
+>> Upstream has renamed nl_handle to nl_sock.  Update crda to the new names
+>> and add #define for libnl-1.1.
+> 
+> But libnl-2.0 comes with a define too:
+> #define nl_handle nl_sock
+> 
+> you just need to include the right headers, no?
+> 
+> johannes
 
-With this patch, I get lots of missing rx_refill_* messages such as
+dunno.... but I can't find it:
 
-drivers/net/wireless/p54/p54usb.c:1024: error: =E2=80=98struct p54u_pri=
-v=E2=80=99 has no member named
-=E2=80=98rx_refill_work=E2=80=99
-drivers/net/wireless/p54/p54usb.c:1025: error: =E2=80=98struct p54u_pri=
-v=E2=80=99 has no member named
-=E2=80=98rx_refill_lock=E2=80=99
-drivers/net/wireless/p54/p54usb.c:1026: error: =E2=80=98struct p54u_pri=
-v=E2=80=99 has no member named
-=E2=80=98rx_refill_list=E2=80=99
+libnl $ egrep "#define nl_handle" * -r
+libnl $ git pull
+Already up-to-date.
 
-Did I miss a patch? I did a search for the string "rx_refill" in my ent=
-ire mailbox and
-found only this mail and Artur's reply.
-
-Larry
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Pat
