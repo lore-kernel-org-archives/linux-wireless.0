@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60070 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754491AbZARPdP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2009 10:33:15 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2009 07:33:15 -0800
-Date: Sun, 18 Jan 2009 07:32:43 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: do not TX injected frames when not allowed
-Message-ID: <20090118153243.GU29609@tesla> (sfid-20090118_163320_937331_5BE04CC5)
-References: <1232131932-25044-1-git-send-email-lrodriguez@atheros.com> <1232268339.3877.5.camel@johannes>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1232268339.3877.5.camel@johannes>
+Received: from xc.sipsolutions.net ([83.246.72.84]:35638 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbZA2IgU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 03:36:20 -0500
+Message-Id: <20090129005808.635331339@sipsolutions.net> (sfid-20090129_093628_730790_FEFA4D8D)
+References: <20090129005450.068797016@sipsolutions.net>
+Date: Thu, 29 Jan 2009 01:54:55 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: m.sujith@gmail.com, tomasw@gmail.com
+Subject: [RFC/RFT 05/11] mac80211: hardware should not deny going back to
+	legacy
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 18, 2009 at 12:45:39AM -0800, Johannes Berg wrote:
-> On Fri, 2009-01-16 at 10:52 -0800, Luis R. Rodriguez wrote:
-> > Monitor mode is able to TX by using injected frames. We should
-> > not allow injected frames to be sent unless allowed by regulatory rules.
-> > Since AP mode uses a monitor interfaces to transmit management frames
-> > we have to take care to not break AP mode as well. Since hostapd
-> > respects 'no-ibss|radar' flags we can make use of the same policy
-> > statically for checking when to disable injected frames. Once AP
-> > mode supports radar detection we should somehow distinguish a
-> > regular monitor mode from an AP's monitor interface.
-> 
-> Any proposal for "somehow"? I'm not all that worried about packet
-> injection here.
+Doing so would be an MLME protocol violation when the peer disabled
+the aggregation session. Quick driver review indicates that there are
+error codes passed all over the drivers but cannot ever be nonzero
+except in error conditions that would indicate mac80211 bugs.
 
-I'll send a patch instead. Keep in mind by not applying this you are
-allowing devices to not respect regulatory rules.
+No real changes here, since no drivers currently can return -EBUSY.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/agg-tx.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2009-01-27 23:10:02.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2009-01-27 23:10:04.000000000 +0100
+@@ -406,9 +406,8 @@ int ieee80211_stop_tx_ba_session(struct 
+ 		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_STOP,
+ 					       &sta->sta, tid, NULL);
+ 
+-	/* case HW denied going back to legacy */
+-	if (ret) {
+-		WARN_ON(ret != -EBUSY);
++	/* HW shall not deny going back to legacy */
++	if (WARN_ON(ret)) {
+ 		*state = HT_AGG_STATE_OPERATIONAL;
+ 		if (hw->ampdu_queues)
+ 			ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
+
+-- 
+
