@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54554 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:37352 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756811AbZAWWOG (ORCPT
+	with ESMTP id S1752445AbZA2Ihk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 17:14:06 -0500
-Subject: Re: [PATCH] ath9k: Read and write the TSF via debugfs
+	Thu, 29 Jan 2009 03:37:40 -0500
+Message-Id: <20090129005809.597263377@sipsolutions.net> (sfid-20090129_093743_032967_495EBF3B)
+References: <20090129005450.068797016@sipsolutions.net>
+Date: Thu, 29 Jan 2009 01:54:59 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20090123044421.270720@gmx.net> (sfid-20090123_054428_080982_2340614F)
-References: <20090123044421.270720@gmx.net>
-	 (sfid-20090123_054428_080982_2340614F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dSe76Edtp+37vFjmEaoI"
-Date: Fri, 23 Jan 2009 23:14:01 +0100
-Message-Id: <1232748841.3977.10.camel@johannes.local> (sfid-20090123_231411_600733_2F4D7F14)
+To: linux-wireless@vger.kernel.org
+Cc: m.sujith@gmail.com, tomasw@gmail.com
+Subject: [RFC/RFT 09/11] mac80211: clean up BA session teardown
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The sta_info pointer can very well be passed to
+ieee80211_sta_tear_down_BA_sessions, this will
+later allow us to pass it through even further.
 
---=-dSe76Edtp+37vFjmEaoI
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ht.c          |    8 ++++----
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/iface.c       |    3 +--
+ net/mac80211/mlme.c        |    2 +-
+ 4 files changed, 7 insertions(+), 8 deletions(-)
 
-On Fri, 2009-01-23 at 05:44 +0100, Alina Friedrichsen wrote:
-> This patch adds an ath9k specific entry to read, write and reset the
-> TSF into the debugfs, like in ath5k. This makes debugging the IBSS
-> handling of wifi drivers _much_ easier.
+--- wireless-testing.orig/net/mac80211/ht.c	2009-01-27 11:51:01.000000000 +0100
++++ wireless-testing/net/mac80211/ht.c	2009-01-27 11:51:38.000000000 +0100
+@@ -153,15 +153,15 @@ u32 ieee80211_enable_ht(struct ieee80211
+ 	return changed;
+ }
+ 
+-void ieee80211_sta_tear_down_BA_sessions(struct ieee80211_sub_if_data *sdata, u8 *addr)
++void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta)
+ {
+-	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_local *local = sta->local;
+ 	int i;
+ 
+ 	for (i = 0; i <  STA_TID_NUM; i++) {
+-		ieee80211_stop_tx_ba_session(&local->hw, addr, i,
++		ieee80211_stop_tx_ba_session(&local->hw, sta->sta.addr, i,
+ 					     WLAN_BACK_INITIATOR);
+-		ieee80211_sta_stop_rx_ba_session(sdata, addr, i,
++		ieee80211_sta_stop_rx_ba_session(sta->sdata, sta->sta.addr, i,
+ 						 WLAN_BACK_RECIPIENT,
+ 						 WLAN_REASON_QSTA_LEAVE_QBSS);
+ 	}
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-27 11:50:29.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-27 11:50:36.000000000 +0100
+@@ -988,7 +988,7 @@ void ieee80211_send_delba(struct ieee802
+ 
+ void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *da,
+ 				u16 tid, u16 initiator, u16 reason);
+-void ieee80211_sta_tear_down_BA_sessions(struct ieee80211_sub_if_data *sdata, u8 *addr);
++void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
+ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
+ 			     struct sta_info *sta,
+ 			     struct ieee80211_mgmt *mgmt, size_t len);
+--- wireless-testing.orig/net/mac80211/iface.c	2009-01-27 11:50:50.000000000 +0100
++++ wireless-testing/net/mac80211/iface.c	2009-01-27 11:50:58.000000000 +0100
+@@ -362,8 +362,7 @@ static int ieee80211_stop(struct net_dev
+ 
+ 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+ 		if (sta->sdata == sdata)
+-			ieee80211_sta_tear_down_BA_sessions(sdata,
+-							    sta->sta.addr);
++			ieee80211_sta_tear_down_BA_sessions(sta);
+ 	}
+ 
+ 	rcu_read_unlock();
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-01-27 11:50:42.000000000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2009-01-27 11:50:47.000000000 +0100
+@@ -913,7 +913,7 @@ static void ieee80211_set_disassoc(struc
+ 	netif_tx_stop_all_queues(sdata->dev);
+ 	netif_carrier_off(sdata->dev);
+ 
+-	ieee80211_sta_tear_down_BA_sessions(sdata, sta->sta.addr);
++	ieee80211_sta_tear_down_BA_sessions(sta);
+ 
+ 	if (self_disconnected) {
+ 		if (deauth)
 
-Ok, read I can understand, but write??
-
-johannes
-
---=-dSe76Edtp+37vFjmEaoI
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJekEmAAoJEKVg1VMiehFY0QQP/jIdkq8aUOvoe+IuDBBdZKf2
-bqh2A221DtXW4fgkPZ/OfX6Ppuz6L/JR2cO/cx7xxmWlKAP2D6we8JKoGgV72e1U
-yd44C9LsKQUxY8mLmTN/AZQzxVwHI1TBv7SxFnzMNGE5totfpUa/wWghoA+as/H5
-hUtFsvsI8pf3N+9L6u456xBetAaOl+i+q807ns73fxp4hZKORpFIvYBMbrYVz/Wd
-VeEw5AAcyHFyzMa/rJRgbG7R+851REhh2C5lPxvy0251F+nOeix4iEEmoffGzGaF
-gjYyKAgP+SSU6/e9720f6roZ5Yg9+LX1pKIcBY9UphKMQn2Ff7ddSZ5mIU9/TZFl
-njRWPeU6zA5bJ2p2VCAN8iU02xmUqiL24ZvIs5IHgfgjJnYsp8HZwfM6Kz7rnC13
-RmtY2i8DxBtaokDCso6JRXb6qiX9hGzn+/M/jfVd4maXF/1mUKDzy+cQ6ne+n4X3
-Ylhy5HXz4btpgksfKPmJ4CdDxWwUEYMsQQTw524mHiDhzm9OTRbB6JGoyzaYUrJD
-KaqNliIxDuQrIP33fMDM4hAQyHb1lKdFLBuB9snOeMUYiuYLlPU+a2Kefhm8uhZP
-HmXQhslWHNOux11YCC2RFsq1AeozdpMenekoJzFakrNk3QsAsX3nm837LQZ0B2hj
-GYdl/INhrXtSCXxFrJSu
-=iu6h
------END PGP SIGNATURE-----
-
---=-dSe76Edtp+37vFjmEaoI--
+-- 
 
