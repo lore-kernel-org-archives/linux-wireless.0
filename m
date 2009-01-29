@@ -1,122 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34044 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752457AbZAGL20 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37489 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753528AbZA2Ilb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2009 06:28:26 -0500
-Message-Id: <20090107112715.783330572@atheros.com> (sfid-20090107_123905_160640_AA1A2893)
-References: <20090107112346.369581673@atheros.com>
-Date: Wed, 07 Jan 2009 13:24:00 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 14/14] ath9k: Setup MFP options for CCMP
+	Thu, 29 Jan 2009 03:41:31 -0500
+Message-Id: <20090129005809.892477504@sipsolutions.net> (sfid-20090129_094135_000978_E0F6B2A1)
+References: <20090129005450.068797016@sipsolutions.net>
+Date: Thu, 29 Jan 2009 01:55:00 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: m.sujith@gmail.com, tomasw@gmail.com
+Subject: [RFC/RFT 10/11] mac80211: RX aggregation: clean up stop session
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure hardware CCMP for management frame protection and use
-software crypto when needed.
+Clean up the locking by splitting it into two functions,
+this will also enable further cleanups of stopping all
+sessions.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath9k/ath9k.h |    2 ++
- drivers/net/wireless/ath9k/hw.c    |   17 +++++++++++++++++
- drivers/net/wireless/ath9k/main.c  |    2 ++
- drivers/net/wireless/ath9k/recv.c  |    6 ++++++
- drivers/net/wireless/ath9k/reg.h   |    6 ++++++
- 5 files changed, 33 insertions(+)
+ net/mac80211/agg-rx.c |   57 ++++++++++++++++++++++++++++----------------------
+ 1 file changed, 32 insertions(+), 25 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/hw.c	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/hw.c	2009-01-07 13:08:13.000000000 +0200
-@@ -2266,6 +2266,23 @@ int ath9k_hw_reset(struct ath_hal *ah, s
- 	if (r)
- 		return r;
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2009-01-27 12:03:13.000000000 +0100
++++ wireless-testing/net/mac80211/agg-rx.c	2009-01-27 12:04:19.000000000 +0100
+@@ -17,47 +17,32 @@
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
  
-+	/* Setup MFP options for CCMP */
-+	if (AR_SREV_9280_20_OR_LATER(ah)) {
-+		/* Mask Retry(b11), PwrMgt(b12), MoreData(b13) to 0 in mgmt
-+		 * frames when constructing CCMP AAD. */
-+		REG_RMW_FIELD(ah, AR_AES_MUTE_MASK1, AR_AES_MUTE_MASK1_FC_MGMT,
-+			      0xc7ff);
-+		ah->sw_mgmt_crypto = false;
-+	} else if (AR_SREV_9160_10_OR_LATER(ah)) {
-+		/* Disable hardware crypto for management frames */
-+		REG_CLR_BIT(ah, AR_PCU_MISC_MODE2,
-+			    AR_PCU_MISC_MODE2_MGMT_CRYPTO_ENABLE);
-+		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
-+			    AR_PCU_MISC_MODE2_NO_CRYPTO_FOR_NON_DATA_PKT);
-+		ah->sw_mgmt_crypto = true;
-+	} else
-+		ah->sw_mgmt_crypto = true;
+-void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid,
+-					u16 initiator, u16 reason)
++static void __ieee80211_sta_stop_rx_ba_session(struct sta_info *sta, u16 tid,
++					       u16 initiator, u16 reason)
+ {
+-	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_hw *hw = &local->hw;
+-	struct sta_info *sta;
+-	int ret, i;
+-
+-	rcu_read_lock();
+-
+-	sta = sta_info_get(local, ra);
+-	if (!sta) {
+-		rcu_read_unlock();
+-		return;
+-	}
++	int i;
+ 
+ 	/* check if TID is in operational state */
+ 	spin_lock_bh(&sta->lock);
+-	if (sta->ampdu_mlme.tid_state_rx[tid]
+-				!= HT_AGG_STATE_OPERATIONAL) {
++	if (sta->ampdu_mlme.tid_state_rx[tid] != HT_AGG_STATE_OPERATIONAL) {
+ 		spin_unlock_bh(&sta->lock);
+-		rcu_read_unlock();
+ 		return;
+ 	}
 +
- 	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
- 		ath9k_hw_set_delta_slope(ah, chan);
+ 	sta->ampdu_mlme.tid_state_rx[tid] =
+ 		HT_AGG_STATE_REQ_STOP_BA_MSK |
+ 		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
+ 	spin_unlock_bh(&sta->lock);
  
---- wireless-testing.orig/drivers/net/wireless/ath9k/reg.h	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/reg.h	2009-01-07 13:08:13.000000000 +0200
-@@ -1243,6 +1243,8 @@ enum {
+-	/* stop HW Rx aggregation. ampdu_action existence
+-	 * already verified in session init so we add the BUG_ON */
+-	BUG_ON(!local->ops->ampdu_action);
+-
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "Rx BA session stop requested for %pM tid %u\n",
+-	       ra, tid);
++	       sta->sta.addr, tid);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
  
- #define AR_AES_MUTE_MASK1       0x8060
- #define AR_AES_MUTE_MASK1_SEQ   0x0000FFFF
-+#define AR_AES_MUTE_MASK1_FC_MGMT 0xFFFF0000
-+#define AR_AES_MUTE_MASK1_FC_MGMT_S 16
+-	ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
+-				       &sta->sta, tid, NULL);
+-	if (ret)
++	if (local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
++				     &sta->sta, tid, NULL))
+ 		printk(KERN_DEBUG "HW problem - can not stop rx "
+ 				"aggregation for tid %d\n", tid);
  
- #define AR_GATED_CLKS       0x8064
- #define AR_GATED_CLKS_TX    0x00000002
-@@ -1467,6 +1469,10 @@ enum {
- #define AR_PCU_TXBUF_CTRL_USABLE_SIZE   0x700
- #define AR_9285_PCU_TXBUF_CTRL_USABLE_SIZE   0x380
+@@ -67,7 +52,8 @@ void ieee80211_sta_stop_rx_ba_session(st
  
-+#define AR_PCU_MISC_MODE2               0x8344
-+#define AR_PCU_MISC_MODE2_MGMT_CRYPTO_ENABLE           0x00000002
-+#define AR_PCU_MISC_MODE2_NO_CRYPTO_FOR_NON_DATA_PKT   0x00000004
+ 	/* check if this is a self generated aggregation halt */
+ 	if (initiator == WLAN_BACK_RECIPIENT || initiator == WLAN_BACK_TIMER)
+-		ieee80211_send_delba(sdata, ra, tid, 0, reason);
++		ieee80211_send_delba(sta->sdata, sta->sta.addr,
++				     tid, 0, reason);
+ 
+ 	/* free the reordering buffer */
+ 	for (i = 0; i < sta->ampdu_mlme.tid_rx[tid]->buf_size; i++) {
+@@ -90,6 +76,27 @@ void ieee80211_sta_stop_rx_ba_session(st
+ 
+ 	sta->ampdu_mlme.tid_state_rx[tid] = HT_AGG_STATE_IDLE;
+ 	spin_unlock_bh(&sta->lock);
++}
 +
- #define AR_KEYTABLE_0           0x8800
- #define AR_KEYTABLE(_n)         (AR_KEYTABLE_0 + ((_n)*32))
- #define AR_KEY_CACHE_SIZE       128
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-01-07 13:08:10.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-01-07 13:08:13.000000000 +0200
-@@ -2348,6 +2348,8 @@ static int ath9k_set_key(struct ieee8021
- 			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
- 			if (key->alg == ALG_TKIP)
- 				key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-+			if (sc->sc_ah->sw_mgmt_crypto && key->alg == ALG_CCMP)
-+				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT;
- 			ret = 0;
- 		}
- 		break;
---- wireless-testing.orig/drivers/net/wireless/ath9k/recv.c	2008-12-18 08:32:48.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/recv.c	2009-01-07 13:08:13.000000000 +0200
-@@ -593,6 +593,12 @@ int ath_rx_tasklet(struct ath_softc *sc,
- 			if (test_bit(keyix, sc->sc_keymap))
- 				rx_status.flag |= RX_FLAG_DECRYPTED;
- 		}
-+		if (ah->sw_mgmt_crypto &&
-+		    (rx_status.flag & RX_FLAG_DECRYPTED) &&
-+		    ieee80211_is_mgmt(hdr->frame_control)) {
-+			/* Use software decrypt for management frames. */
-+			rx_status.flag &= ~RX_FLAG_DECRYPTED;
-+		}
- 
- 		/* Send the frame to mac80211 */
- 		__ieee80211_rx(sc->hw, skb, &rx_status);
---- wireless-testing.orig/drivers/net/wireless/ath9k/ath9k.h	2009-01-07 10:39:55.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/ath9k.h	2009-01-07 13:08:13.000000000 +0200
-@@ -805,6 +805,8 @@ struct ath_hal {
- #ifndef ATH_NF_PER_CHAN
- 	struct ath9k_nfcal_hist nfCalHist[NUM_NF_READINGS];
- #endif
++void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid,
++					u16 initiator, u16 reason)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
 +
-+	bool sw_mgmt_crypto;
- };
++	/* stop HW Rx aggregation. ampdu_action existence
++	 * already verified in session init so we add the BUG_ON */
++	BUG_ON(!local->ops->ampdu_action);
++
++	rcu_read_lock();
++
++	sta = sta_info_get(local, ra);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
++	}
++
++	__ieee80211_sta_stop_rx_ba_session(sta, tid, initiator, reason);
  
- struct chan_centers {
+ 	rcu_read_unlock();
+ }
 
 -- 
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
