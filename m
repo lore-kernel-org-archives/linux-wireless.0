@@ -1,70 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:19437 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753636AbZAHOrD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 09:47:03 -0500
-Received: by fk-out-0910.google.com with SMTP id 18so4486571fkq.5
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2009 06:47:02 -0800 (PST)
-Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net
-In-Reply-To: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils>
-References: <Pine.LNX.4.64.0901081318190.22793@blonde.anvils>
-Content-Type: text/plain
-Date: Thu, 08 Jan 2009 16:46:57 +0200
-Message-Id: <1231426017.922.2.camel@maxim-laptop> (sfid-20090108_154711_898368_804B206A)
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:55862 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753301AbZA2TGW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 14:06:22 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/7] iwlwifi: correct API command overlap
+Date: Thu, 29 Jan 2009 11:09:14 -0800
+Message-Id: <1233256157-21290-5-git-send-email-reinette.chatre@intel.com> (sfid-20090129_200628_026595_C7A767FD)
+In-Reply-To: <1233256157-21290-4-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-2-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
+ <1233256157-21290-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-01-08 at 13:49 +0000, Hugh Dickins wrote:
-> Thank you for the ath5k wireless driver,
-> which I've just started using on an Aspire One.
-> 
-> When running swapping load tests, wireless alive but not in active use,
-> I've now twice hit the BUG_ON(bf->skb == NULL) in ath5k_tasklet_rx().
-> 
-> First time was with 2.6.28 plus kdb patch,
-> kernel BUG at drivers/net/wireless/ath5k/base.c:1675!
-> and poking around the messages I could see before that an
-> ath5k phy0: can't alloc skbuff of size 2673, after a
-> swapper: page allocation failure, order:0 mode:0x4020
-> on a call from dev_alloc_skb(), with memory summary.
-> 
-> Second time was with yesterday's 2.6.28-git, no kdb,
-> kernel BUG at drivers/net/wireless/ath5k/base.c:1683!
-> running ath5k_tasklet_rx() from under do_softirq(),
-> Kernel panic - not syncing: Fatal exception in interrupt
-> so I couldn't see more; but at the top of the screen, the
-> last three lines of a page allocation failure memory summary.
-> 
-> So, that BUG_ON(bf->skb == NULL) appears to be unsafe under
-> memory pressure; but the fix wasn't obvious to me, so over
-> to you!
-> 
-> I'd be glad to try patches, of course, but it's not happening
-> often enough for me to report back success quickly - unless I
-> stumble on a quicker way to reproduce it, it'll need a week or
-> two to grow confident of a fix.
-> 
-> Thanks,
-> Hugh
+From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
 
+Correct the API commands where same command id used for two different
+commands. Update max api versions for affected devices.
 
-I use aspire one, and I don't see that, did this happen several times?
+TX_ANT_CONFIGURATION_CMD was already using id 0x98, so
+REPLY_TX_POWER_DBM_CMD moved to 0x95
 
+Older API interfaces may used original value so V1 defines provided.
 
-Could you try compat-wireless:
+Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-100.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    9 ++++++++-
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    4 +++-
+ 4 files changed, 14 insertions(+), 5 deletions(-)
 
-http://wireless.kernel.org/en/users/Download
-
-
-It has many fixes that made my wireless on that notebook more or less
-usable.
-
-Best regards,
-	Maxim Levitsky
+diff --git a/drivers/net/wireless/iwlwifi/iwl-100.c b/drivers/net/wireless/iwlwifi/iwl-100.c
+index a5df931..11d206a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-100.c
++++ b/drivers/net/wireless/iwlwifi/iwl-100.c
+@@ -46,7 +46,7 @@
+ #include "iwl-5000-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL100_UCODE_API_MAX 1
++#define IWL100_UCODE_API_MAX 2
+ 
+ /* Lowest firmware API version supported */
+ #define IWL100_UCODE_API_MIN 1
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index ee58ddb..5b59286 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1411,12 +1411,19 @@ static int iwl5000_send_rxon_assoc(struct iwl_priv *priv)
+ static int  iwl5000_send_tx_power(struct iwl_priv *priv)
+ {
+ 	struct iwl5000_tx_power_dbm_cmd tx_power_cmd;
++	u8 tx_ant_cfg_cmd;
+ 
+ 	/* half dBm need to multiply */
+ 	tx_power_cmd.global_lmt = (s8)(2 * priv->tx_power_user_lmt);
+ 	tx_power_cmd.flags = IWL50_TX_POWER_NO_CLOSED;
+ 	tx_power_cmd.srv_chan_lmt = IWL50_TX_POWER_AUTO;
+-	return  iwl_send_cmd_pdu_async(priv, REPLY_TX_POWER_DBM_CMD,
++
++	if (IWL_UCODE_API(priv->ucode_ver) == 1)
++		tx_ant_cfg_cmd = REPLY_TX_POWER_DBM_CMD_V1;
++	else
++		tx_ant_cfg_cmd = REPLY_TX_POWER_DBM_CMD;
++
++	return  iwl_send_cmd_pdu_async(priv, tx_ant_cfg_cmd,
+ 				       sizeof(tx_power_cmd), &tx_power_cmd,
+ 				       NULL);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 1672a98..af70070 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -46,8 +46,8 @@
+ #include "iwl-5000-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL6000_UCODE_API_MAX 1
+-#define IWL6050_UCODE_API_MAX 1
++#define IWL6000_UCODE_API_MAX 2
++#define IWL6050_UCODE_API_MAX 2
+ 
+ /* Lowest firmware API version supported */
+ #define IWL6000_UCODE_API_MIN 1
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index e49415c..77f32ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -144,9 +144,11 @@ enum {
+ 	WHO_IS_AWAKE_NOTIFICATION = 0x94,	/* not used */
+ 
+ 	/* Miscellaneous commands */
++	REPLY_TX_POWER_DBM_CMD = 0x95,
+ 	QUIET_NOTIFICATION = 0x96,		/* not used */
+ 	REPLY_TX_PWR_TABLE_CMD = 0x97,
+-	REPLY_TX_POWER_DBM_CMD = 0x98,
++	REPLY_TX_POWER_DBM_CMD_V1 = 0x98,	/* old version of API */
++	TX_ANT_CONFIGURATION_CMD = 0x98,	/* not used */
+ 	MEASURE_ABORT_NOTIFICATION = 0x99,	/* not used */
+ 
+ 	/* Bluetooth device coexistence config command */
+-- 
+1.5.4.3
 
