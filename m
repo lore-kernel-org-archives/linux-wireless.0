@@ -1,108 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11021 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755533AbZAPANT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2009 19:13:19 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2009 16:13:19 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/13] cfg80211: rename fw_handles_regulatory to custom_regulatory
-Date: Thu, 15 Jan 2009 16:12:22 -0800
-Message-ID: <1232064746-17134-10-git-send-email-lrodriguez@atheros.com> (sfid-20090116_011328_416227_3B6D9167)
-In-Reply-To: <1232064746-17134-9-git-send-email-lrodriguez@atheros.com>
-References: <1232064746-17134-1-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-2-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-3-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-4-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-5-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-6-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-7-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-8-git-send-email-lrodriguez@atheros.com>
- <1232064746-17134-9-git-send-email-lrodriguez@atheros.com>
+Received: from wf-out-1314.google.com ([209.85.200.168]:58974 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754063AbZA2PRF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 10:17:05 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so8731652wfd.4
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jan 2009 07:17:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1233231739-4402-1-git-send-email-vasanth@atheros.com>
+References: <1233231739-4402-1-git-send-email-vasanth@atheros.com>
+Date: Thu, 29 Jan 2009 10:17:04 -0500
+Message-ID: <b6c5339f0901290717m760c4704x7f9df7502f772a17@mail.gmail.com> (sfid-20090129_161712_787053_46F15C75)
+Subject: Re: [PATCH] ath9k: Fix LED blink pattern
+From: Bob Copeland <bcopeland@gmail.com>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Luis.Rodriguez@atheros.com, Jouni.Malinen@atheros.com,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers without firmware can also have custom regulatory maps
-which do not map to a specific ISO / IEC alpha2 country code.
+On Thu, Jan 29, 2009 at 7:22 AM, Vasanthakumar Thiagarajan
+<vasanth@atheros.com> wrote:
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+>  drivers/net/wireless/ath9k/core.h |   10 +++++++
+>  drivers/net/wireless/ath9k/main.c |   52 ++++++++++++++++++++++++++++++++----
+>  2 files changed, 56 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
+> index 29251f8..9a7bb1b 100644
+> --- a/drivers/net/wireless/ath9k/core.h
+> +++ b/drivers/net/wireless/ath9k/core.h
+> @@ -600,6 +600,8 @@ struct ath_ani {
+>  /********************/
+>
+>  #define ATH_LED_PIN    1
+> +#define ATH_LED_ON_DURATION_IDLE       350     /* in msecs */
+> +#define ATH_LED_OFF_DURATION_IDLE      250     /* in msecs */
+>
+>  enum ath_led_type {
+>        ATH_LED_RADIO,
+> @@ -677,6 +679,7 @@ enum PROT_MODE {
+>  #define SC_OP_RFKILL_SW_BLOCKED        BIT(12)
+>  #define SC_OP_RFKILL_HW_BLOCKED        BIT(13)
+>  #define SC_OP_WAIT_FOR_BEACON  BIT(14)
+> +#define SC_OP_LED_ON           BIT(15)
+>
+>  struct ath_bus_ops {
+>        void            (*read_cachesize)(struct ath_softc *sc, int *csz);
+> @@ -725,10 +728,17 @@ struct ath_softc {
+>        struct ath_rate_table *hw_rate_table[ATH9K_MODE_MAX];
+>        struct ath_rate_table *cur_rate_table;
+>        struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
+> +
+>        struct ath_led radio_led;
+>        struct ath_led assoc_led;
+>        struct ath_led tx_led;
+>        struct ath_led rx_led;
+> +       struct delayed_work ath_led_blink_work;
+> +       int led_on_duration;
+> +       int led_off_duration;
+> +       int led_on_cnt;
+> +       int led_off_cnt;
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- include/net/wireless.h                      |    6 +++---
- net/wireless/reg.c                          |    2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
+This is something that has come up from time to time from users for
+ath5k as well.  Half of the drivers now have their own timers for
+turning leds on or off.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d2ef3e1..1d568ac 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -811,7 +811,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
- 
--	hw->wiphy->fw_handles_regulatory = true;
-+	hw->wiphy->custom_regulatory = true;
- 
- 	/* Default value; 4 EDCA QOS priorities */
- 	hw->queues = 4;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 15425a0..bbd44d5 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -7388,7 +7388,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
- 
--	hw->wiphy->fw_handles_regulatory = true;
-+	hw->wiphy->custom_regulatory = true;
- 
- 	/* 4 EDCA QOS priorities */
- 	hw->queues = 4;
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 232047b..21e45bf 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -184,8 +184,8 @@ struct ieee80211_supported_band {
-  * @ignore_country_ies: tells us the wireless core should ignore country IEs
-  *	received by itself or by other wireless drivers. This will only
-  *	apply if the driver has provided a regulatory_hint()
-- * @fw_handles_regulatory: tells us the firmware for this device
-- * 	has its own regulatory solution and cannot identify the
-+ * @custom_regulatory: tells us the driver for this device
-+ * 	has its own custom regulatory domain and cannot identify the
-  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
-  * 	we will disregard the first regulatory hint (when the
-  * 	initiator is %REGDOM_SET_BY_CORE).
-@@ -204,7 +204,7 @@ struct wiphy {
- 	/* Supported interface modes, OR together BIT(NL80211_IFTYPE_...) */
- 	u16 interface_modes;
- 
--	bool fw_handles_regulatory;
-+	bool custom_regulatory;
- 	bool ignore_country_ies;
- 
- 	/* If multiple wiphys are registered and you're handed e.g.
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f0ad937..8bf999d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1009,7 +1009,7 @@ static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
- 	if (!last_request)
- 		return true;
- 	if (setby == REGDOM_SET_BY_CORE &&
--		  wiphy->fw_handles_regulatory)
-+		  wiphy->custom_regulatory)
- 		return true;
- 	return false;
- }
+Can we just add a decent blink algorithm to mac80211?  Right now for
+rx it just toggles every other packet.  For tx, it's slightly smarter
+but not overly so.  It seems like this is one of those things everyone
+wants to do and we could easily make it a standard service.
+
 -- 
-1.6.1.rc3.51.g5832d
-
+Bob Copeland %% www.bobcopeland.com
