@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35345 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751328AbZAWUBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2009 15:01:36 -0500
-Subject: Re: [PATCH 0/7] airo: cleanups and simplifications
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090123194010.GD30486@tuxdriver.com>
-References: <1232462691.22158.6.camel@localhost.localdomain>
-	 <20090123194010.GD30486@tuxdriver.com>
-Content-Type: text/plain
-Date: Fri, 23 Jan 2009 14:59:52 -0500
-Message-Id: <1232740792.2577.49.camel@localhost.localdomain> (sfid-20090123_210150_447266_6CB96E45)
-Mime-Version: 1.0
+Received: from wf-out-1314.google.com ([209.85.200.171]:34355 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbZA2GGt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2009 01:06:49 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so8517110wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 22:06:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20090128170303.32025.21799.stgit@tikku>
+References: <20090128170215.32025.32389.stgit@tikku>
+	 <20090128170303.32025.21799.stgit@tikku>
+Date: Thu, 29 Jan 2009 11:36:48 +0530
+Message-ID: <8e92b4100901282206r64a07a9dtcc44db645d301b28@mail.gmail.com> (sfid-20090129_070702_145344_32FCF142)
+Subject: Re: [PATCH v3 2/2] mac80211: use ps-poll when dynamic power save mode
+	is disabled
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-01-23 at 14:40 -0500, John W. Linville wrote:
-> On Tue, Jan 20, 2009 at 09:44:51AM -0500, Dan Williams wrote:
-> > airo needs some hot sexy love.  come and get your love come and get your
-> > love now.
-> > 
-> > [PATCH 1/7] airo: clean up and clarify interrupt-time task handling
-> > [PATCH 2/7] airo: re-arrange WPA capability checks
-> > [PATCH 3/7] airo: simplify WEP index and capability checks
-> > [PATCH 4/7] airo: clean up WEP key operations
-> > [PATCH 5/7] airo: use __attribute__ ((packed)) not #pragma
-> > [PATCH 6/7] airo: clean up and clarify micinit()
-> > [PATCH 7/7] airo: remove useless #defines
-> 
-> 1-4 (v2 of #4) don't seem to apply to wireless-testing anymore.  #1 in
-> particular was a big reject, so I didn't try too hard on the rest.
-> I'll drop 5-7 too just in case there are dependencies.
-> 
-> Would you mind rebasing and reposting?
+On Wed, Jan 28, 2009 at 10:33 PM, Kalle Valo <kalle.valo@nokia.com> wrote:
 
-Will do.
+> +                                * Here is assumed that the driver will be
+> +                                * able to send ps-poll frame and receive a
+> +                                * response even though power save mode is
+> +                                * enabled, but some drivers might require
+> +                                * to disable power save here. This needs
+> +                                * to be investigated.
 
-Dan
+ath9k too needs power save to be disabled to send or receive any frame. Same as
+broadcom. I hope it is the same for many others too. I'm curious about
+the design of
+stlc45xx/p54 since it is capable of sending/receiving even though power save is
+enabled. I wonder what blocks of the hw are off when ps is enabled
+since it is capable
+of doing the basic operation of Tx/Rx which is the only thing expected
+from a driver.
+I seriously doubt if NIC is saving any power at all or the hw design
+is very novel and
+interesting.
 
-
+Thanks,
+Vivek.
