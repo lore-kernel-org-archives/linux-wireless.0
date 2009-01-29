@@ -1,46 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55148 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756512AbZAIWPm (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34341 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752241AbZA2In1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2009 17:15:42 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1LLPdl-000156-7g
-	for linux-wireless@vger.kernel.org; Fri, 09 Jan 2009 17:15:41 -0500
-Received: from linville-t43.local (linville-t43.local [127.0.0.1])
-	by linville-t43.local (8.14.2/8.14.2) with ESMTP id n09M1FAa015926
-	for <linux-wireless@vger.kernel.org>; Fri, 9 Jan 2009 17:01:15 -0500
-Received: (from linville@localhost)
-	by linville-t43.local (8.14.2/8.14.2/Submit) id n09M1F7w015924
-	for linux-wireless@vger.kernel.org; Fri, 9 Jan 2009 17:01:15 -0500
-Date: Fri, 9 Jan 2009 17:01:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+	Thu, 29 Jan 2009 03:43:27 -0500
+Message-Id: <20090129005808.374637105@sipsolutions.net> (sfid-20090129_094330_688815_435E8B09)
+References: <20090129005450.068797016@sipsolutions.net>
+Date: Thu, 29 Jan 2009 01:54:54 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: wireless-testing merging caught-up (for now)
-Message-ID: <20090109220115.GI3371@tuxdriver.com> (sfid-20090109_231547_434710_58D70A59)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: m.sujith@gmail.com, tomasw@gmail.com
+Subject: [RFC/RFT 04/11] mac80211: restrict aggregation to supported
+	interface modes
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greets,
+We can only support aggregation on AP/STA right now. HT isn't defined
+for IBSS, WDS or MESH. In the WDS/MESH cases it's not clear what to
+put into the IBSS field, and we don't handle that in the code at all.
+Also fix the code to handle VLAN correctly.
 
-I wanted to let everyone know that I'm more-or-less caught-up with
-merging the patches posted over the holiday.  If you have posted
-patches more than 48 hours ago and they haven't been merged to
-wireless-testing or rejected (or at least have serious discussions)
-on the list then you may want to resend them.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: do not allow IBSS
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+ net/mac80211/agg-rx.c |    3 ++-
+ net/mac80211/agg-tx.c |   16 +++++++++++++++-
+ net/mac80211/ht.c     |    3 ++-
+ net/mac80211/rx.c     |   11 +++++++++++
+ 4 files changed, 30 insertions(+), 3 deletions(-)
 
-I haven't passed them on to Dave just yet, as I got a little sloppy
-with keeping fixes separate from updates.  I'll try to get that
-sorted-out over the weekend.
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2009-01-28 11:34:59.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2009-01-29 01:46:59.000000000 +0100
+@@ -41,7 +41,8 @@ static void ieee80211_send_addba_request
+ 	memset(mgmt, 0, 24);
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+-	if (sdata->vif.type == NL80211_IFTYPE_AP)
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
+ 	else
+ 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+@@ -180,6 +181,19 @@ int ieee80211_start_tx_ba_session(struct
+ 		goto exit;
+ 	}
+ 
++	/*
++	 * The aggregation code is not prepared to handle
++	 * anything but STA/AP due to the BSSID handling.
++	 * IBSS could work in the code but isn't supported
++	 * by drivers or the standard.
++	 */
++	if (sta->sdata->vif.type != NL80211_IFTYPE_STATION &&
++	    sta->sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
++	    sta->sdata->vif.type != NL80211_IFTYPE_AP) {
++		ret = -EINVAL;
++		goto exit;
++	}
++
+ 	spin_lock_bh(&sta->lock);
+ 
+ 	/* we have tried too many times, receiver does not want A-MPDU */
+--- wireless-testing.orig/net/mac80211/rx.c	2009-01-28 11:34:58.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2009-01-29 01:46:05.000000000 +0100
+@@ -1745,6 +1745,17 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 
+ 	switch (mgmt->u.action.category) {
+ 	case WLAN_CATEGORY_BACK:
++		/*
++		 * The aggregation code is not prepared to handle
++		 * anything but STA/AP due to the BSSID handling;
++		 * IBSS could work in the code but isn't supported
++		 * by drivers or the standard.
++		 */
++		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++		    sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
++		    sdata->vif.type != NL80211_IFTYPE_AP)
++			return RX_DROP_MONITOR;
++
+ 		switch (mgmt->u.action.u.addba_req.action_code) {
+ 		case WLAN_ACTION_ADDBA_REQ:
+ 			if (len < (IEEE80211_MIN_ACTION_SIZE +
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2009-01-28 11:34:59.000000000 +0100
++++ wireless-testing/net/mac80211/agg-rx.c	2009-01-29 01:45:08.000000000 +0100
+@@ -134,7 +134,8 @@ static void ieee80211_send_addba_resp(st
+ 	memset(mgmt, 0, 24);
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+-	if (sdata->vif.type == NL80211_IFTYPE_AP)
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
+ 	else
+ 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+--- wireless-testing.orig/net/mac80211/ht.c	2009-01-28 11:34:59.000000000 +0100
++++ wireless-testing/net/mac80211/ht.c	2009-01-29 01:45:07.000000000 +0100
+@@ -190,7 +190,8 @@ void ieee80211_send_delba(struct ieee802
+ 	memset(mgmt, 0, 24);
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+-	if (sdata->vif.type == NL80211_IFTYPE_AP)
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
+ 	else
+ 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
 
-Hth!
-
-John
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+
