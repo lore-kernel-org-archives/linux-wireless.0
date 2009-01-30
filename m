@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19408 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754532AbZAMT6q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 14:58:46 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2009 11:58:46 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/12] cfg80211: process user requests only after previous user/driver/core requests
-Date: Tue, 13 Jan 2009 11:57:53 -0800
-Message-ID: <1231876675-20518-11-git-send-email-lrodriguez@atheros.com> (sfid-20090113_205849_711488_ECD932B0)
-In-Reply-To: <1231876675-20518-10-git-send-email-lrodriguez@atheros.com>
-References: <1231876675-20518-1-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-2-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-3-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-4-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-5-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-6-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-7-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-8-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-9-git-send-email-lrodriguez@atheros.com>
- <1231876675-20518-10-git-send-email-lrodriguez@atheros.com>
+Received: from smtp.nokia.com ([192.100.122.230]:54125 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752890AbZA3Lpu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2009 06:45:50 -0500
+Message-ID: <4982E7E3.3010104@nokia.com> (sfid-20090130_124554_599662_BCE6A7E7)
+Date: Fri, 30 Jan 2009 13:43:31 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: ext Johannes Berg <johannes@sipsolutions.net>
+CC: Stephen Hemminger <shemminger@vyatta.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: convert to net_device_ops
+References: <20090127052926.44d3fd5f@s6510>	 <1233314257.30970.6.camel@johannes.local>	 (sfid-20090130_121747_128792_58F3B8C4) <1233314871.30970.10.camel@johannes.local>
+In-Reply-To: <1233314871.30970.10.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This prevents user regulatory changes to be considered prior to previous
-pending user, core or driver requests which have not be applied.
+ext Johannes Berg wrote:
+> On Fri, 2009-01-30 at 12:17 +0100, Johannes Berg wrote:
+>> On Tue, 2009-01-27 at 05:29 +1100, Stephen Hemminger wrote:
+>>> Convert to new net_device_ops in 2.6.28 and later.
+>>>
+>>> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+>> John, please revert this commit for now, it's breaking monitor mode
+>> injection (and thus AP mode) because the xmit handler assignment in
+>> ieee80211_setup_sdata is not effective.
+> 
+> Oh, for reference:
+> 
+> commit e22cab741afdd1e9857ea9fe51e28a6fe3c97b90
+> Author: Stephen Hemminger <shemminger@vyatta.com>
+> Date:   Tue Jan 27 05:29:25 2009 +1100
+> 
+>     mac80211: convert to net_device_ops
+>     
+>     Convert to new net_device_ops in 2.6.28 and later.
+>     
+>     Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+>     Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+Yes, I can confirm that reverting this commit solves the hostapd 
+problems I have been seeing.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 12a547a..460411d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1082,6 +1082,16 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 		if (last_request->initiator == REGDOM_SET_BY_USER &&
- 			  last_request->intersect)
- 			return -EOPNOTSUPP;
-+		if (last_request->initiator == REGDOM_SET_BY_CORE ||
-+		    last_request->initiator == REGDOM_SET_BY_DRIVER ||
-+		    last_request->initiator == REGDOM_SET_BY_USER) {
-+			if (alpha2_equal(last_request->alpha2,
-+			    cfg80211_regdomain->alpha2))
-+				return 0;
-+			else
-+				return -EAGAIN;
-+		}
-+
- 		return 0;
- 	}
- 
--- 
-1.6.1.rc3.51.g5832d
+Kalle
 
