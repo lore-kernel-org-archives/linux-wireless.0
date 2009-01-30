@@ -1,65 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33364 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752376AbZAHQwt (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:50565 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979AbZA3SJj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2009 11:52:49 -0500
-Subject: Re: [PATCH v2 1/3] libertas: Fix alignment issues in libertas core
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Colin McCabe <colin@cozybit.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>, dcbw <dcbw@redhat.com>
-In-Reply-To: <1230951623-26998-2-git-send-email-colin@cozybit.com> (sfid-20090103_040451_022232_D73555CB)
-References: <1230951623-26998-1-git-send-email-colin@cozybit.com>
-	 <1230951623-26998-2-git-send-email-colin@cozybit.com>
-	 (sfid-20090103_040451_022232_D73555CB)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-i+F9yd9rFv1enzSRGPzw"
-Date: Thu, 08 Jan 2009 17:53:17 +0100
-Message-Id: <1231433597.8398.3.camel@johannes> (sfid-20090108_175253_557694_88A302CA)
-Mime-Version: 1.0
+	Fri, 30 Jan 2009 13:09:39 -0500
+Message-Id: <F1FAF4F1-E45A-461D-8D46-5D1B1A1BBAE2@ing.unibs.it> (sfid-20090130_190943_641683_32E5AB17)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+To: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v929.2)
+Subject: ad-hoc mode implementation
+Date: Fri, 30 Jan 2009 19:09:35 +0100
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
---=-i+F9yd9rFv1enzSRGPzw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I began testing the opensource firmware on b43 when running ad-hoc  
+mode and I faced a strange problem that drove me to investigate about  
+how ad-hoc mode is implemented inside the wireless stack. Note that  
+what follows holds for both Broadcom original firmware and opensource  
+one, however I did all these tests switching back to original BCM  
+firmware.
 
-On Fri, 2009-01-02 at 19:00 -0800, Colin McCabe wrote:
-> When loading fields from packed structs, use get_unaligned_le16 and
-> get_unaligned_le32 instead of le16_to_cpu and le32_to_cpu.
-> This doesn't matter on x86, but it is important for some other CPUs.
->=20
-> Also, mark all packed structs as packed. Generally, any data structure
-> that comes over the wire from the WLAN firmware should be a packed struct=
-.
+It turned out that Apple Macs with 4328 hardware (bot a/b/g and n)  
+running different version of OSX never succeed in joining ad-hoc  
+networks initiated by b43 while they can join without problems ad-hoc  
+networks run by ath5k (with initiated or run I mean "the first node  
+that is configured with that SSID"). I attach a complete description  
+of the tests at the end of this message.
 
-Just marking the structs packed should be sufficient, since then the
-compiler must assume they are potentially unaligned.
+I then captured some traffic and it seems that b43 never sends beacon  
+when initiating ad-hoc networks, it just sends probes to itself and  
+responds to broadcast probe requests. Note that ath5k instead sends  
+beacons as long as it is the first node. Probably I'm missing  
+something, so just responding to broadcast probes could be a correct  
+alternative procedure to advertise ad-hoc network, however this seems  
+to be the only difference to explain the different behavior of newer  
+Apple Macs when joining ath5k or b43 ad-hoc initiated networks.
 
-johannes
+Please note that if I invert roles (ad-hoc initiated by those Apple  
+Macs, b43 joining the network) everything is fine, so this is not an  
+issue involving send and receive operations, nodes do not have  
+communication problems.
 
---=-i+F9yd9rFv1enzSRGPzw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Has anyone ever experienced such issues? Is it correct to not send  
+beacon when starting an ad-hoc network? I did some tests and OSX does  
+send beacon when initiating an ad-hoc network (as ath5k does).
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Cheers,
+-FG
 
-iQIcBAABAgAGBQJJZi97AAoJEKVg1VMiehFYwSgQALDrvy7pgQedloWpLlLZkKJw
-JdRTVHUviLuda2e4OA1z5sP79u+Y/Gxa9elgczB4JW0oYgJVpYgwtFf7zELrU4ii
-+UYunWh+LHsV7AWRJHawJCMrTMSNU1J4PuXr4jhb+OlmhLbVyY1fNvhKy1wsGbwP
-VuXtFjrnP3QNZlvoIajsTLFz++qQHB878G3SR1xMUF16+KgAYDYRPIYzmTFyid/h
-JnpYfR4ycrnDviSiXTRgTktfmnXJ+uo3FDZ7fZYy4m5ZvevQn4h2FrnTAE/pRfDV
-QdNLwJdIRu4aF+eSZIoFUHTtL0W78v2XWdUc59lYk7WXBYPthb6kZHC7favs+qPg
-kGj/PiKp13+JeelfFrzkrQ6s4Rv7LrzbMqg+wOMuMx7jQn5y1SlnRCsD6uY8nbrD
-oY6z0sVBk0S2yuNkdrfb2BrapgXheZvzAOJON8X9RbYmhBsqJnX+Ma2Yd+F+u9q1
-IZfwGqc5Y7q634hIakd4GCFo8fngqkNMZD3RwRgFkvCJGRRW7ldXoGK+O5EPmHIB
-Zjv2mioinBEzTO1VW+FQrmPMFqi2fX8xmhtPKC0qX4d854EYAKCSIYK2ZhMVDEMH
-kD9zkRkV8sYyNQZEvohJusyDy0sso7yE91nq2fuI4RlB5A++2RMyCYdqnj/vKDeP
-yFStUYWJSVO+IwEn97kM
-=UXPb
------END PGP SIGNATURE-----
+----- testbed scenarios
 
---=-i+F9yd9rFv1enzSRGPzw--
+When I initiate an ad-hoc network on a Linux PC with a 4306 card, I  
+can't join it using any of my Apple Macs equipped with BCM hardware.
+
+I tried two different Apple, one is a new MacBook Pro with 4328 BCM N- 
+PHY, the other is a two years old iMac 17 with a a/b/g  4328 BCM  
+hardware. The Kernel I used on the x86 PC was 2.6.29-rc2-wl, the  
+firmware was the original Broadcom ucode5, I did not use encryption. I  
+did extensive testing but I never succeeded.
+
+I then tried the same setup, using this time a 4318 card to initiate  
+the ad-hoc network on the Linux box, and I got the same behavior.  
+Finally I repeated the experiment this time initiating the ad-hoc  
+network with a Linksys WRT54GL (BCM 4320), same result, the two Apple  
+Macs never joined the network, they reported a generic error and  
+nothing more.
+
+Please note that if I repeat the experiments using a MacBook Pro with  
+Atheros hardware everything works fine. Also all other Linux PC I have  
+do not have problems in joining these b43-run ad-hoc networks  
+independently of the kind of Atheros or BCM hardware they use.
 
