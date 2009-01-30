@@ -1,66 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:23879 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbZAFRcZ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50369 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753478AbZA3OPx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 12:32:25 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so931984eye.37
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2009 09:32:23 -0800 (PST)
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH] rt2x00: Provide regulatory hint with rt2500pci/usb
-Date: Tue, 6 Jan 2009 18:32:20 +0100
-Cc: Gertjan van Wingerde <gwingerde@kpnplanet.nl>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rt2400-devel@lists.sourceforge.net"
-	<rt2400-devel@lists.sourceforge.net>
-References: <200901042021.10904.IvDoorn@gmail.com> <200901052321.46422.IvDoorn@gmail.com> <20090105234546.GK6834@tesla>
-In-Reply-To: <20090105234546.GK6834@tesla>
+	Fri, 30 Jan 2009 09:15:53 -0500
+Date: Fri, 30 Jan 2009 09:05:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	gregkh@suse.de, kalle.valo@iki.fi
+Subject: Re: [PATCH] at76_usb: fix bugs introduced by "Staging: at76_usb:
+	cleanup dma on stack issues"
+Message-ID: <20090130140503.GC3485@tuxdriver.com> (sfid-20090130_151558_487840_3F695513)
+References: <c4d76b3b0901292059w20fccf62gdae10eee02ac4791@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200901061832.20529.IvDoorn@gmail.com> (sfid-20090106_183230_240766_24AF1E13)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c4d76b3b0901292059w20fccf62gdae10eee02ac4791@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Sure, I was a bit doubting about the timing of the call, I noticed that zd1211rw called it during the start()
-> > callback function. Would that be the best location? Or right after ieee80211_register_hw()?
+FWIW, that driver is in the staging tree.  I'm not sure if there is
+a mailing list for that or not, but you should at least copy Greg on
+any patches.  Kalle might be interested in seeing them too.
+
+Hth!
+
+John
+
+On Thu, Jan 29, 2009 at 11:59:48PM -0500, Jason Andryuk wrote:
+> Tracking down the firmware loading problem led to this commit.
 > 
-> Doesn't really matter, so long as its after ieee80211_register_hw() has been called
-> would be nice.
-
-Ok.
-
-> > > 2. I'm still puzzled how to handle the two different values that the EEPROM has, namely one for the bg band and one for the a band. I've handled it by registering the one associated with the configured band, but that seems to be unlikely to be correct. I still haven't found a better way to handle this.
-> > 
-> > Because of this I hadn't looked very deep into rt61 and rt73 yet.
-> > 
-> > > The problem isn't there for the bits that Ivo sent, as the rt2500 devices don't support the a band.
-> > 
-> > For rt2500pci and rt2500usb there are chipsets which support 5GHz (they are rare, but they do exist),
-> > comments for the Ralink drivers indicate they simply didn't add the regulatory domain definitions yet.
+> $ git bisect bad
+> 0d1d1424330cc1934f2b2742f0cfa2c31e6a250b is first bad commit
+> commit 0d1d1424330cc1934f2b2742f0cfa2c31e6a250b
+> Author: Oliver Neukum <oliver@neukum.org>
+> Date:   Thu Dec 18 13:16:40 2008 +0100
 > 
-> Based on the documentation from the EEPROM for all devices I read that its recommended
-> that the EEPROM *not be relied on for the regulatory domain*, instead it recommends the
-> windows registry be used.
->
-> Based on tests for the devices with only one band, do are you seeing an actual regulatory
-> domain in the EEPROM?
+>     Staging: at76_usb: cleanup dma on stack issues
+> 
+>     - no DMA on stack
+>     - cleanup unclear endianness issue
+> 
+>     Signed-off-by: Oliver Neukum <oneukum@suse.de>
+>     Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> 
+> :040000 040000 c4fee9ea0fef25926229d810d19dc2f89cca9401
+> 8b165a35d16280d2413b2700a6080ef290ca1009 M	drivers
+> 
+> The "no DMA on stack" conversion was incomplete with respect to
+> updating the arguments passed to usb_control_msg.  The value 40 is
+> hardcoded as it was prior to conversion.
+> 
+> The driver can now load firmware, but is not fully functional.
+> 
+> Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
+> --
+> 
+> diff --git a/drivers/staging/at76_usb/at76_usb.c b/drivers/staging/at76_usb/at76
+> index 185533e..befde9b 100644
+> --- a/drivers/staging/at76_usb/at76_usb.c
+> +++ b/drivers/staging/at76_usb/at76_usb.c
+> @@ -598,7 +598,7 @@ static int at76_get_op_mode(struct usb_device *udev)
+>                 return -ENOMEM;
+>         ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x33,
+>                               USB_TYPE_VENDOR | USB_DIR_IN |
+> -                             USB_RECIP_INTERFACE, 0x01, 0, &op_mode, 1,
+> +                             USB_RECIP_INTERFACE, 0x01, 0, op_mode, 1,
+>                               USB_CTRL_GET_TIMEOUT);
+>         saved = *op_mode;
+>         kfree(op_mode);
+> @@ -731,7 +731,7 @@ static inline int at76_get_cmd_status(struct usb_device *ude
+>         ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x22,
+>                               USB_TYPE_VENDOR | USB_DIR_IN |
+>                               USB_RECIP_INTERFACE, cmd, 0, stat_buf,
+> -                             sizeof(stat_buf), USB_CTRL_GET_TIMEOUT);
+> +                             40, USB_CTRL_GET_TIMEOUT);
+>         if (ret >= 0)
+>                 ret = stat_buf[5];
+>         kfree(stat_buf);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-I have to check, but I don't think I have any hardware with valid domain values.
- 
-> To deal with the issue of having two separate EEPROM values for a regulatory domain
-> and since the documentation indicates to not rely on it I would advise to allow users
-> to be compliant by selecting the country they are in. wpa_supplicant has support for
-> selecting country now, and so does iw. Eventually I see Network Manager letting users
-> select the country. But you guys are the maintainers and developers so you will know
-> better.
-
-Well it is fine with me,  understood from earlier discussion that it was advised that drivers
-attempted to set the domain if they could. Hence the reason I had added reading the EEPROM
-for domain values to the TODO list. But it is true that it is quite rare that there are valid values
-for it. So it would be fine with me by letting the user handle it completely.
-
-Ivo
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
