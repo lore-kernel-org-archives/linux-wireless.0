@@ -1,96 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54622 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753704AbZATTnS convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:39348 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129AbZA3TJt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 14:43:18 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 11:43:18 -0800
-Date: Tue, 20 Jan 2009 11:42:43 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Paul Hickey <paul@christianpatriot.us>, <stable@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: Failed Build of modules for 2.6.27.9-159
-Message-ID: <20090120194243.GC19581@tesla> (sfid-20090120_204322_930201_4326E11E)
-References: <1232319854.4596.1.camel@localhost.localdomain> <20090119191138.GA4018@tesla> <1232404986.3641.2.camel@localhost.localdomain> <20090120000336.GB4018@tesla> <1232433738.3696.3.camel@localhost.localdomain>
+	Fri, 30 Jan 2009 14:09:49 -0500
+Received: by ewy14 with SMTP id 14so932086ewy.13
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 11:09:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1232433738.3696.3.camel@localhost.localdomain>
+In-Reply-To: <e27b78a40901300601p35d68125kfc3a10a7d7db0900@mail.gmail.com>
+References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
+	 <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com>
+	 <e27b78a40901240804m1acd3a83o7bf6d01f81ec3397@mail.gmail.com>
+	 <45e8e6c40901240956g68a5364tdbacc1e49410c9cc@mail.gmail.com>
+	 <e27b78a40901260625w53acd646xeb5a9ca85555c74d@mail.gmail.com>
+	 <e27b78a40901260956w4e69d33s7db60defc026c8d7@mail.gmail.com>
+	 <45e8e6c40901280954l42bbe788y8723141d673bb7b3@mail.gmail.com>
+	 <e27b78a40901300446y294504d5kd7acaa6c5a26edd@mail.gmail.com>
+	 <e27b78a40901300601p35d68125kfc3a10a7d7db0900@mail.gmail.com>
+Date: Fri, 30 Jan 2009 11:09:47 -0800
+Message-ID: <7c8826910901301109s6d80a75ale251ec837eabccf0@mail.gmail.com> (sfid-20090130_200954_100533_054F0EC7)
+Subject: Re: Crashing on ping?
+From: Mike Cui <cuicui@gmail.com>
+To: Keir <keirlawson@gmail.com>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 19, 2009 at 10:42:18PM -0800, Paul Hickey wrote:
-> Hi Luis,
->=20
-> 2.6.27.9-159.fc10.x86_64 is the kernel. I burned the distro right fro=
-m
-> Fedora.
+I see the same crash everytime I try to use ath5k. I have this device:
 
-I am =FCber-surprised to hear that FC10 2.6.27 kernels have added
-pci_ioremap_bar() in their kernel header include/linux/pci.h. I
-have verified this by checking:
+05:00.0 Ethernet controller [0200]: Atheros Communications Inc.
+AR5212/AR5213 Multiprotocol MAC/baseband processor [168c:0013] (rev
+01)
+        Subsystem: Device [1948:3a02]
+        Flags: bus master, medium devsel, latency 64, IRQ 11
+        Memory at f9df0000 (32-bit, non-prefetchable) [size=64K]
+        Capabilities: [44] Power Management version 2
+        Kernel modules: ath5k, ath_pci
 
-http://download.fedora.redhat.com/pub/fedora/linux/updates/10/x86_64/ke=
-rnel-devel-2.6.27.9-159.fc10.x86_64.rpm
+I use stock 2.6.28.2
 
-I have checked upstrea 2.6.27.9 and even 2.6.27.12 and they do not have=
- this. This breaks
-compatibility projects like compat-wireless :(
-
-Kyle?
-
-> Also, the ForceXPA might not be a problem, but it makes and logs its
-> attempts 4X per minute. It may not be much of an impact on the CPU, b=
-ut
-> is it necessary? Plus the message log gets really long really fast.
-
-Good point, hopefully this is enough of an argument to make the patch
-go into 2.6.27. The patch is already in for >=3D 2.6.28.
-
-Greg -- there is an annoying message that gets printed very often
-when new Atheros 11n cards are used, this is printed upon hw reset
-which occurs on channel changes (scans) and as such happens quite
-often. The message was moved to print only when "EEPROM debugging"
-was enaabled through upstream commit f1dc56003b23d2d5bb5a756de6b1633a76=
-c9e697.
-Unfortunately this commit is pretty large as it refactored hw.c into
-separate files. Below is a small one line patch that changes this. Plea=
-se
-let me know if this is OK for 2.6.27.x
-
-  Luis
-
-=46rom: Luis R. Rodriguez <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: quiet harmless ForceXPAon messages
-
-This is a port of one line of upstream patch
-f1dc56003b23d2d5bb5a756de6b1633a76c9e697
-
-The "ForceXPAon" messages on ath9k were not meant to be printed
-regularly, lets quiet them as this can happen quite frequently
-(scans) and will fill the logs with tons of these messages.
-
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-
---- drivers/net/wireless/ath9k/hw.c.orig	2009-01-20 11:33:44.000000000 =
--0800
-+++ drivers/net/wireless/ath9k/hw.c	2009-01-20 11:34:10.000000000 -0800
-@@ -729,7 +729,7 @@
- 					  AR_AN_TOP2_LOCALBIAS,
- 					  AR_AN_TOP2_LOCALBIAS_S,
- 					  pModal->local_bias);
--		DPRINTF(ah->ah_sc, ATH_DBG_ANY, "ForceXPAon: %d\n",
-+		DPRINTF(ah->ah_sc, ATH_DBG_EEPROM, "ForceXPAon: %d\n",
- 			pModal->force_xpaon);
- 		REG_RMW_FIELD(ah, AR_PHY_XPA_CFG, AR_PHY_FORCE_XPA_CFG,
- 			      pModal->force_xpaon);
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, Jan 30, 2009 at 6:01 AM, Keir <keirlawson@gmail.com> wrote:
+> Could you send me the .config you are using? Just so i can make sure
+> my kernel is exactly the same?
+>
+> Cheers
+>
+> Keir
+>
+> 2009/1/30 Keir <keirlawson@gmail.com>:
+>> I did the following in my serial console:
+>>
+>> root@kyp:/home/keir/Desktop/iw-0.9.6# echo 8 > /proc/sys/kernel/printk
+>> root@kyp:/home/keir/Desktop/iw-0.9.6# ping -I mesh0 10.0.0.2
+>> PING 10.0.0.2 (10.0.0.2) from 10.0.0.3 mesh0: 56(84) bytes of data.
+>> 64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=2.67 ms
+>> 64 bytes from 10.0.0.2: icmp_seq=2 ttl=64 time=0.550 ms
+>> 64 bytes from 10.0.0.2: icmp_seq=3 ttl=64 time=0.445 ms
+>> 64 bytes from 10.0.0.2: icmp_seq=4 ttl=64 time=6.28 ms
+>> 64 bytes from 10.0.0.2: icmp_seq=5 ttl=64 time=2.19 ms
+>>
+>> At which point the console freezes with no further output.
+>>
+>> Any ideas?
+>>
+>> Cheers
+>>
+>> Keir
+>>
+>> 2009/1/28 Andrey Yurovsky <andrey@cozybit.com>
+>>>
+>>> Hi Keir.  If the system really crashes, you should have some output.
+>>> Can you please set:
+>>>
+>>> echo 8 > /proc/sys/kernel/printk
+>>>
+>>> ...and use your serial console and try to reproduce this?  Thanks,
+>>>
+>>>  -Andrey
+>>>
+>>> On Mon, Jan 26, 2009 at 9:56 AM, Keir <keirlawson@gmail.com> wrote:
+>>> > Right, managed to set up a serial terminal, ran cat /proc/kmsg, but
+>>> > still no output of interest (just mesh plink stuff leading up to the
+>>> > connection being established), what should I do next?
+>>> >
+>>> > Cheers
+>>> >
+>>> > Keir
+>>> >
+>>> > 2009/1/26 Keir <keirlawson@gmail.com>:
+>>> >> "sudo cat /proc/kmsg > log" doesnt produce anything of interest.
+>>> >>
+>>> >> Will look into the serial console thing, never done it before.
+>>> >>
+>>> >> Keir
+>>> >>
+>>> >> 2009/1/24 Andrey Yurovsky <andrey@cozybit.com>:
+>>> >>> Can you post logs of the crash (dmesg output)?  You may need to
+>>> >>> connect a serial console to the PC in question to get them if the
+>>> >>> machine is really hard-locking, otherwise see if you can capture the
+>>> >>> output of dmesg
+>>> >>>
+>>> >>> On Sat, Jan 24, 2009 at 8:04 AM, Keir <keirlawson@gmail.com> wrote:
+>>> >>>> Tried that commit, still no luck :( It consistently freezes up on
+>>> >>>> ping, though sometimes it's the machine doing the pining, and other
+>>> >>>> times it's the machine being pinged.  Wondering what I can do to help
+>>> >>>> debug this?
+>>> >>>>
+>>> >>>> Keir
+>>> >>>>
+>>> >>>> 2009/1/23 Andrey Yurovsky <andrey@cozybit.com>:
+>>> >>>>> Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
+>>> >>>>> 93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
+>>> >>>>> 2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
+>>> >>>>> chance to try head of wireless-testing this week.
+>>> >>>>>
+>>> >>>>>  -Andrey
+>>> >>>>>
+>>> >>>>> On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
+>>> >>>>>> I just pulled the latest wireless-testing kernel, however, much like
+>>> >>>>>> the previous wireless-testing kernel I was working on, when attempting
+>>> >>>>>> to ping one node from another on a mesh, using ath5k, the node
+>>> >>>>>> attempting to ping completely freezes after about 7 pings are
+>>> >>>>>> (succesfully) sent.  Anyone have any idea what is going wrong here?
+>>> >>>>>>
+>>> >>>>>> Cheers
+>>> >>>>>>
+>>> >>>>>> Keir
+>>> >>>>>> --
+>>> >>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> >>>>>> the body of a message to majordomo@vger.kernel.org
+>>> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> >>>>>>
+>>> >>>>>
+>>> >>>>
+>>> >>>
+>>> >>
+>>> >
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
