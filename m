@@ -1,68 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:44205 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751571AbZACUlF convert rfc822-to-8bit (ORCPT
+Received: from vilya.visn.co.uk ([193.254.210.161]:32866 "EHLO
+	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753514AbZA3WEv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jan 2009 15:41:05 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so2422097fgg.17
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2009 12:41:01 -0800 (PST)
-Message-ID: <69e28c910901031241iaef37d5t2cb11bf867f75c86@mail.gmail.com> (sfid-20090103_214112_485062_7BC73DED)
-Date: Sat, 3 Jan 2009 21:41:01 +0100
-From: "=?ISO-8859-1?Q?Stefanik_G=E1bor?=" <netrolller.3d@gmail.com>
-To: "Vasanthakumar Thiagarajan" <vasanth@atheros.com>
-Subject: Re: [PATCH] ath9k: Enable Bluetooth Coexistence support
-Cc: "Vasanth Thiagarajan" <Vasanth.Thiagarajan@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@atheros.com>,
-	"Jouni Malinen" <Jouni.Malinen@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-In-Reply-To: <20090103084637.GA31929@vasanth-laptop>
+	Fri, 30 Jan 2009 17:04:51 -0500
+Message-ID: <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk> (sfid-20090130_230456_249829_442BAAEC)
+In-Reply-To: <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>
+References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
+    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>
+    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>
+    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>
+Date: Fri, 30 Jan 2009 22:04:46 -0000 (UTC)
+Subject: Re: rtl8187 wireless issues
+From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: "Hin-Tak Leung" <hintak.leung@gmail.com>
+Cc: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-References: <1230890746-3075-1-git-send-email-vasanth@atheros.com>
-	 <69e28c910901021052m63f63a1ep704a4d8aa8b4ca9@mail.gmail.com>
-	 <20090103084637.GA31929@vasanth-laptop>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 3, 2009 at 9:46 AM, Vasanthakumar Thiagarajan
-<vasanth@atheros.com> wrote:
-> On Sat, Jan 03, 2009 at 12:22:49AM +0530, Stefanik G=E1bor wrote:
->> On Fri, Jan 2, 2009 at 11:05 AM, Vasanthakumar Thiagarajan
->> <vasanth@atheros.com> wrote:
->> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
->> > ---
->> >  drivers/net/wireless/ath9k/ath9k.h |    5 +++++
->> >  drivers/net/wireless/ath9k/hw.c    |   33 +++++++++++++++++++++++=
-++++++++++
->> >  drivers/net/wireless/ath9k/main.c  |    9 +++++++--
->> >  drivers/net/wireless/ath9k/reg.h   |   10 ++++++++++
->> >  4 files changed, 55 insertions(+), 2 deletions(-)
->> >
->> > <snip>
->>
->> Probably a NOBTCOEX modparam might be a good idea - when implementin=
-g
->> BT coexistence in b43, a lot of non-BT-aware cards failed to work
->> because the BT GPIO line was connected to the TX preamplifier,
->> breaking all TX.
+ok,
+
+Actually dmesg reports the same as you
+
+phy0: hwaddr f729a040, RTL8187BvE V0 + rtl8225z2
+usbcore: registered new interface driver rtl8187
+
+NetworkManager advice taken with thanks.
+
 >
-> No need for any module parameters for enabling BT coex. It is
-> already running without any issue on Windows Vista.
->
-> Vasanth
->>
->> --
->> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-=
-)
+> That's wierd - are you sure? Compat-wireless is supposed to put the
+> whole lot (about 50MB of kernel modules, nearly 50 of them) into
+> updates, although only about 4-5 kernel modules are used for rtl8187b=
+=2E
 >
 
-Broadcom's BT coex was also running correctly on Windows Vista, but it
-still caused problems on Linux.
+After running make uninstall and make install a few times, this is the
+structure of files I end with in /lib/modules/`uname -r`.
+
+updates
+updates/net
+updates/net/mac80211
+updates/net/mac80211/mac80211.ko
+updates/net/wireless
+updates/net/wireless/ifcfg80211.ko
+updates/net/wireless/lib80211_crypt_tkip.ko
+updates/net/wireless/lib80211.ko
+updates/net/wireless/lib80211_crypt_ccmp.ko
+updates/net/wireless/lib80211_crypt_wep.ko
+updates/drivers
+updates/drivers/net
+updates/drivers/net/b44.ko
+updates/drivers/net/wireless
+updates/drivers/net/usb
+updates/drivers/net/usb/rndis_host.ko
+updates/drivers/net/usb/usbnet.ko
+updates/drivers/net/usb/cdc_ether.ko
+updates/drivers/misc
+updates/drivers/misc/eeprom
+updates/drivers/misc/eeprom/eeprom_93cx6.ko
+updates/drivers/ssb
+updates/drivers/ssb/ssb.ko
+
+I manually added in to complete it:
+updates/drivers/net/wireless/rtl818x
+updates/drivers/net/wireless/rtl818x/rtl8187.ko
+
+I am not that familiar with kernel makefiles but it would seem that the
+drivers/net/wireless line below is not recursive:
+
+obj-y :=3D net/wireless/ net/mac80211/
+ifeq ($(ONLY_CORE),)
+obj-$(CONFIG_B44) +=3D drivers/net/b44.o
+obj-y +=3D drivers/ssb/ \
+        drivers/misc/eeprom/ \
+        drivers/net/usb/ \
+        drivers/net/wireless/
+endif
+
+Anyway, its only a minor thing.
+
+Cheers
+
+PGR
+
+
 
 --=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Laws are partly formed for the sake of good men, in order to instruct t=
+hem
+how they may live on friendly terms with one another, and partly for th=
+e
+sake of those who refuse to be instructed, whose spirit cannot be subdu=
+ed,
+or softened, or hindered from plunging into evil. [The Laws, Plato]
+
+You fiend! Never have I encountered such corrupt and foul-minded
+perversity=85 Have you ever considered a career in the church?
+Bishop of Bath and Wells (Blackadder II)
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
