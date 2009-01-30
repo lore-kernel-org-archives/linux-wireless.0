@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:59919 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752040AbZALOyz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2009 09:54:55 -0500
-Subject: Re: [PATCH v3] libertas: if_spi, driver for libertas GSPI devices
-From: Dan Williams <dcbw@redhat.com>
-To: Colin McCabe <colin@cozybit.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1231541889-7999-1-git-send-email-colin@cozybit.com>
-References: <1231541889-7999-1-git-send-email-colin@cozybit.com>
-Content-Type: text/plain
-Date: Mon, 12 Jan 2009 09:53:37 -0500
-Message-Id: <1231772017.23907.3.camel@localhost.localdomain> (sfid-20090112_155458_778266_2E5E1ED8)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41889 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752625AbZA3Ups (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2009 15:45:48 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1LT0FH-0007zb-5j
+	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2009 15:45:47 -0500
+Received: from linville-t43.local (linville-t43.local [127.0.0.1])
+	by linville-t43.local (8.14.2/8.14.2) with ESMTP id n0UKirGR013660
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 15:44:53 -0500
+Received: (from linville@localhost)
+	by linville-t43.local (8.14.2/8.14.2/Submit) id n0UKirNO013659
+	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2009 15:44:53 -0500
+Date: Fri, 30 Jan 2009 15:44:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-regdb updated 2009-01-30
+Message-ID: <20090130204452.GG3485@tuxdriver.com> (sfid-20090130_214551_657699_6488A8C5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-01-09 at 14:58 -0800, Colin McCabe wrote:
-> Add initial support for libertas devices using a GSPI interface.  This has
-> been tested with the 8686.
-> 
-> GSPI is intended to be used on embedded systems. Board-specific parameters are
-> required (see libertas_spi.h).
+I have pushed an update to the wireless-regdb database here:
 
-Were you able to take a look at the alignment patches and see if just
-using 'packed' worked, rather than having everything use
-get_unaligned_*?
+	git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
 
-Dan
+The changes include a new man page for regulatory.bin, some sample
+packages for .deb and .rpm generation, and an actual database change
+to correct a mistake in the Japan portion of the database.
 
+Enjoy!	Let me know if there are problems...
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
