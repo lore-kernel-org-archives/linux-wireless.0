@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:40010 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbZADXWf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55899 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754216AbZA3Uhp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2009 18:22:35 -0500
-Date: Sun, 04 Jan 2009 17:22:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>, chunkeey@web.de
-Cc: michiel@ettema.net, linux-wireless@vger.kernel.org
-Subject: [PATCH] p54usb: Add USB ID for Thomson Speedtouch 121g
-Message-ID: <496144b4.iPUdF4BLnkZPcWDl%Larry.Finger@lwfinger.net> (sfid-20090105_002240_008972_D1D9D89D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 30 Jan 2009 15:37:45 -0500
+Subject: Re: [PATCH] mac80211: remove HW_SIGNAL_DB
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bruno Randolf <bruno@thinktube.com>
+In-Reply-To: <69e28c910901300950m2f74a302y6a0dbfc60b3236ed@mail.gmail.com> (sfid-20090130_185059_988423_1247885C)
+References: <1233310386.4161.25.camel@johannes.local>
+	 <20090130165026.GD6534@tesla>
+	 <69e28c910901300950m2f74a302y6a0dbfc60b3236ed@mail.gmail.com>
+	 (sfid-20090130_185059_988423_1247885C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-GfbwyfaEShuBz0A10wyU"
+Date: Fri, 30 Jan 2009 21:37:39 +0100
+Message-Id: <1233347859.4070.2.camel@johannes.local> (sfid-20090130_213748_367308_B7AA9B83)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michiel <michiel@ettema.net>
 
-Add the USB ID for Thomson Speedtouch 121g to p54usb.
+--=-GfbwyfaEShuBz0A10wyU
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michiel <michiel@ettema.net>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Fri, 2009-01-30 at 18:50 +0100, G=C3=A1bor Stefanik wrote:
 
-John,
+> While you are at it, please also add the ability to disable in-HW
+> sequence number generation on a per-packet basis.
 
-This should be included in 2.6.29.
+Probably not possible.
 
-Larry
----
+johannes
 
-Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
-+++ wireless-testing/drivers/net/wireless/p54/p54usb.c
-@@ -56,6 +56,7 @@ static struct usb_device_id p54u_table[]
- 	{USB_DEVICE(0x050d, 0x7050)},	/* Belkin F5D7050 ver 1000 */
- 	{USB_DEVICE(0x0572, 0x2000)},	/* Cohiba Proto board */
- 	{USB_DEVICE(0x0572, 0x2002)},	/* Cohiba Proto board */
-+	{USB_DEVICE(0x06b9, 0x0121)},	/* Thomson SpeedTouch 121g */
- 	{USB_DEVICE(0x0707, 0xee13)},   /* SMC 2862W-G version 2 */
- 	{USB_DEVICE(0x083a, 0x4521)},   /* Siemens Gigaset USB Adapter 54 version 2 */
- 	{USB_DEVICE(0x0846, 0x4240)},	/* Netgear WG111 (v2) */
+--=-GfbwyfaEShuBz0A10wyU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJg2URAAoJEKVg1VMiehFYEaMQAJ9CIsSkvWktip7Bdw+m7F6F
+m+6uOvIoIZSsYINgfO35luvbOIfbnTkGeJTE9uCXuChMCPZ7jGnNJgrZecuf7uf4
+YcxcN+pzHJTzHxSRoBFiJVTrxsPcijg9B6Itdt6YWFV9LseD0dIrLiir/YEVs/Zw
+S/ZfmKvzNvctJFTaKfBFISjidfzOtLA80RHVj7PxZwntXyCVJ3gZNsGxN2Og0occ
+KSGSTuTlrXRP8az6sdGwnUmwxsi1JnPjGJV/s/BDpMYumR8HiQbxV7OvoPWMZ25r
+E82xkl/mHU1TX2ptkv2bpkjy7v9dhiI5aVCbf5Zg/1QrxtHbNmBc33CDq+MyEtiY
+RAy/1ezGw/INy6SOVUU8wfRZCDFvKpwpmDtm4wUKv7cNMHBmrwSHI/0LUut8N9SA
+aUZ8OFArPZX4Aooks40cyWt2JzCdJem/6oFSJdU5MfT0anMYD/QGw55fYxdbj+Lq
+RuGTrIYX4masrjp92S9uUcW8Zd4bjVw7YIJBAo0w9dpz+ksooa0pROht9G9PNA4T
+8fZq8JynhMpyicD72qQyIymhbWvKbQN7HibUk8Pues1Z2BjOqhsYObdo+s6qyIYK
+fMOo9palFcOlhoOz9ajmI7qBKPJ48lzQunYfgyRhPChct6JzTc/OEltpOtBlqS3e
+N+DCm9E4D2NVLzqhkCgK
+=o9c/
+-----END PGP SIGNATURE-----
+
+--=-GfbwyfaEShuBz0A10wyU--
+
