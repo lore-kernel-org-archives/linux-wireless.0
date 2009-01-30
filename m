@@ -1,88 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:56267 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752479AbZAFSzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2009 13:55:43 -0500
-Subject: Re: [RFC][RFT] fix iwlagn hw-rfkill while the interface is down
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	mohamed salim abbas <mabbaswireless@gmail.com>,
-	linux-wireless@vger.kernel.org, tomas.winkler@intel.com,
-	yi.zhu@intel.com, reinette.chatre@intel.com
-In-Reply-To: <1231261515.5246.9.camel@californication>
-References: <200812161307.07193.helmut.schaa@gmail.com>
-	 <20081217202943.GB3516@tuxdriver.com>
-	 <1229549485.26406.12.camel@localhost.localdomain>
-	 <200901051556.13403.helmut.schaa@gmail.com>
-	 <1231257584.14565.16.camel@localhost.localdomain>
-	 <1231260067.5246.7.camel@californication>
-	 <1231260557.14565.24.camel@localhost.localdomain>
-	 <1231261515.5246.9.camel@californication>
+Received: from xc.sipsolutions.net ([83.246.72.84]:57879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754118AbZA3Mf2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2009 07:35:28 -0500
+Subject: [PATCH] mac80211: convert to net_device_ops
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Hemminger <shemminger@vyatta.com>
 Content-Type: text/plain
-Date: Tue, 06 Jan 2009 13:54:28 -0500
-Message-Id: <1231268068.14565.37.camel@localhost.localdomain> (sfid-20090106_195547_449861_3CED451E)
+Date: Fri, 30 Jan 2009 13:35:22 +0100
+Message-Id: <1233318922.4201.1.camel@johannes.local> (sfid-20090130_133548_601377_8E915BE4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-01-06 at 18:05 +0100, Marcel Holtmann wrote:
-> Hi Dan,
-> 
-> > > > > > > > the interrupt moved from pci_probe to mac_start for power saving. once
-> > > > > > > > the interface is up the driver will read some register to know rfkill
-> > > > > > > > status, if the interface in down the driver don't care to keep track
-> > > > > > > > of rfkill switch. I wonder what the purpose of changing this behavior?
-> > > > > > > 
-> > > > > > > I think it still isn't settled in everyone's minds whether rfkill
-> > > > > > > only matters if the device is "up" or if it is something that
-> > > > > > > e.g. NetworkManager might want to monitor as a clue to bring the
-> > > > > > > device up or down in response to rfkill changes.
-> > > > > > 
-> > > > > > The question is:  does NetworkManager just always keep the device 'up'
-> > > > > > irregardless of whether it's supposed to be associated with anything
-> > > > > > just so we can get rfkill events?
-> > > > > 
-> > > > > Another question is: is it worth to keep the interface up (and thus the
-> > > > > firmware loaded) even if the transceiver is killed by a hardware switch?
-> > > > > Wouldn't that consume even more power than just listening to rfkill
-> > > > > interrupts (or polling the killswitch state in case of 3945) with no
-> > > > > firmware loaded.
-> > > > > 
-> > > > > > I guess I'll treat rfkill the same as ethernet carrier.  If we cannot
-> > > > > > rely on rfkill notifications when the device is down (we already can't,
-> > > > > > since iwl3945 simply can't do it) 
-> > > > > 
-> > > > > I've just checked the 3945 and it is indeed possible to poll the killswitch
-> > > > > state even if the firmware is not loaded. Hence 3945 could also expose
-> > > > > the killswitch state while the interface is down (of course the driver would
-> > > > > have to poll for that information).
-> > > > 
-> > > > Even polling the state once every 2 - 4 seconds would be perfectly
-> > > > acceptable latency for me.  It doesn't have to be instantaneous, so we
-> > > > can certainly trade off latency for fewer wakeups.  Care to propose a
-> > > > patch?  it'll make a lot of people happy :)
-> > > 
-> > > if we can't get the rfkill state change via interrupt, then the kernel
-> > > driver has to poll for it (in the no-firmware cases). Or we have to
-> > > remove the rfkill support completely. Everything else is just not
-> > > acceptable. It is _not_ the responsibility of the userspace to make this
-> > > work with quirks.
-> > 
-> > Right; I meant polling in *iwl3945* every 2 - 4 seconds or so, not from
-> > userspace.  Userspace should still listen for the rfkill uevents (not
-> > that HAL does yet, but...)
-> 
-> you actually could use libudev for it directly. That is what I am doing
-> right now. Works pretty smooth.
+Convert to new net_device_ops in 2.6.28 and later.
 
-Do what with libudev?  Poll the register directly?  Or hit some sysfs
-file that eventually polls the register?  And you said "it's not the
-responsibility of userspace to make this work with quirks" which to me
-says you'd prefer this polling to be done in the driver, not
-userspace...  no?
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Fixed version of the original patch.
 
-Dan
+ net/mac80211/iface.c |   47 ++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 30 insertions(+), 17 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/iface.c	2009-01-30 13:10:16.000000000 +0100
++++ wireless-testing/net/mac80211/iface.c	2009-01-30 13:10:18.000000000 +0100
+@@ -591,19 +591,6 @@ static void ieee80211_set_multicast_list
+ 	dev_mc_sync(local->mdev, dev);
+ }
+ 
+-static void ieee80211_if_setup(struct net_device *dev)
+-{
+-	ether_setup(dev);
+-	dev->hard_start_xmit = ieee80211_subif_start_xmit;
+-	dev->wireless_handlers = &ieee80211_iw_handler_def;
+-	dev->set_multicast_list = ieee80211_set_multicast_list;
+-	dev->change_mtu = ieee80211_change_mtu;
+-	dev->open = ieee80211_open;
+-	dev->stop = ieee80211_stop;
+-	dev->destructor = free_netdev;
+-	/* we will validate the address ourselves in ->open */
+-	dev->validate_addr = NULL;
+-}
+ /*
+  * Called when the netdev is removed or, by the code below, before
+  * the interface type changes.
+@@ -671,6 +658,34 @@ static void ieee80211_teardown_sdata(str
+ 	WARN_ON(flushed);
+ }
+ 
++static const struct net_device_ops ieee80211_dataif_ops = {
++	.ndo_open		= ieee80211_open,
++	.ndo_stop		= ieee80211_stop,
++	.ndo_uninit		= ieee80211_teardown_sdata,
++	.ndo_start_xmit		= ieee80211_subif_start_xmit,
++	.ndo_set_multicast_list = ieee80211_set_multicast_list,
++	.ndo_change_mtu 	= ieee80211_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++};
++
++static const struct net_device_ops ieee80211_monitorif_ops = {
++	.ndo_open		= ieee80211_open,
++	.ndo_stop		= ieee80211_stop,
++	.ndo_uninit		= ieee80211_teardown_sdata,
++	.ndo_start_xmit		= ieee80211_monitor_start_xmit,
++	.ndo_set_multicast_list = ieee80211_set_multicast_list,
++	.ndo_change_mtu 	= ieee80211_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++};
++
++static void ieee80211_if_setup(struct net_device *dev)
++{
++	ether_setup(dev);
++	dev->netdev_ops = &ieee80211_dataif_ops;
++	dev->wireless_handlers = &ieee80211_iw_handler_def;
++	dev->destructor = free_netdev;
++}
++
+ /*
+  * Helper function to initialise an interface to a specific type.
+  */
+@@ -682,7 +697,7 @@ static void ieee80211_setup_sdata(struct
+ 
+ 	/* and set some type-dependent values */
+ 	sdata->vif.type = type;
+-	sdata->dev->hard_start_xmit = ieee80211_subif_start_xmit;
++	sdata->dev->netdev_ops = &ieee80211_dataif_ops;
+ 	sdata->wdev.iftype = type;
+ 
+ 	/* only monitor differs */
+@@ -703,7 +718,7 @@ static void ieee80211_setup_sdata(struct
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+ 		sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
+-		sdata->dev->hard_start_xmit = ieee80211_monitor_start_xmit;
++		sdata->dev->netdev_ops = &ieee80211_monitorif_ops;
+ 		sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
+ 				      MONITOR_FLAG_OTHER_BSS;
+ 		break;
+@@ -809,8 +824,6 @@ int ieee80211_if_add(struct ieee80211_lo
+ 	if (ret)
+ 		goto fail;
+ 
+-	ndev->uninit = ieee80211_teardown_sdata;
+-
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) &&
+ 	    params && params->mesh_id_len)
+ 		ieee80211_sdata_set_mesh_id(sdata,
 
 
