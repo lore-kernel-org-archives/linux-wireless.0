@@ -1,93 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42535 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759834AbZAVXHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 18:07:00 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 15:07:00 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/12] mac80211: allow mac80211 drivers to get to struct ieee80211_hw from wiphy
-Date: Thu, 22 Jan 2009 15:05:53 -0800
-Message-ID: <1232665554-26132-12-git-send-email-lrodriguez@atheros.com> (sfid-20090123_000709_471325_ED2B0E04)
-In-Reply-To: <1232665554-26132-11-git-send-email-lrodriguez@atheros.com>
-References: <1232665554-26132-1-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-2-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-3-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-4-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-5-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-6-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-7-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-8-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-9-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-10-git-send-email-lrodriguez@atheros.com>
- <1232665554-26132-11-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:36123 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300AbZA3IId (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2009 03:08:33 -0500
+Subject: Re: [RFC/RFT 06/11] mac80211: document TX aggregation (and small
+	cleanup)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org, m.sujith@gmail.com,
+	tomasw@gmail.com
+In-Reply-To: <20090129215152.GA27253@jm.kir.nu>
+References: <20090129005450.068797016@sipsolutions.net>
+	 <20090129005808.843799105@sipsolutions.net>
+	 <20090129215152.GA27253@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kkPgn7zfi8yankg9dLgr"
+Date: Fri, 30 Jan 2009 09:08:28 +0100
+Message-Id: <1233302908.4161.8.camel@johannes.local> (sfid-20090130_090836_929335_A327480C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a driver is given a wiphy and it wants to get to its private
-mac80211 driver area it can use wiphy_to_ieee80211_hw() to get first
-to its ieee80211_hw and then access the private structure via hw->priv. The
-wiphy_priv() is already being used internally by mac80211 and drivers
-should not use this. This can be helpful in a drivers reg_notifier().
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/mac80211.h |   13 +++++++++++++
- net/mac80211/util.c    |    9 +++++++++
- 2 files changed, 22 insertions(+), 0 deletions(-)
+--=-kkPgn7zfi8yankg9dLgr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9a5869e..b29c41b 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -965,6 +965,19 @@ struct ieee80211_hw {
- };
- 
- /**
-+ * wiphy_to_ieee80211_hw - return a mac80211 driver hw struct from a wiphy
-+ *
-+ * @wiphy: the &struct wiphy which we want to query
-+ *
-+ * mac80211 drivers can use this to get to their respective
-+ * &struct ieee80211_hw. Drivers wishing to get to their own private
-+ * structure can then access it via hw->priv. Note that mac802111 drivers should
-+ * not use wiphy_priv() to try to get their private driver structure as this
-+ * is already used internally by mac80211.
-+ */
-+struct ieee80211_hw *wiphy_to_ieee80211_hw(struct wiphy *wiphy);
-+
-+/**
-  * SET_IEEE80211_DEV - set device for 802.11 hardware
-  *
-  * @hw: the &struct ieee80211_hw to set the device for
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3f559e3..412a04c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -41,6 +41,15 @@ const unsigned char rfc1042_header[] __aligned(2) =
- const unsigned char bridge_tunnel_header[] __aligned(2) =
- 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
- 
-+struct ieee80211_hw *wiphy_to_ieee80211_hw(struct wiphy *wiphy)
-+{
-+	struct ieee80211_local *local;
-+	BUG_ON(!wiphy);
-+
-+	local = wiphy_priv(wiphy);
-+	return &local->hw;
-+}
-+EXPORT_SYMBOL(wiphy_to_ieee80211_hw);
- 
- u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
- 			enum nl80211_iftype type)
--- 
-1.6.1.rc3.51.g5832d
+On Thu, 2009-01-29 at 23:51 +0200, Jouni Malinen wrote:
+> On Thu, Jan 29, 2009 at 01:54:56AM +0100, Johannes Berg wrote:
+>=20
+> > + * DOC: TX aggregation
+>=20
+> > + * When TX aggregation is started by some subsystem (usually the rate =
+control
+> > + * control algorithm would be appropriate) by calling the
+> > + * ieee80211_start_tx_ba_session() function, the driver will be notifi=
+ed via
+> > + * its @ampdu_action function, with the %IEEE80211_AMPDU_TX_START acti=
+on.
+>=20
+> Does rate control (btw, remove the duplicated "control" from the text)
+
+Oops, thanks.
+
+> algorithm have knowledge of whether PTK has already been configured?
+> There is going to be a somewhat unfortunate timing issue with trying to
+> set up aggregation before 4-way handshake has been completed if 802.11w
+> is used (Action frames are dropped before the keys are set). Something
+> in the system (either the request or mac80211's action on the request)
+> would need to be delayed until the keys are in place in such a case.
+
+Interesting issue, something I wasn't aware of. Yes, we'd need to delay
+it in that case, not that it makes sense to set up aggregation that
+early -- who knows it's going to be used? My AP at least will disable
+your session if you're fairly idle (I guess to save reorder buffer
+resources). We can simply delay it in mac80211, or we can just return
+-EAGAIN. For iwl-agn-rs it wouldn't matter, it tries to enable
+aggregation repeatedly even while it's already enabled =3D)
+
+johannes
+
+--=-kkPgn7zfi8yankg9dLgr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJgrV5AAoJEKVg1VMiehFYa+MQAMYco6NvELIcMDGD17xB+0P+
+aB40ehBgqaSy7EJW6bcrh9gx/blfUSTZJGkk3quM4HhoXUVQLUV8IszzDOYRT7WD
+GL7ObkD7PVC7RxQG32PPP4RFxkxZPcgP8zcspUSlejiXQdiGK2aoTz1yV+kjkKzb
+bsbauHEwW8lXrrcgvk9U55vLvHnYnPTQw7UjtnyvPQSaV4K4JKEMwpsneMwF462C
+RUYdPCN5EuXkGCgTHHnrG9Hc44nN6h1Si2Qf3S0wuvzxmcG9W1H7vdttobXLaPgz
+MeSsTN4BvkeJ9cc0vp4n/s9cdJr0OsiEU80l7fvdvz37DwhVJHb+56hClOovBZ/y
++2prI2Urup9SEHauMTho7joJtQi93HFQ9SLD5te7AFrRrHmEPkeZmAMuqgFS0vkd
+fd5k7XNs0PKWCw9w39ag6lsT22+k+CiKVBpemf5uvEfSdPu79J0cND6ElZstLjVS
+j+nW8np+El6AkXIdHeGCzdU7GKF6m0ZQ87LPCPdIrilCSkc0IEK5ysO0YF3Mpn/T
+8pZsceUTd7MyE9KGVATaJ3fkn0FikunxeVYkDlTb7d27HVS3zsKeYnW+1a9iwGcc
+j897mZAukHRgtYKaMjtq5DYQj2lJbgQzHQDm3nvBgcWKMnYweMJBo5Mh5+fvF4Ym
+zU3IkM5ddF6jGhN7lL6e
+=ukLv
+-----END PGP SIGNATURE-----
+
+--=-kkPgn7zfi8yankg9dLgr--
 
