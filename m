@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f20.google.com ([209.85.219.20]:39837 "EHLO
-	mail-ew0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752996AbZASXRR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55883 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754085AbZA3UhW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2009 18:17:17 -0500
-Received: by ewy13 with SMTP id 13so659127ewy.13
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2009 15:17:15 -0800 (PST)
-Message-ID: <497509F9.4010003@gmail.com> (sfid-20090120_001724_609184_C1CA9FE7)
-Date: Tue, 20 Jan 2009 00:17:13 +0100
-From: Artur Skawina <art.08.09@gmail.com>
-MIME-Version: 1.0
-To: Artur Skawina <art.08.09@gmail.com>
-CC: Christian Lamparter <chunkeey@web.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing, p54 and sinus 154 data no longer works
-References: <494698AF.4020204@gmail.com> <200901191948.57069.chunkeey@web.de> <4974F63F.4050302@gmail.com> <200901192338.09646.chunkeey@web.de> <49750494.8000408@gmail.com>
-In-Reply-To: <49750494.8000408@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 30 Jan 2009 15:37:22 -0500
+Subject: Re: [PATCH] mac80211: remove HW_SIGNAL_DB
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bruno Randolf <bruno@thinktube.com>
+In-Reply-To: <20090130165026.GD6534@tesla>
+References: <1233310386.4161.25.camel@johannes.local>
+	 <20090130165026.GD6534@tesla>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-y8k86gUkqJ+4UJbINdBJ"
+Date: Fri, 30 Jan 2009 21:37:13 +0100
+Message-Id: <1233347833.4070.0.camel@johannes.local> (sfid-20090130_213726_688044_F5FA81A8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Artur Skawina wrote:
-> Christian Lamparter wrote:
->> On Monday 19 January 2009 22:53:03 Artur Skawina wrote:
->>> We can move the FREE_AFTER_TX(skb) check from the completion to the submission
->>> path, right? Then find a way to do the pull _before_ giving away the skbs.
->>> I can't shutdown the machine where i can reproduce this today, so it will have
->>> to wait until at least tomorrow.
->>>
->>> artur
->> Like this?
->>
-> yes, that's what i was thinking. Will FREE_AFTER_TX(skb) be false for all skbs
-> that are dropped in p54_rx_frame_sent()?
-> Also most of the push/pull business in completions can probably go, we just have to set
-> up the pointers right on submission, ie transfer the rx header into the headroom, then
-> no skb manipulations in completions should be needed, and these kind of races should
-> be harmless.
 
-I only looked at the FREE_AFTER_TX(skb) part and completely missed that you had already
-removed the pull, sorry.
+--=-y8k86gUkqJ+4UJbINdBJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-artur
+On Fri, 2009-01-30 at 08:50 -0800, Luis R. Rodriguez wrote:
+
+> We should be able to convert zd1211rw to use dBm anyway, we shall
+> release a new "vendor driver" for it which I think has some bits for this=
+.
+> Just need to get around to it.
+
+Yeah but we can start that from UNSPEC too.
+
+johannes
+
+--=-y8k86gUkqJ+4UJbINdBJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJg2T3AAoJEKVg1VMiehFY3JAP+wXmqb8PG4JNnrYQ+dZo41+N
+GVcpUTrtjiB73ZVcjvcVcSe9a13qtUwu5Q9FNH1h0uxkoskSwlYwaG9Cb3BdgqWd
+9s0hhh0y4fqYAAU1Z4QZ9Xj8LJ3gUBClaVvNx7kX4LMSPZN+KtGp+oF6H4h/PKyf
+gqvvY7vFvzvvHNjeyxv5Aafon3rArbIoiFasxbzNFX6C8+kzCL0aNmEXA1T4ceUw
+iGEI/QIsgIPol3Vgmy/FNLzjt/KfNi5hNemiis4nrzOdacQoNyfS308bODNkGeNB
+PfPYBYTno/6cQyKTokPPFKA841ayxyCSyPPPQoKNMRq6CGZ2Kw3m81OH7SMjPAMS
+0iC8iveQFuA+ENgRVVcama4ZpoNOxV4tFkAtGDvgeH2G641lDswA9lwtJA8gqUbE
+OlOZRHp6f+3BxmIRBPTj6JFn1ExlAetgOeWvvt70Aiq+Ndvk0gz7ek213OuTJ7MV
+cdGwMknt35wSN3AVfV3xrqaAX3NFrutnSRQ6MeKynvZ8If6gorNQMM6XIBvCk4q6
+vL35owjiB2L9cHKBIC4ycBmwbdK3/gN3V9iQhIc07K9CDPxnfFHplw+FCuEeWY40
+F6dUI9t4Jl5l4QXFgZ8u2cmBEWqt7GMzYu4Gd1jUQYNkuVkDFGrxDEpzgyZcb1/X
++f8dtpeCRgxNGaURlEuX
+=OGrY
+-----END PGP SIGNATURE-----
+
+--=-y8k86gUkqJ+4UJbINdBJ--
+
