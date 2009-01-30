@@ -1,146 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:39348 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129AbZA3TJt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2009 14:09:49 -0500
-Received: by ewy14 with SMTP id 14so932086ewy.13
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 11:09:47 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:50634 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750949AbZA3RHt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2009 12:07:49 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 09:07:49 -0800
+Date: Fri, 30 Jan 2009 09:07:03 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v5] mac80211: do not TX injected frames when not allowed
+Message-ID: <20090130170703.GF6534@tesla> (sfid-20090130_180754_227710_F37CEBE5)
+References: <1233333636-26066-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <e27b78a40901300601p35d68125kfc3a10a7d7db0900@mail.gmail.com>
-References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
-	 <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com>
-	 <e27b78a40901240804m1acd3a83o7bf6d01f81ec3397@mail.gmail.com>
-	 <45e8e6c40901240956g68a5364tdbacc1e49410c9cc@mail.gmail.com>
-	 <e27b78a40901260625w53acd646xeb5a9ca85555c74d@mail.gmail.com>
-	 <e27b78a40901260956w4e69d33s7db60defc026c8d7@mail.gmail.com>
-	 <45e8e6c40901280954l42bbe788y8723141d673bb7b3@mail.gmail.com>
-	 <e27b78a40901300446y294504d5kd7acaa6c5a26edd@mail.gmail.com>
-	 <e27b78a40901300601p35d68125kfc3a10a7d7db0900@mail.gmail.com>
-Date: Fri, 30 Jan 2009 11:09:47 -0800
-Message-ID: <7c8826910901301109s6d80a75ale251ec837eabccf0@mail.gmail.com> (sfid-20090130_200954_100533_054F0EC7)
-Subject: Re: Crashing on ping?
-From: Mike Cui <cuicui@gmail.com>
-To: Keir <keirlawson@gmail.com>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1233333636-26066-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I see the same crash everytime I try to use ath5k. I have this device:
+On Fri, Jan 30, 2009 at 08:40:36AM -0800, Luis Rodriguez wrote:
+> Monitor mode is able to TX by using injected frames. We should
+> not allow injected frames to be sent unless allowed by regulatory
+> rules. Since AP mode uses a monitor interfaces to transmit
+> management frames we have to take care to not break AP mode as
+> well while resolving this. We can deal with this by allowing compliant
+> APs solutions to inform mac80211 if their monitor interface is
+> intended to be used for an AP by setting a cfg80211 flag for the
+> monitor interface. hostapd, for example, currently does its own
+> checks to ensure AP mode is not used on channels which require radar
+> detection. Once such solutions are available it can can add this
+> flag for monitor interfaces.
+> 
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+> 
+> This v5 leaves the AP flag out, we can add it once we have radar support.
+> 
+>  net/mac80211/tx.c |   22 ++++++++++++++++++++++
+>  1 files changed, 22 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 7b013fb..aa5ba90 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1432,11 +1432,33 @@ int ieee80211_master_start_xmit(struct sk_buff *skb, struct net_device *dev)
+>  int ieee80211_monitor_start_xmit(struct sk_buff *skb,
+>                                  struct net_device *dev)
+>  {
+> +       struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 
-05:00.0 Ethernet controller [0200]: Atheros Communications Inc.
-AR5212/AR5213 Multiprotocol MAC/baseband processor [168c:0013] (rev
-01)
-        Subsystem: Device [1948:3a02]
-        Flags: bus master, medium devsel, latency 64, IRQ 11
-        Memory at f9df0000 (32-bit, non-prefetchable) [size=64K]
-        Capabilities: [44] Power Management version 2
-        Kernel modules: ath5k, ath_pci
+unused variable now, bleh, sorry, will send v6.. hopefully the last heh.
 
-I use stock 2.6.28.2
-
-On Fri, Jan 30, 2009 at 6:01 AM, Keir <keirlawson@gmail.com> wrote:
-> Could you send me the .config you are using? Just so i can make sure
-> my kernel is exactly the same?
->
-> Cheers
->
-> Keir
->
-> 2009/1/30 Keir <keirlawson@gmail.com>:
->> I did the following in my serial console:
->>
->> root@kyp:/home/keir/Desktop/iw-0.9.6# echo 8 > /proc/sys/kernel/printk
->> root@kyp:/home/keir/Desktop/iw-0.9.6# ping -I mesh0 10.0.0.2
->> PING 10.0.0.2 (10.0.0.2) from 10.0.0.3 mesh0: 56(84) bytes of data.
->> 64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=2.67 ms
->> 64 bytes from 10.0.0.2: icmp_seq=2 ttl=64 time=0.550 ms
->> 64 bytes from 10.0.0.2: icmp_seq=3 ttl=64 time=0.445 ms
->> 64 bytes from 10.0.0.2: icmp_seq=4 ttl=64 time=6.28 ms
->> 64 bytes from 10.0.0.2: icmp_seq=5 ttl=64 time=2.19 ms
->>
->> At which point the console freezes with no further output.
->>
->> Any ideas?
->>
->> Cheers
->>
->> Keir
->>
->> 2009/1/28 Andrey Yurovsky <andrey@cozybit.com>
->>>
->>> Hi Keir.  If the system really crashes, you should have some output.
->>> Can you please set:
->>>
->>> echo 8 > /proc/sys/kernel/printk
->>>
->>> ...and use your serial console and try to reproduce this?  Thanks,
->>>
->>>  -Andrey
->>>
->>> On Mon, Jan 26, 2009 at 9:56 AM, Keir <keirlawson@gmail.com> wrote:
->>> > Right, managed to set up a serial terminal, ran cat /proc/kmsg, but
->>> > still no output of interest (just mesh plink stuff leading up to the
->>> > connection being established), what should I do next?
->>> >
->>> > Cheers
->>> >
->>> > Keir
->>> >
->>> > 2009/1/26 Keir <keirlawson@gmail.com>:
->>> >> "sudo cat /proc/kmsg > log" doesnt produce anything of interest.
->>> >>
->>> >> Will look into the serial console thing, never done it before.
->>> >>
->>> >> Keir
->>> >>
->>> >> 2009/1/24 Andrey Yurovsky <andrey@cozybit.com>:
->>> >>> Can you post logs of the crash (dmesg output)?  You may need to
->>> >>> connect a serial console to the PC in question to get them if the
->>> >>> machine is really hard-locking, otherwise see if you can capture the
->>> >>> output of dmesg
->>> >>>
->>> >>> On Sat, Jan 24, 2009 at 8:04 AM, Keir <keirlawson@gmail.com> wrote:
->>> >>>> Tried that commit, still no luck :( It consistently freezes up on
->>> >>>> ping, though sometimes it's the machine doing the pining, and other
->>> >>>> times it's the machine being pinged.  Wondering what I can do to help
->>> >>>> debug this?
->>> >>>>
->>> >>>> Keir
->>> >>>>
->>> >>>> 2009/1/23 Andrey Yurovsky <andrey@cozybit.com>:
->>> >>>>> Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
->>> >>>>> 93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
->>> >>>>> 2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
->>> >>>>> chance to try head of wireless-testing this week.
->>> >>>>>
->>> >>>>>  -Andrey
->>> >>>>>
->>> >>>>> On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
->>> >>>>>> I just pulled the latest wireless-testing kernel, however, much like
->>> >>>>>> the previous wireless-testing kernel I was working on, when attempting
->>> >>>>>> to ping one node from another on a mesh, using ath5k, the node
->>> >>>>>> attempting to ping completely freezes after about 7 pings are
->>> >>>>>> (succesfully) sent.  Anyone have any idea what is going wrong here?
->>> >>>>>>
->>> >>>>>> Cheers
->>> >>>>>>
->>> >>>>>> Keir
->>> >>>>>> --
->>> >>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> >>>>>> the body of a message to majordomo@vger.kernel.org
->>> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>> >>>>>>
->>> >>>>>
->>> >>>>
->>> >>>
->>> >>
->>> >
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+  Luis
