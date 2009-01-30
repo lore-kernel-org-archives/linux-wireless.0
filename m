@@ -1,69 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56717 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753259AbZAXVio convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53096 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbZA3KNO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2009 16:38:44 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John W Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix phy_g.c compiler warning
-Date: Sat, 24 Jan 2009 22:36:57 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200901242236.58641.mb@bu3sch.de> (sfid-20090124_223850_385119_3B094106)
+	Fri, 30 Jan 2009 05:13:14 -0500
+Subject: [PATCH] mac80211: remove HW_SIGNAL_DB
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Bruno Randolf <bruno@thinktube.com>
+Content-Type: text/plain
+Date: Fri, 30 Jan 2009 11:13:06 +0100
+Message-Id: <1233310386.4161.25.camel@johannes.local> (sfid-20090130_111324_351082_DB510EAA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-=46ix compile warning for non-debug builds:
+Giving the signal in dB isn't much more useful to userspace
+than giving the signal in unspecified units. This removes
+some radiotap information for zd1211 (the only driver using
+this flag), but it helps a lot for getting cfg80211-based
+scanning which won't support dB, and zd1211 being dB is a
+little fishy anyway.
 
-drivers/net/wireless/b43/phy_g.c: In function =E2=80=98b43_gphy_op_reca=
-lc_txpower=E2=80=99:
-drivers/net/wireless/b43/phy_g.c:3195: warning: unused variable =E2=80=98=
-dbm=E2=80=99
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bruno Randolf <bruno@thinktube.com>
 ---
+ drivers/net/wireless/zd1211rw/zd_mac.c |    2 +-
+ include/net/mac80211.h                 |   22 ++++++++--------------
+ net/mac80211/main.c                    |    1 -
+ net/mac80211/rx.c                      |   11 +----------
+ net/mac80211/wext.c                    |    3 +--
+ 5 files changed, 11 insertions(+), 28 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c	2009-01-23 1=
-9:18:42.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/phy_g.c	2009-01-24 22:33:=
-44.000000000 +0100
-@@ -3188,20 +3188,23 @@ static enum b43_txpwr_result b43_gphy_op
- 	/* Lower attenuation =3D> Bigger power output. Negate it. */
- 	bbatt_delta =3D -bbatt_delta;
- 	/* RF att affects power level 4 times as much as
- 	 * Baseband attennuation. Subtract it. */
- 	bbatt_delta -=3D 4 * rfatt_delta;
-=20
-+#if B43_DEBUG
- 	if (b43_debug(dev, B43_DBG_XMITPOWER)) {
- 		int dbm =3D pwr_adjust < 0 ? -pwr_adjust : pwr_adjust;
- 		b43dbg(dev->wl,
- 		       "[TX power deltas]  %s" Q52_FMT " dBm   =3D>   "
- 		       "bbatt-delta =3D %d,  rfatt-delta =3D %d\n",
- 		       (pwr_adjust < 0 ? "-" : ""), Q52_ARG(dbm),
- 		       bbatt_delta, rfatt_delta);
- 	}
-+#endif /* DEBUG */
-+
- 	/* So do we finally need to adjust something in hardware? */
- 	if ((rfatt_delta =3D=3D 0) && (bbatt_delta =3D=3D 0))
- 		goto no_adjustment_needed;
-=20
- 	/* Save the deltas for later when we adjust the power. */
- 	gphy->bbatt_delta =3D bbatt_delta;
+--- wireless-testing.orig/include/net/mac80211.h	2009-01-30 10:57:26.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-01-30 10:57:49.000000000 +0100
+@@ -860,11 +860,6 @@ enum ieee80211_tkip_key_type {
+  *	expect values between 0 and @max_signal.
+  *	If possible please provide dB or dBm instead.
+  *
+- * @IEEE80211_HW_SIGNAL_DB:
+- *	Hardware gives signal values in dB, decibel difference from an
+- *	arbitrary, fixed reference. We expect values between 0 and @max_signal.
+- *	If possible please provide dBm instead.
+- *
+  * @IEEE80211_HW_SIGNAL_DBM:
+  *	Hardware gives signal values in dBm, decibel difference from
+  *	one milliwatt. This is the preferred method since it is standardized
+@@ -900,15 +895,14 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE		= 1<<3,
+ 	IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE	= 1<<4,
+ 	IEEE80211_HW_SIGNAL_UNSPEC			= 1<<5,
+-	IEEE80211_HW_SIGNAL_DB				= 1<<6,
+-	IEEE80211_HW_SIGNAL_DBM				= 1<<7,
+-	IEEE80211_HW_NOISE_DBM				= 1<<8,
+-	IEEE80211_HW_SPECTRUM_MGMT			= 1<<9,
+-	IEEE80211_HW_AMPDU_AGGREGATION			= 1<<10,
+-	IEEE80211_HW_SUPPORTS_PS			= 1<<11,
+-	IEEE80211_HW_PS_NULLFUNC_STACK			= 1<<12,
+-	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<13,
+-	IEEE80211_HW_MFP_CAPABLE			= 1<<14,
++	IEEE80211_HW_SIGNAL_DBM				= 1<<6,
++	IEEE80211_HW_NOISE_DBM				= 1<<7,
++	IEEE80211_HW_SPECTRUM_MGMT			= 1<<8,
++	IEEE80211_HW_AMPDU_AGGREGATION			= 1<<9,
++	IEEE80211_HW_SUPPORTS_PS			= 1<<10,
++	IEEE80211_HW_PS_NULLFUNC_STACK			= 1<<11,
++	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
++	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
+ };
+ 
+ /**
+--- wireless-testing.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2009-01-30 10:58:08.000000000 +0100
++++ wireless-testing/drivers/net/wireless/zd1211rw/zd_mac.c	2009-01-30 10:58:15.000000000 +0100
+@@ -967,7 +967,7 @@ struct ieee80211_hw *zd_mac_alloc_hw(str
+ 	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &mac->band;
+ 
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+-		    IEEE80211_HW_SIGNAL_DB;
++		    IEEE80211_HW_SIGNAL_UNSPEC;
+ 
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_MESH_POINT) |
+--- wireless-testing.orig/net/mac80211/main.c	2009-01-30 11:04:18.000000000 +0100
++++ wireless-testing/net/mac80211/main.c	2009-01-30 11:04:28.000000000 +0100
+@@ -888,7 +888,6 @@ int ieee80211_register_hw(struct ieee802
+ 	local->hw.conf.listen_interval = local->hw.max_listen_interval;
+ 
+ 	local->wstats_flags |= local->hw.flags & (IEEE80211_HW_SIGNAL_UNSPEC |
+-						  IEEE80211_HW_SIGNAL_DB |
+ 						  IEEE80211_HW_SIGNAL_DBM) ?
+ 			       IW_QUAL_QUAL_UPDATED : IW_QUAL_QUAL_INVALID;
+ 	local->wstats_flags |= local->hw.flags & IEEE80211_HW_NOISE_DBM ?
+--- wireless-testing.orig/net/mac80211/rx.c	2009-01-30 11:07:35.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2009-01-30 11:08:06.000000000 +0100
+@@ -86,8 +86,7 @@ ieee80211_rx_radiotap_len(struct ieee802
+ 
+ 	if (status->flag & RX_FLAG_TSFT)
+ 		len += 8;
+-	if (local->hw.flags & IEEE80211_HW_SIGNAL_DB ||
+-	    local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
++	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+ 		len += 1;
+ 	if (local->hw.flags & IEEE80211_HW_NOISE_DBM)
+ 		len += 1;
+@@ -199,14 +198,6 @@ ieee80211_add_rx_radiotap_header(struct 
+ 	*pos = status->antenna;
+ 	pos++;
+ 
+-	/* IEEE80211_RADIOTAP_DB_ANTSIGNAL */
+-	if (local->hw.flags & IEEE80211_HW_SIGNAL_DB) {
+-		*pos = status->signal;
+-		rthdr->it_present |=
+-			cpu_to_le32(1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL);
+-		pos++;
+-	}
+-
+ 	/* IEEE80211_RADIOTAP_DB_ANTNOISE is not used */
+ 
+ 	/* IEEE80211_RADIOTAP_RX_FLAGS */
+--- wireless-testing.orig/net/mac80211/wext.c	2009-01-30 11:06:02.000000000 +0100
++++ wireless-testing/net/mac80211/wext.c	2009-01-30 11:06:09.000000000 +0100
+@@ -173,8 +173,7 @@ static int ieee80211_ioctl_giwrange(stru
+ 	range->num_encoding_sizes = 2;
+ 	range->max_encoding_tokens = NUM_DEFAULT_KEYS;
+ 
+-	if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC ||
+-	    local->hw.flags & IEEE80211_HW_SIGNAL_DB)
++	if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
+ 		range->max_qual.level = local->hw.max_signal;
+ 	else if  (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+ 		range->max_qual.level = -110;
 
 
---=20
-Greetings, Michael.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
