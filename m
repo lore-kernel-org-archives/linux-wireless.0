@@ -1,94 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:54745 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755640AbZAWAHV (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:46496 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824AbZA3RvB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 19:07:21 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so754623nfc.21
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2009 16:07:19 -0800 (PST)
+	Fri, 30 Jan 2009 12:51:01 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so82888fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 09:50:58 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <d7a260e8d188b785d0d2be743c8c5461@localhost>
-References: <87priffb95.fsf@litku.valot.fi>
-	 <20090122183448.GC3646@tuxdriver.com>
-	 <d7a260e8d188b785d0d2be743c8c5461@localhost>
-Date: Fri, 23 Jan 2009 01:07:19 +0100
-Message-ID: <2d0a357f0901221607o8f77ff4tf735135200fcea66@mail.gmail.com> (sfid-20090123_010727_266295_4434ED29)
-Subject: Re: iwl3945 regression: associates but no data is transfered
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: samuel@sortiz.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20090130165026.GD6534@tesla>
+References: <1233310386.4161.25.camel@johannes.local>
+	 <20090130165026.GD6534@tesla>
+Date: Fri, 30 Jan 2009 18:50:58 +0100
+Message-ID: <69e28c910901300950m2f74a302y6a0dbfc60b3236ed@mail.gmail.com> (sfid-20090130_185115_906587_2D4A1760)
+Subject: Re: [PATCH] mac80211: remove HW_SIGNAL_DB
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Bruno Randolf <bruno@thinktube.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-BTW, v2 of Alina's fix is *NOT* fixing the problem (not on my machine).
-
-Kind Regards,
-Sedat
-
-[1] [PATCH v2] mac80211: Fixed BSSID handling revisited
-http://marc.info/?l=linux-wireless&m=123259183328417&w=2
-
-On Fri, Jan 23, 2009 at 12:41 AM,  <samuel@sortiz.org> wrote:
+On Fri, Jan 30, 2009 at 5:50 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Fri, Jan 30, 2009 at 02:13:06AM -0800, Johannes Berg wrote:
+>> Giving the signal in dB isn't much more useful to userspace
+>> than giving the signal in unspecified units. This removes
+>> some radiotap information for zd1211 (the only driver using
+>> this flag), but it helps a lot for getting cfg80211-based
+>> scanning which won't support dB, and zd1211 being dB is a
+>> little fishy anyway.
+>>
+>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> Cc: Bruno Randolf <bruno@thinktube.com>
 >
-> On Thu, 22 Jan 2009 13:34:48 -0500, "John W. Linville"
-> <linville@tuxdriver.com> wrote:
->> On Thu, Jan 22, 2009 at 08:26:14PM +0200, Kalle Valo wrote:
->>> Hello,
->>>
->>> I upgraded to the latest wireless-testing and my iwl3945 is now
->>> broken. It can associate but no data is transfered after that. Tried
->>> with open and wep modes. With dhcp I cannot get ip and with static ip
->>> ping to the gateway doesn't work.
->>>
->>> Any hints?
->>
->> Lots of iwlwifi stuff merged yesterday...
-> The bad commit seems to be e32b1b9a33759e8a83ac566c4c43f23ed5d6343b, which
-> is not iwlwifi related.
-> Even though it's an mlme commit, it doesnt seem to affect other drivers (at
-> least b43 and ath5k).
-> I'll come up soon with a proper fix, but for now iwl3945 users should
-> revert that commit locally.
+> We should be able to convert zd1211rw to use dBm anyway, we shall
+> release a new "vendor driver" for it which I think has some bits for =
+this.
+> Just need to get around to it.
 >
-> Cheers,
-> Samuel.
->
->>
->> Chatre, Reinette (1):
->>       iwl3945: add debugging for wrong command queue
->>
->> Helmut Schaa (2):
->>       iwl3945: fix some warnings when compiled without debug
->>       iwlagn: fix hw-rfkill while the interface is down
->>
->> Jay Sternberg (4):
->>       iwlwifi: correct Kconfig to prevent following entries from not
->>       indenting
->>       iwlwifi: remove static from 5000 structures
->>       iwlwifi: add recognition of Intel WiFi Link 6000 and 6050 Series
->>       iwlwifi: add recognition of Intel WiFi Link 100 Series
->>
->> Reinette Chatre (1):
->>       iwlwifi: return NETDEV_TX_OK from _tx ops
->>
->> Samuel Ortiz (3):
->>       iwl3945: Use iwl_txq_update_write_ptr
->>       iwlwifi: Add TFD library operations
->>       iwl3945: Use iwl-hcmd host command routines
->>
->> Winkler, Tomas (6):
->>       iwlwifi: make iwl-power.c more readable
->>       iwlwifi: fix iwl_mac_set_key and iwl3945_mac_set_key
->>       iwlwifi: kill iwl3945_scan_cancel and iwl3945_scan_cancel_timeout
->>       iwlwifi: kill scan39
->>       iwlwifi: remove unused or twice defined members in iwl_priv
->>       iwlwifi: eliminate power_data_39.
+>  Luis
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
+
+While you are at it, please also add the ability to disable in-HW
+sequence number generation on a per-packet basis. This is required to
+allow my proposed IEEE80211_F_TX_NOSEQ radiotap flag to work. (Right
+now, even if mac80211's ieee80211_tx_h_sequence is bypassed, injected
+packets will still have their sequence numbers overwritten, preventing
+proper injection of fragments, and by grepping through the code of
+zd1211rw, there appears to be no code to disable HW sequence number
+generation. Potentially this might mean that mac80211-generated
+sequence numbers also get overwritten by HW-generated ones!)
+
+--G=E1bor
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
