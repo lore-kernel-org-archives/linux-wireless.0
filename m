@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55957 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbZAWAej (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.191]:33949 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327AbZA3IRx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2009 19:34:39 -0500
-Date: Thu, 22 Jan 2009 19:36:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Distributions shipping CRDA
-Message-ID: <20090123003655.GA3177@tuxdriver.com> (sfid-20090123_013444_258631_9E86B827)
-References: <43e72e890901221352n1f0d04adscaf3f6a76abf83b4@mail.gmail.com>
+	Fri, 30 Jan 2009 03:17:53 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so252556rnd.17
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2009 00:17:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890901221352n1f0d04adscaf3f6a76abf83b4@mail.gmail.com>
+In-Reply-To: <498269D5.7080204@openwrt.org>
+References: <498269D5.7080204@openwrt.org>
+Date: Fri, 30 Jan 2009 10:17:51 +0200
+Message-ID: <40f31dec0901300017g2504e494mc75db9d9a0ffca7@mail.gmail.com> (sfid-20090130_091758_355179_EF0D9174)
+Subject: Re: [PATCH,RFC 0/2] ath5k: implement tx power calibration on
+	ar2413/5413
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 22, 2009 at 01:52:39PM -0800, Luis R. Rodriguez wrote:
-> I'd like to review which distributions are already packaging CRDA already.
-> 
-> So far this is what I know:
-> 
-> Ubuntu Jaunty - Yes
-> Arch Linux - Yes
-> Gentoo - Yes
-> 
-> Fedora Core 11  - ?
+2009/1/30 Felix Fietkau <nbd@openwrt.org>:
+> Hi,
+>
+> I got my AR2413 patches to the point where ath5k properly
+> initializes the PDGAIN curves (register dumps verified against
+> what the madwifi HAL does), and it does Tx at much better
+> power level and with 54 Mbit (tested on an AR5413 card).
+> Power still isn't as good as on madwifi yet, but much closer
+> than before, and I actually get >20Mbit/s throughput now.
+>
+> Enjoy!
+>
+> - Felix
+>
 
-I'm working-out the details of package for Fedora 11.
+You are the man !
+
+I'm sending some patches that update phy.c, initvals.c and reset.c etc
+today and i'll merge this one with RF5111/RF5112 pcdac stuff and tpc
+support asap to have power table support for all chips. We also need
+to work out regulatory stuff before we fully enable tx power support
+so i have to test this on a spectrum analyzer.
+
+Just give me some time and i'll come back with code ;-)
 
 -- 
-John W. Linville		Linux should be at the core
-linville@tuxdriver.com			of your literate lifestyle.
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
