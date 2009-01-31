@@ -1,66 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:35741 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751391AbZA1LwV (ORCPT
+Received: from mail-gx0-f21.google.com ([209.85.217.21]:46734 "EHLO
+	mail-gx0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752279AbZAaUuN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2009 06:52:21 -0500
-Received: by fg-out-1718.google.com with SMTP id 13so526705fge.17
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2009 03:52:17 -0800 (PST)
+	Sat, 31 Jan 2009 15:50:13 -0500
+Received: by gxk14 with SMTP id 14so789773gxk.13
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2009 12:50:12 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20090128113751.GA3197@sortiz.org>
-References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
-	 <20090126114453.GB3197@sortiz.org>
-	 <c4d76b3b0901261913s23427b19tbbe34ee7b4261068@mail.gmail.com>
-	 <c4d76b3b0901261935n1846b675w72cfa7308d198080@mail.gmail.com>
-	 <20090127162437.GA3596@sortiz.org>
-	 <c4d76b3b0901271531q19578871idbc59b5a23ac868e@mail.gmail.com>
-	 <1ba2fa240901272312j270eedb5x33534a9703d26e06@mail.gmail.com>
-	 <20090128113751.GA3197@sortiz.org>
-Date: Wed, 28 Jan 2009 13:52:17 +0200
-Message-ID: <1ba2fa240901280352o56ccbc07h50c7a4bfcd0ac9ab@mail.gmail.com> (sfid-20090128_125224_933169_1DA3A10E)
-Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
-From: Tomas Winkler <tomasw@gmail.com>
-To: Samuel Ortiz <samuel@sortiz.org>
-Cc: Jason Andryuk <jandryuk@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <49849ED9.6080300@openwrt.org>
+References: <20090131023147.GE3342@makis>
+	 <20090131170802.GA16826@hash.localnet>
+	 <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>
+	 <49849ED9.6080300@openwrt.org>
+Date: Sat, 31 Jan 2009 22:50:11 +0200
+Message-ID: <40f31dec0901311250q6a669849x1dfbf08d967787be@mail.gmail.com> (sfid-20090131_215019_948350_6245E40D)
+Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jirislaby@gmail.com, mcgrof@gmail.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 1:37 PM, Samuel Ortiz <samuel@sortiz.org> wrote:
-> On Wed, Jan 28, 2009 at 09:12:48AM +0200, Tomas Winkler wrote:
->> On Wed, Jan 28, 2009 at 1:31 AM, Jason Andryuk <jandryuk@gmail.com> wrote:
->> >> No, that's just a consequence of the bug, not the bug itself.
->> >> Would you mind applying this patch on top of your latest wireless-testing tree
->> >> and testing 3945 with it ? Thanks for your patience.
->> >
->> > The patch did not cleanly apply, but I just removed the lines
->> > indicated in the patch.  It crashed with a NULL pointer dereference.
+2009/1/31 Felix Fietkau <nbd@openwrt.org>:
+> Nick Kossifidis wrote:
+>>>> [...]
+>>>> @@ -2156,7 +2157,8 @@
+>>>>  #define      AR5K_PHY_ANT_CTL_TXRX_EN        0x00000001      /* Enable TX/RX (?) */
+>>>>  #define      AR5K_PHY_ANT_CTL_SECTORED_ANT   0x00000004      /* Sectored Antenna */
+>>>>  #define      AR5K_PHY_ANT_CTL_HITUNE5        0x00000008      /* Hitune5 (?) */
+>>>> -#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE   0x00000010      /* Switch table idle (?) */
+>>>> +#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE   0x000003f9      /* Switch table idle (?) */
+>>>> +#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE_S 4
+>>>
+>>> That doesn't look right.. should be 3f0?  (still probably works, I guess).
+>>>
 >>
->> Samuel
->> It was really wrong try, you cannot just leave place where firmware
->> updated read pointer unallocated. I would rather focus on differences
->> introduced by this patch.
-> Well, that's what I did. I neglected to check if rb_stts were actually used.
+>> I know, but HAL does this...
+>>       AR_PHY_BIS(ah, 68, 0xFFFFFC06,
+>>               (ee->ee_antennaControl[0][arrayMode] << 4) | 0x1);
+>>
+>> ~0xFFFFFC06 = 3F9
+> How about splitting it up and making the 0x1 a separate flag?
 >
+
+Agree, i'll change eeprom.c too...
+
+	/* Get antenna modes */
+	ah->ah_antenna[mode][0] =
+	    (ee->ee_ant_control[mode][0] << 4) | 0x1;
+
+>> My intention is to reimplement hw_htoclock to account for half/quarter
+>> rate so it'll soon be
+>> clock = ath5k_hw_htoclock(1, channel->hw_value);
+> AFAIK Sam's HAL might have a bug there. If I remember correctly, the MAC
+> runs at the same clock speed with Half/Quarter rate.
+> It's done that way in the legacy HAL. Though there is a possibility of
+> it being hardware dependent, I'm pretty sure that it is that way at least
+> on 5413.
 >
->> commit 738910c064ff461051cd37e17199f270ff88a9a3 iwl3945: use rx queue
->> management infrastructure from iwlcore is the first to trigger the
->> BUG_ON. However, prior versions would dereference a NULL pointer
->> before the driver could get far enough to trigger the BUG_ON.
-> I know, that's what Jason described.
-> I think I now understand why. Prior to
-> 738910c064ff461051cd37e17199f270ff88a9a3, you introduced
-> c2a0aa3cb733452e749727680e380dca6cc10a68 without actually allocating the
-> rb_stts pointer, which was really wrong too.
 
-Yes I made mistake then I tought that 3945 take also init path of agn
-already... Now it's hard to besect :(.
-I suspect the rx queue managment infrastructure more because we brohgt
-iwlagn bug into 3945 I guess it wrong rx buffer index handling. It's
-really important we nail it now this will solve also our troubles in
-iwlagn, where it get lost upon tons of patches.
+Both HALs tweak clock this way on ar5212SetDeltaSlope on all chips. If
+clock depends on channel bandwidth for turbo it makes sense to also
+change on half/quarter rate operation.
 
-Thanks
-Tomas
+>>>> +     /* Set DAC/ADC delays */
+>>>> +     if (ah->ah_version == AR5K_AR5212) {
+>>>> +             if (ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))
+>>>> +                     data = AR5K_PHY_SCAL_32MHZ_2417;
+>>>> +             else if (ath5k_eeprom_is_hb63(ah))
+>>>> +                     data = AR5K_PHY_SCAL_32MHZ_HB63;
+>>>> +             else
+>>>> +                     data = AR5K_PHY_SCAL_32MHZ;
+>>>> +             ath5k_hw_reg_write(ah, data, AR5K_PHY_SCAL);
+>>>> +             data = 0;
+>>>
+>>> why data = 0; ?
+>>>
+>> Instead of having multiple temporary variables, i use only "data". To
+>> be sure that "data" is ok for use i always zero it each time i use it
+>> so that we don't write any weird stuff by mistake.
+> Wouldn't multiple temporary values be preferable, since the compiler
+> optimizes that stuff anyway?
+>
+
+Hmm, you are right, i just opened ath5k.o with IDA and it seems
+hw_reset has too many ints so what i'm doing is probably confusing for
+gcc.
+
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
