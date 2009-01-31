@@ -1,88 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:56847 "EHLO mail.atheros.com"
+Received: from nbd.name ([88.198.39.176]:46184 "EHLO ds10.mine.nu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756814AbZATUNv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2009 15:13:51 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2009 12:13:51 -0800
-Date: Tue, 20 Jan 2009 12:13:16 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Greg KH <greg@kroah.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Paul Hickey <paul@christianpatriot.us>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Kyle McMartin <kyle@mcmartin.ca>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [stable] Failed Build of modules for 2.6.27.9-159
-Message-ID: <20090120201316.GG19581@tesla> (sfid-20090120_211355_760128_F2F269CB)
-References: <1232319854.4596.1.camel@localhost.localdomain> <20090119191138.GA4018@tesla> <1232404986.3641.2.camel@localhost.localdomain> <20090120000336.GB4018@tesla> <1232433738.3696.3.camel@localhost.localdomain> <20090120194243.GC19581@tesla> <20090120200515.GA5077@kroah.com>
+	id S1752839AbZAaS4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jan 2009 13:56:44 -0500
+Message-ID: <49849ED9.6080300@openwrt.org> (sfid-20090131_195648_533960_421712F4)
+Date: Sat, 31 Jan 2009 19:56:25 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20090120200515.GA5077@kroah.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jirislaby@gmail.com, mcgrof@gmail.com
+Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
+References: <20090131023147.GE3342@makis>	 <20090131170802.GA16826@hash.localnet> <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>
+In-Reply-To: <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 20, 2009 at 12:05:15PM -0800, Greg KH wrote:
-> On Tue, Jan 20, 2009 at 11:42:43AM -0800, Luis R. Rodriguez wrote:
-> > On Mon, Jan 19, 2009 at 10:42:18PM -0800, Paul Hickey wrote:
-> > > Hi Luis,
-> > >
-> > > 2.6.27.9-159.fc10.x86_64 is the kernel. I burned the distro right=
- from
-> > > Fedora.
-> >
-> > I am =FCber-surprised to hear that FC10 2.6.27 kernels have added
-> > pci_ioremap_bar() in their kernel header include/linux/pci.h. I
-> > have verified this by checking:
-> >
-> > http://download.fedora.redhat.com/pub/fedora/linux/updates/10/x86_6=
-4/kernel-devel-2.6.27.9-159.fc10.x86_64.rpm
-> >
-> > I have checked upstrea 2.6.27.9 and even 2.6.27.12 and they do not =
-have this. This breaks
-> > compatibility projects like compat-wireless :(
->=20
-> compatibility projects should be checking for the absense or presence=
- of
-> specific functions, not triggering off of kernel release numbers :)
+Nick Kossifidis wrote:
+>>> [...]
+>>> @@ -2156,7 +2157,8 @@
+>>>  #define      AR5K_PHY_ANT_CTL_TXRX_EN        0x00000001      /* Enable TX/RX (?) */
+>>>  #define      AR5K_PHY_ANT_CTL_SECTORED_ANT   0x00000004      /* Sectored Antenna */
+>>>  #define      AR5K_PHY_ANT_CTL_HITUNE5        0x00000008      /* Hitune5 (?) */
+>>> -#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE   0x00000010      /* Switch table idle (?) */
+>>> +#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE   0x000003f9      /* Switch table idle (?) */
+>>> +#define      AR5K_PHY_ANT_CTL_SWTABLE_IDLE_S 4
+>>
+>> That doesn't look right.. should be 3f0?  (still probably works, I guess).
+>>
+> 
+> I know, but HAL does this...
+> 	AR_PHY_BIS(ah, 68, 0xFFFFFC06,
+> 		(ee->ee_antennaControl[0][arrayMode] << 4) | 0x1);
+> 
+> ~0xFFFFFC06 = 3F9
+How about splitting it up and making the 0x1 a separate flag?
 
-How can I do that? #ifdef no worky on static inlines, for example.
+> My intention is to reimplement hw_htoclock to account for half/quarter
+> rate so it'll soon be
+> clock = ath5k_hw_htoclock(1, channel->hw_value);
+AFAIK Sam's HAL might have a bug there. If I remember correctly, the MAC
+runs at the same clock speed with Half/Quarter rate.
+It's done that way in the legacy HAL. Though there is a possibility of
+it being hardware dependent, I'm pretty sure that it is that way at least
+on 5413.
 
-BTW are you saying the above practice of adding new stuff to headers
-is OK too? I wish it wasn't...
+>>> +     /* Set DAC/ADC delays */
+>>> +     if (ah->ah_version == AR5K_AR5212) {
+>>> +             if (ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))
+>>> +                     data = AR5K_PHY_SCAL_32MHZ_2417;
+>>> +             else if (ath5k_eeprom_is_hb63(ah))
+>>> +                     data = AR5K_PHY_SCAL_32MHZ_HB63;
+>>> +             else
+>>> +                     data = AR5K_PHY_SCAL_32MHZ;
+>>> +             ath5k_hw_reg_write(ah, data, AR5K_PHY_SCAL);
+>>> +             data = 0;
+>>
+>> why data = 0; ?
+>>
+> Instead of having multiple temporary variables, i use only "data". To
+> be sure that "data" is ok for use i always zero it each time i use it
+> so that we don't write any weird stuff by mistake.
+Wouldn't multiple temporary values be preferable, since the compiler
+optimizes that stuff anyway?
 
-> > > Also, the ForceXPA might not be a problem, but it makes and logs =
-its
-> > > attempts 4X per minute. It may not be much of an impact on the CP=
-U, but
-> > > is it necessary? Plus the message log gets really long really fas=
-t.
-> >
-> > Good point, hopefully this is enough of an argument to make the pat=
-ch
-> > go into 2.6.27. The patch is already in for >=3D 2.6.28.
-> >
-> > Greg -- there is an annoying message that gets printed very often
-> > when new Atheros 11n cards are used, this is printed upon hw reset
-> > which occurs on channel changes (scans) and as such happens quite
-> > often. The message was moved to print only when "EEPROM debugging"
-> > was enaabled through upstream commit f1dc56003b23d2d5bb5a756de6b163=
-3a76c9e697.
-> > Unfortunately this commit is pretty large as it refactored hw.c int=
-o
-> > separate files. Below is a small one line patch that changes this. =
-Please
-> > let me know if this is OK for 2.6.27.x
->=20
-> Looks good to me, I'll queue it up for the next .27 release.
-
-Awesome thanks.
-
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- Felix
