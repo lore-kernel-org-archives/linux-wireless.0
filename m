@@ -1,46 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:46713 "EHLO mail.atheros.com"
+Received: from cantor.suse.de ([195.135.220.2]:39481 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755432AbZAPQLF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2009 11:11:05 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2009 08:11:05 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1752647AbZAaOwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jan 2009 09:52:30 -0500
+Received: from Relay1.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 003C7429B4
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2009 15:52:28 +0100 (CET)
+From: Danny Kukawka <dkukawka@suse.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] rt2x00: fix led naming
+Date: Sat, 31 Jan 2009 15:52:20 +0100
+Cc: Helmut Schaa <hschaa@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18800.45259.999815.869498@gargle.gargle.HOWL> (sfid-20090116_171112_805282_0911EB5B)
-Date: Fri, 16 Jan 2009 21:37:39 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 0/9] ath9k driver updates
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200901311552.20951.dkukawka@suse.de> (sfid-20090131_155245_336369_418C5239)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+From: Danny Kukawka <dkukawka@suse.de>
+Subject: rt2x00: fix led naming
 
-A few driver cleanups/fixes.
-This series will apply over the 11 patch series by Gabor Juhos.
+Fixed led device naming for the rt2x00 driver. Due to the
+documentation of the led subsystem/class the naming should be
+"devicename:colour:function" while not applying sections
+should be left blank.
+    
+This should lead to e.g. "%s::radio" instead of "%s:radio".
 
-Sujith
+Signed-off-by: Danny Kukawka <dkukawka@suse.de>
+--
+ rt2x00leds.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Sujith (9):
-  ath9k: rateCodeToIndex is not used, remove it
-  ath9k: Update short guard interval in rate control
-  ath9k: Reorganize code in xmit.c
-  ath9k: Remove ath_tx_stopdma and call ath9k_hw_stoptxdma directly
-  ath9k: Merge queue draining functions
-  ath9k: Add a helper function to wake mac80211 queues
-  ath9k: Handle holding descriptor in TX completion properly
-  ath9k: Revamp TX aggregation
-  ath9k: Cleanup buffer type assignment
-
- drivers/net/wireless/ath9k/beacon.c |    2 +-
- drivers/net/wireless/ath9k/core.h   |   20 +-
- drivers/net/wireless/ath9k/main.c   |    8 +-
- drivers/net/wireless/ath9k/rc.c     |   17 +-
- drivers/net/wireless/ath9k/rc.h     |    1 -
- drivers/net/wireless/ath9k/xmit.c   | 2859 +++++++++++++++--------------------
- 6 files changed, 1260 insertions(+), 1647 deletions(-)
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
+index a0cd35b..c741d77 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00leds.c
++++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
+@@ -134,7 +134,7 @@ void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
+ 		 rt2x00dev->ops->name, wiphy_name(rt2x00dev->hw->wiphy));
+ 
+ 	if (rt2x00dev->led_radio.flags & LED_INITIALIZED) {
+-		snprintf(name, sizeof(name), "%s:radio", dev_name);
++		snprintf(name, sizeof(name), "%s::radio", dev_name);
+ 
+ 		retval = rt2x00leds_register_led(rt2x00dev,
+ 						 &rt2x00dev->led_radio,
+@@ -144,7 +144,7 @@ void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	if (rt2x00dev->led_assoc.flags & LED_INITIALIZED) {
+-		snprintf(name, sizeof(name), "%s:assoc", dev_name);
++		snprintf(name, sizeof(name), "%s::assoc", dev_name);
+ 
+ 		retval = rt2x00leds_register_led(rt2x00dev,
+ 						 &rt2x00dev->led_assoc,
+@@ -154,7 +154,7 @@ void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	if (rt2x00dev->led_qual.flags & LED_INITIALIZED) {
+-		snprintf(name, sizeof(name), "%s:quality", dev_name);
++		snprintf(name, sizeof(name), "%s::quality", dev_name);
+ 
+ 		retval = rt2x00leds_register_led(rt2x00dev,
+ 						 &rt2x00dev->led_qual,
+-- 
+Danny Kukawka
+dkukawka@suse.de
+R&D Team Mobile Devices
+SUSE LINUX a Novell Business
+Maxfeldstr. 5, D-90409 Nuernberg, Germany
+SUSE LINUX Products GmbH, Nuernberg; GF: Markus Rex, HRB 16746 (AG Nuernberg)
