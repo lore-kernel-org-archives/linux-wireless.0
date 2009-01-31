@@ -1,58 +1,446 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:33657 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757524AbZAMNWE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2009 08:22:04 -0500
-Date: Tue, 13 Jan 2009 11:21:59 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Werner Almesberger <werner@openmoko.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rfkill: how murderous can it be ?
-Message-ID: <20090113132159.GB27676@khazad-dum.debian.net> (sfid-20090113_142214_349769_6EB61815)
-References: <20090112191514.GA22112@almesberger.net> <20090113005401.GA7565@srcf.ucam.org>
+Received: from bu3sch.de ([62.75.166.246]:53058 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751606AbZAaShq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jan 2009 13:37:46 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] b43: Add LP 2062 radio init
+Date: Sat, 31 Jan 2009 19:34:53 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090113005401.GA7565@srcf.ucam.org>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200901311934.53766.mb@bu3sch.de> (sfid-20090131_193752_509287_989C0FAD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 13 Jan 2009, Matthew Garrett wrote:
-> On Mon, Jan 12, 2009 at 05:15:14PM -0200, Werner Almesberger wrote:
-> > Alternatively, we could just power down the whole WLAN module. That is
-> > easily done and very reliable. However, MAC state (ESSID, keys, and a
-> > host of other settings) is obliterated if we do this. A watchful user 
-> > space (e.g., wpa_supplicant) could then restore the status quo ante.
-> 
-> Some platform rfkill methods will perform a logical PCI hotplug of the 
-> device, without any means of notifying the driver beforehand. Since this 
-> will destroy the driver structure, I think we really need to leave state 
-> restoration up to userspace.
+This adds initialization code for the 2062 radio.
 
-Sounds acceptable, certaily...
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-But I DO heavily suggest that we inform userspace differently when state was
-lost (i.e. when it absolutely HAS to reconfigure the device or there are no
-chances of data passing through).
+---
 
-Right now, it HAS that information in a roundabout way: if the device
-disappears (hotunplug), state was lost (duh! :-p)   If it stays around, no
-state was lost...
-
-And, as an user, I'd be rather annoyed if suddenly I couldn't easily and
-cheaply just hit the rfkill hotkey (softswitch) to kill and unkill my WLAN
-while browsing, and stopping a few minutes to read the screen... because
-every time I unkilled, the system would churn, deassociate and reassociate
-and be otherwise annoying doing a reconfiguration it didn't absolutely have
-to do.
-
-In other words: make it possible to be configurable!  From the kernel POV
-that just means we need to have to publish to userspace the fact that it has
-to reconfigure when there is not a full hotunplug/hotplug being done.
+Index: wireless-testing/drivers/net/wireless/b43/phy_lp.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_lp.c	2009-01-31 17:19:22.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/phy_lp.c	2009-01-31 19:24:28.000000000 +0100
+@@ -91,7 +91,7 @@ static void lpphy_baseband_rev2plus_init
+ 	b43_phy_set(dev, B43_PHY_OFDM(0x10A), 0x1);
+ 	b43_phy_maskset(dev, B43_LPPHY_CCKLMSSTEPSIZE, 0xFF01, 0x10);
+ 	b43_phy_maskset(dev, B43_PHY_OFDM(0xDF), 0xFF00, 0xF4);
+-	b43_phy_maskset(dev, B43_PHY_OFDM(0xDF), 0x00FF, 0xF100);//FIXME specs are different
++	b43_phy_maskset(dev, B43_PHY_OFDM(0xDF), 0x00FF, 0xF100);
+ 	b43_phy_write(dev, B43_LPPHY_CLIPTHRESH, 0x48);
+ 	b43_phy_maskset(dev, B43_LPPHY_HIGAINDB, 0xFF00, 0x46);
+ 	b43_phy_maskset(dev, B43_PHY_OFDM(0xE4), 0xFF00, 0x10);
+@@ -155,11 +155,114 @@ static void lpphy_baseband_init(struct b
+ 		lpphy_baseband_rev0_1_init(dev);
+ }
+ 
+-static void lpphy_radio_init(struct b43_wldev *dev)
++struct b2062_freqdata {
++	u16 freq;
++	u8 data[6];
++};
++
++/* Initialize the 2062 radio. */
++static void lpphy_2062_init(struct b43_wldev *dev)
++{
++	u32 crystalfreq, pdiv, tmp, ref;
++	unsigned int i;
++	const struct b2062_freqdata *fd = NULL;
++
++	static const struct b2062_freqdata freqdata_tab[] = {
++		{ .freq = 12000, .data[0] =  6, .data[1] =  6, .data[2] =  6,
++				 .data[3] =  6, .data[4] = 10, .data[5] =  6, },
++		{ .freq = 13000, .data[0] =  4, .data[1] =  4, .data[2] =  4,
++				 .data[3] =  4, .data[4] = 11, .data[5] =  7, },
++		{ .freq = 14400, .data[0] =  3, .data[1] =  3, .data[2] =  3,
++				 .data[3] =  3, .data[4] = 12, .data[5] =  7, },
++		{ .freq = 16200, .data[0] =  3, .data[1] =  3, .data[2] =  3,
++				 .data[3] =  3, .data[4] = 13, .data[5] =  8, },
++		{ .freq = 18000, .data[0] =  2, .data[1] =  2, .data[2] =  2,
++				 .data[3] =  2, .data[4] = 14, .data[5] =  8, },
++		{ .freq = 19200, .data[0] =  1, .data[1] =  1, .data[2] =  1,
++				 .data[3] =  1, .data[4] = 14, .data[5] =  9, },
++	};
++
++	b2062_upload_init_table(dev);
++
++	b43_radio_write(dev, B2062_N_TX_CTL3, 0);
++	b43_radio_write(dev, B2062_N_TX_CTL4, 0);
++	b43_radio_write(dev, B2062_N_TX_CTL5, 0);
++	b43_radio_write(dev, B2062_N_PDN_CTL0, 0x40);
++	b43_radio_write(dev, B2062_N_PDN_CTL0, 0);
++	b43_radio_write(dev, B2062_N_CALIB_TS, 0x10);
++	b43_radio_write(dev, B2062_N_CALIB_TS, 0);
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
++		b43_radio_set(dev, B2062_N_TSSI_CTL0, 0x1);
++	else
++		b43_radio_mask(dev, B2062_N_TSSI_CTL0, ~0x1);
++
++	crystalfreq = 0;//FIXME
++
++	if (crystalfreq >= 30000000) {
++		pdiv = 1;
++		b43_radio_mask(dev, B2062_S_RFPLL_CTL1, 0xFFFB);
++	} else {
++		pdiv = 2;
++		b43_radio_set(dev, B2062_S_RFPLL_CTL1, 0x4);
++	}
++
++	tmp = (800000000 * pdiv + crystalfreq) / (32000000 * pdiv);
++	tmp = (tmp - 1) & 0xFF;
++	b43_radio_write(dev, B2062_S_RFPLL_CTL18, tmp);
++
++	tmp = (2 * crystalfreq + 1000000 * pdiv) / (2000000 * pdiv);
++	tmp = ((tmp & 0xFF) - 1) & 0xFFFF;
++	b43_radio_write(dev, B2062_S_RFPLL_CTL19, tmp);
++
++	ref = (1000 * pdiv + 2 * crystalfreq) / (2000 * pdiv);
++	ref &= 0xFFFF;
++	for (i = 0; i < ARRAY_SIZE(freqdata_tab); i++) {
++		if (ref < freqdata_tab[i].freq) {
++			fd = &freqdata_tab[i];
++			break;
++		}
++	}
++	if (B43_WARN_ON(!fd))
++		return;
++
++	b43_radio_write(dev, B2062_S_RFPLL_CTL8,
++			((u16)(fd->data[1]) << 4) | fd->data[0]);
++	b43_radio_write(dev, B2062_S_RFPLL_CTL9,
++			((u16)(fd->data[3]) << 4) | fd->data[2]);//FIXME specs are different
++	b43_radio_write(dev, B2062_S_RFPLL_CTL10, fd->data[4]);
++	b43_radio_write(dev, B2062_S_RFPLL_CTL11, fd->data[5]);
++}
++
++/* Initialize the 2063 radio. */
++static void lpphy_2063_init(struct b43_wldev *dev)
+ {
+ 	//TODO
+ }
+ 
++static void lpphy_sync_stx(struct b43_wldev *dev)
++{
++	//TODO
++}
++
++static void lpphy_radio_init(struct b43_wldev *dev)
++{
++	/* The radio is attached through the 4wire bus. */
++	b43_phy_set(dev, B43_LPPHY_FOURWIRE_CTL, 0x2);
++	udelay(1);
++	b43_phy_mask(dev, B43_LPPHY_FOURWIRE_CTL, 0xFFFD);
++	udelay(1);
++
++	if (dev->phy.rev < 2) {
++		lpphy_2062_init(dev);
++	} else {
++		lpphy_2063_init(dev);
++		lpphy_sync_stx(dev);
++		b43_phy_write(dev, B43_PHY_OFDM(0xF0), 0x5F80);
++		b43_phy_write(dev, B43_PHY_OFDM(0xF1), 0);
++		//TODO Do something on the backplane
++	}
++}
++
+ static int b43_lpphy_op_init(struct b43_wldev *dev)
+ {
+ 	/* TODO: band SPROM */
+@@ -222,7 +325,9 @@ static int b43_lpphy_op_switch_channel(s
+ 
+ static unsigned int b43_lpphy_op_get_default_chan(struct b43_wldev *dev)
+ {
+-	return 1; /* Default to channel 1 */
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
++		return 1;
++	return 36;
+ }
+ 
+ static void b43_lpphy_op_set_rx_antenna(struct b43_wldev *dev, int antenna)
+Index: wireless-testing/drivers/net/wireless/b43/tables_lpphy.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/tables_lpphy.c	2009-01-31 17:32:13.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/tables_lpphy.c	2009-01-31 18:45:04.000000000 +0100
+@@ -28,6 +28,250 @@
+ #include "phy_lp.h"
+ 
+ 
++/* Entry of the 2062 radio init table */
++struct b2062_init_tab_entry {
++	u16 offset;
++	u16 value_a;
++	u16 value_g;
++	u8 flags;
++};
++#define B2062_FLAG_A	0x01 /* Flag: Init in A mode */
++#define B2062_FLAG_G	0x02 /* Flag: Init in G mode */
++
++static const struct b2062_init_tab_entry b2062_init_tab[] = {
++	/* { .offset = B2062_N_COMM1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = 0x0001, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM3, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_N_COMM4, .value_a = 0x0001, .value_g = 0x0000, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_N_COMM5, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM6, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM7, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM8, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM9, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM10, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM11, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM12, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM13, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM14, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_COMM15, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_PDN_CTL0, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_N_PDN_CTL1, .value_a = 0x0000, .value_g = 0x00CA, .flags = B2062_FLAG_G, },
++	/* { .offset = B2062_N_PDN_CTL2, .value_a = 0x0018, .value_g = 0x0018, .flags = 0, }, */
++	{ .offset = B2062_N_PDN_CTL3, .value_a = 0x0000, .value_g = 0x0000, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_N_PDN_CTL4, .value_a = 0x0015, .value_g = 0x002A, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_N_GEN_CTL0, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_IQ_CALIB, .value_a = 0x0001, .value_g = 0x0001, .flags = 0, }, */
++	{ .offset = B2062_N_LGENC, .value_a = 0x00DB, .value_g = 0x00FF, .flags = B2062_FLAG_A, },
++	/* { .offset = B2062_N_LGENA_LPF, .value_a = 0x0001, .value_g = 0x0001, .flags = 0, }, */
++	/* { .offset = B2062_N_LGENA_BIAS0, .value_a = 0x0041, .value_g = 0x0041, .flags = 0, }, */
++	/* { .offset = B2062_N_LGNEA_BIAS1, .value_a = 0x0002, .value_g = 0x0002, .flags = 0, }, */
++	/* { .offset = B2062_N_LGENA_CTL0, .value_a = 0x0032, .value_g = 0x0032, .flags = 0, }, */
++	/* { .offset = B2062_N_LGENA_CTL1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_LGENA_CTL2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_N_LGENA_TUNE0, .value_a = 0x00DD, .value_g = 0x0000, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_N_LGENA_TUNE1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_N_LGENA_TUNE2, .value_a = 0x00DD, .value_g = 0x0000, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_N_LGENA_TUNE3, .value_a = 0x0077, .value_g = 0x00B5, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_N_LGENA_CTL3, .value_a = 0x0000, .value_g = 0x00FF, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_N_LGENA_CTL4, .value_a = 0x001F, .value_g = 0x001F, .flags = 0, }, */
++	/* { .offset = B2062_N_LGENA_CTL5, .value_a = 0x0032, .value_g = 0x0032, .flags = 0, }, */
++	/* { .offset = B2062_N_LGENA_CTL6, .value_a = 0x0032, .value_g = 0x0032, .flags = 0, }, */
++	{ .offset = B2062_N_LGENA_CTL7, .value_a = 0x0033, .value_g = 0x0033, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_N_RXA_CTL0, .value_a = 0x0009, .value_g = 0x0009, .flags = 0, }, */
++	{ .offset = B2062_N_RXA_CTL1, .value_a = 0x0000, .value_g = 0x0000, .flags = B2062_FLAG_G, },
++	/* { .offset = B2062_N_RXA_CTL2, .value_a = 0x0018, .value_g = 0x0018, .flags = 0, }, */
++	/* { .offset = B2062_N_RXA_CTL3, .value_a = 0x0027, .value_g = 0x0027, .flags = 0, }, */
++	/* { .offset = B2062_N_RXA_CTL4, .value_a = 0x0028, .value_g = 0x0028, .flags = 0, }, */
++	/* { .offset = B2062_N_RXA_CTL5, .value_a = 0x0007, .value_g = 0x0007, .flags = 0, }, */
++	/* { .offset = B2062_N_RXA_CTL6, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_RXA_CTL7, .value_a = 0x0008, .value_g = 0x0008, .flags = 0, }, */
++	{ .offset = B2062_N_RXBB_CTL0, .value_a = 0x0082, .value_g = 0x0080, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_N_RXBB_CTL1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_CTL2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_GAIN0, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_N_RXBB_GAIN1, .value_a = 0x0004, .value_g = 0x0004, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_N_RXBB_GAIN2, .value_a = 0x0000, .value_g = 0x0000, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_N_RXBB_GAIN3, .value_a = 0x0011, .value_g = 0x0011, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_RSSI0, .value_a = 0x0043, .value_g = 0x0043, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_RSSI1, .value_a = 0x0033, .value_g = 0x0033, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_CALIB0, .value_a = 0x0010, .value_g = 0x0010, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_CALIB1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_CALIB2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_BIAS0, .value_a = 0x0006, .value_g = 0x0006, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_BIAS1, .value_a = 0x002A, .value_g = 0x002A, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_BIAS2, .value_a = 0x00AA, .value_g = 0x00AA, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_BIAS3, .value_a = 0x0021, .value_g = 0x0021, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_BIAS4, .value_a = 0x00AA, .value_g = 0x00AA, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_BIAS5, .value_a = 0x0022, .value_g = 0x0022, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_RSSI2, .value_a = 0x0001, .value_g = 0x0001, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_RSSI3, .value_a = 0x0055, .value_g = 0x0055, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_RSSI4, .value_a = 0x0001, .value_g = 0x0001, .flags = 0, }, */
++	/* { .offset = B2062_N_RXBB_RSSI5, .value_a = 0x0055, .value_g = 0x0055, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_CTL0, .value_a = 0x0001, .value_g = 0x0001, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_CTL1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_CTL2, .value_a = 0x0084, .value_g = 0x0084, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_CTL3, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_N_TX_CTL4, .value_a = 0x0003, .value_g = 0x0003, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_N_TX_CTL5, .value_a = 0x0002, .value_g = 0x0002, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_N_TX_CTL6, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_CTL7, .value_a = 0x0058, .value_g = 0x0058, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_CTL8, .value_a = 0x0082, .value_g = 0x0082, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_CTL9, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_CTL_A, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_GC2G, .value_a = 0x00FF, .value_g = 0x00FF, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_GC5G, .value_a = 0x00FF, .value_g = 0x00FF, .flags = 0, }, */
++	{ .offset = B2062_N_TX_TUNE, .value_a = 0x0088, .value_g = 0x001B, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_N_TX_PAD, .value_a = 0x0088, .value_g = 0x0088, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_PGA, .value_a = 0x0088, .value_g = 0x0088, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_PADAUX, .value_a = 0x0033, .value_g = 0x0033, .flags = 0, }, */
++	/* { .offset = B2062_N_TX_PGAAUX, .value_a = 0x0033, .value_g = 0x0033, .flags = 0, }, */
++	/* { .offset = B2062_N_TSSI_CTL0, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_TSSI_CTL1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_TSSI_CTL2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_IQ_CALIB_CTL0, .value_a = 0x0033, .value_g = 0x0033, .flags = 0, }, */
++	/* { .offset = B2062_N_IQ_CALIB_CTL1, .value_a = 0x0055, .value_g = 0x0055, .flags = 0, }, */
++	/* { .offset = B2062_N_IQ_CALIB_CTL2, .value_a = 0x0032, .value_g = 0x0032, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_TS, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_CTL0, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_CTL1, .value_a = 0x0015, .value_g = 0x0015, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_CTL2, .value_a = 0x000F, .value_g = 0x000F, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_CTL3, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_CTL4, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_DBG0, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_DBG1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_DBG2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_CALIB_DBG3, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_PSENSE_CTL0, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_PSENSE_CTL1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_PSENSE_CTL2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_N_TEST_BUF0, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RADIO_ID_CODE, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM3, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_S_COMM4, .value_a = 0x0001, .value_g = 0x0000, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_COMM5, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM6, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM7, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM8, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM9, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM10, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM11, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM12, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM13, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM14, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_COMM15, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_S_PDS_CTL0, .value_a = 0x00FF, .value_g = 0x00FF, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_PDS_CTL1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_PDS_CTL2, .value_a = 0x008E, .value_g = 0x008E, .flags = 0, }, */
++	/* { .offset = B2062_S_PDS_CTL3, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_BG_CTL0, .value_a = 0x0006, .value_g = 0x0006, .flags = 0, }, */
++	/* { .offset = B2062_S_BG_CTL1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_BG_CTL2, .value_a = 0x0011, .value_g = 0x0011, .flags = 0, }, */
++	{ .offset = B2062_S_LGENG_CTL0, .value_a = 0x00F8, .value_g = 0x00D8, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_LGENG_CTL1, .value_a = 0x003C, .value_g = 0x0024, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_LGENG_CTL2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_LGENG_CTL3, .value_a = 0x0041, .value_g = 0x0041, .flags = 0, }, */
++	/* { .offset = B2062_S_LGENG_CTL4, .value_a = 0x0002, .value_g = 0x0002, .flags = 0, }, */
++	/* { .offset = B2062_S_LGENG_CTL5, .value_a = 0x0033, .value_g = 0x0033, .flags = 0, }, */
++	/* { .offset = B2062_S_LGENG_CTL6, .value_a = 0x0022, .value_g = 0x0022, .flags = 0, }, */
++	/* { .offset = B2062_S_LGENG_CTL7, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_S_LGENG_CTL8, .value_a = 0x0088, .value_g = 0x0080, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_LGENG_CTL9, .value_a = 0x0088, .value_g = 0x0088, .flags = 0, }, */
++	{ .offset = B2062_S_LGENG_CTL10, .value_a = 0x0088, .value_g = 0x0080, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_LGENG_CTL11, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL0, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL1, .value_a = 0x0007, .value_g = 0x0007, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL2, .value_a = 0x00AF, .value_g = 0x00AF, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL3, .value_a = 0x0012, .value_g = 0x0012, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL4, .value_a = 0x000B, .value_g = 0x000B, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL5, .value_a = 0x005F, .value_g = 0x005F, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL6, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL7, .value_a = 0x0040, .value_g = 0x0040, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL8, .value_a = 0x0052, .value_g = 0x0052, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL9, .value_a = 0x0026, .value_g = 0x0026, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL10, .value_a = 0x0003, .value_g = 0x0003, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL11, .value_a = 0x0036, .value_g = 0x0036, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL12, .value_a = 0x0057, .value_g = 0x0057, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL13, .value_a = 0x0011, .value_g = 0x0011, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL14, .value_a = 0x0075, .value_g = 0x0075, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL15, .value_a = 0x00B4, .value_g = 0x00B4, .flags = 0, }, */
++	/* { .offset = B2062_S_REFPLL_CTL16, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_S_RFPLL_CTL0, .value_a = 0x0098, .value_g = 0x0098, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL1, .value_a = 0x0010, .value_g = 0x0010, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_RFPLL_CTL2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RFPLL_CTL3, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RFPLL_CTL4, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_S_RFPLL_CTL5, .value_a = 0x0043, .value_g = 0x0043, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL6, .value_a = 0x0047, .value_g = 0x0047, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL7, .value_a = 0x000C, .value_g = 0x000C, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL8, .value_a = 0x0011, .value_g = 0x0011, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL9, .value_a = 0x0011, .value_g = 0x0011, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL10, .value_a = 0x000E, .value_g = 0x000E, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL11, .value_a = 0x0008, .value_g = 0x0008, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL12, .value_a = 0x0033, .value_g = 0x0033, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL13, .value_a = 0x000A, .value_g = 0x000A, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL14, .value_a = 0x0006, .value_g = 0x0006, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_RFPLL_CTL15, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RFPLL_CTL16, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RFPLL_CTL17, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_S_RFPLL_CTL18, .value_a = 0x003E, .value_g = 0x003E, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL19, .value_a = 0x0013, .value_g = 0x0013, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_RFPLL_CTL20, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_S_RFPLL_CTL21, .value_a = 0x0062, .value_g = 0x0062, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL22, .value_a = 0x0007, .value_g = 0x0007, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL23, .value_a = 0x0016, .value_g = 0x0016, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL24, .value_a = 0x005C, .value_g = 0x005C, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL25, .value_a = 0x0095, .value_g = 0x0095, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_RFPLL_CTL26, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RFPLL_CTL27, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RFPLL_CTL28, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RFPLL_CTL29, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_S_RFPLL_CTL30, .value_a = 0x00A0, .value_g = 0x00A0, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL31, .value_a = 0x0004, .value_g = 0x0004, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_RFPLL_CTL32, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	{ .offset = B2062_S_RFPLL_CTL33, .value_a = 0x00CC, .value_g = 0x00CC, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	{ .offset = B2062_S_RFPLL_CTL34, .value_a = 0x0007, .value_g = 0x0007, .flags = B2062_FLAG_A | B2062_FLAG_G, },
++	/* { .offset = B2062_S_RXG_CNT0, .value_a = 0x0010, .value_g = 0x0010, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT1, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT2, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT3, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT4, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT5, .value_a = 0x0055, .value_g = 0x0055, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT6, .value_a = 0x0055, .value_g = 0x0055, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT7, .value_a = 0x0005, .value_g = 0x0005, .flags = 0, }, */
++	{ .offset = B2062_S_RXG_CNT8, .value_a = 0x000F, .value_g = 0x000F, .flags = B2062_FLAG_A, },
++	/* { .offset = B2062_S_RXG_CNT9, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT10, .value_a = 0x0055, .value_g = 0x0055, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT11, .value_a = 0x0066, .value_g = 0x0066, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT12, .value_a = 0x0055, .value_g = 0x0055, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT13, .value_a = 0x0044, .value_g = 0x0044, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT14, .value_a = 0x00A0, .value_g = 0x00A0, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT15, .value_a = 0x0004, .value_g = 0x0004, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT16, .value_a = 0x0000, .value_g = 0x0000, .flags = 0, }, */
++	/* { .offset = B2062_S_RXG_CNT17, .value_a = 0x0055, .value_g = 0x0055, .flags = 0, }, */
++};
++
++void b2062_upload_init_table(struct b43_wldev *dev)
++{
++	const struct b2062_init_tab_entry *e;
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(b2062_init_tab); i++) {
++		e = &b2062_init_tab[i];
++		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
++			if (!(e->flags & B2062_FLAG_G))
++				continue;
++			b43_radio_write(dev, e->offset, e->value_g);
++		} else {
++			if (!(e->flags & B2062_FLAG_A))
++				continue;
++			b43_radio_write(dev, e->offset, e->value_a);
++		}
++	}
++}
++
+ u32 b43_lptab_read(struct b43_wldev *dev, u32 offset)
+ {
+ 	u32 type, value;
+Index: wireless-testing/drivers/net/wireless/b43/tables_lpphy.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/tables_lpphy.h	2009-01-31 17:44:33.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/tables_lpphy.h	2009-01-31 17:44:53.000000000 +0100
+@@ -17,5 +17,7 @@
+ u32 b43_lptab_read(struct b43_wldev *dev, u32 offset);
+ void b43_lptab_write(struct b43_wldev *dev, u32 offset, u32 value);
+ 
++void b2062_upload_init_table(struct b43_wldev *dev);
++
+ 
+ #endif /* B43_TABLES_LPPHY_H_ */
+Index: wireless-testing/drivers/net/wireless/b43/phy_lp.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_lp.h	2009-01-31 17:21:13.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/phy_lp.h	2009-01-31 17:51:39.000000000 +0100
+@@ -273,7 +273,7 @@
+ #define B43_LPPHY_TRLOOKUP4			B43_PHY_OFDM(0xBC) /* TRLookup4 */
+ #define B43_LPPHY_RADAR_FIFO_STAT		B43_PHY_OFDM(0xBD) /* Radar FIFO Status */
+ #define B43_LPPHY_GPIO_OUTEN			B43_PHY_OFDM(0xBE) /* GPIO Out enable */
+-#define B43_LPPHY_GPOI_SELECT			B43_PHY_OFDM(0xBF) /* GPOI Select */
++#define B43_LPPHY_GPIO_SELECT			B43_PHY_OFDM(0xBF) /* GPIO Select */
+ #define B43_LPPHY_GPIO_OUT			B43_PHY_OFDM(0xC0) /* GPIO Out */
+ 
+ 
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Greetings, Michael.
