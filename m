@@ -1,86 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49979 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754545AbZBJUmB (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:53410 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbZBAEuV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 15:42:01 -0500
-Message-Id: <20090210202557.078353922@sipsolutions.net> (sfid-20090210_214207_249309_B82C6EB0)
-References: <20090210202536.425266119@sipsolutions.net>
-Date: Tue, 10 Feb 2009 21:25:59 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 23/27] cfg80211: add more flexible BSS lookup
-Mime-Version: 1.0
+	Sat, 31 Jan 2009 23:50:21 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so390456yxm.1
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2009 20:50:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <49851F73.4050204@openwrt.org>
+References: <20090131023147.GE3342@makis>
+	 <20090131170802.GA16826@hash.localnet>
+	 <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>
+	 <20090131223809.GA17413@hash.localnet>
+	 <40f31dec0901311950q27e28bb8we145c79488b1c7e1@mail.gmail.com>
+	 <49851F73.4050204@openwrt.org>
+Date: Sun, 1 Feb 2009 06:50:20 +0200
+Message-ID: <40f31dec0901312050t1c8e50b5y2e63a05f8f5f4f89@mail.gmail.com> (sfid-20090201_055025_230054_094B29AD)
+Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jirislaby@gmail.com, mcgrof@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a more flexible BSS lookup function so that mac80211 or
-other drivers can actually use this for getting the BSS to
-connect to.
+2009/2/1 Felix Fietkau <nbd@openwrt.org>:
+> Nick Kossifidis wrote:
+>> 2009/2/1 Bob Copeland <me@bobcopeland.com>:
+>>> On Sat, Jan 31, 2009 at 08:48:02PM +0200, Nick Kossifidis wrote:
+>>>> > Heh, we should write a little tool to check the shifts and masks :)
+>>>> >
+>>>>
+>>>> Yup :P
+>>>
+>>> I just wrote one, I can post it later :)   It also found:
+>>>
+>>> AR5K_PHY_SIGMA_DELTA_ADC_CLIP 0x01ff3000 13
+>>>
+>>> Should be 12 or a different mask...
+>>>
+>>
+>> 13 is correct
+>>
+>> 0x01ff3000 -> 1111111111110000000000000
+> I think it's    1111111110011000000000000? :)
+>
+> This mask makes 12 seem more likely.
+>
+> - Felix
+>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h |   12 +++++++++++-
- net/wireless/scan.c    |   10 ++++++++--
- 2 files changed, 19 insertions(+), 3 deletions(-)
+Maybe it's in big endian format (we don't know anything about this reg
+anyway :P), both HALs have 13 plus it doesn't make sense to have a
+field split.
 
---- wireless-testing.orig/include/net/cfg80211.h	2009-02-10 20:59:37.000000000 +0100
-+++ wireless-testing/include/net/cfg80211.h	2009-02-10 20:59:38.000000000 +0100
-@@ -785,7 +785,17 @@ cfg80211_inform_bss_frame(struct wiphy *
- struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 				      struct ieee80211_channel *channel,
- 				      const u8 *bssid,
--				      const u8 *ssid, size_t ssid_len);
-+				      const u8 *ssid, size_t ssid_len,
-+				      u16 capa_mask, u16 capa_val);
-+static inline struct cfg80211_bss *
-+cfg80211_get_ibss(struct wiphy *wiphy,
-+		  struct ieee80211_channel *channel,
-+		  const u8 *ssid, size_t ssid_len)
-+{
-+	return cfg80211_get_bss(wiphy, channel, NULL, ssid, ssid_len,
-+				WLAN_CAPABILITY_IBSS, WLAN_CAPABILITY_IBSS);
-+}
-+
- struct cfg80211_bss *cfg80211_get_mesh(struct wiphy *wiphy,
- 				       struct ieee80211_channel *channel,
- 				       const u8 *meshid, size_t meshidlen,
---- wireless-testing.orig/net/wireless/scan.c	2009-02-10 20:59:37.000000000 +0100
-+++ wireless-testing/net/wireless/scan.c	2009-02-10 20:59:38.000000000 +0100
-@@ -116,9 +116,12 @@ static bool is_bss(struct cfg80211_bss *
- {
- 	const u8 *ssidie;
- 
--	if (compare_ether_addr(a->bssid, bssid))
-+	if (bssid && compare_ether_addr(a->bssid, bssid))
- 		return false;
- 
-+	if (!ssid)
-+		return true;
-+
- 	ssidie = find_ie(WLAN_EID_SSID,
- 			 a->information_elements,
- 			 a->len_information_elements);
-@@ -199,7 +202,8 @@ static int cmp_bss(struct cfg80211_bss *
- struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 				      struct ieee80211_channel *channel,
- 				      const u8 *bssid,
--				      const u8 *ssid, size_t ssid_len)
-+				      const u8 *ssid, size_t ssid_len,
-+				      u16 capa_mask, u16 capa_val)
- {
- 	struct cfg80211_registered_device *dev = wiphy_to_dev(wiphy);
- 	struct cfg80211_internal_bss *bss, *res = NULL;
-@@ -207,6 +211,8 @@ struct cfg80211_bss *cfg80211_get_bss(st
- 	spin_lock_bh(&dev->bss_lock);
- 
- 	list_for_each_entry(bss, &dev->bss_list, list) {
-+		if ((bss->pub.capability & capa_mask) != capa_val)
-+			continue;
- 		if (channel && bss->pub.channel != channel)
- 			continue;
- 		if (is_bss(&bss->pub, bssid, ssid, ssid_len)) {
 
 -- 
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
