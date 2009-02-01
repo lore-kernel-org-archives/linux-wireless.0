@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:34122 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753070AbZBDU7S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 15:59:18 -0500
-Subject: Re: [PATCH 2/2] Document CONFIG_DRIVER_NL80211 in
- wpa_supplicant/defconfig
-From: Pavel Roskin <proski@gnu.org>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090204195055.GB28563@jm.kir.nu>
-References: <20090204062021.12891.96607.stgit@ct.roinet.com>
-	 <20090204062037.12891.4454.stgit@ct.roinet.com>
-	 <20090204195055.GB28563@jm.kir.nu>
-Content-Type: text/plain
-Date: Wed, 04 Feb 2009 15:59:12 -0500
-Message-Id: <1233781152.7796.14.camel@dv> (sfid-20090204_215922_464050_CFD91D19)
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([70.167.247.36]:4563 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752147AbZBAAoH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jan 2009 19:44:07 -0500
+Date: Sat, 31 Jan 2009 19:43:49 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	nbd@openwrt.org
+Subject: Re: [PATCH 4/5] ath5k: Update initvals
+Message-ID: <20090201004349.GB17607@hash.localnet> (sfid-20090201_014413_254798_477C8AE4)
+References: <20090131023007.GD3342@makis>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090131023007.GD3342@makis>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-02-04 at 21:50 +0200, Jouni Malinen wrote:
-> On Wed, Feb 04, 2009 at 01:20:37AM -0500, Pavel Roskin wrote:
-> > Put it after CONFIG_DRIVER_WEXT, as it's the new Linux wireless API.
-> > Move comments about kernel includes next to CONFIG_DRIVER_NL80211, away
-> > from CONFIG_CLIENT_MLME.
+On Sat, Jan 31, 2009 at 04:30:07AM +0200, Nick Kossifidis wrote:
+>  * Update initvals to match legacy and Sam's HAL
 > 
-> Thanks. CONFIG_DRIVER_NL80211 part applied as-is; the WIRELESS_DEV
-> comment was removed since it does not apply anymore.
-> CONFIG_DRIVER_NL80211 was missing by design since the driver_nl80211.c
-> code was not yet complete. Anyway, it is now functional enough to be
-> included in wpa_supplicant defconfig. Though, I did leave it commented
-> out for the time being.
+>  Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Looks good to me.  Thank you!
+I spot checked some of these, this is the only thing I saw:
 
+> -	{ AR5K_BEACON_CNT_5211, 0x00000000 },	/* change */
+> +	{ AR5K_FRAME_CTL_QOSM, 	0x000fc78f },
+
+legacy-hal and Sam disagree on the top 12 bits (0xffffc78f vs
+0x000fc78f), we have Sam's.
+
+Rest looks good to me, feel free to add my Acked-by if you want.
 -- 
-Regards,
-Pavel Roskin
+Bob Copeland %% www.bobcopeland.com
+
