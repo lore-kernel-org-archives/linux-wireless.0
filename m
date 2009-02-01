@@ -1,68 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59529 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757016AbZB0VBc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 16:01:32 -0500
-Subject: Re: [PATCH v2] mac80211: Implement commit in wireless extensions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20090226232149.51510@gmx.net> (sfid-20090227_002221_567849_E4A0B0C8)
-References: <20090226232149.51510@gmx.net>
-	 (sfid-20090227_002221_567849_E4A0B0C8)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MCKh36ya5/9pK9XbqkUb"
-Date: Fri, 27 Feb 2009 08:19:14 -0800
-Message-Id: <1235751554.7426.3.camel@johannes.local> (sfid-20090227_220136_821470_BC1F8D54)
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:52709 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751644AbZBAEF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jan 2009 23:05:28 -0500
+Message-ID: <49851F73.4050204@openwrt.org> (sfid-20090201_050545_310530_E4989A7A)
+Date: Sun, 01 Feb 2009 05:05:07 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jirislaby@gmail.com, mcgrof@gmail.com
+Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
+References: <20090131023147.GE3342@makis>	 <20090131170802.GA16826@hash.localnet>	 <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>	 <20090131223809.GA17413@hash.localnet> <40f31dec0901311950q27e28bb8we145c79488b1c7e1@mail.gmail.com>
+In-Reply-To: <40f31dec0901311950q27e28bb8we145c79488b1c7e1@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Nick Kossifidis wrote:
+> 2009/2/1 Bob Copeland <me@bobcopeland.com>:
+>> On Sat, Jan 31, 2009 at 08:48:02PM +0200, Nick Kossifidis wrote:
+>>> > Heh, we should write a little tool to check the shifts and masks :)
+>>> >
+>>>
+>>> Yup :P
+>>
+>> I just wrote one, I can post it later :)   It also found:
+>>
+>> AR5K_PHY_SIGMA_DELTA_ADC_CLIP 0x01ff3000 13
+>>
+>> Should be 12 or a different mask...
+>>
+> 
+> 13 is correct
+> 
+> 0x01ff3000 -> 1111111111110000000000000
+I think it's    1111111110011000000000000? :)
 
---=-MCKh36ya5/9pK9XbqkUb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This mask makes 12 seem more likely.
 
-On Fri, 2009-02-27 at 00:21 +0100, Alina Friedrichsen wrote:
-> This implements commit in wireless extensions for completeness and
-> maybe it could be useful for debugging to initiate a new rejoining
-> process without changing the config.
->=20
-> I not so familiar with nl80211 at the moment, so I want add it to
-> nl80211 in a second patch.
->=20
-> Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
-> ---
-> Version 2: Fix bad header.
->=20
-> Hope we can find a compromise in the conception.
-
-I stand by my opinion that I don't want to have this in the code since
-there's no real reason to have it.
-
-johannes
-
---=-MCKh36ya5/9pK9XbqkUb
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJqBJ/AAoJEKVg1VMiehFY1LIP/AuxlRaXrCpJctZ70T0jqdAG
-Yce0fUtoQgpKQnP0Y9k0w1sRK80mQqyQ4Snm+L+7CsiZCPY5EO5bQmMY4DPrE3bC
-g13Qv+oZlPfMmehSYgttuD1U91r0R98pZPnYYmjHnl/GXfs4KW80eYU4cE/9r4OG
-8VakjyoF4WgLlvfMOdFRYTXz2s4FnEfsd6IthBIzXEMtWDwWbFcBBEWP2+LeTTEr
-1wAeClQSuP5111nK++/0MUvt/NtxpC9B1P4u2b8tgjHjvL2k5TgQI6V/Q4ATidM/
-XZwnUDcazsptRiixNIAc+Apf2POsC7RqzNcZA6031je7EWOYSWi2mXozxxEq4fzD
-xqXCO5hTnc5lx9Tt0DU0KPwpgWpsuE8rMY7qtT5N00ubYJqmhnTx3uIw7spsp+d+
-kRr/PZ4+F2aEWiejg4JeBKwxRXAHGNAbFQx+RU3utcDLYIOEqE0hy4AYcB+H0QDj
-US/NbCsU4aFcLQl9OYzJCT/NvKIpXKdcZBHrkKjvgRnGnyIULMVr6nGeEYVro4Pr
-lNSHjsaMoAYOfMSiqt5nkqhtmIs/IsngzPAFXUbfXINqTPxhaK332uDhMY3gsLm2
-O1lC28J67UA3lzO/wCg+AXc85sk4D9fpSV0O2uxUrp7iRvzFkn41Uz39/CNO8nnf
-VoWSFAIzH1J8PAWSB4O2
-=rpLx
------END PGP SIGNATURE-----
-
---=-MCKh36ya5/9pK9XbqkUb--
-
+- Felix
