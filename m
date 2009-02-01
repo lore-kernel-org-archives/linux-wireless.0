@@ -1,51 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mk-outboundfilter-2.mail.uk.tiscali.com ([212.74.114.38]:55909
-	"EHLO mk-outboundfilter-2.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752412AbZBSX0h (ORCPT
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:37699
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419AbZBAVw0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 18:26:37 -0500
-From: Adam Baker <linux@baker-net.org.uk>
-To: rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] No ProbeResp == dead interface?
-Date: Thu, 19 Feb 2009 23:16:11 +0000
-Cc: Anders Eriksson <aeriksson@fastmail.fm>,
-	linux-wireless@vger.kernel.org
-References: <20090218205849.5723293CD93@tippex.mynet.homeunix.org>
-In-Reply-To: <20090218205849.5723293CD93@tippex.mynet.homeunix.org>
+	Sun, 1 Feb 2009 16:52:26 -0500
+Received: from [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7] (unknown [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by s0be.servebeer.com (Postfix) with ESMTPSA id CE2F8252A7A
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Feb 2009 16:52:21 -0500 (EST)
+Message-ID: <49861993.3080809@erley.org> (sfid-20090201_225233_394944_B46EB271)
+Date: Sun, 01 Feb 2009 16:52:19 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200902192316.11628.linux@baker-net.org.uk> (sfid-20090220_002643_086457_3D819DFB)
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [patch resend] crda: rename nl_handle to nl_sock for libnl-2.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 18 February 2009, Anders Eriksson wrote:
-> Every so often I get in syslog:
-> wlan0: No ProbeResp from current AP 00:18:39:c0:5f:50 - assume out of range
->
-> After that the interface carries no more traffic and the onlly way I've
-> found to revive the card is to power cycle the machine.
-> /etc/iniit.d/net.wlan restart does not work, and "ifconfig wlan0 up ;
-> iwlist scan" shows no results. Is there another way to revive the card?
+Upstream has renamed nl_handle to nl_sock.  Update crda to the new names
+and add #define for libnl-1.1.
 
-The first thing to try would be to see if rmmod rt61pci; modprobe rt61pci is 
-enough to recover it. If it is actually a cardbus card then you could also 
-try unplugging and replugging it.
+Signed-off-by: Pat Erley <pat-lkml@erley.org>
 
-Neither of those is an ideal solution though. Do you fancy the task of trying 
-to diagnose the underlying fault which is likely to require at the very least 
-making sure the driver is built with debugfs support enabled and may require 
-adding a few printk statements into the kernel modules to reveal more details 
-of the behaviour?
+---
+resent fixing whitespace errors in last repost.
 
->
-> I'm on 2.6.29-rc3, and the card is:
-> 00:0a.0 Network controller: RaLink RT2500 802.11g Cardbus/mini-PCI (rev 01)
->         Subsystem: RaLink Device 2560
->         Flags: bus master, slow devsel, latency 64, IRQ 11
->         Memory at efffe000 (32-bit, non-prefetchable) [size=8K]
->         Capabilities: [40] Power Management version 2
->         Kernel driver in use: rt2500pci
->         Kernel modules: rt2500pci
->
+diff --git a/crda.c b/crda.c
+index afc5df1..f2c471f 100644
+--- a/crda.c
++++ b/crda.c
+@@ -43,10 +43,11 @@ static inline int __genl_ctrl_alloc_cache(struct
+nl_handle *h, struct nl_cache *
+ }
 
+ #define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
++#define nl_sock nl_handle
+ #endif /* CONFIG_LIBNL20 */
+
+ struct nl80211_state {
+-	struct nl_handle *nl_handle;
++	struct nl_sock *nl_sock;
+ 	struct nl_cache *nl_cache;
+ 	struct genl_family *nl80211;
+ };
+@@ -55,22 +56,22 @@ static int nl80211_init(struct nl80211_state *state)
+ {
+ 	int err;
+
+-	state->nl_handle = nl_socket_alloc();
+-	if (!state->nl_handle) {
+-		fprintf(stderr, "Failed to allocate netlink handle.\n");
++	state->nl_sock = nl_socket_alloc();
++	if (!state->nl_sock) {
++		fprintf(stderr, "Failed to allocate netlink sock.\n");
+ 		return -ENOMEM;
+ 	}
+
+-	if (genl_connect(state->nl_handle)) {
++	if (genl_connect(state->nl_sock)) {
+ 		fprintf(stderr, "Failed to connect to generic netlink.\n");
+ 		err = -ENOLINK;
+-		goto out_handle_destroy;
++		goto out_sock_destroy;
+ 	}
+
+-	if (genl_ctrl_alloc_cache(state->nl_handle, &state->nl_cache)) {
++	if (genl_ctrl_alloc_cache(state->nl_sock, &state->nl_cache)) {
+ 		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
+ 		err = -ENOMEM;
+-		goto out_handle_destroy;
++		goto out_sock_destroy;
+ 	}
+
+ 	state->nl80211 = genl_ctrl_search_by_name(state->nl_cache, "nl80211");
+@@ -84,8 +85,8 @@ static int nl80211_init(struct nl80211_state *state)
+
+  out_cache_free:
+ 	nl_cache_free(state->nl_cache);
+- out_handle_destroy:
+-	nl_socket_free(state->nl_handle);
++ out_sock_destroy:
++	nl_socket_free(state->nl_sock);
+ 	return err;
+ }
+
+@@ -93,7 +94,7 @@ static void nl80211_cleanup(struct nl80211_state *state)
+ {
+ 	genl_family_put(state->nl80211);
+ 	nl_cache_free(state->nl_cache);
+-	nl_socket_free(state->nl_handle);
++	nl_socket_free(state->nl_sock);
+ }
+
+ static int reg_handler(struct nl_msg __attribute__((unused)) *msg,
+@@ -294,7 +295,7 @@ int main(int argc, char **argv)
+ 	if (!cb)
+ 		goto cb_out;
+
+-	r = nl_send_auto_complete(nlstate.nl_handle, msg);
++	r = nl_send_auto_complete(nlstate.nl_sock, msg);
+
+ 	if (r < 0) {
+ 		fprintf(stderr, "Failed to send regulatory request: %d\n", r);
+@@ -306,7 +307,7 @@ int main(int argc, char **argv)
+ 	nl_cb_err(cb, NL_CB_CUSTOM, error_handler, NULL);
+
+ 	if (!finished) {
+-		r = nl_wait_for_ack(nlstate.nl_handle);
++		r = nl_wait_for_ack(nlstate.nl_sock);
+ 		if (r < 0) {
+ 			fprintf(stderr, "Failed to set regulatory domain: "
+ 				"%d\n", r);
