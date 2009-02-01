@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53685 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753240AbZBXLkO (ORCPT
+Received: from rn-out-0910.google.com ([64.233.170.185]:3618 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752042AbZBADum (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 06:40:14 -0500
-Date: Tue, 24 Feb 2009 13:40:01 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Unlock sc->mutex on error path
-Message-ID: <20090224114001.GA21933@jm.kir.nu> (sfid-20090224_124019_189501_C87227C6)
+	Sat, 31 Jan 2009 22:50:42 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so729615rnd.17
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2009 19:50:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090131223809.GA17413@hash.localnet>
+References: <20090131023147.GE3342@makis>
+	 <20090131170802.GA16826@hash.localnet>
+	 <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>
+	 <20090131223809.GA17413@hash.localnet>
+Date: Sun, 1 Feb 2009 05:50:41 +0200
+Message-ID: <40f31dec0901311950q27e28bb8we145c79488b1c7e1@mail.gmail.com> (sfid-20090201_045100_050601_15A1845F)
+Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An error path in ath9k_add_interface() did not unlock the sc->mutex and
-could leave the driver in quite unresponsive state.
+2009/2/1 Bob Copeland <me@bobcopeland.com>:
+> On Sat, Jan 31, 2009 at 08:48:02PM +0200, Nick Kossifidis wrote:
+>> > Heh, we should write a little tool to check the shifts and masks :)
+>> >
+>>
+>> Yup :P
+>
+> I just wrote one, I can post it later :)   It also found:
+>
+> AR5K_PHY_SIGMA_DELTA_ADC_CLIP 0x01ff3000 13
+>
+> Should be 12 or a different mask...
+>
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+13 is correct
 
----
- drivers/net/wireless/ath9k/main.c |    1 +
- 1 file changed, 1 insertion(+)
+0x01ff3000 -> 1111111111110000000000000
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-02-24 13:34:20.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-02-24 13:34:44.000000000 +0200
-@@ -2145,6 +2145,7 @@ static int ath9k_add_interface(struct ie
- 	default:
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Interface type %d not yet supported\n", conf->type);
-+		mutex_unlock(&sc->mutex);
- 		return -EOPNOTSUPP;
- 	}
- 
+12 only counts the 3 zeros (3 * 4)
+
+I've fixed all things mentioned so far, as soon as you find out why it
+hangs on your pc we can move on ;-)
+
+Again thanks a lot for the review ;-)
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
