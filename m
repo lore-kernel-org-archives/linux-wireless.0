@@ -1,54 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toronto053.server4you.de ([62.75.220.53]:44048 "EHLO
-	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659AbZBSHBD (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.30]:53263 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948AbZBAFOb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 02:01:03 -0500
-Date: Thu, 19 Feb 2009 08:01:39 +0100
-From: Daniel Wagner <wagi@monom.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	networkmanager-list@gnome.org
-Subject: Re: NetworkManager and mac80211_hwsim
-Message-ID: <20090219070139.GA28934@toronto053.server4you.de> (sfid-20090219_080114_644752_4B965DD5)
-References: <20090216160016.GA29509@toronto053.server4you.de> <1234800284.4219.136.camel@johannes.local> <20090216172528.GB29509@toronto053.server4you.de> <1234807251.1666.9.camel@localhost.localdomain> <20090218080636.GA25504@toronto053.server4you.de> <1234946159.4149.0.camel@johannes.local>
+	Sun, 1 Feb 2009 00:14:31 -0500
+Received: by yw-out-2324.google.com with SMTP id 9so389962ywe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2009 21:14:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1234946159.4149.0.camel@johannes.local>
+In-Reply-To: <49852E03.7090003@openwrt.org>
+References: <20090131023147.GE3342@makis>
+	 <20090131170802.GA16826@hash.localnet>
+	 <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>
+	 <20090131223809.GA17413@hash.localnet>
+	 <40f31dec0901311950q27e28bb8we145c79488b1c7e1@mail.gmail.com>
+	 <49851F73.4050204@openwrt.org>
+	 <40f31dec0901312050t1c8e50b5y2e63a05f8f5f4f89@mail.gmail.com>
+	 <49852E03.7090003@openwrt.org>
+Date: Sun, 1 Feb 2009 07:14:30 +0200
+Message-ID: <40f31dec0901312114k1b29e6d7o750fa306bfa7b257@mail.gmail.com> (sfid-20090201_061443_022391_340029EC)
+Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	jirislaby@gmail.com, mcgrof@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 18, 2009 at 09:35:59AM +0100, Johannes Berg wrote:
-> On Wed, 2009-02-18 at 09:06 +0100, Daniel Wagner wrote:
-> 
-> > +	if (parent_dev != NULL) {
-> > +		hal_device_property_set_string (d, "info.parent", hal_device_get_udi (parent_dev));
-> > +		hal_device_property_set_string (d, "net.originating_device", hal_device_get_udi (parent_dev));
-> > +	} else {
-> > +		hal_device_property_set_string (d, "info.parent", "/org/freedesktop/Hal/devices/computer");
-> > +		hal_device_property_set_string (d, "net.originating_device", "/org/freedesktop/Hal/devices/computer");
-> > +		hal_device_property_set_string (d, "info.linux.driver", "mac80211_hwsim");
-> > +		parent_dev = hal_device_store_find (hald_get_gdl (), "/org/freedesktop/Hal/devices/computer");
-> > +		hal_device_property_set_string (parent_dev, "info.linux.driver", "mac80211");
-> > +	}
-> 
-> This is actually not _that_ bad an idea, because it makes sure everybody
-> else will properly link up their parent pointer in sysfs. 
+2009/2/1 Felix Fietkau <nbd@openwrt.org>:
+> Nick Kossifidis wrote:
+>> 2009/2/1 Felix Fietkau <nbd@openwrt.org>:
+>>> Nick Kossifidis wrote:
+>>>> 2009/2/1 Bob Copeland <me@bobcopeland.com>:
+>>>>> On Sat, Jan 31, 2009 at 08:48:02PM +0200, Nick Kossifidis wrote:
+>>>>>> > Heh, we should write a little tool to check the shifts and masks :)
+>>>>>> >
+>>>>>>
+>>>>>> Yup :P
+>>>>>
+>>>>> I just wrote one, I can post it later :)   It also found:
+>>>>>
+>>>>> AR5K_PHY_SIGMA_DELTA_ADC_CLIP 0x01ff3000 13
+>>>>>
+>>>>> Should be 12 or a different mask...
+>>>>>
+>>>>
+>>>> 13 is correct
+>>>>
+>>>> 0x01ff3000 -> 1111111111110000000000000
+>>> I think it's    1111111110011000000000000? :)
+>>>
+>>> This mask makes 12 seem more likely.
+>>>
+>>> - Felix
+>>>
+>>
+>> Maybe it's in big endian format (we don't know anything about this reg
+>> anyway :P), both HALs have 13 plus it doesn't make sense to have a
+>> field split.
+> Ah, figured it out. It's a typo :)
+> Here are the settings from Sam's HAL:
+>
+> #define   AR_PHY_SIGMA_DELTA_ADC_CLIP     0x01FFE000
+> #define   AR_PHY_SIGMA_DELTA_ADC_CLIP_S   13
+>
+> Which does make a lot more sense than     0x01FF3000 :)
+>
+> - Felix
+>
 
-That was exactly the problem. HAL creates only a 'correct' dbus tree if the
-sysfs parent pointers exists. The patch just fakes the parent 'computer'.
-This 'computer' node holds all parent-less nodes (eg alsa_sequencer, alsa_timer).
-One further problem is that the 'computer' node doesn't have a 'info.linux.driver'
-property which NM wants to read. Setting this property to 'mac80211' is
-not correct for all children of this node.
+/me has to get a new pair of glasses :P
 
-> An alternative
-> that doesn't guarantee that would be to check "is it in the ieee80211
-> class".
 
-At the moment NM wants a proper parent->child construct to work. Adding something like
-/org/freedesktop/Hal/devices/virtual/mac80211_hwsim as parent for the child
-would propably be a solution. As I said I was not really ready for fixing
-this up. But if this is something worth to fix I'll do it.
-
-daniel
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
