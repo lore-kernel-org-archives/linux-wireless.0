@@ -1,112 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51934 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754376AbZBJUfm (ORCPT
+Received: from vilya.visn.co.uk ([193.254.210.161]:37503 "EHLO
+	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751557AbZBBP4d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 15:35:42 -0500
-Message-Id: <20090210202554.637032641@sipsolutions.net> (sfid-20090210_213545_261140_7402DBB9)
-References: <20090210202536.425266119@sipsolutions.net>
-Date: Tue, 10 Feb 2009 21:25:47 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 11/27] mac80211: restrict aggregation to supported
-	interface modes
-Mime-Version: 1.0
+	Mon, 2 Feb 2009 10:56:33 -0500
+Message-ID: <35040.82.152.223.193.1233590184.squirrel@www.phantomjinx.co.uk> (sfid-20090202_165635_765636_FE22B5C6)
+In-Reply-To: <49871083.5040309@lwfinger.net>
+References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
+    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>
+    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>
+    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>
+    <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk>
+    <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>
+    <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk>
+    <49871083.5040309@lwfinger.net>
+Date: Mon, 2 Feb 2009 15:56:24 -0000 (UTC)
+Subject: Re: rtl8187 wireless issues
+From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Cc: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>,
+	"Hin-Tak Leung" <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can only support aggregation on AP/STA right now. HT isn't defined
-for IBSS, WDS or MESH. In the WDS/MESH cases it's not clear what to
-put into the IBSS field, and we don't handle that in the code at all.
-Also fix the code to handle VLAN correctly.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: do not allow IBSS
+> P.G. Richardson wrote:
+>> That is a fair possibility. I upgraded the kernel on Saturday hence =
+I
+>> had
+>> to rebuild against the new kernel. Upon install, I noticed that rtl8=
+187
+>> was correctly installed. Of course, this second time of building and
+>> installing, I had removed the blacklist entries for rtl8187 as I had
+>> successfully used it for 24 hours.
+>>
+>> One minor point, I notice in iwconfig is that it doesnt report a bit
+>> rate
+>> of greater than 1Mb/sec. Is this a known issue?
+>
+> Please excuse my jumping into this thread, but the rate-setting
+> problem should be fixed in the latest compat-wireless. What version
+> are you using?
+>
+> I just looked back at the patch log for wireless-testing. To get the
+> best code for the RTL8187, you should have compat-wireless from no
+> earlier than Jan. 28.
+>
+> Larry
 
- net/mac80211/agg-rx.c |    3 ++-
- net/mac80211/agg-tx.c |   16 +++++++++++++++-
- net/mac80211/ht.c     |    3 ++-
- net/mac80211/rx.c     |   11 +++++++++++
- 4 files changed, 30 insertions(+), 3 deletions(-)
+Thanks for letting me know. Compat-wireless dated 30/01/2009.
 
---- wireless-testing.orig/net/mac80211/agg-tx.c	2009-02-10 20:59:32.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2009-02-10 20:59:32.000000000 +0100
-@@ -41,7 +41,8 @@ static void ieee80211_send_addba_request
- 	memset(mgmt, 0, 24);
- 	memcpy(mgmt->da, da, ETH_ALEN);
- 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
--	if (sdata->vif.type == NL80211_IFTYPE_AP)
-+	if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
- 	else
- 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
-@@ -180,6 +181,19 @@ int ieee80211_start_tx_ba_session(struct
- 		goto exit;
- 	}
- 
-+	/*
-+	 * The aggregation code is not prepared to handle
-+	 * anything but STA/AP due to the BSSID handling.
-+	 * IBSS could work in the code but isn't supported
-+	 * by drivers or the standard.
-+	 */
-+	if (sta->sdata->vif.type != NL80211_IFTYPE_STATION &&
-+	    sta->sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
-+	    sta->sdata->vif.type != NL80211_IFTYPE_AP) {
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
- 	spin_lock_bh(&sta->lock);
- 
- 	/* we have tried too many times, receiver does not want A-MPDU */
---- wireless-testing.orig/net/mac80211/rx.c	2009-02-10 20:59:32.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-02-10 20:59:32.000000000 +0100
-@@ -1735,6 +1735,17 @@ ieee80211_rx_h_action(struct ieee80211_r
- 
- 	switch (mgmt->u.action.category) {
- 	case WLAN_CATEGORY_BACK:
-+		/*
-+		 * The aggregation code is not prepared to handle
-+		 * anything but STA/AP due to the BSSID handling;
-+		 * IBSS could work in the code but isn't supported
-+		 * by drivers or the standard.
-+		 */
-+		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
-+		    sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
-+		    sdata->vif.type != NL80211_IFTYPE_AP)
-+			return RX_DROP_MONITOR;
-+
- 		switch (mgmt->u.action.u.addba_req.action_code) {
- 		case WLAN_ACTION_ADDBA_REQ:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
---- wireless-testing.orig/net/mac80211/agg-rx.c	2009-02-10 20:59:32.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-rx.c	2009-02-10 20:59:32.000000000 +0100
-@@ -134,7 +134,8 @@ static void ieee80211_send_addba_resp(st
- 	memset(mgmt, 0, 24);
- 	memcpy(mgmt->da, da, ETH_ALEN);
- 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
--	if (sdata->vif.type == NL80211_IFTYPE_AP)
-+	if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
- 	else
- 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
---- wireless-testing.orig/net/mac80211/ht.c	2009-02-10 20:59:32.000000000 +0100
-+++ wireless-testing/net/mac80211/ht.c	2009-02-10 20:59:32.000000000 +0100
-@@ -190,7 +190,8 @@ void ieee80211_send_delba(struct ieee802
- 	memset(mgmt, 0, 24);
- 	memcpy(mgmt->da, da, ETH_ALEN);
- 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
--	if (sdata->vif.type == NL80211_IFTYPE_AP)
-+	if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 		memcpy(mgmt->bssid, sdata->dev->dev_addr, ETH_ALEN);
- 	else
- 		memcpy(mgmt->bssid, ifsta->bssid, ETH_ALEN);
+Regards
 
--- 
+PGR
 
+--=20
+Laws are partly formed for the sake of good men, in order to instruct t=
+hem
+how they may live on friendly terms with one another, and partly for th=
+e
+sake of those who refuse to be instructed, whose spirit cannot be subdu=
+ed,
+or softened, or hindered from plunging into evil. [The Laws, Plato]
+
+You fiend! Never have I encountered such corrupt and foul-minded
+perversity=85 Have you ever considered a career in the church?
+Bishop of Bath and Wells (Blackadder II)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
