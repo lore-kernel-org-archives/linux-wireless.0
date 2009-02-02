@@ -1,146 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:35940 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752934AbZBWQjP (ORCPT
+Received: from vilya.visn.co.uk ([193.254.210.161]:58487 "EHLO
+	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888AbZBBNvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 11:39:15 -0500
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 23 Feb 2009 18:37:38 +0200
-Message-ID: <20090223163738.20939.25890.stgit@tikku> (sfid-20090223_173917_558042_EC281C54)
-In-Reply-To: <20090223163626.20939.4879.stgit@tikku>
-References: <20090223163626.20939.4879.stgit@tikku>
+	Mon, 2 Feb 2009 08:51:09 -0500
+Message-ID: <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk> (sfid-20090202_145116_108165_0EBDE251)
+In-Reply-To: <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>
+References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
+    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>
+    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>
+    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>
+    <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk>
+    <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>
+Date: Mon, 2 Feb 2009 13:51:03 -0000 (UTC)
+Subject: Re: rtl8187 wireless issues
+From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: "Hin-Tak Leung" <hintak.leung@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add IEEE80211_HW_BEACON_FILTERING flag so that driver inform that it supports
-beacon filtering. Drivers need to call the new function
-ieee80211_beacon_loss() to notify about beacon loss.
+That is a fair possibility. I upgraded the kernel on Saturday hence I h=
+ad
+to rebuild against the new kernel. Upon install, I noticed that rtl8187
+was correctly installed. Of course, this second time of building and
+installing, I had removed the blacklist entries for rtl8187 as I had
+successfully used it for 24 hours.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+One minor point, I notice in iwconfig is that it doesnt report a bit ra=
+te
+of greater than 1Mb/sec. Is this a known issue?
 
- include/net/mac80211.h     |    2 ++
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/iface.c       |    3 +++
- net/mac80211/mlme.c        |   34 +++++++++++++++++++++++++++++++++-
- 4 files changed, 40 insertions(+), 1 deletions(-)
+Regards
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e01c63a..f74bada 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -903,6 +903,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_PS_NULLFUNC_STACK			= 1<<11,
- 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
- 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
-+	IEEE80211_HW_BEACON_FILTERING			= 1<<14,
- };
- 
- /**
-@@ -1971,6 +1972,7 @@ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw, const u8 *ra,
- struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
- 					 const u8 *addr);
- 
-+void ieee80211_beacon_loss(struct ieee80211_hw *hw);
- 
- /* Rate control API */
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 2a19e4c..5cd6296 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -272,6 +272,7 @@ struct ieee80211_if_managed {
- 	struct timer_list chswitch_timer;
- 	struct work_struct work;
- 	struct work_struct chswitch_work;
-+	struct work_struct beacon_loss_work;
- 
- 	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
- 
-@@ -1080,6 +1081,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 			     struct ieee80211_sub_if_data *sdata,
- 			     int powersave);
- void ieee80211_rx_trigger(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_beacon_loss_work(struct work_struct *work);
- 
- void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
- 				     enum queue_stop_reason reason);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 2acc416..e0fa20f 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -470,6 +470,9 @@ static int ieee80211_stop(struct net_device *dev)
- 		 */
- 		cancel_work_sync(&sdata->u.mgd.work);
- 		cancel_work_sync(&sdata->u.mgd.chswitch_work);
-+
-+		cancel_work_sync(&sdata->u.mgd.beacon_loss_work);
-+
- 		/*
- 		 * When we get here, the interface is marked down.
- 		 * Call synchronize_rcu() to wait for the RX path
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d2cc1e0..22cc8e4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -919,6 +919,36 @@ void ieee80211_rx_trigger(struct ieee80211_sub_if_data *sdata)
- 	}
- }
- 
-+void ieee80211_beacon_loss_work(struct work_struct *work)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		container_of(work, struct ieee80211_sub_if_data,
-+			     u.mgd.beacon_loss_work);
-+
-+	printk(KERN_DEBUG "%s: beacon loss from AP %pM "
-+	       "- disassociating\n", sdata->dev->name, sdata->u.mgd.bssid);
-+
-+	ieee80211_set_disassoc(sdata, true, true,
-+			       WLAN_REASON_PREV_AUTH_NOT_VALID);
-+}
-+
-+void ieee80211_beacon_loss(struct ieee80211_hw *hw)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	rcu_read_lock();
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+			continue;
-+
-+		queue_work(local->hw.workqueue,
-+			   &sdata->u.mgd.beacon_loss_work);
-+	}
-+	rcu_read_unlock();
-+}
-+EXPORT_SYMBOL(ieee80211_beacon_loss);
-+
- static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-@@ -953,7 +983,8 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
- 		goto unlock;
- 	}
- 
--	if (time_after(jiffies,
-+	if (!(local->hw.flags & IEEE80211_HW_BEACON_FILTERING) &&
-+	    time_after(jiffies,
- 		       ifmgd->last_beacon + IEEE80211_MONITORING_INTERVAL)) {
- 		printk(KERN_DEBUG "%s: beacon loss from AP %pM "
- 		       "- sending probe request\n",
-@@ -1834,6 +1865,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 	ifmgd = &sdata->u.mgd;
- 	INIT_WORK(&ifmgd->work, ieee80211_sta_work);
- 	INIT_WORK(&ifmgd->chswitch_work, ieee80211_chswitch_work);
-+	INIT_WORK(&ifmgd->beacon_loss_work, ieee80211_beacon_loss_work);
- 	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
- 		    (unsigned long) sdata);
- 	setup_timer(&ifmgd->chswitch_timer, ieee80211_chswitch_timer,
+PGR
 
+> On Fri, Jan 30, 2009 at 10:04 PM, P.G. Richardson
+> <p.g.richardson@phantomjinx.co.uk> wrote:
+>
+>> I am not that familiar with kernel makefiles but it would seem that =
+the
+>> drivers/net/wireless line below is not recursive:
+>>
+>> obj-y :=3D net/wireless/ net/mac80211/
+>> ifeq ($(ONLY_CORE),)
+>> obj-$(CONFIG_B44) +=3D drivers/net/b44.o
+>> obj-y +=3D drivers/ssb/ \
+>>        drivers/misc/eeprom/ \
+>>        drivers/net/usb/ \
+>>        drivers/net/wireless/
+>> endif
+>
+> It is recursive - it runs Makefile in drivers/net/wireless/ . Your
+> list is very small - it should build and install 40+ kernel modules.
+> curious. some kernel config means the modules aren't built, but in
+> your case they are built but not installed... I wonder if it is
+> affected by blacklist.
+>
+
+
+--=20
+Laws are partly formed for the sake of good men, in order to instruct t=
+hem
+how they may live on friendly terms with one another, and partly for th=
+e
+sake of those who refuse to be instructed, whose spirit cannot be subdu=
+ed,
+or softened, or hindered from plunging into evil. [The Laws, Plato]
+
+You fiend! Never have I encountered such corrupt and foul-minded
+perversity=85 Have you ever considered a career in the church?
+Bishop of Bath and Wells (Blackadder II)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
