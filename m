@@ -1,98 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:43284 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751630AbZBCUlt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 15:41:49 -0500
-Received: by mail-ew0-f21.google.com with SMTP id 14so2846565ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 12:41:49 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 04/17] orinoco: remove unnecessary braces
-Date: Tue,  3 Feb 2009 20:40:26 +0000
-Message-Id: <1233693639-8608-5-git-send-email-kilroyd@googlemail.com> (sfid-20090203_214152_569863_5AF44308)
-In-Reply-To: <1233693639-8608-4-git-send-email-kilroyd@googlemail.com>
-References: <1233693639-8608-1-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-2-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-3-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-4-git-send-email-kilroyd@googlemail.com>
+Received: from mail.atheros.com ([12.36.123.2]:46405 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752673AbZBBXjs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2009 18:39:48 -0500
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 15:39:48 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] iw: add MCS set parsing
+Date: Mon, 2 Feb 2009 15:39:06 -0800
+Message-ID: <1233617946-25094-1-git-send-email-lrodriguez@atheros.com> (sfid-20090203_003952_881236_8D85D5FC)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the following checkpatch warnings
+This adds MCS set parsing to iw. When you can 'iw list' you can
+now see the MCS set actually parsed, this can tell you information
+such as all the RX/TX MCS indexes supported, max TX spatial streams,
+if TX unequal modulation is supported and your max supported HT
+RX data rate.
 
-WARNING: braces {} are not necessary for any arm of this statement
-WARNING: braces {} are not necessary for single statement blocks
+This is as per 802.11n Draft 7 on section 7.3.2.57.4 Supported MCS Set field.
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/orinoco/orinoco.c |   18 +++++++-----------
- 1 files changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/orinoco.c b/drivers/net/wireless/orinoco/orinoco.c
-index 5781ee0..120c9d9 100644
---- a/drivers/net/wireless/orinoco/orinoco.c
-+++ b/drivers/net/wireless/orinoco/orinoco.c
-@@ -3497,9 +3497,8 @@ static int orinoco_init(struct net_device *dev)
- 	/* Get initial AP density */
- 	err = hermes_read_wordrec(hw, USER_BAP, HERMES_RID_CNFSYSTEMSCALE,
- 				  &priv->ap_density);
--	if (err || priv->ap_density < 1 || priv->ap_density > 3) {
-+	if (err || priv->ap_density < 1 || priv->ap_density > 3)
- 		priv->has_sensitivity = 0;
--	}
+OK now in v2 we don't print the rate if its 0 as the 802.11n Draft 7
+indicates that if its 0 it does not indicate the max supported RX rate.
+It does refer us to 9.6.0e.5.3 though. We'll need to review that I guess
+to get this when this is not set.
+
+ info.c |   59 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 59 insertions(+), 0 deletions(-)
+
+diff --git a/info.c b/info.c
+index bf3b8bd..7ea8f99 100644
+--- a/info.c
++++ b/info.c
+@@ -1,3 +1,4 @@
++#include <stdbool.h>
+ #include <errno.h>
+ #include <net/if.h>
  
- 	/* Get initial RTS threshold */
- 	err = hermes_read_wordrec(hw, USER_BAP, HERMES_RID_CNFRTSTHRESHOLD,
-@@ -3811,9 +3810,8 @@ static int orinoco_hw_get_bitratelist(struct orinoco_private *priv,
- 	*numrates = num;
- 	num = min(num, max);
- 
--	for (i = 0; i < num; i++) {
-+	for (i = 0; i < num; i++)
- 		rates[i] = (p[i] & 0x7f) * 500000; /* convert to bps */
--	}
- 
- 	return 0;
+@@ -20,6 +21,24 @@ static void print_flag(const char *name, int *open)
+ 	*open = 1;
  }
-@@ -4130,11 +4128,11 @@ static int orinoco_ioctl_setiwencode(struct net_device *dev,
- 			index = priv->tx_key;
  
- 		/* Adjust key length to a supported value */
--		if (erq->length > SMALL_KEY_SIZE) {
-+		if (erq->length > SMALL_KEY_SIZE)
- 			xlen = LARGE_KEY_SIZE;
--		} else if (erq->length > 0) {
-+		else if (erq->length > 0)
- 			xlen = SMALL_KEY_SIZE;
--		} else
-+		else
- 			xlen = 0;
++static void print_mcs_index(unsigned char *mcs)
++{
++	unsigned int mcs_bit;
++
++	for (mcs_bit = 0; mcs_bit <= 76; mcs_bit++) {
++		unsigned int mcs_octet = mcs_bit/8;
++		unsigned int MCS_RATE_BIT = 1 << mcs_bit % 8;
++		bool mcs_rate_idx_set;
++
++		mcs_rate_idx_set = !!(mcs[mcs_octet] & MCS_RATE_BIT);
++
++		if (!mcs_rate_idx_set)
++			continue;
++
++		printf("\t\t\tMCS index %d\n", mcs_bit);
++	}
++}
++
+ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ {
+ 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+@@ -128,10 +147,50 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 		}
+ 		if (tb_band[NL80211_BAND_ATTR_HT_MCS_SET] &&
+ 		    nla_len(tb_band[NL80211_BAND_ATTR_HT_MCS_SET]) == 16) {
++			/* As defined in 7.3.2.57.4 Supported MCS Set field */
++			unsigned int tx_max_num_spatial_streams, max_rx_supp_data_rate;
+ 			unsigned char *mcs = nla_data(tb_band[NL80211_BAND_ATTR_HT_MCS_SET]);
++			bool tx_mcs_set_defined, tx_mcs_set_equal, tx_unequal_modulation;
++
+ 			printf("\t\tHT MCS set: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\n",
+ 				mcs[0], mcs[1], mcs[2], mcs[3], mcs[4], mcs[5], mcs[6], mcs[7],
+ 				mcs[8], mcs[9], mcs[10], mcs[11], mcs[12], mcs[13], mcs[14], mcs[15]);
++
++			max_rx_supp_data_rate = ((mcs[10] >> 8) & ((mcs[11] & 0x3) << 8));
++			tx_mcs_set_defined = !!(mcs[12] & (1 << 0));
++			tx_mcs_set_equal = !(mcs[12] & (1 << 1));
++			tx_max_num_spatial_streams = (mcs[12] | ((1 << 3) | (1 << 4))) + 1;
++			tx_unequal_modulation = !!(mcs[12] & (1 << 5));
++
++			if (max_rx_supp_data_rate)
++				printf("\t\tHT Max RX data rate: %d Mbps\n", max_rx_supp_data_rate);
++			/* XXX: else see 9.6.0e.5.3 how to get this I think */
++
++			if (tx_mcs_set_defined) {
++				if (tx_mcs_set_equal) {
++					printf("\t\tHT TX/RX MCS rate indexes supported:\n");
++					print_mcs_index(&mcs[0]);
++				} else {
++					printf("\t\tHT RX MCS rate indexes supported:\n");
++					print_mcs_index(&mcs[0]);
++
++					if (tx_unequal_modulation)
++						printf("TX unequal modulation supported\n");
++					else
++						printf("TX unequal modulation not supported\n");
++
++					printf("\t\tHT TX Max spatiel streams: %d\n",
++						tx_max_num_spatial_streams);
++
++					printf("\t\tHT TX MCS rate indexes supported may differ\n");
++				}
++			}
++			else {
++				printf("\t\tHT RX MCS rate indexes supported:\n");
++				print_mcs_index(&mcs[0]);
++				printf("\t\tHT TX MCS rates indexes are undefined\n");
++			}
++
+ 		}
+ #endif
  
- 		/* Switch on WEP if off */
-@@ -4256,9 +4254,8 @@ static int orinoco_ioctl_setessid(struct net_device *dev,
- 	memset(priv->desired_essid, 0, sizeof(priv->desired_essid));
- 
- 	/* If not ANY, get the new ESSID */
--	if (erq->flags) {
-+	if (erq->flags)
- 		memcpy(priv->desired_essid, essidbuf, erq->length);
--	}
- 
- 	orinoco_unlock(priv, &flags);
- 
-@@ -4393,9 +4390,8 @@ static int orinoco_ioctl_getfreq(struct net_device *dev,
- 
- 	/* Locking done in there */
- 	tmp = orinoco_hw_get_freq(priv);
--	if (tmp < 0) {
-+	if (tmp < 0)
- 		return tmp;
--	}
- 
- 	frq->m = tmp * 100000;
- 	frq->e = 1;
 -- 
-1.6.0.6
+1.6.1.2.253.ga34a
 
