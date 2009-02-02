@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:44880
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771AbZBCAZl (ORCPT
+Received: from mail-gx0-f21.google.com ([209.85.217.21]:37539 "EHLO
+	mail-gx0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754452AbZBBSR7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 19:25:41 -0500
-Received: from [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7] (unknown [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by s0be.servebeer.com (Postfix) with ESMTPSA id AC932252A84
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Feb 2009 19:25:39 -0500 (EST)
-Message-ID: <49878F03.5070705@erley.org> (sfid-20090203_012545_205136_2BCC2E79)
-Date: Mon, 02 Feb 2009 19:25:39 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Mon, 2 Feb 2009 13:17:59 -0500
+Received: by gxk14 with SMTP id 14so1286338gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 10:17:58 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [patch resend] iw: align output for HT capabilities
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20090130204452.GG3485@tuxdriver.com>
+References: <20090130204452.GG3485@tuxdriver.com>
+Date: Mon, 2 Feb 2009 10:17:58 -0800
+Message-ID: <43e72e890902021017k34dd50cbj9132090ed112b1d0@mail.gmail.com> (sfid-20090202_191818_600565_897A02FA)
+Subject: Re: wireless-regdb updated 2009-01-30
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The HT capabilities have an additional space in front of them causing
-them not to line up with the rest of the listed outputs.  This patch
-removes that space.
+On Fri, Jan 30, 2009 at 12:44 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> I have pushed an update to the wireless-regdb database here:
+>
+>        git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
+>
+> The changes include a new man page for regulatory.bin, some sample
+> packages for .deb and .rpm generation, and an actual database change
+> to correct a mistake in the Japan portion of the database.
+>
+> Enjoy!  Let me know if there are problems...
 
-Signed-off-by: Pat Erley <pat-lkml@erley.org>
+FYI this is now at:
 
----
+http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.01.30.tar.bz2
 
-Fixed my thunderbird settings (hopefully, thought I had done that last 
-time)...
+The cron job was failing because compat-wireless  was failing, I've
+moved the script to run before compat-wireless stuff. It should not
+fail now hopefully.
 
-diff --git a/info.c b/info.c
-index bf3b8bd..69be500 100644
---- a/info.c
-+++ b/info.c
-@@ -70,7 +70,7 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- #ifdef NL80211_BAND_ATTR_HT_CAPA
- 		if (tb_band[NL80211_BAND_ATTR_HT_CAPA]) {
- 			unsigned short cap = nla_get_u16(tb_band[NL80211_BAND_ATTR_HT_CAPA]);
--#define PCOM(fmt, args...) do { printf("\t\t\t * " fmt "\n", ##args); } while (0)
-+#define PCOM(fmt, args...) do { printf("\t\t\t* " fmt "\n", ##args); } while (0)
- #define PBCOM(bit, args...) if (cap & (bit)) PCOM(args)
- 			printf("\t\tHT capabilities: 0x%.4x\n", cap);
- 			PBCOM(0x0001, "LPDC coding");
+  Luis
