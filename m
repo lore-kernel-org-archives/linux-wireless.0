@@ -1,70 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:60917 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753550AbZBJQ2T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 11:28:19 -0500
-Subject: Re: [PATCH] wireless: introduce POWEROF2_BLOCKSIZE_ONLY option
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Bryan Wu <cooloney@kernel.org>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Cliff Cai <cliff.cai@analog.com>
-In-Reply-To: <20090210160451.GD3534@tuxdriver.com>
-References: <1233819002-6912-1-git-send-email-cooloney@kernel.org>
-	 <1233846195.3028.14.camel@localhost>
-	 <386072610902052347m5754262bif18339809a00cb9f@mail.gmail.com>
-	 <386072610902060000s2e150e4cla19aca70f38b0474@mail.gmail.com>
-	 <20090210160451.GD3534@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 10 Feb 2009 11:26:45 -0500
-Message-Id: <1234283205.3119.64.camel@localhost> (sfid-20090210_172822_944784_4ACC7816)
-Mime-Version: 1.0
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:39849 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751598AbZBBWkf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2009 17:40:35 -0500
+Message-ID: <49877655.8020408@lwfinger.net> (sfid-20090202_234041_146404_1E285C7A)
+Date: Mon, 02 Feb 2009 16:40:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hans Ekbrand <hans@sociologi.cjb.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: USB 1.1, usb-dongle, NETGEAR WG111v2, timing problems in	association
+References: <20090117204654.GB9079@amin> <4972B25B.7070306@lwfinger.net> <20090202155542.GE24485@samir> <498719F3.4070601@lwfinger.net> <20090202190255.GF24485@samir>
+In-Reply-To: <20090202190255.GF24485@samir>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-02-10 at 11:04 -0500, John W. Linville wrote:
-> On Fri, Feb 06, 2009 at 04:00:28PM +0800, Bryan Wu wrote:
-> > On Fri, Feb 6, 2009 at 3:47 PM, Bryan Wu <cooloney@kernel.org> wrote:
-> > > On Thu, Feb 5, 2009 at 11:03 PM, Dan Williams <dcbw@redhat.com> wrote:
-> > >> On Thu, 2009-02-05 at 15:30 +0800, Bryan Wu wrote:
-> > >>> From: Cliff Cai <cliff.cai@analog.com>
-> > >>>
-> > >>> Introduce POWEROF2_BLOCKSIZE_ONLY option for those SD/SDIO host
-> > >>> which only support transferring block with size of power-of-2
-> > >>
-> > >> Is the point here to avoid copying in the controller code?  As with the
-> > >> other patches on libertas-dev, I really dislike adding code to *every
-> > >> SDIO driver* just because the host has certain restrictions.  I'd much
-> > >> rather that the host/controller code became aware of it's own
-> > >> restrictions, and exposed those generically to drivers above it.
-> > >> Without a KConfig option.
-> > >>
-> > >> Seriously.  The host knows what it needs.  The code to handle that
-> > >> should go in the host.
-> > >>
-> > >
-> > > I agree here.
-> > >
-> > >> How about adding a method like "sdio_align_size" that takes the
-> > >> controller's constraints into account?  That seems a lot cleaner than
-> > >> adding #define/KConfig junk to every SDIO driver in the kernel.  One
-> > >> less codepath to test, makes your life and all our lives easier.
-> > >>
-> > >
-> > > So we plan to add method ".sdio_align_size" to SDIO stack.
-> > > And Blackfin host driver will implement this method while others will
-> > > implement this as a dummy function.
-> > >
-> > 
-> > sdio_align_size is already in SDIO stack, so we just need to add our
-> > constraints to this function.
+Hans Ekbrand wrote:
 > 
-> I'm reading this as "this patch is unnecessary or will be replaced
-> by something better", so I'm dropping it.  If I misread that, feel
-> free to repost...thanks!
+> Did it work on USB 1.1 even without your enhancements?
+> 
 
-Yeah, some patches got posted to the MMC lists that do what this patch
-would do, but do it in a somewhat better manner.
+Yes. Almost nothing I changed dealt with the USB interface - just with
+the TX part of the code. The part that did affect USB fixed a stalling
+problem on both 1.1 and 2.0.
 
-Dan
+Larry
 
 
