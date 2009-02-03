@@ -1,197 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 30.mail-out.ovh.net ([213.186.62.213]:57582 "HELO
-	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751724AbZBDPGg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 10:06:36 -0500
-Date: Wed, 4 Feb 2009 16:08:57 +0100
-From: Samuel Ortiz <samuel@sortiz.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH RFC] mac80211: Filter scan results
-Message-ID: <20090204150857.GA5069@sortiz.org> (sfid-20090204_160640_465532_8378EED5)
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:16411 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751198AbZBCAR7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2009 19:17:59 -0500
+Subject: [PATCH 2/7 v3] iwlwifi: simplify parameter setting to allow
+	support for 6000 series
+From: reinette chatre <reinette.chatre@intel.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Jay Sternberg <jay.e.sternberg@linux.intel.com>
+In-Reply-To: <1233356232.2411.110.camel@rc-desk>
+References: <> <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
+	 <1233256157-21290-2-git-send-email-reinette.chatre@intel.com>
+	 <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
+	 <1233356232.2411.110.camel@rc-desk>
+Content-Type: text/plain
+Date: Mon, 02 Feb 2009 16:21:14 -0800
+Message-Id: <1233620474.2411.178.camel@rc-desk> (sfid-20090203_011805_086793_CD7E3758)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <samuel.ortiz@intel.com>
+From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
 
-In very dense environment, the scan result buffer can get really large, mostly
-due to the addition of proprietary IEs. iwlist fails, typically warning about:
-"print_scanning_info: Allocation failed". wpa_supplicant fails as well, after
-reallocating the scan result buffer several times, up to 132 Kbytes:
-	[snip]
-	Scan results did not fit - trying larger buffer (131072 bytes)
-	ioctl[SIOCGIWSCAN]: Argument list too long
+by parametrizing the set hw function, in addition to allowing for
+supporting the 6000 family significantly simplify the addition of new
+hardware.
 
-By adding a mac80211 module parameter, we can filter the scan results and keep
-only the ones userspace currently worries about, i.e. WPA1, WPA2, WMM and WPS.
-
-To activate this feature, 1 has to be written to
-/sys/module/mac80211/parameters/ieee80211_scan_ie_filter
-
-Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/ieee80211_i.h |    1 
- net/mac80211/scan.c        |   65 ++++++++++++++++++++++++++++++---------------
- net/mac80211/util.c        |   40 +++++++++++++++++++++++++++
- 3 files changed, 85 insertions(+), 21 deletions(-)
+v2 fix HW params initialization: antennas are antennas and chains are num_of_ant()
+v3 fix TX antenna initialization of 5100 and 5150
 
-Index: wireless-testing/net/mac80211/scan.c
-===================================================================
---- wireless-testing.orig/net/mac80211/scan.c	2009-01-28 11:37:55.000000000 +0100
-+++ wireless-testing/net/mac80211/scan.c	2009-01-28 17:32:48.000000000 +0100
-@@ -31,6 +31,11 @@
- #define IEEE80211_CHANNEL_TIME (HZ / 33)
- #define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 5)
+ drivers/net/wireless/iwlwifi/iwl-100.c  |    2 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   76 ++++++++++++++++---------------
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   10 ++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 +
+ 4 files changed, 53 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-100.c b/drivers/net/wireless/iwlwifi/iwl-100.c
+index dbadaf4..4c4d165 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-100.c
++++ b/drivers/net/wireless/iwlwifi/iwl-100.c
+@@ -66,5 +66,7 @@ struct iwl_cfg iwl100_bgn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_A,
++	.valid_rx_ant = ANT_AB,
+ };
  
-+static int ieee80211_scan_ie_filter;
-+module_param(ieee80211_scan_ie_filter, bool, 0644);
-+MODULE_PARM_DESC(ieee80211_scan_ie_filter,
-+		 "Filter IEs from scan results");
-+
- void ieee80211_rx_bss_list_init(struct ieee80211_local *local)
- {
- 	spin_lock_init(&local->bss_lock);
-@@ -725,33 +730,51 @@ static void ieee80211_scan_add_ies(struc
- 	if (bss == NULL || bss->ies == NULL)
- 		return;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index c5e9a66..535a46c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -43,6 +43,7 @@
+ #include "iwl-sta.h"
+ #include "iwl-helpers.h"
+ #include "iwl-5000-hw.h"
++#include "iwl-6000-hw.h"
  
--	/*
--	 * If needed, fragment the IEs buffer (at IE boundaries) into short
--	 * enough fragments to fit into IW_GENERIC_IE_MAX octet messages.
--	 */
- 	pos = bss->ies;
- 	end = pos + bss->ies_len;
- 
--	while (end - pos > IW_GENERIC_IE_MAX) {
--		next = pos + 2 + pos[1];
--		while (next + 2 + next[1] - pos < IW_GENERIC_IE_MAX)
--			next = next + 2 + next[1];
-+	if (ieee80211_scan_ie_filter) {
-+		while (pos - end) {
-+			next = pos + 2 + pos[1];
-+			if (ieee80211_filter_ie(pos)) {
-+				memset(&iwe, 0, sizeof(iwe));
-+				iwe.cmd = IWEVGENIE;
-+				iwe.u.data.length = next - pos;
-+				*current_ev =
-+					iwe_stream_add_point(info, *current_ev,
-+							     end_buf, &iwe,
-+							     pos);
-+			}
-+			pos = next;
-+		}
-+	} else {
-+		/*
-+		 * If needed, fragment the IEs buffer (at IE boundaries) into
-+		 * short enough fragments to fit into IW_GENERIC_IE_MAX octet
-+		 * messages.
-+		 */
+ /* Highest firmware API version supported */
+ #define IWL5000_UCODE_API_MAX 1
+@@ -840,8 +841,18 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.tfd_size = sizeof(struct iwl_tfd);
+ 	priv->hw_params.max_stations = IWL5000_STATION_COUNT;
+ 	priv->hw_params.bcast_sta_id = IWL5000_BROADCAST_ID;
+-	priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
+-	priv->hw_params.max_inst_size = IWL50_RTC_INST_SIZE;
 +
-+		while (end - pos > IW_GENERIC_IE_MAX) {
-+			next = pos + 2 + pos[1];
-+			while (next + 2 + next[1] - pos < IW_GENERIC_IE_MAX)
-+				next = next + 2 + next[1];
- 
--		memset(&iwe, 0, sizeof(iwe));
--		iwe.cmd = IWEVGENIE;
--		iwe.u.data.length = next - pos;
--		*current_ev = iwe_stream_add_point(info, *current_ev,
--						   end_buf, &iwe, pos);
-+			memset(&iwe, 0, sizeof(iwe));
-+			iwe.cmd = IWEVGENIE;
-+			iwe.u.data.length = next - pos;
-+			*current_ev = iwe_stream_add_point(info, *current_ev,
-+							   end_buf, &iwe, pos);
- 
--		pos = next;
--	}
-+			pos = next;
-+		}
- 
--	if (end > pos) {
--		memset(&iwe, 0, sizeof(iwe));
--		iwe.cmd = IWEVGENIE;
--		iwe.u.data.length = end - pos;
--		*current_ev = iwe_stream_add_point(info, *current_ev,
--						   end_buf, &iwe, pos);
-+		if (end > pos) {
-+			memset(&iwe, 0, sizeof(iwe));
-+			iwe.cmd = IWEVGENIE;
-+			iwe.u.data.length = end - pos;
-+			*current_ev = iwe_stream_add_point(info, *current_ev,
-+							   end_buf, &iwe, pos);
-+		}
- 	}
- }
- 
-Index: wireless-testing/net/mac80211/util.c
-===================================================================
---- wireless-testing.orig/net/mac80211/util.c	2009-01-28 11:37:41.000000000 +0100
-+++ wireless-testing/net/mac80211/util.c	2009-01-28 15:57:03.000000000 +0100
-@@ -675,6 +675,46 @@ void ieee802_11_parse_elems(u8 *start, s
- 	}
- }
- 
-+/*
-+ * ieee80211_filter_ie() tries to keep only the relevant IEs for
-+ * userspace (mostly hostap code).
-+ */
-+int ieee80211_filter_ie(u8 *ie)
-+{
-+	u8 id, ie_len, *pos;
-+	u8 microsoft_oui[4] = {0x00, 0x50, 0xf2};
-+	u8 wpa2_oui[3] = {0x00, 0x0f, 0xac};
-+
-+	pos = ie;
-+	id = *pos++;
-+	ie_len = *pos++;
-+
-+	switch (id) {
-+	case WLAN_EID_RSN:
-+		/* WPA2 */
-+		if (ie_len >= 3 &&
-+		    !memcmp(pos, wpa2_oui, 3))
-+			return 1;
-+
-+		return 0;
-+
-+	case WLAN_EID_VENDOR_SPECIFIC:
-+		/* We're trying to catch WPA1, WMM and WPS IEs. */
-+		if (ie_len >= 3 &&
-+		    !memcmp(pos, microsoft_oui, 3)) {
-+			if ((pos[3] == 1) || /* WPA1 */
-+			    (pos[3] == 2) || /* WMM */
-+			    (pos[3] == 4))   /* WPS */
-+				return 1;
-+		}
-+
-+		return 0;
-+
++	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
++	case CSR_HW_REV_TYPE_6x00:
++	case CSR_HW_REV_TYPE_6x50:
++		priv->hw_params.max_data_size = IWL60_RTC_DATA_SIZE;
++		priv->hw_params.max_inst_size = IWL60_RTC_INST_SIZE;
++		break;
 +	default:
-+		return 0;
++		priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
++		priv->hw_params.max_inst_size = IWL50_RTC_INST_SIZE;
 +	}
-+}
 +
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
-Index: wireless-testing/net/mac80211/ieee80211_i.h
-===================================================================
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-28 11:37:41.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-28 13:49:17.000000000 +0100
-@@ -1028,6 +1028,7 @@ void ieee80211_tx_skb(struct ieee80211_s
- 		      int encrypt);
- void ieee802_11_parse_elems(u8 *start, size_t len,
- 			    struct ieee802_11_elems *elems);
-+int ieee80211_filter_ie(u8 *ie);
- int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
- u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 			      enum ieee80211_band band);
+ 	priv->hw_params.max_bsm_size = 0;
+ 	priv->hw_params.fat_channel =  BIT(IEEE80211_BAND_2GHZ) |
+ 					BIT(IEEE80211_BAND_5GHZ);
+@@ -849,61 +860,40 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 
+ 	priv->hw_params.sens = &iwl5000_sensitivity;
+ 
+-	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+-	case CSR_HW_REV_TYPE_5100:
+-		priv->hw_params.tx_chains_num = 1;
+-		priv->hw_params.rx_chains_num = 2;
+-		priv->hw_params.valid_tx_ant = ANT_B;
+-		priv->hw_params.valid_rx_ant = ANT_AB;
+-		break;
+-	case CSR_HW_REV_TYPE_5150:
+-		priv->hw_params.tx_chains_num = 1;
+-		priv->hw_params.rx_chains_num = 2;
+-		priv->hw_params.valid_tx_ant = ANT_A;
+-		priv->hw_params.valid_rx_ant = ANT_AB;
+-		break;
+-	case CSR_HW_REV_TYPE_5300:
+-	case CSR_HW_REV_TYPE_5350:
+-		priv->hw_params.tx_chains_num = 3;
+-		priv->hw_params.rx_chains_num = 3;
+-		priv->hw_params.valid_tx_ant = ANT_ABC;
+-		priv->hw_params.valid_rx_ant = ANT_ABC;
+-		break;
+-	}
++	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
++	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
++	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
++	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
+ 
+ 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+-	case CSR_HW_REV_TYPE_5100:
+-	case CSR_HW_REV_TYPE_5300:
+-	case CSR_HW_REV_TYPE_5350:
+-		/* 5X00 and 5350 wants in Celsius */
+-		priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
+-		break;
+ 	case CSR_HW_REV_TYPE_5150:
+ 		/* 5150 wants in Kelvin */
+ 		priv->hw_params.ct_kill_threshold =
+ 				iwl5150_get_ct_threshold(priv);
+ 		break;
++	default:
++		/* all others want Celsius */
++		priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
++		break;
+ 	}
+ 
+ 	/* Set initial calibration set */
+ 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+-	case CSR_HW_REV_TYPE_5100:
+-	case CSR_HW_REV_TYPE_5300:
+-	case CSR_HW_REV_TYPE_5350:
++	case CSR_HW_REV_TYPE_5150:
+ 		priv->hw_params.calib_init_cfg =
+-			BIT(IWL_CALIB_XTAL)		|
++			BIT(IWL_CALIB_DC)		|
+ 			BIT(IWL_CALIB_LO)		|
+ 			BIT(IWL_CALIB_TX_IQ) 		|
+-			BIT(IWL_CALIB_TX_IQ_PERD)	|
+ 			BIT(IWL_CALIB_BASE_BAND);
++
+ 		break;
+-	case CSR_HW_REV_TYPE_5150:
++	default:
+ 		priv->hw_params.calib_init_cfg =
+-			BIT(IWL_CALIB_DC)		|
++			BIT(IWL_CALIB_XTAL)		|
+ 			BIT(IWL_CALIB_LO)		|
+ 			BIT(IWL_CALIB_TX_IQ) 		|
++			BIT(IWL_CALIB_TX_IQ_PERD)	|
+ 			BIT(IWL_CALIB_BASE_BAND);
+-
+ 		break;
+ 	}
+ 
+@@ -1556,6 +1546,8 @@ struct iwl_cfg iwl5300_agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_ABC,
++	.valid_rx_ant = ANT_ABC,
+ };
+ 
+ struct iwl_cfg iwl5100_bg_cfg = {
+@@ -1569,6 +1561,8 @@ struct iwl_cfg iwl5100_bg_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_B,
++	.valid_rx_ant = ANT_AB,
+ };
+ 
+ struct iwl_cfg iwl5100_abg_cfg = {
+@@ -1582,6 +1576,8 @@ struct iwl_cfg iwl5100_abg_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_B,
++	.valid_rx_ant = ANT_AB,
+ };
+ 
+ struct iwl_cfg iwl5100_agn_cfg = {
+@@ -1595,6 +1591,8 @@ struct iwl_cfg iwl5100_agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_B,
++	.valid_rx_ant = ANT_AB,
+ };
+ 
+ struct iwl_cfg iwl5350_agn_cfg = {
+@@ -1608,6 +1606,8 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_ABC,
++	.valid_rx_ant = ANT_ABC,
+ };
+ 
+ struct iwl_cfg iwl5150_agn_cfg = {
+@@ -1621,6 +1621,8 @@ struct iwl_cfg iwl5150_agn_cfg = {
+ 	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_A,
++	.valid_rx_ant = ANT_AB,
+ };
+ 
+ MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 4515a60..b78d676 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -72,6 +72,8 @@ struct iwl_cfg iwl6000_2ag_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_BC,
++	.valid_rx_ant = ANT_BC,
+ };
+ 
+ struct iwl_cfg iwl6000_2agn_cfg = {
+@@ -85,6 +87,8 @@ struct iwl_cfg iwl6000_2agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_BC,
++	.valid_rx_ant = ANT_BC,
+ };
+ 
+ struct iwl_cfg iwl6050_2agn_cfg = {
+@@ -98,6 +102,8 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_BC,
++	.valid_rx_ant = ANT_BC,
+ };
+ 
+ struct iwl_cfg iwl6000_3agn_cfg = {
+@@ -111,6 +117,8 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_ABC,
++	.valid_rx_ant = ANT_ABC,
+ };
+ 
+ struct iwl_cfg iwl6050_3agn_cfg = {
+@@ -124,6 +132,8 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+ 	.mod_params = &iwl50_mod_params,
++	.valid_tx_ant = ANT_ABC,
++	.valid_rx_ant = ANT_ABC,
+ };
+ 
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 0a719ae..02e92be 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -211,6 +211,8 @@ struct iwl_cfg {
+ 	u16  eeprom_calib_ver;
+ 	const struct iwl_ops *ops;
+ 	const struct iwl_mod_params *mod_params;
++	u8   valid_tx_ant;
++	u8   valid_rx_ant;
+ };
+ 
+ /***************************
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.5.4.3
+
