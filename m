@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:52527 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753087AbZBXLmI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33651 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884AbZBCKY1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 06:42:08 -0500
-Date: Tue, 24 Feb 2009 13:42:01 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Add module parameter to disable hardware crypto
-Message-ID: <20090224114201.GB21933@jm.kir.nu> (sfid-20090224_124211_250628_44CBCB11)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 3 Feb 2009 05:24:27 -0500
+Subject: Re: [PATCH v2] mac80211: Remove bss information of the current AP
+	when it goes out of range
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090203101911.GC8246@vasanth-laptop>
+References: <1233635989-20664-1-git-send-email-vasanth@atheros.com>
+	 <1233655853.5460.0.camel@johannes.local>
+	 <20090203101911.GC8246@vasanth-laptop>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vTRu2UWenPsyIto0l70z"
+Date: Tue, 03 Feb 2009 11:24:21 +0100
+Message-Id: <1233656661.5460.4.camel@johannes.local> (sfid-20090203_112431_633401_773C0A7D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nohwcrypt=1 module parameter can now be used to disable hardware
-crypto in ath9k. While the hardware acceleration handles most cases,
-it may be useful to be able to force mac80211 software implementation
-to be used for some tests, e.g., with virtual interface combinations
-that may not yet be supported in the key cache configuration. In
-addition, this allows management frame protection to be tested with
-older hardware revisions.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+--=-vTRu2UWenPsyIto0l70z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- drivers/net/wireless/ath9k/main.c |    9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+On Tue, 2009-02-03 at 15:49 +0530, Vasanthakumar Thiagarajan wrote:
+> On Tue, Feb 03, 2009 at 03:40:53PM +0530, Johannes Berg wrote:
+> > On Tue, 2009-02-03 at 10:09 +0530, Vasanthakumar Thiagarajan wrote:
+> > > There is no point having the bss information of currently associated =
+AP
+> > > when the AP is detected to be out of range.
+> >=20
+> > Seems sane to me. There are a few other places I think where we hold on
+> > to the bss info way too long, in fact, we hold on to it _forever_ most
+> > of the time.
+> >=20
+>=20
+> Yeah, we hold bss info when we get direct probe timeout, auth timeout and=
+ assoc
+> timeout. I will remove bss in those places also n the next version.
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-02-24 13:34:44.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-02-24 13:35:01.000000000 +0200
-@@ -26,6 +26,10 @@ MODULE_DESCRIPTION("Support for Atheros 
- MODULE_SUPPORTED_DEVICE("Atheros 802.11n WLAN cards");
- MODULE_LICENSE("Dual BSD/GPL");
- 
-+static int modparam_nohwcrypt;
-+module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
-+MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
-+
- /* We use the hw_value as an index into our private channel structure */
- 
- #define CHAN2G(_freq, _idx)  { \
-@@ -1587,7 +1591,7 @@ int ath_attach(u16 devid, struct ath_sof
- 		IEEE80211_HW_SUPPORTS_PS |
- 		IEEE80211_HW_PS_NULLFUNC_STACK;
- 
--	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah))
-+	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || modparam_nohwcrypt)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
- 
- 	hw->wiphy->interface_modes =
-@@ -2468,6 +2472,9 @@ static int ath9k_set_key(struct ieee8021
- 	struct ath_softc *sc = hw->priv;
- 	int ret = 0;
- 
-+	if (modparam_nohwcrypt)
-+		return -ENOSPC;
-+
- 	mutex_lock(&sc->mutex);
- 	ath9k_ps_wakeup(sc);
- 	DPRINTF(sc, ATH_DBG_KEYCACHE, "Set HW Key\n");
+Not just that, but also when we've found a BSS and never connect to it,
+we'll never time it out. It's nothing you need to fix though, I'm
+perfectly ok with just putting this patch in as a start.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+johannes
+
+--=-vTRu2UWenPsyIto0l70z
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJiBtTAAoJEKVg1VMiehFYPJ4QALn9dWlEtyI+LDnWKfWogYac
+x/02nJirloL42lGlzbW1uA6k+N3VAN4hVYbDHB696n8MgB/ExoEFIMDR0bfubGsX
+dXuR16u2bHkMI+hjDctmwGePU8Zq3hqsHASHnZTBZdF2IRsttinsLvAFYB8MTOJp
+DgZ6QoijtYXPP5j/uaCy3yqn07kxu4h3IZAaZY7xH+d50gjLLRpnXWaGES1VUacr
+P+S5yQrzzcOZP3yjAFBd4jUcHrtFuVismqjcRGT9meMHvAIGuPPBkHS4SyAEK3MR
+YssxBZbi1C2crQlWjs3SJPSXV0cA5RItnD2iubBgjbusPt6FlrPS1BqyuMNR0dEZ
+Kx90OQxd4k4qhc+69XolKtOLJJzYmTPjS+z4fseijRkQbZEcVMdHe0ngvO49LVWS
+sNxzeifU0B5rvbaXzfxQu8xBLxB/vn6t1Kf4G0VvEk7nrqgbugjLqk0M1HXBMxEe
+DCrveJHVGdEeg19uK/A71wjrItHNVg6tn9yw1zbT34NrEc96+nE/633Q0TtBAyba
+NJEY+4KimeE2O+OlV1xdLZ/nijZ6L/lifwFXVqsc1K0aTxtxNINauMJeLMNK6LmQ
+gyAcR5m6pISISLve+iuabA7ci++OnP2SG1n470DwrW+J+sLcWa5UaI2Fr2GsnugH
+y5LoO6yJpa10hIIiIs8f
+=BZy9
+-----END PGP SIGNATURE-----
+
+--=-vTRu2UWenPsyIto0l70z--
+
