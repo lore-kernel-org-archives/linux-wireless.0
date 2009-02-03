@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f222.google.com ([209.85.217.222]:54513 "EHLO
-	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894AbZBMHJk (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:48688 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751942AbZBCQYs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 02:09:40 -0500
-Received: by gxk22 with SMTP id 22so510987gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 23:09:38 -0800 (PST)
+	Tue, 3 Feb 2009 11:24:48 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so737021yxm.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 08:24:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1234508187.1327.19.camel@johannes.local>
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
-	 <1234508187.1327.19.camel@johannes.local>
-Date: Thu, 12 Feb 2009 23:09:38 -0800
-Message-ID: <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com> (sfid-20090213_080943_180672_71B96E3A)
-Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <40f31dec0902030817h4afacc52uea4885d835444aac@mail.gmail.com>
+References: <20090131022310.GA3342@makis>
+	 <1233670130.16539.5.camel@maxim-laptop>
+	 <40f31dec0902030817h4afacc52uea4885d835444aac@mail.gmail.com>
+Date: Tue, 3 Feb 2009 18:24:47 +0200
+Message-ID: <40f31dec0902030824s65b90222j13ac9b691593f19f@mail.gmail.com> (sfid-20090203_172451_673682_9DFFFE83)
+Subject: Re: [ath5k-devel] [PATCH 1/5] ath5k: PHY code cleanup
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 12, 2009 at 10:56 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-02-12 at 21:36 -0800, Luis R. Rodriguez wrote:
->> Driver and userspace regulatory hints are now processed in
->> a workqueue. This should fix some lockdep warnings which complain
->> about possible circular locking dependencies such as:
+2009/2/3 Nick Kossifidis <mickflemm@gmail.com>:
+> 2009/2/3 Maxim Levitsky <maximlevitsky@gmail.com>:
+>> I just tried your 5 patches, as they could fix hangs in the device,
+>> that I experience occasionally, when resuming my aspire one from ram.
+>>
+>> I applied the patches, and I got very unstable system, that tended to
+>> hang even before X.
+>>
+>> When it didn't hang, I tried suspend to ram cycle, but it hanged then.
+>>
+>>
+>> Best regards,
+>>        Maxim Levitsky
+>>
+>>
 >
-> Yes, but I need to look at the one Reinette posted and fix that one,
-> which will probably require a different solution.
+> It's related to unhandled BMISS interrupts, Bob is working on it to
+> see what triggers them. A quick solution is to disable them (as we
+> don't handle them anyway) but it would be better to know the problem.
+>
 
-Oh I didn't see that one. How different?
+Hmm if i recall correctly you have a AR2425 right ? I tested this code
+on AR2425 before i submit the patches and it worked fine, can you give
+me some more infos so i can reproduce this ? What's your setup ?
 
-  Luis
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
