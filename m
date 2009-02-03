@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:44697 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460AbZBHCOE (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:62929 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752464AbZBCRFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Feb 2009 21:14:04 -0500
-Received: by ewy14 with SMTP id 14so1994056ewy.13
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Feb 2009 18:14:02 -0800 (PST)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: sourceforge.bnwi@manchmal.in-ulm.de,
-	Hin-Tak Leung <HinTak.Leung@gmail.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: [PATCH] zd1211rw: adding 0ace:0xa211 as a ZD1211 device
-Date: Sun,  8 Feb 2009 02:13:56 +0000
-Message-Id: <1234059236-4335-1-git-send-email-HinTak.Leung@gmail.com> (sfid-20090208_031410_653114_0E9256ED)
+	Tue, 3 Feb 2009 12:05:09 -0500
+Message-ID: <49887936.3010203@lwfinger.net> (sfid-20090203_180517_583819_EBBBB77D)
+Date: Tue, 03 Feb 2009 11:04:54 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 wireless issues
+References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>    <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk>    <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>    <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk>    <49871083.5040309@lwfinger.net>    <35040.82.152.223.193.1233590184.squirrel@www.phantomjinx.co.uk>    <3ace41890902021548o39b5f02veacc0bd650e92c7@mail.gmail.com>    <20090203142807.GC10968@tuxdriver.com> <44120.62.172.74.16.1233679156.squirrel@www.phantomjinx.co.uk>
+In-Reply-To: <44120.62.172.74.16.1233679156.squirrel@www.phantomjinx.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christoph Biedl <sourceforge.bnwi@manchmal.in-ulm.de> reported success
-in the sourceforge zd1211 mailing list on this addition. This product ID
-was supported by the vendor driver ZD1211LnxDrv 2.22.0.0 (and possibly
-earlier) and it probably should have been added earlier.
+P.G. Richardson wrote:
+> 
+> Apologies. there might be some confusion. When I mentioned the date of the
+> 30/01/2009, I was referring to the snapshot date of the tarball
+> downloaded, ie. compat-wireless-$(date -I).tar.bz2.
+> 
+> I haven't used wireless-testing's git repo thus far. If it will help with
+> the rate issue I have then will definitely install that version instead.
 
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-Tested-by: Christoph Biedl <sourceforge.bnwi@manchmal.in-ulm.de>
----
- drivers/net/wireless/zd1211rw/zd_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Using the wireless-testing git tree would always keep your wireless
+with the latest (and likely the greatest), that would probably be
+overkill for you. I would just grab the latest snapshot from
+compat-wireless. Something from 02/02 would have the latest rtl8187 code.
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 17527f7..f0e5e94 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -37,6 +37,7 @@
- static struct usb_device_id usb_ids[] = {
- 	/* ZD1211 */
- 	{ USB_DEVICE(0x0ace, 0x1211), .driver_info = DEVICE_ZD1211 },
-+	{ USB_DEVICE(0x0ace, 0xa211), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x07b8, 0x6001), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x126f, 0xa006), .driver_info = DEVICE_ZD1211 },
- 	{ USB_DEVICE(0x6891, 0xa727), .driver_info = DEVICE_ZD1211 },
--- 
-1.6.0.6
-
+Larry
