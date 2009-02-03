@@ -1,55 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38257 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752389AbZBDXTu (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.186]:34930 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbZBCWl2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 18:19:50 -0500
-Subject: Re: [PATCH RFC] mac80211: Filter scan results
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Samuel Ortiz <samuel@sortiz.org>,
-	John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1233763752.21577.10.camel@localhost.localdomain>
-References: <20090204150857.GA5069@sortiz.org>
-	 <1233763752.21577.10.camel@localhost.localdomain>
+	Tue, 3 Feb 2009 17:41:28 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so179452mue.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 14:41:26 -0800 (PST)
+Subject: Re: [ath5k-devel] [PATCH 1/5] ath5k: PHY code cleanup
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com
+In-Reply-To: <40f31dec0902031006o6d0dd6ffkf6aae6d39cf078a5@mail.gmail.com>
+References: <20090131022310.GA3342@makis>
+	 <1233670130.16539.5.camel@maxim-laptop>
+	 <40f31dec0902030817h4afacc52uea4885d835444aac@mail.gmail.com>
+	 <40f31dec0902030824s65b90222j13ac9b691593f19f@mail.gmail.com>
+	 <1233679287.11183.7.camel@maxim-laptop>
+	 <40f31dec0902031006o6d0dd6ffkf6aae6d39cf078a5@mail.gmail.com>
 Content-Type: text/plain
-Date: Thu, 05 Feb 2009 00:19:46 +0100
-Message-Id: <1233789586.5559.12.camel@californication> (sfid-20090205_001953_212852_11CD7950)
+Date: Wed, 04 Feb 2009 00:41:21 +0200
+Message-Id: <1233700881.9297.7.camel@maxim-laptop> (sfid-20090203_234134_740662_1B8ECE6C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
-
-> > In very dense environment, the scan result buffer can get really large, mostly
-> > due to the addition of proprietary IEs. iwlist fails, typically warning about:
-> > "print_scanning_info: Allocation failed". wpa_supplicant fails as well, after
-> > reallocating the scan result buffer several times, up to 132 Kbytes:
-> > 	[snip]
-> > 	Scan results did not fit - trying larger buffer (131072 bytes)
-> > 	ioctl[SIOCGIWSCAN]: Argument list too long
-> > 
-> > By adding a mac80211 module parameter, we can filter the scan results and keep
-> > only the ones userspace currently worries about, i.e. WPA1, WPA2, WMM and WPS.
-> > 
-> > To activate this feature, 1 has to be written to
-> > /sys/module/mac80211/parameters/ieee80211_scan_ie_filter
+On Tue, 2009-02-03 at 20:06 +0200, Nick Kossifidis wrote:
+> 2009/2/3 Maxim Levitsky <maximlevitsky@gmail.com>:
+> > On Tue, 2009-02-03 at 18:24 +0200, Nick Kossifidis wrote:
+> >> 2009/2/3 Nick Kossifidis <mickflemm@gmail.com>:
+> >> > 2009/2/3 Maxim Levitsky <maximlevitsky@gmail.com>:
+> >> >> I just tried your 5 patches, as they could fix hangs in the device,
+> >> >> that I experience occasionally, when resuming my aspire one from
+> >> ram.
+> >> >>
+> >> >> I applied the patches, and I got very unstable system, that tended
+> >> to
+> >> >> hang even before X.
+> >> >>
+> >> >> When it didn't hang, I tried suspend to ram cycle, but it hanged
+> >> then.
+> >> >>
+> >> >>
+> >> >> Best regards,
+> >> >>        Maxim Levitsky
+> >> >>
+> >> >>
+> >> >
+> >> > It's related to unhandled BMISS interrupts, Bob is working on it to
+> >> > see what triggers them. A quick solution is to disable them (as we
+> >> > don't handle them anyway) but it would be better to know the
+> >> problem.
+> >> >
+> >
+> > Acer aspire one.
+> >
+> > -wireless-testing tree + 5 patches
+> > I test without X running, maybe I could spot an oops or so,
+> > currently, system just hangs cold.
+> >
 > 
-> NAK.  Use cfg80211.  Module parameters are the wrong way to work around
-> API limitations; the API gets fixed or replaced instead.  Furthermore,
-> the stack/drivers should *NOT* be filtering scan results at all.  That's
-> the job of the userspace program requesting the results; otherwise
-> passive listeners will get only filtered results, and not the complete
-> scan list.
+> What's your AP, your RSSI etc ?
 
-yes, yes and yes, but reality is a little bit different here. You are
-not able to get the results out of the kernel because WEXT is just
-braindead.
+AP?, just some Siemens b/g device
+signal quality is around 100%, ap is in nearby room
+WPA2 is used.
 
-Regards
+I did further test, by switching to console and doing there a
+pm-suspend, and system did hand exactly same way, but I did see a
+message about softlockup in ath5k.
+(in phy-...) 
 
-Marcel
+Also have seen a message about 'not being able to query synaptic...'
+and eveything was dead including keyboard and touchpad. (even sysrq
+didn't work )
+
+
+
+> 
+> >
+> > PS:
+> >
+> > Atheros devices consist of MAC and PHY (which sometimes is called radio)
+> >
+> > It seems that my device has 2425 MAC, but what radio it has?
+> > It also seems that most of the driver treats it as a AR5112.
+> > I thought before that 5112 was the MAC and 2425 was the radio, but it
+> > doesn't seem to be true, can you explain this?
+> >
+> >
+> 
+> A card consists (among other things) of a MAC chip (includes PCU, QCU,
+> DCU, DMA unit), a radio chip (has synth, bias control etc) and in
+> between there is baseband (what's called PHY) that drives the radio
+> chip and provides data i/o to the MAC chip.
+> 
+> First Atheros cards (before 2413) have MAC and PHY on the same chip
+> and radio on a separate chip, MAC/BB chips are named AR52XX and radio
+> chips RF51XX.
+> Newer Atheros cards have all parts on the same chip, MAC is mostly the
+> same as AR5212 (that's why we mark them as AR5K_AR5212) but PHY and
+> (especially) RF change so the whole chip gets the name of the radio
+> chip (RFX4XX -> ARX4XX). So AR2425 has an AR5212 MAC with minor
+> modifications and an RF2425 radio chip. SREV register marks the whole
+> chip (since it's not only a MAC/BB chip anymore) so this might be
+> confusing.
+
+Thanks a lot for explanation, now it is all clear.
+
+Best regards,
+	Maxim Levitsky
 
 
