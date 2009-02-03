@@ -1,65 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49543 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753656AbZBXFSN (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:43284 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751958AbZBCUnG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 00:18:13 -0500
-Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890902232046v3c785a01s42e411e47a22288f@mail.gmail.com> (sfid-20090224_054702_450298_51E73780)
-References: <20090223163626.20939.4879.stgit@tikku>
-	 <20090223163738.20939.25890.stgit@tikku>
-	 <43e72e890902230947x6e55bf36ve715295f43f74fbb@mail.gmail.com>
-	 <87prh9ht22.fsf@litku.valot.fi>
-	 <43e72e890902231111g3705c5bh445e3317de5967f3@mail.gmail.com>
-	 <87bpst7xxd.fsf@litku.valot.fi>
-	 <43e72e890902232046v3c785a01s42e411e47a22288f@mail.gmail.com>
-	 (sfid-20090224_054702_450298_51E73780)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-92yaU+zKDGhfX0pjQrd9"
-Date: Mon, 23 Feb 2009 21:17:17 -0800
-Message-Id: <1235452637.4455.83.camel@johannes.local> (sfid-20090224_061817_362792_04BCE75E)
-Mime-Version: 1.0
+	Tue, 3 Feb 2009 15:43:06 -0500
+Received: by mail-ew0-f21.google.com with SMTP id 14so2846565ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 12:43:05 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Cc: David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 16/17] orinoco: hermes_dld does not need to be a module
+Date: Tue,  3 Feb 2009 20:40:38 +0000
+Message-Id: <1233693639-8608-17-git-send-email-kilroyd@googlemail.com> (sfid-20090203_214314_454405_707A4729)
+In-Reply-To: <1233693639-8608-16-git-send-email-kilroyd@googlemail.com>
+References: <1233693639-8608-1-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-2-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-3-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-4-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-5-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-6-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-7-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-8-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-9-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-10-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-11-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-12-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-13-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-14-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-15-git-send-email-kilroyd@googlemail.com>
+ <1233693639-8608-16-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/Makefile     |    4 +-
+ drivers/net/wireless/orinoco/hermes_dld.c |   33 +---------------------------
+ 2 files changed, 4 insertions(+), 33 deletions(-)
 
---=-92yaU+zKDGhfX0pjQrd9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2009-02-23 at 20:46 -0800, Luis R. Rodriguez wrote:
-
-> How does the hardware deal with IEs that may change order? I am not
-> sure how common this is but I do wonder.
-
-Uh, it would be extraordinarily stupid to change IE order in every
-beacon! I guess it won't deal and we lose the benefits...
-
-johannes
-
---=-92yaU+zKDGhfX0pjQrd9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJo4LaAAoJEKVg1VMiehFY27cP/3TdMoSxn6EpOX6ZOgkHoU1G
-CWq24K3EYnBrm43/3PlwDuKStSsqp55UK4Tx7sZeplw9uNOiidb6u2eFtKYrgB/8
-aDL26u+p672pzk0L8KKsmRz+qnjFnXSKYC8du814EzcRsHC/zGVRRXOc3v+0Wb0A
-fTms0FD7rgHWAsa4GWAp0TnGCt1LPErVADibq2Gwyi2DFDVpRwdMkhgd+fHS2hXd
-KheRuxVCio2pvs1qtdKyQmkcUC4ZCRRD1Nc7wedVF2xW0gPQHg2XCEvIa5fCsO4A
-TEzUHfhrZNpAVsIS8WOlLy/etR8iwzowl/NHu8D4XRZinyLKaxXxo/HHUHvTAQM4
-BqEeEN5zmlchZwTJWmvQOQ/6YtbDTO0/qfpYqN1AkMiWc6RqrmNvWXwtgjN7ejWs
-T4QIQe6bDxYNa6I5RDT4D+PVu5rfhhc6o4udlwfKz2ww8Nfqg5dFFhSgbELoRqlF
-6QgNvX2wsVOBcjpv1yYGMO41mwKXlxVos+JJdGfSzB7PC6T+u3n1GseCLGOTj/r0
-YTC+W1j3U1FIkkcw2ku7E3Xi6PQRlF8SzUJNZ3c82Qx0J81GSmiBcKLvfxEvHoue
-yXQWfiPwyTSI1g8YQ+tOdfxUMOoD/0UhklGTJOZTlMKt/1PClW1uJCo8R14rYLIJ
-Jbtb2sCRJrGquE5yaioG
-=PqB2
------END PGP SIGNATURE-----
-
---=-92yaU+zKDGhfX0pjQrd9--
+diff --git a/drivers/net/wireless/orinoco/Makefile b/drivers/net/wireless/orinoco/Makefile
+index 431ba39..2f3e0dd 100644
+--- a/drivers/net/wireless/orinoco/Makefile
++++ b/drivers/net/wireless/orinoco/Makefile
+@@ -1,9 +1,9 @@
+ #
+ # Makefile for the orinoco wireless device drivers.
+ #
+-orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o
++orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o hermes_dld.o
+ 
+-obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o hermes_dld.o
++obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o
+ obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
+ obj-$(CONFIG_APPLE_AIRPORT)	+= airport.o
+ obj-$(CONFIG_PLX_HERMES)	+= orinoco_plx.o
+diff --git a/drivers/net/wireless/orinoco/hermes_dld.c b/drivers/net/wireless/orinoco/hermes_dld.c
+index d8c626e..1a81998 100644
+--- a/drivers/net/wireless/orinoco/hermes_dld.c
++++ b/drivers/net/wireless/orinoco/hermes_dld.c
+@@ -1,13 +1,7 @@
+ /*
+- * Hermes download helper driver.
++ * Hermes download helper.
+  *
+- * This could be entirely merged into hermes.c.
+- *
+- * I'm keeping it separate to minimise the amount of merging between
+- * kernel upgrades. It also means the memory overhead for drivers that
+- * don't need firmware download low.
+- *
+- * This driver:
++ * This helper:
+  *  - is capable of writing to the volatile area of the hermes device
+  *  - is currently not capable of writing to non-volatile areas
+  *  - provide helpers to identify and update plugin data
+@@ -50,10 +44,6 @@
+ #include "hermes.h"
+ #include "hermes_dld.h"
+ 
+-MODULE_DESCRIPTION("Download helper for Lucent Hermes chipset");
+-MODULE_AUTHOR("David Kilroy <kilroyd@gmail.com>");
+-MODULE_LICENSE("Dual MPL/GPL");
+-
+ #define PFX "hermes_dld: "
+ 
+ /*
+@@ -347,7 +337,6 @@ int hermes_read_pda(hermes_t *hw,
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(hermes_read_pda);
+ 
+ /* Parse PDA and write the records into the adapter
+  *
+@@ -376,7 +365,6 @@ int hermes_apply_pda(hermes_t *hw,
+ 	}
+ 	return 0;
+ }
+-EXPORT_SYMBOL(hermes_apply_pda);
+ 
+ /* Identify the total number of bytes in all blocks
+  * including the header data.
+@@ -398,7 +386,6 @@ hermes_blocks_length(const char *first_block)
+ 
+ 	return total_len;
+ }
+-EXPORT_SYMBOL(hermes_blocks_length);
+ 
+ /*** Hermes programming ***/
+ 
+@@ -452,7 +439,6 @@ int hermesi_program_init(hermes_t *hw, u32 offset)
+ 
+ 	return err;
+ }
+-EXPORT_SYMBOL(hermesi_program_init);
+ 
+ /* Done programming data (Hermes I)
+  *
+@@ -488,7 +474,6 @@ int hermesi_program_end(hermes_t *hw)
+ 
+ 	return rc ? rc : err;
+ }
+-EXPORT_SYMBOL(hermesi_program_end);
+ 
+ /* Program the data blocks */
+ int hermes_program(hermes_t *hw, const char *first_block, const char *end)
+@@ -550,19 +535,6 @@ int hermes_program(hermes_t *hw, const char *first_block, const char *end)
+ 	}
+ 	return 0;
+ }
+-EXPORT_SYMBOL(hermes_program);
+-
+-static int __init init_hermes_dld(void)
+-{
+-	return 0;
+-}
+-
+-static void __exit exit_hermes_dld(void)
+-{
+-}
+-
+-module_init(init_hermes_dld);
+-module_exit(exit_hermes_dld);
+ 
+ /*** Default plugging data for Hermes I ***/
+ /* Values from wl_lkm_718/hcf/dhf.c */
+@@ -727,4 +699,3 @@ int hermes_apply_pda_with_defaults(hermes_t *hw,
+ 	}
+ 	return 0;
+ }
+-EXPORT_SYMBOL(hermes_apply_pda_with_defaults);
+-- 
+1.6.0.6
 
