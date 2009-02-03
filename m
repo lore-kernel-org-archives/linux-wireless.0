@@ -1,93 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48888 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752912AbZB0BlO (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:10170 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752081AbZBCSR4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 20:41:14 -0500
-Subject: Re: pull request: wireless-next-2.6 2009-02-23
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, mcgrof <mcgrof@gmail.com>
-In-Reply-To: <20090226161340.GA4430@tuxdriver.com>
-References: <20090223192659.GB3553@tuxdriver.com>
-	 <1235457113.4455.89.camel@johannes.local>
-	 <20090224.235510.30497146.davem@davemloft.net>
-	 <1235637360.29050.16.camel@johannes.local>
-	 <20090226161340.GA4430@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kbKDvDmrKJf/QQRDVtBM"
-Date: Thu, 26 Feb 2009 17:37:20 -0800
-Message-Id: <1235698640.4936.6.camel@johannes.local> (sfid-20090227_024118_144187_56658767)
-Mime-Version: 1.0
+	Tue, 3 Feb 2009 13:17:56 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so969763fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 10:17:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1233666319.3957.1.camel@johannes.local>
+References: <1233666319.3957.1.camel@johannes.local>
+Date: Tue, 3 Feb 2009 19:17:53 +0100
+Message-ID: <69e28c910902031017j5eb7b702jd818cdf3765ea1f1@mail.gmail.com> (sfid-20090203_191758_011157_64FCDDFC)
+Subject: Re: Cardbus wireless cards
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Feb 3, 2009 at 2:05 PM, Johannes Berg <johannes@sipsolutions.ne=
+t> wrote:
+> Hi,
+>
+> Some of you know that I got a new laptop, and it doesn't have a cardb=
+us
+> slot any more. I still have my powerbook, and it's still working fine=
+,
+> but I'm not using it any more, it hasn't even booted in a month. I co=
+uld
+> test on my powerbook, but given my regular time budget it seems unlik=
+ely
+> that I ever will.
+>
+> Hence, I'm offering my collection of cardbus/pcmcia wireless test car=
+ds
+> to anyone I can afford shipping to.
+>
+> * Broadcom PCMCIA (not cardbus, in cardbus slot adapter)
+>  requires external single antenna (u.fl, have one if I can find it)
+> * Airgo-based Belkin F5D8010 ("true MIMO")
+> * rt61pci (Conceptronic)
+> * Broadcom 11n (4321)
+> * acx111 based card (D-Link AirPlus XTreme G+)
+>
+> I also have a Broadcom 11g (4306 I think, might be 4318) PCI card
+> somewhere that I will most likely never again have a use for.
+>
+> johannes
+>
+> _______________________________________________
+> Bcm43xx-dev mailing list
+> Bcm43xx-dev@lists.berlios.de
+> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+>
+>
 
---=-kbKDvDmrKJf/QQRDVtBM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If Hungary does not fall outside the "anyone I can afford shipping
+to", then I am interested in the acx111 card. Acx-based cards are
+pretty hard to find in Hungary.
 
-On Thu, 2009-02-26 at 11:13 -0500, John W. Linville wrote:
-
-> > Now I just have to get around to fixing it, it's proving to be harder
-> > than I thought, and I don't have much time right now.
->=20
-> I suppose I could just drop that one.  IIRC there was another patch
-> from you that depended upon that one as well?
-
-Ok, so I looked into this, and it turns out that it's harder to fix than
-I thought. Fixing the genl code to call the pre_dumpit at the right
-place is hard and requires netlink (not genl) changes. I'm not in a
-position to do such changes right now, so I would suggest to revert it,
-and for now take the easy way of restructuring nl80211 to take, in each
-operation, the rtnl before any other locks instead of trying to do this
-generically.
-
-Luis, would you be up to that? Basically go from
-
-        mutex_lock(&cfg80211_mtx)
-        ...
-        rtnl_lock()
-        ...
-        rtnl_unlock()
-        ...
-        mutex_unlock(&cfg80211_mtx)
-       =20
-to
-       =20
-        rtnl_lock()
-        ...
-        mutex_lock(&cfg80211_mtx)
-        ...
-        mutex_unlock(&cfg80211_mtx)
-        ...
-        rtnl_unlock()
-       =20
-everywhere.
-
-johannes
-
---=-kbKDvDmrKJf/QQRDVtBM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJp0PNAAoJEKVg1VMiehFY050P/0O8hIUYTp+lHmBSKjlDPm7b
-j1fqf2KnMO32TYGicxQ4vYlydUH6WoM30U7VKNgwjdittXGg0ABB4jrej7q6QaWw
-fCngP2Z3BTnr3odXiZnEyCR7iw56wEOXEPHySR2gX2McOYMYJ9J3SV/cuQt8Dguk
-1aYjohbhT4AbAwtxZuYBuhZAzZm0L9giqKKgF+HiZmtT/0ywwyqdePY3qU7o0WFd
-sxgYxJyaLHAv6YOS01bGd54L/d2sKw5TzfIasn3cXj3hnFiuyWM6hfuDyfNW4MZR
-2a57P54WWQm3KlRszkZJq6TvNVTRSDcjk+TfhZFeCpkA4nKbDGTS2/5H0s3fflTD
-XmtxF4Mj5Tt42ySV72mY1nGLlasmEyX8PevSGnJKBVNsPpT1E0KaSAs/uPofRH/3
-8DDAcLllTkWF4+dCEP0O13waKEwzED8H5Citpe59dB+np7WpN3+jNKXi8yB/PR7Y
-oTJJvTb5ontRd0WKlyft7yHs/2ySwuHkpyU0HjZhYfXINSvzTr9uUEWBDR4GaLcK
-qrlXIZyNXFtiGzvBmV3ik4ACjbtLeZetpmMmghE5vNYAlZRcyUAk9NzUP28iWrOR
-zPBTSqrMmnDQiFBbl2qYmoCOfudUXYem5Eo4s7+2Y/ZfQYiQpjqSQ+DeiG8pdedK
-p+mDwx03XMSc1oQ61aXF
-=Yjqh
------END PGP SIGNATURE-----
-
---=-kbKDvDmrKJf/QQRDVtBM--
-
+G=E1bor
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
