@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:52163 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750794AbZBAFH2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Feb 2009 00:07:28 -0500
-Message-ID: <49852E03.7090003@openwrt.org> (sfid-20090201_060744_933140_3EF79646)
-Date: Sun, 01 Feb 2009 06:07:15 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:59451
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754077AbZBCASy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2009 19:18:54 -0500
+Message-ID: <49878D6B.7050707@erley.org> (sfid-20090203_011858_563778_85407C43)
+Date: Mon, 02 Feb 2009 19:18:51 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	jirislaby@gmail.com, mcgrof@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
-References: <20090131023147.GE3342@makis>	 <20090131170802.GA16826@hash.localnet>	 <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>	 <20090131223809.GA17413@hash.localnet>	 <40f31dec0901311950q27e28bb8we145c79488b1c7e1@mail.gmail.com>	 <49851F73.4050204@openwrt.org> <40f31dec0901312050t1c8e50b5y2e63a05f8f5f4f89@mail.gmail.com>
-In-Reply-To: <40f31dec0901312050t1c8e50b5y2e63a05f8f5f4f89@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [patch] iw: align output for HT capabilities
+References: <49878B8B.4020005@erley.org> <646765f40902021615v521d0031y27885b56a74fd2f2@mail.gmail.com>
+In-Reply-To: <646765f40902021615v521d0031y27885b56a74fd2f2@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Kossifidis wrote:
-> 2009/2/1 Felix Fietkau <nbd@openwrt.org>:
->> Nick Kossifidis wrote:
->>> 2009/2/1 Bob Copeland <me@bobcopeland.com>:
->>>> On Sat, Jan 31, 2009 at 08:48:02PM +0200, Nick Kossifidis wrote:
->>>>> > Heh, we should write a little tool to check the shifts and masks :)
->>>>> >
->>>>>
->>>>> Yup :P
->>>>
->>>> I just wrote one, I can post it later :)   It also found:
->>>>
->>>> AR5K_PHY_SIGMA_DELTA_ADC_CLIP 0x01ff3000 13
->>>>
->>>> Should be 12 or a different mask...
->>>>
->>>
->>> 13 is correct
->>>
->>> 0x01ff3000 -> 1111111111110000000000000
->> I think it's    1111111110011000000000000? :)
+Julian Calaby wrote:
+> On Tue, Feb 3, 2009 at 11:10, pat-lkml <pat-lkml@erley.org> wrote:
+>> The HT capabilities have an additional space in front of them causing
+>> them not to line up with the rest of the listed outputs.  This patch
+>> removes that space.
 >>
->> This mask makes 12 seem more likely.
+>> Signed-off-by: Pat Erley <pat-lkml@erley.org>
 >>
->> - Felix
+>> ---
 >>
+>> diff --git a/info.c b/info.c
+>> index bf3b8bd..69be500 100644
+>> --- a/info.c
+>> +++ b/info.c
+>> @@ -70,7 +70,7 @@ static int print_phy_handler(struct nl_msg *msg, void
+>> *arg)
+>>  #ifdef NL80211_BAND_ATTR_HT_CAPA
+>>                if (tb_band[NL80211_BAND_ATTR_HT_CAPA]) {
+>>                        unsigned short cap = nla_get_u16(tb_band[NL80211_BAND_ATTR_HT_CAPA]);
+>> -#define PCOM(fmt, args...) do { printf("\t\t\t * " fmt "\n", ##args); }
+>> while (0)
+>> +#define PCOM(fmt, args...) do { printf("\t\t\t* " fmt "\n", ##args); }
+>> while (0)
 > 
-> Maybe it's in big endian format (we don't know anything about this reg
-> anyway :P), both HALs have 13 plus it doesn't make sense to have a
-> field split.
-Ah, figured it out. It's a typo :)
-Here are the settings from Sam's HAL:
+> Is it just me or is this patch line-wrapped?
+> 
+> Thanks,
+> 
+no, it line wrapped.  Weird that it'd line wrap the function def but not
+the line later on me, but I guess it's time to look into fixing my mail
+client.
 
-#define   AR_PHY_SIGMA_DELTA_ADC_CLIP     0x01FFE000
-#define   AR_PHY_SIGMA_DELTA_ADC_CLIP_S   13
-
-Which does make a lot more sense than     0x01FF3000 :)
-
-- Felix
+Thanks,
+Pat
