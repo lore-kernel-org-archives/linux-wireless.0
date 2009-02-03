@@ -1,73 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:14463 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:41475 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752285AbZBSKPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 05:15:06 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 02:15:06 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: Filter out beacons from other BSS in STA mode
-Date: Thu, 19 Feb 2009 15:41:52 +0530
-Message-ID: <1235038312-17974-1-git-send-email-vasanth@atheros.com> (sfid-20090219_111511_995041_B838E117)
-MIME-Version: 1.0
+	id S1751922AbZBCQlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2009 11:41:20 -0500
+Subject: Re: [PATCH] wireless: pos[4] tested twice, 2nd should be pos[5]
+From: Dan Williams <dcbw@redhat.com>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: johannes@sipsolutions.net, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <49886DBD.9030302@gmail.com>
+References: <49886DBD.9030302@gmail.com>
 Content-Type: text/plain
+Date: Tue, 03 Feb 2009 11:39:32 -0500
+Message-Id: <1233679172.11344.59.camel@localhost.localdomain> (sfid-20090203_174138_809034_4AC7832D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Passing beacons received from other BSS to s/w in non-scanning
-state is unnecessary in STA mode. This patch filters them out in
-h/w.
+On Tue, 2009-02-03 at 17:15 +0100, Roel Kluin wrote:
+> Is this what it should be? please review.
+> ----------------->8----------------------8<------------------
+> 
+> pos[4] can't be both 0x43 and 0x04, 2nd should be pos[5]
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath9k/mac.h  |    3 ++-
- drivers/net/wireless/ath9k/recv.c |   11 ++++++-----
- 2 files changed, 8 insertions(+), 6 deletions(-)
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-diff --git a/drivers/net/wireless/ath9k/mac.h b/drivers/net/wireless/ath9k/mac.h
-index 74b660a..862a63f 100644
---- a/drivers/net/wireless/ath9k/mac.h
-+++ b/drivers/net/wireless/ath9k/mac.h
-@@ -566,8 +566,9 @@ enum ath9k_rx_filter {
- 	ATH9K_RX_FILTER_BEACON = 0x00000010,
- 	ATH9K_RX_FILTER_PROM = 0x00000020,
- 	ATH9K_RX_FILTER_PROBEREQ = 0x00000080,
--	ATH9K_RX_FILTER_PSPOLL = 0x00004000,
- 	ATH9K_RX_FILTER_PHYERR = 0x00000100,
-+	ATH9K_RX_FILTER_MYBEACON = 0x00000200,
-+	ATH9K_RX_FILTER_PSPOLL = 0x00004000,
- 	ATH9K_RX_FILTER_PHYRADAR = 0x00002000,
- };
- 
-diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
-index 28ad1d5..23b6f54 100644
---- a/drivers/net/wireless/ath9k/recv.c
-+++ b/drivers/net/wireless/ath9k/recv.c
-@@ -375,14 +375,15 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (sc->rx.rxfilter & FIF_CONTROL)
- 		rfilt |= ATH9K_RX_FILTER_CONTROL;
- 
--	if (sc->sc_ah->opmode == NL80211_IFTYPE_STATION ||
--	    sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC)
-+	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
-+	    !(sc->rx.rxfilter & FIF_BCN_PRBRESP_PROMISC))
-+		rfilt |= ATH9K_RX_FILTER_MYBEACON;
-+	else
- 		rfilt |= ATH9K_RX_FILTER_BEACON;
- 
--	/* If in HOSTAP mode, want to enable reception of PSPOLL frames
--	   & beacon frames */
-+	/* If in HOSTAP mode, want to enable reception of PSPOLL frames */
- 	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP)
--		rfilt |= (ATH9K_RX_FILTER_BEACON | ATH9K_RX_FILTER_PSPOLL);
-+		rfilt |= ATH9K_RX_FILTER_PSPOLL;
- 
- 	return rfilt;
- 
--- 
-1.5.5.1
+> ---
+> diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
+> index 57f6c12..00a57ed 100644
+> --- a/drivers/net/wireless/libertas/scan.c
+> +++ b/drivers/net/wireless/libertas/scan.c
+> @@ -692,7 +692,7 @@ static int lbs_process_bss(struct bss_descriptor *bss,
+>  					    bss->wpa_ie_len);
+>  			} else if (pos[1] >= MARVELL_MESH_IE_LENGTH &&
+>  				   pos[2] == 0x00 && pos[3] == 0x50 &&
+> -				   pos[4] == 0x43 && pos[4] == 0x04) {
+> +				   pos[4] == 0x43 && pos[5] == 0x04) {
+>  				lbs_deb_scan("got mesh IE\n");
+>  				bss->mesh = 1;
+>  			} else {
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
