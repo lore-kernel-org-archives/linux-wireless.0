@@ -1,154 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4329 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753451AbZBORGX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55799 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134AbZBCOax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 12:06:23 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 3/4] ath5k: move beacon processing to a tasklet
-Date: Sun, 15 Feb 2009 12:06:11 -0500
-Message-Id: <1234717572-10651-3-git-send-email-me@bobcopeland.com> (sfid-20090215_180626_872485_A857200D)
+	Tue, 3 Feb 2009 09:30:53 -0500
+Date: Tue, 3 Feb 2009 09:28:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 wireless issues
+Message-ID: <20090203142807.GC10968@tuxdriver.com> (sfid-20090203_153056_913444_67CA9A83)
+References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk> <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com> <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk> <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com> <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk> <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com> <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk> <49871083.5040309@lwfinger.net> <35040.82.152.223.193.1233590184.squirrel@www.phantomjinx.co.uk> <3ace41890902021548o39b5f02veacc0bd650e92c7@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3ace41890902021548o39b5f02veacc0bd650e92c7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We currently send beacons directly from the interrupt routine.  This
-can hold up interrupt processing in beaconing modes and makes the
-ISR somewhat more complex.  Move it to a tasklet like rx and tx.
+On Mon, Feb 02, 2009 at 11:48:55PM +0000, Hin-Tak Leung wrote:
 
-Changes-licensed-under: 3-Clause-BSD
+> About dates in wireless-testing log - I had an impression (I could be
+> wrong) that the dates are sometimes git-format-patch/posting dates and
+> not dates at which John commits to wireless-testing? (i.e. the dates
+> shown could be a lot earlier than time of commit, or time of commit is
+> not shown by the dates associated with a patch - I thought this makes
+> sense since the date of a patch should be the first time it appears in
+> the "system", not the first time it gets in-coporated in a particular
+> tree, and patches can go between trees and should *not* pick up date
+> change on the way).
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/base.c |   64 ++++++++++++++++++++-----------------
- drivers/net/wireless/ath5k/base.h |    1 +
- 2 files changed, 36 insertions(+), 29 deletions(-)
+Patch dates in 'git log' are based on their reported creation time or
+(for patches not from git) their posting time.  That's just the way
+git works (at least by default).
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 8e5620a..fa6a216 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -350,6 +350,7 @@ static int 	ath5k_beacon_setup(struct ath5k_softc *sc,
- static void 	ath5k_beacon_send(struct ath5k_softc *sc);
- static void 	ath5k_beacon_config(struct ath5k_softc *sc);
- static void	ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf);
-+static void	ath5k_tasklet_beacon(unsigned long data);
- 
- static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
- {
-@@ -789,6 +790,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
- 	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
- 	tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
-+	tasklet_init(&sc->beacontq, ath5k_tasklet_beacon, (unsigned long)sc);
- 	setup_timer(&sc->calib_tim, ath5k_calibrate, (unsigned long)sc);
- 
- 	ret = ath5k_eeprom_read_mac(ah, mac);
-@@ -1700,6 +1702,35 @@ ath5k_check_ibss_tsf(struct ath5k_softc *sc, struct sk_buff *skb,
- 	}
- }
- 
-+static void ath5k_tasklet_beacon(unsigned long data)
-+{
-+	struct ath5k_softc *sc = (struct ath5k_softc *) data;
-+
-+	/*
-+	 * Software beacon alert--time to send a beacon.
-+	 *
-+	 * In IBSS mode we use this interrupt just to
-+	 * keep track of the next TBTT (target beacon
-+	 * transmission time) in order to detect wether
-+	 * automatic TSF updates happened.
-+	 */
-+	if (sc->opmode == NL80211_IFTYPE_ADHOC) {
-+		/* XXX: only if VEOL suppported */
-+		u64 tsf = ath5k_hw_get_tsf64(sc->ah);
-+		sc->nexttbtt += sc->bintval;
-+		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
-+				"SWBA nexttbtt: %x hw_tu: %x "
-+				"TSF: %llx\n",
-+				sc->nexttbtt,
-+				TSF_TO_TU(tsf),
-+				(unsigned long long) tsf);
-+	} else {
-+		spin_lock(&sc->block);
-+		ath5k_beacon_send(sc);
-+		spin_unlock(&sc->block);
-+	}
-+}
-+
- static void
- ath5k_tasklet_rx(unsigned long data)
- {
-@@ -2039,9 +2070,8 @@ err_unmap:
-  * frame contents are done as needed and the slot time is
-  * also adjusted based on current state.
-  *
-- * this is usually called from interrupt context (ath5k_intr())
-- * but also from ath5k_beacon_config() in IBSS mode which in turn
-- * can be called from a tasklet and user context
-+ * This is called from software irq context (beacontq or restq
-+ * tasklets) or user context from ath5k_beacon_config.
-  */
- static void
- ath5k_beacon_send(struct ath5k_softc *sc)
-@@ -2391,6 +2421,7 @@ ath5k_stop_hw(struct ath5k_softc *sc)
- 	tasklet_kill(&sc->rxtq);
- 	tasklet_kill(&sc->txtq);
- 	tasklet_kill(&sc->restq);
-+	tasklet_kill(&sc->beacontq);
- 
- 	return ret;
- }
-@@ -2421,32 +2452,7 @@ ath5k_intr(int irq, void *dev_id)
- 			tasklet_schedule(&sc->restq);
- 		} else {
- 			if (status & AR5K_INT_SWBA) {
--				/*
--				* Software beacon alert--time to send a beacon.
--				* Handle beacon transmission directly; deferring
--				* this is too slow to meet timing constraints
--				* under load.
--				*
--				* In IBSS mode we use this interrupt just to
--				* keep track of the next TBTT (target beacon
--				* transmission time) in order to detect wether
--				* automatic TSF updates happened.
--				*/
--				if (sc->opmode == NL80211_IFTYPE_ADHOC) {
--					 /* XXX: only if VEOL suppported */
--					u64 tsf = ath5k_hw_get_tsf64(ah);
--					sc->nexttbtt += sc->bintval;
--					ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
--						  "SWBA nexttbtt: %x hw_tu: %x "
--						  "TSF: %llx\n",
--						  sc->nexttbtt,
--						  TSF_TO_TU(tsf),
--						  (unsigned long long) tsf);
--				} else {
--					spin_lock(&sc->block);
--					ath5k_beacon_send(sc);
--					spin_unlock(&sc->block);
--				}
-+				tasklet_schedule(&sc->beacontq);
- 			}
- 			if (status & AR5K_INT_RXEOL) {
- 				/*
-diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-index c0fb8b5..20e0d14 100644
---- a/drivers/net/wireless/ath5k/base.h
-+++ b/drivers/net/wireless/ath5k/base.h
-@@ -169,6 +169,7 @@ struct ath5k_softc {
- 	struct ath5k_led	tx_led;		/* tx led */
- 
- 	spinlock_t		block;		/* protects beacon */
-+	struct tasklet_struct	beacontq;	/* beacon intr tasklet */
- 	struct ath5k_buf	*bbuf;		/* beacon buffer */
- 	unsigned int		bhalq,		/* SW q for outgoing beacons */
- 				bmisscount,	/* missed beacon transmits */
+I generally tag wireless-testing updates on the master branch with
+a date-based tag.  You can see them like this:
+
+	git fetch --tags # just in case...
+	git tag | grep master
+
+Hth!
+
+John
 -- 
-1.6.0.6
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
