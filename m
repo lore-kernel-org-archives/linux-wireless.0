@@ -1,348 +1,372 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:58986 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754363AbZBUQxK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 11:53:10 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so243174eya.37
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Feb 2009 08:53:09 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH v2 2/2] orinoco: prevent accessing memory outside the firmware image
-Date: Sat, 21 Feb 2009 16:52:54 +0000
-Message-Id: <1235235174-8106-3-git-send-email-kilroyd@googlemail.com> (sfid-20090221_175319_092801_7555162C)
-In-Reply-To: <1235235174-8106-1-git-send-email-kilroyd@googlemail.com>
-References: <1235235174-8106-1-git-send-email-kilroyd@googlemail.com>
+Received: from mail.atheros.com ([12.36.123.2]:53748 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750895AbZBCFCg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2009 00:02:36 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 21:02:36 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [RFC 1/2] cfg80211/mac80211: add regulatory_hint_found_beacon() to make help world roaming
+Date: Mon, 2 Feb 2009 21:01:52 -0800
+Message-ID: <1233637313-16786-2-git-send-email-lrodriguez@atheros.com> (sfid-20090203_060240_876346_9CA7AB82)
+In-Reply-To: <1233637313-16786-1-git-send-email-lrodriguez@atheros.com>
+References: <1233637313-16786-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do this by indicating the end of the appropriate regions of memory.
+This adds some initial intelligence to help world roaming. When we
+are world roaming we have no idea what country we are in yet and
+because of this our regulatory domain will be pretty restrictive.
+Country information elements help and we have code to handle that already,
+however, not many APs enable country IEs. We can help the situation
+by adding checks on ours scans for beacons from APs, if we are world roaming
+and an AP beacon is found on a channel we will make the bet that we can
+also beacon and do active scanning -- when not on radar channels.
 
-Note that MAX_PDA_SIZE should only apply to the PDA block read from
-flash/EEPROM, and has been erronously applied to the pdr elements.
-Remove the macro, and use the actual PDA size passed down by the caller.
+Since this goes in as part of cfg80211 all devices present will benefit
+from any device's found beacons, this includes new devices connected or
+when you disconnect and reconnect the same device.
 
-We also fix up some of the types used, marking as much as possible
-const, and using void* for the end pointers.
-
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/orinoco/fw.c         |   12 ++--
- drivers/net/wireless/orinoco/hermes_dld.c |   99 +++++++++++++++--------------
- drivers/net/wireless/orinoco/hermes_dld.h |   12 +++-
- 3 files changed, 67 insertions(+), 56 deletions(-)
+ include/net/wireless.h |   20 +++++
+ net/mac80211/mlme.c    |   35 +++++++++
+ net/wireless/reg.c     |  181 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 235 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/fw.c b/drivers/net/wireless/orinoco/fw.c
-index 9f163fe..e7abb45 100644
---- a/drivers/net/wireless/orinoco/fw.c
-+++ b/drivers/net/wireless/orinoco/fw.c
-@@ -83,7 +83,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
- 	const struct firmware *fw_entry;
- 	const struct orinoco_fw_header *hdr;
- 	const unsigned char *first_block;
--	const unsigned char *end;
-+	const void *end;
- 	const char *firmware;
- 	const char *fw_err;
- 	struct net_device *dev = priv->ndev;
-@@ -152,7 +152,8 @@ orinoco_dl_firmware(struct orinoco_private *priv,
- 		       le16_to_cpu(hdr->headersize) +
- 		       le32_to_cpu(hdr->pdr_offset));
- 
--	err = hermes_apply_pda_with_defaults(hw, first_block, pda);
-+	err = hermes_apply_pda_with_defaults(hw, first_block, end, pda,
-+					     &pda[fw->pda_size / sizeof(*pda)]);
- 	printk(KERN_DEBUG "%s: Apply PDA returned %d\n", dev->name, err);
- 	if (err)
- 		goto abort;
-@@ -184,7 +185,7 @@ free:
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index a42c156..74b0352 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -69,6 +69,9 @@ enum ieee80211_channel_flags {
+  * @band: band this channel belongs to.
+  * @max_antenna_gain: maximum antenna gain in dBi
+  * @max_power: maximum transmission power (in dBm)
++ * @beacon_found: helper to regulatory code to indicate when a beacon
++ * 	has been found on this channel. Use regulatory_hint_found_beacon()
++ *	to enable this, this is is useful only on 5 GHz band.
+  * @orig_mag: internal use
+  * @orig_mpwr: internal use
   */
- static int
- symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
--		const unsigned char *image, const unsigned char *end,
-+		const unsigned char *image, const void *end,
- 		int secondary)
- {
- 	hermes_t *hw = &priv->hw;
-@@ -225,9 +226,10 @@ symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
+@@ -80,6 +83,7 @@ struct ieee80211_channel {
+ 	u32 flags;
+ 	int max_antenna_gain;
+ 	int max_power;
++	bool beacon_found;
+ 	u32 orig_flags;
+ 	int orig_mag, orig_mpwr;
+ };
+@@ -414,6 +418,22 @@ extern void regulatory_hint_11d(struct wiphy *wiphy,
+ 				u8 country_ie_len);
  
- 	/* Write the PDA to the adapter */
- 	if (secondary) {
--		size_t len = hermes_blocks_length(first_block);
-+		size_t len = hermes_blocks_length(first_block, end);
- 		ptr = first_block + len;
--		ret = hermes_apply_pda(hw, ptr, pda);
-+		ret = hermes_apply_pda(hw, ptr, end, pda,
-+				       &pda[fw->pda_size / sizeof(*pda)]);
- 		kfree(pda);
- 		if (ret)
- 			return ret;
-diff --git a/drivers/net/wireless/orinoco/hermes_dld.c b/drivers/net/wireless/orinoco/hermes_dld.c
-index 5260ceb..a9ba195 100644
---- a/drivers/net/wireless/orinoco/hermes_dld.c
-+++ b/drivers/net/wireless/orinoco/hermes_dld.c
-@@ -71,18 +71,6 @@
- #define BLOCK_END	0xFFFFFFFF	/* Last image block */
- #define TEXT_END	0x1A		/* End of text header */
- 
--/*
-- * PDA == Production Data Area
-- *
-- * In principle, the max. size of the PDA is is 4096 words. Currently,
-- * however, only about 500 bytes of this area are used.
-- *
-- * Some USB implementations can't handle sizes in excess of 1016. Note
-- * that PDA is not actually used in those USB environments, but may be
-- * retrieved by common code.
-- */
--#define MAX_PDA_SIZE	1000
--
- /* Limit the amout we try to download in a single shot.
-  * Size is in bytes.
-  */
-@@ -218,13 +206,14 @@ hermes_aux_control(hermes_t *hw, int enabled)
-  * Scan PDR for the record with the specified RECORD_ID.
-  * If it's not found, return NULL.
-  */
--static struct pdr *
--hermes_find_pdr(struct pdr *first_pdr, u32 record_id)
-+static const struct pdr *
-+hermes_find_pdr(const struct pdr *first_pdr, u32 record_id, const void *end)
- {
--	struct pdr *pdr = first_pdr;
--	void *end = (void *)first_pdr + MAX_PDA_SIZE;
-+	const struct pdr *pdr = first_pdr;
- 
--	while (((void *)pdr < end) &&
-+	end -= sizeof(struct pdr);
+ /**
++ * regulatory_hint_found_beacon - hints a beacon was found on a channel
++ * @wiphy: the wireless device where the beacon was found on
++ * @beacon_chan: the channel on which the beacon was found on
++ *
++ * This informs the wireless core that a beacon from an AP was found on
++ * the channel provided. This allows the wireless core to make educated
++ * guesses on regulatory to help with world roaming. This is only used for
++ * world roaming -- when we do not know our current location. This is
++ * only useful on channels 12, 13 and 14 on the 2 GHz band as all other
++ * channels are already enabled by the world regulatory domain; and on
++ * non-radar 5 GHz channels.
++ */
++extern int regulatory_hint_found_beacon(struct wiphy *wiphy,
++					struct ieee80211_channel *beacon_chan);
 +
-+	while (((void *) pdr <= end) &&
- 	       (pdr_id(pdr) != PDI_END)) {
- 		/*
- 		 * PDR area is currently not terminated by PDI_END.
-@@ -244,12 +233,15 @@ hermes_find_pdr(struct pdr *first_pdr, u32 record_id)
++/**
+  * wiphy_apply_custom_regulatory - apply a custom driver regulatory domain
+  * @wiphy: the wireless device we want to process the regulatory domain on
+  * @regd: the custom regulatory domain to use for this wiphy
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 9d51e27..45905dc 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2717,6 +2717,7 @@ void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
+ 	struct ieee80211_if_sta *ifsta;
++	struct ieee80211_bss *bss;
+ 
+ 	if (sdata && sdata->vif.type == NL80211_IFTYPE_ADHOC) {
+ 		ifsta = &sdata->u.sta;
+@@ -2731,6 +2732,40 @@ void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+ 		ieee80211_restart_sta_timer(sdata);
+ 	rcu_read_unlock();
++
++	/* Send off hints to the wireless core about beacons found */
++	spin_lock_bh(&local->bss_lock);
++
++	sdata = local->scan_sdata;
++
++	list_for_each_entry(bss, &local->bss_list, list) {
++		struct wiphy *wiphy;
++		struct ieee80211_supported_band *sband;
++		struct ieee80211_channel *chan;
++		unsigned int i;
++
++		if (!(bss->capability & WLAN_CAPABILITY_ESS))
++			continue;
++
++		wiphy = sdata->local->hw.wiphy;
++
++		if (WARN_ON(!wiphy->bands[bss->band]))
++			continue;
++
++		sband = wiphy->bands[bss->band];
++
++		for (i = 0; i < sband->n_channels; i++) {
++			chan = &sband->channels[i];
++
++			if (chan->center_freq != bss->freq)
++				continue;
++			if (regulatory_hint_found_beacon(wiphy, chan))
++				goto unlock_and_exit;
++		}
++	}
++
++unlock_and_exit:
++	spin_unlock_bh(&local->bss_lock);
  }
  
- /* Scan production data items for a particular entry */
--static struct pdi *
--hermes_find_pdi(struct pdi *first_pdi, u32 record_id)
-+static const struct pdi *
-+hermes_find_pdi(const struct pdi *first_pdi, u32 record_id, const void *end)
- {
--	struct pdi *pdi = first_pdi;
-+	const struct pdi *pdi = first_pdi;
+ void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2323644..656cad7 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -54,6 +54,18 @@ static u32 supported_bandwidths[] = {
+ 	MHZ_TO_KHZ(20),
+ };
+ 
++/*
++ * This list is used to help regulatory when devices are still
++ * world roaming.
++ */
++static LIST_HEAD(reg_beacon_list);
 +
-+	end -= sizeof(struct pdi);
- 
--	while (pdi_id(pdi) != PDI_END) {
-+	while (((void *) pdi <= end) &&
-+	       (pdi_id(pdi) != PDI_END)) {
- 
- 		/* If the record ID matches, we are done */
- 		if (pdi_id(pdi) == record_id)
-@@ -262,12 +254,13 @@ hermes_find_pdi(struct pdi *first_pdi, u32 record_id)
- 
- /* Process one Plug Data Item - find corresponding PDR and plug it */
- static int
--hermes_plug_pdi(hermes_t *hw, struct pdr *first_pdr, const struct pdi *pdi)
-+hermes_plug_pdi(hermes_t *hw, const struct pdr *first_pdr,
-+		const struct pdi *pdi, const void *pdr_end)
- {
--	struct pdr *pdr;
-+	const struct pdr *pdr;
- 
- 	/* Find the PDR corresponding to this PDI */
--	pdr = hermes_find_pdr(first_pdr, pdi_id(pdi));
-+	pdr = hermes_find_pdr(first_pdr, pdi_id(pdi), pdr_end);
- 
- 	/* No match is found, safe to ignore */
- 	if (!pdr)
-@@ -345,18 +338,22 @@ int hermes_read_pda(hermes_t *hw,
-  */
- int hermes_apply_pda(hermes_t *hw,
- 		     const char *first_pdr,
--		     const __le16 *pda)
-+		     const void *pdr_end,
-+		     const __le16 *pda,
-+		     const void *pda_end)
- {
- 	int ret;
- 	const struct pdi *pdi;
--	struct pdr *pdr;
-+	const struct pdr *pdr;
- 
--	pdr = (struct pdr *) first_pdr;
-+	pdr = (const struct pdr *) first_pdr;
-+	pda_end -= sizeof(struct pdi);
- 
- 	/* Go through every PDI and plug them into the adapter */
- 	pdi = (const struct pdi *) (pda + 2);
--	while (pdi_id(pdi) != PDI_END) {
--		ret = hermes_plug_pdi(hw, pdr, pdi);
-+	while (((void *) pdi <= pda_end) &&
-+	       (pdi_id(pdi) != PDI_END)) {
-+		ret = hermes_plug_pdi(hw, pdr, pdi, pdr_end);
- 		if (ret)
- 			return ret;
- 
-@@ -370,15 +367,18 @@ int hermes_apply_pda(hermes_t *hw,
-  * including the header data.
-  */
- size_t
--hermes_blocks_length(const char *first_block)
-+hermes_blocks_length(const char *first_block, const void *end)
- {
- 	const struct dblock *blk = (const struct dblock *) first_block;
- 	int total_len = 0;
- 	int len;
- 
-+	end -= sizeof(*blk);
++/* Used to help world roaming, used on found beacons */
++struct reg_beacon {
++	struct list_head list;
++	struct ieee80211_channel chan;
++};
 +
- 	/* Skip all blocks to locate Plug Data References
- 	 * (Spectrum CS) */
--	while (dblock_addr(blk) != BLOCK_END) {
-+	while (((void *) blk <= end) &&
-+	       (dblock_addr(blk) != BLOCK_END)) {
- 		len = dblock_len(blk);
- 		total_len += sizeof(*blk) + len;
- 		blk = (struct dblock *) &blk->data[len];
-@@ -476,7 +476,7 @@ int hermesi_program_end(hermes_t *hw)
+ /* Central wireless core regulatory domains, we only need two,
+  * the current one and a world regulatory domain in case we have no
+  * information to give us an alpha2 */
+@@ -758,6 +770,141 @@ static u32 map_regdom_flags(u32 rd_flags)
+ 	return channel_flags;
  }
  
- /* Program the data blocks */
--int hermes_program(hermes_t *hw, const char *first_block, const char *end)
-+int hermes_program(hermes_t *hw, const char *first_block, const void *end)
- {
- 	const struct dblock *blk;
- 	u32 blkaddr;
-@@ -488,14 +488,14 @@ int hermes_program(hermes_t *hw, const char *first_block, const char *end)
- 
- 	blk = (const struct dblock *) first_block;
- 
--	if ((const char *) blk > (end - sizeof(*blk)))
-+	if ((void *) blk > (end - sizeof(*blk)))
- 		return -EIO;
- 
- 	blkaddr = dblock_addr(blk);
- 	blklen = dblock_len(blk);
- 
- 	while ((blkaddr != BLOCK_END) &&
--	       (((const char *) blk + blklen) <= end)) {
-+	       (((void *) blk + blklen) <= end)) {
- 		printk(KERN_DEBUG PFX
- 		       "Programming block of length %d to address 0x%08x\n",
- 		       blklen, blkaddr);
-@@ -527,7 +527,7 @@ int hermes_program(hermes_t *hw, const char *first_block, const char *end)
- #endif
- 		blk = (const struct dblock *) &blk->data[blklen];
- 
--		if ((const char *) blk > (end - sizeof(*blk)))
-+		if ((void *) blk > (end - sizeof(*blk)))
- 			return -EIO;
- 
- 		blkaddr = dblock_addr(blk);
-@@ -545,9 +545,9 @@ static const struct {							\
- 	__le16 id;							\
- 	u8 val[length];							\
- } __attribute__ ((packed)) default_pdr_data_##pid = {			\
--	cpu_to_le16((sizeof(default_pdr_data_##pid)/		\
-+	cpu_to_le16((sizeof(default_pdr_data_##pid)/			\
- 				sizeof(__le16)) - 1),			\
--	cpu_to_le16(pid),					\
-+	cpu_to_le16(pid),						\
- 	data								\
++static void handle_reg_beacon(struct wiphy *wiphy,
++			       unsigned int chan_idx,
++			       struct reg_beacon *reg_beacon)
++{
++#ifdef CONFIG_CFG80211_REG_DEBUG
++#define REG_DEBUG_BEACON_FLAG(desc) \
++	printk(KERN_DEBUG "cfg80211: Enabling " desc " on " \
++		"frequency: %d MHz (Ch %d) on %s\n", \
++		reg_beacon->chan.center_freq, \
++		ieee80211_frequency_to_channel(reg_beacon->chan.center_freq), \
++		wiphy_name(wiphy));
++#else
++#define REG_DEBUG_BEACON_FLAG(desc) do {} while (0)
++#endif
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *chan;
++
++	sband = wiphy->bands[reg_beacon->chan.band];
++	chan = &sband->channels[chan_idx];
++
++	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
++		return;
++
++	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
++		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		REG_DEBUG_BEACON_FLAG("active scanning");
++	}
++
++	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
++		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
++		REG_DEBUG_BEACON_FLAG("beaconing");
++	}
++
++	chan->beacon_found = true;
++#undef REG_DEBUG_BEACON_FLAG
++}
++
++/*
++ * Called when a scan on a wiphy finds a beacon on
++ * new channel
++ */
++static void wiphy_update_new_beacon(struct wiphy *wiphy,
++				     struct reg_beacon *reg_beacon)
++{
++	unsigned int i;
++	struct ieee80211_supported_band *sband;
++
++	if (!wiphy->bands[reg_beacon->chan.band])
++		return;
++
++	sband = wiphy->bands[reg_beacon->chan.band];
++
++	for (i = 0; i < sband->n_channels; i++)
++		handle_reg_beacon(wiphy, i, reg_beacon);
++}
++
++/*
++ * Called upon reg changes or a new wiphy is added
++ */
++static void wiphy_update_beacon_reg(struct wiphy *wiphy)
++{
++	unsigned int i;
++	struct ieee80211_supported_band *sband;
++	struct reg_beacon *reg_beacon;
++
++	if (list_empty(&reg_beacon_list))
++		return;
++
++	list_for_each_entry(reg_beacon, &reg_beacon_list, list) {
++		if (!wiphy->bands[reg_beacon->chan.band])
++			continue;
++		sband = wiphy->bands[reg_beacon->chan.band];
++		for (i = 0; i < sband->n_channels; i++)
++			handle_reg_beacon(wiphy, i, reg_beacon);
++	}
++}
++
++static bool freq_is_chan_12_13_14(u16 freq)
++{
++	if (freq == ieee80211_channel_to_frequency(12) ||
++	    freq == ieee80211_channel_to_frequency(13) ||
++	    freq == ieee80211_channel_to_frequency(14))
++		return true;
++	return false;
++}
++
++int regulatory_hint_found_beacon(struct wiphy *wiphy,
++				 struct ieee80211_channel *beacon_chan)
++{
++	struct cfg80211_registered_device *drv;
++	struct reg_beacon *reg_beacon, *beacon;
++
++	if (beacon_chan->beacon_found ||
++	    (beacon_chan->flags & IEEE80211_CHAN_RADAR) ||
++	    (beacon_chan->band == IEEE80211_BAND_2GHZ &&
++	     !freq_is_chan_12_13_14(beacon_chan->center_freq)))
++		return 0;
++
++	reg_beacon = kzalloc(sizeof(struct reg_beacon), GFP_KERNEL);
++	if (!reg_beacon)
++		return -ENOMEM;
++
++#ifdef CONFIG_CFG80211_REG_DEBUG
++	printk(KERN_DEBUG "cfg80211: Found new beacon on "
++		"frequency: %d MHz (Ch %d) on %s\n",
++		beacon_chan->center_freq,
++		ieee80211_frequency_to_channel(beacon_chan->center_freq),
++		wiphy_name(wiphy));
++#endif
++	memcpy(&reg_beacon->chan, beacon_chan,
++		sizeof(struct ieee80211_channel));
++
++	mutex_lock(&cfg80211_drv_mutex);
++
++	list_for_each_entry(drv, &cfg80211_drv_list, list)
++		wiphy_update_new_beacon(&drv->wiphy, reg_beacon);
++
++	/*
++	 * If this happens it means our beacon_found flag isn't
++	 * working as intended.
++	 */
++	list_for_each_entry(beacon, &reg_beacon_list, list) {
++		if (WARN_ON(beacon->chan.center_freq ==
++		    reg_beacon->chan.center_freq))
++			goto unlock;
++	}
++
++	list_add_tail(&reg_beacon->list, &reg_beacon_list);
++
++unlock:
++	mutex_unlock(&cfg80211_drv_mutex);
++	return 0;
++}
++EXPORT_SYMBOL(regulatory_hint_found_beacon);
++
+ static int freq_reg_info_regd(struct wiphy *wiphy,
+ 			      u32 center_freq,
+ 			      u32 *bandwidth,
+@@ -938,16 +1085,38 @@ static void update_all_wiphy_regulatory(enum reg_set_by setby)
+ 		wiphy_update_regulatory(&drv->wiphy, setby);
  }
  
-@@ -616,17 +616,20 @@ DEFINE_DEFAULT_PDR(0x0161, 256,
-  */
- int hermes_apply_pda_with_defaults(hermes_t *hw,
- 				   const char *first_pdr,
--				   const __le16 *pda)
-+				   const void *pdr_end,
-+				   const __le16 *pda,
-+				   const void *pda_end)
- {
- 	const struct pdr *pdr = (const struct pdr *) first_pdr;
--	struct pdi *first_pdi = (struct pdi *) &pda[2];
--	struct pdi *pdi;
--	struct pdi *default_pdi = NULL;
--	struct pdi *outdoor_pdi;
--	void *end = (void *)first_pdr + MAX_PDA_SIZE;
-+	const struct pdi *first_pdi = (const struct pdi *) &pda[2];
-+	const struct pdi *pdi;
-+	const struct pdi *default_pdi = NULL;
-+	const struct pdi *outdoor_pdi;
- 	int record_id;
- 
--	while (((void *)pdr < end) &&
-+	pdr_end -= sizeof(struct pdr);
++static bool reg_is_world_roaming(struct wiphy *wiphy)
++{
++	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
++	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
++		return true;
++	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
++	    wiphy->custom_regulatory)
++		return true;
++	return false;
++}
 +
-+	while (((void *) pdr <= pdr_end) &&
- 	       (pdr_id(pdr) != PDI_END)) {
- 		/*
- 		 * For spectrum_cs firmwares,
-@@ -638,7 +641,7 @@ int hermes_apply_pda_with_defaults(hermes_t *hw,
- 			break;
- 		record_id = pdr_id(pdr);
++/* Reap the advantages of previously found beacons */
++static void reg_process_beacons(struct wiphy *wiphy)
++{
++	if (!reg_is_world_roaming(wiphy))
++		return;
++	wiphy_update_beacon_reg(wiphy);
++}
++
+ void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
+ {
+ 	enum ieee80211_band band;
  
--		pdi = hermes_find_pdi(first_pdi, record_id);
-+		pdi = hermes_find_pdi(first_pdi, record_id, pda_end);
- 		if (pdi)
- 			printk(KERN_DEBUG PFX "Found record 0x%04x at %p\n",
- 			       record_id, pdi);
-@@ -646,7 +649,8 @@ int hermes_apply_pda_with_defaults(hermes_t *hw,
- 		switch (record_id) {
- 		case 0x110: /* Modem REFDAC values */
- 		case 0x120: /* Modem VGDAC values */
--			outdoor_pdi = hermes_find_pdi(first_pdi, record_id + 1);
-+			outdoor_pdi = hermes_find_pdi(first_pdi, record_id + 1,
-+						      pda_end);
- 			default_pdi = NULL;
- 			if (outdoor_pdi) {
- 				pdi = outdoor_pdi;
-@@ -687,7 +691,8 @@ int hermes_apply_pda_with_defaults(hermes_t *hw,
+ 	if (ignore_reg_update(wiphy, setby))
+-		return;
++		goto out;
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		if (wiphy->bands[band])
+ 			handle_band(wiphy, band);
+ 	}
++
++out:
++	reg_process_beacons(wiphy);
+ 	if (wiphy->reg_notifier)
+ 		wiphy->reg_notifier(wiphy, last_request);
+ }
+@@ -1633,6 +1802,8 @@ int regulatory_init(void)
  
- 		if (pdi) {
- 			/* Lengths of the data in PDI and PDR must match */
--			if (pdi_len(pdi) == pdr_len(pdr)) {
-+			if ((pdi_len(pdi) == pdr_len(pdr)) &&
-+			    ((void *) pdi->data + pdi_len(pdi) < pda_end)) {
- 				/* do the actual plugging */
- 				hermes_aux_setaddr(hw, pdr_addr(pdr));
- 				hermes_write_bytes(hw, HERMES_AUXDATA,
-diff --git a/drivers/net/wireless/orinoco/hermes_dld.h b/drivers/net/wireless/orinoco/hermes_dld.h
-index 6fcb262..583a5bc 100644
---- a/drivers/net/wireless/orinoco/hermes_dld.h
-+++ b/drivers/net/wireless/orinoco/hermes_dld.h
-@@ -29,7 +29,7 @@
+ void regulatory_exit(void)
+ {
++	struct reg_beacon *reg_beacon, *reg_tmp;
++
+ 	mutex_lock(&cfg80211_drv_mutex);
  
- int hermesi_program_init(hermes_t *hw, u32 offset);
- int hermesi_program_end(hermes_t *hw);
--int hermes_program(hermes_t *hw, const char *first_block, const char *end);
-+int hermes_program(hermes_t *hw, const char *first_block, const void *end);
+ 	reset_regdomains();
+@@ -1644,5 +1815,13 @@ void regulatory_exit(void)
  
- int hermes_read_pda(hermes_t *hw,
- 		    __le16 *pda,
-@@ -38,11 +38,15 @@ int hermes_read_pda(hermes_t *hw,
- 		    int use_eeprom);
- int hermes_apply_pda(hermes_t *hw,
- 		     const char *first_pdr,
--		     const __le16 *pda);
-+		     const void *pdr_end,
-+		     const __le16 *pda,
-+		     const void *pda_end);
- int hermes_apply_pda_with_defaults(hermes_t *hw,
- 				   const char *first_pdr,
--				   const __le16 *pda);
-+				   const void *pdr_end,
-+				   const __le16 *pda,
-+				   const void *pda_end);
+ 	platform_device_unregister(reg_pdev);
  
--size_t hermes_blocks_length(const char *first_block);
-+size_t hermes_blocks_length(const char *first_block, const void *end);
- 
- #endif /* _HERMES_DLD_H */
++	if (!list_empty(&reg_beacon_list)) {
++		list_for_each_entry_safe(reg_beacon, reg_tmp,
++		  &reg_beacon_list, list) {
++			list_del(&reg_beacon->list);
++			kfree(reg_beacon);
++		}
++	}
++
+ 	mutex_unlock(&cfg80211_drv_mutex);
+ }
 -- 
-1.6.0.6
+1.6.1.2.253.ga34a
 
