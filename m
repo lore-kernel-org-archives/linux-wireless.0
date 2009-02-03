@@ -1,76 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50716 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751416AbZBXCoZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 21:44:25 -0500
-Subject: Re: [RFC PATCH v1 2/3] mac80211: track beacons separately from the
-	rx path activity
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090223163731.20939.62567.stgit@tikku>
-References: <20090223163626.20939.4879.stgit@tikku>
-	 <20090223163731.20939.62567.stgit@tikku>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kFwfKlx8MnWRyA8bwxQM"
-Date: Mon, 23 Feb 2009 18:15:58 -0800
-Message-Id: <1235441758.4455.64.camel@johannes.local> (sfid-20090224_034427_431147_EB493CF3)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:53682 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751755AbZBCTI4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2009 14:08:56 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] b43: (b2062) Fix crystal frequency calculations
+Date: Tue, 3 Feb 2009 20:06:14 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200902032006.14373.mb@bu3sch.de> (sfid-20090203_200906_488897_2963E0F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This fixes the crystal frequency calculations in the b2062 init code.
 
---=-kFwfKlx8MnWRyA8bwxQM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-On Mon, 2009-02-23 at 18:37 +0200, Kalle Valo wrote:
+---
 
-> @@ -1356,6 +1359,8 @@ static void ieee80211_rx_mgmt_assoc_resp(struct iee=
-e80211_sub_if_data *sdata,
->  	bss_conf->assoc_capability =3D capab_info;
->  	ieee80211_set_associated(sdata, changed);
-> =20
-> +	ifmgd->last_beacon =3D jiffies;
-> +
+This patch depends on the SSB PMU code.
 
-That looks a little misplaced; I think it's actually intended anyway?
-Maybe add a comment?
 
-> -		sta->last_rx =3D jiffies;
-> +		if (rx->sdata->vif.type =3D=3D NL80211_IFTYPE_STATION &&
-> +		    ieee80211_is_beacon(hdr->frame_control)) {
-> +			rx->sdata->u.mgd.last_beacon =3D jiffies;
-> +		} else
-> +			sta->last_rx =3D jiffies;
+Index: wireless-testing/drivers/net/wireless/b43/phy_lp.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_lp.c	2009-02-03 19:43:31.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/phy_lp.c	2009-02-03 20:04:26.000000000 +0100
+@@ -160,6 +160,7 @@ struct b2062_freqdata {
+ /* Initialize the 2062 radio. */
+ static void lpphy_2062_init(struct b43_wldev *dev)
+ {
++	struct ssb_bus *bus = dev->dev->bus;
+ 	u32 crystalfreq, pdiv, tmp, ref;
+ 	unsigned int i;
+ 	const struct b2062_freqdata *fd = NULL;
+@@ -193,7 +194,11 @@ static void lpphy_2062_init(struct b43_w
+ 	else
+ 		b43_radio_mask(dev, B2062_N_TSSI_CTL0, ~0x1);
+ 
+-	crystalfreq = 0;//FIXME
++	/* Get the crystal freq, in Hz. */
++	crystalfreq = bus->chipco.pmu.crystalfreq * 1000;
++
++	B43_WARN_ON(!(bus->chipco.capabilities & SSB_CHIPCO_CAP_PMU));
++	B43_WARN_ON(crystalfreq == 0);
+ 
+ 	if (crystalfreq >= 30000000) {
+ 		pdiv = 1;
+@@ -219,13 +224,15 @@ static void lpphy_2062_init(struct b43_w
+ 			break;
+ 		}
+ 	}
+-	if (B43_WARN_ON(!fd))
+-		return;
++	if (!fd)
++		fd = &freqdata_tab[ARRAY_SIZE(freqdata_tab) - 1];
++	b43dbg(dev->wl, "b2062: Using crystal tab entry %u kHz.\n",
++	       fd->freq); /* FIXME: Keep this printk until the code is fully debugged. */
+ 
+ 	b43_radio_write(dev, B2062_S_RFPLL_CTL8,
+ 			((u16)(fd->data[1]) << 4) | fd->data[0]);
+ 	b43_radio_write(dev, B2062_S_RFPLL_CTL9,
+-			((u16)(fd->data[3]) << 4) | fd->data[2]);//FIXME specs are different
++			((u16)(fd->data[3]) << 4) | fd->data[2]);
+ 	b43_radio_write(dev, B2062_S_RFPLL_CTL10, fd->data[4]);
+ 	b43_radio_write(dev, B2062_S_RFPLL_CTL11, fd->data[5]);
+ }
 
-would it be more appropriate to do that in the function that processes
-the beacon in mlme.c? Or does that not work because of the workqueue and
-timing?
-
-johannes
-
---=-kFwfKlx8MnWRyA8bwxQM
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJo1hcAAoJEKVg1VMiehFYk7cP/RqEmrSqH+SKbBGBymmjHSST
-N6cyhLqGTWJdsdUGhLqHc7AJWkVGeZMGds2RPaeWGK4JlwdM2AX9rhyrDRgsg3na
-+zE8KSCjfVkf+Rmt1KTsaIQsdJUgqhm3VKOODStIhXH2Lka1K3yeMKa3C80MKWQU
-4VUo86tER5HSd7nELZhIie6kzW2e/f+90KzM8SwcliCxBeZM07DJEdKVUGpcCGVd
-ZEfkAnPuXopALtnWryfoSf94PyUzkW2y+g3myERVNMccYSSWef0zTywKszHqWcjS
-gTYWnRNVZfYGWR8TDkmJGTfWC4F6nB1dX4WzpdeQeGtRSTxUmzjJNb1eN+I/z9Cc
-75PDmTGYXcZRJ8IKcZllBBFvz7eK8b0n1C+LVyUFFlLI0qHlGFv0IGvhkyyBF3U6
-ar2LEpPhoRl6Nun72dv1tdAJXOfMde2rxY4x/LA+ACcAxb7Puinm3fUjiWHVcgKd
-NU2myU86SnAm0/1YY77ksaVu5t/y3mPatKI2bnKZTHCGKQp+8vhv4U2f151ktDzq
-ujq5Hlm6SSTg5AcUB/m+766cLfaW9ogVSYup7cTfvnZ+rskNrPEBvEJH45RicKQf
-Bj4yekUyCzUDFVZZ+rHpDu3oUOo3+XTCyIoPL6Y10QcwU6nPI25cDLZNoxPylGeE
-C4cAZWJGK7fr0krB84sx
-=pVGl
------END PGP SIGNATURE-----
-
---=-kFwfKlx8MnWRyA8bwxQM--
-
+-- 
+Greetings, Michael.
