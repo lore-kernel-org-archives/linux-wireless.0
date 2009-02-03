@@ -1,61 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54936 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751109AbZBJPWx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 10:22:53 -0500
-Subject: Re: wl12xx: driver for TI wl1251 chipset
-From: Dan Williams <dcbw@redhat.com>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org, luciano.coelho@nokia.com
-In-Reply-To: <87iqnishuj.fsf@nokia.com>
-References: <87iqnishuj.fsf@nokia.com>
-Content-Type: text/plain
-Date: Tue, 10 Feb 2009 10:21:19 -0500
-Message-Id: <1234279279.3119.12.camel@localhost> (sfid-20090210_162257_196997_294F76FC)
-Mime-Version: 1.0
+Received: from vilya.visn.co.uk ([193.254.210.161]:54843 "EHLO
+	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752207AbZBCQja (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2009 11:39:30 -0500
+Message-ID: <44120.62.172.74.16.1233679156.squirrel@www.phantomjinx.co.uk> (sfid-20090203_173932_845333_605272E3)
+In-Reply-To: <20090203142807.GC10968@tuxdriver.com>
+References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
+    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>
+    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>
+    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>
+    <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk>
+    <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>
+    <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk>
+    <49871083.5040309@lwfinger.net>
+    <35040.82.152.223.193.1233590184.squirrel@www.phantomjinx.co.uk>
+    <3ace41890902021548o39b5f02veacc0bd650e92c7@mail.gmail.com>
+    <20090203142807.GC10968@tuxdriver.com>
+Date: Tue, 3 Feb 2009 16:39:16 -0000 (UTC)
+Subject: Re: rtl8187 wireless issues
+From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-02-10 at 12:32 +0200, Kalle Valo wrote:
-> Hello all,
-> 
-> in Nokia we have been working on a mac80211 driver for TI wl1251
-> chipset. We named it as wl12xx, and in the future we are planning to
-> add wl1271 support to the driver as well.
-> 
-> wl1251 is a chipset for embedded devices, supporting both SDIO and SPI
-> busses. Currently the driver supports only SPI. Adding support 1253
-> (the 5 GHz version) should be relatively easy. More information here:
-> 
-> http://focus.ti.com/general/docs/wtbu/wtbuproductcontent.tsp?contentId=4711&navigationId=12494&templateId=6123
-> 
-> Because the patch is over 200 KB, the driver is temporarily available
-> from my server:
-> 
-> http://www.valot.fi/kalle/tmp/wl12xx/wl12xx-2.6.28-1.patch
-> 
-> The patch is against linux-2.6.28-omap1 tag available here:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/tmlind/linux-omap-2.6.git;a=commit;h=0ec95b96fd77036a13398c66901e11cd301190d0
-> 
-> Currently known issues:
-> 
-> o short slot and preamble support missing
-> o rts/cts and cts-to-self missing
-> o no proper bitrate control support
-> o using deprecated omap_get_config(), need to convert to use platform_data
-> o firmware wakeup not working, deepest sleep state in firmware not yet
->   enabled
-> 
-> Also the driver has a netlink interface which is used for running
-> production line tests and pushing the calibration data from user
-> space.
 
-When is the calibration data required, and is it likely to change at
-runtime?  What I really mean is, if the calibration data isn't required
-to change while the interface is up, maybe use request_firmware() and
-load it at device open time or something?
+> On Mon, Feb 02, 2009 at 11:48:55PM +0000, Hin-Tak Leung wrote:
+>
+>> About dates in wireless-testing log - I had an impression (I could b=
+e
+>> wrong) that the dates are sometimes git-format-patch/posting dates a=
+nd
+>> not dates at which John commits to wireless-testing? (i.e. the dates
+>> shown could be a lot earlier than time of commit, or time of commit =
+is
+>> not shown by the dates associated with a patch - I thought this make=
+s
+>> sense since the date of a patch should be the first time it appears =
+in
+>> the "system", not the first time it gets in-coporated in a particula=
+r
+>> tree, and patches can go between trees and should *not* pick up date
+>> change on the way).
+>
+> Patch dates in 'git log' are based on their reported creation time or
+> (for patches not from git) their posting time.  That's just the way
+> git works (at least by default).
+>
+> I generally tag wireless-testing updates on the master branch with
+> a date-based tag.  You can see them like this:
+>
+> 	git fetch --tags # just in case...
+> 	git tag | grep master
+>
+> Hth!
 
-Dan
+Apologies. there might be some confusion. When I mentioned the date of =
+the
+30/01/2009, I was referring to the snapshot date of the tarball
+downloaded, ie. compat-wireless-$(date -I).tar.bz2.
+
+I haven't used wireless-testing's git repo thus far. If it will help wi=
+th
+the rate issue I have then will definitely install that version instead=
+=2E
+
+Cheers
+
+PGR
 
 
+
+--=20
+Laws are partly formed for the sake of good men, in order to instruct t=
+hem
+how they may live on friendly terms with one another, and partly for th=
+e
+sake of those who refuse to be instructed, whose spirit cannot be subdu=
+ed,
+or softened, or hindered from plunging into evil. [The Laws, Plato]
+
+You fiend! Never have I encountered such corrupt and foul-minded
+perversity=85 Have you ever considered a career in the church?
+Bishop of Bath and Wells (Blackadder II)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
