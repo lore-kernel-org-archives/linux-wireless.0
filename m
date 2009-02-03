@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f167.google.com ([209.85.220.167]:51805 "EHLO
-	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbZBXSkg (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.191]:31977 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530AbZBCQP6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 13:40:36 -0500
-Received: by fxm11 with SMTP id 11so3038347fxm.13
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 10:40:33 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v1 1/3] mac80211: decrease execution of the associated timer
-References: <20090223163626.20939.4879.stgit@tikku>
-	<20090223163724.20939.22893.stgit@tikku>
-	<1235441633.4455.61.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 24 Feb 2009 20:40:12 +0200
-In-Reply-To: <1235441633.4455.61.camel@johannes.local> (Johannes Berg's message of "Mon\, 23 Feb 2009 18\:13\:53 -0800")
-Message-ID: <87fxi3y8z7.fsf@litku.valot.fi> (sfid-20090224_194039_386996_4AB42EE4)
+	Tue, 3 Feb 2009 11:15:58 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so296275nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 08:15:56 -0800 (PST)
+Message-ID: <49886DBD.9030302@gmail.com> (sfid-20090203_171602_631017_79ADD97F)
+Date: Tue, 03 Feb 2009 17:15:57 +0100
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: johannes@sipsolutions.net, dcbw@redhat.com
+CC: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] wireless: pos[4] tested twice, 2nd should be pos[5]
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Is this what it should be? please review.
+----------------->8----------------------8<------------------
 
->> --- a/net/mac80211/ieee80211_i.h
->> +++ b/net/mac80211/ieee80211_i.h
->> @@ -1078,6 +1078,7 @@ void ieee80211_dynamic_ps_timer(unsigned long data);
->>  void ieee80211_send_nullfunc(struct ieee80211_local *local,
->>  			     struct ieee80211_sub_if_data *sdata,
->>  			     int powersave);
->> +void ieee80211_rx_trigger(struct ieee80211_sub_if_data *sdata);
->
-> I think that could have a better name maybe? _sta_rx_notify?
+pos[4] can't be both 0x43 and 0x04, 2nd should be pos[5]
 
-That's a lot better name, I'll rename it.
-
->> +void ieee80211_rx_trigger(struct ieee80211_sub_if_data *sdata)
->> +{
->> +	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
->> +		mod_timer(&sdata->u.mgd.timer,
->> +			  jiffies + IEEE80211_MONITORING_INTERVAL);
->> +	}
->
-> Should we have the sta check outside the function? Seems a little odd to
-> have a check in a file that only contains STATION mode code.
-
-Actually I first had the check in rx.c, then moved it to mlme.c just
-to have less changes in rx.c. But you have a point, I'll move the
-check back to rx.c.
-
-> Other than that, looks good to me. I'd have thought this would be more
-> complicated :)
-
-Luckily it wasn't, I prefer having simple patches :)
-
--- 
-Kalle Valo
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
+index 57f6c12..00a57ed 100644
+--- a/drivers/net/wireless/libertas/scan.c
++++ b/drivers/net/wireless/libertas/scan.c
+@@ -692,7 +692,7 @@ static int lbs_process_bss(struct bss_descriptor *bss,
+ 					    bss->wpa_ie_len);
+ 			} else if (pos[1] >= MARVELL_MESH_IE_LENGTH &&
+ 				   pos[2] == 0x00 && pos[3] == 0x50 &&
+-				   pos[4] == 0x43 && pos[4] == 0x04) {
++				   pos[4] == 0x43 && pos[5] == 0x04) {
+ 				lbs_deb_scan("got mesh IE\n");
+ 				bss->mesh = 1;
+ 			} else {
