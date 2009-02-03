@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:40771 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753144AbZBZOiN (ORCPT
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:58329 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986AbZBCOI6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 09:38:13 -0500
-Date: Thu, 26 Feb 2009 16:37:58 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] nl80211: Authentication and association events
-Message-ID: <20090226143758.GB24380@jm.kir.nu> (sfid-20090226_153817_996961_252D3008)
-References: <20090218200210.GA13955@jm.kir.nu> <1234988740.4023.51.camel@johannes.local> <20090220192557.GA17914@jm.kir.nu> <1235440527.4455.45.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1235440527.4455.45.camel@johannes.local>
+	Tue, 3 Feb 2009 09:08:58 -0500
+Received: by fxm13 with SMTP id 13so2227202fxm.13
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 06:08:55 -0800 (PST)
+Subject: Re: [ath5k-devel] [PATCH 1/5] ath5k: PHY code cleanup
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Nick Kossifidis <mick@madwifi-project.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com
+In-Reply-To: <20090131022310.GA3342@makis>
+References: <20090131022310.GA3342@makis>
+Content-Type: text/plain
+Date: Tue, 03 Feb 2009 16:08:50 +0200
+Message-Id: <1233670130.16539.5.camel@maxim-laptop> (sfid-20090203_150907_144808_9F02F38F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 23, 2009 at 05:55:27PM -0800, Johannes Berg wrote:
-> On Fri, 2009-02-20 at 21:25 +0200, Jouni Malinen wrote:
-> > +enum nl80211_auth_type {
-> > +	NL80211_AUTHTYPE_UNSPECIFIED,
-> 
-> This seems a little odd, is that really useful? And if it is, what do we
-> do? Try all?
+I just tried your 5 patches, as they could fix hangs in the device,
+that I experience occasionally, when resuming my aspire one from ram.
 
-This is not supposed to be used and was there only to follow the
-do-not-use-zero-in-nl80211 policy.. However, it looks like the example I
-used (nl80211_iftype) actually uses the unspecified value or well at
-least it is documented as something that could potentially be used. I
-can just remove this and the _after_last, _max from here since they are
-not really supposed to be used anywhere..
+I applied the patches, and I got very unstable system, that tended to
+hang even before X.
 
-> Should we have some more code in cfg80211 to keep track of the BSSes
-> we're authenticated/the one we're associated to, and have some commands
-> to query those from userspace?
+When it didn't hang, I tried suspend to ram cycle, but it hanged then.
 
-It would probably be useful to add this eventually. Whatever is
-requesting the association has most of the information, but it would be
-could to allow other applications have access to it and also remove the
-need to store that in the control application.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Best regards,
+	Maxim Levitsky
+
