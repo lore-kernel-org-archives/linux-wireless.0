@@ -1,35 +1,411 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38447 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751420AbZBMNbG (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52354 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472AbZBCKLw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 08:31:06 -0500
-Date: Fri, 13 Feb 2009 08:17:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: orinoco: fix broken make allyesconfig due to multiple defs of
-	michael_mic
-Message-ID: <20090213131725.GA3792@tuxdriver.com> (sfid-20090213_143110_905857_A62B6AF4)
-References: <1234509680.1327.30.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1234509680.1327.30.camel@johannes.local>
+	Tue, 3 Feb 2009 05:11:52 -0500
+Subject: Re: [RFC 1/2] cfg80211/mac80211: add
+	regulatory_hint_found_beacon() to make help world roaming
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1233637313-16786-2-git-send-email-lrodriguez@atheros.com>
+References: <1233637313-16786-1-git-send-email-lrodriguez@atheros.com>
+	 <1233637313-16786-2-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RgcS581mykKLdlkEIrcn"
+Date: Tue, 03 Feb 2009 11:11:45 +0100
+Message-Id: <1233655905.5460.2.camel@johannes.local> (sfid-20090203_111156_233443_84944E76)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 13, 2009 at 08:21:20AM +0100, Johannes Berg wrote:
-> I don't think the fix is correct:
-> 
-> -       priv->tx_tfm_mic = crypto_alloc_hash("michael_mic", 0, 0);
-> +       priv->tx_tfm_mic = crypto_alloc_hash("orinoco_mic", 0, 0);
-> 
-> that'll never find anything. Renaming the function name was a good plan,
-> but not changing the string here :)
 
-Good point... :-)  I'll fix it up some more...
+--=-RgcS581mykKLdlkEIrcn
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On Mon, 2009-02-02 at 21:01 -0800, Luis R. Rodriguez wrote:
+> This adds some initial intelligence to help world roaming. When we
+> are world roaming we have no idea what country we are in yet and
+> because of this our regulatory domain will be pretty restrictive.
+> Country information elements help and we have code to handle that already=
+,
+> however, not many APs enable country IEs. We can help the situation
+> by adding checks on ours scans for beacons from APs, if we are world roam=
+ing
+> and an AP beacon is found on a channel we will make the bet that we can
+> also beacon and do active scanning -- when not on radar channels.
+>=20
+> Since this goes in as part of cfg80211 all devices present will benefit
+> from any device's found beacons, this includes new devices connected or
+> when you disconnect and reconnect the same device.
+>=20
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+NACK. If we do this _after_ cfg80211 scanning it becomes so much
+simpler.
+
+> ---
+>  include/net/wireless.h |   20 +++++
+>  net/mac80211/mlme.c    |   35 +++++++++
+>  net/wireless/reg.c     |  181 ++++++++++++++++++++++++++++++++++++++++++=
++++++-
+>  3 files changed, 235 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/include/net/wireless.h b/include/net/wireless.h
+> index a42c156..74b0352 100644
+> --- a/include/net/wireless.h
+> +++ b/include/net/wireless.h
+> @@ -69,6 +69,9 @@ enum ieee80211_channel_flags {
+>   * @band: band this channel belongs to.
+>   * @max_antenna_gain: maximum antenna gain in dBi
+>   * @max_power: maximum transmission power (in dBm)
+> + * @beacon_found: helper to regulatory code to indicate when a beacon
+> + * 	has been found on this channel. Use regulatory_hint_found_beacon()
+> + *	to enable this, this is is useful only on 5 GHz band.
+>   * @orig_mag: internal use
+>   * @orig_mpwr: internal use
+>   */
+> @@ -80,6 +83,7 @@ struct ieee80211_channel {
+>  	u32 flags;
+>  	int max_antenna_gain;
+>  	int max_power;
+> +	bool beacon_found;
+>  	u32 orig_flags;
+>  	int orig_mag, orig_mpwr;
+>  };
+> @@ -414,6 +418,22 @@ extern void regulatory_hint_11d(struct wiphy *wiphy,
+>  				u8 country_ie_len);
+> =20
+>  /**
+> + * regulatory_hint_found_beacon - hints a beacon was found on a channel
+> + * @wiphy: the wireless device where the beacon was found on
+> + * @beacon_chan: the channel on which the beacon was found on
+> + *
+> + * This informs the wireless core that a beacon from an AP was found on
+> + * the channel provided. This allows the wireless core to make educated
+> + * guesses on regulatory to help with world roaming. This is only used f=
+or
+> + * world roaming -- when we do not know our current location. This is
+> + * only useful on channels 12, 13 and 14 on the 2 GHz band as all other
+> + * channels are already enabled by the world regulatory domain; and on
+> + * non-radar 5 GHz channels.
+> + */
+> +extern int regulatory_hint_found_beacon(struct wiphy *wiphy,
+> +					struct ieee80211_channel *beacon_chan);
+> +
+> +/**
+>   * wiphy_apply_custom_regulatory - apply a custom driver regulatory doma=
+in
+>   * @wiphy: the wireless device we want to process the regulatory domain =
+on
+>   * @regd: the custom regulatory domain to use for this wiphy
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 9d51e27..45905dc 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2717,6 +2717,7 @@ void ieee80211_mlme_notify_scan_completed(struct ie=
+ee80211_local *local)
+>  {
+>  	struct ieee80211_sub_if_data *sdata =3D local->scan_sdata;
+>  	struct ieee80211_if_sta *ifsta;
+> +	struct ieee80211_bss *bss;
+> =20
+>  	if (sdata && sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC) {
+>  		ifsta =3D &sdata->u.sta;
+> @@ -2731,6 +2732,40 @@ void ieee80211_mlme_notify_scan_completed(struct i=
+eee80211_local *local)
+>  	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+>  		ieee80211_restart_sta_timer(sdata);
+>  	rcu_read_unlock();
+> +
+> +	/* Send off hints to the wireless core about beacons found */
+> +	spin_lock_bh(&local->bss_lock);
+> +
+> +	sdata =3D local->scan_sdata;
+> +
+> +	list_for_each_entry(bss, &local->bss_list, list) {
+> +		struct wiphy *wiphy;
+> +		struct ieee80211_supported_band *sband;
+> +		struct ieee80211_channel *chan;
+> +		unsigned int i;
+> +
+> +		if (!(bss->capability & WLAN_CAPABILITY_ESS))
+> +			continue;
+> +
+> +		wiphy =3D sdata->local->hw.wiphy;
+> +
+> +		if (WARN_ON(!wiphy->bands[bss->band]))
+> +			continue;
+> +
+> +		sband =3D wiphy->bands[bss->band];
+> +
+> +		for (i =3D 0; i < sband->n_channels; i++) {
+> +			chan =3D &sband->channels[i];
+> +
+> +			if (chan->center_freq !=3D bss->freq)
+> +				continue;
+> +			if (regulatory_hint_found_beacon(wiphy, chan))
+> +				goto unlock_and_exit;
+> +		}
+> +	}
+> +
+> +unlock_and_exit:
+> +	spin_unlock_bh(&local->bss_lock);
+>  }
+> =20
+>  void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 2323644..656cad7 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -54,6 +54,18 @@ static u32 supported_bandwidths[] =3D {
+>  	MHZ_TO_KHZ(20),
+>  };
+> =20
+> +/*
+> + * This list is used to help regulatory when devices are still
+> + * world roaming.
+> + */
+> +static LIST_HEAD(reg_beacon_list);
+> +
+> +/* Used to help world roaming, used on found beacons */
+> +struct reg_beacon {
+> +	struct list_head list;
+> +	struct ieee80211_channel chan;
+> +};
+> +
+>  /* Central wireless core regulatory domains, we only need two,
+>   * the current one and a world regulatory domain in case we have no
+>   * information to give us an alpha2 */
+> @@ -758,6 +770,141 @@ static u32 map_regdom_flags(u32 rd_flags)
+>  	return channel_flags;
+>  }
+> =20
+> +static void handle_reg_beacon(struct wiphy *wiphy,
+> +			       unsigned int chan_idx,
+> +			       struct reg_beacon *reg_beacon)
+> +{
+> +#ifdef CONFIG_CFG80211_REG_DEBUG
+> +#define REG_DEBUG_BEACON_FLAG(desc) \
+> +	printk(KERN_DEBUG "cfg80211: Enabling " desc " on " \
+> +		"frequency: %d MHz (Ch %d) on %s\n", \
+> +		reg_beacon->chan.center_freq, \
+> +		ieee80211_frequency_to_channel(reg_beacon->chan.center_freq), \
+> +		wiphy_name(wiphy));
+> +#else
+> +#define REG_DEBUG_BEACON_FLAG(desc) do {} while (0)
+> +#endif
+> +	struct ieee80211_supported_band *sband;
+> +	struct ieee80211_channel *chan;
+> +
+> +	sband =3D wiphy->bands[reg_beacon->chan.band];
+> +	chan =3D &sband->channels[chan_idx];
+> +
+> +	if (likely(chan->center_freq !=3D reg_beacon->chan.center_freq))
+> +		return;
+> +
+> +	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
+> +		chan->flags &=3D ~IEEE80211_CHAN_PASSIVE_SCAN;
+> +		REG_DEBUG_BEACON_FLAG("active scanning");
+> +	}
+> +
+> +	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
+> +		chan->flags &=3D ~IEEE80211_CHAN_NO_IBSS;
+> +		REG_DEBUG_BEACON_FLAG("beaconing");
+> +	}
+> +
+> +	chan->beacon_found =3D true;
+> +#undef REG_DEBUG_BEACON_FLAG
+> +}
+> +
+> +/*
+> + * Called when a scan on a wiphy finds a beacon on
+> + * new channel
+> + */
+> +static void wiphy_update_new_beacon(struct wiphy *wiphy,
+> +				     struct reg_beacon *reg_beacon)
+> +{
+> +	unsigned int i;
+> +	struct ieee80211_supported_band *sband;
+> +
+> +	if (!wiphy->bands[reg_beacon->chan.band])
+> +		return;
+> +
+> +	sband =3D wiphy->bands[reg_beacon->chan.band];
+> +
+> +	for (i =3D 0; i < sband->n_channels; i++)
+> +		handle_reg_beacon(wiphy, i, reg_beacon);
+> +}
+> +
+> +/*
+> + * Called upon reg changes or a new wiphy is added
+> + */
+> +static void wiphy_update_beacon_reg(struct wiphy *wiphy)
+> +{
+> +	unsigned int i;
+> +	struct ieee80211_supported_band *sband;
+> +	struct reg_beacon *reg_beacon;
+> +
+> +	if (list_empty(&reg_beacon_list))
+> +		return;
+> +
+> +	list_for_each_entry(reg_beacon, &reg_beacon_list, list) {
+> +		if (!wiphy->bands[reg_beacon->chan.band])
+> +			continue;
+> +		sband =3D wiphy->bands[reg_beacon->chan.band];
+> +		for (i =3D 0; i < sband->n_channels; i++)
+> +			handle_reg_beacon(wiphy, i, reg_beacon);
+> +	}
+> +}
+> +
+> +static bool freq_is_chan_12_13_14(u16 freq)
+> +{
+> +	if (freq =3D=3D ieee80211_channel_to_frequency(12) ||
+> +	    freq =3D=3D ieee80211_channel_to_frequency(13) ||
+> +	    freq =3D=3D ieee80211_channel_to_frequency(14))
+> +		return true;
+> +	return false;
+> +}
+> +
+> +int regulatory_hint_found_beacon(struct wiphy *wiphy,
+> +				 struct ieee80211_channel *beacon_chan)
+> +{
+> +	struct cfg80211_registered_device *drv;
+> +	struct reg_beacon *reg_beacon, *beacon;
+> +
+> +	if (beacon_chan->beacon_found ||
+> +	    (beacon_chan->flags & IEEE80211_CHAN_RADAR) ||
+> +	    (beacon_chan->band =3D=3D IEEE80211_BAND_2GHZ &&
+> +	     !freq_is_chan_12_13_14(beacon_chan->center_freq)))
+> +		return 0;
+> +
+> +	reg_beacon =3D kzalloc(sizeof(struct reg_beacon), GFP_KERNEL);
+> +	if (!reg_beacon)
+> +		return -ENOMEM;
+> +
+> +#ifdef CONFIG_CFG80211_REG_DEBUG
+> +	printk(KERN_DEBUG "cfg80211: Found new beacon on "
+> +		"frequency: %d MHz (Ch %d) on %s\n",
+> +		beacon_chan->center_freq,
+> +		ieee80211_frequency_to_channel(beacon_chan->center_freq),
+> +		wiphy_name(wiphy));
+> +#endif
+> +	memcpy(&reg_beacon->chan, beacon_chan,
+> +		sizeof(struct ieee80211_channel));
+> +
+> +	mutex_lock(&cfg80211_drv_mutex);
+> +
+> +	list_for_each_entry(drv, &cfg80211_drv_list, list)
+> +		wiphy_update_new_beacon(&drv->wiphy, reg_beacon);
+> +
+> +	/*
+> +	 * If this happens it means our beacon_found flag isn't
+> +	 * working as intended.
+> +	 */
+> +	list_for_each_entry(beacon, &reg_beacon_list, list) {
+> +		if (WARN_ON(beacon->chan.center_freq =3D=3D
+> +		    reg_beacon->chan.center_freq))
+> +			goto unlock;
+> +	}
+> +
+> +	list_add_tail(&reg_beacon->list, &reg_beacon_list);
+> +
+> +unlock:
+> +	mutex_unlock(&cfg80211_drv_mutex);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(regulatory_hint_found_beacon);
+> +
+>  static int freq_reg_info_regd(struct wiphy *wiphy,
+>  			      u32 center_freq,
+>  			      u32 *bandwidth,
+> @@ -938,16 +1085,38 @@ static void update_all_wiphy_regulatory(enum reg_s=
+et_by setby)
+>  		wiphy_update_regulatory(&drv->wiphy, setby);
+>  }
+> =20
+> +static bool reg_is_world_roaming(struct wiphy *wiphy)
+> +{
+> +	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
+> +	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
+> +		return true;
+> +	if (last_request->initiator !=3D REGDOM_SET_BY_COUNTRY_IE &&
+> +	    wiphy->custom_regulatory)
+> +		return true;
+> +	return false;
+> +}
+> +
+> +/* Reap the advantages of previously found beacons */
+> +static void reg_process_beacons(struct wiphy *wiphy)
+> +{
+> +	if (!reg_is_world_roaming(wiphy))
+> +		return;
+> +	wiphy_update_beacon_reg(wiphy);
+> +}
+> +
+>  void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
+>  {
+>  	enum ieee80211_band band;
+> =20
+>  	if (ignore_reg_update(wiphy, setby))
+> -		return;
+> +		goto out;
+>  	for (band =3D 0; band < IEEE80211_NUM_BANDS; band++) {
+>  		if (wiphy->bands[band])
+>  			handle_band(wiphy, band);
+>  	}
+> +
+> +out:
+> +	reg_process_beacons(wiphy);
+>  	if (wiphy->reg_notifier)
+>  		wiphy->reg_notifier(wiphy, last_request);
+>  }
+> @@ -1633,6 +1802,8 @@ int regulatory_init(void)
+> =20
+>  void regulatory_exit(void)
+>  {
+> +	struct reg_beacon *reg_beacon, *reg_tmp;
+> +
+>  	mutex_lock(&cfg80211_drv_mutex);
+> =20
+>  	reset_regdomains();
+> @@ -1644,5 +1815,13 @@ void regulatory_exit(void)
+> =20
+>  	platform_device_unregister(reg_pdev);
+> =20
+> +	if (!list_empty(&reg_beacon_list)) {
+> +		list_for_each_entry_safe(reg_beacon, reg_tmp,
+> +		  &reg_beacon_list, list) {
+> +			list_del(&reg_beacon->list);
+> +			kfree(reg_beacon);
+> +		}
+> +	}
+> +
+>  	mutex_unlock(&cfg80211_drv_mutex);
+>  }
+
+--=-RgcS581mykKLdlkEIrcn
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJiBheAAoJEKVg1VMiehFYIusP/R8i+0pY2k/MmaYCT75abITw
+bkNrn/CnJrFNA72kQMoIxDXPJHp7MJU95VTD4st0cAMllejUgB3KWS5r7i76rETm
+AN1T8p15h9NftiAgXCNA4h9SGWUGBts8CwQtAvO11zs9UkmWmCDqM2+i08R+qbqy
+DYX1FofR/16fZivpKCSJyZnwL1cwF+fWe++Sh62Hpkx5a4ePZ1+rd8avLz/NiR6j
+ddu10WIIuPxKR3soQPSzon0HkEYwGmDZUNo9ZlMkZ4bb6l/VR6STYleVpZYKvo1P
+NlRMC4E2E0Ft3z9Q7Z5RTPS+CXKrDTG/uJ1QZWVvSMIFVAH9gM4UetSOm1N0eZLB
+lorX8Uvz0nmUtzQ8L83OjUjMt3wgvE7bjl9yrc3TdH2VGWHLuLdKRWTHHk8E6Gl8
+644hlOQjjPXd21syFpZQ/CPQFkI5KuROqNvwqHFfjFG1wQ0n6Q4bIg+5ATIl3CQa
+gpIFaE+CTfwYXnV+3XjLnl4cn+9dXfNHYoxfWJNpoDbmJQMCBEHXFJleJYPi3squ
+ecqcts/DJHMJQ7xCr/JEkAFvzrpUaKAcpowDorB8kBlm6HcEQaeixT/lZNWtKPkK
+gSXtU7sSMARk5WYwnzRQEqZm6XrfJdMgBwgiXYqVbGPEg8SXOKeM1YPmP64yU1wx
+TKlJ4/b6fdrL7pQhZXiV
+=lBF1
+-----END PGP SIGNATURE-----
+
+--=-RgcS581mykKLdlkEIrcn--
+
