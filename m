@@ -1,61 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42657 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601AbZBXNtr (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:17709 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbZBCMyV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 08:49:47 -0500
-Subject: Re: [PATCH] ath9k: Add module parameter to disable hardware crypto
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Tue, 3 Feb 2009 07:54:21 -0500
+Received: by wf-out-1314.google.com with SMTP id 27so2228761wfd.4
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 04:54:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <7c8826910902021513o5719927ej12c860d55b49101c@mail.gmail.com>
+References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
+	 <e27b78a40901260956w4e69d33s7db60defc026c8d7@mail.gmail.com>
+	 <45e8e6c40901280954l42bbe788y8723141d673bb7b3@mail.gmail.com>
+	 <e27b78a40901300446y294504d5kd7acaa6c5a26edd@mail.gmail.com>
+	 <e27b78a40901300601p35d68125kfc3a10a7d7db0900@mail.gmail.com>
+	 <7c8826910901301109s6d80a75ale251ec837eabccf0@mail.gmail.com>
+	 <e27b78a40902021013v272ec315nece744d3cf1dc75c@mail.gmail.com>
+	 <7c8826910902021255g2563400an24f97014abf854f8@mail.gmail.com>
+	 <b6c5339f0902021333x2880b7dfj279822622a3d5cc3@mail.gmail.com>
+	 <7c8826910902021513o5719927ej12c860d55b49101c@mail.gmail.com>
+Date: Tue, 3 Feb 2009 07:54:19 -0500
+Message-ID: <b6c5339f0902030454r5ba3ff5eo96702d8cf5c8c994@mail.gmail.com> (sfid-20090203_135425_865393_33FB6686)
+Subject: Re: Crashing on ping?
+From: Bob Copeland <bcopeland@gmail.com>
+To: Mike Cui <cuicui@gmail.com>
+Cc: Keir <keirlawson@gmail.com>, Andrey Yurovsky <andrey@cozybit.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20090224114201.GB21933@jm.kir.nu> (sfid-20090224_124211_250628_44CBCB11)
-References: <20090224114201.GB21933@jm.kir.nu>
-	 (sfid-20090224_124211_250628_44CBCB11)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/Pncri8LHPkc3lNVGg3m"
-Date: Tue, 24 Feb 2009 05:49:07 -0800
-Message-Id: <1235483347.4320.7.camel@johannes.local> (sfid-20090224_144949_685088_0B1710C5)
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Feb 2, 2009 at 6:13 PM, Mike Cui <cuicui@gmail.com> wrote:
+> No I don't have stack trace. The system completely freezes, to a point
+> where even the magic sysreq key doesn't respond. I can try this patch.
+> what does it fix, exactly?
 
---=-/Pncri8LHPkc3lNVGg3m
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The patch is by Christian Lamparter.  It seems we currently accept STAs
+that don't advertise any rates we can use, which will cause the rate
+controller to eventually select a null rate.  This can happen in AP mode
+but I don't know if it has anything to do with the mesh problem.
 
-On Tue, 2009-02-24 at 13:42 +0200, Jouni Malinen wrote:
-> In
-> addition, this allows management frame protection to be tested with
-> older hardware revisions.
-
-This is odd, shouldn't older revisions refuse the hw key setup and use
-software anyway? Or are they unable to distinguish between management
-and data frames and thus it all goes wrong?
-
-johannes
-
---=-/Pncri8LHPkc3lNVGg3m
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJo/rFAAoJEKVg1VMiehFYF2YP/A6YHozGbdBQQYBQZ3f+towe
-rkuQBcBBem5mAQXlTwwnfQP/v3OFtipR0Xr6TGdP4UYMZ70fyjOW142DcOZg5JrN
-hAYwrsf/+mszudKrp5WeWZhCiOD0J7MvXan/JVAyeCHwJVRJUl/f8HvN2WmUSjEw
-8kt+3OOoqlbf4FFKs2S1CwjcJEcvSBTE6yoE1vZwD6uw6yT9M3ZjxS2XNIrYqcML
-NlJYPxsl7IL+Us6zvn+MYLf8gm5NfqxqkqmhlaAZE6ENQzmqJARtinwCwRAuhE2j
-LUZ71Dc0pl+28rLiupxcjGx6wshxYtLZQOFSGO/Is9B9tRNwTd6xoOuOsmkt8n7O
-7JuKusGGahkd9JohlBOv9VqRNWkZEWZ0eh+P4SyAN4l3cDVnTF4hMbjaLXVzRJph
-ACPTy0K6utm52a0kNyrJAVgs8OSqRHJyk7iXJsqK4ITtnKjUfgAUCUMQ9AN4vwlk
-bc85MIhgyfLJo6nUV8X+BS7oTM1jDlIz30aFDCwy3i4S7gSOoLr92hhI8iss8y02
-3yC7XZDgu49BpXXp1KLYtAUPhFH9E6Yv5FSlhuoR5NoWw4Sh7MAph/2RjjJJiNll
-46A+fdoWY/NSwVZV1hFZSNvm4Pr9aJVwB4cTREWLQ3/+GrhNUZFKNYdTGwalARpR
-hKAeW0goVGXBeKeTNYao
-=hZ5z
------END PGP SIGNATURE-----
-
---=-/Pncri8LHPkc3lNVGg3m--
-
+-- 
+Bob Copeland %% www.bobcopeland.com
