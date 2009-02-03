@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46320 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464AbZBZCj7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 21:39:59 -0500
+Received: from mail.atheros.com ([12.36.123.2]:53922 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751409AbZBCEfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2009 23:35:46 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 20:35:46 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, mb@bu3sch.de,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/3] cfg80211: send regulatory events to userspace
-Date: Wed, 25 Feb 2009 21:39:46 -0500
-Message-Id: <1235615989-1323-1-git-send-email-lrodriguez@atheros.com> (sfid-20090226_034005_474383_DFEEF4A4)
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: fix reg_notifier() flags used upon a country IE
+Date: Mon, 2 Feb 2009 20:35:05 -0800
+Message-ID: <1233635705-12890-1-git-send-email-lrodriguez@atheros.com> (sfid-20090203_053551_474020_136600E9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series does the work to prep and then send regulatory
-events to userspace. Userspace can now know if its requests
-were applied or not and when.
+The nl80211 rule flags were being used.
 
-This applies on top of Jouni's MLME patch for cfg80211.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/regd.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Luis R. Rodriguez (3):
-  cfg80211: remove REGDOM_SET_BY_INIT
-  cfg80211: move enums reg_set_by and environment_cap to nl80211.h
-  cfg80211: add regulatory netlink multicast group
-
- drivers/net/wireless/ath9k/main.c |    2 +-
- drivers/net/wireless/ath9k/regd.c |   32 ++++++-----
- drivers/net/wireless/ath9k/regd.h |    3 +-
- include/linux/nl80211.h           |   54 +++++++++++++++++++
- include/net/cfg80211.h            |   40 +-------------
- net/wireless/core.c               |    2 +-
- net/wireless/core.h               |    5 +-
- net/wireless/nl80211.c            |   46 ++++++++++++++++
- net/wireless/nl80211.h            |    5 ++
- net/wireless/reg.c                |  105 +++++++++++++++++++++---------------
- 10 files changed, 193 insertions(+), 101 deletions(-)
+diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
+index dfcc3b5..fe08a4f 100644
+--- a/drivers/net/wireless/ath9k/regd.c
++++ b/drivers/net/wireless/ath9k/regd.c
+@@ -192,11 +192,11 @@ static void ath9k_reg_apply_5ghz_beaconing_flags(struct wiphy *wiphy,
+ 		 * it by applying our static world regdomain by default during
+ 		 * probe */
+ 		if (!(reg_rule->flags & NL80211_RRF_NO_IBSS))
+-			ch->flags &= ~NL80211_RRF_NO_IBSS;
++			ch->flags &= ~IEEE80211_CHAN_NO_IBSS;
+ 		if (!ath9k_is_radar_freq(ch->center_freq))
+ 			continue;
+ 		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
+-			ch->flags &= ~NL80211_RRF_PASSIVE_SCAN;
++			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
+ 	}
+ }
+ 
+-- 
+1.6.1.2.253.ga34a
 
