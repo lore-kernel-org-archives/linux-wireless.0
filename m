@@ -1,81 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58823 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754709AbZBKQ5s (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.190]:34631 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752400AbZBCQle (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 11:57:48 -0500
-Subject: Re: [PATCH] mac80211: Make sure non-HT connection when
-	IEEE80211_STA_TKIP_WEP_USED is set
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1234370929-19519-1-git-send-email-vasanth@atheros.com>
-References: <1234370929-19519-1-git-send-email-vasanth@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F0ygMlHH4YVFVgqUk3zW"
-Date: Wed, 11 Feb 2009 17:57:44 +0100
-Message-Id: <1234371464.16004.11.camel@johannes.local> (sfid-20090211_175751_874412_019B2C91)
+	Tue, 3 Feb 2009 11:41:34 -0500
+Received: by nf-out-0910.google.com with SMTP id d3so299440nfc.21
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 08:41:32 -0800 (PST)
+Subject: Re: [ath5k-devel] [PATCH 1/5] ath5k: PHY code cleanup
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com
+In-Reply-To: <40f31dec0902030824s65b90222j13ac9b691593f19f@mail.gmail.com>
+References: <20090131022310.GA3342@makis>
+	 <1233670130.16539.5.camel@maxim-laptop>
+	 <40f31dec0902030817h4afacc52uea4885d835444aac@mail.gmail.com>
+	 <40f31dec0902030824s65b90222j13ac9b691593f19f@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 03 Feb 2009 18:41:27 +0200
+Message-Id: <1233679287.11183.7.camel@maxim-laptop> (sfid-20090203_174139_535769_1C8A4431)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-02-03 at 18:24 +0200, Nick Kossifidis wrote:
+> 2009/2/3 Nick Kossifidis <mickflemm@gmail.com>:
+> > 2009/2/3 Maxim Levitsky <maximlevitsky@gmail.com>:
+> >> I just tried your 5 patches, as they could fix hangs in the device,
+> >> that I experience occasionally, when resuming my aspire one from
+> ram.
+> >>
+> >> I applied the patches, and I got very unstable system, that tended
+> to
+> >> hang even before X.
+> >>
+> >> When it didn't hang, I tried suspend to ram cycle, but it hanged
+> then.
+> >>
+> >>
+> >> Best regards,
+> >>        Maxim Levitsky
+> >>
+> >>
+> >
+> > It's related to unhandled BMISS interrupts, Bob is working on it to
+> > see what triggers them. A quick solution is to disable them (as we
+> > don't handle them anyway) but it would be better to know the
+> problem.
+> >
 
---=-F0ygMlHH4YVFVgqUk3zW
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Acer aspire one.
 
-On Wed, 2009-02-11 at 22:18 +0530, Vasanthakumar Thiagarajan wrote:
-> It is possible that some broken AP might send HT IEs in it's
-> assoc response even though the STA has not sent them in assoc req
-> when WEP/TKIP is used as pairwise cipher suite. Also it is important
-> to check this bit before enabling ht mode in beacon receive path.
->=20
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
->  net/mac80211/mlme.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 169f10c..e7aafb0 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -1532,7 +1532,8 @@ static void ieee80211_rx_mgmt_assoc_resp(struct iee=
-e80211_sub_if_data *sdata,
->  					 elems.wmm_param_len);
-> =20
->  	if (elems.ht_info_elem && elems.wmm_param &&
-> -	    (ifsta->flags & IEEE80211_STA_WMM_ENABLED))
-> +	    (ifsta->flags & IEEE80211_STA_WMM_ENABLED) &&
-> +	    !(ifsta->flags & IEEE80211_STA_TKIP_WEP_USED))
+-wireless-testing tree + 5 patches
+I test without X running, maybe I could spot an oops or so,
+currently, system just hangs cold.
 
-Maybe we should have a separate flag for _REQUESTED_HT? I'm thinking
-here that possibly we might be adding more conditions under which we do
-not request HT?
+Best regards,
+	Maxim Levitsky
 
-Otherwise, looks ok to me.
+PS:
 
-johannes
+Atheros devices consist of MAC and PHY (which sometimes is called radio)
 
---=-F0ygMlHH4YVFVgqUk3zW
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+It seems that my device has 2425 MAC, but what radio it has?
+It also seems that most of the driver treats it as a AR5112.
+I thought before that 5112 was the MAC and 2425 was the radio, but it
+doesn't seem to be true, can you explain this?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJkwOFAAoJEKVg1VMiehFYKQgQAKDJ4dtppIehWA5qCGvmO9xw
-myEzDs1unmSksFWJJkTbnWSzP6cBoDVODUdqMmpcgzg47YF9nRSC7VAyHX7HHofp
-5opdqmWjY80nmcs2xf9zhhTS0uqVBlLSqAEn45kP4H9qRroTvf3t2lzWZfXfYc56
-vquuHVXmnxZLPZcdHJImilDiE9/C4zOlRRvoR3qB6oSmlYabI+ytZHSIgqtmsPkx
-1i1Eaes8QFIrTWHZWpTKEJdw9m3+33fxf/KXe4NTnkfKmGyVHw2NZEEehmstXF2b
-1DyrHrGHQiV2ZyNAEx6WCIt3hOAlrZU6epKD+Uq0Zb0/iocTPDuCrEO+rBw9CamI
-Aul6cnQg1LJ6+yxa6+nZeuOTFljFh2CviCCu7LCSVgU0NibqosrJDAhHU99P8OjH
-TchYigXAJXEDHoxLgmRm+D2UE6j69852F6gkwZpfEEuEF7AjKMd0pfu5m99qDkUV
-exxa5Q9W8nu07V5fYOmBkL4mKHBFzTE7qRw1OxN8dQaj0WbWXcJtCxWwumDi0+6L
-q09WAr4SIWkI9dvOtLY5Gj98rFYDFcaSn/9v3K0SaC94KZ1gd+LxwcbZMZy9wYoL
-BToy5QC0P3KlxloJoifbQcJkq3PeEBj8D2djq8a5aABS/wpyxIXtAAMRJ00rfakU
-R5EXjW6U6U+uvIlNIKH/
-=ADGB
------END PGP SIGNATURE-----
-
---=-F0ygMlHH4YVFVgqUk3zW--
+ 
 
