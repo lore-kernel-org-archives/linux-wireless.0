@@ -1,96 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c1.cosetrain.com ([213.239.209.213]:47125 "EHLO
-	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753312AbZBHT4v (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:45712 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751012AbZBCUkw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2009 14:56:51 -0500
-From: Florian Sesser <flomaillist@cosetrain.com>
-To: linux-wireless@vger.kernel.org
-Cc: Florian Sesser <flomaillist@cosetrain.com>
-Subject: [PATCH 1/1] iw: Added capability to set individual mesh IDs
-Date: Sun,  8 Feb 2009 20:56:40 +0100
-Message-Id: <01b48b275f07cb009e20b7302edc935a11dec8c3.1234122907.git.flomaillist@cosetrain.com> (sfid-20090208_205654_599723_FC9446BC)
-In-Reply-To: <498F36B7.40806@cosetrain.com>
-References: <498F36B7.40806@cosetrain.com>
+	Tue, 3 Feb 2009 15:40:52 -0500
+Received: by ewy14 with SMTP id 14so2845859ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 12:40:50 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Cc: David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 00/17] orinoco: reorganisation
+Date: Tue,  3 Feb 2009 20:40:22 +0000
+Message-Id: <1233693639-8608-1-git-send-email-kilroyd@googlemail.com> (sfid-20090203_214056_359145_074A1ADE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows the setting of
-  * Path selection protocol ID
-  * Path selection metric ID
-  * Congestion control mode ID
+This patch series reorganises the orinoco driver. The focus is on
+splitting up the monolithic orinoco.c to make future changes easier.
 
-Signed-off-by: Florian Sesser <flomaillist@cosetrain.com>
+The series has been through two RFCs on the orinoco-devel list.
+As a result, checkpatch fixes prefix the core changes, and the last
+two patches stop building hermes and hermes_dld as modules.
+
+Because of patch conflicts, I've included Andrey's checkpatch cleanup
+patch. However there is still a conflict with Harvey Harrison's
+"wireless: replace use of __constant_{endian}" patch.
+
+
+Regards,
+
+Dave.
 ---
- mesh.c    |   26 ++++++++++++++++++++++++++
- nl80211.h |    3 +++
- 2 files changed, 29 insertions(+), 0 deletions(-)
 
-diff --git a/mesh.c b/mesh.c
-index 932196e..5dabe19 100644
---- a/mesh.c
-+++ b/mesh.c
-@@ -93,6 +93,18 @@ static uint32_t _parse_u32(const char *str, _any *ret)
- 	return 0;
- }
- 
-+static uint32_t _parse_hex_u32(const char *str, _any *ret)
-+{
-+	char *endptr = NULL;
-+	long long int v = strtoll(str, &endptr, 16);
-+	if (*endptr != '\0')
-+		return 0xffffffff;
-+	if ((v < 0) || (v > 0xffffffff))
-+		return 0xffffffff;
-+	ret->u.as_32 = (uint32_t)v;
-+	return 0;
-+}
-+
- static void _print_u8(struct nlattr *a)
- {
- 	printf("%d", nla_get_u8(a));
-@@ -123,6 +135,11 @@ static void _print_u32_in_TUs(struct nlattr *a)
- 	printf("%d TUs", nla_get_u32(a));
- }
- 
-+void _print_u32_as_hex(struct nlattr *a)
-+{
-+	printf("%08X", nla_get_u32(a));
-+}
-+
- /* The current mesh parameters */
- const static struct mesh_param_descr _mesh_param_descrs[] =
- {
-@@ -165,6 +182,15 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
- 	{"mesh_hwmp_net_diameter_traversal_time",
- 	NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
- 	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
-+	{"mesh_path_selection_protocol_id",
-+	NL80211_MESHCONF_PATH_SELECTION_PROTOCOL_ID,
-+	_my_nla_put_u32, _parse_hex_u32, _print_u32_as_hex},
-+	{"mesh_path_selection_metric_id",
-+	NL80211_MESHCONF_PATH_SELECTION_METRIC_ID,
-+	_my_nla_put_u32, _parse_hex_u32, _print_u32_as_hex},
-+	{"mesh_congestion_control_mode_id",
-+	NL80211_MESHCONF_CONGESTION_CONTROL_MODE_ID,
-+	_my_nla_put_u32, _parse_hex_u32, _print_u32_as_hex},
- };
- 
- static void print_all_mesh_param_descr(void)
-diff --git a/nl80211.h b/nl80211.h
-index 4bc2704..150029c 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -795,6 +795,9 @@ enum nl80211_meshconf_params {
- 	NL80211_MESHCONF_HWMP_ACTIVE_PATH_TIMEOUT,
- 	NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL,
- 	NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
-+	NL80211_MESHCONF_PATH_SELECTION_PROTOCOL_ID,
-+	NL80211_MESHCONF_PATH_SELECTION_METRIC_ID,
-+	NL80211_MESHCONF_CONGESTION_CONTROL_MODE_ID,
- 
- 	/* keep last */
- 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
--- 
-1.5.6.5
+Andrey Borzenkov (1):
+  orinoco: checkpatch cleanup
+
+David Kilroy (16):
+  orinoco: address leading and trailing whitespace
+  orinoco: spaces in parenthesised expressions
+  orinoco: remove unnecessary braces
+  orinoco: keep line length below 80 characters
+  orinoco: Fix interesting checkpatch errors
+  orinoco: Rename orinoco.c
+  orinoco: use orinoco_private instead of net_device in scan helper
+  orinoco: Move scan helpers to a separate file
+  orinoco: Move MIC helpers into new file
+  orinoco: Move firmware handling into a separate file
+  orinoco: Use accessor functions for bitrate tables
+  orinoco: Add hardware function to set multicast mode
+  orinoco: Move hardware functions into separate file
+  orinoco: Move WEXT handlers into a separate file
+  orinoco: hermes_dld does not need to be a module
+  orinoco: hermes doesn't need to be a separate module
+
+ drivers/net/wireless/orinoco/Makefile         |    3 +-
+ drivers/net/wireless/orinoco/airport.c        |   37 +-
+ drivers/net/wireless/orinoco/fw.c             |  340 ++
+ drivers/net/wireless/orinoco/fw.h             |   16 +
+ drivers/net/wireless/orinoco/hermes.c         |  120 +-
+ drivers/net/wireless/orinoco/hermes.h         |   35 +-
+ drivers/net/wireless/orinoco/hermes_dld.c     |   33 +-
+ drivers/net/wireless/orinoco/hw.c             |  586 +++
+ drivers/net/wireless/orinoco/hw.h             |   47 +
+ drivers/net/wireless/orinoco/main.c           | 2654 +++++++++++
+ drivers/net/wireless/orinoco/main.h           |   63 +
+ drivers/net/wireless/orinoco/mic.c            |   79 +
+ drivers/net/wireless/orinoco/mic.h            |   22 +
+ drivers/net/wireless/orinoco/orinoco.c        | 6153 -------------------------
+ drivers/net/wireless/orinoco/orinoco.h        |   17 +-
+ drivers/net/wireless/orinoco/orinoco_cs.c     |   34 +-
+ drivers/net/wireless/orinoco/orinoco_nortel.c |    7 +-
+ drivers/net/wireless/orinoco/orinoco_pci.c    |    5 +-
+ drivers/net/wireless/orinoco/orinoco_pci.h    |   12 +-
+ drivers/net/wireless/orinoco/orinoco_plx.c    |    3 +-
+ drivers/net/wireless/orinoco/orinoco_tmd.c    |    4 +-
+ drivers/net/wireless/orinoco/scan.c           |  233 +
+ drivers/net/wireless/orinoco/scan.h           |   29 +
+ drivers/net/wireless/orinoco/spectrum_cs.c    |   19 +-
+ drivers/net/wireless/orinoco/wext.c           | 2325 ++++++++++
+ drivers/net/wireless/orinoco/wext.h           |   13 +
+ 26 files changed, 6562 insertions(+), 6327 deletions(-)
+ create mode 100644 drivers/net/wireless/orinoco/fw.c
+ create mode 100644 drivers/net/wireless/orinoco/fw.h
+ create mode 100644 drivers/net/wireless/orinoco/hw.c
+ create mode 100644 drivers/net/wireless/orinoco/hw.h
+ create mode 100644 drivers/net/wireless/orinoco/main.c
+ create mode 100644 drivers/net/wireless/orinoco/main.h
+ create mode 100644 drivers/net/wireless/orinoco/mic.c
+ create mode 100644 drivers/net/wireless/orinoco/mic.h
+ delete mode 100644 drivers/net/wireless/orinoco/orinoco.c
+ create mode 100644 drivers/net/wireless/orinoco/scan.c
+ create mode 100644 drivers/net/wireless/orinoco/scan.h
+ create mode 100644 drivers/net/wireless/orinoco/wext.c
+ create mode 100644 drivers/net/wireless/orinoco/wext.h
 
