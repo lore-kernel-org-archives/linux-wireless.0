@@ -1,31 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55971 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752260AbZBUFYS (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:57324 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756194AbZBDXtS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 00:24:18 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/4] cfg80211: few minor enhancements based on reg requests
-Date: Sat, 21 Feb 2009 00:24:12 -0500
-Message-Id: <1235193856-3524-1-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062422_951958_15FB8C0E)
+	Wed, 4 Feb 2009 18:49:18 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so1389841fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 15:49:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1233790843-7000-1-git-send-email-HinTak.Leung@gmail.com>
+References: <1233790843-7000-1-git-send-email-HinTak.Leung@gmail.com>
+Date: Wed, 4 Feb 2009 23:49:16 +0000
+Message-ID: <3ace41890902041549g121c2422m3bcc17d82d7d9b65@mail.gmail.com> (sfid-20090205_004932_610569_CA53CD14)
+Subject: Re: [PATCH] zd1211rw: treat MAXIM_NEW_RF(0x08) as UW2453_RF(0x09) for
+	TP-Link WN322/422G
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are a few cleanups based on the new strategy to use regutory requests
-structures from the workqueue. We still pass the wiphy directly to
-__regulatory_hint() and ignore_request() as its used often.
+On Wed, Feb 4, 2009 at 11:40 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> Three people (Petr Mensik <pihhan@cipis.net>
+> ["si" should be U+0161 U+00ED], Stephen Ho <stephenhoinhk@gmail.com>
+> on zd1211-devs and Ismael Ojeda Perez <iojedaperez@gmail.com>
+> on linux-wiress) reported success in getting TP-Link WN322G/WN422G
 
-Luis R. Rodriguez (4):
-  cfg80211: make __regulatory_hint() static
-  cfg80211: pass the regulatory_request struct in __regulatory_hint()
-  cfg80211: do not kzalloc() again for a new request on
-    __regulatory_hint
-  cfg80211: pass the regulatory_request to ignore_request
-
- net/wireless/reg.c |  106 ++++++++++++++++++++++-----------------------------
- net/wireless/reg.h |   23 -----------
- 2 files changed, 46 insertions(+), 83 deletions(-)
-
+Damn, typo... "linux-wireless" . please fix the commit message when
+you get this in?
