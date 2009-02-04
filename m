@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46111 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753439AbZBVRTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 12:19:36 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 22 Feb 2009 18:19:33 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090222171933.102390@gmx.net> (sfid-20090222_181939_945473_D5334000)
-MIME-Version: 1.0
-Subject: [PATCH v3] mac80211: Give it some time to do the TSF sync
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Received: from c60.cesmail.net ([216.154.195.49]:34122 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753070AbZBDU7S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2009 15:59:18 -0500
+Subject: Re: [PATCH 2/2] Document CONFIG_DRIVER_NL80211 in
+ wpa_supplicant/defconfig
+From: Pavel Roskin <proski@gnu.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090204195055.GB28563@jm.kir.nu>
+References: <20090204062021.12891.96607.stgit@ct.roinet.com>
+	 <20090204062037.12891.4454.stgit@ct.roinet.com>
+	 <20090204195055.GB28563@jm.kir.nu>
+Content-Type: text/plain
+Date: Wed, 04 Feb 2009 15:59:12 -0500
+Message-Id: <1233781152.7796.14.camel@dv> (sfid-20090204_215922_464050_CFD91D19)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Give slow hardware some time to do the TSF sync, to not run into an IBS=
-S merging endless loop in some rarely situations.
+On Wed, 2009-02-04 at 21:50 +0200, Jouni Malinen wrote:
+> On Wed, Feb 04, 2009 at 01:20:37AM -0500, Pavel Roskin wrote:
+> > Put it after CONFIG_DRIVER_WEXT, as it's the new Linux wireless API.
+> > Move comments about kernel includes next to CONFIG_DRIVER_NL80211, away
+> > from CONFIG_CLIENT_MLME.
+> 
+> Thanks. CONFIG_DRIVER_NL80211 part applied as-is; the WIRELESS_DEV
+> comment was removed since it does not apply anymore.
+> CONFIG_DRIVER_NL80211 was missing by design since the driver_nl80211.c
+> code was not yet complete. Anyway, it is now functional enough to be
+> included in wpa_supplicant defconfig. Though, I did leave it commented
+> out for the time being.
 
-Version 2 adds a comment.
-Version 3: I had forgotten to change the bracket.
-Version 4: No magic number.
+Looks good to me.  Thank you!
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
----
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 1bbfc70..367d2cf 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -29,6 +29,7 @@
- #define IEEE80211_IBSS_JOIN_TIMEOUT (7 * HZ)
-=20
- #define IEEE80211_IBSS_MERGE_INTERVAL (30 * HZ)
-+#define IEEE80211_IBSS_MERGE_DELAY 0x400000
- #define IEEE80211_IBSS_INACTIVITY_LIMIT (60 * HZ)
-=20
- #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
-@@ -332,6 +333,10 @@ static void ieee80211_rx_bss_info(struct ieee80211=
-_sub_if_data *sdata,
- 	       jiffies);
- #endif
-=20
-+	/* give slow hardware some time to do the TSF sync */
-+	if (rx_timestamp < IEEE80211_IBSS_MERGE_DELAY)
-+		goto put_bss;
-+
- 	if (beacon_timestamp > rx_timestamp) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
- 		printk(KERN_DEBUG "%s: beacon TSF higher than "
-
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger01
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Regards,
+Pavel Roskin
