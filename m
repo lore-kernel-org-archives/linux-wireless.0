@@ -1,92 +1,573 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from will39.synserver.de ([212.40.172.10]:39145 "EHLO willies.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751194AbZBPWc6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 17:32:58 -0500
-Subject: Re: [Developers] ISL3880IK crashes with 2.6.19.1 / .21.1
-From: Jan Willies <jan@willies.info>
-To: developers@islsm.org
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <46631BD2.20704@willies.info>
-References: <46631BD2.20704@willies.info>
-Content-Type: text/plain
-Date: Mon, 16 Feb 2009 22:57:03 +0100
-Message-Id: <1234821423.21691.96.camel@localhost.localdomain> (sfid-20090216_233303_547652_DC367D9D)
-Mime-Version: 1.0
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:46256 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752612AbZBDXGg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2009 18:06:36 -0500
+Received: by mail-ew0-f21.google.com with SMTP id 14so4024043ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 15:06:35 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Cc: David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH v2 08/16] orinoco: Move scan helpers to a separate file
+Date: Wed,  4 Feb 2009 23:05:50 +0000
+Message-Id: <1233788758-9850-9-git-send-email-kilroyd@googlemail.com> (sfid-20090205_000641_142568_6EEE4921)
+In-Reply-To: <1233788758-9850-8-git-send-email-kilroyd@googlemail.com>
+References: <1233788758-9850-1-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-2-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-3-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-4-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-5-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-6-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-7-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-8-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Sonntag, den 03.06.2007, 21:51 +0200 schrieb Jan Willies:
-> I tried to replace my broken atheros card with an ISL3880IK one but it 
-> crashes. I tried both wireless-tools.28/29 and kernel 2.6.19.1/2.6.21.1
-> 
-> My system is OpenWrt on a Netgear WGT634U (mipsel).
-> 
-> root@OpenWrt:/# iwconfig
-> lo        no wireless extensions.
-> 
-> ethData bus error, epc == c010810c, ra == c010765c
-> Oops[#1]:
-> Cpu 0
-> $ 0   : 00000000 1000b800 abad0000 a1fa02e8
-> $ 4   : 00000001 c00f0000 00000013 00000001
-> $ 8   : 00000004 800fbb6c 00000000 00000000
-> $12   : 00000000 00000100 00000400 00000000
-> $16   : 818a1980 1000b801 81ee0a80 81ee0800
-> $20   : 00000010 00000000 a1fa0000 ff02000d
-> $24   : 00000000 2abd45f0
-> $28   : 81c7c000 81c7dce8 00000000 c010765c
-> Hi    : 000002fc
-> Lo    : 00035866
-> epc   : c010810c     Not tainted
-> ra    : c010765c Status: 1000b803    KERNEL EXL IE
-> Cause : 0000001c
-> PrId  : 00029007
-> Modules linked in: sch_red sch_sfq sch_hfsc cls_fw prism54 
-> ip_conntrack_tftp ip_nat_irc ip_conntrack_irc ip_nat_ftp 
-> ip_conntrack_ftp ipt_TTL ipt_ttl ipt_TOS ipt_time ipt_tos xt_MARK 
-> xt_mark xt_mac xt_length ipt_ECN ipt_ecn xt_CLASSIFY imq ipt_IMQ 
-> ipt_layer7 ipt_ipp2p xt_NOTRACK iptable_raw xt_portscan xt_DELUDE 
-> xt_string ipt_recent ipt_owner ipt_LOG xt_helper xt_CONNMARK xt_connmark 
-> tun ppp_async ppp_generic slhc crc_ccitt nfs lockd sunrpc switch_robo 
-> switch_core diag
-> Process iwconfig (pid: 2228, threadinfo=81c7c000, task=81cc15a0)
-> Stack : 0000000a 8034e000 812318c0 8034e000 00000000 81cc15a0 8003d39c 
-> 81ee0e30
->          81ee0e30 8002f260 00000004 00000000 00000000 801f79ac 7fd95178 
-> 0000008a
->          ff02000d 81ee0a80 81c7dd98 c0110aa8 812318c0 8034e000 00000000 
-> 812318c0
->          00000004 81c7dd50 00000000 8002a7fc 81c7de70 81c7de70 81c7de60 
-> 801f79ac
->          7fd95178 7fd951f8 81c7de60 00008b01 81ee0800 c010b5b8 80001e30 
-> 00000005
->          ...
-> Call 
-> Trace:[<8003d39c>][<8002f260>][<c0110aa8>][<8002a7fc>][<c010b5b8>][<80001e30>][<800039a0>][<c010b53c>][<80166258>][<800fbb5c>][<c010b53c>][<80166794>][<8011e3f8>][<80157fe0>][<8001f2c8>][<80112914>][<801128f4>][<8008282c>][<80082b48>][<80073db0>][<8007136c>][<80082bc8>][<800617e0>][<80061710>][<8000cdc0>][<8000cdc0>]
-> 
-> Code: 10800014  24020002  3c02abad <8ca30010> 3442face  1462000f 
-> 24020008  08042050  00000000
-> 0      no wireless extensions.
-> 
-> eth0.0    no wireless extensions.
-> 
-> eth0.1    no wireless extensions.
-> 
-> imq0      no wireless extensions.
-> 
-> imq1      no wireless extensions.
-> 
-> Segmentation fault
+No functional change.
 
-Well, it turned out that the mini-pci slot in the WGT634U was b0rked
-after all and not the atheros card or the p54/prism54 driver :/
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/Makefile |    2 +-
+ drivers/net/wireless/orinoco/main.c   |  220 +------------------------------
+ drivers/net/wireless/orinoco/scan.c   |  233 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/orinoco/scan.h   |   29 ++++
+ 4 files changed, 265 insertions(+), 219 deletions(-)
+ create mode 100644 drivers/net/wireless/orinoco/scan.c
+ create mode 100644 drivers/net/wireless/orinoco/scan.h
 
-The p54 driver works fine on my x86 system, even with AP-mode. Thanks
-for making this happen!
-
-
-cheers
-
-- jan
+diff --git a/drivers/net/wireless/orinoco/Makefile b/drivers/net/wireless/orinoco/Makefile
+index d2ac785..efde451 100644
+--- a/drivers/net/wireless/orinoco/Makefile
++++ b/drivers/net/wireless/orinoco/Makefile
+@@ -1,7 +1,7 @@
+ #
+ # Makefile for the orinoco wireless device drivers.
+ #
+-orinoco-objs := main.o
++orinoco-objs := main.o scan.o
+ 
+ obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o hermes_dld.o
+ obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
+diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+index 9e8da9c..1063f8c 100644
+--- a/drivers/net/wireless/orinoco/main.c
++++ b/drivers/net/wireless/orinoco/main.c
+@@ -95,6 +95,8 @@
+ 
+ #include "hermes_rid.h"
+ #include "hermes_dld.h"
++#include "scan.h"
++
+ #include "orinoco.h"
+ 
+ /********************************************************************/
+@@ -350,53 +352,6 @@ static inline void set_port_type(struct orinoco_private *priv)
+ 	}
+ }
+ 
+-#define ORINOCO_MAX_BSS_COUNT	64
+-static int orinoco_bss_data_allocate(struct orinoco_private *priv)
+-{
+-	if (priv->bss_xbss_data)
+-		return 0;
+-
+-	if (priv->has_ext_scan)
+-		priv->bss_xbss_data = kzalloc(ORINOCO_MAX_BSS_COUNT *
+-					      sizeof(struct xbss_element),
+-					      GFP_KERNEL);
+-	else
+-		priv->bss_xbss_data = kzalloc(ORINOCO_MAX_BSS_COUNT *
+-					      sizeof(struct bss_element),
+-					      GFP_KERNEL);
+-
+-	if (!priv->bss_xbss_data) {
+-		printk(KERN_WARNING "Out of memory allocating beacons");
+-		return -ENOMEM;
+-	}
+-	return 0;
+-}
+-
+-static void orinoco_bss_data_free(struct orinoco_private *priv)
+-{
+-	kfree(priv->bss_xbss_data);
+-	priv->bss_xbss_data = NULL;
+-}
+-
+-#define PRIV_BSS	((struct bss_element *)priv->bss_xbss_data)
+-#define PRIV_XBSS	((struct xbss_element *)priv->bss_xbss_data)
+-static void orinoco_bss_data_init(struct orinoco_private *priv)
+-{
+-	int i;
+-
+-	INIT_LIST_HEAD(&priv->bss_free_list);
+-	INIT_LIST_HEAD(&priv->bss_list);
+-	if (priv->has_ext_scan)
+-		for (i = 0; i < ORINOCO_MAX_BSS_COUNT; i++)
+-			list_add_tail(&(PRIV_XBSS[i].list),
+-				      &priv->bss_free_list);
+-	else
+-		for (i = 0; i < ORINOCO_MAX_BSS_COUNT; i++)
+-			list_add_tail(&(PRIV_BSS[i].list),
+-				      &priv->bss_free_list);
+-
+-}
+-
+ static inline u8 *orinoco_get_ie(u8 *data, size_t len,
+ 				 enum ieee80211_eid eid)
+ {
+@@ -1857,177 +1812,6 @@ static void orinoco_send_wevents(struct work_struct *work)
+ 	orinoco_unlock(priv, &flags);
+ }
+ 
+-static inline void orinoco_clear_scan_results(struct orinoco_private *priv,
+-					      unsigned long scan_age)
+-{
+-	if (priv->has_ext_scan) {
+-		struct xbss_element *bss;
+-		struct xbss_element *tmp_bss;
+-
+-		/* Blow away current list of scan results */
+-		list_for_each_entry_safe(bss, tmp_bss, &priv->bss_list, list) {
+-			if (!scan_age ||
+-			    time_after(jiffies, bss->last_scanned + scan_age)) {
+-				list_move_tail(&bss->list,
+-					       &priv->bss_free_list);
+-				/* Don't blow away ->list, just BSS data */
+-				memset(&bss->bss, 0, sizeof(bss->bss));
+-				bss->last_scanned = 0;
+-			}
+-		}
+-	} else {
+-		struct bss_element *bss;
+-		struct bss_element *tmp_bss;
+-
+-		/* Blow away current list of scan results */
+-		list_for_each_entry_safe(bss, tmp_bss, &priv->bss_list, list) {
+-			if (!scan_age ||
+-			    time_after(jiffies, bss->last_scanned + scan_age)) {
+-				list_move_tail(&bss->list,
+-					       &priv->bss_free_list);
+-				/* Don't blow away ->list, just BSS data */
+-				memset(&bss->bss, 0, sizeof(bss->bss));
+-				bss->last_scanned = 0;
+-			}
+-		}
+-	}
+-}
+-
+-static void orinoco_add_ext_scan_result(struct orinoco_private *priv,
+-					struct agere_ext_scan_info *atom)
+-{
+-	struct xbss_element *bss = NULL;
+-	int found = 0;
+-
+-	/* Try to update an existing bss first */
+-	list_for_each_entry(bss, &priv->bss_list, list) {
+-		if (compare_ether_addr(bss->bss.bssid, atom->bssid))
+-			continue;
+-		/* ESSID lengths */
+-		if (bss->bss.data[1] != atom->data[1])
+-			continue;
+-		if (memcmp(&bss->bss.data[2], &atom->data[2],
+-			   atom->data[1]))
+-			continue;
+-		found = 1;
+-		break;
+-	}
+-
+-	/* Grab a bss off the free list */
+-	if (!found && !list_empty(&priv->bss_free_list)) {
+-		bss = list_entry(priv->bss_free_list.next,
+-				 struct xbss_element, list);
+-		list_del(priv->bss_free_list.next);
+-
+-		list_add_tail(&bss->list, &priv->bss_list);
+-	}
+-
+-	if (bss) {
+-		/* Always update the BSS to get latest beacon info */
+-		memcpy(&bss->bss, atom, sizeof(bss->bss));
+-		bss->last_scanned = jiffies;
+-	}
+-}
+-
+-static int orinoco_process_scan_results(struct orinoco_private *priv,
+-					unsigned char *buf,
+-					int len)
+-{
+-	int			offset;		/* In the scan data */
+-	union hermes_scan_info *atom;
+-	int			atom_len;
+-
+-	switch (priv->firmware_type) {
+-	case FIRMWARE_TYPE_AGERE:
+-		atom_len = sizeof(struct agere_scan_apinfo);
+-		offset = 0;
+-		break;
+-	case FIRMWARE_TYPE_SYMBOL:
+-		/* Lack of documentation necessitates this hack.
+-		 * Different firmwares have 68 or 76 byte long atoms.
+-		 * We try modulo first.  If the length divides by both,
+-		 * we check what would be the channel in the second
+-		 * frame for a 68-byte atom.  76-byte atoms have 0 there.
+-		 * Valid channel cannot be 0.  */
+-		if (len % 76)
+-			atom_len = 68;
+-		else if (len % 68)
+-			atom_len = 76;
+-		else if (len >= 1292 && buf[68] == 0)
+-			atom_len = 76;
+-		else
+-			atom_len = 68;
+-		offset = 0;
+-		break;
+-	case FIRMWARE_TYPE_INTERSIL:
+-		offset = 4;
+-		if (priv->has_hostscan) {
+-			atom_len = le16_to_cpup((__le16 *)buf);
+-			/* Sanity check for atom_len */
+-			if (atom_len < sizeof(struct prism2_scan_apinfo)) {
+-				printk(KERN_ERR "%s: Invalid atom_len in scan "
+-				       "data: %d\n", priv->ndev->name,
+-				       atom_len);
+-				return -EIO;
+-			}
+-		} else
+-			atom_len = offsetof(struct prism2_scan_apinfo, atim);
+-		break;
+-	default:
+-		return -EOPNOTSUPP;
+-	}
+-
+-	/* Check that we got an whole number of atoms */
+-	if ((len - offset) % atom_len) {
+-		printk(KERN_ERR "%s: Unexpected scan data length %d, "
+-		       "atom_len %d, offset %d\n", priv->ndev->name, len,
+-		       atom_len, offset);
+-		return -EIO;
+-	}
+-
+-	orinoco_clear_scan_results(priv, msecs_to_jiffies(15000));
+-
+-	/* Read the entries one by one */
+-	for (; offset + atom_len <= len; offset += atom_len) {
+-		int found = 0;
+-		struct bss_element *bss = NULL;
+-
+-		/* Get next atom */
+-		atom = (union hermes_scan_info *) (buf + offset);
+-
+-		/* Try to update an existing bss first */
+-		list_for_each_entry(bss, &priv->bss_list, list) {
+-			if (compare_ether_addr(bss->bss.a.bssid, atom->a.bssid))
+-				continue;
+-			if (le16_to_cpu(bss->bss.a.essid_len) !=
+-			      le16_to_cpu(atom->a.essid_len))
+-				continue;
+-			if (memcmp(bss->bss.a.essid, atom->a.essid,
+-			      le16_to_cpu(atom->a.essid_len)))
+-				continue;
+-			found = 1;
+-			break;
+-		}
+-
+-		/* Grab a bss off the free list */
+-		if (!found && !list_empty(&priv->bss_free_list)) {
+-			bss = list_entry(priv->bss_free_list.next,
+-					 struct bss_element, list);
+-			list_del(priv->bss_free_list.next);
+-
+-			list_add_tail(&bss->list, &priv->bss_list);
+-		}
+-
+-		if (bss) {
+-			/* Always update the BSS to get latest beacon info */
+-			memcpy(&bss->bss, atom, sizeof(bss->bss));
+-			bss->last_scanned = jiffies;
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static void __orinoco_ev_info(struct net_device *dev, hermes_t *hw)
+ {
+ 	struct orinoco_private *priv = netdev_priv(dev);
+diff --git a/drivers/net/wireless/orinoco/scan.c b/drivers/net/wireless/orinoco/scan.c
+new file mode 100644
+index 0000000..89d699d
+--- /dev/null
++++ b/drivers/net/wireless/orinoco/scan.c
+@@ -0,0 +1,233 @@
++/* Helpers for managing scan queues
++ *
++ * See copyright notice in main.c
++ */
++
++#include <linux/kernel.h>
++#include <linux/string.h>
++#include <linux/etherdevice.h>
++
++#include "hermes.h"
++#include "orinoco.h"
++
++#include "scan.h"
++
++#define ORINOCO_MAX_BSS_COUNT	64
++
++#define PRIV_BSS	((struct bss_element *)priv->bss_xbss_data)
++#define PRIV_XBSS	((struct xbss_element *)priv->bss_xbss_data)
++
++int orinoco_bss_data_allocate(struct orinoco_private *priv)
++{
++	if (priv->bss_xbss_data)
++		return 0;
++
++	if (priv->has_ext_scan)
++		priv->bss_xbss_data = kzalloc(ORINOCO_MAX_BSS_COUNT *
++					      sizeof(struct xbss_element),
++					      GFP_KERNEL);
++	else
++		priv->bss_xbss_data = kzalloc(ORINOCO_MAX_BSS_COUNT *
++					      sizeof(struct bss_element),
++					      GFP_KERNEL);
++
++	if (!priv->bss_xbss_data) {
++		printk(KERN_WARNING "Out of memory allocating beacons");
++		return -ENOMEM;
++	}
++	return 0;
++}
++
++void orinoco_bss_data_free(struct orinoco_private *priv)
++{
++	kfree(priv->bss_xbss_data);
++	priv->bss_xbss_data = NULL;
++}
++
++void orinoco_bss_data_init(struct orinoco_private *priv)
++{
++	int i;
++
++	INIT_LIST_HEAD(&priv->bss_free_list);
++	INIT_LIST_HEAD(&priv->bss_list);
++	if (priv->has_ext_scan)
++		for (i = 0; i < ORINOCO_MAX_BSS_COUNT; i++)
++			list_add_tail(&(PRIV_XBSS[i].list),
++				      &priv->bss_free_list);
++	else
++		for (i = 0; i < ORINOCO_MAX_BSS_COUNT; i++)
++			list_add_tail(&(PRIV_BSS[i].list),
++				      &priv->bss_free_list);
++
++}
++
++void orinoco_clear_scan_results(struct orinoco_private *priv,
++				unsigned long scan_age)
++{
++	if (priv->has_ext_scan) {
++		struct xbss_element *bss;
++		struct xbss_element *tmp_bss;
++
++		/* Blow away current list of scan results */
++		list_for_each_entry_safe(bss, tmp_bss, &priv->bss_list, list) {
++			if (!scan_age ||
++			    time_after(jiffies, bss->last_scanned + scan_age)) {
++				list_move_tail(&bss->list,
++					       &priv->bss_free_list);
++				/* Don't blow away ->list, just BSS data */
++				memset(&bss->bss, 0, sizeof(bss->bss));
++				bss->last_scanned = 0;
++			}
++		}
++	} else {
++		struct bss_element *bss;
++		struct bss_element *tmp_bss;
++
++		/* Blow away current list of scan results */
++		list_for_each_entry_safe(bss, tmp_bss, &priv->bss_list, list) {
++			if (!scan_age ||
++			    time_after(jiffies, bss->last_scanned + scan_age)) {
++				list_move_tail(&bss->list,
++					       &priv->bss_free_list);
++				/* Don't blow away ->list, just BSS data */
++				memset(&bss->bss, 0, sizeof(bss->bss));
++				bss->last_scanned = 0;
++			}
++		}
++	}
++}
++
++void orinoco_add_ext_scan_result(struct orinoco_private *priv,
++				 struct agere_ext_scan_info *atom)
++{
++	struct xbss_element *bss = NULL;
++	int found = 0;
++
++	/* Try to update an existing bss first */
++	list_for_each_entry(bss, &priv->bss_list, list) {
++		if (compare_ether_addr(bss->bss.bssid, atom->bssid))
++			continue;
++		/* ESSID lengths */
++		if (bss->bss.data[1] != atom->data[1])
++			continue;
++		if (memcmp(&bss->bss.data[2], &atom->data[2],
++			   atom->data[1]))
++			continue;
++		found = 1;
++		break;
++	}
++
++	/* Grab a bss off the free list */
++	if (!found && !list_empty(&priv->bss_free_list)) {
++		bss = list_entry(priv->bss_free_list.next,
++				 struct xbss_element, list);
++		list_del(priv->bss_free_list.next);
++
++		list_add_tail(&bss->list, &priv->bss_list);
++	}
++
++	if (bss) {
++		/* Always update the BSS to get latest beacon info */
++		memcpy(&bss->bss, atom, sizeof(bss->bss));
++		bss->last_scanned = jiffies;
++	}
++}
++
++int orinoco_process_scan_results(struct orinoco_private *priv,
++				 unsigned char *buf,
++				 int len)
++{
++	int			offset;		/* In the scan data */
++	union hermes_scan_info *atom;
++	int			atom_len;
++
++	switch (priv->firmware_type) {
++	case FIRMWARE_TYPE_AGERE:
++		atom_len = sizeof(struct agere_scan_apinfo);
++		offset = 0;
++		break;
++	case FIRMWARE_TYPE_SYMBOL:
++		/* Lack of documentation necessitates this hack.
++		 * Different firmwares have 68 or 76 byte long atoms.
++		 * We try modulo first.  If the length divides by both,
++		 * we check what would be the channel in the second
++		 * frame for a 68-byte atom.  76-byte atoms have 0 there.
++		 * Valid channel cannot be 0.  */
++		if (len % 76)
++			atom_len = 68;
++		else if (len % 68)
++			atom_len = 76;
++		else if (len >= 1292 && buf[68] == 0)
++			atom_len = 76;
++		else
++			atom_len = 68;
++		offset = 0;
++		break;
++	case FIRMWARE_TYPE_INTERSIL:
++		offset = 4;
++		if (priv->has_hostscan) {
++			atom_len = le16_to_cpup((__le16 *)buf);
++			/* Sanity check for atom_len */
++			if (atom_len < sizeof(struct prism2_scan_apinfo)) {
++				printk(KERN_ERR "%s: Invalid atom_len in scan "
++				       "data: %d\n", priv->ndev->name,
++				       atom_len);
++				return -EIO;
++			}
++		} else
++			atom_len = offsetof(struct prism2_scan_apinfo, atim);
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++
++	/* Check that we got an whole number of atoms */
++	if ((len - offset) % atom_len) {
++		printk(KERN_ERR "%s: Unexpected scan data length %d, "
++		       "atom_len %d, offset %d\n", priv->ndev->name, len,
++		       atom_len, offset);
++		return -EIO;
++	}
++
++	orinoco_clear_scan_results(priv, msecs_to_jiffies(15000));
++
++	/* Read the entries one by one */
++	for (; offset + atom_len <= len; offset += atom_len) {
++		int found = 0;
++		struct bss_element *bss = NULL;
++
++		/* Get next atom */
++		atom = (union hermes_scan_info *) (buf + offset);
++
++		/* Try to update an existing bss first */
++		list_for_each_entry(bss, &priv->bss_list, list) {
++			if (compare_ether_addr(bss->bss.a.bssid, atom->a.bssid))
++				continue;
++			if (le16_to_cpu(bss->bss.a.essid_len) !=
++			      le16_to_cpu(atom->a.essid_len))
++				continue;
++			if (memcmp(bss->bss.a.essid, atom->a.essid,
++			      le16_to_cpu(atom->a.essid_len)))
++				continue;
++			found = 1;
++			break;
++		}
++
++		/* Grab a bss off the free list */
++		if (!found && !list_empty(&priv->bss_free_list)) {
++			bss = list_entry(priv->bss_free_list.next,
++					 struct bss_element, list);
++			list_del(priv->bss_free_list.next);
++
++			list_add_tail(&bss->list, &priv->bss_list);
++		}
++
++		if (bss) {
++			/* Always update the BSS to get latest beacon info */
++			memcpy(&bss->bss, atom, sizeof(bss->bss));
++			bss->last_scanned = jiffies;
++		}
++	}
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/orinoco/scan.h b/drivers/net/wireless/orinoco/scan.h
+new file mode 100644
+index 0000000..f319f74
+--- /dev/null
++++ b/drivers/net/wireless/orinoco/scan.h
+@@ -0,0 +1,29 @@
++/* Helpers for managing scan queues
++ *
++ * See copyright notice in main.c
++ */
++#ifndef _ORINOCO_SCAN_H_
++#define _ORINOCO_SCAN_H_
++
++/* Forward declarations */
++struct orinoco_private;
++struct agere_ext_scan_info;
++
++/* Setup and free memory for scan results */
++int orinoco_bss_data_allocate(struct orinoco_private *priv);
++void orinoco_bss_data_free(struct orinoco_private *priv);
++void orinoco_bss_data_init(struct orinoco_private *priv);
++
++/* Add scan results */
++void orinoco_add_ext_scan_result(struct orinoco_private *priv,
++				 struct agere_ext_scan_info *atom);
++int orinoco_process_scan_results(struct orinoco_private *dev,
++				 unsigned char *buf,
++				 int len);
++
++/* Clear scan results */
++void orinoco_clear_scan_results(struct orinoco_private *priv,
++				unsigned long scan_age);
++
++
++#endif /* _ORINOCO_SCAN_H_ */
+-- 
+1.6.0.6
 
