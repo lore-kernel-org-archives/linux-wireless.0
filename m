@@ -1,111 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f222.google.com ([209.85.217.222]:37177 "EHLO
-	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064AbZBQBjI (ORCPT
+Received: from cp-out11.libero.it ([212.52.84.111]:42161 "EHLO
+	cp-out11.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754408AbZBDW03 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 20:39:08 -0500
-Received: by gxk22 with SMTP id 22so3671180gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 17:39:06 -0800 (PST)
+	Wed, 4 Feb 2009 17:26:29 -0500
+Received: from [192.168.1.102] (151.48.37.158) by cp-out11.libero.it (8.5.016.1)
+        id 492C059609812B03 for linux-wireless@vger.kernel.org; Wed, 4 Feb 2009 23:26:27 +0100
+From: Fabio Rossi <rossi.f@inwind.it>
+To: linux-wireless@vger.kernel.org
+Subject: p54common oops log
+Date: Wed, 4 Feb 2009 23:23:51 +0100
 MIME-Version: 1.0
-Date: Mon, 16 Feb 2009 20:39:06 -0500
-Message-ID: <c4d76b3b0902161739w2fc3bc6fp31fee6ea082702bf@mail.gmail.com> (sfid-20090217_023914_147506_A49F2BF9)
-Subject: [PATCH] at76c50x-usb: fix Oops on disconnect
-From: Jason Andryuk <jandryuk@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200902042323.52020.rossi.f@inwind.it> (sfid-20090204_232633_157615_52ADB8EC)
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-flush_workqueue needs to be called instead of the generic one and the
-associated functions need to be modified to prevent re-adding
-themselves to the workqueue.
+I have found the following problem with my p54pci wireless card:
 
-The rx_tasklet is also killed in the small (?) chance it is scheduled.
+BUG: unable to handle kernel NULL pointer dereference at 00000038
+IP: [<e07f2106>] p54_assign_address+0xb0/0x25c [p54common]
+*pde = 00000000 
+Oops: 0000 [#1] PREEMPT 
+last sysfs file: /sys/class/net/wlan0/type
+Modules linked in: p54pci p54common mac80211
 
-Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
---
+Pid: 4888, comm: phy0 Not tainted (2.6.29-rc3-wl #1) Presario 2701EA 
+470020-401    
+EIP: 0060:[<e07f2106>] EFLAGS: 00010093 CPU: 0
+EIP is at p54_assign_address+0xb0/0x25c [p54common]
+EAX: 00000038 EBX: 00000000 ECX: 00000001 EDX: 00000000
+ESI: 0002027c EDI: 00000000 EBP: ddc0fc58 ESP: ddc0fc18
+ DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
+Process phy0 (pid: 4888, ti=ddc0e000 task=df05cdc0 task.ti=ddc0e000)
+Stack:
+ 00000088 00000038 df013610 df29d3e0 ddc0c160 64000020 ddc0ce6c ddc0ce60
+ 00000000 00020200 00000282 00000003 000000a0 df29d3e0 ddc0ce60 00000038
+ ddc0fc80 e07f235c 00000038 00000000 0000002c 00008001 ddc0c160 ddc0ce60
+Call Trace:
+ [<e07f235c>] ? p54_alloc_skb+0xaa/0xbc [p54common]
+ [<e07f2588>] ? p54_setup_mac+0x2c/0x177 [p54common]
+ [<e07f36d8>] ? p54_bss_info_changed+0x73/0xa6 [p54common]
+ [<e07f3665>] ? p54_bss_info_changed+0x0/0xa6 [p54common]
+ [<e18862b6>] ? ieee80211_bss_info_change_notify+0x41/0x67 [mac80211]
+ [<e1890082>] ? ieee80211_rx_mgmt_assoc_resp+0xa70/0xce3 [mac80211]
+ [<e1890c10>] ? ieee80211_sta_work+0x91b/0x12f5 [mac80211]
+ [<c0117f21>] ? update_curr+0x66/0xbe
+ [<c0118be3>] ? task_tick_fair+0x1f/0x51
+ [<c0117f21>] ? update_curr+0x66/0xbe
+ [<c0117ff0>] ? dequeue_entity+0x50/0x7d
+ [<c0118b6b>] ? dequeue_task_fair+0x26/0x30
+ [<c01167e3>] ? dequeue_task+0x72/0x81
+ [<c012999b>] ? run_workqueue+0x88/0x144
+ [<e18902f5>] ? ieee80211_sta_work+0x0/0x12f5 [mac80211]
+ [<c012a271>] ? worker_thread+0x71/0xa1
+ [<c012cc1b>] ? autoremove_wake_function+0x0/0x3a
+ [<c012a200>] ? worker_thread+0x0/0xa1
+ [<c012c8ff>] ? kthread+0x36/0x58
+ [<c012c8c9>] ? kthread+0x0/0x58
+ [<c01035df>] ? kernel_thread_helper+0x7/0x18
+Code: 89 75 e4 c7 45 e0 00 00 00 00 31 ff 31 c9 eb 15 39 c7 0f 42 f8 8b 45 c4 
+8b 70 04 8b 1b 83 c1 01 3b 4d ec 74 25 8d 43 38 89 45 c4 <8b> 43 38 29 f0 8b 
+55 e0 85 d2 75 d9 39 45 f0 77 d4 8b 53 04 89 
+EIP: [<e07f2106>] p54_assign_address+0xb0/0x25c [p54common] SS:ESP 
+0068:ddc0fc18
+---[ end trace 9c3e36b68d59807e ]---
+note: phy0[4888] exited with preempt_count 1
 
-diff --git a/drivers/net/wireless/at76c50x-usb.c
-b/drivers/net/wireless/at76c50x-usb.c
-index 8d508ca..7a03251 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -1860,6 +1860,9 @@ static void at76_dwork_hw_scan(struct work_struct *work)
-                           dwork_hw_scan.work);
-     int ret;
 
-+    if (priv->device_unplugged)
-+        return;
-+
-     mutex_lock(&priv->mtx);
+I'm using v2.6.29-rc3-12726-gf917b45.
 
-     ret = at76_get_cmd_status(priv->udev, CMD_SCAN);
-@@ -1897,6 +1900,9 @@ static int at76_hw_scan(struct ieee80211_hw *hw,
-
-     at76_dbg(DBG_MAC80211, "%s():", __func__);
-
-+    if (priv->device_unplugged)
-+        return 0;
-+
-     mutex_lock(&priv->mtx);
-
-     ieee80211_stop_queues(hw);
-@@ -2003,6 +2009,10 @@ static void at76_configure_filter(struct
-ieee80211_hw *hw,
-     flags = changed_flags & AT76_SUPPORTED_FILTERS;
-     *total_flags = AT76_SUPPORTED_FILTERS;
-
-+    /* Bail out after updating flags to prevent a WARN_ON in mac80211. */
-+          if (priv->device_unplugged)
-+        return;
-+
-     /* FIXME: access to priv->promisc should be protected with
-      * priv->mtx, but it's impossible because this function needs to be
-      * atomic */
-@@ -2103,8 +2113,7 @@ static struct at76_priv
-*at76_alloc_new_device(struct usb_device *udev)
-     INIT_WORK(&priv->work_submit_rx, at76_work_submit_rx);
-     INIT_DELAYED_WORK(&priv->dwork_hw_scan, at76_dwork_hw_scan);
-
--    priv->rx_tasklet.func = at76_rx_tasklet;
--    priv->rx_tasklet.data = 0;
-+    tasklet_init(&priv->rx_tasklet, at76_rx_tasklet, 0);
-
-     priv->pm_mode = AT76_PM_OFF;
-     priv->pm_period = 0;
-@@ -2243,6 +2252,7 @@ static int at76_init_new_device(struct at76_priv *priv,
-     priv->scan_min_time = DEF_SCAN_MIN_TIME;
-     priv->scan_max_time = DEF_SCAN_MAX_TIME;
-     priv->scan_mode = SCAN_TYPE_ACTIVE;
-+    priv->device_unplugged = 0;
-
-     /* mac80211 initialisation */
-     priv->hw->wiphy->max_scan_ssids = 1;
-@@ -2284,13 +2294,12 @@ static void at76_delete_device(struct at76_priv *priv)
-     /* The device is gone, don't bother turning it off */
-     priv->device_unplugged = 1;
-
--    if (priv->mac80211_registered)
--        ieee80211_unregister_hw(priv->hw);
-+    tasklet_kill(&priv->rx_tasklet);
-
--    /* assuming we used keventd, it must quiesce too */
--    flush_scheduled_work();
--
--    kfree(priv->bulk_out_buffer);
-+    if (priv->mac80211_registered) {
-+        flush_workqueue(priv->hw->workqueue);
-+        ieee80211_unregister_hw(priv->hw);
-+    }
-
-     if (priv->tx_urb) {
-         usb_kill_urb(priv->tx_urb);
-@@ -2303,6 +2312,8 @@ static void at76_delete_device(struct at76_priv *priv)
-
-     at76_dbg(DBG_PROC_ENTRY, "%s: unlinked urbs", __func__);
-
-+    kfree(priv->bulk_out_buffer);
-+
-     if (priv->rx_skb)
-         kfree_skb(priv->rx_skb);
+Fabio
