@@ -1,72 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53189 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794AbZBTFm6 (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:46256 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752096AbZBDXGE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 00:42:58 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v5 02/15] cfg80211: add wiphy_idx_valid to check for wiphy_idx sanity
-Date: Fri, 20 Feb 2009 00:42:37 -0500
-Message-Id: <1235108570-17652-3-git-send-email-lrodriguez@atheros.com> (sfid-20090220_064311_623078_F5E401D8)
-In-Reply-To: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
-References: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 4 Feb 2009 18:06:04 -0500
+Received: by ewy14 with SMTP id 14so4024043ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 15:06:02 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Cc: David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH v2 00/16] orinoco: reorganisation
+Date: Wed,  4 Feb 2009 23:05:42 +0000
+Message-Id: <1233788758-9850-1-git-send-email-kilroyd@googlemail.com> (sfid-20090205_000613_359577_52C28EF3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will later be used by others, for now make use of it in
-cfg80211_drv_by_wiphy_idx() to return early if an invalid
-wiphy_idx has been provided.
+This patch series reorganises the orinoco driver. The focus is on
+splitting up the monolithic orinoco.c to make future changes easier.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+The series has been through two RFCs on the orinoco-devel list.
+As a result, checkpatch fixes prefix the core changes, and the last
+two patches stop building hermes and hermes_dld as modules.
+
+This series has been rebased on top of master-2009-02-03 to eliminate
+conflicts.
+
+Regards,
+
+Dave.
 ---
- net/wireless/core.c |    5 ++++-
- net/wireless/core.h |    7 +++++++
- 2 files changed, 11 insertions(+), 1 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 2b3e786..35d457b 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -42,6 +42,9 @@ cfg80211_drv_by_wiphy_idx(int wiphy_idx)
- {
- 	struct cfg80211_registered_device *result = NULL, *drv;
- 
-+	if (!wiphy_idx_valid(wiphy_idx))
-+		return NULL;
-+
- 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
- 		if (drv->wiphy_idx == wiphy_idx) {
- 			result = drv;
-@@ -225,7 +228,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	drv->wiphy_idx = wiphy_counter++;
- 
--	if (unlikely(drv->wiphy_idx < 0)) {
-+	if (unlikely(!wiphy_idx_valid(drv->wiphy_idx))) {
- 		wiphy_counter--;
- 		mutex_unlock(&cfg80211_drv_mutex);
- 		/* ugh, wrapped! */
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 1783781..4f2e0fe 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -63,6 +63,13 @@ struct cfg80211_registered_device *wiphy_to_dev(struct wiphy *wiphy)
- 	return container_of(wiphy, struct cfg80211_registered_device, wiphy);
- }
- 
-+/* Note 0 is valid, hence phy0 */
-+static inline
-+bool wiphy_idx_valid(int wiphy_idx)
-+{
-+	return (wiphy_idx >= 0);
-+}
-+
- extern struct mutex cfg80211_drv_mutex;
- extern struct list_head cfg80211_drv_list;
- 
--- 
-1.6.0.3
+David Kilroy (16):
+  orinoco: address leading and trailing whitespace
+  orinoco: spaces in parenthesised expressions
+  orinoco: remove unnecessary braces
+  orinoco: keep line length below 80 characters
+  orinoco: Fix interesting checkpatch errors
+  orinoco: Rename orinoco.c
+  orinoco: use orinoco_private instead of net_device in scan helper
+  orinoco: Move scan helpers to a separate file
+  orinoco: Move MIC helpers into new file
+  orinoco: Move firmware handling into a separate file
+  orinoco: Use accessor functions for bitrate tables
+  orinoco: Add hardware function to set multicast mode
+  orinoco: Move hardware functions into separate file
+  orinoco: Move WEXT handlers into a separate file
+  orinoco: hermes_dld does not need to be a module
+  orinoco: hermes doesn't need to be a separate module
+
+ drivers/net/wireless/orinoco/Makefile      |    3 +-
+ drivers/net/wireless/orinoco/airport.c     |    2 +-
+ drivers/net/wireless/orinoco/fw.c          |  340 ++
+ drivers/net/wireless/orinoco/fw.h          |   16 +
+ drivers/net/wireless/orinoco/hermes.c      |   18 -
+ drivers/net/wireless/orinoco/hermes_dld.c  |   33 +-
+ drivers/net/wireless/orinoco/hw.c          |  586 +++
+ drivers/net/wireless/orinoco/hw.h          |   47 +
+ drivers/net/wireless/orinoco/main.c        | 2654 ++++++++++++
+ drivers/net/wireless/orinoco/main.h        |   63 +
+ drivers/net/wireless/orinoco/mic.c         |   79 +
+ drivers/net/wireless/orinoco/mic.h         |   22 +
+ drivers/net/wireless/orinoco/orinoco.c     | 6153 ----------------------------
+ drivers/net/wireless/orinoco/orinoco_cs.c  |    2 +-
+ drivers/net/wireless/orinoco/orinoco_pci.h |    2 +-
+ drivers/net/wireless/orinoco/orinoco_tmd.c |    2 +-
+ drivers/net/wireless/orinoco/scan.c        |  233 ++
+ drivers/net/wireless/orinoco/scan.h        |   29 +
+ drivers/net/wireless/orinoco/spectrum_cs.c |    4 +-
+ drivers/net/wireless/orinoco/wext.c        | 2325 +++++++++++
+ drivers/net/wireless/orinoco/wext.h        |   13 +
+ 21 files changed, 6417 insertions(+), 6209 deletions(-)
+ create mode 100644 drivers/net/wireless/orinoco/fw.c
+ create mode 100644 drivers/net/wireless/orinoco/fw.h
+ create mode 100644 drivers/net/wireless/orinoco/hw.c
+ create mode 100644 drivers/net/wireless/orinoco/hw.h
+ create mode 100644 drivers/net/wireless/orinoco/main.c
+ create mode 100644 drivers/net/wireless/orinoco/main.h
+ create mode 100644 drivers/net/wireless/orinoco/mic.c
+ create mode 100644 drivers/net/wireless/orinoco/mic.h
+ delete mode 100644 drivers/net/wireless/orinoco/orinoco.c
+ create mode 100644 drivers/net/wireless/orinoco/scan.c
+ create mode 100644 drivers/net/wireless/orinoco/scan.h
+ create mode 100644 drivers/net/wireless/orinoco/wext.c
+ create mode 100644 drivers/net/wireless/orinoco/wext.h
 
