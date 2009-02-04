@@ -1,65 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:53898 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750870AbZBQNEd (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:4077 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757820AbZBDTrO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 08:04:33 -0500
-Received: by nf-out-0910.google.com with SMTP id d21so248859nfb.21
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 05:04:31 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Fix RF offset
-Date: Tue, 17 Feb 2009 14:04:29 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+	Wed, 4 Feb 2009 14:47:14 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so1329250fgg.17
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 11:47:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200902171404.29494.IvDoorn@gmail.com> (sfid-20090217_140446_107354_271D7B19)
+In-Reply-To: <3ace41890902041143w49ab91baoc7b461b5629a0cc@mail.gmail.com>
+References: <a4c529250902040227g35a375fdu35c2360f0916dba6@mail.gmail.com>
+	 <a4c529250902040243r6146f56vb2c656818385c749@mail.gmail.com>
+	 <3ace41890902040717l7174fc0xc4589f17ea283e9c@mail.gmail.com>
+	 <a4c529250902041132t6e9bcb79jfd412320fc088ff4@mail.gmail.com>
+	 <3ace41890902041143w49ab91baoc7b461b5629a0cc@mail.gmail.com>
+Date: Wed, 4 Feb 2009 20:47:12 +0100
+Message-ID: <69e28c910902041147i58950cc9x6b3d7cedbce02e01@mail.gmail.com> (sfid-20090204_204725_223082_089E1B5A)
+Subject: Re: zd1211rw NEW RF Type
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Ismael Ojeda Perez <iojedaperez@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The word_base is in bytes instead of word index number,
-this means that when using it, it should be transformed into
-a word index first.
+On Wed, Feb 4, 2009 at 8:43 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> Great, there are 3 people/successes... I'll dig up the other two
+> e-mail addresses and write a proper patch and adding some
+> signed-offs....
 
-Otherwise RF register reading will fail through debugfs since
-we would start reading 4 words starting with word 4 (which is the last
-valid word for RF).
+Tested-bys, perhaps...
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-
----
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index 1c0f8bf..07d378e 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -435,11 +435,12 @@ static ssize_t rt2x00debug_read_##__name(struct file *file,	\
- 	if (index >= debug->__name.word_count)			\
- 		return -EINVAL;					\
- 								\
-+	index += (debug->__name.word_base /			\
-+		  debug->__name.word_size);			\
-+								\
- 	if (debug->__name.flags & RT2X00DEBUGFS_OFFSET)		\
- 		index *= debug->__name.word_size;		\
- 								\
--	index += debug->__name.word_base;			\
--								\
- 	debug->__name.read(intf->rt2x00dev, index, &value);	\
- 								\
- 	size = sprintf(line, __format, value);			\
-@@ -476,11 +477,12 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,	\
- 	size = strlen(line);					\
- 	value = simple_strtoul(line, NULL, 0);			\
- 								\
-+	index += (debug->__name.word_base /			\
-+		  debug->__name.word_size);			\
-+								\
- 	if (debug->__name.flags & RT2X00DEBUGFS_OFFSET)		\
- 		index *= debug->__name.word_size;		\
- 								\
--	index += debug->__name.word_base;			\
--								\
- 	debug->__name.write(intf->rt2x00dev, index, value);	\
- 								\
- 	*offset += size;					\
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
