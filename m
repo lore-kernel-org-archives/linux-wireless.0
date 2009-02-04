@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:15677 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752801AbZBDWWp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 17:22:45 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 14:22:45 -0800
-Date: Wed, 4 Feb 2009 14:22:04 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Kishore Ramachandran <kishore@winlab.rutgers.edu>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	<johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Setting 11n MCS TX bitrate
-Message-ID: <20090204222203.GJ5581@tesla> (sfid-20090204_232249_960349_5383251B)
-References: <604f6e750902041408k7335234bs565e8fe6868f0f54@mail.gmail.com>
+Received: from smtp-out002.kontent.com ([81.88.40.216]:35762 "EHLO
+	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849AbZBDIQT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2009 03:16:19 -0500
+From: Oliver Neukum <oliver@neukum.org>
+To: Jason Andryuk <jandryuk@gmail.com>
+Subject: Re: at76_usb development
+Date: Wed, 4 Feb 2009 09:17:12 +0100
+Cc: gregkh@suse.de, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, kalle.valo@iki.fi, milan.plzik@gmail.com
+References: <c4d76b3b0902032005m3847235cu42f963ca6ad796af@mail.gmail.com>
+In-Reply-To: <c4d76b3b0902032005m3847235cu42f963ca6ad796af@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <604f6e750902041408k7335234bs565e8fe6868f0f54@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200902040917.14343.oliver@neukum.org> (sfid-20090204_091626_339536_A675895E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 04, 2009 at 02:08:02PM -0800, Kishore Ramachandran wrote:
-> Hi,
+Am Wednesday 04 February 2009 05:05:04 schrieb Jason Andryuk:
+> Where should development on at76_usb take place?
+[..]
+> I have more or less tracked down an Oops on disconnect with the
+> wireless-testing version.  Hopefully the time spent has been
+> worthwhile.
+> 
+> Let me know,
 
-Hey Kishore!
+This is an important question. We cannot develop against widely
+diverging versions. If the driver is changed a lot, development must happen
+against the kernel version or it should be removed from the kernel.
 
-> I would like to configure D-Link DWA 645 (AR5416) PCMCIA card so that it uses a fixed 11n bit-rate. Based on earlier posts, I understand that iwconfig or wireless tools will only allow me to set 11a/b/g bit-rates.
-
-This is correct.
-
-> There does not seem to be a "set rate" option with iw yet. Is this in the works?
-
-Not yet, but please feel free to give a shot at hacking it up. It would require
-a new cfg80211 command but keep in mind the way I believe we want this is to
-use the 802.11 MLME SAP interface for this.
-
-Right now ath9k also does not report the right MCS index through iw
-though. It seems this is due to the way our RC works... anyway this
-could use some love too. Sujith may be working on this, not sure,
-sujith?
-
-In the end it would be nice to see minstrel be used anyway so a good
-milestone is to allow ath9k select minstrel or let it use its own RC.
-By then things will start looking better I think.
-
-> I am using ath9k (compat-wireless-2009-01-19) on Ubuntu (kernel v2.6.27-11) with iw v0.9.9.
-
-Nice, just one tip: may want to stick to using iw from git if you are doing
-development, it keeps moving on and on.
-
-  Luis
+	Regards
+		Oliver
+ 
