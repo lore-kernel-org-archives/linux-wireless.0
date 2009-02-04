@@ -1,76 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34353 "EHLO mail.atheros.com"
+Received: from c60.cesmail.net ([216.154.195.49]:2844 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752381AbZBBOHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 09:07:03 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 06:07:03 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Remove bss information of the current AP when it goes out of range
-Date: Mon, 2 Feb 2009 19:34:14 +0530
-Message-ID: <1233583454-14957-1-git-send-email-vasanth@atheros.com> (sfid-20090202_150707_451357_E48E5C4F)
+	id S1751634AbZBDGUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2009 01:20:54 -0500
+Subject: [PATCH 2/2] Document CONFIG_DRIVER_NL80211 in wpa_supplicant/defconfig
+To: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+From: Pavel Roskin <proski@gnu.org>
+Date: Wed, 04 Feb 2009 01:20:37 -0500
+Message-ID: <20090204062037.12891.4454.stgit@ct.roinet.com> (sfid-20090204_072101_015392_5CF80812)
+In-Reply-To: <20090204062021.12891.96607.stgit@ct.roinet.com>
+References: <20090204062021.12891.96607.stgit@ct.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no point having the bss information of currently associated AP
-when the AP is detected to be out of range.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Put it after CONFIG_DRIVER_WEXT, as it's the new Linux wireless API.
+Move comments about kernel includes next to CONFIG_DRIVER_NL80211, away
+from CONFIG_CLIENT_MLME.
 ---
- net/mac80211/mlme.c |   17 +++++++++++++++--
- 1 files changed, 15 insertions(+), 2 deletions(-)
+ wpa_supplicant/defconfig |   18 ++++++++++--------
+ 1 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9d51e27..a671fc0 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1042,6 +1042,7 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	int disassoc;
-+	bool remove_bss = false;
+diff --git a/wpa_supplicant/defconfig b/wpa_supplicant/defconfig
+index 7a28e6f..b95ea50 100644
+--- a/wpa_supplicant/defconfig
++++ b/wpa_supplicant/defconfig
+@@ -82,6 +82,15 @@ CONFIG_DRIVER_ATMEL=y
+ # Driver interface for generic Linux wireless extensions
+ CONFIG_DRIVER_WEXT=y
  
- 	/* TODO: start monitoring current AP signal quality and number of
- 	 * missed beacons. Scan other channels every now and then and search
-@@ -1067,6 +1068,7 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata,
- 				       "range\n",
- 				       sdata->dev->name, ifsta->bssid);
- 				disassoc = 1;
-+				remove_bss = true;
- 			} else
- 				ieee80211_send_probe_req(sdata, ifsta->bssid,
- 							 ifsta->ssid,
-@@ -1086,12 +1088,23 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata,
- 
- 	rcu_read_unlock();
- 
--	if (disassoc)
-+	if (disassoc) {
- 		ieee80211_set_disassoc(sdata, ifsta, true, true,
- 					WLAN_REASON_PREV_AUTH_NOT_VALID);
--	else
-+		if (remove_bss) {
-+			struct ieee80211_bss *bss;
++# Driver interface for Linux drivers using the nl80211 kernel interface
++#CONFIG_DRIVER_NL80211=y
++# Currently, driver_nl80211.c build requires some additional parameters to be
++# able to include some of the kernel header files. Following lines can be used
++# to set these (WIRELESS_DEV must point to the root directory of the
++# wireless-testing.git tree).
++#WIRELESS_DEV=/usr/src/wireless-testing
++#CFLAGS += -I$(WIRELESS_DEV)/net/mac80211
 +
-+			bss = ieee80211_rx_bss_get(local, ifsta->bssid,
-+					local->hw.conf.channel->center_freq,
-+					ifsta->ssid, ifsta->ssid_len);
-+			if (bss)
-+				atomic_dec(&bss->users);
-+			ieee80211_rx_bss_put(local, bss);
-+		}
-+	} else {
- 		mod_timer(&ifsta->timer, jiffies +
- 				      IEEE80211_MONITORING_INTERVAL);
-+	}
- }
+ # Driver interface for FreeBSD net80211 layer (e.g., Atheros driver)
+ #CONFIG_DRIVER_BSD=y
+ #CFLAGS += -I/usr/local/include
+@@ -360,15 +369,8 @@ CONFIG_PEERKEY=y
  
+ # Include client MLME (management frame processing).
+ # This can be used to move MLME processing of Linux mac80211 stack into user
+-# space.
++# space.  mac80211 may need external patches to enable userspace MLME support.
+ #CONFIG_CLIENT_MLME=y
+-# Currently, driver_nl80211.c build requires some additional parameters to be
+-# able to include some of the kernel header files. Following lines can be used
+-# to set these (WIRELESS_DEV must point to the root directory of the
+-# wireless-testing.git tree). In addition, mac80211 may need external patches
+-# to enable userspace MLME support.
+-#WIRELESS_DEV=/usr/src/wireless-testing
+-#CFLAGS += -I$(WIRELESS_DEV)/net/mac80211
  
--- 
-1.5.5.1
-
+ # IEEE Std 802.11r-2008 (Fast BSS Transition)
+ #CONFIG_IEEE80211R=y
