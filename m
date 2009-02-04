@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:58688 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753575AbZBUXHb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 18:07:31 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 22 Feb 2009 00:07:28 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090221230728.227290@gmx.net> (sfid-20090222_000755_305003_3581962C)
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:51412 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955AbZBDPR3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2009 10:17:29 -0500
+Received: by ewy14 with SMTP id 14so3410518ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 07:17:26 -0800 (PST)
 MIME-Version: 1.0
-Subject: [PATCH] mac80211: Don't merge with the same BSSID
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+In-Reply-To: <a4c529250902040243r6146f56vb2c656818385c749@mail.gmail.com>
+References: <a4c529250902040227g35a375fdu35c2360f0916dba6@mail.gmail.com>
+	 <a4c529250902040243r6146f56vb2c656818385c749@mail.gmail.com>
+Date: Wed, 4 Feb 2009 15:17:26 +0000
+Message-ID: <3ace41890902040717l7174fc0xc4589f17ea283e9c@mail.gmail.com> (sfid-20090204_161733_871459_EB1B0420)
+Subject: Re: zd1211rw NEW RF Type
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Ismael Ojeda Perez <iojedaperez@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was not a good idea to do a TSF reset on strange IBSS merges to the =
-same BSSID. For example it will break the TSF sync of ath9k completely =
-and it is unnecessary as all hardware I have tested do a TSF sync to a =
-higher value automatically and IBSS merges are only done to higher TSF =
-values. It only need a TSF reset to accept a lower value, when the IBSS=
- network is changed manually.
+On Wed, Feb 4, 2009 at 10:43 AM, Ismael Ojeda Perez
+<iojedaperez@gmail.com> wrote:
+> Hi, huston we have a problem
+> I have purchased a tp-link usb wireless device
+> model : tl-wn422g
+> i cant work with it because it says there is a new RF type
+> here its what dmesg shows
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
----
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 1bbfc70..cf20575 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -291,6 +291,10 @@ static void ieee80211_rx_bss_info(struct ieee80211=
-_sub_if_data *sdata,
- 				sdata->u.ibss.ssid_len))
- 		goto put_bss;
-=20
-+	/* same BSSID */
-+	if (memcmp(bss->cbss.bssid, sdata->u.ibss.bssid, ETH_ALEN) =3D=3D 0)
-+		goto put_bss;
-+
- 	if (rx_status->flag & RX_FLAG_TSFT) {
- 		/*
- 		 * For correct IBSS merging we need mactime; since mactime is
+> [  526.984508] zd1211rw 7-2:1.0: RF MAXIM_NEW_RF 0x8 is not supported
 
---=20
-Jetzt 1 Monat kostenlos! GMX FreeDSL - Telefonanschluss + DSL=20
-f=FCr nur 17,95 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
-569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You probably don't hang out in the right place... two people on the
+sourceforge zd1211 mailing list recently reported that
+MAXIM_NEW_RF=0x08 is just the same as    UW2453_RF=0x09 ; and one of
+them has a wn422g and the other wn322g
+(I just went back the mailing list archive and checked), so it is
+likely the same change would work for you:
+
+in drivers/net/wireless/zd1211rw/zd_rf.c, line 89, you see:
+
+--------------------
+        case UW2453_RF:
+                r = zd_rf_init_uw2453(rf);
+                break;
+---------------------
+Just put an extra line
+
+         case MAXIM_NEW_RF:
+either immediately before or immediately after the case UW2453_RF: line.
+
+If it reports success for you, maybe we'll consider putting this in
+properly... I am not the maintainer for that part, so it is likely
+we'll need advice/approval from somebody else for this change to go
+into the kernel.
