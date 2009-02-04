@@ -1,81 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46780 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578AbZBXHO3 (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:34967 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756266AbZBDTkd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 02:14:29 -0500
-Subject: Re: Signal quality strange since commit 708c57cf1709fb95
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kalle.valo@iki.fi>, Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <49A39C9C.7040002@lwfinger.net>
-References: <49A01922.1090106@lwfinger.net>
-	 <1235241867.3284.44.camel@localhost> <49A05E35.70904@lwfinger.net>
-	 <8763j33rgq.fsf@litku.valot.fi>
-	 (sfid-20090222_074023_562332_D346678B) <1235441441.4455.58.camel@johannes.local>
-	 <49A37531.70907@lwfinger.net> <1235452576.4455.81.camel@johannes.local>
-	 <49A39C9C.7040002@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rlOx2F+0FsvVUyDTb91B"
-Date: Mon, 23 Feb 2009 23:13:46 -0800
-Message-Id: <1235459626.4320.3.camel@johannes.local> (sfid-20090224_081432_459157_E571CC87)
-Mime-Version: 1.0
+	Wed, 4 Feb 2009 14:40:33 -0500
+Received: by ewy14 with SMTP id 14so3787376ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 11:40:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <cf70f0210902041119l21631fd4hcde779bfca198e24@mail.gmail.com>
+References: <cf70f0210902041010h24932f9ao3e5c9f6a243b483d@mail.gmail.com>
+	 <3ace41890902041018mdc6a5eanc79cebeb5759001e@mail.gmail.com>
+	 <cf70f0210902041119l21631fd4hcde779bfca198e24@mail.gmail.com>
+Date: Wed, 4 Feb 2009 19:40:30 +0000
+Message-ID: <3ace41890902041140r6c010addkd52c2639d784f384@mail.gmail.com> (sfid-20090204_204058_993847_3041A89E)
+Subject: Re: Regarding Belkin wireless USB adapter
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Shivdas Gujare <shivdas.tech@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Feb 4, 2009 at 7:19 PM, Shivdas Gujare <shivdas.tech@gmail.com> wrote:
+> Hi Hin-Tak,
+> Thanks for your quick reply.
+>
+> I needs to recheck about "open or WEP network", but from properties it says
+> "Security->WPA personal".
+>  One thing I observed while trying to configure from command line.
+> if I do "ifconfig wlan0 up", it doesn't show "RUNNING".
+> I can scan the channels using iwlist properly but, assigning access point using
+> "iwconfig wlan0 ap access_pt", doesn't work for me and shows "ap not assigned"
+>
+> Thanks and Regards,
+> Shivdas
 
---=-rlOx2F+0FsvVUyDTb91B
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2009-02-24 at 01:07 -0600, Larry Finger wrote:
-> Johannes Berg wrote:
-> > On Mon, 2009-02-23 at 22:18 -0600, Larry Finger wrote:
-> >=20
-> >> No, I just wondered if it was intentional that it was changed to /70. =
-It appears
-> >> that it was, therefore, at least 3 drivers must be changed as they are
-> >> calculating on the basis of /100. For example, my b43 is showing an iw=
-config
-> >> Link Quality of 93/70 while the KNM applet is showing 50%.
-> >=20
-> > Well that _is_ a bug, since this shouldn't have required driver changes=
-!
-> > I'll take a look into why that might be happening.
->=20
-> Drivers b43, b43legacy, rtl8187, and p54usb all assume a Link Quality sca=
-led to
-> 100, which was the behavior before the commit in the subject. I don't qui=
-te
-> understand why as the old code had this fragment:
-
-Ahh. I see now, you're talking wireless_stats and I'm thinking scan
-results. Yeah, I see what's going on, I'll fix it tomorrow.
-
-johannes
-
---=-rlOx2F+0FsvVUyDTb91B
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJo54nAAoJEKVg1VMiehFYyT4QAJ46rPPmVAZuPXeayUEnRy/H
-wDP0s2IN95/9dLjm2/A+K6tMVBJgijaaCyWBZ+g0+rkSAjWMGKED4sQEt8aRe8Fz
-qR4ZsbgOP8MRWkUrEfkrbDAuhccOcE62HPm9iC/Dmg02DimtYCC66jvZuM24LMcO
-qow5dWXZVNHmMVUQdldFbwnFi+geTAapK9E0i+nNLM/ZMY1qzpakKxYiF5Qy9Ovp
-KhLAj3JRs393Akh6um7+B46rLC3mtruimc8GmkVGFl7U9jBEugYqpK/1M8jhTjL5
-4y95CPulJ30tLEHKz+hg2Jl8ZnRVysg96qJBNmnLTGSVm4536c7EB1F1n0n/G2JU
-nYXAytKGLnUaNJG/TbMvSfS2c7FE9SBbPQla7cKYfCeRIzMynJ0/xR6v7Pl5v2M3
-PD0FgITtE2pDr7p9AvFfE7qB62szuidQKSGsLQ63Pa6lWDn9Lm63WFUtsxsa1nzJ
-0/wfS3ndrlFGJAB5/wWbjihnykjMgCr7g5OLFUhBVv3f+0LDO8e9GZTq82HMhI+Q
-3LIdvnronA6ss6mKRvyZ2df71nNdn0tT8fdFJIDJdphS/5AUYS8s6zk5moRzpsV5
-U7SE/6506lIPbxSAjj+FYsAqJZr0TI1Fjr7gg8kDbUl80mxkYccHuJcM5PCdRg3T
-sYsIRJtU0cHhTxKssveK
-=GWfq
------END PGP SIGNATURE-----
-
---=-rlOx2F+0FsvVUyDTb91B--
-
+So is it working - as in, establishing IP connectivity to outside
+*through* an access point?
+iwlist works regardless of authentication. Also, are you using
+NetworkManager or any way using the dbus interface? I think some WPA
+authentication info can be stored in gnome session config and passed
+via D-bus.
