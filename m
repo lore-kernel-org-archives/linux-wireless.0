@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:35204 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017AbZBMHOi (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60517 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752261AbZBDPau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 02:14:38 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so581791ywh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 23:14:38 -0800 (PST)
+	Wed, 4 Feb 2009 10:30:50 -0500
+Date: Wed, 4 Feb 2009 10:18:54 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Ismael Ojeda Perez <iojedaperez@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: zd1211rw NEW RF Type
+Message-ID: <20090204151854.GC3845@tuxdriver.com> (sfid-20090204_163054_989244_3E58B274)
+References: <a4c529250902040227g35a375fdu35c2360f0916dba6@mail.gmail.com> <a4c529250902040243r6146f56vb2c656818385c749@mail.gmail.com> <3ace41890902040717l7174fc0xc4589f17ea283e9c@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
-	 <1234508187.1327.19.camel@johannes.local>
-	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
-	 <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
-Date: Thu, 12 Feb 2009 23:14:38 -0800
-Message-ID: <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com> (sfid-20090213_081441_201900_913AABF7)
-Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3ace41890902040717l7174fc0xc4589f17ea283e9c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 12, 2009 at 11:14 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Feb 12, 2009 at 11:09 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Thu, Feb 12, 2009 at 10:56 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Thu, 2009-02-12 at 21:36 -0800, Luis R. Rodriguez wrote:
->>>> Driver and userspace regulatory hints are now processed in
->>>> a workqueue. This should fix some lockdep warnings which complain
->>>> about possible circular locking dependencies such as:
->>>
->>> Yes, but I need to look at the one Reinette posted and fix that one,
->>> which will probably require a different solution.
->>
->> Oh I didn't see that one. How different?
->
-> I see an rtnl lock issue against scanning and the drv mutex. Doesn't
-> seem to be related to regulatory. So how would that affect a path to
-> move hints to a workqueue?
+On Wed, Feb 04, 2009 at 03:17:26PM +0000, Hin-Tak Leung wrote:
+> On Wed, Feb 4, 2009 at 10:43 AM, Ismael Ojeda Perez
+> <iojedaperez@gmail.com> wrote:
+> > Hi, huston we have a problem
+> > I have purchased a tp-link usb wireless device
+> > model : tl-wn422g
+> > i cant work with it because it says there is a new RF type
+> > here its what dmesg shows
+> 
+> > [  526.984508] zd1211rw 7-2:1.0: RF MAXIM_NEW_RF 0x8 is not supported
+> 
+> You probably don't hang out in the right place... two people on the
+> sourceforge zd1211 mailing list recently reported that
+> MAXIM_NEW_RF=0x08 is just the same as    UW2453_RF=0x09 ; and one of
+> them has a wn422g and the other wn322g
+> (I just went back the mailing list archive and checked), so it is
+> likely the same change would work for you:
+> 
+> in drivers/net/wireless/zd1211rw/zd_rf.c, line 89, you see:
+> 
+> --------------------
+>         case UW2453_RF:
+>                 r = zd_rf_init_uw2453(rf);
+>                 break;
+> ---------------------
+> Just put an extra line
+> 
+>          case MAXIM_NEW_RF:
+> either immediately before or immediately after the case UW2453_RF: line.
+> 
+> If it reports success for you, maybe we'll consider putting this in
+> properly... I am not the maintainer for that part, so it is likely
+> we'll need advice/approval from somebody else for this change to go
+> into the kernel.
 
-Oh you mean the rntl_lock() and drv mutex is _still_ an issue?
+Or someone can send a patch with a report that it is working for them
+and I'll just merge it... :-)
 
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
