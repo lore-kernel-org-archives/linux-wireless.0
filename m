@@ -1,114 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vilya.visn.co.uk ([193.254.210.161]:37607 "EHLO
-	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759793AbZBEUSr (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.185]:3974 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752375AbZBDPsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2009 15:18:47 -0500
-Received: from localhost ([127.0.0.1] helo=www.phantomjinx.co.uk)
-	by vilya.visn.co.uk with esmtpa (Exim 4.69)
-	(envelope-from <p.g.richardson@phantomjinx.co.uk>)
-	id 1LVAgP-0003OX-VG
-	for linux-wireless@vger.kernel.org; Thu, 05 Feb 2009 20:18:46 +0000
-Message-ID: <53749.82.152.255.229.1233865126.squirrel@www.phantomjinx.co.uk> (sfid-20090205_211906_558435_32D9222A)
-In-Reply-To: <49887936.3010203@lwfinger.net>
-References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
-    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>
-    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>
-    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>
-    <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk>
-    <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>
-    <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk>
-    <49871083.5040309@lwfinger.net>
-    <35040.82.152.223.193.1233590184.squirrel@www.phantomjinx.co.uk>
-    <3ace41890902021548o39b5f02veacc0bd650e92c7@mail.gmail.com>
-    <20090203142807.GC10968@tuxdriver.com>
-    <44120.62.172.74.16.1233679156.squirrel@www.phantomjinx.co.uk>
-    <49887936.3010203@lwfinger.net>
-Date: Thu, 5 Feb 2009 20:18:46 -0000 (UTC)
-Subject: rtl8187 sleeping/hanging
-From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-To: linux-wireless@vger.kernel.org
+	Wed, 4 Feb 2009 10:48:13 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so438818mue.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 07:48:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20090204144317.GA3845@tuxdriver.com>
+References: <c4d76b3b0902032005m3847235cu42f963ca6ad796af@mail.gmail.com>
+	 <200902040917.14343.oliver@neukum.org>
+	 <20090204144317.GA3845@tuxdriver.com>
+Date: Wed, 4 Feb 2009 17:48:11 +0200
+Message-ID: <da94abde0902040748l6194cdd3i7044c839f3110e5a@mail.gmail.com> (sfid-20090204_164818_723348_595C8A33)
+Subject: Re: at76_usb development
+From: Kalle Valo <kalle.valo@iki.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Oliver Neukum <oliver@neukum.org>,
+	Jason Andryuk <jandryuk@gmail.com>, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, milan.plzik@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks,
+On Wed, Feb 4, 2009 at 4:43 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Wed, Feb 04, 2009 at 09:17:12AM +0100, Oliver Neukum wrote:
+>> Am Wednesday 04 February 2009 05:05:04 schrieb Jason Andryuk:
+>> > Where should development on at76_usb take place?
+>> [..]
+>> > I have more or less tracked down an Oops on disconnect with the
+>> > wireless-testing version.  Hopefully the time spent has been
+>> > worthwhile.
+>> >
+>> > Let me know,
+>>
+>> This is an important question. We cannot develop against widely
+>> diverging versions. If the driver is changed a lot, development must happen
+>> against the kernel version or it should be removed from the kernel.
 
-Installed current snapshot -> compat-wireless-2009-02-05
+My plan is that at76_usb is not going to get that much changes. I have
+created a new driver at76c50x-usb which is basically at76_usb plus my
+mac80211 port. That way users still have a working driver until
+mac80211 port has stabilised.
 
-Still trying to get to grips with the rtl8187 driver. Not sure at the
-moment whether my current problems are the fault of the laptop hardware=
- or
-the driver. Maybe someone who has a similar wireless chip would care to
-compare notes.
+> AFAIK you should be sending patches to Greg against the version in
+> drivers/staging.  Kalle may want to be copied.
 
-My router is situated upstairs. I have, this week, changed it to a new =
-one
-with a 5db gain level antenna rather than the original that had a 2db.
+Yes, please cc also me. I try to keep up-to-date what's happening with
+at76-usb so that the same fixes will be fixed in at76c50x-usb as well.
 
-I have no problems with my old laptop using the ipw2200 driver connecti=
-ng
-to either of my routers. I can walk anywhere in the house with doors sh=
-ut
-and still get a solid ping.
+> FWIW, I haven't seen the revised driver that Kalle is developing.
+> Hopefully we will see that before too long.
 
-Sadly, it seems my new laptop is not so reliable...
-- Moving around when constantly pinging causes the pinging to halt,
-missing packets.
-- If I dont use the network connection for a few minutes (think it tend=
-s
-to be when on battery but not definitely tested), it seems the wlan0 di=
-es
-/ goes to sleep / hangs. Not sure which. Sometimes it comes back with a
-quick ping to the router. Other occasions I have to re-modprobe the
-driver.
+Hopefully I'll send a first version of at76c50-usb soon. Sorry for
+taking it so long.
 
-I thought it might be the hardware is not as powerful as my old laptop =
-but
-iwconfig reports both have a 20db tx value so figured they are connecti=
-ng
-with the same transmit power.
+It's nice to see interest for at76_usb, though. I was sure that nobody
+uses it anymore.
 
-Wondered if it might be to do with cpu frequency scaling as the default
-kde4 powersave settings have the following settings:
-- AC adapter: cpu freq scaling =3D performance
-- Battery: cpu freq scaling =3D dynamic (less aggressive)
-(Changed Battery to performance to see if this makes any difference)
-
-Either way if people have any ideas they could throw at me then I would=
- be
-much appreciated as doing anything networky such as a quick google is
-turning into a full blown network marathon!
-
-Distro: Mandriva 2009
-Kernel: 2.6.27.10-desktop586-1mnb
-IP Address: static
-Network: handled by ifcfg script
-Wireless: WPA2-PSK using TKIP
-Channel: Tried both 11 and 8 and has no affect
-
-Happy to provide any more info as required.
-
-Regards
-
-PGR
-
---=20
-Laws are partly formed for the sake of good men, in order to instruct t=
-hem
-how they may live on friendly terms with one another, and partly for th=
-e
-sake of those who refuse to be instructed, whose spirit cannot be subdu=
-ed,
-or softened, or hindered from plunging into evil. [The Laws, Plato]
-
-You fiend! Never have I encountered such corrupt and foul-minded
-perversity=85 Have you ever considered a career in the church?
-Bishop of Bath and Wells (Blackadder II)
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Kalle
