@@ -1,44 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:51010 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425AbZBXMjL (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:46256 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752521AbZBDXGc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 07:39:11 -0500
-Date: Tue, 24 Feb 2009 13:38:43 +0100
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn warning in 2.6.29-rc6
-Message-ID: <20090224123843.GA4059@Pilar.aei.mpg.de> (sfid-20090224_133920_753984_88D4D213)
-References: <20090223212615.GA5047@Pilar.Speedport_W_303V_Typ_A> <1235429106.18617.42.camel@rc-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1235429106.18617.42.camel@rc-desk>
+	Wed, 4 Feb 2009 18:06:32 -0500
+Received: by mail-ew0-f21.google.com with SMTP id 14so4024043ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 15:06:31 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Cc: David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH v2 07/16] orinoco: use orinoco_private instead of net_device in scan helper
+Date: Wed,  4 Feb 2009 23:05:49 +0000
+Message-Id: <1233788758-9850-8-git-send-email-kilroyd@googlemail.com> (sfid-20090205_000637_052305_69D185BC)
+In-Reply-To: <1233788758-9850-7-git-send-email-kilroyd@googlemail.com>
+References: <1233788758-9850-1-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-2-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-3-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-4-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-5-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-6-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-7-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 23.Feb'09 at 14:45:06 -0800, reinette chatre wrote:
-> On Mon, 2009-02-23 at 13:26 -0800, Carlos R. Mafra wrote:
-> > I've just got this warning in my Vaio laptop:
-> > 
-> > ------------[ cut here ]------------
-> > WARNING: at drivers/net/wireless/iwlwifi/iwl-tx.c:1254 iwl_tx_cmd_complete+0x28a/0x2e0()
-> > Hardware name: VGN-FZ240E
-> > wrong command queue 31, sequence 0x7FFF readp=241 writep=241
-> > Modules linked in: usbhid nvram snd_hda_codec_idt snd_hda_intel snd_hda_codec uvcvideo snd_hwdep snd_pcm iwlagn videodev snd_timer sky2 v4l1_compat v4l2_compat_ioctl32 evdev sg i2c_i801 snd_page_alloc sr_mod ata_piix ahci libata sd_mod scsi_mod uhci_hcd ohci_hcd ehci_hcd usbcore [last unloaded: scsi_wait_scan]
-> > Pid: 0, comm: swapper Not tainted 2.6.29-rc6 #37
-> > [...]
-> 
-> This sounds like
-> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1703 for
-> which new uCode was released to address the problem. Could you please
-> try with the most recent 4965 uCode available from
-> http://www.intellinuxwireless.org/?n=Downloads ?
+This makes the interface to the scan helpers consistent, so we can split
+them out.
 
-Ok, I tried it and so far got no warnings at all.
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/main.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-I will keep looking the dmesg for a few days, and if you
-don't hear back from me that means it is gone for good.
+diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+index e43e3e2..9e8da9c 100644
+--- a/drivers/net/wireless/orinoco/main.c
++++ b/drivers/net/wireless/orinoco/main.c
+@@ -1929,11 +1929,10 @@ static void orinoco_add_ext_scan_result(struct orinoco_private *priv,
+ 	}
+ }
+ 
+-static int orinoco_process_scan_results(struct net_device *dev,
++static int orinoco_process_scan_results(struct orinoco_private *priv,
+ 					unsigned char *buf,
+ 					int len)
+ {
+-	struct orinoco_private *priv = netdev_priv(dev);
+ 	int			offset;		/* In the scan data */
+ 	union hermes_scan_info *atom;
+ 	int			atom_len;
+@@ -1967,7 +1966,8 @@ static int orinoco_process_scan_results(struct net_device *dev,
+ 			/* Sanity check for atom_len */
+ 			if (atom_len < sizeof(struct prism2_scan_apinfo)) {
+ 				printk(KERN_ERR "%s: Invalid atom_len in scan "
+-				       "data: %d\n", dev->name, atom_len);
++				       "data: %d\n", priv->ndev->name,
++				       atom_len);
+ 				return -EIO;
+ 			}
+ 		} else
+@@ -1980,7 +1980,7 @@ static int orinoco_process_scan_results(struct net_device *dev,
+ 	/* Check that we got an whole number of atoms */
+ 	if ((len - offset) % atom_len) {
+ 		printk(KERN_ERR "%s: Unexpected scan data length %d, "
+-		       "atom_len %d, offset %d\n", dev->name, len,
++		       "atom_len %d, offset %d\n", priv->ndev->name, len,
+ 		       atom_len, offset);
+ 		return -EIO;
+ 	}
+@@ -2187,7 +2187,7 @@ static void __orinoco_ev_info(struct net_device *dev, hermes_t *hw)
+ 		}
+ #endif	/* ORINOCO_DEBUG */
+ 
+-		if (orinoco_process_scan_results(dev, buf, len) == 0) {
++		if (orinoco_process_scan_results(priv, buf, len) == 0) {
+ 			/* Send an empty event to user space.
+ 			 * We don't send the received data on the event because
+ 			 * it would require us to do complex transcoding, and
+-- 
+1.6.0.6
 
-Thanks for your prompt answer!
