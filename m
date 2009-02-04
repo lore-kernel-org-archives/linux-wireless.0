@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:52151 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753435AbZB1TTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Feb 2009 14:19:36 -0500
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sat, 28 Feb 2009 20:19:33 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <18856.39652.66588.791696@gargle.gargle.HOWL>
-Message-ID: <20090228191933.188860@gmx.net> (sfid-20090228_201943_800055_D68F11F5)
-MIME-Version: 1.0
-References: <20090227220215.254900@gmx.net>
- <18856.39652.66588.791696@gargle.gargle.HOWL>
-Subject: Re: [PATCH] ath9k: Fix FIF_BCN_PRBRESP_PROMISC handling
-To: Sujith <m.sujith@gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:54745 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234AbZBDKxL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2009 05:53:11 -0500
+Subject: Re: [PATCH 2/2] Document CONFIG_DRIVER_NL80211 in
+	wpa_supplicant/defconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <20090204062037.12891.4454.stgit@ct.roinet.com> (sfid-20090204_072101_015392_5CF80812)
+References: <20090204062021.12891.96607.stgit@ct.roinet.com>
+	 <20090204062037.12891.4454.stgit@ct.roinet.com>
+	 (sfid-20090204_072101_015392_5CF80812)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j+LvombhFSVWo3XDKtPS"
+Date: Wed, 04 Feb 2009 11:52:35 +0100
+Message-Id: <1233744755.3992.2.camel@johannes.local> (sfid-20090204_115315_068387_4981665B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hallo Sujith!
 
-> You don't need a new variable in ath_hal. The RX filter is already ca=
-ched
-> in
-> ath_softc during a configure_filter() call.
+--=-j+LvombhFSVWo3XDKtPS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'm asking currently myself, if this code needed at all? Or can it comp=
-letely removed?
+On Wed, 2009-02-04 at 01:20 -0500, Pavel Roskin wrote:
+> Put it after CONFIG_DRIVER_WEXT, as it's the new Linux wireless API.
+> Move comments about kernel includes next to CONFIG_DRIVER_NL80211, away
+> from CONFIG_CLIENT_MLME.
 
-Sending and receiving probe requests and responses works without it, to=
-o. What is the need for this code?
+Eh, no? The kernel includes are not required for nl80211 if everything
+is set up correctly, or maybe for client mlme only?
 
-Regards
-Alina
+johannes
 
---=20
-Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
-f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
-69a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-j+LvombhFSVWo3XDKtPS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJiXNwAAoJEKVg1VMiehFYx3cQAIkTkP5HzDflllpvJV/jEsT2
+8I8hIcnP5qWBmtwNLA10SFfJLBa706fotMQjYMzlUty6E5VQPG0Mwcv+OlgzHqH4
+PJ3LvGlBzQkjZ7h8Znj2HREMwLabz30czWjnTKQEJqSFkJwcBwuRQYATfa8jHajq
+F+orutAKvB7ibiqR4WrR0Gi0Ft5u3QM9TKQcELd05qNRNVShKkkrTaj+MTyIbAo7
+eueTxhJv5s9jUcS7qWZVLABUCIFXjUZOhwwqXlMUKBynr5G8XYsdrA2iu+CYUt49
+dsR92iE0S2W2+/HDl4Z9o2HwAqSKQyyIwrddtpt2blM8saVMu1YsUtVx5xzjZjPS
+L+AvIoBot3oHQbos4fOj2bcW6V7xEkpPojC2Qim0cD5GHkTmZULJSn+XNC6sDL+c
+qoBuZPS1pvJtYTsa114ngayFi16j9WUjar+yt9q9sSh1mESVaSBb8OdpXkOEmezM
+qkPNEePBETOxdlKxHQHL/rV/0f7k4nOcvQf3lGCMKeHGDmo9mWB1RSbEO0A45Nvl
+jFEs61fnL5/Hs7mQSAgzyJY9ZA2n1FliB5T4DyDkskPZAOYg4YwGPi/4QzrGTMsV
+PPpIRcv/DXyxzo74TtA1RdzEZaxnolzvL43vfMtVsbvX5NGOzhe1jh2iPoMKsg1c
+DgSvNDQXp74FtyxnZndK
+=QARt
+-----END PGP SIGNATURE-----
+
+--=-j+LvombhFSVWo3XDKtPS--
+
