@@ -1,77 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41118 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752721AbZBJPdw (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:46256 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753489AbZBDXHP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 10:33:52 -0500
-Subject: Re: zd1211rw keeps failing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mark Ryden <markryde@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Daniel Drake <dsd@gentoo.org>
-In-Reply-To: <dac45060902100545j3d9caf8er2183416f5b5669cc@mail.gmail.com> (sfid-20090210_144559_984950_F1D236FE)
-References: <1234262188.4302.0.camel@johannes.local>
-	 <dac45060902100545j3d9caf8er2183416f5b5669cc@mail.gmail.com>
-	 (sfid-20090210_144559_984950_F1D236FE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mL9Agn23Ywuf+QEH/rzv"
-Date: Tue, 10 Feb 2009 16:33:19 +0100
-Message-Id: <1234279999.4229.2.camel@johannes.local> (sfid-20090210_163356_581904_70A47984)
-Mime-Version: 1.0
+	Wed, 4 Feb 2009 18:07:15 -0500
+Received: by mail-ew0-f21.google.com with SMTP id 14so4024043ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 15:07:14 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Cc: David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH v2 16/16] orinoco: hermes doesn't need to be a separate module
+Date: Wed,  4 Feb 2009 23:05:58 +0000
+Message-Id: <1233788758-9850-17-git-send-email-kilroyd@googlemail.com> (sfid-20090205_000726_071275_B115B120)
+In-Reply-To: <1233788758-9850-16-git-send-email-kilroyd@googlemail.com>
+References: <1233788758-9850-1-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-2-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-3-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-4-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-5-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-6-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-7-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-8-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-9-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-10-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-11-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-12-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-13-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-14-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-15-git-send-email-kilroyd@googlemail.com>
+ <1233788758-9850-16-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Just compile it into the orinoco module. If we merge USB support, the
+module can then be split as appropriate.
 
---=-mL9Agn23Ywuf+QEH/rzv
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/Makefile |    4 ++--
+ drivers/net/wireless/orinoco/hermes.c |   18 ------------------
+ 2 files changed, 2 insertions(+), 20 deletions(-)
 
-On Tue, 2009-02-10 at 15:45 +0200, Mark Ryden wrote:
-> Hello,
->   - Can you please elaborate on under which sequence of operations
-> does this occur ? is it the wireless-testing tree? the reason is:
->  I am using the latest git wireless-testing (from today; -rc4 based tree)=
-.
-> I can associate to an Access Point without errors; and I tried more than =
-once.
->=20
-> I had tried both when encryption is off in the Access Point and when
-> encryption is on in the Access Point.
-
-Odd; I think I might blame it on my hardware. I booted into an older
-kernel and it failed similary, though it works just fine with my
-unencrypted AP.
-
-> > [ 1819.141519] wlan1: authenticate with AP 8e:b5:9c:32:62:6e
-> > [ 1819.340080] wlan1: authenticate with AP 8e:b5:9c:32:62:6e
-> > [ 1819.550073] wlan1: authenticate with AP 8e:b5:9c:32:62:6e
-> > [ 1819.750061] wlan1: authentication with AP 8e:b5:9c:32:62:6e timed ou=
-t
-
-Did I mention that address is completely bogus?
-
-johannes
-
---=-mL9Agn23Ywuf+QEH/rzv
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJkZ47AAoJEKVg1VMiehFYi84P+wfGmoXGLJdSpO+NsFKrnbp/
-OxUApb8LThVoWz7Dosc/AScrwAxUjHqHhVBRP2KX46cPZLn+25lw/Oc9sbra60mg
-kYAlrIwZzJSvlNrqPdPRxGddO3dLuj5zJWGjoxZinjdKS6ZnWikJtj0YWMSApWcy
-HRIqHxhttrhlDwUjjXY2VrsxuU1dRfk6ArY+cPob/WzrDLlnYdDaaoQ56SIsHVJt
-QNqqMSoEdkOPgzJdUtHuIwwSCfM2/2inFuZHRTin7pYoEA6vAgX7fzq1hkZe8Zmr
-ANF/kmYE3Mp7Qpb/balmCYTz8gfBqm88j4K9kjRwJMexOEQ65+DlDTAqSCZ9Z44z
-0sNIVCDOZpNu7lWndwf21g+pMOYxnrHSf4n8UFndV3+6GGnAHVOe3UWvmj61In44
-Egwmmw2FU4/BJFRmD1aEPSITovXiFG26043ouqKYA710PbsO4noXYhXDu5v9m7pD
-YoAZqa5B7d+a0kUsds6oHEPJBM2WGvW33qNoF5uZ5iuhYXEujSyOCmRXemoMe4Ga
-MJjlIgCZ6SxVh6ywbPHUNaqCvP43z/ALeKX2XMEaBcZP+TBvwhEp81BT9IMZq4Uc
-wuethQhiCi+Xjd5hC4LH0Od4pKQQYSyAXrBp5patEvhDjcrsFl7boe96iRTaWYS1
-Cl5j54kET2GcmL51kMsn
-=VlKF
------END PGP SIGNATURE-----
-
---=-mL9Agn23Ywuf+QEH/rzv--
+diff --git a/drivers/net/wireless/orinoco/Makefile b/drivers/net/wireless/orinoco/Makefile
+index 2f3e0dd..1fc7409 100644
+--- a/drivers/net/wireless/orinoco/Makefile
++++ b/drivers/net/wireless/orinoco/Makefile
+@@ -1,9 +1,9 @@
+ #
+ # Makefile for the orinoco wireless device drivers.
+ #
+-orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o hermes_dld.o
++orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o hermes_dld.o hermes.o
+ 
+-obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o
++obj-$(CONFIG_HERMES)		+= orinoco.o
+ obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
+ obj-$(CONFIG_APPLE_AIRPORT)	+= airport.o
+ obj-$(CONFIG_PLX_HERMES)	+= orinoco_plx.o
+diff --git a/drivers/net/wireless/orinoco/hermes.c b/drivers/net/wireless/orinoco/hermes.c
+index f48358f..f2c918c 100644
+--- a/drivers/net/wireless/orinoco/hermes.c
++++ b/drivers/net/wireless/orinoco/hermes.c
+@@ -45,12 +45,6 @@
+ 
+ #include "hermes.h"
+ 
+-MODULE_DESCRIPTION("Low-level driver helper for Lucent Hermes chipset"
+-		   " and Prism II HFA384x wireless MAC controller");
+-MODULE_AUTHOR("Pavel Roskin <proski@gnu.org>"
+-	" & David Gibson <hermes@gibson.dropbear.id.au>");
+-MODULE_LICENSE("Dual MPL/GPL");
+-
+ /* These are maximum timeouts. Most often, card wil react much faster */
+ #define CMD_BUSY_TIMEOUT (100) /* In iterations of ~1us */
+ #define CMD_INIT_TIMEOUT (50000) /* in iterations of ~10us */
+@@ -540,15 +534,3 @@ int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
+ 	return err;
+ }
+ EXPORT_SYMBOL(hermes_write_ltv);
+-
+-static int __init init_hermes(void)
+-{
+-	return 0;
+-}
+-
+-static void __exit exit_hermes(void)
+-{
+-}
+-
+-module_init(init_hermes);
+-module_exit(exit_hermes);
+-- 
+1.6.0.6
 
