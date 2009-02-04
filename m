@@ -1,40 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2788 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbZBFU7K (ORCPT
+Received: from 30.mail-out.ovh.net ([213.186.62.213]:57582 "HELO
+	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751724AbZBDPGg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 15:59:10 -0500
-From: "Bob Copeland" <me@bobcopeland.com>
-To: Hugh Dickins <hugh@veritas.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>, maximlevitsky@gmail.com
-Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
-Date: Fri, 6 Feb 2009 15:58:38 -0500
-Message-Id: <20090206205043.M903@bobcopeland.com> (sfid-20090206_215915_155527_2548182A)
-In-Reply-To: <Pine.LNX.4.64.0902061857410.25517@blonde.anvils>
-References: <Pine.LNX.4.64.0901081740350.19523@blonde.anvils> <b6c5339f0901081041p3c9669f8ycd461b155da60f94@mail.gmail.com> <b6c5339f0901090541m1ac135bcta91bacb3f048a9ba@mail.gmail.com> <Pine.LNX.4.64.0901091400290.925@blonde.anvils> <20090110164705.GB10865@hash.localnet> <20090110201547.GA11261@hash.localnet> <Pine.LNX.4.64.0901131509080.9571@blonde.anvils> <20090113154204.M52697@bobcopeland.com> <Pine.LNX.4.64.0902061305530.15787@blonde.anvils> <20090206183443.M95991@bobcopeland.com> <20090206184445.GB7526@tuxdriver.com> <Pine.LNX.4.64.0902061857410.25517@blonde.anvils>
+	Wed, 4 Feb 2009 10:06:36 -0500
+Date: Wed, 4 Feb 2009 16:08:57 +0100
+From: Samuel Ortiz <samuel@sortiz.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH RFC] mac80211: Filter scan results
+Message-ID: <20090204150857.GA5069@sortiz.org> (sfid-20090204_160640_465532_8378EED5)
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 6 Feb 2009 19:01:28 +0000 (GMT), Hugh Dickins wrote
-> On Fri, 6 Feb 2009, John W. Linville wrote:
-> > Hmmm...well it is a little big, but I guess it is OK.  Do you have
-> > an example of the stack trace?  Or a link to a bugzilla or somesuch
-> > would be even better...
-> 
-> Below is my original report: I didn't copy down the stacktrace,
-> and the kernel paniced with "Fatal exception in interrupt", so
-> nothing I can send you from the logs I'm afraid.
+From: Samuel Ortiz <samuel.ortiz@intel.com>
 
-I can generate the panic if you like, but it will need to wait a few
-hours until I am back home to the machine with the serial console.
-I just forced one of the skb allocations to fail to test it.
+In very dense environment, the scan result buffer can get really large, mostly
+due to the addition of proprietary IEs. iwlist fails, typically warning about:
+"print_scanning_info: Allocation failed". wpa_supplicant fails as well, after
+reallocating the scan result buffer several times, up to 132 Kbytes:
+	[snip]
+	Scan results did not fit - trying larger buffer (131072 bytes)
+	ioctl[SIOCGIWSCAN]: Argument list too long
 
+By adding a mac80211 module parameter, we can filter the scan results and keep
+only the ones userspace currently worries about, i.e. WPA1, WPA2, WMM and WPS.
+
+To activate this feature, 1 has to be written to
+/sys/module/mac80211/parameters/ieee80211_scan_ie_filter
+
+Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    1 
+ net/mac80211/scan.c        |   65 ++++++++++++++++++++++++++++++---------------
+ net/mac80211/util.c        |   40 +++++++++++++++++++++++++++
+ 3 files changed, 85 insertions(+), 21 deletions(-)
+
+Index: wireless-testing/net/mac80211/scan.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/scan.c	2009-01-28 11:37:55.000000000 +0100
++++ wireless-testing/net/mac80211/scan.c	2009-01-28 17:32:48.000000000 +0100
+@@ -31,6 +31,11 @@
+ #define IEEE80211_CHANNEL_TIME (HZ / 33)
+ #define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 5)
+ 
++static int ieee80211_scan_ie_filter;
++module_param(ieee80211_scan_ie_filter, bool, 0644);
++MODULE_PARM_DESC(ieee80211_scan_ie_filter,
++		 "Filter IEs from scan results");
++
+ void ieee80211_rx_bss_list_init(struct ieee80211_local *local)
+ {
+ 	spin_lock_init(&local->bss_lock);
+@@ -725,33 +730,51 @@ static void ieee80211_scan_add_ies(struc
+ 	if (bss == NULL || bss->ies == NULL)
+ 		return;
+ 
+-	/*
+-	 * If needed, fragment the IEs buffer (at IE boundaries) into short
+-	 * enough fragments to fit into IW_GENERIC_IE_MAX octet messages.
+-	 */
+ 	pos = bss->ies;
+ 	end = pos + bss->ies_len;
+ 
+-	while (end - pos > IW_GENERIC_IE_MAX) {
+-		next = pos + 2 + pos[1];
+-		while (next + 2 + next[1] - pos < IW_GENERIC_IE_MAX)
+-			next = next + 2 + next[1];
++	if (ieee80211_scan_ie_filter) {
++		while (pos - end) {
++			next = pos + 2 + pos[1];
++			if (ieee80211_filter_ie(pos)) {
++				memset(&iwe, 0, sizeof(iwe));
++				iwe.cmd = IWEVGENIE;
++				iwe.u.data.length = next - pos;
++				*current_ev =
++					iwe_stream_add_point(info, *current_ev,
++							     end_buf, &iwe,
++							     pos);
++			}
++			pos = next;
++		}
++	} else {
++		/*
++		 * If needed, fragment the IEs buffer (at IE boundaries) into
++		 * short enough fragments to fit into IW_GENERIC_IE_MAX octet
++		 * messages.
++		 */
++
++		while (end - pos > IW_GENERIC_IE_MAX) {
++			next = pos + 2 + pos[1];
++			while (next + 2 + next[1] - pos < IW_GENERIC_IE_MAX)
++				next = next + 2 + next[1];
+ 
+-		memset(&iwe, 0, sizeof(iwe));
+-		iwe.cmd = IWEVGENIE;
+-		iwe.u.data.length = next - pos;
+-		*current_ev = iwe_stream_add_point(info, *current_ev,
+-						   end_buf, &iwe, pos);
++			memset(&iwe, 0, sizeof(iwe));
++			iwe.cmd = IWEVGENIE;
++			iwe.u.data.length = next - pos;
++			*current_ev = iwe_stream_add_point(info, *current_ev,
++							   end_buf, &iwe, pos);
+ 
+-		pos = next;
+-	}
++			pos = next;
++		}
+ 
+-	if (end > pos) {
+-		memset(&iwe, 0, sizeof(iwe));
+-		iwe.cmd = IWEVGENIE;
+-		iwe.u.data.length = end - pos;
+-		*current_ev = iwe_stream_add_point(info, *current_ev,
+-						   end_buf, &iwe, pos);
++		if (end > pos) {
++			memset(&iwe, 0, sizeof(iwe));
++			iwe.cmd = IWEVGENIE;
++			iwe.u.data.length = end - pos;
++			*current_ev = iwe_stream_add_point(info, *current_ev,
++							   end_buf, &iwe, pos);
++		}
+ 	}
+ }
+ 
+Index: wireless-testing/net/mac80211/util.c
+===================================================================
+--- wireless-testing.orig/net/mac80211/util.c	2009-01-28 11:37:41.000000000 +0100
++++ wireless-testing/net/mac80211/util.c	2009-01-28 15:57:03.000000000 +0100
+@@ -675,6 +675,46 @@ void ieee802_11_parse_elems(u8 *start, s
+ 	}
+ }
+ 
++/*
++ * ieee80211_filter_ie() tries to keep only the relevant IEs for
++ * userspace (mostly hostap code).
++ */
++int ieee80211_filter_ie(u8 *ie)
++{
++	u8 id, ie_len, *pos;
++	u8 microsoft_oui[4] = {0x00, 0x50, 0xf2};
++	u8 wpa2_oui[3] = {0x00, 0x0f, 0xac};
++
++	pos = ie;
++	id = *pos++;
++	ie_len = *pos++;
++
++	switch (id) {
++	case WLAN_EID_RSN:
++		/* WPA2 */
++		if (ie_len >= 3 &&
++		    !memcmp(pos, wpa2_oui, 3))
++			return 1;
++
++		return 0;
++
++	case WLAN_EID_VENDOR_SPECIFIC:
++		/* We're trying to catch WPA1, WMM and WPS IEs. */
++		if (ie_len >= 3 &&
++		    !memcmp(pos, microsoft_oui, 3)) {
++			if ((pos[3] == 1) || /* WPA1 */
++			    (pos[3] == 2) || /* WMM */
++			    (pos[3] == 4))   /* WPS */
++				return 1;
++		}
++
++		return 0;
++
++	default:
++		return 0;
++	}
++}
++
+ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+Index: wireless-testing/net/mac80211/ieee80211_i.h
+===================================================================
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-01-28 11:37:41.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-01-28 13:49:17.000000000 +0100
+@@ -1028,6 +1028,7 @@ void ieee80211_tx_skb(struct ieee80211_s
+ 		      int encrypt);
+ void ieee802_11_parse_elems(u8 *start, size_t len,
+ 			    struct ieee802_11_elems *elems);
++int ieee80211_filter_ie(u8 *ie);
+ int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freq);
+ u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
+ 			      enum ieee80211_band band);
 -- 
-Bob Copeland %% www.bobcopeland.com
-
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
