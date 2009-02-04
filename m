@@ -1,69 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:33879 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752010AbZBMHfc (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48769 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752142AbZBDPKi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 02:35:32 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so581956yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 23:35:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1234509436.1327.25.camel@johannes.local>
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
-	 <1234508187.1327.19.camel@johannes.local>
-	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
-	 <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
-	 <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com>
-	 <1234509436.1327.25.camel@johannes.local>
-Date: Thu, 12 Feb 2009 23:35:30 -0800
-Message-ID: <43e72e890902122335l6580dbc1m44702996cc8200e4@mail.gmail.com> (sfid-20090213_083542_175384_E72082A4)
-Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 4 Feb 2009 10:10:38 -0500
+Subject: Re: [PATCH RFC] mac80211: Filter scan results
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Samuel Ortiz <samuel@sortiz.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090204150857.GA5069@sortiz.org> (sfid-20090204_160640_465532_8378EED5)
+References: <20090204150857.GA5069@sortiz.org>
+	 (sfid-20090204_160640_465532_8378EED5)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jOsAaXEukROMRoifvahV"
+Date: Wed, 04 Feb 2009 16:10:01 +0100
+Message-Id: <1233760201.3992.20.camel@johannes.local> (sfid-20090204_161044_782961_6D7B361C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 12, 2009 at 11:17 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-02-12 at 23:14 -0800, Luis R. Rodriguez wrote:
->
->> >>> Yes, but I need to look at the one Reinette posted and fix that one,
->> >>> which will probably require a different solution.
->> >>
->> >> Oh I didn't see that one. How different?
->> >
->> > I see an rtnl lock issue against scanning and the drv mutex. Doesn't
->> > seem to be related to regulatory. So how would that affect a path to
->> > move hints to a workqueue?
->>
->> Oh you mean the rntl_lock() and drv mutex is _still_ an issue?
->
-> Well, regardless of regulatory, we now have two paths:
->
-> nl80211: cfg80211_mutex  -->  drv->mutex  -->  rtnl
-> wext:    rtnl  -->  cfg80211_mutex  -->  drv->mutex
->
-> which is clearly not a good plan.
->
-> Therefore, I'll probably have to implement solution (1) from what I sent
-> you, and invert the locking in nl80211. That would fix your the
-> immediate problem with regulatory as well, because that was:
->
-> rtnl  --->  (regulatory_hint) --->  cfg80211_mutex  -->  drv->mutex
 
-Yup I see. So as it stands in this patch user reg hint now is:
+--=-jOsAaXEukROMRoifvahV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-reg_mutex --> cfg80211_mutex
+On Wed, 2009-02-04 at 16:08 +0100, Samuel Ortiz wrote:
+> From: Samuel Ortiz <samuel.ortiz@intel.com>
+>=20
+> In very dense environment, the scan result buffer can get really large, m=
+ostly
+> due to the addition of proprietary IEs. iwlist fails, typically warning a=
+bout:
+> "print_scanning_info: Allocation failed". wpa_supplicant fails as well, a=
+fter
+> reallocating the scan result buffer several times, up to 132 Kbytes:
+> 	[snip]
+> 	Scan results did not fit - trying larger buffer (131072 bytes)
+> 	ioctl[SIOCGIWSCAN]: Argument list too long
+>=20
+> By adding a mac80211 module parameter, we can filter the scan results and=
+ keep
+> only the ones userspace currently worries about, i.e. WPA1, WPA2, WMM and=
+ WPS.
+>=20
+> To activate this feature, 1 has to be written to
+> /sys/module/mac80211/parameters/ieee80211_scan_ie_filter
 
-Driver hint also does the same so it seems your fix on nl80211 would
-probably just tap this series on the nl80211_req_set_reg().
+Module parameter, hard-coded filter, just to work around wext crap. Eww.
+NACK.
 
-I also think using a workqueue would be good here anyway, the only
-negative thing I've seen is loading takes a bit longer.
+Go for
+http://johannes.sipsolutions.net/patches/kernel/all/LATEST/028-cfg80211-sca=
+n.patch
+instead.
 
-  Luis
+johannes
+
+--=-jOsAaXEukROMRoifvahV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJia/GAAoJEKVg1VMiehFYSqsQALCSOjclNP8WxVuf3vnpylPy
+KsipdHWnofz/KljQLXu68CbRZdFUa/j+DrHkOOQyUfdSx7dvBMeLmIhsYHahnNS3
+GDSGS/heLfeug6DNFZAOUn3ayUgAIFL8nSpDbtogV7zGMApjs8mgsbevpa1vdsjN
+AyAXU4a/dV7t4IKX+dAv3UnodxyFa2cN2ZO79KsSgD3YzoVIlK6fEsVf43mFhljE
+ksovLqCvHpzwk/95p+zuitnw4J4IHOCSZVj+uOh2BA1IUFjh6S8cTP9HqqjLhsZI
+R9RxRF2KW1vKBhYmRFr4QfOub2in3EQLV5jGQuhn65kpoE3VoHlwR58xVKdq6wGM
+mDFrLKcJaDQF3SM3syGOEWYHku4OuAB5A870KbybPjXpkA75B9tNy1ZUdU23R/2N
+RGhcHeaQXQXOXfv28Qco8jWQyzZqiCFsaf9R/+GzqU63m2THQILjTcUrUJ3q9jju
+IWxdUPVhw7yZxXU7PvfClldqwSeEDnxKPUExyedux0CbDjrG2S1qo47z0B2lbVa3
+ItAaQin+CSoVQUKuqtI79TCO0wl8lQ/L6P2Azd5QF9WQMPGRZmvaoj/H03ExLpEc
+xufT8bvZ/9KEAtqSPWZZGrJItzHm1jZUO2thWuny6QIGHlmrS/TE6BN1OTlmhBw8
+2GxNkPrDk84Kvgv/wdmy
+=BrUQ
+-----END PGP SIGNATURE-----
+
+--=-jOsAaXEukROMRoifvahV--
+
