@@ -1,56 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4330 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753461AbZBORGX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 12:06:23 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 4/4] ath5k: compute rts/cts duration after computing full pktlen
-Date: Sun, 15 Feb 2009 12:06:12 -0500
-Message-Id: <1234717572-10651-4-git-send-email-me@bobcopeland.com> (sfid-20090215_180628_288804_2116EADF)
+Received: from mail.atheros.com ([12.36.123.2]:19414 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757918AbZBDNBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2009 08:01:39 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 05:01:39 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Free current bss information in few places where we don't need it any more
+Date: Wed, 4 Feb 2009 18:28:48 +0530
+Message-ID: <1233752328-6918-1-git-send-email-vasanth@atheros.com> (sfid-20090204_140151_903327_6BB0743D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RTS and CTS-to-self duration needs to go after ICV len is considered.
-
-Changes-licensed-under: 3-Clause-BSD
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/ath5k/base.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/mlme.c        |   38 +++++++++++++++++++++-----------------
+ net/mac80211/scan.c        |   13 +++++++++++++
+ 3 files changed, 36 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index fa6a216..bce825b 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1220,6 +1220,10 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index eaf3603..5a1f19a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -955,6 +955,8 @@ ieee80211_rx_bss_get(struct ieee80211_local *local, u8 *bssid, int freq,
+ 		     u8 *ssid, u8 ssid_len);
+ void ieee80211_rx_bss_put(struct ieee80211_local *local,
+ 			  struct ieee80211_bss *bss);
++void ieee80211_rx_bss_remove(struct ieee80211_sub_if_data *sdata, u8 *bssid,
++			     int freq, u8 *ssid, u8 ssid_len);
  
- 	pktlen = skb->len;
- 
-+	if (info->control.hw_key) {
-+		keyidx = info->control.hw_key->hw_key_idx;
-+		pktlen += info->control.hw_key->icv_len;
-+	}
- 	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
- 		flags |= AR5K_TXDESC_RTSENA;
- 		cts_rate = ieee80211_get_rts_cts_rate(sc->hw, info)->hw_value;
-@@ -1232,11 +1236,6 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
- 		duration = le16_to_cpu(ieee80211_ctstoself_duration(sc->hw,
- 			sc->vif, pktlen, info));
+ /* interface handling */
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 57967d3..91c9a5a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -840,6 +840,14 @@ static void ieee80211_direct_probe(struct ieee80211_sub_if_data *sdata,
+ 		       sdata->dev->name, ifsta->bssid);
+ 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
+ 		ieee80211_sta_send_apinfo(sdata, ifsta);
++
++		/*
++		 * Most likely AP is not in the range so remove the
++		 * bss information associated to the AP
++		 */
++		ieee80211_rx_bss_remove(sdata, ifsta->bssid,
++				sdata->local->hw.conf.channel->center_freq,
++				ifsta->ssid, ifsta->ssid_len);
+ 		return;
  	}
+ 
+@@ -871,6 +879,9 @@ static void ieee80211_authenticate(struct ieee80211_sub_if_data *sdata,
+ 		       sdata->dev->name, ifsta->bssid);
+ 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
+ 		ieee80211_sta_send_apinfo(sdata, ifsta);
++		ieee80211_rx_bss_remove(sdata, ifsta->bssid,
++				sdata->local->hw.conf.channel->center_freq,
++				ifsta->ssid, ifsta->ssid_len);
+ 		return;
+ 	}
+ 
+@@ -933,8 +944,12 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_sta_send_apinfo(sdata, ifsta);
+ 
+-	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT)
++	if (self_disconnected || reason == WLAN_REASON_DISASSOC_STA_HAS_LEFT) {
+ 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
++		ieee80211_rx_bss_remove(sdata, ifsta->bssid,
++				sdata->local->hw.conf.channel->center_freq,
++				ifsta->ssid, ifsta->ssid_len);
++	}
+ 
+ 	rcu_read_unlock();
+ 
+@@ -1017,6 +1032,9 @@ static void ieee80211_associate(struct ieee80211_sub_if_data *sdata,
+ 		       sdata->dev->name, ifsta->bssid);
+ 		ifsta->state = IEEE80211_STA_MLME_DISABLED;
+ 		ieee80211_sta_send_apinfo(sdata, ifsta);
++		ieee80211_rx_bss_remove(sdata, ifsta->bssid,
++				sdata->local->hw.conf.channel->center_freq,
++				ifsta->ssid, ifsta->ssid_len);
+ 		return;
+ 	}
+ 
+@@ -1042,7 +1060,6 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 	int disassoc;
+-	bool remove_bss = false;
+ 
+ 	/* TODO: start monitoring current AP signal quality and number of
+ 	 * missed beacons. Scan other channels every now and then and search
+@@ -1068,7 +1085,6 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata,
+ 				       "range\n",
+ 				       sdata->dev->name, ifsta->bssid);
+ 				disassoc = 1;
+-				remove_bss = true;
+ 			} else
+ 				ieee80211_send_probe_req(sdata, ifsta->bssid,
+ 							 ifsta->ssid,
+@@ -1088,24 +1104,12 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata,
+ 
+ 	rcu_read_unlock();
+ 
+-	if (disassoc) {
++	if (disassoc)
+ 		ieee80211_set_disassoc(sdata, ifsta, true, true,
+ 					WLAN_REASON_PREV_AUTH_NOT_VALID);
+-		if (remove_bss) {
+-			struct ieee80211_bss *bss;
 -
--	if (info->control.hw_key) {
--		keyidx = info->control.hw_key->hw_key_idx;
--		pktlen += info->control.hw_key->icv_len;
+-			bss = ieee80211_rx_bss_get(local, ifsta->bssid,
+-					local->hw.conf.channel->center_freq,
+-					ifsta->ssid, ifsta->ssid_len);
+-			if (bss) {
+-				atomic_dec(&bss->users);
+-				ieee80211_rx_bss_put(local, bss);
+-			}
+-		}
+-	} else {
++	else
+ 		mod_timer(&ifsta->timer, jiffies +
+ 				      IEEE80211_MONITORING_INTERVAL);
 -	}
- 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
- 		ieee80211_get_hdrlen_from_skb(skb), AR5K_PKT_TYPE_NORMAL,
- 		(sc->power_level * 2),
+ }
+ 
+ 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 282e6a0..50719ea 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -327,6 +327,19 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 	return bss;
+ }
+ 
++void ieee80211_rx_bss_remove(struct ieee80211_sub_if_data *sdata, u8 *bssid,
++			     int freq, u8 *ssid, u8 ssid_len)
++{
++	struct ieee80211_bss *bss;
++	struct ieee80211_local *local = sdata->local;
++
++	bss = ieee80211_rx_bss_get(local, bssid, freq, ssid, ssid_len);
++	if (bss) {
++		atomic_dec(&bss->users);
++		ieee80211_rx_bss_put(local, bss);
++	}
++}
++
+ ieee80211_rx_result
+ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
+ 		  struct ieee80211_rx_status *rx_status)
 -- 
-1.6.0.6
-
+1.5.5.1
 
