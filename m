@@ -1,115 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:37699
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbZBAVw0 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42686 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753062AbZBEMIH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Feb 2009 16:52:26 -0500
-Received: from [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7] (unknown [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by s0be.servebeer.com (Postfix) with ESMTPSA id CE2F8252A7A
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Feb 2009 16:52:21 -0500 (EST)
-Message-ID: <49861993.3080809@erley.org> (sfid-20090201_225233_394944_B46EB271)
-Date: Sun, 01 Feb 2009 16:52:19 -0500
-From: pat-lkml <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [patch resend] crda: rename nl_handle to nl_sock for libnl-2.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 5 Feb 2009 07:08:07 -0500
+Subject: Re: [PATCH] mac80211: Fix the wrong WARN_ON message appearing on
+	enabling power save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090205110631.GA13746@myhost.users.atheros.com> (sfid-20090205_121647_697221_4D18A79B)
+References: <20090205110631.GA13746@myhost.users.atheros.com>
+	 (sfid-20090205_121647_697221_4D18A79B)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-2YUfXG26nHOTQjCFtdoZ"
+Date: Thu, 05 Feb 2009 13:07:27 +0100
+Message-Id: <1233835647.3931.13.camel@johannes.local> (sfid-20090205_130812_117576_6435E6D6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upstream has renamed nl_handle to nl_sock.  Update crda to the new names
-and add #define for libnl-1.1.
 
-Signed-off-by: Pat Erley <pat-lkml@erley.org>
+--=-2YUfXG26nHOTQjCFtdoZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
-resent fixing whitespace errors in last repost.
+On Thu, 2009-02-05 at 16:36 +0530, Vivek Natarajan wrote:
+> The warning message intended to be hit on driver's rejection of a Tx fram=
+e
+> is also hit while the netif_subqueue is stopped. This patch fixes this er=
+ror
+> case.
 
-diff --git a/crda.c b/crda.c
-index afc5df1..f2c471f 100644
---- a/crda.c
-+++ b/crda.c
-@@ -43,10 +43,11 @@ static inline int __genl_ctrl_alloc_cache(struct
-nl_handle *h, struct nl_cache *
- }
+This seems a little odd. Why would we be in that code if the queue is
+stopped?
 
- #define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
-+#define nl_sock nl_handle
- #endif /* CONFIG_LIBNL20 */
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+>  net/mac80211/tx.c |    8 +++++---
+>  1 files changed, 5 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index f1c726d..bf73f6d 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -35,6 +35,7 @@
+>  #define IEEE80211_TX_OK		0
+>  #define IEEE80211_TX_AGAIN	1
+>  #define IEEE80211_TX_FRAG_AGAIN	2
+> +#define IEEE80211_TX_PENDING	3
+> =20
+>  /* misc utils */
+> =20
+> @@ -1085,7 +1086,7 @@ static int __ieee80211_tx(struct ieee80211_local *l=
+ocal, struct sk_buff *skb,
+> =20
+>  	if (skb) {
+>  		if (netif_subqueue_stopped(local->mdev, skb))
+> -			return IEEE80211_TX_AGAIN;
+> +			return IEEE80211_TX_PENDING;
+> =20
+>  		ret =3D local->ops->tx(local_to_hw(local), skb);
+>  		if (ret)
+> @@ -1211,8 +1212,9 @@ retry:
+>  		 * queues, there's no reason for a driver to reject
+>  		 * a frame there, warn and drop it.
+>  		 */
+> -		if (WARN_ON(info->flags & IEEE80211_TX_CTL_AMPDU))
+> -			goto drop;
+> +		if (ret !=3D IEEE80211_TX_PENDING)
+> +			if (WARN_ON(info->flags & IEEE80211_TX_CTL_AMPDU))
+> +				goto drop;
+> =20
+>  		store =3D &local->pending_packet[queue];
+> =20
 
- struct nl80211_state {
--	struct nl_handle *nl_handle;
-+	struct nl_sock *nl_sock;
- 	struct nl_cache *nl_cache;
- 	struct genl_family *nl80211;
- };
-@@ -55,22 +56,22 @@ static int nl80211_init(struct nl80211_state *state)
- {
- 	int err;
+--=-2YUfXG26nHOTQjCFtdoZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--	state->nl_handle = nl_socket_alloc();
--	if (!state->nl_handle) {
--		fprintf(stderr, "Failed to allocate netlink handle.\n");
-+	state->nl_sock = nl_socket_alloc();
-+	if (!state->nl_sock) {
-+		fprintf(stderr, "Failed to allocate netlink sock.\n");
- 		return -ENOMEM;
- 	}
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
--	if (genl_connect(state->nl_handle)) {
-+	if (genl_connect(state->nl_sock)) {
- 		fprintf(stderr, "Failed to connect to generic netlink.\n");
- 		err = -ENOLINK;
--		goto out_handle_destroy;
-+		goto out_sock_destroy;
- 	}
+iQIcBAABAgAGBQJJitZ8AAoJEKVg1VMiehFY2UAP/RCK+tZR4xEKSJMpqdQTW1Xi
+ieBubjvWURGpLZZkYVXPrQDgKSM9ac38svM1X8m5zOM3nsDBXueyFxxL9ZkM9iJd
+UfA2bh1sST/mOCDczw3Rt6gSwslKtk9Qmwe2YBmzab6xHQXVSCVac7kE2hCehU97
+GYWFHtS9984A/Tg65ROEeDmsVmRfSVDhCW2eVA/q79osGoj8OoCV4OIbmx5FgQ8J
+HoI9Uus2WUgQQi2mQ5zGOWc1gzAKEfhtLJ4Ex+rRfcuN3cARy7PCSXhmSjWxh2di
+e4mUCoNfK7yndZrqg15Mg+20whua7BnFubt9nAX2SXDzsYcmay9186gAIYIVh+N3
+fnrziV9bIc1U+BsIrnP15MJ4hPcQxFuFhZ43/J1Cr7NbcCoYwxo0kbajz+qzvxds
+76V3kSqmc+6KBVdx6k5zsty6/rgBNB3kofDYfewnciaAElD5Am2KoifviXxP0k2D
+K9p/duTYIrM3/vhgG2Om3H8hktZ8+zMQdKG1740LTe5NOBm+YOvAKJKT+nLA9E2k
+WYkfDOnYAVVOK+kpGApd/XoT+merd5I0GrmNJnIJtiPNtQvN/rym7J9nUzty97mR
+Vx1gaFcltA/9L4jQ/HqfFgRl2On27hcFPvXFcdAXSWucctZUPN5uXpEckZ2sQUFC
+qTG17+8WOZCYYkA5LIn8
+=INze
+-----END PGP SIGNATURE-----
 
--	if (genl_ctrl_alloc_cache(state->nl_handle, &state->nl_cache)) {
-+	if (genl_ctrl_alloc_cache(state->nl_sock, &state->nl_cache)) {
- 		fprintf(stderr, "Failed to allocate generic netlink cache.\n");
- 		err = -ENOMEM;
--		goto out_handle_destroy;
-+		goto out_sock_destroy;
- 	}
+--=-2YUfXG26nHOTQjCFtdoZ--
 
- 	state->nl80211 = genl_ctrl_search_by_name(state->nl_cache, "nl80211");
-@@ -84,8 +85,8 @@ static int nl80211_init(struct nl80211_state *state)
-
-  out_cache_free:
- 	nl_cache_free(state->nl_cache);
-- out_handle_destroy:
--	nl_socket_free(state->nl_handle);
-+ out_sock_destroy:
-+	nl_socket_free(state->nl_sock);
- 	return err;
- }
-
-@@ -93,7 +94,7 @@ static void nl80211_cleanup(struct nl80211_state *state)
- {
- 	genl_family_put(state->nl80211);
- 	nl_cache_free(state->nl_cache);
--	nl_socket_free(state->nl_handle);
-+	nl_socket_free(state->nl_sock);
- }
-
- static int reg_handler(struct nl_msg __attribute__((unused)) *msg,
-@@ -294,7 +295,7 @@ int main(int argc, char **argv)
- 	if (!cb)
- 		goto cb_out;
-
--	r = nl_send_auto_complete(nlstate.nl_handle, msg);
-+	r = nl_send_auto_complete(nlstate.nl_sock, msg);
-
- 	if (r < 0) {
- 		fprintf(stderr, "Failed to send regulatory request: %d\n", r);
-@@ -306,7 +307,7 @@ int main(int argc, char **argv)
- 	nl_cb_err(cb, NL_CB_CUSTOM, error_handler, NULL);
-
- 	if (!finished) {
--		r = nl_wait_for_ack(nlstate.nl_handle);
-+		r = nl_wait_for_ack(nlstate.nl_sock);
- 		if (r < 0) {
- 			fprintf(stderr, "Failed to set regulatory domain: "
- 				"%d\n", r);
