@@ -1,178 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55329 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753593AbZBRXZr (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:38476 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753270AbZBEMKe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 18:25:47 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Thu, 5 Feb 2009 07:10:34 -0500
+Date: Thu, 5 Feb 2009 14:07:30 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>, Samuel Ortiz <samuel@sortiz.org>,
+	John Linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 01/15] cfg80211: rename cfg80211_registered_device's idx to wiphy_idx
-Date: Wed, 18 Feb 2009 18:25:31 -0500
-Message-Id: <1234999545-14357-2-git-send-email-lrodriguez@atheros.com> (sfid-20090219_002601_926628_F7DE1626)
-In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: Re: [PATCH RFC] mac80211: Filter scan results
+Message-ID: <20090205120730.GA18339@jm.kir.nu> (sfid-20090205_131038_114865_9212084F)
+References: <20090204150857.GA5069@sortiz.org> <1233789837.24227.19.camel@localhost.localdomain> <1233790539.7390.23.camel@johannes.local> <20090205084407.GA11126@jm.kir.nu> <20090205111058.GA16422@jm.kir.nu> <1233834907.3931.4.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1233834907.3931.4.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Makes it clearer to read when comparing to ifidx
+On Thu, Feb 05, 2009 at 12:55:07PM +0100, Johannes Berg wrote:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/core.c    |   35 ++++++++++++++++++-----------------
- net/wireless/core.h    |    2 +-
- net/wireless/nl80211.c |    4 ++--
- net/wireless/sysfs.c   |    2 +-
- 4 files changed, 22 insertions(+), 21 deletions(-)
+> Seems ok to me, since wext limits us to this anyway... But can we rely
+> on userspace to (a) use the exactly largest buffer size and (b) be able
+> to interpret that?
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 0668b2b..2b3e786 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -37,12 +37,13 @@ DEFINE_MUTEX(cfg80211_drv_mutex);
- static struct dentry *ieee80211_debugfs_dir;
- 
- /* requires cfg80211_drv_mutex to be held! */
--static struct cfg80211_registered_device *cfg80211_drv_by_wiphy(int wiphy)
-+static struct cfg80211_registered_device *
-+cfg80211_drv_by_wiphy_idx(int wiphy_idx)
- {
- 	struct cfg80211_registered_device *result = NULL, *drv;
- 
- 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
--		if (drv->idx == wiphy) {
-+		if (drv->wiphy_idx == wiphy_idx) {
- 			result = drv;
- 			break;
- 		}
-@@ -56,12 +57,12 @@ static struct cfg80211_registered_device *
- __cfg80211_drv_from_info(struct genl_info *info)
- {
- 	int ifindex;
--	struct cfg80211_registered_device *bywiphy = NULL, *byifidx = NULL;
-+	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
- 	struct net_device *dev;
- 	int err = -EINVAL;
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY]) {
--		bywiphy = cfg80211_drv_by_wiphy(
-+		bywiphyidx = cfg80211_drv_by_wiphy_idx(
- 				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
- 		err = -ENODEV;
- 	}
-@@ -78,14 +79,14 @@ __cfg80211_drv_from_info(struct genl_info *info)
- 		err = -ENODEV;
- 	}
- 
--	if (bywiphy && byifidx) {
--		if (bywiphy != byifidx)
-+	if (bywiphyidx && byifidx) {
-+		if (bywiphyidx != byifidx)
- 			return ERR_PTR(-EINVAL);
- 		else
--			return bywiphy; /* == byifidx */
-+			return bywiphyidx; /* == byifidx */
- 	}
--	if (bywiphy)
--		return bywiphy;
-+	if (bywiphyidx)
-+		return bywiphyidx;
- 
- 	if (byifidx)
- 		return byifidx;
-@@ -143,16 +144,16 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 			char *newname)
- {
- 	struct cfg80211_registered_device *drv;
--	int idx, taken = -1, result, digits;
-+	int wiphy_idx, taken = -1, result, digits;
- 
- 	mutex_lock(&cfg80211_drv_mutex);
- 
- 	/* prohibit calling the thing phy%d when %d is not its number */
--	sscanf(newname, PHY_NAME "%d%n", &idx, &taken);
--	if (taken == strlen(newname) && idx != rdev->idx) {
--		/* count number of places needed to print idx */
-+	sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken);
-+	if (taken == strlen(newname) && wiphy_idx != rdev->wiphy_idx) {
-+		/* count number of places needed to print wiphy_idx */
- 		digits = 1;
--		while (idx /= 10)
-+		while (wiphy_idx /= 10)
- 			digits++;
- 		/*
- 		 * deny the name if it is phy<idx> where <idx> is printed
-@@ -222,9 +223,9 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	mutex_lock(&cfg80211_drv_mutex);
- 
--	drv->idx = wiphy_counter++;
-+	drv->wiphy_idx = wiphy_counter++;
- 
--	if (unlikely(drv->idx < 0)) {
-+	if (unlikely(drv->wiphy_idx < 0)) {
- 		wiphy_counter--;
- 		mutex_unlock(&cfg80211_drv_mutex);
- 		/* ugh, wrapped! */
-@@ -235,7 +236,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
- 	mutex_unlock(&cfg80211_drv_mutex);
- 
- 	/* give it a proper name */
--	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->idx);
-+	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->wiphy_idx);
- 
- 	mutex_init(&drv->mtx);
- 	mutex_init(&drv->devlist_mtx);
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 5d0c682..1783781 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -37,7 +37,7 @@ struct cfg80211_registered_device {
- 	enum environment_cap env;
- 
- 	/* wiphy index, internal only */
--	int idx;
-+	int wiphy_idx;
- 
- 	/* associate netdev list */
- 	struct mutex devlist_mtx;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ded96fc..d18e8cd 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -163,7 +163,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	if (!hdr)
- 		return -1;
- 
--	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->wiphy_idx);
- 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&dev->wiphy));
- 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
- 		   dev->wiphy.max_scan_ssids);
-@@ -2730,7 +2730,7 @@ static int nl80211_send_scan_donemsg(struct sk_buff *msg,
- 	if (!hdr)
- 		return -1;
- 
--	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
- 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
- 
- 	/* XXX: we should probably bounce back the request? */
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index 15feaeb..efe3c5c 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -31,7 +31,7 @@ static ssize_t name ## _show(struct device *dev,			\
- 	return sprintf(buf, fmt "\n", dev_to_rdev(dev)->member);	\
- }
- 
--SHOW_FMT(index, "%d", idx);
-+SHOW_FMT(index, "%d", wiphy_idx);
- SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
- 
- static struct device_attribute ieee80211_dev_attrs[] = {
+(a) Currently not, but once people realize that the length field has a
+maximum value of 65535, using it as the largest attempt sounds like the
+most logical choice. In other words, yes, this will require a small
+change in programs that care (wpa_supplicant, which I already changed;
+iwlist; etc.), but the change is minimal and not doing this does not break
+anything new.
+
+(b) Yes, user space apps better be prepared to read the results even if
+the last entry is truncated (can happen with current kernel). There is
+no clear way for the app to know that there could be more scan results
+(well, it could guess that this is the case if the returned buffer is
+very close to 64 kB), but it is not like scanning is that reliable
+operation anyway, so applications better be prepared to not always
+find every BSS in the results.
+
 -- 
-1.6.0.3
-
+Jouni Malinen                                            PGP id EFC895FA
