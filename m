@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:11187 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbZBSHv7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 02:51:59 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so114041ywh.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 23:51:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <878wo2j4vo.fsf@litku.valot.fi>
-References: <1235002285-14812-1-git-send-email-lrodriguez@atheros.com>
-	 <878wo2j4vo.fsf@litku.valot.fi>
-Date: Wed, 18 Feb 2009 23:51:57 -0800
-Message-ID: <43e72e890902182351jae378d5m4515a23a3ae28a91@mail.gmail.com> (sfid-20090219_085245_264815_8DC699F2)
-Subject: Re: [PATCH] cfg80211: default OLD_REG to n
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	marcel@holtmann.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx2.redhat.com ([66.187.237.31]:34220 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751423AbZBEO7W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Feb 2009 09:59:22 -0500
+Subject: Re: [PATCH RFC] mac80211: Filter scan results
+From: Dan Williams <dcbw@redhat.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Jouni Malinen <j@w1.fi>, Johannes Berg <johannes@sipsolutions.net>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	John Linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240902050500p6d8e01d3k6b934f904bd41395@mail.gmail.com>
+References: <20090204150857.GA5069@sortiz.org>
+	 <1233789837.24227.19.camel@localhost.localdomain>
+	 <1233790539.7390.23.camel@johannes.local>
+	 <20090205084407.GA11126@jm.kir.nu> <20090205095217.GA13736@jm.kir.nu>
+	 <1ba2fa240902050344h1deb4c3dqce0949ec154faba4@mail.gmail.com>
+	 <20090205121222.GB18339@jm.kir.nu>
+	 <1ba2fa240902050500p6d8e01d3k6b934f904bd41395@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 05 Feb 2009 09:57:43 -0500
+Message-Id: <1233845863.3028.9.camel@localhost> (sfid-20090205_155926_071730_F02173EB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 18, 2009 at 10:51 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> "Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
->
->> Since we are not following the schedule to remove OLD_REG by 2.6.29
->> lets simply set it to default to n for 2.6.30 and schedule its
->> removal for 2.6.31
->
-> [...]
->
->>  config WIRELESS_OLD_REGULATORY
->>       bool "Old wireless static regulatory definitions"
->> -     default y
->> +     default n
->>       ---help---
->>         This option enables the old static regulatory information
->>         and uses it within the new framework. This is available
->
-> What does this mean in practise? If a user compiles the kernel with
-> the default settings, the wireless will work only if crda is
-> installed?
+On Thu, 2009-02-05 at 15:00 +0200, Tomas Winkler wrote:
+> On Thu, Feb 5, 2009 at 2:12 PM, Jouni Malinen <j@w1.fi> wrote:
+> > On Thu, Feb 05, 2009 at 01:44:15PM +0200, Tomas Winkler wrote:
+> >
+> >> Just a thought If user space will be able to merge 2 scan results we
+> >> can then split then in 2 separate reports....
+> >
+> > Theoretically speaking, yes, WEXT could be extended to do this with some
+> > kind of scan parameter that indicates which 64 kB block is requested.
+> > However, I would not suggest going there and I would probably object to
+> > a patch that tries to do this either in the kernel or in wpa_supplicant
+> > for that matter.
+> 
+> I thin it can be done w/o extension of  wext, j ust the eviction of
+> old scan results is done
+> in user space.IRCC the time stamp of beacon/probe is part of each
+> entry. And user space state machine should be able to react on
+> nl[SIOCGIWSCAN] w/o issuing ioctl[SIOCSIWSCAN]:
 
-No, it means you get the static world regdomain by default instead of
-the static US world regdomain by default.
+I still don't like this.  If 177 BSSes is not enough, then get the
+cfg80211 stuff working better for you.  I can't think of how this scheme
+would work; which half of the results get returned when something calls
+SIOCGIWSCAN?  Would the driver/stack internally flip to the other half
+of the results on each call of SIOCGIWSCAN?  That doesn't work, because
+then two userspace processes requesting scan results will race with each
+other for them.  We had this problem before when drivers cleared the
+scan list each time SIOCGIWSCAN was called.
 
-> If that's the case, this is way too early. All lazy people, like me,
-> will get very frustrated because of this. They don't want to make all
-> those hoops to install crda, they just want their wireless to work.
->
-> For example, I still can't find crda from debian unstable. In my
-> opinion we need to wait _at least_ a year after it's available in all
-> distros, and only then we can make crda the default.
+Dan
 
-Keep in mind OLD_REG still alows usage of CRDA, OLD_REG just means "3
-static regdomains, ieee80211_regdom module parameter, and make the US
-static regdom the default". That's all.
+> > If you really end up hitting a case that does not work reasonably well
+> > with 64 kB fix in user space, I would suggest looking into the
+> > cfg80211/nl80211 scan stuff. The only additional thing it needs in such
+> > an environment is to get better optimized data structure (for which,
+> > there is already a proposed implementation, too).
+> 
+> Guess we need to proceed with cfg anyway
+> 
+> Tomas
+> 
+> > --
+> > Jouni Malinen                                            PGP id EFC895FA
+> >
 
-> Let's not make the same mistake the udev people did. That was a
-> disaster few years back, I suffered from it multiple times.
-> Fortunately things have calmed down now and I can safely update the
-> kernel.
-
-Whatever works.
-
-  Luis
