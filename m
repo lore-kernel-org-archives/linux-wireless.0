@@ -1,94 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:25621 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759AbZBJPJx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38371 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755928AbZBENgi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 10:09:53 -0500
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH v4 1/2] mac80211: remove multicast check from check_tim()
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	vivek.natraj@gmail.com
-Date: Tue, 10 Feb 2009 17:09:24 +0200
-Message-ID: <20090210150924.21245.57742.stgit@tikku> (sfid-20090210_160958_388905_1938C185)
-In-Reply-To: <20090210150822.21245.87099.stgit@tikku>
-References: <20090210150822.21245.87099.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 5 Feb 2009 08:36:38 -0500
+Subject: Re: [PATCH] mac80211: Fix the wrong WARN_ON message appearing on
+	enabling power save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <8e92b4100902050426x5c6a0da5r86c3e6ca945b29c1@mail.gmail.com> (sfid-20090205_132619_307258_7901E67F)
+References: <20090205110631.GA13746@myhost.users.atheros.com>
+	 <1233835647.3931.13.camel@johannes.local>
+	 <8e92b4100902050426x5c6a0da5r86c3e6ca945b29c1@mail.gmail.com>
+	 (sfid-20090205_132619_307258_7901E67F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9P9rqU29OamIc0jZCocf"
+Date: Thu, 05 Feb 2009 14:35:58 +0100
+Message-Id: <1233840958.3931.20.camel@johannes.local> (sfid-20090205_143642_805312_5422604B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently mac80211 checks for the multicast tim bit from beacons,
-disables power save and sends a null frame if the bit is set. This was
-added to support ath9k. But this is a bit controversial because the AP will
-send multicast frames immediately after the beacon and the time constraints
-are really high. Relying mac80211 to be fast enough here might not be
-reliable in all situations. And there's no need to send a null frame, AP
-will send the frames immediately after the dtim beacon no matter what.
 
-Also if dynamic power save is disabled (iwconfig wlan0 power timeout 0)
-currently mac80211 disables power save whenever the multicast bit is set
-but it's never enabled again after receiving the first multicast/broadcast
-frame.
+--=-9P9rqU29OamIc0jZCocf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The current implementation is not usable on p54/stlc45xx and the
-easiest way to fix this is to remove the multicast tim bit check
-altogether. Handling multicast tim bit in host is rare, most of the
-designs do this in firmware/hardware, so it's better not to have it in
-mac80211. It's a lot better to do this in firmware/hardware, or if
-that's not possible it could be done in the driver.
+On Thu, 2009-02-05 at 17:56 +0530, Vivek Natarajan wrote:
+> On Thu, Feb 5, 2009 at 5:37 PM, Johannes Berg <johannes@sipsolutions.net>=
+ wrote:
+> > On Thu, 2009-02-05 at 16:36 +0530, Vivek Natarajan wrote:
+> >> The warning message intended to be hit on driver's rejection of a Tx f=
+rame
+> >> is also hit while the netif_subqueue is stopped. This patch fixes this=
+ error
+> >> case.
+> >
+> > This seems a little odd. Why would we be in that code if the queue is
+> > stopped?
+>=20
+> This issue happens only when we are associated with a 11n AP and power
+> save is enabled.
+> In the function 'ieee80211_master_start_xmit', ps_disable_work is
+> queued where wake_queues is called. But before this work is executed,
+> we check if the queues are stopped in _ieee80211_tx and returned
+> TX_AGAIN to ieee8011_tx which led to the warning message.
 
-Also renamed the function to ieee80211_check_tim() to follow the style
-of the file.
+Ah, ok, thanks for the explanation. Might make sense to put that into
+the commit message.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+johannes
 
- net/mac80211/mlme.c |   11 ++++-------
- 1 files changed, 4 insertions(+), 7 deletions(-)
+--=-9P9rqU29OamIc0jZCocf
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 91c9a5a..05c8d13 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -611,7 +611,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 	}
- }
- 
--static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
-+static bool ieee80211_check_tim(struct ieee802_11_elems *elems, u16 aid)
- {
- 	u8 mask;
- 	u8 index, indexn1, indexn2;
-@@ -621,9 +621,6 @@ static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
- 	index = aid / 8;
- 	mask  = 1 << (aid & 7);
- 
--	if (tim->bitmap_ctrl & 0x01)
--		*is_mc = true;
--
- 	indexn1 = tim->bitmap_ctrl & 0xfe;
- 	indexn2 = elems->tim_len + indexn1 - 4;
- 
-@@ -1840,7 +1837,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_local *local = sdata->local;
- 	u32 changed = 0;
--	bool erp_valid, directed_tim, is_mc = false;
-+	bool erp_valid, directed_tim;
- 	u8 erp_value = 0;
- 
- 	/* Process beacon from the current BSS */
-@@ -1868,9 +1865,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 
- 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK &&
- 	    local->hw.conf.flags & IEEE80211_CONF_PS) {
--		directed_tim = check_tim(&elems, ifsta->aid, &is_mc);
-+		directed_tim = ieee80211_check_tim(&elems, ifsta->aid);
- 
--		if (directed_tim || is_mc) {
-+		if (directed_tim) {
- 			local->hw.conf.flags &= ~IEEE80211_CONF_PS;
- 			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
- 			ieee80211_send_nullfunc(local, sdata, 0);
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJius7AAoJEKVg1VMiehFYnpgQAKqGVv/CtQw8Neu08277eg+L
+xplzBCmXF8jAY2vKjbIo9EpBTbVtC2BcqFqTRd2ph+8TKLROIA9HO2z2gDyjZz2G
+pkTr2sLC31AfggoOWUkD3rSH6U0TCHFeOYkfc1EU5zlM1opD5lSF8A/6GSzIey6Q
+kbjGb/2d8AtLXKc6c6OBzfmLZlaAR+4VF+uhzLXPahtIWptNoIzbL43Wn3UhmIC2
+Tfa72QSOkp4TO21cFq7ugKb/0jK0mCyqEa4eDzNehW7AsJ2nRvOyGATUk7grVfVz
+zvVRJqqgbxNZefxV3B1jIVLEXhcLKs6hPMsii7P78hspkxbNpsIR8O2s+pkb+CpW
+i2eS/6/9vSQxXboXMP0/rhnDMr4H2b5JGCeUiaTvi1U7Ec/xFk/G0oxsQ5PwmaVY
++Ujcvu1SOCPyVf0TdGBmxjGlwqLhatU2vFuivDJs9lBuwJWlGXRzCYJV8Kh45WFx
+sH5t28mbv+TgjxfWqOvqoKmztBeXVlpk1XZDVg40bOy5nMUAEKdBTBsKICmjWoG/
++BZaPmrL5MYG43t8cs+7pl7Dz16wV+O+zuQIw76Un5lLzPt8kt0ztbtnt3lAXNZr
+Je1f7zXRZ1PFQv4vvTCrp6/22OE7AxJsNau0OZcwTytaKu1u+MSnIJkPJ5ePPe/3
+WOWUegIiiy+B0jUYdTtF
+=PyW3
+-----END PGP SIGNATURE-----
+
+--=-9P9rqU29OamIc0jZCocf--
 
