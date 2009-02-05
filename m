@@ -1,65 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59561 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753623AbZB0VCb (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:63514 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754539AbZBENAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 16:02:31 -0500
-Subject: Re: [PATCH v2] mac80211: Call commit() on channel setting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20090226234307.51520@gmx.net> (sfid-20090227_004341_064030_7F5271DC)
-References: <20090226234307.51520@gmx.net>
-	 (sfid-20090227_004341_064030_7F5271DC)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Kuta6lGw2UGzeKO67g+1"
-Date: Fri, 27 Feb 2009 08:20:53 -0800
-Message-Id: <1235751653.7426.6.camel@johannes.local> (sfid-20090227_220234_402795_322B1174)
-Mime-Version: 1.0
+	Thu, 5 Feb 2009 08:00:19 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so285195wfa.4
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Feb 2009 05:00:17 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20090205121222.GB18339@jm.kir.nu>
+References: <20090204150857.GA5069@sortiz.org>
+	 <1233789837.24227.19.camel@localhost.localdomain>
+	 <1233790539.7390.23.camel@johannes.local>
+	 <20090205084407.GA11126@jm.kir.nu> <20090205095217.GA13736@jm.kir.nu>
+	 <1ba2fa240902050344h1deb4c3dqce0949ec154faba4@mail.gmail.com>
+	 <20090205121222.GB18339@jm.kir.nu>
+Date: Thu, 5 Feb 2009 15:00:17 +0200
+Message-ID: <1ba2fa240902050500p6d8e01d3k6b934f904bd41395@mail.gmail.com> (sfid-20090205_140026_635712_95D5FAA3)
+Subject: Re: [PATCH RFC] mac80211: Filter scan results
+From: Tomas Winkler <tomasw@gmail.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	John Linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Feb 5, 2009 at 2:12 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Thu, Feb 05, 2009 at 01:44:15PM +0200, Tomas Winkler wrote:
+>
+>> Just a thought If user space will be able to merge 2 scan results we
+>> can then split then in 2 separate reports....
+>
+> Theoretically speaking, yes, WEXT could be extended to do this with some
+> kind of scan parameter that indicates which 64 kB block is requested.
+> However, I would not suggest going there and I would probably object to
+> a patch that tries to do this either in the kernel or in wpa_supplicant
+> for that matter.
 
---=-Kuta6lGw2UGzeKO67g+1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I thin it can be done w/o extension of  wext, j ust the eviction of
+old scan results is done
+in user space.IRCC the time stamp of beacon/probe is part of each
+entry. And user space state machine should be able to react on
+nl[SIOCGIWSCAN] w/o issuing ioctl[SIOCSIWSCAN]:
 
-On Fri, 2009-02-27 at 00:43 +0100, Alina Friedrichsen wrote:
-> This calls commit() on all logical interfaces of a physical interface, if=
- the channel of it is changed. Before it works as it should, I must fix the=
- joining process of STA and IBSS a little, which I will make tomorrow.
+> If you really end up hitting a case that does not work reasonably well
+> with 64 kB fix in user space, I would suggest looking into the
+> cfg80211/nl80211 scan stuff. The only additional thing it needs in such
+> an environment is to get better optimized data structure (for which,
+> there is already a proposed implementation, too).
 
-You really should remember to linewrap your descriptions.
+Guess we need to proceed with cfg anyway
 
-> +	list_for_each_entry(sdata, &local->interfaces, list) {
-> +		ieee80211_commit(sdata);
-> +	}
+Tomas
 
-That doesn't look like it can work? sta_commit/ibss_commit? Separate by
-interface type?
-
-johannes
-
---=-Kuta6lGw2UGzeKO67g+1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJqBLjAAoJEKVg1VMiehFYxNcP/R11b0Oot5eLbOZddIJCtrbP
-RFz6qrJ4r6U/C4JSgK3b48hwcTDvXvtY0GoFXDOsEXZFOGElntY8lkG9LtjC1dej
-gp3VQD3TbRX2t14kfvuv1XNA6YQ1EbgUe4GfgoDSnYqSzTyopI/xARep36tcjNIM
-CQhhUOmO2VQ++aDcz7AOGozr0bWmkenLFUCuopJFL5gQ8WIig2lzwdQBt0uNOtT3
-ByeJ4N3i+cZkT9ORruLlZAZxfnIPoGYTZYISEEvz2Snou5A5OUmdmUoQN3m6AN2/
-970knvME5vW2o/xaQYuGMkUYopCuV4J5xL5msyUP9QSL4CPc4u4VlGSUT23Pwz2K
-cJPvi0MlGqYyMnGf1z0wCBsDdbdvYVdh6sz79EVtyjav/1zO3sLJ5dIf7XbLH+Yg
-ZWZBC0Bq5z6hVvEdsiL7dyOfkxx0ljv3TJBBpC4G5t/A4py79LLj9odwAUy4J/ux
-4BDrW+K2Y4a8+BSYrFEU5JXmZbYkcilF/9vDNGs7+zbm9LI7FPAnX4SrrEvEdkXL
-qsGk78eUpIZWunuyJ6h7EBnBcfkGa34v+DuHoGLr6EVA7CCXJRIwAMIoR80L26Ex
-gMWdJcCXw7sIep4+HfyLYG2o0rNe6bWPV+D/URv0NBymdI3IcNKqHunwtn8rKUL+
-ptm5b0gco7S1keRmqz6W
-=Co7Y
------END PGP SIGNATURE-----
-
---=-Kuta6lGw2UGzeKO67g+1--
-
+> --
+> Jouni Malinen                                            PGP id EFC895FA
+>
