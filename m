@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rn-out-0910.google.com ([64.233.170.188]:42041 "EHLO
-	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755225AbZBLEsw (ORCPT
+Received: from mail-gx0-f21.google.com ([209.85.217.21]:54533 "EHLO
+	mail-gx0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754638AbZBEVG7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 23:48:52 -0500
-Received: by rn-out-0910.google.com with SMTP id k40so609986rnd.17
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 20:48:50 -0800 (PST)
+	Thu, 5 Feb 2009 16:06:59 -0500
+Received: by mail-gx0-f21.google.com with SMTP id 14so483656gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Feb 2009 13:06:59 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <18835.42847.358511.204936@gargle.gargle.HOWL>
-References: <18835.42847.358511.204936@gargle.gargle.HOWL>
-Date: Wed, 11 Feb 2009 20:48:50 -0800
-Message-ID: <43e72e890902112048r2569a008pe1b8a0ea1457cd4d@mail.gmail.com> (sfid-20090212_054921_131659_FC0BADF6)
-Subject: Re: [PATCH 4/8] ath9k: Enable TSF Out of Range Interrupt
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni.Malinen@atheros.com, Luis.Rodriguez@atheros.com
+In-Reply-To: <20090205154532.M30551@bobcopeland.com>
+References: <20090131023147.GE3342@makis> <20090204215706.GA5651@makis>
+	 <20090205154532.M30551@bobcopeland.com>
+Date: Thu, 5 Feb 2009 23:06:59 +0200
+Message-ID: <40f31dec0902051306m769712ecn858672ba24524c63@mail.gmail.com> (sfid-20090205_220718_668006_0B990EED)
+Subject: Re: [PATCH 5/5] ath5k: Update reset code
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	nbd@openwrt.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 11, 2009 at 8:36 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> This patch lays the groundwork for handling TSF Out of Range
-> interrupt, which will be used for power save later on.
+2009/2/5 Bob Copeland <me@bobcopeland.com>:
+> On Wed, 4 Feb 2009 23:57:06 +0200, Nick Kossifidis wrote
+>> * Update reset and sync with HALs
+>>  * Clean up eeprom settings and tweaking of initvals and put them on
+> separate functions
+>>  * Set/Restore 32KHz ref clk operation
+>>  * Add some more documentation
+>>  TODO: Spur mitigation, tpc, half/quarter rate, compression etc
+>>
+>>  v2: Address comments from Bob and Felix and fix RSSI threshold bug
+>>  introduced on the first version of the patch
+>>
+>>  Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
 >
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> This works much better, except I still get some hard hangs
+> occasionally.  Doesn't appear to be bmiss storm this time.  I did it
+> with a VT up and didn't get an oops; I guess I'll try a serial console
+> or some printks.
+>
+> I could trigger it via a few suspend-resume cycles, so I guess it's the
+> reset from ath5k_init().  Did you still have any problems with the 2425?
+>
 
-> --- a/drivers/net/wireless/ath9k/main.c
-> +++ b/drivers/net/wireless/ath9k/main.c
-> @@ -574,6 +574,10 @@ irqreturn_t ath_isr(int irq, void *dev)
->                                        sc->sc_flags |= SC_OP_WAIT_FOR_BEACON;
->                                }
->                        }
-> +                       if (status & ATH9K_INT_TSFOOR) {
-> +                               /* FIXME: Handle this interrupt for power save */
-> +                               sched = true;
-> +                       }
+I think this is because we call reset too many times. Try removing
+call to reset from config_interface, after some tests i did it seems
+wrong (we don't need to reset pcu and if we do, we don't need to reset
+the whole chip and re run phy initialization etc). I don't get any
+problems with ar2425 but i didn't get any before anyway (i never got a
+hang, just a few bmiss interrupts, not a storm).
 
-Since this is not handled yet is there a need to sched then?
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
