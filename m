@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51818 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755365AbZBJUcc (ORCPT
+Received: from mu-out-0910.google.com ([209.85.134.185]:12721 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758637AbZBEP7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 15:32:32 -0500
-Message-Id: <20090210202553.482117002@sipsolutions.net> (sfid-20090210_213236_374841_C73D0E42)
-References: <20090210202536.425266119@sipsolutions.net>
-Date: Tue, 10 Feb 2009 21:25:41 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: [PATCH 05/27] mac80211: reject extra IEs for probe request when
-	hw_scan
+	Thu, 5 Feb 2009 10:59:16 -0500
+Received: by mu-out-0910.google.com with SMTP id i10so231078mue.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Feb 2009 07:59:14 -0800 (PST)
+Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com
+In-Reply-To: <20090205154532.M30551@bobcopeland.com>
+References: <20090131023147.GE3342@makis> <20090204215706.GA5651@makis>
+	 <20090205154532.M30551@bobcopeland.com>
+Content-Type: text/plain
+Date: Thu, 05 Feb 2009 17:59:10 +0200
+Message-Id: <1233849550.18717.3.camel@maxim-laptop> (sfid-20090205_165937_551567_1E32A94B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We cannot currently hand off extra IEs to hw_scan, so reject
-configuring extra IEs for probe request frames when hw_scan
-is set.
+On Thu, 2009-02-05 at 10:51 -0500, Bob Copeland wrote:
+> On Wed, 4 Feb 2009 23:57:06 +0200, Nick Kossifidis wrote
+> > * Update reset and sync with HALs
+> >  * Clean up eeprom settings and tweaking of initvals and put them on
+> separate functions
+> >  * Set/Restore 32KHz ref clk operation
+> >  * Add some more documentation
+> >  TODO: Spur mitigation, tpc, half/quarter rate, compression etc
+> > 
+> >  v2: Address comments from Bob and Felix and fix RSSI threshold bug
+> >  introduced on the first version of the patch
+> > 
+> >  Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+> 
+> This works much better, except I still get some hard hangs 
+> occasionally.  Doesn't appear to be bmiss storm this time.  I did it 
+> with a VT up and didn't get an oops; I guess I'll try a serial console
+> or some printks.
+> 
+> I could trigger it via a few suspend-resume cycles, so I guess it's the
+> reset from ath5k_init().  Did you still have any problems with the 2425?
+> 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>
----
- net/mac80211/cfg.c |   11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+It also work better here, I didn't yet see these hangs, but nether I did
+many suspend/resume cycles, so I'll take an another look.
 
---- wireless-testing.orig/net/mac80211/cfg.c	2009-02-10 20:59:27.000000000 +0100
-+++ wireless-testing/net/mac80211/cfg.c	2009-02-10 20:59:30.000000000 +0100
-@@ -1176,11 +1176,16 @@ static int ieee80211_set_channel(struct 
- 	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
- }
- 
--static int set_mgmt_extra_ie_sta(struct ieee80211_if_sta *ifsta, u8 subtype,
--				 u8 *ies, size_t ies_len)
-+static int set_mgmt_extra_ie_sta(struct ieee80211_sub_if_data *sdata,
-+				 u8 subtype, u8 *ies, size_t ies_len)
- {
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
-+
- 	switch (subtype) {
- 	case IEEE80211_STYPE_PROBE_REQ >> 4:
-+		if (local->ops->hw_scan)
-+			break;
- 		kfree(ifsta->ie_probereq);
- 		ifsta->ie_probereq = ies;
- 		ifsta->ie_probereq_len = ies_len;
-@@ -1244,7 +1249,7 @@ static int ieee80211_set_mgmt_extra_ie(s
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
--		ret = set_mgmt_extra_ie_sta(&sdata->u.sta, params->subtype,
-+		ret = set_mgmt_extra_ie_sta(sdata, params->subtype,
- 					    ies, ies_len);
- 		break;
- 	default:
+But what I did see is that gain/noise timeouts still happen.
+in exactly same way.
 
--- 
+Best regards,
+	Maxim Levitsky
 
