@@ -1,38 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:52725 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752193AbZBVTmm (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:54634 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953AbZBELQn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 14:42:42 -0500
-Date: Sun, 22 Feb 2009 20:42:37 +0100
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Sitsofe Wheeler <sitsofe@yahoo.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, Bob Copeland <me@bob>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090222194236.GA6060@nowhere> (sfid-20090222_204247_105158_CD70F42A)
-References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <20090222171032.GD6003@nowhere> <49A1A72A.50102@gmail.com>
+	Thu, 5 Feb 2009 06:16:43 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so241262wfa.4
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Feb 2009 03:16:42 -0800 (PST)
+Date: Thu, 5 Feb 2009 16:36:31 +0530
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Fix the wrong WARN_ON message appearing on
+	enabling power save.
+Message-ID: <20090205110631.GA13746@myhost.users.atheros.com> (sfid-20090205_121647_697221_4D18A79B)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49A1A72A.50102@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 22, 2009 at 08:27:38PM +0100, Jiri Slaby wrote:
-> On 22.2.2009 18:10, Frederic Weisbecker wrote:
->> I have some troubles with kmemcheck, so I give up for now.
->> Well, by reading the kmemcheck documentation, it tells that there can be some false
->> positives so...
->
-> This has nothing to do with kmemcheck.
->
->> Since we are not sure this is a real bug, I'm not sure it would be interesting.
->
-> There is no false positive possibility with these checkers, so this is  
-> pretty much interesting, because it is a bug.
+The warning message intended to be hit on driver's rejection of a Tx frame
+is also hit while the netif_subqueue is stopped. This patch fixes this error
+case.
 
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/tx.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-If so, Documentation/kmemcheck.txt really needs an update.
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f1c726d..bf73f6d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -35,6 +35,7 @@
+ #define IEEE80211_TX_OK		0
+ #define IEEE80211_TX_AGAIN	1
+ #define IEEE80211_TX_FRAG_AGAIN	2
++#define IEEE80211_TX_PENDING	3
+ 
+ /* misc utils */
+ 
+@@ -1085,7 +1086,7 @@ static int __ieee80211_tx(struct ieee80211_local *local, struct sk_buff *skb,
+ 
+ 	if (skb) {
+ 		if (netif_subqueue_stopped(local->mdev, skb))
+-			return IEEE80211_TX_AGAIN;
++			return IEEE80211_TX_PENDING;
+ 
+ 		ret = local->ops->tx(local_to_hw(local), skb);
+ 		if (ret)
+@@ -1211,8 +1212,9 @@ retry:
+ 		 * queues, there's no reason for a driver to reject
+ 		 * a frame there, warn and drop it.
+ 		 */
+-		if (WARN_ON(info->flags & IEEE80211_TX_CTL_AMPDU))
+-			goto drop;
++		if (ret != IEEE80211_TX_PENDING)
++			if (WARN_ON(info->flags & IEEE80211_TX_CTL_AMPDU))
++				goto drop;
+ 
+ 		store = &local->pending_packet[queue];
+ 
+-- 
+1.6.0.1
 
