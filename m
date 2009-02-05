@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:45872 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbZBXQoH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58654 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbZBEX2G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 11:44:07 -0500
-Cc: Lorenzo Nava <navalorenx@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Message-Id: <7528B52E-1B77-4CA9-A17F-01E24FDF81DC@ing.unibs.it> (sfid-20090224_174411_135856_95848098)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <49A421ED.7000801@lwfinger.net>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: More data on open-source firmware crash
-Date: Tue, 24 Feb 2009 17:44:01 +0100
-References: <49A1A331.9080205@lwfinger.net> <80C13710-6BA9-4F14-95B5-82C3043CE93B@ing.unibs.it> <49A41F1D.9060300@lwfinger.net> <03E07CC7-A971-4EDD-9363-628B61E94A92@ing.unibs.it> <49A421ED.7000801@lwfinger.net>
+	Thu, 5 Feb 2009 18:28:06 -0500
+Subject: [PATCH 2.6.29] mac80211: restrict to AP in outgoing interface
+	heuristic
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 06 Feb 2009 00:27:32 +0100
+Message-Id: <1233876452.4101.24.camel@johannes.local> (sfid-20090206_002811_575250_339CE35B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We try to find the correct outgoing interface for injected frames
+based on the TA, but since this is a hack for hostapd 11w, restrict
+the heuristic to AP mode interfaces. At some point we'll add the
+ability to give an interface index in radiotap or so and just
+remove this heuristic again.
 
-On Feb 24, 2009, at 5:35 PM, Larry Finger wrote:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: stable@kernel.org [2.6.28.x]
+---
+Otherwise we end up passing the monitor vif pointer to drivers, which
+may cause them to crash.
 
-> Francesco Gringoli wrote:
->> What about drop info from dmesg? Another try could be halve the dma
->> queue, I believe now it is 64 slots. Could you give a try setting  
->> it to 32?
->
-> The RX DMA queue was 64 and TX was 256. Both will be 32 in my next  
-> run.
->
-> I don't understand the "drop info from dmesg" part.
-Sorry Larry,
+ net/mac80211/tx.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-sometimes when I modify something, I can read
-
-[334415.451028] b43-phy244 debug: RX: Packet dropped
-
-in the dmesg because the received bytes were not correctly copied  
-between the "air-buffer" to the internal buffer and finally to the rx- 
-fifo along with the rxheader.
-
-Did you notice something similar?
-
-Cheers,
--FG
-
->
->
-> Larry
->
-
--------
-
-Francesco Gringoli, PhD - Assistant Professor
-Dept. of Electrical Engineering for Automation
-University of Brescia
-via Branze, 38
-25123 Brescia
-ITALY
-
-Ph:  ++39.030.3715843
-FAX: ++39.030.380014
-WWW: http://www.ing.unibs.it/~gringoli
-
-
+--- wireless-testing.orig/net/mac80211/tx.c	2009-02-06 00:16:38.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-02-06 00:22:30.000000000 +0100
+@@ -1394,6 +1394,8 @@ int ieee80211_master_start_xmit(struct s
+ 						list) {
+ 				if (!netif_running(sdata->dev))
+ 					continue;
++				if (sdata->vif.type != NL80211_IFTYPE_AP)
++					continue;
+ 				if (compare_ether_addr(sdata->dev->dev_addr,
+ 						       hdr->addr2)) {
+ 					dev_hold(sdata->dev);
 
 
