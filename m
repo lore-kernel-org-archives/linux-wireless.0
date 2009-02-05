@@ -1,74 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:43823 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751339AbZBLIV6 convert rfc822-to-8bit (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:57092 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955AbZBEM0P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 03:21:58 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so183558fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 00:21:56 -0800 (PST)
+	Thu, 5 Feb 2009 07:26:15 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so270787wfa.4
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Feb 2009 04:26:13 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <efe7343f0902120005m5ff558ccn1dad7c49fe42aadf@mail.gmail.com>
-References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
-	 <200902112332.53480.IvDoorn@gmail.com>
-	 <3ace41890902111451n6c9cbdc4me410609479b1ac4f@mail.gmail.com>
-	 <20090212042217.b05e83b4.cjsthompson@gmail.com>
-	 <a32f33a40902120000g1e95df1eq8a221ddc539f351c@mail.gmail.com>
-	 <efe7343f0902120005m5ff558ccn1dad7c49fe42aadf@mail.gmail.com>
-Date: Thu, 12 Feb 2009 02:21:56 -0600
-Message-ID: <78a2adce0902120021v182f53fdv7b61c56385ca6db7@mail.gmail.com> (sfid-20090212_092202_457004_93C0CCDD)
-Subject: Re: Sitecom WL-608 USB WiFi
-From: "Thomas d'Otreppe" <tdotreppe@gmail.com>
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"Christoph .J Thompson" <cjsthompson@gmail.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <1233835647.3931.13.camel@johannes.local>
+References: <20090205110631.GA13746@myhost.users.atheros.com>
+	 <1233835647.3931.13.camel@johannes.local>
+Date: Thu, 5 Feb 2009 17:56:13 +0530
+Message-ID: <8e92b4100902050426x5c6a0da5r86c3e6ca945b29c1@mail.gmail.com> (sfid-20090205_132619_307258_7901E67F)
+Subject: Re: [PATCH] mac80211: Fix the wrong WARN_ON message appearing on
+	enabling power save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Or maybe someone has the fcc id. FCC website provide internal pictures
-of wireless adapters (if they have such id of course).
+On Thu, Feb 5, 2009 at 5:37 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2009-02-05 at 16:36 +0530, Vivek Natarajan wrote:
+>> The warning message intended to be hit on driver's rejection of a Tx frame
+>> is also hit while the netif_subqueue is stopped. This patch fixes this error
+>> case.
+>
+> This seems a little odd. Why would we be in that code if the queue is
+> stopped?
 
-Thomas
+This issue happens only when we are associated with a 11n AP and power
+save is enabled.
+In the function 'ieee80211_master_start_xmit', ps_disable_work is
+queued where wake_queues is called. But before this work is executed,
+we check if the queues are stopped in _ieee80211_tx and returned
+TX_AGAIN to ieee8011_tx which led to the warning message.
 
-On Thu, Feb 12, 2009 at 2:05 AM, Luis Correia <luis.f.correia@gmail.com=
-> wrote:
-> Hi,
->
-> On Thu, Feb 12, 2009 at 08:00, Ivo Van Doorn <ivdoorn@gmail.com> wrot=
-e:
->> On Thu, Feb 12, 2009 at 4:22 AM, Christoph .J Thompson
->> <cjsthompson@gmail.com> wrote:
->>> Further research suggest this WiFi dongle has the RT2870 chipset, i=
-t works with the RaLink driver once the id has been added to it.
->>
->> Hmm thats weird, I couldn't find the reference that it is a 11n devi=
-ce. :S
->> Anyway, I'll add the USB ID to rt2800usb.
->>
->> Ivo
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wire=
-less" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
->
-> can any brave soul have the guts to pry open this USB stick and look
-> at the chip?
->
-> That was, we all would be sure of it's origins :)
->
-> Luis Correia
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Vivek.
