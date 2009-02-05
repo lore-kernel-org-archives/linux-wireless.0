@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:55509 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751773AbZBIW3R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 17:29:17 -0500
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Mon, 09 Feb 2009 23:29:15 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1234217077.4175.257.camel@johannes.local>
-Message-ID: <20090209222915.90830@gmx.net> (sfid-20090209_232919_663115_E8D7EFB9)
+Received: from smtp-out003.kontent.com ([81.88.40.217]:37347 "EHLO
+	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758754AbZBEJHF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Feb 2009 04:07:05 -0500
+From: Oliver Neukum <oliver@neukum.org>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: at76_usb development
+Date: Thu, 5 Feb 2009 10:08:02 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jason Andryuk <jandryuk@gmail.com>, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, milan.plzik@gmail.com
+References: <c4d76b3b0902032005m3847235cu42f963ca6ad796af@mail.gmail.com> <20090204144317.GA3845@tuxdriver.com> <da94abde0902040748l6194cdd3i7044c839f3110e5a@mail.gmail.com>
+In-Reply-To: <da94abde0902040748l6194cdd3i7044c839f3110e5a@mail.gmail.com>
 MIME-Version: 1.0
-References: <1234217077.4175.257.camel@johannes.local>
-Subject: Re: [PATCH] mac80211: split managed/ibss code a little more
-To: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com
+Content-Type: text/plain; charset=iso-8859-1
+Message-Id: <200902051008.04061.oliver@neukum.org> (sfid-20090205_100722_027673_A50EBBA0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes!
+Am Wednesday 04 February 2009 16:48:11 schrieb Kalle Valo:
+> > AFAIK you should be sending patches to Greg against the version in
+> > drivers/staging. =A0Kalle may want to be copied.
+>=20
+> Yes, please cc also me. I try to keep up-to-date what's happening wit=
+h
+> at76-usb so that the same fixes will be fixed in at76c50x-usb as well=
+=2E
 
-> It appears that you can completely mess up mac80211 in IBSS
-> mode by sending it a disassoc or deauth: it'll stop queues
-> and do a lot more but not ever do anything again. Fix this
-> by not handling all those frames in IBSS mode,=20
+Here is what I found with at76-usb as it is in the current kernel:
 
-This is a huge change. Hopefully it doesn't break anything.
+ static int at76_wait_completion(struct at76_priv *priv, int cmd)
+ {
+        int status =3D 0;
 
-Applying this patch fails for me. Can you please send me your mlme.c?
+        unsigned long timeout =3D jiffies + CMD_COMPLETION_TIMEOUT;
 
-Regards
-Alina
+        do {
 
---=20
-Jetzt 1 Monat kostenlos! GMX FreeDSL - Telefonanschluss + DSL=20
-f=FCr nur 17,95 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
-569a
+This can go wrong in a preemptible kernel. You have no guarantee the fu=
+ll
+timeout is granted.
+
+@@ -1631,7 +1633,7 @@ static void at76_rx_tasklet(unsigned long param)
+        buf =3D (struct at76_rx_buffer *)priv->rx_skb->data;
+
+        if (urb->status !=3D 0) {
+-               if (urb->status !=3D -ENOENT && urb->status !=3D -ECONN=
+RESET)
++               if (urb->status !=3D -ENOENT && urb->status !=3D -ECONN=
+RESET && urb->status !=3D -ESHUTDOWN)
+
+Should also check for ESHUTDOWN, also in at76_mac80211_tx_callback()
+
+	Regards
+		Oliver
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
