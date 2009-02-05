@@ -1,34 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f167.google.com ([209.85.220.167]:52231 "EHLO
-	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757435AbZBVXUz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53306 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243AbZBEQR0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 18:20:55 -0500
-Message-ID: <49A1DDD2.7040706@gmail.com> (sfid-20090223_002117_204923_A4CF86C8)
-Date: Mon, 23 Feb 2009 00:20:50 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-CC: Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com>
-In-Reply-To: <49A1CA01.9030501@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 5 Feb 2009 11:17:26 -0500
+Message-Id: <20090205161133.193146777@sipsolutions.net> (sfid-20090205_171730_167976_1F70C8CB)
+References: <20090205160738.990564487@sipsolutions.net>
+Date: Thu, 05 Feb 2009 17:07:45 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 07/11] mac80211: fix race in TX aggregation
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22.2.2009 22:56, Jiri Slaby wrote:
-> Well, maybe we should try to reproduce with jumbo packets sent to the
-> ath5k receiver, since I think it (1) is not very much test-covered code
-> (2) appears to be related.
+When disabling TX aggregation because it was rejected or from
+the timer (it was not accepted), there is a window where we
+first set the state to operation, unlock, and then undo the
+whole thing. Avoid that by splitting up the stop function.
+Also get rid of the pointless sta_info indirection in the timer.
 
-According to the spec I have for older chip, there is not `done' flag 
-set for descriptors which have `more' flag set. We handle this wrongly. 
-Am I looking correctly, Nick, Luis, Bob?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/agg-tx.c |   95 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 48 insertions(+), 47 deletions(-)
 
-I still don't see what could have caused this though.
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2009-01-29 02:03:28.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2009-01-29 02:03:30.000000000 +0100
+@@ -123,6 +123,34 @@ void ieee80211_send_bar(struct ieee80211
+ 	ieee80211_tx_skb(sdata, skb, 0);
+ }
+ 
++static int __ieee80211_stop_tx_ba_session(struct ieee80211_local *local,
++					  struct sta_info *sta, u16 tid,
++					  enum ieee80211_back_parties initiator)
++{
++	int ret;
++	u8 *state;
++
++	state = &sta->ampdu_mlme.tid_state_tx[tid];
++
++	if (local->hw.ampdu_queues)
++		ieee80211_stop_queue(&local->hw, sta->tid_to_tx_q[tid]);
++
++	*state = HT_AGG_STATE_REQ_STOP_BA_MSK |
++		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
++
++	ret = local->ops->ampdu_action(&local->hw, IEEE80211_AMPDU_TX_STOP,
++				       &sta->sta, tid, NULL);
++
++	/* HW shall not deny going back to legacy */
++	if (WARN_ON(ret)) {
++		*state = HT_AGG_STATE_OPERATIONAL;
++		if (local->hw.ampdu_queues)
++			ieee80211_wake_queue(&local->hw, sta->tid_to_tx_q[tid]);
++	}
++
++	return ret;
++}
++
+ /*
+  * After sending add Block Ack request we activated a timer until
+  * add Block Ack response will arrive from the recipient.
+@@ -135,23 +163,13 @@ static void sta_addba_resp_timer_expired
+ 	 * flow in sta_info_create gives the TID as data, while the timer_to_id
+ 	 * array gives the sta through container_of */
+ 	u16 tid = *(u8 *)data;
+-	struct sta_info *temp_sta = container_of((void *)data,
++	struct sta_info *sta = container_of((void *)data,
+ 		struct sta_info, timer_to_tid[tid]);
+-
+-	struct ieee80211_local *local = temp_sta->local;
+-	struct ieee80211_hw *hw = &local->hw;
+-	struct sta_info *sta;
++	struct ieee80211_local *local = sta->local;
+ 	u8 *state;
+ 
+-	rcu_read_lock();
+-
+-	sta = sta_info_get(local, temp_sta->sta.addr);
+-	if (!sta) {
+-		rcu_read_unlock();
+-		return;
+-	}
+-
+ 	state = &sta->ampdu_mlme.tid_state_tx[tid];
++
+ 	/* check if the TID waits for addBA response */
+ 	spin_lock_bh(&sta->lock);
+ 	if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
+@@ -161,21 +179,15 @@ static void sta_addba_resp_timer_expired
+ 		printk(KERN_DEBUG "timer expired on tid %d but we are not "
+ 				"expecting addBA response there", tid);
+ #endif
+-		goto timer_expired_exit;
++		return;
+ 	}
+ 
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
+ #endif
+ 
+-	/* go through the state check in stop_BA_session */
+-	*state = HT_AGG_STATE_OPERATIONAL;
++	__ieee80211_stop_tx_ba_session(local, sta, tid, WLAN_BACK_INITIATOR);
+ 	spin_unlock_bh(&sta->lock);
+-	ieee80211_stop_tx_ba_session(hw, temp_sta->sta.addr, tid,
+-				     WLAN_BACK_INITIATOR);
+-
+-timer_expired_exit:
+-	rcu_read_unlock();
+ }
+ 
+ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
+@@ -187,6 +199,9 @@ int ieee80211_start_tx_ba_session(struct
+ 	u8 *state;
+ 	int ret = 0;
+ 
++	if (WARN_ON(!local->ops->ampdu_action))
++		return -EINVAL;
++
+ 	if ((tid >= STA_TID_NUM) || !(hw->flags & IEEE80211_HW_AMPDU_AGGREGATION))
+ 		return -EINVAL;
+ 
+@@ -280,9 +295,8 @@ int ieee80211_start_tx_ba_session(struct
+ 	/* This is slightly racy because the queue isn't stopped */
+ 	start_seq_num = sta->tid_seq[tid];
+ 
+-	if (local->ops->ampdu_action)
+-		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
+-					       &sta->sta, tid, &start_seq_num);
++	ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_START,
++				       &sta->sta, tid, &start_seq_num);
+ 
+ 	if (ret) {
+ 		/* No need to requeue the packets in the agg queue, since we
+@@ -423,6 +437,9 @@ int ieee80211_stop_tx_ba_session(struct 
+ 	u8 *state;
+ 	int ret = 0;
+ 
++	if (WARN_ON(!local->ops->ampdu_action))
++		return -EINVAL;
++
+ 	if (tid >= STA_TID_NUM)
+ 		return -EINVAL;
+ 
+@@ -439,7 +456,7 @@ int ieee80211_stop_tx_ba_session(struct 
+ 
+ 	if (*state != HT_AGG_STATE_OPERATIONAL) {
+ 		ret = -ENOENT;
+-		goto stop_BA_exit;
++		goto unlock;
+ 	}
+ 
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+@@ -447,27 +464,13 @@ int ieee80211_stop_tx_ba_session(struct 
+ 	       ra, tid);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+ 
+-	if (hw->ampdu_queues)
+-		ieee80211_stop_queue(hw, sta->tid_to_tx_q[tid]);
+-
+-	*state = HT_AGG_STATE_REQ_STOP_BA_MSK |
+-		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
++	ret = __ieee80211_stop_tx_ba_session(local, sta, tid, initiator);
+ 
+-	if (local->ops->ampdu_action)
+-		ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_TX_STOP,
+-					       &sta->sta, tid, NULL);
+-
+-	/* HW shall not deny going back to legacy */
+-	if (WARN_ON(ret)) {
+-		*state = HT_AGG_STATE_OPERATIONAL;
+-		if (hw->ampdu_queues)
+-			ieee80211_wake_queue(hw, sta->tid_to_tx_q[tid]);
+-		goto stop_BA_exit;
+-	}
+-
+-stop_BA_exit:
++ unlock:
+ 	spin_unlock_bh(&sta->lock);
++
+ 	rcu_read_unlock();
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
+@@ -623,10 +626,8 @@ void ieee80211_process_addba_resp(struct
+ 		spin_unlock_bh(&sta->lock);
+ 	} else {
+ 		sta->ampdu_mlme.addba_req_num[tid]++;
+-		/* this will allow the state check in stop_BA_session */
+-		*state = HT_AGG_STATE_OPERATIONAL;
++		__ieee80211_stop_tx_ba_session(local, sta, tid,
++					       WLAN_BACK_INITIATOR);
+ 		spin_unlock_bh(&sta->lock);
+-		ieee80211_stop_tx_ba_session(hw, sta->sta.addr, tid,
+-					     WLAN_BACK_INITIATOR);
+ 	}
+ }
+
+-- 
+
