@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:14671 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754890AbZB0KSL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 05:18:11 -0500
-Received: from mail.atheros.com ([10.10.20.86])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2009 02:18:10 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43427 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752491AbZBEMP3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Feb 2009 07:15:29 -0500
+Date: Thu, 5 Feb 2009 14:12:22 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dan Williams <dcbw@redhat.com>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	John Linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC] mac80211: Filter scan results
+Message-ID: <20090205121222.GB18339@jm.kir.nu> (sfid-20090205_131532_892788_F3209F2F)
+References: <20090204150857.GA5069@sortiz.org> <1233789837.24227.19.camel@localhost.localdomain> <1233790539.7390.23.camel@johannes.local> <20090205084407.GA11126@jm.kir.nu> <20090205095217.GA13736@jm.kir.nu> <1ba2fa240902050344h1deb4c3dqce0949ec154faba4@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18855.48369.413479.945570@gargle.gargle.HOWL> (sfid-20090227_111815_035715_A2869317)
-Date: Fri, 27 Feb 2009 15:44:09 +0530
-To: Alina Friedrichsen <x-alina@gmx.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: IBSS issues
-In-Reply-To: <20090227095312.291210@gmx.net>
-References: <18855.26210.618690.891378@gargle.gargle.HOWL>
-	<20090227082545.291220@gmx.net>
-	<18855.43002.100899.931613@gargle.gargle.HOWL>
-	<20090227095312.291210@gmx.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1ba2fa240902050344h1deb4c3dqce0949ec154faba4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alina Friedrichsen wrote:
-> But is it calculated only one time after the join? The TSF value in the template is
-> really fast outdated. I think why not let __ieee80211_sta_join_ibss() call the
-> set_tsf() callback, so that the TSF is mostly synced from the beginning on
-> and fine-tuned later by the hardware?
+On Thu, Feb 05, 2009 at 01:44:15PM +0200, Tomas Winkler wrote:
 
+> Just a thought If user space will be able to merge 2 scan results we
+> can then split then in 2 separate reports....
 
-Yes, the TBTT is calculated only once after joining the BSS network.
+Theoretically speaking, yes, WEXT could be extended to do this with some
+kind of scan parameter that indicates which 64 kB block is requested.
+However, I would not suggest going there and I would probably object to
+a patch that tries to do this either in the kernel or in wpa_supplicant
+for that matter.
 
-Am not sure I understand the proposal. What would the tsf value in set_tsf() be ?
-11.1.4 (IEEE802.11-2007) says that the TSF has to be reset to zero on joining
-an IBSS network. We do that correctly. To calculate the next TBTT, we can't use the
-HW TSF, since it has just been reset. And the Beacon's timestamp + intval + FUDGE
-is what we do in ath9k to get the TBTT for this peer, which I think is correct.
-A sniffer shows the beacon generation being evenly distributed.
+If you really end up hitting a case that does not work reasonably well
+with 64 kB fix in user space, I would suggest looking into the
+cfg80211/nl80211 scan stuff. The only additional thing it needs in such
+an environment is to get better optimized data structure (for which,
+there is already a proposed implementation, too).
 
-Sujith
+-- 
+Jouni Malinen                                            PGP id EFC895FA
