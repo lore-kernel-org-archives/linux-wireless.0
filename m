@@ -1,48 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:35204 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750872AbZBMHON (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58973 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753175AbZBERAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 02:14:13 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so581791ywh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 23:14:12 -0800 (PST)
+	Thu, 5 Feb 2009 12:00:54 -0500
+Date: Thu, 5 Feb 2009 11:58:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-02-05
+Message-ID: <20090205165837.GB4638@tuxdriver.com> (sfid-20090205_180058_811638_E2EB6BCD)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
-	 <1234508187.1327.19.camel@johannes.local>
-	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
-Date: Thu, 12 Feb 2009 23:14:12 -0800
-Message-ID: <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com> (sfid-20090213_081416_593303_89D1EB18)
-Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 12, 2009 at 11:09 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Feb 12, 2009 at 10:56 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Thu, 2009-02-12 at 21:36 -0800, Luis R. Rodriguez wrote:
->>> Driver and userspace regulatory hints are now processed in
->>> a workqueue. This should fix some lockdep warnings which complain
->>> about possible circular locking dependencies such as:
->>
->> Yes, but I need to look at the one Reinette posted and fix that one,
->> which will probably require a different solution.
->
-> Oh I didn't see that one. How different?
+Dave,
 
-I see an rtnl lock issue against scanning and the drv mutex. Doesn't
-seem to be related to regulatory. So how would that affect a path to
-move hints to a workqueue?
+A couple of small fixes for iwlwifi intended for 2.6.29.  One of them
+will conflict when it is pulled into net-next-2.6 -- just take all the
+hunks.
 
-  Luis
+Please let me know if there are problems!
+
+John
+
+---
+
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit 55128bc23e9ab44e97f81f6cd349035230ee59a6:
+  Randy Dunlap (1):
+        sunrpc: fix rdma dependencies
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Reinette Chatre (2):
+      iwlwifi: clean key table in iwl_clear_stations_table
+      iwlwifi: save PCI state before suspend, restore after resume
+
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |    3 +++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 ++
+ 3 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index b35c881..c01ea48 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4042,6 +4042,7 @@ static int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 		priv->is_open = 1;
+ 	}
+ 
++	pci_save_state(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
+ 
+ 	return 0;
+@@ -4052,6 +4053,7 @@ static int iwl_pci_resume(struct pci_dev *pdev)
+ 	struct iwl_priv *priv = pci_get_drvdata(pdev);
+ 
+ 	pci_set_power_state(pdev, PCI_D0);
++	pci_restore_state(pdev);
+ 
+ 	if (priv->is_open)
+ 		iwl_mac_start(priv->hw);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 412f66b..70a8b21 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -480,6 +480,9 @@ void iwl_clear_stations_table(struct iwl_priv *priv)
+ 	priv->num_stations = 0;
+ 	memset(priv->stations, 0, sizeof(priv->stations));
+ 
++	/* clean ucode key table bit map */
++	priv->ucode_key_table = 0;
++
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ }
+ EXPORT_SYMBOL(iwl_clear_stations_table);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 95d0198..5b44d32 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -8143,6 +8143,7 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 		priv->is_open = 1;
+ 	}
+ 
++	pci_save_state(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
+ 
+ 	return 0;
+@@ -8153,6 +8154,7 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
+ 	struct iwl3945_priv *priv = pci_get_drvdata(pdev);
+ 
+ 	pci_set_power_state(pdev, PCI_D0);
++	pci_restore_state(pdev);
+ 
+ 	if (priv->is_open)
+ 		iwl3945_mac_start(priv->hw);
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
