@@ -1,107 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:34005 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1759828AbZBYV4f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 16:56:35 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Wed, 25 Feb 2009 22:56:31 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090225215631.289250@gmx.net> (sfid-20090225_225640_347262_7915CAB7)
-MIME-Version: 1.0
-Subject: [PATCH] mac80211: Implement commit in wireless extensions
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Received: from xc.sipsolutions.net ([83.246.72.84]:53325 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754203AbZBEQR6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Feb 2009 11:17:58 -0500
+Message-Id: <20090205161133.454219884@sipsolutions.net> (sfid-20090205_171801_465989_B1837E48)
+References: <20090205160738.990564487@sipsolutions.net>
+Date: Thu, 05 Feb 2009 17:07:46 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 08/11] mac80211: fix aggregation timer lockups
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This implements commit in wireless extensions for completeness and mayb=
-e it could be useful for debugging to initiate a new rejoining process =
-without changing the config.
+As far as I can tell, there are possible lockups because both the RX
+session_timer and TX addba_resp_timer are del_timer_sync'ed under
+the sta spinlock which both timer functions take. Additionally, the
+TX agg code seems to leak memory when TX aggregation is not disabled
+before the sta_info is freed.
 
-I not so familiar with nl80211 at the moment, so I want add it to nl802=
-11 in a second patch.
+Fix this by making the free code a little smarter in the RX agg case,
+and actually make the sta_info_destroy code free the TX agg info in
+the TX agg case. We won't notify the peer, but it'll notice something
+is wrong anyway, and normally this only happens after we've told it
+in some other way we will no longer talk to it.
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ecbc8e0..7f00c70 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -920,6 +920,7 @@ static inline int ieee80211_bssid_match(const u8 *r=
-addr, const u8 *addr)
-=20
- int ieee80211_hw_config(struct ieee80211_local *local, u32 changed);
- int ieee80211_if_config(struct ieee80211_sub_if_data *sdata, u32 chang=
-ed);
-+int ieee80211_commit(struct ieee80211_sub_if_data *sdata);
- void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
- void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sd=
-ata,
- 				      u32 changed);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index f38db4d..1b2d598 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -294,6 +294,20 @@ int ieee80211_hw_config(struct ieee80211_local *lo=
-cal, u32 changed)
- 	return ret;
- }
-=20
-+void ieee80211_commit(struct ieee80211_sub_if_data *sdata)
-+{
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_ADHOC:
-+		ieee80211_ibss_commit(sdata);
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		ieee80211_sta_commit(sdata);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
- void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sd=
-ata,
- 				      u32 changed)
- {
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index f6924fc..1ac0516 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -121,6 +121,15 @@ static int ieee80211_set_encryption(struct ieee802=
-11_sub_if_data *sdata, u8 *sta
- 	return err;
- }
-=20
-+static int ieee80211_ioctl_commit(struct net_device *dev,
-+				  struct iw_request_info *info,
-+				  struct iw_point *data, char *extra)
-+{
-+	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-+	ieee80211_commit(sdata);
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwgenie(struct net_device *dev,
- 				    struct iw_request_info *info,
- 				    struct iw_point *data, char *extra)
-@@ -1035,7 +1044,7 @@ static int ieee80211_ioctl_siwencodeext(struct ne=
-t_device *dev,
-=20
- static const iw_handler ieee80211_handler[] =3D
- {
--	(iw_handler) NULL,				/* SIOCSIWCOMMIT */
-+	(iw_handler) ieee80211_ioctl_commit,		/* SIOCSIWCOMMIT */
- 	(iw_handler) cfg80211_wext_giwname,		/* SIOCGIWNAME */
- 	(iw_handler) NULL,				/* SIOCSIWNWID */
- 	(iw_handler) NULL,				/* SIOCGIWNWID */
+ net/mac80211/agg-rx.c   |   11 +++++++++--
+ net/mac80211/sta_info.c |   37 +++++++++++++++++++++++++++++++++----
+ net/mac80211/sta_info.h |    1 +
+ 3 files changed, 43 insertions(+), 6 deletions(-)
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger01
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2009-01-27 12:16:43.000000000 +0100
++++ wireless-testing/net/mac80211/agg-rx.c	2009-01-27 14:10:12.000000000 +0100
+@@ -78,11 +78,18 @@ void ieee80211_sta_stop_rx_ba_session(st
+ 			sta->ampdu_mlme.tid_rx[tid]->reorder_buf[i] = NULL;
+ 		}
+ 	}
++
++	spin_lock_bh(&sta->lock);
+ 	/* free resources */
+ 	kfree(sta->ampdu_mlme.tid_rx[tid]->reorder_buf);
+-	kfree(sta->ampdu_mlme.tid_rx[tid]);
+-	sta->ampdu_mlme.tid_rx[tid] = NULL;
++
++	if (!sta->ampdu_mlme.tid_rx[tid]->shutdown) {
++		kfree(sta->ampdu_mlme.tid_rx[tid]);
++		sta->ampdu_mlme.tid_rx[tid] = NULL;
++	}
++
+ 	sta->ampdu_mlme.tid_state_rx[tid] = HT_AGG_STATE_IDLE;
++	spin_unlock_bh(&sta->lock);
+ 
+ 	rcu_read_unlock();
+ }
+--- wireless-testing.orig/net/mac80211/sta_info.c	2009-01-27 12:16:38.000000000 +0100
++++ wireless-testing/net/mac80211/sta_info.c	2009-01-27 14:27:34.000000000 +0100
+@@ -194,12 +194,41 @@ void sta_info_destroy(struct sta_info *s
+ 		dev_kfree_skb_any(skb);
+ 
+ 	for (i = 0; i <  STA_TID_NUM; i++) {
++		struct tid_ampdu_rx *tid_rx;
++		struct tid_ampdu_tx *tid_tx;
++
+ 		spin_lock_bh(&sta->lock);
+-		if (sta->ampdu_mlme.tid_rx[i])
+-		  del_timer_sync(&sta->ampdu_mlme.tid_rx[i]->session_timer);
+-		if (sta->ampdu_mlme.tid_tx[i])
+-		  del_timer_sync(&sta->ampdu_mlme.tid_tx[i]->addba_resp_timer);
++		tid_rx = sta->ampdu_mlme.tid_rx[i];
++		/* Make sure timer won't free the tid_rx struct, see below */
++		if (tid_rx)
++			tid_rx->shutdown = true;
+ 		spin_unlock_bh(&sta->lock);
++
++		/*
++		 * Outside spinlock - shutdown is true now so that the timer
++		 * won't free tid_rx, we have to do that now. Can't let the
++		 * timer do it because we have to sync the timer outside the
++		 * lock that it takes itself.
++		 */
++		if (tid_rx) {
++			del_timer_sync(&tid_rx->session_timer);
++			kfree(tid_rx);
++		}
++
++		/*
++		 * No need to do such complications for TX agg sessions, the
++		 * path leading to freeing the tid_tx struct goes via a call
++		 * from the driver, and thus needs to look up the sta struct
++		 * again, which cannot be found when we get here. Hence, we
++		 * just need to delete the timer and free the aggregation
++		 * info; we won't be telling the peer about it then but that
++		 * doesn't matter if we're not talking to it again anyway.
++		 */
++		tid_tx = sta->ampdu_mlme.tid_tx[i];
++		if (tid_tx) {
++			del_timer_sync(&tid_tx->addba_resp_timer);
++			kfree(tid_tx);
++		}
+ 	}
+ 
+ 	__sta_info_free(local, sta);
+--- wireless-testing.orig/net/mac80211/sta_info.h	2009-01-27 12:16:43.000000000 +0100
++++ wireless-testing/net/mac80211/sta_info.h	2009-01-27 14:07:25.000000000 +0100
+@@ -100,6 +100,7 @@ struct tid_ampdu_rx {
+ 	u16 buf_size;
+ 	u16 timeout;
+ 	u8 dialog_token;
++	bool shutdown;
+ };
+ 
+ /**
+
+-- 
+
