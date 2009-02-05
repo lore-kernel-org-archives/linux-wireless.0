@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:55077 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753897AbZBWNqg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46796 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752417AbZBEQNf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 08:46:36 -0500
-Received: by bwz5 with SMTP id 5so4745707bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 05:46:34 -0800 (PST)
-To: "Alina Friedrichsen" <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-Subject: Re: [PATCH v3] mac80211: Give it some time to do the TSF sync
-References: <20090222171933.102390@gmx.net>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 23 Feb 2009 15:46:28 +0200
-In-Reply-To: <20090222171933.102390@gmx.net> (Alina Friedrichsen's message of "Sun\, 22 Feb 2009 18\:19\:33 +0100")
-Message-ID: <87mycd6zbf.fsf@litku.valot.fi> (sfid-20090223_144640_537015_C45F9003)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 5 Feb 2009 11:13:35 -0500
+Message-Id: <20090205160738.990564487@sipsolutions.net> (sfid-20090205_171347_265481_1C63CB85)
+Date: Thu, 05 Feb 2009 17:07:38 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 00/11] mac80211 aggregation cleanups/fixes
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Alina Friedrichsen" <x-alina@gmx.net> writes:
+Here are a few previously posted, now rebased, patches for
+mac80211 aggregation. This is mostly preparatory for getting
+Intel aggregation working again, which is working for me but
+right now I'm unclear what sort of internal validation Intel
+folks want to do (and I hear there was one issue in testing)
 
-> Give slow hardware some time to do the TSF sync, to not run into an
-> IBSS merging endless loop in some rarely situations.
->
-> Version 2 adds a comment.
-> Version 3: I had forgotten to change the bracket.
-> Version 4: No magic number.
+This series contains:
+ * remove stray aggregation debugfs definition
+   - nothing really interesting
 
-Much better now, thanks. In the future, please write the patch
-history...
+ * fix RX aggregation timeouts
+   - timeout calculations fixed to use TU not ms
 
-> Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
-> ---
+ * restructure HT code
+   - make the whole thing easier to work on
 
-... to here (ie after the '---' line) so that they are ignored when
-the patch applied. This is easier for John.
+ * restrict aggregation to supported interface modes
+   - only allow aggregation for AP/VLAN/STA
 
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+ * hardware should not deny going back to legacy
+   - remove the -EBUSY special case
 
-Disclaimer: I know very little about mac80211 ibss implementation :)
+ * document TX aggregation (and small cleanup)
+   - some documentation, a little cleanup
 
--- 
-Kalle Valo
+ * fix race in TX aggregation
+   - race fix
+
+ * fix aggregation timer lockups
+   - fix a timer lock inversion problem
+     (I think there's another one somewhere)
+
+ * clean up BA session teardown
+ * RX aggregation: clean up stop session
+ * further cleanups to stopping BA sessions
+   - cleanups
+
+johannes
+
