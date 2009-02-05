@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:57815 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbZBIQMX (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57538 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754515AbZBEJ36 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 11:12:23 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so521031eya.37
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 08:12:21 -0800 (PST)
-Message-ID: <499055E5.6070701@gmail.com> (sfid-20090209_171228_088959_A086B432)
-Date: Mon, 09 Feb 2009 11:12:21 -0500
-From: Richard Farina <sidhayn@gmail.com>
+	Thu, 5 Feb 2009 04:29:58 -0500
+Date: Thu, 5 Feb 2009 11:29:34 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Kishore Ramachandran <kishore@winlab.rutgers.edu>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Setting 11n MCS TX bitrate
+Message-ID: <20090205092934.GA12435@jm.kir.nu> (sfid-20090205_103003_622854_36EBC272)
+References: <604f6e750902041408k7335234bs565e8fe6868f0f54@mail.gmail.com> <20090204222203.GJ5581@tesla> <604f6e750902041451x340e0b14x4561125c1f7163c6@mail.gmail.com> <20090204231840.GL5581@tesla>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni.Malinen@atheros.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v6] mac80211: do not TX injected frames when not allowed
-References: <1233335309-28099-1-git-send-email-lrodriguez@atheros.com> <1233347900.4070.4.camel@johannes.local>
-In-Reply-To: <1233347900.4070.4.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090204231840.GL5581@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Fri, 2009-01-30 at 09:08 -0800, Luis R. Rodriguez wrote:
->   
->> Monitor mode is able to TX by using injected frames. We should
->> not allow injected frames to be sent unless allowed by regulatory
->> rules. Since AP mode uses a monitor interfaces to transmit
->> management frames we have to take care to not break AP mode as
->> well while resolving this. We can deal with this by allowing compliant
->> APs solutions to inform mac80211 if their monitor interface is
->> intended to be used for an AP by setting a cfg80211 flag for the
->> monitor interface. hostapd, for example, currently does its own
->> checks to ensure AP mode is not used on channels which require radar
->> detection. Once such solutions are available it can can add this
->> flag for monitor interfaces.
->>
->> Acked-by: Johannes Berg <johannes@sipsolutions.net>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->>     
-Tested-by: Rick Farina <sidhayn@gmail.com>
-Nacked-by: Rick Farina <sidhayn@gmail.com>
+On Wed, Feb 04, 2009 at 03:18:40PM -0800, Luis R. Rodriguez wrote:
+> Well in general I was talking about IEEE-802.11 section 10.3 stuff.
+> In cfg80211/nl80211 we don't want to allow things like "set essid"
+> as iwconfig has, instead we want to break things down a bit more,
+> which can really help debugging. The MLME SAP already has some
+> decent layout of commands/responses but after a quick glance
+> I do not see anything for setting a static rate. May want to review
+> that a bit before implementing set rate though. Just remember
+> post early and review early. If you have an idea of how you want
+> to do it let us know to get feedback.
 
-Luis, when I requested this from you and you cranked out a patch in 30 
-seconds what you gave me worked great, unfortunately this patch doesn't 
-perform the intended function for me.  If I use this patch and mark, 
-say, everything as "PASSIVE-SCAN NO-IBSS" I can still send raw packets 
-out of my interface (confirmed by capturing on another card). The 
-original patch is as follows:
-
-+       if ((tx->channel->flags & (IEEE80211_CHAN_NO_IBSS |
-+           IEEE80211_CHAN_RADAR)))
-+               return TX_DROP;
-
-TX_DROP seemed to successfully prevent raw packet transmission on the 
-channels marked NO_IBSS.  Can someone please confirm my findings so we 
-can get this fixed properly?
-
-Thanks,
-Rick Farina
-
->> ---
->>
->> This v6 leaves the AP flag out and removes the unused sdata..
->>     
->
-> Yeah, let's go with this until hostapd is fixed anyway.
->
-> johannes
->   
-
+TX rate control is outside the scope of IEEE Std 802.11-2007 (see 9.6
+Multirate support) and as such, there is no MLME SAP (or any other)
+primitives for this type of functionality defined in the standard. The
+parameters are passed into PHY through the PHY-SAP interface in TXVECTOR
+(e.g., DATARATE and MCS). How the MAC sublayer decides how to set these
+parameters or even things like how to control the decision process are
+very much out of scope.
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
