@@ -1,112 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:52835 "EHLO mx2.redhat.com"
+Received: from smtp01.jazztel.es ([62.14.3.170]:34914 "EHLO smtp01.jazztel.es"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751479AbZBRMUp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 07:20:45 -0500
-Subject: Re: Missing link quality with wireless-testing
-From: Dan Williams <dcbw@redhat.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090218082520.GA26280@jm.kir.nu>
-References: <1234896777.4678.7.camel@californication>
-	 <1234899806.29785.35.camel@johannes.local>
-	 <1234902294.4678.12.camel@californication>
-	 <1234904111.29785.44.camel@johannes.local>
-	 <1234904978.4678.31.camel@californication>
-	 <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net>
-	 <1234933059.21412.28.camel@californication>
-	 <20090218073104.GA23366@jm.kir.nu>
-	 <1234944391.21412.47.camel@californication>
-	 <20090218082520.GA26280@jm.kir.nu>
-Content-Type: text/plain
-Date: Wed, 18 Feb 2009 07:18:43 -0500
-Message-Id: <1234959523.13950.47.camel@localhost> (sfid-20090218_132052_960524_888C1F9B)
-Mime-Version: 1.0
+	id S1759709AbZBER0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Feb 2009 12:26:37 -0500
+Received: from [87.219.174.145] (helo=localhost)
+	by smtp01.jazztel.es with esmtpa (Exim 4.60)
+	(envelope-from <arnau60@casal.upc.edu>)
+	id 1LV7KX-0006ll-3C
+	for linux-wireless@vger.kernel.org; Thu, 05 Feb 2009 17:43:57 +0100
+Received: from arnau by localhost with local (Exim 4.63)
+	(envelope-from <arnau60@casal.upc.edu>)
+	id 1LV7Lu-0001vq-QS
+	for linux-wireless@vger.kernel.org; Thu, 05 Feb 2009 17:45:22 +0100
+Date: Thu, 5 Feb 2009 17:45:22 +0100
+From: Arnau Roig <arnau60@casal.upc.edu>
+To: linux-wireless@vger.kernel.org
+Subject: txpower and frequency settings: concept guidance needed
+Message-ID: <20090205164522.GA5580@purple> (sfid-20090205_182643_281266_66D68FD2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-02-18 at 10:25 +0200, Jouni Malinen wrote:
-> On Wed, Feb 18, 2009 at 09:06:31AM +0100, Marcel Holtmann wrote:
-> 
-> > so it seems the missing value is affecting the details wpa_supplicant is
-> > handing out via its D-Bus interface. I didn't check the code yet to see
-> > what is actually happening or if I just happen to run an outdated
-> > version.
-> 
-> Yes, it looks like the dbus interface will get all three wext values
-> (quality, noise, level) regardless of whether they were available from
-> kernel or not. This does not cause any issues for wpa_supplicant, but if
-> other programs (e.g., NM) are using the "quality" value in preference to
-> "level", they would be processing zeros for all BSSes. If I understood
-> correctly, NM does indeed prefer to use "quality", so this will likely
-> explain why you are seeing different behavior with the qual->qual value
-> removed (= 0 for wpa_supplicant).
-> 
-> I don't know how NM would react to the "quality" value being removed,
-> but it would sound reasonable to do that in wpa_supplicant (and same for
+Hello to everybody.
 
-With WEXT, there are three ways to calculate pretty bars.  They *all*
-require max_qual values returned from the GIWRANGE handler, because
-otherwise you have no f**king clue what the upper or lower bounds are.
+I'm new in kernel development and in wireless networking also.
+I've read most of the documentation availible in wireless.kernel.org
+and, to be honest it's still not clear to me what are the uses of the
+mac80211, cfg80211 or nl80211.
 
-QUAL.QUAL
---------------
+I'm using a 2.6.24 kernel, compat-wireless-2.6-old (compat-release
+v4.5-g2badec7) and ath5k driver (v0.5.0).
 
-Requires:
-  - max_qual.qual > 0
-  - !(max_qual.updated & IW_QUAL_QUAL_INVALID)
-  - !(qual.updated & IW_QUAL_QUAL_INVALID)
+What I want to do is a userspace application that has to modify the
+frequency channel and the tx_power of the wireless device depending on
+several network statistics. Please, where do I have to start looking?
 
-pct = 100 * (qual.qual / max_qual.qual)
+Is the struct ieee80211_conf, declared in mac80211.h what I need for
+changing the current working channel and tx_power?
+Can I read network statistics with get_station, declared in the struct
+cfg80211_ops in cfg80211.h? Or the way to do it is using
+@NL80211_CMD_GET_WIPHY in nl80211_commands?
 
-
-QUAL.LEVEL in dBm
---------------
-
-Requires:
-  - max_qual.level == 0 (ie, dBm values)
-  - !(max_qual.updated & IW_QUAL_LEVEL_INVALID)
-  - !(qual.updated & IW_QUAL_LEVEL_INVALID)
-  - (max_qual.noise > 0) && !(max_qual.updated & IW_QUAL_NOISE_INVALID)
-      OR
-    (qual.noise > 0) && !(qual.updated & IW_QUAL_NOISE_INVALID)
-
-pct = (clamp driver values between -90 dBm and -20 dBm, then some voodoo)
-
-
-QUAL.LEVEL in RSSI
---------------
-
-Requires:
-  - max_qual.level != 0
-  - !(max_qual.updated & IW_QUAL_LEVEL_INVALID)
-  - !(qual.updated & IW_QUAL_LEVEL_INVALID)
-
-pct = 100 * (qual.level / max_qual.level)
-
-
-Anyone think all this stuff really, really sucks?  Yes!!!  So lets just
-have drivers/stack provide a few sane values that userspace really
-doesn't have to go through this shit to calculate...
-
-<rant ends>
-
-NM is probably fine here with qual == 0 because I doubt the GIWRANGE
-handler is returning a valid max_qual.qual > 0 anymore with Johannes'
-patch.  Could be wrong though.
-
-> "noise") if the value was not available from the driver (based on the
-> WEXT flags or in case of nl80211, just based on the fact that these
-> values are never reported). I would expect this change to go in shortly
-> (assuming it does not trigger any critical issue with NM), but anyway,
-> this does not help with old versions.
-
-Ah right; the dbus interface shouldn't be appending "quality" to the
-dict if the driver doesn't provide valid quality (ie, max_qual.updated
-has the QUAL_INVALID bit set).  Same thing for noise and level.
-
-Dan
-
-
+Thank you for your time.
