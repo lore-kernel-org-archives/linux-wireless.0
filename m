@@ -1,121 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:55663 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898AbZBTVHI convert rfc822-to-8bit (ORCPT
+Received: from extu-mxob-1.symantec.com ([216.10.194.28]:58825 "EHLO
+	extu-mxob-1.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752400AbZBFTCq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 16:07:08 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so2090791fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 13:07:06 -0800 (PST)
+	Fri, 6 Feb 2009 14:02:46 -0500
+Received: from [172.20.29.59]([172.20.29.59]) (4136 bytes) by megami.veritas.com
+	via sendmail with P:esmtp/R:smart_host/T:smtp
+	(sender: <hugh@veritas.com>)
+	id <m1LVVxX-0000HiC@megami.veritas.com>
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Feb 2009 11:01:51 -0800 (PST)
+	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
+Date: Fri, 6 Feb 2009 19:01:28 +0000 (GMT)
+From: Hugh Dickins <hugh@veritas.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	maximlevitsky@gmail.com
+Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
+In-Reply-To: <20090206184445.GB7526@tuxdriver.com>
+Message-ID: <Pine.LNX.4.64.0902061857410.25517@blonde.anvils> (sfid-20090206_200250_523667_097FEFB8)
+References: <Pine.LNX.4.64.0901081740350.19523@blonde.anvils>
+ <b6c5339f0901081041p3c9669f8ycd461b155da60f94@mail.gmail.com>
+ <b6c5339f0901090541m1ac135bcta91bacb3f048a9ba@mail.gmail.com>
+ <Pine.LNX.4.64.0901091400290.925@blonde.anvils> <20090110164705.GB10865@hash.localnet>
+ <20090110201547.GA11261@hash.localnet> <Pine.LNX.4.64.0901131509080.9571@blonde.anvils>
+ <20090113154204.M52697@bobcopeland.com> <Pine.LNX.4.64.0902061305530.15787@blonde.anvils>
+ <20090206183443.M95991@bobcopeland.com> <20090206184445.GB7526@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890902201233w95b4aaew1fa0bbf06196d74f@mail.gmail.com>
-References: <499C7DC0.4040608@lwfinger.net>
-	 <1234992712.4023.60.camel@johannes.local>
-	 <20090218220531.GD4246@tesla> <499C8DD2.7000800@lwfinger.net>
-	 <20090218224833.GB28733@bombadil.infradead.org>
-	 <69e28c910902201145h6d9fa472rc81da56ffce16dc0@mail.gmail.com>
-	 <43e72e890902201233w95b4aaew1fa0bbf06196d74f@mail.gmail.com>
-Date: Fri, 20 Feb 2009 22:07:05 +0100
-Message-ID: <69e28c910902201307i398b4a89na4ce0205d66ee921@mail.gmail.com> (sfid-20090220_220716_037104_FDE47688)
-Subject: Re: ieee80211_regdom module parameter for cfg80211
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 20, 2009 at 9:33 PM, Luis R. Rodriguez <mcgrof@gmail.com> w=
-rote:
-> On Fri, Feb 20, 2009 at 11:45 AM, G=E1bor Stefanik
-> <netrolller.3d@gmail.com> wrote:
->> On Wed, Feb 18, 2009 at 11:48 PM, Luis R. Rodriguez
->> <mcgrof@bombadil.infradead.org> wrote:
->>> On Wed, Feb 18, 2009 at 04:38:10PM -0600, Larry Finger wrote:
->>>> Luis R. Rodriguez wrote:
->>>> > On Wed, Feb 18, 2009 at 01:31:52PM -0800, Johannes Berg wrote:
->>>> >> On Wed, 2009-02-18 at 15:29 -0600, Larry Finger wrote:
->>>> >>> On at least one forum, I have seen the recommendation that a u=
-ser set their
->>>> >>> regulatory domain by creating the file /etc/modprobe.d/cfg8021=
-1 with the
->>>> >>> contents "ieee80211_regdom=3DUS".
->>>> >>>
->>>> >>> That works as long as CONFIG_WIRELESS_OLD_REGULATORY is set in=
- their .config,
->>>> >>> but will fail if it is not.
->>>> >>>
->>>> >>> Should the module_param statement be moved outside the ifdef
->>>> >>> CONFIG_WIRELESS_OLD...? Setting the module parameter that way =
-might not make any
->>>> >>> sense, but it surely shouldn't kill wireless.
->>>> >> I actually see no reason to not just /honour/ it by calling crd=
-a with
->>>> >> its parameter if CONFIG_WIRELESS_OLD_REGULATORY isn't set.
->>>> >
->>>> > The idea was that things we want to get rid of will go in OLD_RE=
-G. Static regdoms
->>>> > for US, JP and EU fall into that and so does the module paramete=
-r. I believe
->>>> > it is silly to keep the module parameter around as we already ha=
-ve userspace
->>>> > APIs to let users set this.
->>>>
->>>> I guess we leave it the way it is. At least the only people that w=
-ill get caught
->>>> are those that upgrade their distro.
->>>
->>> Yeah, if they disable OLD_REG -- but I am curious which distributio=
-ns are using this
->>> themselves as well. Would you happen to know ? Or are you mostly se=
-eing just users
->>> doing that themselves?
->>
->> Yes, I was talking about users doing this, users who upgrade their
->> kernel without upgrading their distro. Keeping a modparam provides a=
-n
->> easy way for users to upgrade kernels without a full distro upgrade =
--
->> modparams have a much simpler syntax than init scripts. If we keep t=
-he
->> modparam as a way to control CRDA, this is what an user has to do to
->> upgrade:
->> 1. Compile and install the new kernel. (Mostly straightforward, as
->> long as the user has a config and knows how to use make.)
->> 2. Compile and install CRDA. (Straightforward.)
->> 3. echo options cfg80211 ieee80211_regdom=3D"HU" >>
->> /etc/modprobe.d/options (Straightforward.)
->>
->> Removing the modparam changes step 3 to:
->> 3. Find the init scripts, and edit them to include "iw reg set HU",
->> making sure it happens early enough, caring about the syntax, taking
->> into account differences between distros, etc. Possibly includes
->> modifying the initramfs/initrd by hand in some odd distros. (Not
->> straightforward at all, requires knowledge of the distro's inner
->> workings, such as the init version used, e.g. sysvinit, bsdinit,
->> upstart, etc.)
->
-> It seems reasonable to keep the module parameter in case iw is not
-> installed but if users went through the trouble of installing crda ar=
-e
-> we to not expect users to have iw also by 2.6.30?
->
-> =A0Luis
->
+On Fri, 6 Feb 2009, John W. Linville wrote:
+> On Fri, Feb 06, 2009 at 01:37:49PM -0500, Bob Copeland wrote:
+> > On Fri, 6 Feb 2009 13:12:34 +0000 (GMT), Hugh Dickins wrote
+> > > Hi Bob,
+> > > 
+> > > On Tue, 13 Jan 2009, Bob Copeland wrote:
+> > > > On Tue, 13 Jan 2009 15:35:29 +0000 (GMT), Hugh Dickins wrote
+> > > > > But I haven't seen any allocation failure for several days.
+> > > > > I didn't get any while trying to simplify the reproduction,
+> > > > 
+> > > > I'll go ahead and push this upstream then today or tomorrow; let me 
+> > > > know if you run into any problems with more testing.
+> > > 
+> > > Just a prod: I've not seen your fix go into the 2.6.29-rc tree yet.
+> > 
+> > Good point, it is queued for 2.6.30.  John, would there be any problem
+> > with including a8e3cd514, "ath5k: fix bf->skb==NULL panic in 
+> > ath5k_tasklet_rx" for 2.6.29?
+> 
+> Hmmm...well it is a little big, but I guess it is OK.  Do you have
+> an example of the stack trace?  Or a link to a bugzilla or somesuch
+> would be even better...
 
-I am not talking about the case when iw is not installed - even if iw
-is installed, it is much easier to edit the module options file than
-the init scripts.
+Below is my original report: I didn't copy down the stacktrace,
+and the kernel paniced with "Fatal exception in interrupt", so
+nothing I can send you from the logs I'm afraid.
 
-G=E1bor
+Hugh
 
---=20
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>From hugh@veritas.com Thu Jan  8 13:49:47 2009
+Date: Thu, 8 Jan 2009 13:49:44 +0000 (GMT)
+From: Hugh Dickins <hugh@veritas.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc:  <linux-wireless@vger.kernel.org>,  <ath5k-devel@lists.ath5k.org>
+Subject: ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
+
+Thank you for the ath5k wireless driver,
+which I've just started using on an Aspire One.
+
+When running swapping load tests, wireless alive but not in active use,
+I've now twice hit the BUG_ON(bf->skb == NULL) in ath5k_tasklet_rx().
+
+First time was with 2.6.28 plus kdb patch,
+kernel BUG at drivers/net/wireless/ath5k/base.c:1675!
+and poking around the messages I could see before that an
+ath5k phy0: can't alloc skbuff of size 2673, after a
+swapper: page allocation failure, order:0 mode:0x4020
+on a call from dev_alloc_skb(), with memory summary.
+
+Second time was with yesterday's 2.6.28-git, no kdb,
+kernel BUG at drivers/net/wireless/ath5k/base.c:1683!
+running ath5k_tasklet_rx() from under do_softirq(),
+Kernel panic - not syncing: Fatal exception in interrupt
+so I couldn't see more; but at the top of the screen, the
+last three lines of a page allocation failure memory summary.
+
+So, that BUG_ON(bf->skb == NULL) appears to be unsafe under
+memory pressure; but the fix wasn't obvious to me, so over
+to you!
+
+I'd be glad to try patches, of course, but it's not happening
+often enough for me to report back success quickly - unless I
+stumble on a quicker way to reproduce it, it'll need a week or
+two to grow confident of a fix.
+
+Thanks,
+Hugh
