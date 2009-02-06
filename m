@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53746 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:38180 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852AbZBCFCe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 00:02:34 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 21:02:34 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [RFC 0/2] cfg80211/mac80211: help world roaming through beacons reg hints
-Date: Mon, 2 Feb 2009 21:01:51 -0800
-Message-ID: <1233637313-16786-1-git-send-email-lrodriguez@atheros.com> (sfid-20090203_060238_898933_9FE26E7E)
-MIME-Version: 1.0
+	id S1750936AbZBFQnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2009 11:43:10 -0500
+Subject: Re: turning off IBSS (with wext)
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1233928622.4175.9.camel@johannes.local>
+References: <1233928622.4175.9.camel@johannes.local>
 Content-Type: text/plain
+Date: Fri, 06 Feb 2009 11:41:36 -0500
+Message-Id: <1233938496.28437.10.camel@localhost> (sfid-20090206_174315_252955_401A01DC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support to help the wireless core with world roaming
-by providing hints to when we receive beacons from APs. Devices
-can be world roaming when the world regulatory domain is set or
-the device has a custom regulatory domain and no country IEs have
-been received.
+On Fri, 2009-02-06 at 14:57 +0100, Johannes Berg wrote:
+> Hi,
+> 
+> so I was testing IBSS, and found this strange behaviour:
+> 
+>  * wpa_supplicant (or NM?) will try to do SIWMLME(disassoc) in IBSS
+>    mode, which seems kinda wrong. Why do we accept it? We send out a
+>    frame and then do nothing else.
+>  * Then I thought "iwconfig wlan1 essid off" - but that fails with
+>    -EINVAL due to ieee80211_sta_find_ibss
+> 
+> It seems to me that either one of those, or both, should actually turn
+> off beaconing.
 
-This should should help users more on 5 GHz which doesn't allow beaconing
-or active scanning when world roaming.
+Either one; the supplicant uses SIWMLME(disassoc) at various times (like
+when leaving a BSS), and NM will sometimes set a NULL SSID when
+deactivating the device.
 
-We call mac80211's beacon hint from ieee80211_mlme_notify_scan_completed(),
-which is called at the end of ieee80211_scan_completed(). This guarantees
-that we take advantage of devices which do hw-scanning or sw-scanning.
+Dan
 
-Review with the locking is appreciated, but I think this is OK.
-
-Luis R. Rodriguez (2):
-  wireless: add regulatory_hint_found_beacon() to make help world
-    roaming
-  ath9k: follow beacon hints on reg_notifier when world roaming
-
- drivers/net/wireless/ath9k/regd.c |   92 ++++++++++++-------
- include/net/wireless.h            |   20 ++++
- net/mac80211/mlme.c               |   35 +++++++
- net/wireless/reg.c                |  181 ++++++++++++++++++++++++++++++++++++-
- 4 files changed, 295 insertions(+), 33 deletions(-)
 
