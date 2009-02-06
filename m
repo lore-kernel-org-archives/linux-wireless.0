@@ -1,69 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:54543 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754054AbZB0RQW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 12:16:22 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Fri, 27 Feb 2009 18:16:18 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <200902271714.54181.mb@bu3sch.de>
-Message-ID: <20090227171618.254890@gmx.net> (sfid-20090227_181625_236326_BFF32853)
-MIME-Version: 1.0
-References: <20090226234307.51520@gmx.net> <200902271503.13308.mb@bu3sch.de>
- <20090227153418.254900@gmx.net> <200902271714.54181.mb@bu3sch.de>
-Subject: Re: [PATCH v2] mac80211: Call commit() on channel setting
+Received: from cp-out10.libero.it ([212.52.84.110]:46352 "EHLO
+	cp-out10.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239AbZBFTPG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2009 14:15:06 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
 To: linux-wireless@vger.kernel.org
+Subject: Re: ath5k: problems with wireless network data transfer
+Date: Fri, 6 Feb 2009 20:02:02 +0100
+Cc: Tim Hawkins <tim.hawkins@mac.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+References: <200902050010.27428.rossi.f@inwind.it> <40f31dec0902041519t5dcab35n19e6a0ec1642eaa5@mail.gmail.com> <5BAE77E6-F36F-4A54-A67E-FA10FF2FA599@mac.com>
+In-Reply-To: <5BAE77E6-F36F-4A54-A67E-FA10FF2FA599@mac.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200902062002.04579.rossi.f@inwind.it> (sfid-20090206_201510_935010_E60C5E8E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Michael!
+On Thursday 05 February 2009, Tim Hawkins wrote:
 
-> I think this is desired behavior.
+> this problem has been around for some time, users of the "aspire one"
+> know to turn off the ath5k driver
+> and use a branch of the madwifi driver patched with AR242x support,
+> otherwise wireless networking is completely unreliable.
+>
+> The problem appears to be poor support for ar242x in the current in
+> the wild version in most popular distros.
+>
+> The ath5k drive will load and appear to work, but is so flaky that it
+> is virtually unusable.
 
-Yes.
-
-> We voluntarily associated with the
-> "test" AP on channel 4.
-
-Yes this is correct because IEEE80211_IBSS_AUTO_CHANNEL_SEL flag was se=
-t.
-
-> Who says that we want to assoc to the "test" ssid on channel 11?
-
-Because this setting is now outdated. The channel is set to 11 and the =
-IEEE80211_IBSS_AUTO_CHANNEL_SEL flag is clear.
-
-If we now set the SSID to test again, we assoc to "test" on channel 11.=
- Do not recover from the channel set automatically, is a broken behavio=
-r, I think.
-
-> This is a
-> policy decision and such policy
-> doesn't belong into the kernel. Userspace can initiate a reassociatio=
-n
-> after the channel change,
-> if the AP switch is desired.
-> There are good reasons to leave roaming decisions in userspace, becau=
-se
-> these decisions are simply very
-> complex and would put lots of policy into the kernel or require lots =
-of
-> kernel API.
-
-I think the basic functionality should work without any userspace daemo=
-n. All the that can be implemented without real problems with a few lin=
-es of code. This would better for embedded systems, if we don't need th=
-e wpa_supplicant for an unencrypted network, or so.
-
-Regards
-Alina
-
---=20
-Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
-f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
-69a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for reporting the links where are described similar problems. You have 
+a AR242x chip, from what I have understood the MAC+PHY part is common to my 
+AR5212. So the problem could be related to the MAC management inside ath5k. I 
+don't know if it's related by here I can see 5 AP, maybe the medium is too 
+crowded.
