@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out11.libero.it ([212.52.84.111]:34195 "EHLO
-	cp-out11.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758120AbZBDXsz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 18:48:55 -0500
-From: Fabio Rossi <rossi.f@inwind.it>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: ath5k: problems with wireless network data transfer
-Date: Thu, 5 Feb 2009 00:47:43 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200902050010.27428.rossi.f@inwind.it> <40f31dec0902041519t5dcab35n19e6a0ec1642eaa5@mail.gmail.com>
-In-Reply-To: <40f31dec0902041519t5dcab35n19e6a0ec1642eaa5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200902050047.44133.rossi.f@inwind.it> (sfid-20090205_004900_393184_917CFF4F)
+Received: from mx2.redhat.com ([66.187.237.31]:35741 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752960AbZBFUv2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2009 15:51:28 -0500
+Subject: Re: turning off IBSS (with wext)
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1233952826.4175.21.camel@johannes.local>
+References: <1233928622.4175.9.camel@johannes.local>
+	 <1233938496.28437.10.camel@localhost>
+	 <1233952826.4175.21.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 06 Feb 2009 15:49:57 -0500
+Message-Id: <1233953398.3476.11.camel@localhost> (sfid-20090206_215133_128670_D4F7DD50)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 05 February 2009, Nick Kossifidis wrote:
+On Fri, 2009-02-06 at 21:40 +0100, Johannes Berg wrote:
+> On Fri, 2009-02-06 at 11:41 -0500, Dan Williams wrote:
+> > On Fri, 2009-02-06 at 14:57 +0100, Johannes Berg wrote:
+> > > Hi,
+> > > 
+> > > so I was testing IBSS, and found this strange behaviour:
+> > > 
+> > >  * wpa_supplicant (or NM?) will try to do SIWMLME(disassoc) in IBSS
+> > >    mode, which seems kinda wrong. Why do we accept it? We send out a
+> > >    frame and then do nothing else.
+> > >  * Then I thought "iwconfig wlan1 essid off" - but that fails with
+> > >    -EINVAL due to ieee80211_sta_find_ibss
+> > > 
+> > > It seems to me that either one of those, or both, should actually turn
+> > > off beaconing.
+> > 
+> > Either one; the supplicant uses SIWMLME(disassoc) at various times (like
+> > when leaving a BSS), and NM will sometimes set a NULL SSID when
+> > deactivating the device.
+> 
+> Fun. Neither one actually works.
 
-> Can you please post a dmesg output when ath5k loads ?
+Yeah; I had to recently patch wpa_supplicant to really disassociate at
+Jouni's suggestion; just telling the driver to disassoc isn't adequate
+in all cases, because some drivers will just try to reassoc.  Instead,
+unlocking the BSSID and setting a bogus SSID will usually actually
+accomplish the disassociation in addition to the MLME disassoc...
 
-This is the dmesg output:
+Dan
 
-cfg80211: Calling CRDA to update world regulatory domain
-ath5k 0000:00:0b.0: PCI INT A -> Link[LNKB] -> GSI 10 (level, low) -> IRQ 10
-ath5k 0000:00:0b.0: registered as 'phy0'
-phy0: Selected rate control algorithm 'minstrel'
-ath5k phy0: Atheros AR5212 chip found (MAC: 0x56, PHY: 0x41)
-ath5k phy0: RF5112B multiband radio found (0x36)
-udev: renamed network interface wlan0 to ath0
-cfg80211: World regulatory domain updated:
-        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-        (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
