@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:26923 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbZBGFUy (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:45996 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754977AbZBFRsH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Feb 2009 00:20:54 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so466364yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2009 21:20:53 -0800 (PST)
+	Fri, 6 Feb 2009 12:48:07 -0500
+Message-ID: <498C77C6.3060608@lwfinger.net> (sfid-20090206_184813_026518_56CCA53E)
+Date: Fri, 06 Feb 2009 11:47:50 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20090207050356.GA16457@hash.localnet>
-References: <20090131023147.GE3342@makis> <20090204215706.GA5651@makis>
-	 <20090205154532.M30551@bobcopeland.com>
-	 <40f31dec0902051306m769712ecn858672ba24524c63@mail.gmail.com>
-	 <20090207050356.GA16457@hash.localnet>
-Date: Sat, 7 Feb 2009 07:20:52 +0200
-Message-ID: <40f31dec0902062120o1234e462k450c7bc6f61d6753@mail.gmail.com> (sfid-20090207_062058_597720_DBF3E60C)
-Subject: Re: [PATCH 5/5] ath5k: Update reset code
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 sleeping/hanging
+References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>    <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk>    <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>    <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk>    <49871083.5040309@lwfinger.net>    <35040.82.152.223.193.1233590184.squirrel@www.phantomjinx.co.uk>    <3ace41890902021548o39b5f02veacc0bd650e92c7@mail.gmail.com>    <20090203142807.GC10968@tuxdriver.com>    <44120.62.172.74.16.1233679156.squirrel@www.phantomjinx.co.uk>    <49887936.3010203@lwfinger.net>    <53749.82.152.255.229.1233865126.squirrel@www.phantomjinx.co.uk>    <498B5C63.7060602@lwfinger.net> <38242.82.152.255.229.1233874870.squirrel@www.phantomjinx.co.uk>
+In-Reply-To: <38242.82.152.255.229.1233874870.squirrel@www.phantomjinx.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/2/7 Bob Copeland <me@bobcopeland.com>:
-> On Thu, Feb 05, 2009 at 11:06:59PM +0200, Nick Kossifidis wrote:
->> I think this is because we call reset too many times. Try removing
->> call to reset from config_interface, after some tests i did it seems
->> wrong (we don't need to reset pcu and if we do, we don't need to reset
->> the whole chip and re run phy initialization etc). I don't get any
->> problems with ar2425 but i didn't get any before anyway (i never got a
->> hang, just a few bmiss interrupts, not a storm).
->
-> Yep, with BMISS interrupts turned off and config_interface no longer
-> calling reset, it's quite stable now.  Maybe there was some timing
-> thing at play.  If we add a patch to remove those then I'm satisfied :)
->
+P.G. Richardson wrote:
 
-O.K. do you want me to put these fixes on this patch or post a separate ?
+> The 20db reported in iwconfig by mac80211 is not the actual data, is the
+> signal strength please? I can see the signal strength change upon repeated
+> calls to iwconfig and downstairs even when seemingly "out of range" and
+> failing to ping anything, it still reports a signal strength of above 50%.
 
+Signal strength may have even less physical meaning that the power.
+Some devices, such as those by Broadcom, report the received signal
+strength with some accuracy. The RTL8187B is supposed to have such an
+output; however, my testing showed it to be essentially random. The
+only reported quantity that could be used was the automatic gain
+control setting of the receiver. This was calibrated against the
+BCM4311 at two points, assumed to be linear, and the signal strength
+and signal quality numbers were derived. For the RTL8187, a similar
+scheme was used. As you can tell, only relative values for these
+quantities are meaningful. The fact that your signal strength is above
+50% means very little.
 
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Larry
