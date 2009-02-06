@@ -1,103 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56301 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751210AbZBMHtC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43553 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187AbZBFSpx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 02:49:02 -0500
-Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890902122335l6580dbc1m44702996cc8200e4@mail.gmail.com> (sfid-20090213_084150_789218_6A367D4F)
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
-	 <1234508187.1327.19.camel@johannes.local>
-	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
-	 <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
-	 <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com>
-	 <1234509436.1327.25.camel@johannes.local>
-	 <43e72e890902122335l6580dbc1m44702996cc8200e4@mail.gmail.com>
-	 (sfid-20090213_084150_789218_6A367D4F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-U+mmvuMps/dLlFEMJdTc"
-Date: Fri, 13 Feb 2009 08:48:54 +0100
-Message-Id: <1234511334.1327.34.camel@johannes.local> (sfid-20090213_084908_475668_A423C39E)
-Mime-Version: 1.0
+	Fri, 6 Feb 2009 13:45:53 -0500
+Date: Fri, 6 Feb 2009 13:44:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Hugh Dickins <hugh@veritas.com>, ath5k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	maximlevitsky@gmail.com
+Subject: Re: [ath5k-devel] ath5k_tasklet_rx BUG_ON(bf->skb == NULL)
+Message-ID: <20090206184445.GB7526@tuxdriver.com> (sfid-20090206_194556_475020_C3D14427)
+References: <Pine.LNX.4.64.0901081740350.19523@blonde.anvils> <b6c5339f0901081041p3c9669f8ycd461b155da60f94@mail.gmail.com> <b6c5339f0901090541m1ac135bcta91bacb3f048a9ba@mail.gmail.com> <Pine.LNX.4.64.0901091400290.925@blonde.anvils> <20090110164705.GB10865@hash.localnet> <20090110201547.GA11261@hash.localnet> <Pine.LNX.4.64.0901131509080.9571@blonde.anvils> <20090113154204.M52697@bobcopeland.com> <Pine.LNX.4.64.0902061305530.15787@blonde.anvils> <20090206183443.M95991@bobcopeland.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090206183443.M95991@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Feb 06, 2009 at 01:37:49PM -0500, Bob Copeland wrote:
+> On Fri, 6 Feb 2009 13:12:34 +0000 (GMT), Hugh Dickins wrote
+> > Hi Bob,
+> > 
+> > On Tue, 13 Jan 2009, Bob Copeland wrote:
+> > > On Tue, 13 Jan 2009 15:35:29 +0000 (GMT), Hugh Dickins wrote
+> > > > But I haven't seen any allocation failure for several days.
+> > > > I didn't get any while trying to simplify the reproduction,
+> > > 
+> > > I'll go ahead and push this upstream then today or tomorrow; let me 
+> > > know if you run into any problems with more testing.
+> > 
+> > Just a prod: I've not seen your fix go into the 2.6.29-rc tree yet.
+> 
+> Good point, it is queued for 2.6.30.  John, would there be any problem
+> with including a8e3cd514, "ath5k: fix bf->skb==NULL panic in 
+> ath5k_tasklet_rx" for 2.6.29?
 
---=-U+mmvuMps/dLlFEMJdTc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hmmm...well it is a little big, but I guess it is OK.  Do you have
+an example of the stack trace?  Or a link to a bugzilla or somesuch
+would be even better...
 
-On Thu, 2009-02-12 at 23:35 -0800, Luis R. Rodriguez wrote:
-
-> > Well, regardless of regulatory, we now have two paths:
-> >
-> > nl80211: cfg80211_mutex  -->  drv->mutex  -->  rtnl
-> > wext:    rtnl  -->  cfg80211_mutex  -->  drv->mutex
-> >
-> > which is clearly not a good plan.
-> >
-> > Therefore, I'll probably have to implement solution (1) from what I sen=
-t
-> > you, and invert the locking in nl80211. That would fix your the
-> > immediate problem with regulatory as well, because that was:
-> >
-> > rtnl  --->  (regulatory_hint) --->  cfg80211_mutex  -->  drv->mutex
->=20
-> Yup I see. So as it stands in this patch user reg hint now is:
->=20
-> reg_mutex --> cfg80211_mutex
-
-I don't really care about reg_mutex much, and it probably doesn't matter
-as long as its use is limited. Question is whether we need it, but
-that's a different question.
-
-> Driver hint also does the same so it seems your fix on nl80211 would
-> probably just tap this series on the nl80211_req_set_reg().
-
-Yeah, I think I'll work on top of your series anyway so I don't clash
-with the cleanups.
-
-> I also think using a workqueue would be good here anyway, the only
-> negative thing I've seen is loading takes a bit longer.
-
-Indeed, it's a good thing because a path like this:
-
-driver_open
- -> regulatory_hint
-  -> cfg80211 stuff
-   -> driver_reg_notifier
-
-is always deadlock prone since you call into the driver from itself.
-
-johannes
-
---=-U+mmvuMps/dLlFEMJdTc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJlSXjAAoJEKVg1VMiehFYKeYP/RCKS9DeKYpEngerzWz/Nywm
-PKr3bvSpx4nynpi851cfT8I5H1bjsRLVsJPQAi8svGLa0//MUKyknxYT4/47sdST
-SFHwlniHdamvlQu4giRoJJqUJK3XrWVZWSpaGiUiKFWkFb9uLzbfDz919eIlLtqK
-cAN7Lxjto/2KjiuxibEsA3Vu7tqErHn51Pfx9qOG3S1DHy0LpTDKCxco8cqAG1EO
-mzAMejKKqSuIBz17cGc4Pc+027QrFjNA1OVhfizemANAULcS9K9WqnLGaXRRi+5r
-4FEnRiz0NUCrqPKjBZ5PxQIZflwWwo7FsgO1hz8oD+CZsUse2Fh/pKve3p1jS713
-aprvvktBG4vXB7aveJwq0ZcfE5KVT4GJ9Hp1MVT/mwfAQMJ3ER2G4V9gk4cddDAJ
-nluIEtCcffUzPRdLOw0sim5SMWb6181EAu3S/9QbJUZCXKVhc+/OkllS6ZSC4kpw
-klojtbDmN2aHdZAFknAgaCefnxUFA41IMzo6s+pg+jzc4q91m0gx46h/bEEqy1gD
-c6bIFcjdkr+vuedkEpYBzZgJnz4EGYsFT03GDIEeZVCjkPz0kaUc0akhpJyXTlc4
-V/buu9EIi7+E3hukasgnWHqsyybhRAUCkikteNkN4I0LfcvAuJocjJWC3gO2zZiF
-hH0tT57PeVkxc4uhmgi9
-=23JO
------END PGP SIGNATURE-----
-
---=-U+mmvuMps/dLlFEMJdTc--
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
