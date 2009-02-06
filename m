@@ -1,71 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:54178 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755563AbZBJVb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 16:31:29 -0500
-Subject: Re: [PATCH] ipw2x00: age scan results on resume
-From: reinette chatre <reinette.chatre@intel.com>
+Received: from wf-out-1314.google.com ([209.85.200.171]:21768 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752440AbZBFHrj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2009 02:47:39 -0500
+MIME-Version: 1.0
+In-Reply-To: <1233846195.3028.14.camel@localhost>
+References: <1233819002-6912-1-git-send-email-cooloney@kernel.org>
+	 <1233846195.3028.14.camel@localhost>
+Date: Fri, 6 Feb 2009 15:47:38 +0800
+Message-ID: <386072610902052347m5754262bif18339809a00cb9f@mail.gmail.com> (sfid-20090206_084746_144312_674B23D8)
+Subject: Re: [PATCH] wireless: introduce POWEROF2_BLOCKSIZE_ONLY option
+From: Bryan Wu <cooloney@kernel.org>
 To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <1234280177.3119.23.camel@localhost>
-References: <1234280177.3119.23.camel@localhost>
-Content-Type: text/plain
-Date: Tue, 10 Feb 2009 13:35:14 -0800
-Message-Id: <1234301714.1626.27.camel@rc-desk> (sfid-20090210_223134_099969_29FC8127)
-Mime-Version: 1.0
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Cliff Cai <cliff.cai@analog.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-02-10 at 07:36 -0800, Dan Williams wrote:
-> Scanned BSS entries are timestamped with jiffies, which doesn't
-> increment across suspend and hibernate.  On resume, every BSS in the
-> scan list looks like it was scanned within the last 10 seconds,
-> irregardless of how long the machine was actually asleep.  Age scan
-> results on resume with the time spent during sleep so userspace has a
-> clue how old they really are.
-> 
-> Signed-off-by: Dan Williams <dcbw@redhat.com>
+On Thu, Feb 5, 2009 at 11:03 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Thu, 2009-02-05 at 15:30 +0800, Bryan Wu wrote:
+>> From: Cliff Cai <cliff.cai@analog.com>
+>>
+>> Introduce POWEROF2_BLOCKSIZE_ONLY option for those SD/SDIO host
+>> which only support transferring block with size of power-of-2
+>
+> Is the point here to avoid copying in the controller code?  As with the
+> other patches on libertas-dev, I really dislike adding code to *every
+> SDIO driver* just because the host has certain restrictions.  I'd much
+> rather that the host/controller code became aware of it's own
+> restrictions, and exposed those generically to drivers above it.
+> Without a KConfig option.
+>
+> Seriously.  The host knows what it needs.  The code to handle that
+> should go in the host.
+>
 
-This makes sense.
+I agree here.
 
-> ---
-> This fixes NetworkManager and wpa_supplicant trying to connect to the AP
-> associated with at suspend/hibernate time, which clearly may not exist
-> at the location where the machine is waking up.
-> 
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-> index 823c2bf..abf897d 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2100.c
-> +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-> @@ -1692,7 +1692,13 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
->  	u32 lock;
->  	u32 ord_len = sizeof(lock);
->  
-> -	/* Quite if manually disabled. */
-> +	/* Age scan list entries found before suspend */
-> +	if (priv->suspend_time) {
-> +		ieee80211_networks_age(priv->ieee, priv->suspend_time);
-> +		priv->suspend_time = 0;
-> +	}
-> +
-> +	/* Quiet if manually disabled. */
->  	if (priv->status & STATUS_RF_KILL_SW) {
->  		IPW_DEBUG_INFO("%s: Radio is disabled by Manual Disable "
->  			       "switch\n", priv->net_dev->name);
-> @@ -6414,6 +6420,9 @@ static int ipw2100_suspend(struct pci_dev *pci_dev, pm_message_t state)
->  	pci_disable_device(pci_dev);
->  	pci_set_power_state(pci_dev, PCI_D3hot);
->  
-> +	if (!priv->suspend_at)
-> +		priv->suspend_at = get_seconds();
-> +
+> How about adding a method like "sdio_align_size" that takes the
+> controller's constraints into account?  That seems a lot cleaner than
+> adding #define/KConfig junk to every SDIO driver in the kernel.  One
+> less codepath to test, makes your life and all our lives easier.
+>
 
-I do not see where suspend_at is reset. Would that not confuse things
-when you suspend two or more times?
+So we plan to add method ".sdio_align_size" to SDIO stack.
+And Blackfin host driver will implement this method while others will
+implement this as a dummy function.
 
-Reinette
+In libertas, we need to call this method to take this constraints into account.
+
+Thanks
+-Bryan
 
 
-
+>> [ Bryan Wu <cooloney@kernel.org>:
+>>  - remove some useless coding style cleanup
+>>  - using roundup() function as upstream does
+>> ]
+>>
+>> Signed-off-by: Cliff Cai <cliff.cai@analog.com>
+>> Signed-off-by: Bryan Wu <cooloney@kernel.org>
+>> ---
+>>  drivers/net/wireless/Kconfig            |    6 ++++++
+>>  drivers/net/wireless/libertas/if_sdio.c |   16 ++++++++++++++++
+>>  2 files changed, 22 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+>> index e4f9f74..a2685fa 100644
+>> --- a/drivers/net/wireless/Kconfig
+>> +++ b/drivers/net/wireless/Kconfig
+>> @@ -151,6 +151,12 @@ config LIBERTAS_SDIO
+>>       ---help---
+>>         A driver for Marvell Libertas 8385 and 8686 SDIO devices.
+>>
+>> +config POWEROF2_BLOCKSIZE_ONLY
+>> +     bool "Support transferring block with size of power-of-2 only"
+>> +     depends on LIBERTAS_SDIO
+>> +     ---help---
+>> +       For SD/SDIO host which only supports transferring block with size of power-of-2.
+>> +
+>>  config LIBERTAS_DEBUG
+>>       bool "Enable full debugging output in the Libertas module."
+>>       depends on LIBERTAS
+>> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+>> index 4519d73..5efc056 100644
+>> --- a/drivers/net/wireless/libertas/if_sdio.c
+>> +++ b/drivers/net/wireless/libertas/if_sdio.c
+>> @@ -272,6 +272,11 @@ static int if_sdio_card_to_host(struct if_sdio_card *card)
+>>        */
+>>       chunk = sdio_align_size(card->func, size);
+>>
+>> +/* For SD/SDIO host which only supports transferring block with size of power-of-2 */
+>> +#if defined(CONFIG_POWEROF2_BLOCKSIZE_ONLY)
+>> +     chunk = (chunk + card->func->cur_blksize - 1) /
+>> +                     card->func->cur_blksize * card->func->cur_blksize;
+>> +#endif
+>>       ret = sdio_readsb(card->func, card->buffer, card->ioport, chunk);
+>>       if (ret)
+>>               goto out;
+>> @@ -581,8 +586,14 @@ static int if_sdio_prog_real(struct if_sdio_card *card)
+>>                       lbs_deb_sdio("sending %d bytes (%d bytes) chunk\n",
+>>                               chunk_size, (chunk_size + 31) / 32 * 32);
+>>  */
+>> +/* For SD/SDIO host which only supports transferring block with size of power-of-2 */
+>> +#if defined(CONFIG_POWEROF2_BLOCKSIZE_ONLY)
+>> +                     ret = sdio_writesb(card->func, card->ioport,
+>> +                             chunk_buffer, roundup(chunk_size, 256);
+>> +#else
+>>                       ret = sdio_writesb(card->func, card->ioport,
+>>                               chunk_buffer, roundup(chunk_size, 32));
+>> +#endif
+>>                       if (ret)
+>>                               goto release;
+>>
+>> @@ -699,6 +710,11 @@ static int if_sdio_host_to_card(struct lbs_private *priv,
+>>        */
+>>       size = sdio_align_size(card->func, nb + 4);
+>>
+>> +/* For SD/SDIO host which only supports transferring block with size of power-of-2 */
+>> +#if defined(CONFIG_POWEROF2_BLOCKSIZE_ONLY)
+>> +     size = (size + card->func->cur_blksize - 1) /
+>> +                     card->func->cur_blksize * card->func->cur_blksize;
+>> +#endif
+>>       packet = kzalloc(sizeof(struct if_sdio_packet) + size,
+>>                       GFP_ATOMIC);
+>>       if (!packet) {
+>
+>
