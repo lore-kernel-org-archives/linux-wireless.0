@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:39615
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751229AbZBOWBH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52309 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752553AbZBFVLZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 17:01:07 -0500
-Message-ID: <4998909F.30106@erley.org> (sfid-20090215_230111_804892_218A5AF1)
-Date: Sun, 15 Feb 2009 17:01:03 -0500
-From: pat-lkml <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?P=E9teut_Alain?= <alain.peteut@space.unibe.ch>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: compat-wireless-2.6-old (15.02.2009)
-References: <20090215224218.da9seiz3s0ks40cg@mail.unibe.ch>
-In-Reply-To: <20090215224218.da9seiz3s0ks40cg@mail.unibe.ch>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 6 Feb 2009 16:11:25 -0500
+Subject: Re: [PATCH] mac80211: Remove TSF atomic requirement from the
+	documentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Alina Friedrichsen <x-alina@gmx.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <87ocxfp937.fsf@litku.valot.fi> (sfid-20090206_220815_144086_DD693107)
+References: <20090205165834.63840@gmx.net> <87fxirpe1q.fsf@litku.valot.fi>
+	 <1233953047.4175.27.camel@johannes.local>  <87ocxfp937.fsf@litku.valot.fi>
+	 (sfid-20090206_220815_144086_DD693107)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LzDT3VCxCtwrO4fXqHil"
+Date: Fri, 06 Feb 2009 22:11:20 +0100
+Message-Id: <1233954680.4175.36.camel@johannes.local> (sfid-20090206_221129_062795_322845E5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-P=E9teut Alain wrote:
-> Hi,
->=20
-> I tried to find the solution, but I didn't found the root of the prob=
-lem:
-> for some reason ../drivers/net/wireless/iwl-4965.c wasn't compiled, b=
-ut
-> the CONFIG_IWL4965=3Dy was defined config.mk.
-> This leads to a not existing struct iwl_cfg iwl4965_agn_cfg which was
-> claimed by make during making iwl4965.ko.
 
-I can't comment on this part.
-=20
-> Since I don't need support for 4965 I set CONFIG_IWL4965=3Dn to overc=
-ome
-> this issue.
->=20
-> I thought I'm fine but this leads to
-> ..
-> FATAL: Error inserting iwl4965
-> (/lib/modules/2.6.26-1-amd64/kernel/drivers/net/wireless/iwlwifi/iwl4=
-965.ko):
-> Unknown symbol in module, or unknown parameter (see dmesg)
-> ..
-> during make load.
-> Any suggestions?
+--=-LzDT3VCxCtwrO4fXqHil
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-We'd need to see the dmesg output (as the error message says) to figure=
- out=20
-why that is happening for you. =20
+On Fri, 2009-02-06 at 23:08 +0200, Kalle Valo wrote:
 
-Pat Erley
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Alina, it would be nice to explicitly mention that the function can
+> sleep. Otherwise driver authors need to guess if sleeping is allowed
+> or not.
+
+That's a larger project to actually annotate all of them either way ;) I
+think we only mention atomicity requirements right now.
+
+johannes
+
+--=-LzDT3VCxCtwrO4fXqHil
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJjKdxAAoJEKVg1VMiehFYtxYP/Rwlydw1Y6XgYeNiOGj5Fh+0
+IU8uc7qBfV1bMY6keYak57NsQx8I9niKGWfpc1On1eJZtPfDjtEmMM3sK42aDsK2
+eUesXaSribhro8ilCTaxjnSwfT3EOMfc5AOmVmaSbs4tiI985IF2UmjvpR26k51c
+PoWybjNeJQez/ahpHqpXATwSd/Heh/3dHY7qJ7PbA214/D8+Gjt1vyPV+N8Z6SPu
+jRbV2C2mpwdyTRL283IE3rOayiXfE3QIJpdPiolZnfSyoT4PninKp+/IleEGo04Q
+gd2PUsPKtOErXqzT/MEIk+C7a9NT4uwyd0Kl+WDcWoVvow4+dNcaMJ9YXrplT3QQ
+9N8s39d37pP7Q061B+ZMcKWp/5m4MkF6PnMKl+mLXjSMZ6bp4MKw6ZS5xTWRQuHJ
+jSKUWSwJ4wxvy060nPDzP5A3HJIMZhbALm9AfxytzJZtai5dX8P4LdHpXkn6eEYC
+HsyM8eyAEdlYswJEbTdLgs4En2wlkfGKdD2CLa82OD7AN3CGNcd0bDJGRBVZmTrh
+0ShawBtRyxD0m3GPhRJ43n4uxZBgDbSJiEQrWigW0nMPDH6qZupEcriuGJdf5kyX
+Rk/o6Fq1Euz+Q48/GVrp9k7e3V0idz4px5dBad9S6dVILt370yWXjGWztCewZMWG
+VSgxfMpQW8s8/zFekW8B
+=GaAI
+-----END PGP SIGNATURE-----
+
+--=-LzDT3VCxCtwrO4fXqHil--
+
