@@ -1,74 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f222.google.com ([209.85.217.222]:58717 "EHLO
-	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754112AbZBPINf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34667 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752089AbZBFUxn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 03:13:35 -0500
-Received: by gxk22 with SMTP id 22so2805998gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 00:13:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1234695526.4219.46.camel@johannes.local>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-5-git-send-email-lrodriguez@atheros.com>
-	 <1234695526.4219.46.camel@johannes.local>
-Date: Mon, 16 Feb 2009 00:13:33 -0800
-Message-ID: <43e72e890902160013q48912fa1if1db7155e4fee1f1@mail.gmail.com> (sfid-20090216_091355_894983_518B35CC)
-Subject: Re: [PATCH 04/10] nl80211: disallow user requests prior to
-	regulatory_init()
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 6 Feb 2009 15:53:43 -0500
+Subject: Re: turning off IBSS (with wext)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1233953398.3476.11.camel@localhost>
+References: <1233928622.4175.9.camel@johannes.local>
+	 <1233938496.28437.10.camel@localhost>
+	 <1233952826.4175.21.camel@johannes.local>
+	 <1233953398.3476.11.camel@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZshPrlbTyi/+R/CLPAX6"
+Date: Fri, 06 Feb 2009 21:53:39 +0100
+Message-Id: <1233953619.4175.34.camel@johannes.local> (sfid-20090206_215347_399581_A56B6626)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 15, 2009 at 2:58 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
->> If cfg80211 is built into the kernel there is perhaps a small
->> time window betwen nl80211_init() and regulatory_init() where
->> cfg80211_regdomain hasn't yet been initialized to let the
->> wireless core do its work. During that rare case and time
->> frame (if its even possible) we don't allow user regulatory
->> changes as cfg80211 is working on enabling its first regulatory
->> domain.
->>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> ---
->>  net/wireless/nl80211.c |    9 +++++++++
->>  1 files changed, 9 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->> index db973f2..6f4dedb 100644
->> --- a/net/wireless/nl80211.c
->> +++ b/net/wireless/nl80211.c
->> @@ -1876,6 +1876,15 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
->>       int r;
->>       char *data = NULL;
->>
->> +     /*
->> +      * You should only get this when cfg80211 hasn't yet initialized
->> +      * completely when built-in to the kernel right between the time
->> +      * window between nl80211_init() and regulatory_init(), if that is
->> +      * even possible.
->> +      */
->> +     if (!cfg80211_regdomain)
->> +             return -EINPROGRESS;
->> +
->
-> But that variable access here is racy too.
 
-Right.
+--=-ZshPrlbTyi/+R/CLPAX6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> It might be ok anyway because
-> the variable can never be NULL again after the first assignment
+On Fri, 2009-02-06 at 15:49 -0500, Dan Williams wrote:
 
-That's what I was going for.
+> > > >  * wpa_supplicant (or NM?) will try to do SIWMLME(disassoc) in IBSS
+> > > >    mode, which seems kinda wrong. Why do we accept it? We send out =
+a
+> > > >    frame and then do nothing else.
+> > > >  * Then I thought "iwconfig wlan1 essid off" - but that fails with
+> > > >    -EINVAL due to ieee80211_sta_find_ibss
+> > > >=20
+> > > > It seems to me that either one of those, or both, should actually t=
+urn
+> > > > off beaconing.
+> > >=20
+> > > Either one; the supplicant uses SIWMLME(disassoc) at various times (l=
+ike
+> > > when leaving a BSS), and NM will sometimes set a NULL SSID when
+> > > deactivating the device.
+> >=20
+> > Fun. Neither one actually works.
+>=20
+> Yeah; I had to recently patch wpa_supplicant to really disassociate at
+> Jouni's suggestion; just telling the driver to disassoc isn't adequate
+> in all cases, because some drivers will just try to reassoc.  Instead,
+> unlocking the BSSID and setting a bogus SSID will usually actually
+> accomplish the disassociation in addition to the MLME disassoc...
 
->  but in
-> that case the assignment needs to take care to assign something fully
-> created ...
+To be honest, I'm not sure I like disassoc, it doesn't actually make any
+sense since we never associated. OTOH, wext claims we did... It's all a
+little fishy. What do you mean by "bogus SSID" here? Hopefully the empty
+"off" SSID I had in point 2? If so, I guess I'll make that work, or
+something...
 
-Can you elaborate on what you mean?
+johannes
 
-  Luis
+--=-ZshPrlbTyi/+R/CLPAX6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJjKNQAAoJEKVg1VMiehFYwtkQAJeO2hbng6uPGjHyphPGENYk
+W6rz4kCl4gefIFEitgJzKeGXVqqK8839rcAGxRr1UoLXWak8aQDbkOC59yS0oIbF
+Z+eW/A2jEuqeFYWFdp9IJWJYXsuNAPPvjlgzO5dl1UUFkDy7IRnRi+zByV+G364j
+o0xJMutkS98lc1YIEIdzOqHaBsj4/c1rV5Tce6I1yimEN+eDZL0yOU4WGt7P5A38
+KaVVTfKFRQvfnYNH39s/esM10xVXPDTl+ytuHAFwVFEhibiul5g+r0M1NdyO0Ez/
+qZ6t8635ZwveUvCOL1lYvXNuNToLzBUfn2Zi3g7buFEgG6HCWixd68wJmzo5/nFf
+EHqZj+KI4hYoiofoF/DRpO9EjCt9OADOcmWFgBDFRfaP+a1YSdsnE062yafnFFqU
+S4W0l6PF334y8ICaCAHuZ0GUdsCN5ZeIsDi+BEvT8j9x+3ajX+r29NyF4Tb9r1nj
+UhHN7YmG4KE7mRrHoTnnoSsSMY6lGicjLPB9WvHYqCELgDMJLSzwN7wZ/VQ5uG12
+BK1WWcfxcwAcHM/ncOyKtDT3gsiRd7VkqVzepf5cUBvAH31ZBwuW4V1YMBHO7vCm
+yHMo9CailElT/BqGZBb8Kft2Hv4F21/eWLmVfQVb/n77X5fmjRsnyUjFlvaVPqjv
+GyQD/GOOwBTYDZMNQ0hK
+=j0O8
+-----END PGP SIGNATURE-----
+
+--=-ZshPrlbTyi/+R/CLPAX6--
+
