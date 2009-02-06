@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32511 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952AbZBNGm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Feb 2009 01:42:28 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 22:42:28 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] cfg80211: allow drivers that agree on regulatory to agree
-Date: Fri, 13 Feb 2009 22:41:40 -0800
-Message-ID: <1234593702-19750-2-git-send-email-lrodriguez@atheros.com> (sfid-20090214_074234_731916_010A6B4F)
-In-Reply-To: <1234593702-19750-1-git-send-email-lrodriguez@atheros.com>
-References: <1234593702-19750-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:36290 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752502AbZBFOms (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2009 09:42:48 -0500
+Subject: Re: [RFC 1/2] mac80211: don't add BSS when creating IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Alina Friedrichsen <x-alina@gmx.net>
+In-Reply-To: <1233917883.4099.9.camel@johannes.local> (sfid-20090206_115848_195519_25A34D99)
+References: <1233917883.4099.9.camel@johannes.local>
+	 (sfid-20090206_115848_195519_25A34D99)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1WNt59RMUb7Op7koWfFp"
+Date: Fri, 06 Feb 2009 15:42:44 +0100
+Message-Id: <1233931364.4175.13.camel@johannes.local> (sfid-20090206_154253_566929_E0CA3DCB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows drivers that agree on regulatory to share their
-regulatory domain.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+--=-1WNt59RMUb7Op7koWfFp
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 9dce86a..95f8298 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1164,6 +1164,16 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 				return 0;
- 			return -EALREADY;
- 		}
-+
-+		/*
-+		 * This would happen if you unplug and plug your card
-+		 * back in or if you add a new device for which the previously
-+		 * loaded card also agrees on the regulatory domain.
-+		 */
-+		if (last_request->initiator == REGDOM_SET_BY_DRIVER &&
-+		    alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
-+			return -EALREADY;
-+
- 		return REG_INTERSECT;
- 	case REGDOM_SET_BY_USER:
- 		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
--- 
-1.6.1.2.253.ga34a
+On Fri, 2009-02-06 at 11:58 +0100, Johannes Berg wrote:
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+> Untested. Please test, also in combination with 2/2.
+
+Tested both together with IBSS, works fine. Haven't tested fixed channel
+and/or fixed BSSID though.
+
+johannes
+
+--=-1WNt59RMUb7Op7koWfFp
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJjExhAAoJEKVg1VMiehFYYQcP/jleDO0J6IllfZYcPn/GWS/S
+ItItgzttC6KE35r8J4ahdzWyuDK92hi5UDJWwOvl+vVuyzUwdbba8Z5fuU3FwxOn
+pKroEZdh/Qzf/ZmakCvQNmxLGka9BkPKkBrq1PlV/59S0BBv/VeY1HmUCkr1/NRD
+3mlle9l72JtUoSRreVDrAkGVEbSN2ZLBrVd4h/xJVlGF3iHYYObWZN+lzJxSKnhD
+R0R3wRY7PNm5Vv6iZBLRhzRE4QDBmAM3af73kwpZnaLON8Bwb2f1tOBL5zhXeCiO
+ucv5Yru3S0ExoQoqnIP1THOh13cfLsbltJ8ieoD/xvrqN0WneodZ+ZlEmJ4xaSiC
+HocDfqv3S0Vb9vZhBAn6ZyUsEIVb/rvi8r6OQQufUcB2Jz60f8C06Pkac0kXIYNe
+y1cJGQwOX2exIpe0ED/kU5jyD+QQ+uGLVqmDP3YrN5wFsohVfwUABDlK7QAX3PDo
+v66chogA3mKCfGoPqNRjE9+6a45S/Eoq15jEIcTvgfukHy4KvqJ0Dx5MLSlJ+iqT
+d/nI9/UL/BlCCL0DaNcPiylrsxWvxjb9ADzEQXJu7P73nZvWW28VZxuQAfqzrwBT
+PrGohVjMP1XEuz6K/RZRnjMRqp2jXX9FTnK4VoZGAK0K2zm9EnW9ooKeDIKC8vir
+63DXUWvtWmLdXjAfUNhF
+=2oTY
+-----END PGP SIGNATURE-----
+
+--=-1WNt59RMUb7Op7koWfFp--
 
