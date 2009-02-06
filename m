@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:20501 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752064AbZBELoR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39298 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbZBFUnI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2009 06:44:17 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so137502fgg.17
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Feb 2009 03:44:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20090205095217.GA13736@jm.kir.nu>
-References: <20090204150857.GA5069@sortiz.org>
-	 <1233789837.24227.19.camel@localhost.localdomain>
-	 <1233790539.7390.23.camel@johannes.local>
-	 <20090205084407.GA11126@jm.kir.nu> <20090205095217.GA13736@jm.kir.nu>
-Date: Thu, 5 Feb 2009 13:44:15 +0200
-Message-ID: <1ba2fa240902050344h1deb4c3dqce0949ec154faba4@mail.gmail.com> (sfid-20090205_124422_981790_D1393D85)
-Subject: Re: [PATCH RFC] mac80211: Filter scan results
-From: Tomas Winkler <tomasw@gmail.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Dan Williams <dcbw@redhat.com>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 6 Feb 2009 15:43:08 -0500
+Subject: Re: [RFC 1/2] mac80211: don't add BSS when creating IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090206190012.260110@gmx.net> (sfid-20090206_200044_110756_7814C10D)
+References: <1233917883.4099.9.camel@johannes.local>
+	 (sfid-20090206_115848_195519_25A34D99) <1233931364.4175.13.camel@johannes.local>
+	 <20090206190012.260110@gmx.net> (sfid-20090206_200044_110756_7814C10D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-4TEAR5vpHUwQYPpksI5R"
+Date: Fri, 06 Feb 2009 21:43:04 +0100
+Message-Id: <1233952984.4175.25.camel@johannes.local> (sfid-20090206_214311_452075_A0CF928D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 5, 2009 at 11:52 AM, Jouni Malinen <j@w1.fi> wrote:
-> On Thu, Feb 05, 2009 at 10:44:07AM +0200, Jouni Malinen wrote:
->> Trying to use 131072 byte buffer is actually a bug in wpa_supplicant and
->> even the previous attempt of 65536 is not valid. I did not realize
->> this before, but it was pointed out to me some time ago that the length
->> field in struct iw_point is only 16 bits, so there is actually a strict
->> limit of 65535 bytes of data available through SIOCGIWSCAN.
->>
->> 65536 ends up being truncated into zero, so I would assume the largest
->> buffer wpa_supplicant tries to use in practice is 32768 bytes. I'll fix
->> this so that the next doubling is actually limited to 65535 (assuming it
->> works with WEXT code in kernel). I would hope that this helps quite a
->> bit as far as wpa_supplicant is concerned (almost doubling the maximum
->> results buffers).
->
-> This moved the maximum from 88 BSSes (using IEEE 802.11g with WPA2 as an
-> example here; smaller number for 802.11n etc. extensions) to 177 BSSes
-> (or 178, but the last one was truncated, I think; the returned buffer
-> was 65534 bytes long). After that, things get bad, though, since there
-> is no way for the user space to fetch the buffer (at least with mac80211
-> scan reporting).
->
->> As far as a possible workaround in kernel code is concerned,
->> length=65535 could be considered a special case. Since it is clear that
->> userspace cannot provide a larger buffer, there is not much point in
->> returning -E2BIG. Instead, the results could be truncated after the last
->> BSS that fit into the buffer and that would be returned to userspace.
->> This is likely going to be much more useful than not being able to
->> receive any result.
->
-> This should have helped with the test above when the number of BSSes
-> went past 178. Sure, all BSSes would not be reported, but should the
-> driver do any sorting based on BSS preference (e.g., signal strength),
-> this would likely work for most use cases.
 
+--=-4TEAR5vpHUwQYPpksI5R
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Just a thought If user space will be able to merge 2 scan results we
-can then split then in 2 separate reports....
+On Fri, 2009-02-06 at 20:00 +0100, Alina Friedrichsen wrote:
+> Hello Johannes!
+>=20
+> > Tested both together with IBSS, works fine. Haven't tested fixed channe=
+l
+> > and/or fixed BSSID though.
+>=20
+> I have tested both, it works fine, too. :)
 
-Tomas
+Thanks Alina, I'll have to split up the second patch (cfg80211 changes)
+and look at the function naming you suggested, and then repost in a few
+days as [PATCH]
+
+johannes
+
+--=-4TEAR5vpHUwQYPpksI5R
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJjKDVAAoJEKVg1VMiehFYVHEP/0hiJENWV5rbuh2tbm0dlBEM
+eYa6nSq3NXXlbBSvv0h0gUo1WPnJ1XJbL/bRA8UxoifivAsuSyTJ16ygdMSen5xH
+3W0TQnU6/Otj0wZBbk+zDWoEW8KyDGKrhKp+VxNmT/Z6XtojqnUr7y5GIhbU8Tx/
+4DwQXRPqeZYTbNZTr34DX02feXhpdSd8mnhkgkhQtyzi5yD5ySkxjUmH6EEAa+eT
+k4WJiKpI4l80NzZ0xUT/Leh7EG+bHZVMyEQrFSK0sDpkC177sPmB0fm4/Zg8mgV/
+q8F0RzT1pngSg1poPPsW08ZrUal4UrV1xk1W74Bg6ffE2VQ2w7piLuIqk3/w/kFL
+mIils2sGq0C66nCuRoDvuSpR4odwKOYH9mh/JOOUye42n/3JFjTAbbRsFCADOXhY
+u6s94HVMFjIn/es84h0igbyZHcMTLHFhwlCgR0fcn9EieS42GpBl3Jyit7W1pRPW
+IAXLbJiWvneh5CVub5yt4pQNe5rdtVdCmoxBVBlCK43QQEa5bxjk49J0aDTFkd47
++Ul6nqUb3/pnTw5R2SMqW5M14xgjcUeRAoMdeUrSe30ehkXEs5RYUP3sK1E2drJt
+bLYKYIDJdQXoOoEZxcjMDNIiGyH7Dtvn/mV9vJSHoqkvPVTQnvB3PxOf8qPFNEU8
+dnMQLihPDxO+3Cy8ii1Z
+=s0H2
+-----END PGP SIGNATURE-----
+
+--=-4TEAR5vpHUwQYPpksI5R--
+
