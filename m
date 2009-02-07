@@ -1,77 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:36209
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363AbZBWQQy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 11:16:54 -0500
+Received: from eta-ori.net ([91.121.142.51]:42528 "EHLO orion.eta-ori.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753251AbZBGIPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Feb 2009 03:15:06 -0500
+Received: from [IPv6:2001:6f8:10ae:0:217:31ff:fe81:8c8] (istari.kleinerfeigling.org [IPv6:2001:6f8:10ae:0:217:31ff:fe81:8c8])
+	by orion.eta-ori.net (Postfix) with ESMTPSA id C887432413F
+	for <linux-wireless@vger.kernel.org>; Sat,  7 Feb 2009 09:15:00 +0100 (CET)
+Message-ID: <498D431A.9000608@impulze.org> (sfid-20090207_091513_128333_63BE1C1E)
+Date: Sat, 07 Feb 2009 09:15:22 +0100
+From: Daniel Mierswa <impulze@impulze.org>
 MIME-Version: 1.0
-Date: Mon, 23 Feb 2009 11:16:51 -0500
-From: <pat-lkml@erley.org>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<ath5k-devel@venema.h4ckr.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten =?UTF-8?Q?=28ath=35k=5Frx?=
- =?UTF-8?Q?=5Fskb=5Falloc=29?=
-In-Reply-To: <40f31dec0902230803qcbd4c20kc66a50e6e2e8eef2@mail.gmail.com>
-References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <40f31dec0902230803qcbd4c20kc66a50e6e2e8eef2@mail.gmail.com>
-Message-ID: <ee884e22dfd15885de1299d4396dbb2a@127.0.0.1> (sfid-20090223_171657_237699_44DF9D72)
-Content-Type: text/plain; charset="UTF-8"
+To: linux-wireless@vger.kernel.org
+Subject: Re: location of binaries and libraries of new wifi tools
+References: <498CC07F.3080800@impulze.org> <1233981671.3652.6.camel@localhost>
+In-Reply-To: <1233981671.3652.6.camel@localhost>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 23 Feb 2009 18:03:16 +0200, Nick Kossifidis <mickflemm@gmail.com>
-wrote:
-> 2009/2/23 Bob Copeland <me@bobcopeland.com>:
->> On Mon, 23 Feb 2009 00:20:50 +0100, Jiri Slaby wrote
->>> On 22.2.2009 22:56, Jiri Slaby wrote:
->>> > Well, maybe we should try to reproduce with jumbo packets sent to the
->>> > ath5k receiver, since I think it (1) is not very much test-covered
->>> > code
->>> > (2) appears to be related.
->>>
->>> According to the spec I have for older chip, there is not `done' flag
->>> set for descriptors which have `more' flag set. We handle this wrongly.
->>> Am I looking correctly, Nick, Luis, Bob?
->>>
->>> I still don't see what could have caused this though.
->>
->> As I understand it, yes, we don't do the right thing when the more flag
->> is set.  We're supposed to keep processing packets until we get one with
->> the done flag, and then all of that is supposed to be merged into a
->> single
->> packet.  Other flags such as the rx rate are only valid on the final
->> packet.
->>
->> However, I did some debugging of this a while ago and concluded that the
->> 'jumbo' frames were largely garbage data.  The dma buffer size is
->> certainly
->> large enough for a standard 802.11 frame and the 'more' flag is only
->> supposed to be set if the dma buffer size is too small for a packet.  In
->> all cases the dma buffer size was 2500+ bytes and the actual contents of
->> the packets looked like random values (I did have encryption turned on,
->> but there were no 802.11 headers I could see.)
->>
->> So I am not sure if the jumbo packets are causing bad things to happen,
->> or if they are an indication that something bad has already happened.
->>
-> 
-> Hmm can someone test ath5k against an Atheros AP using fast frames ?
-> Maybe they are jumbo frames but they don't have any header etc so that
-> they look like one frame after un-fragmentation, documentation says
-> that the current frame is continued in the next descriptor if more is
-> set to 1 so i guess next buffer might not have the header. If more = 0
-> then it's our last descriptor and only then other fields such as done,
-> frame receive ok, rssi etc are valid.
+On 07.02.2009 05:41, Dan Williams wrote:
+> Stuff in /bin or /sbin can certainly link to stuff in /usr without
+> breaking.  The only time it breaks is when you're using network
+> mounted /usr and you need the wireless stack to boot the machine and
+> mount /usr.  But then you have to ask yourself, why are you using a
+> network mounted /usr over wifi?  That seems odd.  Somebody turns on a
+> microwave or starts to use a cordless phone and you're hosed.
+Right, point taken. But why should there be a non-working binary in
+/sbin if you don't have /usr mounted. Couldn't we just stick all the
+tools in /usr/{s,}bin then?
 
-If an ath9k device in AP mode using hostapd counts as an Atheros AP, then I
 
-can test tonight.  If you can send me the steps to test this, I'll do it in
+-- 
+Mierswa, Daniel
 
-about 8 hours.
-
-Pat Erley
+If you still don't like it, that's ok: that's why I'm boss. I simply
+know better than you do.
+               --- Linus Torvalds, comp.os.linux.advocacy, 1996/07/22
