@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:13716 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751571AbZBWT43 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:39283 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753285AbZBGHmk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 14:56:29 -0500
-Received: by wf-out-1314.google.com with SMTP id 28so2652154wfa.4
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 11:56:26 -0800 (PST)
+	Sat, 7 Feb 2009 02:42:40 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so693489fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2009 23:42:38 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alina Friedrichsen <x-alina@gmx.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] mac80211: Remove TSF atomic requirement from the documentation
+References: <20090205165834.63840@gmx.net> <87fxirpe1q.fsf@litku.valot.fi>
+	<1233953047.4175.27.camel@johannes.local>
+	<87ocxfp937.fsf@litku.valot.fi>
+	<1233954680.4175.36.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 07 Feb 2009 09:34:33 +0200
+In-Reply-To: <1233954680.4175.36.camel@johannes.local> (Johannes Berg's message of "Fri\, 06 Feb 2009 22\:11\:20 +0100")
+Message-ID: <87d4duitti.fsf@litku.valot.fi> (sfid-20090207_084245_887987_B4DAEF11)
 MIME-Version: 1.0
-In-Reply-To: <20090223193704.GC3553@tuxdriver.com>
-References: <87wsbobfza.wl%peter@chubb.wattle.id.au>
-	 <20090223193704.GC3553@tuxdriver.com>
-Date: Mon, 23 Feb 2009 14:56:26 -0500
-Message-ID: <b6c5339f0902231156r6498fb6as219b7ba18b8cce5e@mail.gmail.com> (sfid-20090223_205632_819034_F11D84B3)
-Subject: Re: [ath5k-devel] [PATCH] Fix transmit LED on Acer Aspire One
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Peter Chubb <peterc@gelato.unsw.edu.au>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	lrodriguz@atheros.com, jirislaby@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 23, 2009 at 2:37 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Feb 18, 2009 at 02:07:05PM +1100, Peter Chubb wrote:
->> +     /* Enable softled on Acer Aspire One */
->> +     else if (pdev->subsystem_vendor == 0x105b && pdev->subsystem_device == 0xe008) {
->> +             __set_bit(ATH_STAT_LEDSOFT, sc->status);
->> +             sc->led_pin = 3;
->> +             sc->led_on = 0;
->> +     }
->>       if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
->>               goto out;
+Johannes Berg <johannes@sipsolutions.net> writes:
+
+> On Fri, 2009-02-06 at 23:08 +0200, Kalle Valo wrote:
 >
-> Any comment on this from the ath5k guys?  That 0x105b subvendor ID
-> would seem to correspond to "Foxconn International, Inc.", which
-> doesn't sound much like "Acer"...
+>> Alina, it would be nice to explicitly mention that the function can
+>> sleep. Otherwise driver authors need to guess if sleeping is allowed
+>> or not.
+>
+> That's a larger project to actually annotate all of them either way ;) 
 
-It's already in wireless-testing with similar values.
+Yes, but we can start with smaller pieces ;)
 
-Not quite apropos to this patch, someone with the ambit chipset said
-the values didn't match up with his laptop, so we do need to add a
-subsystem_device test I think, but it should have a #define in pci.h.
-In any case there's usually no harm in enabling the wrong gpio pin,
-unless rfkill happens to sit there.
+> I think we only mention atomicity requirements right now.
+
+I found only one spot:
+
+ * @set_key: See the section "Hardware crypto acceleration"
+ *	This callback can sleep, and is only called between add_interface
+
+But, like you said, we can add these later.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Kalle Valo
