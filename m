@@ -1,32 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13154 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752593AbZB1AQt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 19:16:49 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/6] iwlwifi driver updates 02/27/2009
-Date: Fri, 27 Feb 2009 16:21:18 -0800
-Message-Id: <1235780484-27979-1-git-send-email-reinette.chatre@intel.com> (sfid-20090228_011656_370603_F5E19FE8)
+Received: from yx-out-2324.google.com ([74.125.44.28]:26923 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbZBGFUy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Feb 2009 00:20:54 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so466364yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2009 21:20:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20090207050356.GA16457@hash.localnet>
+References: <20090131023147.GE3342@makis> <20090204215706.GA5651@makis>
+	 <20090205154532.M30551@bobcopeland.com>
+	 <40f31dec0902051306m769712ecn858672ba24524c63@mail.gmail.com>
+	 <20090207050356.GA16457@hash.localnet>
+Date: Sat, 7 Feb 2009 07:20:52 +0200
+Message-ID: <40f31dec0902062120o1234e462k450c7bc6f61d6753@mail.gmail.com> (sfid-20090207_062058_597720_DBF3E60C)
+Subject: Re: [PATCH 5/5] ath5k: Update reset code
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains mostly 3945 porting patches. We include one fix in the
-probe function's error flow. The API version of uCode for new hardware is
-updated, backport support already present.
+2009/2/7 Bob Copeland <me@bobcopeland.com>:
+> On Thu, Feb 05, 2009 at 11:06:59PM +0200, Nick Kossifidis wrote:
+>> I think this is because we call reset too many times. Try removing
+>> call to reset from config_interface, after some tests i did it seems
+>> wrong (we don't need to reset pcu and if we do, we don't need to reset
+>> the whole chip and re run phy initialization etc). I don't get any
+>> problems with ar2425 but i didn't get any before anyway (i never got a
+>> hang, just a few bmiss interrupts, not a storm).
+>
+> Yep, with BMISS interrupts turned off and config_interface no longer
+> calling reset, it's quite stable now.  Maybe there was some timing
+> thing at play.  If we add a patch to remove those then I'm satisfied :)
+>
 
-[PATCH 1/6] iwlwifi: update 5150 API version to support new firmware
-[PATCH 2/6] iwl3945: synchronize timestamp with uCode
-[PATCH 3/6] iwl3945: unify set key flow with iwlwifi
-[PATCH 4/6] iwlwifi: fix *pci_probe error flow
-[PATCH 5/6] iwl3945: add iwl3945_setup_mac
-[PATCH 6/6] iwl3945 : use iwl_activate_qos
+O.K. do you want me to put these fixes on this patch or post a separate ?
 
 
-Thank you
 
-Reinette
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
