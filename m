@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:36131 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754064AbZBTXl6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 18:41:58 -0500
-Date: Fri, 20 Feb 2009 18:41:55 -0500
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni.Malinen@atheros.com
-Subject: Re: [PATCH v4 00/15] cfg80211: add a workqueue for regulatory
-	processing
-Message-ID: <20090220234155.GC23428@bombadil.infradead.org> (sfid-20090221_004216_701339_C1DF1BD6)
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com> <1235050171.4023.64.camel@johannes.local> <43e72e890902191640u107ff0fdse92367fccc975dba@mail.gmail.com> <1235149043.4023.66.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1235149043.4023.66.camel@johannes.local>
+Received: from mx2.redhat.com ([66.187.237.31]:43872 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753121AbZBGEmq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2009 23:42:46 -0500
+Subject: Re: location of binaries and libraries of new wifi tools
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Mierswa <impulze@impulze.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <498CC07F.3080800@impulze.org>
+References: <498CC07F.3080800@impulze.org>
+Content-Type: text/plain
+Date: Fri, 06 Feb 2009 23:41:11 -0500
+Message-Id: <1233981671.3652.6.camel@localhost> (sfid-20090207_054251_020424_C56C7082)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 20, 2009 at 05:57:23PM +0100, Johannes Berg wrote:
-> On Thu, 2009-02-19 at 16:40 -0800, Luis R. Rodriguez wrote:
-> 
-> > > I don't know why you insist on having a wrapper for
-> > > wiphy->wiphy_idx but it's ok :)
-> > 
-> > Heh its just because wiphy->wiphy_idx does not exist, the drv has so
-> > you must go to the container and then use that. If we move the idx to
-> > the wiphy then I'm good to use wiphy->wiphy_idx. Want to do that?
-> 
-> Ah. Not sure, but I don't think we need to expose that to drivers.
+On Fri, 2009-02-06 at 23:58 +0100, Daniel Mierswa wrote:
+> Hey list, I was wondering where to put binaries for the new
+> wireless-stack based tools. Most default installations put libnl, crypto
+> and gcrypt into /usr. Applications like iw, wpa_supplicant and crda need
+> those to run, yet they do not link statically. So if the default
+> location for the new binaries is /sbin or /bin and the libraries it
+> links against are default installed somewhere into /usr things will
+> break. I wonder now what to do for consistency. Either statically link
+> libraries that are default installed into /usr, put those libs into /lib
+> or install the binaries into /usr aswell. I'd appreciate any comments on
+> that. :) Thanks and have a nice weekend.
 
-Unless we may need it later for virtual wiphys, not sure, Jouni?
+Stuff in /bin or /sbin can certainly link to stuff in /usr without
+breaking.  The only time it breaks is when you're using network
+mounted /usr and you need the wireless stack to boot the machine and
+mount /usr.  But then you have to ask yourself, why are you using a
+network mounted /usr over wifi?  That seems odd.  Somebody turns on a
+microwave or starts to use a cordless phone and you're hosed.
 
-  Luis
+Dan
+
+
