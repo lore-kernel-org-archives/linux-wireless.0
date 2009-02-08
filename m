@@ -1,42 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:50759 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752989AbZBXJBw (ORCPT
+Received: from c1.cosetrain.com ([213.239.209.213]:47125 "EHLO
+	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753312AbZBHT4v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 04:01:52 -0500
-Date: Tue, 24 Feb 2009 11:01:37 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kalle.valo@nokia.com>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
-Message-ID: <20090224090137.GB10851@jm.kir.nu> (sfid-20090224_100155_328970_74E925EF)
-References: <20090223163626.20939.4879.stgit@tikku> <20090223163738.20939.25890.stgit@tikku> <1235442058.4455.71.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1235442058.4455.71.camel@johannes.local>
+	Sun, 8 Feb 2009 14:56:51 -0500
+From: Florian Sesser <flomaillist@cosetrain.com>
+To: linux-wireless@vger.kernel.org
+Cc: Florian Sesser <flomaillist@cosetrain.com>
+Subject: [PATCH 1/1] iw: Added capability to set individual mesh IDs
+Date: Sun,  8 Feb 2009 20:56:40 +0100
+Message-Id: <01b48b275f07cb009e20b7302edc935a11dec8c3.1234122907.git.flomaillist@cosetrain.com> (sfid-20090208_205654_599723_FC9446BC)
+In-Reply-To: <498F36B7.40806@cosetrain.com>
+References: <498F36B7.40806@cosetrain.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 23, 2009 at 06:20:58PM -0800, Johannes Berg wrote:
+This allows the setting of
+  * Path selection protocol ID
+  * Path selection metric ID
+  * Congestion control mode ID
 
-> We used to go through a probe request cycle once to make sure, but I'm
-> not sure there's a point in that. Just pointing out the change here.
+Signed-off-by: Florian Sesser <flomaillist@cosetrain.com>
+---
+ mesh.c    |   26 ++++++++++++++++++++++++++
+ nl80211.h |    3 +++
+ 2 files changed, 29 insertions(+), 0 deletions(-)
 
-Having seen some hardware implementations of Beacon miss getting out of
-sync with the AP timing and causing way too frequent disconnections, I
-would think that there may well be good reasons to check in software
-that report was indeed correct, e.g., by sending the probe request
-before giving up on the AP.
-
-> The code looks pretty good, but this will lead to an interesting
-> situation where "iwlist wlan1 scan last" ("iw dev wlan1 scan dump") will
-> not show _any_ BSS, which will probably trip up NM; this happens because
-> the BSS will not be updated and expire after 10 seconds. I think we need
-> a way to "hold on" to the BSS.
-
-Dropping the BSS is not good.. The scan results should always include
-the current BSS so that information from it is available for things like
-4-way handshake (WPA/RSN IE is needed from Beacon/ProbeResp).
-
+diff --git a/mesh.c b/mesh.c
+index 932196e..5dabe19 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -93,6 +93,18 @@ static uint32_t _parse_u32(const char *str, _any *ret)
+ 	return 0;
+ }
+ 
++static uint32_t _parse_hex_u32(const char *str, _any *ret)
++{
++	char *endptr = NULL;
++	long long int v = strtoll(str, &endptr, 16);
++	if (*endptr != '\0')
++		return 0xffffffff;
++	if ((v < 0) || (v > 0xffffffff))
++		return 0xffffffff;
++	ret->u.as_32 = (uint32_t)v;
++	return 0;
++}
++
+ static void _print_u8(struct nlattr *a)
+ {
+ 	printf("%d", nla_get_u8(a));
+@@ -123,6 +135,11 @@ static void _print_u32_in_TUs(struct nlattr *a)
+ 	printf("%d TUs", nla_get_u32(a));
+ }
+ 
++void _print_u32_as_hex(struct nlattr *a)
++{
++	printf("%08X", nla_get_u32(a));
++}
++
+ /* The current mesh parameters */
+ const static struct mesh_param_descr _mesh_param_descrs[] =
+ {
+@@ -165,6 +182,15 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
+ 	{"mesh_hwmp_net_diameter_traversal_time",
+ 	NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
+ 	_my_nla_put_u16, _parse_u16, _print_u16_in_TUs},
++	{"mesh_path_selection_protocol_id",
++	NL80211_MESHCONF_PATH_SELECTION_PROTOCOL_ID,
++	_my_nla_put_u32, _parse_hex_u32, _print_u32_as_hex},
++	{"mesh_path_selection_metric_id",
++	NL80211_MESHCONF_PATH_SELECTION_METRIC_ID,
++	_my_nla_put_u32, _parse_hex_u32, _print_u32_as_hex},
++	{"mesh_congestion_control_mode_id",
++	NL80211_MESHCONF_CONGESTION_CONTROL_MODE_ID,
++	_my_nla_put_u32, _parse_hex_u32, _print_u32_as_hex},
+ };
+ 
+ static void print_all_mesh_param_descr(void)
+diff --git a/nl80211.h b/nl80211.h
+index 4bc2704..150029c 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -795,6 +795,9 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_HWMP_ACTIVE_PATH_TIMEOUT,
+ 	NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL,
+ 	NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
++	NL80211_MESHCONF_PATH_SELECTION_PROTOCOL_ID,
++	NL80211_MESHCONF_PATH_SELECTION_METRIC_ID,
++	NL80211_MESHCONF_CONGESTION_CONTROL_MODE_ID,
+ 
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.6.5
+
