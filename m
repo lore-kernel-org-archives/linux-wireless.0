@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:52709 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751644AbZBAEF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2009 23:05:28 -0500
-Message-ID: <49851F73.4050204@openwrt.org> (sfid-20090201_050545_310530_E4989A7A)
-Date: Sun, 01 Feb 2009 05:05:07 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail.gmx.net ([213.165.64.20]:41925 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752202AbZBHRpV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Feb 2009 12:45:21 -0500
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 08 Feb 2009 18:45:19 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1234089364.4175.113.camel@johannes.local>
+Message-ID: <20090208174519.109630@gmx.net> (sfid-20090208_184526_263798_15A5ADB7)
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	jirislaby@gmail.com, mcgrof@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
-References: <20090131023147.GE3342@makis>	 <20090131170802.GA16826@hash.localnet>	 <40f31dec0901311048t3834612cgc6b1dd01aa42a5c0@mail.gmail.com>	 <20090131223809.GA17413@hash.localnet> <40f31dec0901311950q27e28bb8we145c79488b1c7e1@mail.gmail.com>
-In-Reply-To: <40f31dec0901311950q27e28bb8we145c79488b1c7e1@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+References: <20090207233507.67590@gmx.net>	
+ (sfid-20090208_003539_503598_424F18AB)
+ <1234089364.4175.113.camel@johannes.local>
+Subject: Re: generic ieee80211_sta_commit()?
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Kossifidis wrote:
-> 2009/2/1 Bob Copeland <me@bobcopeland.com>:
->> On Sat, Jan 31, 2009 at 08:48:02PM +0200, Nick Kossifidis wrote:
->>> > Heh, we should write a little tool to check the shifts and masks :)
->>> >
->>>
->>> Yup :P
->>
->> I just wrote one, I can post it later :)   It also found:
->>
->> AR5K_PHY_SIGMA_DELTA_ADC_CLIP 0x01ff3000 13
->>
->> Should be 12 or a different mask...
->>
-> 
-> 13 is correct
-> 
-> 0x01ff3000 -> 1111111111110000000000000
-I think it's    1111111110011000000000000? :)
+Hello!
 
-This mask makes 12 seem more likely.
+> What if you set the SSID again? I'd think that would help?
 
-- Felix
+Yes it only works again if you do so.
+
+> That could make sense, not exactly sure at this point. I'm also still
+> wondering about the other issue with turning _off_ IBSS, with essid o=
+ff
+> or so, see my other mail.
+
+What mail do you mean?
+
+> Sounds reasonable, if it fixes a bug.
+
+I think it's a clean-up, too.
+
+> I'd have to see the patch, I
+> guess. I'd like to also do assoc/IBSS stuff in cfg80211 at some point
+> soonish.
+
+How do you mean it?
+
+Regards
+Alina
+
+--=20
+Jetzt 1 Monat kostenlos! GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 17,95 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
+569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
