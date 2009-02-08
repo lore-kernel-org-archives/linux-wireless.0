@@ -1,83 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.217.174]:46277 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755183AbZBKV5L (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36055 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753168AbZBHKgM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 16:57:11 -0500
-Received: by gxk22 with SMTP id 22so28227gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 13:57:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <49928965.5000800@impulze.org>
-References: <49928231.3070405@impulze.org> <49928965.5000800@impulze.org>
-Date: Wed, 11 Feb 2009 13:57:09 -0800
-Message-ID: <43e72e890902111357q748a3664i39285598f397c9f3@mail.gmail.com> (sfid-20090211_225716_180635_2A83FC28)
-Subject: Re: also use SBINDIR for the regulatory.rules
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Daniel Mierswa <impulze@impulze.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 8 Feb 2009 05:36:12 -0500
+Subject: Re: generic ieee80211_sta_commit()?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20090207233507.67590@gmx.net> (sfid-20090208_003539_503598_424F18AB)
+References: <20090207233507.67590@gmx.net>
+	 (sfid-20090208_003539_503598_424F18AB)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-neX8j8WMZaBi8oBXsbzh"
+Date: Sun, 08 Feb 2009 11:36:04 +0100
+Message-Id: <1234089364.4175.113.camel@johannes.local> (sfid-20090208_113616_111287_015939AF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 11, 2009 at 12:16 AM, Daniel Mierswa <impulze@impulze.org> wrote:
-> On 11.02.2009 08:45, Daniel Mierswa wrote:
->>> You supply the user with a chance to specify SBINDIR during make
->>> install, yet forgot to use it in one place at the install target. I
->>> attached a patch against trunk for crda.git which fixes that.
->>>
->>> Also choosing /sbin as default SBINDIR path is probably not a good idea,
->>> since you link against gcrypt and crypto which are both located in /usr
->>> which upstream won't change. So it's either thinking of another method
->>> to do db verification or to choose /usr/sbin as default binary location.
->>> Thanks for your time. Feedback welcomed.  :)
->>
->> Do the same with udev/regulatory.rules. Hope it fits.
->>
->>
-> And of course that attached patch was all wrong. Sorry :( Here's a new one.
->
->
-> --
-> Mierswa, Daniel
->
-> If you still don't like it, that's ok: that's why I'm boss. I simply
-> know better than you do.
->               --- Linus Torvalds, comp.os.linux.advocacy, 1996/07/22
->
->
-> From 9d4b1b20bf02d4233b6323d85140385650a9dc09 Mon Sep 17 00:00:00 2001
-> From: Daniel Mierswa <impulze@impulze.org>
-> Date: Wed, 11 Feb 2009 08:39:55 +0100
-> Subject: [PATCH] also replace the SBINDIR used in the rules file
->
-> ---
->  Makefile              |    1 +
->  udev/regulatory.rules |    2 +-
->  2 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/Makefile b/Makefile
-> index 106397d..4079bb0 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -119,6 +119,7 @@ install: crda crda.8.gz regdbdump.8.gz
->        @# putting it in the right place.
->        $(Q)rm -f $(DESTDIR)/etc/udev/rules.d/regulatory.rules
->        $(Q)ln -sf regulatory.rules udev/$(UDEV_LEVEL)regulatory.rules
-> +       $(Q)sed 's:$$(SBINDIR):$(SBINDIR):' -i udev/regulatory.rules
->        $(Q)$(INSTALL) -m 644 -t \
->                $(DESTDIR)/$(UDEV_RULE_DIR)/ \
->                udev/$(UDEV_LEVEL)regulatory.rules
-> diff --git a/udev/regulatory.rules b/udev/regulatory.rules
-> index e81d802..ef9b5f1 100644
-> --- a/udev/regulatory.rules
-> +++ b/udev/regulatory.rules
-> @@ -2,4 +2,4 @@
->  # For more information see:
->  # http://wireless.kernel.org/en/developers/Regulatory/CRDA
->
-> -KERNEL=="regulatory*", ACTION=="change", SUBSYSTEM=="platform", RUN+="/sbin/crda"
-> +KERNEL=="regulatory*", ACTION=="change", SUBSYSTEM=="platform", RUN+="$(SBINDIR)"
 
-How is it the udev rule will know what $(SBINDIR) is?
+--=-neX8j8WMZaBi8oBXsbzh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+Hi,
+
+On Sun, 2009-02-08 at 00:35 +0100, Alina Friedrichsen wrote:
+> Hello,
+>=20
+> after a "ip link set wlan0 down" and than "ip link set wlan0 up" the
+> wifi connection don't come up again. If you do a "iwconfig wlan0
+> channel 4" beaconing in IBSS doesn't work anymore.
+
+What if you set the SSID again? I'd think that would help?
+
+> My thought to fix this is to add a generic ieee80211_sta_commit()
+> function which is called after the most config changes (e.g. SSID,
+> BSSID, channel, interface up, ...), so that a clean rejoin is done by
+> the function and the driver hangs not in an undefined state. And I
+> think it's more elegant, because ieee80211_sta_set_bssid() then
+> doesn't need to call ieee80211_sta_set_ssid() anymore to do the
+> rejoin.
+
+That could make sense, not exactly sure at this point. I'm also still
+wondering about the other issue with turning _off_ IBSS, with essid off
+or so, see my other mail.
+
+> What do you think about it? If agree I will implement it after
+> Johannes IBSS changes are applied to avoid confusion.
+
+Sounds reasonable, if it fixes a bug. I'd have to see the patch, I
+guess. I'd like to also do assoc/IBSS stuff in cfg80211 at some point
+soonish.
+
+johannes
+
+--=-neX8j8WMZaBi8oBXsbzh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJjrWRAAoJEKVg1VMiehFYvAMP/0nn1SWSNQDOuuuj3saTjfXy
+WMxrQZXuYieXQlNxXXj9Hc3aMSrsn1+L+Bldo8CddHd+0Ct9mnkMbtimANhh798+
+fYc6oYKhcgPG+5fvm9g8QuPwI/ga5LW0L+Au9JCcpT6c8SbGgIsQowDuknLlCaxb
+QomIPKVPrVEHrFJ+6M5x0MCbdoklHA3bwqy0vhzMs9wR3aUNJEHf0fiJkdkWHceQ
+v1oaoy77RXJskWw2TgStNRKUCZM4LmtyOwO6pXLlp2BgxVzSmgAuEP8XH1M53zqH
+vb8pN115ndXBbU8Wj4KphW4VZyPVxOT0rGxWIZsJfuBzVGFlU9mm+wzfduG45vc/
+LEmUQ1y+Smo2Dt2d6r4EN7AHeNSRmbQvfinYixk4qTo0AkJPXSD14qKBaSk97zWi
+6l8ajpISp/l8/E2b6zY45dBs9SDhKtaHYoIaPqUsPGDgyZv5E6FAG3COUtuOzamZ
+/q6vdc9xNtM0u9LCYT1gPFkyhsi/cZFtZtgPPXpqiSkN9DoOY9tBCXeCjF7/ORP9
+jfqhYwzyWJlo7x5oMS53GCXTFhDPnuiM0jD2EVzMoS73EmiR0CdF5CdDdnYTW3iI
+c5aj0741JycJt+7BC2O3aY8blvIGRWRQSSDGLiv08PBxdltYOMuT2qeqkd3S9/Bx
+N+UKZlWYfs4ugkl0zZzJ
+=/YqI
+-----END PGP SIGNATURE-----
+
+--=-neX8j8WMZaBi8oBXsbzh--
+
