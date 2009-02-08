@@ -1,78 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43746 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754862AbZBPIwb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60618 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752264AbZBHSBD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 03:52:31 -0500
-Subject: Re: [PATCH 06/10] cfg80211: propagate -ENOMEM during
-	regulatory_init()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Greg KH <greg@kroah.com>
-In-Reply-To: <43e72e890902160018r40d8c694qa1da55c9fa7ec376@mail.gmail.com> (sfid-20090216_091915_110909_54CB4C2A)
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-7-git-send-email-lrodriguez@atheros.com>
-	 <1234695674.4219.50.camel@johannes.local>
-	 <43e72e890902160018r40d8c694qa1da55c9fa7ec376@mail.gmail.com>
-	 (sfid-20090216_091915_110909_54CB4C2A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zO6zePBcYbKgqkcPfzcJ"
-Date: Mon, 16 Feb 2009 09:52:25 +0100
-Message-Id: <1234774345.4219.106.camel@johannes.local> (sfid-20090216_095235_146817_E76C4DD3)
-Mime-Version: 1.0
+	Sun, 8 Feb 2009 13:01:03 -0500
+Date: Sun, 8 Feb 2009 12:56:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, mcgrof@gmail.com, nbd@openwrt.org
+Subject: Re: [PATCH 5/5] ath5k: Update reset code
+Message-ID: <20090208175649.GA25417@tuxdriver.com> (sfid-20090208_190116_619002_E7F60B8E)
+References: <20090131023147.GE3342@makis> <20090204215706.GA5651@makis> <20090205154532.M30551@bobcopeland.com> <40f31dec0902051306m769712ecn858672ba24524c63@mail.gmail.com> <20090207050356.GA16457@hash.localnet> <40f31dec0902062120o1234e462k450c7bc6f61d6753@mail.gmail.com> <20090207143944.GB16457@hash.localnet> <40f31dec0902070813x10b49b33sf77962deb4bdf379@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0902070813x10b49b33sf77962deb4bdf379@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Feb 07, 2009 at 06:13:55PM +0200, Nick Kossifidis wrote:
+> 2009/2/7 Bob Copeland <me@bobcopeland.com>:
+> > On Sat, Feb 07, 2009 at 07:20:52AM +0200, Nick Kossifidis wrote:
+> >> O.K. do you want me to put these fixes on this patch or post a separate ?
+> >
+> > I think a separate patch is fine, it's a valid change by itself.
+> >
+> > --
+> > Bob Copeland %% www.bobcopeland.com
+> >
+> >
+> 
+> O.K. i'm sending a separate patch for this ;-)
+> 
+> John is it ok to push these 5 patches on wireless-testing or should i
+> re-send the whole series along with the next one ?
 
---=-zO6zePBcYbKgqkcPfzcJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+There has been a ton of discussion in this thread.  It would make
+things more clear in my inbox if you reposted the whole revised series.
 
-On Mon, 2009-02-16 at 00:18 -0800, Luis R. Rodriguez wrote:
+Thanks!
 
-> > I disagree with this patch -- there's so much that can go wrong even if
-> > allocating the message here is ok that imho it's hardly useful to check
-> > for errors here.
->=20
-> Huh?? ENOMEM is the only error we are propagating  -- that itself
-> seems reasonable to propagate.
->=20
-> > crda could fail, not be installed, etc.
->=20
-> This is never propagated to the kernel, that is not what this patch
-> does. Those failures you mentioned should not prevent cfg80211 from
-> moving on.
->=20
-> All this patch does is propagate -ENOMEMs.
-
-Yes, all those other possible crda failures do not prevent cfg80211 from
-moving on. But being unable to create a uevent could very well also be
-treated as a crda failure, and then how is it different from crda
-failing in userspace to warrant stopping cfg80211 from moving on?
-
-johannes
-
---=-zO6zePBcYbKgqkcPfzcJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJmSlGAAoJEKVg1VMiehFY8LEP/3LPqSas6qY9EEo9MPwmNYKh
-R7THWkOgz36OhNjXH6cFNb/1enbe9Sr6CQYcni74VDsKNhZQ5xNy6VOxaAN21dG/
-HJpmG8VoIvhBLO0AzzyHzwkbK5jHsaqbzSaj4cbB3LkcxD6j0fAFmUxQUp8KkRQI
-ay9TGn6TszoIHFtD9dm02zlu75ORirqKsYJqUlwE+qrj4qu4WoXHn7jw0W3dZSGc
-nHI4gsOlwUCPlqN9LTv1YQKh7v2NwN8FAhSK+suwjeLX8Y+MLnz0KHBBB2FoNjX3
-jmRZThvol2AEAmwyaI+agrLYBkc7gV9xVCet2WZWAEoSzCDVyO5q5rT0s52zQDRF
-yle9BVTsQI83/iGlPKcLNZYzpsVoY45W+LTnUUt8gqvHjQsy5pUw4Q0tbFKXjF9Q
-Vs1VjyAz2CQgUN3ZYML1ggiyZOr8jw57pmldG49VV6c2mbE11eS2RQKBKxzUUV4V
-n5Tu/dSR7uWyD3In6ZLIyEh/X4Ff9p/xnbcShdSvqNQL9j4dYPqM/79UgCfZYOQK
-NpjUzuZRPYgePSDceMjl2J72aABjovuetqZb/JDg9WHcdD2h+ZDYqMlEoHLdWVxv
-s9FdTUOxwyL3gVXIF0IxUxZJyfRCNH1z9vrAOzBHiM09Di5jyCRtTqIs+jc1MF5N
-AMFZCaz5QRQRgjSgHhLx
-=T4CW
------END PGP SIGNATURE-----
-
---=-zO6zePBcYbKgqkcPfzcJ--
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
