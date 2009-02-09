@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:40647 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753836AbZBITRf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 14:17:35 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so1121595fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 11:17:33 -0800 (PST)
+Received: from symlink.to.noone.org ([85.10.207.172]:47492 "EHLO sym.noone.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754527AbZBIWeD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2009 17:34:03 -0500
+Date: Mon, 9 Feb 2009 23:05:40 +0100
+From: Tobias Klauser <tklauser@distanz.ch>
+To: jirislaby@gmail.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	trivial@kernel.org
+Subject: [PATCH] ath5k: Storage class should be before const qualifier
+Message-ID: <20090209220540.GA7962@xenon.distanz.ch> (sfid-20090209_233410_491889_F5445791)
 MIME-Version: 1.0
-In-Reply-To: <1233685203-5093-1-git-send-email-reinette.chatre@intel.com>
-References: <> <1233685203-5093-1-git-send-email-reinette.chatre@intel.com>
-Date: Mon, 9 Feb 2009 20:17:33 +0100
-Message-ID: <f6ca9fed0902091117k7326e51ag8469887cb1a99d53@mail.gmail.com> (sfid-20090209_201739_129865_4EC198BA)
-Subject: Re: [ipw3945-devel] [PATCH v2.6.29] iwlwifi: save PCI state before
-	suspend, restore after resume
-From: drago01 <drago01@gmail.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 3, 2009 at 7:20 PM, Reinette Chatre
-<reinette.chatre@intel.com> wrote:
-> This is the right thing to do and fixes the following warning:
-> [...]
+The C99 specification states in section 6.11.5:
 
-With 2.6.29-rc4-git1 (which has this patch) I sometimes get:
+The placement of a storage-class specifier other than at the beginning
+of the declaration specifiers in a declaration is an obsolescent
+feature.
 
-iwl3945: Wait for START_ALIVE timeout after 2000ms.
-iwl3945 0000:07:00.0: PCI INT A disabled
+Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+---
+ drivers/net/wireless/ath5k/eeprom.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-After resume with results into no working wireless until the module is reloaded.
-I am not sure if this patch is the culprit (have not tried to revert
-it), but that's the only change that might have caused this (with rc3
-it was working fine, it just triggered the warning that this patch
-supposed to solve).
+diff --git a/drivers/net/wireless/ath5k/eeprom.c b/drivers/net/wireless/ath5k/eeprom.c
+index 1cb7edf..c5e03a6 100644
+--- a/drivers/net/wireless/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath5k/eeprom.c
+@@ -491,9 +491,9 @@ ath5k_eeprom_init_modes(struct ath5k_hw *ah)
+ static inline void
+ ath5k_get_pcdac_intercepts(struct ath5k_hw *ah, u8 min, u8 max, u8 *vp)
+ {
+-	const static u16 intercepts3[] =
++	static const u16 intercepts3[] =
+ 		{ 0, 5, 10, 20, 30, 50, 70, 85, 90, 95, 100 };
+-	const static u16 intercepts3_2[] =
++	static const u16 intercepts3_2[] =
+ 		{ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+ 	const u16 *ip;
+ 	int i;
+-- 
+1.5.6.5
+
