@@ -1,81 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f167.google.com ([209.85.220.167]:48911 "EHLO
-	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755789AbZBXUee (ORCPT
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:56992 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751933AbZBIWdN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 15:34:34 -0500
-Received: by fxm11 with SMTP id 11so3138476fxm.13
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 12:34:30 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
-References: <20090223163626.20939.4879.stgit@tikku>
-	<20090223163738.20939.25890.stgit@tikku>
-	<43e72e890902230947x6e55bf36ve715295f43f74fbb@mail.gmail.com>
-	<87prh9ht22.fsf@litku.valot.fi>
-	<1235441919.4455.68.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 24 Feb 2009 22:34:25 +0200
-In-Reply-To: <1235441919.4455.68.camel@johannes.local> (Johannes Berg's message of "Mon\, 23 Feb 2009 18\:18\:39 -0800")
-Message-ID: <873ae3y3ou.fsf@litku.valot.fi> (sfid-20090224_213438_245651_55358C93)
+	Mon, 9 Feb 2009 17:33:13 -0500
+Received: by bwz5 with SMTP id 5so1969679bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 14:33:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4990AC02.6030703@lwfinger.net>
+References: <6ad5d99d0902091343v693173f2w61ff60a216bb15e9@mail.gmail.com>
+	 <4990AC02.6030703@lwfinger.net>
+Date: Mon, 9 Feb 2009 22:33:09 +0000
+Message-ID: <3ace41890902091433g4c4e0c17n9e01aabc613d5bb6@mail.gmail.com> (sfid-20090209_233317_718956_127A4E31)
+Subject: Re: rtl8187 in Toshiba L300 linux troubles
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Jorge Munoz <jorgeroden1@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Mon, Feb 9, 2009 at 10:19 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Jorge Munoz wrote:
+>> I'm a L300 Toshiba user, this laptop has a rtl8187 wifi card (Bus 007
+>> Device 003: ID 0bda:8198 Realtek Semiconductor Corp.).
+>> Running down  Ubuntu 8.10 kernel 2.6.27.9-generic based distro
+>> (www.molinux.info <http://www.molinux.info>), wifi does not work
+>> correctly, it fall down in few minutes. We can improve this behaviour by
+>> fixing bit rate ($iwconfig wlan0 rate 12M fixed).
+>> Now there is a new kernel 2.6.27-11-generic. I would like to know if
+>> there are improvements about this bug.
+>> All my colleagues from my region (Castilla La Mancha, Spain) have the
+>> same laptop (28.000 were delivered by spanish goverment). We have
+>> created a patch to fix the bit rate and I don't know if it's necessary
+>> maintain it.
+>>  I'll be grateful for your support.
 
-> On Mon, 2009-02-23 at 21:06 +0200, Kalle Valo wrote:
+That sounds like various things we have worked on recently.
+Unfortunately you will need to install compat-wireless
+(see http://linuxwireless.org/), or wait until about 2.6.30 to get
+some of the improvements. I say go and install compat-wireless and
+publicise your experience with compat-wireless to your colleagues, and
+if it does not work, come back.
+2.6.27.9 is quite old.
+
 >
->> Also my assumption here is that ieee80211_beacon_loss() should be
->> called only after certain number of consecutive beacon misses. While
->> testing these patches on stlc45xx I used number 10. Can ath9k handle
->> anything like this? Or will it just report each beacon miss
->> individually?
+> There have been patches for the RTL8187B in recent kernels that have
+> been sent to stable; however, I don't follow the updates to Ubuntu
+> kernels and do not know if they have been applied there.
 >
-> Should the number be configurable? The beacon interval might vary so it
-> might be useful to set it so that misses * interval is constant?
-
-Yes, I think so. I decided to omit this part for now and add it later
-when we know more how different hardware support it.
-
->> I don't see a problem. Like you said, such hardware should have beacon
->> checksumming support. Whenever the checksum has changed, the hardware
->> should pass the beacon to the host and mac80211 would receive the
->> beacon just like without beacon filtering. 
->> 
->> Beacon filtering can be thought like filtering unrelevant beacons, but
->> passing through the beacons which have new information. For example,
->> stlc45xx already has beacon checksum support even though it doesn't
->> support 5 GHz band. Unfortunately I haven't managed to find the time
->> to test it yet.
->> 
->> If there is hardware using 5 GHz band and does not support beacon
->> checksumming, then the driver should not even enable beacon filtering.
+> The main patch that did the most to improve stability for the rtl8187
+> devices was:
 >
-> Should the flag be per-band in that case? 
-
-I would like to see such (in my opinion broken) hardware design first.
-
-> Or do we need checksum support anyway?
-
-My current thinking is that to have proper beacon filtering the
-hardware needs to support checksumming. Beacon filtering might work
-without checksum support in most cases so that the users won't notice
-anything. But from engineer's point of view I don't consider it as
-good enough, at least ERP protection changes would end up unnoticed,
-and I'm sure there are also other cases.
-
-I don't know how beacon filtering works in wl12xx, I need to test that
-soon. It might give some hints how other vendors have implemented
-this.
-
-> (Actually, we shouldn't call that checksum support, but 'beacon
-> change notification' or something, I guess)
-
-Yes. But I don't think we need to add any checksum support to
-mac80211. Apart from mentioning it in the documentation, of course.
-
--- 
-Kalle Valo
+> ================
+>
+> commit 2fcbab044a3faf4d4a6e269148dd1f188303b206
+> Author: Larry Finger <Larry.Finger@lwfinger.net>
+> Date:   Fri Jan 23 11:46:32 2009 -0600
+>
+>    rtl8187: Add termination packet to prevent stall
+>
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> index 6ad6bac..22bc07e 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> @@ -273,6 +273,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev,
+> struct sk_buff *skb)
+>
+>        usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, ep),
+>                          buf, skb->len, rtl8187_tx_cb, skb);
+> +       urb->transfer_flags |= URB_ZERO_PACKET;
+>        usb_anchor_urb(urb, &priv->anchored);
+>        rc = usb_submit_urb(urb, GFP_ATOMIC);
+>        if (rc < 0) {
+>
+>
+>
+> Larry
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
