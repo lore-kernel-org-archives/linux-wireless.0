@@ -1,151 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57040 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665AbZBROWN (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:37183 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753941AbZBITbm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 09:22:13 -0500
-Subject: Re: Missing link quality with wireless-testing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jouni Malinen <j@w1.fi>, Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1234959523.13950.47.camel@localhost>
-References: <1234896777.4678.7.camel@californication>
-	 <1234899806.29785.35.camel@johannes.local>
-	 <1234902294.4678.12.camel@californication>
-	 <1234904111.29785.44.camel@johannes.local>
-	 <1234904978.4678.31.camel@californication>
-	 <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net>
-	 <1234933059.21412.28.camel@californication>
-	 <20090218073104.GA23366@jm.kir.nu>
-	 <1234944391.21412.47.camel@californication>
-	 <20090218082520.GA26280@jm.kir.nu>  <1234959523.13950.47.camel@localhost>
-Content-Type: text/plain
-Date: Wed, 18 Feb 2009 14:37:51 +0100
-Message-Id: <1234964271.4023.21.camel@johannes.local> (sfid-20090218_152217_385924_D1795961)
-Mime-Version: 1.0
+	Mon, 9 Feb 2009 14:31:42 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so1125333fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 11:31:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1234207772.11530.164.camel@rc-desk>
+References: <1233685203-5093-1-git-send-email-reinette.chatre@intel.com>
+	 <f6ca9fed0902091117k7326e51ag8469887cb1a99d53@mail.gmail.com>
+	 <1234207772.11530.164.camel@rc-desk>
+Date: Mon, 9 Feb 2009 20:31:40 +0100
+Message-ID: <f6ca9fed0902091131n4ae7e920tae2343c1504530e6@mail.gmail.com> (sfid-20090209_203202_495053_EB54E7A3)
+Subject: Re: [ipw3945-devel] [PATCH v2.6.29] iwlwifi: save PCI state before
+	suspend, restore after resume
+From: drago01 <drago01@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-02-18 at 07:18 -0500, Dan Williams wrote:
+On Mon, Feb 9, 2009 at 8:29 PM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> On Mon, 2009-02-09 at 11:17 -0800, drago01 wrote:
+>> On Tue, Feb 3, 2009 at 7:20 PM, Reinette Chatre
+>> <reinette.chatre@intel.com> wrote:
+>> > This is the right thing to do and fixes the following warning:
+>> > [...]
+>>
+>> With 2.6.29-rc4-git1 (which has this patch) I sometimes get:
+>>
+>> iwl3945: Wait for START_ALIVE timeout after 2000ms.
+>> iwl3945 0000:07:00.0: PCI INT A disabled
+>>
+>> After resume with results into no working wireless until the module is reloaded.
+>> I am not sure if this patch is the culprit (have not tried to revert
+>> it), but that's the only change that might have caused this (with rc3
+>> it was working fine, it just triggered the warning that this patch
+>> supposed to solve).
+>
+> That patch is the culprit. Please see current status at
+> http://bugzilla.kernel.org/show_bug.cgi?id=12656
 
-[snipped explanation]
-
-> Anyone think all this stuff really, really sucks?  Yes!!!  So lets just
-> have drivers/stack provide a few sane values that userspace really
-> doesn't have to go through this shit to calculate...
-> 
-> <rant ends>
-> 
-> NM is probably fine here with qual == 0 because I doubt the GIWRANGE
-> handler is returning a valid max_qual.qual > 0 anymore with Johannes'
-> patch.  Could be wrong though.
-
-We're actually getting _two_ things wrong now and nobody ever noticed.
-So much for "but someone might care about the values wext returns". But
-there actually is a problem.
-
-First, we're reporting max_qual.qual != 0 still, this should be changed.
-wpa_supplicant is still reporting quality values, so the invalid flags
-aren't ever set. This needs to change in mac80211 (fixing the immediate
-regression) and wpa_supplicant.
-
-HOWEVER. Since all our qual.qual values are 0 though, your code _should_
-cope fine, because of this (from NM):
-
-        /* If the quality percent was 0 or doesn't exist, then try to use signal levels instead */
-        if ((percent < 1) && (level_percent >= 0))
-                percent = level_percent;
-
-Now, why doesn't it?
-
-Because we don't report proper max_qual _level_ values. Something
-clearly nobody cared about because NM was using qual.qual and not
-qual.level. Here's the relevant snippet from mac80211:
-
-        /* cfg80211 requires this, and enforces 0..100 */
-        if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
-                range->max_qual.level = 100;
-        else if  (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
-                range->max_qual.level = -110;
-        else
-                range->max_qual.level = 0;
-
-Note the dBm branch -- clearly wrong. Did anyone care? Clearly not.
-
-
-Therefore, here's what I'm going to do:
- 1) always set IW_QUAL_QUAL_INVALID, even in max_qual (fixes bug #1)
- 2) set max_qual.level to 0 for dBm instead of -110 (fixes bug #2)
-
-patch below.
-
-johannes
-
-Subject: mac80211: fix wext max_qual report
-
-mac80211 is reporting a max_qual.level of -110 for dBm while it
-should be reporting 0. It is also reporting a valid max_qual.qual
-although we no longer set qual.qual, which trips up NetworkManager
-due to a wpa_supplicant bug. But we don't need to report that our
-max_qual.qual value is valid.
-
-Fix the max_qual.level to be 0 for dBm and 100 for non-dBm and
-remove max_qual.qual. max_qual.noise = -110 also seems wrong,
-so fix that while at it.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/wext.c |   28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
-
---- wireless-testing.orig/net/mac80211/wext.c	2009-02-18 14:24:56.000000000 +0100
-+++ wireless-testing/net/mac80211/wext.c	2009-02-18 14:29:07.000000000 +0100
-@@ -148,11 +148,19 @@ static u8 ieee80211_get_wstats_flags(str
- {
- 	u8 wstats_flags = 0;
- 
--	wstats_flags |= local->hw.flags & (IEEE80211_HW_SIGNAL_UNSPEC |
--					   IEEE80211_HW_SIGNAL_DBM) ?
--				IW_QUAL_QUAL_UPDATED : IW_QUAL_QUAL_INVALID;
--	wstats_flags |= local->hw.flags & IEEE80211_HW_NOISE_DBM ?
--				IW_QUAL_NOISE_UPDATED : IW_QUAL_NOISE_INVALID;
-+	wstats_flags |= IW_QUAL_QUAL_INVALID;
-+
-+	if (local->hw.flags & (IEEE80211_HW_SIGNAL_UNSPEC |
-+			       IEEE80211_HW_SIGNAL_DBM))
-+		wstats_flags |= IW_QUAL_LEVEL_UPDATED;
-+	else
-+		wstats_flags |= IW_QUAL_LEVEL_INVALID;
-+
-+	if (local->hw.flags & IEEE80211_HW_NOISE_DBM)
-+		wstats_flags |= IW_QUAL_NOISE_UPDATED;
-+	else
-+		wstats_flags |= IW_QUAL_NOISE_INVALID;
-+
- 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
- 		wstats_flags |= IW_QUAL_DBM;
- 
-@@ -191,19 +199,11 @@ static int ieee80211_ioctl_giwrange(stru
- 	if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
- 		range->max_qual.level = 100;
- 	else if  (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
--		range->max_qual.level = -110;
--	else
- 		range->max_qual.level = 0;
- 
--	if (local->hw.flags & IEEE80211_HW_NOISE_DBM)
--		range->max_qual.noise = -110;
--	else
--		range->max_qual.noise = 0;
--
--	range->max_qual.qual = 100;
-+	range->max_qual.noise = 0;
- 	range->max_qual.updated = ieee80211_get_wstats_flags(local);
- 
--	range->avg_qual.qual = 50;
- 	/* not always true but better than nothing */
- 	range->avg_qual.level = range->max_qual.level / 2;
- 	range->avg_qual.noise = range->max_qual.noise / 2;
-
-
+OK, thanks no need to test a revert than.
