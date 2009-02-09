@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56060 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbZBUFEm (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59973 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757669AbZBIUBE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 00:04:42 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v6 00/15] cfg80211: add a workqueue for regulatory processing
-Date: Sat, 21 Feb 2009 00:04:18 -0500
-Message-Id: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060445_855813_991DFACA)
+	Mon, 9 Feb 2009 15:01:04 -0500
+Subject: [PATCH] mac80211: reject extra IEs for probe resp when hw_scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain
+Date: Mon, 09 Feb 2009 21:00:31 +0100
+Message-Id: <1234209631.4175.242.camel@johannes.local> (sfid-20090209_210133_384668_7BC4C69F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I found one bug in my v5 series on the workqueue patch -- I was
-accessing wiphy->custom_regulatory without first checking if the
-wiphy existed, in case there are any conflicts I am rebasing the
-other patches and just sending a new version 6 series.
+We cannot currently hand off extra IEs to hw_scan, so reject
+configuring extra IEs for probe response frames when hw_scan
+is set.
 
-Luis R. Rodriguez (15):
-  cfg80211: rename cfg80211_registered_device's idx to wiphy_idx
-  cfg80211: add wiphy_idx_valid to check for wiphy_idx sanity
-  cfg80211: rename cfg80211_drv_mutex to cfg80211_mutex
-  nl80211: disallow user requests prior to regulatory_init()
-  cfg80211: add regulatory_hint_core() to separate the core reg hint
-  cfg80211: propagate -ENOMEM during regulatory_init()
-  cfg80211: add assert_cfg80211_lock() to ensure proper protection
-  cfg80211: make regulatory_request use wiphy_idx instead of wiphy
-  cfg80211: protect first access of last_request on 11d hint under
-    mutex
-  cfg80211: remove likely from an 11d hint case
-  cfg80211: free rd on unlikely event on 11d hint
-  cfg80211: move all regulatory hints to workqueue
-  cfg80211: comments style cleanup
-  cfg80211: allow drivers that agree on regulatory to agree
-  cfg80211: rename regdom_changed to regdom_changes() and use it
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>
+---
+ net/mac80211/cfg.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/ath9k/main.c      |    8 +-
- drivers/net/wireless/zd1211rw/zd_mac.c |    6 +-
- include/net/cfg80211.h                 |    8 +-
- include/net/wireless.h                 |    9 +-
- net/wireless/core.c                    |  102 ++++--
- net/wireless/core.h                    |   33 ++-
- net/wireless/nl80211.c                 |   47 ++-
- net/wireless/reg.c                     |  665 +++++++++++++++++++++++--------
- net/wireless/reg.h                     |    2 +
- net/wireless/sysfs.c                   |    2 +-
- 10 files changed, 644 insertions(+), 238 deletions(-)
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-02-09 20:56:40.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2009-02-09 20:58:46.000000000 +0100
+@@ -1176,9 +1176,12 @@ static int ieee80211_set_channel(struct 
+ 	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ }
+ 
+-static int set_mgmt_extra_ie_sta(struct ieee80211_if_sta *ifsta, u8 subtype,
+-				 u8 *ies, size_t ies_len)
++static int set_mgmt_extra_ie_sta(struct ieee80211_sub_if_data *sdata,
++				 u8 subtype, u8 *ies, size_t ies_len)
+ {
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++
+ 	switch (subtype) {
+ 	case IEEE80211_STYPE_PROBE_REQ >> 4:
+ 		kfree(ifsta->ie_probereq);
+@@ -1186,6 +1189,8 @@ static int set_mgmt_extra_ie_sta(struct 
+ 		ifsta->ie_probereq_len = ies_len;
+ 		return 0;
+ 	case IEEE80211_STYPE_PROBE_RESP >> 4:
++		if (local->ops->hw_scan)
++			break;
+ 		kfree(ifsta->ie_proberesp);
+ 		ifsta->ie_proberesp = ies;
+ 		ifsta->ie_proberesp_len = ies_len;
+@@ -1244,7 +1249,7 @@ static int ieee80211_set_mgmt_extra_ie(s
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+-		ret = set_mgmt_extra_ie_sta(&sdata->u.sta, params->subtype,
++		ret = set_mgmt_extra_ie_sta(sdata, params->subtype,
+ 					    ies, ies_len);
+ 		break;
+ 	default:
+
 
