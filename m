@@ -1,48 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:44302 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759691AbZBRWi2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39083 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751572AbZBIUav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 17:38:28 -0500
-Message-ID: <499C8DD2.7000800@lwfinger.net> (sfid-20090218_233844_314855_B7D1AED6)
-Date: Wed, 18 Feb 2009 16:38:10 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 9 Feb 2009 15:30:51 -0500
+Date: Mon, 9 Feb 2009 15:23:14 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2009-02-09
+Message-ID: <20090209202314.GF6069@tuxdriver.com> (sfid-20090209_213116_341523_12159D4E)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: ieee80211_regdom module parameter for cfg80211
-References: <499C7DC0.4040608@lwfinger.net> <1234992712.4023.60.camel@johannes.local> <20090218220531.GD4246@tesla>
-In-Reply-To: <20090218220531.GD4246@tesla>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Wed, Feb 18, 2009 at 01:31:52PM -0800, Johannes Berg wrote:
->> On Wed, 2009-02-18 at 15:29 -0600, Larry Finger wrote:
->>> On at least one forum, I have seen the recommendation that a user set their
->>> regulatory domain by creating the file /etc/modprobe.d/cfg80211 with the
->>> contents "ieee80211_regdom=US".
->>>
->>> That works as long as CONFIG_WIRELESS_OLD_REGULATORY is set in their .config,
->>> but will fail if it is not.
->>>
->>> Should the module_param statement be moved outside the ifdef
->>> CONFIG_WIRELESS_OLD...? Setting the module parameter that way might not make any
->>> sense, but it surely shouldn't kill wireless.
->> I actually see no reason to not just /honour/ it by calling crda with
->> its parameter if CONFIG_WIRELESS_OLD_REGULATORY isn't set.
-> 
-> The idea was that things we want to get rid of will go in OLD_REG. Static regdoms
-> for US, JP and EU fall into that and so does the module parameter. I believe
-> it is silly to keep the module parameter around as we already have userspace
-> APIs to let users set this.
+Dave,
 
-I guess we leave it the way it is. At least the only people that will get caught
-are those that upgrade their distro. A clean install should redo the /etc/...
-tree and do away with such modifications.
+Another round of update intended for 2.6.30.  Along with a few mac80211
+updates, there is the usual ton of driver updates with no real unifying
+theme.  FWIW, this has spent a little time in linux-next already.
 
-Larry
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
+---
+
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
+
+---
+
+The following changes since commit aa6320d336971171df1d13c1c284facf10804881:
+  Herbert Xu (1):
+        gro: Optimise TCP packet reception
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+
+Alina Friedrichsen (2):
+      mac80211: Creating new IBSS with fixed BSSID
+      mac80211: IBSS join rework
+
+Andrey Borzenkov (1):
+      orinoco: checkpatch cleanup
+
+Danny Kukawka (5):
+      iwlwifi: fix led naming
+      ath9k: fix led naming
+      b43legacy: fix led naming
+      rt2x00: fix led naming
+      iwlwifi: another led naming fix
+
+Felix Fietkau (1):
+      ath5k: properly free rx dma descriptors
+
+Harvey Harrison (1):
+      wireless: replace uses of __constant_{endian}
+
+Ivo van Doorn (4):
+      rt2x00: Move intf_work to mac82011 workqueue
+      rt2x00: Add kill_tx_queue callback function
+      rt2x00: Validate firmware in driver
+      Add new rt73usb USB ID
+
+Jay Sternberg (7):
+      iwlwifi: add new HW_REV_TYPEs for Intel WiFi Link 100, 6000 and 6050 Series
+      iwlwifi: simplify parameter setting to allow support for 6000 series
+      iwlwifi: parametrize configuration of the PLL for exclusion on 6000
+      iwlwifi: correct API command overlap
+      iwlwifi: define structures and functions externally for customization
+      iwlwifi: remove chain noise calibration functions from 6000 family
+      ipw2x00: correct Kconfig to prevent following entries from not indenting
+
+Johannes Berg (3):
+      mac80211: remove HW_SIGNAL_DB
+      mac80211: convert to net_device_ops
+      mac80211: convert master interface to netdev_ops
+
+Luis R. Rodriguez (6):
+      ath9k: replace usage of internal wireless_modes for conf
+      ath9k: move check for radar freqs into a helper
+      ath9k: remove passive scan on 5 GHz if country IE knows better
+      mac80211: do not TX injected frames when not allowed
+      cfg80211: add get reg command
+      ath9k: fix reg_notifier() flags used upon a country IE
+
+Michael Buesch (6):
+      b43: Add LP-PHY register definitions
+      b43: Add LP-PHY baseband init for >=rev2
+      b43: Add LP 2062 radio init
+      ssb: Add PMU support
+      b43: Port spec bugfixes for the LP baseband init
+      b43: (b2062) Fix crystal frequency calculations
+
+Mike Rapoport (1):
+      libertas: if_spi: add ability to call board specific setup/teardown methods
+
+Roel Kluin (1):
+      libertas: pos[4] tested twice, 2nd should be pos[5]
+
+Samuel Ortiz (1):
+      iwl3945: Getting rid of the *39_rxon iwl_priv fields
+
+Sujith (7):
+      ath9k: Fix lockdep warning
+      mac80211: Reset assoc_scan_tries after an unsuccessful scan run
+      ath9k: Fix typo in checking for chip revision
+      ath9k: Remove a bunch of unused macros
+      ath9k: Cleanup get_rate() interface
+      ath9k: Handle mac80211's RC flags for MCS rates
+      ath9k: Add debugfs files for printing TX rate details
+
+Tomas Winkler (1):
+      iwlwifi: don't use implicit priv in IWL_DEBUG
+
+Vasanthakumar Thiagarajan (2):
+      ath9k: Fix LED blink pattern
+      mac80211: Remove bss information of the current AP when it goes out of range
+
+Vivek Natarajan (1):
+      ath9k: Enable MIB and TIM interrupts for station mode.
+
+Winkler, Tomas (4):
+      iwlwifi: suppress unused variable warning when compiling w/o IWLWIFI_DEBUG
+      iwlwifi: iwl3945_send_tx_power must be static
+      iwlwifi: check return value of pci_enable_device
+      iwlwifi: unify iwlagn and 3945 power save management
+
+ drivers/net/wireless/ath5k/base.c                 |   15 +-
+ drivers/net/wireless/ath9k/core.h                 |   35 +-
+ drivers/net/wireless/ath9k/debug.c                |  100 ++
+ drivers/net/wireless/ath9k/hw.c                   |    2 +-
+ drivers/net/wireless/ath9k/mac.c                  |    3 -
+ drivers/net/wireless/ath9k/main.c                 |  102 ++-
+ drivers/net/wireless/ath9k/rc.c                   |  173 ++-
+ drivers/net/wireless/ath9k/reg.h                  |   11 -
+ drivers/net/wireless/ath9k/regd.c                 |   33 +-
+ drivers/net/wireless/ath9k/xmit.c                 |  136 +--
+ drivers/net/wireless/b43/Makefile                 |    1 +
+ drivers/net/wireless/b43/phy_lp.c                 |  220 ++++-
+ drivers/net/wireless/b43/phy_lp.h                 |  315 +++++-
+ drivers/net/wireless/b43/tables_lpphy.c           |  333 +++++
+ drivers/net/wireless/b43/tables_lpphy.h           |   23 +
+ drivers/net/wireless/b43legacy/leds.c             |    8 +-
+ drivers/net/wireless/hostap/hostap_80211_rx.c     |    4 +-
+ drivers/net/wireless/hostap/hostap_ap.c           |    8 +-
+ drivers/net/wireless/hostap/hostap_ioctl.c        |    6 +-
+ drivers/net/wireless/ipw2x00/Kconfig              |    1 +
+ drivers/net/wireless/ipw2x00/ipw2200.c            |    2 +-
+ drivers/net/wireless/iwlwifi/Makefile             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-100.c            |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-3945-led.c       |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c        |   86 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c           |  130 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h           |    8 -
+ drivers/net/wireless/iwlwifi/iwl-4965.c           |  130 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c           |  165 ++--
+ drivers/net/wireless/iwlwifi/iwl-6000.c           |   42 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd-check.c |  109 --
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |  104 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |  644 +++--------
+ drivers/net/wireless/iwlwifi/iwl-calib.c          |   85 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h       |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c           |  482 +++++++-
+ drivers/net/wireless/iwlwifi/iwl-core.h           |   26 +-
+ drivers/net/wireless/iwlwifi/iwl-csr.h            |    3 +
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |  103 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c         |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c           |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-io.h             |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c            |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-led.h            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-power.c          |   35 +-
+ drivers/net/wireless/iwlwifi/iwl-power.h          |   28 +-
+ drivers/net/wireless/iwlwifi/iwl-rfkill.c         |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c             |   37 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c           |   62 +-
+ drivers/net/wireless/iwlwifi/iwl-spectrum.c       |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c            |   36 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c             |   54 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c       | 1392 ++++++---------------
+ drivers/net/wireless/libertas/if_spi.c            |   15 +
+ drivers/net/wireless/libertas/scan.c              |    2 +-
+ drivers/net/wireless/orinoco/airport.c            |   35 +-
+ drivers/net/wireless/orinoco/hermes.c             |  102 +-
+ drivers/net/wireless/orinoco/hermes.h             |   35 +-
+ drivers/net/wireless/orinoco/hermes_dld.c         |    4 +-
+ drivers/net/wireless/orinoco/orinoco.c            |    2 +-
+ drivers/net/wireless/orinoco/orinoco.h            |   17 +-
+ drivers/net/wireless/orinoco/orinoco_cs.c         |   31 +-
+ drivers/net/wireless/orinoco/orinoco_nortel.c     |    7 +-
+ drivers/net/wireless/orinoco/orinoco_pci.c        |    5 +-
+ drivers/net/wireless/orinoco/orinoco_pci.h        |   10 +-
+ drivers/net/wireless/orinoco/orinoco_plx.c        |    3 +-
+ drivers/net/wireless/orinoco/orinoco_tmd.c        |    2 +-
+ drivers/net/wireless/orinoco/spectrum_cs.c        |   15 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c           |   30 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c           |   30 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c           |    1 +
+ drivers/net/wireless/rt2x00/rt2x00.h              |    9 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c           |    7 +-
+ drivers/net/wireless/rt2x00/rt2x00firmware.c      |   27 +-
+ drivers/net/wireless/rt2x00/rt2x00leds.c          |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00lib.h           |   13 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c           |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c         |   19 +-
+ drivers/net/wireless/rt2x00/rt2x00reg.h           |   10 +
+ drivers/net/wireless/rt2x00/rt2x00usb.c           |   62 +-
+ drivers/net/wireless/rt2x00/rt2x00usb.h           |   11 +
+ drivers/net/wireless/rt2x00/rt61pci.c             |   66 +-
+ drivers/net/wireless/rt2x00/rt73usb.c             |   31 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c            |    2 +-
+ drivers/ssb/Makefile                              |    1 +
+ drivers/ssb/driver_chipcommon.c                   |   14 +-
+ drivers/ssb/driver_chipcommon_pmu.c               |  508 ++++++++
+ include/linux/nl80211.h                           |    4 +
+ include/linux/spi/libertas_spi.h                  |    7 +
+ include/linux/ssb/ssb_driver_chipcommon.h         |  224 ++++
+ include/net/mac80211.h                            |   22 +-
+ net/mac80211/iface.c                              |   47 +-
+ net/mac80211/main.c                               |   29 +-
+ net/mac80211/mlme.c                               |   48 +-
+ net/mac80211/rx.c                                 |   19 +-
+ net/mac80211/tx.c                                 |   21 +
+ net/mac80211/wext.c                               |    3 +-
+ net/wireless/nl80211.c                            |   81 ++
+ net/wireless/reg.c                                |    2 +-
+ net/wireless/reg.h                                |    2 +
+ 101 files changed, 4269 insertions(+), 2798 deletions(-)
+ create mode 100644 drivers/net/wireless/b43/tables_lpphy.c
+ create mode 100644 drivers/net/wireless/b43/tables_lpphy.h
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-hcmd-check.c
+ create mode 100644 drivers/ssb/driver_chipcommon_pmu.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2009-02-09.patch.bz2
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
