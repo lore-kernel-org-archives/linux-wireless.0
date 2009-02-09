@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:50882 "EHLO ciao.gmane.org"
+Received: from venema.h4ckr.net ([217.24.1.135]:53564 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754038AbZBJRuE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 12:50:04 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1LWwkE-0007fp-AJ
-	for linux-wireless@vger.kernel.org; Tue, 10 Feb 2009 17:50:02 +0000
-Received: from rain.gmane.org ([80.91.229.7])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2009 17:50:02 +0000
-Received: from lurkos.usenet by rain.gmane.org with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2009 17:50:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Lurkos <lurkos.usenet@gmail.com>
-Subject: Merge compat-wireless-old into 2.6.26
-Date: Tue, 10 Feb 2009 17:28:16 +0000 (UTC)
-Message-ID: <20090210172817.9004.60065.XPN@L622132.user.x-privat.org> (sfid-20090210_185010_204922_C3F2C1B8)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1753833AbZBIERu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Feb 2009 23:17:50 -0500
+Date: Mon, 9 Feb 2009 06:17:45 +0200
+From: Nick Kossifidis <mick@madwifi-project.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
+	me@bobcopeland.com, nbd@openwrt.org
+Subject: [PATCH 7/7] ath5k: Don't call reset on config_interface
+Message-ID: <20090209041745.GG3168@makis> (sfid-20090209_051752_857855_6833B212)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is it possibile to patch linux 2.6.26 source (e.g. Debian Lenny sources)
-to have the new compat-wireless-old?
-If yes, what could be the correct procedure?
-I would prefer to compile only my wireless network card driver
-statically into the kernel.
-Thank you.
+ * We call reset too often and this can result various PHY problems.
+  On config_interface we don't need to reset the whole device.
 
--- 
-Lurkos
+  TODO: Create a function hw_fast_reset that only resets the PCU
+  (tx/rx stuff) and not the whole device so that we can use this for
+  stuck beacons etc.
 
+  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+
+---
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 685c19c..aa4e726 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2871,7 +2871,7 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ {
+ 	struct ath5k_softc *sc = hw->priv;
+ 	struct ath5k_hw *ah = sc->ah;
+-	int ret;
++	int ret = 0;
+ 
+ 	mutex_lock(&sc->lock);
+ 	if (sc->vif != vif) {
+@@ -2897,9 +2897,7 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		}
+ 		ath5k_beacon_update(sc, beacon);
+ 	}
+-	mutex_unlock(&sc->lock);
+ 
+-	return ath5k_reset_wake(sc);
+ unlock:
+ 	mutex_unlock(&sc->lock);
+ 	return ret;
