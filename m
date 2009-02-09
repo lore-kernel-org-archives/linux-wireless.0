@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173017pub.verizon.net ([206.46.173.17]:58485 "EHLO
-	vms173017pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbZBCEYN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 23:24:13 -0500
-Received: from depotrd.localnet ([96.237.24.216]) by vms173017.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 6.3-2.01 (built Jun 13 2007; 32bit))
- with ESMTPA id <0KEG00MBHXVSCDY8@vms173017.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Mon, 02 Feb 2009 20:35:53 -0600 (CST)
-From: Glenn Burkhardt <gbburkhardt@verizon.net>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: poor performance with ath5k; reverting to ath_pci
-Date: Mon, 02 Feb 2009 21:36:00 -0500
-References: <200901140003.31693.gbburkhardt@verizon.net>
- <200901212158.13854.gbburkhardt@verizon.net>
- <40f31dec0901222331l2d55b732ua50089aef8a42ccf@mail.gmail.com>
-In-reply-to: <40f31dec0901222331l2d55b732ua50089aef8a42ccf@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8
-Message-id: <200902022136.00606.gbburkhardt@verizon.net> (sfid-20090203_052417_963344_FB67FFCB)
+Received: from gold.linx.net ([195.66.232.40]:53276 "EHLO gold.linx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752445AbZBISYF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2009 13:24:05 -0500
+Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
+  ranges
+From: Tony Vroon <tony@linx.net>
+Reply-To: tony@linx.net
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	reinette chatre <reinette.chatre@intel.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <43e72e890902091020p65235e3ds833560974c785318@mail.gmail.com>
+References: <1234202993.21570.18.camel@localhost>
+	 <43e72e890902091020p65235e3ds833560974c785318@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-rAzYpYYCsV5TamhTyZsW"
+Date: Mon, 09 Feb 2009 18:23:31 +0000
+Message-Id: <1234203811.21570.19.camel@localhost> (sfid-20090209_192410_821929_66022C96)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> O.K. so both algorithms have overestimated the rate, madwifi with
-> minstrel sets it to 36M and both pid an minstrel on ath5k/mac80211 set
-> it to 54M. This results packet corruption and packet loss. Please try
-> locking the rate to 18M - 36M and check the performance again (also an
-> iperf udp test would be very usefull) to see if this is only a problem
-> with the algorithm or a more generic problem.
 
-It doesn't seem to be the rate selection.  I switched to channel 2 again, and 
-the version of ath5k that came with Suse 11.1 didn't connect to my router at 
-all.  The ath_pci driver I built did, with roughly millisecond ping round 
-trips.  The ath_pci driver changed the bit rate to 18 Mb/s; ath5k reported 
-using 5.5 Mb/s, but ping was never successful.
+--=-rAzYpYYCsV5TamhTyZsW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I also built a kernel from the wireless testing repository ( 2.6.29-rc3-wl-9-
-pae), and that driver was able to connect initially, although with a slow 
-response rate:
+On Mon, 2009-02-09 at 10:20 -0800, Luis R. Rodriguez wrote:
+> Your AP did not provide 5 GHz frequencies in its country information
+> element. Because of this the intersection between what CRDA has for GB
+> and what your AP provides does not include any channels in 5 GHz. This
+> has been fixed in wireless-testing though, if your AP country IE does
+> not have information for a separate band we lave that band to trust
+> CRDA information instead.
+>=20
+> This should have been propagated down to 29 already, maybe it'll be in
+> rc5?
 
-PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
-64 bytes from 192.168.2.1: icmp_seq=1 ttl=64 time=3086 ms
-64 bytes from 192.168.2.1: icmp_seq=2 ttl=64 time=2925 ms
-64 bytes from 192.168.2.1: icmp_seq=3 ttl=64 time=3293 ms
-64 bytes from 192.168.2.1: icmp_seq=4 ttl=64 time=3986 ms
-64 bytes from 192.168.2.1: icmp_seq=6 ttl=64 time=4018 ms
-64 bytes from 192.168.2.1: icmp_seq=7 ttl=64 time=3030 ms
-ping: sendmsg: Network is unreachable
-ping: sendmsg: Network is unreachable
+John, will this make it into 2.6.29 final please?
+>=20
+Regards,
+Tony V.
 
-It reported the bit rate to be 54 Mb/s; I tried turning it down to as low as 6 
-Mb/s, but then it didn't work at all.
+--=-rAzYpYYCsV5TamhTyZsW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-This last test was using 'minstrel' rate control; it doesn't seem that 'pid' 
-is a selectable option in the kernel configuration for 'wireless testing'.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
-I'll try to get some more data with 'iperf'.  I have a couple of other 
-machines in the house that I can use.
+iEYEABECAAYFAkmQdKMACgkQp5vW4rUFj5p0fgCdF6iXlmDc7BZMznXQTTAN86YC
+Nu8AoIwMOputlpVwR507C9uxXPR4xGJo
+=eBb5
+-----END PGP SIGNATURE-----
+
+--=-rAzYpYYCsV5TamhTyZsW--
+
