@@ -1,66 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4331 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472AbZBORGX (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:57815 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646AbZBIQMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 12:06:23 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>,
-	stable@kernel.org
-Subject: [PATCH 2/4] ath5k: use spin_lock_irqsave for beacon lock
-Date: Sun, 15 Feb 2009 12:06:10 -0500
-Message-Id: <1234717572-10651-2-git-send-email-me@bobcopeland.com> (sfid-20090215_180629_022299_E3AC06B1)
+	Mon, 9 Feb 2009 11:12:23 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so521031eya.37
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 08:12:21 -0800 (PST)
+Message-ID: <499055E5.6070701@gmail.com> (sfid-20090209_171228_088959_A086B432)
+Date: Mon, 09 Feb 2009 11:12:21 -0500
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni.Malinen@atheros.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v6] mac80211: do not TX injected frames when not allowed
+References: <1233335309-28099-1-git-send-email-lrodriguez@atheros.com> <1233347900.4070.4.camel@johannes.local>
+In-Reply-To: <1233347900.4070.4.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath5k_reset can be called from process context, which in turn can
-call ath5k_beacon_config which takes the sc->block spinlock.  Since
-it can also be taken in hard irq context, use spin_lock_irqsave
-everywhere.  This fixes a potential deadlock in adhoc mode.
+Johannes Berg wrote:
+> On Fri, 2009-01-30 at 09:08 -0800, Luis R. Rodriguez wrote:
+>   
+>> Monitor mode is able to TX by using injected frames. We should
+>> not allow injected frames to be sent unless allowed by regulatory
+>> rules. Since AP mode uses a monitor interfaces to transmit
+>> management frames we have to take care to not break AP mode as
+>> well while resolving this. We can deal with this by allowing compliant
+>> APs solutions to inform mac80211 if their monitor interface is
+>> intended to be used for an AP by setting a cfg80211 flag for the
+>> monitor interface. hostapd, for example, currently does its own
+>> checks to ensure AP mode is not used on channels which require radar
+>> detection. Once such solutions are available it can can add this
+>> flag for monitor interfaces.
+>>
+>> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>     
+Tested-by: Rick Farina <sidhayn@gmail.com>
+Nacked-by: Rick Farina <sidhayn@gmail.com>
 
-Changes-licensed-under: 3-Clause-BSD
+Luis, when I requested this from you and you cranked out a patch in 30 
+seconds what you gave me worked great, unfortunately this patch doesn't 
+perform the intended function for me.  If I use this patch and mark, 
+say, everything as "PASSIVE-SCAN NO-IBSS" I can still send raw packets 
+out of my interface (confirmed by capturing on another card). The 
+original patch is as follows:
 
-Cc: stable@kernel.org
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/base.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
++       if ((tx->channel->flags & (IEEE80211_CHAN_NO_IBSS |
++           IEEE80211_CHAN_RADAR)))
++               return TX_DROP;
 
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index d930c10..8e5620a 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1700,7 +1700,6 @@ ath5k_check_ibss_tsf(struct ath5k_softc *sc, struct sk_buff *skb,
- 	}
- }
- 
--
- static void
- ath5k_tasklet_rx(unsigned long data)
- {
-@@ -2216,6 +2215,7 @@ static void
- ath5k_beacon_config(struct ath5k_softc *sc)
- {
- 	struct ath5k_hw *ah = sc->ah;
-+	unsigned long flags;
- 
- 	ath5k_hw_set_imr(ah, 0);
- 	sc->bmisscount = 0;
-@@ -2237,9 +2237,9 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- 
- 		if (sc->opmode == NL80211_IFTYPE_ADHOC) {
- 			if (ath5k_hw_hasveol(ah)) {
--				spin_lock(&sc->block);
-+				spin_lock_irqsave(&sc->block, flags);
- 				ath5k_beacon_send(sc);
--				spin_unlock(&sc->block);
-+				spin_unlock_irqrestore(&sc->block, flags);
- 			}
- 		} else
- 			ath5k_beacon_update_timers(sc, -1);
--- 
-1.6.0.6
+TX_DROP seemed to successfully prevent raw packet transmission on the 
+channels marked NO_IBSS.  Can someone please confirm my findings so we 
+can get this fixed properly?
 
+Thanks,
+Rick Farina
+
+>> ---
+>>
+>> This v6 leaves the AP flag out and removes the unused sdata..
+>>     
+>
+> Yeah, let's go with this until hostapd is fixed anyway.
+>
+> johannes
+>   
 
