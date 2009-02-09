@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:17666 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756559AbZBLJsJ (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:41607 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbZBIS4N convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 04:48:09 -0500
-Received: by rv-out-0506.google.com with SMTP id g9so544860rvb.5
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 01:48:08 -0800 (PST)
+	Mon, 9 Feb 2009 13:56:13 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so1115427fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 10:56:10 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20090212094356.82a7573b.cjsthompson@gmail.com>
-References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
-	 <200902112332.53480.IvDoorn@gmail.com>
-	 <3ace41890902111451n6c9cbdc4me410609479b1ac4f@mail.gmail.com>
-	 <20090212042217.b05e83b4.cjsthompson@gmail.com>
-	 <a32f33a40902120000g1e95df1eq8a221ddc539f351c@mail.gmail.com>
-	 <efe7343f0902120005m5ff558ccn1dad7c49fe42aadf@mail.gmail.com>
-	 <20090212094356.82a7573b.cjsthompson@gmail.com>
-Date: Thu, 12 Feb 2009 09:48:08 +0000
-Message-ID: <efe7343f0902120148l7404bcf8s86a84891b2480697@mail.gmail.com> (sfid-20090212_104815_196040_849BAC24)
-Subject: Re: Sitecom WL-608 USB WiFi
-From: Luis Correia <luis.f.correia@gmail.com>
-To: "Christoph .J Thompson" <cjsthompson@gmail.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless@vger.kernel.org
+Date: Mon, 9 Feb 2009 19:56:10 +0100
+Message-ID: <69e28c910902091056h119b3fa4g460e5e18288c1c3c@mail.gmail.com> (sfid-20090209_195617_922348_5BA0F2FF)
+Subject: Proposal: Add a new flag to the proposed TX flags field to control
+	the sequence number of injected packets
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: radiotap@radiotap.org, Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Currently the TX Flags field is defined as a bitmap containing:
+0x0001 Transmission failed due to excessive retries
+0x0002 Transmission used CTS-to-self protection
+0x0004 Transmission used RTS/CTS handshake
+0x0008 Transmission shall not expect an ACK frame and not retry when
+no ACK is received
 
-On Thu, Feb 12, 2009 at 08:43, Christoph .J Thompson
-<cjsthompson@gmail.com> wrote:
-> On Thu, 12 Feb 2009 08:05:48 +0000
-> Luis Correia <luis.f.correia@gmail.com> wrote:
->> can any brave soul have the guts to pry open this USB stick and look
->> at the chip?
->>
->> That was, we all would be sure of it's origins :)
->>
->> Luis Correia
->
-> I did it, it was quite easy without damaging it. This was written on the chip inside:
->
-> Ralink
-> RT2070L
-> PB49460ED
-> 0841ST
->
-> Did they do a typo?
+I'd like to propose the following additional bit:
+0x0010 Transmission has the sequence and fragment numbers pre-set from
+userspace and should not be renumbered
 
-Probably, it should probably be RT2870L :)
+This bit is useful for packet injection, where userspace injectors
+might want to control the sequence and fragment numbers of the packets
+it injects. A particular example is aireplay-ng's -5 mode
+(fragmentation attack), where userspace injects pre-made fragments
+one-by-one. The wireless stack usually can't recognize that the
+injected packets are fragments, and instead treats them as complete
+packets, assigning a new sequence number to each fragment, preventing
+the receiving party from correctly reassembling the fragmented packet.
+The userspace does however know that the packets being injected are
+fragments, and such can produce much more correct sequence numbers for
+them. So, userspace can in these cases set TX_FLAGS |=3D3D 0x0010 and p=
+ut
+pre-generated sequence numbers on the packets it injects.
 
-But yes, looks like rt2800usb.
+Similar to how 0x0008 works, this bit also should be used when packets
+are being sent, as opposed to when they are being reported as having
+been sent (like the first 3 bits).
 
+I have posted a reference implementation on the linux-wireless mailing
+list about a month ago, and it is also available here:
+http://trac.aircrack-ng.org/svn/trunk/patches/mac80211_2.6.28-rc8-wl_fr=
+ag+a=3D
+ck_radiotap.patch
+(Note that this patch may not clearly apply to 2.6.29-rc2 or the
+current wireless-testing kernel, as it was made against the
+master-2008-12-17 tag of wireless-testing.)
 
-Luis Correia
+G=E1bor
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
