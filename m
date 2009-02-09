@@ -1,155 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:43284 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958AbZBCUnG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 15:43:06 -0500
-Received: by mail-ew0-f21.google.com with SMTP id 14so2846565ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 12:43:05 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 16/17] orinoco: hermes_dld does not need to be a module
-Date: Tue,  3 Feb 2009 20:40:38 +0000
-Message-Id: <1233693639-8608-17-git-send-email-kilroyd@googlemail.com> (sfid-20090203_214314_454405_707A4729)
-In-Reply-To: <1233693639-8608-16-git-send-email-kilroyd@googlemail.com>
-References: <1233693639-8608-1-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-2-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-3-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-4-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-5-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-6-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-7-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-8-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-9-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-10-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-11-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-12-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-13-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-14-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-15-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-16-git-send-email-kilroyd@googlemail.com>
+Received: from mga01.intel.com ([192.55.52.88]:64216 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751160AbZBITZw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2009 14:25:52 -0500
+Subject: Re: [ipw3945-devel] [PATCH v2.6.29] iwlwifi: save PCI state before
+	suspend, restore after resume
+From: reinette chatre <reinette.chatre@intel.com>
+To: drago01 <drago01@gmail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <f6ca9fed0902091117k7326e51ag8469887cb1a99d53@mail.gmail.com>
+References: <> <1233685203-5093-1-git-send-email-reinette.chatre@intel.com>
+	 <f6ca9fed0902091117k7326e51ag8469887cb1a99d53@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 09 Feb 2009 11:29:32 -0800
+Message-Id: <1234207772.11530.164.camel@rc-desk> (sfid-20090209_202555_867639_3836B110)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/Makefile     |    4 +-
- drivers/net/wireless/orinoco/hermes_dld.c |   33 +---------------------------
- 2 files changed, 4 insertions(+), 33 deletions(-)
+On Mon, 2009-02-09 at 11:17 -0800, drago01 wrote:
+> On Tue, Feb 3, 2009 at 7:20 PM, Reinette Chatre
+> <reinette.chatre@intel.com> wrote:
+> > This is the right thing to do and fixes the following warning:
+> > [...]
+> 
+> With 2.6.29-rc4-git1 (which has this patch) I sometimes get:
+> 
+> iwl3945: Wait for START_ALIVE timeout after 2000ms.
+> iwl3945 0000:07:00.0: PCI INT A disabled
+> 
+> After resume with results into no working wireless until the module is reloaded.
+> I am not sure if this patch is the culprit (have not tried to revert
+> it), but that's the only change that might have caused this (with rc3
+> it was working fine, it just triggered the warning that this patch
+> supposed to solve).
 
-diff --git a/drivers/net/wireless/orinoco/Makefile b/drivers/net/wireless/orinoco/Makefile
-index 431ba39..2f3e0dd 100644
---- a/drivers/net/wireless/orinoco/Makefile
-+++ b/drivers/net/wireless/orinoco/Makefile
-@@ -1,9 +1,9 @@
- #
- # Makefile for the orinoco wireless device drivers.
- #
--orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o
-+orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o hermes_dld.o
- 
--obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o hermes_dld.o
-+obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o
- obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
- obj-$(CONFIG_APPLE_AIRPORT)	+= airport.o
- obj-$(CONFIG_PLX_HERMES)	+= orinoco_plx.o
-diff --git a/drivers/net/wireless/orinoco/hermes_dld.c b/drivers/net/wireless/orinoco/hermes_dld.c
-index d8c626e..1a81998 100644
---- a/drivers/net/wireless/orinoco/hermes_dld.c
-+++ b/drivers/net/wireless/orinoco/hermes_dld.c
-@@ -1,13 +1,7 @@
- /*
-- * Hermes download helper driver.
-+ * Hermes download helper.
-  *
-- * This could be entirely merged into hermes.c.
-- *
-- * I'm keeping it separate to minimise the amount of merging between
-- * kernel upgrades. It also means the memory overhead for drivers that
-- * don't need firmware download low.
-- *
-- * This driver:
-+ * This helper:
-  *  - is capable of writing to the volatile area of the hermes device
-  *  - is currently not capable of writing to non-volatile areas
-  *  - provide helpers to identify and update plugin data
-@@ -50,10 +44,6 @@
- #include "hermes.h"
- #include "hermes_dld.h"
- 
--MODULE_DESCRIPTION("Download helper for Lucent Hermes chipset");
--MODULE_AUTHOR("David Kilroy <kilroyd@gmail.com>");
--MODULE_LICENSE("Dual MPL/GPL");
--
- #define PFX "hermes_dld: "
- 
- /*
-@@ -347,7 +337,6 @@ int hermes_read_pda(hermes_t *hw,
- 
- 	return 0;
- }
--EXPORT_SYMBOL(hermes_read_pda);
- 
- /* Parse PDA and write the records into the adapter
-  *
-@@ -376,7 +365,6 @@ int hermes_apply_pda(hermes_t *hw,
- 	}
- 	return 0;
- }
--EXPORT_SYMBOL(hermes_apply_pda);
- 
- /* Identify the total number of bytes in all blocks
-  * including the header data.
-@@ -398,7 +386,6 @@ hermes_blocks_length(const char *first_block)
- 
- 	return total_len;
- }
--EXPORT_SYMBOL(hermes_blocks_length);
- 
- /*** Hermes programming ***/
- 
-@@ -452,7 +439,6 @@ int hermesi_program_init(hermes_t *hw, u32 offset)
- 
- 	return err;
- }
--EXPORT_SYMBOL(hermesi_program_init);
- 
- /* Done programming data (Hermes I)
-  *
-@@ -488,7 +474,6 @@ int hermesi_program_end(hermes_t *hw)
- 
- 	return rc ? rc : err;
- }
--EXPORT_SYMBOL(hermesi_program_end);
- 
- /* Program the data blocks */
- int hermes_program(hermes_t *hw, const char *first_block, const char *end)
-@@ -550,19 +535,6 @@ int hermes_program(hermes_t *hw, const char *first_block, const char *end)
- 	}
- 	return 0;
- }
--EXPORT_SYMBOL(hermes_program);
--
--static int __init init_hermes_dld(void)
--{
--	return 0;
--}
--
--static void __exit exit_hermes_dld(void)
--{
--}
--
--module_init(init_hermes_dld);
--module_exit(exit_hermes_dld);
- 
- /*** Default plugging data for Hermes I ***/
- /* Values from wl_lkm_718/hcf/dhf.c */
-@@ -727,4 +699,3 @@ int hermes_apply_pda_with_defaults(hermes_t *hw,
- 	}
- 	return 0;
- }
--EXPORT_SYMBOL(hermes_apply_pda_with_defaults);
--- 
-1.6.0.6
+That patch is the culprit. Please see current status at
+http://bugzilla.kernel.org/show_bug.cgi?id=12656
+
+Reinette
 
