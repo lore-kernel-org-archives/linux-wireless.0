@@ -1,233 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:48376 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbZBCUmh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 15:42:37 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so534738eya.37
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 12:42:35 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 12/17] orinoco: Use accessor functions for bitrate tables
-Date: Tue,  3 Feb 2009 20:40:34 +0000
-Message-Id: <1233693639-8608-13-git-send-email-kilroyd@googlemail.com> (sfid-20090203_214240_847599_6670F07D)
-In-Reply-To: <1233693639-8608-12-git-send-email-kilroyd@googlemail.com>
-References: <1233693639-8608-1-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-2-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-3-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-4-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-5-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-6-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-7-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-8-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-9-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-10-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-11-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-12-git-send-email-kilroyd@googlemail.com>
+Received: from mail.atheros.com ([12.36.123.2]:58961 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750887AbZBIIBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2009 03:01:20 -0500
+Received: from mail.atheros.com ([10.10.21.49])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 00:01:20 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18831.57819.562083.509881@gargle.gargle.HOWL> (sfid-20090209_090122_900471_6DC0CE7B)
+Date: Mon, 9 Feb 2009 13:27:15 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 08/10] ath9k: Add callbacks hooks for EEPROM operations
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-... when used by the WEXT ioctl functions. This will allow us to
-separate the card specific stuff from the WEXT code.
+This is preparatory work for removing the individual
+function pointer assignments in eeprom.c
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/orinoco/main.c |  140 ++++++++++++++++++++---------------
- 1 files changed, 81 insertions(+), 59 deletions(-)
+ drivers/net/wireless/ath9k/eeprom.h |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-index 1874624..4358794 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -282,6 +282,33 @@ static inline void set_port_type(struct orinoco_private *priv)
- 	}
- }
+diff --git a/drivers/net/wireless/ath9k/eeprom.h b/drivers/net/wireless/ath9k/eeprom.h
+index 81a7a70..47c8eea 100644
+--- a/drivers/net/wireless/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath9k/eeprom.h
+@@ -447,6 +447,23 @@ enum hal_eep_map {
+ 	EEP_MAP_MAX
+ };
  
-+static int orinoco_get_bitratemode(int bitrate, int automatic)
-+{
-+	int ratemode = -1;
-+	int i;
++struct eeprom_ops {
++	int (*check_eeprom)(struct ath_hw *hw);
++	u32 (*get_eeprom)(struct ath_hw *hw, enum eeprom_param param);
++	bool (*fill_eeprom)(struct ath_hw *hw);
++	int (*get_eeprom_ver)(struct ath_hw *hw);
++	int (*get_eeprom_rev)(struct ath_hw *hw);
++	u8 (*get_num_ant_config)(struct ath_hw *hw, enum ieee80211_band band);
++	u16 (*get_eeprom_antenna_cfg)(struct ath_hw *hw,
++				      struct ath9k_channel *chan);
++	bool (*set_board_values)(struct ath_hw *hw, struct ath9k_channel *chan);
++	void (*set_addac)(struct ath_hw *hw, struct ath9k_channel *chan);
++	int (*set_txpower)(struct ath_hw *hw, struct ath9k_channel *chan,
++			   u16 cfgCtl, u8 twiceAntennaReduction,
++			   u8 twiceMaxRegulatoryPower, u8 powerLimit);
++	u16 (*get_spur_channel)(struct ath_hw *ah, u16 i, bool is2GHz);
++};
 +
-+	if ((bitrate != 10) && (bitrate != 20) &&
-+	    (bitrate != 55) && (bitrate != 110))
-+		return ratemode;
-+
-+	for (i = 0; i < BITRATE_TABLE_SIZE; i++) {
-+		if ((bitrate_table[i].bitrate == bitrate) &&
-+		    (bitrate_table[i].automatic == automatic)) {
-+			ratemode = i;
-+			break;
-+		}
-+	}
-+	return ratemode;
-+}
-+
-+static void orinoco_get_ratemode_cfg(int ratemode, int *bitrate, int *automatic)
-+{
-+	BUG_ON((ratemode < 0) || (ratemode >= BITRATE_TABLE_SIZE));
-+
-+	*bitrate = bitrate_table[ratemode].bitrate * 100000;
-+	*automatic = bitrate_table[ratemode].automatic;
-+}
-+
- static inline u8 *orinoco_get_ie(u8 *data, size_t len,
- 				 enum ieee80211_eid eid)
- {
-@@ -1794,6 +1821,50 @@ static int __orinoco_hw_set_bitrate(struct orinoco_private *priv)
- 	return err;
- }
- 
-+static int orinoco_hw_get_act_bitrate(struct orinoco_private *priv,
-+				      int *bitrate)
-+{
-+	hermes_t *hw = &priv->hw;
-+	int i;
-+	int err = 0;
-+	u16 val;
-+
-+	err = hermes_read_wordrec(hw, USER_BAP,
-+				  HERMES_RID_CURRENTTXRATE, &val);
-+	if (err)
-+		return err;
-+
-+	switch (priv->firmware_type) {
-+	case FIRMWARE_TYPE_AGERE: /* Lucent style rate */
-+		/* Note : in Lucent firmware, the return value of
-+		 * HERMES_RID_CURRENTTXRATE is the bitrate in Mb/s,
-+		 * and therefore is totally different from the
-+		 * encoding of HERMES_RID_CNFTXRATECONTROL.
-+		 * Don't forget that 6Mb/s is really 5.5Mb/s */
-+		if (val == 6)
-+			*bitrate = 5500000;
-+		else
-+			*bitrate = val * 1000000;
-+		break;
-+	case FIRMWARE_TYPE_INTERSIL: /* Intersil style rate */
-+	case FIRMWARE_TYPE_SYMBOL: /* Symbol style rate */
-+		for (i = 0; i < BITRATE_TABLE_SIZE; i++)
-+			if (bitrate_table[i].intersil_txratectrl == val)
-+				break;
-+
-+		if (i >= BITRATE_TABLE_SIZE)
-+			printk(KERN_INFO "%s: Unable to determine current bitrate (0x%04hx)\n",
-+			       priv->ndev->name, val);
-+
-+		*bitrate = bitrate_table[i].bitrate * 100000;
-+		break;
-+	default:
-+		BUG();
-+	}
-+
-+	return err;
-+}
-+
- /* Set fixed AP address */
- static int __orinoco_hw_set_wap(struct orinoco_private *priv)
- {
-@@ -3975,9 +4046,8 @@ static int orinoco_ioctl_setrate(struct net_device *dev,
- 				 char *extra)
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
--	int ratemode = -1;
-+	int ratemode;
- 	int bitrate; /* 100s of kilobits */
--	int i;
- 	unsigned long flags;
- 
- 	/* As the user space doesn't know our highest rate, it uses -1
-@@ -3991,16 +4061,7 @@ static int orinoco_ioctl_setrate(struct net_device *dev,
- 		bitrate = rrq->value / 100000;
- 	}
- 
--	if ((bitrate != 10) && (bitrate != 20) &&
--	    (bitrate != 55) && (bitrate != 110))
--		return -EINVAL;
--
--	for (i = 0; i < BITRATE_TABLE_SIZE; i++)
--		if ((bitrate_table[i].bitrate == bitrate) &&
--		    (bitrate_table[i].automatic == !rrq->fixed)) {
--			ratemode = i;
--			break;
--		}
-+	ratemode = orinoco_get_bitratemode(bitrate, !rrq->fixed);
- 
- 	if (ratemode == -1)
- 		return -EINVAL;
-@@ -4019,65 +4080,26 @@ static int orinoco_ioctl_getrate(struct net_device *dev,
- 				 char *extra)
- {
- 	struct orinoco_private *priv = netdev_priv(dev);
--	hermes_t *hw = &priv->hw;
- 	int err = 0;
--	int ratemode;
--	int i;
--	u16 val;
-+	int bitrate, automatic;
- 	unsigned long flags;
- 
- 	if (orinoco_lock(priv, &flags) != 0)
- 		return -EBUSY;
- 
--	ratemode = priv->bitratemode;
--
--	BUG_ON((ratemode < 0) || (ratemode >= BITRATE_TABLE_SIZE));
--
--	rrq->value = bitrate_table[ratemode].bitrate * 100000;
--	rrq->fixed = !bitrate_table[ratemode].automatic;
--	rrq->disabled = 0;
-+	orinoco_get_ratemode_cfg(priv->bitratemode, &bitrate, &automatic);
- 
- 	/* If the interface is running we try to find more about the
- 	   current mode */
--	if (netif_running(dev)) {
--		err = hermes_read_wordrec(hw, USER_BAP,
--					  HERMES_RID_CURRENTTXRATE, &val);
--		if (err)
--			goto out;
-+	if (netif_running(dev))
-+		err = orinoco_hw_get_act_bitrate(priv, &bitrate);
- 
--		switch (priv->firmware_type) {
--		case FIRMWARE_TYPE_AGERE: /* Lucent style rate */
--			/* Note : in Lucent firmware, the return value of
--			 * HERMES_RID_CURRENTTXRATE is the bitrate in Mb/s,
--			 * and therefore is totally different from the
--			 * encoding of HERMES_RID_CNFTXRATECONTROL.
--			 * Don't forget that 6Mb/s is really 5.5Mb/s */
--			if (val == 6)
--				rrq->value = 5500000;
--			else
--				rrq->value = val * 1000000;
--			break;
--		case FIRMWARE_TYPE_INTERSIL: /* Intersil style rate */
--		case FIRMWARE_TYPE_SYMBOL: /* Symbol style rate */
--			for (i = 0; i < BITRATE_TABLE_SIZE; i++)
--				if (bitrate_table[i].intersil_txratectrl == val) {
--					ratemode = i;
--					break;
--				}
--			if (i >= BITRATE_TABLE_SIZE)
--				printk(KERN_INFO "%s: Unable to determine current bitrate (0x%04hx)\n",
--				       dev->name, val);
--
--			rrq->value = bitrate_table[ratemode].bitrate * 100000;
--			break;
--		default:
--			BUG();
--		}
--	}
--
-- out:
- 	orinoco_unlock(priv, &flags);
- 
-+	rrq->value = bitrate;
-+	rrq->fixed = !automatic;
-+	rrq->disabled = 0;
-+
- 	return err;
- }
- 
+ #define ar5416_get_eep_ver(_ah) \
+ 	(((_ah)->ah_eeprom.def.baseEepHeader.version >> 12) & 0xF)
+ #define ar5416_get_eep_rev(_ah) \
 -- 
-1.6.0.6
+1.6.1
 
