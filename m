@@ -1,80 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57845 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752797AbZBQTHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 14:07:33 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 11:07:33 -0800
-Date: Tue, 17 Feb 2009 11:06:46 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Tony Vroon <tony@linx.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>
-Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
-	ranges
-Message-ID: <20090217190646.GC4257@tesla> (sfid-20090217_200738_076004_BF60AE62)
-References: <1234207263.6694.1.camel@localhost> <1234208152.6694.4.camel@localhost> <20090210013941.GA4386@tesla> <1234230689.3793.15.camel@localhost> <20090210020708.GC4386@tesla> <1234379981.4789.7.camel@localhost> <20090214045232.GA5769@tesla> <1234786124.4271.2.camel@localhost> <20090216154733.GA2870@tuxdriver.com> <20090217184230.GA4257@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090217184230.GA4257@tesla>
+Received: from xc.sipsolutions.net ([83.246.72.84]:55380 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121AbZBIMOe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2009 07:14:34 -0500
+Subject: Re: [PATCH 3/3] mac80211: Modul. mesh path prot: Skeleton Module
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Sesser <flomaillist@cosetrain.com>
+Cc: linux-wireless@vger.kernel.org, Benedikt Elser <elser@in.tum.de>
+In-Reply-To: <49901A58.4030403@cosetrain.com>
+References: <498F36B7.40806@cosetrain.com>
+	 <31341041c003f9a10f7ef791dc74748c0ba6b46f.1234118418.git.flomaillist@cosetrain.com>
+	 <897787d59c53459e0bff3a6829ac470f6ed2e84e.1234118418.git.flomaillist@cosetrain.com>
+	 <944d8e06a2b02e5ae6d612fb435d540958023ff9.1234118418.git.flomaillist@cosetrain.com>
+	 (sfid-20090208_205238_672681_BE3F6B7E) <1234176251.4175.222.camel@johannes.local>
+	 <49901A58.4030403@cosetrain.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-u5XxiMS7YEdpgy9ajnEN"
+Date: Mon, 09 Feb 2009 13:14:28 +0100
+Message-Id: <1234181668.4175.233.camel@johannes.local> (sfid-20090209_131438_630123_414EF629)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 17, 2009 at 10:42:30AM -0800, Luis Rodriguez wrote:
-> On Mon, Feb 16, 2009 at 07:47:33AM -0800, John W. Linville wrote:
-> > On Mon, Feb 16, 2009 at 12:08:44PM +0000, Tony Vroon wrote:
-> > > Just to confirm, if I use my early-boot hook that I used for your iw
-> > > list to set the regulatory domain manually (iw reg set GB) all is well.
-> > > If I allow the driver stack to get to the association stage without
-> > > setting a regulatory domain, I can never get my 802.11A spectrum back
-> > > after the fact.
-> > > Would you still see this as a bug or rather a specific requirement of
-> > > the new interface that hasn't yet been documented?
-> >
-> > Seems like a bug, or at least an unintended consequence of intersection...?
 
-Sorry for the blank e-mail.
+--=-u5XxiMS7YEdpgy9ajnEN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-You are reporting you are disabling OLD_REG and your 5 GHz on iwlagn is disabled
-upon bootup. You also reported from your log:
+Hi,
 
-cfg80211: Calling CRDA to update world regulatory domain
-cfg80211: calling CRDA failed - unable to update world regulatory domain, using static definition
+> Johannes, thanks for all of your comments! I will need some time to work
+> through them, though, please be patient.
+>=20
+> Johannes Berg wrote:
+> > 00-0F-0F   (hex)                Real ID Technology Co., Ltd.
+> > 000F0F     (base 16)            Real ID Technology Co., Ltd.
+> >                                 9F Hanmi B/D 192-19
+> >                                 Nonhyeon-Dong
+> >                                 Gangnam-Gu Seoul 135-010
+> >                                 KOREA, REPUBLIC OF
+> >=20
+> > Have you asked them about using their OUI?
+>=20
+> Nah, sorry about that - I didn't get 0x000FACFF meant 'null' in the
+> first place,=20
 
-This indicates to me your regulatory domain was simply never updated by CRDA. So what
-would have happened is that iwlagn registers its device to mac80211 via ieee80211_register_hw()
-then mac80211 registers it with cfg80211 via wiphy_register(). Upon that call cfg80211 will update
-the device's regulatory ifnromation by calling
+Actually I was looking at Draft 2.0 - 2.08/09 seems to have this
+updated. And no, I don't really have access to the documents.
 
-wiphy_update_regulatory(wiphy, REGDOM_SET_BY_CORE);
+> and since I don't have access to an OUI yet, I selected
+> this value by random. I still hope nobody seriously wants my skeleton
+> module in the kernel code though.
 
-This in turn will check to see if it should ignore the request, and in your case
-the check is:
+Heh, right.
 
-        if (!last_request)
-                return true;
-        if (setby == REGDOM_SET_BY_CORE &&
-                  wiphy->custom_regulatory)
-                return true
+> BTW... do you know which OUI in that case (at devel time, this is an
+> university project, afaik the university does not have an OUI I can use)
+> makes sense for stuff like that? I believe there is a reserved range,
+> but I don't know for what reason it's reserved, and if I should use it
+> to avoid misunderstandings.
 
-Since iwlagn sets wiphy->custom_regulatory to true and since upon registration setby is
-REGDOM_SET_BY_CORE the device will be ignored to change the regulatory domain. I see I
-currently see no reason why your 5 GHz channels will be disabled unless I'm missing
-something or the card's EEPROM disables them.
+I don't think there is a reserved OUI.
 
-To debug this further we need more information. So please provide the output of both
-the kernel *and*, 'iw list' _prior_ to associating to your AP. Before you do so please
-recompile wireless-testing with these options enabled:
+> [do you really think I should to copy the style of rate control? i don't
+> like it at all. they have KBs of (IMHO) not very useful code instead of
+> keeping it to the point? Even in the Kconfig. Please correct me if I got
+> this wrong.]
 
-# Intel debug
-CONFIG_IWL_DEBUG_INFO=y
+Depends what you mean by that? I think you should force one algorithm to
+be built in -- just like rate control. I also think you should take a
+look at abstracting the API like rate control to not expose so many
+internal data structures. Alternatively, just don't make them kernel
+modules but require building the algorithms into mac80211.ko anyway.
 
-# Cfg80211 regulatory debug
-CONFIG_CFG80211_REG_DEBUG=y
+> I know that, as I'm pretty new to kernel coding. Should I get me some
+> mentor from the kernel mentors project, or are you willing to correct my
+> stupid beginner mistakes all the time?
 
-So to re-iterate: I want both your kernel log _and_ 'iw list' output prior to association.
+Seems fine at this point, I take it you've looked through
+http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches
+and the links at the bottom of that page. Also
+Documentation/CodingStyle, and checkpatch etc. but that seemed fairly
+clean this time around, so I guess you did.
 
-  Luis
+What I didn't like about your patches was (1) the cramped style with so
+few empty lines, and (2) the API issue I mentioned.
+
+> Also: As you still haven't said anything about my ops struct, I deem you
+> think I have made a somewhat reasonable selection here?
+
+Not sure what to say there -- you don't really have a choice which
+functions to make virtual. The timer thing seems a little odd, either
+the algorithm should do everything or nothing, imho.
+
+I don't think it's necessary to split this into an ops and a
+registration struct though.
+
+johannes
+
+--=-u5XxiMS7YEdpgy9ajnEN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJkB4cAAoJEKVg1VMiehFY2zsQAJ7tfQJfHTfmaOkxuJR8jYsG
+dVegVP6g6e8y9CY+Ie94QaWtuixghz6ww70lynKA9Zs+c34RlFvP05cCyB7BrDwm
+cKA/E2HV07LsONQhba0/MA7QRRDYPdpPXkbtN3ftzTk46zACgqwXc1+EV4+DCzS+
+pGrLGX7uJk9TNRqCbqDSvGZq4An6DPw41fYsjkMaIe/1VVBkMgd+xhujY6OxWHy6
+Qs9GpAelg7GaLqUyQc7F63NrAnnYwo6STZbe1AdThWC1noB+KiwhAU4SGDuEonRi
+eoMtpl8Lk0+PLFG/FreH9FqgPR2x1FI4xd44pzRLuPSV/IH4GmIiBrk5Sqi4GEpk
+jIcunSisptIEXiAfbYADT6uhlcYyIJd+hL6ecrrD+5Z+yGorX2JMnIRfb6HQ5NoN
+94a8FCw4ffLjpDFolmmfqI8W0WCGj9XRVlzOZNtGfXUu+PaeXy6Mhrhj8MxCyHB7
+N4H0CIGEDy9N/19ThAlOkZfLYPFIF3arl5auwaalKucoUi1uB4AEKbWthWEhjoZz
+WAGmrriT+RrQ3KJm3sfi3iBGaZuEAuAebG832eZmDSVPB8hOhzvjUqNDlevtRnI7
+ulWbzJKItF7kVKHVyr8AJeVhhLM6HszrgFc0btjWVNyF9/pcfLQzTcoq9juva9xs
+JxZHJs7ADPsCdDctAsW3
+=K9Oo
+-----END PGP SIGNATURE-----
+
+--=-u5XxiMS7YEdpgy9ajnEN--
+
