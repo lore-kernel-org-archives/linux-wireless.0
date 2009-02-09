@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:44061 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753118AbZB0OPX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52404 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754601AbZBIUE1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 09:15:23 -0500
-Message-ID: <49A7F578.4080405@lwfinger.net> (sfid-20090227_151532_086298_ABBFE2E0)
-Date: Fri, 27 Feb 2009 08:15:20 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Korrignu <korrignu@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: informations about BCM4312
-References: <49A7E9FC.7070904@gmail.com>
-In-Reply-To: <49A7E9FC.7070904@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Feb 2009 15:04:27 -0500
+Subject: [PATCH] mac80211: reject extra IEs for probe request when hw_scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain
+Date: Mon, 09 Feb 2009 21:03:55 +0100
+Message-Id: <1234209835.4175.246.camel@johannes.local> (sfid-20090209_210442_066612_5756F0AA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Korrignu wrote:
-> hello,
-> 
-> i have a BCM4312 (rev02) chipset on my laptop, and I can't understand on
-> this webpage http://wireless.kernel.org/en/users/Drivers/b43#supported
-> if it is supported by b43 module or not
-> 
-> in fact, when i load the module, there is no new network interface
-> created...
-> and i can't find informations about it on the web...
-> 
-> could get me some informations about this problem ?
+We cannot currently hand off extra IEs to hw_scan, so reject
+configuring extra IEs for probe request frames when hw_scan
+is set.
 
-The BCM4312 is somewhat of a problem as there are two completely different
-devices that use that identification. You need to look at the PCI ID to tell if
-it is supported. Use the command 'lspci -n'and look for a line that has
-"14e5:43XX" in it. If XX is 15, it is not supported. The fact that you have to
-load the b43 module manually suggests that it is not supported. The other thing
-to do is the command 'dmesg | grep b43'.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>
+---
+ net/mac80211/cfg.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-Larry
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-02-09 20:56:40.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2009-02-09 21:03:21.000000000 +0100
+@@ -1176,11 +1176,16 @@ static int ieee80211_set_channel(struct 
+ 	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ }
+ 
+-static int set_mgmt_extra_ie_sta(struct ieee80211_if_sta *ifsta, u8 subtype,
+-				 u8 *ies, size_t ies_len)
++static int set_mgmt_extra_ie_sta(struct ieee80211_sub_if_data *sdata,
++				 u8 subtype, u8 *ies, size_t ies_len)
+ {
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
++
+ 	switch (subtype) {
+ 	case IEEE80211_STYPE_PROBE_REQ >> 4:
++		if (local->ops->hw_scan)
++			break;
+ 		kfree(ifsta->ie_probereq);
+ 		ifsta->ie_probereq = ies;
+ 		ifsta->ie_probereq_len = ies_len;
+@@ -1244,7 +1249,7 @@ static int ieee80211_set_mgmt_extra_ie(s
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+-		ret = set_mgmt_extra_ie_sta(&sdata->u.sta, params->subtype,
++		ret = set_mgmt_extra_ie_sta(sdata, params->subtype,
+ 					    ies, ies_len);
+ 		break;
+ 	default:
+
+
