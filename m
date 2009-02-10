@@ -1,46 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2736 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752264AbZBWQat (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54101 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755051AbZBJUgp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 11:30:49 -0500
-Date: Mon, 23 Feb 2009 11:30:32 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090223163032.GA3450@hash.localnet> (sfid-20090223_173052_211834_48D48529)
-References: <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <40f31dec0902230803qcbd4c20kc66a50e6e2e8eef2@mail.gmail.com> <40f31dec0902230815x6b43fa50h41edfeead96822a3@mail.gmail.com> <20090223162103.GA3383@hash.localnet> <40f31dec0902230827j5c0f9f20je02c7fb02709f71e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0902230827j5c0f9f20je02c7fb02709f71e@mail.gmail.com>
+	Tue, 10 Feb 2009 15:36:45 -0500
+Message-Id: <20090210202554.989108642@sipsolutions.net> (sfid-20090210_213648_180957_B28D7CC9)
+References: <20090210202536.425266119@sipsolutions.net>
+Date: Tue, 10 Feb 2009 21:25:49 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 13/27] mac80211: document TX aggregation (and small cleanup)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 23, 2009 at 06:27:35PM +0200, Nick Kossifidis wrote:
-> 2009/2/23 Bob Copeland <me@bobcopeland.com>:
-> > On Mon, Feb 23, 2009 at 06:15:51PM +0200, Nick Kossifidis wrote:
-> >> Typo alert...
-> >> rs->rs_more = !!(rx_status->rx_status_0 & AR5K_5212_RX_DESC_STATUS0_MORE);
-> >
-> > I'm slow... what's wrong with it?
-> >
-> 
-> "!!"
-> 
-> it should be just
-> 
-> rs->rs_more = (rx_status->rx_status_0 & AR5K_5212_RX_DESC_STATUS0_MORE);
+Add documentation and move ieee80211_start_tx_ba_cb_irqsafe to right
+after ieee80211_start_tx_ba_cb.
 
-No, that's intentional.  That was actually a bug we had at some point 
-(rs_more is a u8 so the bitwise AND overflowed).  The "!!" makes it zero 
-or one so it fits.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/agg-tx.c |   76 +++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 51 insertions(+), 25 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2009-02-10 20:59:33.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2009-02-10 20:59:33.000000000 +0100
+@@ -18,6 +18,31 @@
+ #include "ieee80211_i.h"
+ #include "wme.h"
+ 
++/**
++ * DOC: TX aggregation
++ *
++ * Aggregation on the TX side requires setting the hardware flag
++ * %IEEE80211_HW_AMPDU_AGGREGATION as well as, if present, the @ampdu_queues
++ * hardware parameter to the number of hardware AMPDU queues. If there are no
++ * hardware queues then the driver will (currently) have to do all frame
++ * buffering.
++ *
++ * When TX aggregation is started by some subsystem (usually the rate control
++ * algorithm would be appropriate) by calling the
++ * ieee80211_start_tx_ba_session() function, the driver will be notified via
++ * its @ampdu_action function, with the %IEEE80211_AMPDU_TX_START action.
++ *
++ * In response to that, the driver is later required to call the
++ * ieee80211_start_tx_ba_cb() (or ieee80211_start_tx_ba_cb_irqsafe())
++ * function, which will start the aggregation session.
++ *
++ * Similarly, when the aggregation session is stopped by
++ * ieee80211_stop_tx_ba_session(), the driver's @ampdu_action function will
++ * be called with the action %IEEE80211_AMPDU_TX_STOP. In this case, the
++ * call must not fail, and the driver must later call ieee80211_stop_tx_ba_cb()
++ * (or ieee80211_stop_tx_ba_cb_irqsafe()).
++ */
++
+ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 					 const u8 *da, u16 tid,
+ 					 u8 dialog_token, u16 start_seq_num,
+@@ -363,6 +388,31 @@ void ieee80211_start_tx_ba_cb(struct iee
+ }
+ EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
+ 
++void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
++				      const u8 *ra, u16 tid)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_ra_tid *ra_tid;
++	struct sk_buff *skb = dev_alloc_skb(0);
++
++	if (unlikely(!skb)) {
++#ifdef CONFIG_MAC80211_HT_DEBUG
++		if (net_ratelimit())
++			printk(KERN_WARNING "%s: Not enough memory, "
++			       "dropping start BA session", skb->dev->name);
++#endif
++		return;
++	}
++	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
++	memcpy(&ra_tid->ra, ra, ETH_ALEN);
++	ra_tid->tid = tid;
++
++	skb->pkt_type = IEEE80211_ADDBA_MSG;
++	skb_queue_tail(&local->skb_queue, skb);
++	tasklet_schedule(&local->tasklet);
++}
++EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
++
+ 
+ int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
+ 				 u8 *ra, u16 tid,
+@@ -492,31 +542,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+ }
+ EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
+ 
+-void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
+-				      const u8 *ra, u16 tid)
+-{
+-	struct ieee80211_local *local = hw_to_local(hw);
+-	struct ieee80211_ra_tid *ra_tid;
+-	struct sk_buff *skb = dev_alloc_skb(0);
+-
+-	if (unlikely(!skb)) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		if (net_ratelimit())
+-			printk(KERN_WARNING "%s: Not enough memory, "
+-			       "dropping start BA session", skb->dev->name);
+-#endif
+-		return;
+-	}
+-	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
+-	memcpy(&ra_tid->ra, ra, ETH_ALEN);
+-	ra_tid->tid = tid;
+-
+-	skb->pkt_type = IEEE80211_ADDBA_MSG;
+-	skb_queue_tail(&local->skb_queue, skb);
+-	tasklet_schedule(&local->tasklet);
+-}
+-EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
+-
+ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw,
+ 				     const u8 *ra, u16 tid)
+ {
+@@ -542,6 +567,7 @@ void ieee80211_stop_tx_ba_cb_irqsafe(str
+ }
+ EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb_irqsafe);
+ 
++
+ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 				  struct sta_info *sta,
+ 				  struct ieee80211_mgmt *mgmt,
 
 -- 
-Bob Copeland %% www.bobcopeland.com
 
