@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54060 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbZBUFUr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51858 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103AbZBJUdg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 00:20:47 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 2/5] cfg80211: enable 5 GHz world roaming channels
-Date: Sat, 21 Feb 2009 00:20:38 -0500
-Message-Id: <1235193641-17993-3-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062057_208748_B18D2032)
-In-Reply-To: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
-References: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 10 Feb 2009 15:33:36 -0500
+Message-Id: <20090210202553.874683796@sipsolutions.net> (sfid-20090210_213339_457417_4BBE00C5)
+References: <20090210202536.425266119@sipsolutions.net>
+Date: Tue, 10 Feb 2009 21:25:43 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 07/27] mac80211: remove bssid argument from
+	prepare_for_handlers
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current static world regulatory domain is too restrictive,
-we can use some 5 GHz channels world wide so long as they do not
-touch frequencies which require DFS. The compromise is we must
-also enforce passive scanning and disallow usage of a mode of
-operation that beacons: (AP | IBSS | Mesh)
+It's a little confusing to get the BSSID outside the function
+and pass it in, when it's only needed for this function, so
+change that.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/wireless/reg.c |   13 ++++++++++++-
- 1 files changed, 12 insertions(+), 1 deletions(-)
+ net/mac80211/rx.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 85c2c31..da2a8ac 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -73,11 +73,22 @@ static spinlock_t reg_requests_lock;
+--- wireless-testing.orig/net/mac80211/rx.c	2009-02-10 20:59:27.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2009-02-10 20:59:31.000000000 +0100
+@@ -2030,9 +2030,10 @@ static void ieee80211_invoke_rx_handlers
+ /* main receive path */
  
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
--	.n_reg_rules = 1,
-+	.n_reg_rules = 3,
- 	.alpha2 =  "00",
- 	.reg_rules = {
- 		/* IEEE 802.11b/g, channels 1..11 */
- 		REG_RULE(2412-10, 2462+10, 40, 6, 20, 0),
-+		/* IEEE 802.11a, channel 36..48 */
-+		REG_RULE(5180-10, 5240+10, 40, 6, 23,
-+			NL80211_RRF_PASSIVE_SCAN |
-+			NL80211_RRF_NO_IBSS),
-+
-+		/* NB: 5260 MHz - 5700 MHz requies DFS */
-+
-+		/* IEEE 802.11a, channel 149..165 */
-+		REG_RULE(5745-10, 5825+10, 40, 6, 23,
-+			NL80211_RRF_PASSIVE_SCAN |
-+			NL80211_RRF_NO_IBSS),
- 	}
- };
+ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+-				u8 *bssid, struct ieee80211_rx_data *rx,
++				struct ieee80211_rx_data *rx,
+ 				struct ieee80211_hdr *hdr)
+ {
++	u8 *bssid = ieee80211_get_bssid(hdr, rx->skb->len, sdata->vif.type);
+ 	int multicast = is_multicast_ether_addr(hdr->addr1);
  
+ 	switch (sdata->vif.type) {
+@@ -2135,7 +2136,6 @@ static void __ieee80211_rx_handle_packet
+ 	int prepares;
+ 	struct ieee80211_sub_if_data *prev = NULL;
+ 	struct sk_buff *skb_new;
+-	u8 *bssid;
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	memset(&rx, 0, sizeof(rx));
+@@ -2174,9 +2174,8 @@ static void __ieee80211_rx_handle_packet
+ 		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
+ 			continue;
+ 
+-		bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);
+ 		rx.flags |= IEEE80211_RX_RA_MATCH;
+-		prepares = prepare_for_handlers(sdata, bssid, &rx, hdr);
++		prepares = prepare_for_handlers(sdata, &rx, hdr);
+ 
+ 		if (!prepares)
+ 			continue;
+
 -- 
-1.6.0.3
 
