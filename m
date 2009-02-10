@@ -1,89 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:36244 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752772AbZBHT70 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41118 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752721AbZBJPdw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2009 14:59:26 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so929766fgg.17
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2009 11:59:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20090208192343.106487dmjra19g6o@neo.wg.de>
-References: <20090206233134.11116cap9kcroxgc@neo.wg.de>
-	 <1233960318.11530.114.camel@rc-desk>
-	 <20090208192343.106487dmjra19g6o@neo.wg.de>
-Date: Sun, 8 Feb 2009 20:59:25 +0100
-Message-ID: <69e28c910902081159v1371ee70nb5e70ebdc648b54a@mail.gmail.com> (sfid-20090208_205929_584469_5786810B)
-Subject: Re: iwlagn: Microcode SW error detected.
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-To: Jan Schneider <jan@horde.org>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 10 Feb 2009 10:33:52 -0500
+Subject: Re: zd1211rw keeps failing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mark Ryden <markryde@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Daniel Drake <dsd@gentoo.org>
+In-Reply-To: <dac45060902100545j3d9caf8er2183416f5b5669cc@mail.gmail.com> (sfid-20090210_144559_984950_F1D236FE)
+References: <1234262188.4302.0.camel@johannes.local>
+	 <dac45060902100545j3d9caf8er2183416f5b5669cc@mail.gmail.com>
+	 (sfid-20090210_144559_984950_F1D236FE)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mL9Agn23Ywuf+QEH/rzv"
+Date: Tue, 10 Feb 2009 16:33:19 +0100
+Message-Id: <1234279999.4229.2.camel@johannes.local> (sfid-20090210_163356_581904_70A47984)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 8, 2009 at 7:23 PM, Jan Schneider <jan@horde.org> wrote:
-> Zitat von reinette chatre <reinette.chatre@intel.com>:
->
->> On Fri, 2009-02-06 at 14:31 -0800, Jan Schneider wrote:
->>>
->>> I've seen in a post from January that someone already had this problem
->>> but couldn't reproduce it.
->>> I can't reliably reproduce, but I see this more often than I like.
->>> When this happens, it usually doesn't help to reload the kernel
->>> module. Sometimes it helps to use the rfkill switch though.
->>>
->>> Here's a log with debug=0x43fff:
->>
->> It does not seem as though your driver is compiled with debug support.
->> You can confirm that by looking at the version number of the driver
->> printed when it loads ... it should have a "d" in it like "1.2.26kds".
->> Could you please recompile the driver with debug support (IWLWIFI_DEBUG)
->> and rerun your test?  This will provide us with a complete event log of
->> the uCode error.
->
-> Enabling debug didn't help:
->
-> Feb  7 00:04:40 tank kernel: [ 2769.084395] iwlagn: Intel(R) Wireless WiFi
-> Link
-> AGN driver for Linux, 1.3.27kds
->
->
-> /etc/modprobe.d/iwlagn:
->
-> options iwlagn debug=0x43fff
->
->
-> I still get:
->
-> Feb  8 18:40:53 tank kernel: [77584.979829] iwlagn 0000:0c:00.0: Microcode
-> SW er
-> ror detected.  Restarting 0x2000000.
-> Feb  8 18:40:53 tank kernel: [77585.029747] Registered led device:
-> iwl-phy0::rad
-> io
-> Feb  8 18:40:53 tank kernel: [77585.030765] Registered led device:
-> iwl-phy0::ass
-> oc
-> Feb  8 18:40:53 tank kernel: [77585.031602] Registered led device:
-> iwl-phy0::RX
-> Feb  8 18:40:53 tank kernel: [77585.032467] Registered led device:
-> iwl-phy0::TX
->
-> Jan.
->
-> --
-> Do you need professional PHP or Horde consulting?
-> http://horde.org/consulting/
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-No - enable IWLWIFI_DEBUG in your kernel config, then rebuild the
-kernel (or at least the iwlwifi modules).
+--=-mL9Agn23Ywuf+QEH/rzv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+On Tue, 2009-02-10 at 15:45 +0200, Mark Ryden wrote:
+> Hello,
+>   - Can you please elaborate on under which sequence of operations
+> does this occur ? is it the wireless-testing tree? the reason is:
+>  I am using the latest git wireless-testing (from today; -rc4 based tree)=
+.
+> I can associate to an Access Point without errors; and I tried more than =
+once.
+>=20
+> I had tried both when encryption is off in the Access Point and when
+> encryption is on in the Access Point.
+
+Odd; I think I might blame it on my hardware. I booted into an older
+kernel and it failed similary, though it works just fine with my
+unencrypted AP.
+
+> > [ 1819.141519] wlan1: authenticate with AP 8e:b5:9c:32:62:6e
+> > [ 1819.340080] wlan1: authenticate with AP 8e:b5:9c:32:62:6e
+> > [ 1819.550073] wlan1: authenticate with AP 8e:b5:9c:32:62:6e
+> > [ 1819.750061] wlan1: authentication with AP 8e:b5:9c:32:62:6e timed ou=
+t
+
+Did I mention that address is completely bogus?
+
+johannes
+
+--=-mL9Agn23Ywuf+QEH/rzv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJkZ47AAoJEKVg1VMiehFYi84P+wfGmoXGLJdSpO+NsFKrnbp/
+OxUApb8LThVoWz7Dosc/AScrwAxUjHqHhVBRP2KX46cPZLn+25lw/Oc9sbra60mg
+kYAlrIwZzJSvlNrqPdPRxGddO3dLuj5zJWGjoxZinjdKS6ZnWikJtj0YWMSApWcy
+HRIqHxhttrhlDwUjjXY2VrsxuU1dRfk6ArY+cPob/WzrDLlnYdDaaoQ56SIsHVJt
+QNqqMSoEdkOPgzJdUtHuIwwSCfM2/2inFuZHRTin7pYoEA6vAgX7fzq1hkZe8Zmr
+ANF/kmYE3Mp7Qpb/balmCYTz8gfBqm88j4K9kjRwJMexOEQ65+DlDTAqSCZ9Z44z
+0sNIVCDOZpNu7lWndwf21g+pMOYxnrHSf4n8UFndV3+6GGnAHVOe3UWvmj61In44
+Egwmmw2FU4/BJFRmD1aEPSITovXiFG26043ouqKYA710PbsO4noXYhXDu5v9m7pD
+YoAZqa5B7d+a0kUsds6oHEPJBM2WGvW33qNoF5uZ5iuhYXEujSyOCmRXemoMe4Ga
+MJjlIgCZ6SxVh6ywbPHUNaqCvP43z/ALeKX2XMEaBcZP+TBvwhEp81BT9IMZq4Uc
+wuethQhiCi+Xjd5hC4LH0Od4pKQQYSyAXrBp5patEvhDjcrsFl7boe96iRTaWYS1
+Cl5j54kET2GcmL51kMsn
+=VlKF
+-----END PGP SIGNATURE-----
+
+--=-mL9Agn23Ywuf+QEH/rzv--
+
