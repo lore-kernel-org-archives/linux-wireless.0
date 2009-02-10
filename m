@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46245 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754420AbZBMAv6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 19:51:58 -0500
-Subject: Re: [PATCH 1/1] ipw2200, fix ipw io functions
-From: Zhu Yi <yi.zhu@intel.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>
-In-Reply-To: <1234474180-910-1-git-send-email-jirislaby@gmail.com>
-References: <1234474180-910-1-git-send-email-jirislaby@gmail.com>
-Content-Type: text/plain
-Date: Fri, 13 Feb 2009 08:49:40 +0800
-Message-Id: <1234486180.6354.203.camel@debian> (sfid-20090213_015206_021175_F64EDB87)
+Received: from xc.sipsolutions.net ([83.246.72.84]:51879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755002AbZBJUeH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 15:34:07 -0500
+Message-Id: <20090210202554.050078602@sipsolutions.net> (sfid-20090210_213411_888887_F9AF4F4B)
+References: <20090210202536.425266119@sipsolutions.net>
+Date: Tue, 10 Feb 2009 21:25:44 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 08/27] mac80211: remove stray aggregation debugfs definition
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-02-13 at 05:29 +0800, Jiri Slaby wrote:
->  /* alias to 8-bit direct read (low 4K of SRAM/regs), with debug
-> wrapper */
-> -#define ipw_read8(ipw, ofs) __ipw_read8(__FILE__, __LINE__, ipw, ofs)
-> +#define ipw_read8(ipw, ofs) ({ \
-> +       IPW_DEBUG_IO("%s %d: read_direct8(0x%08X)\n", __FILE__, __LINE__, \
-> +                       (u32)(ofs)); \
-> +       _ipw_read8(ipw, ofs); \
-> +})
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/sta_info.h |    1-
+ net/mac80211/sta_info.h |    1 -
+ 1 file changed, 1 deletion(-)
 
-Please put a do {} while(0) for this and some of below macros as well.
+--- wireless-testing.orig/net/mac80211/sta_info.h	2009-02-10 20:59:27.000000000 +0100
++++ wireless-testing/net/mac80211/sta_info.h	2009-02-10 20:59:31.000000000 +0100
+@@ -65,7 +65,6 @@ enum ieee80211_sta_info_flags {
+ #define HT_AGG_STATE_OPERATIONAL	(HT_ADDBA_REQUESTED_MSK |	\
+ 					 HT_ADDBA_DRV_READY_MSK |	\
+ 					 HT_ADDBA_RECEIVED_MSK)
+-#define HT_AGG_STATE_DEBUGFS_CTL	BIT(7)
+ 
+ /**
+  * struct tid_ampdu_tx - TID aggregation information (Tx).
 
-Thanks,
--yi
+-- 
 
