@@ -1,212 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54195 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754475AbZBJUjX (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:25621 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759AbZBJPJx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 15:39:23 -0500
-Message-Id: <20090210202555.979247282@sipsolutions.net> (sfid-20090210_213926_073694_A0331F8E)
-References: <20090210202536.425266119@sipsolutions.net>
-Date: Tue, 10 Feb 2009 21:25:54 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 18/27] mac80211: further cleanups to stopping BA sessions
-Mime-Version: 1.0
+	Tue, 10 Feb 2009 10:09:53 -0500
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH v4 1/2] mac80211: remove multicast check from check_tim()
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	vivek.natraj@gmail.com
+Date: Tue, 10 Feb 2009 17:09:24 +0200
+Message-ID: <20090210150924.21245.57742.stgit@tikku> (sfid-20090210_160958_388905_1938C185)
+In-Reply-To: <20090210150822.21245.87099.stgit@tikku>
+References: <20090210150822.21245.87099.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Essentially consisting of passing the sta_info pointer around,
-instead of repeatedly doing hash lookups.
+Currently mac80211 checks for the multicast tim bit from beacons,
+disables power save and sends a null frame if the bit is set. This was
+added to support ath9k. But this is a bit controversial because the AP will
+send multicast frames immediately after the beacon and the time constraints
+are really high. Relying mac80211 to be fast enough here might not be
+reliable in all situations. And there's no need to send a null frame, AP
+will send the frames immediately after the dtim beacon no matter what.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Also if dynamic power save is disabled (iwconfig wlan0 power timeout 0)
+currently mac80211 disables power save whenever the multicast bit is set
+but it's never enabled again after receiving the first multicast/broadcast
+frame.
+
+The current implementation is not usable on p54/stlc45xx and the
+easiest way to fix this is to remove the multicast tim bit check
+altogether. Handling multicast tim bit in host is rare, most of the
+designs do this in firmware/hardware, so it's better not to have it in
+mac80211. It's a lot better to do this in firmware/hardware, or if
+that's not possible it could be done in the driver.
+
+Also renamed the function to ieee80211_check_tim() to follow the style
+of the file.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- net/mac80211/agg-rx.c      |    6 ++--
- net/mac80211/agg-tx.c      |   63 +++++++++++++++++++++++----------------------
- net/mac80211/ht.c          |    9 ++----
- net/mac80211/ieee80211_i.h |    5 +++
- 4 files changed, 44 insertions(+), 39 deletions(-)
 
---- wireless-testing.orig/net/mac80211/agg-rx.c	2009-02-10 20:59:35.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-rx.c	2009-02-10 20:59:35.000000000 +0100
-@@ -17,8 +17,8 @@
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
- 
--static void __ieee80211_sta_stop_rx_ba_session(struct sta_info *sta, u16 tid,
--					       u16 initiator, u16 reason)
-+void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
-+				    u16 initiator, u16 reason)
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_hw *hw = &local->hw;
-@@ -96,7 +96,7 @@ void ieee80211_sta_stop_rx_ba_session(st
- 		return;
- 	}
- 
--	__ieee80211_sta_stop_rx_ba_session(sta, tid, initiator, reason);
-+	__ieee80211_stop_rx_ba_session(sta, tid, initiator, reason);
- 
- 	rcu_read_unlock();
- }
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-02-10 20:59:34.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-02-10 20:59:35.000000000 +0100
-@@ -990,6 +990,8 @@ void ieee80211_send_delba(struct ieee802
- 
- void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *da,
- 				u16 tid, u16 initiator, u16 reason);
-+void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
-+				    u16 initiator, u16 reason);
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
- void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
- 			     struct sta_info *sta,
-@@ -1003,6 +1005,9 @@ void ieee80211_process_addba_request(str
- 				     struct ieee80211_mgmt *mgmt,
- 				     size_t len);
- 
-+int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
-+				   enum ieee80211_back_parties initiator);
-+
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_mgmt *mgmt,
---- wireless-testing.orig/net/mac80211/agg-tx.c	2009-02-10 20:59:34.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2009-02-10 20:59:35.000000000 +0100
-@@ -123,10 +123,10 @@ void ieee80211_send_bar(struct ieee80211
- 	ieee80211_tx_skb(sdata, skb, 0);
- }
- 
--static int __ieee80211_stop_tx_ba_session(struct ieee80211_local *local,
--					  struct sta_info *sta, u16 tid,
--					  enum ieee80211_back_parties initiator)
-+static int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
-+					   enum ieee80211_back_parties initiator)
- {
-+	struct ieee80211_local *local = sta->local;
- 	int ret;
- 	u8 *state;
- 
-@@ -165,7 +165,6 @@ static void sta_addba_resp_timer_expired
- 	u16 tid = *(u8 *)data;
- 	struct sta_info *sta = container_of((void *)data,
- 		struct sta_info, timer_to_tid[tid]);
--	struct ieee80211_local *local = sta->local;
- 	u8 *state;
- 
- 	state = &sta->ampdu_mlme.tid_state_tx[tid];
-@@ -186,7 +185,7 @@ static void sta_addba_resp_timer_expired
- 	printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
- #endif
- 
--	__ieee80211_stop_tx_ba_session(local, sta, tid, WLAN_BACK_INITIATOR);
-+	___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
- 	spin_unlock_bh(&sta->lock);
- }
- 
-@@ -427,6 +426,32 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
- }
- EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
- 
-+int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
-+				   enum ieee80211_back_parties initiator)
-+{
-+	u8 *state;
-+	int ret;
-+
-+	/* check if the TID is in aggregation */
-+	state = &sta->ampdu_mlme.tid_state_tx[tid];
-+	spin_lock_bh(&sta->lock);
-+
-+	if (*state != HT_AGG_STATE_OPERATIONAL) {
-+		ret = -ENOENT;
-+		goto unlock;
-+	}
-+
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+	printk(KERN_DEBUG "Tx BA session stop requested for %pM tid %u\n",
-+	       sta->sta.addr, tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+
-+	ret = ___ieee80211_stop_tx_ba_session(sta, tid, initiator);
-+
-+ unlock:
-+	spin_unlock_bh(&sta->lock);
-+	return ret;
-+}
- 
- int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
- 				 u8 *ra, u16 tid,
-@@ -434,7 +459,6 @@ int ieee80211_stop_tx_ba_session(struct 
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct sta_info *sta;
--	u8 *state;
- 	int ret = 0;
- 
- 	if (WARN_ON(!local->ops->ampdu_action))
-@@ -450,27 +474,8 @@ int ieee80211_stop_tx_ba_session(struct 
- 		return -ENOENT;
- 	}
- 
--	/* check if the TID is in aggregation */
--	state = &sta->ampdu_mlme.tid_state_tx[tid];
--	spin_lock_bh(&sta->lock);
--
--	if (*state != HT_AGG_STATE_OPERATIONAL) {
--		ret = -ENOENT;
--		goto unlock;
--	}
--
--#ifdef CONFIG_MAC80211_HT_DEBUG
--	printk(KERN_DEBUG "Tx BA session stop requested for %pM tid %u\n",
--	       ra, tid);
--#endif /* CONFIG_MAC80211_HT_DEBUG */
--
--	ret = __ieee80211_stop_tx_ba_session(local, sta, tid, initiator);
--
-- unlock:
--	spin_unlock_bh(&sta->lock);
--
-+	ret = __ieee80211_stop_tx_ba_session(sta, tid, initiator);
- 	rcu_read_unlock();
--
- 	return ret;
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
-@@ -623,11 +628,9 @@ void ieee80211_process_addba_resp(struct
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "Resuming TX aggregation for tid %d\n", tid);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
--		spin_unlock_bh(&sta->lock);
- 	} else {
- 		sta->ampdu_mlme.addba_req_num[tid]++;
--		__ieee80211_stop_tx_ba_session(local, sta, tid,
--					       WLAN_BACK_INITIATOR);
--		spin_unlock_bh(&sta->lock);
-+		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
- 	}
-+	spin_unlock_bh(&sta->lock);
- }
---- wireless-testing.orig/net/mac80211/ht.c	2009-02-10 20:59:34.000000000 +0100
-+++ wireless-testing/net/mac80211/ht.c	2009-02-10 20:59:35.000000000 +0100
-@@ -155,15 +155,12 @@ u32 ieee80211_enable_ht(struct ieee80211
- 
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta)
- {
--	struct ieee80211_local *local = sta->local;
- 	int i;
- 
- 	for (i = 0; i <  STA_TID_NUM; i++) {
--		ieee80211_stop_tx_ba_session(&local->hw, sta->sta.addr, i,
--					     WLAN_BACK_INITIATOR);
--		ieee80211_sta_stop_rx_ba_session(sta->sdata, sta->sta.addr, i,
--						 WLAN_BACK_RECIPIENT,
--						 WLAN_REASON_QSTA_LEAVE_QBSS);
-+		__ieee80211_stop_tx_ba_session(sta, i, WLAN_BACK_INITIATOR);
-+		__ieee80211_stop_rx_ba_session(sta, i, WLAN_BACK_RECIPIENT,
-+					       WLAN_REASON_QSTA_LEAVE_QBSS);
- 	}
- }
- 
+ net/mac80211/mlme.c |   11 ++++-------
+ 1 files changed, 4 insertions(+), 7 deletions(-)
 
--- 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 91c9a5a..05c8d13 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -611,7 +611,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 	}
+ }
+ 
+-static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
++static bool ieee80211_check_tim(struct ieee802_11_elems *elems, u16 aid)
+ {
+ 	u8 mask;
+ 	u8 index, indexn1, indexn2;
+@@ -621,9 +621,6 @@ static bool check_tim(struct ieee802_11_elems *elems, u16 aid, bool *is_mc)
+ 	index = aid / 8;
+ 	mask  = 1 << (aid & 7);
+ 
+-	if (tim->bitmap_ctrl & 0x01)
+-		*is_mc = true;
+-
+ 	indexn1 = tim->bitmap_ctrl & 0xfe;
+ 	indexn2 = elems->tim_len + indexn1 - 4;
+ 
+@@ -1840,7 +1837,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee802_11_elems elems;
+ 	struct ieee80211_local *local = sdata->local;
+ 	u32 changed = 0;
+-	bool erp_valid, directed_tim, is_mc = false;
++	bool erp_valid, directed_tim;
+ 	u8 erp_value = 0;
+ 
+ 	/* Process beacon from the current BSS */
+@@ -1868,9 +1865,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK &&
+ 	    local->hw.conf.flags & IEEE80211_CONF_PS) {
+-		directed_tim = check_tim(&elems, ifsta->aid, &is_mc);
++		directed_tim = ieee80211_check_tim(&elems, ifsta->aid);
+ 
+-		if (directed_tim || is_mc) {
++		if (directed_tim) {
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+ 			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
+ 			ieee80211_send_nullfunc(local, sdata, 0);
 
