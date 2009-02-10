@@ -1,135 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57938 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750932AbZBLGM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 01:12:27 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 22:12:26 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18835.48357.7271.454072@gargle.gargle.HOWL> (sfid-20090212_071231_361530_5402841A)
-Date: Thu, 12 Feb 2009 11:38:37 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	<Jouni.Malinen@Atheros.com>
-Subject: [PATCH v2] mac80211: Extend the rate control API with an update callback
+Received: from xc.sipsolutions.net ([83.246.72.84]:51898 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755049AbZBJUej (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 15:34:39 -0500
+Message-Id: <20090210202554.234408031@sipsolutions.net> (sfid-20090210_213454_286528_BB32EF72)
+References: <20090210202536.425266119@sipsolutions.net>
+Date: Tue, 10 Feb 2009 21:25:45 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 09/27] mac80211: fix RX aggregation timeouts
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AP can switch dynamically between 20/40 Mhz channel width,
-in which case we switch the local operating channel, but the
-rate control algorithm is not notified. This patch adds a new callback
-to indicate such changes to the RC algorithm.
+The values are in TUs (1.024ms), not ms.
 
-Currently, HT channel width change is notified, but this callback
-can be used to indicate any new requirements that might come up later on.
-
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-v2:
---
-* Rebased over [PATCH] mac80211: split IBSS/managed code
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/mesh_hwmp.c   |    1 -
+ net/mac80211/rx.c          |   16 ++++++----------
+ net/mac80211/sta_info.h    |    2 +-
+ 4 files changed, 9 insertions(+), 12 deletions(-)
 
- include/net/mac80211.h |   13 +++++++++++++
- net/mac80211/ht.c      |   13 +++++++++++++
- net/mac80211/rate.h    |   12 ++++++++++++
- 3 files changed, 38 insertions(+), 0 deletions(-)
+--- wireless-testing.orig/net/mac80211/rx.c	2009-02-10 20:59:31.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2009-02-10 20:59:32.000000000 +0100
+@@ -1640,11 +1640,9 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
+ 		start_seq_num = le16_to_cpu(bar->start_seq_num) >> 4;
+ 
+ 		/* reset session timer */
+-		if (tid_agg_rx->timeout) {
+-			unsigned long expires =
+-				jiffies + (tid_agg_rx->timeout / 1000) * HZ;
+-			mod_timer(&tid_agg_rx->session_timer, expires);
+-		}
++		if (tid_agg_rx->timeout)
++			mod_timer(&tid_agg_rx->session_timer,
++				  TU_TO_EXP_TIME(tid_agg_rx->timeout));
+ 
+ 		/* manage reordering buffer according to requested */
+ 		/* sequence number */
+@@ -2380,11 +2378,9 @@ static u8 ieee80211_rx_reorder_ampdu(str
+ 	/* new un-ordered ampdu frame - process it */
+ 
+ 	/* reset session timer */
+-	if (tid_agg_rx->timeout) {
+-		unsigned long expires =
+-			jiffies + (tid_agg_rx->timeout / 1000) * HZ;
+-		mod_timer(&tid_agg_rx->session_timer, expires);
+-	}
++	if (tid_agg_rx->timeout)
++		mod_timer(&tid_agg_rx->session_timer,
++			  TU_TO_EXP_TIME(tid_agg_rx->timeout));
+ 
+ 	/* if this mpdu is fragmented - terminate rx aggregation session */
+ 	sc = le16_to_cpu(hdr->seq_ctrl);
+--- wireless-testing.orig/net/mac80211/sta_info.h	2009-02-10 20:59:31.000000000 +0100
++++ wireless-testing/net/mac80211/sta_info.h	2009-02-10 20:59:32.000000000 +0100
+@@ -88,7 +88,7 @@ struct tid_ampdu_tx {
+  * @stored_mpdu_num: number of MPDUs in reordering buffer
+  * @ssn: Starting Sequence Number expected to be aggregated.
+  * @buf_size: buffer size for incoming A-MPDUs
+- * @timeout: reset timer value.
++ * @timeout: reset timer value (in TUs).
+  * @dialog_token: dialog token for aggregation session
+  */
+ struct tid_ampdu_rx {
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-02-10 20:59:26.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-02-10 20:59:32.000000000 +0100
+@@ -57,6 +57,8 @@ struct ieee80211_local;
+  */
+ #define IEEE80211_SCAN_RESULT_EXPIRE (10 * HZ)
+ 
++#define TU_TO_EXP_TIME(x)	(jiffies + usecs_to_jiffies((x) * 1024))
++
+ struct ieee80211_fragment_entry {
+ 	unsigned long first_frag_time;
+ 	unsigned int seq;
+--- wireless-testing.orig/net/mac80211/mesh_hwmp.c	2009-02-10 20:59:26.000000000 +0100
++++ wireless-testing/net/mac80211/mesh_hwmp.c	2009-02-10 20:59:32.000000000 +0100
+@@ -58,7 +58,6 @@ static inline u32 u32_field_get(u8 *preq
+ #define PERR_IE_DST_ADDR(x)	(x + 2)
+ #define PERR_IE_DST_DSN(x)	u32_field_get(x, 8, 0);
+ 
+-#define TU_TO_EXP_TIME(x) (jiffies + msecs_to_jiffies(x * 1024 / 1000))
+ #define MSEC_TO_TU(x) (x*1000/1024)
+ #define DSN_GT(x, y) ((long) (y) - (long) (x) < 0)
+ #define DSN_LT(x, y) ((long) (x) - (long) (y) < 0)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 31fd8ba..e01c63a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1975,6 +1975,16 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
- /* Rate control API */
- 
- /**
-+ * enum rate_control_changed - flags to indicate which parameter changed
-+ *
-+ * @IEEE80211_RC_HT_CHANGED: The HT parameters of the operating channel have
-+ *	changed, rate control algorithm can update its internal state if needed.
-+ */
-+enum rate_control_changed {
-+	IEEE80211_RC_HT_CHANGED = BIT(0)
-+};
-+
-+/**
-  * struct ieee80211_tx_rate_control - rate control information for/from RC algo
-  *
-  * @hw: The hardware the algorithm is invoked for.
-@@ -2010,6 +2020,9 @@ struct rate_control_ops {
- 	void *(*alloc_sta)(void *priv, struct ieee80211_sta *sta, gfp_t gfp);
- 	void (*rate_init)(void *priv, struct ieee80211_supported_band *sband,
- 			  struct ieee80211_sta *sta, void *priv_sta);
-+	void (*rate_update)(void *priv, struct ieee80211_supported_band *sband,
-+			    struct ieee80211_sta *sta,
-+			    void *priv_sta, u32 changed);
- 	void (*free_sta)(void *priv, struct ieee80211_sta *sta,
- 			 void *priv_sta);
- 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 69b6e9a..4e3c72f 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -17,6 +17,7 @@
- #include <net/wireless.h>
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
-+#include "rate.h"
- 
- void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
- 				       struct ieee80211_ht_cap *ht_cap_ie,
-@@ -93,7 +94,9 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_bss_ht_conf ht;
-+	struct sta_info *sta;
- 	u32 changed = 0;
- 	bool enable_ht = true, ht_changed;
- 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-@@ -136,6 +139,16 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 	if (ht_changed) {
-                 /* channel_type change automatically detected */
- 		ieee80211_hw_config(local, 0);
-+
-+		rcu_read_lock();
-+
-+		sta = sta_info_get(local, ifmgd->bssid);
-+		if (sta)
-+			rate_control_rate_update(local, sband, sta,
-+						 IEEE80211_RC_HT_CHANGED);
-+
-+		rcu_read_unlock();
-+
-         }
- 
- 	/* disable HT */
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index 928da62..b9164c9 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -62,6 +62,18 @@ static inline void rate_control_rate_init(struct sta_info *sta)
- 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
- }
- 
-+static inline void rate_control_rate_update(struct ieee80211_local *local,
-+				    struct ieee80211_supported_band *sband,
-+				    struct sta_info *sta, u32 changed)
-+{
-+	struct rate_control_ref *ref = local->rate_ctrl;
-+	struct ieee80211_sta *ista = &sta->sta;
-+	void *priv_sta = sta->rate_ctrl_priv;
-+
-+	if (ref->ops->rate_update)
-+		ref->ops->rate_update(ref->priv, sband, ista,
-+				      priv_sta, changed);
-+}
- 
- static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
- 					   struct ieee80211_sta *sta,
 -- 
-1.6.1
 
