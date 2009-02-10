@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.217.174]:61010 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751363AbZBYMfh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 07:35:37 -0500
-Received: by gxk22 with SMTP id 22so165gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2009 04:35:35 -0800 (PST)
-Message-ID: <49A53B16.8010605@gmail.com> (sfid-20090225_133544_707376_B70880EE)
-Date: Wed, 25 Feb 2009 13:35:34 +0100
-From: Roel Kluin <roel.kluin@gmail.com>
-MIME-Version: 1.0
-To: jt@hpl.hp.com
-CC: linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] wireless, wavelan: spin off by 1
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from main.gmane.org ([80.91.229.2]:50882 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754038AbZBJRuE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 12:50:04 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1LWwkE-0007fp-AJ
+	for linux-wireless@vger.kernel.org; Tue, 10 Feb 2009 17:50:02 +0000
+Received: from rain.gmane.org ([80.91.229.7])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2009 17:50:02 +0000
+Received: from lurkos.usenet by rain.gmane.org with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2009 17:50:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Lurkos <lurkos.usenet@gmail.com>
+Subject: Merge compat-wireless-old into 2.6.26
+Date: Tue, 10 Feb 2009 17:28:16 +0000 (UTC)
+Message-ID: <20090210172817.9004.60065.XPN@L622132.user.x-privat.org> (sfid-20090210_185010_204922_C3F2C1B8)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-spin can reach -1 after the loop, so 0 is still success.
+Is it possibile to patch linux 2.6.26 source (e.g. Debian Lenny sources)
+to have the new compat-wireless-old?
+If yes, what could be the correct procedure?
+I would prefer to compile only my wireless network card driver
+statically into the kernel.
+Thank you.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-diff --git a/drivers/net/wireless/wavelan_cs.c b/drivers/net/wireless/wavelan_cs.c
-index de717f8..1565a0a 100644
---- a/drivers/net/wireless/wavelan_cs.c
-+++ b/drivers/net/wireless/wavelan_cs.c
-@@ -838,9 +838,8 @@ wv_82593_cmd(struct net_device *	dev,
-     }
-   while(((status & SR3_EXEC_STATE_MASK) != SR3_EXEC_IDLE) && (spin-- > 0));
- 
--  /* If the interrupt hasn't be posted */
--  if(spin <= 0)
--    {
-+  /* If the interrupt hasn't been posted */
-+  if (spin < 0) {
- #ifdef DEBUG_INTERRUPT_ERROR
-       printk(KERN_INFO "wv_82593_cmd: %s timeout (previous command), status 0x%02x\n",
- 	     str, status);
+-- 
+Lurkos
+
