@@ -1,41 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36318 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755874AbZBLEke (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 23:40:34 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 20:40:34 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18835.42852.814424.538794@gargle.gargle.HOWL> (sfid-20090212_054037_936347_45E1A9A2)
-Date: Thu, 12 Feb 2009 10:06:52 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 7/8] ath9k: Fix incorrect noise floor reading for 4k EEPROM
+Received: from xc.sipsolutions.net ([83.246.72.84]:49979 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754545AbZBJUmB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 15:42:01 -0500
+Message-Id: <20090210202557.078353922@sipsolutions.net> (sfid-20090210_214207_249309_B82C6EB0)
+References: <20090210202536.425266119@sipsolutions.net>
+Date: Tue, 10 Feb 2009 21:25:59 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 23/27] cfg80211: add more flexible BSS lookup
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/eeprom.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Add a more flexible BSS lookup function so that mac80211 or
+other drivers can actually use this for getting the BSS to
+connect to.
 
-diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
-index c2335af..b0fdb1e 100644
---- a/drivers/net/wireless/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath9k/eeprom.c
-@@ -439,7 +439,7 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h |   12 +++++++++++-
+ net/wireless/scan.c    |   10 ++++++++--
+ 2 files changed, 19 insertions(+), 3 deletions(-)
+
+--- wireless-testing.orig/include/net/cfg80211.h	2009-02-10 20:59:37.000000000 +0100
++++ wireless-testing/include/net/cfg80211.h	2009-02-10 20:59:38.000000000 +0100
+@@ -785,7 +785,17 @@ cfg80211_inform_bss_frame(struct wiphy *
+ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
+ 				      struct ieee80211_channel *channel,
+ 				      const u8 *bssid,
+-				      const u8 *ssid, size_t ssid_len);
++				      const u8 *ssid, size_t ssid_len,
++				      u16 capa_mask, u16 capa_val);
++static inline struct cfg80211_bss *
++cfg80211_get_ibss(struct wiphy *wiphy,
++		  struct ieee80211_channel *channel,
++		  const u8 *ssid, size_t ssid_len)
++{
++	return cfg80211_get_bss(wiphy, channel, NULL, ssid, ssid_len,
++				WLAN_CAPABILITY_IBSS, WLAN_CAPABILITY_IBSS);
++}
++
+ struct cfg80211_bss *cfg80211_get_mesh(struct wiphy *wiphy,
+ 				       struct ieee80211_channel *channel,
+ 				       const u8 *meshid, size_t meshidlen,
+--- wireless-testing.orig/net/wireless/scan.c	2009-02-10 20:59:37.000000000 +0100
++++ wireless-testing/net/wireless/scan.c	2009-02-10 20:59:38.000000000 +0100
+@@ -116,9 +116,12 @@ static bool is_bss(struct cfg80211_bss *
+ {
+ 	const u8 *ssidie;
  
- 	switch (param) {
- 	case EEP_NFTHRESH_2:
--		return pModal[1].noiseFloorThreshCh[0];
-+		return pModal->noiseFloorThreshCh[0];
- 	case AR_EEPROM_MAC(0):
- 		return pBase->macAddr[0] << 8 | pBase->macAddr[1];
- 	case AR_EEPROM_MAC(1):
+-	if (compare_ether_addr(a->bssid, bssid))
++	if (bssid && compare_ether_addr(a->bssid, bssid))
+ 		return false;
+ 
++	if (!ssid)
++		return true;
++
+ 	ssidie = find_ie(WLAN_EID_SSID,
+ 			 a->information_elements,
+ 			 a->len_information_elements);
+@@ -199,7 +202,8 @@ static int cmp_bss(struct cfg80211_bss *
+ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
+ 				      struct ieee80211_channel *channel,
+ 				      const u8 *bssid,
+-				      const u8 *ssid, size_t ssid_len)
++				      const u8 *ssid, size_t ssid_len,
++				      u16 capa_mask, u16 capa_val)
+ {
+ 	struct cfg80211_registered_device *dev = wiphy_to_dev(wiphy);
+ 	struct cfg80211_internal_bss *bss, *res = NULL;
+@@ -207,6 +211,8 @@ struct cfg80211_bss *cfg80211_get_bss(st
+ 	spin_lock_bh(&dev->bss_lock);
+ 
+ 	list_for_each_entry(bss, &dev->bss_list, list) {
++		if ((bss->pub.capability & capa_mask) != capa_val)
++			continue;
+ 		if (channel && bss->pub.channel != channel)
+ 			continue;
+ 		if (is_bss(&bss->pub, bssid, ssid, ssid_len)) {
+
 -- 
-1.6.1
 
