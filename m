@@ -1,72 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:36927 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751252AbZBDX32 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:38587 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbZBJPKM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 18:29:28 -0500
-Subject: Re: [PATCH RFC] mac80211: Filter scan results
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1233789657.24227.14.camel@localhost.localdomain>
-References: <20090204150857.GA5069@sortiz.org>
-	 (sfid-20090204_160640_465532_8378EED5)  <1233760201.3992.20.camel@johannes.local>
-	 <1233789496.5559.10.camel@californication>
-	 <1233789657.24227.14.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Thu, 05 Feb 2009 00:29:22 +0100
-Message-Id: <1233790162.5559.17.camel@californication> (sfid-20090205_002933_998774_5D5A57D4)
-Mime-Version: 1.0
+	Tue, 10 Feb 2009 10:10:12 -0500
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH v4 0/2] mac80211: ps-poll implementation
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	vivek.natraj@gmail.com
+Date: Tue, 10 Feb 2009 17:09:16 +0200
+Message-ID: <20090210150822.21245.87099.stgit@tikku> (sfid-20090210_161015_504875_2AD79573)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Here's my suggestion for how to implement ps-poll in mac80211. Also
+this fixes the case when dynamic_ps_timeout is zero.
 
-> > > > In very dense environment, the scan result buffer can get really large, mostly
-> > > > due to the addition of proprietary IEs. iwlist fails, typically warning about:
-> > > > "print_scanning_info: Allocation failed". wpa_supplicant fails as well, after
-> > > > reallocating the scan result buffer several times, up to 132 Kbytes:
-> > > > 	[snip]
-> > > > 	Scan results did not fit - trying larger buffer (131072 bytes)
-> > > > 	ioctl[SIOCGIWSCAN]: Argument list too long
-> > > > 
-> > > > By adding a mac80211 module parameter, we can filter the scan results and keep
-> > > > only the ones userspace currently worries about, i.e. WPA1, WPA2, WMM and WPS.
-> > > > 
-> > > > To activate this feature, 1 has to be written to
-> > > > /sys/module/mac80211/parameters/ieee80211_scan_ie_filter
-> > > 
-> > > Module parameter, hard-coded filter, just to work around wext crap. Eww.
-> > > NACK.
-> > 
-> > we are perfectly aware that this is ugly and trust me, that nobody of us
-> > wants to do it. However we do have these setups and they happen in real
-> > life. I have been in a couple of locations where I ran into this problem
-> > and in that cases there is no way for me to establish any kind of WiFi
-> > connection at all, because the buffers are just too small. And that is
-> > with a laptop. Then just think about a mobile phone running mac80211
-> > where the memory is limited.
-> > 
-> > So WEXT is crap and everybody agrees, but until we can use cfg80211 for
-> > scanning, we need something to make this work. So if this patch is not
-> 
-> No.  This does not go into the kernel.  Help make cfg80211 work for you,
-> and you're perfectly free to patch your kernels as you see fit.  You can
-> certainly backport cfg80211 scanning bits to whatever kernels you care
-> about, just the same as you'd backport this hack to whatever kernels you
-> care about.
+I decided to use ps-polling when dynamic_ps_timeout is zero. If
+userspace sets timeout to zero, it means that it's ready to sacrifice
+throughput over power consumption. But in case there throughput is
+more, userspace can set timeout to a non-zero value and null frame
+wakeup is used instead, throughput is higher but power consumption
+also increases.
 
-this is not a matter of backporting. The matter is that neither WEXT nor
-cfg80211 allow scanning in dense RF environment. We are more than happy
-to actually use cfg80211, but I have never seen any final patch for
-adding scanning support. All of them were more or less work-in-progress.
+Most probably this patchset breaks ath9k multicast handling. I
+recommend ath9k to try do multicast tim bit handling in hardware, I
+would really assume that to be possible. But if that's really
+impossible, then it can be done in the driver. But having support for
+waking up multicast tim bits in mac80211 is unreliable and complicated
+the implementation, I just recommend dropping it.
 
-Regards
+Open question is that should power save be disabled whenever mac80211
+is ps-polling the frames. For example, p54/stlc45xx does not require to
+disable power save in that case, it just stays awake long enough to
+receive the data frame from the AP. So I did not disable power save
+mode in this case, but I would like to hear comments what other
+hardware needs.
 
-Marcel
+v4: 
 
+o rebase and resend
+
+v3:
+
+o remove another leftover debug printk
+
+v2:
+
+o RX_CONTINUE after sending ps-poll frame in ieee80211_rx_h_check_more_data()
+o remove leftover debug printk
+o use ps-poll only when dynamic_ps_timeout is zero, otherwise null frame
+  wakeup is used
+
+---
+
+Kalle Valo (2):
+      mac80211: use ps-poll when dynamic power save mode is disabled
+      mac80211: remove multicast check from check_tim()
+
+
+ net/mac80211/ieee80211_i.h |    3 ++
+ net/mac80211/mlme.c        |   67 +++++++++++++++++++++++++++++++++++++-------
+ net/mac80211/rx.c          |   34 ++++++++++++++++++++++
+ 3 files changed, 93 insertions(+), 11 deletions(-)
 
