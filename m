@@ -1,104 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59874 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756398AbZB0VH3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 16:07:29 -0500
-Subject: Re: [PATCH] mac80211: Replacement for: Implement commit in
-	wireless extensions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20090227184314.42290@gmx.net> (sfid-20090227_194348_299848_A96EDA18)
-References: <20090227184314.42290@gmx.net>
-	 (sfid-20090227_194348_299848_A96EDA18)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-L2v3o1OoXCvpgRbZMNJK"
-Date: Fri, 27 Feb 2009 22:05:25 +0100
-Message-Id: <1235768725.7426.83.camel@johannes.local> (sfid-20090227_220731_770835_E1A77374)
-Mime-Version: 1.0
+Received: from mail.ammma.de ([213.83.39.131]:21085 "EHLO ammma.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752991AbZBJLTQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 06:19:16 -0500
+Message-ID: <20090210121904.94213ubhpr3wui04@neo.wg.de> (sfid-20090210_121922_243757_30E29EDE)
+Date: Tue, 10 Feb 2009 12:19:04 +0100
+From: Jan Schneider <jan@horde.org>
+To: Jan Schneider <jan@horde.org>
+Cc: =?iso-8859-1?b?R+Fib3I=?= Stefanik <netrolller.3d@gmail.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn: Microcode SW error detected.
+References: <20090206233134.11116cap9kcroxgc@neo.wg.de>
+ <1233960318.11530.114.camel@rc-desk>
+ <20090208192343.106487dmjra19g6o@neo.wg.de>
+ <69e28c910902081159v1371ee70nb5e70ebdc648b54a@mail.gmail.com>
+ <20090208235149.58334qon9gu98ykg@neo.wg.de>
+ <20090209004532.11356srchh8hvbwg@neo.wg.de>
+In-Reply-To: <20090209004532.11356srchh8hvbwg@neo.wg.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Zitat von Jan Schneider <jan@horde.org>:
 
---=-L2v3o1OoXCvpgRbZMNJK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Zitat von Jan Schneider <jan@horde.org>:
+>
+>> Zitat von G=E1bor Stefanik <netrolller.3d@gmail.com>:
+>>
+>>> On Sun, Feb 8, 2009 at 7:23 PM, Jan Schneider <jan@horde.org> wrote=
+:
+>>>> Zitat von reinette chatre <reinette.chatre@intel.com>:
+>>>>
+>>>>> On Fri, 2009-02-06 at 14:31 -0800, Jan Schneider wrote:
+>>>>>>
+>>>>>> I've seen in a post from January that someone already had this p=
+roblem
+>>>>>> but couldn't reproduce it.
+>>>>>> I can't reliably reproduce, but I see this more often than I lik=
+e.
+>>>>>> When this happens, it usually doesn't help to reload the kernel
+>>>>>> module. Sometimes it helps to use the rfkill switch though.
+>>>>>>
+>>>>>> Here's a log with debug=3D0x43fff:
+>>>>>
+>>>>> It does not seem as though your driver is compiled with debug sup=
+port.
+>>>>> You can confirm that by looking at the version number of the driv=
+er
+>>>>> printed when it loads ... it should have a "d" in it like "1.2.26=
+kds".
+>>>>> Could you please recompile the driver with debug support (IWLWIFI=
+_DEBUG)
+>>>>> and rerun your test?  This will provide us with a complete event =
+log of
+>>>>> the uCode error.
+>>>>
+>>>> Enabling debug didn't help:
+>>>>
+>>>> Feb  7 00:04:40 tank kernel: [ 2769.084395] iwlagn: Intel(R) Wirel=
+ess WiFi
+>>>> Link
+>>>> AGN driver for Linux, 1.3.27kds
+>>>>
+>>>>
+>>>> /etc/modprobe.d/iwlagn:
+>>>>
+>>>> options iwlagn debug=3D0x43fff
+>>>>
+>>>>
+>>>> I still get:
+>>>>
+>>>> Feb  8 18:40:53 tank kernel: [77584.979829] iwlagn 0000:0c:00.0: M=
+icrocode
+>>>> SW er
+>>>> ror detected.  Restarting 0x2000000.
+>>>> Feb  8 18:40:53 tank kernel: [77585.029747] Registered led device:
+>>>> iwl-phy0::rad
+>>>> io
+>>>> Feb  8 18:40:53 tank kernel: [77585.030765] Registered led device:
+>>>> iwl-phy0::ass
+>>>> oc
+>>>> Feb  8 18:40:53 tank kernel: [77585.031602] Registered led device:
+>>>> iwl-phy0::RX
+>>>> Feb  8 18:40:53 tank kernel: [77585.032467] Registered led device:
+>>>> iwl-phy0::TX
+>>>
+>>> No - enable IWLWIFI_DEBUG in your kernel config, then rebuild the
+>>> kernel (or at least the iwlwifi modules).
+>>
+>> That's what I did, see the "d" in "1.2.26kds" above.
+>
+> Eh, that was the wrong citation of course. But it's still a "d" in =20
+> "1.3.27kds".
 
-On Fri, 2009-02-27 at 19:43 +0100, Alina Friedrichsen wrote:
-> This patch _not_ implements commit in wireless extensions, but solves som=
-e dependencies needed by the other patches.
->=20
-> The maybe usage of this ioctl must discussed after the complete joining p=
-rocess (STA and *IBSS*) in nl80211 defined.
->=20
-> I hope this is a compromise.
->=20
-> Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
-> ---
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index ecbc8e0..7f00c70 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -920,6 +920,7 @@ static inline int ieee80211_bssid_match(const u8 *rad=
-dr, const u8 *addr)
-> =20
->  int ieee80211_hw_config(struct ieee80211_local *local, u32 changed);
->  int ieee80211_if_config(struct ieee80211_sub_if_data *sdata, u32 changed=
-);
-> +void ieee80211_commit(struct ieee80211_sub_if_data *sdata);
->  void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
->  void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdat=
-a,
->  				      u32 changed);
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index f38db4d..1b2d598 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -294,6 +294,20 @@ int ieee80211_hw_config(struct ieee80211_local *loca=
-l, u32 changed)
->  	return ret;
->  }
-> =20
-> +void ieee80211_commit(struct ieee80211_sub_if_data *sdata)
-> +{
-> +	switch (sdata->vif.type) {
-> +	case NL80211_IFTYPE_ADHOC:
-> +		ieee80211_ibss_commit(sdata);
-> +		break;
-> +	case NL80211_IFTYPE_STATION:
-> +		ieee80211_sta_commit(sdata);
-> +		break;
-> +	default:
-> +		break;
-> +	}
+Anything else I can try to provide more information?
 
-I don't really see a need for that, it's only called in what, two
-places? And it makes things interdependent. At _least_ put it into a
-more appropriate file like wext.c and open-code it in cfg.c
+Jan.
 
-johannes
+--=20
+Do you need professional PHP or Horde consulting?
+http://horde.org/consulting/
 
---=-L2v3o1OoXCvpgRbZMNJK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJqFWSAAoJEKVg1VMiehFYkx8P/32i17TK/kD/bZ43I6ufX37e
-zSh2WqVuD4EHdTrja7/WsZIGY1vz+2G1vd9fLm5tMcUi1dG2zDjMOG8ssUlU0upq
-8ulCdAzeYqq6IioBnAz+i2oQBkzDlHxFZksq7B9FEAy6bFAl1HguUzcMLHRS/KsR
-1WMJOwIuE4ASBkcWiWYYe6kF65Y2Nkd0hrggexmz/qsQcPR8RRBmLN8msu20yVC5
-zmpogse6eg5pONC6mporf04+KHUbuXcw/OC1v9o2TGSa85LSqhF2XxBlejhc1Hd8
-XNCqgbBqQBFPjT05i5j6U7FHVQKnH/LinrPjLYO8+f9dkAgFhD+CWMjxapoK0R+U
-e9sYAIK0/lflAJWjJZRcQ+qywvdBXc/rxOrmwDslYYoZ/2RXE3dbjNQl9MUKtl/L
-e/58eVg1R9ydmy5520Y5gBwc5Zj9Lf6CuskRcTKhZufIiHjdkgijsUYqfBNe1spE
-N/MAIc1C+jrkgRSa/TUD0oB0zhsa/GtZUDUIrEaSaJVT+9FmJ4oGOo9QvcSHfHiA
-s36SEwGAGBvml8mlKAR5v3kDwTDmMlZSxjvcB1siGO6TfwEQvKlIA09AEMyux2ka
-K3Lk2dw5AMdF7x+9B1q9yi0AHmZ2AhxgjYyeI1iLaUEFht8T/DWfaQcSbZ5etnSx
-rwaVHGI/pbpts5pp/sWy
-=kCps
------END PGP SIGNATURE-----
-
---=-L2v3o1OoXCvpgRbZMNJK--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
