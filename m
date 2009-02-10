@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:45489 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754358AbZBUXSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 18:18:02 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sun, 22 Feb 2009 00:18:00 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090221231800.227280@gmx.net> (sfid-20090222_001818_271761_37ABA3CC)
-MIME-Version: 1.0
-Subject: [PATCH v3] mac80211: Give it some time to do the TSF sync
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Received: from mga02.intel.com ([134.134.136.20]:21934 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756055AbZBJTEg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 14:04:36 -0500
+Subject: Re: [ipw3945-devel] [PATCH v2.6.29] iwlwifi: save PCI state before
+	suspend, restore after resume
+From: reinette chatre <reinette.chatre@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>, drago01 <drago01@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <200902092051.44374.helmut.schaa@gmail.com>
+References: <> <f6ca9fed0902091117k7326e51ag8469887cb1a99d53@mail.gmail.com>
+	 <1234207772.11530.164.camel@rc-desk>
+	 <200902092051.44374.helmut.schaa@gmail.com>
+Content-Type: text/plain
+Date: Tue, 10 Feb 2009 11:08:19 -0800
+Message-Id: <1234292899.1626.14.camel@rc-desk> (sfid-20090210_200501_403582_164060E3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Give slow hardware some time to do the TSF sync, to not run into an IBS=
-S merging endless loop in some rarely situations.
+On Mon, 2009-02-09 at 11:51 -0800, Helmut Schaa wrote:
+> Am Montag, 9. Februar 2009 schrieb reinette chatre:
+> > On Mon, 2009-02-09 at 11:17 -0800, drago01 wrote:
+> > > On Tue, Feb 3, 2009 at 7:20 PM, Reinette Chatre
+> > > <reinette.chatre@intel.com> wrote:
+> > > > This is the right thing to do and fixes the following warning:
+> > > > [...]
+> > > 
+> > > With 2.6.29-rc4-git1 (which has this patch) I sometimes get:
+> > > 
+> > > iwl3945: Wait for START_ALIVE timeout after 2000ms.
+> > > iwl3945 0000:07:00.0: PCI INT A disabled
+> > > 
+> > > After resume with results into no working wireless until the module is reloaded.
+> > > I am not sure if this patch is the culprit (have not tried to revert
+> > > it), but that's the only change that might have caused this (with rc3
+> > > it was working fine, it just triggered the warning that this patch
+> > > supposed to solve).
+> > 
+> > That patch is the culprit. Please see current status at
+> > http://bugzilla.kernel.org/show_bug.cgi?id=12656
+> 
+> Reinette, maybe we could just use the rfkill-patch [1] I've submitted
+> some time ago. Of course it does a bit more then just saving and restoring
+> the pci state ;) but it changes iwl3945 to only use pci_save_state and
+> pci_restore_state in the suspend and resume handlers which should fix the
+> issue you've pointed out in comment #10.
 
-Version 2 adds a comment.
+indeed ... thanks to you we do not need to fix 2.6.30. As you say this
+is a big change - I am going to try to get the one line fix in before
+going this route because 2.6.29 is only looking for fixes right now.
+Your changes are much cleaner though and I am very happy that it is in
+wireless-testing already.
 
-Version 3: I had forgotten to change the bracket.
+Reinette
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 1bbfc70..ea737bf 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -332,6 +332,10 @@ static void ieee80211_rx_bss_info(struct ieee80211=
-_sub_if_data *sdata,
- 	       jiffies);
- #endif
-=20
-+	/* give slow hardware some time to do the TSF sync */
-+	if (rx_timestamp < 0x400000)
-+		goto put_bss;
-+
- 	if (beacon_timestamp > rx_timestamp) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
- 		printk(KERN_DEBUG "%s: beacon TSF higher than "
-
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger01
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
