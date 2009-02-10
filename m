@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:58961 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750887AbZBIIBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 03:01:20 -0500
-Received: from mail.atheros.com ([10.10.21.49])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 00:01:20 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48246 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754244AbZBJOPx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 09:15:53 -0500
+Date: Tue, 10 Feb 2009 09:10:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arnau Roig <arnau60@casal.upc.edu>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: txpower and frequency settings: concept guidance needed
+Message-ID: <20090210141045.GA3534@tuxdriver.com> (sfid-20090210_151557_400761_EF62E7DF)
+References: <20090205164522.GA5580@purple>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18831.57819.562083.509881@gargle.gargle.HOWL> (sfid-20090209_090122_900471_6DC0CE7B)
-Date: Mon, 9 Feb 2009 13:27:15 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 08/10] ath9k: Add callbacks hooks for EEPROM operations
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090205164522.GA5580@purple>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is preparatory work for removing the individual
-function pointer assignments in eeprom.c
+On Thu, Feb 05, 2009 at 05:45:22PM +0100, Arnau Roig wrote:
+> Hello to everybody.
+> 
+> I'm new in kernel development and in wireless networking also.
+> I've read most of the documentation availible in wireless.kernel.org
+> and, to be honest it's still not clear to me what are the uses of the
+> mac80211, cfg80211 or nl80211.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/eeprom.h |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+mac80211 implements the higher level MAC layer function of the
+ieee802.11 specification for wireless local area networking.
+cfg80211 provides the back-end of a configuration API for wireless
+LAN devices -- it is intended to supercede the Wireless Extensions
+API at the device layer.  nl80211 is a front-end to cfg80211 that
+is based on netlink sockets.  This provides a user-level API for
+wireless configuration.
 
-diff --git a/drivers/net/wireless/ath9k/eeprom.h b/drivers/net/wireless/ath9k/eeprom.h
-index 81a7a70..47c8eea 100644
---- a/drivers/net/wireless/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath9k/eeprom.h
-@@ -447,6 +447,23 @@ enum hal_eep_map {
- 	EEP_MAP_MAX
- };
- 
-+struct eeprom_ops {
-+	int (*check_eeprom)(struct ath_hw *hw);
-+	u32 (*get_eeprom)(struct ath_hw *hw, enum eeprom_param param);
-+	bool (*fill_eeprom)(struct ath_hw *hw);
-+	int (*get_eeprom_ver)(struct ath_hw *hw);
-+	int (*get_eeprom_rev)(struct ath_hw *hw);
-+	u8 (*get_num_ant_config)(struct ath_hw *hw, enum ieee80211_band band);
-+	u16 (*get_eeprom_antenna_cfg)(struct ath_hw *hw,
-+				      struct ath9k_channel *chan);
-+	bool (*set_board_values)(struct ath_hw *hw, struct ath9k_channel *chan);
-+	void (*set_addac)(struct ath_hw *hw, struct ath9k_channel *chan);
-+	int (*set_txpower)(struct ath_hw *hw, struct ath9k_channel *chan,
-+			   u16 cfgCtl, u8 twiceAntennaReduction,
-+			   u8 twiceMaxRegulatoryPower, u8 powerLimit);
-+	u16 (*get_spur_channel)(struct ath_hw *ah, u16 i, bool is2GHz);
-+};
-+
- #define ar5416_get_eep_ver(_ah) \
- 	(((_ah)->ah_eeprom.def.baseEepHeader.version >> 12) & 0xF)
- #define ar5416_get_eep_rev(_ah) \
+> I'm using a 2.6.24 kernel, compat-wireless-2.6-old (compat-release
+> v4.5-g2badec7) and ath5k driver (v0.5.0).
+> 
+> What I want to do is a userspace application that has to modify the
+> frequency channel and the tx_power of the wireless device depending on
+> several network statistics. Please, where do I have to start looking?
+> 
+> Is the struct ieee80211_conf, declared in mac80211.h what I need for
+> changing the current working channel and tx_power?
+> Can I read network statistics with get_station, declared in the struct
+> cfg80211_ops in cfg80211.h? Or the way to do it is using
+> @NL80211_CMD_GET_WIPHY in nl80211_commands?
+
+You may want to take a look at the sources for the iw utility.
+This should illustrate how to drive the nl80211 API.
+
+> Thank you for your time.
+
+Hth!
+
+John
 -- 
-1.6.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
