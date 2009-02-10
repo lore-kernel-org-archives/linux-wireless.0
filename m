@@ -1,96 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36316 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755720AbZBLEkb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 23:40:31 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 20:40:31 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18835.42849.198425.552819@gargle.gargle.HOWL> (sfid-20090212_054034_455438_B91D5F96)
-Date: Thu, 12 Feb 2009 10:06:49 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 5/8] ath9k: Initialize AGC calibration properly
+Received: from xc.sipsolutions.net ([83.246.72.84]:49962 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755796AbZBJUla (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 15:41:30 -0500
+Message-Id: <20090210202556.865386356@sipsolutions.net> (sfid-20090210_214136_756642_B66673B1)
+References: <20090210202536.425266119@sipsolutions.net>
+Date: Tue, 10 Feb 2009 21:25:58 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 22/27] cfg80211: allow users to request removing a BSS
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/calib.c |   31 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/phy.h   |    4 ++++
- 2 files changed, 35 insertions(+), 0 deletions(-)
+This patch introduces cfg80211_unlink_bss, a function to
+allow a driver to remove a BSS from the internal list and
+make it not show up in scan results any more -- this is
+to be used when the driver detects that the BSS is no
+longer available.
 
-diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
-index 1fc3a08..a7ce8c5 100644
---- a/drivers/net/wireless/ath9k/calib.c
-+++ b/drivers/net/wireless/ath9k/calib.c
-@@ -851,6 +851,30 @@ static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah)
- bool ath9k_hw_init_cal(struct ath_hw *ah,
- 		       struct ath9k_channel *chan)
- {
-+	if (AR_SREV_9280_10_OR_LATER(ah)) {
-+		REG_CLR_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
-+		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
-+		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
-+
-+		/* Kick off the cal */
-+		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
-+			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
-+			  AR_PHY_AGC_CONTROL_CAL);
-+
-+		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
-+				   AR_PHY_AGC_CONTROL_CAL, 0)) {
-+			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
-+				"offset calibration failed to complete in 1ms; "
-+				"noisy environment?\n");
-+			return false;
-+		}
-+
-+		REG_CLR_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
-+		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
-+		REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
-+	}
-+
-+	/* Calibrate the AGC */
- 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
- 		  REG_READ(ah, AR_PHY_AGC_CONTROL) |
- 		  AR_PHY_AGC_CONTROL_CAL);
-@@ -862,9 +886,16 @@ bool ath9k_hw_init_cal(struct ath_hw *ah,
- 		return false;
- 	}
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h |   11 +++++++++++
+ net/wireless/scan.c    |   21 +++++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+
+--- wireless-testing.orig/include/net/cfg80211.h	2009-02-10 20:59:37.000000000 +0100
++++ wireless-testing/include/net/cfg80211.h	2009-02-10 20:59:37.000000000 +0100
+@@ -791,5 +791,16 @@ struct cfg80211_bss *cfg80211_get_mesh(s
+ 				       const u8 *meshid, size_t meshidlen,
+ 				       const u8 *meshcfg);
+ void cfg80211_put_bss(struct cfg80211_bss *bss);
++/**
++ * cfg80211_unlink_bss - unlink BSS from internal data structures
++ * @wiphy: the wiphy
++ * @bss: the bss to remove
++ *
++ * This function removes the given BSS from the internal data structures
++ * thereby making it no longer show up in scan results etc. Use this
++ * function when you detect a BSS is gone. Normally BSSes will also time
++ * out, so it is not necessary to use this function at all.
++ */
++void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *bss);
  
-+	if (AR_SREV_9280_10_OR_LATER(ah)) {
-+		REG_SET_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
-+		REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
-+	}
+ #endif /* __NET_CFG80211_H */
+--- wireless-testing.orig/net/wireless/scan.c	2009-02-10 20:59:37.000000000 +0100
++++ wireless-testing/net/wireless/scan.c	2009-02-10 20:59:37.000000000 +0100
+@@ -432,6 +432,27 @@ void cfg80211_put_bss(struct cfg80211_bs
+ }
+ EXPORT_SYMBOL(cfg80211_put_bss);
+ 
++void cfg80211_unlink_bss(struct wiphy *wiphy, struct cfg80211_bss *pub)
++{
++	struct cfg80211_registered_device *dev = wiphy_to_dev(wiphy);
++	struct cfg80211_internal_bss *bss;
 +
-+	/* Do PA Calibration */
- 	if (AR_SREV_9285(ah) && AR_SREV_9285_11_OR_LATER(ah))
- 		ath9k_hw_9285_pa_cal(ah);
- 
-+	/* Do NF Calibration */
- 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
- 		  REG_READ(ah, AR_PHY_AGC_CONTROL) |
- 		  AR_PHY_AGC_CONTROL_NF);
-diff --git a/drivers/net/wireless/ath9k/phy.h b/drivers/net/wireless/ath9k/phy.h
-index 837a598..4758c37 100644
---- a/drivers/net/wireless/ath9k/phy.h
-+++ b/drivers/net/wireless/ath9k/phy.h
-@@ -485,6 +485,10 @@ bool ath9k_hw_init_rf(struct ath_hw *ah,
- #define AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_4    0x0FC00000
- #define AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_4_S  22
- 
-+/* Carrier leak calibration control, do it after AGC calibration */
-+#define AR_PHY_CL_CAL_CTL       0xA358
-+#define AR_PHY_CL_CAL_ENABLE    0x00000002
++	if (WARN_ON(!pub))
++		return;
 +
- #define AR_PHY_POWER_TX_RATE5   0xA38C
- #define AR_PHY_POWER_TX_RATE6   0xA390
- 
++	bss = container_of(pub, struct cfg80211_internal_bss, pub);
++
++	spin_lock_bh(&dev->bss_lock);
++
++	list_del(&bss->list);
++	rb_erase(&bss->rbn, &dev->bss_tree);
++
++	spin_unlock_bh(&dev->bss_lock);
++
++	kref_put(&bss->ref, bss_release);
++}
++EXPORT_SYMBOL(cfg80211_unlink_bss);
++
+ #ifdef CONFIG_WIRELESS_EXT
+ int cfg80211_wext_siwscan(struct net_device *dev,
+ 			  struct iw_request_info *info,
+
 -- 
-1.6.1
 
