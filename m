@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36931 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752536AbZBFO0A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 09:26:00 -0500
-Subject: turning off IBSS (with wext)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-e1vPZirTMQShIoiei3k2"
-Date: Fri, 06 Feb 2009 14:57:02 +0100
-Message-Id: <1233928622.4175.9.camel@johannes.local> (sfid-20090206_152605_216563_03443ACB)
+Received: from mga01.intel.com ([192.55.52.88]:54178 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755563AbZBJVb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 16:31:29 -0500
+Subject: Re: [PATCH] ipw2x00: age scan results on resume
+From: reinette chatre <reinette.chatre@intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1234280177.3119.23.camel@localhost>
+References: <1234280177.3119.23.camel@localhost>
+Content-Type: text/plain
+Date: Tue, 10 Feb 2009 13:35:14 -0800
+Message-Id: <1234301714.1626.27.camel@rc-desk> (sfid-20090210_223134_099969_29FC8127)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2009-02-10 at 07:36 -0800, Dan Williams wrote:
+> Scanned BSS entries are timestamped with jiffies, which doesn't
+> increment across suspend and hibernate.  On resume, every BSS in the
+> scan list looks like it was scanned within the last 10 seconds,
+> irregardless of how long the machine was actually asleep.  Age scan
+> results on resume with the time spent during sleep so userspace has a
+> clue how old they really are.
+> 
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
 
---=-e1vPZirTMQShIoiei3k2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This makes sense.
 
-Hi,
+> ---
+> This fixes NetworkManager and wpa_supplicant trying to connect to the AP
+> associated with at suspend/hibernate time, which clearly may not exist
+> at the location where the machine is waking up.
+> 
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+> index 823c2bf..abf897d 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2100.c
+> +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+> @@ -1692,7 +1692,13 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
+>  	u32 lock;
+>  	u32 ord_len = sizeof(lock);
+>  
+> -	/* Quite if manually disabled. */
+> +	/* Age scan list entries found before suspend */
+> +	if (priv->suspend_time) {
+> +		ieee80211_networks_age(priv->ieee, priv->suspend_time);
+> +		priv->suspend_time = 0;
+> +	}
+> +
+> +	/* Quiet if manually disabled. */
+>  	if (priv->status & STATUS_RF_KILL_SW) {
+>  		IPW_DEBUG_INFO("%s: Radio is disabled by Manual Disable "
+>  			       "switch\n", priv->net_dev->name);
+> @@ -6414,6 +6420,9 @@ static int ipw2100_suspend(struct pci_dev *pci_dev, pm_message_t state)
+>  	pci_disable_device(pci_dev);
+>  	pci_set_power_state(pci_dev, PCI_D3hot);
+>  
+> +	if (!priv->suspend_at)
+> +		priv->suspend_at = get_seconds();
+> +
 
-so I was testing IBSS, and found this strange behaviour:
+I do not see where suspend_at is reset. Would that not confuse things
+when you suspend two or more times?
 
- * wpa_supplicant (or NM?) will try to do SIWMLME(disassoc) in IBSS
-   mode, which seems kinda wrong. Why do we accept it? We send out a
-   frame and then do nothing else.
- * Then I thought "iwconfig wlan1 essid off" - but that fails with
-   -EINVAL due to ieee80211_sta_find_ibss
+Reinette
 
-It seems to me that either one of those, or both, should actually turn
-off beaconing.
 
-johannes
-
---=-e1vPZirTMQShIoiei3k2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJjEGsAAoJEKVg1VMiehFYFS0P/j/ScWvVnv2/TAf3YEfcDh3N
-7WzElWigAYiq0Oth91q0ldEWlRqnySVus6UB5PsTAcN5R5TsD79nr9HVI/sJ2Lhb
-axibd6wbUL4/Eid/P+MOusswjg01U/LuBZ2c+s3szSTZHnjzcH0FkMu5DU5G4KrD
-dqyy6Ia6zNFi0gL3+4PGuZ7VavCgJE1hu0t9BuDPW1zR7mAyn4PecNJcW1xSTtM5
-HX2sC9bTd6Xi3dEohSAY63NqNb57DJQ2LaMdYLTUruYft3yKB23tDr5MnR67wv2l
-Y4DH3HbrjWbn3qMWZzdSP7lQzkBBxSF/dwZQPqxnZykIsKSft+Q7O+chZ/OEN+Zo
-kw8y+hFU5PUKCTJGEYVozbCfp/jh8yjLSEDjM9KAcPEBHvOLoA6eCItYxG4dXDJv
-LQ1DZ9HgiJ4DEPWqGpjQcpfaqn/MbsvTZnXfxs+2Cb2p5gZ56A0L+4gA2EyKQyls
-UhFGmrphdKP3mIw/e5bW74RiypYXc3FhmjmQAQQia8tyeeW9Y/iQ+YKrA+LhU7JE
-R1nDXDOp5qg9nsg1bnRDlLAQgdJrnNUMDBGc9ggtCCAwbaJijR7XosK1Pv7UZ8Ej
-tmN0S9UIj6c/5v7ZJ/nyeL77w6dA3i5pOZ2gfdtA94U5VnqFRSKkpOGw+t+VBA3l
-ZQyWvr3KFz5WFsClHAjM
-=crA0
------END PGP SIGNATURE-----
-
---=-e1vPZirTMQShIoiei3k2--
 
