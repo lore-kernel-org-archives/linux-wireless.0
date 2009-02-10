@@ -1,63 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32978 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088AbZBCSzo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 13:55:44 -0500
-Subject: Re: Cardbus wireless cards
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
-In-Reply-To: <69e28c910902031017j5eb7b702jd818cdf3765ea1f1@mail.gmail.com> (sfid-20090203_191754_828026_9EF5403E)
-References: <1233666319.3957.1.camel@johannes.local>
-	 <69e28c910902031017j5eb7b702jd818cdf3765ea1f1@mail.gmail.com>
-	 (sfid-20090203_191754_828026_9EF5403E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-hXFGHhvVYElkOyMwjp+o"
-Date: Tue, 03 Feb 2009 19:55:41 +0100
-Message-Id: <1233687341.4070.6.camel@johannes.local> (sfid-20090203_195557_021889_ACCEBA15)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:40083 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753499AbZBJXgH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 18:36:07 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2009 15:36:07 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: add comments for ath9k_hw_configpcipowersave()
+Date: Tue, 10 Feb 2009 15:35:22 -0800
+Message-ID: <1234308922-18365-1-git-send-email-lrodriguez@atheros.com> (sfid-20090211_003612_747864_5EB39303)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is used for ASPM.
 
---=-hXFGHhvVYElkOyMwjp+o
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/hw.c |   35 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 35 insertions(+), 0 deletions(-)
 
-On Tue, 2009-02-03 at 19:17 +0100, G=C3=A1bor Stefanik wrote:
-
-> If Hungary does not fall outside the "anyone I can afford shipping
-> to", then I am interested in the acx111 card. Acx-based cards are
-> pretty hard to find in Hungary.
-
-Heh, should be fine, send me your address in private.
-
-johannes
-
---=-hXFGHhvVYElkOyMwjp+o
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJiJMrAAoJEKVg1VMiehFYKNAP/0ryiYSDKZ+4oEmI+WlclvRl
-eGGS8/eDOJAaoupIGaQaWix48tloDwN+KxnWKBzd4uEbdp64+QYU4shBOARGQ+ln
-CdZxjm/7F5wSzc692eE5Vx7xG30dwIPiWMiGKx+FQEcOLcFZBUO1WIU4KjAy9RHC
-e4MmSPR4CvMEjBuguEYZVZj4AGPhdYDgbPSDjPKqGe9QAYDDWvfAV7l1lhCJCIXB
-Y7ggLXvTO20KCng238VUNXxv0yu1SieYlfo4OQKqB7iyN+7hTwCizPy0vpBjw1cA
-9M/aLSuxc9nc8azjZMJcBEXqjVoB1IUu0yTUjy/9HUSvzKR8HMAjrYs6TEljy4l0
-OFroxbHYg1KvoIREgI2JKJcrlj/gQipwGjQ/OGqZ/Nwnd4S8XXDu9ijP9+NAi2iS
-R/p9TjtwfvARnMk/DobHhgl363AIavX5YihfCEH/XfcHjUcGzOJazZwzh6b78p1G
-cyHDIfPTiQOVHKZn527RSIFXXaJ9xu2k+qtq1j5T38B3LmIrb6aQ3NJOiDu0MCOg
-nJzszvRguLrfL+f6LIkKS8OI018dCve97Zuv9VGqBSU6KvQwOpV73Rvqg+LVfAvv
-Sw3gLtN5vSfMU5zJ+lrGEKCWXIxt9U5anmfLyt/y23EcwwNbAeUe6zlGtTo+iEC3
-FEuudLzaJKDfAyLeN85L
-=sMh5
------END PGP SIGNATURE-----
-
---=-hXFGHhvVYElkOyMwjp+o--
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 72ca1c8..cfcaaf8 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -2632,6 +2632,15 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 	return status;
+ }
+ 
++/*
++ * Helper for ASPM support.
++ *
++ * Disable PLL when in L0s as well as receiver clock when in L1.
++ * This power saving option must be enabled through the SerDes.
++ *
++ * Programming the SerDes must go through the same 288 bit serial shift
++ * register as the other analog registers.  Hence the 9 writes.
++ */
+ void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore)
+ {
+ 	u8 i;
+@@ -2639,13 +2648,20 @@ void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore)
+ 	if (ah->is_pciexpress != true)
+ 		return;
+ 
++	/* Do not touch SerDes registers */
+ 	if (ah->config.pcie_powersave_enable == 2)
+ 		return;
+ 
++	/* Nothing to do on restore for 11N */
+ 	if (restore)
+ 		return;
+ 
+ 	if (AR_SREV_9280_20_OR_LATER(ah)) {
++		/*
++		 * AR9280 2.0 or later chips use SerDes values from the
++		 * initvals.h initialized depending on chipset during
++		 * ath9k_hw_do_attach()
++		 */
+ 		for (i = 0; i < ah->iniPcieSerdes.ia_rows; i++) {
+ 			REG_WRITE(ah, INI_RA(&ah->iniPcieSerdes, i, 0),
+ 				  INI_RA(&ah->iniPcieSerdes, i, 1));
+@@ -2656,10 +2672,12 @@ void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore)
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x9248fd00);
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x24924924);
+ 
++		/* RX shut off when elecidle is asserted */
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0xa8000019);
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x13160820);
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0xe5980560);
+ 
++		/* Shut off CLKREQ active in L1 */
+ 		if (ah->config.pcie_clock_req)
+ 			REG_WRITE(ah, AR_PCIE_SERDES, 0x401deffc);
+ 		else
+@@ -2669,29 +2687,46 @@ void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore)
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0xbe105554);
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x00043007);
+ 
++		/* Load the new settings */
+ 		REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
+ 
+ 		udelay(1000);
+ 	} else {
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x9248fc00);
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x24924924);
++
++		/* RX shut off when elecidle is asserted */
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x28000039);
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x53160824);
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0xe5980579);
++
++		/*
++		 * Ignore ah->ah_config.pcie_clock_req setting for
++		 * pre-AR9280 11n
++		 */
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x001defff);
++
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x1aaabe40);
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0xbe105554);
+ 		REG_WRITE(ah, AR_PCIE_SERDES, 0x000e3007);
++
++		/* Load the new settings */
+ 		REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
+ 	}
+ 
++	/* set bit 19 to allow forcing of pcie core into L1 state */
+ 	REG_SET_BIT(ah, AR_PCIE_PM_CTRL, AR_PCIE_PM_CTRL_ENA);
+ 
++	/* Several PCIe massages to ensure proper behaviour */
+ 	if (ah->config.pcie_waen) {
+ 		REG_WRITE(ah, AR_WA, ah->config.pcie_waen);
+ 	} else {
+ 		if (AR_SREV_9285(ah))
+ 			REG_WRITE(ah, AR_WA, AR9285_WA_DEFAULT);
++		/*
++		 * On AR9280 chips bit 22 of 0x4004 needs to be set to
++		 * otherwise card may disappear.
++		 */
+ 		else if (AR_SREV_9280(ah))
+ 			REG_WRITE(ah, AR_WA, AR9280_WA_DEFAULT);
+ 		else
+-- 
+1.5.6.3
 
