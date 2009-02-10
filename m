@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:53564 "EHLO venema.h4ckr.net"
+Received: from mx2.redhat.com ([66.187.237.31]:60917 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753833AbZBIERu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2009 23:17:50 -0500
-Date: Mon, 9 Feb 2009 06:17:45 +0200
-From: Nick Kossifidis <mick@madwifi-project.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	me@bobcopeland.com, nbd@openwrt.org
-Subject: [PATCH 7/7] ath5k: Don't call reset on config_interface
-Message-ID: <20090209041745.GG3168@makis> (sfid-20090209_051752_857855_6833B212)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1753550AbZBJQ2T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 11:28:19 -0500
+Subject: Re: [PATCH] wireless: introduce POWEROF2_BLOCKSIZE_ONLY option
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bryan Wu <cooloney@kernel.org>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Cliff Cai <cliff.cai@analog.com>
+In-Reply-To: <20090210160451.GD3534@tuxdriver.com>
+References: <1233819002-6912-1-git-send-email-cooloney@kernel.org>
+	 <1233846195.3028.14.camel@localhost>
+	 <386072610902052347m5754262bif18339809a00cb9f@mail.gmail.com>
+	 <386072610902060000s2e150e4cla19aca70f38b0474@mail.gmail.com>
+	 <20090210160451.GD3534@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 10 Feb 2009 11:26:45 -0500
+Message-Id: <1234283205.3119.64.camel@localhost> (sfid-20090210_172822_944784_4ACC7816)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * We call reset too often and this can result various PHY problems.
-  On config_interface we don't need to reset the whole device.
+On Tue, 2009-02-10 at 11:04 -0500, John W. Linville wrote:
+> On Fri, Feb 06, 2009 at 04:00:28PM +0800, Bryan Wu wrote:
+> > On Fri, Feb 6, 2009 at 3:47 PM, Bryan Wu <cooloney@kernel.org> wrote:
+> > > On Thu, Feb 5, 2009 at 11:03 PM, Dan Williams <dcbw@redhat.com> wrote:
+> > >> On Thu, 2009-02-05 at 15:30 +0800, Bryan Wu wrote:
+> > >>> From: Cliff Cai <cliff.cai@analog.com>
+> > >>>
+> > >>> Introduce POWEROF2_BLOCKSIZE_ONLY option for those SD/SDIO host
+> > >>> which only support transferring block with size of power-of-2
+> > >>
+> > >> Is the point here to avoid copying in the controller code?  As with the
+> > >> other patches on libertas-dev, I really dislike adding code to *every
+> > >> SDIO driver* just because the host has certain restrictions.  I'd much
+> > >> rather that the host/controller code became aware of it's own
+> > >> restrictions, and exposed those generically to drivers above it.
+> > >> Without a KConfig option.
+> > >>
+> > >> Seriously.  The host knows what it needs.  The code to handle that
+> > >> should go in the host.
+> > >>
+> > >
+> > > I agree here.
+> > >
+> > >> How about adding a method like "sdio_align_size" that takes the
+> > >> controller's constraints into account?  That seems a lot cleaner than
+> > >> adding #define/KConfig junk to every SDIO driver in the kernel.  One
+> > >> less codepath to test, makes your life and all our lives easier.
+> > >>
+> > >
+> > > So we plan to add method ".sdio_align_size" to SDIO stack.
+> > > And Blackfin host driver will implement this method while others will
+> > > implement this as a dummy function.
+> > >
+> > 
+> > sdio_align_size is already in SDIO stack, so we just need to add our
+> > constraints to this function.
+> 
+> I'm reading this as "this patch is unnecessary or will be replaced
+> by something better", so I'm dropping it.  If I misread that, feel
+> free to repost...thanks!
 
-  TODO: Create a function hw_fast_reset that only resets the PCU
-  (tx/rx stuff) and not the whole device so that we can use this for
-  stuck beacons etc.
+Yeah, some patches got posted to the MMC lists that do what this patch
+would do, but do it in a somewhat better manner.
 
-  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Dan
 
----
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 685c19c..aa4e726 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -2871,7 +2871,7 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- 	struct ath5k_softc *sc = hw->priv;
- 	struct ath5k_hw *ah = sc->ah;
--	int ret;
-+	int ret = 0;
- 
- 	mutex_lock(&sc->lock);
- 	if (sc->vif != vif) {
-@@ -2897,9 +2897,7 @@ ath5k_config_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		}
- 		ath5k_beacon_update(sc, beacon);
- 	}
--	mutex_unlock(&sc->lock);
- 
--	return ath5k_reset_wake(sc);
- unlock:
- 	mutex_unlock(&sc->lock);
- 	return ret;
+
