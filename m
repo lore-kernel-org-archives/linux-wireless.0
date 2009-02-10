@@ -1,123 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59611 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753144AbZB0VD7 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:18976 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179AbZBJKeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 16:03:59 -0500
-Subject: Re: [RFC] nl80211: Authentication and association events
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org, Samuel Ortiz <samuel@sortiz.org>,
-	Kalle Valo <kalle.valo@nokia.com>
-In-Reply-To: <20090226185710.GA22925@jm.kir.nu>
-References: <20090218200210.GA13955@jm.kir.nu>
-	 <1234988740.4023.51.camel@johannes.local>
-	 <20090220192557.GA17914@jm.kir.nu>
-	 <1235440527.4455.45.camel@johannes.local>
-	 <20090226143758.GB24380@jm.kir.nu> <1235666926.4099.2.camel@johannes.local>
-	 <20090226185710.GA22925@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-mKlNm58cFlq4Xo55Pcm9"
-Date: Fri, 27 Feb 2009 08:47:27 -0800
-Message-Id: <1235753247.7426.27.camel@johannes.local> (sfid-20090227_220402_354541_CAC54D87)
-Mime-Version: 1.0
+	Tue, 10 Feb 2009 05:34:05 -0500
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx06.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id n1AAXwWp005301
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2009 12:34:00 +0200
+To: linux-wireless@vger.kernel.org
+Cc: luciano.coelho@nokia.com
+Subject: wl12xx: driver for TI wl1251 chipset
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Tue, 10 Feb 2009 12:32:04 +0200
+Message-ID: <87iqnishuj.fsf@nokia.com> (sfid-20090210_113409_865893_3E14764B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello all,
 
---=-mKlNm58cFlq4Xo55Pcm9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+in Nokia we have been working on a mac80211 driver for TI wl1251
+chipset. We named it as wl12xx, and in the future we are planning to
+add wl1271 support to the driver as well.
 
-[adding Kalle, Samuel]
+wl1251 is a chipset for embedded devices, supporting both SDIO and SPI
+busses. Currently the driver supports only SPI. Adding support 1253
+(the 5 GHz version) should be relatively easy. More information here:
 
-On Thu, 2009-02-26 at 20:57 +0200, Jouni Malinen wrote:
+http://focus.ti.com/general/docs/wtbu/wtbuproductcontent.tsp?contentId=4711&navigationId=12494&templateId=6123
 
-> Actually, iwconfig works fine in my current version since it just uses
-> the information from same functions that were used in
-> net/mac80211/mlme.c. In other words, when I complete association with an
-> external SME (wpa_supplicant), iwconfig can still show the BSSID etc.
-> info.
+Because the patch is over 200 KB, the driver is temporarily available
+from my server:
 
-Yes, I know, but we really want to move the wext stuff into cfg80211 and
-then it won't really work this way any more.
+http://www.valot.fi/kalle/tmp/wl12xx/wl12xx-2.6.28-1.patch
 
-> I'm now able to complete authentication and association in two steps and
-> use only nl80211 for it (i.e., no WEXT code needed in driver_nl80211.c
-> for auth/assoc/deauth/disassoc processing). The mlme.c changes are not
-> the cleanest possible and there are still couple of places where mlme.c
-> shows its SME nature by deciding to automatically do something, but
-> other than that, this seems to be functional.
+The patch is against linux-2.6.28-omap1 tag available here:
 
-Sounds good. I guess we can do things piecewise...
+http://git.kernel.org/?p=linux/kernel/git/tmlind/linux-omap-2.6.git;a=commit;h=0ec95b96fd77036a13398c66901e11cd301190d0
 
-One thing we were saying yesterday is that it might make more sense to
-not do assoc w/o auth for those hardware that doesn't support it, but
-rather add a new "connect" command instead so the distinction is
-clearer. Not sure though.
+Currently known issues:
 
-Couple of thoughts. Trivial one: can the SSID really be 0 bytes as
-documented? Does that make any sense?
+o short slot and preamble support missing
+o rts/cts and cts-to-self missing
+o no proper bitrate control support
+o using deprecated omap_get_config(), need to convert to use platform_data
+o firmware wakeup not working, deepest sleep state in firmware not yet
+  enabled
 
-Another thing I would like to do -- instead of passing this struct:
+Also the driver has a netlink interface which is used for running
+production line tests and pushing the calibration data from user
+space.
 
-+struct cfg80211_auth_request {
-+       struct ieee80211_channel *chan;
-+       u8 *peer_addr;
-+       const u8 *ssid;
-+       size_t ssid_len;
-+       enum nl80211_auth_type auth_type;
-+       const u8 *ie;
-+       size_t ie_len;
-+};
+All comments and review is greatly appreciated. After receiving all
+the comments, I will port the driver to the wireless-testing tree and
+submit a version for the possible inclusion.
 
-why don't we pass a cfg80211_bss pointer and the IE info? That might
-mean that cfg80211 would need to invoke scanning and have a small state
-machine, but that seems reasonable. Then we inc the ref on that bss
-struct and keep it around, so it stays in scan results too.
+TI has given us technical support while developing the driver, big
+thanks to them.
 
-We'd probably need to change the event functions to include the BSS
-pointer (if we want to allow multiple authentications to be in flight at
-the same time) and whether the authentication was actually successful
-(maybe we can parse that out of the reported frame).
-
-The result of that is that we can
- * check, in MLME.associate, that we're already authenticated, and do it
-   generically in cfg80211
- * keep around the BSS in scan results without having to add some extra
-   code to drivers/mac80211 when we start filtering beacons
- * easily tell userspace what's going on
-
-and we can keep around the BSS that we're associated with too for the
-same reasons and to verify we're only on one BSS at a time and catch
-userspace requesting a second one.
-
-The other upside of this is that drivers will stop working entirely if
-they do not provide the proper events, which is good because it means
-all drivers will take great care to provide them.
-
-johannes
-
---=-mKlNm58cFlq4Xo55Pcm9
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJqBkcAAoJEKVg1VMiehFYhnUQAMH9Lam3PJJARKPESAZUb9Z8
-q1b/2H64Pr8xoxDOQqyHc42ufB1jUUj5L+liJmUyMV80qEOo/270DvR4bdlVctLe
-PjNuXgrgzUwEN9QgPVORXHIanG/PbEt2kHtE6Qq4OajE5udPK191vVnug20aDB8F
-CGMOgSbkjPu05YKPU0AO2GW4Uh1s6dKKoWywMqAvbNNivoTNweuKRrfnlj3s2pXb
-A45Ai8LkqhFZAKChXjJbCuW994RJy1k5NcobHnJ5Phc3OvXS0SUr2Ue5qEvvbHBc
-emDDF4zcrAL4jGJ37YGMQdkabLVuKarbdwVahpv+4C+6pRxn6d0SIvkfYExQneGL
-l8TRGNg6h7/+4VvBY5lROFNSIT9gubG8BZ+3lnV4TP4nWFClpY/oi6JQrzVIFA8y
-xrWzWSi51D1uQkrutQjruSftkWyD1Y+jY0plSf++qDBi5eQu64/M+lFZZQtHPsxA
-+JDOVuJmsZLUkYK2co2tdEWEHEEfzWpMSwzDmfAU4vS7f1UlNBeIxSrCn7CEHnDY
-zLzSJsbxptzxuzSw873wK8i2oiCoYr4v0fuHmNMcXIAO3EyvkFgpqbN5mrxXlpxZ
-2AMTJEgUUi0PGMHDhLaWn93DuTyf9XarIdfcRwOAzLHTLErDIESh8dBqfhJM4qtm
-EhEgGw4Hq/thw5tlr58e
-=CWiN
------END PGP SIGNATURE-----
-
---=-mKlNm58cFlq4Xo55Pcm9--
-
+-- 
+Kalle Valo
