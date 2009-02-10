@@ -1,75 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30455 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750736AbZBIIAU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 03:00:20 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 00:00:20 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18831.57764.650130.995504@gargle.gargle.HOWL> (sfid-20090209_090023_740424_88864ACA)
-Date: Mon, 9 Feb 2009 13:26:20 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 00/10] ath9k: Driver Cleanup
+Received: from xc.sipsolutions.net ([83.246.72.84]:54160 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754497AbZBJUiU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 15:38:20 -0500
+Message-Id: <20090210202555.591186722@sipsolutions.net> (sfid-20090210_213823_071108_D3C9F772)
+References: <20090210202536.425266119@sipsolutions.net>
+Date: Tue, 10 Feb 2009 21:25:52 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 16/27] mac80211: clean up BA session teardown
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+The sta_info pointer can very well be passed to
+ieee80211_sta_tear_down_BA_sessions, this will
+later allow us to pass it through even further.
 
-A bunch of patches cleaning up various parts of the driver.
-Most of them address the items in:
-http://linuxwireless.org/en/users/Drivers/ath9k#TODO
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ht.c          |    8 ++++----
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/iface.c       |    3 +--
+ net/mac80211/mlme.c        |    2 +-
+ 4 files changed, 7 insertions(+), 8 deletions(-)
 
-Sujith
+--- wireless-testing.orig/net/mac80211/ht.c	2009-02-10 20:59:32.000000000 +0100
++++ wireless-testing/net/mac80211/ht.c	2009-02-10 20:59:34.000000000 +0100
+@@ -153,15 +153,15 @@ u32 ieee80211_enable_ht(struct ieee80211
+ 	return changed;
+ }
+ 
+-void ieee80211_sta_tear_down_BA_sessions(struct ieee80211_sub_if_data *sdata, u8 *addr)
++void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta)
+ {
+-	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_local *local = sta->local;
+ 	int i;
+ 
+ 	for (i = 0; i <  STA_TID_NUM; i++) {
+-		ieee80211_stop_tx_ba_session(&local->hw, addr, i,
++		ieee80211_stop_tx_ba_session(&local->hw, sta->sta.addr, i,
+ 					     WLAN_BACK_INITIATOR);
+-		ieee80211_sta_stop_rx_ba_session(sdata, addr, i,
++		ieee80211_sta_stop_rx_ba_session(sta->sdata, sta->sta.addr, i,
+ 						 WLAN_BACK_RECIPIENT,
+ 						 WLAN_REASON_QSTA_LEAVE_QBSS);
+ 	}
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-02-10 20:59:32.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-02-10 20:59:34.000000000 +0100
+@@ -990,7 +990,7 @@ void ieee80211_send_delba(struct ieee802
+ 
+ void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *da,
+ 				u16 tid, u16 initiator, u16 reason);
+-void ieee80211_sta_tear_down_BA_sessions(struct ieee80211_sub_if_data *sdata, u8 *addr);
++void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
+ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
+ 			     struct sta_info *sta,
+ 			     struct ieee80211_mgmt *mgmt, size_t len);
+--- wireless-testing.orig/net/mac80211/iface.c	2009-02-10 20:59:25.000000000 +0100
++++ wireless-testing/net/mac80211/iface.c	2009-02-10 20:59:34.000000000 +0100
+@@ -362,8 +362,7 @@ static int ieee80211_stop(struct net_dev
+ 
+ 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+ 		if (sta->sdata == sdata)
+-			ieee80211_sta_tear_down_BA_sessions(sdata,
+-							    sta->sta.addr);
++			ieee80211_sta_tear_down_BA_sessions(sta);
+ 	}
+ 
+ 	rcu_read_unlock();
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-02-10 20:59:25.000000000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2009-02-10 20:59:34.000000000 +0100
+@@ -924,7 +924,7 @@ static void ieee80211_set_disassoc(struc
+ 	netif_tx_stop_all_queues(sdata->dev);
+ 	netif_carrier_off(sdata->dev);
+ 
+-	ieee80211_sta_tear_down_BA_sessions(sdata, sta->sta.addr);
++	ieee80211_sta_tear_down_BA_sessions(sta);
+ 
+ 	if (self_disconnected) {
+ 		if (deauth)
 
-Sujith (10):
-  ath9k: Header file cleanup
-  ath9k: Convert ANI channel to a pointer
-  ath9k: Remove all the sc_ prefixes
-  ath9k: Store HW version information in a separate structure
-  ath9k: Move regulatory information to a separate structure
-  ath9k: Remove duplicate variables
-  ath9k: Merge ath_hal and ath_hal_5416 structures
-  ath9k: Add callbacks hooks for EEPROM operations
-  ath9k: Cleanup EEPROM operations
-  ath9k: Remove all the useless ah_ variable prefixes
-
- drivers/net/wireless/ath9k/ahb.c    |   16 +-
- drivers/net/wireless/ath9k/ani.c    |  263 ++--
- drivers/net/wireless/ath9k/ani.h    |  138 ++
- drivers/net/wireless/ath9k/ath9k.h  | 1640 ++++++++------------
- drivers/net/wireless/ath9k/beacon.c |   96 +-
- drivers/net/wireless/ath9k/calib.c  |  190 +--
- drivers/net/wireless/ath9k/calib.h  |  124 ++
- drivers/net/wireless/ath9k/core.h   |  821 ----------
- drivers/net/wireless/ath9k/debug.c  |  136 +-
- drivers/net/wireless/ath9k/debug.h  |  153 ++
- drivers/net/wireless/ath9k/eeprom.c | 2922 +++++++++++++++++------------------
- drivers/net/wireless/ath9k/eeprom.h |  473 ++++++
- drivers/net/wireless/ath9k/hw.c     | 1142 +++++++--------
- drivers/net/wireless/ath9k/hw.h     | 1568 +++++++------------
- drivers/net/wireless/ath9k/mac.c    |  175 +--
- drivers/net/wireless/ath9k/mac.h    |  676 ++++++++
- drivers/net/wireless/ath9k/main.c   |  418 +++---
- drivers/net/wireless/ath9k/pci.c    |   20 +-
- drivers/net/wireless/ath9k/phy.c    |  221 ++--
- drivers/net/wireless/ath9k/phy.h    |   14 +-
- drivers/net/wireless/ath9k/rc.c     |   14 +-
- drivers/net/wireless/ath9k/rc.h     |   17 +-
- drivers/net/wireless/ath9k/recv.c   |   48 +-
- drivers/net/wireless/ath9k/reg.h    |   53 +-
- drivers/net/wireless/ath9k/regd.c   |   70 +-
- drivers/net/wireless/ath9k/regd.h   |   26 +-
- drivers/net/wireless/ath9k/xmit.c   |   36 +-
- 27 files changed, 5618 insertions(+), 5852 deletions(-)
- create mode 100644 drivers/net/wireless/ath9k/ani.h
- create mode 100644 drivers/net/wireless/ath9k/calib.h
- delete mode 100644 drivers/net/wireless/ath9k/core.h
- create mode 100644 drivers/net/wireless/ath9k/debug.h
- create mode 100644 drivers/net/wireless/ath9k/eeprom.h
- create mode 100644 drivers/net/wireless/ath9k/mac.h
+-- 
 
