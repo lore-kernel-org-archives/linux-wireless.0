@@ -1,50 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:46500 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbZBDKnV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54195 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754475AbZBJUjX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 05:43:21 -0500
-Received: by fxm13 with SMTP id 13so2982330fxm.13
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 02:43:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <a4c529250902040227g35a375fdu35c2360f0916dba6@mail.gmail.com>
-References: <a4c529250902040227g35a375fdu35c2360f0916dba6@mail.gmail.com>
-Date: Wed, 4 Feb 2009 10:43:19 +0000
-Message-ID: <a4c529250902040243r6146f56vb2c656818385c749@mail.gmail.com> (sfid-20090204_114327_025289_11A90522)
-Subject: zd1211rw NEW RF Type
-From: Ismael Ojeda Perez <iojedaperez@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 10 Feb 2009 15:39:23 -0500
+Message-Id: <20090210202555.979247282@sipsolutions.net> (sfid-20090210_213926_073694_A0331F8E)
+References: <20090210202536.425266119@sipsolutions.net>
+Date: Tue, 10 Feb 2009 21:25:54 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 18/27] mac80211: further cleanups to stopping BA sessions
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, huston we have a problem
-I have purchased a tp-link usb wireless device
-model : tl-wn422g
-i cant work with it because it says there is a new RF type
-here its what dmesg shows
+Essentially consisting of passing the sta_info pointer around,
+instead of repeatedly doing hash lookups.
 
-[  503.629054] usbcore: registered new interface driver zd1211rw
-[  522.452184] usb 7-2: new high speed USB device using ehci_hcd and address 5
-[  522.586859] usb 7-2: configuration #1 chosen from 1 choice
-[  522.701176] usb 7-2: reset high speed USB device using ehci_hcd and address 5
-[  522.843643] phy1: Selected rate control algorithm 'pid'
-[  522.846157] zd1211rw 7-2:1.0: phy1
-[  526.888705] firmware: requesting zd1211/zd1211b_ub
-[  526.945146] firmware: requesting zd1211/zd1211b_uphr
-[  526.984508] zd1211rw 7-2:1.0: RF MAXIM_NEW_RF 0x8 is not supported
-[  527.001064] firmware: requesting zd1211/zd1211b_ub
-[  527.007886] firmware: requesting zd1211/zd1211b_uphr
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/agg-rx.c      |    6 ++--
+ net/mac80211/agg-tx.c      |   63 +++++++++++++++++++++++----------------------
+ net/mac80211/ht.c          |    9 ++----
+ net/mac80211/ieee80211_i.h |    5 +++
+ 4 files changed, 44 insertions(+), 39 deletions(-)
 
-lsusb command shows this
-Bus 007 Device 005: ID 0ace:1215 ZyDAS WLA-54L WiFi
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2009-02-10 20:59:35.000000000 +0100
++++ wireless-testing/net/mac80211/agg-rx.c	2009-02-10 20:59:35.000000000 +0100
+@@ -17,8 +17,8 @@
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+ 
+-static void __ieee80211_sta_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+-					       u16 initiator, u16 reason)
++void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
++				    u16 initiator, u16 reason)
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_hw *hw = &local->hw;
+@@ -96,7 +96,7 @@ void ieee80211_sta_stop_rx_ba_session(st
+ 		return;
+ 	}
+ 
+-	__ieee80211_sta_stop_rx_ba_session(sta, tid, initiator, reason);
++	__ieee80211_stop_rx_ba_session(sta, tid, initiator, reason);
+ 
+ 	rcu_read_unlock();
+ }
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-02-10 20:59:34.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-02-10 20:59:35.000000000 +0100
+@@ -990,6 +990,8 @@ void ieee80211_send_delba(struct ieee802
+ 
+ void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *da,
+ 				u16 tid, u16 initiator, u16 reason);
++void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
++				    u16 initiator, u16 reason);
+ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
+ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
+ 			     struct sta_info *sta,
+@@ -1003,6 +1005,9 @@ void ieee80211_process_addba_request(str
+ 				     struct ieee80211_mgmt *mgmt,
+ 				     size_t len);
+ 
++int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
++				   enum ieee80211_back_parties initiator);
++
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_mgmt *mgmt,
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2009-02-10 20:59:34.000000000 +0100
++++ wireless-testing/net/mac80211/agg-tx.c	2009-02-10 20:59:35.000000000 +0100
+@@ -123,10 +123,10 @@ void ieee80211_send_bar(struct ieee80211
+ 	ieee80211_tx_skb(sdata, skb, 0);
+ }
+ 
+-static int __ieee80211_stop_tx_ba_session(struct ieee80211_local *local,
+-					  struct sta_info *sta, u16 tid,
+-					  enum ieee80211_back_parties initiator)
++static int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
++					   enum ieee80211_back_parties initiator)
+ {
++	struct ieee80211_local *local = sta->local;
+ 	int ret;
+ 	u8 *state;
+ 
+@@ -165,7 +165,6 @@ static void sta_addba_resp_timer_expired
+ 	u16 tid = *(u8 *)data;
+ 	struct sta_info *sta = container_of((void *)data,
+ 		struct sta_info, timer_to_tid[tid]);
+-	struct ieee80211_local *local = sta->local;
+ 	u8 *state;
+ 
+ 	state = &sta->ampdu_mlme.tid_state_tx[tid];
+@@ -186,7 +185,7 @@ static void sta_addba_resp_timer_expired
+ 	printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
+ #endif
+ 
+-	__ieee80211_stop_tx_ba_session(local, sta, tid, WLAN_BACK_INITIATOR);
++	___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
+ 	spin_unlock_bh(&sta->lock);
+ }
+ 
+@@ -427,6 +426,32 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
+ }
+ EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
+ 
++int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
++				   enum ieee80211_back_parties initiator)
++{
++	u8 *state;
++	int ret;
++
++	/* check if the TID is in aggregation */
++	state = &sta->ampdu_mlme.tid_state_tx[tid];
++	spin_lock_bh(&sta->lock);
++
++	if (*state != HT_AGG_STATE_OPERATIONAL) {
++		ret = -ENOENT;
++		goto unlock;
++	}
++
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	printk(KERN_DEBUG "Tx BA session stop requested for %pM tid %u\n",
++	       sta->sta.addr, tid);
++#endif /* CONFIG_MAC80211_HT_DEBUG */
++
++	ret = ___ieee80211_stop_tx_ba_session(sta, tid, initiator);
++
++ unlock:
++	spin_unlock_bh(&sta->lock);
++	return ret;
++}
+ 
+ int ieee80211_stop_tx_ba_session(struct ieee80211_hw *hw,
+ 				 u8 *ra, u16 tid,
+@@ -434,7 +459,6 @@ int ieee80211_stop_tx_ba_session(struct 
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct sta_info *sta;
+-	u8 *state;
+ 	int ret = 0;
+ 
+ 	if (WARN_ON(!local->ops->ampdu_action))
+@@ -450,27 +474,8 @@ int ieee80211_stop_tx_ba_session(struct 
+ 		return -ENOENT;
+ 	}
+ 
+-	/* check if the TID is in aggregation */
+-	state = &sta->ampdu_mlme.tid_state_tx[tid];
+-	spin_lock_bh(&sta->lock);
+-
+-	if (*state != HT_AGG_STATE_OPERATIONAL) {
+-		ret = -ENOENT;
+-		goto unlock;
+-	}
+-
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-	printk(KERN_DEBUG "Tx BA session stop requested for %pM tid %u\n",
+-	       ra, tid);
+-#endif /* CONFIG_MAC80211_HT_DEBUG */
+-
+-	ret = __ieee80211_stop_tx_ba_session(local, sta, tid, initiator);
+-
+- unlock:
+-	spin_unlock_bh(&sta->lock);
+-
++	ret = __ieee80211_stop_tx_ba_session(sta, tid, initiator);
+ 	rcu_read_unlock();
+-
+ 	return ret;
+ }
+ EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
+@@ -623,11 +628,9 @@ void ieee80211_process_addba_resp(struct
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 		printk(KERN_DEBUG "Resuming TX aggregation for tid %d\n", tid);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+-		spin_unlock_bh(&sta->lock);
+ 	} else {
+ 		sta->ampdu_mlme.addba_req_num[tid]++;
+-		__ieee80211_stop_tx_ba_session(local, sta, tid,
+-					       WLAN_BACK_INITIATOR);
+-		spin_unlock_bh(&sta->lock);
++		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
+ 	}
++	spin_unlock_bh(&sta->lock);
+ }
+--- wireless-testing.orig/net/mac80211/ht.c	2009-02-10 20:59:34.000000000 +0100
++++ wireless-testing/net/mac80211/ht.c	2009-02-10 20:59:35.000000000 +0100
+@@ -155,15 +155,12 @@ u32 ieee80211_enable_ht(struct ieee80211
+ 
+ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta)
+ {
+-	struct ieee80211_local *local = sta->local;
+ 	int i;
+ 
+ 	for (i = 0; i <  STA_TID_NUM; i++) {
+-		ieee80211_stop_tx_ba_session(&local->hw, sta->sta.addr, i,
+-					     WLAN_BACK_INITIATOR);
+-		ieee80211_sta_stop_rx_ba_session(sta->sdata, sta->sta.addr, i,
+-						 WLAN_BACK_RECIPIENT,
+-						 WLAN_REASON_QSTA_LEAVE_QBSS);
++		__ieee80211_stop_tx_ba_session(sta, i, WLAN_BACK_INITIATOR);
++		__ieee80211_stop_rx_ba_session(sta, i, WLAN_BACK_RECIPIENT,
++					       WLAN_REASON_QSTA_LEAVE_QBSS);
+ 	}
+ }
+ 
 
-im using ubuntu 8.10 linux kernel
-2.6.27-7-generic
+-- 
 
-i whould apreciate any help to get this device working i have some
-knowledge of C programming i can try and help you to modify and test
-anything you tellme so we can add this new device to the supported
-list.
-
-Thank in advance to you all.
