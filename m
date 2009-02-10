@@ -1,87 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f167.google.com ([209.85.220.167]:54621 "EHLO
-	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752AbZBVMB0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 07:01:26 -0500
-Message-ID: <49A13E91.1090601@gmail.com> (sfid-20090222_130130_868841_26A9352E)
-Date: Sun, 22 Feb 2009 13:01:21 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:60494 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752925AbZBJCHw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2009 21:07:52 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 18:07:52 -0800
+Date: Mon, 9 Feb 2009 18:07:08 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Tony Vroon <tony@linx.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	reinette chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
+	ranges
+Message-ID: <20090210020708.GC4386@tesla> (sfid-20090210_030756_554064_EC5E8AE0)
+References: <1234202993.21570.18.camel@localhost> <43e72e890902091020p65235e3ds833560974c785318@mail.gmail.com> <1234203811.21570.19.camel@localhost> <20090209183924.GA6069@tuxdriver.com> <1234207263.6694.1.camel@localhost> <1234208152.6694.4.camel@localhost> <20090210013941.GA4386@tesla> <1234230689.3793.15.camel@localhost>
 MIME-Version: 1.0
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, Bob Copeland <me@bob>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-References: <20090222111807.GB5538@silver.sucs.org>
-In-Reply-To: <20090222111807.GB5538@silver.sucs.org>
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1234230689.3793.15.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22.2.2009 12:18, Sitsofe Wheeler wrote:
-> While testing a linux-tip from yesterday, a
-> BUG kmalloc-4096: Poison overwritten
-> warning appeared inside dmesg. I'm not aware of what I was doing othe=
-r
-> that browsing a few web pages and using ssh in the lead up to it. Out=
-put
-> is attached below:
->
-> [ 3666.410818] ath5k phy0: unsupported jumbo
-> [ 4432.305651] ath5k phy0: unsupported jumbo
-> [ 4466.022644] totem[4664]: segfault at 5bf7b980 ip b5b39cbb sp b0d5f=
-130 error 6 in libpulse.so.0.4.1[b5afb000+4d000]
-> [ 4617.353923] totem[5189]: segfault at 4c7a2ee0 ip b59bfdca sp b1c12=
-ec0 error 6 in libpulse.so.0.4.1[b5981000+4d000]
-> [ 7412.846146] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> [ 7412.846159] BUG kmalloc-4096: Poison overwritten
-> [ 7412.846163] ------------------------------------------------------=
------------------------
-> [ 7412.846166]
-> [ 7412.846172] INFO: 0xf6438010-0xf6438053. First byte 0x80 instead o=
-f 0x6b
-> [ 7412.846188] INFO: Allocated in dev_alloc_skb+0x21/0x40 age=3D629 c=
-pu=3D0 pid=3D0
-> [ 7412.846197] INFO: Freed in skb_release_data+0x5e/0x90 age=3D21 cpu=
-=3D0 pid=3D0
-> [ 7412.846204] INFO: Slab 0xc17a27e0 objects=3D7 used=3D5 fp=3D0xf643=
-8000 flags=3D0x400020c3
-> [ 7412.846210] INFO: Object 0xf6438000 @offset=3D0 fp=3D0xf643a060
-> [ 7412.846212]
-> [ 7412.846216]   Object 0xf6438000:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
- 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
-> [ 7412.846245]   Object 0xf6438010:  80 00 00 00 ff ff ff ff ff ff 00=
- 30 ab 1a 32 3f ....=FF=FF=FF=FF=FF=FF.0=AB.2?
+On Mon, Feb 09, 2009 at 05:51:29PM -0800, Tony Vroon wrote:
+> On Mon, 2009-02-09 at 17:39 -0800, Luis R. Rodriguez wrote: 
+> > In Intel's case the first regulatory domain is ignored (world). To see,
+> > before associating to an AP try running 'iw list'.
+> 
+> I will remove NetworkManager & gdm from the default runlevel and try
+> that, yes.
+> 
+> > I noticed that, what ends up happening then is the static world regulatory
+> > domain is used from the kernel. I take it you used an initramfs with the
+> > sda driver in there?
+> 
+> No. There's an initramfs, but it's only used to unlock the encrypted
+> root filesystem. The actual driver for sda (ata_piix) is in the kernel.
 
-Hmm, beacon written after the memory was freed.
+Intersting -- this is the first case I hear about this.
 
-> [ 7412.846273]   Object 0xf6438020:  00 30 ab 1a 32 3f e0 24 59 62 25=
- b5 01 00 00 00 .0=AB.2?=E0$Yb%=B5....
-> [ 7412.846301]   Object 0xf6438030:  64 00 31 00 00 08 57 69 72 65 6c=
- 65 73 73 01 04 d.1...Wireless..
-> [ 7412.846329]   Object 0xf6438040:  82 84 8b 96 03 01 06 05 04 01 02=
- 00 00 55 fa af .............U=FA=AF
-> [ 7412.846357]   Object 0xf6438050:  5d 55 fa 5d 6b 6b 6b 6b 6b 6b 6b=
- 6b 6b 6b 6b 6b ]U=FA]kkkkkkkkkkkk
-> [ 7412.846385]   Object 0xf6438060:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b=
- 6b 6b 6b 6b 6b kkkkkkkkkkkkkkkk
+> > I've been using initramfs too but for some reason
+> > on my system udev triggers the request eventually after the drive
+> > is mounted. So this is the first time I hear of this.
+> 
+> I have another user reporting it on PowerPC, without an encrypted root.
 
-=2E..
+Are they also disabling OLD_REG? Note that the only routine I see
+failing then in the initial:
 
-The unsupported jumbo message might be a clue. When we jump to the next=
-:=20
-label, the buffer is at the end of the list in software, while in=20
-hardware it isn't. In theory, we might hit the bug with rx buffers=20
-exhaustion, because the test (bf_last =3D=3D bf) doesn't work as expect=
-ed then.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", 0, ENVIRON_ANY);
+
+Is a kmalloc() (unlikely) or call_crda() failing, and call_crda() will
+only fail if kobject_uevent_env() fails and last I checked that would
+fail only if the kernel failed to build and emit the udev event (it doesn't mean
+CRDA was not present, it should mean udev never got the udev event IIRC).
+
+> > I also noticed though:
+> > 
+> > cfg80211: Calling CRDA for country: GB
+> > cfg80211: Current regulatory intersected:
+> >         (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> >         (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > 
+> > This seems to indicate to me you manually ran:
+> > 
+> > sudo iw reg set GB
+> > 
+> > Is that the case? 
+> 
+> Eventually, yes.
+
+Oh? Hmm.. if we leave the channel intact before applying the intersected
+regulatory domain and if 'iw list' shows the 5 GHz channels it should mean
+they are left enabled, I'm a bit puzzled myself, unless I'm missing something.
+
+> To see if that would clear things up, but it didn't.
+> Even if I just leave the AP 802.11d info to fill in the regulatory
+> information (which you can see higher up, as it has the information
+> slightly wrong and includes channel 14 together with very high radio
+> power) the 5GHz channels are not included.
+
+Heh :)
+
+> As said, will do an iw list with no other software having fiddled with
+> anything yet. The Cisco APs are in the vicinity so I may not be able to
+> stop them picking up the 80211d info though.
+
+Actually we don't follow country IE hints in Linux until we associate
+to an AP so you should be good.
+
+  Luis
