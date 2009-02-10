@@ -1,95 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:46256 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753489AbZBDXHP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 18:07:15 -0500
-Received: by mail-ew0-f21.google.com with SMTP id 14so4024043ewy.13
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 15:07:14 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH v2 16/16] orinoco: hermes doesn't need to be a separate module
-Date: Wed,  4 Feb 2009 23:05:58 +0000
-Message-Id: <1233788758-9850-17-git-send-email-kilroyd@googlemail.com> (sfid-20090205_000726_071275_B115B120)
-In-Reply-To: <1233788758-9850-16-git-send-email-kilroyd@googlemail.com>
-References: <1233788758-9850-1-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-2-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-3-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-4-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-5-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-6-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-7-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-8-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-9-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-10-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-11-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-12-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-13-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-14-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-15-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-16-git-send-email-kilroyd@googlemail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:46637 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755761AbZBJWFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 17:05:52 -0500
+Subject: Re: [PATCH] ipw2x00: age scan results on resume
+From: Dan Williams <dcbw@redhat.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1234301714.1626.27.camel@rc-desk>
+References: <1234280177.3119.23.camel@localhost>
+	 <1234301714.1626.27.camel@rc-desk>
+Content-Type: text/plain
+Date: Tue, 10 Feb 2009 17:04:18 -0500
+Message-Id: <1234303458.15997.24.camel@localhost> (sfid-20090210_230556_441447_332461A2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just compile it into the orinoco module. If we merge USB support, the
-module can then be split as appropriate.
+On Tue, 2009-02-10 at 13:35 -0800, reinette chatre wrote:
+> On Tue, 2009-02-10 at 07:36 -0800, Dan Williams wrote:
+> > Scanned BSS entries are timestamped with jiffies, which doesn't
+> > increment across suspend and hibernate.  On resume, every BSS in the
+> > scan list looks like it was scanned within the last 10 seconds,
+> > irregardless of how long the machine was actually asleep.  Age scan
+> > results on resume with the time spent during sleep so userspace has a
+> > clue how old they really are.
+> > 
+> > Signed-off-by: Dan Williams <dcbw@redhat.com>
+> 
+> This makes sense.
+> 
+> > ---
+> > This fixes NetworkManager and wpa_supplicant trying to connect to the AP
+> > associated with at suspend/hibernate time, which clearly may not exist
+> > at the location where the machine is waking up.
+> > 
+> > diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+> > index 823c2bf..abf897d 100644
+> > --- a/drivers/net/wireless/ipw2x00/ipw2100.c
+> > +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+> > @@ -1692,7 +1692,13 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
+> >  	u32 lock;
+> >  	u32 ord_len = sizeof(lock);
+> >  
+> > -	/* Quite if manually disabled. */
+> > +	/* Age scan list entries found before suspend */
+> > +	if (priv->suspend_time) {
+> > +		ieee80211_networks_age(priv->ieee, priv->suspend_time);
+> > +		priv->suspend_time = 0;
+> > +	}
+> > +
+> > +	/* Quiet if manually disabled. */
+> >  	if (priv->status & STATUS_RF_KILL_SW) {
+> >  		IPW_DEBUG_INFO("%s: Radio is disabled by Manual Disable "
+> >  			       "switch\n", priv->net_dev->name);
+> > @@ -6414,6 +6420,9 @@ static int ipw2100_suspend(struct pci_dev *pci_dev, pm_message_t state)
+> >  	pci_disable_device(pci_dev);
+> >  	pci_set_power_state(pci_dev, PCI_D3hot);
+> >  
+> > +	if (!priv->suspend_at)
+> > +		priv->suspend_at = get_seconds();
+> > +
+> 
+> I do not see where suspend_at is reset. Would that not confuse things
+> when you suspend two or more times?
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/Makefile |    4 ++--
- drivers/net/wireless/orinoco/hermes.c |   18 ------------------
- 2 files changed, 2 insertions(+), 20 deletions(-)
+Ah right; left over from a previous iteration.  Thanks for the catch.
 
-diff --git a/drivers/net/wireless/orinoco/Makefile b/drivers/net/wireless/orinoco/Makefile
-index 2f3e0dd..1fc7409 100644
---- a/drivers/net/wireless/orinoco/Makefile
-+++ b/drivers/net/wireless/orinoco/Makefile
-@@ -1,9 +1,9 @@
- #
- # Makefile for the orinoco wireless device drivers.
- #
--orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o hermes_dld.o
-+orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o hermes_dld.o hermes.o
- 
--obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o
-+obj-$(CONFIG_HERMES)		+= orinoco.o
- obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
- obj-$(CONFIG_APPLE_AIRPORT)	+= airport.o
- obj-$(CONFIG_PLX_HERMES)	+= orinoco_plx.o
-diff --git a/drivers/net/wireless/orinoco/hermes.c b/drivers/net/wireless/orinoco/hermes.c
-index f48358f..f2c918c 100644
---- a/drivers/net/wireless/orinoco/hermes.c
-+++ b/drivers/net/wireless/orinoco/hermes.c
-@@ -45,12 +45,6 @@
- 
- #include "hermes.h"
- 
--MODULE_DESCRIPTION("Low-level driver helper for Lucent Hermes chipset"
--		   " and Prism II HFA384x wireless MAC controller");
--MODULE_AUTHOR("Pavel Roskin <proski@gnu.org>"
--	" & David Gibson <hermes@gibson.dropbear.id.au>");
--MODULE_LICENSE("Dual MPL/GPL");
--
- /* These are maximum timeouts. Most often, card wil react much faster */
- #define CMD_BUSY_TIMEOUT (100) /* In iterations of ~1us */
- #define CMD_INIT_TIMEOUT (50000) /* in iterations of ~10us */
-@@ -540,15 +534,3 @@ int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
- 	return err;
- }
- EXPORT_SYMBOL(hermes_write_ltv);
--
--static int __init init_hermes(void)
--{
--	return 0;
--}
--
--static void __exit exit_hermes(void)
--{
--}
--
--module_init(init_hermes);
--module_exit(exit_hermes);
--- 
-1.6.0.6
+Dan
+
 
