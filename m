@@ -1,78 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:55967 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752818AbZBVRQR (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54335 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754038AbZBJQPx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 12:16:17 -0500
-Received: by nf-out-0910.google.com with SMTP id d21so360500nfb.21
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2009 09:16:15 -0800 (PST)
-Date: Sun, 22 Feb 2009 18:10:33 +0100
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, Bob Copeland <me@bob>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090222171032.GD6003@nowhere> (sfid-20090222_181622_243350_8A5283CD)
-References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org>
+	Tue, 10 Feb 2009 11:15:53 -0500
+Date: Tue, 10 Feb 2009 11:04:51 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bryan Wu <cooloney@kernel.org>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Cliff Cai <cliff.cai@analog.com>
+Subject: Re: [PATCH] wireless: introduce POWEROF2_BLOCKSIZE_ONLY option
+Message-ID: <20090210160451.GD3534@tuxdriver.com> (sfid-20090210_171556_444876_697DC490)
+References: <1233819002-6912-1-git-send-email-cooloney@kernel.org> <1233846195.3028.14.camel@localhost> <386072610902052347m5754262bif18339809a00cb9f@mail.gmail.com> <386072610902060000s2e150e4cla19aca70f38b0474@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090222170201.GA27360@silver.sucs.org>
+In-Reply-To: <386072610902060000s2e150e4cla19aca70f38b0474@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 22, 2009 at 05:02:01PM +0000, Sitsofe Wheeler wrote:
-> On Sun, Feb 22, 2009 at 03:47:44PM +0100, Frederic Weisbecker wrote:
-> > On Sun, Feb 22, 2009 at 12:20:36PM +0000, Sitsofe Wheeler wrote:
-> > > On Sun, Feb 22, 2009 at 01:01:21PM +0100, Jiri Slaby wrote:
-> > > > The unsupported jumbo message might be a clue. When we jump to the next: 
-> > > > label, the buffer is at the end of the list in software, while in 
-> > > > hardware it isn't. In theory, we might hit the bug with rx buffers 
-> > > > exhaustion, because the test (bf_last == bf) doesn't work as expected then.
-> > > 
-> > > This seems to be happening somewhat regularly now - I've got a small
-> > > collections of the warnings (I'll include them below in case they are
-> > > any help):
-> > > 
-> > > [ 7435.711659] ath5k phy0: unsupported jumbo
-> > > [ 8125.567136] ath5k phy0: noise floor calibration timeout (2417MHz)
-> > > [ 9596.212322] ath5k phy0: unsupported jumbo
-> > > [10697.497598] ath5k phy0: unsupported jumbo
-> > > [11207.740975] =============================================================================
-> > > [11207.740986] BUG kmalloc-4096: Poison overwritten
-> > > [11207.740991] -----------------------------------------------------------------------------
-> > > [11207.740994] 
-> > > [11207.740999] INFO: 0xd7060010-0xd7060053. First byte 0x80 instead of 0x6b
-> > > [11207.741014] INFO: Allocated in dev_alloc_skb+0x21/0x40 age=4990 cpu=0 pid=0
-> > > [11207.741023] INFO: Freed in skb_release_data+0x5e/0x90 age=893 cpu=0 pid=508
-> > > [11207.741030] INFO: Slab 0xc133dd80 objects=7 used=5 fp=0xd7060000 flags=0x400020c3
-> > > [11207.741036] INFO: Object 0xd7060000 @offset=0 fp=0xd70640c0
+On Fri, Feb 06, 2009 at 04:00:28PM +0800, Bryan Wu wrote:
+> On Fri, Feb 6, 2009 at 3:47 PM, Bryan Wu <cooloney@kernel.org> wrote:
+> > On Thu, Feb 5, 2009 at 11:03 PM, Dan Williams <dcbw@redhat.com> wrote:
+> >> On Thu, 2009-02-05 at 15:30 +0800, Bryan Wu wrote:
+> >>> From: Cliff Cai <cliff.cai@analog.com>
+> >>>
+> >>> Introduce POWEROF2_BLOCKSIZE_ONLY option for those SD/SDIO host
+> >>> which only support transferring block with size of power-of-2
+> >>
+> >> Is the point here to avoid copying in the controller code?  As with the
+> >> other patches on libertas-dev, I really dislike adding code to *every
+> >> SDIO driver* just because the host has certain restrictions.  I'd much
+> >> rather that the host/controller code became aware of it's own
+> >> restrictions, and exposed those generically to drivers above it.
+> >> Without a KConfig option.
+> >>
+> >> Seriously.  The host knows what it needs.  The code to handle that
+> >> should go in the host.
+> >>
+> >
+> > I agree here.
+> >
+> >> How about adding a method like "sdio_align_size" that takes the
+> >> controller's constraints into account?  That seems a lot cleaner than
+> >> adding #define/KConfig junk to every SDIO driver in the kernel.  One
+> >> less codepath to test, makes your life and all our lives easier.
+> >>
+> >
+> > So we plan to add method ".sdio_align_size" to SDIO stack.
+> > And Blackfin host driver will implement this method while others will
+> > implement this as a dummy function.
+> >
 > 
-> > Looks like it happens with ath5k driver.
-> > Well, I have an atheros card, so I'm testing it.
-> 
-> Good luck! I've just switched to a different location (with faster wifi
-> and more single network access points ) and I've been totally unable to
-> reproduce this warning.
+> sdio_align_size is already in SDIO stack, so we just need to add our
+> constraints to this function.
 
-I have some troubles with kmemcheck, so I give up for now.
-Well, by reading the kmemcheck documentation, it tells that there can be some false
-positives so...
+I'm reading this as "this patch is unnecessary or will be replaced
+by something better", so I'm dropping it.  If I misread that, feel
+free to repost...thanks!
 
- 
-> If there's some debug output that I produce that will help you let me
-> know...
-
-
-Since we are not sure this is a real bug, I'm not sure it would be interesting.
-
-Well, I will see that later.
-Thanks.
-
-
-> -- 
-> Sitsofe | http://sucs.org/~sits/
-
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
