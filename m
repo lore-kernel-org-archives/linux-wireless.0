@@ -1,67 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:44253 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752666AbZBXQ3d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 11:29:33 -0500
-Cc: Lorenzo Nava <navalorenx@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Message-Id: <03E07CC7-A971-4EDD-9363-628B61E94A92@ing.unibs.it> (sfid-20090224_172936_470162_3A928BAF)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <49A41F1D.9060300@lwfinger.net>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: More data on open-source firmware crash
-Date: Tue, 24 Feb 2009 17:29:28 +0100
-References: <49A1A331.9080205@lwfinger.net> <80C13710-6BA9-4F14-95B5-82C3043CE93B@ing.unibs.it> <49A41F1D.9060300@lwfinger.net>
+Received: from smtp01.jazztel.es ([62.14.3.170]:55591 "EHLO smtp01.jazztel.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750798AbZBJMjy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2009 07:39:54 -0500
+Received: from [87.217.204.25] (helo=localhost)
+	by smtp01.jazztel.es with esmtpa (Exim 4.60)
+	(envelope-from <arnau60@casal.upc.edu>)
+	id 1LWru4-0001S7-5p
+	for linux-wireless@vger.kernel.org; Tue, 10 Feb 2009 13:39:52 +0100
+Received: from arnau by localhost with local (Exim 4.63)
+	(envelope-from <arnau60@casal.upc.edu>)
+	id 1LWrvl-00032s-An
+	for linux-wireless@vger.kernel.org; Tue, 10 Feb 2009 13:41:37 +0100
+Date: Tue, 10 Feb 2009 13:41:37 +0100
+From: Arnau Roig <arnau60@casal.upc.edu>
+To: linux-wireless@vger.kernel.org
+Subject: Re: txpower and frequency settings: concept guidance needed
+Message-ID: <20090210124137.GA11637@purple> (sfid-20090210_133958_889762_F8B57E83)
+References: <20090205164522.GA5580@purple>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090205164522.GA5580@purple>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 24, 2009, at 5:23 PM, Larry Finger wrote:
+Hello again.
 
->
-> Francesco,
->
-> I don't think the problem results from an overrun of the TX FIFO. In  
-> my latest
-> test, I added code in routine handle_irq_transmit_status() that  
-> would print a
-> message if the while loop count reached 16 or more. That print did  
-> not occur.
-> The largest queue depth reached during the run was 14. When the first
-> out-of-order cookie was received, the largest depth in the last 64  
-> transactions
-> was only 5.
->
-> I'm going to increase the number of transactions saved for my next  
-> run. Any
-> other info that I should capture?
-What about drop info from dmesg? Another try could be halve the dma  
-queue, I believe now it is 64 slots. Could you give a try setting it  
-to 32?
+Is there any other list where I could ask this question?
+Is there some kind of documentation I can read to better
+understand the mac80211 stack?
 
-Cheers,
--FG
-
->
->
-> Larry
-
--------
-
-Francesco Gringoli, PhD - Assistant Professor
-Dept. of Electrical Engineering for Automation
-University of Brescia
-via Branze, 38
-25123 Brescia
-ITALY
-
-Ph:  ++39.030.3715843
-FAX: ++39.030.380014
-WWW: http://www.ing.unibs.it/~gringoli
-
-
-
-
+Thanks in advance.
