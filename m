@@ -1,270 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.217.174]:45475 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805AbZBTEHF (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59261 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187AbZBJKhC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 23:07:05 -0500
-Received: by gxk22 with SMTP id 22so2071609gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 20:07:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87fxibhr5q.fsf@litku.valot.fi>
-References: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com>
-	 <8763j7qyfx.fsf@litku.valot.fi> <1235014330.6344.18.camel@rainbow>
-	 <87fxibhr5q.fsf@litku.valot.fi>
-Date: Thu, 19 Feb 2009 23:07:03 -0500
-Message-ID: <c4d76b3b0902192007s347ea4e3hcfa3fae1a1e3060b@mail.gmail.com> (sfid-20090220_050712_391060_01136A5A)
-Subject: Re: [PATCH] at76c50x-usb: support cfg80211 scanning
-From: Jason Andryuk <jandryuk@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 10 Feb 2009 05:37:02 -0500
+Subject: zd1211rw keeps failing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Daniel Drake <dsd@gentoo.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UFjlF/utd/r7cJipOODF"
+Date: Tue, 10 Feb 2009 11:36:28 +0100
+Message-Id: <1234262188.4302.0.camel@johannes.local> (sfid-20090210_113708_296347_B9312E94)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 19, 2009 at 1:33 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Jason Andryuk <jandryuk@gmail.com> writes:
->> I am having issues with my Linksys WUSB11 adapter.  It has the intersil
->> 3861 and the scan command is reporting Command Status of 0x03 - Invalid
->> parameter.  For right now, scanning does not work for me.
->
-> Oh, that's bad. And the device is working fine with the old at76_usb
-> driver? Can you send some debug logs, please? Especially I'm
-> interested about hardware differences between your Linksys and the
-> Belkin I have.
 
-I thought before I was not getting any scan results.  I may have been
-wrong.  However right now with the driver from wireless-testing
-2009-02-18, 4 APs show up in NetworkManager.  Unfortunately, my AP is
-not one of them.  No signal strength is reported for any of them.
-Curiously, there are distinct results for each of at76c50x-usb, a
-semi-operational iwl3945 and the functional rtl8187.
+--=-UFjlF/utd/r7cJipOODF
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-CMD_SCAN is receiving a lot of status 0x03 CMD_STATUS_INVALID_PARAMETER
+With the -rc4 based wireless tree:
 
-With debug=0xf022c001 I get the output below.  I was wondering if
-status=0x03 was being received because CMD_SET_MIB was called before
-CMD_SCAN's status was checked.  Hopefully you can make some sense out
-of the below logs.
+[ 1810.855457] usb 1-1: firmware: requesting zd1211/zd1211b_ub
+[ 1810.868857] usb 1-1: firmware: requesting zd1211/zd1211b_uphr
+[ 1810.926526] zd1211rw 1-1:1.0: firmware version 4725
+[ 1810.966529] zd1211rw 1-1:1.0: zd1211b chip 1582:6003 v4810 high 00-11-f6=
+ AL2230_RF pa0 -----
+[ 1810.969518] cfg80211: Calling CRDA for country: DE
+[ 1811.970118] zd1211rw 1-1:1.0: error ioread32(CR_REG1): -110
+[ 1812.030460] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D
+[ 1812.030467] BUG kmalloc-64: Poison overwritten
+[ 1812.030470] ------------------------------------------------------------=
+-----------------
+[ 1812.030471]=20
+[ 1812.030474] INFO: 0xffff880055000550-0xffff88005500057f. First byte 0x1 =
+instead of 0x6b
+[ 1812.030487] INFO: Allocated in zd_usb_enable_int+0xa5/0x180 [zd1211rw] a=
+ge=3D114 cpu=3D0 pid=3D4209
+[ 1812.030496] INFO: Freed in int_urb_complete+0x92/0x1bc [zd1211rw] age=3D=
+107 cpu=3D0 pid=3D4209
+[ 1812.030499] INFO: Slab 0xffffe20002288000 objects=3D30 used=3D28 fp=3D0x=
+ffff880055000550 flags=3D0x40000000000000c3
+[ 1812.030503] INFO: Object 0xffff880055000550 @offset=3D1360 fp=3D0xffff88=
+00550003b8
+[ 1812.030504]=20
+[ 1812.030507] Bytes b4 0xffff880055000540:  42 c8 01 00 01 00 00 00 5a 5a =
+5a 5a 5a 5a 5a 5a B=EF=BF=BD......ZZZZZZZZ
+[ 1812.030529]   Object 0xffff880055000550:  01 90 82 96 00 00 80 96 a0 00 =
+00 00 00 00 6b a5 ..............k=EF=BF=BD
+[ 1812.030551]   Object 0xffff880055000560:  00 00 00 00 00 00 00 00 00 00 =
+00 00 00 00 00 00 ................
+[ 1812.030573]   Object 0xffff880055000570:  00 00 00 00 00 00 00 00 00 00 =
+00 00 00 00 00 00 ................
+[ 1812.030594]   Object 0xffff880055000580:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b =
+6b 6b 6b 6b 6b a5 kkkkkkkkkkkkkkk=EF=BF=BD
+[ 1812.030616]  Redzone 0xffff880055000590:  bb bb bb bb bb bb bb bb       =
+                  =EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=
+=BF=BD=EF=BF=BD       =20
+[ 1812.030638]  Padding 0xffff8800550005d0:  5a 5a 5a 5a 5a 5a 5a 5a       =
+                  ZZZZZZZZ       =20
+[ 1812.030662] Pid: 4, comm: ksoftirqd/0 Not tainted 2.6.29-rc4-wl-13559-g0=
+416c58-dirty #40
+[ 1812.030666] Call Trace:
+[ 1812.030669]  <IRQ>  [<ffffffff802d3116>] print_trailer+0x106/0x160
+[ 1812.030681]  [<ffffffff802d3875>] check_bytes_and_report+0x125/0x180
+[ 1812.030685]  [<ffffffff802d397c>] check_object+0xac/0x270
+[ 1812.030704]  [<ffffffffa005d7ae>] ? ohci_urb_enqueue+0xae/0x360 [ohci_hc=
+d]
+[ 1812.030709]  [<ffffffff802d4595>] alloc_debug_processing+0x105/0x1a0
+[ 1812.030714]  [<ffffffff802d59d6>] __slab_alloc+0x96/0x2f0
+[ 1812.030721]  [<ffffffffa005d7ae>] ? ohci_urb_enqueue+0xae/0x360 [ohci_hc=
+d]
+[ 1812.030728]  [<ffffffffa005d7ae>] ? ohci_urb_enqueue+0xae/0x360 [ohci_hc=
+d]
+[ 1812.030732]  [<ffffffff802d6a06>] __kmalloc+0x106/0x140
+[ 1812.030739]  [<ffffffffa005d7ae>] ohci_urb_enqueue+0xae/0x360 [ohci_hcd]
+[ 1812.030762]  [<ffffffffa0017838>] usb_hcd_submit_urb+0x88/0x1c0 [usbcore=
+]
+[ 1812.030779]  [<ffffffffa0017dfd>] usb_submit_urb+0x10d/0x340 [usbcore]
+[ 1812.030789]  [<ffffffffa00934ce>] hid_irq_in+0x9e/0x210 [usbhid]
+[ 1812.030806]  [<ffffffffa0016050>] usb_hcd_giveback_urb+0x60/0xe0 [usbcor=
+e]
+[ 1812.030813]  [<ffffffffa005ab11>] finish_urb+0xa1/0x110 [ohci_hcd]
+[ 1812.030820]  [<ffffffffa005ac3b>] takeback_td+0xbb/0x160 [ohci_hcd]
+[ 1812.030826]  [<ffffffffa005ad93>] dl_done_list+0xb3/0x110 [ohci_hcd]
+[ 1812.030833]  [<ffffffffa005f470>] ohci_irq+0x2f0/0x3cc [ohci_hcd]
+[ 1812.030850]  [<ffffffffa0015930>] ? usb_hcd_irq+0x20/0xb0 [usbcore]
+[ 1812.030867]  [<ffffffffa0015950>] usb_hcd_irq+0x40/0xb0 [usbcore]
+[ 1812.030873]  [<ffffffff8029166b>] handle_IRQ_event+0x3b/0x80
+[ 1812.030877]  [<ffffffff802931f1>] handle_fasteoi_irq+0x91/0x110
+[ 1812.030883]  [<ffffffff8020e43c>] do_IRQ+0x9c/0x150
+[ 1812.030887]  [<ffffffff8020c6d3>] ret_from_intr+0x0/0xf
+[ 1812.030893]  [<ffffffff8024ccb0>] ? tasklet_action+0x140/0x160
+[ 1812.030898]  [<ffffffff8024ccac>] ? tasklet_action+0x13c/0x160
+[ 1812.030902]  [<ffffffff8024d71d>] ? __do_softirq+0x9d/0x190
+[ 1812.030907]  [<ffffffff8020cebc>] ? call_softirq+0x1c/0x40
+[ 1812.030909]  <EOI>  [<ffffffff8020e1a5>] ? do_softirq+0x75/0xc0
+[ 1812.030916]  [<ffffffff8024cd54>] ? ksoftirqd+0x84/0x1b0
+[ 1812.030920]  [<ffffffff8024ccd0>] ? ksoftirqd+0x0/0x1b0
+[ 1812.030924]  [<ffffffff8024ccd0>] ? ksoftirqd+0x0/0x1b0
+[ 1812.030929]  [<ffffffff8025f2e9>] ? kthread+0x49/0x90
+[ 1812.030934]  [<ffffffff8020cdba>] ? child_rip+0xa/0x20
+[ 1812.030938]  [<ffffffff8020c780>] ? restore_args+0x0/0x30
+[ 1812.030942]  [<ffffffff8025f2a0>] ? kthread+0x0/0x90
+[ 1812.030946]  [<ffffffff8020cdb0>] ? child_rip+0x0/0x20
+[ 1812.030949] FIX kmalloc-64: Restoring 0xffff880055000550-0xffff880055000=
+57f=3D0x6b
+[ 1812.030950]=20
+[ 1812.030953] FIX kmalloc-64: Marking all objects used
+[ 1812.057052] ADDRCONF(NETDEV_UP): wlan1: link is not ready
+[ 1819.141519] wlan1: authenticate with AP 8e:b5:9c:32:62:6e
+[ 1819.340080] wlan1: authenticate with AP 8e:b5:9c:32:62:6e
+[ 1819.550073] wlan1: authenticate with AP 8e:b5:9c:32:62:6e
+[ 1819.750061] wlan1: authentication with AP 8e:b5:9c:32:62:6e timed out
 
-"calling ieee80211_rx_irqsafe(): 123/0" and "at76_dwork_hw_scan:
-CMD_SCAN status 0x03" seem to continue indefinitely.
+johannes
 
-Jason
+--=-UFjlF/utd/r7cJipOODF
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Feb 19 22:26:48 rainbow kernel: [ 1040.215351] at76c50x-usb:
-downloading firmware atmel_at76c503-i3861.bin
-Feb 19 22:26:48 rainbow kernel: [ 1040.215354] usb 3-2: firmware:
-requesting atmel_at76c503-i3861.bin
-Feb 19 22:26:48 rainbow kernel: [ 1040.227033] at76c50x-usb: got it.
-Feb 19 22:26:48 rainbow kernel: [ 1040.227036] usb 3-2: using firmware
-atmel_at76c503-i3861.bin (version 0.90.0-44)
-Feb 19 22:26:48 rainbow kernel: [ 1040.227039] at76c50x-usb: board 1,
-int 104:22228, ext 22332:5832
-Feb 19 22:26:48 rainbow kernel: [ 1040.227040] at76c50x-usb: firmware
-id 0.90.0-44 Intersil 3861 Copyright (c) 1999-2000 by Atmel
-Corporation
-Feb 19 22:26:48 rainbow kernel: [ 1040.228351] at76c50x-usb: opmode 1
-Feb 19 22:26:48 rainbow kernel: [ 1040.229513] at76c50x-usb: USB
-interface: 2 endpoints
-Feb 19 22:26:48 rainbow kernel: [ 1040.229515] at76c50x-usb:
-at76_alloc_urbs: ENTER
-Feb 19 22:26:48 rainbow kernel: [ 1040.229516] at76c50x-usb:
-at76_alloc_urbs: NumEndpoints 2
-Feb 19 22:26:48 rainbow kernel: [ 1040.229518] at76c50x-usb:
-at76_alloc_urbs: 0. endpoint: addr 0x85 attr 0x2
-Feb 19 22:26:48 rainbow kernel: [ 1040.229520] at76c50x-usb:
-at76_alloc_urbs: 1. endpoint: addr 0x2 attr 0x2
-Feb 19 22:26:48 rainbow kernel: [ 1040.229521] at76c50x-usb:
-at76_alloc_urbs: EXIT
-Feb 19 22:26:48 rainbow kernel: [ 1040.230845] phy3: Selected rate
-control algorithm 'minstrel'
-Feb 19 22:26:48 rainbow kernel: [ 1040.231471] phy3: USB 3-2:1.0, MAC
-00:06:25:00:6a:7a, firmware 0.90.0-2
-Feb 19 22:26:48 rainbow kernel: [ 1040.231473] phy3: regulatory domain
-0x10: FCC (USA)
-Feb 19 22:26:48 rainbow kernel: [ 1040.231492] usbcore: registered new
-interface driver at76c50x-usb
-Feb 19 22:26:48 rainbow kernel: [ 1040.247748] udev: renamed network
-interface wlan0 to wlan3
-Feb 19 22:26:52 rainbow kernel: [ 1044.259085] at76c50x-usb:
-at76_mac80211_start()
-Feb 19 22:26:52 rainbow kernel: [ 1044.259112] at76c50x-usb: issuing
-command CMD_STARTUP (0x0b)
-Feb 19 22:26:52 rainbow kernel: [ 1044.259120] 00000000: 0b 00 68 00
-00 00 08 00 00 06 00 06 82 84 0b 16  ..h.............
-Feb 19 22:26:52 rainbow kernel: [ 1044.259126] 00000010: 01 0a 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.259131] 00000020: 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.259136] 00000030: 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.259140] 00000040: 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.259145] 00000050: 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.259150] 00000060: 00 00 00 00
-00 00 00 00 00 00 64 00              ..........d.
-Feb 19 22:26:52 rainbow kernel: [ 1044.262385] at76c50x-usb: phy3:
-Waiting on cmd 11, status = 1 (CMD_STATUS_COMPLETE)
-Feb 19 22:26:52 rainbow kernel: [ 1044.262394] at76c50x-usb: issuing
-command CMD_RADIO_ON (0x06)
-Feb 19 22:26:52 rainbow kernel: [ 1044.262401] 00000000: 06 00 00 00
-                                   ....
-Feb 19 22:26:52 rainbow kernel: [ 1044.265387] at76c50x-usb: phy3:
-Waiting on cmd 6, status = 2 (CMD_STATUS_UNKNOWN)
-Feb 19 22:26:52 rainbow kernel: [ 1044.265394] at76c50x-usb: issuing
-command CMD_SET_MIB (0x01)
-Feb 19 22:26:52 rainbow kernel: [ 1044.265400] 00000000: 01 00 05 00
-01 01 09 00 00                       .........
-Feb 19 22:26:52 rainbow kernel: [ 1044.268385] at76c50x-usb: phy3:
-Waiting on cmd 1, status = 1 (CMD_STATUS_COMPLETE)
-Feb 19 22:26:52 rainbow kernel: [ 1044.268391] at76c50x-usb: issuing
-command CMD_SET_MIB (0x01)
-Feb 19 22:26:52 rainbow kernel: [ 1044.268396] 00000000: 01 00 06 00
-03 02 08 00 00 06                    ..........
-Feb 19 22:26:52 rainbow kernel: [ 1044.271397] at76c50x-usb: phy3:
-Waiting on cmd 1, status = 1 (CMD_STATUS_COMPLETE)
-Feb 19 22:26:52 rainbow kernel: [ 1044.271403] at76c50x-usb: issuing
-command CMD_SET_MIB (0x01)
-Feb 19 22:26:52 rainbow kernel: [ 1044.271408] 00000000: 01 00 06 00
-03 02 0a 00 00 06                    ..........
-Feb 19 22:26:52 rainbow kernel: [ 1044.274383] at76c50x-usb: phy3:
-Waiting on cmd 1, status = 1 (CMD_STATUS_COMPLETE)
-Feb 19 22:26:52 rainbow kernel: [ 1044.274389] at76c50x-usb: issuing
-command CMD_SET_MIB (0x01)
-Feb 19 22:26:52 rainbow kernel: [ 1044.274394] 00000000: 01 00 05 00
-01 01 03 00 01                       .........
-Feb 19 22:26:52 rainbow kernel: [ 1044.277398] at76c50x-usb: phy3:
-Waiting on cmd 1, status = 1 (CMD_STATUS_COMPLETE)
-Feb 19 22:26:52 rainbow kernel: [ 1044.277404] at76c50x-usb: issuing
-command CMD_SET_MIB (0x01)
-Feb 19 22:26:52 rainbow kernel: [ 1044.277410] 00000000: 01 00 05 00
-05 01 35 00 01                       ......5..
-Feb 19 22:26:52 rainbow kernel: [ 1044.280669] at76c50x-usb: phy3:
-Waiting on cmd 1, status = 1 (CMD_STATUS_COMPLETE)
-Feb 19 22:26:52 rainbow kernel: [ 1044.280674] at76c50x-usb: issuing
-command CMD_SCAN (0x03)
-Feb 19 22:26:52 rainbow kernel: [ 1044.280679] 00000000: 03 00 30 00
-ff ff ff ff ff ff 00 00 00 00 00 00  ..0.............
-Feb 19 22:26:52 rainbow kernel: [ 1044.280685] 00000010: 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.280690] 00000020: 00 00 00 00
-00 00 00 00 00 00 01 0a 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.280695] 00000030: 00 00 00 00
-                                   ....
-Feb 19 22:26:52 rainbow kernel: [ 1044.283425] at76c50x-usb:
-at76_add_interface()
-Feb 19 22:26:52 rainbow kernel: [ 1044.291401] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 61/0
-Feb 19 22:26:52 rainbow kernel: [ 1044.292072] at76c50x-usb:
-at76_configure_filter(): changed_flags=0x00000000
-total_flags=0x80000000 mc_count=0
-Feb 19 22:26:52 rainbow kernel: [ 1044.292122] at76c50x-usb:
-at76_config(): channel 1 radio 1
-Feb 19 22:26:52 rainbow kernel: [ 1044.292126] at76c50x-usb: bssid:
-Feb 19 22:26:52 rainbow kernel: [ 1044.292131] 00000000: 00 00 00 00
-00 00                                ......
-Feb 19 22:26:52 rainbow kernel: [ 1044.292136] at76c50x-usb: issuing
-command CMD_SCAN (0x03)
-Feb 19 22:26:52 rainbow kernel: [ 1044.292141] 00000000: 03 00 30 00
-ff ff ff ff ff ff 00 00 00 00 00 00  ..0.............
-Feb 19 22:26:52 rainbow kernel: [ 1044.292146] 00000010: 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.292151] 00000020: 00 00 00 00
-00 00 00 00 00 00 01 01 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.292156] 00000030: 00 00 00 00
-                                   ....
-Feb 19 22:26:52 rainbow kernel: [ 1044.295393] at76c50x-usb:
-at76_configure_filter(): changed_flags=0x00000001
-total_flags=0x80000000 mc_count=1
-Feb 19 22:26:52 rainbow kernel: [ 1044.295420] at76c50x-usb:
-at76_configure_filter(): changed_flags=0x00000001
-total_flags=0x80000000 mc_count=2
-Feb 19 22:26:52 rainbow kernel: [ 1044.295623] at76c50x-usb: issuing
-command CMD_SET_MIB (0x01)
-Feb 19 22:26:52 rainbow kernel: [ 1044.295630] 00000000: 01 00 05 00
-01 01 06 00 01                       .........
-Feb 19 22:26:52 rainbow kernel: [ 1044.296495] ADDRCONF(NETDEV_UP):
-wlan3: link is not ready
-Feb 19 22:26:52 rainbow kernel: [ 1044.296504] at76c50x-usb:
-at76_configure_filter(): changed_flags=0x00000001
-total_flags=0x80000000 mc_count=2
-Feb 19 22:26:52 rainbow kernel: [ 1044.302400] at76c50x-usb: phy3:
-Waiting on cmd 1, status = 1 (CMD_STATUS_COMPLETE)
-Feb 19 22:26:52 rainbow kernel: [ 1044.302410] at76c50x-usb: at76_hw_scan():
-Feb 19 22:26:52 rainbow kernel: [ 1044.302415] at76c50x-usb:
-at76_hw_scan: sending CMD_SCAN
-Feb 19 22:26:52 rainbow kernel: [ 1044.302420] at76c50x-usb: issuing
-command CMD_SCAN (0x03)
-Feb 19 22:26:52 rainbow kernel: [ 1044.302426] 00000000: 03 00 30 00
-ff ff ff ff ff ff 00 00 00 00 00 00  ..0.............
-Feb 19 22:26:52 rainbow kernel: [ 1044.302433] 00000010: 00 00 00 00
-00 00 00 00 00 00 00 00 00 00 00 00  ................
-Feb 19 22:26:52 rainbow kernel: [ 1044.302438] 00000020: 00 00 00 00
-00 00 00 00 00 00 00 00 10 27 0a 00  .............'..
-Feb 19 22:26:52 rainbow kernel: [ 1044.302444] 00000030: 78 00 00 00
-                                   x...
-Feb 19 22:26:52 rainbow kernel: [ 1044.353434] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:52 rainbow kernel: [ 1044.455471] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:52 rainbow kernel: [ 1044.549532] at76c50x-usb:
-at76_dwork_hw_scan: CMD_SCAN status 0x03
-Feb 19 22:26:52 rainbow kernel: [ 1044.558532] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:52 rainbow kernel: [ 1044.660587] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:52 rainbow kernel: [ 1044.682597] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:52 rainbow kernel: [ 1044.763601] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:53 rainbow kernel: [ 1044.797651] at76c50x-usb:
-at76_dwork_hw_scan: CMD_SCAN status 0x03
-Feb 19 22:26:53 rainbow kernel: [ 1044.887702] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:53 rainbow kernel: [ 1044.968742] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:53 rainbow kernel: [ 1045.045776] at76c50x-usb:
-at76_dwork_hw_scan: CMD_SCAN status 0x03
-Feb 19 22:26:53 rainbow kernel: [ 1045.070790] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:53 rainbow kernel: [ 1045.293899] at76c50x-usb:
-at76_dwork_hw_scan: CMD_SCAN status 0x03
-Feb 19 22:26:53 rainbow kernel: [ 1045.378910] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:53 rainbow kernel: [ 1045.542031] at76c50x-usb:
-at76_dwork_hw_scan: CMD_SCAN status 0x03
-Feb 19 22:26:53 rainbow kernel: [ 1045.583049] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:53 rainbow kernel: [ 1045.687101] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:53 rainbow kernel: [ 1045.707111] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:54 rainbow kernel: [ 1045.790152] at76c50x-usb:
-at76_dwork_hw_scan: CMD_SCAN status 0x03
-Feb 19 22:26:54 rainbow kernel: [ 1045.810161] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:54 rainbow kernel: [ 1045.890199] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:54 rainbow kernel: [ 1045.912207] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:54 rainbow kernel: [ 1046.014267] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:54 rainbow kernel: [ 1046.037275] at76c50x-usb:
-at76_dwork_hw_scan: CMD_SCAN status 0x03
-Feb 19 22:26:54 rainbow kernel: [ 1046.117316] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:54 rainbow kernel: [ 1046.219360] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:54 rainbow kernel: [ 1046.285400] at76c50x-usb:
-at76_dwork_hw_scan: CMD_SCAN status 0x03
-Feb 19 22:26:54 rainbow kernel: [ 1046.300403] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:54 rainbow kernel: [ 1046.402455] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 123/0
-Feb 19 22:26:54 rainbow kernel: [ 1046.424471] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:54 rainbow kernel: [ 1046.526519] at76c50x-usb: calling
-ieee80211_rx_irqsafe(): 110/0
-Feb 19 22:26:54 rainbow kernel: [ 1046.534514] at76c50x-usb:
-at76_dwork_hw_scan: CMD_SCAN status 0x03
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJkViqAAoJEKVg1VMiehFYCxwQAL4gmn2chQOPdVCQoM9A9302
+K0lmpvwOZ3Jf0hK0qtO4NUrdlNjEqWzpWdYaSt6doSFDRK+xjVzH+yeavUvUEvuR
+a3oCj9RIyooMqrDCyInOaAcIb1Loj2Dfscezsm1LMZ7hSj65qpQcKgRwpGAzgXCr
+5rRvhvlElmeF/fVwTlP0CEcgVvww6oVcvy+MUPfLZJqrn3NjOsPFLEw8xcthJdEN
+D2Hb4im4IwDACTwtkXyRmz5Vjx0nBkQziedHCfLTfHmCPJvDSZGR6lf8WTW03SuT
+jl3nxN+bmWtCzTSjZGUIvimXuKX36MFcCLpvukxRB+00D0ybBUeUDFf+1ufNDVFq
+6bhefZyDrK3+dHK/uLVcw9uSCrKbjfYSe3HHnbRmQUpJFdkxoDdoNhUcY0z5AvhL
+9nt5K532dpLJogZeUcUzytdV6M/G0HhTszP0QT9rP7Ijhdp3mrQ3rPJM6Nw9DdPO
+xs3K89w28vGELv/YfhXs0VCVXGiki6OkV1pYFx0qeY1YzxA0+mgIqfaS95sjDQA5
+jVBiAzj2AJU/g/RMLDY6fee/+XFVKaIykXOgvfOJ2PMKYEUrG8st0UQEsqOiMUMW
+Syt6O6lOn5uwMTatGWL/RODOBpASDEin/n5dAmlokc/OxnNeKDeuroFRbcrUs7uw
+huhiu1uZQL5qBGlJLSad
+=CzVj
+-----END PGP SIGNATURE-----
+
+--=-UFjlF/utd/r7cJipOODF--
+
