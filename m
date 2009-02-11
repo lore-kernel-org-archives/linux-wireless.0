@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gold.linx.net ([195.66.232.40]:46224 "EHLO gold.linx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750718AbZBPMJd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 07:09:33 -0500
-Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
- ranges
-From: Tony Vroon <tony@linx.net>
-Reply-To: tony@linx.net
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20090214045232.GA5769@tesla>
-References: <1234202993.21570.18.camel@localhost>
-	 <43e72e890902091020p65235e3ds833560974c785318@mail.gmail.com>
-	 <1234203811.21570.19.camel@localhost> <20090209183924.GA6069@tuxdriver.com>
-	 <1234207263.6694.1.camel@localhost> <1234208152.6694.4.camel@localhost>
-	 <20090210013941.GA4386@tesla> <1234230689.3793.15.camel@localhost>
-	 <20090210020708.GC4386@tesla> <1234379981.4789.7.camel@localhost>
-	 <20090214045232.GA5769@tesla>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-bywdwxdSyFq1oWR6NeDu"
-Date: Mon, 16 Feb 2009 12:08:44 +0000
-Message-Id: <1234786124.4271.2.camel@localhost> (sfid-20090216_130942_898521_881009FB)
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55168
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755292AbZBKV6I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2009 16:58:08 -0500
+Date: Wed, 11 Feb 2009 13:58:01 -0800 (PST)
+Message-Id: <20090211.135801.242440425.davem@davemloft.net> (sfid-20090211_225813_554997_1DE1A0C0)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-02-11
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090211191212.GA7033@tuxdriver.com>
+References: <20090211191212.GA7033@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 11 Feb 2009 14:12:12 -0500
 
---=-bywdwxdSyFq1oWR6NeDu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Here are a few more intended for 2.6.29.  The ath5k one is already in
+> -next, but it turns-out to affect 2.6.29 as well.  The two zd1211rw ones
+> are one-liners that enable new hardware for that driver.
+> 
+> The iwlwifi patch corrects a problem (introduced by the previous iwlwifi
+> fix) that disables the iwlwifi devices after suspend/resume.  It will
+> conflict with what is already in -next -- just take the hunks that are
+> already in -next and ignore the hunks introduced here.
+> 
+> Please let me know if there are problems!
 
-Just to confirm, if I use my early-boot hook that I used for your iw
-list to set the regulatory domain manually (iw reg set GB) all is well.
-If I allow the driver stack to get to the association stage without
-setting a regulatory domain, I can never get my 802.11A spectrum back
-after the fact.
-Would you still see this as a bug or rather a specific requirement of
-the new interface that hasn't yet been documented?
-
-Regards,
-Tony V.
-
---=-bywdwxdSyFq1oWR6NeDu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkmZV0wACgkQp5vW4rUFj5p/EgCfQHpiczFALZE12NqPvmhxGmC6
-M8MAoKs/CAknZ4axlCoUfwEywBkclXrl
-=YFtO
------END PGP SIGNATURE-----
-
---=-bywdwxdSyFq1oWR6NeDu--
-
+Pulled, thanks a lot John.
