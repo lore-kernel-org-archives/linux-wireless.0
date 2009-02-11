@@ -1,165 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ammma.de ([213.83.39.131]:5915 "EHLO ammma.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751880AbZBEXRt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2009 18:17:49 -0500
-Message-ID: <20090206001718.15786wrk24r178g0@neo.wg.de> (sfid-20090206_001753_127518_15B63F94)
-Date: Fri, 06 Feb 2009 00:17:18 +0100
-From: Jan Schneider <jan@horde.org>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn crashing
-References: <20090205152550.10936yvgbf2eipcs@neo.wg.de>
- <1233870102.558.6.camel@rc-desk>
-In-Reply-To: <1233870102.558.6.camel@rc-desk>
+Received: from rn-out-0910.google.com ([64.233.170.190]:5331 "EHLO
+	rn-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725AbZBKVl0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2009 16:41:26 -0500
+Received: by rn-out-0910.google.com with SMTP id k40so448374rnd.17
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 13:41:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+In-Reply-To: <2d14e2ca0902110900r7f0b84e4k7be81827187c434@mail.gmail.com>
+References: <2d14e2ca0902110900r7f0b84e4k7be81827187c434@mail.gmail.com>
+Date: Wed, 11 Feb 2009 13:41:25 -0800
+Message-ID: <43e72e890902111341l36bd40c8o9d54515e8b06e603@mail.gmail.com> (sfid-20090211_224131_552427_AB50FA90)
+Subject: Re: [ath9k-devel] Radar Detection and DFS status
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: mementux <mementux@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Michael Green <Michael.Green@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zitat von reinette chatre <reinette.chatre@intel.com>:
-
-> On Thu, 2009-02-05 at 06:25 -0800, Jan Schneider wrote:
->> Hi,
->>
->> since there doesn't seem to be a bug tracker,
+2009/2/11 mementux <mementux@gmail.com>:
+> Hi!
 >
-> http://www.intellinuxwireless.org/bugzilla/
-
-That's a bit misleading then, because a) it doesn't list iwlagn in  
-bugzilla, and b) the bold red first paragraph on the homepage tells  
-that this is no longer the place I am looking for.
-
->>  I'm gonna report it
->> here. Exactly every 10 minutes, I get this dump in the logs:
->>
->> Feb  5 14:38:27 tank kernel: [ 6267.996208] no space for a new
->> keyModules linked
->>   in: aes_x86_64 aes_generic af_packet i915 drm rfcomm bnep sco l2cap
->> ipt_MASQUER
->> ADE iptable_nat nf_nat nf_conntrack_ipv4 xt_state nf_conntrack
->> ipt_REJECT xt_tcp
->> udp bridge stp kvm_intel kvm ppdev vmnet vmblock vmci vmmon ipv6
->> acpi_cpufreq cp
->> ufreq_userspace cpufreq_stats cpufreq_powersave cpufreq_conservative
->> cpufreq_ond
->> emand freq_table container sbs sbshc pci_slot iptable_filter ip_tables
->> x_tables
->> uinput sbp2 lp btusb bluetooth pcmcia snd_hda_intel arc4 snd_pcm_oss
->> ecb snd_mix
->> er_oss crypto_blkcipher snd_pcm iwlagn iwlcore snd_seq_dummy dcdbas
->> snd_seq_oss
->> rfkill dm_multipath psmouse sdhci_pci scsi_dh sdhci led_class pcspkr
->> ricoh_mmc s
->> erio_raw yenta_socket rsrc_nonstatic joydev mmc_core mac80211
->> snd_seq_midi pcmci
->> a_core snd_rawmidi snd_seq_midi_event snd_seq cfg80211 snd_timer
->> snd_seq_device
->> snd uvcvideo soundcore compat_ioctl32 shpchp pci_hotplug
->> snd_page_alloc videodev
->>   v4l1_compat evdev video output parport_pc parport wmi button ac
->> Feb  5 14:38:27 tank kernel: battery intel_agp usbhid hid ext3 jbd
->> mbcache sr_mo
->> d cdrom sd_mod crc_t10dif sg pata_acpi ohci1394 ahci ata_generic
->> ieee1394 ehci_h
->> cd uhci_hcd libata scsi_mod dock usbcore e1000e dm_mirror dm_log
->> dm_snapshot dm_
->> mod thermal processor fan fbcon tileblit font bitblit softcursor fuse
->> Feb  5 14:38:27 tank kernel: [ 6267.996419] Pid: 9, comm: events/0  
->> Tainted: G
->>       W 2.6.27-11-generic #1
->> Feb  5 14:38:27 tank kernel: [ 6267.996424]
->> Feb  5 14:38:27 tank kernel: [ 6267.996426] Call Trace:
->> Feb  5 14:38:27 tank kernel: [ 6267.996442]  [<ffffffff8024e92c>]
->> warn_slowpath+
->> 0xbc/0xf0
->> Feb  5 14:38:27 tank kernel: [ 6267.996452]  [<ffffffff802ddc69>] ?
->> constant_tes
->> t_bit+0x9/0x40
->> Feb  5 14:38:27 tank kernel: [ 6267.996461]  [<ffffffff8050367e>] ?
->> _spin_lock+0xe/0x20
->> Feb  5 14:38:27 tank kernel: [ 6267.996468]  [<ffffffff802de75e>] ?
->> get_partial_node+0xae/0xc0
->> Feb  5 14:38:27 tank kernel: [ 6267.996474]  [<ffffffff802e1f10>] ?
->> __slab_alloc+0xd0/0x260
->> Feb  5 14:38:27 tank kernel: [ 6267.996482]  [<ffffffff80301b21>] ?
->> alloc_inode+0x1f1/0x220
->> Feb  5 14:38:27 tank kernel: [ 6267.996489]  [<ffffffff802ff9d6>] ?
->> __d_lookup+0x16/0x150
->> Feb  5 14:38:27 tank kernel: [ 6267.996496]  [<ffffffff80363499>] ?
->> cap_d_instantiate+0x9/0x10
->> Feb  5 14:38:27 tank kernel: [ 6267.996505]  [<ffffffff80362e29>] ?
->> cap_inode_alloc_security+0x9/0x10
->> Feb  5 14:38:27 tank kernel: [ 6267.996523]  [<ffffffffa0402930>] ?
->> iwl_mac_set_key+0x0/0x160 [iwlagn]
->> Feb  5 14:38:27 tank kernel: [ 6267.996531]  [<ffffffff8036268b>] ?
->> security_d_instantiate+0x1b/0x30
->> Feb  5 14:38:27 tank kernel: [ 6267.996538]  [<ffffffff802ffe55>] ?
->> d_instantiate+0x75/0x90
->> Feb  5 14:38:27 tank kernel: [ 6267.996545]  [<ffffffff8031fff6>] ?
->> inotify_inode_queue_event+0x16/0x100
->> Feb  5 14:38:27 tank kernel: [ 6267.996554]  [<ffffffff80350e1a>] ?
->> debugfs_mknod+0xda/0x140
->> Feb  5 14:38:27 tank kernel: [ 6267.996560]  [<ffffffff80300549>] ?
->> dput+0xb9/0x190
->> Feb  5 14:38:27 tank kernel: [ 6267.996566]  [<ffffffff80502179>] ?
->> mutex_unlock+0x9/0x20
->> Feb  5 14:38:27 tank kernel: [ 6267.996586]  [<ffffffffa03ed412>]
->> iwl_set_dynamic_key+0x492/0x4e0 [iwlcore]
->> Feb  5 14:38:27 tank kernel: [ 6267.996599]  [<ffffffff80351122>] ?
->> debugfs_create_file+0x82/0xe0
->> Feb  5 14:38:27 tank kernel: [ 6267.996620]  [<ffffffffa03efc9e>] ?
->> iwl_scan_cancel+0xe/0x80 [iwlcore]
->> Feb  5 14:38:27 tank kernel: [ 6267.996635]  [<ffffffffa0402a5c>]
->> iwl_mac_set_key+0x12c/0x160 [iwlagn]
->> Feb  5 14:38:27 tank kernel: [ 6267.996673]  [<ffffffffa033b067>]
->> __ieee80211_key_todo+0x167/0x330 [mac80211]
->> Feb  5 14:38:27 tank kernel: [ 6267.996706]  [<ffffffffa033b3b0>] ?
->> key_todo+0x0/0x10 [mac80211]
->> Feb  5 14:38:27 tank kernel: [ 6267.996734]  [<ffffffffa033b39a>]
->> ieee80211_key_todo+0x1a/0x30 [mac80211]
->> Feb  5 14:38:27 tank kernel: [ 6267.996762]  [<ffffffffa033b3be>]
->> key_todo+0xe/0x10 [mac80211]
->> Feb  5 14:38:27 tank kernel: [ 6267.996771]  [<ffffffff80262812>]
->> run_workqueue+0xc2/0x1a0
->> Feb  5 14:38:27 tank kernel: [ 6267.996783]  [<ffffffff80262b1f>]
->> worker_thread+0xaf/0x130
->> Feb  5 14:38:27 tank kernel: [ 6267.996791]  [<ffffffff80267060>] ?
->> autoremove_wake_function+0x0/0x40
->> Feb  5 14:38:27 tank kernel: [ 6267.996798]  [<ffffffff80262a70>] ?
->> worker_thread+0x0/0x130
->> Feb  5 14:38:27 tank kernel: [ 6267.996803]  [<ffffffff80266c2e>]
->> kthread+0x4e/0x90
->> Feb  5 14:38:27 tank kernel: [ 6267.996810]  [<ffffffff80213c99>]
->> child_rip+0xa/0x11
->> Feb  5 14:38:27 tank kernel: [ 6267.996816]  [<ffffffff80266be0>] ?
->> kthread+0x0/0x90
->> Feb  5 14:38:27 tank kernel: [ 6267.996821]  [<ffffffff80213c8f>] ?
->> child_rip+0x0/0x11
->> Feb  5 14:38:27 tank kernel: [ 6267.996825]
->> Feb  5 14:38:27 tank kernel: [ 6267.996828] ---[ end trace
->> ec5f349ce4f550a2 ]---
->>
->> This is an Intel 5300 inside a Dell Latitude. I *used* to have all
->> kind of other issues that I can't reliably reproduce at the moment, so
->> I thought I would start with this one, and see if it fixes other
->> issues too.
->> This is compat-wireless-2009-01-30.
+> I would like to make an outdoor radio link at 5GHz between my house and one
+> of my neighbors. Because I live near an airport, I've looked for European in
+> force regulation regarding radar detection. I've discovered that ETSI has
+> released a new normative on Dicember 2008 (EN 301 893 v1.5). This normative
+> requires that WLAN devices with DFS capability must detect pulse width down
+> to 0.8us across the bands from 5250 to 5350MHz and from 5470 to 5725 MHz;
+> moreover they must detect staggered Pulse Repetition Frequency (PRF) radars
+> with 3 PRF value (I don't excactly know what it means).
 >
-> Around this time we added a patch that may help with this. Could you
-> please check if you are running with
-> c15040bdab2181a55893438eabdd402a363c0338 ("iwlwifi: clean key table in
-> iwl_clear_stations_table")?
+> I have two devices with Atheros 5414 radio module, so I've looked for
+> support of radar detection (and 802.11h) in madwifi driver. I've seen that
+> the -dfs branch supports the EN 301 893 v1.4.1 and it implements 802.11h
+> protocol. Looking into the madwifi-dfs code I've seen that the hardware does
+> the pulse detection and the driver detects the radar recognizing the pulse
+> patterns (ath/if_ath_radar.c and ath/if_ath_radar.h).
+>
+> Because the pulse detection is done in hardware, I suppose that for
+> detecting pulse width down to 0.8us I need radio modules with newer chipset
+> like AR9xxx. Is it right? Can't I use my AR5414 radio modules?
+> So, I've searched in the code of ath9k and mac80211 but I don't find any
+> implementation of radar detection and 802.11h. Am I wrong? I've read on
+> http://wireless.kernel.org/en/users/Drivers/ath9k that 802.11h is a feature
+> of ath9k driver (and consecutively of mac80211, right?).
+>
+> I there any way to make an outdoor radio link at 5GHz compliant to the
+> European regulation with Linux? :-)
 
-No, I didn't, but I updated to latest HEAD snapshot and that fixed it  
-indeed. Great! Now let's see if that also improves overall stability.
+mac80211 or ath9k does not yet have radar detection support so
+therefore no mac80211 driver will allow you to use any beaconing mode
+(AP | IBSS | Mesh) mode on DFS channels yet.
 
-Thanks, Jan.
+Note that not all 5 GHz channels require radar detection though so you
+could try using one of the non-DFS channels. Check 'iw list' for that.
 
--- 
-Do you need professional PHP or Horde consulting?
-http://horde.org/consulting/
+ath9k STA should work with DFS but I didn't work on that myself so
+will leave someone else to comment on that.
 
+  Luis
