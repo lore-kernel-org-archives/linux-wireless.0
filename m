@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f21.google.com ([209.85.217.21]:37539 "EHLO
-	mail-gx0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754452AbZBBSR7 (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:35372 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754498AbZBKWc6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 13:17:59 -0500
-Received: by gxk14 with SMTP id 14so1286338gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 10:17:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20090130204452.GG3485@tuxdriver.com>
-References: <20090130204452.GG3485@tuxdriver.com>
-Date: Mon, 2 Feb 2009 10:17:58 -0800
-Message-ID: <43e72e890902021017k34dd50cbj9132090ed112b1d0@mail.gmail.com> (sfid-20090202_191818_600565_897A02FA)
-Subject: Re: wireless-regdb updated 2009-01-30
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
+	Wed, 11 Feb 2009 17:32:58 -0500
+Received: by ewy14 with SMTP id 14so361923ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 14:32:55 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "Christoph .J Thompson" <cjsthompson@gmail.com>
+Subject: Re: Sitecom WL-608 USB WiFi
+Date: Wed, 11 Feb 2009 23:32:53 +0100
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
+In-Reply-To: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200902112332.53480.IvDoorn@gmail.com> (sfid-20090211_233302_407511_1B3D233E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 30, 2009 at 12:44 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> I have pushed an update to the wireless-regdb database here:
->
->        git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
->
-> The changes include a new man page for regulatory.bin, some sample
-> packages for .deb and .rpm generation, and an actual database change
-> to correct a mistake in the Japan portion of the database.
->
-> Enjoy!  Let me know if there are problems...
+Hi,
 
-FYI this is now at:
+> I just baught a Sitecom WL-608 USB WIFI dongle and it seems it isn't supported out of the box yet. Here is some info on the device:
 
-http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.01.30.tar.bz2
+Looks like a new USB id. Since it isn't an 11n device it can only be a rt73usb or rt2500usb device.
+Could you try below patch? My current bet is that the device contains the rt73 chipset,
+so this will enable rt73usb to use the device.
 
-The cron job was failing because compat-wireless  was failing, I've
-moved the script to run before compat-wireless stuff. It should not
-fail now hopefully.
+Ivo
 
-  Luis
+---
+
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 846996c..84f2ee8 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2398,6 +2398,7 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	/* Senao */
+ 	{ USB_DEVICE(0x1740, 0x7100), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Sitecom */
++	{ USB_DEVICE(0x0df6, 0x003f), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x9712), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x90ac), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Surecom */
+
