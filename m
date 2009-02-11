@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4130 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751622AbZB0C1m (ORCPT
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:47395
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754219AbZBKWen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 21:27:42 -0500
-Date: Thu, 26 Feb 2009 21:27:04 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Jiri Slaby <jirislaby@gmail.com>, proski@gnu.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	ath5k-devel@venema.h4ckr.net
-Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
-Message-ID: <20090227022704.GA29850@hash.localnet> (sfid-20090227_032751_187484_B205E656)
-References: <1235688271-22346-1-git-send-email-jirislaby@gmail.com> <20090226230338.M86894@bobcopeland.com> <49A7236E.2020807@gmail.com> <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com> <49A726A7.6090809@gmail.com>
+	Wed, 11 Feb 2009 17:34:43 -0500
+Message-ID: <4993527D.9070700@erley.org> (sfid-20090211_233445_363569_131F63EB)
+Date: Wed, 11 Feb 2009 17:34:37 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49A726A7.6090809@gmail.com>
+To: Bob Copeland <bcopeland@gmail.com>
+CC: =?ISO-8859-1?Q?Norman_Rie=DF?= <norman@smash-net.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath5k master (AP) mode
+References: <49931D52.90904@smash-net.org> <b6c5339f0902111304u430bce4dl3304f171ae8fbd45@mail.gmail.com>
+In-Reply-To: <b6c5339f0902111304u430bce4dl3304f171ae8fbd45@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 27, 2009 at 12:32:55AM +0100, Jiri Slaby wrote:
-> On 27.2.2009 00:28, Bob Copeland wrote:
->> hw_to_driver_rix() returns sc->rate_idx[x][y] as an int, and that
->> array is initialized to (u8)-1 for invalid rates.  So, it can
->> return 255 if the hardware rate index (y) is bad, then the check
->> "rxs.rate_idx>= 0" would always be true, right?  If it's not a
->> real bug yet, it likely will be one day :)
->
-> Ah, yes, it really is a bug(tm), care to post a fix?
+Bob Copeland wrote:
+> On Wed, Feb 11, 2009 at 1:47 PM, Norman Rie=DF <norman@smash-net.org>=
+ wrote:
+>> Hello,
+>>
+>> i pulled wireless-testing kernel today and installed hostapd-0.6.7, =
+ but
+>> it still does not work.
+>>
+>>
+>> iwconfig wlan0 mode master
+>> Error for wireless request "Set Mode" (8B06) :
+>>    SET failed on device wlan0 ; Invalid argument.
+>=20
+> Did you apply this patch from upthread?
+>=20
 
-Actually, I remembered in the dark recesses of my moldering brain 
-that someone had a lost patch for this a while ago, so I searched
-the archives.  Pavel, ok to add your s-o-b?
+I can confirm Norman's wireless card's behavior (and have an associate =
+with
+the same problem).  This is with the upthread patch applied to compat-w=
+ireless
+pulled from git.
 
-From: Pavel Roskin <proski@gnu.org>
-Subject: [PATCH] ath5k: use signed elements for rate index table
+ath5k 0000:0a:05.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+ath5k 0000:0a:05.0: registered as 'phy5'
+phy5: Selected rate control algorithm 'pid'
+ath5k phy5: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+ath5k phy5: RF5112B multiband radio found (0x36)
 
-A lookup table is used to convert from hardware rate indexes back
-to driver-based rate indexes.  For unknown hardware rates, we
-initialize these values to -1, but since the array elements are of
-type u8, they will be in the range 0-255.  This can cause array
-overruns because subsequent sanity checks only check for negative
-values.
+If I remove the entry from hostapd.conf to set the channel, and force a=
+ channel
+with iwconfig, hostapd will start, but nothing can associate, and netst=
+umbler
+on an XP machine with an atheros card in it does not detect the SSID as=
+ being=20
+an access point.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/base.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-index 20e0d14..8229561 100644
---- a/drivers/net/wireless/ath5k/base.h
-+++ b/drivers/net/wireless/ath5k/base.h
-@@ -112,7 +112,7 @@ struct ath5k_softc {
- 	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
- 	struct ieee80211_channel channels[ATH_CHAN_MAX];
- 	struct ieee80211_rate	rates[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
--	u8			rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
-+	s8			rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
- 	enum nl80211_iftype	opmode;
- 	struct ath5k_hw		*ah;		/* Atheros HW */
- 
--- 
-1.5.4.1
+Pat Erley
 
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
