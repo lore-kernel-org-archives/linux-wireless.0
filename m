@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:20260 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834AbZBVV4W (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39617 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753890AbZBKQay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 16:56:22 -0500
-Message-ID: <49A1CA01.9030501@gmail.com> (sfid-20090222_225628_049307_DBA51BFB)
-Date: Sun, 22 Feb 2009 22:56:17 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Wed, 11 Feb 2009 11:30:54 -0500
+Date: Wed, 11 Feb 2009 11:25:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [PATCH 0/3] iwlwifi driver updates 02/10/2009
+Message-ID: <20090211162549.GA5082@tuxdriver.com> (sfid-20090211_173058_445115_4E67458D)
+References: <1234307944-21820-1-git-send-email-reinette.chatre@intel.com> <1234368987.23593.35.camel@rc-desk>
 MIME-Version: 1.0
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-CC: Frederic Weisbecker <fweisbec@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, Bob Copeland <me@bob>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org>
-In-Reply-To: <20090222170201.GA27360@silver.sucs.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1234368987.23593.35.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22.2.2009 18:02, Sitsofe Wheeler wrote:
-> On Sun, Feb 22, 2009 at 03:47:44PM +0100, Frederic Weisbecker wrote:
->> Looks like it happens with ath5k driver.
->> Well, I have an atheros card, so I'm testing it.
->
-> Good luck! I've just switched to a different location (with faster wifi
-> and more single network access points ) and I've been totally unable to
-> reproduce this warning.
+On Wed, Feb 11, 2009 at 08:16:27AM -0800, reinette chatre wrote:
+> On Tue, 2009-02-10 at 15:19 -0800, Chatre, Reinette wrote:
+> > Two cleanups and a fix to configure 5000 series FAT channels correctly.
+> > 
+> > [PATCH 1/3] iwlwifi: use pci registers defined in pci_regs.h
+> > [PATCH 2/3] iwlwifi: drop PCIe workaround applicable for development boards
+> > [PATCH 3/3] iwlwifi: fix FAT channel config for 5000 series
+> 
+> John,
+> 
+> Two of these patches have a duplicate "From:" line that will cause
+> git-am to include this information in the commit message.
+> 
+> Should I resend?
+> 
+> Reinette
 
-Well, maybe we should try to reproduce with jumbo packets sent to the 
-ath5k receiver, since I think it (1) is not very much test-covered code 
-(2) appears to be related.
+I've fixed that already, thanks. :-)
 
-Could you append lspci -vvnnxxx of your adapter? Better along with 
-ath_info[1] output.
-
-[1] svn co http://svn.madwifi-project.org/ath_info/trunk ath_info
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
