@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:52294 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016AbZBXAoW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 19:44:22 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so263394ugf.37
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 16:44:19 -0800 (PST)
-From: Rahul Jain <rahul@schmizz.net>
-Reply-To: Rahul <rahul@schmizz.net>
+Received: from main.gmane.org ([80.91.229.2]:49214 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755666AbZBKSRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2009 13:17:36 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LXJeL-0001wL-Uc
+	for linux-wireless@vger.kernel.org; Wed, 11 Feb 2009 18:17:29 +0000
+Received: from rain.gmane.org ([80.91.229.7])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 18:17:29 +0000
+Received: from lurkos.usenet by rain.gmane.org with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 18:17:29 +0000
 To: linux-wireless@vger.kernel.org
-Subject: IEEE 802.15.4
-Date: Tue, 24 Feb 2009 01:44:13 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200902240144.13336.r.jain@jacobs-university.de> (sfid-20090224_014426_010677_C14627FC)
+From: Lurkos <lurkos.usenet@gmail.com>
+Subject: Re: Merge compat-wireless-old into 2.6.26
+Date: Wed, 11 Feb 2009 18:17:21 +0000 (UTC)
+Message-ID: <20090211181727.8162.26564.XPN@L622132.user.x-privat.org> (sfid-20090211_191740_228885_C294F92D)
+References: <20090210172817.9004.60065.XPN@L622132.user.x-privat.org> <20090210181915.GA4248@tesla>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+*Luis R. Rodriguez* wrote:
 
-I am working on implementing a Linux device driver for IEEE 802.15.4 NanoLoc 
-Chipset for my bachelor's thesis. Currently, I am writing the research 
-proposal, and therefore am collecting background information on this topic so 
-that I can come up with a concrete work plan. I have no previous experience 
-with device drivers as such, however since this is something I really want to 
-do I am more than willing to learn.
-Now, here is the thing - if someone could point me to some good documentation 
-on this topic (device drivers for IEEE 802.15.4) it would help me a lot. The 
-NanoLoc chip is capable of range measurement (reasonably accurate) between 
-transceivers and the final goal of the project is to realize this. 
-I would really appreciate background information on this topic - I do not mind 
-RTFM. :) Any pointers would also be deeply appreciated.
+>> Is it possibile to patch linux 2.6.26 source (e.g. Debian Lenny sources)
+>> to have the new compat-wireless-old?
+>> If yes, what could be the correct procedure?
+> It is possible, you would just have to replace the directories
+> that compat-wireless-old has in the kernel sources.
 
-Thanks
-Rahul Jain
-Jacobs University Bremen
+Ok, thank you. I am going to try.
+
+>> I would prefer to compile only my wireless network card driver
+>> statically into the kernel.
+> What exactly will that buy you though? Is it worth the effort?
+
+In fact probably no.
+I would like only to use the new iwl3945, because the one provided with
+2.6.26 gives me lots of problem (*) and then I have to use
+compat-wirelss-old version.
+At the same time I would prefer not to put files outside my home without
+a corresponding deb package, to keep administration of the machine more
+simple. It's quite simple to forget these type of customization (like
+installing compat-wireless)... a package with the flag installed makes
+simpler to keep track on what exactly you have done with the laptop.
+Of course it's also a way learn more about Linux...
+
+(*) physical button to switch on/off wifi doesn't work
+
+-- 
+Lurkos
+
