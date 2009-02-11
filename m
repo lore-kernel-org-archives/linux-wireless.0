@@ -1,77 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:52685 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755177AbZBKWvd (ORCPT
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:56143 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754784AbZBKUVV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 17:51:33 -0500
-Received: by fxm13 with SMTP id 13so1329667fxm.13
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 14:51:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <200902112332.53480.IvDoorn@gmail.com>
-References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
-	 <200902112332.53480.IvDoorn@gmail.com>
-Date: Wed, 11 Feb 2009 22:51:29 +0000
-Message-ID: <3ace41890902111451n6c9cbdc4me410609479b1ac4f@mail.gmail.com> (sfid-20090211_235136_750740_8DBAB231)
-Subject: Re: Sitecom WL-608 USB WiFi
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "Christoph .J Thompson" <cjsthompson@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 11 Feb 2009 15:21:21 -0500
+Received: by bwz5 with SMTP id 5so553682bwz.13
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 12:21:19 -0800 (PST)
+Date: Wed, 11 Feb 2009 21:17:07 +0100
+From: "Christoph .J Thompson" <cjsthompson@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Sitecom WL-608 USB WiFi
+Message-Id: <20090211211707.d5e71ddb.cjsthompson@gmail.com> (sfid-20090211_212126_840255_B2B4C9EE)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I added the WL-603 to the zd1211rw driver in wireless-testing a couple
-of weeks. ago.
-zd1211rw: adding Sitecom WL-603 (0df6:0036) to the USB id list
+Hi,
 
-Here was the entry - could you try adding a similiar line (using
-0x003f for your device, instead of 0x0036 shown here) and report back
-if the WL608 is similiar to the WL 603 except by the ID?
+I just baught a Sitecom WL-608 USB WIFI dongle and it seems it isn't supported out of the box yet. Here is some info on the device:
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c
-b/drivers/net/wireless/zd1211rw/zd_usb.c
-index b5db57d..17527f7 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -84,6 +84,7 @@ static struct usb_device_id usb_ids[] = {
-        { USB_DEVICE(0x0586, 0x340a), .driver_info = DEVICE_ZD1211B },
-        { USB_DEVICE(0x0471, 0x1237), .driver_info = DEVICE_ZD1211B },
-        { USB_DEVICE(0x07fa, 0x1196), .driver_info = DEVICE_ZD1211B },
-+       { USB_DEVICE(0x0df6, 0x0036), .driver_info = DEVICE_ZD1211B },
-        /* "Driverless" devices that need ejecting */
-        { USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
-        { USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
+http://www.sitecom.com/product.php?productname=Wireless+USB+Adapter+54g&productcode=WL-608&productid=709&inactive=1
 
+Bus 001 Device 024: ID 0df6:003f Sitecom Europe B.V.
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  idVendor           0x0df6 Sitecom Europe B.V.
+  idProduct          0x003f
+  bcdDevice            1.01
+  iManufacturer           1 Ralink
+  iProduct                2 802.11 g WLAN
+  iSerial                 3 1.0
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength           67
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0
+    bmAttributes         0x80
+      (Bus Powered)
+    MaxPower              450mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           7
+      bInterfaceClass       255 Vendor Specific Class
+      bInterfaceSubClass    255 Vendor Specific Subclass
+      bInterfaceProtocol    255 Vendor Specific Protocol
+      iInterface              5 1.0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x01  EP 1 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x02  EP 2 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x04  EP 4 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x05  EP 5 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x06  EP 6 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+Device Qualifier (for other device speed):
+  bLength                10
+  bDescriptorType         6
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  bNumConfigurations      1
+Device Status:     0x0000
+  (Bus Powered)
 
-On Wed, Feb 11, 2009 at 10:32 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> Hi,
->
->> I just baught a Sitecom WL-608 USB WIFI dongle and it seems it isn't supported out of the box yet. Here is some info on the device:
->
-> Looks like a new USB id. Since it isn't an 11n device it can only be a rt73usb or rt2500usb device.
-> Could you try below patch? My current bet is that the device contains the rt73 chipset,
-> so this will enable rt73usb to use the device.
->
-> Ivo
->
-> ---
->
-> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-> index 846996c..84f2ee8 100644
-> --- a/drivers/net/wireless/rt2x00/rt73usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
-> @@ -2398,6 +2398,7 @@ static struct usb_device_id rt73usb_device_table[] = {
->        /* Senao */
->        { USB_DEVICE(0x1740, 0x7100), USB_DEVICE_DATA(&rt73usb_ops) },
->        /* Sitecom */
-> +       { USB_DEVICE(0x0df6, 0x003f), USB_DEVICE_DATA(&rt73usb_ops) },
->        { USB_DEVICE(0x0df6, 0x9712), USB_DEVICE_DATA(&rt73usb_ops) },
->        { USB_DEVICE(0x0df6, 0x90ac), USB_DEVICE_DATA(&rt73usb_ops) },
->        /* Surecom */
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+It look like this device uses a RaLink chip. How do I go about to find out which one?
+
+Thanks,
+
+-- 
+Christoph .J Thompson <cjsthompson@gmail.com>
