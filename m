@@ -1,33 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:11047 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754643AbZBTAiD (ORCPT
+Received: from india533.server4you.de ([85.25.151.41]:9311 "EHLO
+	india533.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754592AbZBKS5i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 19:38:03 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so277253yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 16:38:00 -0800 (PST)
+	Wed, 11 Feb 2009 13:57:38 -0500
+Received: from [192.168.0.17] (pD95FE930.dip.t-dialin.net [217.95.233.48])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by india533.server4you.de (Postfix) with ESMTP id 7D65E770510
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 19:47:44 +0100 (CET)
+Message-ID: <49931D52.90904@smash-net.org> (sfid-20090211_195742_743713_3AE76E31)
+Date: Wed, 11 Feb 2009 19:47:46 +0100
+From: =?ISO-8859-15?Q?Norman_Rie=DF?= <norman@smash-net.org>
 MIME-Version: 1.0
-In-Reply-To: <1235050014.4023.62.camel@johannes.local>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-	 <1234999545-14357-11-git-send-email-lrodriguez@atheros.com>
-	 <1235050014.4023.62.camel@johannes.local>
-Date: Thu, 19 Feb 2009 16:38:00 -0800
-Message-ID: <43e72e890902191638k3549b0dfic0bb209548915073@mail.gmail.com> (sfid-20090220_013808_228485_B871C022)
-Subject: Re: [PATCH v4 10/15] cfg80211: remove likely from an 11d hint case
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: Re: ath5k master (AP) mode
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 19, 2009 at 5:26 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-02-18 at 18:25 -0500, Luis R. Rodriguez wrote:
->
->> +     if (unlikely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
->>               goto out;
->
-> WARN_ON already contains an unlikely.
+Hello,
 
-Thanks! I'll go fix.
+i pulled wireless-testing kernel today and installed hostapd-0.6.7,  but
+it still does not work.
+
+
+iwconfig wlan0 mode master
+Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlan0 ; Invalid argument.
+
+hostapd v0.6.7
+User space daemon for IEEE 802.11 AP management,
+IEEE 802.1X/WPA/WPA2/EAP/RADIUS Authenticator
+Copyright (c) 2002-2009, Jouni Malinen <j@w1.fi> and contributors
+
+
+hostapd -dd /etc/hostapd/hostapd.conf
+Configuration file: /etc/hostapd/hostapd.conf
+ctrl_interface_group=0
+Failed to set interface wlan0 to master mode.
+nl80211 driver initialization failed.
+wlan0: Unable to setup interface.
+rmdir[ctrl_interface]: No such file or directory
+ELOOP: remaining socket: sock=5 eloop_data=0x95f39e8 user_data=(nil)
+handler=0x8075908
+
+
+The card is Atheros Communications Inc. AR2413 802.11bg NIC (rev 01).
+
+Regards,
+
+Norman
