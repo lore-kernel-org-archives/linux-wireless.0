@@ -1,125 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32582 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752890AbZBBVDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 16:03:51 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 13:03:51 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] iw: add MCS set parsing (RX/TX MCS rates)
-Date: Mon, 2 Feb 2009 13:03:08 -0800
-Message-ID: <1233608588-17791-1-git-send-email-lrodriguez@atheros.com> (sfid-20090202_220354_742396_C88F72A3)
+Received: from yx-out-2324.google.com ([74.125.44.29]:2168 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754894AbZBKVtE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2009 16:49:04 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so220130yxm.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 13:49:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20090210131418.9c3408a9.rumi_ml@rtfm.hu>
+References: <20081112224810.8d4ca179.rumi_ml@rtfm.hu>
+	 <1226530010.15173.0.camel@dv>
+	 <20081113004632.d8d821c5.rumi_ml@rtfm.hu>
+	 <20081113181155.c556bde1.rumi_ml@rtfm.hu>
+	 <1226598550.5839.3.camel@johannes.berg>
+	 <20081113235928.3ed79ff6.rumi_ml@rtfm.hu>
+	 <40f31dec0811131507x7449112cy5746d28c848a2146@mail.gmail.com>
+	 <20081114111559.56530874.rumi_ml@rtfm.hu>
+	 <20090210131418.9c3408a9.rumi_ml@rtfm.hu>
+Date: Wed, 11 Feb 2009 23:49:01 +0200
+Message-ID: <40f31dec0902111349q222bce42y50345dafe244b267@mail.gmail.com> (sfid-20090211_224909_409512_780CAE2B)
+Subject: Re: ath5k master (AP) mode
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: RUMI Szabolcs <rumi_ml@rtfm.hu>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Matteo Brusa <matteo.brusa@kaasa.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds MCS set parsing to iw. When you can 'iw list' you can
-now see the MCS set actually parsed, this can tell you information
-such as all the RX/TX MCS indexes supported, max TX spatial streams,
-if TX unequal modulation is supported and your max supported HT
-RX data rate.
+2009/2/10 RUMI Szabolcs <rumi_ml@rtfm.hu>:
+> Hello Everyone!
+>
+> To put it simple: IT WORKS! :)
+>
+> The recipe:
+>
+> wireless-testing-git pull from earlier today with the only
+> modification being this:
+>
+> -----8<----------------------------------------
+>
+> --- wireless-testing/drivers/net/wireless/ath5k/base.c      2009-02-10 06:11:43.186470883 +0100
+> +++ wireless-testing/drivers/net/wireless/ath5k/base.c.old       2008-11-14 09:36:40.000000000 +0100
+> @@ -522,6 +501,7 @@
+>        hw->wiphy->interface_modes =
+>                BIT(NL80211_IFTYPE_STATION) |
+>                BIT(NL80211_IFTYPE_ADHOC) |
+> +               BIT(NL80211_IFTYPE_AP) |
+>                BIT(NL80211_IFTYPE_MESH_POINT);
+>
+>        hw->extra_tx_headroom = 2;
+>
+> -----8<----------------------------------------
+>
+> Otherwise hostapd-0.6.7, nothing special on the userland.
+>
+> In detail:
+>
+> - Open System mode works with Tx fluctuating between 4-6 Mbps
+> and Rx between 10-14 Mbps regardless of the distance or signal
+> strength. It was tested standing 1m away from the AP antenna
+> (signal 100/100) up to 15m away with several thick walls in
+> between (signal 60/100) but throughput figures remained the
+> same.
+>
+> - MAC address filtering does work. It probably always did,
+> I think I've just messed up the configuration the last time
+> and that was the reason back then, sorry.
+>
+> - WEP mode does not work, apparently the driver does not allow
+> setting it and hostapd is exiting on that error.
+>
+> - WPA and WPA2 have been tested and they seem to be working!
+>
+> A small hint is that the WPA pre-shared key should be given
+> in hex both for hostapd and on the clients, otherwise there can
+> be differences in translation from ASCII to hex which in turn
+> may lead to an authentication failure.
+>
+> I've tried to push some 100 MBs through the link in both directions
+> both with WPA/WPA2 turned off and then on and it seems to be rock
+> solid so far. CPU usage both on the AP host and the client is
+> negligible in any case, the throughput isn't affected by turning
+> on WPA/WPA2 either.
+>
+> Thank you all!
+>
+> Best regards,
+> Sab
+>
 
-This is as per 802.11n Draft 7 on section 7.3.2.57.4 Supported MCS Set field.
+The only reason we haven't enabled AP support yet is that it didn't
+work on some devices and we need to make more tests to be sure that
+it's ok.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
 
-I don't see anything on the max HT RX rate though, so cannot test that.
-My HT APs are also being shipped from NJ so I have no APs to test against
-which I can go and tweak to ensure HT is enabled as I want. Please test
-and review.
-
- info.c |   57 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 57 insertions(+), 0 deletions(-)
-
-diff --git a/info.c b/info.c
-index bf3b8bd..cabd4b6 100644
---- a/info.c
-+++ b/info.c
-@@ -1,3 +1,4 @@
-+#include <stdbool.h>
- #include <errno.h>
- #include <net/if.h>
- 
-@@ -20,6 +21,24 @@ static void print_flag(const char *name, int *open)
- 	*open = 1;
- }
- 
-+static void print_mcs_index(unsigned char *mcs)
-+{
-+	unsigned int mcs_bit;
-+
-+	for (mcs_bit = 0; mcs_bit <= 76; mcs_bit++) {
-+		unsigned int mcs_octet = mcs_bit/8;
-+		unsigned int MCS_RATE_BIT = 1 << mcs_bit % 8;
-+		bool mcs_rate_idx_set;
-+
-+		mcs_rate_idx_set = !!(mcs[mcs_octet] & MCS_RATE_BIT);
-+
-+		if (!mcs_rate_idx_set)
-+			continue;
-+
-+		printf("\t\t\tMCS index %d\n", mcs_bit);
-+	}
-+}
-+
- static int print_phy_handler(struct nl_msg *msg, void *arg)
- {
- 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
-@@ -128,10 +147,48 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 		}
- 		if (tb_band[NL80211_BAND_ATTR_HT_MCS_SET] &&
- 		    nla_len(tb_band[NL80211_BAND_ATTR_HT_MCS_SET]) == 16) {
-+			/* As defined in 7.3.2.57.4 Supported MCS Set field */
-+			unsigned int tx_max_num_spatial_streams, max_rx_supp_data_rate;
- 			unsigned char *mcs = nla_data(tb_band[NL80211_BAND_ATTR_HT_MCS_SET]);
-+			bool tx_mcs_set_defined, tx_mcs_set_equal, tx_unequal_modulation;
-+
- 			printf("\t\tHT MCS set: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x\n",
- 				mcs[0], mcs[1], mcs[2], mcs[3], mcs[4], mcs[5], mcs[6], mcs[7],
- 				mcs[8], mcs[9], mcs[10], mcs[11], mcs[12], mcs[13], mcs[14], mcs[15]);
-+
-+			max_rx_supp_data_rate = ((mcs[10] >> 8) & ((mcs[11] & 0x3) << 8));
-+			tx_mcs_set_defined = !!(mcs[12] & (1 << 0));
-+			tx_mcs_set_equal = !(mcs[12] & (1 << 1));
-+			tx_max_num_spatial_streams = (mcs[12] | ((1 << 3) | (1 << 4))) + 1;
-+			tx_unequal_modulation = !!(mcs[12] & (1 << 5));
-+
-+			printf("\t\tHT Max RX data rate: %d Mbps\n", max_rx_supp_data_rate);
-+
-+			if (tx_mcs_set_defined) {
-+				if (tx_mcs_set_equal) {
-+					printf("\t\tHT TX/RX MCS rate indexes supported:\n");
-+					print_mcs_index(&mcs[0]);
-+				} else {
-+					printf("\t\tHT RX MCS rate indexes supported:\n");
-+					print_mcs_index(&mcs[0]);
-+
-+					if (tx_unequal_modulation)
-+						printf("TX unequal modulation supported\n");
-+					else
-+						printf("TX unequal modulation not supported\n");
-+
-+					printf("\t\tHT TX Max spatiel streams: %d\n",
-+						tx_max_num_spatial_streams);
-+
-+					printf("\t\tHT TX MCS rate indexes supported may differ\n");
-+				}
-+			}
-+			else {
-+				printf("\t\tHT RX MCS rate indexes supported:\n");
-+				print_mcs_index(&mcs[0]);
-+				printf("\t\tHT TX MCS rates indexes are undefined\n");
-+			}
-+
- 		}
- #endif
- 
 -- 
-1.6.1.2.253.ga34a
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
