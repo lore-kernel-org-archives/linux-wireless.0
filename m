@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:51748
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752849AbZBCAKz (ORCPT
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:65148 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757913AbZBLUjz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 19:10:55 -0500
-Received: from [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7] (unknown [IPv6:2001:4978:142:0:290:f5ff:fe3e:e3c7])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by s0be.servebeer.com (Postfix) with ESMTPSA id 69B99252A84
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Feb 2009 19:10:54 -0500 (EST)
-Message-ID: <49878B8B.4020005@erley.org> (sfid-20090203_011100_708554_3B99B242)
-Date: Mon, 02 Feb 2009 19:10:51 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Thu, 12 Feb 2009 15:39:55 -0500
+Received: by bwz5 with SMTP id 5so1288227bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 12:39:53 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [patch] iw: align output for HT capabilities
+In-Reply-To: <43e72e890902120753w44cab825i861d5c92c4816c61@mail.gmail.com>
+References: <2d14e2ca0902110900r7f0b84e4k7be81827187c434@mail.gmail.com>
+	 <43e72e890902111341l36bd40c8o9d54515e8b06e603@mail.gmail.com>
+	 <17a838c40902120456wb862200y8717a0d6a061b057@mail.gmail.com>
+	 <43e72e890902120753w44cab825i861d5c92c4816c61@mail.gmail.com>
+Date: Thu, 12 Feb 2009 21:39:51 +0100
+Message-ID: <17a838c40902121239v48bb2657jb540e52520b59a56@mail.gmail.com> (sfid-20090212_214000_352445_474908D7)
+Subject: Re: [ath9k-devel] Radar Detection and DFS status
+From: Alberto Pollastro <a.pollastro@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Michael Green <Michael.Green@atheros.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The HT capabilities have an additional space in front of them causing
-them not to line up with the rest of the listed outputs.  This patch
-removes that space.
+On Thu, Feb 12, 2009 at 4:53 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> Yes, we have indoor and outdoor channel flags. You can supply a patch
+> or provide a reference to the regulatory information you are reading
+> to determine this and we can patch it up.
 
-Signed-off-by: Pat Erley <pat-lkml@erley.org>
+I've read the European Directive 2007/90/EC:
 
----
+http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2007:041:0010:01:EN:HTML
 
-diff --git a/info.c b/info.c
-index bf3b8bd..69be500 100644
---- a/info.c
-+++ b/info.c
-@@ -70,7 +70,7 @@ static int print_phy_handler(struct nl_msg *msg, void
-*arg)
- #ifdef NL80211_BAND_ATTR_HT_CAPA
- 		if (tb_band[NL80211_BAND_ATTR_HT_CAPA]) {
- 			unsigned short cap = nla_get_u16(tb_band[NL80211_BAND_ATTR_HT_CAPA]);
--#define PCOM(fmt, args...) do { printf("\t\t\t * " fmt "\n", ##args); }
-while (0)
-+#define PCOM(fmt, args...) do { printf("\t\t\t* " fmt "\n", ##args); }
-while (0)
- #define PBCOM(bit, args...) if (cap & (bit)) PCOM(args)
- 			printf("\t\tHT capabilities: 0x%.4x\n", cap);
- 			PBCOM(0x0001, "LPDC coding");
+I think that the EC directive has been acknowledged by the Italian
+legislation as reported in the following table at page 28 (it's in
+Italian, sorry):
+
+http://www.comunicazioni.it/binary/min_comunicazioni/piano_nazionale_ripartizione_frequenze/03%20tabella_B.pdf
+
+I hope I'm not wrong.
+
+Thanks,
+Albert.
