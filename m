@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:52993 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:47180 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754258AbZBDXWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 18:22:40 -0500
-Subject: Re: [PATCH RFC] mac80211: Filter scan results
-From: Dan Williams <dcbw@redhat.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1233789496.5559.10.camel@californication>
-References: <20090204150857.GA5069@sortiz.org>
-	 (sfid-20090204_160640_465532_8378EED5)  <1233760201.3992.20.camel@johannes.local>
-	 <1233789496.5559.10.camel@californication>
-Content-Type: text/plain
-Date: Wed, 04 Feb 2009 18:20:57 -0500
-Message-Id: <1233789657.24227.14.camel@localhost.localdomain> (sfid-20090205_002244_586597_77136768)
-Mime-Version: 1.0
+	id S1753038AbZBLVcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2009 16:32:03 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 13:32:02 -0800
+Date: Thu, 12 Feb 2009 13:31:16 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Michael Green <Michael.Green@Atheros.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Alberto Pollastro <a.pollastro@gmail.com>
+Subject: Re: [ath9k-devel] Radar Detection and DFS status
+Message-ID: <20090212213116.GI4196@tesla> (sfid-20090212_223207_376912_60768F92)
+References: <2d14e2ca0902110900r7f0b84e4k7be81827187c434@mail.gmail.com> <43e72e890902111341l36bd40c8o9d54515e8b06e603@mail.gmail.com> <17a838c40902120456wb862200y8717a0d6a061b057@mail.gmail.com> <43e72e890902120753w44cab825i861d5c92c4816c61@mail.gmail.com> <17a838c40902121239v48bb2657jb540e52520b59a56@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <17a838c40902121239v48bb2657jb540e52520b59a56@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-02-05 at 00:18 +0100, Marcel Holtmann wrote:
-> Hi Johannes,
+On Thu, Feb 12, 2009 at 12:39:51PM -0800, Alberto Pollastro wrote:
+> On Thu, Feb 12, 2009 at 4:53 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > Yes, we have indoor and outdoor channel flags. You can supply a patch
+> > or provide a reference to the regulatory information you are reading
+> > to determine this and we can patch it up.
 > 
-> > > In very dense environment, the scan result buffer can get really large, mostly
-> > > due to the addition of proprietary IEs. iwlist fails, typically warning about:
-> > > "print_scanning_info: Allocation failed". wpa_supplicant fails as well, after
-> > > reallocating the scan result buffer several times, up to 132 Kbytes:
-> > > 	[snip]
-> > > 	Scan results did not fit - trying larger buffer (131072 bytes)
-> > > 	ioctl[SIOCGIWSCAN]: Argument list too long
-> > > 
-> > > By adding a mac80211 module parameter, we can filter the scan results and keep
-> > > only the ones userspace currently worries about, i.e. WPA1, WPA2, WMM and WPS.
-> > > 
-> > > To activate this feature, 1 has to be written to
-> > > /sys/module/mac80211/parameters/ieee80211_scan_ie_filter
-> > 
-> > Module parameter, hard-coded filter, just to work around wext crap. Eww.
-> > NACK.
+> I've read the European Directive 2007/90/EC:
 > 
-> we are perfectly aware that this is ugly and trust me, that nobody of us
-> wants to do it. However we do have these setups and they happen in real
-> life. I have been in a couple of locations where I ran into this problem
-> and in that cases there is no way for me to establish any kind of WiFi
-> connection at all, because the buffers are just too small. And that is
-> with a laptop. Then just think about a mobile phone running mac80211
-> where the memory is limited.
+> http://eur-lex.europa.eu/LexUriServ/LexUriServ.do?uri=OJ:L:2007:041:0010:01:EN:HTML
 > 
-> So WEXT is crap and everybody agrees, but until we can use cfg80211 for
-> scanning, we need something to make this work. So if this patch is not
+> I think that the EC directive has been acknowledged by the Italian
+> legislation as reported in the following table at page 28 (it's in
+> Italian, sorry):
+> 
+> http://www.comunicazioni.it/binary/min_comunicazioni/piano_nazionale_ripartizione_frequenze/03%20tabella_B.pdf
+> 
+> I hope I'm not wrong.
 
-No.  This does not go into the kernel.  Help make cfg80211 work for you,
-and you're perfectly free to patch your kernels as you see fit.  You can
-certainly backport cfg80211 scanning bits to whatever kernels you care
-about, just the same as you'd backport this hack to whatever kernels you
-care about.
+Thanks the details, Michael, what do you think?
 
-Dan
-
-
+  Luis
