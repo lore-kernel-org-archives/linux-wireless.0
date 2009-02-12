@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35697 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204AbZBGH3v (ORCPT
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:37870 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767AbZBLIAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Feb 2009 02:29:51 -0500
-Date: Sat, 7 Feb 2009 02:29:35 -0500
-From: Christoph Hellwig <hch@infradead.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Daniel Mierswa <impulze@impulze.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: location of binaries and libraries of new wifi tools
-Message-ID: <20090207072935.GA27869@infradead.org> (sfid-20090207_082954_324290_12F11949)
-References: <498CC07F.3080800@impulze.org> <1233981671.3652.6.camel@localhost>
+	Thu, 12 Feb 2009 03:00:30 -0500
+Received: by bwz5 with SMTP id 5so794348bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 00:00:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1233981671.3652.6.camel@localhost>
+In-Reply-To: <20090212042217.b05e83b4.cjsthompson@gmail.com>
+References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
+	 <200902112332.53480.IvDoorn@gmail.com>
+	 <3ace41890902111451n6c9cbdc4me410609479b1ac4f@mail.gmail.com>
+	 <20090212042217.b05e83b4.cjsthompson@gmail.com>
+Date: Thu, 12 Feb 2009 09:00:27 +0100
+Message-ID: <a32f33a40902120000g1e95df1eq8a221ddc539f351c@mail.gmail.com> (sfid-20090212_090034_601310_07EE4595)
+Subject: Re: Sitecom WL-608 USB WiFi
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: "Christoph .J Thompson" <cjsthompson@gmail.com>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 06, 2009 at 11:41:11PM -0500, Dan Williams wrote:
-> On Fri, 2009-02-06 at 23:58 +0100, Daniel Mierswa wrote:
-> > Hey list, I was wondering where to put binaries for the new
-> > wireless-stack based tools. Most default installations put libnl, crypto
-> > and gcrypt into /usr. Applications like iw, wpa_supplicant and crda need
-> > those to run, yet they do not link statically. So if the default
-> > location for the new binaries is /sbin or /bin and the libraries it
-> > links against are default installed somewhere into /usr things will
-> > break. I wonder now what to do for consistency. Either statically link
-> > libraries that are default installed into /usr, put those libs into /lib
-> > or install the binaries into /usr aswell. I'd appreciate any comments on
-> > that. :) Thanks and have a nice weekend.
-> 
-> Stuff in /bin or /sbin can certainly link to stuff in /usr without
-> breaking.  The only time it breaks is when you're using network
-> mounted /usr and you need the wireless stack to boot the machine and
-> mount /usr.
+On Thu, Feb 12, 2009 at 4:22 AM, Christoph .J Thompson
+<cjsthompson@gmail.com> wrote:
+> Further research suggest this WiFi dongle has the RT2870 chipset, it works with the RaLink driver once the id has been added to it.
 
-Which is a tradeoff to make.  But when you decide mounting /usr using
-wireless networks is not viable you shoiuld just move the tools to
-/usr/bin & /usr/sbin instead.  Having tools in /bin and & /sbin that
-need libraries from /usr/lib is not a good idea as it violates the basic
-assumptions (and doesn't actually help anything over having the tools
-in /usr/bin & /usr/sbin)
+Hmm thats weird, I couldn't find the reference that it is a 11n device. :S
+Anyway, I'll add the USB ID to rt2800usb.
+
+Ivo
