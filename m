@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41353 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107AbZBLJI5 (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:39824 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239AbZBLCme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 04:08:57 -0500
-Subject: Re: [PATCH] mac80211: fix aggregation for hardware with ampdu
-	queues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <18835.43402.286764.192456@gargle.gargle.HOWL>
-References: <1234396313.16004.65.camel@johannes.local>
-	 <18835.43402.286764.192456@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-sn7DPrF7QdnA44lyN/Xm"
-Date: Thu, 12 Feb 2009 10:08:21 +0100
-Message-Id: <1234429701.16004.81.camel@johannes.local> (sfid-20090212_100902_307222_0DA23951)
+	Wed, 11 Feb 2009 21:42:34 -0500
+Received: by ewy14 with SMTP id 14so420232ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 18:42:32 -0800 (PST)
+Date: Thu, 12 Feb 2009 03:38:17 +0100
+From: "Christoph .J Thompson" <cjsthompson@gmail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Hin-Tak Leung <hintak.leung@gmail.com>
+Subject: Re: Sitecom WL-608 USB WiFi
+Message-Id: <20090212033817.22d0a4ae.cjsthompson@gmail.com> (sfid-20090212_034238_825652_67A355F7)
+In-Reply-To: <200902112332.53480.IvDoorn@gmail.com>
+References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
+	<200902112332.53480.IvDoorn@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 11 Feb 2009 23:32:53 +0100
+Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> Hi,
+> 
+> Looks like a new USB id. Since it isn't an 11n device it can only be a rt73usb or rt2500usb device.
+> Could you try below patch? My current bet is that the device contains the rt73 chipset,
+> so this will enable rt73usb to use the device.
 
---=-sn7DPrF7QdnA44lyN/Xm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have tried to add the id of the Sitecom WL-608 to the rt73usb, rt2500usb and zd1211rw drivers but so far no luck. I turned debugging on for the aforementioned drivers and here is what I got:
 
-On Thu, 2009-02-12 at 10:16 +0530, Sujith wrote:
+phy4 -> rt73usb_validate_eeprom: EEPROM recovery - Antenna: 0x09aa
+phy4 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
+phy4 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET BG: 0x0000
+phy4 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET A: 0x0000
+phy4 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0001, rev: d5af900a.
+phy4 -> rt73usb_init_eeprom: Error - Invalid RT chipset detected.
+phy4 -> rt2x00lib_probe_dev: Error - Failed to allocate device.
+usbcore: registered new interface driver rt73usb
 
-> Tested with ath9k, works okay.
+phy5 -> rt2500usb_validate_eeprom: EEPROM recovery - Antenna: 0x0002
+phy5 -> rt2500usb_validate_eeprom: EEPROM recovery - NIC: 0xfff0
+phy5 -> rt2x00_set_chip: Info - Chipset detected - rt: 1201, rf: 0000, rev: 00002080.
+phy5 -> rt2500usb_init_eeprom: Error - Invalid RT chipset detected.
+phy5 -> rt2x00lib_probe_dev: Error - Failed to allocate device.
+usbcore: registered new interface driver rt2500usb
 
-Thanks, I tried to test but am seeing enormous latencies (with ath9k)
-even before my patch, ping looks like this:
+zd1211rw usb_init()
+usb 1-1.1: print_id() 0df6:003f v0101 high
+usb 1-1.1: reset high speed USB device using ehci_hcd and address 6
+zd1211rw 1-1.1:1.0: zd_chip_read_mac_addr_fw() 
+usb 1-1.1: read over firmware interface failed: -32
+zd1211rw 1-1.1:1.0: probe() couldn't initialize mac. Error number -32
+usb 1-1.1: reset high speed USB device using ehci_hcd and address 6
+zd1211rw: probe of 1-1.1:1.0 failed with error -32
+usbcore: registered new interface driver zd1211rw
+zd1211rw initialized
 
-ping ...
-      22000 ms
-      11000 ms
-...
-        100 ms
-      20000 ms
-...
-        200 ms
-
-etc.
-
-Anyway, not a pressing issue, and not sure where that's coming from.
-Throughput was good when it actually managed to establish a connection.
-
-johannes
-
---=-sn7DPrF7QdnA44lyN/Xm
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJk+cCAAoJEKVg1VMiehFYe+kP/iRQU6WMAssfkns0Z5EFRPQB
-AJ540R0JGvzRXtU0ZxnzGTVG1kKhPs9JVkElVnhiOdfmiSKA2/4mvLMeB7Se/ooI
-L0eIbQx2/HUL8y161ZeR56SZJCr++f0kTCldC7BAdb/c87hRiPdbMkKvzbY9kvVM
-ZKtvuL5/K8ZTSR6/48B4y8Ao5eh89ASQ8TcDCKdCeOYvj9IIz5nUmVUnkkd8er80
-Gy38siGMgT84nf3Rywg5DL7XmcpvbHgOgso5m3U1AMYlrbV7OUmi3wz64k1xKKok
-TyUWVa+yfxQHoVsiB2EMVKcwsZYZ2h0Y15DMCMXW6EMxGfQG/5EeTHZRxFtKjif4
-qcCyyq8ZO75dbIMKXqL/J0XM7/CL7zwqVZu2pfq8y2Xws4RR2KhwBn26q32UWTTo
-WnDE/LQMtlB5KqFpviDLAs8ARiOwWlhRFelge+fGzIEPLb+OeKsg0KKs62QnfKJo
-UZmIDkwKV5n9uEuDeh++NRY8RMOc0FUuCzOd/VISPfaZ73SeIKcuH8mh8f+gvUCT
-uRNISspckhpZhTGKlKE7yoALyIIpa1yHr7mt/O13BAl6nN7OMf0SIzFHMuC3zDc9
-XA6sh4ItjMpTfSAlFYBby6PfJ1vCPSzesQNsMMAqYOyw6ZcnODv9uNss9iGGJSmw
-EMPemZI0l8AQYXxLSzl/
-=9eEi
------END PGP SIGNATURE-----
-
---=-sn7DPrF7QdnA44lyN/Xm--
-
+-- 
+Christoph .J Thompson <cjsthompson@gmail.com>
