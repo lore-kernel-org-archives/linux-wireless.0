@@ -1,60 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:44706 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566AbZBPLLh (ORCPT
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:52692 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759326AbZBLRva (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 06:11:37 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so929416ywh.1
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 03:11:36 -0800 (PST)
+	Thu, 12 Feb 2009 12:51:30 -0500
+Received: by fxm13 with SMTP id 13so2396442fxm.13
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 09:51:28 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH] iwlagn: clean up error path in iwl_pci_probe
+Date: Thu, 12 Feb 2009 18:51:03 +0100
+Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
 MIME-Version: 1.0
-In-Reply-To: <1234779625.4219.125.camel@johannes.local>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-9-git-send-email-lrodriguez@atheros.com>
-	 <1234695858.4219.54.camel@johannes.local>
-	 <43e72e890902160155j402e887an9c5ea3ca9b9f64f3@mail.gmail.com>
-	 <1234778566.4219.120.camel@johannes.local>
-	 <43e72e890902160211p683bef08g5643ccb787cbf725@mail.gmail.com>
-	 <1234779625.4219.125.camel@johannes.local>
-Date: Mon, 16 Feb 2009 03:11:36 -0800
-Message-ID: <43e72e890902160311r7b99a1f2i790fa1b4ea197b51@mail.gmail.com> (sfid-20090216_121142_492021_56F9A520)
-Subject: Re: [PATCH 08/10] cfg80211: make regulatory_request use wiphy_idx
-	instead of wiphy
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200902121851.04202.helmut.schaa@gmail.com> (sfid-20090212_185155_407975_13C797F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 16, 2009 at 2:20 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-02-16 at 02:11 -0800, Luis R. Rodriguez wrote:
->
->> >> * Driver hints which never have the wiphy NULL
->> >> * __regulatory_hint: called from 11d hints, and from the workqueue
->> >> that processes the pending requests (which can come from userspace or
->> >> from drivers right now).
->> >
->> > Ok, but in the first case you can't have NULL, and in the second you
->> > could just inline it. It's not an operation that requires an inline here
->> > for it.
->>
->> Sure, its just called twice
->
-> Yeah but the first call is entirely pointless since wiphy cannot be NULL
-> there. I don't want to encourage random error-checking accessors where
-> writing wiphy->wiphy_idx is perfectly fine.
+This avoids triggering a BUG_ON in pci_disable_msi in the error path.
+Furthermore remove the first call to pci_disable_device as it is already
+called at out_pci_disable_device.
 
-That's the thing wiphy does not have a wiphy_idx, the
-cfg80211_registered_device does.
+Both issues were introduced in the patch "iwlagn: fix hw-rfkill while
+the interface is down".
 
->>  and I think it makes the code more
->> readable to use a routine, what if I just move it to core.c or reg.c.
->
-> If you really think it makes the code that much more readable then
-> please just use it once in the case where a NULL argument can happen
-> (the workqueue), and move it to that code.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
 
-OK
+JFI iwl3945 is not affected.
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 397577c..87b237d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3605,21 +3605,21 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	err = request_irq(priv->pci_dev->irq, iwl_isr, IRQF_SHARED,
+ 			  DRV_NAME, priv);
+ 	if (err) {
+ 		IWL_ERR(priv, "Error allocating IRQ %d\n", priv->pci_dev->irq);
+ 		goto out_disable_msi;
+ 	}
+ 	err = sysfs_create_group(&pdev->dev.kobj, &iwl_attribute_group);
+ 	if (err) {
+ 		IWL_ERR(priv, "failed to create sysfs device attributes\n");
+-		goto out_uninit_drv;
++		goto out_free_irq;
+ 	}
+ 
+ 	iwl_setup_deferred_work(priv);
+ 	iwl_setup_rx_handlers(priv);
+ 
+ 	/**********************************
+ 	 * 9. Setup and register mac80211
+ 	 **********************************/
+ 
+ 	/* enable interrupts if needed: hw bug w/a */
+@@ -3650,24 +3650,24 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		IWL_ERR(priv, "Unable to initialize RFKILL system. "
+ 				  "Ignoring error: %d\n", err);
+ 	else
+ 		iwl_rfkill_set_hw_state(priv);
+ 
+ 	iwl_power_initialize(priv);
+ 	return 0;
+ 
+  out_remove_sysfs:
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl_attribute_group);
++ out_free_irq:
++	free_irq(priv->pci_dev->irq, priv);
+  out_disable_msi:
+ 	pci_disable_msi(priv->pci_dev);
+-	pci_disable_device(priv->pci_dev);
+- out_uninit_drv:
+ 	iwl_uninit_drv(priv);
+  out_free_eeprom:
+ 	iwl_eeprom_free(priv);
+  out_iounmap:
+ 	pci_iounmap(pdev, priv->hw_base);
+  out_pci_release_regions:
+ 	pci_release_regions(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+  out_pci_disable_device:
+ 	pci_disable_device(pdev);
