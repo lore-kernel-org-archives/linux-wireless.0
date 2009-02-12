@@ -1,117 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:58243 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:47125 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752591AbZBCPxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 10:53:25 -0500
-Subject: Re: [PATCH] libertas: if_spi: add ability to call board specific
-	setup/teardown methods
+	id S1757623AbZBLUxB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2009 15:53:01 -0500
+Subject: Re: Automatic/manual regulatory settings
 From: Dan Williams <dcbw@redhat.com>
-To: Mike Rapoport <mike@compulab.co.il>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <4987EC74.7040706@compulab.co.il>
-References: <4987EC74.7040706@compulab.co.il>
+To: Jan Schneider <jan@horde.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090212181959.11876f8viq636hs0@neo.wg.de>
+References: <20090212181959.11876f8viq636hs0@neo.wg.de>
 Content-Type: text/plain
-Date: Tue, 03 Feb 2009 10:51:42 -0500
-Message-Id: <1233676302.11344.21.camel@localhost.localdomain> (sfid-20090203_165328_975073_C27B7C28)
+Date: Thu, 12 Feb 2009 15:51:23 -0500
+Message-Id: <1234471883.24344.2.camel@localhost> (sfid-20090212_215308_103435_E34E2A42)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-02-03 at 09:04 +0200, Mike Rapoport wrote:
-> In certain cases it is required to perform board specific actions
-> before activating libertas G-SPI interface. These actions may include
-> power up of the chip, GPIOs setup, proper pin-strapping and SPI
-> controller config.
-> This patch adds ability to call board specific setup/teardown methods
-> 
-> 
-> Signed-off-by: Mike Rapoport <mike@compulab.co.il>
+On Thu, 2009-02-12 at 18:19 +0100, Jan Schneider wrote:
+> While looking at logs collected for my microcode crash problem I  
+> noticed that cfg80211 loads US regulatory settings.
+> If I understand the documentation correctly the actual country should  
+> be set either by the AP or the device using cfg80211. Neither seems to  
+> happen, so is it the "correct" way to do this through the  
+> ieee80211_regdom module parameter? And I wonder how this is supposed  
+> to happen "idiot-proof" in the future?
 
-Andrey, does this look OK to you?  Seems fine to me, though what's the
-lifetime of the platform data 'pdata' in the probe function?  Is that
-guaranteed to be valid for the entire lifetime of the libertas SPI
-device?
+In the future it would get set by whatever configures your network
+connection.  Either system scripts like ifup/ifdown, or configured
+manually in the config files that ifup/ifdown use, or automatically via
+NetworkManager based on some setting, or via NetworkManager based on a
+user-override.
+
+One idea I've toyed with for NetworkManager is using the city you select
+in the GUI Timezone control panel that all desktop environments for
+timezone selection.  Just a thought.  Or, it could come from a
+system-wide setting by your sysadmin in /etc, or set on a per-connection
+basis when you set up the NetworkManager connection for that AP in the
+NM connection editor.
 
 Dan
 
-> ---
->  drivers/net/wireless/libertas/if_spi.c |   15 +++++++++++++++
->  include/linux/spi/libertas_spi.h       |    7 +++++++
->  2 files changed, 22 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-> index 7c02ea3..07311e7 100644
-> --- a/drivers/net/wireless/libertas/if_spi.c
-> +++ b/drivers/net/wireless/libertas/if_spi.c
-> @@ -42,6 +42,7 @@ struct if_spi_packet {
->  struct if_spi_card {
->  	struct spi_device		*spi;
->  	struct lbs_private		*priv;
-> +	struct libertas_spi_platform_data *pdata;
-> 
->  	char				helper_fw_name[FIRMWARE_NAME_MAX];
->  	char				main_fw_name[FIRMWARE_NAME_MAX];
-> @@ -1022,6 +1023,17 @@ static int __devinit if_spi_probe(struct spi_device *spi)
-> 
->  	lbs_deb_enter(LBS_DEB_SPI);
-> 
-> +	if (!pdata) {
-> +		err = -EINVAL;
-> +		goto out;
-> +	}
-> +
-> +	if (pdata->setup) {
-> +		err = pdata->setup(spi);
-> +		if (err)
-> +			goto out;
-> +	}
-> +
->  	/* Allocate card structure to represent this specific device */
->  	card = kzalloc(sizeof(struct if_spi_card), GFP_KERNEL);
->  	if (!card) {
-> @@ -1029,6 +1041,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
->  		goto out;
->  	}
->  	spi_set_drvdata(spi, card);
-> +	card->pdata = pdata;
->  	card->spi = spi;
->  	card->gpio_cs = pdata->gpio_cs;
->  	card->prev_xfer_time = jiffies;
-> @@ -1158,6 +1171,8 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
->  	if_spi_terminate_spi_thread(card);
->  	lbs_remove_card(priv); /* will call free_netdev */
->  	gpio_free(card->gpio_cs);
-> +	if (card->pdata->teardown)
-> +		card->pdata->teardown(spi);
->  	free_if_spi_card(card);
->  	lbs_deb_leave(LBS_DEB_SPI);
->  	return 0;
-> diff --git a/include/linux/spi/libertas_spi.h b/include/linux/spi/libertas_spi.h
-> index ada71b4..79506f5 100644
-> --- a/include/linux/spi/libertas_spi.h
-> +++ b/include/linux/spi/libertas_spi.h
-> @@ -10,6 +10,9 @@
->   */
->  #ifndef _LIBERTAS_SPI_H_
->  #define _LIBERTAS_SPI_H_
-> +
-> +struct spi_device;
-> +
->  struct libertas_spi_platform_data {
->  	/* There are two ways to read data from the WLAN module's SPI
->  	 * interface. Setting 0 or 1 here controls which one is used.
-> @@ -21,5 +24,9 @@ struct libertas_spi_platform_data {
-> 
->  	/* GPIO number to use as chip select */
->  	u16 gpio_cs;
-> +
-> +	/* Board specific setup/teardown */
-> +	int (*setup)(struct spi_device *spi);
-> +	int (*teardown)(struct spi_device *spi);
->  };
->  #endif
-> -- 
-> 1.5.6.4
-> 
-> 
 
