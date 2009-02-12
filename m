@@ -1,79 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:49554 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752396AbZBXSxC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 13:53:02 -0500
-Received: by bwz5 with SMTP id 5so6056734bwz.13
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 10:52:59 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v1 2/3] mac80211: track beacons separately from the rx path activity
-References: <20090223163626.20939.4879.stgit@tikku>
-	<20090223163731.20939.62567.stgit@tikku>
-	<1235441758.4455.64.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 24 Feb 2009 20:52:51 +0200
-In-Reply-To: <1235441758.4455.64.camel@johannes.local> (Johannes Berg's message of "Mon\, 23 Feb 2009 18\:15\:58 -0800")
-Message-ID: <87bpsry8e4.fsf@litku.valot.fi> (sfid-20090224_195308_011624_C208C42A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx2.redhat.com ([66.187.237.31]:39618 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757040AbZBLRea (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2009 12:34:30 -0500
+Subject: [PATCH] make net/ieee80211.h private to ipw2x00
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	reinette chatre <reinette.chatre@intel.com>
+In-Reply-To: <1234390630.14687.9.camel@localhost>
+References: <1234390630.14687.9.camel@localhost>
+Content-Type: text/plain
+Date: Thu, 12 Feb 2009 12:32:55 -0500
+Message-Id: <1234459975.15402.4.camel@localhost> (sfid-20090212_183435_045406_8149C75C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Only ipw2x00 now uses it.  Reduce confusion.  Profit!
 
-> On Mon, 2009-02-23 at 18:37 +0200, Kalle Valo wrote:
->
->> @@ -1356,6 +1359,8 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
->>  	bss_conf->assoc_capability = capab_info;
->>  	ieee80211_set_associated(sdata, changed);
->>  
->> +	ifmgd->last_beacon = jiffies;
->> +
->
-> That looks a little misplaced; I think it's actually intended
-> anyway?
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-Yes, it's intended. We need to initialise the variable after a
-successful association, otherwise this test in ieee80211_associated()
-will trigger immediately:
+---
+Depends on "[PATCH] hostap: convert usage of net/ieee80211.h to linux/ieee80211.h" of course...
 
-	if (time_after(jiffies,
-		       ifmgd->last_beacon + IEEE80211_MONITORING_INTERVAL)) {
-		printk(KERN_DEBUG "%s: beacon loss from AP %pM "
-		       "- sending probe request\n",
-		       sdata->dev->name, ifmgd->bssid);
+ drivers/net/wireless/ipw2x00/Kconfig               |    2 +-
+ .../net/wireless/ipw2x00}/ieee80211.h              |    0
+ drivers/net/wireless/ipw2x00/ipw2100.h             |    4 ++--
+ drivers/net/wireless/ipw2x00/ipw2200.h             |    3 ++-
+ drivers/net/wireless/ipw2x00/libipw_geo.c          |    2 +-
+ drivers/net/wireless/ipw2x00/libipw_module.c       |    2 +-
+ drivers/net/wireless/ipw2x00/libipw_rx.c           |    3 ++-
+ drivers/net/wireless/ipw2x00/libipw_tx.c           |    2 +-
+ drivers/net/wireless/ipw2x00/libipw_wx.c           |    3 ++-
+ 9 files changed, 12 insertions(+), 9 deletions(-)
+ rename {include/net => drivers/net/wireless/ipw2x00}/ieee80211.h (100%)
 
-> Maybe add a comment?
-
-I will.
-
->> -		sta->last_rx = jiffies;
->> +		if (rx->sdata->vif.type == NL80211_IFTYPE_STATION &&
->> +		    ieee80211_is_beacon(hdr->frame_control)) {
->> +			rx->sdata->u.mgd.last_beacon = jiffies;
->> +		} else
->> +			sta->last_rx = jiffies;
->
-> would it be more appropriate to do that in the function that processes
-> the beacon in mlme.c? Or does that not work because of the workqueue and
-> timing?
-
-The test is there because I didn't want to include beacons to
-sta->last_rx timestamp. That way I can send probe requests only during
-data path idle period:
-
-	if (time_after(jiffies, sta->last_rx + IEEE80211_PROBE_IDLE_TIME)) {
-		ifmgd->flags |= IEEE80211_STA_PROBEREQ_POLL;
-		ieee80211_send_probe_req(sdata, ifmgd->bssid, ifmgd->ssid,
-					 ifmgd->ssid_len, NULL, 0);
-	}
-
-sta->last_rx is used in master mode as well, so I might have to do
-some trickery if I move the code to mlme.c. But I do share your
-view of having mlme related code in mlme.c, it makes life a lot
-easier. I need to think this a bit more.
-
+diff --git a/drivers/net/wireless/ipw2x00/Kconfig b/drivers/net/wireless/ipw2x00/Kconfig
+index 1d5dc3e..85cc799 100644
+--- a/drivers/net/wireless/ipw2x00/Kconfig
++++ b/drivers/net/wireless/ipw2x00/Kconfig
+@@ -186,7 +186,7 @@ config LIBIPW_DEBUG
+ 	  % echo 0x00000FFO > /proc/net/ieee80211/debug_level
+ 
+ 	  For a list of values you can assign to debug_level, you
+-	  can look at the bit mask values in <net/ieee80211.h>
++	  can look at the bit mask values in ieee80211.h
+ 
+ 	  If you are not trying to debug or develop the libipw
+ 	  component, you most likely want to say N here.
+diff --git a/include/net/ieee80211.h b/drivers/net/wireless/ipw2x00/ieee80211.h
+similarity index 100%
+rename from include/net/ieee80211.h
+rename to drivers/net/wireless/ipw2x00/ieee80211.h
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
+index bbf1ddc..46b135d 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.h
++++ b/drivers/net/wireless/ipw2x00/ipw2100.h
+@@ -39,8 +39,6 @@
+ #include <linux/wireless.h>
+ #include <net/iw_handler.h>	// new driver API
+ 
+-#include <net/ieee80211.h>
+-
+ #ifdef CONFIG_IPW2100_MONITOR
+ #include <net/ieee80211_radiotap.h>
+ #endif
+@@ -48,6 +46,8 @@
+ #include <linux/workqueue.h>
+ #include <linux/mutex.h>
+ 
++#include "ieee80211.h"
++
+ struct ipw2100_priv;
+ struct ipw2100_tx_packet;
+ struct ipw2100_rx_packet;
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.h b/drivers/net/wireless/ipw2x00/ipw2200.h
+index 277b274..3e66c99 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.h
++++ b/drivers/net/wireless/ipw2x00/ipw2200.h
+@@ -49,13 +49,14 @@
+ #include <asm/io.h>
+ 
+ #include <net/lib80211.h>
+-#include <net/ieee80211.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+ #define DRV_NAME	"ipw2200"
+ 
+ #include <linux/workqueue.h>
+ 
++#include "ieee80211.h"
++
+ /* Authentication  and Association States */
+ enum connection_manager_assoc_states {
+ 	CMAS_INIT = 0,
+diff --git a/drivers/net/wireless/ipw2x00/libipw_geo.c b/drivers/net/wireless/ipw2x00/libipw_geo.c
+index 960ad13..9dfbb87 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_geo.c
++++ b/drivers/net/wireless/ipw2x00/libipw_geo.c
+@@ -41,7 +41,7 @@
+ #include <linux/etherdevice.h>
+ #include <asm/uaccess.h>
+ 
+-#include <net/ieee80211.h>
++#include "ieee80211.h"
+ 
+ int ieee80211_is_valid_channel(struct ieee80211_device *ieee, u8 channel)
+ {
+diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
+index a2f5616..0f233ab 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_module.c
++++ b/drivers/net/wireless/ipw2x00/libipw_module.c
+@@ -50,7 +50,7 @@
+ #include <net/net_namespace.h>
+ #include <net/arp.h>
+ 
+-#include <net/ieee80211.h>
++#include "ieee80211.h"
+ 
+ #define DRV_DESCRIPTION "802.11 data/management/control stack"
+ #define DRV_NAME        "ieee80211"
+diff --git a/drivers/net/wireless/ipw2x00/libipw_rx.c b/drivers/net/wireless/ipw2x00/libipw_rx.c
+index 9c67dfa..4865475 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_rx.c
++++ b/drivers/net/wireless/ipw2x00/libipw_rx.c
+@@ -33,7 +33,8 @@
+ #include <linux/ctype.h>
+ 
+ #include <net/lib80211.h>
+-#include <net/ieee80211.h>
++
++#include "ieee80211.h"
+ 
+ static void ieee80211_monitor_rx(struct ieee80211_device *ieee,
+ 					struct sk_buff *skb,
+diff --git a/drivers/net/wireless/ipw2x00/libipw_tx.c b/drivers/net/wireless/ipw2x00/libipw_tx.c
+index f78f57e..a874e90 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_tx.c
++++ b/drivers/net/wireless/ipw2x00/libipw_tx.c
+@@ -41,7 +41,7 @@
+ #include <linux/etherdevice.h>
+ #include <asm/uaccess.h>
+ 
+-#include <net/ieee80211.h>
++#include "ieee80211.h"
+ 
+ /*
+ 
+diff --git a/drivers/net/wireless/ipw2x00/libipw_wx.c b/drivers/net/wireless/ipw2x00/libipw_wx.c
+index 31ea3ab..dfbadb3 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_wx.c
++++ b/drivers/net/wireless/ipw2x00/libipw_wx.c
+@@ -35,9 +35,10 @@
+ #include <linux/jiffies.h>
+ 
+ #include <net/lib80211.h>
+-#include <net/ieee80211.h>
+ #include <linux/wireless.h>
+ 
++#include "ieee80211.h"
++
+ static const char *ieee80211_modes[] = {
+ 	"?", "a", "b", "ab", "g", "ag", "bg", "abg"
+ };
 -- 
-Kalle Valo
+1.6.1.3
+
+
