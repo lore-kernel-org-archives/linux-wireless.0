@@ -1,103 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55340 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754192AbZBRXZr (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2868 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758708AbZBLSjJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 18:25:47 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 15/15] cfg80211: rename regdom_changed to regdom_changes() and use it
-Date: Wed, 18 Feb 2009 18:25:45 -0500
-Message-Id: <1234999545-14357-16-git-send-email-lrodriguez@atheros.com> (sfid-20090219_005324_444760_97FB47C0)
-In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+	Thu, 12 Feb 2009 13:39:09 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	ath9k-devel@lists.ath9k.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/6] ath9k: save a few calls to ath9k_regd_get_eepromRD
+Date: Thu, 12 Feb 2009 13:38:54 -0500
+Message-Id: <1234463938-1350-3-git-send-email-me@bobcopeland.com> (sfid-20090212_193916_216642_CD21EBD1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   19 ++++++++-----------
- 1 files changed, 8 insertions(+), 11 deletions(-)
+Since we already have a stack variable to track the eeprom regd,
+we can grab it up front it and save three calls to fetch it again.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c6087bc..17dae20 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -291,7 +291,7 @@ static bool alpha2_equal(const char *alpha2_x, const char *alpha2_y)
- 	return false;
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath9k/regd.c |   13 +++++--------
+ 1 files changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
+index 0c632ff..9999462 100644
+--- a/drivers/net/wireless/ath9k/regd.c
++++ b/drivers/net/wireless/ath9k/regd.c
+@@ -371,11 +371,8 @@ ath9k_regd_find_country_by_rd(int regdmn)
  }
  
--static bool regdom_changed(const char *alpha2)
-+static bool regdom_changes(const char *alpha2)
+ /* Returns the map of the EEPROM set RD to a country code */
+-static u16 ath9k_regd_get_default_country(struct ath_hw *ah)
++static u16 ath9k_regd_get_default_country(u16 rd)
  {
- 	assert_cfg80211_lock();
+-	u16 rd;
+-
+-	rd = ath9k_regd_get_eepromRD(ah);
+ 	if (rd & COUNTRY_ERD_FLAG) {
+ 		struct country_code_to_enum_rd *country = NULL;
+ 		u16 cc = rd & ~COUNTRY_ERD_FLAG;
+@@ -405,7 +402,7 @@ ath9k_get_regpair(int regdmn)
+ int ath9k_regd_init(struct ath_hw *ah)
+ {
+ 	struct country_code_to_enum_rd *country = NULL;
+-	int regdmn;
++	u16 regdmn;
  
-@@ -1134,8 +1134,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 				 * intersect them, but that seems unlikely
- 				 * to be correct. Reject second one for now.
- 				 */
--				if (!alpha2_equal(alpha2,
--						  cfg80211_regdomain->alpha2))
-+				if (regdom_changes(alpha2))
- 					return -EOPNOTSUPP;
- 				return -EALREADY;
- 			}
-@@ -1143,8 +1142,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 			 * Two consecutive Country IE hints on the same wiphy.
- 			 * This should be picked up early by the driver/stack
- 			 */
--			if (WARN_ON(!alpha2_equal(cfg80211_regdomain->alpha2,
--				  alpha2)))
-+			if (WARN_ON(regdom_changes(alpha2)))
- 				return 0;
- 			return -EALREADY;
- 		}
-@@ -1153,7 +1151,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 		if (last_request->initiator == REGDOM_SET_BY_CORE) {
- 			if (is_old_static_regdom(cfg80211_regdomain))
- 				return 0;
--			if (!alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
-+			if (regdom_changes(alpha2))
- 				return 0;
- 			return -EALREADY;
- 		}
-@@ -1164,7 +1162,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 		 * loaded card also agrees on the regulatory domain.
- 		 */
- 		if (last_request->initiator == REGDOM_SET_BY_DRIVER &&
--		    alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
-+		    !regdom_changes(alpha2))
- 			return -EALREADY;
- 
- 		return REG_INTERSECT;
-@@ -1185,13 +1183,12 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 		if (last_request->initiator == REGDOM_SET_BY_CORE ||
- 		    last_request->initiator == REGDOM_SET_BY_DRIVER ||
- 		    last_request->initiator == REGDOM_SET_BY_USER) {
--			if (!alpha2_equal(last_request->alpha2,
--			    cfg80211_regdomain->alpha2))
-+			if (regdom_changes(last_request->alpha2))
- 				return -EAGAIN;
- 		}
- 
- 		if (!is_old_static_regdom(cfg80211_regdomain) &&
--		    alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
-+		    !regdom_changes(alpha2))
- 			return -EALREADY;
- 
- 		return 0;
-@@ -1720,7 +1717,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		 * checking if the alpha2 changes if CRDA was already called
- 		 */
- 		if (!is_old_static_regdom(cfg80211_regdomain) &&
--		    !regdom_changed(rd->alpha2))
-+		    !regdom_changes(rd->alpha2))
- 			return -EINVAL;
+ 	if (!ath9k_regd_is_eeprom_valid(ah)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_REGULATORY,
+@@ -413,14 +410,14 @@ int ath9k_regd_init(struct ath_hw *ah)
+ 		return -EINVAL;
  	}
  
+-	ah->regulatory.country_code = ath9k_regd_get_default_country(ah);
++	regdmn = ath9k_regd_get_eepromRD(ah);
++	ah->regulatory.country_code = ath9k_regd_get_default_country(regdmn);
+ 
+ 	if (ah->regulatory.country_code == CTRY_DEFAULT &&
+-	    ath9k_regd_get_eepromRD(ah) == CTRY_DEFAULT)
++	    regdmn == CTRY_DEFAULT)
+ 		ah->regulatory.country_code = CTRY_UNITED_STATES;
+ 
+ 	if (ah->regulatory.country_code == CTRY_DEFAULT) {
+-		regdmn = ath9k_regd_get_eepromRD(ah);
+ 		country = NULL;
+ 	} else {
+ 		country = ath9k_regd_find_country(ah->regulatory.country_code);
 -- 
-1.6.0.3
+1.6.0.6
+
 
