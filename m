@@ -1,65 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38247 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755628AbZBDXSV (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2872 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758986AbZBLSjJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 18:18:21 -0500
-Subject: Re: [PATCH RFC] mac80211: Filter scan results
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Samuel Ortiz <samuel@sortiz.org>,
-	John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1233760201.3992.20.camel@johannes.local>
-References: <20090204150857.GA5069@sortiz.org>
-	 (sfid-20090204_160640_465532_8378EED5)  <1233760201.3992.20.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 05 Feb 2009 00:18:16 +0100
-Message-Id: <1233789496.5559.10.camel@californication> (sfid-20090205_001826_760057_B8FFA6E5)
-Mime-Version: 1.0
+	Thu, 12 Feb 2009 13:39:09 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	ath9k-devel@lists.ath9k.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 0/6] ath9k: regulatory cleanups
+Date: Thu, 12 Feb 2009 13:38:52 -0500
+Message-Id: <1234463938-1350-1-git-send-email-me@bobcopeland.com> (sfid-20090212_193923_306205_E057C4F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi, here are some hopefully trivial cleanups to the existing ath9k
+regulatory code.  This is the easy stuff before migrating regulatory
+code to be shared with ath5k as well.  Next steps will be removing
+usage of ath_hal from the common code, moving the files to a shared 
+directory, and finally enabling the code in ath5k.
 
-> > In very dense environment, the scan result buffer can get really large, mostly
-> > due to the addition of proprietary IEs. iwlist fails, typically warning about:
-> > "print_scanning_info: Allocation failed". wpa_supplicant fails as well, after
-> > reallocating the scan result buffer several times, up to 132 Kbytes:
-> > 	[snip]
-> > 	Scan results did not fit - trying larger buffer (131072 bytes)
-> > 	ioctl[SIOCGIWSCAN]: Argument list too long
-> > 
-> > By adding a mac80211 module parameter, we can filter the scan results and keep
-> > only the ones userspace currently worries about, i.e. WPA1, WPA2, WMM and WPS.
-> > 
-> > To activate this feature, 1 has to be written to
-> > /sys/module/mac80211/parameters/ieee80211_scan_ie_filter
-> 
-> Module parameter, hard-coded filter, just to work around wext crap. Eww.
-> NACK.
-
-we are perfectly aware that this is ugly and trust me, that nobody of us
-wants to do it. However we do have these setups and they happen in real
-life. I have been in a couple of locations where I ran into this problem
-and in that cases there is no way for me to establish any kind of WiFi
-connection at all, because the buffers are just too small. And that is
-with a laptop. Then just think about a mobile phone running mac80211
-where the memory is limited.
-
-So WEXT is crap and everybody agrees, but until we can use cfg80211 for
-scanning, we need something to make this work. So if this patch is not
-acceptable, then do we get scanning support via cfg80211 for 2.6.30? You
-were always marking your patches as development/RFC.
-
-> Go for
-> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/028-cfg80211-scan.patch
-
-Return a 404 btw.
-
-Regards
-
-Marcel
-
+I only compile tested this for lack of hardware but there should
+be 0 functional changes.
 
