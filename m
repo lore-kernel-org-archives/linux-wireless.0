@@ -1,63 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50408 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:34407 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751476AbZBXHEK (ORCPT
+	with ESMTP id S1758872AbZBLKRU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 02:04:10 -0500
-Subject: Re: Lockdep rtnl_mutex and genl_mutex circular dependency
+	Thu, 12 Feb 2009 05:17:20 -0500
+Subject: Re: soft-safe -> soft-unsafe lock order detected
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1235457352.4455.94.camel@johannes.local> (sfid-20090224_073621_026588_C3A80F8E)
-References: <20090220023144.GE4740@tesla>
-	 (sfid-20090220_033236_226088_BAC87115)  <1235457352.4455.94.camel@johannes.local>
-	 (sfid-20090224_073621_026588_C3A80F8E)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lor/0D2Q18Ocx1OeS045"
-Date: Mon, 23 Feb 2009 23:03:32 -0800
-Message-Id: <1235459012.4320.0.camel@johannes.local> (sfid-20090224_080413_374143_74E1EAE2)
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4991AC67.90104@openwrt.org> (sfid-20090210_173417_726855_7504F887)
+References: <4991AC67.90104@openwrt.org>
+	 (sfid-20090210_173417_726855_7504F887)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ae1+ViFhUaOj7gS/aHzJ"
+Date: Thu, 12 Feb 2009 11:16:47 +0100
+Message-Id: <1234433807.16004.88.camel@johannes.local> (sfid-20090212_111736_123131_223B74EE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-lor/0D2Q18Ocx1OeS045
+--=-Ae1+ViFhUaOj7gS/aHzJ
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2009-02-23 at 22:35 -0800, Johannes Berg wrote:
 
-> pre_dumpit does rtnl_lock(), and netlink_dump_start() will re-do
-> genl_lock(), so here we end up with a dependency of rtnl -> genl. But
-> in the non-dump path, we do the pre_doit() with genl held, getting
-> genl -> rtnl. We thus have to change the genetlink change, patch coming
-> in a minute.
+> to a soft-irq-unsafe lock:
+>  (todo_lock){--..}
+> ... which became soft-irq-unsafe at:
+> ...  [<800b2248>] __lock_acquire+0x624/0x844
+>   [<800b24c4>] lock_acquire+0x5c/0x84
+>   [<8006b8c4>] _spin_lock+0x34/0x48
+>   [<c0206d9c>] ieee80211_set_default_key+0x4b8/0x4f0 [mac80211]
 
-It's actually harder than I thought -- I need to try to understand the
-genl locking more, but not today.
+That seems to be incorrect. ieee80211_set_default_key will have
+_irqsave-locked the key lock, so the todo lock is here always locked in
+an irq-excluded section.
+
+The lock is, however, possibly used that way in ieee80211_key_link,
+which can be fixed easily and we can remove the todo lock too.
 
 johannes
 
---=-lor/0D2Q18Ocx1OeS045
+--=-Ae1+ViFhUaOj7gS/aHzJ
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJo5vBAAoJEKVg1VMiehFYREYQAItRYvTRKnsmmBRgxXxPuWLM
-sEscNH294w3Gbay7hCG7KxZp+sImM2Aqw+peNu+7VR3l1De5GAAivre5cXnVJw6W
-pTciuR3JEv/bHOUpdRcuLXf9x+iqwBkWNAXaPIYOFWbojjH9YymriDgT6Z9pl3fD
-ffnVOVNNSQryaa9K+Bye7XG/4SMXi+hl5JBwQaoIPa5YjSvnsfSj0xutmTzd8USY
-SnK0tCbcX17pPsDsOCGReuL1sYvClXdSUImIaDLXtze+1YO6cozvm3/uY34Fmsl8
-gNuD4qPir7Tq0jh4kVjeYYojDGuDYyL8EYb7tcY+oBQEd6q67Y0ZOkJyL8dxluRM
-iy+6tySNwIT1HuiOpqyyVtGGC5QV7vX9j+yXDX6qm/ECSVFMvssMwZez4/mBewQ4
-CQ4sgC0jU2UzEu6QymvEJ3ZQPcADrQdTqZxccr/0V0oVXllJIfJYqfnZ4egxiI91
-QGujH6A+bLHtuGIKyKJ//NakSAq2ftdLe2KSxnN4is9zH3NEWvjDoxDq8pKn02MP
-44QQbTd391N5lJBUfkAL0bmmBoE9n/fxNg0Cje1EwIY9vD1GmTIQE8a0E4c2tGWv
-fdv65mT17mw3adiYHcpK8Bazs3tCLwvlbTRUAtL3tJUL8teCwoW4N8yo4x1R2Wsl
-BOPBvCMMCeaKEtMKJ0sy
-=SLkB
+iQIcBAABAgAGBQJJk/cMAAoJEKVg1VMiehFYMQQQAJzMUlxlxMN7rtg4Roe+TzH0
+hmGFpB1PE+dUfdrXPjOxjHCAgCLoIpHs29ZD0H7AMMWbAJ9+TOTbu7hM2eKkE4Vr
+jYu7jqwbeuGm88qmD1SJ/q6tLcaZYyHpLZC12uJ84uxxe+TEjEmDggC/BmW4kB8y
+yaEMMq5Zg2pWvL//eoq1ZETipKoY702/ppetZaVJjueO0DQySRfMdufeIxcF9GWt
+5cwuUOQwkRnFC3xnKBgsn6shbDpIGagyXebqIAW+nrGbsPHxif4z9O7WmhBzZd/k
+JJQy8rQ/frfsSvCDgklEyRUISLsMn/KPQvj2Rb9KtTb3WxO0r3QN3lsOabAcagFQ
+Qb5YugwdIr/EEVZ59H1oZNdsosVC/3EpYM7t4woTnG7v2vKl/vye3QYUGVIEwncu
+vi/ZgAkPHyNURtFtU+6HGWsSAwBhuyE5hVmQpitaxknAcbkKodmfK1P86usMtCvA
+gbMcG5u8Ek8Uji1A4XIH1rCOAjxEEZliH3GJ8Jx8idIh9ZHp9vcARI6fBtk2lpaE
+m27O3+HQ6xEgYrHQQvtsOlDVhZ6fq1aPlIdKduI2cFa4bH2rqrOLWjO4N5xvFPlt
+BBut4t66NnjC/q7fM5OG/iQ7AGBbUy1MfQtfSxQ+OhauefiTGxoYUiZhF9ogYLsT
+SY6i8E8AMIv8ZeLYLPB9
+=SA8Y
 -----END PGP SIGNATURE-----
 
---=-lor/0D2Q18Ocx1OeS045--
+--=-Ae1+ViFhUaOj7gS/aHzJ--
 
