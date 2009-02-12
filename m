@@ -1,93 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:42025 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:27140 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751504AbZBRMt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 07:49:59 -0500
-Subject: Re: Missing link quality with wireless-testing
-From: Dan Williams <dcbw@redhat.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090218123301.GA6152@jm.kir.nu>
-References: <1234899806.29785.35.camel@johannes.local>
-	 <1234902294.4678.12.camel@californication>
-	 <1234904111.29785.44.camel@johannes.local>
-	 <1234904978.4678.31.camel@californication>
-	 <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net>
-	 <1234933059.21412.28.camel@californication>
-	 <20090218073104.GA23366@jm.kir.nu>
-	 <1234944391.21412.47.camel@californication>
-	 <20090218082520.GA26280@jm.kir.nu> <1234959523.13950.47.camel@localhost>
-	 <20090218123301.GA6152@jm.kir.nu>
-Content-Type: text/plain
-Date: Wed, 18 Feb 2009 07:48:17 -0500
-Message-Id: <1234961297.13950.55.camel@localhost> (sfid-20090218_135004_579882_9F7183E6)
-Mime-Version: 1.0
+	id S1752896AbZBLRkI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2009 12:40:08 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 09:40:08 -0800
+Date: Thu, 12 Feb 2009 09:39:23 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Jan Schneider <jan@horde.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Automatic/manual regulatory settings
+Message-ID: <20090212173923.GD4196@tesla> (sfid-20090212_184013_466932_52FEA116)
+References: <20090212181959.11876f8viq636hs0@neo.wg.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090212181959.11876f8viq636hs0@neo.wg.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-02-18 at 14:33 +0200, Jouni Malinen wrote:
-> On Wed, Feb 18, 2009 at 07:18:43AM -0500, Dan Williams wrote:
-> 
-> > With WEXT, there are three ways to calculate pretty bars.  They *all*
-> > require max_qual values returned from the GIWRANGE handler, because
-> > otherwise you have no f**king clue what the upper or lower bounds are.
-> 
-> > QUAL.LEVEL in dBm
-> > --------------
-> > 
-> > Requires:
-> >   - max_qual.level == 0 (ie, dBm values)
-> 
-> That is an area where NM (= 0) and mac80211 (= -110) do not agree.
+On Thu, Feb 12, 2009 at 09:19:59AM -0800, Jan Schneider wrote:
+> While looking at logs collected for my microcode crash problem I
+> noticed that cfg80211 loads US regulatory settings.
 
-Then mac80211 is not conforming to WEXT...  unless it's setting
-IW_QUAL_DBM in the updated field, which it probably is.
+That is because of the CONFIG_WIRELESS_OLD_REGULATORY=y which I keep
+insisting should die already. This is still present because CRDA is
+starting to be embraced by distributions.
 
-Before we added IW_QUAL_DBM, the switch between dBm and RSSI was
-max_qual.level; if it was 0, level was in dBm, because no cards in use
-in Linux at that time could support a signal of more 0 dBm.  Thus, if it
-was over 0, the value was in RSSI.
+> If I understand the documentation correctly the actual country should
+> be set either by the AP or the device using cfg80211.
 
-Here's the relevant bit of wireless.h:
+Correct. With OLD_REG it also means you'll get a static default "US"
+regulatory domain. The only other two static options are "JP" and "EU".
+This is why this is OLD_REG -- its using static definitions and the
+information is present inside the kernel.
 
-        /* Quality range (link, level, noise)
-         * If the quality is absolute, it will be in the range [0 ; max_qual],
-         * if the quality is dBm, it will be in the range [max_qual ; 0].
+Because you _may_ still have CRDA installed we also call CRDA if your
+ieee80211_regdomain module parameter is either "US" or "JP" because
+there are actual valid ISO / IEC 3166 alpha2 country codes and if
+CRDA is present you will get to reap the benefits of an updated
+regulatory domain.
 
-That doc never got updated for IW_QUAL_DBM either.
+> Neither seems to
+> happen
 
-> > NM is probably fine here with qual == 0 because I doubt the GIWRANGE
-> > handler is returning a valid max_qual.qual > 0 anymore with Johannes'
-> > patch.  Could be wrong though.
-> 
-> Well, it is not fine, but not only for that reason.. max_qual.qual is
-> still set to 100 and the IW_QUAL_QUAL_INVALID is not used for it.
-> However, even if I set IW_QUAL_QUAL_INVALID and remove "quality" from
-> wpa_supplicant dbus interface, I still get NM showing perfect 100%
-> signal all the time regardless of how close to losing the connection the
-> card really is..
-> 
-> I gave up on trying to understand all the cases, but my assumption is
-> that the remaining issue is in the disagreement on max_qua.level for the
-> dBm case. However, I'm not sure whether fixing that would automatically
-> resolve the issues with wext (it might be enough for the current nl80211
-> version with wpa_supplicant from git head).
+On what device? Keep in mind iwlfifi driver ignores the first regulatory
+setting by the regulatory code. If users later want to enhance regulatory
+further they will have to call it manually using iw:
 
-NM doesn't really handle IW_QUAL_DBM (added in WE-19).  Mainly because
-stuff worked without it, and it wasn't implemented in drivers until
-quite recently.  NM should handle IW_QUAL_DBM.
+iw reg set FR
 
-> > Ah right; the dbus interface shouldn't be appending "quality" to the
-> > dict if the driver doesn't provide valid quality (ie, max_qual.updated
-> > has the QUAL_INVALID bit set).  Same thing for noise and level.
-> 
-> The unknown values are not included anymore in wpa_supplicant 0.7.x.
+> so is it the "correct" way to do this through the
+> ieee80211_regdom module parameter?
 
-Just pulled; it doesn't show up in master.  Do you have a separate git
-repo for 0.7.x?
+No, that should be used only for "US", "JP" and "EU", but technically
+you can also try "FR" and CRDA will be called as well if present. But
+the correct way to do this from userspace is to do it through iw or
+wpa_supplicant, which as the capability of setting it too. If you are
+writing your own application you can use the same nl80211 command as
+iw and wpa_supplicant, NL80211_CMD_REQ_SET_REG.
 
-Dan
+> And I wonder how this is supposed
+> to happen "idiot-proof" in the future?
 
+Hm?
 
+  LuisT
