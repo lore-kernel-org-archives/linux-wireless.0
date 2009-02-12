@@ -1,131 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:48684 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750703AbZBLFzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 00:55:06 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 21:55:05 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18835.47316.166957.190784@gargle.gargle.HOWL> (sfid-20090212_065513_561691_C25F0623)
-Date: Thu, 12 Feb 2009 11:21:16 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	<Jouni.Malinen@Atheros.com>
-Subject: [PATCH] mac80211: Extend the rate control API with an update callback
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:45370 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753535AbZBLIsQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2009 03:48:16 -0500
+Received: by bwz5 with SMTP id 5so817266bwz.13
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 00:48:14 -0800 (PST)
+Date: Thu, 12 Feb 2009 09:43:56 +0100
+From: "Christoph .J Thompson" <cjsthompson@gmail.com>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Sitecom WL-608 USB WiFi
+Message-Id: <20090212094356.82a7573b.cjsthompson@gmail.com> (sfid-20090212_094819_611260_0DA272B6)
+In-Reply-To: <efe7343f0902120005m5ff558ccn1dad7c49fe42aadf@mail.gmail.com>
+References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
+	<200902112332.53480.IvDoorn@gmail.com>
+	<3ace41890902111451n6c9cbdc4me410609479b1ac4f@mail.gmail.com>
+	<20090212042217.b05e83b4.cjsthompson@gmail.com>
+	<a32f33a40902120000g1e95df1eq8a221ddc539f351c@mail.gmail.com>
+	<efe7343f0902120005m5ff558ccn1dad7c49fe42aadf@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AP can switch dynamically between 20/40 Mhz channel width,
-in which case we switch the local operating channel, but the
-rate control algorithm is not notified. This patch adds a new callback
-to indicate such changes to the RC algorithm.
+On Thu, 12 Feb 2009 08:05:48 +0000
+Luis Correia <luis.f.correia@gmail.com> wrote:
+> can any brave soul have the guts to pry open this USB stick and look
+> at the chip?
+> 
+> That was, we all would be sure of it's origins :)
+> 
+> Luis Correia
 
-Currently, HT channel width change is notified, but this callback
-can be used to indicate any new requirements that might come up later on.
+I did it, it was quite easy without damaging it. This was written on the chip inside:
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- include/net/mac80211.h |   13 +++++++++++++
- net/mac80211/ht.c      |   13 +++++++++++++
- net/mac80211/rate.h    |   12 ++++++++++++
- 3 files changed, 38 insertions(+), 0 deletions(-)
+Ralink
+RT2070L
+PB49460ED
+0841ST
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 88fa3e0..509be69 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1980,6 +1980,16 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
- /* Rate control API */
- 
- /**
-+ * enum rate_control_changed - flags to indicate which parameter changed
-+ *
-+ * @IEEE80211_RC_HT_CHANGED: The HT parameters of the operating channel have
-+ *	changed, rate control algorithm can update its internal state if needed.
-+ */
-+enum rate_control_changed {
-+	IEEE80211_RC_HT_CHANGED = BIT(0)
-+};
-+
-+/**
-  * struct ieee80211_tx_rate_control - rate control information for/from RC algo
-  *
-  * @hw: The hardware the algorithm is invoked for.
-@@ -2015,6 +2025,9 @@ struct rate_control_ops {
- 	void *(*alloc_sta)(void *priv, struct ieee80211_sta *sta, gfp_t gfp);
- 	void (*rate_init)(void *priv, struct ieee80211_supported_band *sband,
- 			  struct ieee80211_sta *sta, void *priv_sta);
-+	void (*rate_update)(void *priv, struct ieee80211_supported_band *sband,
-+			    struct ieee80211_sta *sta,
-+			    void *priv_sta, u32 changed);
- 	void (*free_sta)(void *priv, struct ieee80211_sta *sta,
- 			 void *priv_sta);
- 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 82ea0b6..4115613 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -17,6 +17,7 @@
- #include <net/wireless.h>
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
-+#include "rate.h"
- 
- void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
- 				       struct ieee80211_ht_cap *ht_cap_ie,
-@@ -93,7 +94,9 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-+	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
- 	struct ieee80211_bss_ht_conf ht;
-+	struct sta_info *sta;
- 	u32 changed = 0;
- 	bool enable_ht = true, ht_changed;
- 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-@@ -136,6 +139,16 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 	if (ht_changed) {
-                 /* channel_type change automatically detected */
- 		ieee80211_hw_config(local, 0);
-+
-+		rcu_read_lock();
-+
-+		sta = sta_info_get(local, ifsta->bssid);
-+		if (sta)
-+			rate_control_rate_update(local, sband, sta,
-+						 IEEE80211_RC_HT_CHANGED);
-+
-+		rcu_read_unlock();
-+
-         }
- 
- 	/* disable HT */
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index 928da62..b9164c9 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -62,6 +62,18 @@ static inline void rate_control_rate_init(struct sta_info *sta)
- 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
- }
- 
-+static inline void rate_control_rate_update(struct ieee80211_local *local,
-+				    struct ieee80211_supported_band *sband,
-+				    struct sta_info *sta, u32 changed)
-+{
-+	struct rate_control_ref *ref = local->rate_ctrl;
-+	struct ieee80211_sta *ista = &sta->sta;
-+	void *priv_sta = sta->rate_ctrl_priv;
-+
-+	if (ref->ops->rate_update)
-+		ref->ops->rate_update(ref->priv, sband, ista,
-+				      priv_sta, changed);
-+}
- 
- static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
- 					   struct ieee80211_sta *sta,
+Did they do a typo?
+
+
 -- 
-1.6.1
-
+Christoph .J Thompson <cjsthompson@gmail.com>
