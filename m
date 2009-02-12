@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21934 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756055AbZBJTEg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 14:04:36 -0500
-Subject: Re: [ipw3945-devel] [PATCH v2.6.29] iwlwifi: save PCI state before
-	suspend, restore after resume
-From: reinette chatre <reinette.chatre@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>, drago01 <drago01@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <200902092051.44374.helmut.schaa@gmail.com>
-References: <> <f6ca9fed0902091117k7326e51ag8469887cb1a99d53@mail.gmail.com>
-	 <1234207772.11530.164.camel@rc-desk>
-	 <200902092051.44374.helmut.schaa@gmail.com>
-Content-Type: text/plain
-Date: Tue, 10 Feb 2009 11:08:19 -0800
-Message-Id: <1234292899.1626.14.camel@rc-desk> (sfid-20090210_200501_403582_164060E3)
-Mime-Version: 1.0
+Received: from yw-out-2324.google.com ([74.125.46.30]:40046 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750742AbZBLPx7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2009 10:53:59 -0500
+Received: by yw-out-2324.google.com with SMTP id 5so394564ywh.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 07:53:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <17a838c40902120456wb862200y8717a0d6a061b057@mail.gmail.com>
+References: <2d14e2ca0902110900r7f0b84e4k7be81827187c434@mail.gmail.com>
+	 <43e72e890902111341l36bd40c8o9d54515e8b06e603@mail.gmail.com>
+	 <17a838c40902120456wb862200y8717a0d6a061b057@mail.gmail.com>
+Date: Thu, 12 Feb 2009 07:53:57 -0800
+Message-ID: <43e72e890902120753w44cab825i861d5c92c4816c61@mail.gmail.com> (sfid-20090212_165403_667927_4703D2D6)
+Subject: Re: [ath9k-devel] Radar Detection and DFS status
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Alberto Pollastro <a.pollastro@gmail.com>
+Cc: Michael Green <Michael.Green@atheros.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-02-09 at 11:51 -0800, Helmut Schaa wrote:
-> Am Montag, 9. Februar 2009 schrieb reinette chatre:
-> > On Mon, 2009-02-09 at 11:17 -0800, drago01 wrote:
-> > > On Tue, Feb 3, 2009 at 7:20 PM, Reinette Chatre
-> > > <reinette.chatre@intel.com> wrote:
-> > > > This is the right thing to do and fixes the following warning:
-> > > > [...]
-> > > 
-> > > With 2.6.29-rc4-git1 (which has this patch) I sometimes get:
-> > > 
-> > > iwl3945: Wait for START_ALIVE timeout after 2000ms.
-> > > iwl3945 0000:07:00.0: PCI INT A disabled
-> > > 
-> > > After resume with results into no working wireless until the module is reloaded.
-> > > I am not sure if this patch is the culprit (have not tried to revert
-> > > it), but that's the only change that might have caused this (with rc3
-> > > it was working fine, it just triggered the warning that this patch
-> > > supposed to solve).
-> > 
-> > That patch is the culprit. Please see current status at
-> > http://bugzilla.kernel.org/show_bug.cgi?id=12656
-> 
-> Reinette, maybe we could just use the rfkill-patch [1] I've submitted
-> some time ago. Of course it does a bit more then just saving and restoring
-> the pci state ;) but it changes iwl3945 to only use pci_save_state and
-> pci_restore_state in the suspend and resume handlers which should fix the
-> issue you've pointed out in comment #10.
+On Thu, Feb 12, 2009 at 4:56 AM, Alberto Pollastro
+<a.pollastro@gmail.com> wrote:
+> On Wed, Feb 11, 2009 at 10:41 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>
+>> mac80211 or ath9k does not yet have radar detection support so
+>> therefore no mac80211 driver will allow you to use any beaconing mode
+>> (AP | IBSS | Mesh) mode on DFS channels yet.
+>>
+>> Note that not all 5 GHz channels require radar detection though so you
+>> could try using one of the non-DFS channels. Check 'iw list' for that.
+>
+> I've checked in regdb (2009.01.30) an it reports that I can use these
+> frequencies (in Italy):
+>
+> country IT:
+>    (2402 - 2482 @ 40), (N/A, 20)
+>    (5170 - 5250 @ 40), (N/A, 20)
+>    (5250 - 5330 @ 40), (N/A, 20), DFS
+>    (5490 - 5710 @ 40), (N/A, 27), DFS
+>
+> I'm not sure, but in Italy the range 5170 - 5250 can be used only
+> indoor. Are indoor/outdoor channels treated differently by mac80211
+> and/or ath9k?
 
-indeed ... thanks to you we do not need to fix 2.6.30. As you say this
-is a big change - I am going to try to get the one line fix in before
-going this route because 2.6.29 is only looking for fixes right now.
-Your changes are much cleaner though and I am very happy that it is in
-wireless-testing already.
+Yes, we have indoor and outdoor channel flags. You can supply a patch
+or provide a reference to the regulatory information you are reading
+to determine this and we can patch it up.
 
-Reinette
+> Regarding 802.11h, is its development for beaconing modes scheduled?
 
+I believe this will be worked on but we have no exact schedule.
+
+  Luis
