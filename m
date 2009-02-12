@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f21.google.com ([209.85.217.21]:45547 "EHLO
-	mail-gx0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752849AbZBFWcq (ORCPT
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:50312 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756371AbZBLBMD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 17:32:46 -0500
-Received: by gxk14 with SMTP id 14so1021952gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2009 14:32:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20090205160738.990564487@sipsolutions.net>
-References: <20090205160738.990564487@sipsolutions.net>
-Date: Fri, 6 Feb 2009 14:32:44 -0800
-Message-ID: <43e72e890902061432k2ba1a2b3o49563e496b5be0d6@mail.gmail.com> (sfid-20090206_233249_588806_400D79A7)
-Subject: Re: [PATCH 00/11] mac80211 aggregation cleanups/fixes
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Feb 2009 20:12:03 -0500
+Received: by fxm13 with SMTP id 13so1410304fxm.13
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 17:12:01 -0800 (PST)
+Date: Thu, 12 Feb 2009 02:07:47 +0100
+From: "Christoph .J Thompson" <cjsthompson@gmail.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Sitecom WL-608 USB WiFi
+Message-Id: <20090212020747.fd21a6a1.cjsthompson@gmail.com> (sfid-20090212_021209_125385_0C40A8E7)
+In-Reply-To: <3ace41890902111451n6c9cbdc4me410609479b1ac4f@mail.gmail.com>
+References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
+	<200902112332.53480.IvDoorn@gmail.com>
+	<3ace41890902111451n6c9cbdc4me410609479b1ac4f@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 5, 2009 at 8:07 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Here are a few previously posted, now rebased, patches for
-> mac80211 aggregation. This is mostly preparatory for getting
-> Intel aggregation working again, which is working for me but
-> right now I'm unclear what sort of internal validation Intel
-> folks want to do (and I hear there was one issue in testing)
+On Wed, 11 Feb 2009 22:51:29 +0000
+Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> I added the WL-603 to the zd1211rw driver in wireless-testing a couple
+> of weeks. ago.
+> zd1211rw: adding Sitecom WL-603 (0df6:0036) to the USB id list
+> 
+> Here was the entry - could you try adding a similiar line (using
+> 0x003f for your device, instead of 0x0036 shown here) and report back
+> if the WL608 is similiar to the WL 603 except by the ID?
 
-Tested-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+No problem, I will try it and report back.
 
-  Luis
+-- 
+Christoph .J Thompson <cjsthompson@gmail.com>
