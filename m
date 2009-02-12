@@ -1,84 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx28.mail.ru ([94.100.176.42]:22019 "EHLO mx28.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751285AbZBOKJu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 05:09:50 -0500
-Received: from mx7.mail.ru (mx7.mail.ru [94.100.176.21])
-	by mx28.mail.ru (mPOP.Fallback_MX) with ESMTP id 0A475784C03
-	for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 12:51:51 +0300 (MSK)
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-Subject: [PATCH] orinoco: do not resgister NULL pm_notifier function
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Date: Sun, 15 Feb 2009 12:51:18 +0300
-Message-ID: <20090215094753.31795.19546.stgit@cooker.net> (sfid-20090215_110956_181878_02756325)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from xc.sipsolutions.net ([83.246.72.84]:48812 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754976AbZBLKGO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2009 05:06:14 -0500
+Subject: Re: soft-safe -> soft-unsafe lock order detected
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4991AC67.90104@openwrt.org> (sfid-20090210_173417_726855_7504F887)
+References: <4991AC67.90104@openwrt.org>
+	 (sfid-20090210_173417_726855_7504F887)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RtfHxQCwtbS4hvCkG/kP"
+Date: Thu, 12 Feb 2009 11:05:41 +0100
+Message-Id: <1234433141.16004.85.camel@johannes.local> (sfid-20090212_110619_890286_88E79878)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With DEBUG_NOTIFIERS it results in
 
-[11330.890966] WARNING: at /home/bor/src/linux-git/kernel/notifier.c:88
-notifier_call_chain+0x91/0xa0()
-[11330.890977] Hardware name: PORTEGE 4000
-[11330.890983] Invalid notifier called! ...
+--=-RtfHxQCwtbS4hvCkG/kP
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Without DEBUG_NOTIFIERS it most likely crashes on NULL pointer.
+On Tue, 2009-02-10 at 17:33 +0100, Gabor Juhos wrote:
 
-Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
+> I'm testing the ath9k driver in STA mode on an Atheros AR913x based board=
+.
 
----
+>  (&local->sta_lock){.+..}
+> ... which became soft-irq-safe at:
+>   [<800b21cc>] __lock_acquire+0x5a8/0x844
+>   [<800b24c4>] lock_acquire+0x5c/0x84
+>   [<8006b980>] _spin_lock_irqsave+0x50/0x74
+>   [<c020570c>] ieee80211_beacon_get+0x14c/0x3a4 [mac80211]
+>   [<c0341e08>] ath9k_beacon_tasklet+0x304/0x5c4 [ath9k]
 
-This condition is triggered by default config options so it is 2.6.29
-material. Patch is intentionally against 2.6.29 base and not against
-wireless-next.
+Something is mismatched here. STA mode !=3D beaconing.
 
- drivers/net/wireless/orinoco/orinoco.c |   19 +++++++++++++++----
- 1 files changed, 15 insertions(+), 4 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/orinoco/orinoco.c b/drivers/net/wireless/orinoco/orinoco.c
-index 6514e46..728fd3f 100644
---- a/drivers/net/wireless/orinoco/orinoco.c
-+++ b/drivers/net/wireless/orinoco/orinoco.c
-@@ -3158,8 +3158,20 @@ static int orinoco_pm_notifier(struct notifier_block *notifier,
- 
- 	return NOTIFY_DONE;
- }
-+
-+static void orinoco_register_pm_notifier(struct orinoco_private *priv)
-+{
-+	priv->pm_notifier.notifier_call = orinoco_pm_notifier;
-+	register_pm_notifier(&priv->pm_notifier);
-+}
-+
-+static void orinoco_unregister_pm_notifier(struct orinoco_private *priv)
-+{
-+	unregister_pm_notifier(&priv->pm_notifier);
-+}
- #else /* !PM_SLEEP || HERMES_CACHE_FW_ON_INIT */
--#define orinoco_pm_notifier NULL
-+#define orinoco_register_pm_notifier(priv) do { } while(0)
-+#define orinoco_unregister_pm_notifier(priv) do { } while(0)
- #endif
- 
- /********************************************************************/
-@@ -3653,8 +3665,7 @@ struct net_device
- 	priv->cached_fw = NULL;
- 
- 	/* Register PM notifiers */
--	priv->pm_notifier.notifier_call = orinoco_pm_notifier;
--	register_pm_notifier(&priv->pm_notifier);
-+	orinoco_register_pm_notifier(priv);
- 
- 	return dev;
- }
-@@ -3678,7 +3689,7 @@ void free_orinocodev(struct net_device *dev)
- 		kfree(rx_data);
- 	}
- 
--	unregister_pm_notifier(&priv->pm_notifier);
-+	orinoco_unregister_pm_notifier(priv);
- 	orinoco_uncache_fw(priv);
- 
- 	priv->wpa_ie_len = 0;
+--=-RtfHxQCwtbS4hvCkG/kP
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJk/RyAAoJEKVg1VMiehFYfOwP/jROdA9qNf82krnXIrpKBV66
+IwdkPUmZ/H7ID7FQ+Jn+Cf+uunYwWuQcpDeOyXhA9cuxMkyZB+iSZ8nGJI5FhBwg
+XjAD9ls6h2CzSIZtPF7pOuYTySfCYyLKM9ydjDjSAk4BDI0jcfXhE1x1w4/Y50lm
+8tK9EnzNk4SBF7wJnhrHD+mTlBAPbJpXMTsSKXDgVDz3sDfPtMoWVdJHrRFBnVYG
+gpfUBnWB5afSIKkdtB3N00xEXp5HT1I48ELF8nurNRI+QyooG0YvXYVJZW+v4uKW
+WIwsLCtu1JtIKE5CSUMtzyOvjhwjTmGr6PjE8NFHTLtXZkSAZYCJmNHb1dQ+VFKr
+YcUSJBfavUjqSgb3dyLrnbyLqnLmcWT6t3smCjSGPHiDSshiePJsKdkCfNdzQ45W
+9njwBxkNBOdtsXvZweeZbMEp5RMGzv1zeWQgScozpx105sMEA8M0Px5ZGm1Y/1MX
+kPYChqk0DGwKz0by3dVRWWhT11RQNilIoAkbhkCQ/xxjOvP/vS56HdVlmCpjWmvm
+KJWKBHB1S+VYpA2ALNa2cOcrKgm2+YXiQ7P4IsX/2wtSb+hi0IeTWiBvmbskMQqH
+OTRCOskGc1m0ByVoLWQv/NH2uJXkiXlafFCg5VYabXGBHR8QwQ9W1vhUJQbUSDs2
+I2zcFrIFtYsSHudz8hMB
+=Wgs2
+-----END PGP SIGNATURE-----
+
+--=-RtfHxQCwtbS4hvCkG/kP--
 
