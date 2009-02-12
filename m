@@ -1,102 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60027 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752635AbZBIKjH (ORCPT
+Received: from mga03.intel.com ([143.182.124.21]:42377 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756118AbZBLEzv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 05:39:07 -0500
-Subject: Re: [PATCH 2/3] mac80211: Modul. mesh path prot: Comm w/ Userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Florian Sesser <flomaillist@cosetrain.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <897787d59c53459e0bff3a6829ac470f6ed2e84e.1234118418.git.flomaillist@cosetrain.com> (sfid-20090208_205238_013714_9C35AD85)
-References: <498F36B7.40806@cosetrain.com>
-	 <31341041c003f9a10f7ef791dc74748c0ba6b46f.1234118418.git.flomaillist@cosetrain.com>
-	 <897787d59c53459e0bff3a6829ac470f6ed2e84e.1234118418.git.flomaillist@cosetrain.com>
-	 (sfid-20090208_205238_013714_9C35AD85)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-KNZOY9jmSQcvk3e8gT/5"
-Date: Mon, 09 Feb 2009 11:39:02 +0100
-Message-Id: <1234175942.4175.218.camel@johannes.local> (sfid-20090209_113912_801722_6EBD48A4)
-Mime-Version: 1.0
+	Wed, 11 Feb 2009 23:55:51 -0500
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Sujith <Sujith.Manoharan@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 11 Feb 2009 20:55:47 -0800
+Subject: RE: [PATCH] mac80211: fix aggregation for hardware with ampdu queues
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A353F1ACF4B@orsmsx506.amr.corp.intel.com> (sfid-20090212_055553_724986_3E745133)
+References: <1234396313.16004.65.camel@johannes.local>
+ <18835.43402.286764.192456@gargle.gargle.HOWL>
+In-Reply-To: <18835.43402.286764.192456@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Thanks for testing. Do you agree the medium-term sulution?
 
---=-KNZOY9jmSQcvk3e8gT/5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Wey-Yi Guy
+Intel Corporation
+2111 N.E. 25th Avenue  M/S JF3-308                 
+Hillsboro OR 97124-5961
+USA
+Work Phone: 503-264-6023 (OR)
+Cell Phone: 503-329-8410
+Email: wey-yi.w.guy@intel.com
+ 
 
-On Sun, 2009-02-08 at 20:52 +0100, Florian Sesser wrote:
-> Modularize mesh path selection protocol.
+-----Original Message-----
+From: Sujith [mailto:Sujith.Manoharan@atheros.com] 
+Sent: Wednesday, February 11, 2009 8:46 PM
+To: Johannes Berg
+Cc: John Linville; linux-wireless; Guy, Wey-Yi W
+Subject: [PATCH] mac80211: fix aggregation for hardware with ampdu queues
 
-that's the subject, you also need to mentioned nl80211/cfg80211 since
-that is the bulk of the change.
+Johannes Berg wrote:
+> Hardware with AMPDU queues currently has broken aggregation.
+> 
+> This patch fixes it by making all A-MPDUs go over the regular AC queues,
+> but keeping track of the hardware queues in mac80211. As a first rough
+> version, it actually stops the AC queue for extended periods of time,
+> which can be removed by adding buffering internal to mac80211, but is
+> currently not a huge problem because people rarely use multiple TIDs
+> that are in the same AC (and iwlwifi currently doesn't operate as AP).
+> 
+> This is a short-term fix, my current medium-term plan, which I hope to
+> execute soon as well, but am not sure can finish before .30, looks like
+> this:
+>  1) rework the internal queuing layer in mac80211 that we use for
+>     fragments if the driver stopped queue in the middle of a fragmented
+>     frame to be able to queue more frames at once (rather than just a
+>     single frame with its fragments)
+>  2) instead of stopping the entire AC queue, queue up the frames in a
+>     per-station/per-TID queue during aggregation session initiation,
+>     when the session has come up take all those frames and put them
+>     onto the queue from 1)
+>  3) push the ampdu queue layer abstraction this patch introduces in
+>     mac80211 into the driver, and remove the virtual queue stuff from
+>     mac80211 again
+> 
+> This plan will probably also affect ath9k in that mac80211 queues the
+> frames instead of passing them down, even when there are no ampdu queues.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-> This patch enables communication with userspace through the
-> "iw" tool. The corresponding patch to IW will be posted on
-> this list.
+Tested with ath9k, works okay.
 
-NACK to this description. 'iw' is but one implementation of an nl80211
-userspace client.
-
-> +++ b/include/net/cfg80211.h
-> @@ -458,6 +458,10 @@ struct mesh_config {
->  	u32 dot11MeshHWMPactivePathTimeout;
->  	u16 dot11MeshHWMPpreqMinInterval;
->  	u16 dot11MeshHWMPnetDiameterTraversalTime;
-> +	/* Mesh IDs */
-> +	u32 mesh_path_selection_protocol_id;
-> +	u32 mesh_path_selection_metric_id;
-> +	u32 mesh_congestion_control_mode_id;
-
-That's not a useful comment.
-=20
-> +	if (_chg_mesh_attr(NL80211_MESHCONF_PATH_SELECTION_PROTOCOL_ID, mask))
-> +		mesh_ids_set_pp(&sdata->u.mesh,
-> +		nconf->mesh_path_selection_protocol_id);
-> +	if (_chg_mesh_attr(NL80211_MESHCONF_PATH_SELECTION_METRIC_ID, mask))
-> +		conf->mesh_path_selection_metric_id =3D
-> +			nconf->mesh_path_selection_metric_id;
-> +	if (_chg_mesh_attr(NL80211_MESHCONF_CONGESTION_CONTROL_MODE_ID, mask))
-> +		conf->mesh_congestion_control_mode_id =3D
-> +			nconf->mesh_congestion_control_mode_id;
-
-Shouldn't this actually effect the change too?
-
-> +	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, mesh_path_selection_protocol_id,
-> +			mask, NL80211_MESHCONF_PATH_SELECTION_PROTOCOL_ID,
-> +			nla_get_u32);
-> +	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, mesh_path_selection_metric_id,
-> +			mask, NL80211_MESHCONF_PATH_SELECTION_METRIC_ID,
-> +			nla_get_u32);
-> +	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, mesh_congestion_control_mode_id,
-> +			mask, NL80211_MESHCONF_CONGESTION_CONTROL_MODE_ID,
-> +			nla_get_u32);
-
-can that possibly be unset?
-
-johannes
-
---=-KNZOY9jmSQcvk3e8gT/5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJkAfDAAoJEKVg1VMiehFYYTkP/17EVT5Yd+1uUrlrMwDWBpog
-T8HfH1XgvufWBCE8Jft/18iQ5HlfaDeRFolpV7wMcM2Z1/hJfDysKXZBtAFMwyGW
-YGvIouZnwaR7cA4Bn7uwe88J4kjDrhA/LBPWuTWCvmM4WHYafhvpJfXKRulLC62J
-v/nx+6YQ2/f94BPjaXSMf69FjQeJW9WPKcA3FD+w5pDrkuIjjt7Kr4UzDLkzWqPe
-0r8tK5ouk6ugO1Yy8d6UQSKvVDuxVQupPlNWWScf+NFpc5p44NyO81CIQ/stwgsA
-Ifb958CTZ9oVjDWKMVbxZEtatJizInkFRIVZSsM4jDI1I3fs8h1S2QsDC9pnFGwR
-Mkp7ri8WBAjBliYwuQayG/FoqoOCK7EUtc1JXATV/U7U8N6Ikj92ZbaQ9HbovL+y
-yD48BM6/haEGLaU+fL7lswslhdoOWl+7SzvH2nUod+LBnLxOGwDZ1MTkO2O2pZte
-c9uUsC2pzDmnFyckDShNvu5ctyUllm0rmc3QXN+OMK9dFOhMu/cMOJxmD5nGFL/N
-wupqSDXhiRdd3Ps8mtl0I/EoGFEWGaECfN8vfBGikEpbaXpXjfxmIvsO6jB5zA2i
-7eVIfTxJNyair+qnBrIHV9NcNQIq6i9rRexat5WDv2h6xWnDyblDW30Lddlnn/Iv
-U9dQw2l7xz3HWGmZ8/l6
-=NHeH
------END PGP SIGNATURE-----
-
---=-KNZOY9jmSQcvk3e8gT/5--
-
+Sujith
