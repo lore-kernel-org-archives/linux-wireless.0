@@ -1,170 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:27452 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:57938 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751298AbZBNFel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Feb 2009 00:34:41 -0500
+	id S1750932AbZBLGM1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2009 01:12:27 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 21:34:41 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/10] cfg80211: add assert_cfg80211_lock() to ensure proper protection
-Date: Fri, 13 Feb 2009 21:33:44 -0800
-Message-ID: <1234589627-16977-8-git-send-email-lrodriguez@atheros.com> (sfid-20090214_063446_752974_B4CC8E64)
-In-Reply-To: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 22:12:26 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18835.48357.7271.454072@gargle.gargle.HOWL> (sfid-20090212_071231_361530_5402841A)
+Date: Thu, 12 Feb 2009 11:38:37 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<Jouni.Malinen@Atheros.com>
+Subject: [PATCH v2] mac80211: Extend the rate control API with an update callback
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/core.c    |    5 ++++-
- net/wireless/core.h    |    6 ++++++
- net/wireless/nl80211.c |    3 ++-
- net/wireless/reg.c     |   15 +++++++++++++++
- 4 files changed, 27 insertions(+), 2 deletions(-)
+The AP can switch dynamically between 20/40 Mhz channel width,
+in which case we switch the local operating channel, but the
+rate control algorithm is not notified. This patch adds a new callback
+to indicate such changes to the RC algorithm.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 39d40d1..e347093 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -7,7 +7,6 @@
- #include <linux/if.h>
- #include <linux/module.h>
- #include <linux/err.h>
--#include <linux/mutex.h>
- #include <linux/list.h>
- #include <linux/nl80211.h>
- #include <linux/debugfs.h>
-@@ -50,6 +49,8 @@ cfg80211_drv_by_wiphy_idx(int wiphy_idx)
- 	if (!wiphy_idx_valid(wiphy_idx))
- 		return NULL;
+Currently, HT channel width change is notified, but this callback
+can be used to indicate any new requirements that might come up later on.
+
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+v2:
+--
+* Rebased over [PATCH] mac80211: split IBSS/managed code
+
+ include/net/mac80211.h |   13 +++++++++++++
+ net/mac80211/ht.c      |   13 +++++++++++++
+ net/mac80211/rate.h    |   12 ++++++++++++
+ 3 files changed, 38 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 31fd8ba..e01c63a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1975,6 +1975,16 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
+ /* Rate control API */
  
-+	assert_cfg80211_lock();
+ /**
++ * enum rate_control_changed - flags to indicate which parameter changed
++ *
++ * @IEEE80211_RC_HT_CHANGED: The HT parameters of the operating channel have
++ *	changed, rate control algorithm can update its internal state if needed.
++ */
++enum rate_control_changed {
++	IEEE80211_RC_HT_CHANGED = BIT(0)
++};
 +
- 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
- 		if (drv->wiphy_idx == wiphy_idx) {
- 			result = drv;
-@@ -69,6 +70,8 @@ __cfg80211_drv_from_info(struct genl_info *info)
- 	struct net_device *dev;
- 	int err = -EINVAL;
++/**
+  * struct ieee80211_tx_rate_control - rate control information for/from RC algo
+  *
+  * @hw: The hardware the algorithm is invoked for.
+@@ -2010,6 +2020,9 @@ struct rate_control_ops {
+ 	void *(*alloc_sta)(void *priv, struct ieee80211_sta *sta, gfp_t gfp);
+ 	void (*rate_init)(void *priv, struct ieee80211_supported_band *sband,
+ 			  struct ieee80211_sta *sta, void *priv_sta);
++	void (*rate_update)(void *priv, struct ieee80211_supported_band *sband,
++			    struct ieee80211_sta *sta,
++			    void *priv_sta, u32 changed);
+ 	void (*free_sta)(void *priv, struct ieee80211_sta *sta,
+ 			 void *priv_sta);
  
-+	assert_cfg80211_lock();
-+
- 	if (info->attrs[NL80211_ATTR_WIPHY]) {
- 		bywiphyidx = cfg80211_drv_by_wiphy_idx(
- 				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index e12eab5..1f036f3 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -10,6 +10,7 @@
- #include <linux/netdevice.h>
- #include <linux/kref.h>
- #include <linux/rbtree.h>
-+#include <linux/mutex.h>
- #include <net/genetlink.h>
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 69b6e9a..4e3c72f 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -17,6 +17,7 @@
  #include <net/wireless.h>
- #include <net/cfg80211.h>
-@@ -72,6 +73,11 @@ bool wiphy_idx_valid(int wiphy_idx)
- extern struct mutex cfg80211_mutex;
- extern struct list_head cfg80211_drv_list;
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
++#include "rate.h"
  
-+static inline void assert_cfg80211_lock(void)
-+{
-+	BUG_ON(!mutex_is_locked(&cfg80211_mutex));
-+}
-+
- struct cfg80211_internal_bss {
- 	struct list_head list;
- 	struct rb_node rbn;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6f4dedb..89593d3 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7,7 +7,6 @@
- #include <linux/if.h>
- #include <linux/module.h>
- #include <linux/err.h>
--#include <linux/mutex.h>
- #include <linux/list.h>
- #include <linux/if_ether.h>
- #include <linux/ieee80211.h>
-@@ -159,6 +158,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	int i;
- 	u16 ifmodes = dev->wiphy.interface_modes;
- 
-+	assert_cfg80211_lock();
-+
- 	hdr = nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_WIPHY);
- 	if (!hdr)
- 		return -1;
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 47d5056..93c197c 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -830,6 +830,8 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
+ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
+ 				       struct ieee80211_ht_cap *ht_cap_ie,
+@@ -93,7 +94,9 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_local *local = sdata->local;
  	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_bss_ht_conf ht;
++	struct sta_info *sta;
+ 	u32 changed = 0;
+ 	bool enable_ht = true, ht_changed;
+ 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
+@@ -136,6 +139,16 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 	if (ht_changed) {
+                 /* channel_type change automatically detected */
+ 		ieee80211_hw_config(local, 0);
++
++		rcu_read_lock();
++
++		sta = sta_info_get(local, ifmgd->bssid);
++		if (sta)
++			rate_control_rate_update(local, sband, sta,
++						 IEEE80211_RC_HT_CHANGED);
++
++		rcu_read_unlock();
++
+         }
  
-+	assert_cfg80211_lock();
-+
- 	sband = wiphy->bands[band];
- 	BUG_ON(chan_idx >= sband->n_channels);
- 	chan = &sband->channels[chan_idx];
-@@ -1042,6 +1044,10 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
- static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 			  const char *alpha2)
- {
-+
-+	if (set_by != REGDOM_SET_BY_CORE)
-+		assert_cfg80211_lock();
-+
- 	/* All initial requests are respected */
- 	if (!last_request)
- 		return 0;
-@@ -1122,6 +1128,9 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
- 	bool intersect = false;
- 	int r = 0;
+ 	/* disable HT */
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 928da62..b9164c9 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -62,6 +62,18 @@ static inline void rate_control_rate_init(struct sta_info *sta)
+ 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
+ }
  
-+	if (set_by != REGDOM_SET_BY_CORE)
-+		assert_cfg80211_lock();
++static inline void rate_control_rate_update(struct ieee80211_local *local,
++				    struct ieee80211_supported_band *sband,
++				    struct sta_info *sta, u32 changed)
++{
++	struct rate_control_ref *ref = local->rate_ctrl;
++	struct ieee80211_sta *ista = &sta->sta;
++	void *priv_sta = sta->rate_ctrl_priv;
 +
- 	r = ignore_request(wiphy, set_by, alpha2);
++	if (ref->ops->rate_update)
++		ref->ops->rate_update(ref->priv, sband, ista,
++				      priv_sta, changed);
++}
  
- 	if (r == REG_INTERSECT) {
-@@ -1217,6 +1226,8 @@ EXPORT_SYMBOL(regulatory_hint);
- static bool reg_same_country_ie_hint(struct wiphy *wiphy,
- 			u32 country_ie_checksum)
- {
-+	assert_cfg80211_lock();
-+
- 	if (!last_request->wiphy)
- 		return false;
- 	if (likely(last_request->wiphy != wiphy))
-@@ -1583,6 +1594,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- {
- 	int r;
- 
-+	assert_cfg80211_lock();
-+
- 	/* Note that this doesn't update the wiphys, this is done below */
- 	r = __set_regdom(rd);
- 	if (r) {
-@@ -1605,6 +1618,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- /* Caller must hold cfg80211_mutex */
- void reg_device_remove(struct wiphy *wiphy)
- {
-+	assert_cfg80211_lock();
-+
- 	kfree(wiphy->regd);
- 	if (!last_request || !last_request->wiphy)
- 		return;
+ static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
+ 					   struct ieee80211_sta *sta,
 -- 
-1.6.1.2.253.ga34a
+1.6.1
 
