@@ -1,56 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:56721 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755443AbZB0Pev convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 10:34:51 -0500
-Received: by fxm24 with SMTP id 24so1103613fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2009 07:34:48 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:48684 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750703AbZBLFzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2009 00:55:06 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 21:55:05 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20090226223155.d2d40946.cjsthompson@gmail.com>
-References: <20090226223155.d2d40946.cjsthompson@gmail.com>
-Date: Fri, 27 Feb 2009 15:34:48 +0000
-Message-ID: <3ace41890902270734v5a70ffb6x3b797c25a51734c9@mail.gmail.com> (sfid-20090227_163455_837786_66395FF5)
-Subject: Re: D-Link GWL-122 and AP/WPA2
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "Christoph .J Thompson" <cjsthompson@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18835.47316.166957.190784@gargle.gargle.HOWL> (sfid-20090212_065513_561691_C25F0623)
+Date: Thu, 12 Feb 2009 11:21:16 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<Jouni.Malinen@Atheros.com>
+Subject: [PATCH] mac80211: Extend the rate control API with an update callback
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 26, 2009 at 9:31 PM, Christoph .J Thompson
-<cjsthompson@gmail.com> wrote:
->
-> After trying to get a Sitecom WL-608 wireless USB adapter to work in =
-AP mode to no avail I gave up and ordered a Belkin F5D7050 wireless USB=
- adapter thinking it used a Prism based chipset which would enable me t=
-o use it in AP mode. Almost two weeks later I finally got it this morni=
-ng (kudos to UPS for the "fast" delivery). To my dismay some clown at B=
-elkin thought it was funny to use a new chipset with each revision of t=
-heir F5D7050. I got a revision "e" which has a Realtek rtl8187 chipset =
-which won't be of any use for what I want to do. So I'm back at my star=
-ting point with my pockets ~50 euros lighter. I'm going to have to buy =
-another USB wifi adapter and I'm considering the D-Link GWL-122. It see=
-ms that the D-Link GWL-122 uses the Prism chipset. Has anyone here any =
-experience with this device? Will it work in AP mode with WPA2?
+The AP can switch dynamically between 20/40 Mhz channel width,
+in which case we switch the local operating channel, but the
+rate control algorithm is not notified. This patch adds a new callback
+to indicate such changes to the RC algorithm.
 
-Sorry to hear about your misfortune... can I ask if the F5D7050 works
-well with the in-kernel rtl8187 driver in STA mode?
+Currently, HT channel width change is notified, but this callback
+can be used to indicate any new requirements that might come up later on.
 
-Indeed Sitecom seems to use chips from every manufacturer...
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ include/net/mac80211.h |   13 +++++++++++++
+ net/mac80211/ht.c      |   13 +++++++++++++
+ net/mac80211/rate.h    |   12 ++++++++++++
+ 3 files changed, 38 insertions(+), 0 deletions(-)
 
->
-> --
-> Christoph .J Thompson <cjsthompson@gmail.com>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 88fa3e0..509be69 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1980,6 +1980,16 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
+ /* Rate control API */
+ 
+ /**
++ * enum rate_control_changed - flags to indicate which parameter changed
++ *
++ * @IEEE80211_RC_HT_CHANGED: The HT parameters of the operating channel have
++ *	changed, rate control algorithm can update its internal state if needed.
++ */
++enum rate_control_changed {
++	IEEE80211_RC_HT_CHANGED = BIT(0)
++};
++
++/**
+  * struct ieee80211_tx_rate_control - rate control information for/from RC algo
+  *
+  * @hw: The hardware the algorithm is invoked for.
+@@ -2015,6 +2025,9 @@ struct rate_control_ops {
+ 	void *(*alloc_sta)(void *priv, struct ieee80211_sta *sta, gfp_t gfp);
+ 	void (*rate_init)(void *priv, struct ieee80211_supported_band *sband,
+ 			  struct ieee80211_sta *sta, void *priv_sta);
++	void (*rate_update)(void *priv, struct ieee80211_supported_band *sband,
++			    struct ieee80211_sta *sta,
++			    void *priv_sta, u32 changed);
+ 	void (*free_sta)(void *priv, struct ieee80211_sta *sta,
+ 			 void *priv_sta);
+ 
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 82ea0b6..4115613 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -17,6 +17,7 @@
+ #include <net/wireless.h>
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
++#include "rate.h"
+ 
+ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
+ 				       struct ieee80211_ht_cap *ht_cap_ie,
+@@ -93,7 +94,9 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
++	struct ieee80211_if_sta *ifsta = &sdata->u.sta;
+ 	struct ieee80211_bss_ht_conf ht;
++	struct sta_info *sta;
+ 	u32 changed = 0;
+ 	bool enable_ht = true, ht_changed;
+ 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
+@@ -136,6 +139,16 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 	if (ht_changed) {
+                 /* channel_type change automatically detected */
+ 		ieee80211_hw_config(local, 0);
++
++		rcu_read_lock();
++
++		sta = sta_info_get(local, ifsta->bssid);
++		if (sta)
++			rate_control_rate_update(local, sband, sta,
++						 IEEE80211_RC_HT_CHANGED);
++
++		rcu_read_unlock();
++
+         }
+ 
+ 	/* disable HT */
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 928da62..b9164c9 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -62,6 +62,18 @@ static inline void rate_control_rate_init(struct sta_info *sta)
+ 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
+ }
+ 
++static inline void rate_control_rate_update(struct ieee80211_local *local,
++				    struct ieee80211_supported_band *sband,
++				    struct sta_info *sta, u32 changed)
++{
++	struct rate_control_ref *ref = local->rate_ctrl;
++	struct ieee80211_sta *ista = &sta->sta;
++	void *priv_sta = sta->rate_ctrl_priv;
++
++	if (ref->ops->rate_update)
++		ref->ops->rate_update(ref->priv, sband, ista,
++				      priv_sta, changed);
++}
+ 
+ static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
+ 					   struct ieee80211_sta *sta,
+-- 
+1.6.1
+
