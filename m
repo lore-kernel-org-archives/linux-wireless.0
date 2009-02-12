@@ -1,43 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3262 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754230AbZBXN60 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 08:58:26 -0500
-Date: Tue, 24 Feb 2009 08:58:17 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090224135817.GB6019@hash.localnet> (sfid-20090224_145829_042008_75661FAF)
-References: <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <49A321BA.2040500@gmail.com> <49A326A4.8090103@gmail.com> <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:36312 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755114AbZBLEk0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2009 23:40:26 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 20:40:26 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18835.42843.318423.175849@gargle.gargle.HOWL> (sfid-20090212_054032_087693_ADD5D289)
+Date: Thu, 12 Feb 2009 10:06:43 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 2/8] ath9k: Fix rd_ext EEPROM capability for AR9285
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 24, 2009 at 01:08:03AM +0200, Nick Kossifidis wrote:
-> He does an extra check...
-> 
-> 	/*
-> 	 * Given the use of a self-linked tail be very sure that the hw is
-> 	 * done with this descriptor; the hw may have done this descriptor
-> 	 * once and picked it up again...make sure the hw has moved on.
-> 	 */
-> 	if ((ands->ds_rxstatus1&AR_Done) == 0 && OS_REG_READ(ah, AR_RXDP) == pa)
-> 		return HAL_EINPROGRESS;
+AR9285 chipsets have a different EEPROM layout,
+handle this appropriately when populating the rd_ext
+capability.
 
-Sounds like we definitely need that.  If the hw uses up all the dma buffers
-in one go, there's a good chance we can send the skb to mac80211 while
-the hardware is still using it.  I guess an easy way to test would be to
-set the max rx buffers to 3 or so and watch the fireworks.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/eeprom.h |   12 ++++++++++++
+ drivers/net/wireless/ath9k/hw.c     |    3 ++-
+ 2 files changed, 14 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/ath9k/eeprom.h b/drivers/net/wireless/ath9k/eeprom.h
+index b7c656c..5c0d6c3 100644
+--- a/drivers/net/wireless/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath9k/eeprom.h
+@@ -78,6 +78,18 @@
+ #define INCREASE_MAXPOW_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+ #define INCREASE_MAXPOW_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
+ 
++/*
++ * For AR9285 and later chipsets, the following bits are not being programmed
++ * in EEPROM and so need to be enabled always.
++ *
++ * Bit 0: en_fcc_mid
++ * Bit 1: en_jap_mid
++ * Bit 2: en_fcc_dfs_ht40
++ * Bit 3: en_jap_ht40
++ * Bit 4: en_jap_dfs_ht40
++ */
++#define AR9285_RDEXT_DEFAULT    0x1F
++
+ #define AR_EEPROM_MAC(i)	(0x1d+(i))
+ #define ATH9K_POW_SM(_r, _s)	(((_r) & 0x3f) << (_s))
+ #define FREQ2FBIN(x, y)		((y) ? ((x) - 2300) : (((x) - 4800) / 5))
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index cad8e39..55d5a74 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -3128,10 +3128,11 @@ bool ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	u16 capField = 0, eeval;
+ 
+ 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
+-
+ 	ah->regulatory.current_rd = eeval;
+ 
+ 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_1);
++	if (AR_SREV_9285_10_OR_LATER(ah))
++		eeval |= AR9285_RDEXT_DEFAULT;
+ 	ah->regulatory.current_rd_ext = eeval;
+ 
+ 	capField = ah->eep_ops->get_eeprom(ah, EEP_OP_CAP);
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.6.1
 
