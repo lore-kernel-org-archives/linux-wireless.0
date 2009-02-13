@@ -1,86 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:46256 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752096AbZBDXGE (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60117 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663AbZBMHRW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 18:06:04 -0500
-Received: by ewy14 with SMTP id 14so4024043ewy.13
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 15:06:02 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH v2 00/16] orinoco: reorganisation
-Date: Wed,  4 Feb 2009 23:05:42 +0000
-Message-Id: <1233788758-9850-1-git-send-email-kilroyd@googlemail.com> (sfid-20090205_000613_359577_52C28EF3)
+	Fri, 13 Feb 2009 02:17:22 -0500
+Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com> (sfid-20090213_081438_770752_801CC2D1)
+References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
+	 <1234508187.1327.19.camel@johannes.local>
+	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
+	 <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
+	 <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com>
+	 (sfid-20090213_081438_770752_801CC2D1)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HyXjG8IoscepqTUebBQV"
+Date: Fri, 13 Feb 2009 08:17:16 +0100
+Message-Id: <1234509436.1327.25.camel@johannes.local> (sfid-20090213_081726_373100_9C176492)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series reorganises the orinoco driver. The focus is on
-splitting up the monolithic orinoco.c to make future changes easier.
 
-The series has been through two RFCs on the orinoco-devel list.
-As a result, checkpatch fixes prefix the core changes, and the last
-two patches stop building hermes and hermes_dld as modules.
+--=-HyXjG8IoscepqTUebBQV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-This series has been rebased on top of master-2009-02-03 to eliminate
-conflicts.
+On Thu, 2009-02-12 at 23:14 -0800, Luis R. Rodriguez wrote:
 
-Regards,
+> >>> Yes, but I need to look at the one Reinette posted and fix that one,
+> >>> which will probably require a different solution.
+> >>
+> >> Oh I didn't see that one. How different?
+> >
+> > I see an rtnl lock issue against scanning and the drv mutex. Doesn't
+> > seem to be related to regulatory. So how would that affect a path to
+> > move hints to a workqueue?
+>=20
+> Oh you mean the rntl_lock() and drv mutex is _still_ an issue?
 
-Dave.
----
+Well, regardless of regulatory, we now have two paths:
 
-David Kilroy (16):
-  orinoco: address leading and trailing whitespace
-  orinoco: spaces in parenthesised expressions
-  orinoco: remove unnecessary braces
-  orinoco: keep line length below 80 characters
-  orinoco: Fix interesting checkpatch errors
-  orinoco: Rename orinoco.c
-  orinoco: use orinoco_private instead of net_device in scan helper
-  orinoco: Move scan helpers to a separate file
-  orinoco: Move MIC helpers into new file
-  orinoco: Move firmware handling into a separate file
-  orinoco: Use accessor functions for bitrate tables
-  orinoco: Add hardware function to set multicast mode
-  orinoco: Move hardware functions into separate file
-  orinoco: Move WEXT handlers into a separate file
-  orinoco: hermes_dld does not need to be a module
-  orinoco: hermes doesn't need to be a separate module
+nl80211: cfg80211_mutex  -->  drv->mutex  -->  rtnl
+wext:    rtnl  -->  cfg80211_mutex  -->  drv->mutex
 
- drivers/net/wireless/orinoco/Makefile      |    3 +-
- drivers/net/wireless/orinoco/airport.c     |    2 +-
- drivers/net/wireless/orinoco/fw.c          |  340 ++
- drivers/net/wireless/orinoco/fw.h          |   16 +
- drivers/net/wireless/orinoco/hermes.c      |   18 -
- drivers/net/wireless/orinoco/hermes_dld.c  |   33 +-
- drivers/net/wireless/orinoco/hw.c          |  586 +++
- drivers/net/wireless/orinoco/hw.h          |   47 +
- drivers/net/wireless/orinoco/main.c        | 2654 ++++++++++++
- drivers/net/wireless/orinoco/main.h        |   63 +
- drivers/net/wireless/orinoco/mic.c         |   79 +
- drivers/net/wireless/orinoco/mic.h         |   22 +
- drivers/net/wireless/orinoco/orinoco.c     | 6153 ----------------------------
- drivers/net/wireless/orinoco/orinoco_cs.c  |    2 +-
- drivers/net/wireless/orinoco/orinoco_pci.h |    2 +-
- drivers/net/wireless/orinoco/orinoco_tmd.c |    2 +-
- drivers/net/wireless/orinoco/scan.c        |  233 ++
- drivers/net/wireless/orinoco/scan.h        |   29 +
- drivers/net/wireless/orinoco/spectrum_cs.c |    4 +-
- drivers/net/wireless/orinoco/wext.c        | 2325 +++++++++++
- drivers/net/wireless/orinoco/wext.h        |   13 +
- 21 files changed, 6417 insertions(+), 6209 deletions(-)
- create mode 100644 drivers/net/wireless/orinoco/fw.c
- create mode 100644 drivers/net/wireless/orinoco/fw.h
- create mode 100644 drivers/net/wireless/orinoco/hw.c
- create mode 100644 drivers/net/wireless/orinoco/hw.h
- create mode 100644 drivers/net/wireless/orinoco/main.c
- create mode 100644 drivers/net/wireless/orinoco/main.h
- create mode 100644 drivers/net/wireless/orinoco/mic.c
- create mode 100644 drivers/net/wireless/orinoco/mic.h
- delete mode 100644 drivers/net/wireless/orinoco/orinoco.c
- create mode 100644 drivers/net/wireless/orinoco/scan.c
- create mode 100644 drivers/net/wireless/orinoco/scan.h
- create mode 100644 drivers/net/wireless/orinoco/wext.c
- create mode 100644 drivers/net/wireless/orinoco/wext.h
+which is clearly not a good plan.
+
+Therefore, I'll probably have to implement solution (1) from what I sent
+you, and invert the locking in nl80211. That would fix your the
+immediate problem with regulatory as well, because that was:
+
+rtnl  --->  (regulatory_hint) --->  cfg80211_mutex  -->  drv->mutex
+
+johannes
+
+--=-HyXjG8IoscepqTUebBQV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJlR55AAoJEKVg1VMiehFYq4YP/iB8rB+mpLdtj8UlkR258q9J
+xkeqK82V5K0Mb4nYidEWst7ymaPYwYu0E8aGu2NFBibBJr5UjfREyppBosw8RkWG
+gzuyWzZ76wMEq1Kz+MnuIkJ8LWioHz9KbbCxdLp2Lay/D42pJi1jbB4n3znPNP++
++JKQphhrDvMBSH7sCdO9ZIUwA0RjIuzZ5YgwmjaB+QzKeD31knn8jf9BzD2TrIwD
+qOztELI/SVsgXacgN6kNYGIQ7d1TrhE/CeL6HwA3zY46OYHd7uL0rw5sZWxoxSFF
+h8ZzlxZcWtfxUGanv4N8YcukIDbpUy4OP75FDIcR/KLCgBxLCxYsFwhscnIu/0OO
+yXPutxzmk0nx4hBiTCqbpLSRp4CQdUgqmh40+DMiVDO64wrj2ZY+JZddp60BD4Jh
+lvxlAImiiTDTf/LI8XSxEu+Zun2F2tD/RBwnQqPOKDcsDZG7PWekDlSQ2fVlFRfl
+MO0+DL93N0uo543417EXg6gYr+Gg3hmXX5RUIF5fc08Jp0HpgZJ3R/1KI25saLiX
+yJP1zsm41WVdl/0BmNe23yy+Tnjd55ZthdSEHieQIQlGDREEFALHiZHWZfmkQmiY
+3VBX2r4sqY7Bf9Hk8MR8HNmTg50gM4k65EicZ7NhVQWQaS4Hpa0vGf32wDTrMXwL
+AJcNJDuJFA7OnM35SDHq
+=q/D1
+-----END PGP SIGNATURE-----
+
+--=-HyXjG8IoscepqTUebBQV--
 
