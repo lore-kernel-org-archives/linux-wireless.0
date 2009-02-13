@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.188]:43006 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751252AbZBOP10 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 10:27:26 -0500
-Received: by nf-out-0910.google.com with SMTP id d21so173545nfb.21
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 07:27:25 -0800 (PST)
-Message-ID: <4998345C.9050409@gmail.com> (sfid-20090215_162731_098155_352D308E)
-Date: Sun, 15 Feb 2009 16:27:24 +0100
-From: Roel Kluin <roel.kluin@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:26152 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753479AbZBMWuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 17:50:22 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 14:50:22 -0800
+Date: Fri, 13 Feb 2009 14:49:37 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] compat-2.6: reflect changes to iwlwifi Kconfig file
+Message-ID: <20090213224937.GE4278@tesla> (sfid-20090213_235029_323300_1230EC9E)
+References: <1234560857-32206-1-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
-To: flamingice@sourmilk.net
-CC: linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] p54: misplaced parentheses
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1234560857-32206-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only FIF_FCSFAIL is set due to parentheses
+On Fri, Feb 13, 2009 at 01:34:17PM -0800, Reinette Chatre wrote:
+> - CONFIG_IWLWIFI is now a tristate, select it to be 'm'
+> - CONFIG_IWLCORE has been removed
+> - CONFIG_IWLAGN_SPECTRUM_MEASUREMENT renamed to
+>   CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT
+> - CONFIG_IWLAGN_LEDS has been removed (not used by driver)
+> - CONFIG_IWL3945_RFKILL does not exist
+> 
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-// include/net/mac80211.h vi +1133
-enum ieee80211_filter_flags {
-        FIF_PROMISC_IN_BSS      = 1<<0,
-	...
-};
+Thanks applied
 
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 34561e6..530daee 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -1932,8 +1932,8 @@ static void p54_configure_filter(struct ieee80211_hw *dev,
- 	struct p54_common *priv = dev->priv;
- 
- 	*total_flags &= FIF_PROMISC_IN_BSS |
--			(*total_flags & FIF_PROMISC_IN_BSS) ?
--				FIF_FCSFAIL : 0;
-+			(*total_flags & FIF_PROMISC_IN_BSS ?
-+				FIF_FCSFAIL : 0);
- 
- 	priv->filter_flags = *total_flags;
- 
+  Luis
