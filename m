@@ -1,63 +1,372 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f222.google.com ([209.85.217.222]:61484 "EHLO
-	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbZBPJ3y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 04:29:54 -0500
-Received: by gxk22 with SMTP id 22so2834002gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 01:29:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1234776145.4219.113.camel@johannes.local>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-6-git-send-email-lrodriguez@atheros.com>
-	 <1234695593.4219.47.camel@johannes.local>
-	 <43e72e890902160014k11ba609lbe1340750771b6c0@mail.gmail.com>
-	 <1234774211.4219.102.camel@johannes.local>
-	 <43e72e890902160117yd3a3b09o45ada7bc0aa0fbd7@mail.gmail.com>
-	 <1234776145.4219.113.camel@johannes.local>
-Date: Mon, 16 Feb 2009 01:29:53 -0800
-Message-ID: <43e72e890902160129y1c43b845he7ffd6b2e0d1b987@mail.gmail.com> (sfid-20090216_102959_040561_AA10B24D)
-Subject: Re: [PATCH 05/10] cfg80211: add regulatory_hint_core() to separate
-	the core reg hint
+Received: from mail.atheros.com ([12.36.123.2]:33443 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750944AbZBMFgx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 00:36:53 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 21:36:53 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/6] cfg80211: rename cfg80211_drv_mutex to cfg80211_mutex
+Date: Thu, 12 Feb 2009 21:36:00 -0800
+Message-ID: <1234503363-11014-4-git-send-email-lrodriguez@atheros.com> (sfid-20090213_063658_417195_65C783D3)
+In-Reply-To: <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
+References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+ <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
+ <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 16, 2009 at 1:22 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-02-16 at 01:17 -0800, Luis R. Rodriguez wrote:
->
->> >> > So before you documented that cfg80211_mutex is used to protect this
->> >> > variable, but it's not used here.
->> >>
->> >> This is only used during initialization, have any better ideas?
->> >
->> > If regulatory is initialised before netlink that is probably fine, is
->> > it?
->>
->> Yeah I was hoping that would be the case but then I realized that we
->> also end up creating a udev event to call crda and we need nl80211
->> initialized in order to process these hints so technically we have a
->> race between regulatory_init() finishing and nl80211_init() get done
->> before we can let nl80211 process the first CORE call to crda so it
->> may be dropped -- unless we are sure udev will do some sort of
->> retries.
->>
->> An alternative is to add the regulatory_request() for core to the
->> queue and then call a reg_post_init() on core.c  that would just
->> schedule the reg workqueue after nl80211_init().
->>
->> Thoughts?
->
-> Can't you just do the proper locking and initialise regulatory after
-> nl80211?
+cfg80211_drv_mutex is protecting more than the driver list,
+this renames it and documents what its currently supposed to
+protect.
 
-Yes if we figure out a way to not do a mutex_lock() from the module's
-init, we cannot call a mutex_lock() from cfg80211_init(). I think
-sending core's request to the workqueue is one way -- we'd then have
-to schedule the queue towards the end of regulatory_init().
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/core.c    |   35 ++++++++++++++++++++---------------
+ net/wireless/core.h    |    6 +++---
+ net/wireless/nl80211.c |   20 ++++++++++----------
+ net/wireless/reg.c     |   18 +++++++++---------
+ 4 files changed, 42 insertions(+), 37 deletions(-)
 
-  Luis
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 55be3b0..f55040a 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -31,7 +31,12 @@ MODULE_DESCRIPTION("wireless configuration support");
+  * only read the list, and that can happen quite
+  * often because we need to do it for each command */
+ LIST_HEAD(cfg80211_drv_list);
+-DEFINE_MUTEX(cfg80211_drv_mutex);
++
++/*
++ * This is used to protect the cfg80211_drv_list, cfg80211_regdomain, and
++ * the last reguluatory request receipt in regd.c
++ */
++DEFINE_MUTEX(cfg80211_mutex);
+ 
+ /* for debugfs */
+ static struct dentry *ieee80211_debugfs_dir;
+@@ -52,7 +57,7 @@ cfg80211_drv_by_wiphy_idx(int wiphy_idx)
+ 	return result;
+ }
+ 
+-/* requires cfg80211_drv_mutex to be held! */
++/* requires cfg80211_mutex to be held! */
+ static struct cfg80211_registered_device *
+ __cfg80211_drv_from_info(struct genl_info *info)
+ {
+@@ -99,7 +104,7 @@ cfg80211_get_dev_from_info(struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *drv;
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 	drv = __cfg80211_drv_from_info(info);
+ 
+ 	/* if it is not an error we grab the lock on
+@@ -108,7 +113,7 @@ cfg80211_get_dev_from_info(struct genl_info *info)
+ 	if (!IS_ERR(drv))
+ 		mutex_lock(&drv->mtx);
+ 
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 
+ 	return drv;
+ }
+@@ -119,7 +124,7 @@ cfg80211_get_dev_from_ifindex(int ifindex)
+ 	struct cfg80211_registered_device *drv = ERR_PTR(-ENODEV);
+ 	struct net_device *dev;
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 	dev = dev_get_by_index(&init_net, ifindex);
+ 	if (!dev)
+ 		goto out;
+@@ -130,7 +135,7 @@ cfg80211_get_dev_from_ifindex(int ifindex)
+ 		drv = ERR_PTR(-ENODEV);
+ 	dev_put(dev);
+  out:
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 	return drv;
+ }
+ 
+@@ -146,7 +151,7 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
+ 	struct cfg80211_registered_device *drv;
+ 	int wiphy_idx, taken = -1, result, digits;
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 
+ 	/* prohibit calling the thing phy%d when %d is not its number */
+ 	sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken);
+@@ -194,7 +199,7 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
+ 
+ 	result = 0;
+ out_unlock:
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 	if (result == 0)
+ 		nl80211_notify_dev_rename(rdev);
+ 
+@@ -221,19 +226,19 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+ 
+ 	drv->ops = ops;
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 
+ 	drv->wiphy_idx = wiphy_counter++;
+ 
+ 	if (!wiphy_idx_valid(drv->wiphy_idx)) {
+ 		wiphy_counter--;
+-		mutex_unlock(&cfg80211_drv_mutex);
++		mutex_unlock(&cfg80211_mutex);
+ 		/* ugh, wrapped! */
+ 		kfree(drv);
+ 		return NULL;
+ 	}
+ 
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 
+ 	/* give it a proper name */
+ 	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->wiphy_idx);
+@@ -311,7 +316,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 	/* check and set up bitrates */
+ 	ieee80211_set_bitrate_flags(wiphy);
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 
+ 	/* set up regulatory info */
+ 	wiphy_update_regulatory(wiphy, REGDOM_SET_BY_CORE);
+@@ -331,7 +336,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 
+ 	res = 0;
+ out_unlock:
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 	return res;
+ }
+ EXPORT_SYMBOL(wiphy_register);
+@@ -341,7 +346,7 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 	struct cfg80211_registered_device *drv = wiphy_to_dev(wiphy);
+ 
+ 	/* protect the device list */
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 
+ 	BUG_ON(!list_empty(&drv->netdev_list));
+ 
+@@ -367,7 +372,7 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 	device_del(&drv->wiphy.dev);
+ 	debugfs_remove(drv->wiphy.debugfsdir);
+ 
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ }
+ EXPORT_SYMBOL(wiphy_unregister);
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index e24bc2a..ba0531e 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -69,7 +69,7 @@ bool wiphy_idx_valid(int wiphy_idx)
+ 	return (likely(wiphy_idx >= 0));
+ }
+ 
+-extern struct mutex cfg80211_drv_mutex;
++extern struct mutex cfg80211_mutex;
+ extern struct list_head cfg80211_drv_list;
+ 
+ struct cfg80211_internal_bss {
+@@ -88,13 +88,13 @@ struct cfg80211_internal_bss {
+  * the driver's mutex!
+  *
+  * This means that you need to call cfg80211_put_dev()
+- * before being allowed to acquire &cfg80211_drv_mutex!
++ * before being allowed to acquire &cfg80211_mutex!
+  *
+  * This is necessary because we need to lock the global
+  * mutex to get an item off the list safely, and then
+  * we lock the drv mutex so it doesn't go away under us.
+  *
+- * We don't want to keep cfg80211_drv_mutex locked
++ * We don't want to keep cfg80211_mutex locked
+  * for all the time in order to allow requests on
+  * other interfaces to go through at the same time.
+  *
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 47018bd..f5c2c05 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -256,7 +256,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
+ 	int start = cb->args[0];
+ 	struct cfg80211_registered_device *dev;
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 	list_for_each_entry(dev, &cfg80211_drv_list, list) {
+ 		if (++idx <= start)
+ 			continue;
+@@ -267,7 +267,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
+ 			break;
+ 		}
+ 	}
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 
+ 	cb->args[0] = idx;
+ 
+@@ -470,7 +470,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
+ 	struct cfg80211_registered_device *dev;
+ 	struct wireless_dev *wdev;
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 	list_for_each_entry(dev, &cfg80211_drv_list, list) {
+ 		if (wp_idx < wp_start) {
+ 			wp_idx++;
+@@ -497,7 +497,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
+ 		wp_idx++;
+ 	}
+  out:
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 
+ 	cb->args[0] = wp_idx;
+ 	cb->args[1] = if_idx;
+@@ -1910,9 +1910,9 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	if (is_world_regdom(data))
+ 		return -EINVAL;
+ #endif
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 	/* This means the regulatory domain was already set, however
+ 	 * we don't want to confuse userspace with a "successful error"
+ 	 * message so lets just treat it as a success */
+@@ -2106,7 +2106,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ 	unsigned int i;
+ 	int err = -EINVAL;
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 
+ 	if (!cfg80211_regdomain)
+ 		goto out;
+@@ -2169,7 +2169,7 @@ nla_put_failure:
+ 	genlmsg_cancel(msg, hdr);
+ 	err = -EMSGSIZE;
+ out:
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 	return err;
+ }
+ 
+@@ -2228,9 +2228,9 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	BUG_ON(rule_idx != num_rules);
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 	r = set_regdom(rd);
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ 	return r;
+ 
+  bad_reg:
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2323644..ba82312 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1116,7 +1116,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 	return -EINVAL;
+ }
+ 
+-/* Caller must hold &cfg80211_drv_mutex */
++/* Caller must hold &cfg80211_mutex */
+ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+ 			const char *alpha2,
+ 			u32 country_ie_checksum,
+@@ -1188,13 +1188,13 @@ void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ 	int r;
+ 	BUG_ON(!alpha2);
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 	r = __regulatory_hint(wiphy, REGDOM_SET_BY_DRIVER,
+ 		alpha2, 0, ENVIRON_ANY);
+ 	/* This is required so that the orig_* parameters are saved */
+ 	if (r == -EALREADY && wiphy->strict_regulatory)
+ 		wiphy_update_regulatory(wiphy, REGDOM_SET_BY_DRIVER);
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ }
+ EXPORT_SYMBOL(regulatory_hint);
+ 
+@@ -1225,7 +1225,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	if (!last_request)
+ 		return;
+ 
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 
+ 	/* IE len must be evenly divisible by 2 */
+ 	if (country_ie_len & 0x01)
+@@ -1307,7 +1307,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 		country_ie_regdomain->alpha2, checksum, env);
+ 
+ out:
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ }
+ EXPORT_SYMBOL(regulatory_hint_11d);
+ 
+@@ -1562,7 +1562,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 
+ /* Use this call to set the current regulatory domain. Conflicts with
+  * multiple drivers can be ironed out later. Caller must've already
+- * kmalloc'd the rd structure. Caller must hold cfg80211_drv_mutex */
++ * kmalloc'd the rd structure. Caller must hold cfg80211_mutex */
+ int set_regdom(const struct ieee80211_regdomain *rd)
+ {
+ 	int r;
+@@ -1586,7 +1586,7 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 	return r;
+ }
+ 
+-/* Caller must hold cfg80211_drv_mutex */
++/* Caller must hold cfg80211_mutex */
+ void reg_device_remove(struct wiphy *wiphy)
+ {
+ 	kfree(wiphy->regd);
+@@ -1633,7 +1633,7 @@ int regulatory_init(void)
+ 
+ void regulatory_exit(void)
+ {
+-	mutex_lock(&cfg80211_drv_mutex);
++	mutex_lock(&cfg80211_mutex);
+ 
+ 	reset_regdomains();
+ 
+@@ -1644,5 +1644,5 @@ void regulatory_exit(void)
+ 
+ 	platform_device_unregister(reg_pdev);
+ 
+-	mutex_unlock(&cfg80211_drv_mutex);
++	mutex_unlock(&cfg80211_mutex);
+ }
+-- 
+1.6.1.2.253.ga34a
+
