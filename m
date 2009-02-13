@@ -1,74 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:43485
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754532AbZBXWpR (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:35204 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbZBMHOi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 17:45:17 -0500
-Message-ID: <49A47878.3030202@erley.org> (sfid-20090224_234521_771856_B2D576BC)
-Date: Tue, 24 Feb 2009 17:45:12 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Fri, 13 Feb 2009 02:14:38 -0500
+Received: by yw-out-2324.google.com with SMTP id 5so581791ywh.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 23:14:38 -0800 (PST)
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: Jouni Malinen <jouni.malinen@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Add module parameter to disable hardware crypto
-References: <20090224114201.GB21933@jm.kir.nu> <49A40320.1040902@erley.org> <20090224150710.GA1419@jm.kir.nu> <49A41315.3030007@erley.org> <49A45378.50009@erley.org>
-In-Reply-To: <49A45378.50009@erley.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
+References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
+	 <1234508187.1327.19.camel@johannes.local>
+	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
+	 <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
+Date: Thu, 12 Feb 2009 23:14:38 -0800
+Message-ID: <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com> (sfid-20090213_081441_201900_913AABF7)
+Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pat-lkml wrote:
-> pat-lkml wrote:
->> pat-lkml wrote:
->>> Jouni Malinen wrote:
->>> Which client are you using? Are you sure that the passphrase/PSK is set
->>> correctly? The nohwcrypt patch should make absolutely no difference for
->>> this part (this is key handshake which in the initial phase is sent
->>> without encrypted EAPOL-Key frames, so neither sw nor hw crypto used).
->> I've tried 3 different clients with identical behavior:
+On Thu, Feb 12, 2009 at 11:14 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, Feb 12, 2009 at 11:09 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Thu, Feb 12, 2009 at 10:56 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>> On Thu, 2009-02-12 at 21:36 -0800, Luis R. Rodriguez wrote:
+>>>> Driver and userspace regulatory hints are now processed in
+>>>> a workqueue. This should fix some lockdep warnings which complain
+>>>> about possible circular locking dependencies such as:
+>>>
+>>> Yes, but I need to look at the one Reinette posted and fix that one,
+>>> which will probably require a different solution.
 >>
->> 1.  Playstation 3
->> 2.  Dell Axim / WM6
->> 3.  ath5k Laptop
->>
->> I get that (afore mentioned invalid MIC in msg 2/4) with nohwcrypt=1, while
->> nohwcrypt=0 I get 'STA Detected Michael MIC error' during stage 3 I believe. 
->>
->> I'll have more time after about 6:00PM EST to test this and provide the full
->> logs of each client associating, along with  wpa_supplicant logs.  I'm running
->> git hostapd, and I've NEVER had wpa1 work correctly with it, which is why I said
->> that that report wasn't an 'ACK/NACK' just reporting that I see a difference in 
->> behavior with it.  
->>
->> Pat
-> 
-> Ok, I feel VERY sheepish now.  In doing further testing, I discovered a typo in my
-> hostapd.conf for the wpa config, specifically, an extra char that snuck into my wpa
-> pass phrase.  Use nohwcrypt=1, hostapd now works perfectly with wep/wpa/wpa2, while
-> with nohwcrypt=0, I get errors (that I'll need physical access to my computer to 
-> debug/log) in wpa only.  I'm testing with my usual, rate limited scp transfer over 
-> wireless right now, as previous 'issues' have arisen when a re-key occurs during a 
-> transfer.
+>> Oh I didn't see that one. How different?
+>
+> I see an rtnl lock issue against scanning and the drv mutex. Doesn't
+> seem to be related to regulatory. So how would that affect a path to
+> move hints to a workqueue?
 
-Here are 2 sets of logs: [linked as they're ~60K total]
+Oh you mean the rntl_lock() and drv mutex is _still_ an issue?
 
-http://wireless.erley.org/ath9k-nohwcrypto0.txt
-http://wireless.erley.org/ath9k-nohwcrypto1.txt
-
-As can be deduced from the file names, the first one is with nohwcrypto=0
-while the second is with nohwcrypto=1.
-
-I set this module param with the modprobe.conf line: options ath9k nohwcrypt=1
-
-I made NO changes in hostapd between these two log runs, only removing and 
-reloading the ath9k driver.  nohwcrypto=0 resulted in the Michael MIC error and
-a non functioning client (PS3, in this example) while nohwcrypto=1 resulted in
-a working PS3 client.  I was able to stream 3 hours of video (in total) today
-while working on other things, with hostapd set to 30s re-keying.  Any other tests
-I could do/log/provide for getting hwcrypto to work in AP mode would be great.
-
-I've done no testing in station mode, as I don't have any interests in using ath9k
-in station mode at the moment.
-
-Pat Erley
+  Luis
