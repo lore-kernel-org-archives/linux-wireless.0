@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.186]:29922 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754186AbZBRTZN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36207 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373AbZBMG4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 14:25:13 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so46986fkf.5
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 11:25:12 -0800 (PST)
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] at76c50x-usb: clean up DMA on stack
-References: <c4d76b3b0902151837o797d850ajb883ce98338aa8a1@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 18 Feb 2009 21:25:08 +0200
-In-Reply-To: <c4d76b3b0902151837o797d850ajb883ce98338aa8a1@mail.gmail.com> (Jason Andryuk's message of "Sun\, 15 Feb 2009 21\:37\:35 -0500")
-Message-ID: <87prhfzgx7.fsf@litku.valot.fi> (sfid-20090218_202519_181804_56AC02E2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 13 Feb 2009 01:56:31 -0500
+Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
+References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ca0Msjb2tHKHJl3fnRxV"
+Date: Fri, 13 Feb 2009 07:56:27 +0100
+Message-Id: <1234508187.1327.19.camel@johannes.local> (sfid-20090213_075634_857464_53BAE057)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jason Andryuk <jandryuk@gmail.com> writes:
 
-> cleanup dma on stack issues
->
-> - no DMA on stack
-> - cleanup unclear endianness issue
->
-> Corrected version of Oliver Neukum's original patch for at76_usb
+--=-Ca0Msjb2tHKHJl3fnRxV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks, but the patch seems to be corrupted:
+On Thu, 2009-02-12 at 21:36 -0800, Luis R. Rodriguez wrote:
+> Driver and userspace regulatory hints are now processed in
+> a workqueue. This should fix some lockdep warnings which complain
+> about possible circular locking dependencies such as:
 
-patching file drivers/net/wireless/at76c50x-usb.c
-Hunk #1 FAILED at 580.
-patch: **** malformed patch at line 90: *udev, u16 mib, void *buf,
+Yes, but I need to look at the one Reinette posted and fix that one,
+which will probably require a different solution.
 
-Can you resend, please?
+johannes
 
--- 
-Kalle Valo
+--=-Ca0Msjb2tHKHJl3fnRxV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJlRmYAAoJEKVg1VMiehFYqx8P/3km81LtETvXXZtdT4LqoGKv
+eURc8cM6Dw7t0mjFbnK8UsT1Ok3z/sSmsXWvJs3KB6DNmwaJvRvgPt7etW20XO9Z
+r1uXxqOIIOv1LlcJjJwWNq7PVdAJ/By9y8E1lNIMBsz/slyiPRgvCcwxRQZtWHz4
+6L1Xq6Z+OdVLIzrph/DTeuPV6U29PSxRWZeuSFNx8SD7zXf0Ml4YIV+7rhh/f1/0
+odcLpjwTx4qyvFlx97L/jxhWMSDmLRUiONNPRcWlxa2YX4v+vKKkQSauADQ99I4Y
+3+D66v2Vi7jFVhDQ9HetmCxpLGOnbftWo8qB1HCeR7jHg3L294Bq+SgPFvRmxwJk
+JL2mjMOdCiXSWvj36kTbY0kWz6ehr7LHRvDG3LeuPDG8+Z9j0gGawGFR2TxC6ZEs
+IVY+24WKdQaKbWfhDJaUawm7vMV2vKvebjYbwfi3WfavJrLmQy7icTVPwTOHgGes
+bWi4HoHxjmuxI0K1PsZdBNc+QWgD7egdPJYRWrTCl2cp5Mb/qabyFu7dQ0KbI9DQ
+arnoO3KUsfjIrBx2lbMs7UchR+WuF8souVMBcjbHmtqxp7G8I9Oe9BAzkYkXwMDu
+wM53cVyXBybBHrbhYPYQPrc9bvfCck/gKbbEG4mdvyvj/gM+bZQMF8x3KW9rIb4y
+fI2DZGR3MtniCdR2yxqd
+=ohgQ
+-----END PGP SIGNATURE-----
+
+--=-Ca0Msjb2tHKHJl3fnRxV--
+
