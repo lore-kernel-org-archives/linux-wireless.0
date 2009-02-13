@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f222.google.com ([209.85.217.222]:48425 "EHLO
-	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbZBPKL6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51066 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753235AbZBMVp6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 05:11:58 -0500
-Received: by gxk22 with SMTP id 22so2850251gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 02:11:57 -0800 (PST)
+	Fri, 13 Feb 2009 16:45:58 -0500
+Date: Fri, 13 Feb 2009 16:30:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Greg KH <greg@kroah.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>, stable@kernel.org
+Subject: Re: [stable] [PATCH] mac80211: avoid possible buffer overrun in
+	sta_agg_status_write
+Message-ID: <20090213213050.GJ3581@tuxdriver.com> (sfid-20090213_224602_040016_CADD702A)
+References: <1226089619-726-1-git-send-email-linville@tuxdriver.com> <20090208202527.GD17043@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <1234778566.4219.120.camel@johannes.local>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-9-git-send-email-lrodriguez@atheros.com>
-	 <1234695858.4219.54.camel@johannes.local>
-	 <43e72e890902160155j402e887an9c5ea3ca9b9f64f3@mail.gmail.com>
-	 <1234778566.4219.120.camel@johannes.local>
-Date: Mon, 16 Feb 2009 02:11:56 -0800
-Message-ID: <43e72e890902160211p683bef08g5643ccb787cbf725@mail.gmail.com> (sfid-20090216_111202_218668_65917F45)
-Subject: Re: [PATCH 08/10] cfg80211: make regulatory_request use wiphy_idx
-	instead of wiphy
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090208202527.GD17043@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 16, 2009 at 2:02 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-02-16 at 01:55 -0800, Luis R. Rodriguez wrote:
->
->> >> +static inline
->> >> +int wiphy_idx(struct wiphy *wiphy)
->> >> +{
->> >> +     struct cfg80211_registered_device *drv;
->> >> +     if (!wiphy)
->> >> +             return WIPHY_IDX_STALE;
->> >> +     drv = wiphy_to_dev(wiphy);
->> >> +     return drv->wiphy_idx;
->> >> +}
->> >
->> > I neither like the name of this function (same as the variable name) nor
->> > the function -- you're using it in exactly one place where you cannot
->> > ever pass NULL afaict.
->>
->> Nope, I'm calling it from 2 places:
->>
->> * Driver hints which never have the wiphy NULL
->> * __regulatory_hint: called from 11d hints, and from the workqueue
->> that processes the pending requests (which can come from userspace or
->> from drivers right now).
->
-> Ok, but in the first case you can't have NULL, and in the second you
-> could just inline it. It's not an operation that requires an inline here
-> for it.
+On Sun, Feb 08, 2009 at 12:25:27PM -0800, Greg KH wrote:
+> 
+> John, the patch below seems to have David Miller's ack that he applied
+> it to a tree back in November, but I don't see it in Linus's tree
+> anywhere.  Did something happen to it?
 
-Sure, its just called twice and I think it makes the code more
-readable to use a routine, what if I just move it to core.c or reg.c.
+I think Dave applied a slightly different patch to do more-or-less
+the same thing.
 
-  Luis
+commit 013cd397532e5803a1625954a884d021653da720
+Author: Jianjun Kong <jianjun@zeuux.org>
+Date:   Mon Nov 10 21:37:39 2008 -0800
+
+    mac80211: fix a buffer overrun in station debug code
+
+    net/mac80211/debugfs_sta.c
+    The trailing zero was written to state[4], it's out of bounds.
+
+    Signed-off-by: Jianjun Kong <jianjun@zeuux.org>
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+
+Hth!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
