@@ -1,116 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:47983 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752414AbZBUHxT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751273AbZBMGyN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 02:53:19 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 1/4] at76c50x-usb: fix oops on disconnect
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Sat, 21 Feb 2009 09:53:14 +0200
-Message-ID: <20090221075314.15991.63558.stgit@tikku> (sfid-20090221_085322_324226_E618AC44)
-In-Reply-To: <20090221075013.15991.66595.stgit@tikku>
-References: <20090221075013.15991.66595.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 13 Feb 2009 01:54:13 -0500
+Subject: Re: [PATCH 4/6] cfg80211: add assert_cfg80211_lock() to ensure
+	proper protection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
+References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-q1yxlkN6bveuY95wtraM"
+Date: Fri, 13 Feb 2009 07:54:08 +0100
+Message-Id: <1234508048.1327.17.camel@johannes.local> (sfid-20090213_075416_745381_6813298E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jason Andryuk <jandryuk@gmail.com>
 
-flush_workqueue needs to be called instead of the generic one and the
-associated functions need to be modified to prevent re-adding
-themselves to the workqueue.
+--=-q1yxlkN6bveuY95wtraM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The rx_tasklet is also killed in the small (?) chance it is scheduled.
+On Thu, 2009-02-12 at 21:36 -0800, Luis R. Rodriguez wrote:
 
-Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
-Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
----
+> +static inline void assert_cfg80211_lock(void)
+> +{
+> +	BUG_ON(!mutex_is_locked(&cfg80211_mutex));
+> +}
 
- drivers/net/wireless/at76c50x-usb.c |   27 +++++++++++++++++++--------
- 1 files changed, 19 insertions(+), 8 deletions(-)
+That's a little heavy-handed for a small development mistake, can we
+have a WARN_ON instead?
 
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-index aa06b90..c79591e 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -1848,6 +1848,9 @@ static void at76_dwork_hw_scan(struct work_struct *work)
- 					      dwork_hw_scan.work);
- 	int ret;
- 
-+	if (priv->device_unplugged)
-+		return;
-+
- 	mutex_lock(&priv->mtx);
- 
- 	ret = at76_get_cmd_status(priv->udev, CMD_SCAN);
-@@ -1882,6 +1885,9 @@ static int at76_hw_scan(struct ieee80211_hw *hw,
- 
- 	at76_dbg(DBG_MAC80211, "%s():", __func__);
- 
-+	if (priv->device_unplugged)
-+		return 0;
-+
- 	mutex_lock(&priv->mtx);
- 
- 	ieee80211_stop_queues(hw);
-@@ -1985,6 +1991,10 @@ static void at76_configure_filter(struct ieee80211_hw *hw,
- 	flags = changed_flags & AT76_SUPPORTED_FILTERS;
- 	*total_flags = AT76_SUPPORTED_FILTERS;
- 
-+	/* Bail out after updating flags to prevent a WARN_ON in mac80211. */
-+	if (priv->device_unplugged)
-+		return;
-+
- 	/* FIXME: access to priv->promisc should be protected with
- 	 * priv->mtx, but it's impossible because this function needs to be
- 	 * atomic */
-@@ -2085,8 +2095,7 @@ static struct at76_priv *at76_alloc_new_device(struct usb_device *udev)
- 	INIT_WORK(&priv->work_submit_rx, at76_work_submit_rx);
- 	INIT_DELAYED_WORK(&priv->dwork_hw_scan, at76_dwork_hw_scan);
- 
--	priv->rx_tasklet.func = at76_rx_tasklet;
--	priv->rx_tasklet.data = 0;
-+	tasklet_init(&priv->rx_tasklet, at76_rx_tasklet, 0);
- 
- 	priv->pm_mode = AT76_PM_OFF;
- 	priv->pm_period = 0;
-@@ -2225,6 +2234,7 @@ static int at76_init_new_device(struct at76_priv *priv,
- 	priv->scan_min_time = DEF_SCAN_MIN_TIME;
- 	priv->scan_max_time = DEF_SCAN_MAX_TIME;
- 	priv->scan_mode = SCAN_TYPE_ACTIVE;
-+	priv->device_unplugged = 0;
- 
- 	/* mac80211 initialisation */
- 	priv->hw->wiphy->max_scan_ssids = 1;
-@@ -2266,13 +2276,12 @@ static void at76_delete_device(struct at76_priv *priv)
- 	/* The device is gone, don't bother turning it off */
- 	priv->device_unplugged = 1;
- 
--	if (priv->mac80211_registered)
--		ieee80211_unregister_hw(priv->hw);
-+	tasklet_kill(&priv->rx_tasklet);
- 
--	/* assuming we used keventd, it must quiesce too */
--	flush_scheduled_work();
--
--	kfree(priv->bulk_out_buffer);
-+	if (priv->mac80211_registered) {
-+		flush_workqueue(priv->hw->workqueue);
-+		ieee80211_unregister_hw(priv->hw);
-+	}
- 
- 	if (priv->tx_urb) {
- 		usb_kill_urb(priv->tx_urb);
-@@ -2285,6 +2294,8 @@ static void at76_delete_device(struct at76_priv *priv)
- 
- 	at76_dbg(DBG_PROC_ENTRY, "%s: unlinked urbs", __func__);
- 
-+	kfree(priv->bulk_out_buffer);
-+
- 	if (priv->rx_skb)
- 		kfree_skb(priv->rx_skb);
- 
+johannes
+
+--=-q1yxlkN6bveuY95wtraM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJlRkOAAoJEKVg1VMiehFYmYUQAJs8tZCQ4+EIS11gGMFZD7IJ
+FSew88CrqFYFFS+q5bWc+ibhWZTdwiZC2RMcvP3pA+rS9XBJL1Vxpyf6yCVkOVj5
+ljaMFLVhEuw6fgndTRcst3lILx/CSmFc8L6VoxTgVWVJiAi3l5YC3h1wuduj2RJX
+NbXmDbWheWRNxxDAlYvH9BychFN7f8CMnYNviZ/a3Oo2jyq0RcY4o/Od0Evi41Uk
+hymWpBBx04ytalgNa+NMyyQZ/Ttk4XjCgWljrj7PwVXYp0Uv1oW/tVLpuW6tQBgC
+ufgxKjlnh2EAX5krMdV94sVGdGtDz8+79KG5kp+gq9+bIeVrf3jZgzn+kmbQdU6c
+CmIgwXoxs/x3VB2C0D9SUslBdiBCYR37OStB/aR46vxHoosHtiq/FGPBI5HmDC27
+I6VU0EKhdsYVU3NbduocqNPvhgGQXjl02XxY10ggu/d2ZB9VW4I772tF6i47xzVf
+LOWyZk33Ivs1Ex2ctVa+SYtPE3PSMYUEjUU19rQOnicKEXMLiF7Os/dY2qLUXkP3
+uTIvVp425eh+lqTl+amPd3N9PYuvOW71GtNngm72wfVyAbMeosDZ6OEN4/sDJb2w
+jyFxuiAPsXltWDfmTfjHmfdXUC12c6zAstfiKa2G28CnXngGcLeQEHyTLPBiWBGX
+EtnAoOe0Sej32VFW6WkQ
+=hzmj
+-----END PGP SIGNATURE-----
+
+--=-q1yxlkN6bveuY95wtraM--
 
