@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f178.google.com ([209.85.218.178]:54615 "EHLO
-	mail-bw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756010AbZB0RzS convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60154 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518AbZBMHSU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 12:55:18 -0500
-Received: by bwz26 with SMTP id 26so1136628bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2009 09:55:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <ee588a540902270946h13e03b6el71de5237a458b7a3@mail.gmail.com>
-References: <ee588a540902270946h13e03b6el71de5237a458b7a3@mail.gmail.com>
-Date: Fri, 27 Feb 2009 18:55:15 +0100
-Message-ID: <ee588a540902270955j214d98d2uf58858d12a7787cc@mail.gmail.com> (sfid-20090227_185523_004989_C9DD2D9E)
-Subject: Fwd: b43* linux driver, more ids dev
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 Feb 2009 02:18:20 -0500
+Subject: Re: [PATCH 2/6] cfg80211: add wiphy_idx_valid to check for
+	wiphy_idx  sanity
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890902122308x375cc22fu1c27f8fe9aaac524@mail.gmail.com> (sfid-20090213_081423_734967_DF01AF3C)
+References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
+	 <1234507985.1327.15.camel@johannes.local>
+	 <43e72e890902122308x375cc22fu1c27f8fe9aaac524@mail.gmail.com>
+	 (sfid-20090213_081423_734967_DF01AF3C)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TReOPSwdBXodJ0eFEUVD"
+Date: Fri, 13 Feb 2009 08:18:15 +0100
+Message-Id: <1234509495.1327.27.camel@johannes.local> (sfid-20090213_081822_593590_5CE864D5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fwd to linux-wireless@vger.kernel.org
 
+--=-TReOPSwdBXodJ0eFEUVD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----------- Forwarded message ----------
-=46rom: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Date: Fri, Feb 27, 2009 at 18:46
-Subject: b43* linux driver, more ids dev
-To: mb@bu3sch.de, Larry.Finger@lwfinger.net,
-johannes@sipsolutions.net, stefano.brivio@polimi.it
+On Thu, 2009-02-12 at 23:08 -0800, Luis R. Rodriguez wrote:
+> On Thu, Feb 12, 2009 at 10:53 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2009-02-12 at 21:35 -0800, Luis R. Rodriguez wrote:
+> >
+> >> -     if (unlikely(drv->wiphy_idx < 0)) {
+> >> +     if (!wiphy_idx_valid(drv->wiphy_idx)) {
+> >
+> >> +/* Note 0 is valid, hence phy0 */
+> >> +static inline
+> >> +bool wiphy_idx_valid(int wiphy_idx)
+> >> +{
+> >> +     return (likely(wiphy_idx >=3D 0));
+> >> +}
+> >
+> > Does that really work properly with the likely in there?
+>=20
+> Oh you mean !likely() won't give me my unlikely() effect? I think so
+> as the path is meant to not be optimized so the optimized path would
+> be put first, no?
 
+Well keep in mind that likely() also affects branch prediction on some
+CPUs where you can annotate that, and I think it wouldn't be possible
+for the compiler to get it out of the inline there properly.
 
-hi,
+johannes
 
-are there any trouble with these devices ? why are they not =A0inside
-b43* drivers ?
+--=-TReOPSwdBXodJ0eFEUVD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-PCI_VENDOR_ID_BROADCOM, 0x4313
-PCI_VENDOR_ID_BROADCOM, 0x4315
-PCI_VENDOR_ID_BROADCOM, 0x432a
-PCI_VENDOR_ID_BROADCOM, 0x432b
-PCI_VENDOR_ID_BROADCOM, 0x432c
-PCI_VENDOR_ID_BROADCOM, 0x432d
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
+iQIcBAABAgAGBQJJlR60AAoJEKVg1VMiehFYVe0P/RJwt6zWNIkl1ZnKY2D//ngD
+bI5sgiEaIyJ4DwH5HlFfTdQU2T9NVCHStFiHfzHv5mnP1eagyR6/YfxxJ3LbmMvq
+cxjDxOdxqzaADouRHPwOg1RVcZJzulwtz7a46olKeTNnqkU7oGeDh/r+I1nOIFti
+qaeR2BOGaJVYGtZzJpVwkmphZv/AU7Ng1Arqt33FHxMQzUddVg5YmYJaA8nt07tM
++Xv4tO74L2nnrogt1SUDlZt1EUQ4ybaEw7at6Qc/TqjCif9zeftJuWThOQQD+FQx
++fcmBnwMOuW9fU9ku2aEs5AWAVefXREzSUKa9oPm+0dsrQ9bWBvk/x4QcWdE4Kwe
+aQlFuTo8xkYjeWpg54tmpxdt19wXt2NAco20iJ3xKBEoPs5RSVGnF2IhbCdX0abN
+DWsgd5Of5Y4AgM9N+qvHqrFqbBBNCLJHEcm7MHU9wBK4Otni2DwbHOXnd9XQkp1V
++lpb27kbFDpaRGMmuVdF437KqfsFRIvHt8+CwfD25ulln1xXqJDq4z/1vmjGzCG2
+XPHTmbhpP/ZyH8vT5oIBs0N0TQKAFL2uXU1KVewvkiEsEWZWg2cvT2LzKR+iCoWB
+8Y4bWR6sn7IFqvMm0d3yiefeaoz6kJTj7rDPeB5URe6XicnaAGm7TqjoyIHehJdl
+eHGqf5eaoMZey8m5SoaN
+=57A2
+-----END PGP SIGNATURE-----
 
-taken from the vendor's driver src:
-http://www.broadcom.com/docs/linux_sta/hybrid-portsrc-x86_32-v5_10_27_1=
-4.tar.gz
+--=-TReOPSwdBXodJ0eFEUVD--
 
-more info at: http://www.broadcom.com/support/802.11/linux_sta.php
-
-
--thanks-
-
-
-regards,
---
-Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea,
-Prestige, ...
-
-
-
---=20
-Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea,
-Prestige, ...
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
