@@ -1,84 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47741 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262AbZBUXAU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 18:00:20 -0500
-Date: Sat, 21 Feb 2009 17:59:25 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+Received: from mga09.intel.com ([134.134.136.24]:62627 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753538AbZBMW6G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 17:58:06 -0500
+Subject: Re: [PATCH] compat-2.6: reflect changes to iwlwifi Kconfig file
+From: reinette chatre <reinette.chatre@intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlagn: default to MAX_UCODE_BEACON_INTERVAL in
-	iwl_adjust_beacon_interval
-Message-ID: <20090221225925.GA3841@tuxdriver.com> (sfid-20090222_000027_473173_533A1461)
-References: <154E55ADF9629D4E8D13F08BF92ABEB629C9D28B8D@PDSMSX501.ccr.corp.intel.com> <20090220145223.GA15006@tuxdriver.com> <1235155966.5860.44.camel@rc-desk> <20090220194306.GA4051@tuxdriver.com> <20090221003013.GA3890@tuxdriver.com> <20090221003133.GB3890@tuxdriver.com> <1235237493.5860.122.camel@rc-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1235237493.5860.122.camel@rc-desk>
+In-Reply-To: <20090213224937.GE4278@tesla>
+References: <1234560857-32206-1-git-send-email-reinette.chatre@intel.com>
+	 <20090213224937.GE4278@tesla>
+Content-Type: text/plain
+Date: Fri, 13 Feb 2009 15:01:51 -0800
+Message-Id: <1234566111.31995.55.camel@rc-desk> (sfid-20090213_235811_589938_0CCC1A9F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 21, 2009 at 09:31:33AM -0800, reinette chatre wrote:
-> On Fri, 2009-02-20 at 16:31 -0800, John W. Linville wrote:
-> > From: John W. Linville <linville@tuxdriver.com>
+On Fri, 2009-02-13 at 14:49 -0800, Luis R. Rodriguez wrote:
+> On Fri, Feb 13, 2009 at 01:34:17PM -0800, Reinette Chatre wrote:
+> > - CONFIG_IWLWIFI is now a tristate, select it to be 'm'
+> > - CONFIG_IWLCORE has been removed
+> > - CONFIG_IWLAGN_SPECTRUM_MEASUREMENT renamed to
+> >   CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT
+> > - CONFIG_IWLAGN_LEDS has been removed (not used by driver)
+> > - CONFIG_IWL3945_RFKILL does not exist
 > > 
-> > Default to MAX_UCODE_BEACON_INTERVAL if the output of
-> > iwl_adjust_beacon_interval would otherwise be zero.  This prevents a
-> > division by zero on my iwl5300-equipped Lenovo T400 with kernels that
-> > include "mac80211: use cfg80211s BSS infrastructure".
-> > 
-> > This patch is a bit of a hack -- I'm not sure why iwl_setup_rxon_timing
-> > is giving iwl_adjust_beacon_interval a zero input (which is the only way
-> > it would output zero).  I would be happy to have a better fix.  But for
-> > now, this makes my box boot...
-> > 
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 > 
-> Unfortunately I do not have a better fix, but I could shed some light
-> onto what may be going on and hope we can together figure out what is
-> the problem.
-> 
-> First, it appears that your problem occurs during association. The
-> driver obtains the value of beacon interval from mac80211 at the time it
-> is asked to associate (specifically, mac80211 calls bss_info_changed
-> with BSS_CHANGED_ASSOC and ieee80211_bss_conf->assoc is true). The
-> driver obtains beacon interval from iee80211_bss_conf structure at this
-> time. As you indicate - the driver gets a zero and this causes an oops
-> later.
-> 
-> Now, the patch you pointed out ("mac80211: use cfg80211s BSS
-> infrastructure") changes the way in which the beacon interval value is
-> obtained and stored ... but yet I cannot see how it can be different
-> from before and cause zero to be returned. Here I hope that Johannes can
-> shed some light.
-> 
-> Before this patch we used mac80211's BSS infrastructure and placed the
-> beacon interval from the beacon frame in that. Now we use cfg80211's BSS
-> infrastructure and place the beacon interval from the probe response in
-> that. Now, the function that does this (ieee80211_bss_info_update) does
-> not currently distinguish between beacon and probe resp when it updates
-> the BSS information and uses the probe resp fields (in
-> cfg80211_inform_bss_frame). This should not matter because the beacon
-> and probe resp fields are the same in this regard.
-> 
-> So ... if the information is obtained in the same way there could maybe
-> be an issue in how it is stored now? This has also changed significantly
-> with the move to the rbtree. I don't know.
+> Thanks applied
 
-I'm sorry if I was too terse, but at least it had the benefit
-of you reproducing my struggle and my analysis (and my perplexed
-frustration). :-)
+Please wait on this ... this patch depends on recent patch to
+wireless-testing that has not been applied yet.
 
-> Johannes, do you perhaps know how beacon interval was ok with the
-> mac80211 BSS infrastructure, but now we get zero after moving to
-> cfg80211 BSS infrastructure?
+Reinette
 
-Help us Obi Wan Johannes...you're our only hope! :-)
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
