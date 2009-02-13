@@ -1,182 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:33441 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750757AbZBMFgu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 00:36:50 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 21:36:50 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/6] cfg80211: rename cfg80211_registered_device's idx to wiphy_idx
-Date: Thu, 12 Feb 2009 21:35:58 -0800
-Message-ID: <1234503363-11014-2-git-send-email-lrodriguez@atheros.com> (sfid-20090213_063653_994336_6B207916)
-In-Reply-To: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:56301 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751210AbZBMHtC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 02:49:02 -0500
+Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890902122335l6580dbc1m44702996cc8200e4@mail.gmail.com> (sfid-20090213_084150_789218_6A367D4F)
 References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
+	 <1234508187.1327.19.camel@johannes.local>
+	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
+	 <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
+	 <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com>
+	 <1234509436.1327.25.camel@johannes.local>
+	 <43e72e890902122335l6580dbc1m44702996cc8200e4@mail.gmail.com>
+	 (sfid-20090213_084150_789218_6A367D4F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-U+mmvuMps/dLlFEMJdTc"
+Date: Fri, 13 Feb 2009 08:48:54 +0100
+Message-Id: <1234511334.1327.34.camel@johannes.local> (sfid-20090213_084908_475668_A423C39E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Makes it clearer to read when comparing to ifidx
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/core.c    |   35 ++++++++++++++++++-----------------
- net/wireless/core.h    |    2 +-
- net/wireless/nl80211.c |    4 ++--
- net/wireless/sysfs.c   |    2 +-
- 4 files changed, 22 insertions(+), 21 deletions(-)
+--=-U+mmvuMps/dLlFEMJdTc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 0668b2b..2b3e786 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -37,12 +37,13 @@ DEFINE_MUTEX(cfg80211_drv_mutex);
- static struct dentry *ieee80211_debugfs_dir;
- 
- /* requires cfg80211_drv_mutex to be held! */
--static struct cfg80211_registered_device *cfg80211_drv_by_wiphy(int wiphy)
-+static struct cfg80211_registered_device *
-+cfg80211_drv_by_wiphy_idx(int wiphy_idx)
- {
- 	struct cfg80211_registered_device *result = NULL, *drv;
- 
- 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
--		if (drv->idx == wiphy) {
-+		if (drv->wiphy_idx == wiphy_idx) {
- 			result = drv;
- 			break;
- 		}
-@@ -56,12 +57,12 @@ static struct cfg80211_registered_device *
- __cfg80211_drv_from_info(struct genl_info *info)
- {
- 	int ifindex;
--	struct cfg80211_registered_device *bywiphy = NULL, *byifidx = NULL;
-+	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
- 	struct net_device *dev;
- 	int err = -EINVAL;
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY]) {
--		bywiphy = cfg80211_drv_by_wiphy(
-+		bywiphyidx = cfg80211_drv_by_wiphy_idx(
- 				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
- 		err = -ENODEV;
- 	}
-@@ -78,14 +79,14 @@ __cfg80211_drv_from_info(struct genl_info *info)
- 		err = -ENODEV;
- 	}
- 
--	if (bywiphy && byifidx) {
--		if (bywiphy != byifidx)
-+	if (bywiphyidx && byifidx) {
-+		if (bywiphyidx != byifidx)
- 			return ERR_PTR(-EINVAL);
- 		else
--			return bywiphy; /* == byifidx */
-+			return bywiphyidx; /* == byifidx */
- 	}
--	if (bywiphy)
--		return bywiphy;
-+	if (bywiphyidx)
-+		return bywiphyidx;
- 
- 	if (byifidx)
- 		return byifidx;
-@@ -143,16 +144,16 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 			char *newname)
- {
- 	struct cfg80211_registered_device *drv;
--	int idx, taken = -1, result, digits;
-+	int wiphy_idx, taken = -1, result, digits;
- 
- 	mutex_lock(&cfg80211_drv_mutex);
- 
- 	/* prohibit calling the thing phy%d when %d is not its number */
--	sscanf(newname, PHY_NAME "%d%n", &idx, &taken);
--	if (taken == strlen(newname) && idx != rdev->idx) {
--		/* count number of places needed to print idx */
-+	sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken);
-+	if (taken == strlen(newname) && wiphy_idx != rdev->wiphy_idx) {
-+		/* count number of places needed to print wiphy_idx */
- 		digits = 1;
--		while (idx /= 10)
-+		while (wiphy_idx /= 10)
- 			digits++;
- 		/*
- 		 * deny the name if it is phy<idx> where <idx> is printed
-@@ -222,9 +223,9 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	mutex_lock(&cfg80211_drv_mutex);
- 
--	drv->idx = wiphy_counter++;
-+	drv->wiphy_idx = wiphy_counter++;
- 
--	if (unlikely(drv->idx < 0)) {
-+	if (unlikely(drv->wiphy_idx < 0)) {
- 		wiphy_counter--;
- 		mutex_unlock(&cfg80211_drv_mutex);
- 		/* ugh, wrapped! */
-@@ -235,7 +236,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
- 	mutex_unlock(&cfg80211_drv_mutex);
- 
- 	/* give it a proper name */
--	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->idx);
-+	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->wiphy_idx);
- 
- 	mutex_init(&drv->mtx);
- 	mutex_init(&drv->devlist_mtx);
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index e29ad4c..36e2397 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -37,7 +37,7 @@ struct cfg80211_registered_device {
- 	enum environment_cap env;
- 
- 	/* wiphy index, internal only */
--	int idx;
-+	int wiphy_idx;
- 
- 	/* associate netdev list */
- 	struct mutex devlist_mtx;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 298a4de..47018bd 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -142,7 +142,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	if (!hdr)
- 		return -1;
- 
--	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->wiphy_idx);
- 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&dev->wiphy));
- 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
- 		   dev->wiphy.max_scan_ssids);
-@@ -2739,7 +2739,7 @@ static int nl80211_send_scan_donemsg(struct sk_buff *msg,
- 	if (!hdr)
- 		return -1;
- 
--	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
- 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
- 
- 	/* XXX: we should probably bounce back the request? */
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index 26a72b0..2e3fd91 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -31,7 +31,7 @@ static ssize_t name ## _show(struct device *dev,			\
- 	return sprintf(buf, fmt "\n", dev_to_rdev(dev)->member);	\
- }
- 
--SHOW_FMT(index, "%d", idx);
-+SHOW_FMT(index, "%d", wiphy_idx);
- SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
- 
- static struct device_attribute ieee80211_dev_attrs[] = {
--- 
-1.6.1.2.253.ga34a
+On Thu, 2009-02-12 at 23:35 -0800, Luis R. Rodriguez wrote:
+
+> > Well, regardless of regulatory, we now have two paths:
+> >
+> > nl80211: cfg80211_mutex  -->  drv->mutex  -->  rtnl
+> > wext:    rtnl  -->  cfg80211_mutex  -->  drv->mutex
+> >
+> > which is clearly not a good plan.
+> >
+> > Therefore, I'll probably have to implement solution (1) from what I sen=
+t
+> > you, and invert the locking in nl80211. That would fix your the
+> > immediate problem with regulatory as well, because that was:
+> >
+> > rtnl  --->  (regulatory_hint) --->  cfg80211_mutex  -->  drv->mutex
+>=20
+> Yup I see. So as it stands in this patch user reg hint now is:
+>=20
+> reg_mutex --> cfg80211_mutex
+
+I don't really care about reg_mutex much, and it probably doesn't matter
+as long as its use is limited. Question is whether we need it, but
+that's a different question.
+
+> Driver hint also does the same so it seems your fix on nl80211 would
+> probably just tap this series on the nl80211_req_set_reg().
+
+Yeah, I think I'll work on top of your series anyway so I don't clash
+with the cleanups.
+
+> I also think using a workqueue would be good here anyway, the only
+> negative thing I've seen is loading takes a bit longer.
+
+Indeed, it's a good thing because a path like this:
+
+driver_open
+ -> regulatory_hint
+  -> cfg80211 stuff
+   -> driver_reg_notifier
+
+is always deadlock prone since you call into the driver from itself.
+
+johannes
+
+--=-U+mmvuMps/dLlFEMJdTc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJlSXjAAoJEKVg1VMiehFYKeYP/RCKS9DeKYpEngerzWz/Nywm
+PKr3bvSpx4nynpi851cfT8I5H1bjsRLVsJPQAi8svGLa0//MUKyknxYT4/47sdST
+SFHwlniHdamvlQu4giRoJJqUJK3XrWVZWSpaGiUiKFWkFb9uLzbfDz919eIlLtqK
+cAN7Lxjto/2KjiuxibEsA3Vu7tqErHn51Pfx9qOG3S1DHy0LpTDKCxco8cqAG1EO
+mzAMejKKqSuIBz17cGc4Pc+027QrFjNA1OVhfizemANAULcS9K9WqnLGaXRRi+5r
+4FEnRiz0NUCrqPKjBZ5PxQIZflwWwo7FsgO1hz8oD+CZsUse2Fh/pKve3p1jS713
+aprvvktBG4vXB7aveJwq0ZcfE5KVT4GJ9Hp1MVT/mwfAQMJ3ER2G4V9gk4cddDAJ
+nluIEtCcffUzPRdLOw0sim5SMWb6181EAu3S/9QbJUZCXKVhc+/OkllS6ZSC4kpw
+klojtbDmN2aHdZAFknAgaCefnxUFA41IMzo6s+pg+jzc4q91m0gx46h/bEEqy1gD
+c6bIFcjdkr+vuedkEpYBzZgJnz4EGYsFT03GDIEeZVCjkPz0kaUc0akhpJyXTlc4
+V/buu9EIi7+E3hukasgnWHqsyybhRAUCkikteNkN4I0LfcvAuJocjJWC3gO2zZiF
+hH0tT57PeVkxc4uhmgi9
+=23JO
+-----END PGP SIGNATURE-----
+
+--=-U+mmvuMps/dLlFEMJdTc--
 
