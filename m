@@ -1,63 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:41406 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753261AbZBOQsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 11:48:09 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Roel Kluin <roel.kluin@gmail.com>
-Subject: Re: [PATCH] B43: misplaced parentheses?
-Date: Sun, 15 Feb 2009 17:46:44 +0100
-Cc: stefano.brivio@polimi.it, linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-References: <499844E7.1040307@gmail.com>
-In-Reply-To: <499844E7.1040307@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200902151746.44754.mb@bu3sch.de> (sfid-20090215_174813_591417_C8D4FDCF)
+Received: from xc.sipsolutions.net ([83.246.72.84]:52636 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbZBMJEf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 04:04:35 -0500
+Subject: [PATCH] genetlink: introduce pre/post methods
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	netdev <netdev@vger.kernel.org>, tgraf@redhat.com
+Content-Type: text/plain
+Date: Fri, 13 Feb 2009 10:04:25 +0100
+Message-Id: <1234515865.4204.16.camel@johannes.local> (sfid-20090213_100444_944438_10C9D31D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 15 February 2009 17:37:59 Roel Kluin wrote:
-> I think below is what was intended? otherwise we could as well have written:
-> 
->  	b43_radio_write16(dev, txctl_reg,
->  			  (b43_radio_read16(dev, txctl_reg) & ~txctl_value)
-> 			  || (rfatt->with_padmix) ? txctl_value : 0);
-> 
-> 			  ^^--- Note: boolean or
+Sometimes doit/dumpit callbacks for a given family consist
+of quite a bit of boilerplate code, for example locking or
+generic sanity checks on messages.
 
-Uhm, no?
-Can you please explain why you think this is equal? Does | have precedence over ?:
+These methods allow writing the boilerplate code just once
+instead of copying it into all handlers.
 
-> 
-> please review.
-> -------------------------->8------------------8<---------------------------
-> Fix misplaced parentheses
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
-> diff --git a/drivers/net/wireless/b43/lo.c b/drivers/net/wireless/b43/lo.c
-> index 6a18a14..88ed75f 100644
-> --- a/drivers/net/wireless/b43/lo.c
-> +++ b/drivers/net/wireless/b43/lo.c
-> @@ -783,7 +783,7 @@ struct b43_lo_calib * b43_calibrate_lo_setting(struct b43_wldev *dev,
->  			  | rfatt->att);
->  	b43_radio_write16(dev, txctl_reg,
->  			  (b43_radio_read16(dev, txctl_reg) & ~txctl_value)
-> -			  | (rfatt->with_padmix) ? txctl_value : 0);
-> +			  | (rfatt->with_padmix ? txctl_value : 0));
->  
->  	max_rx_gain = rfatt->att * 2;
->  	max_rx_gain += bbatt->att / 2;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+I'd like to have this go in via the wireless tree because I have a
+bugfix for that tree which depends on this infrastructure.
+
+Note: struct genl_info just moves.
+
+ include/net/genetlink.h |   47 ++++++++++++++++++++++++++++-------------------
+ net/netlink/genetlink.c |   19 ++++++++++++++++---
+ 2 files changed, 44 insertions(+), 22 deletions(-)
+
+--- wireless-testing.orig/include/net/genetlink.h	2009-02-13 09:14:26.000000000 +0100
++++ wireless-testing/include/net/genetlink.h	2009-02-13 10:00:37.000000000 +0100
+@@ -21,12 +21,35 @@ struct genl_multicast_group
+ };
+ 
+ /**
++ * struct genl_info - receiving information
++ * @snd_seq: sending sequence number
++ * @snd_pid: netlink pid of sender
++ * @nlhdr: netlink message header
++ * @genlhdr: generic netlink message header
++ * @userhdr: user specific header
++ * @attrs: netlink attributes
++ */
++struct genl_info
++{
++	u32			snd_seq;
++	u32			snd_pid;
++	struct nlmsghdr *	nlhdr;
++	struct genlmsghdr *	genlhdr;
++	void *			userhdr;
++	struct nlattr **	attrs;
++};
++
++/**
+  * struct genl_family - generic netlink family
+  * @id: protocol family idenfitier
+  * @hdrsize: length of user specific header in bytes
+  * @name: name of family
+  * @version: protocol version
+  * @maxattr: maximum number of attributes supported
++ * @pre_doit: called before any doit op
++ * @post_doit: called after any doit op
++ * @pre_dumpit: called before any dumpit op
++ * @post_dumpit: called after any dumpit op
+  * @attrbuf: buffer to store parsed attributes
+  * @ops_list: list of all assigned operations
+  * @family_list: family list
+@@ -39,6 +62,11 @@ struct genl_family
+ 	char			name[GENL_NAMSIZ];
+ 	unsigned int		version;
+ 	unsigned int		maxattr;
++	int			(*pre_doit)(struct sk_buff *skb,
++					    struct genl_info *info);
++	void			(*post_doit)(void);
++	int			(*pre_dumpit)(void);
++	void			(*post_dumpit)(void);
+ 	struct nlattr **	attrbuf;	/* private */
+ 	struct list_head	ops_list;	/* private */
+ 	struct list_head	family_list;	/* private */
+@@ -46,25 +74,6 @@ struct genl_family
+ };
+ 
+ /**
+- * struct genl_info - receiving information
+- * @snd_seq: sending sequence number
+- * @snd_pid: netlink pid of sender
+- * @nlhdr: netlink message header
+- * @genlhdr: generic netlink message header
+- * @userhdr: user specific header
+- * @attrs: netlink attributes
+- */
+-struct genl_info
+-{
+-	u32			snd_seq;
+-	u32			snd_pid;
+-	struct nlmsghdr *	nlhdr;
+-	struct genlmsghdr *	genlhdr;
+-	void *			userhdr;
+-	struct nlattr **	attrs;
+-};
+-
+-/**
+  * struct genl_ops - generic netlink operations
+  * @cmd: command identifier
+  * @flags: flags
+--- wireless-testing.orig/net/netlink/genetlink.c	2009-02-13 09:14:26.000000000 +0100
++++ wireless-testing/net/netlink/genetlink.c	2009-02-13 09:54:32.000000000 +0100
+@@ -446,8 +446,14 @@ static int genl_rcv_msg(struct sk_buff *
+ 			return -EOPNOTSUPP;
+ 
+ 		genl_unlock();
+-		err = netlink_dump_start(genl_sock, skb, nlh,
+-					 ops->dumpit, ops->done);
++		err = 0;
++		if (family->pre_dumpit)
++			err = family->pre_dumpit();
++		if (!err)
++			err = netlink_dump_start(genl_sock, skb, nlh,
++						 ops->dumpit, ops->done);
++		if (family->post_dumpit)
++			family->post_dumpit();
+ 		genl_lock();
+ 		return err;
+ 	}
+@@ -469,7 +475,14 @@ static int genl_rcv_msg(struct sk_buff *
+ 	info.userhdr = nlmsg_data(nlh) + GENL_HDRLEN;
+ 	info.attrs = family->attrbuf;
+ 
+-	return ops->doit(skb, &info);
++	err = 0;
++	if (family->pre_doit)
++		err = family->pre_doit(skb, &info);
++	if (!err)
++		err = ops->doit(skb, &info);
++	if (family->post_doit)
++		family->post_doit();
++	return err;
+ }
+ 
+ static void genl_rcv(struct sk_buff *skb)
 
 
-
--- 
-Greetings, Michael.
