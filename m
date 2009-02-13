@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:48468 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752368AbZBQQFe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 11:05:34 -0500
-Message-ID: <499AE03C.9050008@lwfinger.net> (sfid-20090217_170539_385635_35F92452)
-Date: Tue, 17 Feb 2009 10:05:16 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:33442 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750757AbZBMFgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 00:36:51 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 21:36:51 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/6] cfg80211: add wiphy_idx_valid to check for wiphy_idx sanity
+Date: Thu, 12 Feb 2009 21:35:59 -0800
+Message-ID: <1234503363-11014-3-git-send-email-lrodriguez@atheros.com> (sfid-20090213_063655_975217_CC8518B8)
+In-Reply-To: <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
+References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+ <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?VmlrdG9yIElsaWphxaFpxIc=?= <viktor.ilijasic@gmail.com>
-CC: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: rtl8187 not handling my usb card
-References: <4999F3A6.7020208@gmail.com> <4999F427.4060008@lwfinger.net>	 <3ace41890902161603o447ae321obb536586dcafad69@mail.gmail.com>	 <499A00D7.1080000@lwfinger.net> <63d38a500902170149q275bcb87r9ada40439a013dc7@mail.gmail.com>
-In-Reply-To: <63d38a500902170149q275bcb87r9ada40439a013dc7@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Viktor Ilija=C5=A1i=C4=87 wrote:
-> Hi all.
->=20
-> Yesterday evening I tried John's patch (I manually added those two
-> lines to the source), and the driver properly loads and it seem to
-> work.
->=20
-> However.... it would seem that my card died some time in the last few
-> days. It works for about 10-15 seconds after i plug it in, and then
-> "dies". I'd say that when it gets warm, it's out of the game.
->=20
-> In Linux after i plug it in, it works just enough time to:
-> 1. detect networks in ubuntu network manager (and return a nice scan
-> result with iwlist wlan3 scan)
-> 2. starts to connect to my network (and reaches random points in conn=
-ecting)
-> 3. stops responding altogether, cannot connect, no more results with
-> iwlist scan, etc.
->=20
-> I noticed this exact behavior in windows too, yesterday morning,
-> before I tried these patches, so linux driver is DEFINITELY not to
-> blame.
->=20
-> In windows it very shortly detects available networks, starts to
-> connect and very soon stops responding and finding networks.
->=20
-> I'll return it to shop to be replaced, and I'll report back when I ge=
-t
-> one that works properly.
->=20
-> Also, Larry, I took lsusb -v output during those first few moments
-> while the card operates properly, hope it helps:
+This will later be used by others.
 
-That output confirms that it is an 8187, not an 8187b.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/core.c |    2 +-
+ net/wireless/core.h |    7 +++++++
+ 2 files changed, 8 insertions(+), 1 deletions(-)
 
-I also had a Realtek device fail, but after replacement, all has been w=
-ell.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 2b3e786..55be3b0 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -225,7 +225,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+ 
+ 	drv->wiphy_idx = wiphy_counter++;
+ 
+-	if (unlikely(drv->wiphy_idx < 0)) {
++	if (!wiphy_idx_valid(drv->wiphy_idx)) {
+ 		wiphy_counter--;
+ 		mutex_unlock(&cfg80211_drv_mutex);
+ 		/* ugh, wrapped! */
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 36e2397..e24bc2a 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -62,6 +62,13 @@ struct cfg80211_registered_device *wiphy_to_dev(struct wiphy *wiphy)
+ 	return container_of(wiphy, struct cfg80211_registered_device, wiphy);
+ }
+ 
++/* Note 0 is valid, hence phy0 */
++static inline
++bool wiphy_idx_valid(int wiphy_idx)
++{
++	return (likely(wiphy_idx >= 0));
++}
++
+ extern struct mutex cfg80211_drv_mutex;
+ extern struct list_head cfg80211_drv_list;
+ 
+-- 
+1.6.1.2.253.ga34a
 
-Thanks for testing.
-
-Larry
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
