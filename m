@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:34451 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752851AbZBXETJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 23:19:09 -0500
-Message-ID: <49A37531.70907@lwfinger.net> (sfid-20090224_051913_506663_61CB7114)
-Date: Mon, 23 Feb 2009 22:18:57 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Kalle Valo <kalle.valo@iki.fi>, Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Signal quality strange since commit 708c57cf1709fb95
-References: <49A01922.1090106@lwfinger.net>	 <1235241867.3284.44.camel@localhost> <49A05E35.70904@lwfinger.net>	 <8763j33rgq.fsf@litku.valot.fi> (sfid-20090222_074023_562332_D346678B) <1235441441.4455.58.camel@johannes.local>
-In-Reply-To: <1235441441.4455.58.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:42988 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752283AbZBMTro (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 14:47:44 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Arjan van de Ven <arjan@linux.intel.com>
+Subject: [PATCH 2/3] iwlwifi: use singlethread workqueue
+Date: Fri, 13 Feb 2009 11:51:18 -0800
+Message-Id: <1234554679-30186-3-git-send-email-reinette.chatre@intel.com> (sfid-20090213_204754_593091_09635180)
+In-Reply-To: <1234554679-30186-2-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1234554679-30186-1-git-send-email-reinette.chatre@intel.com>
+ <1234554679-30186-2-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sun, 2009-02-22 at 08:39 +0200, Kalle Valo wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>
->>> I know how it works with drivers that implement their own ioctl
->>> calls for the WEXT interface; however, the 3 that I mentioned all
->>> use mac80211 and get their WEXT support through cfg80211.
->> Yes, something is wrong now. I noticed the same problem (/70 in signal
->> strength) when I was implementing rssi support for at76c50x-usb.
-> 
-> Ok, so what exactly is the problem here?
-> 
-> I intentionally changed it to be /70 rather than /100 so I didn't have
-> to do *100/70 in kernel space, and tools should cope with that (and
-> users too); is there a problem with how the XX (XX/70) gets calculated?
+Use one workqueue instead of one per CPU.
 
-No, I just wondered if it was intentional that it was changed to /70. It appears
-that it was, therefore, at least 3 drivers must be changed as they are
-calculating on the basis of /100. For example, my b43 is showing an iwconfig
-Link Quality of 93/70 while the KNM applet is showing 50%.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+cc: Arjan van de Ven <arjan@linux.intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 397577c..432aee2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3370,7 +3370,7 @@ static DEVICE_ATTR(statistics, S_IRUGO, show_statistics, NULL);
+ 
+ static void iwl_setup_deferred_work(struct iwl_priv *priv)
+ {
+-	priv->workqueue = create_workqueue(DRV_NAME);
++	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
+ 
+ 	init_waitqueue_head(&priv->wait_command_queue);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index d068e18..f78a69a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5201,7 +5201,7 @@ static DEVICE_ATTR(dump_events, S_IWUSR, NULL, dump_event_log);
+ 
+ static void iwl3945_setup_deferred_work(struct iwl_priv *priv)
+ {
+-	priv->workqueue = create_workqueue(DRV_NAME);
++	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
+ 
+ 	init_waitqueue_head(&priv->wait_command_queue);
+ 
+-- 
+1.5.4.3
+
