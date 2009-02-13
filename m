@@ -1,66 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:55765 "EHLO
-	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846AbZBVUSZ (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:12719 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750827AbZBMFmD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 15:18:25 -0500
-Date: Sun, 22 Feb 2009 20:18:22 +0000
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090222201821.GA21375@silver.sucs.org> (sfid-20090222_211829_748328_7CCDF159)
-References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <20090222171032.GD6003@nowhere> <49A1A72A.50102@gmail.com> <20090222194236.GA6060@nowhere>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090222194236.GA6060@nowhere>
+	Fri, 13 Feb 2009 00:42:03 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so572836yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 21:42:02 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1234463938-1350-3-git-send-email-me@bobcopeland.com>
+References: <1234463938-1350-3-git-send-email-me@bobcopeland.com>
+Date: Thu, 12 Feb 2009 21:42:02 -0800
+Message-ID: <43e72e890902122142m38bd03bydddb2300a087c80a@mail.gmail.com> (sfid-20090213_064209_471326_2CD89EF9)
+Subject: Re: [ath5k-devel] [PATCH 2/6] ath9k: save a few calls to
+	ath9k_regd_get_eepromRD
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 22, 2009 at 08:42:37PM +0100, Frederic Weisbecker wrote:
-> On Sun, Feb 22, 2009 at 08:27:38PM +0100, Jiri Slaby wrote:
-> > On 22.2.2009 18:10, Frederic Weisbecker wrote:
-> >> I have some troubles with kmemcheck, so I give up for now.
-> >> Well, by reading the kmemcheck documentation, it tells that there can be some false
-> >> positives so...
-> >
-> > This has nothing to do with kmemcheck.
-> >
-> >> Since we are not sure this is a real bug, I'm not sure it would be interesting.
-> >
-> > There is no false positive possibility with these checkers, so this is  
-> > pretty much interesting, because it is a bug.
-> 
-> 
-> If so, Documentation/kmemcheck.txt really needs an update.
+On Thu, Feb 12, 2009 at 10:38 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> Since we already have a stack variable to track the eeprom regd,
+> we can grab it up front it and save three calls to fetch it again.
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
 
-kmemcheck is different to the slab object lifetime debugger (which is
-what reported this error). kmemcheck may have turned up in the trace
-because it was compiled in (and it ties into slab/slub) but wasn't
-turned on (it can be dynamically toggled via sysfs).
+Ackedy-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-kmemcheck keeps a shadow of the memory and via the shadow memory it
-records whether the memory has been written to yet. I believe
-kmemcheck's problem is that it can't know when allocated but
-uninitialised memory is being used on purpose/not really being used
-(e.g. when gcc does a 32 bit read when only 16 bits have been used but
-throws the upper 16 bits away). There may be other cases such as when a
-previously uninitialised buffer is used but the buffer is actually used
-by an mmaped device...
-
-My understanding is that the slab debugger writes poison about the place
-(e.g. to memory that has been freed and at the start/end of allocations)
-and then checks to see if someone has scribbled on it. This case is more
-coarse as it only deals with allocation rather than initialisation (and
-if you scribble the same value as the poison pattern you go undetected)
-but I believe this is what Jiri is referring to as a "no false positive
-possibility" case - it's never right to write to unallocated memory.
-
-(fixed up Bob's email address on the cc)
-
--- 
-Sitsofe | http://sucs.org/~sits/
+  Luis
