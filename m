@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26152 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753479AbZBMWuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 17:50:22 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 14:50:22 -0800
-Date: Fri, 13 Feb 2009 14:49:37 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] compat-2.6: reflect changes to iwlwifi Kconfig file
-Message-ID: <20090213224937.GE4278@tesla> (sfid-20090213_235029_323300_1230EC9E)
-References: <1234560857-32206-1-git-send-email-reinette.chatre@intel.com>
+Received: from yx-out-2324.google.com ([74.125.44.30]:19512 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962AbZBMFq1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 00:46:27 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so573227yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 21:46:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1234560857-32206-1-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1234463938-1350-5-git-send-email-me@bobcopeland.com>
+References: <1234463938-1350-5-git-send-email-me@bobcopeland.com>
+Date: Thu, 12 Feb 2009 21:46:25 -0800
+Message-ID: <43e72e890902122146v7ff1660ucc51f49b7aec0acb@mail.gmail.com> (sfid-20090213_064629_947904_E011724E)
+Subject: Re: [ath5k-devel] [PATCH 4/6] ath9k: remove ath9k_regd_get_rd()
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 13, 2009 at 01:34:17PM -0800, Reinette Chatre wrote:
-> - CONFIG_IWLWIFI is now a tristate, select it to be 'm'
-> - CONFIG_IWLCORE has been removed
-> - CONFIG_IWLAGN_SPECTRUM_MEASUREMENT renamed to
->   CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT
-> - CONFIG_IWLAGN_LEDS has been removed (not used by driver)
-> - CONFIG_IWL3945_RFKILL does not exist
-> 
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+On Thu, Feb 12, 2009 at 10:38 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> The function ath9k_regd_get_rd() is unused.
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
 
-Thanks applied
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
   Luis
