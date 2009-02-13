@@ -1,79 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:51103 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754170AbZBYSUE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 13:20:04 -0500
-Date: Wed, 25 Feb 2009 20:19:53 +0200
-From: Jouni Malinen <j@w1.fi>
-To: pat-lkml <pat-lkml@erley.org>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: ath9k and TKIP hw crypto in AP mode
-Message-ID: <20090225181953.GA23880@jm.kir.nu> (sfid-20090225_192010_902993_DDA097EB)
-References: <20090224114201.GB21933@jm.kir.nu> <49A40320.1040902@erley.org> <20090224150710.GA1419@jm.kir.nu> <49A41315.3030007@erley.org> <49A45378.50009@erley.org>
+Received: from mail.atheros.com ([12.36.123.2]:48302 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752082AbZBMJHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 04:07:33 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 01:07:33 -0800
+Date: Fri, 13 Feb 2009 14:37:21 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH] ath9k: Fix panic upon attach failure
+Message-ID: <20090213090721.GB21695@vasanth-laptop> (sfid-20090213_100739_090069_D5CBEA97)
+References: <1234515108-5594-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49A45378.50009@erley.org>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1234515108-5594-1-git-send-email-vasanth@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 24, 2009 at 03:07:20PM -0500, pat-lkml wrote:
-> pass phrase.  Use nohwcrypt=1, hostapd now works perfectly with wep/wpa/wpa2, while
-> with nohwcrypt=0, I get errors (that I'll need physical access to my computer to 
-> debug/log) in wpa only.
+On Fri, Feb 13, 2009 at 02:21:48PM +0530, Vasanth Thiagarajan wrote:
+> [246916.338046]
+> [246916.338048] Pid: 29265, comm: insmod Not tainted (2.6.29-rc4-wl #64) 9461DUU
+> [246916.338051] EIP: 0060:[<c02ca274>] EFLAGS: 00010202 CPU: 0
+> [246916.338055] EIP is at rollback_registered+0x24/0x220
+> [246916.338057] EAX: 00000001 EBX: 00000000 ECX: 00000000 EDX: f122e8fc
+> [246916.338059] ESI: 00000000 EDI: 00000000 EBP: f6595d30 ESP: f6595d1c
+> [246916.338062]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+> [246916.338064] Process insmod (pid: 29265, ti=f6594000 task=f7343fe0 task.ti=f6594000)
+> [246916.338067] Stack:
+> [246916.338068]  c04a2920 22222222 f6595d48 00000000 f122f080 f6595d48 c02ca489 f122e8fc
+> [246916.338076]  f122e220 f122f080 f122e220 f6595d5c f8a03156 f122e220 f122f080 f122e220
+> [246916.338085]  f6595d80 f87359af f122f080 00002000 f874e129 f122f150 f122f080 f6290000
+> [246916.338094] Call Trace:
+> [246916.338096]  [<c02ca489>] ? unregister_netdevice+0x19/0x70
+> [246916.338100]  [<f8a03156>] ? ieee80211_unregister_hw+0x36/0xd0 [mac80211]
+> [246916.338112]  [<f87359af>] ? ath_detach+0xcf/0x250 [ath9k]
+> [246916.338127]  [<f8735d9c>] ? ath_attach+0x26c/0x740 [ath9k]
+> [246916.338139]  [<f873c33a>] ? ath_pci_probe+0x13a/0x310 [ath9k]
+> [246916.338151]  [<c0233e28>] ? _raw_spin_unlock+0x68/0x80
+> [246916.338158]  [<c023ab8e>] ? local_pci_probe+0xe/0x10
+> [246916.338162]  [<c023b8e0>] ? pci_device_probe+0x60/0x80
+> [246916.338169]  [<c029e042>] ? driver_probe_device+0x82/0x1b0
+> [246916.338174]  [<c029e1f9>] ? __driver_attach+0x89/0x90
+> [246916.338180]  [<c029d97b>] ? bus_for_each_dev+0x4b/0x70
+> [246916.338184]  [<c023b820>] ? pci_device_remove+0x0/0x40
+> [246916.338190]  [<c029ded9>] ? driver_attach+0x19/0x20
+> [246916.338193]  [<c029e170>] ? __driver_attach+0x0/0x90
+> [246916.338197]  [<c029d317>] ? bus_add_driver+0x1b7/0x230
+> [246916.338203]  [<c023b820>] ? pci_device_remove+0x0/0x40
+> [246916.338206]  [<c029e399>] ? driver_register+0x69/0x140
+> [246916.338212]  [<f859d000>] ? ath9k_init+0x0/0x54 [ath9k]
+> [246916.338221]  [<c023bb4e>] ? __pci_register_driver+0x4e/0x90
+> [246916.338225]  [<f859d000>] ? ath9k_init+0x0/0x54 [ath9k]
+> [246916.338232]  [<f859d06b>] ? ath_pci_init+0x17/0x19 [ath9k]
+> [246916.338238]  [<f859d017>] ? ath9k_init+0x17/0x54 [ath9k]
+> [246916.338245]  [<c017148e>] ? tracepoint_update_probe_range+0x7e/0xb0
+> [246916.338249]  [<c010111a>] ? do_one_initcall+0x2a/0x170
+> [246916.338252]  [<c0149f26>] ? up_read+0x16/0x30
+> [246916.338256]  [<c014aa9d>] ? __blocking_notifier_call_chain+0x4d/0x60
+> [246916.338265]  [<c0162b1a>] ? sys_init_module+0x8a/0x1c0
+> [246916.338269]  [<c022f888>] ? trace_hardirqs_on_thunk+0xc/0x10
+> [246916.338272]  [<c0103ebf>] ? sysenter_do_call+0x12/0x43
+> [246916.338276] Code: 8d bc 27 00 00 00 00 55 89 e5 56 89 c6 53 83 ec 0c a1 74 27 4a c0 85 c0 0f 85 4b 01 00 00 e8 04 7d 00 00 85 c0 0f 84 c9 01 00 00 <8b> 86 18 03 00 00 85 c0 0f 84 86 01 00 00 83 e8 01 0f 85 71 01
+> [246916.338328] EIP: [<c02ca274>] rollback_registered+0x24/0x220 SS:ESP 0068:f6595d1c
+> [246916.338335] ---[ end trace 76357c56a75ea34e ]---
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+>  drivers/net/wireless/ath9k/main.c |   20 +++++++++++++-------
+>  1 files changed, 13 insertions(+), 7 deletions(-)
+> 
 
-Thanks, I was able to reproduce this and figure out what was happening.
-It looks like I have not tested TKIP in AP mode before (I've been mainly
-testing HT and that does not allow TKIP..). Anyway, the Michael MIC
-TX/RX keys are set incorrectly for the group key which will trigger
-Michael MIC errors on every broadcast frame.
+I will rebase over pending patches and send out a separate one.
 
-I have more complete cleanup of the key configuration for ath9k in
-progress, but as far as this particular issue is concerned, the
-following change should resolve it. So far, I've only tested this with
-the current hardware revision, but I will test this with older design,
-too, and submit a proper patch later. Anyway, you may want to test this
-as a fix for TKIP in AP mode.
-
-
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-02-25 20:09:14.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-02-25 20:11:19.000000000 +0200
-@@ -648,8 +648,8 @@ static int ath_keyset(struct ath_softc *
- }
- 
- static int ath_setkey_tkip(struct ath_softc *sc, u16 keyix, const u8 *key,
--			   struct ath9k_keyval *hk,
--			   const u8 *addr)
-+			   struct ath9k_keyval *hk, const u8 *addr,
-+			   bool authenticator)
- {
- 	const u8 *key_rxmic;
- 	const u8 *key_txmic;
-@@ -659,7 +659,13 @@ static int ath_setkey_tkip(struct ath_so
- 
- 	if (addr == NULL) {
- 		/* Group key installation */
--		memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
-+		if (authenticator) {
-+			memcpy(hk->kv_mic, key_txmic, sizeof(hk->kv_mic));
-+			memcpy(hk->kv_txmic, key_txmic, sizeof(hk->kv_mic));
-+		} else {
-+			memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
-+			memcpy(hk->kv_txmic, key_rxmic, sizeof(hk->kv_mic));
-+		}
- 		return ath_keyset(sc, keyix, hk, addr);
- 	}
- 	if (!sc->splitmic) {
-@@ -826,7 +832,8 @@ static int ath_key_config(struct ath_sof
- 	}
- 
- 	if (key->alg == ALG_TKIP)
--		ret = ath_setkey_tkip(sc, idx, key->key, &hk, mac);
-+		ret = ath_setkey_tkip(sc, idx, key->key, &hk, mac,
-+				      vif->type == NL80211_IFTYPE_AP);
- 	else
- 		ret = ath_keyset(sc, idx, &hk, mac);
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Vasanth
