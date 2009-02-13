@@ -1,42 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:48958 "EHLO
-	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751469AbZBNAjW (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:36118 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752634AbZBMH5F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 19:39:22 -0500
-Date: Fri, 13 Feb 2009 16:39:35 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: lkml <linux-kernel@vger.kernel.org>
-Cc: linux-wireless@vger.kernel.org, akpm <akpm@linux-foundation.org>,
-	linville@tuxdriver.com
-Subject: [PATCH -next/mmotm/resend/lost] wireless: fix for CONFIG_NL80211=n
-Message-Id: <20090213163935.ea924a9a.randy.dunlap@oracle.com> (sfid-20090214_013927_260784_1DD3BDE7)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 13 Feb 2009 02:57:05 -0500
+Received: by yw-out-2324.google.com with SMTP id 5so584693ywh.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 23:57:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1234511334.1327.34.camel@johannes.local>
+References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
+	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
+	 <1234508187.1327.19.camel@johannes.local>
+	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
+	 <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
+	 <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com>
+	 <1234509436.1327.25.camel@johannes.local>
+	 <43e72e890902122335l6580dbc1m44702996cc8200e4@mail.gmail.com>
+	 <1234511334.1327.34.camel@johannes.local>
+Date: Thu, 12 Feb 2009 23:57:04 -0800
+Message-ID: <43e72e890902122357g26bf3dd4j930de7c1f6c28280@mail.gmail.com> (sfid-20090213_085711_687515_FA957517)
+Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Thu, Feb 12, 2009 at 11:48 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2009-02-12 at 23:35 -0800, Luis R. Rodriguez wrote:
+>
+>> > Well, regardless of regulatory, we now have two paths:
+>> >
+>> > nl80211: cfg80211_mutex  -->  drv->mutex  -->  rtnl
+>> > wext:    rtnl  -->  cfg80211_mutex  -->  drv->mutex
+>> >
+>> > which is clearly not a good plan.
+>> >
+>> > Therefore, I'll probably have to implement solution (1) from what I sent
+>> > you, and invert the locking in nl80211. That would fix your the
+>> > immediate problem with regulatory as well, because that was:
+>> >
+>> > rtnl  --->  (regulatory_hint) --->  cfg80211_mutex  -->  drv->mutex
+>>
+>> Yup I see. So as it stands in this patch user reg hint now is:
+>>
+>> reg_mutex --> cfg80211_mutex
+>
+> I don't really care about reg_mutex much, and it probably doesn't matter
+> as long as its use is limited. Question is whether we need it, but
+> that's a different question.
 
-Add empty function for case of CONFIG_NL80211=n:
+To answer that question -- reg_mutex just protects the
+reg_requests_list linked list. That's it. Without that you could
+potentially have two userspace reg hints while the workqueue runs.
+Remember that the hints no longer lock except to just add a new
+regulatory_request into the reg_requests_list.
 
-net/wireless/scan.c:35: error: implicit declaration of function 'nl80211_send_scan_aborted'
+>> Driver hint also does the same so it seems your fix on nl80211 would
+>> probably just tap this series on the nl80211_req_set_reg().
+>
+> Yeah, I think I'll work on top of your series anyway so I don't clash
+> with the cleanups.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- net/wireless/nl80211.h |    4 ++++
- 1 file changed, 4 insertions(+)
+Any other comments on the series?
 
---- linux-next-20090212.orig/net/wireless/nl80211.h
-+++ linux-next-20090212/net/wireless/nl80211.h
-@@ -27,6 +27,10 @@ static inline void
- nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
- 		       struct net_device *netdev)
- {}
-+static inline void nl80211_send_scan_aborted(
-+					struct cfg80211_registered_device *rdev,
-+					struct net_device *netdev)
-+{}
- #endif /* CONFIG_NL80211 */
- 
- #endif /* __NET_WIRELESS_NL80211_H */
+>> I also think using a workqueue would be good here anyway, the only
+>> negative thing I've seen is loading takes a bit longer.
+>
+> Indeed, it's a good thing because a path like this:
+>
+> driver_open
+>  -> regulatory_hint
+>  -> cfg80211 stuff
+>   -> driver_reg_notifier
+>
+> is always deadlock prone since you call into the driver from itself.
+
+I see -- good point.
+
+  Luis
