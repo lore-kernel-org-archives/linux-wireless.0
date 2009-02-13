@@ -1,98 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:55518 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753209AbZBURTS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 12:19:18 -0500
-Date: Sat, 21 Feb 2009 18:19:13 +0100
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Thomas Meyer <thomas@m3y3r.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Thomas Gleixner <tglx@tglx.de>,
-	LKML <linux-kernel@vger.kernel.org>,
-	rt-users <linux-rt-users@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Carsten Emde <ce@ceag.ch>,
-	Clark Williams <williams@redhat.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [Announce] 2.6.29-rc4-rt2
-Message-ID: <20090221171912.GB6807@nowhere> (sfid-20090221_181926_003418_163B96D8)
-References: <alpine.LFD.2.00.0902112332370.415@localhost.localdomain> <alpine.LFD.2.00.0902122353050.16972@localhost.localdomain> <1235235862.3350.4.camel@localhost.localdomain>
+Received: from mail.atheros.com ([12.36.123.2]:33441 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750757AbZBMFgu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 00:36:50 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 21:36:50 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/6] cfg80211: rename cfg80211_registered_device's idx to wiphy_idx
+Date: Thu, 12 Feb 2009 21:35:58 -0800
+Message-ID: <1234503363-11014-2-git-send-email-lrodriguez@atheros.com> (sfid-20090213_063653_994336_6B207916)
+In-Reply-To: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
+References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1235235862.3350.4.camel@localhost.localdomain>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 21, 2009 at 06:04:22PM +0100, Thomas Meyer wrote:
-> Am Donnerstag, den 12.02.2009, 23:56 +0100 schrieb Thomas Gleixner:
-> > We are pleased to announce the first update to our new preempt-rt
-> > series. It fixes the reported bugs and some more.
-> > 
-> > Download locations:
-> > 
-> >    http://rt.et.redhat.com/download/
-> >    http://www.kernel.org/pub/linux/kernel/projects/rt/
-> >  
-> > Information on the RT patch can be found at:
-> > 
-> >   http://rt.wiki.kernel.org/index.php/Main_Page
-> > 
-> > to build the 2.6.29-rc4-rt2 tree, the following patches should be
-> > applied:
-> > 
-> >   http://www.kernel.org/pub/linux/kernel/v2.6/testing/linux-2.6.29-rc4.tar.bz2
-> >   http://www.kernel.org/pub/linux/kernel/projects/rt/patch-2.6.29-rc4-rt2.bz2
-> > 
-> > The broken out patches are also available at the same download
-> > locations.
-> > 
-> > Enjoy !
-> > 
-> >       Thomas, Ingo
-> > --
-> 
-> Hi,
-> 
-> I got this warning, that i never saw before with a non rt-preempt
-> kernel. But maybe it's just coincidence...
-> 
-> [22652.437889] ------------[ cut here ]------------
-> [22652.437898] WARNING: at net/mac80211/rx.c:2234 __ieee80211_rx+0x85/0x53e [mac80211]()
-> [22652.437904] Hardware name: MacBookPro1,1
-> [22652.437908] Modules linked in: ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables nf_conntrack_ftp ip6t_REJECT xt_tcpudp nf_conntrack_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables x_tables ath5k mac80211 cfg80211 video [last unloaded: scsi_wait_scan]
-> [22652.437952] Pid: 23, comm: sirq-tasklet/1 Tainted: G        W  2.6.29-rc4-rt2-tip #57
-> [22652.437958] Call Trace:
-> [22652.437970]  [<c0451e50>] warn_slowpath+0x8a/0xd3
-> [22652.437981]  [<c0665165>] ? plist_add+0x73/0x8e
-> [22652.437990]  [<c0447d8e>] ? enqueue_pushable_task+0x62/0x79
-> [22652.437999]  [<c04480f1>] ? enqueue_task_rt+0x203/0x247
-> [22652.438029]  [<f90e78bf>] __ieee80211_rx+0x85/0x53e [mac80211]
-> [22652.438039]  [<c09aafaa>] ? __spin_unlock_irq+0x1e/0x44
-> [22652.438057]  [<f92e14af>] ath5k_tasklet_rx+0x406/0x457 [ath5k]
-> [22652.438067]  [<c045787e>] __tasklet_action+0x8c/0x100
-> [22652.438075]  [<c04579d8>] tasklet_action+0x67/0x7f
-> [22652.438083]  [<c04575e3>] ksoftirqd+0x12d/0x223
-> [22652.438091]  [<c04574b6>] ? ksoftirqd+0x0/0x223
-> [22652.438099]  [<c0467022>] kthread+0x4a/0x82
-> [22652.438106]  [<c0466fd8>] ? kthread+0x0/0x82
-> [22652.438114]  [<c0420b67>] kernel_thread_helper+0x7/0x10
-> [22652.438120] ---[ end trace a7919e7f17c0a727 ]---
-> 
+Makes it clearer to read when comparing to ifidx
 
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/core.c    |   35 ++++++++++++++++++-----------------
+ net/wireless/core.h    |    2 +-
+ net/wireless/nl80211.c |    4 ++--
+ net/wireless/sysfs.c   |    2 +-
+ 4 files changed, 22 insertions(+), 21 deletions(-)
 
-Hi,
-
-It's an known issue on ath5k (or 80211):
-http://patchwork.kernel.org/patch/1169/
-
-So not preempt-rt related. Perhaps it has been fixed in -rc5.
-
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 0668b2b..2b3e786 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -37,12 +37,13 @@ DEFINE_MUTEX(cfg80211_drv_mutex);
+ static struct dentry *ieee80211_debugfs_dir;
  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rt-users" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ /* requires cfg80211_drv_mutex to be held! */
+-static struct cfg80211_registered_device *cfg80211_drv_by_wiphy(int wiphy)
++static struct cfg80211_registered_device *
++cfg80211_drv_by_wiphy_idx(int wiphy_idx)
+ {
+ 	struct cfg80211_registered_device *result = NULL, *drv;
+ 
+ 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
+-		if (drv->idx == wiphy) {
++		if (drv->wiphy_idx == wiphy_idx) {
+ 			result = drv;
+ 			break;
+ 		}
+@@ -56,12 +57,12 @@ static struct cfg80211_registered_device *
+ __cfg80211_drv_from_info(struct genl_info *info)
+ {
+ 	int ifindex;
+-	struct cfg80211_registered_device *bywiphy = NULL, *byifidx = NULL;
++	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
+ 	struct net_device *dev;
+ 	int err = -EINVAL;
+ 
+ 	if (info->attrs[NL80211_ATTR_WIPHY]) {
+-		bywiphy = cfg80211_drv_by_wiphy(
++		bywiphyidx = cfg80211_drv_by_wiphy_idx(
+ 				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
+ 		err = -ENODEV;
+ 	}
+@@ -78,14 +79,14 @@ __cfg80211_drv_from_info(struct genl_info *info)
+ 		err = -ENODEV;
+ 	}
+ 
+-	if (bywiphy && byifidx) {
+-		if (bywiphy != byifidx)
++	if (bywiphyidx && byifidx) {
++		if (bywiphyidx != byifidx)
+ 			return ERR_PTR(-EINVAL);
+ 		else
+-			return bywiphy; /* == byifidx */
++			return bywiphyidx; /* == byifidx */
+ 	}
+-	if (bywiphy)
+-		return bywiphy;
++	if (bywiphyidx)
++		return bywiphyidx;
+ 
+ 	if (byifidx)
+ 		return byifidx;
+@@ -143,16 +144,16 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
+ 			char *newname)
+ {
+ 	struct cfg80211_registered_device *drv;
+-	int idx, taken = -1, result, digits;
++	int wiphy_idx, taken = -1, result, digits;
+ 
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 
+ 	/* prohibit calling the thing phy%d when %d is not its number */
+-	sscanf(newname, PHY_NAME "%d%n", &idx, &taken);
+-	if (taken == strlen(newname) && idx != rdev->idx) {
+-		/* count number of places needed to print idx */
++	sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken);
++	if (taken == strlen(newname) && wiphy_idx != rdev->wiphy_idx) {
++		/* count number of places needed to print wiphy_idx */
+ 		digits = 1;
+-		while (idx /= 10)
++		while (wiphy_idx /= 10)
+ 			digits++;
+ 		/*
+ 		 * deny the name if it is phy<idx> where <idx> is printed
+@@ -222,9 +223,9 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+ 
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 
+-	drv->idx = wiphy_counter++;
++	drv->wiphy_idx = wiphy_counter++;
+ 
+-	if (unlikely(drv->idx < 0)) {
++	if (unlikely(drv->wiphy_idx < 0)) {
+ 		wiphy_counter--;
+ 		mutex_unlock(&cfg80211_drv_mutex);
+ 		/* ugh, wrapped! */
+@@ -235,7 +236,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+ 	mutex_unlock(&cfg80211_drv_mutex);
+ 
+ 	/* give it a proper name */
+-	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->idx);
++	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->wiphy_idx);
+ 
+ 	mutex_init(&drv->mtx);
+ 	mutex_init(&drv->devlist_mtx);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index e29ad4c..36e2397 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -37,7 +37,7 @@ struct cfg80211_registered_device {
+ 	enum environment_cap env;
+ 
+ 	/* wiphy index, internal only */
+-	int idx;
++	int wiphy_idx;
+ 
+ 	/* associate netdev list */
+ 	struct mutex devlist_mtx;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 298a4de..47018bd 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -142,7 +142,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	if (!hdr)
+ 		return -1;
+ 
+-	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->wiphy_idx);
+ 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&dev->wiphy));
+ 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
+ 		   dev->wiphy.max_scan_ssids);
+@@ -2739,7 +2739,7 @@ static int nl80211_send_scan_donemsg(struct sk_buff *msg,
+ 	if (!hdr)
+ 		return -1;
+ 
+-	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
+ 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
+ 
+ 	/* XXX: we should probably bounce back the request? */
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 26a72b0..2e3fd91 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -31,7 +31,7 @@ static ssize_t name ## _show(struct device *dev,			\
+ 	return sprintf(buf, fmt "\n", dev_to_rdev(dev)->member);	\
+ }
+ 
+-SHOW_FMT(index, "%d", idx);
++SHOW_FMT(index, "%d", wiphy_idx);
+ SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
+ 
+ static struct device_attribute ieee80211_dev_attrs[] = {
+-- 
+1.6.1.2.253.ga34a
 
