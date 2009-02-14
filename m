@@ -1,28 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:36930 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752183AbZBUPJY (ORCPT
+Received: from rcsinet11.oracle.com ([148.87.113.123]:48958 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469AbZBNAjW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 10:09:24 -0500
-Message-ID: <49A01922.1090106@lwfinger.net> (sfid-20090221_160928_943263_A64D4D4A)
-Date: Sat, 21 Feb 2009 09:09:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Signal quality strange since commit 708c57cf1709fb95
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 Feb 2009 19:39:22 -0500
+Date: Fri, 13 Feb 2009 16:39:35 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: linux-wireless@vger.kernel.org, akpm <akpm@linux-foundation.org>,
+	linville@tuxdriver.com
+Subject: [PATCH -next/mmotm/resend/lost] wireless: fix for CONFIG_NL80211=n
+Message-Id: <20090213163935.ea924a9a.randy.dunlap@oracle.com> (sfid-20090214_013927_260784_1DD3BDE7)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I admit that I didn't follow the discussion of reporting signal quality very
-closely; however since commit 708c57cf1709fb95, all of my wireless devices (b43,
-p54usb, rtl8187) are reporting link quality as XX/70 rather than XX/100. I doubt
-that this was an intended consequence of that patch. If the SIOCGIWRANGE ioctl
-is now more correct, what changes are needed in the drivers to restore the old
-behavior? Having written the qual calculation for 2 drivers, I understand the
-uselessness of this number, but I also know the uproar such a change will cause
-in the user community.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Larry
+Add empty function for case of CONFIG_NL80211=n:
+
+net/wireless/scan.c:35: error: implicit declaration of function 'nl80211_send_scan_aborted'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ net/wireless/nl80211.h |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+--- linux-next-20090212.orig/net/wireless/nl80211.h
++++ linux-next-20090212/net/wireless/nl80211.h
+@@ -27,6 +27,10 @@ static inline void
+ nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *netdev)
+ {}
++static inline void nl80211_send_scan_aborted(
++					struct cfg80211_registered_device *rdev,
++					struct net_device *netdev)
++{}
+ #endif /* CONFIG_NL80211 */
+ 
+ #endif /* __NET_WIRELESS_NL80211_H */
