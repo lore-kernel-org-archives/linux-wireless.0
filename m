@@ -1,66 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55427 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752176AbZBOQMf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 11:12:35 -0500
-Subject: Re: [PATCH] nl80211: Optional IEs into scan request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>, Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240902150509i5df08adcg214901548d3cd538@mail.gmail.com> (sfid-20090215_140947_104879_EFB2F067)
-References: <20090213105306.GA18754@jm.kir.nu>
-	 <1234522804.4219.13.camel@johannes.local>
-	 <20090213111523.GA22438@jm.kir.nu>
-	 <1ba2fa240902150509i5df08adcg214901548d3cd538@mail.gmail.com>
-	 (sfid-20090215_140947_104879_EFB2F067)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Brl1gT9KFD87DvlglJAg"
-Date: Sun, 15 Feb 2009 17:12:27 +0100
-Message-Id: <1234714347.4219.70.camel@johannes.local> (sfid-20090215_171239_141563_8F98A78D)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:27446 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750727AbZBNFec (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Feb 2009 00:34:32 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 21:34:32 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/10] cfg80211: rename cfg80211_registered_device's idx to wiphy_idx
+Date: Fri, 13 Feb 2009 21:33:38 -0800
+Message-ID: <1234589627-16977-2-git-send-email-lrodriguez@atheros.com> (sfid-20090214_063439_261477_30BDDF5B)
+In-Reply-To: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Makes it clearer to read when comparing to ifidx
 
---=-Brl1gT9KFD87DvlglJAg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/core.c    |   35 ++++++++++++++++++-----------------
+ net/wireless/core.h    |    2 +-
+ net/wireless/nl80211.c |    4 ++--
+ net/wireless/sysfs.c   |    2 +-
+ 4 files changed, 22 insertions(+), 21 deletions(-)
 
-On Sun, 2009-02-15 at 15:09 +0200, Tomas Winkler wrote:
-
-> Status questions
-> What is the version of wpa_supplicant that supports WPS.  Is wext
-> covered with IWEVGENIE?
-> Is it currently working with mac80211 based drivers?
-
-The WPS scanning might be an issue in iwlwifi because afaik the hw_scan
-callback doesn't honour any of the ways to add IEs into probe requests?
-
-johannes
-
---=-Brl1gT9KFD87DvlglJAg
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJmD7oAAoJEKVg1VMiehFYibQQAK5wYGXuiaXliaEvNHqLJfrk
-+qDIcRZ/kMGYZnygK3Z4Xmmog4TN6sr696JjeETvAmawkGr1VTB2QsPc560V6Zo0
-s6MzTrXiGrjh1RORrDT5OemRA9WE2w4qvLVkyP92OazC/63OZWYO1El4CEGcnB6F
-nVmdpnOIQ9eB6sRSkurhbt4e0y/r4QDJaqTguHQc5kFEjKuNyodfOOTBhiLGl1HZ
-JXCU8zoxt0XEzTr6vcjpex9ldOUWAV8F7Sos7RRwRVUbaS+S4MVmNSZNdBOLPB1Z
-JXA/caLD0QI2QtGlfGK3avAA/UhWo1k4BpnwniuCzQc7IKY9hSiiRSdPm9OAFb7e
-BbdrBMge+gA9V2ST4inxw+Ptqa2ZmfpfJIZcDNzwrMeIuzOF1HodBms07XCeSQvl
-UYasNZgz8T3hOmWQxcEyMJ1p35BYb9YLxzGqEE0/7yLYjF/pGMn+IlkOb3oOXhyW
-WEjFtc1pCRuDlC2TDcDMLbdpiD/1zPGMowQEU+8U3M2zYdyRPNWncdxSRouNi4uk
-pliuGiwjrlehx0YKJGVgZCaH3rAszq0viZDgiZEQzb7L0U+FyoUzW8N0tMlqzTZd
-FuKVG4UpN/WWA6PRNS55pY2C0jy1obAymEdhi7AwOWV6Ad2xnYQHSkPJsU1H4JHR
-pgOpDSW+vXyYaiKrWZyo
-=cDkv
------END PGP SIGNATURE-----
-
---=-Brl1gT9KFD87DvlglJAg--
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 0668b2b..2b3e786 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -37,12 +37,13 @@ DEFINE_MUTEX(cfg80211_drv_mutex);
+ static struct dentry *ieee80211_debugfs_dir;
+ 
+ /* requires cfg80211_drv_mutex to be held! */
+-static struct cfg80211_registered_device *cfg80211_drv_by_wiphy(int wiphy)
++static struct cfg80211_registered_device *
++cfg80211_drv_by_wiphy_idx(int wiphy_idx)
+ {
+ 	struct cfg80211_registered_device *result = NULL, *drv;
+ 
+ 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
+-		if (drv->idx == wiphy) {
++		if (drv->wiphy_idx == wiphy_idx) {
+ 			result = drv;
+ 			break;
+ 		}
+@@ -56,12 +57,12 @@ static struct cfg80211_registered_device *
+ __cfg80211_drv_from_info(struct genl_info *info)
+ {
+ 	int ifindex;
+-	struct cfg80211_registered_device *bywiphy = NULL, *byifidx = NULL;
++	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
+ 	struct net_device *dev;
+ 	int err = -EINVAL;
+ 
+ 	if (info->attrs[NL80211_ATTR_WIPHY]) {
+-		bywiphy = cfg80211_drv_by_wiphy(
++		bywiphyidx = cfg80211_drv_by_wiphy_idx(
+ 				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
+ 		err = -ENODEV;
+ 	}
+@@ -78,14 +79,14 @@ __cfg80211_drv_from_info(struct genl_info *info)
+ 		err = -ENODEV;
+ 	}
+ 
+-	if (bywiphy && byifidx) {
+-		if (bywiphy != byifidx)
++	if (bywiphyidx && byifidx) {
++		if (bywiphyidx != byifidx)
+ 			return ERR_PTR(-EINVAL);
+ 		else
+-			return bywiphy; /* == byifidx */
++			return bywiphyidx; /* == byifidx */
+ 	}
+-	if (bywiphy)
+-		return bywiphy;
++	if (bywiphyidx)
++		return bywiphyidx;
+ 
+ 	if (byifidx)
+ 		return byifidx;
+@@ -143,16 +144,16 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
+ 			char *newname)
+ {
+ 	struct cfg80211_registered_device *drv;
+-	int idx, taken = -1, result, digits;
++	int wiphy_idx, taken = -1, result, digits;
+ 
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 
+ 	/* prohibit calling the thing phy%d when %d is not its number */
+-	sscanf(newname, PHY_NAME "%d%n", &idx, &taken);
+-	if (taken == strlen(newname) && idx != rdev->idx) {
+-		/* count number of places needed to print idx */
++	sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken);
++	if (taken == strlen(newname) && wiphy_idx != rdev->wiphy_idx) {
++		/* count number of places needed to print wiphy_idx */
+ 		digits = 1;
+-		while (idx /= 10)
++		while (wiphy_idx /= 10)
+ 			digits++;
+ 		/*
+ 		 * deny the name if it is phy<idx> where <idx> is printed
+@@ -222,9 +223,9 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+ 
+ 	mutex_lock(&cfg80211_drv_mutex);
+ 
+-	drv->idx = wiphy_counter++;
++	drv->wiphy_idx = wiphy_counter++;
+ 
+-	if (unlikely(drv->idx < 0)) {
++	if (unlikely(drv->wiphy_idx < 0)) {
+ 		wiphy_counter--;
+ 		mutex_unlock(&cfg80211_drv_mutex);
+ 		/* ugh, wrapped! */
+@@ -235,7 +236,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+ 	mutex_unlock(&cfg80211_drv_mutex);
+ 
+ 	/* give it a proper name */
+-	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->idx);
++	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->wiphy_idx);
+ 
+ 	mutex_init(&drv->mtx);
+ 	mutex_init(&drv->devlist_mtx);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index e29ad4c..36e2397 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -37,7 +37,7 @@ struct cfg80211_registered_device {
+ 	enum environment_cap env;
+ 
+ 	/* wiphy index, internal only */
+-	int idx;
++	int wiphy_idx;
+ 
+ 	/* associate netdev list */
+ 	struct mutex devlist_mtx;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fd46b18..80741c4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -163,7 +163,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	if (!hdr)
+ 		return -1;
+ 
+-	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->wiphy_idx);
+ 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&dev->wiphy));
+ 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
+ 		   dev->wiphy.max_scan_ssids);
+@@ -2705,7 +2705,7 @@ static int nl80211_send_scan_donemsg(struct sk_buff *msg,
+ 	if (!hdr)
+ 		return -1;
+ 
+-	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
+ 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
+ 
+ 	/* XXX: we should probably bounce back the request? */
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 26a72b0..2e3fd91 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -31,7 +31,7 @@ static ssize_t name ## _show(struct device *dev,			\
+ 	return sprintf(buf, fmt "\n", dev_to_rdev(dev)->member);	\
+ }
+ 
+-SHOW_FMT(index, "%d", idx);
++SHOW_FMT(index, "%d", wiphy_idx);
+ SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
+ 
+ static struct device_attribute ieee80211_dev_attrs[] = {
+-- 
+1.6.1.2.253.ga34a
 
