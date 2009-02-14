@@ -1,35 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54866
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1757426AbZBYHxj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 02:53:39 -0500
-Date: Tue, 24 Feb 2009 23:53:17 -0800 (PST)
-Message-Id: <20090224.235317.10940015.davem@davemloft.net> (sfid-20090225_085418_615177_4B2C36F9)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-02-23
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090223192617.GA3553@tuxdriver.com>
-References: <20090223192617.GA3553@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.36.123.2]:32510 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750727AbZBNGm1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Feb 2009 01:42:27 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 22:42:27 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/3] cfg80211: one fixup and a few cleanups
+Date: Fri, 13 Feb 2009 22:41:39 -0800
+Message-ID: <1234593702-19750-1-git-send-email-lrodriguez@atheros.com> (sfid-20090214_074231_914011_B5E2267C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 23 Feb 2009 14:26:17 -0500
+This goes on top of my last series. This has a fixup for
+drivers reporting the same regulatory domain and some cleanups.
 
-> Here are a couple of fixes, one for an oops and one for a warning.  Also
-> included is a PCI ID addition.  These are intended for 2.6.29.
+Luis R. Rodriguez (3):
+  cfg80211: allow drivers that agree on regulatory to agree
+  cfg80211: add assert_cfg80211_lock() to regdom_changed
+  cfg80211: rename regdom_changed to regdom_changes() and use it
 
-Pulled, thanks John.
+ net/wireless/reg.c |   35 +++++++++++++++++++++++------------
+ 1 files changed, 23 insertions(+), 12 deletions(-)
 
-> P.S.  This causes some conflicts with -next.  The ath9k conflict is
-> simple.  The orinoco conflict involves moving some code from orinoco.c
-> to orinoco/main.c in -next (where orinoco.c no longer exists).  I have
-> included a "merge-test" branch in the wireless-next-2.6 tree to provide
-> and example for the merge when you get to it.
-
-Ok, I'll take care of that now, thanks John.
