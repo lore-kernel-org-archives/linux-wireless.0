@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:53725 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754191AbZBJQYa (ORCPT
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:48667
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824AbZBNCnZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 11:24:30 -0500
-To: Dan Williams <dcbw@redhat.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Coelho Luciano \(Nokia-D\/Helsinki\)" <Luciano.Coelho@nokia.com>
-Subject: Re: wl12xx: driver for TI wl1251 chipset
-References: <87iqnishuj.fsf@nokia.com> <1234279279.3119.12.camel@localhost>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 10 Feb 2009 18:23:29 +0200
-In-Reply-To: <1234279279.3119.12.camel@localhost> (ext Dan Williams's message of "Tue\, 10 Feb 2009 16\:21\:19 +0100")
-Message-ID: <87mycuxnum.fsf@nokia.com> (sfid-20090210_172435_534003_CC20C974)
+	Fri, 13 Feb 2009 21:43:25 -0500
+Message-ID: <49962FC9.2040406@erley.org> (sfid-20090214_034329_431506_E8F89B83)
+Date: Fri, 13 Feb 2009 21:43:21 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Vitja Makarov <vitja.makarov@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless with CONFIG_MAC80211disabled
+References: <1925ef8a0902130015o6df0c962n3fe05ec420d0aef@mail.gmail.com>	 <43e72e890902130023w3c192b04r3a41b4643eedb530@mail.gmail.com>	 <1925ef8a0902130454i7b72a7fftb13cc6b77413b70c@mail.gmail.com> <43e72e890902131449n153b606fne9a6dba1af071915@mail.gmail.com>
+In-Reply-To: <43e72e890902131449n153b606fne9a6dba1af071915@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams <dcbw@redhat.com> writes:
+Luis R. Rodriguez wrote:
+> On Fri, Feb 13, 2009 at 4:54 AM, Vitja Makarov <vitja.makarov@gmail.com> wrote:
+>> This should be problem for 2.6.27 too.
+> 
+> modified for 27 and applied, thanks
 
->> production line tests and pushing the calibration data from user
->> space.
->
-> When is the calibration data required
+I didn't run into this problem with 2.6.28-gentoo-r1... I've been running 
+compat-wireless from git since the 4th on this kernel, with no mac80211
+enabled and had no problems.  Is there interest in a patch allowing you to
+set something like FORCE=y on the CLI to override these patches?
 
-When we boot the firmware, that is during interface up.
-
-> and is it likely to change at runtime?
-
-It's device specific. Each device is calibrated in the factory and the
-calibration data is stored to a special partition in the device.
-
-> What I really mean is, if the calibration data isn't required to
-> change while the interface is up, maybe use request_firmware() and
-> load it at device open time or something?
-
-request_firmware() has access only to the rootfs which the user can
-flash anytime he wants. So we would have to create the calibration
-file during every boot, or something like that. I guess it's doable
-but a bit ugly.
-
--- 
-Kalle Valo
+Pat Erley
