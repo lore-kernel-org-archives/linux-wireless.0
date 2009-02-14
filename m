@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40751 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750833AbZBQKKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 05:10:17 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 02:10:17 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from yx-out-2324.google.com ([74.125.44.29]:36223 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752283AbZBNA4X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2009 19:56:23 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so723141yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 16:56:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18842.35873.62261.389386@gargle.gargle.HOWL> (sfid-20090217_111022_482399_FF15CB0F)
-Date: Tue, 17 Feb 2009 15:36:25 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 1/4] ath9k: Initialize channel change time
+In-Reply-To: <1234566111.31995.55.camel@rc-desk>
+References: <1234560857-32206-1-git-send-email-reinette.chatre@intel.com>
+	 <20090213224937.GE4278@tesla> <1234566111.31995.55.camel@rc-desk>
+Date: Fri, 13 Feb 2009 16:56:22 -0800
+Message-ID: <43e72e890902131656w36ef512el366ca47be07ba3e8@mail.gmail.com> (sfid-20090214_015640_159351_435F1C73)
+Subject: Re: [PATCH] compat-2.6: reflect changes to iwlwifi Kconfig file
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set channel change time to 5ms, this will improve scan results.
+On Fri, Feb 13, 2009 at 3:01 PM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> On Fri, 2009-02-13 at 14:49 -0800, Luis R. Rodriguez wrote:
+>> On Fri, Feb 13, 2009 at 01:34:17PM -0800, Reinette Chatre wrote:
+>> > - CONFIG_IWLWIFI is now a tristate, select it to be 'm'
+>> > - CONFIG_IWLCORE has been removed
+>> > - CONFIG_IWLAGN_SPECTRUM_MEASUREMENT renamed to
+>> >   CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT
+>> > - CONFIG_IWLAGN_LEDS has been removed (not used by driver)
+>> > - CONFIG_IWL3945_RFKILL does not exist
+>> >
+>> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+>>
+>> Thanks applied
+>
+> Please wait on this ... this patch depends on recent patch to
+> wireless-testing that has not been applied yet.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+OK thanks.
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 32cdb24..04494a3 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1602,6 +1602,7 @@ int ath_attach(u16 devid, struct ath_softc *sc)
- 
- 	hw->queues = 4;
- 	hw->max_rates = 4;
-+	hw->channel_change_time = 5000;
- 	hw->max_rate_tries = ATH_11N_TXMAXTRY;
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
--- 
-1.6.1
-
+  Luis
