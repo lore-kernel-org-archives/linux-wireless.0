@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f31.google.com ([209.85.219.31]:41843 "EHLO
-	mail-ew0-f31.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754059AbZBKUrQ (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:60539 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750705AbZBNDIY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 15:47:16 -0500
-Received: by ewy12 with SMTP id 12so88880ewy.13
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 12:47:13 -0800 (PST)
+	Fri, 13 Feb 2009 22:08:24 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so732411yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 19:08:21 -0800 (PST)
 MIME-Version: 1.0
-Date: Wed, 11 Feb 2009 21:47:13 +0100
-Message-ID: <2d14e2ca0902111247s7c816865g50db1e65cc4fd9ae@mail.gmail.com> (sfid-20090211_214719_799807_5D48DB32)
-Subject: Radar Detection and DFS status
-From: mementux <mementux@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <49962FC9.2040406@erley.org>
+References: <1925ef8a0902130015o6df0c962n3fe05ec420d0aef@mail.gmail.com>
+	 <43e72e890902130023w3c192b04r3a41b4643eedb530@mail.gmail.com>
+	 <1925ef8a0902130454i7b72a7fftb13cc6b77413b70c@mail.gmail.com>
+	 <43e72e890902131449n153b606fne9a6dba1af071915@mail.gmail.com>
+	 <49962FC9.2040406@erley.org>
+Date: Fri, 13 Feb 2009 19:08:21 -0800
+Message-ID: <43e72e890902131908n3ca09f43w9ac5165b3f03ac66@mail.gmail.com> (sfid-20090214_040835_896443_54FAEA1C)
+Subject: Re: compat-wireless with CONFIG_MAC80211disabled
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: pat-lkml <pat-lkml@erley.org>
+Cc: Vitja Makarov <vitja.makarov@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Fri, Feb 13, 2009 at 6:43 PM, pat-lkml <pat-lkml@erley.org> wrote:
+> Luis R. Rodriguez wrote:
+>> On Fri, Feb 13, 2009 at 4:54 AM, Vitja Makarov <vitja.makarov@gmail.com> wrote:
+>>> This should be problem for 2.6.27 too.
+>>
+>> modified for 27 and applied, thanks
+>
+> I didn't run into this problem with 2.6.28-gentoo-r1... I've been running
+> compat-wireless from git since the 4th on this kernel, with no mac80211
+> enabled and had no problems.
 
-I would like to make an outdoor radio link at 5GHz between my house
-and one of my neighbors. Because I live near an airport, I've looked
-for European in force regulation regarding radar detection. I've
-discovered that ETSI has released a new normative on Dicember 2008 (EN
-301 893 v1.5). This normative requires that WLAN devices with DFS
-capability must detect pulse width down to 0.8us across the bands from
-5250 to 5350MHz and from 5470 to 5725 MHz; moreover they must detect
-staggered Pulse Repetition Frequency (PRF) radars with 3 PRF value (I
-don't excactly know what it means).
+Oh interesting, because skb->do_not_encrypt was there on 27, and
+skb->requeue was added as of 28. Since config.mk was enforcing it to
+be enabled and since compat-wireless uses its own
+include/linux/compat_autoconf.h with values derived from config.mk
+when building compat-wireless you were getting
 
-I have two devices with Atheros 5414 radio module, so I've looked for
-support of radar detection (and 802.11h) in madwifi driver. I've seen
-that the -dfs branch supports the EN 301 893 v1.4.1 and it implements
-802.11h protocol. Looking into the madwifi-dfs code I've seen that the
-hardware does the pulse detection and the driver detects the radar
-recognizing the pulse patterns (ath/if_ath_radar.c and
-ath/if_ath_radar.h).
+#define CONFIG_MAC80211 1
 
-Because the pulse detection is done in hardware, I suppose that for
-detecting pulse width down to 0.8us I need radio modules with newer
-chipset like AR9xxx. Is it right? Can't I use my AR5414 radio modules?
-So, I've searched in the code of ath9k and mac80211 but I don't find
-any implementation of radar detection and 802.11h. Am I wrong? I've
-read on http://wireless.kernel.org/en/users/Drivers/ath9k that 802.11h
-is a feature of ath9k driver (and consecutively of mac80211, right?).
+and therefore compat-wireless did build correctly assuming your
+kernel's skb_buff had skb->do_not_encrypt and skb->requeue although
+the reality of it is that it didn't therefore probably forcing
+mac80211 to mess around with other nearby fields in the skb_buff like
+the skb->dma_cookie, skb->secmark or skb->mark, depending on whether
+CONFIG_NET_DMA, CONFIG_NETWORK_SECMARK or neither were enabled
+respectively.
 
-I there any way to make an outdoor radio link at 5GHz compliant to the
-European regulation with Linux? :-)
+So it seems it was working by chance as your kernel's skbs were being
+raped by mac80211 in their sleep.
 
-Thanks,
-Albert.
+> Is there interest in a patch allowing you to
+> set something like FORCE=y on the CLI to override these patches?
+
+Do you have CONFIG_NET_DMA?
+If not do you have CONFIG_NETWORK_SECMARK?
+
+It'd be interesting to see what net core is doing due to the rape and
+it'd be even more interesting if we can determine the rape is allowed
+during certain circumstances, therefore allowing us to hack config.mk
+to allow for such atrocities to go on.
+
+ Luis
