@@ -1,55 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.184]:37236 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755980AbZBRUZ3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 15:25:29 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so69935fkf.5
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 12:25:26 -0800 (PST)
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] at76c50x-usb: convert at76_debug to an unsigned int
-References: <c4d76b3b0902151803m2d4517e0v434cdd12a7c3e074@mail.gmail.com>
-	<c4d76b3b0902151817h35862687ta778434af4817f1c@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 18 Feb 2009 22:25:22 +0200
-In-Reply-To: <c4d76b3b0902151817h35862687ta778434af4817f1c@mail.gmail.com> (Jason Andryuk's message of "Sun\, 15 Feb 2009 21\:17\:30 -0500")
-Message-ID: <87ab8jqyq5.fsf@litku.valot.fi> (sfid-20090218_212550_060410_8DF59AEE)
+Received: from mail.atheros.com ([12.36.123.2]:27450 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751293AbZBNFei (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Feb 2009 00:34:38 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 21:34:38 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/10] cfg80211: add regulatory_hint_core() to separate the core reg hint
+Date: Fri, 13 Feb 2009 21:33:42 -0800
+Message-ID: <1234589627-16977-6-git-send-email-lrodriguez@atheros.com> (sfid-20090214_063442_627964_0222D924)
+In-Reply-To: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jason Andryuk <jandryuk@gmail.com> writes:
+This will allow us to clean up and make distinctions of who
+needs locking or not.
 
-> at76_debug should be an unsigned int as it used as a bit field.  In
-> fact, modprobe fails when trying to set at76_debug's high bit.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   36 +++++++++++++++++++++++++++---------
+ 1 files changed, 27 insertions(+), 9 deletions(-)
 
-Thanks. I'll send this to John.
-
-> Also included is a compile fix to the ieee80211_scan_completed() call.
-
-I separated this to a patch of it's own:
-
-commit e8970b5f443eb4621c808c659131b47ebdf16af7
-Author: Jason Andryuk <jandryuk@gmail.com>
-Date:   Wed Feb 18 22:18:14 2009 +0200
-
-    at76c50x-usb: update to latest mac80211 hw scan api
-    
-    With the latest mac80211 stack, the driver needs to be updated for
-    cfg80211 scanning.  I based the changes off of modifications for
-    at76_usb found here:
-    
-    http://johannes.sipsolutions.net/patches/old/all/2008-09-19-13:35/020-cfg80211-scan.patch
-    
-    The trick was that max_signal also needs to be set to avoid a divide
-    by zero Oops.  I just guessed and used the value 100 for now.
-    
-    kvalo: handpicked the change from two different patches
-    
-    Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
-    Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ba82312..679fded 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 	case REGDOM_SET_BY_INIT:
+ 		return -EINVAL;
+ 	case REGDOM_SET_BY_CORE:
+-		/*
+-		 * Always respect new wireless core hints, should only happen
+-		 * when updating the world regulatory domain at init.
+-		 */
+-		return 0;
++		return -EINVAL;
+ 	case REGDOM_SET_BY_COUNTRY_IE:
+ 		if (unlikely(!is_an_alpha2(alpha2)))
+ 			return -EINVAL;
+@@ -1183,6 +1179,26 @@ new_request:
+ 	return call_crda(alpha2);
+ }
+ 
++static int regulatory_hint_core(const char *alpha2)
++{
++	struct regulatory_request *request;
++
++	BUG_ON(last_request);
++
++	request = kzalloc(sizeof(struct regulatory_request),
++			  GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request->alpha2[0] = alpha2[0];
++	request->alpha2[1] = alpha2[1];
++	request->initiator = REGDOM_SET_BY_CORE;
++
++	last_request = request;
++
++	return call_crda(alpha2);
++}
++
+ void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ {
+ 	int r;
+@@ -1616,16 +1632,18 @@ int regulatory_init(void)
+ 	 * stuck with the static values. We ignore "EU" code as
+ 	 * that is not a valid ISO / IEC 3166 alpha2 */
+ 	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
+-		err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE,
+-					ieee80211_regdom, 0, ENVIRON_ANY);
++		err = regulatory_hint_core(ieee80211_regdom);
+ #else
+ 	cfg80211_regdomain = cfg80211_world_regdom;
+ 
+-	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", 0, ENVIRON_ANY);
+-	if (err)
++	err = regulatory_hint_core("00");
++	if (err) {
++		if (err == -ENOMEM)
++			return err;
+ 		printk(KERN_ERR "cfg80211: calling CRDA failed - "
+ 		       "unable to update world regulatory domain, "
+ 		       "using static definition\n");
++	}
+ #endif
+ 
+ 	return 0;
 -- 
-Kalle Valo
+1.6.1.2.253.ga34a
+
