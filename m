@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:1641 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:27447 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750966AbZBCJUo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 04:20:44 -0500
-Subject: Re: potential null dereference in ipw_wx_set_scan()
-From: Zhu Yi <yi.zhu@intel.com>
-To: Dan Carpenter <error27@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.0902012132350.2949@bikeee>
-References: <alpine.DEB.2.00.0902012132350.2949@bikeee>
+	id S1750872AbZBNFee (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Feb 2009 00:34:34 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 21:34:34 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/10] cfg80211: add wiphy_idx_valid to check for wiphy_idx sanity
+Date: Fri, 13 Feb 2009 21:33:39 -0800
+Message-ID: <1234589627-16977-3-git-send-email-lrodriguez@atheros.com> (sfid-20090214_063438_916678_4B26F60D)
+In-Reply-To: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Tue, 03 Feb 2009 17:18:59 +0800
-Message-Id: <1233652739.5990.238.camel@debian> (sfid-20090203_102050_434437_18F76762)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-02-03 at 16:21 +0800, Dan Carpenter wrote:
-> I'm testing out my code checker (http://repo.or.cz/w/smatch.git/).
-> 
-> It complains about ipw_wx_set_scan() from 
-> drivers/net/wireless/ipw2x00/ipw2200.c
-> 
-> Can the "if (req->scan_type == IW_SCAN_TYPE_PASSIVE) { " from line 9522 
-> ever be false?  If the conditions on lines 9516 and 9522 were both false 
-> then 'work' would still be NULL.  That causes a null dereference in 
-> queue_delayed_work() on line 9534.
+This will later be used by others, for now make use of it in
+cfg80211_drv_by_wiphy_idx() to return early if an invalid
+wiphy_idx has been provided.
 
-Yes. I guess we never hit this because no one is using iw_scan_req other
-than IW_SCAN_THIS_ESSID. Patch is welcome.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/core.c |    5 ++++-
+ net/wireless/core.h |    7 +++++++
+ 2 files changed, 11 insertions(+), 1 deletions(-)
 
-Thanks,
--yi
-
->    9515          if (wrqu->data.length == sizeof(struct iw_scan_req)) {
->    9516                  if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
->    9517                          int len = min((int)req->essid_len,
->    9518                                        (int)sizeof(priv->direct_scan_ssid));
->    9519                          memcpy(priv->direct_scan_ssid, req->essid, len);
->    9520                          priv->direct_scan_ssid_len = len;
->    9521                          work = &priv->request_direct_scan;
->    9522                  } else if (req->scan_type == IW_SCAN_TYPE_PASSIVE) {
->    9523                          work = &priv->request_passive_scan;
->    9524                  }
->    9525          } else {
->    9526                  /* Normal active broadcast scan */
->    9527                  work = &priv->request_scan;
->    9528          }
-
-
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 2b3e786..35d457b 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -42,6 +42,9 @@ cfg80211_drv_by_wiphy_idx(int wiphy_idx)
+ {
+ 	struct cfg80211_registered_device *result = NULL, *drv;
+ 
++	if (!wiphy_idx_valid(wiphy_idx))
++		return NULL;
++
+ 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
+ 		if (drv->wiphy_idx == wiphy_idx) {
+ 			result = drv;
+@@ -225,7 +228,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+ 
+ 	drv->wiphy_idx = wiphy_counter++;
+ 
+-	if (unlikely(drv->wiphy_idx < 0)) {
++	if (unlikely(!wiphy_idx_valid(drv->wiphy_idx))) {
+ 		wiphy_counter--;
+ 		mutex_unlock(&cfg80211_drv_mutex);
+ 		/* ugh, wrapped! */
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 36e2397..505fc10 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -62,6 +62,13 @@ struct cfg80211_registered_device *wiphy_to_dev(struct wiphy *wiphy)
+ 	return container_of(wiphy, struct cfg80211_registered_device, wiphy);
+ }
+ 
++/* Note 0 is valid, hence phy0 */
++static inline
++bool wiphy_idx_valid(int wiphy_idx)
++{
++	return (wiphy_idx >= 0);
++}
++
+ extern struct mutex cfg80211_drv_mutex;
+ extern struct list_head cfg80211_drv_list;
+ 
+-- 
+1.6.1.2.253.ga34a
 
