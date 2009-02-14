@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:51359 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754879AbZB0VnT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 16:43:19 -0500
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Fri, 27 Feb 2009 22:43:17 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1235768725.7426.83.camel@johannes.local>
-Message-ID: <20090227214317.254870@gmx.net> (sfid-20090227_224322_694535_8164DDEF)
+Received: from mail.atheros.com ([12.36.123.2]:27449 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750865AbZBNFeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Feb 2009 00:34:36 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 21:34:36 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 04/10] nl80211: disallow user requests prior to regulatory_init()
+Date: Fri, 13 Feb 2009 21:33:41 -0800
+Message-ID: <1234589627-16977-5-git-send-email-lrodriguez@atheros.com> (sfid-20090214_063440_955532_AE18692E)
+In-Reply-To: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-References: <20090227184314.42290@gmx.net>	
- (sfid-20090227_194348_299848_A96EDA18)
- <1235768725.7426.83.camel@johannes.local>
-Subject: Re: [PATCH] mac80211: Replacement for: Implement commit in	wireless
- extensions
-To: Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes!
+If cfg80211 is built into the kernel there is perhaps a small
+time window betwen nl80211_init() and regulatory_init() where
+cfg80211_regdomain hasn't yet been initialized to let the
+wireless core do its work. During that rare case and time
+frame (if its even possible) we don't allow user regulatory
+changes as cfg80211 is working on enabling its first regulatory
+domain.
 
-> I don't really see a need for that, it's only called in what, two
-> places? And it makes things interdependent.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/nl80211.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-One centralized function is in
-every case easier to maintain.
-=46or example if you add mesh mode to it.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index db973f2..6f4dedb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1876,6 +1876,15 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	int r;
+ 	char *data = NULL;
+ 
++	/*
++	 * You should only get this when cfg80211 hasn't yet initialized
++	 * completely when built-in to the kernel right between the time
++	 * window between nl80211_init() and regulatory_init(), if that is
++	 * even possible.
++	 */
++	if (!cfg80211_regdomain)
++		return -EINPROGRESS;
++
+ 	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+ 		return -EINVAL;
+ 
+-- 
+1.6.1.2.253.ga34a
 
-> At _least_ put it into a
-> more appropriate file like wext.c
-
-This function is config interface independent,
-so wext.c is not the right place for it.
-
-> and open-code it in cfg.c
-
-This would be a better place for it
-if it should be added to
-mac80211_config_ops. If not I think
-main.c is the best place for it.
-
-Regards
-Alina
-
---=20
-Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
-f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
-69a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
