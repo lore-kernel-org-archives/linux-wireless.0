@@ -1,284 +1,339 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.ru ([94.100.176.17]:15103 "EHLO mx3.mail.ru"
+Received: from mail.atheros.com ([12.36.123.2]:27454 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753020AbZB1UJd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Feb 2009 15:09:33 -0500
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-To: Dave <kilroyd@googlemail.com>
-Subject: [PATCH v3] orinoco: firmware: consistently compile out fw cache support if not requested
-Date: Sat, 28 Feb 2009 23:09:09 +0300
-Cc: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-References: <20090215100902.7895.2670.stgit@cooker.net> <200902211911.25718.arvidjaar@mail.ru> <49A033A8.4070006@gmail.com>
-In-Reply-To: <49A033A8.4070006@gmail.com>
+	id S1751170AbZBNFen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Feb 2009 00:34:43 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 21:34:43 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 09/10] cfg80211: move regulatory hints to workqueue
+Date: Fri, 13 Feb 2009 21:33:46 -0800
+Message-ID: <1234589627-16977-10-git-send-email-lrodriguez@atheros.com> (sfid-20090214_063449_757222_1E18B0C5)
+In-Reply-To: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1697587.xtBJHVPjmJ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200902282309.16655.arvidjaar@mail.ru> (sfid-20090228_210945_019343_D5185619)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1697587.xtBJHVPjmJ
-Content-Type: multipart/mixed;
-  boundary="Boundary-01=_snZqJrLUl/tWN1q"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Driver and userspace regulatory hints are now processed in
+a workqueue. This will allow us to later add more work into
+the workqueue such as doing AP beacon regulatory hints.
 
---Boundary-01=_snZqJrLUl/tWN1q
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-On 21 =D1=84=D0=B5=D0=B2=D1=80=D0=B0=D0=BB=D1=8F 2009 20:02:32 Dave wrote:
-> > +#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) ||
-> > defined(CONFIG_PM_SLEEP) +extern void orinoco_cache_fw(struct
-> > orinoco_private *priv, int ap); +extern void
-> > orinoco_uncache_fw(struct orinoco_private *priv);
->
-> Please remove the explicit externs.
->
-
-OK
-
-> > --- a/drivers/net/wireless/orinoco/main.c
-> > +++ b/drivers/net/wireless/orinoco/main.c
-> > @@ -2580,8 +2580,10 @@ struct net_device
-> >
-> > -	priv->cached_pri_fw =3D NULL;
-> > +#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) ||
-> > defined(CONFIG_PM_SLEEP) priv->cached_fw =3D NULL;
-> > +	priv->cached_pri_fw =3D NULL;
-> > +#endif
->
-> Please leave the orderring alone.
->
-
-OK
-
-> These just minimize the changes and reduce potential for conflicts
-> during rebases/merges.
->
-> Acked-by: David Kilroy <kilroyd@googlemail.com>
-
-=46ixed version attached.
-
---Boundary-01=_snZqJrLUl/tWN1q
-Content-Type: message/rfc822;
-  name="orinoco-conditional-fw-cache"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
-	filename="orinoco-conditional-fw-cache"
-
-Subject: [PATCH] orinoco: firmware: consistently compile out fw cache support if not requested
-From: Andrey Borzenkov <arvidjaar@mail.ru>
-
-Currently part of support for FW caching is unconditionally compiled
-in even if it is never used. Consistently remove caching support if
-not requested by user.
-
-Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
-
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath9k/main.c      |    8 ++-
+ drivers/net/wireless/zd1211rw/zd_mac.c |    6 +-
+ include/net/cfg80211.h                 |    2 +
+ include/net/wireless.h                 |    9 ++-
+ net/wireless/nl80211.c                 |   10 +--
+ net/wireless/reg.c                     |  138 +++++++++++++++++++++++++++++---
+ net/wireless/reg.h                     |    2 +
+ 7 files changed, 151 insertions(+), 24 deletions(-)
 
- drivers/net/wireless/orinoco/fw.c      |   37 +++++++++++++++++++++-----------
- drivers/net/wireless/orinoco/fw.h      |    5 ++++
- drivers/net/wireless/orinoco/main.c    |    2 ++
- drivers/net/wireless/orinoco/orinoco.h |    2 ++
- 4 files changed, 33 insertions(+), 13 deletions(-)
-
-
-diff --git a/drivers/net/wireless/orinoco/fw.c b/drivers/net/wireless/orinoco/fw.c
-index 7d2292d..9bbc1dd 100644
---- a/drivers/net/wireless/orinoco/fw.c
-+++ b/drivers/net/wireless/orinoco/fw.c
-@@ -43,6 +43,19 @@ struct orinoco_fw_header {
- 	char signature[0];      /* FW signature length headersize-20 */
- } __attribute__ ((packed));
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index fc3460f..f51e7c8 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1656,8 +1656,12 @@ int ath_attach(u16 devid, struct ath_softc *sc)
  
-+#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
-+static inline const struct firmware *
-+orinoco_cached_fw_get(struct orinoco_private *priv, bool primary)
-+{
-+	if (primary)
-+		return priv->cached_pri_fw;
-+	else
-+		return priv->cached_fw;
-+}
-+#else
-+#define orinoco_cached_fw_get(priv, primary) (NULL)
-+#endif
-+
- /* Download either STA or AP firmware into the card. */
- static int
- orinoco_dl_firmware(struct orinoco_private *priv,
-@@ -79,7 +92,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
- 	if (err)
- 		goto free;
+ 	error = ieee80211_register_hw(hw);
  
--	if (!priv->cached_fw) {
-+	if (!orinoco_cached_fw_get(priv, false)) {
- 		err = request_firmware(&fw_entry, firmware, priv->dev);
+-	if (!ath9k_is_world_regd(sc->sc_ah))
+-		regulatory_hint(hw->wiphy, sc->sc_ah->regulatory.alpha2);
++	if (!ath9k_is_world_regd(sc->sc_ah)) {
++		error = regulatory_hint(hw->wiphy,
++			sc->sc_ah->regulatory.alpha2);
++		if (error)
++			goto detach;
++	}
  
- 		if (err) {
-@@ -89,7 +102,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
- 			goto free;
- 		}
- 	} else
--		fw_entry = priv->cached_fw;
-+		fw_entry = orinoco_cached_fw_get(priv, false);
+ 	/* Initialize LED control */
+ 	ath_init_leds(sc);
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 7579af2..da9214e 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -170,10 +170,10 @@ int zd_mac_init_hw(struct ieee80211_hw *hw)
+ 		goto disable_int;
  
- 	hdr = (const struct orinoco_fw_header *) fw_entry->data;
+ 	r = zd_reg2alpha2(mac->regdomain, alpha2);
+-	if (!r)
+-		regulatory_hint(hw->wiphy, alpha2);
++	if (r)
++		goto disable_int;
  
-@@ -132,7 +145,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
- 
- abort:
- 	/* If we requested the firmware, release it. */
--	if (!priv->cached_fw)
-+	if (!orinoco_cached_fw_get(priv, false))
- 		release_firmware(fw_entry);
- 
- free:
-@@ -234,20 +247,20 @@ symbol_dl_firmware(struct orinoco_private *priv,
- 	int ret;
- 	const struct firmware *fw_entry;
- 
--	if (!priv->cached_pri_fw) {
-+	if (!orinoco_cached_fw_get(priv, true)) {
- 		if (request_firmware(&fw_entry, fw->pri_fw, priv->dev) != 0) {
- 			printk(KERN_ERR "%s: Cannot find firmware: %s\n",
- 			       dev->name, fw->pri_fw);
- 			return -ENOENT;
- 		}
- 	} else
--		fw_entry = priv->cached_pri_fw;
-+		fw_entry = orinoco_cached_fw_get(priv, true);
- 
- 	/* Load primary firmware */
- 	ret = symbol_dl_image(priv, fw, fw_entry->data,
- 			      fw_entry->data + fw_entry->size, 0);
- 
--	if (!priv->cached_pri_fw)
-+	if (!orinoco_cached_fw_get(priv, true))
- 		release_firmware(fw_entry);
- 	if (ret) {
- 		printk(KERN_ERR "%s: Primary firmware download failed\n",
-@@ -255,19 +268,19 @@ symbol_dl_firmware(struct orinoco_private *priv,
- 		return ret;
- 	}
- 
--	if (!priv->cached_fw) {
-+	if (!orinoco_cached_fw_get(priv, false)) {
- 		if (request_firmware(&fw_entry, fw->sta_fw, priv->dev) != 0) {
- 			printk(KERN_ERR "%s: Cannot find firmware: %s\n",
- 			       dev->name, fw->sta_fw);
- 			return -ENOENT;
- 		}
- 	} else
--		fw_entry = priv->cached_fw;
-+		fw_entry = orinoco_cached_fw_get(priv, false);
- 
- 	/* Load secondary firmware */
- 	ret = symbol_dl_image(priv, fw, fw_entry->data,
- 			      fw_entry->data + fw_entry->size, 1);
--	if (!priv->cached_fw)
-+	if (!orinoco_cached_fw_get(priv, false))
- 		release_firmware(fw_entry);
- 	if (ret) {
- 		printk(KERN_ERR "%s: Secondary firmware download failed\n",
-@@ -301,9 +314,9 @@ int orinoco_download(struct orinoco_private *priv)
- 	return err;
- }
- 
-+#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
- void orinoco_cache_fw(struct orinoco_private *priv, int ap)
- {
--#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
- 	const struct firmware *fw_entry = NULL;
- 	const char *pri_fw;
- 	const char *fw;
-@@ -323,12 +336,10 @@ void orinoco_cache_fw(struct orinoco_private *priv, int ap)
- 		if (request_firmware(&fw_entry, fw, priv->dev) == 0)
- 			priv->cached_fw = fw_entry;
- 	}
--#endif
- }
- 
- void orinoco_uncache_fw(struct orinoco_private *priv)
- {
--#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
- 	if (priv->cached_pri_fw)
- 		release_firmware(priv->cached_pri_fw);
- 	if (priv->cached_fw)
-@@ -336,5 +347,5 @@ void orinoco_uncache_fw(struct orinoco_private *priv)
- 
- 	priv->cached_pri_fw = NULL;
- 	priv->cached_fw = NULL;
--#endif
- }
-+#endif
-diff --git a/drivers/net/wireless/orinoco/fw.h b/drivers/net/wireless/orinoco/fw.h
-index 2290f08..89fc26d 100644
---- a/drivers/net/wireless/orinoco/fw.h
-+++ b/drivers/net/wireless/orinoco/fw.h
-@@ -10,7 +10,12 @@ struct orinoco_private;
- 
- int orinoco_download(struct orinoco_private *priv);
- 
-+#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
- void orinoco_cache_fw(struct orinoco_private *priv, int ap);
- void orinoco_uncache_fw(struct orinoco_private *priv);
-+#else
-+#define orinoco_cache_fw(priv, ap) do { } while(0)
-+#define orinoco_uncache_fw(priv) do { } while (0)
-+#endif
- 
- #endif /* _ORINOCO_FW_H_ */
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-index f953059..0a0c96a 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -2580,8 +2580,10 @@ struct net_device
- 	netif_carrier_off(dev);
- 	priv->last_linkstatus = 0xffff;
- 
-+#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
- 	priv->cached_pri_fw = NULL;
- 	priv->cached_fw = NULL;
-+#endif
- 
- 	/* Register PM notifiers */
- 	orinoco_register_pm_notifier(priv);
-diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
-index f3f94b2..8e5a72c 100644
---- a/drivers/net/wireless/orinoco/orinoco.h
-+++ b/drivers/net/wireless/orinoco/orinoco.h
-@@ -159,9 +159,11 @@ struct orinoco_private {
- 	unsigned int tkip_cm_active:1;
- 	unsigned int key_mgmt:3;
- 
-+#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
- 	/* Cached in memory firmware to use during ->resume. */
- 	const struct firmware *cached_pri_fw;
- 	const struct firmware *cached_fw;
-+#endif
- 
- 	struct notifier_block pm_notifier;
+-	r = 0;
++	r = regulatory_hint(hw->wiphy, alpha2);
+ disable_int:
+ 	zd_chip_disable_int(chip);
+ out:
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2a83510..ec29843 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -396,6 +396,7 @@ enum environment_cap {
+  * 	country IE
+  * @country_ie_env: lets us know if the AP is telling us we are outdoor,
+  * 	indoor, or if it doesn't matter
++ * @list: used to insert into a linked list
+  */
+ struct regulatory_request {
+ 	int wiphy_idx;
+@@ -404,6 +405,7 @@ struct regulatory_request {
+ 	bool intersect;
+ 	u32 country_ie_checksum;
+ 	enum environment_cap country_ie_env;
++	struct list_head list;
  };
+ 
+ struct ieee80211_freq_range {
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index 1c6285e..afeade9 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -398,8 +398,15 @@ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
+  * domain should be in or by providing a completely build regulatory domain.
+  * If the driver provides an ISO/IEC 3166 alpha2 userspace will be queried
+  * for a regulatory domain structure for the respective country.
++ *
++ * The wiphy must have been registered to cfg80211 prior to this call.
++ * For cfg80211 drivers this means you must first use wiphy_register(),
++ * for mac80211 drivers you must first use ieee80211_register_hw().
++ *
++ * Drivers should check the return value, its possible you can get
++ * an -ENOMEM.
+  */
+-extern void regulatory_hint(struct wiphy *wiphy, const char *alpha2);
++extern int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
+ 
+ /**
+  * regulatory_hint_11d - hints a country IE as a regulatory domain
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 89593d3..3a9ecb2 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1896,14 +1896,8 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	if (is_world_regdom(data))
+ 		return -EINVAL;
+ #endif
+-	mutex_lock(&cfg80211_mutex);
+-	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
+-	mutex_unlock(&cfg80211_mutex);
+-	/* This means the regulatory domain was already set, however
+-	 * we don't want to confuse userspace with a "successful error"
+-	 * message so lets just treat it as a success */
+-	if (r == -EALREADY)
+-		r = 0;
++	r = regulatory_hint_user(data);
++
+ 	return r;
+ }
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 098e416..6c8c719 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -64,6 +64,18 @@ const struct ieee80211_regdomain *cfg80211_regdomain;
+  * what it thinks should apply for the same country */
+ static const struct ieee80211_regdomain *country_ie_regdomain;
+ 
++static LIST_HEAD(reg_requests_list);
++static DEFINE_MUTEX(reg_mutex);
++
++static void reg_process_pending_hints(void);
++
++static void reg_todo(struct work_struct *work)
++{
++	reg_process_pending_hints();
++}
++
++static DECLARE_WORK(reg_work, reg_todo);
++
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+ 	.n_reg_rules = 1,
+@@ -829,7 +841,7 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_channel *chan;
+-	struct wiphy *request_wiphy;
++	struct wiphy *request_wiphy = NULL;
+ 
+ 	assert_cfg80211_lock();
+ 
+@@ -1213,18 +1225,61 @@ static int regulatory_hint_core(const char *alpha2)
+ 	return call_crda(alpha2);
+ }
+ 
+-void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
++/* This currently queues driver and user hints */
++static void queue_regulatory_request(struct regulatory_request *request)
+ {
+-	int r;
++	mutex_lock(&reg_mutex);
++	list_add_tail(&request->list, &reg_requests_list);
++	mutex_unlock(&reg_mutex);
++
++	schedule_work(&reg_work);
++}
++
++/* User hints */
++int regulatory_hint_user(const char *alpha2)
++{
++	struct regulatory_request *request;
++
+ 	BUG_ON(!alpha2);
+ 
+-	mutex_lock(&cfg80211_mutex);
+-	r = __regulatory_hint(wiphy, REGDOM_SET_BY_DRIVER,
+-		alpha2, 0, ENVIRON_ANY);
+-	/* This is required so that the orig_* parameters are saved */
+-	if (r == -EALREADY && wiphy->strict_regulatory)
+-		wiphy_update_regulatory(wiphy, REGDOM_SET_BY_DRIVER);
+-	mutex_unlock(&cfg80211_mutex);
++	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request->wiphy_idx = WIPHY_IDX_STALE;
++	request->alpha2[0] = alpha2[0];
++	request->alpha2[1] = alpha2[1];
++	request->initiator = REGDOM_SET_BY_USER,
++
++	queue_regulatory_request(request);
++
++	return 0;
++}
++
++/* Driver hints */
++int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
++{
++	struct regulatory_request *request;
++
++	BUG_ON(!alpha2);
++	BUG_ON(!wiphy);
++
++	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request->wiphy_idx = wiphy_idx(wiphy);
++
++	/* Must have registered wiphy first */
++	BUG_ON(!wiphy_idx_valid(request->wiphy_idx));
++
++	request->alpha2[0] = alpha2[0];
++	request->alpha2[1] = alpha2[1];
++	request->initiator = REGDOM_SET_BY_DRIVER;
++
++	queue_regulatory_request(request);
++
++	return 0;
+ }
+ EXPORT_SYMBOL(regulatory_hint);
+ 
+@@ -1625,6 +1680,58 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 	return r;
+ }
+ 
++/* This currently only processes user and driver regulatory hints */
++static int reg_process_hint(struct regulatory_request *reg_request)
++{
++	int r = 0;
++	struct wiphy *wiphy = NULL;
++
++	BUG_ON(!reg_request->alpha2);
++
++	mutex_lock(&cfg80211_mutex);
++
++	if (wiphy_idx_valid(reg_request->wiphy_idx))
++		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
++
++	if (reg_request->initiator == REGDOM_SET_BY_DRIVER &&
++	    !wiphy) {
++		r = -ENODEV;
++		goto out;
++	}
++
++	r = __regulatory_hint(wiphy, reg_request->initiator,
++		reg_request->alpha2, 0, reg_request->country_ie_env);
++	/* This is required so that the orig_* parameters are saved */
++	if (r == -EALREADY && wiphy->strict_regulatory)
++		wiphy_update_regulatory(wiphy, reg_request->initiator);
++out:
++	mutex_unlock(&cfg80211_mutex);
++
++	if (r == -EALREADY)
++		r = 0;
++
++	return r;
++}
++
++static void reg_process_pending_hints(void)
++	{
++	struct regulatory_request *reg_request, *tmp;
++	int r;
++
++	mutex_lock(&reg_mutex);
++	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
++		r = reg_process_hint(reg_request);
++		if (r)
++			printk(KERN_ERR "cfg80211: wiphy_idx %d sent a "
++				"regulatory hint but now has gone fishing, "
++				"ignoring request\n", reg_request->wiphy_idx);
++		list_del(&reg_request->list);
++		kfree(reg_request);
++	}
++	mutex_unlock(&reg_mutex);
++}
++
++
+ /* Caller must hold cfg80211_mutex */
+ void reg_device_remove(struct wiphy *wiphy)
+ {
+@@ -1690,6 +1797,11 @@ int regulatory_init(void)
+ 
+ void regulatory_exit(void)
+ {
++	struct regulatory_request *reg_request, *tmp;
++
++	cancel_work_sync(&reg_work);
++
++	mutex_lock(&reg_mutex);
+ 	mutex_lock(&cfg80211_mutex);
+ 
+ 	reset_regdomains();
+@@ -1701,5 +1813,11 @@ void regulatory_exit(void)
+ 
+ 	platform_device_unregister(reg_pdev);
+ 
++	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
++		list_del(&reg_request->list);
++		kfree(reg_request);
++	}
++
+ 	mutex_unlock(&cfg80211_mutex);
++	mutex_unlock(&reg_mutex);
+ }
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index fe8c83f..4730def 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -6,6 +6,8 @@ extern const struct ieee80211_regdomain *cfg80211_regdomain;
+ bool is_world_regdom(const char *alpha2);
+ bool reg_is_valid_request(const char *alpha2);
+ 
++int regulatory_hint_user(const char *alpha2);
++
+ void reg_device_remove(struct wiphy *wiphy);
+ 
+ int regulatory_init(void);
+-- 
+1.6.1.2.253.ga34a
 
---Boundary-01=_snZqJrLUl/tWN1q--
-
---nextPart1697587.xtBJHVPjmJ
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkmpmewACgkQR6LMutpd94zjYwCdF8cgb6p1jLMhSr7rwhYEYSif
-RmsAn26UfKPG575g4S6c0GVOmdpmM8pz
-=wslp
------END PGP SIGNATURE-----
-
---nextPart1697587.xtBJHVPjmJ--
