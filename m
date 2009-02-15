@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58115 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755782AbZB0Vfu (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:54086 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753005AbZBOQn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 16:35:50 -0500
-Subject: Re: [PATCH v2] mac80211: Call commit() on channel setting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090227212625.219210@gmx.net> (sfid-20090227_222656_514709_DC1701C7)
-References: <20090226234307.51520@gmx.net>
-	 (sfid-20090227_004341_064030_7F5271DC) <1235751653.7426.6.camel@johannes.local>
-	 <20090227212625.219210@gmx.net> (sfid-20090227_222656_514709_DC1701C7)
-Content-Type: text/plain
-Date: Fri, 27 Feb 2009 22:35:47 +0100
-Message-Id: <1235770547.7426.89.camel@johannes.local> (sfid-20090227_223553_574363_8D4CFB17)
-Mime-Version: 1.0
+	Sun, 15 Feb 2009 11:43:26 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so255664eya.37
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 08:43:24 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 1/3] rt2x00: uncomment get_tsf
+Date: Sun, 15 Feb 2009 17:42:30 +0100
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200902151742.01372.IvDoorn@gmail.com>
+In-Reply-To: <200902151742.01372.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200902151742.30220.IvDoorn@gmail.com> (sfid-20090215_174329_983050_F7182063)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-02-27 at 22:26 +0100, Alina Friedrichsen wrote:
-> Hello Johannes!
-> 
-> > You really should remember to linewrap your descriptions.
-> 
-> Sorry, I'm accustomed that the software wrap it
-> automatically to the screen width. (XHTML and so...)
-> 
-> Can you please describe how a IBSS join should done with
-> nl80211? "Das sich wext und nl80211 nicht gegenseitig
-> auf die Fuesse treten." (Sorry I can't translate this to
-> English - locution.)
+The atomic requirement for get_tsf() has been removed
+by mac80211. This means the USB drivers can add support
+for the callback function again.
 
-on the todo list
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt73usb.c |   10 ----------
+ 1 files changed, 0 insertions(+), 10 deletions(-)
 
-> Regards
-> Alina
-> 
-> P.S.: I have received this mail 5 hours to late.
-
-well I\m travelling and wrote that on plane -- off for a week now
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 6521dac..8f52234 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2241,13 +2241,6 @@ static int rt73usb_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
+ 	return 0;
+ }
+ 
+-#if 0
+-/*
+- * Mac80211 demands get_tsf must be atomic.
+- * This is not possible for rt73usb since all register access
+- * functions require sleeping. Untill mac80211 no longer needs
+- * get_tsf to be atomic, this function should be disabled.
+- */
+ static u64 rt73usb_get_tsf(struct ieee80211_hw *hw)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+@@ -2261,9 +2254,6 @@ static u64 rt73usb_get_tsf(struct ieee80211_hw *hw)
+ 
+ 	return tsf;
+ }
+-#else
+-#define rt73usb_get_tsf	NULL
+-#endif
+ 
+ static const struct ieee80211_ops rt73usb_mac80211_ops = {
+ 	.tx			= rt2x00mac_tx,
+-- 
+1.5.6.1
 
