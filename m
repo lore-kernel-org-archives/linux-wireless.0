@@ -1,55 +1,253 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:58150 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752068AbZBITwH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 14:52:07 -0500
-Received: by bwz5 with SMTP id 5so1787318bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 11:52:05 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Subject: Re: [ipw3945-devel] [PATCH v2.6.29] iwlwifi: save PCI state =?iso-8859-1?q?before=09suspend?=, restore after resume
-Date: Mon, 9 Feb 2009 20:51:43 +0100
-Cc: ipw3945-devel@lists.sourceforge.net, drago01 <drago01@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <> <f6ca9fed0902091117k7326e51ag8469887cb1a99d53@mail.gmail.com> <1234207772.11530.164.camel@rc-desk>
-In-Reply-To: <1234207772.11530.164.camel@rc-desk>
+Received: from mx5.mail.ru ([94.100.176.19]:8536 "EHLO mx5.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750718AbZBOKJs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2009 05:09:48 -0500
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: [PATCH] orinoco: firmware: consistently compile out fw cache support
+	if not requested
+To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Date: Sun, 15 Feb 2009 13:09:44 +0300
+Message-ID: <20090215100902.7895.2670.stgit@cooker.net> (sfid-20090215_110953_730008_A2517ED9)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200902092051.44374.helmut.schaa@gmail.com> (sfid-20090209_205213_950179_0D52E3BD)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 9. Februar 2009 schrieb reinette chatre:
-> On Mon, 2009-02-09 at 11:17 -0800, drago01 wrote:
-> > On Tue, Feb 3, 2009 at 7:20 PM, Reinette Chatre
-> > <reinette.chatre@intel.com> wrote:
-> > > This is the right thing to do and fixes the following warning:
-> > > [...]
-> > 
-> > With 2.6.29-rc4-git1 (which has this patch) I sometimes get:
-> > 
-> > iwl3945: Wait for START_ALIVE timeout after 2000ms.
-> > iwl3945 0000:07:00.0: PCI INT A disabled
-> > 
-> > After resume with results into no working wireless until the module is reloaded.
-> > I am not sure if this patch is the culprit (have not tried to revert
-> > it), but that's the only change that might have caused this (with rc3
-> > it was working fine, it just triggered the warning that this patch
-> > supposed to solve).
-> 
-> That patch is the culprit. Please see current status at
-> http://bugzilla.kernel.org/show_bug.cgi?id=12656
+Currently part of support for FW caching is unconditionally compiled
+in even if it is never used. Consistently remove caching support if
+not requested by user.
 
-Reinette, maybe we could just use the rfkill-patch [1] I've submitted
-some time ago. Of course it does a bit more then just saving and restoring
-the pci state ;) but it changes iwl3945 to only use pci_save_state and
-pci_restore_state in the suspend and resume handlers which should fix the
-issue you've pointed out in comment #10.
+Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
 
-Helmut
+---
 
-[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=5b95e3a7f01364399ac66a7028ac6821487824b1
+Patch is against wireless-next
+
+ drivers/net/wireless/orinoco/fw.c      |   24 +++++++--------
+ drivers/net/wireless/orinoco/fw.h      |   50 +++++++++++++++++++++++++++++---
+ drivers/net/wireless/orinoco/main.c    |    8 +++--
+ drivers/net/wireless/orinoco/orinoco.h |    2 +
+ 4 files changed, 62 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/fw.c b/drivers/net/wireless/orinoco/fw.c
+index 7d2292d..842834e 100644
+--- a/drivers/net/wireless/orinoco/fw.c
++++ b/drivers/net/wireless/orinoco/fw.c
+@@ -79,7 +79,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 	if (err)
+ 		goto free;
+ 
+-	if (!priv->cached_fw) {
++	if (!orinoco_cached_fw_get(priv)) {
+ 		err = request_firmware(&fw_entry, firmware, priv->dev);
+ 
+ 		if (err) {
+@@ -89,7 +89,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 			goto free;
+ 		}
+ 	} else
+-		fw_entry = priv->cached_fw;
++		fw_entry = orinoco_cached_fw_get(priv);
+ 
+ 	hdr = (const struct orinoco_fw_header *) fw_entry->data;
+ 
+@@ -132,7 +132,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+ 
+ abort:
+ 	/* If we requested the firmware, release it. */
+-	if (!priv->cached_fw)
++	if (!orinoco_cached_fw_get(priv))
+ 		release_firmware(fw_entry);
+ 
+ free:
+@@ -234,20 +234,20 @@ symbol_dl_firmware(struct orinoco_private *priv,
+ 	int ret;
+ 	const struct firmware *fw_entry;
+ 
+-	if (!priv->cached_pri_fw) {
++	if (!orinoco_cached_pri_fw_get(priv)) {
+ 		if (request_firmware(&fw_entry, fw->pri_fw, priv->dev) != 0) {
+ 			printk(KERN_ERR "%s: Cannot find firmware: %s\n",
+ 			       dev->name, fw->pri_fw);
+ 			return -ENOENT;
+ 		}
+ 	} else
+-		fw_entry = priv->cached_pri_fw;
++		fw_entry = orinoco_cached_pri_fw_get(priv);
+ 
+ 	/* Load primary firmware */
+ 	ret = symbol_dl_image(priv, fw, fw_entry->data,
+ 			      fw_entry->data + fw_entry->size, 0);
+ 
+-	if (!priv->cached_pri_fw)
++	if (!orinoco_cached_pri_fw_get(priv))
+ 		release_firmware(fw_entry);
+ 	if (ret) {
+ 		printk(KERN_ERR "%s: Primary firmware download failed\n",
+@@ -255,19 +255,19 @@ symbol_dl_firmware(struct orinoco_private *priv,
+ 		return ret;
+ 	}
+ 
+-	if (!priv->cached_fw) {
++	if (!orinoco_cached_fw_get(priv)) {
+ 		if (request_firmware(&fw_entry, fw->sta_fw, priv->dev) != 0) {
+ 			printk(KERN_ERR "%s: Cannot find firmware: %s\n",
+ 			       dev->name, fw->sta_fw);
+ 			return -ENOENT;
+ 		}
+ 	} else
+-		fw_entry = priv->cached_fw;
++		fw_entry = orinoco_cached_fw_get(priv);
+ 
+ 	/* Load secondary firmware */
+ 	ret = symbol_dl_image(priv, fw, fw_entry->data,
+ 			      fw_entry->data + fw_entry->size, 1);
+-	if (!priv->cached_fw)
++	if (!orinoco_cached_fw_get(priv))
+ 		release_firmware(fw_entry);
+ 	if (ret) {
+ 		printk(KERN_ERR "%s: Secondary firmware download failed\n",
+@@ -301,9 +301,9 @@ int orinoco_download(struct orinoco_private *priv)
+ 	return err;
+ }
+ 
++#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
+ void orinoco_cache_fw(struct orinoco_private *priv, int ap)
+ {
+-#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
+ 	const struct firmware *fw_entry = NULL;
+ 	const char *pri_fw;
+ 	const char *fw;
+@@ -323,12 +323,10 @@ void orinoco_cache_fw(struct orinoco_private *priv, int ap)
+ 		if (request_firmware(&fw_entry, fw, priv->dev) == 0)
+ 			priv->cached_fw = fw_entry;
+ 	}
+-#endif
+ }
+ 
+ void orinoco_uncache_fw(struct orinoco_private *priv)
+ {
+-#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
+ 	if (priv->cached_pri_fw)
+ 		release_firmware(priv->cached_pri_fw);
+ 	if (priv->cached_fw)
+@@ -336,5 +334,5 @@ void orinoco_uncache_fw(struct orinoco_private *priv)
+ 
+ 	priv->cached_pri_fw = NULL;
+ 	priv->cached_fw = NULL;
+-#endif
+ }
++#endif
+diff --git a/drivers/net/wireless/orinoco/fw.h b/drivers/net/wireless/orinoco/fw.h
+index 2290f08..1d1e02f 100644
+--- a/drivers/net/wireless/orinoco/fw.h
++++ b/drivers/net/wireless/orinoco/fw.h
+@@ -5,12 +5,52 @@
+ #ifndef _ORINOCO_FW_H_
+ #define _ORINOCO_FW_H_
+ 
+-/* Forward declations */
+-struct orinoco_private;
+-
+ int orinoco_download(struct orinoco_private *priv);
+ 
+-void orinoco_cache_fw(struct orinoco_private *priv, int ap);
+-void orinoco_uncache_fw(struct orinoco_private *priv);
++#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
++static inline const struct firmware *
++orinoco_cached_fw_get(struct orinoco_private *priv)
++{
++	return priv->cached_fw;
++}
++
++static inline const struct firmware *
++orinoco_cached_pri_fw_get(struct orinoco_private *priv)
++{
++	return priv->cached_pri_fw;
++}
++
++static inline void
++orinoco_cached_fw_set(struct orinoco_private *priv, struct firmware *fw)
++{
++	priv->cached_fw = fw;
++}
++
++static inline void
++orinoco_cached_pri_fw_set(struct orinoco_private *priv, struct firmware *fw)
++{
++	priv->cached_pri_fw = fw;
++}
++
++extern void orinoco_cache_fw(struct orinoco_private *priv, int ap);
++extern void orinoco_uncache_fw(struct orinoco_private *priv);
++#else
++static inline const struct firmware *
++orinoco_cached_fw_get(struct orinoco_private *priv)
++{
++	return NULL;
++}
++
++static inline const struct firmware *
++orinoco_cached_pri_fw_get(struct orinoco_private *priv)
++{
++	return NULL;
++}
++
++#define orinoco_cached_fw_set(priv, fw) do { } while (0)
++#define orinoco_cached_pri_fw_set(priv, fw) do { } while (0)
++#define orinoco_cache_fw(priv, ap) do { } while(0)
++#define orinoco_uncache_fw(priv) do { } while (0)
++#endif
+ 
+ #endif /* _ORINOCO_FW_H_ */
+diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+index f953059..2afab2a 100644
+--- a/drivers/net/wireless/orinoco/main.c
++++ b/drivers/net/wireless/orinoco/main.c
+@@ -89,6 +89,8 @@
+ #include <linux/ieee80211.h>
+ #include <net/iw_handler.h>
+ 
++#include "orinoco.h"
++
+ #include "hermes_rid.h"
+ #include "hermes_dld.h"
+ #include "hw.h"
+@@ -98,8 +100,6 @@
+ #include "wext.h"
+ #include "main.h"
+ 
+-#include "orinoco.h"
+-
+ /********************************************************************/
+ /* Module information                                               */
+ /********************************************************************/
+@@ -2580,8 +2580,8 @@ struct net_device
+ 	netif_carrier_off(dev);
+ 	priv->last_linkstatus = 0xffff;
+ 
+-	priv->cached_pri_fw = NULL;
+-	priv->cached_fw = NULL;
++	orinoco_cached_pri_fw_set(priv, NULL);
++	orinoco_cached_fw_set(priv, NULL);
+ 
+ 	/* Register PM notifiers */
+ 	orinoco_register_pm_notifier(priv);
+diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
+index f3f94b2..8e5a72c 100644
+--- a/drivers/net/wireless/orinoco/orinoco.h
++++ b/drivers/net/wireless/orinoco/orinoco.h
+@@ -159,9 +159,11 @@ struct orinoco_private {
+ 	unsigned int tkip_cm_active:1;
+ 	unsigned int key_mgmt:3;
+ 
++#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
+ 	/* Cached in memory firmware to use during ->resume. */
+ 	const struct firmware *cached_pri_fw;
+ 	const struct firmware *cached_fw;
++#endif
+ 
+ 	struct notifier_block pm_notifier;
+ };
 
