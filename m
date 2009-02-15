@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:49012 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888AbZBTGE5 (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:1490 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753827AbZBONrh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 01:04:57 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	marcel@holtmann.org, kalle.valo@nokia.com, kyle@mcmartin.ca
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 5/5] cfg80211: default OLD_REG to n
-Date: Fri, 20 Feb 2009 01:04:34 -0500
-Message-Id: <1235109874-3966-6-git-send-email-lrodriguez@atheros.com> (sfid-20090220_070504_568388_5224377E)
-In-Reply-To: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
-References: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 15 Feb 2009 08:47:37 -0500
+Date: Sun, 15 Feb 2009 08:47:02 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Dhaval Giani <dhaval.lists@thegianis.in>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Dhaval Giani <dhaval@linux.vnet.ibm.com>,
+	linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
+Message-ID: <20090215134702.GA10180@hash.localnet> (sfid-20090215_144741_173572_740E4828)
+References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com> <1231338965-796-1-git-send-email-jirislaby@gmail.com> <20090107152208.GB4207@linux.vnet.ibm.com> <4964CAAA.3040801@gmail.com> <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we are not following the schedule to remove OLD_REG by 2.6.29
-lets simply set it to default to n for 2.6.30 and schedule its
-removal for 2.6.31
+On Mon, Feb 02, 2009 at 01:27:39PM +0530, Dhaval Giani wrote:
+> So I finally managed to hit this on 2.6.29-rc3. It is hard to
+> reproduce, so I hope so much information is enough to give you a good
+> guess. This time it hit while trying to connect to an open network at
+> the airport.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- Documentation/feature-removal-schedule.txt |    5 +++--
- net/wireless/Kconfig                       |    2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+> WARNING: at net/mac80211/rx.c:2236 __ieee80211_rx+0x96/0x571 [mac80211]()
+> Hardware name: 2007CS3
+> RATE=255, BAND=8
 
-diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
-index ac98851..bf83b02 100644
---- a/Documentation/feature-removal-schedule.txt
-+++ b/Documentation/feature-removal-schedule.txt
-@@ -7,7 +7,7 @@ be removed from this file.
- ---------------------------
- 
- What:	old static regulatory information and ieee80211_regdom module parameter
--When:	2.6.29
-+When:	2.6.31
- Why:	The old regulatory infrastructure has been replaced with a new one
- 	which does not require statically defined regulatory domains. We do
- 	not want to keep static regulatory domains in the kernel due to the
-@@ -19,7 +19,8 @@ Why:	The old regulatory infrastructure has been replaced with a new one
- 	and used by default the US when CONFIG_WIRELESS_OLD_REGULATORY was
- 	set. We also kept around the ieee80211_regdom module parameter in case
- 	some applications were relying on it. Changing regulatory domains
--	can now be done instead by using nl80211, as is done with iw.
-+	can now be done instead by using nl80211, as is done with iw, or
-+	wpa_supplicant.
- Who:	Luis R. Rodriguez <lrodriguez@atheros.com>
- 
- ---------------------------
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index e28e2b8..009f5b8 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -25,7 +25,7 @@ config NL80211
- 
- config WIRELESS_OLD_REGULATORY
- 	bool "Old wireless static regulatory definitions"
--	default y
-+	default n
- 	---help---
- 	  This option enables the old static regulatory information
- 	  and uses it within the new framework. This is available
--- 
-1.6.0.3
+band is supposed to be sc->curband?  8 is way wrong.  rate could be 255
+if, for some reason, the hardware rate wasn't in the rate table.
+
+> Pid: 2634, comm: X Not tainted 2.6.29-rc3 #18
+> Call Trace:
+>  [<c0430636>] warn_slowpath+0x76/0xad
+>  [<c04508d7>] ? __lock_acquire+0xb36/0xb45
+>  [<f7dd0205>] __ieee80211_rx+0x96/0x571 [mac80211]
+>  [<f7e37976>] ath5k_tasklet_rx+0x4fb/0x53d [ath5k]
+>  [<c06fa5c3>] ? _spin_unlock_irq+0x27/0x34
+>  [<c0434f91>] tasklet_action+0x85/0xf0
+
+Interestingly I hit this just the other day -- I was debugging something
+else and had a serial console hooked up, otherwise I wouldn't have
+noticed at all.  It happened at some point during a suspend-to-ram
+sequence, which makes at least my version sound like a race condition
+of some sort.
+
+
 
