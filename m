@@ -1,117 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49061 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754620AbZBJT7I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 14:59:08 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH v2.6.29] iwlwifi: fix suspend/resume and its usage of pci saved state
-Date: Tue, 10 Feb 2009 12:02:49 -0800
-Message-Id: <1234296169-3964-1-git-send-email-reinette.chatre@intel.com> (sfid-20090210_205914_678635_1DE88EA6)
-In-Reply-To: <>
-References: <>
+Received: from an-out-0708.google.com ([209.85.132.243]:65257 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753078AbZBORUH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2009 12:20:07 -0500
+Received: by an-out-0708.google.com with SMTP id c2so912768anc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 09:20:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <da94abde0902070320g6a98320dhfdb05de8867d5fa7@mail.gmail.com>
+References: <20090207071701.21485.18763.stgit@tikku>
+	 <da94abde0902070320g6a98320dhfdb05de8867d5fa7@mail.gmail.com>
+Date: Sun, 15 Feb 2009 12:20:05 -0500
+Message-ID: <c4d76b3b0902150920v23db7ad3qf6e69752eade6643@mail.gmail.com> (sfid-20090215_182019_335193_17A2C570)
+Subject: Re: [PATCH] at76c50x-usb: mac80211 port of at76_usb
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here we do two things:
+On Sat, Feb 7, 2009 at 6:20 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> On Sat, Feb 7, 2009 at 9:27 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+>> John, please consider this driver as inclusion to the linux-testing tree. I
+>> don't consider this ready for mainline yet, I want to test this more first in
+>> case there are critical bugs.
+>
+> I have been testing this for few hours now on ubuntu 8.10 with
+> networkmanager. With iperf I got this warning in some cases:
+>
+> phy0: at76_mac80211_tx called while tx urb is pending
+>
+> Also sometimes first association attempt failed and a second attempt
+> was needed, but otherwise the driver seems to be usable, at least for
+> me. The device I used for testing:
+>
+> Bus 002 Device 006: ID 050d:0050 Belkin Components F5D6050 802.11b
+> Wireless Adapter
 
-First, revert the following patch entirely:
+After applying the patch to wireless-testing master-2009-02-11, I
+tried it out to poor results.
 
-commit c4e061ace75513aee227090486cc46dec7810c00
-Author: Reinette Chatre <reinette.chatre@intel.com>
-Date:   Tue Feb 3 10:20:03 2009 -0800
+Attaching my Linksys WUSB11 results in an Oops.  Unfortunately,
+2.6.29-rc4 has problems with my e1000e, so I cannot set up a
+netconsole.  I will continue to investigate, but all I have for now is
+the below logs.
 
-    iwlwifi: save PCI state before suspend, restore after resume
+Jason
 
-Next, indicate to PCI driver that the saved PCI state is valid during suspend.
-
-We restore PCI state and enable the device when network interface is created,
-similarly PCI state is saved and the device is disabled when network interface
-is removed. Thus, when .suspend is called the PCI state is saved and device
-is disabled. This is the case even if an interface is never created as PCI
-state is saved and device disabled during .probe.
-
-PCI driver assumes PCI state is saved in .suspend. Saving the state at this
-time will save state of disabled device and thus cause problems during
-resume (resuming a disabled device). We thus indicate directly to PCI
-driver that current PCI saved state is valid.
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Tested-by: Alex Riesen <fork0@users.sf.net>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   15 +++++++++++++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   15 +++++++++++++--
- 2 files changed, 26 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c01ea48..36bafeb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4042,7 +4042,19 @@ static int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 		priv->is_open = 1;
- 	}
- 
--	pci_save_state(pdev);
-+	/* pci driver assumes state will be saved in this function.
-+	 * pci state is saved and device disabled when interface is
-+	 * stopped, so at this time pci device will always be disabled -
-+	 * whether interface was started or not. saving pci state now will
-+	 * cause saved state be that of a disabled device, which will cause
-+	 * problems during resume in that we will end up with a disabled device.
-+	 *
-+	 * indicate that the current saved state (from when interface was
-+	 * stopped) is valid. if interface was never up at time of suspend
-+	 * then the saved state will still be valid as it was saved during
-+	 * .probe. */
-+	pdev->state_saved = true;
-+
- 	pci_set_power_state(pdev, PCI_D3hot);
- 
- 	return 0;
-@@ -4053,7 +4065,6 @@ static int iwl_pci_resume(struct pci_dev *pdev)
- 	struct iwl_priv *priv = pci_get_drvdata(pdev);
- 
- 	pci_set_power_state(pdev, PCI_D0);
--	pci_restore_state(pdev);
- 
- 	if (priv->is_open)
- 		iwl_mac_start(priv->hw);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 5b44d32..93be74a 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -8143,7 +8143,19 @@ static int iwl3945_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 		priv->is_open = 1;
- 	}
- 
--	pci_save_state(pdev);
-+	/* pci driver assumes state will be saved in this function.
-+	 * pci state is saved and device disabled when interface is
-+	 * stopped, so at this time pci device will always be disabled -
-+	 * whether interface was started or not. saving pci state now will
-+	 * cause saved state be that of a disabled device, which will cause
-+	 * problems during resume in that we will end up with a disabled device.
-+	 *
-+	 * indicate that the current saved state (from when interface was
-+	 * stopped) is valid. if interface was never up at time of suspend
-+	 * then the saved state will still be valid as it was saved during
-+	 * .probe. */
-+	pdev->state_saved = true;
-+
- 	pci_set_power_state(pdev, PCI_D3hot);
- 
- 	return 0;
-@@ -8154,7 +8166,6 @@ static int iwl3945_pci_resume(struct pci_dev *pdev)
- 	struct iwl3945_priv *priv = pci_get_drvdata(pdev);
- 
- 	pci_set_power_state(pdev, PCI_D0);
--	pci_restore_state(pdev);
- 
- 	if (priv->is_open)
- 		iwl3945_mac_start(priv->hw);
--- 
-1.5.4.3
-
+Feb 13 13:11:16 rainbow kernel: [  371.980119] usb 3-2: new full speed
+USB device using uhci_hcd and address 2
+Feb 13 13:11:16 rainbow kernel: [  372.129492] usb 3-2: configuration
+#1 chosen from 1 choice
+Feb 13 13:11:16 rainbow kernel: [  372.196265] at76c50x_usb:
+`0xb002c001' invalid for parameter `debug'
+Feb 13 13:14:42 rainbow kernel: [  578.488148] usb 3-2: USB
+disconnect, address 2
+Feb 13 13:14:46 rainbow kernel: [  582.232074] usb 3-2: new full speed
+USB device using uhci_hcd and address 3
+Feb 13 13:14:46 rainbow kernel: [  582.381458] usb 3-2: configuration
+#1 chosen from 1 choice
+Feb 13 13:14:46 rainbow kernel: [  582.441646] Atmel at76x USB
+Wireless LAN Driver 0.17 loading
+Feb 13 13:14:46 rainbow kernel: [  582.441711] usb 3-2: firmware:
+requesting atmel_at76c503-i3861.bin
+Feb 13 13:14:46 rainbow kernel: [  582.500287] usb 3-2: using firmware
+atmel_at76c503-i3861.bin (version 0.90.0-44)
+Feb 13 13:14:46 rainbow kernel: [  582.515108] phy2: Selected rate
+control algorithm 'minstrel'
+Feb 13 13:14:46 rainbow kernel: [  582.517798] phy2: USB 3-2:1.0, MAC
+00:06:25:00:6a:7a, firmware 0.90.0-2
+Feb 13 13:14:46 rainbow kernel: [  582.517804] phy2: regulatory domain
+0x10: FCC (USA)
+Feb 13 13:14:46 rainbow kernel: [  582.517858] usbcore: registered new
+interface driver at76c50x-usb
+Feb 13 13:14:46 rainbow kernel: [  582.530931] udev: renamed network
+interface wlan0 to wlan3
