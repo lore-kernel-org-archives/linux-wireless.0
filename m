@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:44662 "EHLO mx2.redhat.com"
+Received: from bu3sch.de ([62.75.166.246]:44259 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756136AbZBKRQ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 12:16:27 -0500
-Subject: Re: [PATCH v2] ipw2x00: age scan results on resume
-From: Dan Williams <dcbw@redhat.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <1234306699.1626.34.camel@rc-desk>
-References: <1234303830.15997.27.camel@localhost>
-	 <1234306699.1626.34.camel@rc-desk>
-Content-Type: text/plain
-Date: Wed, 11 Feb 2009 12:14:49 -0500
-Message-Id: <1234372489.2648.1.camel@localhost> (sfid-20090211_181630_882673_6B42B531)
-Mime-Version: 1.0
+	id S1753195AbZBOREV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2009 12:04:21 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] b43: Fix LO calibration txctl reg value
+Date: Sun, 15 Feb 2009 18:02:39 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Roel Kluin <roel.kluin@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200902151802.39970.mb@bu3sch.de> (sfid-20090215_180425_121007_6C623C4C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-02-10 at 14:58 -0800, reinette chatre wrote:
-> On Tue, 2009-02-10 at 14:10 -0800, Dan Williams wrote:
-> > Scanned BSS entries are timestamped with jiffies, which doesn't
-> > increment across suspend and hibernate.  On resume, every BSS in the
-> > scan list looks like it was scanned within the last 10 seconds,
-> > irregardless of how long the machine was actually asleep.  Age scan
-> > results on resume with the time spent during sleep so userspace has a
-> > clue how old they really are.
-> > 
-> > Signed-off-by: Dan Williams <dcbw@redhat.com>
-> > ---
-> > This fixes NetworkManager and wpa_supplicant trying to connect to the AP
-> > associated with at suspend/hibernate time, which clearly may not exist
-> > at the location where the machine is waking up.
-> > 
-> > v2: always set suspend_at
-> 
-> Thank you.
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Found an issue, plus ieee80211_translate_scan() doesn't handle large
-unsigned network->last_seen values (leading to stuff like "Last beacon:
--32131218ms ago"), so I'll post a v3 update.
+This patch expands the parenthesis in the txctl reg write
+of the LO calibration to enforce precedence rules.
 
-Dan
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
+---
 
+John, please apply this bugfix.
+
+diff --git a/drivers/net/wireless/b43/lo.c b/drivers/net/wireless/b43/lo.c
+index 6a18a14..88ed75f 100644
+--- a/drivers/net/wireless/b43/lo.c
++++ b/drivers/net/wireless/b43/lo.c
+@@ -783,7 +783,7 @@ struct b43_lo_calib * b43_calibrate_lo_setting(struct b43_wldev *dev,
+ 			  | rfatt->att);
+ 	b43_radio_write16(dev, txctl_reg,
+ 			  (b43_radio_read16(dev, txctl_reg) & ~txctl_value)
+-			  | (rfatt->with_padmix) ? txctl_value : 0);
++			  | (rfatt->with_padmix ? txctl_value : 0));
+ 
+ 	max_rx_gain = rfatt->att * 2;
+ 	max_rx_gain += bbatt->att / 2;
+
+-- 
+Greetings, Michael.
