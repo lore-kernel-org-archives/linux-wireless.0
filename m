@@ -1,69 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49019 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:46931 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754099AbZBRRac (ORCPT
+	with ESMTP id S1752176AbZBOK75 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 12:30:32 -0500
-Subject: Re: [PATCH] cfg80211/mac80211: fill qual.qual value/adjust
-	max_qual.qual
+	Sun, 15 Feb 2009 05:59:57 -0500
+Subject: Re: [PATCH 05/10] cfg80211: add regulatory_hint_core() to separate
+	the core reg hint
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1234978042.4023.32.camel@johannes.local> (sfid-20090218_182801_452013_E7F46FA4)
-References: <1234896777.4678.7.camel@californication>
-	 (sfid-20090217_195251_321967_5E2E0AB8)  <1234978042.4023.32.camel@johannes.local>
-	 (sfid-20090218_182801_452013_E7F46FA4)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OOFN0Of+Kaq092hk0VEG"
-Date: Wed, 18 Feb 2009 18:29:57 +0100
-Message-Id: <1234978197.4023.34.camel@johannes.local> (sfid-20090218_183037_439634_B9D4456A)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1234589627-16977-6-git-send-email-lrodriguez@atheros.com>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-6-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-AYCVi992uGJjoCrlWGeB"
+Date: Sun, 15 Feb 2009 11:59:53 +0100
+Message-Id: <1234695593.4219.47.camel@johannes.local> (sfid-20090215_120001_377442_95EC3772)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-OOFN0Of+Kaq092hk0VEG
+--=-AYCVi992uGJjoCrlWGeB
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2009-02-18 at 18:27 +0100, Johannes Berg wrote:
-> Due to various bugs in the software stack we end up having
-> to fill qual.qual; level should be used, but wpa_supplicant
-> doesn't properly ignore qual.qual, NM should use qual.level
-> regardless of that because qual.qual is 0 but doesn't handle
-> IW_QUAL_DBM right now.
+On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
+> This will allow us to clean up and make distinctions of who
+> needs locking or not.
 >=20
-> So fill qual.qual with the qual.level value clamped to
-> -110..-40 dBm or just the regular 'unspecified' signal level.
-> This requires a mac80211 change to properly announce the
-> max_qual.qual and avg_qual.qual values.
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  net/wireless/reg.c |   36 +++++++++++++++++++++++++++---------
+>  1 files changed, 27 insertions(+), 9 deletions(-)
+>=20
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index ba82312..679fded 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, enu=
+m reg_set_by set_by,
+>  	case REGDOM_SET_BY_INIT:
+>  		return -EINVAL;
+>  	case REGDOM_SET_BY_CORE:
+> -		/*
+> -		 * Always respect new wireless core hints, should only happen
+> -		 * when updating the world regulatory domain at init.
+> -		 */
+> -		return 0;
+> +		return -EINVAL;
+>  	case REGDOM_SET_BY_COUNTRY_IE:
+>  		if (unlikely(!is_an_alpha2(alpha2)))
+>  			return -EINVAL;
+> @@ -1183,6 +1179,26 @@ new_request:
+>  	return call_crda(alpha2);
+>  }
+> =20
+> +static int regulatory_hint_core(const char *alpha2)
+> +{
+> +	struct regulatory_request *request;
+> +
+> +	BUG_ON(last_request);
+> +
+> +	request =3D kzalloc(sizeof(struct regulatory_request),
+> +			  GFP_KERNEL);
+> +	if (!request)
+> +		return -ENOMEM;
+> +
+> +	request->alpha2[0] =3D alpha2[0];
+> +	request->alpha2[1] =3D alpha2[1];
+> +	request->initiator =3D REGDOM_SET_BY_CORE;
+> +
+> +	last_request =3D request;
 
-Forgot to mention .. with a little work we can move the entire iwrange
-handling into cfg80211 -- happiness.
+So before you documented that cfg80211_mutex is used to protect this
+variable, but it's not used here.
 
 johannes
 
---=-OOFN0Of+Kaq092hk0VEG
+--=-AYCVi992uGJjoCrlWGeB
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJnEWTAAoJEKVg1VMiehFYeLgQALH9rC8JAMbOcuF81+Yg0OXq
-JPnPi1UqGZUWvFUu6Vpq7BIByowDlBYHlkETkgS713B/AYsfwPTqjG09CvHmXV8Z
-Nz0iYE3ahWspU6+m6Yi7cM5UQdzBe9hONQ7v5GAQ3wcNYBx+vq/eyb3SJMP3CH0r
-fzwdXC/g8+gBTk7mlyPQESmNW4uhozXfHz4Iyh3ElcCV2dMucaMcSFXJSNCx6K5Y
-d/h8jnDH/K1TWnFYTqNkLo5JiyGw1sUSAafvTATbyMEWpF9tgqbuq/RKQ4qGa8SR
-f2uvkN12iSu4Ld806xuwfpD67TNg6Xvx3JfacYA2t0MrPjBDmsMVJXCNCIaQEA0W
-P02sFWCcKv50rBgGicFfeecmcdEz74M3Y6RiBdYMTndjrbH44UTS+K4auvEyD12+
-NugBKS0pFlMBpWxNJ4GX1xAP4fSFVn4wZxv+Vn6Ip4dUJKkTbivJGfw2lBEGkkKo
-phtxHZi7hr3o0W+DLvq3/AaQcrXYt1N7StyxD+bfSmk61FNFjQgCBFEF65gB/Lhq
-ShuZz0cpHb7UWq4UXcZVJCPvl6rPj0qRFoy8sUQ9DYr2UFBYmitZ404aXj6h+x4b
-IVuS3c1+vC5qqkTaNAPz/8q2erknlYO8UVfwONxHVZL4mRT2E1z3RWSvYP8vNggR
-J4B6OpXl58rB3yxakjqM
-=Wje0
+iQIcBAABAgAGBQJJl/WlAAoJEKVg1VMiehFYMkgP/i3x73RhFzqf+6MrJXie2KXK
+i26U24fkDEbPeyHv53rSDArjZwcUy6wNwlD8tG+x7OozeudZev1E7KltygbByCUJ
+ZBI3RlloSpF/+/7jMvj8we6dG8yneYFLGlDLIdiMecu1m9CzAOTVYMGYsghIp5tk
+vuiN8vcjyrL5LgoRTd+ie5D539ofxTLzI4lEthSoavfCFy/pLq2AZLC1ue6Dx/8N
+VmubmBPoc2v4f3uej3TETgFDBcqJ7y96MDBbTWGLI6lUZrFcD5rKGAiAdpODU74T
+9AiXmtlkeNMsTnsF2PMgFs4lqyCPDK54vwBQ6GRfhydEX9ZVDJn2xNqQP67KWSq0
+FXlNhEUira7+klmTMmqrMZe/FEIuJq7Q3X2GKNAFL0ceZfYUHsRm2xJu5SpWoZOZ
+pFa/PHqizelrd+8FWM5wgLPo5zCzyQKwjA8XRawH/KBVzL/jKd+/EPkAiNqOyiDM
+W/TM5sccWnwDNeylWf1OXlhHDruyrmQGzMkCAKQjhHUaDHtt3RbvWS3WJDDJJHHS
+Psq9wLkjISeziy0DsjR0on+LwtB5YABHFFF85sPZrwvEVA/eBJ/i+gGO4NOe39Dg
+cklyeH9QZeiilJzy8nXRXf2pmRhbVKi8F5lEsu9RUaoh+Y64Y1PManD0UzXktNUG
+3oNYNJF2a7U7d4Bp82Yp
+=i9O5
 -----END PGP SIGNATURE-----
 
---=-OOFN0Of+Kaq092hk0VEG--
+--=-AYCVi992uGJjoCrlWGeB--
 
