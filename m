@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:48614 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643AbZBDEFF (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:54947 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753579AbZBORJq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 23:05:05 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so861076yxm.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 20:05:04 -0800 (PST)
+	Sun, 15 Feb 2009 12:09:46 -0500
+Message-ID: <49984C44.7090005@lwfinger.net> (sfid-20090215_180953_868797_73F1915B)
+Date: Sun, 15 Feb 2009 11:09:24 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Tue, 3 Feb 2009 23:05:04 -0500
-Message-ID: <c4d76b3b0902032005m3847235cu42f963ca6ad796af@mail.gmail.com> (sfid-20090204_050511_898297_0F47E286)
-Subject: at76_usb development
-From: Jason Andryuk <jandryuk@gmail.com>
-To: gregkh@suse.de, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, oliver@neukum.org, oneukum@suse.de,
-	kalle.valo@iki.fi, milan.plzik@gmail.com
+To: Michael Buesch <mb@bu3sch.de>
+CC: Roel Kluin <roel.kluin@gmail.com>, stefano.brivio@polimi.it,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] B43: misplaced parentheses?
+References: <499844E7.1040307@gmail.com> <49984B70.4080007@lwfinger.net> <200902151807.00311.mb@bu3sch.de>
+In-Reply-To: <200902151807.00311.mb@bu3sch.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Where should development on at76_usb take place?
-staging-at76_usb-mention-mac80211-port-in-todo-file.patch mentions
-John Linville's wireless-legacy tree with
-revert-staging-at76_usb-update-drivers-staging-at76_usb-w-mac80211-port.patch
-reverting mac80211.  wireless-legacy has not been updated since
-2.6.27-rc4, but a quick comparison showed that it was more or less
-equivalent to what is in wireless-testing/drivers/staging/at76_usb.
+Michael Buesch wrote:
+> On Sunday 15 February 2009 18:05:52 Larry Finger wrote:
+>> Roel Kluin wrote:
+>>> -			  | (rfatt->with_padmix) ? txctl_value : 0);
+>>> +			  | (rfatt->with_padmix ? txctl_value : 0));
+>> As I see it, the difference between the above two lines is the same as the
+>> difference between c and d in this program:
+>>
+>> int main(int argc, char **argv)
+>> {
+>>         int a = 1, b = 2, c, d;
+>>
+>>         c = (a) ? b : 0;
+>>         d = (a ? b : 0);
+>>         fprintf (stderr, "a, b, c, d: %d %d %d %d\n", a, b, c, d);
+>>         return 1;
+>> }
+>>
+>> When this program is executed, the output line is
+>>
+>> a, b, c, d: 1 2 2 2
+>>
+>> which is what I expected. Thus "(condition) ? result1 : result2" is the same as
+>> "(condition ? result1 : result2)".
+> 
+> The problem is the binary OR operator, which has precedence over the ?: operator.
 
-I have more or less tracked down an Oops on disconnect with the
-wireless-testing version.  Hopefully the time spent has been
-worthwhile.
+I see. Please ignore my noise.
 
-Let me know,
-
-Jason
+Larry
