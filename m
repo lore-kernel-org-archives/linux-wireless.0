@@ -1,69 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39360 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757005AbZBFUoL (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.184]:47168 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753085AbZBOQn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 15:44:11 -0500
-Subject: Re: [PATCH] mac80211: Remove TSF atomic requirement from the
-	documentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Alina Friedrichsen <x-alina@gmx.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <87fxirpe1q.fsf@litku.valot.fi> (sfid-20090206_202141_993466_0DCBA166)
-References: <20090205165834.63840@gmx.net>  <87fxirpe1q.fsf@litku.valot.fi>
-	 (sfid-20090206_202141_993466_0DCBA166)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-N2qx6GzmzR+KmJW1PZRS"
-Date: Fri, 06 Feb 2009 21:44:07 +0100
-Message-Id: <1233953047.4175.27.camel@johannes.local> (sfid-20090206_214415_769861_16C51014)
-Mime-Version: 1.0
+	Sun, 15 Feb 2009 11:43:26 -0500
+Received: by nf-out-0910.google.com with SMTP id d21so175401nfb.21
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 08:43:25 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 2/3] rt2x00: Remove check for rf word 0
+Date: Sun, 15 Feb 2009 17:42:48 +0100
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200902151742.01372.IvDoorn@gmail.com> <200902151742.30220.IvDoorn@gmail.com>
+In-Reply-To: <200902151742.30220.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200902151742.48677.IvDoorn@gmail.com> (sfid-20090215_174332_696221_73EB1902)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The only way rf_write() can be called with word 0 is
+when the user sends the wrong word index through debugfs.
+However the values which are send through debugfs are
+validated using the RF_BASE and RF_SIZE macro values,
+the most logical solution is to increase RF_BASE with 4
+and decrease RF_SIZE with 4 (RF_SIZE has always been
+1 word too big)
 
---=-N2qx6GzmzR+KmJW1PZRS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c |    3 ---
+ drivers/net/wireless/rt2x00/rt2400pci.h |    4 ++--
+ drivers/net/wireless/rt2x00/rt2500pci.c |    3 ---
+ drivers/net/wireless/rt2x00/rt2500pci.h |    4 ++--
+ drivers/net/wireless/rt2x00/rt2500usb.c |    3 ---
+ drivers/net/wireless/rt2x00/rt2500usb.h |    4 ++--
+ drivers/net/wireless/rt2x00/rt61pci.c   |    3 ---
+ drivers/net/wireless/rt2x00/rt61pci.h   |    4 ++--
+ drivers/net/wireless/rt2x00/rt73usb.c   |    3 ---
+ drivers/net/wireless/rt2x00/rt73usb.h   |    4 ++--
+ 10 files changed, 10 insertions(+), 25 deletions(-)
 
-On Fri, 2009-02-06 at 21:21 +0200, Kalle Valo wrote:
-> "Alina Friedrichsen" <x-alina@gmx.net> writes:
->=20
-> > The atomic requirement for the TSF callbacks is outdated. get_tsf() is
-> > only called by ieee80211_rx_bss_info() which is indirectly called by
-> > the work queue ieee80211_sta_work(). In the same context are called
-> > several other non-atomic functions, too. And the atomic requirement
-> > causes problems for drivers of USB wifi cards.
->=20
-> Atomicity requirement also creates problems for SPI based devices, not
-> only USB. So I strongly support for removing the requirement.
->=20
-> Unfortunately I don't have time to review this, though. Sorry.
-
-It's ok, I took a look, there's no such requirement (any more).
-
-johannes
-
---=-N2qx6GzmzR+KmJW1PZRS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJjKEUAAoJEKVg1VMiehFYVZsP/31krx770ICqpsmq+1s8sd77
-rECYyOdWatxWNAlw96KaJr0TT35tlLc7brUPpJEoIN/iW2u4yiOnyuwwqicK7fla
-Es7YTija5zwnG5DFfFXYFQ/WUQHdws7hWCwFV8wcDm1n6nt7mgYJmNUwJf5zJa3p
-eYUql8BsTX+ztt/Y9PDcPd6BGvN9TRampKqy2YGAXAJkPdn/TGlhWgBLNWVeUmo3
-YSDTJZwq0CRbij4LvyA8zJMDYC0/krqJTdbHeQwWoFulzvC72BCHn+s/e89trsbg
-8XcUCU0IrnGElQQxckZdBLKegQQr96ulVKw2DHNxxoZXWDexDZnJ29s5IYW/uGWC
-3vtbNDYmudc7O3nlldXRwGPUOHfjgI94dPzH96LFhfyMzoP8AbyvdmgVKWivNsEl
-JiCzD/KNdrL9qBUnBUbqqfK+62S/TT7seGrjN4cv0Z9OIRrM/bEZG7IkjCrzRgnM
-jqukmyikUc/Iwepe1Qiit5YySe/MxkA/lOUOF1mc62GhkyyZSr6svvoDFvq0fAZo
-8FeR/Yc0Q6MiNmJTAxfRRzOlHL9KXsf/vOgN92zGMwI8iAaFX0XKkLBjxLWgtxlq
-Tb+oMKH3cXkmhsOPJMi6S1nB6IFMe4xqrIA/+gCcY/U8l1gm0lQr7VnQSv4jzBIw
-7SOPY1ENJbSdTrX+TzJV
-=DanH
------END PGP SIGNATURE-----
-
---=-N2qx6GzmzR+KmJW1PZRS--
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index b084825..0f08773 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -114,9 +114,6 @@ static void rt2400pci_rf_write(struct rt2x00_dev *rt2x00dev,
+ {
+ 	u32 reg;
+ 
+-	if (!word)
+-		return;
+-
+ 	mutex_lock(&rt2x00dev->csr_mutex);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
+index 72ac31c..ec3b004 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.h
++++ b/drivers/net/wireless/rt2x00/rt2400pci.h
+@@ -48,8 +48,8 @@
+ #define EEPROM_SIZE			0x0100
+ #define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0020
+-#define RF_BASE				0x0000
+-#define RF_SIZE				0x0010
++#define RF_BASE				0x0004
++#define RF_SIZE				0x000c
+ 
+ /*
+  * Number of TX queues.
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index eb82860..276a823 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -114,9 +114,6 @@ static void rt2500pci_rf_write(struct rt2x00_dev *rt2x00dev,
+ {
+ 	u32 reg;
+ 
+-	if (!word)
+-		return;
+-
+ 	mutex_lock(&rt2x00dev->csr_mutex);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.h b/drivers/net/wireless/rt2x00/rt2500pci.h
+index 17a0c9c..ce2f065 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.h
++++ b/drivers/net/wireless/rt2x00/rt2500pci.h
+@@ -59,8 +59,8 @@
+ #define EEPROM_SIZE			0x0200
+ #define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0040
+-#define RF_BASE				0x0000
+-#define RF_SIZE				0x0014
++#define RF_BASE				0x0004
++#define RF_SIZE				0x0010
+ 
+ /*
+  * Number of TX queues.
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 270691a..ca28067 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -204,9 +204,6 @@ static void rt2500usb_rf_write(struct rt2x00_dev *rt2x00dev,
+ {
+ 	u16 reg;
+ 
+-	if (!word)
+-		return;
+-
+ 	mutex_lock(&rt2x00dev->csr_mutex);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.h b/drivers/net/wireless/rt2x00/rt2500usb.h
+index afce0e0..5bc46fe 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.h
++++ b/drivers/net/wireless/rt2x00/rt2500usb.h
+@@ -59,8 +59,8 @@
+ #define EEPROM_SIZE			0x006a
+ #define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0060
+-#define RF_BASE				0x0000
+-#define RF_SIZE				0x0014
++#define RF_BASE				0x0004
++#define RF_SIZE				0x0010
+ 
+ /*
+  * Number of TX queues.
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 0be147f..2ca8b7a 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -123,9 +123,6 @@ static void rt61pci_rf_write(struct rt2x00_dev *rt2x00dev,
+ {
+ 	u32 reg;
+ 
+-	if (!word)
+-		return;
+-
+ 	mutex_lock(&rt2x00dev->csr_mutex);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.h b/drivers/net/wireless/rt2x00/rt61pci.h
+index 2f97fee..41e8959 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.h
++++ b/drivers/net/wireless/rt2x00/rt61pci.h
+@@ -50,8 +50,8 @@
+ #define EEPROM_SIZE			0x0100
+ #define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0080
+-#define RF_BASE				0x0000
+-#define RF_SIZE				0x0014
++#define RF_BASE				0x0004
++#define RF_SIZE				0x0010
+ 
+ /*
+  * Number of TX queues.
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 8f52234..846996c 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -122,9 +122,6 @@ static void rt73usb_rf_write(struct rt2x00_dev *rt2x00dev,
+ {
+ 	u32 reg;
+ 
+-	if (!word)
+-		return;
+-
+ 	mutex_lock(&rt2x00dev->csr_mutex);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.h b/drivers/net/wireless/rt2x00/rt73usb.h
+index 834b28c..c8016f6 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.h
++++ b/drivers/net/wireless/rt2x00/rt73usb.h
+@@ -50,8 +50,8 @@
+ #define EEPROM_SIZE			0x0100
+ #define BBP_BASE			0x0000
+ #define BBP_SIZE			0x0080
+-#define RF_BASE				0x0000
+-#define RF_SIZE				0x0014
++#define RF_BASE				0x0004
++#define RF_SIZE				0x0010
+ 
+ /*
+  * Number of TX queues.
+-- 
+1.5.6.1
 
