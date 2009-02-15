@@ -1,37 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2799 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752825AbZBZN7v (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59935 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751933AbZBOLEX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 08:59:51 -0500
-Date: Thu, 26 Feb 2009 08:59:39 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090226135938.GA12182@hash.localnet> (sfid-20090226_145955_111646_71A14160)
-References: <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <49A321BA.2040500@gmail.com> <49A326A4.8090103@gmail.com> <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090225140139.GA18694@silver.sucs.org>
+	Sun, 15 Feb 2009 06:04:23 -0500
+Subject: Re: [PATCH 08/10] cfg80211: make regulatory_request use wiphy_idx
+	instead of wiphy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1234589627-16977-9-git-send-email-lrodriguez@atheros.com>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-9-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Hs8JQAaO4NQbq0UC8vaV"
+Date: Sun, 15 Feb 2009 12:04:18 +0100
+Message-Id: <1234695858.4219.54.camel@johannes.local> (sfid-20090215_120425_678747_C8E76CE0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 25, 2009 at 02:01:39PM +0000, Sitsofe Wheeler wrote:
-> It has been days since the original BUG occurred and further it
-> originally had happened in a -tip kernel with kmemcheck compiled into
-> it. I had been utterly unable to reproduce the error on any network with
-> a stock 2.6.29-rc6 kernel. Not even the original -tip kernel produced
-> the error again...
 
-Can you post your config?  I want to make sure I have all the same
-knobs turned on, if I can think of a way to reproduce it.
+--=-Hs8JQAaO4NQbq0UC8vaV
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Bob Copeland %% www.bobcopeland.com
+On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
+
+> +static inline
+> +int wiphy_idx(struct wiphy *wiphy)
+> +{
+> +	struct cfg80211_registered_device *drv;
+> +	if (!wiphy)
+> +		return WIPHY_IDX_STALE;
+> +	drv =3D wiphy_to_dev(wiphy);
+> +	return drv->wiphy_idx;
+> +}
+
+I neither like the name of this function (same as the variable name) nor
+the function -- you're using it in exactly one place where you cannot
+ever pass NULL afaict.
+
+johannes
+
+--=-Hs8JQAaO4NQbq0UC8vaV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJl/avAAoJEKVg1VMiehFYdsEQAIFRXyDvbat0r12mQyF7SfHM
+81CRWdZtXXUgwGm77i6Enhc+jQ/Ob/nSfPlVCcK2qsIg89uD0wNN18LoCS1DYiUP
+UFxBUpwfyPRaBcf+mqVK4jgSxhLg5PNuox63tKe/LuMMoKxGIiNyU+TwCqmof0TU
+k9P1q5YuQacryhJJZqpM4ell5OSiHI6pHI+6CJe5eGzNGFD2ggbSyWAiHiCjV3qf
+2NNBxrxARP924VTYzl5ii0J8EIhZTaS/K0RqGoxG0mAxonyR6XwAxYEnW997lroA
+1N6YAeqmDjHRsOCRq+TFe08IeOXzbEMMwaOXzAhDhHfnbGZBfoXtX1gL0TpXC7ll
+3oDi95h2DBkTZAT/tsqRH3fbln++35I4h6CZhPD0o+3Fp52guFvadGO8ezOOQejq
+XbG4TBPfq5NpRDH4fFr1kflGUfyT9ExrzUc9kl9cnhqC6u9h8R3Nprrn6xxDQdvh
+y2mCldsYVrm3V8HHLvxDrRv6A/XB5hBE4whqDTC1etL9r/hz4C+hCvDI5pQ2g8Jd
+rRpIQmc7qTWd3WGabCmTr+V5A6d73V16nkZYWXRFDC37VmNHC9Sb6o8Q96WBW8wq
+uaado7OqhFEIbQGftvfKk02Umg0dnFG2xlCmSGXK5aUcuWx4C1cAZz5ShG88wGnu
+ZRCuktBAg9evTsTghigh
+=Ap5V
+-----END PGP SIGNATURE-----
+
+--=-Hs8JQAaO4NQbq0UC8vaV--
 
