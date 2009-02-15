@@ -1,113 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38799 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760404AbZBYW1G (ORCPT
+Received: from mail-ew0-f21.google.com ([209.85.219.21]:40233 "EHLO
+	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753124AbZBOQn2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 17:27:06 -0500
-To: Alina Friedrichsen <x-alina@gmx.net>
-Subject: Re: [PATCH] mac80211: Implement commit in wireless extensions
+	Sun, 15 Feb 2009 11:43:28 -0500
+Received: by ewy14 with SMTP id 14so1607517ewy.13
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 08:43:26 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 3/3] rt2x00: Add various new USB IDs for rt73usb
+Date: Sun, 15 Feb 2009 17:43:05 +0100
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <200902151742.01372.IvDoorn@gmail.com> <200902151742.30220.IvDoorn@gmail.com> <200902151742.48677.IvDoorn@gmail.com>
+In-Reply-To: <200902151742.48677.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Date: Wed, 25 Feb 2009 23:27:01 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20090225215631.289250@gmx.net> (sfid-20090225_225703_350502_23B11EFA)
-References: <20090225215631.289250@gmx.net> (sfid-20090225_225703_350502_23B11EFA)
-Message-ID: <d38edefd935f0aa5c8cca9aee1cf1d7b@localhost>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200902151743.05405.IvDoorn@gmail.com> (sfid-20090215_174332_552854_A231430C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt73usb.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-On Wed, 25 Feb 2009 22:56:31 +0100, "Alina Friedrichsen" <x-alina@gmx.net>
-wrote:
-> This implements commit in wireless extensions for completeness and maybe
-it
-> could be useful for debugging to initiate a new rejoining process without
-> changing the config.
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 846996c..90ace51 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2342,6 +2342,9 @@ static const struct rt2x00_ops rt73usb_ops = {
+ static struct usb_device_id rt73usb_device_table[] = {
+ 	/* AboCom */
+ 	{ USB_DEVICE(0x07b8, 0xb21d), USB_DEVICE_DATA(&rt73usb_ops) },
++	/* Amigo */
++	{ USB_DEVICE(0x148f, 0x9021), USB_DEVICE_DATA(&rt73usb_ops) },
++	{ USB_DEVICE(0x0eb0, 0x9021), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Askey */
+ 	{ USB_DEVICE(0x1690, 0x0722), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* ASUS */
+@@ -2389,6 +2392,7 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	{ USB_DEVICE(0x0db0, 0xa861), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0xa874), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Ralink */
++	{ USB_DEVICE(0x04bb, 0x093d), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x148f, 0x2671), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Qcom */
+@@ -2405,6 +2409,8 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	/* Planex */
+ 	{ USB_DEVICE(0x2019, 0xab01), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x2019, 0xab50), USB_DEVICE_DATA(&rt73usb_ops) },
++	/* ZyXEL */
++	{ USB_DEVICE(0x0586, 0x3415), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ 0, }
+ };
+ 
+-- 
+1.5.6.1
 
-I don't think that we should do this -- "completeness" for wext is a bad
-argument and for debugging you can also do the other things.
-
-> I not so familiar with nl80211 at the moment, so I want add it to nl80211
-> in a second patch.
-
-No, you won't. nl80211 shall not require such hacks.
-
-johannes
-
-> Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
-> ---
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index ecbc8e0..7f00c70 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -920,6 +920,7 @@ static inline int ieee80211_bssid_match(const u8
-> *raddr, const u8 *addr)
->  
->  int ieee80211_hw_config(struct ieee80211_local *local, u32 changed);
->  int ieee80211_if_config(struct ieee80211_sub_if_data *sdata, u32
-changed);
-> +int ieee80211_commit(struct ieee80211_sub_if_data *sdata);
->  void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
->  void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data
-*sdata,
->  				      u32 changed);
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index f38db4d..1b2d598 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -294,6 +294,20 @@ int ieee80211_hw_config(struct ieee80211_local
-*local,
-> u32 changed)
->  	return ret;
->  }
->  
-> +void ieee80211_commit(struct ieee80211_sub_if_data *sdata)
-> +{
-> +	switch (sdata->vif.type) {
-> +	case NL80211_IFTYPE_ADHOC:
-> +		ieee80211_ibss_commit(sdata);
-> +		break;
-> +	case NL80211_IFTYPE_STATION:
-> +		ieee80211_sta_commit(sdata);
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +}
-> +
->  void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data
-*sdata,
->  				      u32 changed)
->  {
-> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-> index f6924fc..1ac0516 100644
-> --- a/net/mac80211/wext.c
-> +++ b/net/mac80211/wext.c
-> @@ -121,6 +121,15 @@ static int ieee80211_set_encryption(struct
-> ieee80211_sub_if_data *sdata, u8 *sta
->  	return err;
->  }
->  
-> +static int ieee80211_ioctl_commit(struct net_device *dev,
-> +				  struct iw_request_info *info,
-> +				  struct iw_point *data, char *extra)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	ieee80211_commit(sdata);
-> +	return 0;
-> +}
-> +
->  static int ieee80211_ioctl_siwgenie(struct net_device *dev,
->  				    struct iw_request_info *info,
->  				    struct iw_point *data, char *extra)
-> @@ -1035,7 +1044,7 @@ static int ieee80211_ioctl_siwencodeext(struct
-> net_device *dev,
->  
->  static const iw_handler ieee80211_handler[] =
->  {
-> -	(iw_handler) NULL,				/* SIOCSIWCOMMIT */
-> +	(iw_handler) ieee80211_ioctl_commit,		/* SIOCSIWCOMMIT */
->  	(iw_handler) cfg80211_wext_giwname,		/* SIOCGIWNAME */
->  	(iw_handler) NULL,				/* SIOCSIWNWID */
->  	(iw_handler) NULL,				/* SIOCGIWNWID */
