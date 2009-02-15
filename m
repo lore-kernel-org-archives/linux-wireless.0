@@ -1,46 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:55134 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686AbZBWQhy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 11:37:54 -0500
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [RFC PATCH v1 0/3] mac80211: beacon filtering
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 23 Feb 2009 18:37:17 +0200
-Message-ID: <20090223163626.20939.4879.stgit@tikku> (sfid-20090223_173758_195526_BE5D0319)
+Received: from bu3sch.de ([62.75.166.246]:43666 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752186AbZBORAz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2009 12:00:55 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Roel Kluin <roel.kluin@gmail.com>
+Subject: Re: [PATCH] B43: misplaced parentheses?
+Date: Sun, 15 Feb 2009 17:59:31 +0100
+Cc: stefano.brivio@polimi.it, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <499844E7.1040307@gmail.com> <200902151746.44754.mb@bu3sch.de>
+In-Reply-To: <200902151746.44754.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200902151759.32185.mb@bu3sch.de> (sfid-20090215_180115_239741_CF25496C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's my suggestion how to implement beacon filtering in mac80211.
-The basic idea is simple, the driver enables filtering is whenever
-mac80211 enables power save. Driver calls ieee80211_beacon_loss()
-whenever hardware informs about beacon loss.
+On Sunday 15 February 2009 17:46:44 Michael Buesch wrote:
+> On Sunday 15 February 2009 17:37:59 Roel Kluin wrote:
+> > I think below is what was intended? otherwise we could as well have written:
+> > 
+> >  	b43_radio_write16(dev, txctl_reg,
+> >  			  (b43_radio_read16(dev, txctl_reg) & ~txctl_value)
+> > 			  || (rfatt->with_padmix) ? txctl_value : 0);
+> > 
+> > 			  ^^--- Note: boolean or
+> 
+> Uhm, no?
+> Can you please explain why you think this is equal? Does | have precedence over ?:
 
-I have tested this with stlc45xx and based on simple tests this seems
-to work. For reference I'll send stlc45xx patch as a followup.
+Hm, | does indeed seem to have precedence over ?:. So, while I still don't understand
+why you think || would be equal to the current code, but expanding the paren throughout
+the whole ?: expression seems to be required.
 
-TODO: 
+Note that the paren was intentionally placed like this under the assumption that ?:
+has precedence over |. Which seems to be wrong.
 
-o API documentation
-o test with different hardwares (without beacon filtering) to 
-  avoid regressions
+> 
+> > 
+> > please review.
+> > -------------------------->8------------------8<---------------------------
+> > Fix misplaced parentheses
+> > 
+> > Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> > ---
+> > diff --git a/drivers/net/wireless/b43/lo.c b/drivers/net/wireless/b43/lo.c
+> > index 6a18a14..88ed75f 100644
+> > --- a/drivers/net/wireless/b43/lo.c
+> > +++ b/drivers/net/wireless/b43/lo.c
+> > @@ -783,7 +783,7 @@ struct b43_lo_calib * b43_calibrate_lo_setting(struct b43_wldev *dev,
+> >  			  | rfatt->att);
+> >  	b43_radio_write16(dev, txctl_reg,
+> >  			  (b43_radio_read16(dev, txctl_reg) & ~txctl_value)
+> > -			  | (rfatt->with_padmix) ? txctl_value : 0);
+> > +			  | (rfatt->with_padmix ? txctl_value : 0));
+> >  
+> >  	max_rx_gain = rfatt->att * 2;
+> >  	max_rx_gain += bbatt->att / 2;
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > 
+> 
+> 
+> 
 
----
-
-Kalle Valo (3):
-      mac80211: add beacon filtering support
-      mac80211: track beacons separately from the rx path activity
-      mac80211: decrease execution of the associated timer
 
 
- include/net/mac80211.h     |    2 +
- net/mac80211/ieee80211_i.h |    4 ++
- net/mac80211/iface.c       |    3 +
- net/mac80211/mlme.c        |  114 ++++++++++++++++++++++++++++++++------------
- net/mac80211/rx.c          |    9 +++
- 5 files changed, 99 insertions(+), 33 deletions(-)
-
+-- 
+Greetings, Michael.
