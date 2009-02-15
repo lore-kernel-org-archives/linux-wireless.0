@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:49024 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbZBTGFF (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.188]:43006 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751252AbZBOP10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 01:05:05 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	marcel@holtmann.org, kalle.valo@nokia.com, kyle@mcmartin.ca
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/5] cfg80211: enable 5 GHz world roaming channels
-Date: Fri, 20 Feb 2009 01:04:31 -0500
-Message-Id: <1235109874-3966-3-git-send-email-lrodriguez@atheros.com> (sfid-20090220_070511_181102_0A3BF158)
-In-Reply-To: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
-References: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 15 Feb 2009 10:27:26 -0500
+Received: by nf-out-0910.google.com with SMTP id d21so173545nfb.21
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 07:27:25 -0800 (PST)
+Message-ID: <4998345C.9050409@gmail.com> (sfid-20090215_162731_098155_352D308E)
+Date: Sun, 15 Feb 2009 16:27:24 +0100
+From: Roel Kluin <roel.kluin@gmail.com>
+MIME-Version: 1.0
+To: flamingice@sourmilk.net
+CC: linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] p54: misplaced parentheses
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current static world regulatory domain is too restrictive,
-we can use some 5 GHz channels world wide so long as they do not
-touch frequencies which require DFS. The compromise is we must
-also enforce passive scanning and disallow usage of a mode of
-operation that beacons: (AP | IBSS | Mesh)
+Only FIF_FCSFAIL is set due to parentheses
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 ---
- net/wireless/reg.c |   13 ++++++++++++-
- 1 files changed, 12 insertions(+), 1 deletions(-)
+// include/net/mac80211.h vi +1133
+enum ieee80211_filter_flags {
+        FIF_PROMISC_IN_BSS      = 1<<0,
+	...
+};
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 8f64575..8e86505 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -73,11 +73,22 @@ static spinlock_t reg_requests_lock;
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index 34561e6..530daee 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -1932,8 +1932,8 @@ static void p54_configure_filter(struct ieee80211_hw *dev,
+ 	struct p54_common *priv = dev->priv;
  
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
--	.n_reg_rules = 1,
-+	.n_reg_rules = 3,
- 	.alpha2 =  "00",
- 	.reg_rules = {
- 		/* IEEE 802.11b/g, channels 1..11 */
- 		REG_RULE(2412-10, 2462+10, 40, 6, 20, 0),
-+		/* IEEE 802.11a, channel 36..48 */
-+		REG_RULE(5180-10, 5240+10, 40, 6, 23,
-+			NL80211_RRF_PASSIVE_SCAN |
-+			NL80211_RRF_NO_IBSS),
-+
-+		/* NB: 5260 MHz - 5700 MHz requies DFS */
-+
-+		/* IEEE 802.11a, channel 149..165 */
-+		REG_RULE(5745-10, 5825+10, 40, 6, 23,
-+			NL80211_RRF_PASSIVE_SCAN |
-+			NL80211_RRF_NO_IBSS),
- 	}
- };
+ 	*total_flags &= FIF_PROMISC_IN_BSS |
+-			(*total_flags & FIF_PROMISC_IN_BSS) ?
+-				FIF_FCSFAIL : 0;
++			(*total_flags & FIF_PROMISC_IN_BSS ?
++				FIF_FCSFAIL : 0);
  
--- 
-1.6.0.3
-
+ 	priv->filter_flags = *total_flags;
+ 
