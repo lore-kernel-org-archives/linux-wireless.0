@@ -1,242 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54824 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757112AbZBKS1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 13:27:46 -0500
-Subject: [PATCH v3] ipw2x00: age scan results on resume
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	reinette chatre <reinette.chatre@intel.com>
-Content-Type: text/plain
-Date: Wed, 11 Feb 2009 13:26:06 -0500
-Message-Id: <1234376767.2648.25.camel@localhost> (sfid-20090211_192800_356700_AB824DAE)
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([70.167.247.36]:4329 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753451AbZBORGX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2009 12:06:23 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/4] ath5k: move beacon processing to a tasklet
+Date: Sun, 15 Feb 2009 12:06:11 -0500
+Message-Id: <1234717572-10651-3-git-send-email-me@bobcopeland.com> (sfid-20090215_180626_872485_A857200D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Scanned BSS entries are timestamped with jiffies, which doesn't
-increment across suspend and hibernate.  On resume, every BSS in the
-scan list looks like it was scanned within the last 10 seconds,
-irregardless of how long the machine was actually asleep.  Age scan
-results on resume with the time spent during sleep so userspace has a
-clue how old they really are.
+We currently send beacons directly from the interrupt routine.  This
+can hold up interrupt processing in beaconing modes and makes the
+ISR somewhat more complex.  Move it to a tasklet like rx and tx.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+Changes-licensed-under: 3-Clause-BSD
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
-This fixes NetworkManager and wpa_supplicant trying to connect to the AP
-associated with at suspend/hibernate time, which clearly may not exist
-at the location where the machine is waking up.
+ drivers/net/wireless/ath5k/base.c |   64 ++++++++++++++++++++-----------------
+ drivers/net/wireless/ath5k/base.h |    1 +
+ 2 files changed, 36 insertions(+), 29 deletions(-)
 
-v3: fix aging calculation and make other usage of jiffies overflow-safe
-v2: always set suspend_at
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 823c2bf..2d7e32c 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -1692,7 +1692,13 @@ static int ipw2100_up(struct ipw2100_priv *priv, int deferred)
- 	u32 lock;
- 	u32 ord_len = sizeof(lock);
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 8e5620a..fa6a216 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -350,6 +350,7 @@ static int 	ath5k_beacon_setup(struct ath5k_softc *sc,
+ static void 	ath5k_beacon_send(struct ath5k_softc *sc);
+ static void 	ath5k_beacon_config(struct ath5k_softc *sc);
+ static void	ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf);
++static void	ath5k_tasklet_beacon(unsigned long data);
  
--	/* Quite if manually disabled. */
-+	/* Age scan list entries found before suspend */
-+	if (priv->suspend_time) {
-+		ieee80211_networks_age(priv->ieee, priv->suspend_time);
-+		priv->suspend_time = 0;
-+	}
-+
-+	/* Quiet if manually disabled. */
- 	if (priv->status & STATUS_RF_KILL_SW) {
- 		IPW_DEBUG_INFO("%s: Radio is disabled by Manual Disable "
- 			       "switch\n", priv->net_dev->name);
-@@ -6414,6 +6420,8 @@ static int ipw2100_suspend(struct pci_dev *pci_dev, pm_message_t state)
- 	pci_disable_device(pci_dev);
- 	pci_set_power_state(pci_dev, PCI_D3hot);
- 
-+	priv->suspend_at = get_seconds();
-+
- 	mutex_unlock(&priv->action_mutex);
- 
- 	return 0;
-@@ -6457,6 +6465,8 @@ static int ipw2100_resume(struct pci_dev *pci_dev)
- 	 * the queue of needed */
- 	netif_device_attach(dev);
- 
-+	priv->suspend_time = get_seconds() - priv->suspend_at;
-+
- 	/* Bring the device back up */
- 	if (!(priv->status & STATUS_RF_KILL_SW))
- 		ipw2100_up(priv, 0);
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
-index bbf1ddc..430534b 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.h
-@@ -591,6 +591,10 @@ struct ipw2100_priv {
- 
- 	int user_requested_scan;
- 
-+	/* Track time in suspend */
-+	unsigned long suspend_at;
-+	unsigned long suspend_time;
-+
- 	u32 interrupts;
- 	int tx_interrupts;
- 	int rx_interrupts;
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 0420d3d..6cd9c69 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11224,6 +11224,12 @@ static int ipw_up(struct ipw_priv *priv)
+ static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
  {
- 	int rc, i, j;
+@@ -789,6 +790,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
+ 	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
+ 	tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
++	tasklet_init(&sc->beacontq, ath5k_tasklet_beacon, (unsigned long)sc);
+ 	setup_timer(&sc->calib_tim, ath5k_calibrate, (unsigned long)sc);
  
-+	/* Age scan list entries found before suspend */
-+	if (priv->suspend_time) {
-+		ieee80211_networks_age(priv->ieee, priv->suspend_time);
-+		priv->suspend_time = 0;
-+	}
-+
- 	if (priv->status & STATUS_EXIT_PENDING)
- 		return -EIO;
- 
-@@ -11824,6 +11830,8 @@ static int ipw_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 	pci_disable_device(pdev);
- 	pci_set_power_state(pdev, pci_choose_state(pdev, state));
- 
-+	priv->suspend_at = get_seconds();
-+
- 	return 0;
+ 	ret = ath5k_eeprom_read_mac(ah, mac);
+@@ -1700,6 +1702,35 @@ ath5k_check_ibss_tsf(struct ath5k_softc *sc, struct sk_buff *skb,
+ 	}
  }
  
-@@ -11859,6 +11867,8 @@ static int ipw_pci_resume(struct pci_dev *pdev)
- 	 * the queue of needed */
- 	netif_device_attach(dev);
- 
-+	priv->suspend_time = get_seconds() - priv->suspend_at;
-+
- 	/* Bring the device back up */
- 	queue_work(priv->workqueue, &priv->up);
- 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.h b/drivers/net/wireless/ipw2x00/ipw2200.h
-index 277b274..7d88c75 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.h
-@@ -1346,6 +1346,10 @@ struct ipw_priv {
- 
- 	s8 tx_power;
- 
-+	/* Track time in suspend */
-+	unsigned long suspend_at;
-+	unsigned long suspend_time;
-+
- #ifdef CONFIG_PM
- 	u32 pm_state[16];
- #endif
-diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
-index a2f5616..ec77534 100644
---- a/drivers/net/wireless/ipw2x00/libipw_module.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_module.c
-@@ -105,6 +105,21 @@ static inline void ieee80211_networks_free(struct ieee80211_device *ieee)
- 	ieee->networks = NULL;
- }
- 
-+void ieee80211_networks_age(struct ieee80211_device *ieee,
-+                            unsigned long age_secs)
++static void ath5k_tasklet_beacon(unsigned long data)
 +{
-+	struct ieee80211_network *network = NULL;
-+	unsigned long flags;
-+	unsigned long age_jiffies = msecs_to_jiffies(age_secs * MSEC_PER_SEC);
++	struct ath5k_softc *sc = (struct ath5k_softc *) data;
 +
-+	spin_lock_irqsave(&ieee->lock, flags);
-+	list_for_each_entry(network, &ieee->network_list, list) {
-+		network->last_scanned -= age_jiffies;
++	/*
++	 * Software beacon alert--time to send a beacon.
++	 *
++	 * In IBSS mode we use this interrupt just to
++	 * keep track of the next TBTT (target beacon
++	 * transmission time) in order to detect wether
++	 * automatic TSF updates happened.
++	 */
++	if (sc->opmode == NL80211_IFTYPE_ADHOC) {
++		/* XXX: only if VEOL suppported */
++		u64 tsf = ath5k_hw_get_tsf64(sc->ah);
++		sc->nexttbtt += sc->bintval;
++		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
++				"SWBA nexttbtt: %x hw_tu: %x "
++				"TSF: %llx\n",
++				sc->nexttbtt,
++				TSF_TO_TU(tsf),
++				(unsigned long long) tsf);
++	} else {
++		spin_lock(&sc->block);
++		ath5k_beacon_send(sc);
++		spin_unlock(&sc->block);
 +	}
-+	spin_unlock_irqrestore(&ieee->lock, flags);
 +}
-+EXPORT_SYMBOL(ieee80211_networks_age);
 +
- static void ieee80211_networks_initialize(struct ieee80211_device *ieee)
+ static void
+ ath5k_tasklet_rx(unsigned long data)
  {
- 	int i;
-diff --git a/drivers/net/wireless/ipw2x00/libipw_rx.c b/drivers/net/wireless/ipw2x00/libipw_rx.c
-index 9c67dfa..e087f72 100644
---- a/drivers/net/wireless/ipw2x00/libipw_rx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_rx.c
-@@ -1615,7 +1616,7 @@ static void ieee80211_process_probe_response(struct ieee80211_device
- 			break;
+@@ -2039,9 +2070,8 @@ err_unmap:
+  * frame contents are done as needed and the slot time is
+  * also adjusted based on current state.
+  *
+- * this is usually called from interrupt context (ath5k_intr())
+- * but also from ath5k_beacon_config() in IBSS mode which in turn
+- * can be called from a tasklet and user context
++ * This is called from software irq context (beacontq or restq
++ * tasklets) or user context from ath5k_beacon_config.
+  */
+ static void
+ ath5k_beacon_send(struct ath5k_softc *sc)
+@@ -2391,6 +2421,7 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 	tasklet_kill(&sc->rxtq);
+ 	tasklet_kill(&sc->txtq);
+ 	tasklet_kill(&sc->restq);
++	tasklet_kill(&sc->beacontq);
  
- 		if ((oldest == NULL) ||
--		    (target->last_scanned < oldest->last_scanned))
-+		    time_before(target->last_scanned, oldest->last_scanned))
- 			oldest = target;
- 	}
+ 	return ret;
+ }
+@@ -2421,32 +2452,7 @@ ath5k_intr(int irq, void *dev_id)
+ 			tasklet_schedule(&sc->restq);
+ 		} else {
+ 			if (status & AR5K_INT_SWBA) {
+-				/*
+-				* Software beacon alert--time to send a beacon.
+-				* Handle beacon transmission directly; deferring
+-				* this is too slow to meet timing constraints
+-				* under load.
+-				*
+-				* In IBSS mode we use this interrupt just to
+-				* keep track of the next TBTT (target beacon
+-				* transmission time) in order to detect wether
+-				* automatic TSF updates happened.
+-				*/
+-				if (sc->opmode == NL80211_IFTYPE_ADHOC) {
+-					 /* XXX: only if VEOL suppported */
+-					u64 tsf = ath5k_hw_get_tsf64(ah);
+-					sc->nexttbtt += sc->bintval;
+-					ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
+-						  "SWBA nexttbtt: %x hw_tu: %x "
+-						  "TSF: %llx\n",
+-						  sc->nexttbtt,
+-						  TSF_TO_TU(tsf),
+-						  (unsigned long long) tsf);
+-				} else {
+-					spin_lock(&sc->block);
+-					ath5k_beacon_send(sc);
+-					spin_unlock(&sc->block);
+-				}
++				tasklet_schedule(&sc->beacontq);
+ 			}
+ 			if (status & AR5K_INT_RXEOL) {
+ 				/*
+diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
+index c0fb8b5..20e0d14 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -169,6 +169,7 @@ struct ath5k_softc {
+ 	struct ath5k_led	tx_led;		/* tx led */
  
-diff --git a/drivers/net/wireless/ipw2x00/libipw_wx.c b/drivers/net/wireless/ipw2x00/libipw_wx.c
-index 31ea3ab..0a9f7c6 100644
---- a/drivers/net/wireless/ipw2x00/libipw_wx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_wx.c
-@@ -35,6 +35,16 @@
- 	"?", "a", "b", "ab", "g", "ag", "bg", "abg"
- };
- 
-+static inline unsigned int elapsed_jiffies_msecs(unsigned long start)
-+{
-+	unsigned long end = jiffies;
-+
-+	if (end >= start)
-+		return jiffies_to_msecs(end - start);
-+
-+	return jiffies_to_msecs(end + (MAX_JIFFY_OFFSET - start) + 1);
-+}
-+
- #define MAX_CUSTOM_LEN 64
- static char *ieee80211_translate_scan(struct ieee80211_device *ieee,
- 				      char *start, char *stop,
-@@ -215,8 +225,8 @@ static char *ieee80211_translate_scan(struct ieee80211_device *ieee,
- 	iwe.cmd = IWEVCUSTOM;
- 	p = custom;
- 	p += snprintf(p, MAX_CUSTOM_LEN - (p - custom),
--		      " Last beacon: %dms ago",
--		      jiffies_to_msecs(jiffies - network->last_scanned));
-+		      " Last beacon: %ums ago",
-+		      elapsed_jiffies_msecs(network->last_scanned));
- 	iwe.u.data.length = p - custom;
- 	if (iwe.u.data.length)
- 		start = iwe_stream_add_point(info, start, stop, &iwe, custom);
-@@ -276,15 +286,15 @@ int ieee80211_wx_get_scan(struct ieee80211_device *ieee,
- 		    time_after(network->last_scanned + ieee->scan_age, jiffies))
- 			ev = ieee80211_translate_scan(ieee, ev, stop, network,
- 						      info);
--		else
-+		else {
- 			IEEE80211_DEBUG_SCAN("Not showing network '%s ("
--					     "%pM)' due to age (%dms).\n",
-+					     "%pM)' due to age (%ums).\n",
- 					     print_ssid(ssid, network->ssid,
- 							 network->ssid_len),
- 					     network->bssid,
--					     jiffies_to_msecs(jiffies -
--							      network->
--							      last_scanned));
-+					     elapsed_jiffies_msecs(
-+					               network->last_scanned));
-+		}
- 	}
- 
- 	spin_unlock_irqrestore(&ieee->lock, flags);
-diff --git a/include/net/ieee80211.h b/include/net/ieee80211.h
-index adb7cf3..7515fad 100644
---- a/include/net/ieee80211.h
-+++ b/include/net/ieee80211.h
-@@ -1119,6 +1119,9 @@ static inline int ieee80211_is_cck_rate(u8 rate)
- extern void free_ieee80211(struct net_device *dev);
- extern struct net_device *alloc_ieee80211(int sizeof_priv);
- 
-+extern void ieee80211_networks_age(struct ieee80211_device *ieee,
-+				   unsigned long age_secs);
-+
- extern int ieee80211_set_encryption(struct ieee80211_device *ieee);
- 
- /* ieee80211_tx.c */
+ 	spinlock_t		block;		/* protects beacon */
++	struct tasklet_struct	beacontq;	/* beacon intr tasklet */
+ 	struct ath5k_buf	*bbuf;		/* beacon buffer */
+ 	unsigned int		bhalq,		/* SW q for outgoing beacons */
+ 				bmisscount,	/* missed beacon transmits */
+-- 
+1.6.0.6
+
 
