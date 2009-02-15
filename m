@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:28673 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082AbZBSDcO (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:54601 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753337AbZBORGN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 22:32:14 -0500
-Received: by qw-out-2122.google.com with SMTP id 5so145213qwi.37
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 19:32:12 -0800 (PST)
-Subject: Re: [PATCH] at76c50x-usb: support cfg80211 scanning
-From: Jason Andryuk <jandryuk@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <8763j7qyfx.fsf@litku.valot.fi>
-References: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com>
-	 <8763j7qyfx.fsf@litku.valot.fi>
-Content-Type: text/plain
-Date: Wed, 18 Feb 2009 22:32:10 -0500
-Message-Id: <1235014330.6344.18.camel@rainbow> (sfid-20090219_043221_569988_EA9E240A)
-Mime-Version: 1.0
+	Sun, 15 Feb 2009 12:06:13 -0500
+Message-ID: <49984B70.4080007@lwfinger.net> (sfid-20090215_180615_338994_8C3F8E71)
+Date: Sun, 15 Feb 2009 11:05:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Roel Kluin <roel.kluin@gmail.com>
+CC: stefano.brivio@polimi.it, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] B43: misplaced parentheses?
+References: <499844E7.1040307@gmail.com>
+In-Reply-To: <499844E7.1040307@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-02-18 at 22:31 +0200, Kalle Valo wrote:
-> Jason Andryuk <jandryuk@gmail.com> writes:
-> 
-> > With the latest mac80211 stack, the driver needs to be updated for
-> > cfg80211 scanning.  I based the changes off of modifications for
-> > at76_usb found here:
-> > http://johannes.sipsolutions.net/patches/old/all/2008-09-19-13:35/020-cfg80211-scan.patch
-> >
-> > The trick was that max_signal also needs to be set to avoid a divide
-> > by zero Oops.  I just guessed and used the value 100 for now.
-> 
-> Thank you for doing this. Unfortunately the patch was corrupted, so I
-> had to manually take your changes. I also included the
-> ieee80211_scan_compileted() fix to this patch.
-> 
-> > Additionally, I added some ieee80211_{wake,stop}_queues calls that
-> > were contained in the older at76_usb.  There is ambiguity as to
-> > whether at76_join should be called before or after waking the queues.
-> 
-> I would like to have a separate patch for this. Also I would like to
-> know what kind of bug this fixes.
-> 
-> Sorry to be so picky, but I'm going to push the driver into mainline
-> soon and I try avoid regressions right now.
+Roel Kluin wrote:
+> -			  | (rfatt->with_padmix) ? txctl_value : 0);
+> +			  | (rfatt->with_padmix ? txctl_value : 0));
 
-I must admit, I do not have the best understanding of the driver.  As
-such, I was making modifications to at76c50x-usb to be as similar to
-at76_usb+mac80211 as possible to prevent the driver from oops-ing.
+As I see it, the difference between the above two lines is the same as the
+difference between c and d in this program:
 
-I don't know the proper usage of ieee80211_{wake,stop}_queues, but my
-understanding is they should be called at different times to indicate
-readiness for transmitting frames to the mac80211 stack.
+int main(int argc, char **argv)
+{
+        int a = 1, b = 2, c, d;
 
-I am having issues with my Linksys WUSB11 adapter.  It has the intersil
-3861 and the scan command is reporting Command Status of 0x03 - Invalid
-parameter.  For right now, scanning does not work for me.
+        c = (a) ? b : 0;
+        d = (a ? b : 0);
+        fprintf (stderr, "a, b, c, d: %d %d %d %d\n", a, b, c, d);
+        return 1;
+}
 
-Sorry about the corrupt patches.  The gmail web interface was causing
-problems.
+When this program is executed, the output line is
 
-Take care.
+a, b, c, d: 1 2 2 2
 
-Jason
+which is what I expected. Thus "(condition) ? result1 : result2" is the same as
+"(condition ? result1 : result2)".
 
+Larry
