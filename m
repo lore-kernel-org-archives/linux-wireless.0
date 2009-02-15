@@ -1,68 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:60539 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750705AbZBNDIY (ORCPT
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:62888 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753191AbZBONJR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 22:08:24 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so732411yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 19:08:21 -0800 (PST)
+	Sun, 15 Feb 2009 08:09:17 -0500
+Received: by fxm13 with SMTP id 13so4887242fxm.13
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 05:09:15 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <49962FC9.2040406@erley.org>
-References: <1925ef8a0902130015o6df0c962n3fe05ec420d0aef@mail.gmail.com>
-	 <43e72e890902130023w3c192b04r3a41b4643eedb530@mail.gmail.com>
-	 <1925ef8a0902130454i7b72a7fftb13cc6b77413b70c@mail.gmail.com>
-	 <43e72e890902131449n153b606fne9a6dba1af071915@mail.gmail.com>
-	 <49962FC9.2040406@erley.org>
-Date: Fri, 13 Feb 2009 19:08:21 -0800
-Message-ID: <43e72e890902131908n3ca09f43w9ac5165b3f03ac66@mail.gmail.com> (sfid-20090214_040835_896443_54FAEA1C)
-Subject: Re: compat-wireless with CONFIG_MAC80211disabled
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: pat-lkml <pat-lkml@erley.org>
-Cc: Vitja Makarov <vitja.makarov@gmail.com>,
+In-Reply-To: <20090213111523.GA22438@jm.kir.nu>
+References: <20090213105306.GA18754@jm.kir.nu>
+	 <1234522804.4219.13.camel@johannes.local>
+	 <20090213111523.GA22438@jm.kir.nu>
+Date: Sun, 15 Feb 2009 15:09:15 +0200
+Message-ID: <1ba2fa240902150509i5df08adcg214901548d3cd538@mail.gmail.com> (sfid-20090215_140922_697357_F28CEAAA)
+Subject: Re: [PATCH] nl80211: Optional IEs into scan request
+From: Tomas Winkler <tomasw@gmail.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 13, 2009 at 6:43 PM, pat-lkml <pat-lkml@erley.org> wrote:
-> Luis R. Rodriguez wrote:
->> On Fri, Feb 13, 2009 at 4:54 AM, Vitja Makarov <vitja.makarov@gmail.com> wrote:
->>> This should be problem for 2.6.27 too.
->>
->> modified for 27 and applied, thanks
+On Fri, Feb 13, 2009 at 1:15 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Fri, Feb 13, 2009 at 12:00:04PM +0100, Johannes Berg wrote:
 >
-> I didn't run into this problem with 2.6.28-gentoo-r1... I've been running
-> compat-wireless from git since the 4th on this kernel, with no mac80211
-> enabled and had no problems.
+>> Looks like this will conflict with my ibss splitout patch?
+>
+> Yeah.. Here's a compile-tested, rebased version. I'll send PATCHv2 after
+> having had a chance to test this more properly.
 
-Oh interesting, because skb->do_not_encrypt was there on 27, and
-skb->requeue was added as of 28. Since config.mk was enforcing it to
-be enabled and since compat-wireless uses its own
-include/linux/compat_autoconf.h with values derived from config.mk
-when building compat-wireless you were getting
+>
+> This extends the NL80211_CMD_TRIGGER_SCAN command to allow applications
+> to specify a set of information element(s) to be added into Probe
+> Request frames with NL80211_ATTR_IE. This provides support for the
+> MLME-SCAN.request primitive parameter VendorSpecificInfo and can be
+> used, e.g., to implement WPS scanning.
 
-#define CONFIG_MAC80211 1
+> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>
 
-and therefore compat-wireless did build correctly assuming your
-kernel's skb_buff had skb->do_not_encrypt and skb->requeue although
-the reality of it is that it didn't therefore probably forcing
-mac80211 to mess around with other nearby fields in the skb_buff like
-the skb->dma_cookie, skb->secmark or skb->mark, depending on whether
-CONFIG_NET_DMA, CONFIG_NETWORK_SECMARK or neither were enabled
-respectively.
+Status questions
+What is the version of wpa_supplicant that supports WPS.  Is wext
+covered with IWEVGENIE?
+Is it currently working with mac80211 based drivers?
+Thanks
+Tomas
 
-So it seems it was working by chance as your kernel's skbs were being
-raped by mac80211 in their sleep.
-
-> Is there interest in a patch allowing you to
-> set something like FORCE=y on the CLI to override these patches?
-
-Do you have CONFIG_NET_DMA?
-If not do you have CONFIG_NETWORK_SECMARK?
-
-It'd be interesting to see what net core is doing due to the rape and
-it'd be even more interesting if we can determine the rape is allowed
-during certain circumstances, therefore allowing us to hack config.mk
-to allow for such atrocities to go on.
-
- Luis
+> ---
+>  include/net/cfg80211.h     |    4 ++++
+>  net/mac80211/ieee80211_i.h |    3 ++-
+>  net/mac80211/mlme.c        |    8 +++++---
+>  net/mac80211/scan.c        |    3 ++-
+>  net/mac80211/util.c        |    7 +++++--
+>  net/wireless/nl80211.c     |   21 ++++++++++++++++++++-
+>  6 files changed, 38 insertions(+), 8 deletions(-)
+>
+> --- wireless-testing.orig/include/net/cfg80211.h        2009-02-12 14:43:39.000000000 +0200
+> +++ wireless-testing/include/net/cfg80211.h     2009-02-13 13:08:37.000000000 +0200
+> @@ -525,6 +525,8 @@ struct cfg80211_ssid {
+>  * @n_ssids: number of SSIDs
+>  * @channels: channels to scan on.
+>  * @n_channels: number of channels for each band
+> + * @ie: optional information element(s) to add into Probe Request or %NULL
+> + * @ie_len: length of ie in octets
+>  * @wiphy: the wiphy this was for
+>  * @ifidx: the interface index
+>  */
+> @@ -533,6 +535,8 @@ struct cfg80211_scan_request {
+>        int n_ssids;
+>        struct ieee80211_channel **channels;
+>        u32 n_channels;
+> +       u8 *ie;
+> +       size_t ie_len;
+>
+>        /* internal */
+>        struct wiphy *wiphy;
+> --- wireless-testing.orig/net/mac80211/scan.c   2009-02-13 13:04:17.000000000 +0200
+> +++ wireless-testing/net/mac80211/scan.c        2009-02-13 13:08:37.000000000 +0200
+> @@ -338,7 +338,8 @@ void ieee80211_scan_work(struct work_str
+>                        ieee80211_send_probe_req(
+>                                sdata, NULL,
+>                                local->scan_req->ssids[i].ssid,
+> -                               local->scan_req->ssids[i].ssid_len);
+> +                               local->scan_req->ssids[i].ssid_len,
+> +                               local->scan_req->ie, local->scan_req->ie_len);
+>                next_delay = IEEE80211_CHANNEL_TIME;
+>                break;
+>        }
+> --- wireless-testing.orig/net/wireless/nl80211.c        2009-02-12 14:43:39.000000000 +0200
+> +++ wireless-testing/net/wireless/nl80211.c     2009-02-13 13:08:37.000000000 +0200
+> @@ -2286,6 +2286,7 @@ static int nl80211_trigger_scan(struct s
+>        struct wiphy *wiphy;
+>        int err, tmp, n_ssids = 0, n_channels = 0, i;
+>        enum ieee80211_band band;
+> +       size_t ie_len;
+>
+>        err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
+>        if (err)
+> @@ -2327,9 +2328,15 @@ static int nl80211_trigger_scan(struct s
+>                goto out_unlock;
+>        }
+>
+> +       if (info->attrs[NL80211_ATTR_IE])
+> +               ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+> +       else
+> +               ie_len = 0;
+> +
+>        request = kzalloc(sizeof(*request)
+>                        + sizeof(*ssid) * n_ssids
+> -                       + sizeof(channel) * n_channels, GFP_KERNEL);
+> +                       + sizeof(channel) * n_channels
+> +                       + ie_len, GFP_KERNEL);
+>        if (!request) {
+>                err = -ENOMEM;
+>                goto out_unlock;
+> @@ -2340,6 +2347,12 @@ static int nl80211_trigger_scan(struct s
+>        if (n_ssids)
+>                request->ssids = (void *)(request->channels + n_channels);
+>        request->n_ssids = n_ssids;
+> +       if (ie_len) {
+> +               if (request->ssids)
+> +                       request->ie = (void *)(request->ssids + n_ssids);
+> +               else
+> +                       request->ie = (void *)(request->channels + n_channels);
+> +       }
+>
+>        if (info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
+>                /* user specified, bail out if channel not found */
+> @@ -2380,6 +2393,12 @@ static int nl80211_trigger_scan(struct s
+>                }
+>        }
+>
+> +       if (info->attrs[NL80211_ATTR_IE]) {
+> +               request->ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+> +               memcpy(request->ie, nla_data(info->attrs[NL80211_ATTR_IE]),
+> +                      request->ie_len);
+> +       }
+> +
+>        request->ifidx = dev->ifindex;
+>        request->wiphy = &drv->wiphy;
+>
+> --- wireless-testing.orig/net/mac80211/ieee80211_i.h    2009-02-13 13:11:07.000000000 +0200
+> +++ wireless-testing/net/mac80211/ieee80211_i.h 2009-02-13 13:11:24.000000000 +0200
+> @@ -1079,7 +1079,8 @@ void ieee80211_send_auth(struct ieee8021
+>                         u8 *extra, size_t extra_len,
+>                         const u8 *bssid, int encrypt);
+>  void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+> -                             u8 *ssid, size_t ssid_len);
+> +                             u8 *ssid, size_t ssid_len,
+> +                             u8 *ie, size_t ie_len);
+>
+>  void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+>                                  const size_t supp_rates_len,
+> --- wireless-testing.orig/net/mac80211/mlme.c   2009-02-13 13:10:15.000000000 +0200
+> +++ wireless-testing/net/mac80211/mlme.c        2009-02-13 13:10:45.000000000 +0200
+> @@ -716,7 +716,7 @@ static void ieee80211_direct_probe(struc
+>         * will not answer to direct packet in unassociated state.
+>         */
+>        ieee80211_send_probe_req(sdata, NULL,
+> -                                ifmgd->ssid, ifmgd->ssid_len);
+> +                                ifmgd->ssid, ifmgd->ssid_len, NULL, 0);
+>
+>        mod_timer(&ifmgd->timer, jiffies + IEEE80211_AUTH_TIMEOUT);
+>  }
+> @@ -946,7 +946,8 @@ static void ieee80211_associated(struct
+>                        } else
+>                                ieee80211_send_probe_req(sdata, ifmgd->bssid,
+>                                                         ifmgd->ssid,
+> -                                                        ifmgd->ssid_len);
+> +                                                        ifmgd->ssid_len,
+> +                                                        NULL, 0);
+>                        ifmgd->flags ^= IEEE80211_STA_PROBEREQ_POLL;
+>                } else {
+>                        ifmgd->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
+> @@ -955,7 +956,8 @@ static void ieee80211_associated(struct
+>                                ifmgd->last_probe = jiffies;
+>                                ieee80211_send_probe_req(sdata, ifmgd->bssid,
+>                                                         ifmgd->ssid,
+> -                                                        ifmgd->ssid_len);
+> +                                                        ifmgd->ssid_len,
+> +                                                        NULL, 0);
+>                        }
+>                }
+>        }
+> --- wireless-testing.orig/net/mac80211/util.c   2009-02-13 13:08:44.000000000 +0200
+> +++ wireless-testing/net/mac80211/util.c        2009-02-13 13:11:58.000000000 +0200
+> @@ -835,7 +835,8 @@ void ieee80211_send_auth(struct ieee8021
+>  }
+>
+>  void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+> -                             u8 *ssid, size_t ssid_len)
+> +                             u8 *ssid, size_t ssid_len,
+> +                             u8 *ie, size_t ie_len)
+>  {
+>        struct ieee80211_local *local = sdata->local;
+>        struct ieee80211_supported_band *sband;
+> @@ -854,7 +855,7 @@ void ieee80211_send_probe_req(struct iee
+>        }
+>
+>        skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt) + 200 +
+> -                           extra_preq_ie_len);
+> +                           ie_len + extra_preq_ie_len);
+>        if (!skb) {
+>                printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
+>                       "request\n", sdata->dev->name);
+> @@ -901,6 +902,8 @@ void ieee80211_send_probe_req(struct iee
+>                *pos = rate->bitrate / 5;
+>        }
+>
+> +       if (ie)
+> +               memcpy(skb_put(skb, ie_len), ie, ie_len);
+>        if (extra_preq_ie)
+>                memcpy(skb_put(skb, extra_preq_ie_len), extra_preq_ie,
+>                       extra_preq_ie_len);
+>
+> --
+> Jouni Malinen                                            PGP id EFC895FA
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
