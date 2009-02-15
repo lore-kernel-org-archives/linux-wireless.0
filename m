@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36901 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:59857 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341AbZBFOZi (ORCPT
+	with ESMTP id S1752717AbZBOLB6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 09:25:38 -0500
-Subject: [PATCH] zd1211rw: do not ratelimit no-ops
+	Sun, 15 Feb 2009 06:01:58 -0500
+Subject: Re: [PATCH 07/10] cfg80211: add assert_cfg80211_lock() to ensure
+	proper protection
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 06 Feb 2009 14:31:18 +0100
-Message-Id: <1233927078.4175.0.camel@johannes.local> (sfid-20090206_152543_039159_43C8ECC6)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1234589627-16977-8-git-send-email-lrodriguez@atheros.com>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-8-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ISgTh6O8ZicbwYpvMnCo"
+Date: Sun, 15 Feb 2009 12:01:53 +0100
+Message-Id: <1234695713.4219.51.camel@johannes.local> (sfid-20090215_120202_625411_79F5AE1D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is rather confusing to see this in the log:
-[  695.606877] __ratelimit: 40 callbacks suppressed
-[  700.726878] __ratelimit: 40 callbacks suppressed
 
-without ever seeing any actual message. This is because
-zd1211rw doesn't compile out the net_ratelimit() call
-properly if debugging is not enabled.
+--=-ISgTh6O8ZicbwYpvMnCo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/zd1211rw/zd_def.h |    5 +++++
- drivers/net/wireless/zd1211rw/zd_mac.c |    7 +++----
- 2 files changed, 8 insertions(+), 4 deletions(-)
+On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
 
---- wireless-testing.orig/drivers/net/wireless/zd1211rw/zd_def.h	2009-02-06 14:25:41.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/zd1211rw/zd_def.h	2009-02-06 14:26:42.000000000 +0100
-@@ -33,8 +33,13 @@ typedef u16 __nocast zd_addr_t;
- #ifdef DEBUG
- #  define dev_dbg_f(dev, fmt, args...) \
- 	  dev_printk_f(KERN_DEBUG, dev, fmt, ## args)
-+#  define dev_dbg_f_limit(dev, fmt, args...) do {\
-+	if (net_ratelimit())
-+		dev_printk_f(KERN_DEBUG, dev, fmt, ## args)
-+} while (0)
- #else
- #  define dev_dbg_f(dev, fmt, args...) do { (void)(dev); } while (0)
-+#  define dev_dbg_f_limit(dev, fmt, args...) do { (void)(dev); } while (0)
- #endif /* DEBUG */
- 
- #ifdef DEBUG
---- wireless-testing.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2009-02-06 14:25:27.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/zd1211rw/zd_mac.c	2009-02-06 14:26:57.000000000 +0100
-@@ -793,10 +793,9 @@ static void zd_process_intr(struct work_
- 	struct zd_mac *mac = container_of(work, struct zd_mac, process_intr);
- 
- 	int_status = le16_to_cpu(*(__le16 *)(mac->intr_buffer+4));
--	if (int_status & INT_CFG_NEXT_BCN) {
--		if (net_ratelimit())
--			dev_dbg_f(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");
--	} else
-+	if (int_status & INT_CFG_NEXT_BCN)
-+		dev_dbg_f_limit(zd_mac_dev(mac), "INT_CFG_NEXT_BCN\n");
-+	else
- 		dev_dbg_f(zd_mac_dev(mac), "Unsupported interrupt\n");
- 
- 	zd_chip_enable_hwint(&mac->chip);
+> @@ -1122,6 +1128,9 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg=
+_set_by set_by,
+>  	bool intersect =3D false;
+>  	int r =3D 0;
+> =20
+> +	if (set_by !=3D REGDOM_SET_BY_CORE)
+> +		assert_cfg80211_lock();
+> +
+>  	r =3D ignore_request(wiphy, set_by, alpha2);
+> =20
+>  	if (r =3D=3D REG_INTERSECT) {
 
+still conditional locking?
+
+johannes
+
+--=-ISgTh6O8ZicbwYpvMnCo
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJl/YfAAoJEKVg1VMiehFYQUUP/AwQ+Ylujh9tJ99O+i4+PGxc
+P2tGDZPJHWkKpA/hmgofkqShCduKSmXDD+PLwFm1KzKvLvsnJJuAbITc9zNeV5/H
+gUNYhQWT676R3487WMjGKLbBGqkzpPExr3dI8m0b+gESQLqtW9PVDpIDkCPOdF98
+Hn0uuQo/dldKGw3dv8p77c94yjUgJ3CvFPkKnt79itx3wqw42ky2AE+ZaxcvIlwL
+xy+sjfIR/wUsgvrVoU1deG3T8ZQgcE5axgYh9hHYy/jDdUEBYu059xPsmFQWOSZ9
+fFY5px79IuuIsAMgvEHePd9/4DMGGUnAtgx/fq7tQob1XYCRMjVFbUBp1OO7Me2z
+cHo7bp1oHBdtMFlPMc4tzRIo9/QxXbMbyTi0oLYlNkJGmv1ajGHH5Kue9DvhYb8s
+Qmzmo39BFETm9M54/ZfZDRyX64dGgGden8TvSeaRTRTA4W1HB+gyLPw6sNhYgMKG
+2QRSzk+z3srBfyTrhpgtW6LrCbCdXglfb+DWr5+9xYOHSuVDjwM26Zt4rAoZFKJ3
+3oVa34Cu0NoLJ8G95GulePwuGpqr4PzRqmPMAUAg2meaHVFYYAEEiNP0GrImwyK2
+tcH6zQj5wLaafTZgsO7OGGbvfF7Uu0o/qe2JXnY0IOKI439MAsqyQSMUGduCY1r5
+VpnGveOVsTOp09OWnOjY
+=qA4g
+-----END PGP SIGNATURE-----
+
+--=-ISgTh6O8ZicbwYpvMnCo--
 
