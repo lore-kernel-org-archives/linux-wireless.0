@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:45996 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754977AbZBFRsH (ORCPT
+Received: from mail-fx0-f20.google.com ([209.85.220.20]:62412 "EHLO
+	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752746AbZBOUpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 12:48:07 -0500
-Message-ID: <498C77C6.3060608@lwfinger.net> (sfid-20090206_184813_026518_56CCA53E)
-Date: Fri, 06 Feb 2009 11:47:50 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 15 Feb 2009 15:45:15 -0500
+Received: by fxm13 with SMTP id 13so5136734fxm.13
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 12:45:12 -0800 (PST)
 MIME-Version: 1.0
-To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8187 sleeping/hanging
-References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>    <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk>    <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>    <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk>    <49871083.5040309@lwfinger.net>    <35040.82.152.223.193.1233590184.squirrel@www.phantomjinx.co.uk>    <3ace41890902021548o39b5f02veacc0bd650e92c7@mail.gmail.com>    <20090203142807.GC10968@tuxdriver.com>    <44120.62.172.74.16.1233679156.squirrel@www.phantomjinx.co.uk>    <49887936.3010203@lwfinger.net>    <53749.82.152.255.229.1233865126.squirrel@www.phantomjinx.co.uk>    <498B5C63.7060602@lwfinger.net> <38242.82.152.255.229.1233874870.squirrel@www.phantomjinx.co.uk>
-In-Reply-To: <38242.82.152.255.229.1233874870.squirrel@www.phantomjinx.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1234714347.4219.70.camel@johannes.local>
+References: <20090213105306.GA18754@jm.kir.nu>
+	 <1234522804.4219.13.camel@johannes.local>
+	 <20090213111523.GA22438@jm.kir.nu>
+	 <1ba2fa240902150509i5df08adcg214901548d3cd538@mail.gmail.com>
+	 <1234714347.4219.70.camel@johannes.local>
+Date: Sun, 15 Feb 2009 22:45:12 +0200
+Message-ID: <1ba2fa240902151245p3afcca43jef27921ad3db4d99@mail.gmail.com> (sfid-20090215_214520_977220_3E483D24)
+Subject: Re: [PATCH] nl80211: Optional IEs into scan request
+From: Tomas Winkler <tomasw@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-P.G. Richardson wrote:
+On Sun, Feb 15, 2009 at 6:12 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2009-02-15 at 15:09 +0200, Tomas Winkler wrote:
+>
+>> Status questions
+>> What is the version of wpa_supplicant that supports WPS.  Is wext
+>> covered with IWEVGENIE?
+>> Is it currently working with mac80211 based drivers?
+>
+> The WPS scanning might be an issue in iwlwifi because afaik the hw_scan
+> callback doesn't honour any of the ways to add IEs into probe requests?
 
-> The 20db reported in iwconfig by mac80211 is not the actual data, is the
-> signal strength please? I can see the signal strength change upon repeated
-> calls to iwconfig and downstairs even when seemingly "out of range" and
-> failing to ping anything, it still reports a signal strength of above 50%.
+Correct I'm aware of it.  Your suggestion to create mac80211/cfg
+helper for construction of probe requests for HW scan usage is on the
+TODO list...
 
-Signal strength may have even less physical meaning that the power.
-Some devices, such as those by Broadcom, report the received signal
-strength with some accuracy. The RTL8187B is supposed to have such an
-output; however, my testing showed it to be essentially random. The
-only reported quantity that could be used was the automatic gain
-control setting of the receiver. This was calibrated against the
-BCM4311 at two points, assumed to be linear, and the signal strength
-and signal quality numbers were derived. For the RTL8187, a similar
-scheme was used. As you can tell, only relative values for these
-quantities are meaningful. The fact that your signal strength is above
-50% means very little.
-
-Larry
+Tomas
