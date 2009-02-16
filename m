@@ -1,229 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:30358 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231AbZBLTOX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754862AbZBPIwb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 14:14:23 -0500
-Received: by nf-out-0910.google.com with SMTP id d21so80961nfb.21
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 11:14:21 -0800 (PST)
-Message-Id: <A31F863C-69D2-4415-B470-2514EEE60CBB@icix.org> (sfid-20090212_201426_804722_8506CF9F)
-From: Antonio Marques <froz@icix.org>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: [RFC PATCH] iwlwifi: Add mesh support for Intel Wireless WiFi Link AGN
-Date: Thu, 12 Feb 2009 19:14:16 +0000
+	Mon, 16 Feb 2009 03:52:31 -0500
+Subject: Re: [PATCH 06/10] cfg80211: propagate -ENOMEM during
+	regulatory_init()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Greg KH <greg@kroah.com>
+In-Reply-To: <43e72e890902160018r40d8c694qa1da55c9fa7ec376@mail.gmail.com> (sfid-20090216_091915_110909_54CB4C2A)
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-7-git-send-email-lrodriguez@atheros.com>
+	 <1234695674.4219.50.camel@johannes.local>
+	 <43e72e890902160018r40d8c694qa1da55c9fa7ec376@mail.gmail.com>
+	 (sfid-20090216_091915_110909_54CB4C2A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-zO6zePBcYbKgqkcPfzcJ"
+Date: Mon, 16 Feb 2009 09:52:25 +0100
+Message-Id: <1234774345.4219.106.camel@johannes.local> (sfid-20090216_095235_146817_E76C4DD3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for Mesh Point mode in iwlwifi. It is based on  
-a previously
-submitted patch:
 
-http://marc.info/?l=linux-wireless&m=121304247317921&w=2
+--=-zO6zePBcYbKgqkcPfzcJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I would appreciate it if someone more knowledgeable could take a look  
-at this as
-this is my first patch and I am not entirely familiar with the codebase.
-Signed-off-by: Antonio Marques <froz@icix.org>
----
-  drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    6 +++---
-  drivers/net/wireless/iwlwifi/iwl-agn.c    |   17 +++++++++++++++--
-  drivers/net/wireless/iwlwifi/iwl-core.c   |    2 ++
-  drivers/net/wireless/iwlwifi/iwl-rx.c     |    1 +
-  drivers/net/wireless/iwlwifi/iwl-sta.c    |    7 +++++--
-  5 files changed, 26 insertions(+), 7 deletions(-)
+On Mon, 2009-02-16 at 00:18 -0800, Luis R. Rodriguez wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/ 
-wireless/iwlwifi/iwl-agn-rs.c
-index 04b42c8..da80c05 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -806,7 +806,7 @@ static void rs_tx_status(void *priv_r, struct  
-ieee80211_supported_band *sband,
-  	if (retries > 15)
-  		retries = 15;
+> > I disagree with this patch -- there's so much that can go wrong even if
+> > allocating the message here is ok that imho it's hardly useful to check
+> > for errors here.
+>=20
+> Huh?? ENOMEM is the only error we are propagating  -- that itself
+> seems reasonable to propagate.
+>=20
+> > crda could fail, not be installed, etc.
+>=20
+> This is never propagated to the kernel, that is not what this patch
+> does. Those failures you mentioned should not prevent cfg80211 from
+> moving on.
+>=20
+> All this patch does is propagate -ENOMEMs.
 
--	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) &&
-+	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC || priv->iw_mode ==  
-NL80211_IFTYPE_MESH_POINT)  &&
-  	    !lq_sta->ibss_sta_added)
-  		goto out;
+Yes, all those other possible crda failures do not prevent cfg80211 from
+moving on. But being unable to create a uevent could very well also be
+treated as a crda failure, and then how is it different from crda
+failing in userspace to warrant stopping cfg80211 from moving on?
 
-@@ -2082,7 +2082,7 @@ static void rs_initialize_lq(struct iwl_priv  
-*priv,
-  	i = lq_sta->last_txrate_idx;
+johannes
 
-  	if ((lq_sta->lq.sta_id == 0xff) &&
--	    (priv->iw_mode == NL80211_IFTYPE_ADHOC))
-+	    (priv->iw_mode == NL80211_IFTYPE_ADHOC || priv->iw_mode ==  
-NL80211_IFTYPE_MESH_POINT))
-  		goto out;
+--=-zO6zePBcYbKgqkcPfzcJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-  	valid_tx_ant = priv->hw_params.valid_tx_ant;
-@@ -2162,7 +2162,7 @@ static void rs_get_rate(void *priv_r, struct  
-ieee80211_sta *sta, void *priv_sta,
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-  	rate_idx  = lq_sta->last_txrate_idx;
+iQIcBAABAgAGBQJJmSlGAAoJEKVg1VMiehFY8LEP/3LPqSas6qY9EEo9MPwmNYKh
+R7THWkOgz36OhNjXH6cFNb/1enbe9Sr6CQYcni74VDsKNhZQ5xNy6VOxaAN21dG/
+HJpmG8VoIvhBLO0AzzyHzwkbK5jHsaqbzSaj4cbB3LkcxD6j0fAFmUxQUp8KkRQI
+ay9TGn6TszoIHFtD9dm02zlu75ORirqKsYJqUlwE+qrj4qu4WoXHn7jw0W3dZSGc
+nHI4gsOlwUCPlqN9LTv1YQKh7v2NwN8FAhSK+suwjeLX8Y+MLnz0KHBBB2FoNjX3
+jmRZThvol2AEAmwyaI+agrLYBkc7gV9xVCet2WZWAEoSzCDVyO5q5rT0s52zQDRF
+yle9BVTsQI83/iGlPKcLNZYzpsVoY45W+LTnUUt8gqvHjQsy5pUw4Q0tbFKXjF9Q
+Vs1VjyAz2CQgUN3ZYML1ggiyZOr8jw57pmldG49VV6c2mbE11eS2RQKBKxzUUV4V
+n5Tu/dSR7uWyD3In6ZLIyEh/X4Ff9p/xnbcShdSvqNQL9j4dYPqM/79UgCfZYOQK
+NpjUzuZRPYgePSDceMjl2J72aABjovuetqZb/JDg9WHcdD2h+ZDYqMlEoHLdWVxv
+s9FdTUOxwyL3gVXIF0IxUxZJyfRCNH1z9vrAOzBHiM09Di5jyCRtTqIs+jc1MF5N
+AMFZCaz5QRQRgjSgHhLx
+=T4CW
+-----END PGP SIGNATURE-----
 
--	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) &&
-+	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC || priv->iw_mode ==  
-NL80211_IFTYPE_MESH_POINT) &&
-  	    !lq_sta->ibss_sta_added) {
-  		u8 sta_id = iwl_find_station(priv, hdr->addr1);
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/ 
-wireless/iwlwifi/iwl-agn.c
-index 397577c..ff81d67 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -303,6 +303,7 @@ static unsigned int iwl_fill_beacon_frame(struct  
-iwl_priv *priv,
-  {
-  	if (!iwl_is_associated(priv) || !priv->ibss_beacon ||
-  	    ((priv->iw_mode != NL80211_IFTYPE_ADHOC) &&
-+	     (priv->iw_mode != NL80211_IFTYPE_MESH_POINT) &&
-  	     (priv->iw_mode != NL80211_IFTYPE_AP)))
-  		return 0;
-
-@@ -2096,7 +2097,7 @@ static void iwl_post_associate(struct iwl_priv  
-*priv)
-  		else
-  			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
-
--		if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
-+		if (priv->iw_mode == NL80211_IFTYPE_ADHOC || priv->iw_mode ==  
-NL80211_IFTYPE_MESH_POINT)
-  			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
-
-  	}
-@@ -2107,6 +2108,7 @@ static void iwl_post_associate(struct iwl_priv  
-*priv)
-  	case NL80211_IFTYPE_STATION:
-  		break;
-
-+	case NL80211_IFTYPE_MESH_POINT:
-  	case NL80211_IFTYPE_ADHOC:
-
-  		/* assume default assoc id */
-@@ -2123,7 +2125,7 @@ static void iwl_post_associate(struct iwl_priv  
-*priv)
-  		break;
-  	}
-
--	if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
-+	if (priv->iw_mode == NL80211_IFTYPE_ADHOC || priv->iw_mode ==  
-NL80211_IFTYPE_MESH_POINT)
-  		priv->assoc_station_added = 1;
-
-  	spin_lock_irqsave(&priv->lock, flags);
-@@ -2542,6 +2544,12 @@ static int iwl_mac_config_interface(struct  
-ieee80211_hw *hw,
-  		priv->ibss_beacon = ieee80211_beacon_get(hw, vif);
-  	}
-
-+	if (priv->iw_mode == NL80211_IFTYPE_MESH_POINT) {
-+		if (priv->ibss_beacon)
-+			dev_kfree_skb(priv->ibss_beacon);
-+		priv->ibss_beacon = ieee80211_beacon_get(hw, vif);
-+	}
-+
-  	if (iwl_is_rfkill(priv))
-  		goto done;
-
-@@ -2583,6 +2591,11 @@ static int iwl_mac_config_interface(struct  
-ieee80211_hw *hw,
-  	IWL_DEBUG_MAC80211(priv, "leave\n");
-  	mutex_unlock(&priv->mutex);
-
-+	if (priv->iw_mode == NL80211_IFTYPE_MESH_POINT) {
-+		iwl_reset_qos(priv);
-+		iwl_post_associate(priv);
-+	}
-+
-  	return 0;
-  }
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/ 
-wireless/iwlwifi/iwl-core.c
-index 260bf90..a3592ac 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1028,6 +1028,7 @@ void iwl_connection_init_rx_config(struct  
-iwl_priv *priv, int mode)
-  		priv->staging_rxon.filter_flags = RXON_FILTER_ACCEPT_GRP_MSK;
-  		break;
-
-+	case NL80211_IFTYPE_MESH_POINT:
-  	case NL80211_IFTYPE_ADHOC:
-  		priv->staging_rxon.dev_type = RXON_DEV_TYPE_IBSS;
-  		priv->staging_rxon.flags = RXON_FLG_SHORT_PREAMBLE_MSK;
-@@ -1268,6 +1269,7 @@ int iwl_setup_mac(struct iwl_priv *priv)
-  		    IEEE80211_HW_SUPPORTS_PS;
-  	hw->wiphy->interface_modes =
-  		BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_MESH_POINT) |
-  		BIT(NL80211_IFTYPE_ADHOC);
-
-  	hw->wiphy->custom_regulatory = true;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/ 
-wireless/iwlwifi/iwl-rx.c
-index 8f65908..f2060a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -959,6 +959,7 @@ static int iwl_is_network_packet(struct iwl_priv  
-*priv,
-  	/* Filter incoming packets to determine if they are targeted toward
-  	 * this network, discarding packets coming from ourselves */
-  	switch (priv->iw_mode) {
-+	case NL80211_IFTYPE_MESH_POINT:
-  	case NL80211_IFTYPE_ADHOC: /* Header: Dest. | Source    | BSSID */
-  		/* packets to our IBSS update information */
-  		return !compare_ether_addr(header->addr3, priv->bssid);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/ 
-wireless/iwlwifi/iwl-sta.c
-index 1fae3a6..94a18f2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -45,6 +45,7 @@ u8 iwl_find_station(struct iwl_priv *priv, const u8  
-*addr)
-  	unsigned long flags;
-
-  	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) ||
-+	    (priv->iw_mode == NL80211_IFTYPE_MESH_POINT) ||
-  	    (priv->iw_mode == NL80211_IFTYPE_AP))
-  		start = IWL_STA_ID;
-
-@@ -285,7 +286,8 @@ u8 iwl_add_station_flags(struct iwl_priv *priv,  
-const u8 *addr, int is_ap,
-
-  	/* BCAST station and IBSS stations do not work in HT mode */
-  	if (sta_id != priv->hw_params.bcast_sta_id &&
--	    priv->iw_mode != NL80211_IFTYPE_ADHOC)
-+	    (priv->iw_mode != NL80211_IFTYPE_ADHOC) &&
-+	    (priv->iw_mode != NL80211_IFTYPE_MESH_POINT))
-  		iwl_set_ht_add_station(priv, sta_id, ht_info);
-
-  	spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
-@@ -908,7 +910,7 @@ int iwl_send_lq_cmd(struct iwl_priv *priv,
-  	};
-
-  	if ((lq->sta_id == 0xFF) &&
--	    (priv->iw_mode == NL80211_IFTYPE_ADHOC))
-+	    (priv->iw_mode == NL80211_IFTYPE_ADHOC || priv->iw_mode ==  
-NL80211_IFTYPE_MESH_POINT))
-  		return -EINVAL;
-
-  	if (lq->sta_id == 0xFF)
-@@ -1052,6 +1054,7 @@ int iwl_get_sta_id(struct iwl_priv *priv, struct  
-ieee80211_hdr *hdr)
-
-  	/* If this frame is going out to an IBSS network, find the station,
-  	 * or create a new station table entry */
-+	case NL80211_IFTYPE_MESH_POINT:
-  	case NL80211_IFTYPE_ADHOC:
-  		sta_id = iwl_find_station(priv, hdr->addr1);
-  		if (sta_id != IWL_INVALID_STATION)
--- 
-1.5.6.3
+--=-zO6zePBcYbKgqkcPfzcJ--
 
