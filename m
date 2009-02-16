@@ -1,101 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:27450 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751293AbZBNFei (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Feb 2009 00:34:38 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 21:34:38 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/10] cfg80211: add regulatory_hint_core() to separate the core reg hint
-Date: Fri, 13 Feb 2009 21:33:42 -0800
-Message-ID: <1234589627-16977-6-git-send-email-lrodriguez@atheros.com> (sfid-20090214_063442_627964_0222D924)
-In-Reply-To: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+Received: from yx-out-2324.google.com ([74.125.44.28]:61585 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753076AbZBPITe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2009 03:19:34 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so920427yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 00:19:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1234695713.4219.51.camel@johannes.local>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-8-git-send-email-lrodriguez@atheros.com>
+	 <1234695713.4219.51.camel@johannes.local>
+Date: Mon, 16 Feb 2009 00:19:32 -0800
+Message-ID: <43e72e890902160019x9acdf3bk41631800f4c9fcba@mail.gmail.com> (sfid-20090216_091936_690689_910628DD)
+Subject: Re: [PATCH 07/10] cfg80211: add assert_cfg80211_lock() to ensure
+	proper protection
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will allow us to clean up and make distinctions of who
-needs locking or not.
+On Sun, Feb 15, 2009 at 3:01 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
+>
+>> @@ -1122,6 +1128,9 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+>>       bool intersect = false;
+>>       int r = 0;
+>>
+>> +     if (set_by != REGDOM_SET_BY_CORE)
+>> +             assert_cfg80211_lock();
+>> +
+>>       r = ignore_request(wiphy, set_by, alpha2);
+>>
+>>       if (r == REG_INTERSECT) {
+>
+> still conditional locking?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   36 +++++++++++++++++++++++++++---------
- 1 files changed, 27 insertions(+), 9 deletions(-)
+WTF, that was a typo the idea with this new series was to remove that.
+Sorry I'll resend with that removed.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ba82312..679fded 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 	case REGDOM_SET_BY_INIT:
- 		return -EINVAL;
- 	case REGDOM_SET_BY_CORE:
--		/*
--		 * Always respect new wireless core hints, should only happen
--		 * when updating the world regulatory domain at init.
--		 */
--		return 0;
-+		return -EINVAL;
- 	case REGDOM_SET_BY_COUNTRY_IE:
- 		if (unlikely(!is_an_alpha2(alpha2)))
- 			return -EINVAL;
-@@ -1183,6 +1179,26 @@ new_request:
- 	return call_crda(alpha2);
- }
- 
-+static int regulatory_hint_core(const char *alpha2)
-+{
-+	struct regulatory_request *request;
-+
-+	BUG_ON(last_request);
-+
-+	request = kzalloc(sizeof(struct regulatory_request),
-+			  GFP_KERNEL);
-+	if (!request)
-+		return -ENOMEM;
-+
-+	request->alpha2[0] = alpha2[0];
-+	request->alpha2[1] = alpha2[1];
-+	request->initiator = REGDOM_SET_BY_CORE;
-+
-+	last_request = request;
-+
-+	return call_crda(alpha2);
-+}
-+
- void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- {
- 	int r;
-@@ -1616,16 +1632,18 @@ int regulatory_init(void)
- 	 * stuck with the static values. We ignore "EU" code as
- 	 * that is not a valid ISO / IEC 3166 alpha2 */
- 	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
--		err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE,
--					ieee80211_regdom, 0, ENVIRON_ANY);
-+		err = regulatory_hint_core(ieee80211_regdom);
- #else
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
--	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", 0, ENVIRON_ANY);
--	if (err)
-+	err = regulatory_hint_core("00");
-+	if (err) {
-+		if (err == -ENOMEM)
-+			return err;
- 		printk(KERN_ERR "cfg80211: calling CRDA failed - "
- 		       "unable to update world regulatory domain, "
- 		       "using static definition\n");
-+	}
- #endif
- 
- 	return 0;
--- 
-1.6.1.2.253.ga34a
-
+  Luis
