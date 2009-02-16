@@ -1,58 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56496 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754762AbZBTAVj (ORCPT
+Received: from mail-gx0-f222.google.com ([209.85.217.222]:58717 "EHLO
+	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754112AbZBPINf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 19:21:39 -0500
-Subject: Re: [PATCH v4 10/15] cfg80211: remove likely from an 11d hint case
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Mon, 16 Feb 2009 03:13:35 -0500
+Received: by gxk22 with SMTP id 22so2805998gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 00:13:33 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1234695526.4219.46.camel@johannes.local>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-5-git-send-email-lrodriguez@atheros.com>
+	 <1234695526.4219.46.camel@johannes.local>
+Date: Mon, 16 Feb 2009 00:13:33 -0800
+Message-ID: <43e72e890902160013q48912fa1if1db7155e4fee1f1@mail.gmail.com> (sfid-20090216_091355_894983_518B35CC)
+Subject: Re: [PATCH 04/10] nl80211: disallow user requests prior to
+	regulatory_init()
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1234999545-14357-11-git-send-email-lrodriguez@atheros.com>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-	 <1234999545-14357-11-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9ZatDUiCDw4Bl4GLf10l"
-Date: Thu, 19 Feb 2009 14:26:54 +0100
-Message-Id: <1235050014.4023.62.camel@johannes.local> (sfid-20090220_012142_756965_A57F8BDC)
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Feb 15, 2009 at 2:58 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
+>> If cfg80211 is built into the kernel there is perhaps a small
+>> time window betwen nl80211_init() and regulatory_init() where
+>> cfg80211_regdomain hasn't yet been initialized to let the
+>> wireless core do its work. During that rare case and time
+>> frame (if its even possible) we don't allow user regulatory
+>> changes as cfg80211 is working on enabling its first regulatory
+>> domain.
+>>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  net/wireless/nl80211.c |    9 +++++++++
+>>  1 files changed, 9 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+>> index db973f2..6f4dedb 100644
+>> --- a/net/wireless/nl80211.c
+>> +++ b/net/wireless/nl80211.c
+>> @@ -1876,6 +1876,15 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+>>       int r;
+>>       char *data = NULL;
+>>
+>> +     /*
+>> +      * You should only get this when cfg80211 hasn't yet initialized
+>> +      * completely when built-in to the kernel right between the time
+>> +      * window between nl80211_init() and regulatory_init(), if that is
+>> +      * even possible.
+>> +      */
+>> +     if (!cfg80211_regdomain)
+>> +             return -EINPROGRESS;
+>> +
+>
+> But that variable access here is racy too.
 
---=-9ZatDUiCDw4Bl4GLf10l
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Right.
 
-On Wed, 2009-02-18 at 18:25 -0500, Luis R. Rodriguez wrote:
+> It might be ok anyway because
+> the variable can never be NULL again after the first assignment
 
-> +	if (unlikely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
->  		goto out;
+That's what I was going for.
 
-WARN_ON already contains an unlikely.
+>  but in
+> that case the assignment needs to take care to assign something fully
+> created ...
 
-johannes
+Can you elaborate on what you mean?
 
---=-9ZatDUiCDw4Bl4GLf10l
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJnV4YAAoJEKVg1VMiehFYnJYQAIFENB93JVZWmzElfIXzm7wU
-+ux4Nuya3Z1ZzpP7+fGqZQqBhPlr4JgEYZt6h/euvwqiU+DrrXGIjXcGzEfaj10e
-6iD2zLgnfLOFyKNOSdVYuvT5kWciT4dJFvF3eJlF8cF35usT6FVrw6w4GUramzP/
-lKgbZybw4lAoq9mxwxPAomNctZ8juDn78lP/klew/mpDEdfbYWeHT8mIGWldFHVq
-BoKAyL+Lo5g5VEBX1REdodBrjxxevpJYtUwK/mSU+iwTZy0tEDf/DDrdfNhdmGQH
-RZlUwnq9PMiaz3527qZ3kX98jHtPlxxca4B6ou50M6IApGftBP4HJti6B+9t7rZD
-gjb+k9WshM75Odg4R+H8Q7tc8J5batcVe6dWWuhkZLHojVu9YsXotRV2pSuak4Pq
-6jyLAev42gNt2bIvVaaoZXRZVh3n79BCNiU3LwxOr3Byo7maVqZAvimk0k5hBZHK
-1NNEQckPZw4ybl1MYHd6ipPp6DHhcRW68/YbZb9HRjX3a4dDdGQBFckPQjbR1Z/4
-CNvQjoKzWe+aIFcBSUZwTbAHpZD80IbFcMPrYdqUguWBghHTisl862ynLrc+ofHO
-l1l0q9AaNarSYSHBVgEoRZtHxzvppQ/U0D1by/skQ7LLrsYEpHcgMnCJ6MJgoiQ0
-B5xKwOuuADtVAUHHgJOX
-=8r00
------END PGP SIGNATURE-----
-
---=-9ZatDUiCDw4Bl4GLf10l--
-
+  Luis
