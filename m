@@ -1,60 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35177 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753366AbZBRMd2 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45282 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756723AbZBPIuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 07:33:28 -0500
-Date: Wed, 18 Feb 2009 14:33:01 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Missing link quality with wireless-testing
-Message-ID: <20090218123301.GA6152@jm.kir.nu> (sfid-20090218_133406_302377_77CA0CEF)
-References: <1234899806.29785.35.camel@johannes.local> <1234902294.4678.12.camel@californication> <1234904111.29785.44.camel@johannes.local> <1234904978.4678.31.camel@californication> <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net> <1234933059.21412.28.camel@californication> <20090218073104.GA23366@jm.kir.nu> <1234944391.21412.47.camel@californication> <20090218082520.GA26280@jm.kir.nu> <1234959523.13950.47.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1234959523.13950.47.camel@localhost>
+	Mon, 16 Feb 2009 03:50:16 -0500
+Subject: Re: [PATCH 05/10] cfg80211: add regulatory_hint_core() to separate
+	 the core reg hint
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890902160014k11ba609lbe1340750771b6c0@mail.gmail.com> (sfid-20090216_091419_672080_37A82B02)
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-6-git-send-email-lrodriguez@atheros.com>
+	 <1234695593.4219.47.camel@johannes.local>
+	 <43e72e890902160014k11ba609lbe1340750771b6c0@mail.gmail.com>
+	 (sfid-20090216_091419_672080_37A82B02)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-jYnKuCr5XUvZ51BsDxar"
+Date: Mon, 16 Feb 2009 09:50:11 +0100
+Message-Id: <1234774211.4219.102.camel@johannes.local> (sfid-20090216_095027_760461_DD2BCF3B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 18, 2009 at 07:18:43AM -0500, Dan Williams wrote:
 
-> With WEXT, there are three ways to calculate pretty bars.  They *all*
-> require max_qual values returned from the GIWRANGE handler, because
-> otherwise you have no f**king clue what the upper or lower bounds are.
+--=-jYnKuCr5XUvZ51BsDxar
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> QUAL.LEVEL in dBm
-> --------------
-> 
-> Requires:
->   - max_qual.level == 0 (ie, dBm values)
+On Mon, 2009-02-16 at 00:14 -0800, Luis R. Rodriguez wrote:
+> On Sun, Feb 15, 2009 at 2:59 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
+> >> This will allow us to clean up and make distinctions of who
+> >> needs locking or not.
+> >>
+> >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> >> ---
+> >>  net/wireless/reg.c |   36 +++++++++++++++++++++++++++---------
+> >>  1 files changed, 27 insertions(+), 9 deletions(-)
+> >>
+> >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> >> index ba82312..679fded 100644
+> >> --- a/net/wireless/reg.c
+> >> +++ b/net/wireless/reg.c
+> >> @@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, =
+enum reg_set_by set_by,
+> >>       case REGDOM_SET_BY_INIT:
+> >>               return -EINVAL;
+> >>       case REGDOM_SET_BY_CORE:
+> >> -             /*
+> >> -              * Always respect new wireless core hints, should only h=
+appen
+> >> -              * when updating the world regulatory domain at init.
+> >> -              */
+> >> -             return 0;
+> >> +             return -EINVAL;
+> >>       case REGDOM_SET_BY_COUNTRY_IE:
+> >>               if (unlikely(!is_an_alpha2(alpha2)))
+> >>                       return -EINVAL;
+> >> @@ -1183,6 +1179,26 @@ new_request:
+> >>       return call_crda(alpha2);
+> >>  }
+> >>
+> >> +static int regulatory_hint_core(const char *alpha2)
+> >> +{
+> >> +     struct regulatory_request *request;
+> >> +
+> >> +     BUG_ON(last_request);
+> >> +
+> >> +     request =3D kzalloc(sizeof(struct regulatory_request),
+> >> +                       GFP_KERNEL);
+> >> +     if (!request)
+> >> +             return -ENOMEM;
+> >> +
+> >> +     request->alpha2[0] =3D alpha2[0];
+> >> +     request->alpha2[1] =3D alpha2[1];
+> >> +     request->initiator =3D REGDOM_SET_BY_CORE;
+> >> +
+> >> +     last_request =3D request;
+> >
+> > So before you documented that cfg80211_mutex is used to protect this
+> > variable, but it's not used here.
+>=20
+> This is only used during initialization, have any better ideas?
 
-That is an area where NM (= 0) and mac80211 (= -110) do not agree.
+If regulatory is initialised before netlink that is probably fine, is
+it?
 
-> NM is probably fine here with qual == 0 because I doubt the GIWRANGE
-> handler is returning a valid max_qual.qual > 0 anymore with Johannes'
-> patch.  Could be wrong though.
+johannes
 
-Well, it is not fine, but not only for that reason.. max_qual.qual is
-still set to 100 and the IW_QUAL_QUAL_INVALID is not used for it.
-However, even if I set IW_QUAL_QUAL_INVALID and remove "quality" from
-wpa_supplicant dbus interface, I still get NM showing perfect 100%
-signal all the time regardless of how close to losing the connection the
-card really is..
+--=-jYnKuCr5XUvZ51BsDxar
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-I gave up on trying to understand all the cases, but my assumption is
-that the remaining issue is in the disagreement on max_qua.level for the
-dBm case. However, I'm not sure whether fixing that would automatically
-resolve the issues with wext (it might be enough for the current nl80211
-version with wpa_supplicant from git head).
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-> Ah right; the dbus interface shouldn't be appending "quality" to the
-> dict if the driver doesn't provide valid quality (ie, max_qual.updated
-> has the QUAL_INVALID bit set).  Same thing for noise and level.
+iQIcBAABAgAGBQJJmSjBAAoJEKVg1VMiehFYvuUQAIER81uaKo+2MkmPc1AUODrG
+c0ZuP8RbMsyxn1BVY270qC1vNIH45Wwr30eNqUgulRL9Id5O8f40M06ZbIuryBgP
+O0wZO/hSdL9ZX+ygVIsGjvZucUoTDY1ScpDzKkQTzfNzVvwrq8l/VhcubhSQko/W
+OoBQYcSqlmrW5x2Qys+w1bY8vUn/yrK5jFIMc/elrK5gtdkehie7Wsp4mw2CN+2R
+xop+6hupTdQQ/vrYFMZAXiO8V9UD4Cmuc9x3FiAqt8umbGwNtc/O+yRYdaejunhd
+CbMYR0kCx4tjdYghPBB+Xd4OnQM5o9JNmblhW8DcliCbIE2werJe6w0TTI/bgO4N
+wOfeyT5j1wxGTlGLBDtPIDdwQZiZexlICAtKdggLoRUWGR3AOJJPcs1Ni+niROxn
+ne7xx/501KhG6gfABbBawFQg5juHRw8CMhc62LMKGbWvLS8/qziXffs6G08/uadx
+6qiIet0YTlLzWS7Fp1TPueoDm2wFE8pBVnAgCiY/9pKvH80DnSWgxZ4lZ2LPA3Ca
+1EEacbncYPUkBhLh0JWPPFojfa7pd/J7qFMtHT66dwX/n9K8t17EFAAw2xsChmkB
+609s6/msPBSS5ccCOFkaMBQUJYpGGMvojbYrvnSU2fi22XG63x++PsgC03WDskTw
+Lo/Ewhf20U23JIRrlhCf
+=g/Tq
+-----END PGP SIGNATURE-----
 
-The unknown values are not included anymore in wpa_supplicant 0.7.x.
+--=-jYnKuCr5XUvZ51BsDxar--
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
