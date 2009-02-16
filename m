@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:38180 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:55999 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750936AbZBFQnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 11:43:10 -0500
-Subject: Re: turning off IBSS (with wext)
+	id S1751287AbZBPSCi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2009 13:02:38 -0500
+Subject: Re: NetworkManager and mac80211_hwsim
 From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1233928622.4175.9.camel@johannes.local>
-References: <1233928622.4175.9.camel@johannes.local>
+To: Daniel Wagner <wagi@monom.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, networkmanager-list@gnome.org
+In-Reply-To: <20090216172528.GB29509@toronto053.server4you.de>
+References: <20090216160016.GA29509@toronto053.server4you.de>
+	 <1234800284.4219.136.camel@johannes.local>
+	 <20090216172528.GB29509@toronto053.server4you.de>
 Content-Type: text/plain
-Date: Fri, 06 Feb 2009 11:41:36 -0500
-Message-Id: <1233938496.28437.10.camel@localhost> (sfid-20090206_174315_252955_401A01DC)
+Date: Mon, 16 Feb 2009 13:00:51 -0500
+Message-Id: <1234807251.1666.9.camel@localhost.localdomain> (sfid-20090216_190242_601729_F5E24D38)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-02-06 at 14:57 +0100, Johannes Berg wrote:
-> Hi,
+On Mon, 2009-02-16 at 18:25 +0100, Daniel Wagner wrote:
+> On Mon, Feb 16, 2009 at 05:04:44PM +0100, Johannes Berg wrote:
+> > On Mon, 2009-02-16 at 17:00 +0100, Daniel Wagner wrote:
+> > 
+> > > hotplug_event_begin_add_dev (..., parent_dev = NULL, ...)
+> > >   net_add(..., parent_dev = NULL, ...)
+> > >   {
+> > >   	if (parent_dev == NULL)
+> > > 		goto error;
+> > >   }
+> > > 
+> > > Before I go deeper into that thing, does someone has
+> > > an idea what could go wrong here with mac80211_hwsim?
+> > 
+> > hwsim phys have no parents in sysfs since they're virtual.
 > 
-> so I was testing IBSS, and found this strange behaviour:
-> 
->  * wpa_supplicant (or NM?) will try to do SIWMLME(disassoc) in IBSS
->    mode, which seems kinda wrong. Why do we accept it? We send out a
->    frame and then do nothing else.
->  * Then I thought "iwconfig wlan1 essid off" - but that fails with
->    -EINVAL due to ieee80211_sta_find_ibss
-> 
-> It seems to me that either one of those, or both, should actually turn
-> off beaconing.
+> Do you propose to patch hald to handle this situation then?
 
-Either one; the supplicant uses SIWMLME(disassoc) at various times (like
-when leaving a BSS), and NM will sometimes set a NULL SSID when
-deactivating the device.
+The patch (for now) would have to go in hal, since obviously if HAL
+can't see it, NM won't.  Until we port over to DeviceKit of course.
 
-Dan
+dan
 
 
