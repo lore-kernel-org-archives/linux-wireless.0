@@ -1,85 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53200 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751620AbZBTFnA (ORCPT
+Received: from toronto053.server4you.de ([62.75.220.53]:38855 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750778AbZBPRZS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 00:43:00 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Greg KH <greg@kroah.com>
-Subject: [PATCH v5 06/15] cfg80211: propagate -ENOMEM during regulatory_init()
-Date: Fri, 20 Feb 2009 00:42:41 -0500
-Message-Id: <1235108570-17652-7-git-send-email-lrodriguez@atheros.com> (sfid-20090220_064315_347248_80CE8F04)
-In-Reply-To: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
-References: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 16 Feb 2009 12:25:18 -0500
+Date: Mon, 16 Feb 2009 18:25:28 +0100
+From: Daniel Wagner <wagi@monom.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, networkmanager-list@gnome.org
+Subject: Re: NetworkManager and mac80211_hwsim
+Message-ID: <20090216172528.GB29509@toronto053.server4you.de> (sfid-20090216_182523_459480_4E1E5C6A)
+References: <20090216160016.GA29509@toronto053.server4you.de> <1234800284.4219.136.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1234800284.4219.136.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calling kobject_uevent_env() can fail mainly due to out of
-memory conditions. We do not want to continue during such
-conditions so propagate that as well instead of letting
-cfg80211 load as if everything is peachy.
+On Mon, Feb 16, 2009 at 05:04:44PM +0100, Johannes Berg wrote:
+> On Mon, 2009-02-16 at 17:00 +0100, Daniel Wagner wrote:
+> 
+> > hotplug_event_begin_add_dev (..., parent_dev = NULL, ...)
+> >   net_add(..., parent_dev = NULL, ...)
+> >   {
+> >   	if (parent_dev == NULL)
+> > 		goto error;
+> >   }
+> > 
+> > Before I go deeper into that thing, does someone has
+> > an idea what could go wrong here with mac80211_hwsim?
+> 
+> hwsim phys have no parents in sysfs since they're virtual.
 
-Additionally lets clarify that when CRDA is not called during
-cfg80211's initialization _and_ if the error is not an -ENOMEM
-its because kobject_uevent_env() failed to call CRDA, not because
-CRDA failed. For those who want to find out why we also let you
-do so by enabling the kernel config CONFIG_CFG80211_REG_DEBUG --
-you'll get an actual stack trace.
+Do you propose to patch hald to handle this situation then?
 
-So for now we'll treat non -ENOMEM kobject_uevent_env() failures as
-non fatal during cfg80211's initialization.
-
-CC: Greg KH <greg@kroah.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   22 +++++++++++++++++-----
- 1 files changed, 17 insertions(+), 5 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6373a78..47d5056 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1616,7 +1616,7 @@ void reg_device_remove(struct wiphy *wiphy)
- 
- int regulatory_init(void)
- {
--	int err;
-+	int err = 0;
- 
- 	reg_pdev = platform_device_register_simple("regulatory", 0, NULL, 0);
- 	if (IS_ERR(reg_pdev))
-@@ -1637,12 +1637,24 @@ int regulatory_init(void)
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
- 	err = regulatory_hint_core("00");
-+#endif
- 	if (err) {
--		printk(KERN_ERR "cfg80211: calling CRDA failed - "
--		       "unable to update world regulatory domain, "
--		       "using static definition\n");
--	}
-+		if (err == -ENOMEM)
-+			return err;
-+		/*
-+		 * N.B. kobject_uevent_env() can fail mainly for when we're out
-+		 * memory which is handled and propagated appropriately above
-+		 * but it can also fail during a netlink_broadcast() or during
-+		 * early boot for call_usermodehelper(). For now treat these
-+		 * errors as non-fatal.
-+		 */
-+		printk(KERN_ERR "cfg80211: kobject_uevent_env() was unable "
-+			"to call CRDA during init");
-+#ifdef CONFIG_CFG80211_REG_DEBUG
-+		/* We want to find out exactly why when debugging */
-+		WARN_ON(err);
- #endif
-+	}
- 
- 	return 0;
- }
--- 
-1.6.0.3
-
+daniel
