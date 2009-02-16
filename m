@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51800 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756230AbZBJUcA (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47010 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110AbZBPQA5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 15:32:00 -0500
-Message-Id: <20090210202553.253322188@sipsolutions.net> (sfid-20090210_213221_449264_C71244F9)
-References: <20090210202536.425266119@sipsolutions.net>
-Date: Tue, 10 Feb 2009 21:25:40 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 04/27] mac80211: properly validate/translate IW_AUTH_MFP
-	values
-Mime-Version: 1.0
+	Mon, 16 Feb 2009 11:00:57 -0500
+Date: Mon, 16 Feb 2009 10:47:33 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tony Vroon <tony@linx.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	reinette chatre <reinette.chatre@intel.com>
+Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
+	ranges
+Message-ID: <20090216154733.GA2870@tuxdriver.com> (sfid-20090216_170100_497595_3C0F9A59)
+References: <1234203811.21570.19.camel@localhost> <20090209183924.GA6069@tuxdriver.com> <1234207263.6694.1.camel@localhost> <1234208152.6694.4.camel@localhost> <20090210013941.GA4386@tesla> <1234230689.3793.15.camel@localhost> <20090210020708.GC4386@tesla> <1234379981.4789.7.camel@localhost> <20090214045232.GA5769@tesla> <1234786124.4271.2.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1234786124.4271.2.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure nobody passes in bogus values, and translate the values
-(although it isn't necessary).
+On Mon, Feb 16, 2009 at 12:08:44PM +0000, Tony Vroon wrote:
+> Just to confirm, if I use my early-boot hook that I used for your iw
+> list to set the regulatory domain manually (iw reg set GB) all is well.
+> If I allow the driver stack to get to the association stage without
+> setting a regulatory domain, I can never get my 802.11A spectrum back
+> after the fact.
+> Would you still see this as a bug or rather a specific requirement of
+> the new interface that hasn't yet been documented?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/wext.c |   18 +++++++++++++++---
- 1 file changed, 15 insertions(+), 3 deletions(-)
-
---- wireless-testing.orig/net/mac80211/wext.c	2009-02-10 20:59:27.000000000 +0100
-+++ wireless-testing/net/mac80211/wext.c	2009-02-10 20:59:30.000000000 +0100
-@@ -982,9 +982,21 @@ static int ieee80211_ioctl_siwauth(struc
- 			break;
- 		}
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
--		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
--			sdata->u.sta.mfp = data->value;
--		else
-+		    sdata->vif.type == NL80211_IFTYPE_ADHOC) {
-+		    	switch (data->value) {
-+		    	case IW_AUTH_MFP_DISABLED:
-+		    		sdata->u.sta.mfp = IEEE80211_MFP_DISABLED;
-+		    		break;
-+		    	case IW_AUTH_MFP_OPTIONAL:
-+		    		sdata->u.sta.mfp = IEEE80211_MFP_OPTIONAL;
-+		    		break;
-+		    	case IW_AUTH_MFP_REQUIRED:
-+		    		sdata->u.sta.mfp = IEEE80211_MFP_REQUIRED;
-+		    		break;
-+		    	default:
-+		    		ret = -EINVAL;
-+		    	}
-+		} else
- 			ret = -EOPNOTSUPP;
- 		break;
- 	default:
+Seems like a bug, or at least an unintended consequence of intersection...?
 
 -- 
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
