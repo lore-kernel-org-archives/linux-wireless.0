@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54303 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752062AbZBRHcP (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:14569 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753691AbZBPJz0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 02:32:15 -0500
-Date: Wed, 18 Feb 2009 09:31:04 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Missing link quality with wireless-testing
-Message-ID: <20090218073104.GA23366@jm.kir.nu> (sfid-20090218_083219_546555_0337B005)
-References: <1234896777.4678.7.camel@californication> <1234899806.29785.35.camel@johannes.local> <1234902294.4678.12.camel@californication> <1234904111.29785.44.camel@johannes.local> <1234904978.4678.31.camel@californication> <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net> <1234933059.21412.28.camel@californication>
+	Mon, 16 Feb 2009 04:55:26 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so925091yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 01:55:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1234933059.21412.28.camel@californication>
+In-Reply-To: <1234695858.4219.54.camel@johannes.local>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-9-git-send-email-lrodriguez@atheros.com>
+	 <1234695858.4219.54.camel@johannes.local>
+Date: Mon, 16 Feb 2009 01:55:25 -0800
+Message-ID: <43e72e890902160155j402e887an9c5ea3ca9b9f64f3@mail.gmail.com> (sfid-20090216_105532_236120_76C8B514)
+Subject: Re: [PATCH 08/10] cfg80211: make regulatory_request use wiphy_idx
+	instead of wiphy
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 18, 2009 at 05:57:39AM +0100, Marcel Holtmann wrote:
-> > Would setting qual->updated |= IW_QUAL_QUAL_INVALID; work for you?  If
-> > some app doesn't handle that, it's totally, completely broken.
-> 
-> does wpa_supplicant handle this value correctly? I actually never
-> checked that.
+On Sun, Feb 15, 2009 at 3:04 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
+>
+>> +static inline
+>> +int wiphy_idx(struct wiphy *wiphy)
+>> +{
+>> +     struct cfg80211_registered_device *drv;
+>> +     if (!wiphy)
+>> +             return WIPHY_IDX_STALE;
+>> +     drv = wiphy_to_dev(wiphy);
+>> +     return drv->wiphy_idx;
+>> +}
+>
+> I neither like the name of this function (same as the variable name) nor
+> the function -- you're using it in exactly one place where you cannot
+> ever pass NULL afaict.
 
-No, it doesn't use qual->updated at all. Then again, neither does it
-rely on qual->qual either. The signal level (qual->level) is used first
-and only if that is not available, qual->qual will be used in sorting
-the results.
+Nope, I'm calling it from 2 places:
 
-> However I think it is bad practice to abandon a value that has been
-> previously set by mac80211 and remove it without any further warning. If
-> a driver never set the value before it is a different story than
-> mac80211 deciding to not set it any more from one kernel version to
-> another one.
+* Driver hints which never have the wiphy NULL
+* __regulatory_hint: called from 11d hints, and from the workqueue
+that processes the pending requests (which can come from userspace or
+from drivers right now).
 
-It would be interesting to know which applications depend only on
-qual->qual values being there and cannot use qual->level. Anyway, I
-would agree that it would be reasonable to fill in something in the
-qual->qual field for now. It should be enough to do this in the wext
-compat code (i.e., not changing anything in mac80211 and only touching
-#ifdef CONFIG_WIRELESS_EXT blocks in net/wireless/scan.c). This would
-provide somewhat useful value for applications that depend on a value
-that was not really guaranteed to be there in the first place. I think I
-would include the IW_QUAL_QUAL_INVALID flag anyway and just target the
-broken apps with this workaround.
+Do you want me to move it into reg.c?
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
