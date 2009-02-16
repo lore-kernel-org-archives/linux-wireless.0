@@ -1,60 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59243 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:37553 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751692AbZBPSZT (ORCPT
+	with ESMTP id S1753429AbZBPJzV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 13:25:19 -0500
-Subject: Re: [PATCH v2] mac80211: split IBSS/managed code
+	Mon, 16 Feb 2009 04:55:21 -0500
+Subject: Re: [PATCH 09/10] cfg80211: move regulatory hints to workqueue
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <20090216182402.51530@gmx.net> (sfid-20090216_192447_336149_B320BB22)
-References: <1234396421.16004.67.camel@johannes.local>
-	 <20090213203641.199830@gmx.net>
-	 (sfid-20090213_213711_951136_CAB188EF) <1234698268.4219.64.camel@johannes.local>
-	 <20090216182402.51530@gmx.net> (sfid-20090216_192447_336149_B320BB22)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-1/4qwjPKHTExtauDIj5J"
-Date: Mon, 16 Feb 2009 19:25:17 +0100
-Message-Id: <1234808717.4219.141.camel@johannes.local> (sfid-20090216_192524_738029_8AC4DAEB)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890902160148n5a383a96t8e20dc4bc9d10687@mail.gmail.com> (sfid-20090216_104802_517071_54509B27)
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-10-git-send-email-lrodriguez@atheros.com>
+	 <1234696212.4219.60.camel@johannes.local>
+	 <43e72e890902160148n5a383a96t8e20dc4bc9d10687@mail.gmail.com>
+	 (sfid-20090216_104802_517071_54509B27)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ODSqZx85Ccf1QlsIwoh+"
+Date: Mon, 16 Feb 2009 10:55:13 +0100
+Message-Id: <1234778113.4219.117.camel@johannes.local> (sfid-20090216_105525_497123_4F8480BC)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-1/4qwjPKHTExtauDIj5J
+--=-ODSqZx85Ccf1QlsIwoh+
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2009-02-16 at 19:24 +0100, Alina Friedrichsen wrote:
-> Hi Johannes,
->=20
-> as far as I have tested it, IBSS works again with this patch. :)
+On Mon, 2009-02-16 at 01:48 -0800, Luis R. Rodriguez wrote:
 
-Alina, thanks for confirming!
+> > Are you sure the mutex order reg_mutex --> cfg80211_mutex is a good
+> > idea? Is there a need for two locks at all?
+>=20
+> I think so. So reg_mutex would prevent any new requests to be added
+> into the queue, that's the only thing that mutex protects. Once you
+> are sure you have no one adding requests to the queue you then need to
+> ensure no one is processing a regulatory request and hence the
+> cfg80211_mutex.
+>=20
+> We need to protect the queue from additions to the queue from having
+> the workqueue process it.
+
+Maybe just use a spinlock for the list, and do the loop manually like in
+mac80211/key.c then?
+
+        spin_lock(&todo_lock);
+        while (!list_empty(&todo_list)) {
+                key =3D list_first_entry(&todo_list, struct ieee80211_key, =
+todo);
+                list_del_init(&key->todo);
+		spin_unlock(&todo_lock);
+........
+		spin_lock(&todo_lock);
+	}
+	spin_unlock(&todo_lock);
 
 johannes
 
---=-1/4qwjPKHTExtauDIj5J
+--=-ODSqZx85Ccf1QlsIwoh+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJma+KAAoJEKVg1VMiehFYqAgP/iXNWF4TUgQ69t8j6wxw+1OO
-0fPFyRwyqdAqDaIwEcFgbL05eqsR0aflg7yjym2VVsCQKGsAw47a3g9NvyGqXiNe
-899jSBh3ibo5QGzq/RVej0Bv0tT7QXz7W3j9Lt9nKN5jqDxhJuAoE5eGLtJGn1Ri
-YdLNeRHs9Cni11FPUNI1O4AmsMmVXvEJi5Nx1YoMj3/ACgBPlcnmEi/Loy3q9pJJ
-yP8CsWVSOtzUapjMBalcPK1xssM3BTwJ7r5Bci6UwiFcgK1m8HWltyXxs1TyaRmm
-EoZ6bpx4aHaA5drvMChh+znVXNwz3riOaRPpjw6/89M03tm9BjefkeB1B6+HPuWC
-b6L3HuUe+vgBco3BhTjzIeQSCzZs7xOzaxLsqH0jdQI2o9YxhscJP3gtPKH0RI7j
-bUm2TCbfT/8XfUI6mV0TSv5ombF/v7i+HftYFQ1o7Rep4GgkajCNL797fkkoXpTa
-+V5z7dO80ZfjzawUopDjj7TNUow+msgtK9AgFFt4HRcgfjnHt3TA4HJzEfU5u041
-ZJMMqMR96Roy6DckQBU2WkRMAglr77QTvHYlybH6hq6X2YUMRzCFrm31C9xEQGlR
-DH33g6khfP/Yjl5Uz4gA6RnlxZMl4oHCKWsQHr33f3akpsDQpjyl6wUA9ijxqV3T
-L+/KFsuqsrv7Ls51wd7u
-=IzZs
+iQIcBAABAgAGBQJJmTf+AAoJEKVg1VMiehFY3FYP/jJXgXsUR9shdWJB7zZSQArA
+EiH5Ot3uch73OQEQZpR1OFfs5JsoFNaNaZt3wqLe6rGRtmN/2/Sjk0ZMLARr8Jhb
+jlAjLBUlQDseNpzeEBxwjOFrtoERggpCTOU53T4KDIWxGbOyjzENT19GiQIWP7WD
+URPs8dSfaSLdzbBggFZ5ZncMOw4d/7d1u2pHWKofyLSwaBWAO/yizkbvZhq4XXby
+/A0H0lp4T6wYrvpfP4T2y2H+M01iPIXjmPwTI4hVUp8jhalLtt/TrvZNSDazYBMK
+/SW6Uda9R94GhSBn7J7JKWLdFUf8snWY91P+VGnTR4eS+S6wVsQ+1A3dTQet4PEh
+37MkcrA0Y0POU1LkdYRt0hoGn+LXXeuiCfeMqH9lH4xgMpKnRkQJmF52BiW8LiiV
+xLVGOmg4+3vUEc7HzjHoJwJ169mmRDjdVLfEo/Po4Pj/X9TtWLABi9U4xmgzYOCx
+/Npd7JALtGSKrRpgujyY2ZD/ZsoJeH5Uoh5dW/cnJizPiz2l4IJo0Ul5oHYKgO9v
+HetolwpzhM8RgdTWXliIwfzciDDEx0ZqDO2L8sDRyE29NtkeFSrfmY1xdAzK3H83
+UtTq3FudWJCnF2NwhfNZvSDTJxcYT4XydeMkiV6dafRXkpn8ExqcUfJavopFG76z
+ZKkIbnJzNWyzLYYFwxCw
+=zsTn
 -----END PGP SIGNATURE-----
 
---=-1/4qwjPKHTExtauDIj5J--
+--=-ODSqZx85Ccf1QlsIwoh+--
 
