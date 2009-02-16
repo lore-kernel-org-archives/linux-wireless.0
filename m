@@ -1,92 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:58986 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828AbZBUQxG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 11:53:06 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so243174eya.37
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Feb 2009 08:53:04 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH v2 1/2] orinoco: validate firmware header
-Date: Sat, 21 Feb 2009 16:52:53 +0000
-Message-Id: <1235235174-8106-2-git-send-email-kilroyd@googlemail.com> (sfid-20090221_175316_167796_FC68A7A3)
-In-Reply-To: <1235235174-8106-1-git-send-email-kilroyd@googlemail.com>
-References: <1235235174-8106-1-git-send-email-kilroyd@googlemail.com>
+Received: from mail.atheros.com ([12.36.123.2]:55942 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752924AbZBPH5K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2009 02:57:10 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 23:57:10 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18841.7024.68079.715862@gargle.gargle.HOWL> (sfid-20090216_085715_239219_4D3AEE2E)
+Date: Mon, 16 Feb 2009 13:23:20 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 3/4] ath9k: Fix HW wait timeout
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check the Agere firmware headers for validity before attempting to
-download it.
+RX and calibration have different timeout requirements.
+This patch fixes it by changing the HW wait routine
+to accept a timeout value.
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/orinoco/fw.c |   37 +++++++++++++++++++++++++++++++++++++
- 1 files changed, 37 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath9k/calib.c |    6 ++++--
+ drivers/net/wireless/ath9k/hw.c    |   17 ++++++++++-------
+ drivers/net/wireless/ath9k/hw.h    |    4 ++--
+ drivers/net/wireless/ath9k/mac.c   |   28 +++++++++++++++++++++++-----
+ drivers/net/wireless/ath9k/pci.c   |    3 ++-
+ drivers/net/wireless/ath9k/recv.c  |    1 -
+ 6 files changed, 41 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/fw.c b/drivers/net/wireless/orinoco/fw.c
-index 7d2292d..9f163fe 100644
---- a/drivers/net/wireless/orinoco/fw.c
-+++ b/drivers/net/wireless/orinoco/fw.c
-@@ -43,6 +43,33 @@ struct orinoco_fw_header {
- 	char signature[0];      /* FW signature length headersize-20 */
- } __attribute__ ((packed));
+diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
+index e5abe65..93c6e1f 100644
+--- a/drivers/net/wireless/ath9k/calib.c
++++ b/drivers/net/wireless/ath9k/calib.c
+@@ -893,7 +893,8 @@ bool ath9k_hw_init_cal(struct ath_hw *ah,
+ 			  AR_PHY_AGC_CONTROL_CAL);
  
-+/* Check the range of various header entries. Return a pointer to a
-+ * description of the problem, or NULL if everything checks out. */
-+static const char *validate_fw(const struct orinoco_fw_header *hdr, size_t len)
-+{
-+	u16 hdrsize;
-+
-+	if (len < sizeof(*hdr))
-+		return "image too small";
-+	if (memcmp(hdr->hdr_vers, "HFW", 3) != 0)
-+		return "format not recognised";
-+
-+	hdrsize = le16_to_cpu(hdr->headersize);
-+	if (hdrsize > len)
-+		return "bad headersize";
-+	if ((hdrsize + le32_to_cpu(hdr->block_offset)) > len)
-+		return "bad block offset";
-+	if ((hdrsize + le32_to_cpu(hdr->pdr_offset)) > len)
-+		return "bad PDR offset";
-+	if ((hdrsize + le32_to_cpu(hdr->pri_offset)) > len)
-+		return "bad PRI offset";
-+	if ((hdrsize + le32_to_cpu(hdr->compat_offset)) > len)
-+		return "bad compat offset";
-+
-+	/* TODO: consider adding a checksum or CRC to the firmware format */
-+	return NULL;
-+}
-+
- /* Download either STA or AP firmware into the card. */
- static int
- orinoco_dl_firmware(struct orinoco_private *priv,
-@@ -58,6 +85,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
- 	const unsigned char *first_block;
- 	const unsigned char *end;
- 	const char *firmware;
-+	const char *fw_err;
- 	struct net_device *dev = priv->ndev;
- 	int err = 0;
+ 		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
+-				   AR_PHY_AGC_CONTROL_CAL, 0)) {
++				   AR_PHY_AGC_CONTROL_CAL, 0,
++				   AH_WAIT_TIMEOUT)) {
+ 			DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+ 				"offset calibration failed to complete in 1ms; "
+ 				"noisy environment?\n");
+@@ -910,7 +911,8 @@ bool ath9k_hw_init_cal(struct ath_hw *ah,
+ 		  REG_READ(ah, AR_PHY_AGC_CONTROL) |
+ 		  AR_PHY_AGC_CONTROL_CAL);
  
-@@ -93,6 +121,15 @@ orinoco_dl_firmware(struct orinoco_private *priv,
+-	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL, 0)) {
++	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
++			   0, AH_WAIT_TIMEOUT)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_CALIBRATE,
+ 			"offset calibration failed to complete in 1ms; "
+ 			"noisy environment?\n");
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 1c02358..eeee5b8 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -84,11 +84,13 @@ static u32 ath9k_hw_mac_to_clks(struct ath_hw *ah, u32 usecs)
+ 		return ath9k_hw_mac_clks(ah, usecs);
+ }
  
- 	hdr = (const struct orinoco_fw_header *) fw_entry->data;
+-bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val)
++bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout)
+ {
+ 	int i;
  
-+	fw_err = validate_fw(hdr, fw_entry->size);
-+	if (fw_err) {
-+		printk(KERN_WARNING "%s: Invalid firmware image detected (%s). "
-+		       "Aborting download\n",
-+		       dev->name, fw_err);
-+		err = -EINVAL;
-+		goto abort;
+-	for (i = 0; i < (AH_TIMEOUT / AH_TIME_QUANTUM); i++) {
++	BUG_ON(timeout < AH_TIME_QUANTUM);
++
++	for (i = 0; i < (timeout / AH_TIME_QUANTUM); i++) {
+ 		if ((REG_READ(ah, reg) & mask) == val)
+ 			return true;
+ 
+@@ -96,8 +98,8 @@ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val)
+ 	}
+ 
+ 	DPRINTF(ah->ah_sc, ATH_DBG_REG_IO,
+-		"timeout on reg 0x%x: 0x%08x & 0x%08x != 0x%08x\n",
+-		reg, REG_READ(ah, reg), mask, val);
++		"timeout (%d us) on reg 0x%x: 0x%08x & 0x%08x != 0x%08x\n",
++		timeout, reg, REG_READ(ah, reg), mask, val);
+ 
+ 	return false;
+ }
+@@ -1516,7 +1518,7 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+ 	udelay(50);
+ 
+ 	REG_WRITE(ah, AR_RTC_RC, 0);
+-	if (!ath9k_hw_wait(ah, AR_RTC_RC, AR_RTC_RC_M, 0)) {
++	if (!ath9k_hw_wait(ah, AR_RTC_RC, AR_RTC_RC_M, 0, AH_WAIT_TIMEOUT)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_RESET,
+ 			"RTC stuck in MAC reset\n");
+ 		return false;
+@@ -1545,7 +1547,8 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ 	if (!ath9k_hw_wait(ah,
+ 			   AR_RTC_STATUS,
+ 			   AR_RTC_STATUS_M,
+-			   AR_RTC_STATUS_ON)) {
++			   AR_RTC_STATUS_ON,
++			   AH_WAIT_TIMEOUT)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_RESET, "RTC not waking up\n");
+ 		return false;
+ 	}
+@@ -1640,7 +1643,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
+ 
+ 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, AR_PHY_RFBUS_REQ_EN);
+ 	if (!ath9k_hw_wait(ah, AR_PHY_RFBUS_GRANT, AR_PHY_RFBUS_GRANT_EN,
+-			   AR_PHY_RFBUS_GRANT_EN)) {
++			   AR_PHY_RFBUS_GRANT_EN, AH_WAIT_TIMEOUT)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_REG_IO,
+ 			"Could not kill baseband RX\n");
+ 		return false;
+diff --git a/drivers/net/wireless/ath9k/hw.h b/drivers/net/wireless/ath9k/hw.h
+index 08469d9..ddab3b7 100644
+--- a/drivers/net/wireless/ath9k/hw.h
++++ b/drivers/net/wireless/ath9k/hw.h
+@@ -93,7 +93,7 @@
+ #define ATH9K_NUM_QUEUES            10
+ 
+ #define MAX_RATE_POWER              63
+-#define AH_TIMEOUT                  100000
++#define AH_WAIT_TIMEOUT             100000 /* (us) */
+ #define AH_TIME_QUANTUM             10
+ #define AR_KEYTABLE_SIZE            128
+ #define POWER_UP_TIME               200000
+@@ -612,7 +612,7 @@ bool ath9k_hw_setantennaswitch(struct ath_hw *ah,
+ 			       u8 *antenna_cfgd);
+ 
+ /* General Operation */
+-bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val);
++bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
+ u32 ath9k_hw_reverse_bits(u32 val, u32 n);
+ bool ath9k_get_channel_edges(struct ath_hw *ah, u16 flags, u16 *low, u16 *high);
+ u16 ath9k_hw_computetxtime(struct ath_hw *ah, struct ath_rate_table *rates,
+diff --git a/drivers/net/wireless/ath9k/mac.c b/drivers/net/wireless/ath9k/mac.c
+index f32c622..a6c2042 100644
+--- a/drivers/net/wireless/ath9k/mac.c
++++ b/drivers/net/wireless/ath9k/mac.c
+@@ -886,7 +886,8 @@ bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set)
+ 		REG_SET_BIT(ah, AR_DIAG_SW,
+ 			    (AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT));
+ 
+-		if (!ath9k_hw_wait(ah, AR_OBS_BUS_1, AR_OBS_BUS_1_RX_STATE, 0)) {
++		if (!ath9k_hw_wait(ah, AR_OBS_BUS_1, AR_OBS_BUS_1_RX_STATE,
++				   0, AH_WAIT_TIMEOUT)) {
+ 			REG_CLR_BIT(ah, AR_DIAG_SW,
+ 				    (AR_DIAG_RX_DIS |
+ 				     AR_DIAG_RX_ABORT));
+@@ -933,15 +934,32 @@ void ath9k_hw_stoppcurecv(struct ath_hw *ah)
+ 
+ bool ath9k_hw_stopdmarecv(struct ath_hw *ah)
+ {
++#define AH_RX_STOP_DMA_TIMEOUT 10000   /* usec */
++#define AH_RX_TIME_QUANTUM     100     /* usec */
++
++	int i;
++
+ 	REG_WRITE(ah, AR_CR, AR_CR_RXD);
+ 
+-	if (!ath9k_hw_wait(ah, AR_CR, AR_CR_RXE, 0)) {
++	/* Wait for rx enable bit to go low */
++	for (i = AH_RX_STOP_DMA_TIMEOUT / AH_TIME_QUANTUM; i != 0; i--) {
++		if ((REG_READ(ah, AR_CR) & AR_CR_RXE) == 0)
++			break;
++		udelay(AH_TIME_QUANTUM);
 +	}
 +
- 	/* Enable aux port to allow programming */
- 	err = hermesi_program_init(hw, le32_to_cpu(hdr->entry_point));
- 	printk(KERN_DEBUG "%s: Program init returned %d\n", dev->name, err);
++	if (i == 0) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_QUEUE,
+-			"dma failed to stop in 10ms\n"
+-			"AR_CR=0x%08x\nAR_DIAG_SW=0x%08x\n",
+-			REG_READ(ah, AR_CR), REG_READ(ah, AR_DIAG_SW));
++			"dma failed to stop in %d ms "
++			"AR_CR=0x%08x AR_DIAG_SW=0x%08x\n",
++			AH_RX_STOP_DMA_TIMEOUT / 1000,
++			REG_READ(ah, AR_CR),
++			REG_READ(ah, AR_DIAG_SW));
+ 		return false;
+ 	} else {
+ 		return true;
+ 	}
++
++#undef AH_RX_TIME_QUANTUM
++#undef AH_RX_STOP_DMA_TIMEOUT
+ }
+diff --git a/drivers/net/wireless/ath9k/pci.c b/drivers/net/wireless/ath9k/pci.c
+index c28afe4..a70f954 100644
+--- a/drivers/net/wireless/ath9k/pci.c
++++ b/drivers/net/wireless/ath9k/pci.c
+@@ -63,7 +63,8 @@ static bool ath_pci_eeprom_read(struct ath_hw *ah, u32 off, u16 *data)
+ 	if (!ath9k_hw_wait(ah,
+ 			   AR_EEPROM_STATUS_DATA,
+ 			   AR_EEPROM_STATUS_DATA_BUSY |
+-			   AR_EEPROM_STATUS_DATA_PROT_ACCESS, 0)) {
++			   AR_EEPROM_STATUS_DATA_PROT_ACCESS, 0,
++			   AH_WAIT_TIMEOUT)) {
+ 		return false;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 08f676a..28ad1d5 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -427,7 +427,6 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 	ath9k_hw_stoppcurecv(ah);
+ 	ath9k_hw_setrxfilter(ah, 0);
+ 	stopped = ath9k_hw_stopdmarecv(ah);
+-	mdelay(3); /* 3ms is long enough for 1 frame */
+ 	sc->rx.rxlink = NULL;
+ 
+ 	return stopped;
 -- 
-1.6.0.6
+1.6.1
 
