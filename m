@@ -1,94 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56025 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57273 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778AbZBRO0S (ORCPT
+	with ESMTP id S1750876AbZBPQEq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 09:26:18 -0500
-Subject: Re: Missing link quality with wireless-testing
+	Mon, 16 Feb 2009 11:04:46 -0500
+Subject: Re: NetworkManager and mac80211_hwsim
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jouni Malinen <j@w1.fi>, Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1234961297.13950.55.camel@localhost>
-References: <1234899806.29785.35.camel@johannes.local>
-	 <1234902294.4678.12.camel@californication>
-	 <1234904111.29785.44.camel@johannes.local>
-	 <1234904978.4678.31.camel@californication>
-	 <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net>
-	 <1234933059.21412.28.camel@californication>
-	 <20090218073104.GA23366@jm.kir.nu>
-	 <1234944391.21412.47.camel@californication>
-	 <20090218082520.GA26280@jm.kir.nu> <1234959523.13950.47.camel@localhost>
-	 <20090218123301.GA6152@jm.kir.nu>  <1234961297.13950.55.camel@localhost>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-+EEEQUc7vdtFYF1pmh+5"
-Date: Wed, 18 Feb 2009 15:25:44 +0100
-Message-Id: <1234967144.4023.25.camel@johannes.local> (sfid-20090218_152622_186866_AE856FFF)
+To: Daniel Wagner <wagi@monom.org>
+Cc: linux-wireless@vger.kernel.org, networkmanager-list@gnome.org
+In-Reply-To: <20090216160016.GA29509@toronto053.server4you.de> (sfid-20090216_165945_976037_910C9191)
+References: <20090216160016.GA29509@toronto053.server4you.de>
+	 (sfid-20090216_165945_976037_910C9191)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WTvGi/EVsOeyltT9FxD+"
+Date: Mon, 16 Feb 2009 17:04:44 +0100
+Message-Id: <1234800284.4219.136.camel@johannes.local> (sfid-20090216_170449_652763_9D97D8AD)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-+EEEQUc7vdtFYF1pmh+5
+--=-WTvGi/EVsOeyltT9FxD+
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2009-02-18 at 07:48 -0500, Dan Williams wrote:
+On Mon, 2009-02-16 at 17:00 +0100, Daniel Wagner wrote:
 
-> > >   - max_qual.level =3D=3D 0 (ie, dBm values)
-> >=20
-> > That is an area where NM (=3D 0) and mac80211 (=3D -110) do not agree.
+> hotplug_event_begin_add_dev (..., parent_dev =3D NULL, ...)
+>   net_add(..., parent_dev =3D NULL, ...)
+>   {
+>   	if (parent_dev =3D=3D NULL)
+> 		goto error;
+>   }
 >=20
-> Then mac80211 is not conforming to WEXT...  unless it's setting
-> IW_QUAL_DBM in the updated field, which it probably is.
+> Before I go deeper into that thing, does someone has
+> an idea what could go wrong here with mac80211_hwsim?
 
-Yeah, it is.
-
-> Before we added IW_QUAL_DBM, the switch between dBm and RSSI was
-> max_qual.level; if it was 0, level was in dBm, because no cards in use
-> in Linux at that time could support a signal of more 0 dBm.  Thus, if it
-> was over 0, the value was in RSSI.
->=20
-> Here's the relevant bit of wireless.h:
->=20
->         /* Quality range (link, level, noise)
->          * If the quality is absolute, it will be in the range [0 ; max_q=
-ual],
->          * if the quality is dBm, it will be in the range [max_qual ; 0].
->=20
-> That doc never got updated for IW_QUAL_DBM either.
-
-Fun. But what did I expect. I withdraw my earlier patch then.
-
-> NM doesn't really handle IW_QUAL_DBM (added in WE-19).  Mainly because
-> stuff worked without it, and it wasn't implemented in drivers until
-> quite recently.  NM should handle IW_QUAL_DBM.
-
-Does all that mean that we cannot actually get this working right now
-without adding back qual.qual? Or should we just remove IW_QUAL_DBM?
+hwsim phys have no parents in sysfs since they're virtual.
 
 johannes
 
---=-+EEEQUc7vdtFYF1pmh+5
+--=-WTvGi/EVsOeyltT9FxD+
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJnBplAAoJEKVg1VMiehFYE5wP/2mU3X4NougqO1G23qUOe0zr
-aAmy5eClJMW49ruDRFPOexRxtWPhKXokGm9czvlvcG7ivJOkgSRmR1bhgYlc4/CV
-4WslpDxrbE9aVz68avq+g+rKNM7mvIAEM7DR85EGoAhMUuT926ZMUvU/yaMcKaBC
-bB8BprDmbIyS2IWp7e/JHTTu54FB2yzgoOMbI+U7H8Ao/lNDMLKmeE8bxHrV9ItF
-JD366CSfdlcPTuSPl37CyqryMNHEt6IslotnStT9RWBpvaD+PBvjHd5pHO4ywV4Y
-F9VgnZ1x0ShKfDJA6GnnP9LNpVfZI8Q+pz7Ui5DvgelLiHgYwkQG+vgpWAukqZ3J
-U22XSXpvZQPASbBat2S91g1emP4G3UHg7XwtCJ4z8+6LZX/5Xvf+ll0ZSpTfTkmH
-tj5laksIc10OwUHoef86aoYKqJD0kUBENK5aS99WHURwb1nVOfaUaDiVRkY6c6sJ
-7OqBn/iNofx8UWJFiaIRjxjkGdehLjPGM8ygJIpyX1/yjmQe0LWcwHNgf7yrh8wF
-7W+WNsTLRJb5H+t6WNct5NJfUq1HL2crRzQ6LPWGS6uCbfTott2LBleArJkNUbxg
-5iuBUKJWqEu4YqxaNV5qcNna9Ho+Xj7wmUn0pDYXysKmkb7ZDtNAcSWqjS5dU1Aw
-ePOfgxuMZxdjrY3P3jsr
-=bW1m
+iQIcBAABAgAGBQJJmY6WAAoJEKVg1VMiehFYIecP/j92zQlP+/KGjatNVSNmkC16
+EryQGgO7JziEHaMQiYiNnoQ/4Yhio8afj54zJ9omDnzuTUjoQ10lJpvIq/VpZ8Bv
+p97P8f8hctOeXEPs71fNxLoAw7bK9W5zUyZ6K7K+l0YwPRTOJggB2c8sqcickH+T
+Y5d02be7ENGMfvwj+ps7yCGPyFxw1IznCJsVA/D7l85an3VvMBGVln35wqS5bhn5
+ll4YV5f9sSDczBAZHcjEibSQ7wrtpOkwGnvyi/Ajbu0JYdmtZ4Zvu3jRdLtjeShj
+fvRZ5j5H7agQDRdYp35YYk8NCgc02boCDdN29lv8nGZ+XbjXvhSnUSxR6pXgG2BR
+WlEE8gipY4jVsEhgFPjouvFXM4/Z4loOeBSLR1CNXEFkm2WdxByyqU7Os/vBq8Wb
+w8tBtupgY23nR+XPfD6Fr6s7cMiXWFkm4gQBFVy5dZQ+7BD8UbG0zKjb3Nq+7ZfW
+QNJq7pht90KVzXKCX/Eth0uDUD39dQRAOq5eiFD9vUl9UfZ+I2sNWxUgA5f/aEa9
+i7r+BGUuoy0nk1n7+g/waeXt9heWCbAu3RpC544vZB9uzBAGRfZjDF581Lcglhpx
+toaaYEAP+jAr5jU7VV87jkuW1m3RYhnYIGvn7M8r/uqgOypMMlklBwc6WHXkypeB
+neVPWOXSy0Ji8uE9NEBf
+=qFjG
 -----END PGP SIGNATURE-----
 
---=-+EEEQUc7vdtFYF1pmh+5--
+--=-WTvGi/EVsOeyltT9FxD+--
 
