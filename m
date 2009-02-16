@@ -1,82 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2873 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759062AbZBLSjJ (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:47463 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752728AbZBPLeB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 13:39:09 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	ath9k-devel@lists.ath9k.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 3/6] ath9k: convert isWwrSKU macro into C code
-Date: Thu, 12 Feb 2009 13:38:55 -0500
-Message-Id: <1234463938-1350-4-git-send-email-me@bobcopeland.com> (sfid-20090212_193924_745072_BD3758F7)
+	Mon, 16 Feb 2009 06:34:01 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so215552fgg.17
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 03:34:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <3ace41890902111445k606682a8p197a9eb65cdbc3a2@mail.gmail.com>
+References: <6ad5d99d0902091343v693173f2w61ff60a216bb15e9@mail.gmail.com>
+	 <4990AC02.6030703@lwfinger.net>
+	 <3ace41890902091433g4c4e0c17n9e01aabc613d5bb6@mail.gmail.com>
+	 <6ad5d99d0902111412m97608eanf6c2fd3e8bc6af4c@mail.gmail.com>
+	 <3ace41890902111445k606682a8p197a9eb65cdbc3a2@mail.gmail.com>
+Date: Mon, 16 Feb 2009 12:33:59 +0100
+Message-ID: <ec5eb5d60902160333k52bfcb5bj4122be2f853f0590@mail.gmail.com> (sfid-20090216_123408_212231_39EE1129)
+Subject: Re: rtl8187 in Toshiba L300 linux troubles
+From: =?ISO-8859-1?Q?Jorge_Mu=F1oz?= <jorgeroden@gmail.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Jorge Munoz <jorgeroden1@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Write isWwrSKU as an inline function and nix the camel-case to make
-the routine slightly clearer.  Change its argument to take the regd
-value directly so it can eventually be used by ath5k as well.
+Thanks Hin-Tak, I haven't checked your answer yet. When I have got an
+answer I' ll post here. But I have to say that I' ve compiled (Ubuntu
+8.10 distro based) compat-wireless without uninstalling
+linux-backports-modules-2.6.27-11-generic and rtl8187 works correctly.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath9k/regd.c |   11 +++++++++--
- drivers/net/wireless/ath9k/regd.h |    5 -----
- 2 files changed, 9 insertions(+), 7 deletions(-)
+In order to installing compat-wireless rtl8187 driver I' ve done a
+shell script to automate compilation process but next
+step should be create a .deb package to include this in a repository
+tree. Do you know if is there one with stable rtl8187 driver yet
+(2.6.27-11)?
 
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index 9999462..9793515 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -106,6 +106,12 @@ static const struct ieee80211_regdomain ath9k_world_regdom_67_68_6A = {
- 	}
- };
- 
-+static inline bool is_wwr_sku(u16 regd)
-+{
-+	return ((regd & WORLD_SKU_MASK) == WORLD_SKU_PREFIX) ||
-+		(regd == WORLD);
-+}
-+
- static u16 ath9k_regd_get_eepromRD(struct ath_hw *ah)
- {
- 	return ah->regulatory.current_rd & ~WORLDWIDE_ROAMING_FLAG;
-@@ -118,7 +124,7 @@ u16 ath9k_regd_get_rd(struct ath_hw *ah)
- 
- bool ath9k_is_world_regd(struct ath_hw *ah)
- {
--	return isWwrSKU(ah);
-+	return is_wwr_sku(ath9k_regd_get_eepromRD(ah));
- }
- 
- const struct ieee80211_regdomain *ath9k_default_world_regdomain(void)
-@@ -463,7 +469,8 @@ u32 ath9k_regd_get_ctl(struct ath_hw *ah, struct ath9k_channel *chan)
- 	u32 ctl = NO_CTL;
- 
- 	if (!ah->regulatory.regpair ||
--	    (ah->regulatory.country_code == CTRY_DEFAULT && isWwrSKU(ah))) {
-+	    (ah->regulatory.country_code == CTRY_DEFAULT &&
-+	     is_wwr_sku(ath9k_regd_get_eepromRD(ah)))) {
- 		if (IS_CHAN_B(chan))
- 			ctl = SD_NO_CTL | CTL_11B;
- 		else if (IS_CHAN_G(chan))
-diff --git a/drivers/net/wireless/ath9k/regd.h b/drivers/net/wireless/ath9k/regd.h
-index 53a9f46..8f0bfcc 100644
---- a/drivers/net/wireless/ath9k/regd.h
-+++ b/drivers/net/wireless/ath9k/regd.h
-@@ -20,11 +20,6 @@
- #define COUNTRY_ERD_FLAG        0x8000
- #define WORLDWIDE_ROAMING_FLAG  0x4000
- 
--#define isWwrSKU(_ah) \
--	(((ath9k_regd_get_eepromRD((_ah)) & WORLD_SKU_MASK) == \
--		WORLD_SKU_PREFIX) || \
--		(ath9k_regd_get_eepromRD(_ah) == WORLD))
--
- #define MULTI_DOMAIN_MASK 0xFF00
- 
- #define WORLD_SKU_MASK          0x00F0
+
+On 2/11/09, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> On Wed, Feb 11, 2009 at 10:12 PM, Jorge Munoz <jorgeroden1@gmail.com> wrote:
+>> It's all right. I have followed all the steps written in compat-wireless
+>> (http://linuxwireless.org/en/users/Download#Buildingandinstalling) and it
+>> works!
+>> First of all I have had to install build-essential and
+>> linux-headers-2.6.27-11-generic  in my ubuntu based distro
+>> (www.molinux.info) compilation has done without any error (very clean).
+>> This is a key improvement, now  the signal level is better and wireless
+>> traffic isn't interrupted. Good job. Thank you.
+>>
+>> In order to help my colleagues I would like you to advice me about next
+>> issue. Ubuntu has a linux-backports-modules-2.6.27-11-generic but your
+>> improvement isn't on it yet. The problem is that this package includes
+>> others modules for Toshiba L300 hardware support (webcam, ...) and should
+>> be
+>> necessary install it. My question is if I can install the rtl8187.ko file
+>> directly (without compilation process) in another L300 laptop after
+>> upgrading the system with linux-backports-modules-2.6.27-11-generic.
+>> Thanks again
+>
+> Kernel modules are matched to the specific kernel version (and
+> archtecture). I am not familiar with Ubuntu,
+> but in fact any of your colleague could just
+> 1) copy your /lib/modules/<kver>/updates/ recursively
+> 2) run "depmod -a"
+> 3) either reboot or unload and reload the kernel module with "modprobe
+> -r rtl8187" then "modprobe -v rtl8187"
+>
+> In fact step two is probably not necessary if you choose to reboot,
+> since depmod is often run just based on time-stamp at boot up.
+>
+> I assume your question is just whether step 1) would work - the answer
+> is yes, provided you run depmod afterwards, or equivalent. You
+> actually don't need to copy the whole of that 40+ modules from
+> compar-wireless, just 4:
+> rtl8187
+> mac80211
+> eeprom_93cx6
+> cfg80211
+>
+> (lsmod would tell you this).
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
 -- 
-1.6.0.6
-
-
+www.jorgeroden.blogspot.com
+FSF member 5687
