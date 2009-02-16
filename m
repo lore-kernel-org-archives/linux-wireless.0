@@ -1,94 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46321 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752600AbZBZCkA (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:10157 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751856AbZBPJRs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 21:40:00 -0500
+	Mon, 16 Feb 2009 04:17:48 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so923040yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 01:17:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1234774211.4219.102.camel@johannes.local>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-6-git-send-email-lrodriguez@atheros.com>
+	 <1234695593.4219.47.camel@johannes.local>
+	 <43e72e890902160014k11ba609lbe1340750771b6c0@mail.gmail.com>
+	 <1234774211.4219.102.camel@johannes.local>
+Date: Mon, 16 Feb 2009 01:17:46 -0800
+Message-ID: <43e72e890902160117yd3a3b09o45ada7bc0aa0fbd7@mail.gmail.com> (sfid-20090216_101752_707890_A3DEE5FD)
+Subject: Re: [PATCH 05/10] cfg80211: add regulatory_hint_core() to separate
+	the core reg hint
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, mb@bu3sch.de,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/3] cfg80211: remove REGDOM_SET_BY_INIT
-Date: Wed, 25 Feb 2009 21:39:47 -0500
-Message-Id: <1235615989-1323-2-git-send-email-lrodriguez@atheros.com> (sfid-20090226_034006_225864_9EB4273F)
-In-Reply-To: <1235615989-1323-1-git-send-email-lrodriguez@atheros.com>
-References: <1235615989-1323-1-git-send-email-lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not used as we can always just assume the first
-regulatory domain set will _always_ be a static regulatory
-domain. REGDOM_SET_BY_CORE will be the first request from
-cfg80211 for a regdomain and that then populates the first
-regulatory request.
+On Mon, Feb 16, 2009 at 12:50 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2009-02-16 at 00:14 -0800, Luis R. Rodriguez wrote:
+>> On Sun, Feb 15, 2009 at 2:59 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
+>> >> This will allow us to clean up and make distinctions of who
+>> >> needs locking or not.
+>> >>
+>> >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> >> ---
+>> >>  net/wireless/reg.c |   36 +++++++++++++++++++++++++++---------
+>> >>  1 files changed, 27 insertions(+), 9 deletions(-)
+>> >>
+>> >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> >> index ba82312..679fded 100644
+>> >> --- a/net/wireless/reg.c
+>> >> +++ b/net/wireless/reg.c
+>> >> @@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+>> >>       case REGDOM_SET_BY_INIT:
+>> >>               return -EINVAL;
+>> >>       case REGDOM_SET_BY_CORE:
+>> >> -             /*
+>> >> -              * Always respect new wireless core hints, should only happen
+>> >> -              * when updating the world regulatory domain at init.
+>> >> -              */
+>> >> -             return 0;
+>> >> +             return -EINVAL;
+>> >>       case REGDOM_SET_BY_COUNTRY_IE:
+>> >>               if (unlikely(!is_an_alpha2(alpha2)))
+>> >>                       return -EINVAL;
+>> >> @@ -1183,6 +1179,26 @@ new_request:
+>> >>       return call_crda(alpha2);
+>> >>  }
+>> >>
+>> >> +static int regulatory_hint_core(const char *alpha2)
+>> >> +{
+>> >> +     struct regulatory_request *request;
+>> >> +
+>> >> +     BUG_ON(last_request);
+>> >> +
+>> >> +     request = kzalloc(sizeof(struct regulatory_request),
+>> >> +                       GFP_KERNEL);
+>> >> +     if (!request)
+>> >> +             return -ENOMEM;
+>> >> +
+>> >> +     request->alpha2[0] = alpha2[0];
+>> >> +     request->alpha2[1] = alpha2[1];
+>> >> +     request->initiator = REGDOM_SET_BY_CORE;
+>> >> +
+>> >> +     last_request = request;
+>> >
+>> > So before you documented that cfg80211_mutex is used to protect this
+>> > variable, but it's not used here.
+>>
+>> This is only used during initialization, have any better ideas?
+>
+> If regulatory is initialised before netlink that is probably fine, is
+> it?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    2 +-
- drivers/net/wireless/ath9k/regd.c |    1 -
- include/net/cfg80211.h            |    3 ---
- net/wireless/reg.c                |    2 --
- 4 files changed, 1 insertions(+), 7 deletions(-)
+Yeah I was hoping that would be the case but then I realized that we
+also end up creating a udev event to call crda and we need nl80211
+initialized in order to process these hints so technically we have a
+race between regulatory_init() finishing and nl80211_init() get done
+before we can let nl80211 process the first CORE call to crda so it
+may be dropped -- unless we are sure udev will do some sort of
+retries.
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 7823d37..b85f6cf 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1653,7 +1653,7 @@ int ath_attach(u16 devid, struct ath_softc *sc)
- 	}
- 	wiphy_apply_custom_regulatory(hw->wiphy, regd);
- 	ath9k_reg_apply_radar_flags(hw->wiphy);
--	ath9k_reg_apply_world_flags(hw->wiphy, REGDOM_SET_BY_INIT);
-+	ath9k_reg_apply_world_flags(hw->wiphy, REGDOM_SET_BY_DRIVER);
- 
- 	error = ieee80211_register_hw(hw);
- 
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index f7d7cc2..4f27cec 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -339,7 +339,6 @@ int ath9k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
- 
- 	switch (request->initiator) {
- 	case REGDOM_SET_BY_DRIVER:
--	case REGDOM_SET_BY_INIT:
- 	case REGDOM_SET_BY_CORE:
- 	case REGDOM_SET_BY_USER:
- 		break;
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 157f3d3..142de14 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -350,8 +350,6 @@ struct bss_parameters {
- 
- /**
-  * enum reg_set_by - Indicates who is trying to set the regulatory domain
-- * @REGDOM_SET_BY_INIT: regulatory domain was set by initialization. We will be
-- * 	using a static world regulatory domain by default.
-  * @REGDOM_SET_BY_CORE: Core queried CRDA for a dynamic world regulatory domain.
-  * @REGDOM_SET_BY_USER: User asked the wireless core to set the
-  * 	regulatory domain.
-@@ -362,7 +360,6 @@ struct bss_parameters {
-  *	should consider.
-  */
- enum reg_set_by {
--	REGDOM_SET_BY_INIT,
- 	REGDOM_SET_BY_CORE,
- 	REGDOM_SET_BY_USER,
- 	REGDOM_SET_BY_DRIVER,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ce66bfd..a230d4b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1243,8 +1243,6 @@ static int ignore_request(struct wiphy *wiphy,
- 		return 0;
- 
- 	switch (pending_request->initiator) {
--	case REGDOM_SET_BY_INIT:
--		return -EINVAL;
- 	case REGDOM_SET_BY_CORE:
- 		return -EINVAL;
- 	case REGDOM_SET_BY_COUNTRY_IE:
--- 
-1.6.0.3
+An alternative is to add the regulatory_request() for core to the
+queue and then call a reg_post_init() on core.c  that would just
+schedule the reg workqueue after nl80211_init().
 
+Thoughts?
+
+  Luis
