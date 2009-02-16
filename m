@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56064 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbZBUFEm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 00:04:42 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v6 10/15] cfg80211: remove likely from an 11d hint case
-Date: Sat, 21 Feb 2009 00:04:28 -0500
-Message-Id: <1235192673-6314-11-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060452_108547_2CAB08B5)
-In-Reply-To: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
-References: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
+Received: from gold.linx.net ([195.66.232.40]:46224 "EHLO gold.linx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750718AbZBPMJd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2009 07:09:33 -0500
+Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
+ ranges
+From: Tony Vroon <tony@linx.net>
+Reply-To: tony@linx.net
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	reinette chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20090214045232.GA5769@tesla>
+References: <1234202993.21570.18.camel@localhost>
+	 <43e72e890902091020p65235e3ds833560974c785318@mail.gmail.com>
+	 <1234203811.21570.19.camel@localhost> <20090209183924.GA6069@tuxdriver.com>
+	 <1234207263.6694.1.camel@localhost> <1234208152.6694.4.camel@localhost>
+	 <20090210013941.GA4386@tesla> <1234230689.3793.15.camel@localhost>
+	 <20090210020708.GC4386@tesla> <1234379981.4789.7.camel@localhost>
+	 <20090214045232.GA5769@tesla>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-bywdwxdSyFq1oWR6NeDu"
+Date: Mon, 16 Feb 2009 12:08:44 +0000
+Message-Id: <1234786124.4271.2.camel@localhost> (sfid-20090216_130942_898521_881009FB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Truth of the matter this was confusing people so mark it as
-unlikely as that is the case now.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+--=-bywdwxdSyFq1oWR6NeDu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b474452..baf50ca 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1331,14 +1331,16 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	if (!rd)
- 		goto out;
- 
--	/* This will not happen right now but we leave it here for the
-+	/*
-+	 * This will not happen right now but we leave it here for the
- 	 * the future when we want to add suspend/resume support and having
- 	 * the user move to another country after doing so, or having the user
--	 * move to another AP. Right now we just trust the first AP. This is why
--	 * this is marked as likley(). If we hit this before we add this support
--	 * we want to be informed of it as it would indicate a mistake in the
--	 * current design  */
--	if (likely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
-+	 * move to another AP. Right now we just trust the first AP.
-+	 *
-+	 * If we hit this before we add this support we want to be informed of
-+	 * it as it would indicate a mistake in the current design
-+	 */
-+	if (WARN_ON(reg_same_country_ie_hint(wiphy, checksum)))
- 		goto out;
- 
- 	/* We keep this around for when CRDA comes back with a response so
--- 
-1.6.0.3
+Just to confirm, if I use my early-boot hook that I used for your iw
+list to set the regulatory domain manually (iw reg set GB) all is well.
+If I allow the driver stack to get to the association stage without
+setting a regulatory domain, I can never get my 802.11A spectrum back
+after the fact.
+Would you still see this as a bug or rather a specific requirement of
+the new interface that hasn't yet been documented?
+
+Regards,
+Tony V.
+
+--=-bywdwxdSyFq1oWR6NeDu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iEYEABECAAYFAkmZV0wACgkQp5vW4rUFj5p/EgCfQHpiczFALZE12NqPvmhxGmC6
+M8MAoKs/CAknZ4axlCoUfwEywBkclXrl
+=YFtO
+-----END PGP SIGNATURE-----
+
+--=-bywdwxdSyFq1oWR6NeDu--
 
