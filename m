@@ -1,126 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53362 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754203AbZBEQTB (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:63159 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755215AbZBPCDD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2009 11:19:01 -0500
-Message-Id: <20090205161133.868177491@sipsolutions.net> (sfid-20090205_171907_601693_517A4F82)
-References: <20090205160738.990564487@sipsolutions.net>
-Date: Thu, 05 Feb 2009 17:07:48 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 10/11] mac80211: RX aggregation: clean up stop session
-Mime-Version: 1.0
+	Sun, 15 Feb 2009 21:03:03 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so897413yxm.1
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 18:03:02 -0800 (PST)
+MIME-Version: 1.0
+Date: Sun, 15 Feb 2009 21:03:02 -0500
+Message-ID: <c4d76b3b0902151803m2d4517e0v434cdd12a7c3e074@mail.gmail.com> (sfid-20090216_030317_447840_1CE29100)
+Subject: [PATCH] at76c50x-usb: convert at76_debug to an unsigned int
+From: Jason Andryuk <jandryuk@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clean up the locking by splitting it into two functions,
-this will also enable further cleanups of stopping all
-sessions.
+at76_debug should be an unsigned int as it used as a bit field.  In
+fact, modprobe fails when trying to set at76_debug's high bit.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/agg-rx.c |   57 ++++++++++++++++++++++++++++----------------------
- 1 file changed, 32 insertions(+), 25 deletions(-)
+Also included is a compile fix to the ieee80211_scan_completed() call.
 
---- wireless-testing.orig/net/mac80211/agg-rx.c	2009-01-27 12:03:13.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-rx.c	2009-01-27 12:04:19.000000000 +0100
-@@ -17,47 +17,32 @@
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
- 
--void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid,
--					u16 initiator, u16 reason)
-+static void __ieee80211_sta_stop_rx_ba_session(struct sta_info *sta, u16 tid,
-+					       u16 initiator, u16 reason)
- {
--	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_hw *hw = &local->hw;
--	struct sta_info *sta;
--	int ret, i;
--
--	rcu_read_lock();
--
--	sta = sta_info_get(local, ra);
--	if (!sta) {
--		rcu_read_unlock();
--		return;
--	}
-+	int i;
- 
- 	/* check if TID is in operational state */
- 	spin_lock_bh(&sta->lock);
--	if (sta->ampdu_mlme.tid_state_rx[tid]
--				!= HT_AGG_STATE_OPERATIONAL) {
-+	if (sta->ampdu_mlme.tid_state_rx[tid] != HT_AGG_STATE_OPERATIONAL) {
- 		spin_unlock_bh(&sta->lock);
--		rcu_read_unlock();
- 		return;
- 	}
-+
- 	sta->ampdu_mlme.tid_state_rx[tid] =
- 		HT_AGG_STATE_REQ_STOP_BA_MSK |
- 		(initiator << HT_AGG_STATE_INITIATOR_SHIFT);
- 	spin_unlock_bh(&sta->lock);
- 
--	/* stop HW Rx aggregation. ampdu_action existence
--	 * already verified in session init so we add the BUG_ON */
--	BUG_ON(!local->ops->ampdu_action);
--
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "Rx BA session stop requested for %pM tid %u\n",
--	       ra, tid);
-+	       sta->sta.addr, tid);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
- 
--	ret = local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
--				       &sta->sta, tid, NULL);
--	if (ret)
-+	if (local->ops->ampdu_action(hw, IEEE80211_AMPDU_RX_STOP,
-+				     &sta->sta, tid, NULL))
- 		printk(KERN_DEBUG "HW problem - can not stop rx "
- 				"aggregation for tid %d\n", tid);
- 
-@@ -67,7 +52,8 @@ void ieee80211_sta_stop_rx_ba_session(st
- 
- 	/* check if this is a self generated aggregation halt */
- 	if (initiator == WLAN_BACK_RECIPIENT || initiator == WLAN_BACK_TIMER)
--		ieee80211_send_delba(sdata, ra, tid, 0, reason);
-+		ieee80211_send_delba(sta->sdata, sta->sta.addr,
-+				     tid, 0, reason);
- 
- 	/* free the reordering buffer */
- 	for (i = 0; i < sta->ampdu_mlme.tid_rx[tid]->buf_size; i++) {
-@@ -90,6 +76,27 @@ void ieee80211_sta_stop_rx_ba_session(st
- 
- 	sta->ampdu_mlme.tid_state_rx[tid] = HT_AGG_STATE_IDLE;
- 	spin_unlock_bh(&sta->lock);
-+}
-+
-+void ieee80211_sta_stop_rx_ba_session(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid,
-+					u16 initiator, u16 reason)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+
-+	/* stop HW Rx aggregation. ampdu_action existence
-+	 * already verified in session init so we add the BUG_ON */
-+	BUG_ON(!local->ops->ampdu_action);
-+
-+	rcu_read_lock();
-+
-+	sta = sta_info_get(local, ra);
-+	if (!sta) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	__ieee80211_sta_stop_rx_ba_session(sta, tid, initiator, reason);
- 
- 	rcu_read_unlock();
+Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
+--
+
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x
+index e8868ae..a89ee2d 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -109,7 +109,7 @@
+                }                                                        \
+        } while (0)
+
+-static int at76_debug = DBG_DEFAULTS;
++static uint at76_debug = DBG_DEFAULTS;
+
+ /* Protect against concurrent firmware loading and parsing */
+ static struct mutex fw_mutex;
+@@ -1861,7 +1861,7 @@ static void at76_dwork_hw_scan(struct work_struct *work)
+                goto exit;
+        }
+
+-       ieee80211_scan_completed(priv->hw);
++       ieee80211_scan_completed(priv->hw, false);
+
+        if (is_valid_ether_addr(priv->bssid))
+                at76_join(priv);
+@@ -2447,7 +2447,7 @@ static void __exit at76_mod_exit(void)
+        led_trigger_unregister_simple(ledtrig_tx);
  }
 
--- 
+-module_param_named(debug, at76_debug, int, 0600);
++module_param_named(debug, at76_debug, uint, 0600);
+ MODULE_PARM_DESC(debug, "Debugging level");
 
+ module_init(at76_mod_init);
