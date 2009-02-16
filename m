@@ -1,85 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbZBMII5 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58945 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105AbZBPQPx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 03:08:57 -0500
-Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890902122357g26bf3dd4j930de7c1f6c28280@mail.gmail.com> (sfid-20090213_090325_171722_FA5880AF)
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
-	 <1234508187.1327.19.camel@johannes.local>
-	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
-	 <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
-	 <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com>
-	 <1234509436.1327.25.camel@johannes.local>
-	 <43e72e890902122335l6580dbc1m44702996cc8200e4@mail.gmail.com>
-	 <1234511334.1327.34.camel@johannes.local>
-	 <43e72e890902122357g26bf3dd4j930de7c1f6c28280@mail.gmail.com>
-	 (sfid-20090213_090325_171722_FA5880AF)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6HVfxYN+OiNLjuGMzAgp"
-Date: Fri, 13 Feb 2009 09:08:49 +0100
-Message-Id: <1234512529.1327.38.camel@johannes.local> (sfid-20090213_090902_173447_5D19B81B)
-Mime-Version: 1.0
+	Mon, 16 Feb 2009 11:15:53 -0500
+Date: Mon, 16 Feb 2009 11:11:57 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Viktor =?utf-8?B?SWxpamHFoWnEhw==?= <viktor.ilijasic@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 not handling my usb card
+Message-ID: <20090216161157.GB2870@tuxdriver.com> (sfid-20090216_171557_845548_E8C9819A)
+References: <63d38a500902152114o7b3c0f91j571a1e1d62e31d24@mail.gmail.com> <63d38a500902152133y264b783cl76800ed3efa46dd4@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <63d38a500902152133y264b783cl76800ed3efa46dd4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Feb 16, 2009 at 06:33:10AM +0100, Viktor Ilija=C5=A1i=C4=87 wro=
+te:
 
---=-6HVfxYN+OiNLjuGMzAgp
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2009-02-12 at 23:57 -0800, Luis R. Rodriguez wrote:
-
-> To answer that question -- reg_mutex just protects the
-> reg_requests_list linked list. That's it. Without that you could
-> potentially have two userspace reg hints while the workqueue runs.
-> Remember that the hints no longer lock except to just add a new
-> regulatory_request into the reg_requests_list.
-
-Right, ok.
-
-> >> Driver hint also does the same so it seems your fix on nl80211 would
-> >> probably just tap this series on the nl80211_req_set_reg().
-> >
-> > Yeah, I think I'll work on top of your series anyway so I don't clash
-> > with the cleanups.
+> The card is AirLive WL1600USB, PCI/USB ID 1b75:8187,
+> url: http://www.airlive.com/product/product_3.jsp?pdid=3DPD1223473034=
+861
 >=20
-> Any other comments on the series?
+> I somehow have the feeling that the PCI/USB ID of this card is
+> unrecognized by the module (if the module even recognizes hardware
+> only by it's ID), since this is rather obscure ID (google only return=
+s
+> 2 results for that ID). I'm no expert, I might be wrong.
 
-Not really, looks pretty good to me. It does seem a little dubious to
-return an error from a hint function and then not attach the hardware,
-but that's up to you what you want to do in ath9k I guess -- seems it
-should work ok even if the hint failed, though of course then you'll not
-have memory for anything else either...
+You might try applying the patch below and rebuilding your kernel.
+Does that get the driver to recognize the device?
 
-johannes
+John
 
---=-6HVfxYN+OiNLjuGMzAgp
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+---
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/w=
+ireless/rtl818x/rtl8187_dev.c
+index 82bd47e..5da2bd7 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -59,6 +59,8 @@ static struct usb_device_id rtl8187_table[] __devinit=
+data =3D {
+ 	{USB_DEVICE(0x0df6, 0x0028), .driver_info =3D DEVICE_RTL8187B},
+ 	/* Abocom */
+ 	{USB_DEVICE(0x13d1, 0xabe6), .driver_info =3D DEVICE_RTL8187},
++	/* AirLive */
++	{USB_DEVICE(0x1b75, 0x8187), .driver_info =3D DEVICE_RTL8187},
+ 	{}
+ };
+=20
 
-iQIcBAABAgAGBQJJlSqOAAoJEKVg1VMiehFY9YkQAIPadnYZpgJIs76UvS9K0UgB
-npWJHd1FAV4AqO5e4vaW5D9yBa/Qg6WLx4ImB0tdtZVFnf5Mw52ANTE6cxpEFi0i
-xxfstijKNxlQTHtId7V30IQD7UIavlgYnt+ORXfVleEKvVFwLz89cUaBz/FU+iQY
-pz9a07f4QGUoyGDV7jSGU0r/Knpkl6ErXTICXtiNdGY+oSrLngLG3sWkBofAkcgN
-vmLppTZQaRzmQhgKCFe/pwKyvVecX4nbFC+srEGW6XBCkiEJ5vm9zpQ6VJYnK0/n
-SfHS+ty5xl9IdfK1V3nDJCphLhsaUs24WRUsXPSz/ByXNH64akkP4X6UsIr1IITo
-RNkX5/ZUuSrFhmupjIoGGFJUS9MqL6sPZfmqzawGz590G0dw3FHqcpjCzyOK6LI6
-Q2CZJteZE/foWL5GahBWPFGXD+ZxTNFpJSJOYpKa24tGqAA3WnQzcDRqaj2l3b0A
-iX1FUohH4/cPBXrowK4GoPU03k+pgAn7MbChhErdVuBKaxLWV8bpRg+1kb4F90m0
-bNB8ZjVlqRep6El3gl/4L23BpOFoRkUb1QP5HCw9uVM6U1/x1Sqh0PekzQNvhE66
-8nPnYO3061ld0E8XxYiQXxZhPEc1qe5+Ft8ovwuo9q119AjPBVG0vT499ES6+OTG
-3cdVtrNhukebHP7+xxPh
-=6FfJ
------END PGP SIGNATURE-----
-
---=-6HVfxYN+OiNLjuGMzAgp--
-
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
