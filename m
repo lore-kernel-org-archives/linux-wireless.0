@@ -1,63 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:27061 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754551AbZBSJUA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753287AbZBPKUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 04:20:00 -0500
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx09.nokia.com (Switch-3.2.6/Switch-3.2.6) with ESMTP id n1J9JRhw025273
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 03:19:56 -0600
-To: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "Coelho Luciano \(Nokia-D\/Helsinki\)" <Luciano.Coelho@nokia.com>
-Subject: Re: wl12xx: driver for TI wl1251 chipset
-References: <87iqnishuj.fsf@nokia.com>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Thu, 19 Feb 2009 11:19:50 +0200
-In-Reply-To: <87iqnishuj.fsf@nokia.com> (Valo Kalle's message of "Tue\, 10 Feb 2009 11\:32\:04 +0100")
-Message-ID: <87tz6qokax.fsf@nokia.com> (sfid-20090219_102010_966736_31DD4922)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 16 Feb 2009 05:20:30 -0500
+Subject: Re: [PATCH 08/10] cfg80211: make regulatory_request use wiphy_idx
+	instead of wiphy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890902160211p683bef08g5643ccb787cbf725@mail.gmail.com> (sfid-20090216_111158_948581_8300960E)
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-9-git-send-email-lrodriguez@atheros.com>
+	 <1234695858.4219.54.camel@johannes.local>
+	 <43e72e890902160155j402e887an9c5ea3ca9b9f64f3@mail.gmail.com>
+	 <1234778566.4219.120.camel@johannes.local>
+	 <43e72e890902160211p683bef08g5643ccb787cbf725@mail.gmail.com>
+	 (sfid-20090216_111158_948581_8300960E)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-znyCmwaxpJ07lqKX6pFk"
+Date: Mon, 16 Feb 2009 11:20:25 +0100
+Message-Id: <1234779625.4219.125.camel@johannes.local> (sfid-20090216_112034_217750_2C49E2D0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Valo Kalle (Nokia-D/Tampere)" <Kalle.Valo@nokia.com> writes:
 
-> Hello all,
->
-> in Nokia we have been working on a mac80211 driver for TI wl1251
-> chipset. We named it as wl12xx, and in the future we are planning to
-> add wl1271 support to the driver as well.
+--=-znyCmwaxpJ07lqKX6pFk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[...]
+On Mon, 2009-02-16 at 02:11 -0800, Luis R. Rodriguez wrote:
 
-> http://www.valot.fi/kalle/tmp/wl12xx/wl12xx-2.6.28-1.patch
+> >> * Driver hints which never have the wiphy NULL
+> >> * __regulatory_hint: called from 11d hints, and from the workqueue
+> >> that processes the pending requests (which can come from userspace or
+> >> from drivers right now).
+> >
+> > Ok, but in the first case you can't have NULL, and in the second you
+> > could just inline it. It's not an operation that requires an inline her=
+e
+> > for it.
+>=20
+> Sure, its just called twice
 
-[...]
+Yeah but the first call is entirely pointless since wiphy cannot be NULL
+there. I don't want to encourage random error-checking accessors where
+writing wiphy->wiphy_idx is perfectly fine.
 
-> Currently known issues:
->
-> o short slot and preamble support missing
-> o rts/cts and cts-to-self missing
-> o no proper bitrate control support
-> o using deprecated omap_get_config(), need to convert to use platform_data
-> o firmware wakeup not working, deepest sleep state in firmware not yet
->   enabled
+>  and I think it makes the code more
+> readable to use a routine, what if I just move it to core.c or reg.c.
 
-I received few comments, I'll list them here so that I don't forget
-them:
+If you really think it makes the code that much more readable then
+please just use it once in the case where a NULL argument can happen
+(the workqueue), and move it to that code.
 
-o netlink interface might create problems, I'll remove netlink. cfor
-  now but will revisit it later
-o wl12xx_80211.h is, well, ugly
-o fragmentation in the hardware might not be worth the trouble
-o "*fc &= ~IEEE80211_FCTL_PROTECTED;" shouldn't be necessary, just set
-  the status properly
-o get_tsf() doesn't need to be atomic anymore, ad-hoc tsf hack can be
-  removed
+johannes
 
-If anyone has more comments, please send them soon. I'm planning to
-prepare a patch for adding wl12xx to wireless-testing next week. Let's
-see if John takes it :)
+--=-znyCmwaxpJ07lqKX6pFk
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-Kalle Valo
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJmT3mAAoJEKVg1VMiehFYTOIQAJbdeubMregGShKqxxwPyP/q
+FQTrZaaZ/v0eeHHwKg7KWG96nnvXXfxM9VcfPEQrdH+EI6Wj/SH45HfjneQ4kYGI
+rEJNm7Ebio+5k4p0axzFLI5Sx4zBiq7rKRx8fDjH6PED9jW6Pahtr/snSHiar5ci
+yhHTpdPbdBTq59RMtylkL1RtPgYa3+PW4eDf45ylcxdLH65oxpGGE3vFdGXSVleE
+Lrzk9xkFUUGE/0ltdol670HNHYly+WOkPZWgm69FvX4za7Qdo1h4I5tr4Nv+5n8j
+6YUf2cgRoEEVQtoN8bD2VQmBAPXXziBIY9E1ZhE9SMFBIj1cYztRaHuZDTT0jAiZ
++WE/fAhg/JqC14rBuP/07b6VQGEcXDyJDobAvBw3kBT6d96MtMTBpaQhtiAFVBW9
+IWji5NqzKAPsVtMBZyLTPxUomm4JJgiecaDnY3ZuexgR9oSrW4ZIRLhumUCF0876
+X6erg37rPU1xFZsWMYfaZsb2/S96FSIzn4GpuEIqHhyWPxN24tFrCOnpTIa48UZW
+erx6VcesnSlpHrJ586rCNguan7yWNXs4NhOtd8Det3FkIScxhXfhVLI6FrOwdc2d
+aSzX3jIpegB/yLVCBU6kX33MptzfAbORSu6kPx4kt0er1e47pigZQq0WDu8IFZe1
+e3tWaE76kz4NcV+NUvMK
+=b6u9
+-----END PGP SIGNATURE-----
+
+--=-znyCmwaxpJ07lqKX6pFk--
+
