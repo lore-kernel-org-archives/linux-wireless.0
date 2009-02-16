@@ -1,37 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4563 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752147AbZBAAoH (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:3302 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754960AbZBPIOT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2009 19:44:07 -0500
-Date: Sat, 31 Jan 2009 19:43:49 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 4/5] ath5k: Update initvals
-Message-ID: <20090201004349.GB17607@hash.localnet> (sfid-20090201_014413_254798_477C8AE4)
-References: <20090131023007.GD3342@makis>
+	Mon, 16 Feb 2009 03:14:19 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so920180yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 00:14:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090131023007.GD3342@makis>
+In-Reply-To: <1234695593.4219.47.camel@johannes.local>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-6-git-send-email-lrodriguez@atheros.com>
+	 <1234695593.4219.47.camel@johannes.local>
+Date: Mon, 16 Feb 2009 00:14:17 -0800
+Message-ID: <43e72e890902160014k11ba609lbe1340750771b6c0@mail.gmail.com> (sfid-20090216_091424_588796_BD96130C)
+Subject: Re: [PATCH 05/10] cfg80211: add regulatory_hint_core() to separate
+	the core reg hint
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 31, 2009 at 04:30:07AM +0200, Nick Kossifidis wrote:
->  * Update initvals to match legacy and Sam's HAL
-> 
->  Signed-Off-by: Nick Kossifidis <mickflemm@gmail.com>
+On Sun, Feb 15, 2009 at 2:59 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
+>> This will allow us to clean up and make distinctions of who
+>> needs locking or not.
+>>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  net/wireless/reg.c |   36 +++++++++++++++++++++++++++---------
+>>  1 files changed, 27 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index ba82312..679fded 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+>>       case REGDOM_SET_BY_INIT:
+>>               return -EINVAL;
+>>       case REGDOM_SET_BY_CORE:
+>> -             /*
+>> -              * Always respect new wireless core hints, should only happen
+>> -              * when updating the world regulatory domain at init.
+>> -              */
+>> -             return 0;
+>> +             return -EINVAL;
+>>       case REGDOM_SET_BY_COUNTRY_IE:
+>>               if (unlikely(!is_an_alpha2(alpha2)))
+>>                       return -EINVAL;
+>> @@ -1183,6 +1179,26 @@ new_request:
+>>       return call_crda(alpha2);
+>>  }
+>>
+>> +static int regulatory_hint_core(const char *alpha2)
+>> +{
+>> +     struct regulatory_request *request;
+>> +
+>> +     BUG_ON(last_request);
+>> +
+>> +     request = kzalloc(sizeof(struct regulatory_request),
+>> +                       GFP_KERNEL);
+>> +     if (!request)
+>> +             return -ENOMEM;
+>> +
+>> +     request->alpha2[0] = alpha2[0];
+>> +     request->alpha2[1] = alpha2[1];
+>> +     request->initiator = REGDOM_SET_BY_CORE;
+>> +
+>> +     last_request = request;
+>
+> So before you documented that cfg80211_mutex is used to protect this
+> variable, but it's not used here.
 
-I spot checked some of these, this is the only thing I saw:
+This is only used during initialization, have any better ideas?
 
-> -	{ AR5K_BEACON_CNT_5211, 0x00000000 },	/* change */
-> +	{ AR5K_FRAME_CTL_QOSM, 	0x000fc78f },
-
-legacy-hal and Sam disagree on the top 12 bits (0xffffc78f vs
-0x000fc78f), we have Sam's.
-
-Rest looks good to me, feel free to add my Acked-by if you want.
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
