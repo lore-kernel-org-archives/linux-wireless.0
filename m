@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:39344 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752349AbZBDTcZ (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.28]:6169 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751357AbZBPJJm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 14:32:25 -0500
-Received: by ug-out-1314.google.com with SMTP id 39so112770ugf.37
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 11:32:24 -0800 (PST)
+	Mon, 16 Feb 2009 04:09:42 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so922669yxm.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 01:09:41 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <3ace41890902040717l7174fc0xc4589f17ea283e9c@mail.gmail.com>
-References: <a4c529250902040227g35a375fdu35c2360f0916dba6@mail.gmail.com>
-	 <a4c529250902040243r6146f56vb2c656818385c749@mail.gmail.com>
-	 <3ace41890902040717l7174fc0xc4589f17ea283e9c@mail.gmail.com>
-Date: Wed, 4 Feb 2009 19:32:23 +0000
-Message-ID: <a4c529250902041132t6e9bcb79jfd412320fc088ff4@mail.gmail.com> (sfid-20090204_203230_538823_348F9463)
-Subject: Re: zd1211rw NEW RF Type
-From: Ismael Ojeda Perez <iojedaperez@gmail.com>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1234774345.4219.106.camel@johannes.local>
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-7-git-send-email-lrodriguez@atheros.com>
+	 <1234695674.4219.50.camel@johannes.local>
+	 <43e72e890902160018r40d8c694qa1da55c9fa7ec376@mail.gmail.com>
+	 <1234774345.4219.106.camel@johannes.local>
+Date: Mon, 16 Feb 2009 01:09:41 -0800
+Message-ID: <43e72e890902160109i386d78bydd36f182ed3e6dcd@mail.gmail.com> (sfid-20090216_100949_902767_02DE8996)
+Subject: Re: [PATCH 06/10] cfg80211: propagate -ENOMEM during
+	regulatory_init()
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Greg KH <greg@kroah.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/2/4 Hin-Tak Leung <hintak.leung@gmail.com>:
-> On Wed, Feb 4, 2009 at 10:43 AM, Ismael Ojeda Perez
-> <iojedaperez@gmail.com> wrote:
->> Hi, huston we have a problem
->> I have purchased a tp-link usb wireless device
->> model : tl-wn422g
->> i cant work with it because it says there is a new RF type
->> here its what dmesg shows
+On Mon, Feb 16, 2009 at 12:52 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2009-02-16 at 00:18 -0800, Luis R. Rodriguez wrote:
 >
->> [  526.984508] zd1211rw 7-2:1.0: RF MAXIM_NEW_RF 0x8 is not supported
+>> > I disagree with this patch -- there's so much that can go wrong even if
+>> > allocating the message here is ok that imho it's hardly useful to check
+>> > for errors here.
+>>
+>> Huh?? ENOMEM is the only error we are propagating  -- that itself
+>> seems reasonable to propagate.
+>>
+>> > crda could fail, not be installed, etc.
+>>
+>> This is never propagated to the kernel, that is not what this patch
+>> does. Those failures you mentioned should not prevent cfg80211 from
+>> moving on.
+>>
+>> All this patch does is propagate -ENOMEMs.
 >
-> You probably don't hang out in the right place... two people on the
-> sourceforge zd1211 mailing list recently reported that
-> MAXIM_NEW_RF=0x08 is just the same as    UW2453_RF=0x09 ; and one of
-> them has a wn422g and the other wn322g
-> (I just went back the mailing list archive and checked), so it is
-> likely the same change would work for you:
->
-> in drivers/net/wireless/zd1211rw/zd_rf.c, line 89, you see:
->
-> --------------------
->        case UW2453_RF:
->                r = zd_rf_init_uw2453(rf);
->                break;
-> ---------------------
-> Just put an extra line
->
->         case MAXIM_NEW_RF:
-> either immediately before or immediately after the case UW2453_RF: line.
->
-> If it reports success for you, maybe we'll consider putting this in
-> properly... I am not the maintainer for that part, so it is likely
-> we'll need advice/approval from somebody else for this change to go
-> into the kernel.
->
+> Yes, all those other possible crda failures do not prevent cfg80211 from
+> moving on. But being unable to create a uevent could very well also be
+> treated as a crda failure
 
-Thanks for your kind help as you say it was as easy as modifying the
-line and the device is now working perfectly.
-i added just below line 89 the following code
-case MAXIM_NEW_RF:
-		r = zd_rf_init_uw2453(rf);
-		break;
-Thanks ;) to you all and to the open comunity.
+We're strictly checking just for ENOMEMs which if you are getting will
+get you into problems anyway so might as well propagate that
+information.
+
+kobject_uevent_env() can fail for a short set of other non-memory
+related issues and those are the cases we are ignoring here including
+the possible call to call_usermodehelper() during early boot (which
+I'm not even sure how likely it is, Greg?).
+
+>, and then how is it different from crda
+> failing in userspace to warrant stopping cfg80211 from moving on?
+
+This is based on the premise that we are simply bailing out for all
+conditions on the creation of a udev event but that is not the case --
+prior to this we were disregarding -ENOMEMs which I do not believe is
+correct. Why wouldn't you want to propagate that?
+
+  Luis
