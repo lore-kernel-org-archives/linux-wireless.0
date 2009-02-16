@@ -1,95 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56760 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814AbZBWVPU (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53676 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753317AbZBPKSZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 16:15:20 -0500
-Date: Mon, 23 Feb 2009 16:11:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Lars Ericsson <Lars_Ericsson@telia.com>
-Cc: "'Johannes Berg'" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: SIOCGIWSCAN-race
-Message-ID: <20090223211155.GA8814@tuxdriver.com> (sfid-20090223_221524_088890_C081F26F)
-References: <B944EEED4BC94818AF57142C1687A0A0@gotws1589>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <B944EEED4BC94818AF57142C1687A0A0@gotws1589>
+	Mon, 16 Feb 2009 05:18:25 -0500
+Subject: Re: [PATCH 09/10] cfg80211: move regulatory hints to workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890902160209q2106331ds540a711e9badfa3f@mail.gmail.com> (sfid-20090216_111011_271337_5C2D5B4D)
+References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
+	 <1234589627-16977-10-git-send-email-lrodriguez@atheros.com>
+	 <1234696212.4219.60.camel@johannes.local>
+	 <43e72e890902160148n5a383a96t8e20dc4bc9d10687@mail.gmail.com>
+	 <1234778113.4219.117.camel@johannes.local>
+	 <43e72e890902160209q2106331ds540a711e9badfa3f@mail.gmail.com>
+	 (sfid-20090216_111011_271337_5C2D5B4D)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8D66JyprLBUN/cTR/HUq"
+Date: Mon, 16 Feb 2009 11:18:18 +0100
+Message-Id: <1234779498.4219.122.camel@johannes.local> (sfid-20090216_111829_085192_C34B8E7C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 21, 2009 at 08:33:06AM +0100, Lars Ericsson wrote:
-> Hi Johannes,
-> 
-> I have discovered and patched a race in the scanning function since a couple
-> of releases.
-> To day I checked the current Linux git and the problem is still there.
-> 
-> The problem is the sequence of events when the scan result is reported back.
-> The wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL); 
-> is called before ieee80211_hw_config(local);
-> 
-> ieee80211_hw_config(local) will trig the wpa_supplicant to select an AP. 
-> That may happen before the ieee80211_hw_config() is executed since the
-> wpa_supplicant
-> generated actions is executed by an other thread (wpa_supplicant).
-> 
-> The result is that:
-> - wpa_supplicant setup for an association to an ap using correct channel.
-> - ieee80211_hw_config() reset the channel to the value before the SCAN
-> started.
-> - the association request will be sent out using the wrong channel.
-> 
-> 
-> Attached you will find the patch for 2.6.27. 
-> It is not a perfect patch since the code is duplicated but it works :)
 
-Looks like the patch would need to be reworked -- the code in 2.6.29
-and later is different.  Also, any reason we can't just move the
-wireless_send_event() down to done:?
+--=-8D66JyprLBUN/cTR/HUq
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Still, this doesn't feel quite right.  Shouldn't we be able to queue
-the userland-driven channel change until after the scan completes?
+On Mon, 2009-02-16 at 02:09 -0800, Luis R. Rodriguez wrote:
 
-John
+> > Maybe just use a spinlock for the list, and do the loop manually like i=
+n
+> > mac80211/key.c then?
+> >
+> >        spin_lock(&todo_lock);
+> >        while (!list_empty(&todo_list)) {
+> >                key =3D list_first_entry(&todo_list, struct ieee80211_ke=
+y, todo);
+> >                list_del_init(&key->todo);
+> >                spin_unlock(&todo_lock);
+> > ........
+> >                spin_lock(&todo_lock);
+> >        }
+> >        spin_unlock(&todo_lock);
+>=20
+> Sure, is the benefit you see that we won't contend userspace longer if
+> the workqueue is busy?
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index f5c7c33..8c13a91 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -437,15 +437,6 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 	local->last_scan_completed = jiffies;
- 	memset(&wrqu, 0, sizeof(wrqu));
- 
--	/*
--	 * local->scan_sdata could have been NULLed by the interface
--	 * down code in case we were scanning on an interface that is
--	 * being taken down.
--	 */
--	sdata = local->scan_sdata;
--	if (sdata)
--		wireless_send_event(sdata->dev, SIOCGIWSCAN, &wrqu, NULL);
--
- 	if (local->hw_scanning) {
- 		local->hw_scanning = false;
- 		/*
-@@ -486,6 +477,15 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
- 	rcu_read_unlock();
- 
-  done:
-+	/*
-+	 * local->scan_sdata could have been NULLed by the interface
-+	 * down code in case we were scanning on an interface that is
-+	 * being taken down.
-+	 */
-+	sdata = local->scan_sdata;
-+	if (sdata)
-+		wireless_send_event(sdata->dev, SIOCGIWSCAN, &wrqu, NULL);
-+
- 	ieee80211_mlme_notify_scan_completed(local);
- 	ieee80211_mesh_notify_scan_completed(local);
- }
+No, just that it's simpler because we truly only use the spinlock for
+list accesses rather than holding a reg_mutex around the cfg80211 mutex.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thus we can queue things without needing the cfg80211 mutex, but dequeue
+needs to run under it.
+
+johannes
+
+--=-8D66JyprLBUN/cTR/HUq
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJmT1nAAoJEKVg1VMiehFYxO8P/A07aSbAq01srqeXHxE1owco
+9dZxutA+OtHjd/jR9OeqFbTchShJ0tZoDnKk4w0e3XO6E0mVyTWfieUZtBaa1J6l
+5ztUyQaNAOKwuKEOeNrHsNzwLAI9ebWZEWtNplKdjgC07pYQ7odh2VNdfF6MBlCp
+fkOo8qkErdU70/44VJ6/X2XL/LbkM7cavtDceUzlH4E3a+EOatOWORHc1v75/id/
+G54JFhqvHzxYm0fLGqPSoelwlUsEOpgQJV5rG0TIywbsOzBV1pATJtOhZmdf6REo
+jchqjMhGGkiDq/TvySK1WhuKPiWWs9TiXbl1ulMc3doAnw2Yet0OXD+KsUvLCTMw
+cVxoI12JYw/ckgypTbU1MZ0J9LXdjCQuRX44pAWoJXWrYkIHgOaywaPKQydgsLyr
+ERRh7SmC5Exo0Tzq8JpDwf42EjMDIYt772ER4ljEx2LE0uXmP0SGWKqVUQkx4Qyl
+DWXP2tBr779a3B68duxgMk3Eb/6GRbN/f1hq7IHv8LZmy6XFHXcaubjQ9zVfsTue
+0eTiJqjgB6QXos1L+8Bj8V/QiEsOZ34oa2ZSZv7qeeeWtYlXV7OVXK4mVuHeG035
+4lx0wk8B8RaKhswGIXBAOdnCts27Bea1boGCT9cKEYw3R35tfdmkN/MSMNSvEuO6
+/P96urZfSlth3qM/IzI7
+=P66i
+-----END PGP SIGNATURE-----
+
+--=-8D66JyprLBUN/cTR/HUq--
+
