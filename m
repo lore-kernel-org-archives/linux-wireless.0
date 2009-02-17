@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:56929 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750962AbZBQAKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 19:10:07 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1LZDXG-00007d-J8
-	for linux-wireless@vger.kernel.org; Tue, 17 Feb 2009 00:10:02 +0000
-Received: from dslb-092-076-241-105.pools.arcor-ip.net ([92.76.241.105])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 00:10:02 +0000
-Received: from feldmann_markus by dslb-092-076-241-105.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 00:10:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Markus Feldmann <feldmann_markus@gmx.de>
-Subject: Re: Does ACPIPHP work on my Machine
-Date: Tue, 17 Feb 2009 01:09:47 +0100
-Message-ID: <gncv8e$cod$1@ger.gmane.org> (sfid-20090217_011012_263757_B6448786)
-References: <gktp4e$p6h$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-In-Reply-To: <gktp4e$p6h$1@ger.gmane.org>
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:38859 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600AbZBQADk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2009 19:03:40 -0500
+Received: by bwz5 with SMTP id 5so3524962bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 16:03:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4999F427.4060008@lwfinger.net>
+References: <4999F3A6.7020208@gmail.com> <4999F427.4060008@lwfinger.net>
+Date: Tue, 17 Feb 2009 00:03:38 +0000
+Message-ID: <3ace41890902161603o447ae321obb536586dcafad69@mail.gmail.com> (sfid-20090217_010345_020703_2C91A891)
+Subject: Re: rtl8187 not handling my usb card
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	viktor.ilijasic@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I tried the newest Kernel <2.6.29.4> and it doean't work at all.
-The same Problem with the rfkill Button. I can't activate my
-wlan card without a functional ACPIPHP i think.
-So i hope Matthew Garrett or something else will hear my
-shout for help. :-)
+Hiya,
 
-In some days i have birthday and i wish me ... :-)
+A quick search on google shows Airlive hosting a linux driver here:
 
-Regards Markus
+http://www.airlive.com/support/support_3a.jsp?pdid=PD1223473034861
 
+I had a quick look  and indeed it looks like the realtek vendor driver
+(or a variant of) for 8187L.
+Note that this is for reference, since we all know the vendor driver
+has some issues with the latest wireless stack, etc.
