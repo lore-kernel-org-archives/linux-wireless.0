@@ -1,153 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:41809 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754133AbZB0QBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 11:01:00 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Date: Fri, 27 Feb 2009 16:59:05 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Florian Fainelli <florian@openwrt.org>
-MIME-Version: 1.0
-Message-Id: <200902271659.06122.mb@bu3sch.de> (sfid-20090227_170113_592142_C84B6866)
-Subject: [PATCH] ssb: Add SPROM fallback support
-Content-Type: text/plain;
-  charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:52164 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754430AbZBQTnb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2009 14:43:31 -0500
+Subject: Re: Missing link quality with wireless-testing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1234896777.4678.7.camel@californication> (sfid-20090217_195251_321967_5E2E0AB8)
+References: <1234896777.4678.7.camel@californication>
+	 (sfid-20090217_195251_321967_5E2E0AB8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-9SPuVS4aZyc+TSI03aXN"
+Date: Tue, 17 Feb 2009 20:43:26 +0100
+Message-Id: <1234899806.29785.35.camel@johannes.local> (sfid-20090217_204344_725950_77F85EFF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds SSB functionality to register a fallback SPROM image from the
-architecture setup code.
 
-Weird architectures exist that have half-assed SSB devices without SPROM attached to
-their PCI busses. The architecture can register a fallback SPROM image that is
-used if no SPROM is found on the SSB device.
+--=-9SPuVS4aZyc+TSI03aXN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-Cc: Florian Fainelli <florian@openwrt.org>
+Marcel,
 
----
+> I have been running the wireless-testing kernel from yesterday and I
+> realized that something with the link quality values from scanning
+> results is broken.
 
-John, please merge in the next feature window.
-The actual user of this interface will be merged through the mips tree.
+What exactly is broken by this? Wext never guaranteed that 'qual' values
+be present, and thus any application that breaks from not having 'qual'
+is broken anyway.
 
+johannes
 
-Index: wireless-testing/drivers/ssb/pci.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pci.c	2009-01-23 17:08:11.000000000 +0100
-+++ wireless-testing/drivers/ssb/pci.c	2009-02-27 16:47:16.000000000 +0100
-@@ -564,6 +564,7 @@ static int sprom_extract(struct ssb_bus 
- static int ssb_pci_sprom_get(struct ssb_bus *bus,
- 			     struct ssb_sprom *sprom)
- {
-+	const struct ssb_sprom *fallback;
- 	int err = -ENOMEM;
- 	u16 *buf;
- 
-@@ -583,12 +584,23 @@ static int ssb_pci_sprom_get(struct ssb_
- 		bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
- 		sprom_do_read(bus, buf);
- 		err = sprom_check_crc(buf, bus->sprom_size);
--		if (err)
-+		if (err) {
-+			/* All CRC attempts failed.
-+			 * Maybe there is no SPROM on the device?
-+			 * If we have a fallback, use that. */
-+			fallback = ssb_get_fallback_sprom();
-+			if (fallback) {
-+				memcpy(sprom, fallback, sizeof(*sprom));
-+				err = 0;
-+				goto out_free;
-+			}
- 			ssb_printk(KERN_WARNING PFX "WARNING: Invalid"
- 				   " SPROM CRC (corrupt SPROM)\n");
-+		}
- 	}
- 	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
- 
-+out_free:
- 	kfree(buf);
- out:
- 	return err;
-Index: wireless-testing/drivers/ssb/sprom.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/sprom.c	2008-12-26 22:47:35.000000000 +0100
-+++ wireless-testing/drivers/ssb/sprom.c	2009-02-27 16:47:16.000000000 +0100
-@@ -14,6 +14,9 @@
- #include "ssb_private.h"
- 
- 
-+static const struct ssb_sprom *fallback_sprom;
-+
-+
- static int sprom2hex(const u16 *sprom, char *buf, size_t buf_len,
- 		     size_t sprom_size_words)
- {
-@@ -131,3 +134,36 @@ out:
- 		return res;
- 	return err ? err : count;
- }
-+
-+/**
-+ * ssb_arch_set_fallback_sprom - Set a fallback SPROM for use if no SPROM is found.
-+ *
-+ * @sprom: The SPROM data structure to register.
-+ *
-+ * With this function the architecture implementation may register a fallback
-+ * SPROM data structure. The fallback is only used for PCI based SSB devices,
-+ * where no valid SPROM can be found in the shadow registers.
-+ *
-+ * This function is useful for weird architectures that have a half-assed SSB device
-+ * hardwired to their PCI bus.
-+ *
-+ * Note that it does only work with PCI attached SSB devices. PCMCIA devices currently
-+ * don't use this fallback.
-+ * Architectures must provide the SPROM for native SSB devices anyway,
-+ * so the fallback also isn't used for native devices.
-+ *
-+ * This function is available for architecture code, only. So it is not exported.
-+ */
-+int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom)
-+{
-+	if (fallback_sprom)
-+		return -EEXIST;
-+	fallback_sprom = sprom;
-+
-+	return 0;
-+}
-+
-+const struct ssb_sprom *ssb_get_fallback_sprom(void)
-+{
-+	return fallback_sprom;
-+}
-Index: wireless-testing/drivers/ssb/ssb_private.h
-===================================================================
---- wireless-testing.orig/drivers/ssb/ssb_private.h	2008-12-26 22:47:35.000000000 +0100
-+++ wireless-testing/drivers/ssb/ssb_private.h	2009-02-27 16:47:16.000000000 +0100
-@@ -131,6 +131,7 @@ ssize_t ssb_attr_sprom_store(struct ssb_
- 			     const char *buf, size_t count,
- 			     int (*sprom_check_crc)(const u16 *sprom, size_t size),
- 			     int (*sprom_write)(struct ssb_bus *bus, const u16 *sprom));
-+extern const struct ssb_sprom *ssb_get_fallback_sprom(void);
- 
- 
- /* core.c */
-Index: wireless-testing/include/linux/ssb/ssb.h
-===================================================================
---- wireless-testing.orig/include/linux/ssb/ssb.h	2009-02-04 19:45:14.000000000 +0100
-+++ wireless-testing/include/linux/ssb/ssb.h	2009-02-27 16:47:16.000000000 +0100
-@@ -339,6 +339,10 @@ extern int ssb_bus_pcmciabus_register(st
- 
- extern void ssb_bus_unregister(struct ssb_bus *bus);
- 
-+/* Set a fallback SPROM.
-+ * See kdoc at the function definition for complete documentation. */
-+extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
-+
- /* Suspend a SSB bus.
-  * Call this from the parent bus suspend routine. */
- extern int ssb_bus_suspend(struct ssb_bus *bus);
+--=-9SPuVS4aZyc+TSI03aXN
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
--- 
-Greetings, Michael.
+iQIcBAABAgAGBQJJmxNbAAoJEKVg1VMiehFYutoP/AwkVLb5g16FYpN9DZ65WDvE
+g93QpAzNgmf2PWzTOfUo4HM3x2EraW8vmpYb8/D7VU1GOiNnaGozDu5UV2xlwO5b
+xZTrICH3GbXjChF3842GhTKVCUSdvX5JSV4TNFHMSRV3VY653fcNraxivXgqQ3sh
+yggYj/ICrn19wzajY16IZ5R8UtGvolRgYW0rhma2nDyrENTV14XAl5tJWX9nnfg/
+d+bsBJOEIffW8OdjHeZXjNt4HK6iVNaelAo0vUrbiSPKsiVTqZR+62L069T12dQ5
+HVaszs5tz5bsALEVwylLsI7ghTI1Tv7oKk6GQD5/2ptfnEyAbB8qL6/YP3jR0261
+4ZvyzPCvhCV0reJC1VTL+EtQkz6bpanjfpYQ33YSDvdMwwse646mfgE0DWHgw9p5
+UkGXTfkiN4+o20Sc0LxgbmgtQ9FFR9NPYc3RnCCS4CfGNFR6QlZRneAhrLEmWsV8
+sMjS6v3Cwj1WA1coOg5D2STTODg3eQWU+4tQQe7qk1jdb4+3BvAlODVGs95I9pMR
+zzf9wdcJkHMwJKyhBCetT+Z+gb0Rva92Y0qecNU7bEXcqFRqy0/bxXRPxF6/GD29
+95vZNtUOVkBSWekQV1GFiaGSq5szxMTqpZ9bStomH2A2BrA2lRdul8Lx+LyvQIZn
+6HYlNgdVt5I4I1U4Un5g
+=k1iX
+-----END PGP SIGNATURE-----
+
+--=-9SPuVS4aZyc+TSI03aXN--
+
