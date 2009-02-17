@@ -1,80 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53264 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751191AbZBPJPR (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:38553 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953AbZBQUbb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 04:15:17 -0500
-Subject: Re: [PATCH 06/10] cfg80211: propagate -ENOMEM during
-	regulatory_init()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Greg KH <greg@kroah.com>
-In-Reply-To: <43e72e890902160109i386d78bydd36f182ed3e6dcd@mail.gmail.com> (sfid-20090216_101014_517565_73E5101A)
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-7-git-send-email-lrodriguez@atheros.com>
-	 <1234695674.4219.50.camel@johannes.local>
-	 <43e72e890902160018r40d8c694qa1da55c9fa7ec376@mail.gmail.com>
-	 <1234774345.4219.106.camel@johannes.local>
-	 <43e72e890902160109i386d78bydd36f182ed3e6dcd@mail.gmail.com>
-	 (sfid-20090216_101014_517565_73E5101A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-b4/7ayp9B58GQKjm36mO"
-Date: Mon, 16 Feb 2009 10:15:09 +0100
-Message-Id: <1234775709.4219.111.camel@johannes.local> (sfid-20090216_101521_714935_F94BCAE5)
-Mime-Version: 1.0
+	Tue, 17 Feb 2009 15:31:31 -0500
+Date: Tue, 17 Feb 2009 14:31:12 -0600
+From: Larry Finger <Larry.Finger@gmail.com>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8187: New USB ID's for RTL8187L
+Message-ID: <499b1e90.kmugr59uxt2XRg8i%Larry.Finger@gmail.com> (sfid-20090217_213134_521277_0F2891C9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add new USB ID codes. These come from two postings on forums and
+mailing lists, and four are derived from the .inf that accompanies
+the latest Realtek Windows driver for the RTL8187L.
 
---=-b4/7ayp9B58GQKjm36mO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks to Viktor Ilija=C5=A1i=C4=87 <viktor.ilijasic@gmail.com> and Xos=
+e Vazquez
+Perez <xose.vazquez@gmail.com> for reporting these new ID's.
 
-On Mon, 2009-02-16 at 01:09 -0800, Luis R. Rodriguez wrote:
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> We're strictly checking just for ENOMEMs which if you are getting will
-> get you into problems anyway so might as well propagate that
-> information.
->=20
-> kobject_uevent_env() can fail for a short set of other non-memory
-> related issues and those are the cases we are ignoring here including
-> the possible call to call_usermodehelper() during early boot (which
-> I'm not even sure how likely it is, Greg?).
->=20
-> >, and then how is it different from crda
-> > failing in userspace to warrant stopping cfg80211 from moving on?
->=20
-> This is based on the premise that we are simply bailing out for all
-> conditions on the creation of a udev event but that is not the case --
-> prior to this we were disregarding -ENOMEMs which I do not believe is
-> correct. Why wouldn't you want to propagate that?
+John,
 
-Dunno, it just seems pointless to check for an error condition that
-covers so few of the possible ways to fail here.
+I think these are 2.6.29 material.
 
-johannes
+Larry
+---
 
---=-b4/7ayp9B58GQKjm36mO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJmS6aAAoJEKVg1VMiehFYkPMP+gLmxU5HId6R0HxxilDdQUzO
-lkn1fl5OAcszIwKs9puawjFguGz3fCkAhLPDtTF6OTExno6JLmzug4K3N+q/xCW6
-Hpk2kfI/mdZcINQEVrzA6CxqzgXt/NgafpvQDMNsN+AaBwvUTTFLQRBMhO+Nqj7Z
-Q2mOuR3XuaEm/T94kx/QBpKyteGElCpUD8+AjrxFNtoGQDS/OkBCyZ3LRrjUMaEX
-YkvKlX3pb2Vn/isD4h/4Sz/wFzICn6aFGJ1Meo3kF03rcWS8h5X9NwJ+wjX2Nj4n
-Z2Q+J9VPTo5m7kF9siKCdzraAuxQqt92H/OQSiTz2+r81Ts2dON0yuH5NCYLqi30
-tamzP45UTXQHKDv2FdFhV2RfnLNlXjXyjzLolZ7KAUMHt0zkAr+4bEneu0jsZwu5
-FXDMTVALxJu9a9slfYnQuX928ASq8v0ekpf1owwdOvW19zeZzB30UNwtc2NhGhiz
-Yol917T1LT6h9gnkddmtq7iGm1ip9yRV/qH1+TVshIrRE0kObQ5BP8bwnLHkKOzZ
-6C15gTB13yGO+kphhmUp+K399vrd0hPl9Pk39tGq1O0YLHoQ4SV3XHN91uoalaaB
-B/5rqaODhqN249VLjeV4UQTIg2E3TBicHtTTKKWezCJRBt5KoSS6rbh7CXif5k4i
-V/XwFQMfuCG2u6/hTzBt
-=mmJ5
------END PGP SIGNATURE-----
-
---=-b4/7ayp9B58GQKjm36mO--
-
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -48,6 +48,10 @@ static struct usb_device_id rtl8187_tabl
+ 	{USB_DEVICE(0x0bda, 0x8189), .driver_info =3D DEVICE_RTL8187B},
+ 	{USB_DEVICE(0x0bda, 0x8197), .driver_info =3D DEVICE_RTL8187B},
+ 	{USB_DEVICE(0x0bda, 0x8198), .driver_info =3D DEVICE_RTL8187B},
++	/* Surecom */
++	{USB_DEVICE(0x0769, 0x11F2), .driver_info =3D DEVICE_RTL8187},
++	/* Logitech */
++	{USB_DEVICE(0x0789, 0x010C), .driver_info =3D DEVICE_RTL8187},
+ 	/* Netgear */
+ 	{USB_DEVICE(0x0846, 0x6100), .driver_info =3D DEVICE_RTL8187},
+ 	{USB_DEVICE(0x0846, 0x6a00), .driver_info =3D DEVICE_RTL8187},
+@@ -57,8 +61,16 @@ static struct usb_device_id rtl8187_tabl
+ 	/* Sitecom */
+ 	{USB_DEVICE(0x0df6, 0x000d), .driver_info =3D DEVICE_RTL8187},
+ 	{USB_DEVICE(0x0df6, 0x0028), .driver_info =3D DEVICE_RTL8187B},
++	/* Sphairon Access Systems GmbH */
++	{USB_DEVICE(0x114B, 0x0150), .driver_info =3D DEVICE_RTL8187},
++	/* Dick Smith Electronics */
++	{USB_DEVICE(0x1371, 0x9401), .driver_info =3D DEVICE_RTL8187},
+ 	/* Abocom */
+ 	{USB_DEVICE(0x13d1, 0xabe6), .driver_info =3D DEVICE_RTL8187},
++	/* Qcom */
++	{USB_DEVICE(0x18E8, 0x6232), .driver_info =3D DEVICE_RTL8187},
++	/* AirLive */
++	{USB_DEVICE(0x1b75, 0x8187), .driver_info =3D DEVICE_RTL8187},
+ 	{}
+ };
+=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
