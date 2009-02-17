@@ -1,104 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50978 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752087AbZBOLKS (ORCPT
+Received: from mail-ew0-f31.google.com ([209.85.219.31]:52746 "EHLO
+	mail-ew0-f31.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105AbZBQJti (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 06:10:18 -0500
-Subject: Re: [PATCH 09/10] cfg80211: move regulatory hints to workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1234589627-16977-10-git-send-email-lrodriguez@atheros.com>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-10-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-88xE7C+fvvEexK320PU6"
-Date: Sun, 15 Feb 2009 12:10:12 +0100
-Message-Id: <1234696212.4219.60.camel@johannes.local> (sfid-20090215_121024_119822_F3339BC5)
-Mime-Version: 1.0
+	Tue, 17 Feb 2009 04:49:38 -0500
+Received: by ewy12 with SMTP id 12so967528ewy.13
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 01:49:36 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <499A00D7.1080000@lwfinger.net>
+References: <4999F3A6.7020208@gmail.com> <4999F427.4060008@lwfinger.net>
+	 <3ace41890902161603o447ae321obb536586dcafad69@mail.gmail.com>
+	 <499A00D7.1080000@lwfinger.net>
+Date: Tue, 17 Feb 2009 10:49:36 +0100
+Message-ID: <63d38a500902170149q275bcb87r9ada40439a013dc7@mail.gmail.com> (sfid-20090217_104945_238807_7B643EBD)
+Subject: Re: rtl8187 not handling my usb card
+From: =?ISO-8859-2?Q?Viktor_Ilija=B9i=E6?= <viktor.ilijasic@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all.
 
---=-88xE7C+fvvEexK320PU6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yesterday evening I tried John's patch (I manually added those two
+lines to the source), and the driver properly loads and it seem to
+work.
 
-On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
+However.... it would seem that my card died some time in the last few
+days. It works for about 10-15 seconds after i plug it in, and then
+"dies". I'd say that when it gets warm, it's out of the game.
 
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -396,6 +396,7 @@ enum environment_cap {
->   * 	country IE
->   * @country_ie_env: lets us know if the AP is telling us we are outdoor,
->   * 	indoor, or if it doesn't matter
-> + * @list: used to insert into a linked list
+In Linux after i plug it in, it works just enough time to:
+1. detect networks in ubuntu network manager (and return a nice scan
+result with iwlist wlan3 scan)
+2. starts to connect to my network (and reaches random points in connecting)
+3. stops responding altogether, cannot connect, no more results with
+iwlist scan, etc.
 
-I wouldn't mind it explaining which list ;)
+I noticed this exact behavior in windows too, yesterday morning,
+before I tried these patches, so linux driver is DEFINITELY not to
+blame.
 
-> +static LIST_HEAD(reg_requests_list);
-> +static DEFINE_MUTEX(reg_mutex);
-> +
-> +static void reg_process_pending_hints(void);
+In windows it very shortly detects available networks, starts to
+connect and very soon stops responding and finding networks.
 
-can you reorder the code in a way that doesn't require forward
-declarations?
+I'll return it to shop to be replaced, and I'll report back when I get
+one that works properly.
 
-> +/* This currently only processes user and driver regulatory hints */
-> +static int reg_process_hint(struct regulatory_request *reg_request)
-> +{
+Also, Larry, I took lsusb -v output during those first few moments
+while the card operates properly, hope it helps:
 
-why bother offloading _user_ hints to a workqueue? That seems a little
-pointless since we can sleep there and do whatever. OTOH, maybe _all_
-should be offloaded so the order is correct?
+$ sudo lsusb -v
+Bus 004 Device 004: ID 1b75:8187
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  idVendor           0x1b75
+  idProduct          0x8187
+  bcdDevice            1.00
+  iManufacturer           1 Manufacturer_Realtek_RTL8187_
+  iProduct                2 AirLive WL1600USB
+  iSerial                 3 004F78000572
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength           39
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          4 Wireless Network Card
+    bmAttributes         0x80
+      (Bus Powered)
+    MaxPower              500mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           3
+      bInterfaceClass         0 (Defined at Interface level)
+      bInterfaceSubClass      0
+      bInterfaceProtocol      0
+      iInterface              5 Bulk-IN,Bulk-OUT,Bulk-OUT
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x02  EP 2 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+Device Qualifier (for other device speed):
+  bLength                10
+  bDescriptorType         6
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  bNumConfigurations      1
+Device Status:     0x0000
+  (Bus Powered)
 
-> +static void reg_process_pending_hints(void)
-> +	{
-> +	struct regulatory_request *reg_request, *tmp;
-> +	int r;
-> +
-> +	mutex_lock(&reg_mutex);
-> +	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
-> +		r =3D reg_process_hint(reg_request);
-> +		if (r)
-> +			printk(KERN_ERR "cfg80211: wiphy_idx %d sent a "
-> +				"regulatory hint but now has gone fishing, "
-> +				"ignoring request\n", reg_request->wiphy_idx);
 
-pointless warning, it'll happen if somebody just inserts/unplugs very
-quickly on a loaded system.
+Hin-Tak, I did see the AirLive linux reference driver, but didn't even
+want to try that, unless my only option left was ndiswrapper. I know
+those manufacturer's "drivers" usually cause more frustration than
+use.
 
-> +		list_del(&reg_request->list);
-> +		kfree(reg_request);
-> +	}
-> +	mutex_unlock(&reg_mutex);
-> +}
+Thanks all for your time and help.
 
-Are you sure the mutex order reg_mutex --> cfg80211_mutex is a good
-idea? Is there a need for two locks at all?
+Viktor
 
-johannes
 
---=-88xE7C+fvvEexK320PU6
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--
+Don't let people drive you crazy when you know it's in walking distance.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJl/gSAAoJEKVg1VMiehFYpCsP/RIh+gPxPMPJycBgAxJN6owi
-a9ELNzjY/nfLZgmV/wt78Mr+bNsd7iEIiRPmP9oHNmgmNmy7iybVP6JDptJTEq+K
-WArDWbyxKQFJwnvMNCOOAj/GCpOjSnwHKd81EihLIDW0JS6C6RYNofLEc8nT01KW
-PTrA8oGxFCgNAxDTyvgSeb78nGx0ywgtSt0YHCst5a72VH78PraW/9Oz/zWLZnwv
-qAwWJYuzrT3+1YFXUgrkckBrq7AgfG3RWHu7l3HSQgi8PX63iioRxT8FLQ5U17oK
-c8NZm2tCMexjfJHbZAkAxuGbuWQ1CgI6vLKQpoC/bB0CVUHpaJsJcL3TcxcpuiCI
-muL6q9uQB5fxCe6PZlaHCf8KzJVmBMNiu+UNJxSPrka8RsA2IWls8iuaNRJk8jl2
-5MIvoR9fbD7fIcHOlBbbR9D+1wnuewhE36Cl/2TCHN/7xdKLN3xJPOhtQI9zbmuf
-9boFUff7yjGQcBg5woPOG8hC1Q5jihmsQbVSSZyVfRdcRAE6sjIg5cboUDlWEIC2
-/sNt2uKSxxhfRxKkqunPP5EJSmb3wQ89BVywiFmb9TCLRo4wm8Len8lsT9B3OouE
-AzZNdnzRps0suH+FlMJ264J2iCAI4VE69ECBirjgzGiA546owSipNoV3xrFWGWV1
-9PfCY/zA5H8YK97kWqeo
-=RwkI
------END PGP SIGNATURE-----
-
---=-88xE7C+fvvEexK320PU6--
-
+On Tue, Feb 17, 2009 at 01:12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>
+> Hin-Tak Leung wrote:
+> > Hiya,
+> >
+> > A quick search on google shows Airlive hosting a linux driver here:
+> >
+> > http://www.airlive.com/support/support_3a.jsp?pdid=PD1223473034861
+> >
+> > I had a quick look  and indeed it looks like the realtek vendor driver
+> > (or a variant of) for 8187L.
+> > Note that this is for reference, since we all know the vendor driver
+> > has some issues with the latest wireless stack, etc.
+>
+> Once I get confirmation from the OP that his device works, I have a patch with a
+> total of 6 new ID's for rtl8187. Four of them came from the .inf file
+> accompaning the Windows version of the RTL8187L driver.
+>
+> Larry
