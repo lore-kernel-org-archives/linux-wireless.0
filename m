@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51839 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755247AbZBJUdE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 15:33:04 -0500
-Message-Id: <20090210202553.674589918@sipsolutions.net> (sfid-20090210_213307_988302_A13F37B6)
-References: <20090210202536.425266119@sipsolutions.net>
-Date: Tue, 10 Feb 2009 21:25:42 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 06/27] mac80211: fix beacon enable more
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:57845 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752797AbZBQTHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2009 14:07:33 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 11:07:33 -0800
+Date: Tue, 17 Feb 2009 11:06:46 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Tony Vroon <tony@linx.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	reinette chatre <reinette.chatre@intel.com>
+Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
+	ranges
+Message-ID: <20090217190646.GC4257@tesla> (sfid-20090217_200738_076004_BF60AE62)
+References: <1234207263.6694.1.camel@localhost> <1234208152.6694.4.camel@localhost> <20090210013941.GA4386@tesla> <1234230689.3793.15.camel@localhost> <20090210020708.GC4386@tesla> <1234379981.4789.7.camel@localhost> <20090214045232.GA5769@tesla> <1234786124.4271.2.camel@localhost> <20090216154733.GA2870@tuxdriver.com> <20090217184230.GA4257@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090217184230.GA4257@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hopefully the last required fix ... disable beaconing
-only on beaconing interfaces, and thus avoid calling
-ieee80211_if_config for purely virtual interfaces
-(those driver doesn't know about).
+On Tue, Feb 17, 2009 at 10:42:30AM -0800, Luis Rodriguez wrote:
+> On Mon, Feb 16, 2009 at 07:47:33AM -0800, John W. Linville wrote:
+> > On Mon, Feb 16, 2009 at 12:08:44PM +0000, Tony Vroon wrote:
+> > > Just to confirm, if I use my early-boot hook that I used for your iw
+> > > list to set the regulatory domain manually (iw reg set GB) all is well.
+> > > If I allow the driver stack to get to the association stage without
+> > > setting a regulatory domain, I can never get my 802.11A spectrum back
+> > > after the fact.
+> > > Would you still see this as a bug or rather a specific requirement of
+> > > the new interface that hasn't yet been documented?
+> >
+> > Seems like a bug, or at least an unintended consequence of intersection...?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/scan.c |   14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+Sorry for the blank e-mail.
 
---- wireless-testing.orig/net/mac80211/scan.c	2009-02-10 20:59:27.000000000 +0100
-+++ wireless-testing/net/mac80211/scan.c	2009-02-10 20:59:30.000000000 +0100
-@@ -500,7 +500,12 @@ void ieee80211_scan_completed(struct iee
- 		} else
- 			netif_tx_wake_all_queues(sdata->dev);
- 
--		ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON_ENABLED);
-+		/* re-enable beaconing */
-+		if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
-+			ieee80211_if_config(sdata,
-+					    IEEE80211_IFCC_BEACON_ENABLED);
- 	}
- 	mutex_unlock(&local->iflist_mtx);
- 
-@@ -656,7 +661,12 @@ int ieee80211_start_scan(struct ieee8021
- 		if (!netif_running(sdata->dev))
- 			continue;
- 
--		ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON_ENABLED);
-+		/* disable beaconing */
-+		if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
-+			ieee80211_if_config(sdata,
-+					    IEEE80211_IFCC_BEACON_ENABLED);
- 
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 			if (sdata->u.sta.flags & IEEE80211_STA_ASSOCIATED) {
+You are reporting you are disabling OLD_REG and your 5 GHz on iwlagn is disabled
+upon bootup. You also reported from your log:
 
--- 
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: calling CRDA failed - unable to update world regulatory domain, using static definition
 
+This indicates to me your regulatory domain was simply never updated by CRDA. So what
+would have happened is that iwlagn registers its device to mac80211 via ieee80211_register_hw()
+then mac80211 registers it with cfg80211 via wiphy_register(). Upon that call cfg80211 will update
+the device's regulatory ifnromation by calling
+
+wiphy_update_regulatory(wiphy, REGDOM_SET_BY_CORE);
+
+This in turn will check to see if it should ignore the request, and in your case
+the check is:
+
+        if (!last_request)
+                return true;
+        if (setby == REGDOM_SET_BY_CORE &&
+                  wiphy->custom_regulatory)
+                return true
+
+Since iwlagn sets wiphy->custom_regulatory to true and since upon registration setby is
+REGDOM_SET_BY_CORE the device will be ignored to change the regulatory domain. I see I
+currently see no reason why your 5 GHz channels will be disabled unless I'm missing
+something or the card's EEPROM disables them.
+
+To debug this further we need more information. So please provide the output of both
+the kernel *and*, 'iw list' _prior_ to associating to your AP. Before you do so please
+recompile wireless-testing with these options enabled:
+
+# Intel debug
+CONFIG_IWL_DEBUG_INFO=y
+
+# Cfg80211 regulatory debug
+CONFIG_CFG80211_REG_DEBUG=y
+
+So to re-iterate: I want both your kernel log _and_ 'iw list' output prior to association.
+
+  Luis
