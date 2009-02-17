@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:47395
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754219AbZBKWen (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:53898 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbZBQNEd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 17:34:43 -0500
-Message-ID: <4993527D.9070700@erley.org> (sfid-20090211_233445_363569_131F63EB)
-Date: Wed, 11 Feb 2009 17:34:37 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Tue, 17 Feb 2009 08:04:33 -0500
+Received: by nf-out-0910.google.com with SMTP id d21so248859nfb.21
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 05:04:31 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Fix RF offset
+Date: Tue, 17 Feb 2009 14:04:29 +0100
+Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
 MIME-Version: 1.0
-To: Bob Copeland <bcopeland@gmail.com>
-CC: =?ISO-8859-1?Q?Norman_Rie=DF?= <norman@smash-net.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath5k master (AP) mode
-References: <49931D52.90904@smash-net.org> <b6c5339f0902111304u430bce4dl3304f171ae8fbd45@mail.gmail.com>
-In-Reply-To: <b6c5339f0902111304u430bce4dl3304f171ae8fbd45@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200902171404.29494.IvDoorn@gmail.com> (sfid-20090217_140446_107354_271D7B19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> On Wed, Feb 11, 2009 at 1:47 PM, Norman Rie=DF <norman@smash-net.org>=
- wrote:
->> Hello,
->>
->> i pulled wireless-testing kernel today and installed hostapd-0.6.7, =
- but
->> it still does not work.
->>
->>
->> iwconfig wlan0 mode master
->> Error for wireless request "Set Mode" (8B06) :
->>    SET failed on device wlan0 ; Invalid argument.
->=20
-> Did you apply this patch from upthread?
->=20
+The word_base is in bytes instead of word index number,
+this means that when using it, it should be transformed into
+a word index first.
 
-I can confirm Norman's wireless card's behavior (and have an associate =
-with
-the same problem).  This is with the upthread patch applied to compat-w=
-ireless
-pulled from git.
+Otherwise RF register reading will fail through debugfs since
+we would start reading 4 words starting with word 4 (which is the last
+valid word for RF).
 
-ath5k 0000:0a:05.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-ath5k 0000:0a:05.0: registered as 'phy5'
-phy5: Selected rate control algorithm 'pid'
-ath5k phy5: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
-ath5k phy5: RF5112B multiband radio found (0x36)
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-If I remove the entry from hostapd.conf to set the channel, and force a=
- channel
-with iwconfig, hostapd will start, but nothing can associate, and netst=
-umbler
-on an XP machine with an atheros card in it does not detect the SSID as=
- being=20
-an access point.
-
-Pat Erley
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 1c0f8bf..07d378e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -435,11 +435,12 @@ static ssize_t rt2x00debug_read_##__name(struct file *file,	\
+ 	if (index >= debug->__name.word_count)			\
+ 		return -EINVAL;					\
+ 								\
++	index += (debug->__name.word_base /			\
++		  debug->__name.word_size);			\
++								\
+ 	if (debug->__name.flags & RT2X00DEBUGFS_OFFSET)		\
+ 		index *= debug->__name.word_size;		\
+ 								\
+-	index += debug->__name.word_base;			\
+-								\
+ 	debug->__name.read(intf->rt2x00dev, index, &value);	\
+ 								\
+ 	size = sprintf(line, __format, value);			\
+@@ -476,11 +477,12 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,	\
+ 	size = strlen(line);					\
+ 	value = simple_strtoul(line, NULL, 0);			\
+ 								\
++	index += (debug->__name.word_base /			\
++		  debug->__name.word_size);			\
++								\
+ 	if (debug->__name.flags & RT2X00DEBUGFS_OFFSET)		\
+ 		index *= debug->__name.word_size;		\
+ 								\
+-	index += debug->__name.word_base;			\
+-								\
+ 	debug->__name.write(intf->rt2x00dev, index, value);	\
+ 								\
+ 	*offset += size;					\
