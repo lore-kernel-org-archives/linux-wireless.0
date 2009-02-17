@@ -1,72 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26029 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751671AbZB0CkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 21:40:03 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2009 18:40:02 -0800
-Date: Thu, 26 Feb 2009 18:39:12 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: Jiri Slaby <jirislaby@gmail.com>,
-	"proski@gnu.org" <proski@gnu.org>,
-	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
-Message-ID: <20090227023912.GF13456@tesla> (sfid-20090227_034022_536773_06EE40FF)
-References: <1235688271-22346-1-git-send-email-jirislaby@gmail.com> <20090226230338.M86894@bobcopeland.com> <49A7236E.2020807@gmail.com> <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com> <49A726A7.6090809@gmail.com> <20090227022704.GA29850@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090227022704.GA29850@hash.localnet>
+Received: from xc.sipsolutions.net ([83.246.72.84]:34895 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131AbZBQLdi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2009 06:33:38 -0500
+Subject: Re: [PATCH] nl80211: Provide access to STA TX/RX packet counters
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090217112457.GA22926@jm.kir.nu>
+References: <20090217112457.GA22926@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-65vr3ztkHnTWD7MnSgIy"
+Date: Tue, 17 Feb 2009 12:33:32 +0100
+Message-Id: <1234870412.21343.4.camel@johannes.local> (sfid-20090217_123342_251031_C9CC1B35)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 26, 2009 at 06:27:04PM -0800, Bob Copeland wrote:
-> On Fri, Feb 27, 2009 at 12:32:55AM +0100, Jiri Slaby wrote:
-> > On 27.2.2009 00:28, Bob Copeland wrote:
-> >> hw_to_driver_rix() returns sc->rate_idx[x][y] as an int, and that
-> >> array is initialized to (u8)-1 for invalid rates.  So, it can
-> >> return 255 if the hardware rate index (y) is bad, then the check
-> >> "rxs.rate_idx>= 0" would always be true, right?  If it's not a
-> >> real bug yet, it likely will be one day :)
-> >
-> > Ah, yes, it really is a bug(tm), care to post a fix?
-> 
-> Actually, I remembered in the dark recesses of my moldering brain
-> that someone had a lost patch for this a while ago, so I searched
-> the archives.  Pavel, ok to add your s-o-b?
-> 
-> From: Pavel Roskin <proski@gnu.org>
-> Subject: [PATCH] ath5k: use signed elements for rate index table
-> 
-> A lookup table is used to convert from hardware rate indexes back
-> to driver-based rate indexes.  For unknown hardware rates, we
-> initialize these values to -1, but since the array elements are of
-> type u8, they will be in the range 0-255.  This can cause array
-> overruns because subsequent sanity checks only check for negative
-> values.
-> 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+
+--=-65vr3ztkHnTWD7MnSgIy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2009-02-17 at 13:24 +0200, Jouni Malinen wrote:
+> The TX/RX packet counters are needed to fill in RADIUS Accounting
+> attributes Acct-Output-Packets and Acct-Input-Packets. We already
+> collect the needed information, but only the TX/RX bytes were
+> previously exposed through nl80211. Allow applications to fetch the
+> packet counters, too, to provide more complete support for accounting.
+>=20
+> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
 > ---
->  drivers/net/wireless/ath5k/base.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-> index 20e0d14..8229561 100644
-> --- a/drivers/net/wireless/ath5k/base.h
-> +++ b/drivers/net/wireless/ath5k/base.h
-> @@ -112,7 +112,7 @@ struct ath5k_softc {
->         struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
->         struct ieee80211_channel channels[ATH_CHAN_MAX];
->         struct ieee80211_rate   rates[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
-> -       u8                      rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
-> +       s8                      rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
+>  include/linux/nl80211.h |    5 +++++
+>  include/net/cfg80211.h  |    8 ++++++++
+>  net/mac80211/cfg.c      |    4 ++++
+>  net/wireless/nl80211.c  |    6 ++++++
+>  4 files changed, 23 insertions(+)
+>=20
+> --- uml.orig/include/linux/nl80211.h	2009-02-17 13:09:52.000000000 +0200
+> +++ uml/include/linux/nl80211.h	2009-02-17 13:11:11.000000000 +0200
+> @@ -526,6 +526,9 @@ enum nl80211_rate_info {
+>   * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, =
+dBm)
+>   * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribu=
+te
+>   * 	containing info as possible, see &enum nl80211_sta_info_txrate.
+> + * @NL80211_STA_INFO_RX_PACKETS: total received packet (u32, from this s=
+tation)
+> + * @NL80211_STA_INFO_TX_PACKETS: total transmitted packets (u32, to this
+> + *	station)
+>   */
+>  enum nl80211_sta_info {
+>  	__NL80211_STA_INFO_INVALID,
+> @@ -537,6 +540,8 @@ enum nl80211_sta_info {
+>  	NL80211_STA_INFO_PLINK_STATE,
+>  	NL80211_STA_INFO_SIGNAL,
+>  	NL80211_STA_INFO_TX_BITRATE,
+> +	NL80211_STA_INFO_RX_PACKETS,
+> +	NL80211_STA_INFO_TX_PACKETS,
+> =20
+>  	/* keep last */
+>  	__NL80211_STA_INFO_AFTER_LAST,
+> --- uml.orig/include/net/cfg80211.h	2009-02-17 13:11:25.000000000 +0200
+> +++ uml/include/net/cfg80211.h	2009-02-17 13:12:37.000000000 +0200
+> @@ -178,6 +178,8 @@ struct station_parameters {
+>   * @STATION_INFO_SIGNAL: @signal filled
+>   * @STATION_INFO_TX_BITRATE: @tx_bitrate fields are filled
+>   *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
+> + * @STATION_INFO_RX_PACKETS: @rx_packets filled
+> + * @STATION_INFO_TX_PACKETS: @tx_packets filled
+>   */
+>  enum station_info_flags {
+>  	STATION_INFO_INACTIVE_TIME	=3D 1<<0,
+> @@ -188,6 +190,8 @@ enum station_info_flags {
+>  	STATION_INFO_PLINK_STATE	=3D 1<<5,
+>  	STATION_INFO_SIGNAL		=3D 1<<6,
+>  	STATION_INFO_TX_BITRATE		=3D 1<<7,
+> +	STATION_INFO_RX_PACKETS		=3D 1<<8,
+> +	STATION_INFO_TX_PACKETS		=3D 1<<9,
+>  };
+> =20
+>  /**
+> @@ -235,6 +239,8 @@ struct rate_info {
+>   * @plink_state: mesh peer link state
+>   * @signal: signal strength of last received packet in dBm
+>   * @txrate: current unicast bitrate to this station
+> + * @rx_packets: packets received from this station
+> + * @tx_packets: packets transmitted to this station
+>   */
+>  struct station_info {
+>  	u32 filled;
+> @@ -246,6 +252,8 @@ struct station_info {
+>  	u8 plink_state;
+>  	s8 signal;
+>  	struct rate_info txrate;
+> +	u32 rx_packets;
+> +	u32 tx_packets;
+>  };
+> =20
+>  /**
+> --- uml.orig/net/mac80211/cfg.c	2009-02-17 13:13:59.000000000 +0200
+> +++ uml/net/mac80211/cfg.c	2009-02-17 13:14:40.000000000 +0200
+> @@ -341,11 +341,15 @@ static void sta_set_sinfo(struct sta_inf
+>  	sinfo->filled =3D STATION_INFO_INACTIVE_TIME |
+>  			STATION_INFO_RX_BYTES |
+>  			STATION_INFO_TX_BYTES |
+> +			STATION_INFO_RX_PACKETS |
+> +			STATION_INFO_TX_PACKETS |
+>  			STATION_INFO_TX_BITRATE;
+> =20
+>  	sinfo->inactive_time =3D jiffies_to_msecs(jiffies - sta->last_rx);
+>  	sinfo->rx_bytes =3D sta->rx_bytes;
+>  	sinfo->tx_bytes =3D sta->tx_bytes;
+> +	sinfo->rx_packets =3D sta->rx_packets;
+> +	sinfo->tx_packets =3D sta->tx_packets;
+> =20
+>  	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
+>  		sinfo->filled |=3D STATION_INFO_SIGNAL;
+> --- uml.orig/net/wireless/nl80211.c	2009-02-17 13:12:55.000000000 +0200
+> +++ uml/net/wireless/nl80211.c	2009-02-17 13:13:54.000000000 +0200
+> @@ -1206,6 +1206,12 @@ static int nl80211_send_station(struct s
+> =20
+>  		nla_nest_end(msg, txrate);
+>  	}
+> +	if (sinfo->filled & STATION_INFO_RX_PACKETS)
+> +		NLA_PUT_U32(msg, NL80211_STA_INFO_RX_PACKETS,
+> +			    sinfo->rx_packets);
+> +	if (sinfo->filled & STATION_INFO_TX_PACKETS)
+> +		NLA_PUT_U32(msg, NL80211_STA_INFO_TX_PACKETS,
+> +			    sinfo->tx_packets);
+>  	nla_nest_end(msg, sinfoattr);
+> =20
+>  	return genlmsg_end(msg, hdr);
+>=20
 
-Might be worth adding a note why this is the case. Can't we simply avoid
-this by checking earlier for the error or simply assigning it an actual
-default _good_ hw rate value?
+--=-65vr3ztkHnTWD7MnSgIy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-  Luis
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJmqCJAAoJEKVg1VMiehFYUREP/1EGMmp4u4D/rXSJ7jyDDIl3
+WXqsNleTrhCa5mJ8yiPtBTM/c4A1QCLM/WjTJZn6Qxqq/BXdyOg4toKQjrgSpNFJ
+hQw5lA8c8qkd0gL2nN3KQiLyOiToeDmyedmZl5r2R4MLbS1nhNIjsDQg7otlylfG
+J83BzG2VOyUBSFzrthnvPpewNKBMMPMEYnZURVd3RHT7VK/ftnTv3qkPT6rijrVk
+axou9jLhZUZvo/P8zT2B2ou9Z5+0PpA3RVe8+E1660AW6EsYd9EJlDpK4dvfDQ2d
+7xV+AogCUlWWwugpQMU2QVLjTJE0JQug9oCN2G2fb74i70l97rXr9vrGmWa0dS3k
+/IDPTi9Ypa3DguDug6vFhFspbI7G5VCbzrtHa5soIFQS3e1d+WP/WrIT8d4NRcvR
+qU1sKMbXvHLu6pNdZYHKYfTs20dZDTQ/eoWfEfDFoNeb006O4UVIwGJR3Kw2aluq
+8HITi083hBb40JTZ2Vu9UmiK1cvKr5yziUEso3rB/fdiwzBy8DMtU0EjYDCRNZ5Y
+lqJgSqH4qeFLci329Xb9xTAnhkMcx35ZyAqOhWbyjbhHfScJOlnXMLJBaITQ2jRJ
+MrXV7b3f1xI2WrBw2JKsn9Rr2TViWqv3q6ayXeqSCxqetytCoiWS9+MWsutUWc2a
+vOc+pKn2AcqU+EpP3TZ3
+=Vu0O
+-----END PGP SIGNATURE-----
+
+--=-65vr3ztkHnTWD7MnSgIy--
+
