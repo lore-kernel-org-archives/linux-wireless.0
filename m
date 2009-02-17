@@ -1,94 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51898 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43424 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755049AbZBJUej (ORCPT
+	with ESMTP id S1750989AbZBQQoX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 15:34:39 -0500
-Message-Id: <20090210202554.234408031@sipsolutions.net> (sfid-20090210_213454_286528_BB32EF72)
-References: <20090210202536.425266119@sipsolutions.net>
-Date: Tue, 10 Feb 2009 21:25:45 +0100
+	Tue, 17 Feb 2009 11:44:23 -0500
+Subject: Re: [PATCH -next/mmotm/resend/lost] wireless: fix for
+	CONFIG_NL80211=n
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/27] mac80211: fix RX aggregation timeouts
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: lkml <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, akpm <akpm@linux-foundation.org>,
+	linville@tuxdriver.com
+In-Reply-To: <20090213163935.ea924a9a.randy.dunlap@oracle.com> (sfid-20090214_013927_260784_1DD3BDE7)
+References: <20090213163935.ea924a9a.randy.dunlap@oracle.com>
+	 (sfid-20090214_013927_260784_1DD3BDE7)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZtTcPGLy+nSr2Z/uNMVj"
+Date: Tue, 17 Feb 2009 17:44:17 +0100
+Message-Id: <1234889057.29785.5.camel@johannes.local> (sfid-20090217_174427_878472_DAE79B87)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The values are in TUs (1.024ms), not ms.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/mesh_hwmp.c   |    1 -
- net/mac80211/rx.c          |   16 ++++++----------
- net/mac80211/sta_info.h    |    2 +-
- 4 files changed, 9 insertions(+), 12 deletions(-)
+--=-ZtTcPGLy+nSr2Z/uNMVj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/net/mac80211/rx.c	2009-02-10 20:59:31.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-02-10 20:59:32.000000000 +0100
-@@ -1640,11 +1640,9 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
- 		start_seq_num = le16_to_cpu(bar->start_seq_num) >> 4;
- 
- 		/* reset session timer */
--		if (tid_agg_rx->timeout) {
--			unsigned long expires =
--				jiffies + (tid_agg_rx->timeout / 1000) * HZ;
--			mod_timer(&tid_agg_rx->session_timer, expires);
--		}
-+		if (tid_agg_rx->timeout)
-+			mod_timer(&tid_agg_rx->session_timer,
-+				  TU_TO_EXP_TIME(tid_agg_rx->timeout));
- 
- 		/* manage reordering buffer according to requested */
- 		/* sequence number */
-@@ -2380,11 +2378,9 @@ static u8 ieee80211_rx_reorder_ampdu(str
- 	/* new un-ordered ampdu frame - process it */
- 
- 	/* reset session timer */
--	if (tid_agg_rx->timeout) {
--		unsigned long expires =
--			jiffies + (tid_agg_rx->timeout / 1000) * HZ;
--		mod_timer(&tid_agg_rx->session_timer, expires);
--	}
-+	if (tid_agg_rx->timeout)
-+		mod_timer(&tid_agg_rx->session_timer,
-+			  TU_TO_EXP_TIME(tid_agg_rx->timeout));
- 
- 	/* if this mpdu is fragmented - terminate rx aggregation session */
- 	sc = le16_to_cpu(hdr->seq_ctrl);
---- wireless-testing.orig/net/mac80211/sta_info.h	2009-02-10 20:59:31.000000000 +0100
-+++ wireless-testing/net/mac80211/sta_info.h	2009-02-10 20:59:32.000000000 +0100
-@@ -88,7 +88,7 @@ struct tid_ampdu_tx {
-  * @stored_mpdu_num: number of MPDUs in reordering buffer
-  * @ssn: Starting Sequence Number expected to be aggregated.
-  * @buf_size: buffer size for incoming A-MPDUs
-- * @timeout: reset timer value.
-+ * @timeout: reset timer value (in TUs).
-  * @dialog_token: dialog token for aggregation session
-  */
- struct tid_ampdu_rx {
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-02-10 20:59:26.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-02-10 20:59:32.000000000 +0100
-@@ -57,6 +57,8 @@ struct ieee80211_local;
-  */
- #define IEEE80211_SCAN_RESULT_EXPIRE (10 * HZ)
- 
-+#define TU_TO_EXP_TIME(x)	(jiffies + usecs_to_jiffies((x) * 1024))
-+
- struct ieee80211_fragment_entry {
- 	unsigned long first_frag_time;
- 	unsigned int seq;
---- wireless-testing.orig/net/mac80211/mesh_hwmp.c	2009-02-10 20:59:26.000000000 +0100
-+++ wireless-testing/net/mac80211/mesh_hwmp.c	2009-02-10 20:59:32.000000000 +0100
-@@ -58,7 +58,6 @@ static inline u32 u32_field_get(u8 *preq
- #define PERR_IE_DST_ADDR(x)	(x + 2)
- #define PERR_IE_DST_DSN(x)	u32_field_get(x, 8, 0);
- 
--#define TU_TO_EXP_TIME(x) (jiffies + msecs_to_jiffies(x * 1024 / 1000))
- #define MSEC_TO_TU(x) (x*1000/1024)
- #define DSN_GT(x, y) ((long) (y) - (long) (x) < 0)
- #define DSN_LT(x, y) ((long) (x) - (long) (y) < 0)
+On Fri, 2009-02-13 at 16:39 -0800, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+>=20
+> Add empty function for case of CONFIG_NL80211=3Dn:
+>=20
+> net/wireless/scan.c:35: error: implicit declaration of function 'nl80211_=
+send_scan_aborted'
+>=20
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 
--- 
+bump &
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+I forgot this when adding the scan abort part.
+
+> ---
+>  net/wireless/nl80211.h |    4 ++++
+>  1 file changed, 4 insertions(+)
+>=20
+> --- linux-next-20090212.orig/net/wireless/nl80211.h
+> +++ linux-next-20090212/net/wireless/nl80211.h
+> @@ -27,6 +27,10 @@ static inline void
+>  nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+>  		       struct net_device *netdev)
+>  {}
+> +static inline void nl80211_send_scan_aborted(
+> +					struct cfg80211_registered_device *rdev,
+> +					struct net_device *netdev)
+> +{}
+>  #endif /* CONFIG_NL80211 */
+> =20
+>  #endif /* __NET_WIRELESS_NL80211_H */
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+--=-ZtTcPGLy+nSr2Z/uNMVj
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJmuldAAoJEKVg1VMiehFYaPsP/ArQ2cAA12EPOgvyB8nyKsqt
+q0ZZl0fInOTPN8uDCpdM8KyWAXLwkFD86i36kjkCsEk5uWN55UzabaGXnp20t61y
+Xpd4f2pGmvOdRuX44MA8HlAa6Can5fseSDNHVUA4JKSlWcOeiprB9wgph+0jhAoJ
+lCDAzk11xxeWA49yPiNQ/aIsHcuLNnx3F/wvoF8uOAUljkNT5PEKXBKSE+DNj4WS
+Nez27RqaBgHyyI5sggqTl0KR7o/NmzXof+k/b3QL7aP5JNsojo5g3zl4exFbPnkn
+Km0XMgH0pMg7KPjgKlCxqPdoCj+qIMvTEkZ0hupwzGka99cxc9cCPR9Mm30cQLX/
+0OwblI8zV2P27M4L7dqghS7Fa3mx5HsXw0hzLe8ZYyBWq1LDNjwwdcGNdBScqxoc
+VNwgG2rYjHPIKwY/B1Wp0Ko8ASb2Wh3a9NFJ8nVZKgMwDtS1W6ssvWl+By5IhTza
+gspW5CpBWsMe1/t5rHiQNScHE/BmcvPs32C826FtMrt1x0YNNCCVdlvEQWUIkvie
+0l+EXfPJGpbENrSxK5kyxx5mT3r3n/UaRs5kt74WdxXH6lybZRA4BRzdp3vaB9kg
+H5nPtKivj9+YNGFxM1EuEn8wxhFgFGn4m62MrAeTu+I1I5VgRmPKuJl37o4k7Og7
+OeMNvGyu5sdjMALX6KAk
+=OHg2
+-----END PGP SIGNATURE-----
+
+--=-ZtTcPGLy+nSr2Z/uNMVj--
 
