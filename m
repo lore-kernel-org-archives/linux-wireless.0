@@ -1,84 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:36118 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752634AbZBMH5F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 02:57:05 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so584693ywh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 23:57:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1234511334.1327.34.camel@johannes.local>
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
-	 <1234508187.1327.19.camel@johannes.local>
-	 <43e72e890902122309q61036a23k2efeb14fe3a6e814@mail.gmail.com>
-	 <43e72e890902122314m2966471dm3a9485a91e8e927@mail.gmail.com>
-	 <43e72e890902122314r6b9e881cg5538523780e808ef@mail.gmail.com>
-	 <1234509436.1327.25.camel@johannes.local>
-	 <43e72e890902122335l6580dbc1m44702996cc8200e4@mail.gmail.com>
-	 <1234511334.1327.34.camel@johannes.local>
-Date: Thu, 12 Feb 2009 23:57:04 -0800
-Message-ID: <43e72e890902122357g26bf3dd4j930de7c1f6c28280@mail.gmail.com> (sfid-20090213_085711_687515_FA957517)
-Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from main.gmane.org ([80.91.229.2]:56929 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750962AbZBQAKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2009 19:10:07 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LZDXG-00007d-J8
+	for linux-wireless@vger.kernel.org; Tue, 17 Feb 2009 00:10:02 +0000
+Received: from dslb-092-076-241-105.pools.arcor-ip.net ([92.76.241.105])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 00:10:02 +0000
+Received: from feldmann_markus by dslb-092-076-241-105.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 00:10:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: Re: Does ACPIPHP work on my Machine
+Date: Tue, 17 Feb 2009 01:09:47 +0100
+Message-ID: <gncv8e$cod$1@ger.gmane.org> (sfid-20090217_011012_263757_B6448786)
+References: <gktp4e$p6h$1@ger.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <gktp4e$p6h$1@ger.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 12, 2009 at 11:48 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-02-12 at 23:35 -0800, Luis R. Rodriguez wrote:
->
->> > Well, regardless of regulatory, we now have two paths:
->> >
->> > nl80211: cfg80211_mutex  -->  drv->mutex  -->  rtnl
->> > wext:    rtnl  -->  cfg80211_mutex  -->  drv->mutex
->> >
->> > which is clearly not a good plan.
->> >
->> > Therefore, I'll probably have to implement solution (1) from what I sent
->> > you, and invert the locking in nl80211. That would fix your the
->> > immediate problem with regulatory as well, because that was:
->> >
->> > rtnl  --->  (regulatory_hint) --->  cfg80211_mutex  -->  drv->mutex
->>
->> Yup I see. So as it stands in this patch user reg hint now is:
->>
->> reg_mutex --> cfg80211_mutex
->
-> I don't really care about reg_mutex much, and it probably doesn't matter
-> as long as its use is limited. Question is whether we need it, but
-> that's a different question.
+I tried the newest Kernel <2.6.29.4> and it doean't work at all.
+The same Problem with the rfkill Button. I can't activate my
+wlan card without a functional ACPIPHP i think.
+So i hope Matthew Garrett or something else will hear my
+shout for help. :-)
 
-To answer that question -- reg_mutex just protects the
-reg_requests_list linked list. That's it. Without that you could
-potentially have two userspace reg hints while the workqueue runs.
-Remember that the hints no longer lock except to just add a new
-regulatory_request into the reg_requests_list.
+In some days i have birthday and i wish me ... :-)
 
->> Driver hint also does the same so it seems your fix on nl80211 would
->> probably just tap this series on the nl80211_req_set_reg().
->
-> Yeah, I think I'll work on top of your series anyway so I don't clash
-> with the cleanups.
+Regards Markus
 
-Any other comments on the series?
-
->> I also think using a workqueue would be good here anyway, the only
->> negative thing I've seen is loading takes a bit longer.
->
-> Indeed, it's a good thing because a path like this:
->
-> driver_open
->  -> regulatory_hint
->  -> cfg80211 stuff
->   -> driver_reg_notifier
->
-> is always deadlock prone since you call into the driver from itself.
-
-I see -- good point.
-
-  Luis
