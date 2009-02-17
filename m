@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:63328 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267AbZBSFhe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 00:37:34 -0500
-Received: by bwz5 with SMTP id 5so606195bwz.13
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 21:37:32 -0800 (PST)
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Mysterious IWLWIFI_SPECTRUM_MEASUREMENT config
-References: <87d4df1wfz.fsf@litku.valot.fi>
-	<1234993225.12483.41.camel@rc-desk>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 19 Feb 2009 07:37:30 +0200
-In-Reply-To: <1234993225.12483.41.camel@rc-desk> (reinette chatre's message of "Wed\, 18 Feb 2009 13\:40\:25 -0800")
-Message-ID: <87zlgjhtr9.fsf@litku.valot.fi> (sfid-20090219_063741_955640_2DBED110)
+Received: from mail.atheros.com ([12.36.123.2]:26076 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751327AbZBQKKU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2009 05:10:20 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 02:10:20 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18842.35881.598326.462081@gargle.gargle.HOWL> (sfid-20090217_111028_453823_5EE3373C)
+Date: Tue, 17 Feb 2009 15:36:33 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 3/4] ath9k: Remove ath_txq_depth and get the queue depth directly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reinette chatre <reinette.chatre@intel.com> writes:
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/xmit.c |    9 ++-------
+ 1 files changed, 2 insertions(+), 7 deletions(-)
 
-> On Wed, 2009-02-18 at 09:33 -0800, Kalle Valo wrote:
->> I was doing my usual practise of recompiling my kernel and again I was
->> asked this question:
->> 
->> Enable Spectrum Measurement in iwlagn driver
->> (IWLWIFI_SPECTRUM_MEASUREMENT) [N/y/?] (NEW)
->> 
->> Ok, so I chose '?' and got this:
->> 
->> "This option will enable spectrum measurement for the iwlagn driver."
->> 
->> Not a very helpful message. I have few kind requests:
->> 
->> 1) Please write a proper description for the option.
->
-> Will do.
-
-Thanks. You will make the life of the users easier.
-
->> 2) Recommend a proper default value: "If you don't have a clue what
->>    this is, choose N".
->
-> These are 802.11h measurements ... so typical users may not be
-> interested. We'll make this a default N.
-
-Good choice.
-
->> 3) Please consider even removing the option. Is it really needed?
->> 
->
-> Some users may want this information so we'll keep it as an option for
-> now. 
-
-Not a problem when the option is properly documented, like you are
-planning to do.
-
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 3f70b1e..84fd3ee 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -772,11 +772,6 @@ bool ath_tx_aggr_check(struct ath_softc *sc, struct ath_node *an, u8 tidno)
+ /* Queue Management */
+ /********************/
+ 
+-static u32 ath_txq_depth(struct ath_softc *sc, int qnum)
+-{
+-	return sc->tx.txq[qnum].axq_depth;
+-}
+-
+ static void ath_get_beaconconfig(struct ath_softc *sc, int if_id,
+ 				 struct ath_beacon_config *conf)
+ {
+@@ -1657,7 +1652,7 @@ int ath_tx_start(struct ath_softc *sc, struct sk_buff *skb,
+ 		 * we will at least have to run TX completionon one buffer
+ 		 * on the queue */
+ 		spin_lock_bh(&txq->axq_lock);
+-		if (ath_txq_depth(sc, txq->axq_qnum) > 1) {
++		if (sc->tx.txq[txq->axq_qnum].axq_depth > 1) {
+ 			ieee80211_stop_queue(sc->hw,
+ 				skb_get_queue_mapping(skb));
+ 			txq->stopped = 1;
+@@ -1867,7 +1862,7 @@ static void ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
+ 
+ 	spin_lock_bh(&txq->axq_lock);
+ 	if (txq->stopped &&
+-	    ath_txq_depth(sc, txq->axq_qnum) <= (ATH_TXBUF - 20)) {
++	    sc->tx.txq[txq->axq_qnum].axq_depth <= (ATH_TXBUF - 20)) {
+ 		qnum = ath_get_mac80211_qnum(txq->axq_qnum, sc);
+ 		if (qnum != -1) {
+ 			ieee80211_wake_queue(sc->hw, qnum);
 -- 
-Kalle Valo
+1.6.1
+
