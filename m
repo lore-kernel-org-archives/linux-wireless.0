@@ -1,55 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:40071 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752670AbZBGH1I (ORCPT
+Received: from mail-gx0-f222.google.com ([209.85.217.222]:41132 "EHLO
+	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751334AbZBQAn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Feb 2009 02:27:08 -0500
-Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
-	by emh06-2.mail.saunalahti.fi (Postfix) with SMTP id 582C9C7EEE
-	for <linux-wireless@vger.kernel.org>; Sat,  7 Feb 2009 09:27:05 +0200 (EET)
-Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
-	by emh07.mail.saunalahti.fi (Postfix) with ESMTP id 491261C6389
-	for <linux-wireless@vger.kernel.org>; Sat,  7 Feb 2009 09:27:04 +0200 (EET)
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH] at76c50x-usb: mac80211 port of at76_usb
-To: linux-wireless@vger.kernel.org
-Date: Sat, 07 Feb 2009 09:27:04 +0200
-Message-ID: <20090207071701.21485.18763.stgit@tikku> (sfid-20090207_082714_081757_BD19D0EE)
+	Mon, 16 Feb 2009 19:43:58 -0500
+Received: by gxk22 with SMTP id 22so3629961gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 16:43:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Date: Mon, 16 Feb 2009 19:43:55 -0500
+Message-ID: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com> (sfid-20090217_014402_763116_51616F18)
+Subject: [PATCH] at76c50x-usb: support cfg80211 scanning
+From: Jason Andryuk <jandryuk@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's the first version of at76c50x-usb which is a mac80211 port from
-at76_usb, which included own 802.11 stack. The driver has received almost
-no testing, I just associated few to times to an AP using WEP and iwconfig. 
+With the latest mac80211 stack, the driver needs to be updated for
+cfg80211 scanning.  I based the changes off of modifications for
+at76_usb found here:
+http://johannes.sipsolutions.net/patches/old/all/2008-09-19-13:35/020-cfg80211-scan.patch
 
-My quick test showed problems already, for example sometimes I had to
-set essid twice before the driver associated. And I'm sure there are also
-loads of other issues. Patches welcome :)
+The trick was that max_signal also needs to be set to avoid a divide
+by zero Oops.  I just guessed and used the value 100 for now.
 
-The driver is based on at76_usb mac80211 patches[1] plus some cosmetic 
-changes to reflect the name change. Also I dropped the wpa patches for now
-due to stability issues. I'll readd wpa support after the driver is stable
-enough.
+Additionally, I added some ieee80211_{wake,stop}_queues calls that
+were contained in the older at76_usb.  There is ambiguity as to
+whether at76_join should be called before or after waking the queues.
 
-John, please consider this driver as inclusion to the linux-testing tree. I
-don't consider this ready for mainline yet, I want to test this more first in
-case there are critical bugs.
+Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
+--
 
-[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-legacy.git;a=shortlog;h=at76
+diff --git a/drivers/net/wireless/at76c50x-usb.c
+b/drivers/net/wireless/at76c50x-usb.c
+index 2f18248..8d508ca 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -1875,8 +1875,10 @@ static void at76_dwork_hw_scan(struct work_struct *work)
 
----
+     ieee80211_scan_completed(priv->hw, false);
 
-Kalle Valo (1):
-      at76c50x-usb: add driver
+-    if (is_valid_ether_addr(priv->bssid))
++    if (is_valid_ether_addr(priv->bssid)) {
++        ieee80211_wake_queues(priv->hw);
+         at76_join(priv);
++    }
 
+     ieee80211_wake_queues(priv->hw);
 
- drivers/net/wireless/Kconfig        |    8 
- drivers/net/wireless/Makefile       |    2 
- drivers/net/wireless/at76c50x-usb.c | 2465 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/at76c50x-usb.h |  463 +++++++
- 4 files changed, 2938 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/at76c50x-usb.c
- create mode 100644 drivers/net/wireless/at76c50x-usb.h
+@@ -1884,14 +1886,16 @@ exit:
+     mutex_unlock(&priv->mtx);
+ }
 
+-static int at76_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
++static int at76_hw_scan(struct ieee80211_hw *hw,
++            struct cfg80211_scan_request *req)
+ {
+     struct at76_priv *priv = hw->priv;
+     struct at76_req_scan scan;
+     int ret;
++    u8 *ssid = NULL;
++    int len = 0;
+
+     at76_dbg(DBG_MAC80211, "%s():", __func__);
+-    at76_dbg_dump(DBG_MAC80211, ssid, len, "ssid %zd bytes:", len);
+
+     mutex_lock(&priv->mtx);
+
+@@ -1899,8 +1903,14 @@ static int at76_hw_scan(struct ieee80211_hw
+*hw, u8 *ssid, size_t len)
+
+     memset(&scan, 0, sizeof(struct at76_req_scan));
+     memset(scan.bssid, 0xFF, ETH_ALEN);
+-    scan.scan_type = SCAN_TYPE_ACTIVE;
+-    if (priv->essid_size > 0) {
++    if (req->n_ssids) {
++        scan.scan_type = SCAN_TYPE_ACTIVE;
++        ssid = req->ssids[0].ssid;
++        len = req->ssids[0].ssid_len;
++    } else {
++        scan.scan_type = SCAN_TYPE_PASSIVE;
++    }
++    if (len) {
+         memcpy(scan.essid, ssid, len);
+         scan.essid_size = len;
+     }
+@@ -1939,10 +1949,13 @@ static int at76_config(struct ieee80211_hw
+*hw, u32 changed)
+
+     priv->channel = hw->conf.channel->hw_value;
+
+-    if (is_valid_ether_addr(priv->bssid))
++    if (is_valid_ether_addr(priv->bssid)) {
+         at76_join(priv);
+-    else
++        ieee80211_wake_queues(priv->hw);
++    } else {
++        ieee80211_stop_queues(priv->hw);
+         at76_start_monitor(priv);
++    }
+
+     mutex_unlock(&priv->mtx);
+
+@@ -1962,9 +1975,12 @@ static int at76_config_interface(struct ieee80211_hw *hw,
+
+     memcpy(priv->bssid, conf->bssid, ETH_ALEN);
+
+-    if (is_valid_ether_addr(priv->bssid))
++    if (is_valid_ether_addr(priv->bssid)) {
+         /* mac80211 is joining a bss */
++        ieee80211_wake_queues(priv->hw);
+         at76_join(priv);
++    } else
++        ieee80211_stop_queues(priv->hw);
+
+     mutex_unlock(&priv->mtx);
+
+@@ -2229,10 +2245,12 @@ static int at76_init_new_device(struct at76_priv *priv,
+     priv->scan_mode = SCAN_TYPE_ACTIVE;
+
+     /* mac80211 initialisation */
++    priv->hw->wiphy->max_scan_ssids = 1;
+     priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+     priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &at76_supported_band;
+     priv->hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+               IEEE80211_HW_SIGNAL_UNSPEC;
++    priv->hw->max_signal = 100;
+
+     SET_IEEE80211_DEV(priv->hw, &interface->dev);
+     SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
