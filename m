@@ -1,37 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:1048 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752922AbZBZBLp (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55331 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002AbZBRXZr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 20:11:45 -0500
-Date: Wed, 25 Feb 2009 20:11:36 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090226011136.GB10577@hash.localnet> (sfid-20090226_021149_277483_B8B7DC5B)
-References: <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <49A321BA.2040500@gmail.com> <49A326A4.8090103@gmail.com> <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49A46AD4.3060007@gmail.com>
+	Wed, 18 Feb 2009 18:25:47 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v4 02/15] cfg80211: add wiphy_idx_valid to check for wiphy_idx sanity
+Date: Wed, 18 Feb 2009 18:25:32 -0500
+Message-Id: <1234999545-14357-3-git-send-email-lrodriguez@atheros.com> (sfid-20090219_002600_151669_EADC180D)
+In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
+References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 24, 2009 at 10:47:00PM +0100, Jiri Slaby wrote:
-> I added a check for this in rx tasklet some time ago, because I hit it.  
-> So no fireworks really should happen ;).
->
-> And yes, we ought to use this much better test (I knew nothing about  
-> AR_RXDP reg) than mine.
+This will later be used by others, for now make use of it in
+cfg80211_drv_by_wiphy_idx() to return early if an invalid
+wiphy_idx has been provided.
 
-Indeed, it lasted all day for me with only 3 buffers under load, lots of
-packet loss though :)
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/core.c |    5 ++++-
+ net/wireless/core.h |    7 +++++++
+ 2 files changed, 11 insertions(+), 1 deletions(-)
 
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 2b3e786..35d457b 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -42,6 +42,9 @@ cfg80211_drv_by_wiphy_idx(int wiphy_idx)
+ {
+ 	struct cfg80211_registered_device *result = NULL, *drv;
+ 
++	if (!wiphy_idx_valid(wiphy_idx))
++		return NULL;
++
+ 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
+ 		if (drv->wiphy_idx == wiphy_idx) {
+ 			result = drv;
+@@ -225,7 +228,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+ 
+ 	drv->wiphy_idx = wiphy_counter++;
+ 
+-	if (unlikely(drv->wiphy_idx < 0)) {
++	if (unlikely(!wiphy_idx_valid(drv->wiphy_idx))) {
+ 		wiphy_counter--;
+ 		mutex_unlock(&cfg80211_drv_mutex);
+ 		/* ugh, wrapped! */
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 1783781..4f2e0fe 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -63,6 +63,13 @@ struct cfg80211_registered_device *wiphy_to_dev(struct wiphy *wiphy)
+ 	return container_of(wiphy, struct cfg80211_registered_device, wiphy);
+ }
+ 
++/* Note 0 is valid, hence phy0 */
++static inline
++bool wiphy_idx_valid(int wiphy_idx)
++{
++	return (wiphy_idx >= 0);
++}
++
+ extern struct mutex cfg80211_drv_mutex;
+ extern struct list_head cfg80211_drv_list;
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.6.0.3
 
