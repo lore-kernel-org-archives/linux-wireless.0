@@ -1,164 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f12.google.com ([209.85.218.12]:43502 "EHLO
-	mail-bw0-f12.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472AbZBBSOz (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48479 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751287AbZBRIZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 13:14:55 -0500
-Received: by bwz5 with SMTP id 5so1456565bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 10:14:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <7c8826910901301109s6d80a75ale251ec837eabccf0@mail.gmail.com>
-References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
-	 <45e8e6c40901231106t481c823ag3bbac67d8205ef7a@mail.gmail.com>
-	 <e27b78a40901240804m1acd3a83o7bf6d01f81ec3397@mail.gmail.com>
-	 <45e8e6c40901240956g68a5364tdbacc1e49410c9cc@mail.gmail.com>
-	 <e27b78a40901260625w53acd646xeb5a9ca85555c74d@mail.gmail.com>
-	 <e27b78a40901260956w4e69d33s7db60defc026c8d7@mail.gmail.com>
-	 <45e8e6c40901280954l42bbe788y8723141d673bb7b3@mail.gmail.com>
-	 <e27b78a40901300446y294504d5kd7acaa6c5a26edd@mail.gmail.com>
-	 <e27b78a40901300601p35d68125kfc3a10a7d7db0900@mail.gmail.com>
-	 <7c8826910901301109s6d80a75ale251ec837eabccf0@mail.gmail.com>
-Date: Mon, 2 Feb 2009 18:13:51 +0000
-Message-ID: <e27b78a40902021013v272ec315nece744d3cf1dc75c@mail.gmail.com> (sfid-20090202_191459_890586_9EBADCB7)
-Subject: Re: Crashing on ping?
-From: Keir <keirlawson@gmail.com>
-To: Mike Cui <cuicui@gmail.com>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	Wed, 18 Feb 2009 03:25:46 -0500
+Date: Wed, 18 Feb 2009 10:25:20 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: Missing link quality with wireless-testing
+Message-ID: <20090218082520.GA26280@jm.kir.nu> (sfid-20090218_092600_369268_B19E9165)
+References: <1234896777.4678.7.camel@californication> <1234899806.29785.35.camel@johannes.local> <1234902294.4678.12.camel@californication> <1234904111.29785.44.camel@johannes.local> <1234904978.4678.31.camel@californication> <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net> <1234933059.21412.28.camel@californication> <20090218073104.GA23366@jm.kir.nu> <1234944391.21412.47.camel@californication>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1234944391.21412.47.camel@californication>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cards I am using are all:
+On Wed, Feb 18, 2009 at 09:06:31AM +0100, Marcel Holtmann wrote:
 
-02:07.0 Ethernet controller: Atheros Communications Inc. AR5212/AR5213
-Multiprotocol MAC/baseband processor [168c:0013] (rev 01)
-	Subsystem: Netgear Unknown device [1385:5a00]
-	Flags: bus master, medium devsel, latency 168, IRQ 16
-	Memory at ff6f0000 (32-bit, non-prefetchable) [size=64K]
-	Capabilities: [44] Power Management version 2
+> so it seems the missing value is affecting the details wpa_supplicant is
+> handing out via its D-Bus interface. I didn't check the code yet to see
+> what is actually happening or if I just happen to run an outdated
+> version.
 
-Did you mean specifically with the mesh stack Mike?
+Yes, it looks like the dbus interface will get all three wext values
+(quality, noise, level) regardless of whether they were available from
+kernel or not. This does not cause any issues for wpa_supplicant, but if
+other programs (e.g., NM) are using the "quality" value in preference to
+"level", they would be processing zeros for all BSSes. If I understood
+correctly, NM does indeed prefer to use "quality", so this will likely
+explain why you are seeing different behavior with the qual->qual value
+removed (= 0 for wpa_supplicant).
 
-Cheers
+I don't know how NM would react to the "quality" value being removed,
+but it would sound reasonable to do that in wpa_supplicant (and same for
+"noise") if the value was not available from the driver (based on the
+WEXT flags or in case of nl80211, just based on the fact that these
+values are never reported). I would expect this change to go in shortly
+(assuming it does not trigger any critical issue with NM), but anyway,
+this does not help with old versions.
 
-Keir
-
-2009/1/30 Mike Cui <cuicui@gmail.com>:
-> I see the same crash everytime I try to use ath5k. I have this device:
->
-> 05:00.0 Ethernet controller [0200]: Atheros Communications Inc.
-> AR5212/AR5213 Multiprotocol MAC/baseband processor [168c:0013] (rev
-> 01)
->        Subsystem: Device [1948:3a02]
->        Flags: bus master, medium devsel, latency 64, IRQ 11
->        Memory at f9df0000 (32-bit, non-prefetchable) [size=64K]
->        Capabilities: [44] Power Management version 2
->        Kernel modules: ath5k, ath_pci
->
-> I use stock 2.6.28.2
->
-> On Fri, Jan 30, 2009 at 6:01 AM, Keir <keirlawson@gmail.com> wrote:
->> Could you send me the .config you are using? Just so i can make sure
->> my kernel is exactly the same?
->>
->> Cheers
->>
->> Keir
->>
->> 2009/1/30 Keir <keirlawson@gmail.com>:
->>> I did the following in my serial console:
->>>
->>> root@kyp:/home/keir/Desktop/iw-0.9.6# echo 8 > /proc/sys/kernel/printk
->>> root@kyp:/home/keir/Desktop/iw-0.9.6# ping -I mesh0 10.0.0.2
->>> PING 10.0.0.2 (10.0.0.2) from 10.0.0.3 mesh0: 56(84) bytes of data.
->>> 64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=2.67 ms
->>> 64 bytes from 10.0.0.2: icmp_seq=2 ttl=64 time=0.550 ms
->>> 64 bytes from 10.0.0.2: icmp_seq=3 ttl=64 time=0.445 ms
->>> 64 bytes from 10.0.0.2: icmp_seq=4 ttl=64 time=6.28 ms
->>> 64 bytes from 10.0.0.2: icmp_seq=5 ttl=64 time=2.19 ms
->>>
->>> At which point the console freezes with no further output.
->>>
->>> Any ideas?
->>>
->>> Cheers
->>>
->>> Keir
->>>
->>> 2009/1/28 Andrey Yurovsky <andrey@cozybit.com>
->>>>
->>>> Hi Keir.  If the system really crashes, you should have some output.
->>>> Can you please set:
->>>>
->>>> echo 8 > /proc/sys/kernel/printk
->>>>
->>>> ...and use your serial console and try to reproduce this?  Thanks,
->>>>
->>>>  -Andrey
->>>>
->>>> On Mon, Jan 26, 2009 at 9:56 AM, Keir <keirlawson@gmail.com> wrote:
->>>> > Right, managed to set up a serial terminal, ran cat /proc/kmsg, but
->>>> > still no output of interest (just mesh plink stuff leading up to the
->>>> > connection being established), what should I do next?
->>>> >
->>>> > Cheers
->>>> >
->>>> > Keir
->>>> >
->>>> > 2009/1/26 Keir <keirlawson@gmail.com>:
->>>> >> "sudo cat /proc/kmsg > log" doesnt produce anything of interest.
->>>> >>
->>>> >> Will look into the serial console thing, never done it before.
->>>> >>
->>>> >> Keir
->>>> >>
->>>> >> 2009/1/24 Andrey Yurovsky <andrey@cozybit.com>:
->>>> >>> Can you post logs of the crash (dmesg output)?  You may need to
->>>> >>> connect a serial console to the PC in question to get them if the
->>>> >>> machine is really hard-locking, otherwise see if you can capture the
->>>> >>> output of dmesg
->>>> >>>
->>>> >>> On Sat, Jan 24, 2009 at 8:04 AM, Keir <keirlawson@gmail.com> wrote:
->>>> >>>> Tried that commit, still no luck :( It consistently freezes up on
->>>> >>>> ping, though sometimes it's the machine doing the pining, and other
->>>> >>>> times it's the machine being pinged.  Wondering what I can do to help
->>>> >>>> debug this?
->>>> >>>>
->>>> >>>> Keir
->>>> >>>>
->>>> >>>> 2009/1/23 Andrey Yurovsky <andrey@cozybit.com>:
->>>> >>>>> Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
->>>> >>>>> 93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
->>>> >>>>> 2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
->>>> >>>>> chance to try head of wireless-testing this week.
->>>> >>>>>
->>>> >>>>>  -Andrey
->>>> >>>>>
->>>> >>>>> On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
->>>> >>>>>> I just pulled the latest wireless-testing kernel, however, much like
->>>> >>>>>> the previous wireless-testing kernel I was working on, when attempting
->>>> >>>>>> to ping one node from another on a mesh, using ath5k, the node
->>>> >>>>>> attempting to ping completely freezes after about 7 pings are
->>>> >>>>>> (succesfully) sent.  Anyone have any idea what is going wrong here?
->>>> >>>>>>
->>>> >>>>>> Cheers
->>>> >>>>>>
->>>> >>>>>> Keir
->>>> >>>>>> --
->>>> >>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>>> >>>>>> the body of a message to majordomo@vger.kernel.org
->>>> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>> >>>>>>
->>>> >>>>>
->>>> >>>>
->>>> >>>
->>>> >>
->>>> >
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
+-- 
+Jouni Malinen                                            PGP id EFC895FA
