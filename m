@@ -1,92 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vilya.visn.co.uk ([193.254.210.161]:54695 "EHLO
-	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755647AbZBFS42 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752094AbZBRQtJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 13:56:28 -0500
-Message-ID: <58412.82.152.255.229.1233946585.squirrel@www.phantomjinx.co.uk> (sfid-20090206_195634_905110_3692AECF)
-In-Reply-To: <498C77C6.3060608@lwfinger.net>
-References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
-    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>
-    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>
-    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>
-    <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk>
-    <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>
-    <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk>
-    <49871083.5040309@lwfinger.net>
-    <35040.82.152.223.193.1233590184.squirrel@www.phantomjinx.co.uk>
-    <3ace41890902021548o39b5f02veacc0bd650e92c7@mail.gmail.com>
-    <20090203142807.GC10968@tuxdriver.com>
-    <44120.62.172.74.16.1233679156.squirrel@www.phantomjinx.co.uk>
-    <49887936.3010203@lwfinger.net>
-    <53749.82.152.255.229.1233865126.squirrel@www.phantomjinx.co.uk>
-    <498B5C63.7060602@lwfinger.net>
-    <38242.82.152.255.229.1233874870.squirrel@www.phantomjinx.co.uk>
-    <498C77C6.3060608@lwfinger.net>
-Date: Fri, 6 Feb 2009 18:56:25 -0000 (UTC)
-Subject: Re: rtl8187 sleeping/hanging
-From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Cc: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>,
+	Wed, 18 Feb 2009 11:49:09 -0500
+Subject: Re: Missing link quality with wireless-testing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Jouni Malinen <j@w1.fi>, Marcel Holtmann <marcel@holtmann.org>,
 	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1234969986.19743.7.camel@localhost>
+References: <1234896777.4678.7.camel@californication>
+	 <1234899806.29785.35.camel@johannes.local>
+	 <1234902294.4678.12.camel@californication>
+	 <1234904111.29785.44.camel@johannes.local>
+	 <1234904978.4678.31.camel@californication>
+	 <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net>
+	 <1234933059.21412.28.camel@californication>
+	 <20090218073104.GA23366@jm.kir.nu>
+	 <1234944391.21412.47.camel@californication>
+	 <20090218082520.GA26280@jm.kir.nu>  <1234959523.13950.47.camel@localhost>
+	 <1234964271.4023.21.camel@johannes.local>
+	 <1234969986.19743.7.camel@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-z7wOabRNbbJTeRYwMVOa"
+Date: Wed, 18 Feb 2009 17:48:31 +0100
+Message-Id: <1234975711.4023.28.camel@johannes.local> (sfid-20090218_174913_779926_39E1C8D9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> P.G. Richardson wrote:
->
->> The 20db reported in iwconfig by mac80211 is not the actual data, is=
- the
->> signal strength please? I can see the signal strength change upon
->> repeated
->> calls to iwconfig and downstairs even when seemingly "out of range" =
-and
->> failing to ping anything, it still reports a signal strength of abov=
-e
->> 50%.
->
-> Signal strength may have even less physical meaning that the power.
-> Some devices, such as those by Broadcom, report the received signal
-> strength with some accuracy. The RTL8187B is supposed to have such an
-> output; however, my testing showed it to be essentially random. The
-> only reported quantity that could be used was the automatic gain
-> control setting of the receiver. This was calibrated against the
-> BCM4311 at two points, assumed to be linear, and the signal strength
-> and signal quality numbers were derived. For the RTL8187, a similar
-> scheme was used. As you can tell, only relative values for these
-> quantities are meaningful. The fact that your signal strength is abov=
-e
-> 50% means very little.
+--=-z7wOabRNbbJTeRYwMVOa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Good to know.
+On Wed, 2009-02-18 at 10:13 -0500, Dan Williams wrote:
 
-With a repeater in the living room now, I have 100/100 signal strength =
-and
-fewer problems with connectivity. Not perfect I think due to the positi=
-on
-of the router. Still network connectivity improving.
+> >         /* cfg80211 requires this, and enforces 0..100 */
+> >         if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
+> >                 range->max_qual.level =3D 100;
+> >         else if  (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+> >                 range->max_qual.level =3D -110;
+> >         else
+> >                 range->max_qual.level =3D 0;
+> >=20
+> > Note the dBm branch -- clearly wrong. Did anyone care? Clearly not.
+>=20
+> Almost; I was partially wrong as well.  The comments from wireless.h
+> imply that max_qual.level in the dBm case can be < 0.  Remember that
+> these values are *s8*, and thus max_qual.level can be < 0 and greater
+> than -127 at least.
 
-Thanks for the info.
+Ok, I wasn't looking at the header file, only your explanation.
 
-PGR
+> This of course doesn't allow RSSI-based levels of > 127, but whatever.
+> To get the definitive determination of RSSI vs. dBm for level, you use
+> (updated & IW_QUAL_DBM).
+>=20
+> The understanding of max_qual.level =3D=3D 0 means dBm was probably from
+> conversations with Jean and that's apparently not borne out by the
+> evidence from wireless.h, unless there's something else I'm not reading.
+>=20
+> NM doesn't handle IW_QUAL_DBM.  It should.
+>=20
+> > Therefore, here's what I'm going to do:
+> >  1) always set IW_QUAL_QUAL_INVALID, even in max_qual (fixes bug #1)
+> >  2) set max_qual.level to 0 for dBm instead of -110 (fixes bug #2)
+> >=20
+> > patch below.
+>=20
+> I think leaving max_qual.level =3D=3D -110 is OK in mac80211 actually.  I=
+t's
+> NM that's got the problem by not respecting IW_QUAL_DBM.
 
---=20
-Laws are partly formed for the sake of good men, in order to instruct t=
-hem
-how they may live on friendly terms with one another, and partly for th=
-e
-sake of those who refuse to be instructed, whose spirit cannot be subdu=
-ed,
-or softened, or hindered from plunging into evil. [The Laws, Plato]
+Yeah, but now we've got three or four bugs that together mean we broke
+NM. We can't really wait for NM *and* wpa_supplicant to get their
+fixes...
 
-You fiend! Never have I encountered such corrupt and foul-minded
-perversity=85 Have you ever considered a career in the church?
-Bishop of Bath and Wells (Blackadder II)
+Should we just calculate a qual.qual value anyway?
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-z7wOabRNbbJTeRYwMVOa
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJnDvZAAoJEKVg1VMiehFYm0kP/jUKpOByGn2DN8TUmkxafLpU
+dJsbzfiYwSK4yQFo5dw0MVfwp+18m8PkhLu2HqOoVEKqeqYiu7MePpRVCb58jVb9
+CDABFKWwPTzmajxD+0tYm/ju/GElJixq9CWejr74Z9LArSG7KYECvhMLReziqGpq
+6dKFovEEdSS78m4AyM1VrZSJpWN9Ijj0JI/Vgak4Amc1tzgNoH6zwrSnGumjqz3N
+aRpuKuaoVEUjI2wK3SruaTsEEJaI2kShlopc4ZH5HaWPH3oxrxJEo1butQhjl2dN
+oCgImxnxlpWcUUQzhzrXPYMQBReUeCfSLxdwxG0z/5sNxggVbQdnnZ86HSveTE/N
+Yt0fKnF2GFNzSlZWtvL1rEika6mmCOD+RM9+yiZeNPQ0tP3PpizeV+Tm2yEqH9n/
+5dr2In0nx1XOUGUkBxpOFBFu4Irdf2q43zlkCo660K4AmeCTiw19cUTxLeotN8Ww
+SztTNwbVvwCFhjAz1QzN8LIKaYXKc+8XJI5O1V+fTIRyst1e9Xc/qda6x4QoQr34
+Ih1fvLV9QpDBSistIWD59sfRXpUizeZCv89HcZ2xaatIEYrWoV60o/6WqWjMV36r
+AI6f4l1dER6y96JG7MPeDJZNqC0UjzGm7MnU8EOxkWKko0PE8oo+9jcrh7aR3GAp
+dBkXl2S3wnFBseNcp4D5
+=hWPt
+-----END PGP SIGNATURE-----
+
+--=-z7wOabRNbbJTeRYwMVOa--
+
