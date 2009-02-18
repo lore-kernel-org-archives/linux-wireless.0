@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:57437 "EHLO
-	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752453AbZBBPxY (ORCPT
+Received: from mail-bw0-f167.google.com ([209.85.218.167]:49263 "EHLO
+	mail-bw0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753572AbZBRUwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 10:53:24 -0500
-Received: from c83-249-24-87.bredband.comhem.se ([83.249.24.87]:48888 helo=samir)
-	by ch-smtp02.sth.basefarm.net with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.68)
-	(envelope-from <hans@sociologi.cjb.net>)
-	id 1LU16o-0001YG-7h
-	for linux-wireless@vger.kernel.org; Mon, 02 Feb 2009 16:53:16 +0100
-Received: from hans by samir with local (Exim 4.69)
-	(envelope-from <hans@sociologi.cjb.net>)
-	id 1LU19F-0002Rc-1M
-	for linux-wireless@vger.kernel.org; Mon, 02 Feb 2009 16:55:45 +0100
-Date: Mon, 2 Feb 2009 16:55:44 +0100
-From: Hans Ekbrand <hans@sociologi.cjb.net>
-To: linux-wireless@vger.kernel.org
-Subject: Re: USB 1.1, usb-dongle, NETGEAR WG111v2, timing problems in
-	association
-Message-ID: <20090202155542.GE24485@samir> (sfid-20090202_165328_602889_95863290)
-References: <20090117204654.GB9079@amin> <4972B25B.7070306@lwfinger.net>
+	Wed, 18 Feb 2009 15:52:23 -0500
+Received: by bwz11 with SMTP id 11so112361bwz.13
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 12:52:21 -0800 (PST)
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] at76_usb: fix Oops on disconnect
+References: <c4d76b3b0902042003p7e2b28a0pcbf0953282becd27@mail.gmail.com>
+	<da94abde0902070329s373a9edbqd9265acac8930d2a@mail.gmail.com>
+	<c4d76b3b0902081947x92eb0bo73fa63afb23b5e2c@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 18 Feb 2009 22:52:19 +0200
+In-Reply-To: <c4d76b3b0902081947x92eb0bo73fa63afb23b5e2c@mail.gmail.com> (Jason Andryuk's message of "Sun\, 8 Feb 2009 22\:47\:32 -0500")
+Message-ID: <87wsbnpiws.fsf@litku.valot.fi> (sfid-20090218_215230_517746_DCCFB701)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Zi0sgQQBxRFxMTsj"
-In-Reply-To: <4972B25B.7070306@lwfinger.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Jason Andryuk <jandryuk@gmail.com> writes:
 
---Zi0sgQQBxRFxMTsj
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> I'll take a look at at76c50x-usb in general and bringing over this
+> patch specifically.  Unfortunately, I still had one disconnect oops
+> with the patch installed.  Netconsole was not configured, so I did not
+> catch it.  There were several other successful disconnects without
+> Oops though.
 
-On Sat, Jan 17, 2009 at 10:38:51PM -0600, Larry Finger wrote:
-> Hans Ekbrand wrote:
-> > Hi list!
-> >=20
-> > On an old system with only USB 1.1, I tried to use a USB-dongle:
-> > NETGEAR WG111v2. The device works perfectly with same kernel (2.6.26-1
-> > from debian lenny) on a new system with USB 2.0, using the "rtl8187"
-> > driver.
-> >=20
-> > However, on USB 1.1 I get:
->=20
-> I just bought a WG111v2 on E-Bay last week. Once it arrives, I will be
-> able to test the performance of this device.
+Progress is always good :)
 
-Have you had the possiblity to try it on USB 1.1 yet?
+> It may need locking as none is currently present, but does a one way
+> transition device_unplugged 0 -> 1 need a lock?
 
---=20
-Hans Ekbrand (http://sociologi.cjb.net) <hans@sociologi.cjb.net>
-Q. What is that strange attachment in this mail?
-A. My digital signature, see www.gnupg.org for info on how you could
-   use it to ensure that this mail is from me and has not been
-   altered on the way to you.
+Using int might be enough but I think it's not guarenteed anywhere.
+Better to use atomic operations directly or use a proper lock. But I
+think the issues are more than that. For example, the disconnect
+handler is not taking the mutex.
 
---Zi0sgQQBxRFxMTsj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkmHF34ACgkQfCyHKnBQYU4NfwCgzM9NkKk+kaHp/fYnrdNRHgG3
-808Ani63gewG5ur9ZVNCtMAHcdhTYWv1
-=gJD4
------END PGP SIGNATURE-----
-
---Zi0sgQQBxRFxMTsj--
+-- 
+Kalle Valo
