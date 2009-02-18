@@ -1,92 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gold.linx.net ([195.66.232.40]:39832 "EHLO gold.linx.net"
+Received: from mga01.intel.com ([192.55.52.88]:2016 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751661AbZBJBuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 20:50:08 -0500
-Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
- ranges
-From: Tony Vroon <tony@linx.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20090210013941.GA4386@tesla>
-References: <1234202993.21570.18.camel@localhost>
-	 <43e72e890902091020p65235e3ds833560974c785318@mail.gmail.com>
-	 <1234203811.21570.19.camel@localhost> <20090209183924.GA6069@tuxdriver.com>
-	 <1234207263.6694.1.camel@localhost> <1234208152.6694.4.camel@localhost>
-	 <20090210013941.GA4386@tesla>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1WMjzMPcV1Nnu1yIEKWX"
-Date: Tue, 10 Feb 2009 01:51:29 +0000
-Message-Id: <1234230689.3793.15.camel@localhost> (sfid-20090210_025013_261010_DD8EF93E)
-Mime-Version: 1.0
+	id S1753556AbZBRXuX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2009 18:50:23 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 5/8] iwl3945: remove duplicate interrupt code
+Date: Wed, 18 Feb 2009 15:54:30 -0800
+Message-Id: <1235001273-7808-6-git-send-email-reinette.chatre@intel.com> (sfid-20090219_005040_420673_2EC825F4)
+In-Reply-To: <1235001273-7808-5-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1235001273-7808-1-git-send-email-reinette.chatre@intel.com>
+ <1235001273-7808-2-git-send-email-reinette.chatre@intel.com>
+ <1235001273-7808-3-git-send-email-reinette.chatre@intel.com>
+ <1235001273-7808-4-git-send-email-reinette.chatre@intel.com>
+ <1235001273-7808-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
---=-1WMjzMPcV1Nnu1yIEKWX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Patch removes duplicate code to enable and disable interrupt.
+iwl3945 now uses iwlwifi's functions.
 
-On Mon, 2009-02-09 at 17:39 -0800, Luis R. Rodriguez wrote:=20
-> In Intel's case the first regulatory domain is ignored (world). To see,
-> before associating to an AP try running 'iw list'.
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   37 +++++---------------------
+ 1 files changed, 7 insertions(+), 30 deletions(-)
 
-I will remove NetworkManager & gdm from the default runlevel and try
-that, yes.
-
-> I noticed that, what ends up happening then is the static world regulator=
-y
-> domain is used from the kernel. I take it you used an initramfs with the
-> sda driver in there?
-
-No. There's an initramfs, but it's only used to unlock the encrypted
-root filesystem. The actual driver for sda (ata_piix) is in the kernel.
-
-> I've been using initramfs too but for some reason
-> on my system udev triggers the request eventually after the drive
-> is mounted. So this is the first time I hear of this.
-
-I have another user reporting it on PowerPC, without an encrypted root.
-
-> I also noticed though:
->=20
-> cfg80211: Calling CRDA for country: GB
-> cfg80211: Current regulatory intersected:
->         (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->         (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
->=20
-> This seems to indicate to me you manually ran:
->=20
-> sudo iw reg set GB
->=20
-> Is that the case?=20
-
-Eventually, yes. To see if that would clear things up, but it didn't.
-Even if I just leave the AP 802.11d info to fill in the regulatory
-information (which you can see higher up, as it has the information
-slightly wrong and includes channel 14 together with very high radio
-power) the 5GHz channels are not included.
-
-As said, will do an iw list with no other software having fiddled with
-anything yet. The Cisco APs are in the vicinity so I may not be able to
-stop them picking up the 80211d info though.
-
-Regards,
-Tony V.
-
---=-1WMjzMPcV1Nnu1yIEKWX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkmQ3aEACgkQp5vW4rUFj5oxMwCfYo6e2zjkoyjw2g6CiGhHm5fv
-K9wAnRCgj5MOXIao+tNym5RYcUrkX6BT
-=IrK7
------END PGP SIGNATURE-----
-
---=-1WMjzMPcV1Nnu1yIEKWX--
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 62ec67a..2763662 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1982,14 +1982,6 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
+ 	iwl3945_rx_queue_restock(priv);
+ }
+ 
+-static void iwl3945_enable_interrupts(struct iwl_priv *priv)
+-{
+-	IWL_DEBUG_ISR(priv, "Enabling interrupts\n");
+-	set_bit(STATUS_INT_ENABLED, &priv->status);
+-	iwl_write32(priv, CSR_INT_MASK, CSR_INI_SET_MASK);
+-}
+-
+-
+ /* call this function to flush any scheduled tasklet */
+ static inline void iwl_synchronize_irq(struct iwl_priv *priv)
+ {
+@@ -1998,21 +1990,6 @@ static inline void iwl_synchronize_irq(struct iwl_priv *priv)
+ 	tasklet_kill(&priv->irq_tasklet);
+ }
+ 
+-
+-static inline void iwl3945_disable_interrupts(struct iwl_priv *priv)
+-{
+-	clear_bit(STATUS_INT_ENABLED, &priv->status);
+-
+-	/* disable interrupts from uCode/NIC to host */
+-	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
+-
+-	/* acknowledge/clear/reset any interrupts still pending
+-	 * from uCode or flow handler (Rx/Tx DMA) */
+-	iwl_write32(priv, CSR_INT, 0xffffffff);
+-	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
+-	IWL_DEBUG_ISR(priv, "Disabled interrupts\n");
+-}
+-
+ static const char *desc_lookup(int i)
+ {
+ 	switch (i) {
+@@ -2254,7 +2231,7 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ 		IWL_ERR(priv, "Microcode HW error detected.  Restarting.\n");
+ 
+ 		/* Tell the device to stop sending interrupts */
+-		iwl3945_disable_interrupts(priv);
++		iwl_disable_interrupts(priv);
+ 
+ 		iwl_irq_handle_error(priv);
+ 
+@@ -2334,7 +2311,7 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ 	/* Re-enable all interrupts */
+ 	/* only Re-enable if disabled by irq */
+ 	if (test_bit(STATUS_INT_ENABLED, &priv->status))
+-		iwl3945_enable_interrupts(priv);
++		iwl_enable_interrupts(priv);
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	if (priv->debug_level & (IWL_DL_ISR)) {
+@@ -2400,7 +2377,7 @@ unplugged:
+ 	/* re-enable interrupts here since we don't have anything to service. */
+ 	/* only Re-enable if disabled by irq */
+ 	if (test_bit(STATUS_INT_ENABLED, &priv->status))
+-		iwl3945_enable_interrupts(priv);
++		iwl_enable_interrupts(priv);
+ 	spin_unlock(&priv->lock);
+ 	return IRQ_NONE;
+ }
+@@ -3174,7 +3151,7 @@ static void __iwl3945_down(struct iwl_priv *priv)
+ 
+ 	/* tell the device to stop sending interrupts */
+ 	spin_lock_irqsave(&priv->lock, flags);
+-	iwl3945_disable_interrupts(priv);
++	iwl_disable_interrupts(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 	iwl_synchronize_irq(priv);
+ 
+@@ -3304,7 +3281,7 @@ static int __iwl3945_up(struct iwl_priv *priv)
+ 
+ 	/* clear (again), then enable host interrupts */
+ 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
+-	iwl3945_enable_interrupts(priv);
++	iwl_enable_interrupts(priv);
+ 
+ 	/* really make sure rfkill handshake bits are cleared */
+ 	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
+@@ -5253,7 +5230,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	 * ********************/
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+-	iwl3945_disable_interrupts(priv);
++	iwl_disable_interrupts(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	pci_enable_msi(priv->pci_dev);
+@@ -5348,7 +5325,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
+ 	 * tasklet for the driver
+ 	 */
+ 	spin_lock_irqsave(&priv->lock, flags);
+-	iwl3945_disable_interrupts(priv);
++	iwl_disable_interrupts(priv);
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	iwl_synchronize_irq(priv);
+-- 
+1.5.4.3
 
