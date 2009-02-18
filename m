@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ammma.de ([213.83.39.131]:21803 "EHLO ammma.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752976AbZBHSXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2009 13:23:52 -0500
-Message-ID: <20090208192343.106487dmjra19g6o@neo.wg.de> (sfid-20090208_192408_621407_DB086D32)
-Date: Sun, 08 Feb 2009 19:23:43 +0100
-From: Jan Schneider <jan@horde.org>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: Microcode SW error detected.
-References: <20090206233134.11116cap9kcroxgc@neo.wg.de>
- <1233960318.11530.114.camel@rc-desk>
-In-Reply-To: <1233960318.11530.114.camel@rc-desk>
+Received: from fk-out-0910.google.com ([209.85.128.189]:39380 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752787AbZBRUbe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2009 15:31:34 -0500
+Received: by fk-out-0910.google.com with SMTP id f33so72206fkf.5
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 12:31:32 -0800 (PST)
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] at76c50x-usb: support cfg80211 scanning
+References: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 18 Feb 2009 22:31:30 +0200
+In-Reply-To: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com> (Jason Andryuk's message of "Mon\, 16 Feb 2009 19\:43\:55 -0500")
+Message-ID: <8763j7qyfx.fsf@litku.valot.fi> (sfid-20090218_213145_271771_96ECD149)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zitat von reinette chatre <reinette.chatre@intel.com>:
+Jason Andryuk <jandryuk@gmail.com> writes:
 
-> On Fri, 2009-02-06 at 14:31 -0800, Jan Schneider wrote:
->> I've seen in a post from January that someone already had this problem
->> but couldn't reproduce it.
->> I can't reliably reproduce, but I see this more often than I like.
->> When this happens, it usually doesn't help to reload the kernel
->> module. Sometimes it helps to use the rfkill switch though.
->>
->> Here's a log with debug=0x43fff:
+> With the latest mac80211 stack, the driver needs to be updated for
+> cfg80211 scanning.  I based the changes off of modifications for
+> at76_usb found here:
+> http://johannes.sipsolutions.net/patches/old/all/2008-09-19-13:35/020-cfg80211-scan.patch
 >
-> It does not seem as though your driver is compiled with debug support.
-> You can confirm that by looking at the version number of the driver
-> printed when it loads ... it should have a "d" in it like "1.2.26kds".
-> Could you please recompile the driver with debug support (IWLWIFI_DEBUG)
-> and rerun your test?  This will provide us with a complete event log of
-> the uCode error.
+> The trick was that max_signal also needs to be set to avoid a divide
+> by zero Oops.  I just guessed and used the value 100 for now.
 
-Enabling debug didn't help:
+Thank you for doing this. Unfortunately the patch was corrupted, so I
+had to manually take your changes. I also included the
+ieee80211_scan_compileted() fix to this patch.
 
-Feb  7 00:04:40 tank kernel: [ 2769.084395] iwlagn: Intel(R) Wireless  
-WiFi Link
-AGN driver for Linux, 1.3.27kds
+> Additionally, I added some ieee80211_{wake,stop}_queues calls that
+> were contained in the older at76_usb.  There is ambiguity as to
+> whether at76_join should be called before or after waking the queues.
 
+I would like to have a separate patch for this. Also I would like to
+know what kind of bug this fixes.
 
-/etc/modprobe.d/iwlagn:
-
-options iwlagn debug=0x43fff
-
-
-I still get:
-
-Feb  8 18:40:53 tank kernel: [77584.979829] iwlagn 0000:0c:00.0:  
-Microcode SW er
-ror detected.  Restarting 0x2000000.
-Feb  8 18:40:53 tank kernel: [77585.029747] Registered led device:  
-iwl-phy0::rad
-io
-Feb  8 18:40:53 tank kernel: [77585.030765] Registered led device:  
-iwl-phy0::ass
-oc
-Feb  8 18:40:53 tank kernel: [77585.031602] Registered led device:  
-iwl-phy0::RX
-Feb  8 18:40:53 tank kernel: [77585.032467] Registered led device:  
-iwl-phy0::TX
-
-Jan.
+Sorry to be so picky, but I'm going to push the driver into mainline
+soon and I try avoid regressions right now.
 
 -- 
-Do you need professional PHP or Horde consulting?
-http://horde.org/consulting/
-
+Kalle Valo
