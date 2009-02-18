@@ -1,168 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:34941 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753087AbZBBUzq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 15:55:46 -0500
-Received: by ewy14 with SMTP id 14so2092376ewy.13
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 12:55:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <e27b78a40902021013v272ec315nece744d3cf1dc75c@mail.gmail.com>
-References: <e27b78a40901230803t8eafb3cx6d70ceaec68daf09@mail.gmail.com>
-	 <e27b78a40901240804m1acd3a83o7bf6d01f81ec3397@mail.gmail.com>
-	 <45e8e6c40901240956g68a5364tdbacc1e49410c9cc@mail.gmail.com>
-	 <e27b78a40901260625w53acd646xeb5a9ca85555c74d@mail.gmail.com>
-	 <e27b78a40901260956w4e69d33s7db60defc026c8d7@mail.gmail.com>
-	 <45e8e6c40901280954l42bbe788y8723141d673bb7b3@mail.gmail.com>
-	 <e27b78a40901300446y294504d5kd7acaa6c5a26edd@mail.gmail.com>
-	 <e27b78a40901300601p35d68125kfc3a10a7d7db0900@mail.gmail.com>
-	 <7c8826910901301109s6d80a75ale251ec837eabccf0@mail.gmail.com>
-	 <e27b78a40902021013v272ec315nece744d3cf1dc75c@mail.gmail.com>
-Date: Mon, 2 Feb 2009 12:55:43 -0800
-Message-ID: <7c8826910902021255g2563400an24f97014abf854f8@mail.gmail.com> (sfid-20090202_215550_410610_7368428C)
-Subject: Re: Crashing on ping?
-From: Mike Cui <cuicui@gmail.com>
-To: Keir <keirlawson@gmail.com>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
+Received: from mx2.redhat.com ([66.187.237.31]:54278 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751925AbZBRNWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2009 08:22:40 -0500
+Subject: Re: Missing link quality with wireless-testing
+From: Dan Williams <dcbw@redhat.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1234961297.13950.55.camel@localhost>
+References: <1234899806.29785.35.camel@johannes.local>
+	 <1234902294.4678.12.camel@californication>
+	 <1234904111.29785.44.camel@johannes.local>
+	 <1234904978.4678.31.camel@californication>
+	 <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net>
+	 <1234933059.21412.28.camel@californication>
+	 <20090218073104.GA23366@jm.kir.nu>
+	 <1234944391.21412.47.camel@californication>
+	 <20090218082520.GA26280@jm.kir.nu> <1234959523.13950.47.camel@localhost>
+	 <20090218123301.GA6152@jm.kir.nu>  <1234961297.13950.55.camel@localhost>
+Content-Type: text/plain
+Date: Wed, 18 Feb 2009 08:20:53 -0500
+Message-Id: <1234963253.13950.68.camel@localhost> (sfid-20090218_142244_301617_990B7BE3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No. crash happens when I use it in regular access point mode.
+On Wed, 2009-02-18 at 07:48 -0500, Dan Williams wrote:
+> On Wed, 2009-02-18 at 14:33 +0200, Jouni Malinen wrote:
+> > On Wed, Feb 18, 2009 at 07:18:43AM -0500, Dan Williams wrote:
+> > 
+> > > With WEXT, there are three ways to calculate pretty bars.  They *all*
+> > > require max_qual values returned from the GIWRANGE handler, because
+> > > otherwise you have no f**king clue what the upper or lower bounds are.
+> > 
+> > > QUAL.LEVEL in dBm
+> > > --------------
+> > > 
+> > > Requires:
+> > >   - max_qual.level == 0 (ie, dBm values)
+> > 
+> > That is an area where NM (= 0) and mac80211 (= -110) do not agree.
+> 
+> Then mac80211 is not conforming to WEXT...  unless it's setting
+> IW_QUAL_DBM in the updated field, which it probably is.
+> 
+> Before we added IW_QUAL_DBM, the switch between dBm and RSSI was
+> max_qual.level; if it was 0, level was in dBm, because no cards in use
+> in Linux at that time could support a signal of more 0 dBm.  Thus, if it
+> was over 0, the value was in RSSI.
+> 
+> Here's the relevant bit of wireless.h:
+> 
+>         /* Quality range (link, level, noise)
+>          * If the quality is absolute, it will be in the range [0 ; max_qual],
+>          * if the quality is dBm, it will be in the range [max_qual ; 0].
+> 
+> That doc never got updated for IW_QUAL_DBM either.
 
-On Mon, Feb 2, 2009 at 10:13 AM, Keir <keirlawson@gmail.com> wrote:
-> Cards I am using are all:
->
-> 02:07.0 Ethernet controller: Atheros Communications Inc. AR5212/AR5213
-> Multiprotocol MAC/baseband processor [168c:0013] (rev 01)
->        Subsystem: Netgear Unknown device [1385:5a00]
->        Flags: bus master, medium devsel, latency 168, IRQ 16
->        Memory at ff6f0000 (32-bit, non-prefetchable) [size=64K]
->        Capabilities: [44] Power Management version 2
->
-> Did you mean specifically with the mesh stack Mike?
->
-> Cheers
->
-> Keir
->
-> 2009/1/30 Mike Cui <cuicui@gmail.com>:
->> I see the same crash everytime I try to use ath5k. I have this device:
->>
->> 05:00.0 Ethernet controller [0200]: Atheros Communications Inc.
->> AR5212/AR5213 Multiprotocol MAC/baseband processor [168c:0013] (rev
->> 01)
->>        Subsystem: Device [1948:3a02]
->>        Flags: bus master, medium devsel, latency 64, IRQ 11
->>        Memory at f9df0000 (32-bit, non-prefetchable) [size=64K]
->>        Capabilities: [44] Power Management version 2
->>        Kernel modules: ath5k, ath_pci
->>
->> I use stock 2.6.28.2
->>
->> On Fri, Jan 30, 2009 at 6:01 AM, Keir <keirlawson@gmail.com> wrote:
->>> Could you send me the .config you are using? Just so i can make sure
->>> my kernel is exactly the same?
->>>
->>> Cheers
->>>
->>> Keir
->>>
->>> 2009/1/30 Keir <keirlawson@gmail.com>:
->>>> I did the following in my serial console:
->>>>
->>>> root@kyp:/home/keir/Desktop/iw-0.9.6# echo 8 > /proc/sys/kernel/printk
->>>> root@kyp:/home/keir/Desktop/iw-0.9.6# ping -I mesh0 10.0.0.2
->>>> PING 10.0.0.2 (10.0.0.2) from 10.0.0.3 mesh0: 56(84) bytes of data.
->>>> 64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=2.67 ms
->>>> 64 bytes from 10.0.0.2: icmp_seq=2 ttl=64 time=0.550 ms
->>>> 64 bytes from 10.0.0.2: icmp_seq=3 ttl=64 time=0.445 ms
->>>> 64 bytes from 10.0.0.2: icmp_seq=4 ttl=64 time=6.28 ms
->>>> 64 bytes from 10.0.0.2: icmp_seq=5 ttl=64 time=2.19 ms
->>>>
->>>> At which point the console freezes with no further output.
->>>>
->>>> Any ideas?
->>>>
->>>> Cheers
->>>>
->>>> Keir
->>>>
->>>> 2009/1/28 Andrey Yurovsky <andrey@cozybit.com>
->>>>>
->>>>> Hi Keir.  If the system really crashes, you should have some output.
->>>>> Can you please set:
->>>>>
->>>>> echo 8 > /proc/sys/kernel/printk
->>>>>
->>>>> ...and use your serial console and try to reproduce this?  Thanks,
->>>>>
->>>>>  -Andrey
->>>>>
->>>>> On Mon, Jan 26, 2009 at 9:56 AM, Keir <keirlawson@gmail.com> wrote:
->>>>> > Right, managed to set up a serial terminal, ran cat /proc/kmsg, but
->>>>> > still no output of interest (just mesh plink stuff leading up to the
->>>>> > connection being established), what should I do next?
->>>>> >
->>>>> > Cheers
->>>>> >
->>>>> > Keir
->>>>> >
->>>>> > 2009/1/26 Keir <keirlawson@gmail.com>:
->>>>> >> "sudo cat /proc/kmsg > log" doesnt produce anything of interest.
->>>>> >>
->>>>> >> Will look into the serial console thing, never done it before.
->>>>> >>
->>>>> >> Keir
->>>>> >>
->>>>> >> 2009/1/24 Andrey Yurovsky <andrey@cozybit.com>:
->>>>> >>> Can you post logs of the crash (dmesg output)?  You may need to
->>>>> >>> connect a serial console to the PC in question to get them if the
->>>>> >>> machine is really hard-locking, otherwise see if you can capture the
->>>>> >>> output of dmesg
->>>>> >>>
->>>>> >>> On Sat, Jan 24, 2009 at 8:04 AM, Keir <keirlawson@gmail.com> wrote:
->>>>> >>>> Tried that commit, still no luck :( It consistently freezes up on
->>>>> >>>> ping, though sometimes it's the machine doing the pining, and other
->>>>> >>>> times it's the machine being pinged.  Wondering what I can do to help
->>>>> >>>> debug this?
->>>>> >>>>
->>>>> >>>> Keir
->>>>> >>>>
->>>>> >>>> 2009/1/23 Andrey Yurovsky <andrey@cozybit.com>:
->>>>> >>>>> Hi Keir.  Incidentally, we're using ath5k mesh right now at commit
->>>>> >>>>> 93bd2ac7301b0879821e584991f82de372d62bf6 (that's just after the
->>>>> >>>>> 2.6.29-rc1 tag but before -rc2) an things work fine.  I haven't had a
->>>>> >>>>> chance to try head of wireless-testing this week.
->>>>> >>>>>
->>>>> >>>>>  -Andrey
->>>>> >>>>>
->>>>> >>>>> On Fri, Jan 23, 2009 at 8:03 AM, Keir <keirlawson@gmail.com> wrote:
->>>>> >>>>>> I just pulled the latest wireless-testing kernel, however, much like
->>>>> >>>>>> the previous wireless-testing kernel I was working on, when attempting
->>>>> >>>>>> to ping one node from another on a mesh, using ath5k, the node
->>>>> >>>>>> attempting to ping completely freezes after about 7 pings are
->>>>> >>>>>> (succesfully) sent.  Anyone have any idea what is going wrong here?
->>>>> >>>>>>
->>>>> >>>>>> Cheers
->>>>> >>>>>>
->>>>> >>>>>> Keir
->>>>> >>>>>> --
->>>>> >>>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>>>> >>>>>> the body of a message to majordomo@vger.kernel.org
->>>>> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>> >>>>>>
->>>>> >>>>>
->>>>> >>>>
->>>>> >>>
->>>>> >>
->>>>> >
->>>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->
+And yeah, the NM method isn't entirely consistent with this comment in
+wext.h either; however, it's pretty unclear how to actually figure out
+from max_qual whether the driver is reporting absolute or dBm unless you
+use IW_QUAL_DBM.
+
+Dan
+
+> > > NM is probably fine here with qual == 0 because I doubt the GIWRANGE
+> > > handler is returning a valid max_qual.qual > 0 anymore with Johannes'
+> > > patch.  Could be wrong though.
+> > 
+> > Well, it is not fine, but not only for that reason.. max_qual.qual is
+> > still set to 100 and the IW_QUAL_QUAL_INVALID is not used for it.
+> > However, even if I set IW_QUAL_QUAL_INVALID and remove "quality" from
+> > wpa_supplicant dbus interface, I still get NM showing perfect 100%
+> > signal all the time regardless of how close to losing the connection the
+> > card really is..
+> > 
+> > I gave up on trying to understand all the cases, but my assumption is
+> > that the remaining issue is in the disagreement on max_qua.level for the
+> > dBm case. However, I'm not sure whether fixing that would automatically
+> > resolve the issues with wext (it might be enough for the current nl80211
+> > version with wpa_supplicant from git head).
+> 
+> NM doesn't really handle IW_QUAL_DBM (added in WE-19).  Mainly because
+> stuff worked without it, and it wasn't implemented in drivers until
+> quite recently.  NM should handle IW_QUAL_DBM.
+> 
+> > > Ah right; the dbus interface shouldn't be appending "quality" to the
+> > > dict if the driver doesn't provide valid quality (ie, max_qual.updated
+> > > has the QUAL_INVALID bit set).  Same thing for noise and level.
+> > 
+> > The unknown values are not included anymore in wpa_supplicant 0.7.x.
+> 
+> Just pulled; it doesn't show up in master.  Do you have a separate git
+> repo for 0.7.x?
+> 
+> Dan
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
