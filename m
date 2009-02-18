@@ -1,66 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from india533.server4you.de ([85.25.151.41]:28301 "EHLO
-	india533.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168AbZBLJMw (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55340 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754192AbZBRXZr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 04:12:52 -0500
-Message-ID: <4993E811.5040504@smash-net.org> (sfid-20090212_101257_382722_0CEB1BFC)
-Date: Thu, 12 Feb 2009 10:12:49 +0100
-From: =?ISO-8859-1?Q?Norman_Rie=DF?= <norman@smash-net.org>
-MIME-Version: 1.0
-To: Bob Copeland <bcopeland@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath5k master (AP) mode
-References: <49931D52.90904@smash-net.org> <b6c5339f0902111304u430bce4dl3304f171ae8fbd45@mail.gmail.com>
-In-Reply-To: <b6c5339f0902111304u430bce4dl3304f171ae8fbd45@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 18 Feb 2009 18:25:47 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v4 15/15] cfg80211: rename regdom_changed to regdom_changes() and use it
+Date: Wed, 18 Feb 2009 18:25:45 -0500
+Message-Id: <1234999545-14357-16-git-send-email-lrodriguez@atheros.com> (sfid-20090219_005324_444760_97FB47C0)
+In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
+References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland schrieb:
-> On Wed, Feb 11, 2009 at 1:47 PM, Norman Rie=DF <norman@smash-net.org>=
- wrote:
->  =20
->> Hello,
->>
->> i pulled wireless-testing kernel today and installed hostapd-0.6.7, =
- but
->> it still does not work.
->>
->>
->> iwconfig wlan0 mode master
->> Error for wireless request "Set Mode" (8B06) :
->>    SET failed on device wlan0 ; Invalid argument.
->>    =20
->
-> Did you apply this patch from upthread?
->
-> --- wireless-testing/drivers/net/wireless/ath5k/base.c      2009-02-1=
-0
-> 06:11:43.186470883 +0100
-> +++ wireless-testing/drivers/net/wireless/ath5k/base.c.old
-> 2008-11-14 09:36:40.000000000 +0100
-> @@ -522,6 +501,7 @@
->        hw->wiphy->interface_modes =3D
->                BIT(NL80211_IFTYPE_STATION) |
->                BIT(NL80211_IFTYPE_ADHOC) |
-> +               BIT(NL80211_IFTYPE_AP) |
->                BIT(NL80211_IFTYPE_MESH_POINT);
->
->        hw->extra_tx_headroom =3D 2;
->
->  =20
-Arrrrg,
-as i understood it, the newest pull did change that line, so i did not.
-With that line added hostapd starts, and at first look, a bg2200 sees
-the accesspoint with wpa2 capability.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   19 ++++++++-----------
+ 1 files changed, 8 insertions(+), 11 deletions(-)
 
-Sorry for that.
-Thanks
-Norman
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index c6087bc..17dae20 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -291,7 +291,7 @@ static bool alpha2_equal(const char *alpha2_x, const char *alpha2_y)
+ 	return false;
+ }
+ 
+-static bool regdom_changed(const char *alpha2)
++static bool regdom_changes(const char *alpha2)
+ {
+ 	assert_cfg80211_lock();
+ 
+@@ -1134,8 +1134,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 				 * intersect them, but that seems unlikely
+ 				 * to be correct. Reject second one for now.
+ 				 */
+-				if (!alpha2_equal(alpha2,
+-						  cfg80211_regdomain->alpha2))
++				if (regdom_changes(alpha2))
+ 					return -EOPNOTSUPP;
+ 				return -EALREADY;
+ 			}
+@@ -1143,8 +1142,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 			 * Two consecutive Country IE hints on the same wiphy.
+ 			 * This should be picked up early by the driver/stack
+ 			 */
+-			if (WARN_ON(!alpha2_equal(cfg80211_regdomain->alpha2,
+-				  alpha2)))
++			if (WARN_ON(regdom_changes(alpha2)))
+ 				return 0;
+ 			return -EALREADY;
+ 		}
+@@ -1153,7 +1151,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		if (last_request->initiator == REGDOM_SET_BY_CORE) {
+ 			if (is_old_static_regdom(cfg80211_regdomain))
+ 				return 0;
+-			if (!alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
++			if (regdom_changes(alpha2))
+ 				return 0;
+ 			return -EALREADY;
+ 		}
+@@ -1164,7 +1162,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		 * loaded card also agrees on the regulatory domain.
+ 		 */
+ 		if (last_request->initiator == REGDOM_SET_BY_DRIVER &&
+-		    alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
++		    !regdom_changes(alpha2))
+ 			return -EALREADY;
+ 
+ 		return REG_INTERSECT;
+@@ -1185,13 +1183,12 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		if (last_request->initiator == REGDOM_SET_BY_CORE ||
+ 		    last_request->initiator == REGDOM_SET_BY_DRIVER ||
+ 		    last_request->initiator == REGDOM_SET_BY_USER) {
+-			if (!alpha2_equal(last_request->alpha2,
+-			    cfg80211_regdomain->alpha2))
++			if (regdom_changes(last_request->alpha2))
+ 				return -EAGAIN;
+ 		}
+ 
+ 		if (!is_old_static_regdom(cfg80211_regdomain) &&
+-		    alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
++		    !regdom_changes(alpha2))
+ 			return -EALREADY;
+ 
+ 		return 0;
+@@ -1720,7 +1717,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		 * checking if the alpha2 changes if CRDA was already called
+ 		 */
+ 		if (!is_old_static_regdom(cfg80211_regdomain) &&
+-		    !regdom_changed(rd->alpha2))
++		    !regdom_changes(rd->alpha2))
+ 			return -EINVAL;
+ 	}
+ 
+-- 
+1.6.0.3
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
