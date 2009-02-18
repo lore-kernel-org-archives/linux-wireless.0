@@ -1,52 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:16416 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751058AbZBWQ1i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 11:27:38 -0500
+Received: from mail.atheros.com ([12.36.123.2]:26570 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751420AbZBRE0j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2009 23:26:39 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 20:26:39 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 04/15] nl80211: disallow user requests prior to regulatory_init()
+Date: Tue, 17 Feb 2009 20:21:51 -0800
+Message-ID: <1234930922-29367-5-git-send-email-lrodriguez@atheros.com> (sfid-20090218_052642_870878_37983D56)
+In-Reply-To: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
+References: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20090223162103.GA3383@hash.localnet>
-References: <20090222111807.GB5538@silver.sucs.org>
-	 <20090222122036.GC5538@silver.sucs.org>
-	 <20090222144742.GA6078@nowhere>
-	 <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com>
-	 <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com>
-	 <40f31dec0902230803qcbd4c20kc66a50e6e2e8eef2@mail.gmail.com>
-	 <40f31dec0902230815x6b43fa50h41edfeead96822a3@mail.gmail.com>
-	 <20090223162103.GA3383@hash.localnet>
-Date: Mon, 23 Feb 2009 18:27:35 +0200
-Message-ID: <40f31dec0902230827j5c0f9f20je02c7fb02709f71e@mail.gmail.com> (sfid-20090223_172742_214221_87990CE1)
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/2/23 Bob Copeland <me@bobcopeland.com>:
-> On Mon, Feb 23, 2009 at 06:15:51PM +0200, Nick Kossifidis wrote:
->> Typo alert...
->> rs->rs_more = !!(rx_status->rx_status_0 & AR5K_5212_RX_DESC_STATUS0_MORE);
->
-> I'm slow... what's wrong with it?
->
+If cfg80211 is built into the kernel there is perhaps a small
+time window betwen nl80211_init() and regulatory_init() where
+cfg80211_regdomain hasn't yet been initialized to let the
+wireless core do its work. During that rare case and time
+frame (if its even possible) we don't allow user regulatory
+changes as cfg80211 is working on enabling its first regulatory
+domain.
 
-"!!"
+To check for cfg80211_regdomain we now contend the entire operation
+using the cfg80211_mutex.
 
-it should be just
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/nl80211.c |   34 ++++++++++++++++++++++++++--------
+ 1 files changed, 26 insertions(+), 8 deletions(-)
 
-rs->rs_more = (rx_status->rx_status_0 & AR5K_5212_RX_DESC_STATUS0_MORE);
-
-
-
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f353e39..5d3e968 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1882,24 +1882,42 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	int r;
+ 	char *data = NULL;
+ 
+-	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+-		return -EINVAL;
++	/*
++	 * You should only get this when cfg80211 hasn't yet initialized
++	 * completely when built-in to the kernel right between the time
++	 * window between nl80211_init() and regulatory_init(), if that is
++	 * even possible.
++	 */
++	mutex_lock(&cfg80211_mutex);
++	if (unlikely(!cfg80211_regdomain)) {
++		r = -EINPROGRESS;
++		goto out;
++	}
++
++	if (!info->attrs[NL80211_ATTR_REG_ALPHA2]) {
++		r = -EINVAL;
++		goto out;
++	}
+ 
+ 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+ 
+ #ifdef CONFIG_WIRELESS_OLD_REGULATORY
+ 	/* We ignore world regdom requests with the old regdom setup */
+-	if (is_world_regdom(data))
+-		return -EINVAL;
++	if (is_world_regdom(data)) {
++		r = -EINVAL;
++		goto out;
++	}
+ #endif
+-	mutex_lock(&cfg80211_mutex);
+ 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
+-	mutex_unlock(&cfg80211_mutex);
+-	/* This means the regulatory domain was already set, however
++	/*
++	 * This means the regulatory domain was already set, however
+ 	 * we don't want to confuse userspace with a "successful error"
+-	 * message so lets just treat it as a success */
++	 * message so lets just treat it as a success
++	 */
+ 	if (r == -EALREADY)
+ 		r = 0;
++out:
++	mutex_unlock(&cfg80211_mutex);
+ 	return r;
+ }
+ 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.6.1.2.253.ga34a
+
