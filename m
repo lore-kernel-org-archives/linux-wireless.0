@@ -1,93 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60494 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752925AbZBJCHw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 21:07:52 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 18:07:52 -0800
-Date: Mon, 9 Feb 2009 18:07:08 -0800
+Received: from bombadil.infradead.org ([18.85.46.34]:55324 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366AbZBRXZq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2009 18:25:46 -0500
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Tony Vroon <tony@linx.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
-	ranges
-Message-ID: <20090210020708.GC4386@tesla> (sfid-20090210_030756_554064_EC5E8AE0)
-References: <1234202993.21570.18.camel@localhost> <43e72e890902091020p65235e3ds833560974c785318@mail.gmail.com> <1234203811.21570.19.camel@localhost> <20090209183924.GA6069@tuxdriver.com> <1234207263.6694.1.camel@localhost> <1234208152.6694.4.camel@localhost> <20090210013941.GA4386@tesla> <1234230689.3793.15.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1234230689.3793.15.camel@localhost>
+To: johannes@sipsolutions.net
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v4 00/15] cfg80211: add a workqueue for regulatory processing
+Date: Wed, 18 Feb 2009 18:25:30 -0500
+Message-Id: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com> (sfid-20090219_002554_225305_A5157636)
+To: johannes@sipsolutions.net, linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 09, 2009 at 05:51:29PM -0800, Tony Vroon wrote:
-> On Mon, 2009-02-09 at 17:39 -0800, Luis R. Rodriguez wrote: 
-> > In Intel's case the first regulatory domain is ignored (world). To see,
-> > before associating to an AP try running 'iw list'.
-> 
-> I will remove NetworkManager & gdm from the default runlevel and try
-> that, yes.
-> 
-> > I noticed that, what ends up happening then is the static world regulatory
-> > domain is used from the kernel. I take it you used an initramfs with the
-> > sda driver in there?
-> 
-> No. There's an initramfs, but it's only used to unlock the encrypted
-> root filesystem. The actual driver for sda (ata_piix) is in the kernel.
+This series has a few cleanups and minor fixes but mainly
+adds a workqueue for cfg80211 to use to process all regulatory
+hints. This v4 just changes the spin_lock to only be held _only_ during
+dequeing (not like this matters much).
 
-Intersting -- this is the first case I hear about this.
+This series is also rebased on today's pull of wl. Using a new
+SMTP server now, so hopefully this goes through fine in one shot.
 
-> > I've been using initramfs too but for some reason
-> > on my system udev triggers the request eventually after the drive
-> > is mounted. So this is the first time I hear of this.
-> 
-> I have another user reporting it on PowerPC, without an encrypted root.
+Luis R. Rodriguez (15):
+  cfg80211: rename cfg80211_registered_device's idx to wiphy_idx
+  cfg80211: add wiphy_idx_valid to check for wiphy_idx sanity
+  cfg80211: rename cfg80211_drv_mutex to cfg80211_mutex
+  nl80211: disallow user requests prior to regulatory_init()
+  cfg80211: add regulatory_hint_core() to separate the core reg hint
+  cfg80211: propagate -ENOMEM during regulatory_init()
+  cfg80211: add assert_cfg80211_lock() to ensure proper protection
+  cfg80211: make regulatory_request use wiphy_idx instead of wiphy
+  cfg80211: protect first access of last_request on 11d hint under
+    mutex
+  cfg80211: remove likely from an 11d hint case
+  cfg80211: free rd on unlikely event on 11d hint
+  cfg80211: move all regulatory hints to workqueue
+  cfg80211: comments style cleanup
+  cfg80211: allow drivers that agree on regulatory to agree
+  cfg80211: rename regdom_changed to regdom_changes() and use it
 
-Are they also disabling OLD_REG? Note that the only routine I see
-failing then in the initial:
+ drivers/net/wireless/ath9k/main.c      |    8 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c |    6 +-
+ include/net/cfg80211.h                 |    8 +-
+ include/net/wireless.h                 |    9 +-
+ net/wireless/core.c                    |  102 ++++--
+ net/wireless/core.h                    |   33 ++-
+ net/wireless/nl80211.c                 |   47 ++-
+ net/wireless/reg.c                     |  662 +++++++++++++++++++++++---------
+ net/wireless/reg.h                     |    2 +
+ net/wireless/sysfs.c                   |    2 +-
+ 10 files changed, 641 insertions(+), 238 deletions(-)
 
-err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", 0, ENVIRON_ANY);
-
-Is a kmalloc() (unlikely) or call_crda() failing, and call_crda() will
-only fail if kobject_uevent_env() fails and last I checked that would
-fail only if the kernel failed to build and emit the udev event (it doesn't mean
-CRDA was not present, it should mean udev never got the udev event IIRC).
-
-> > I also noticed though:
-> > 
-> > cfg80211: Calling CRDA for country: GB
-> > cfg80211: Current regulatory intersected:
-> >         (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> >         (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> > 
-> > This seems to indicate to me you manually ran:
-> > 
-> > sudo iw reg set GB
-> > 
-> > Is that the case? 
-> 
-> Eventually, yes.
-
-Oh? Hmm.. if we leave the channel intact before applying the intersected
-regulatory domain and if 'iw list' shows the 5 GHz channels it should mean
-they are left enabled, I'm a bit puzzled myself, unless I'm missing something.
-
-> To see if that would clear things up, but it didn't.
-> Even if I just leave the AP 802.11d info to fill in the regulatory
-> information (which you can see higher up, as it has the information
-> slightly wrong and includes channel 14 together with very high radio
-> power) the 5GHz channels are not included.
-
-Heh :)
-
-> As said, will do an iw list with no other software having fiddled with
-> anything yet. The Cisco APs are in the vicinity so I may not be able to
-> stop them picking up the 80211d info though.
-
-Actually we don't follow country IE hints in Linux until we associate
-to an AP so you should be good.
-
-  Luis
