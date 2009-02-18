@@ -1,253 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:2490 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751743AbZBTWV0 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45997 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751661AbZBRRpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 17:21:26 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so446392yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 14:21:25 -0800 (PST)
-MIME-Version: 1.0
-Date: Fri, 20 Feb 2009 14:21:24 -0800
-Message-ID: <5cd984fd0902201421y5d8ee7ewa96d89b14efa6df8@mail.gmail.com> (sfid-20090220_232130_663454_BD04CF9F)
-Subject: Please add linksys wusb54gp to working devices list.
-From: Dennis Aliev <dennis@capricornsolutions.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 18 Feb 2009 12:45:40 -0500
+Subject: [PATCH] cfg80211: clean up signal type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 18 Feb 2009 18:45:06 +0100
+Message-Id: <1234979106.4023.36.camel@johannes.local> (sfid-20090218_184544_683043_C58C9FA5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please add Linksys WUSB54GP (no version, so I assume v1?) to a list of
-compatible hardware.
-http://www1.linksys.com/products/imagelib2/wusb54gp.jpg
+It wasn't a good idea to make the signal type a per-BSS option,
+although then it is closer to the actual value. Move it to be
+a per-wiphy setting, update mac80211 to match.
 
-Downloaded backtrack 4 beta VM and spent few hours chasing forums to
-get the card working (Have been away from Linux 4 years, love the
-progress!).  Turned out that simple overwrite of firmware (bundled
-with Backtrack4-Beta) did the trick and finally assigned (wlan0)
-device to the adapter. Even though the size of the files was identical
-(29,500 bytes). Never checked the md5, sorry.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Might require that other patch adding qual.qual to apply.
 
-root@bt:~# ls -l /lib/firmware/isl3890usb
--rw-r--r-- 1 root root 29500 2007-02-12 15:51 /lib/firmware/isl3890usb
+ include/net/cfg80211.h |    8 +++-----
+ include/net/wireless.h |    3 +++
+ net/mac80211/main.c    |    5 +++++
+ net/mac80211/scan.c    |   11 +++--------
+ net/wireless/nl80211.c |    2 +-
+ net/wireless/scan.c    |   21 +++++++++------------
+ 6 files changed, 24 insertions(+), 26 deletions(-)
 
-root@bt:~# lsusb -vvv
-Bus 001 Device 003: ID 5041:2235 Linksys (?)
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               2.00
-  bDeviceClass          255 Vendor Specific Class
-  bDeviceSubClass         0
-  bDeviceProtocol         0
-  bMaxPacketSize0        64
-  idVendor           0x5041 Linksys (?)
-  idProduct          0x2235
-  bcdDevice            2.02
-  iManufacturer           0
-  iProduct                0
-  iSerial                 0
-  bNumConfigurations      1
-  Configuration Descriptor:
-    bLength                 9
-    bDescriptorType         2
-    wTotalLength           95
-    bNumInterfaces          1
-    bConfigurationValue     1
-    iConfiguration          0
-    bmAttributes         0x80
-      (Bus Powered)
-    MaxPower              500mA
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       0
-      bNumEndpoints          11
-      bInterfaceClass       255 Vendor Specific Class
-      bInterfaceSubClass      0
-      bInterfaceProtocol      0
-      iInterface              0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x01  EP 1 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x81  EP 1 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x02  EP 2 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x82  EP 2 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x83  EP 3 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x84  EP 4 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x8d  EP 13 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x0d  EP 13 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x8e  EP 14 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x0e  EP 14 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x8f  EP 15 IN
-        bmAttributes            3
-          Transfer Type            Interrupt
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0004  1x 4 bytes
-        bInterval               1
-Device Qualifier (for other device speed):
-  bLength                10
-  bDescriptorType         6
-  bcdUSB               2.00
-  bDeviceClass          255 Vendor Specific Class
-  bDeviceSubClass         0
-  bDeviceProtocol         0
-  bMaxPacketSize0        64
-  bNumConfigurations      1
-Device Status:     0x0002
-  (Bus Powered)
-  Remote Wakeup Enabled
-
-
-root@bt:~# lsmod  | grep p54usb
-p54usb                 16384  0
-p54common              18944  1 p54usb
-mac80211              155936  2 p54usb,p54common
-
-
-dmesg
-usb 1-1: new high speed USB device using ehci_hcd and address 3
-usb 1-1: configuration #1 chosen from 1 choice
-usb 1-1: firmware: requesting isl3890usb
-p54: LM86 firmware
-p54: FW rev 2.13.1.0 - Softmac protocol 5.5
-p54: unknown eeprom code : 0x1
-p54: unknown eeprom code : 0x3
-p54: unknown eeprom code : 0x1905
-p54: unknown eeprom code : 0x1007
-p54: unknown eeprom code : 0x1008
-p54: unknown eeprom code : 0x1100
-phy1: hwaddr 00:0f:66:77:e1:d6, MAC:isl3886 RF:Frisbee
-phy1: Selected rate control algorithm 'pid'
-
-root@bt:~# airmon-ng start wlan0
-Interface       Chipset         Driver
-
-wlan0           PrismGT         p54usb - [phy1]
-                                (monitor mode enabled on mon0)
-
-root@bt:~# iwconfig
-lo        no wireless extensions.
-eth0      no wireless extensions.
-wmaster0  no wireless extensions.
-
-wlan0     IEEE 802.11bg  ESSID:""
-          Mode:Managed  Frequency:2.447 GHz  Access Point: Not-Associated
-          Tx-Power=27 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Encryption key:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-mon0      IEEE 802.11bg  Mode:Monitor  Frequency:2.447 GHz  Tx-Power=27 dBm
-          Retry min limit:7   RTS thr:off   Fragment thr=2352 B
-          Encryption key:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+--- wireless-testing.orig/include/net/cfg80211.h	2009-02-18 18:33:25.000000000 +0100
++++ wireless-testing/include/net/cfg80211.h	2009-02-18 18:38:00.000000000 +0100
+@@ -577,8 +577,7 @@ enum cfg80211_signal_type {
+  * @information_elements: the information elements (Note that there
+  *	is no guarantee that these are well-formed!)
+  * @len_information_elements: total length of the information elements
+- * @signal: signal strength value
+- * @signal_type: signal type
++ * @signal: signal strength value (type depends on the wiphy's signal_type)
+  * @free_priv: function pointer to free private data
+  * @priv: private area for driver use, has at least wiphy->bss_priv_size bytes
+  */
+@@ -593,7 +592,6 @@ struct cfg80211_bss {
+ 	size_t len_information_elements;
+ 
+ 	s32 signal;
+-	enum cfg80211_signal_type signal_type;
+ 
+ 	void (*free_priv)(struct cfg80211_bss *bss);
+ 	u8 priv[0] __attribute__((__aligned__(sizeof(void *))));
+@@ -782,6 +780,7 @@ void cfg80211_scan_done(struct cfg80211_
+  *
+  * @wiphy: the wiphy reporting the BSS
+  * @bss: the found BSS
++ * @signal: the signal strength, type depends on the wiphy's signal_type
+  * @gfp: context flags
+  *
+  * This informs cfg80211 that BSS information was found and
+@@ -791,8 +790,7 @@ struct cfg80211_bss*
+ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 			  struct ieee80211_channel *channel,
+ 			  struct ieee80211_mgmt *mgmt, size_t len,
+-			  s32 signal, enum cfg80211_signal_type sigtype,
+-			  gfp_t gfp);
++			  s32 signal, gfp_t gfp);
+ 
+ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
+ 				      struct ieee80211_channel *channel,
+--- wireless-testing.orig/include/net/wireless.h	2009-02-18 18:33:20.000000000 +0100
++++ wireless-testing/include/net/wireless.h	2009-02-18 18:35:17.000000000 +0100
+@@ -200,6 +200,7 @@ struct ieee80211_supported_band {
+  * 	the regulatory_hint() API. This can be used by the driver
+  *	on the reg_notifier() if it chooses to ignore future
+  *	regulatory domain changes caused by other drivers.
++ * @signal_type: signal type reported in &struct cfg80211_bss.
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -213,6 +214,8 @@ struct wiphy {
+ 	bool custom_regulatory;
+ 	bool strict_regulatory;
+ 
++	enum cfg80211_signal_type signal_type;
++
+ 	int bss_priv_size;
+ 	u8 max_scan_ssids;
+ 
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-02-18 18:39:40.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.c	2009-02-18 18:39:50.000000000 +0100
+@@ -2423,7 +2423,7 @@ static int nl80211_send_bss(struct sk_bu
+ 	NLA_PUT_U16(msg, NL80211_BSS_CAPABILITY, res->capability);
+ 	NLA_PUT_U32(msg, NL80211_BSS_FREQUENCY, res->channel->center_freq);
+ 
+-	switch (res->signal_type) {
++	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
+ 		NLA_PUT_U32(msg, NL80211_BSS_SIGNAL_MBM, res->signal);
+ 		break;
+--- wireless-testing.orig/net/wireless/scan.c	2009-02-18 18:36:52.000000000 +0100
++++ wireless-testing/net/wireless/scan.c	2009-02-18 18:39:25.000000000 +0100
+@@ -370,7 +370,6 @@ cfg80211_bss_update(struct cfg80211_regi
+ 		found->pub.beacon_interval = res->pub.beacon_interval;
+ 		found->pub.tsf = res->pub.tsf;
+ 		found->pub.signal = res->pub.signal;
+-		found->pub.signal_type = res->pub.signal_type;
+ 		found->pub.capability = res->pub.capability;
+ 		found->ts = res->ts;
+ 		kref_put(&res->ref, bss_release);
+@@ -392,8 +391,7 @@ struct cfg80211_bss *
+ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 			  struct ieee80211_channel *channel,
+ 			  struct ieee80211_mgmt *mgmt, size_t len,
+-			  s32 signal, enum cfg80211_signal_type sigtype,
+-			  gfp_t gfp)
++			  s32 signal, gfp_t gfp)
+ {
+ 	struct cfg80211_internal_bss *res;
+ 	size_t ielen = len - offsetof(struct ieee80211_mgmt,
+@@ -401,7 +399,7 @@ cfg80211_inform_bss_frame(struct wiphy *
+ 	bool overwrite;
+ 	size_t privsz = wiphy->bss_priv_size;
+ 
+-	if (WARN_ON(sigtype == NL80211_BSS_SIGNAL_UNSPEC &&
++	if (WARN_ON(wiphy->signal_type == NL80211_BSS_SIGNAL_UNSPEC &&
+ 	            (signal < 0 || signal > 100)))
+ 		return NULL;
+ 
+@@ -415,7 +413,6 @@ cfg80211_inform_bss_frame(struct wiphy *
+ 
+ 	memcpy(res->pub.bssid, mgmt->bssid, ETH_ALEN);
+ 	res->pub.channel = channel;
+-	res->pub.signal_type = sigtype;
+ 	res->pub.signal = signal;
+ 	res->pub.tsf = le64_to_cpu(mgmt->u.probe_resp.timestamp);
+ 	res->pub.beacon_interval = le16_to_cpu(mgmt->u.probe_resp.beacon_int);
+@@ -607,9 +604,9 @@ static inline unsigned int elapsed_jiffi
+ }
+ 
+ static char *
+-ieee80211_bss(struct iw_request_info *info,
+-		      struct cfg80211_internal_bss *bss,
+-		      char *current_ev, char *end_buf)
++ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
++	      struct cfg80211_internal_bss *bss, char *current_ev,
++	      char *end_buf)
+ {
+ 	struct iw_event iwe;
+ 	u8 *buf, *cfg, *p;
+@@ -638,13 +635,13 @@ ieee80211_bss(struct iw_request_info *in
+ 	current_ev = iwe_stream_add_event(info, current_ev, end_buf, &iwe,
+ 					  IW_EV_FREQ_LEN);
+ 
+-	if (bss->pub.signal_type != CFG80211_SIGNAL_TYPE_NONE) {
++	if (wiphy->signal_type != CFG80211_SIGNAL_TYPE_NONE) {
+ 		memset(&iwe, 0, sizeof(iwe));
+ 		iwe.cmd = IWEVQUAL;
+ 		iwe.u.qual.updated = IW_QUAL_LEVEL_UPDATED |
+ 				     IW_QUAL_NOISE_INVALID |
+ 				     IW_QUAL_QUAL_UPDATED;
+-		switch (bss->pub.signal_type) {
++		switch (wiphy->signal_type) {
+ 		case CFG80211_SIGNAL_TYPE_MBM:
+ 			sig = bss->pub.signal / 100;
+ 			iwe.u.qual.level = sig;
+@@ -823,8 +820,8 @@ static int ieee80211_scan_results(struct
+ 			spin_unlock_bh(&dev->bss_lock);
+ 			return -E2BIG;
+ 		}
+-		current_ev = ieee80211_bss(info, bss,
+-						   current_ev, end_buf);
++		current_ev = ieee80211_bss(&dev->wiphy, info, bss,
++					   current_ev, end_buf);
+ 	}
+ 	spin_unlock_bh(&dev->bss_lock);
+ 	return current_ev - buf;
+--- wireless-testing.orig/net/mac80211/main.c	2009-02-18 18:40:56.000000000 +0100
++++ wireless-testing/net/mac80211/main.c	2009-02-18 18:42:37.000000000 +0100
+@@ -861,6 +861,11 @@ int ieee80211_register_hw(struct ieee802
+ 	/* mac80211 always supports monitor */
+ 	local->hw.wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
+ 
++	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
++		local->hw.wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
++	else if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
++		local->hw.wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
++
+ 	result = wiphy_register(local->hw.wiphy);
+ 	if (result < 0)
+ 		goto fail_wiphy_register;
+--- wireless-testing.orig/net/mac80211/scan.c	2009-02-18 18:40:15.000000000 +0100
++++ wireless-testing/net/mac80211/scan.c	2009-02-18 18:42:11.000000000 +0100
+@@ -63,20 +63,15 @@ ieee80211_bss_info_update(struct ieee802
+ {
+ 	struct ieee80211_bss *bss;
+ 	int clen;
+-	enum cfg80211_signal_type sigtype = CFG80211_SIGNAL_TYPE_NONE;
+ 	s32 signal = 0;
+ 
+-	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
+-		sigtype = CFG80211_SIGNAL_TYPE_MBM;
++	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+ 		signal = rx_status->signal * 100;
+-	} else if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC) {
+-		sigtype = CFG80211_SIGNAL_TYPE_UNSPEC;
++	else if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
+ 		signal = (rx_status->signal * 100) / local->hw.max_signal;
+-	}
+ 
+ 	bss = (void *)cfg80211_inform_bss_frame(local->hw.wiphy, channel,
+-						mgmt, len, signal, sigtype,
+-						GFP_ATOMIC);
++						mgmt, len, signal, GFP_ATOMIC);
+ 
+ 	if (!bss)
+ 		return NULL;
 
 
-Cheers,
-
-Dennis Aliev
-Capricorn Solutions
-(858) 952-1212
-
-Online and Onsite Tech Support
-support@capricornsolutions.com
-http://www.capricornsolutions.com
