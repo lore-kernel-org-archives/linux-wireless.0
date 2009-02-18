@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f167.google.com ([209.85.220.167]:45069 "EHLO
-	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753682AbZBVLtP (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55335 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754091AbZBRXZr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 06:49:15 -0500
-Received: by fxm11 with SMTP id 11so932171fxm.13
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2009 03:49:13 -0800 (PST)
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] at76c50x-usb: support cfg80211 scanning
-References: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com>
-	<8763j7qyfx.fsf@litku.valot.fi> <1235014330.6344.18.camel@rainbow>
-	<87fxibhr5q.fsf@litku.valot.fi>
-	<c4d76b3b0902192007s347ea4e3hcfa3fae1a1e3060b@mail.gmail.com>
-	<87hc2okyrm.fsf@litku.valot.fi>
-	<c4d76b3b0902211344j5cefcdd3p4e34ddc0ac5d78d@mail.gmail.com>
-	<c4d76b3b0902211400t7f5909d1o9ea8325f40db2aff@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 22 Feb 2009 13:49:11 +0200
-In-Reply-To: <c4d76b3b0902211400t7f5909d1o9ea8325f40db2aff@mail.gmail.com> (Jason Andryuk's message of "Sat\, 21 Feb 2009 17\:00\:41 -0500")
-Message-ID: <87tz6md748.fsf@litku.valot.fi> (sfid-20090222_124917_993815_C6F3A1BC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 18 Feb 2009 18:25:47 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v4 11/15] cfg80211: free rd on unlikely event on 11d hint
+Date: Wed, 18 Feb 2009 18:25:41 -0500
+Message-Id: <1234999545-14357-12-git-send-email-lrodriguez@atheros.com> (sfid-20090219_002605_664398_F2E40D13)
+In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
+References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jason Andryuk <jandryuk@gmail.com> writes:
+This was never happening but it was still wrong, so correct it.
 
-> On Sat, Feb 21, 2009 at 4:44 PM, Jason Andryuk <jandryuk@gmail.com> wrote:
->> I was trying at76_usb + mac80211 when that was in staging, but I have
->> not tried ~ at76c503a.berlios.de staging version.  I can take a look.
->
-> at76_usb in staging does not compile.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-This is in linux-wireless, right? That's because net/ieee80211.h was
-just removed. I'll have a patch ready for at76_usb and I'll send it to
-Greg.
-
-at76_usb compiles in Linus' tree (ie. linux-2.6), though. Or if you
-want to use wireless-testing wait for my patch.
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 69cd4f0..f5354df 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1341,7 +1341,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	 * it as it would indicate a mistake in the current design
+ 	 */
+ 	if (unlikely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
+-		goto out;
++		goto free_rd_out;
+ 
+ 	/* We keep this around for when CRDA comes back with a response so
+ 	 * we can intersect with that */
+@@ -1350,6 +1350,10 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	__regulatory_hint(wiphy, REGDOM_SET_BY_COUNTRY_IE,
+ 		country_ie_regdomain->alpha2, checksum, env);
+ 
++	goto out;
++
++free_rd_out:
++	kfree(rd);
+ out:
+ 	mutex_unlock(&cfg80211_mutex);
+ }
 -- 
-Kalle Valo
+1.6.0.3
+
