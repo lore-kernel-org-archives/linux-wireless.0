@@ -1,72 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2868 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758708AbZBLSjJ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53684 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761414AbZBRWps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 13:39:09 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	ath9k-devel@lists.ath9k.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 2/6] ath9k: save a few calls to ath9k_regd_get_eepromRD
-Date: Thu, 12 Feb 2009 13:38:54 -0500
-Message-Id: <1234463938-1350-3-git-send-email-me@bobcopeland.com> (sfid-20090212_193916_216642_CD21EBD1)
+	Wed, 18 Feb 2009 17:45:48 -0500
+Date: Wed, 18 Feb 2009 17:45:44 -0500
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ieee80211_regdom module parameter for cfg80211
+Message-ID: <20090218224544.GA28733@bombadil.infradead.org> (sfid-20090218_234554_172965_554711AB)
+References: <499C7DC0.4040608@lwfinger.net> <1234992712.4023.60.camel@johannes.local> <20090218220531.GD4246@tesla> <69e28c910902181434h37a1de57ob86df10d44271fe7@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c910902181434h37a1de57ob86df10d44271fe7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we already have a stack variable to track the eeprom regd,
-we can grab it up front it and save three calls to fetch it again.
+On Wed, Feb 18, 2009 at 11:34:58PM +0100, G=E1bor Stefanik wrote:
+> On Wed, Feb 18, 2009 at 11:05 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > On Wed, Feb 18, 2009 at 01:31:52PM -0800, Johannes Berg wrote:
+> >> On Wed, 2009-02-18 at 15:29 -0600, Larry Finger wrote:
+> >> > On at least one forum, I have seen the recommendation that a use=
+r set their
+> >> > regulatory domain by creating the file /etc/modprobe.d/cfg80211 =
+with the
+> >> > contents "ieee80211_regdom=3DUS".
+> >> >
+> >> > That works as long as CONFIG_WIRELESS_OLD_REGULATORY is set in t=
+heir .config,
+> >> > but will fail if it is not.
+> >> >
+> >> > Should the module_param statement be moved outside the ifdef
+> >> > CONFIG_WIRELESS_OLD...? Setting the module parameter that way mi=
+ght not make any
+> >> > sense, but it surely shouldn't kill wireless.
+> >>
+> >> I actually see no reason to not just /honour/ it by calling crda w=
+ith
+> >> its parameter if CONFIG_WIRELESS_OLD_REGULATORY isn't set.
+> >
+> > The idea was that things we want to get rid of will go in OLD_REG. =
+Static regdoms
+> > for US, JP and EU fall into that and so does the module parameter. =
+I believe
+> > it is silly to keep the module parameter around as we already have =
+userspace
+> > APIs to let users set this.
+>=20
+> Keeping the module parameter as a way to set the initial regdomain is
+> helpful for users who upgrade the kernel of an older distro.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath9k/regd.c |   13 +++++--------
- 1 files changed, 5 insertions(+), 8 deletions(-)
+This makes sense, but what distributions are using this module paramete=
+r?
+As far as I can tell its only users using it.
 
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index 0c632ff..9999462 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -371,11 +371,8 @@ ath9k_regd_find_country_by_rd(int regdmn)
- }
- 
- /* Returns the map of the EEPROM set RD to a country code */
--static u16 ath9k_regd_get_default_country(struct ath_hw *ah)
-+static u16 ath9k_regd_get_default_country(u16 rd)
- {
--	u16 rd;
--
--	rd = ath9k_regd_get_eepromRD(ah);
- 	if (rd & COUNTRY_ERD_FLAG) {
- 		struct country_code_to_enum_rd *country = NULL;
- 		u16 cc = rd & ~COUNTRY_ERD_FLAG;
-@@ -405,7 +402,7 @@ ath9k_get_regpair(int regdmn)
- int ath9k_regd_init(struct ath_hw *ah)
- {
- 	struct country_code_to_enum_rd *country = NULL;
--	int regdmn;
-+	u16 regdmn;
- 
- 	if (!ath9k_regd_is_eeprom_valid(ah)) {
- 		DPRINTF(ah->ah_sc, ATH_DBG_REGULATORY,
-@@ -413,14 +410,14 @@ int ath9k_regd_init(struct ath_hw *ah)
- 		return -EINVAL;
- 	}
- 
--	ah->regulatory.country_code = ath9k_regd_get_default_country(ah);
-+	regdmn = ath9k_regd_get_eepromRD(ah);
-+	ah->regulatory.country_code = ath9k_regd_get_default_country(regdmn);
- 
- 	if (ah->regulatory.country_code == CTRY_DEFAULT &&
--	    ath9k_regd_get_eepromRD(ah) == CTRY_DEFAULT)
-+	    regdmn == CTRY_DEFAULT)
- 		ah->regulatory.country_code = CTRY_UNITED_STATES;
- 
- 	if (ah->regulatory.country_code == CTRY_DEFAULT) {
--		regdmn = ath9k_regd_get_eepromRD(ah);
- 		country = NULL;
- 	} else {
- 		country = ath9k_regd_find_country(ah->regulatory.country_code);
--- 
-1.6.0.6
+And if there are distributions using it -- can we not expect them to st=
+op
+using it by they disable OLD_REG?
 
+> Adding a
+> line to /etc/modprobe.d/options would be a much easier way of setting
+> the right regdomain right during bootup than having to edit the init
+> scripts
 
+Using init scripts is just one way of doing this, its not the only way.
+Userspace can use user-configuration settings through wpa_supplicant,
+hostapd, GPS devices can also provide hints, say through the usage of
+GeoClue. That's really a lot neater than a module parameter or an init
+script.
+
+> and it is also something that CRDA's "make install" could do
+> automagically (like "make install regdom=3DHU").
+
+I'd rather not make that a practice provided we want to phase out OLD_R=
+EG
+and we want userspace to use nl80211 for this.
+
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
