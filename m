@@ -1,58 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:53400 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754860AbZBPQUy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 11:20:54 -0500
-Message-ID: <49999255.5070302@lwfinger.net> (sfid-20090216_172101_842691_B618D7B0)
-Date: Mon, 16 Feb 2009 10:20:37 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:60489 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751319AbZBREzL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2009 23:55:11 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 20:55:11 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Fix PTK/GTK handshake timeout
+Date: Wed, 18 Feb 2009 10:22:02 +0530
+Message-ID: <1234932722-10580-1-git-send-email-vasanth@atheros.com> (sfid-20090218_055515_819312_30B9A53D)
 MIME-Version: 1.0
-To: =?UTF-8?B?VmlrdG9yIElsaWphxaFpxIc=?= <viktor.ilijasic@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8187 not handling my usb card
-References: <63d38a500902152114o7b3c0f91j571a1e1d62e31d24@mail.gmail.com> <63d38a500902152133y264b783cl76800ed3efa46dd4@mail.gmail.com>
-In-Reply-To: <63d38a500902152133y264b783cl76800ed3efa46dd4@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Viktor Ilija=C5=A1i=C4=87 wrote:
->=20
-> If any more info is needed, please, feel free to ask.
->=20
-> $ tail /var/log/syslog
-> Feb 16 05:55:36 CH4 kernel: [ 1389.137978] usbcore: deregistering
-> interface driver rtl8187
-> Feb 16 05:55:41 CH4 kernel: [ 1394.294357] usbcore: registered new
-> interface driver rtl8187
-> Feb 16 05:55:45 CH4 kernel: [ 1397.480159] usb 4-3: new high speed US=
-B
-> device using ehci_hcd and address 4
-> Feb 16 05:55:45 CH4 kernel: [ 1397.678395] usb 4-3: configuration #1
-> chosen from 1 choice
->=20
-> $ lsusb
-> Bus 004 Device 004: ID 1b75:8187
-> Bus 004 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-> Bus 001 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Some APs don't start BA negotiation with the client before it is done
+with the key handshake in WPA/RSN. With those APs, key handshake times
+out if EAPOL frames are sent after addba request. So defer the BA negotiation
+until we are done with tx/rx of all EAPOL frames.
 
-The driver for USB devices is selected from the ID's, just as it is wit=
-h PCI
-devices.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath9k/rc.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Please send the details for your device as output from the 'lsusb -v' c=
-ommand. I
-don't need the data for any other USB stuff, just the 8187. Once I have=
- that
-info, I will send you a test patch for your sources.
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index a4e8631..c85bbd0 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -1533,7 +1533,8 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 			 tx_info_priv->tx.ts_longretry);
+ 
+ 	/* Check if aggregation has to be enabled for this tid */
+-	if (conf_is_ht(&sc->hw->conf)) {
++	if (conf_is_ht(&sc->hw->conf) &&
++	    !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
+ 		if (ieee80211_is_data_qos(fc)) {
+ 			u8 *qc, tid;
+ 			struct ath_node *an;
+-- 
+1.5.5.1
 
-Larry
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
