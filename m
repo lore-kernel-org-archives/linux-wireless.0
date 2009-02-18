@@ -1,70 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:33722 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753073AbZBMVn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 16:43:57 -0500
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=iso-8859-1
-Date: Fri, 13 Feb 2009 22:43:54 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <1234559990.4219.27.camel@johannes.local>
-Message-ID: <20090213214354.67600@gmx.net> (sfid-20090213_224400_664598_BCB4BE70)
-MIME-Version: 1.0
-References: <1234396421.16004.67.camel@johannes.local>	
- <20090213203641.199830@gmx.net> (sfid-20090213_213711_951136_CAB188EF)
- <1234559990.4219.27.camel@johannes.local>
-Subject: Re: [PATCH] mac80211: split IBSS/managed code
+Received: from mail.atheros.com ([12.36.123.2]:26872 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752886AbZBRWGS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2009 17:06:18 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 14:06:18 -0800
+Date: Wed, 18 Feb 2009 14:05:31 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: Johannes Berg <johannes@sipsolutions.net>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ieee80211_regdom module parameter for cfg80211
+Message-ID: <20090218220531.GD4246@tesla> (sfid-20090218_230623_742799_FAEA64BD)
+References: <499C7DC0.4040608@lwfinger.net> <1234992712.4023.60.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1234992712.4023.60.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes!
+On Wed, Feb 18, 2009 at 01:31:52PM -0800, Johannes Berg wrote:
+> On Wed, 2009-02-18 at 15:29 -0600, Larry Finger wrote:
+> > On at least one forum, I have seen the recommendation that a user set their
+> > regulatory domain by creating the file /etc/modprobe.d/cfg80211 with the
+> > contents "ieee80211_regdom=US".
+> > 
+> > That works as long as CONFIG_WIRELESS_OLD_REGULATORY is set in their .config,
+> > but will fail if it is not.
+> > 
+> > Should the module_param statement be moved outside the ifdef
+> > CONFIG_WIRELESS_OLD...? Setting the module parameter that way might not make any
+> > sense, but it surely shouldn't kill wireless.
+> 
+> I actually see no reason to not just /honour/ it by calling crda with
+> its parameter if CONFIG_WIRELESS_OLD_REGULATORY isn't set.
 
-> > * In IBSS beaconing doesn't work.
->=20
-> Odd, I'm sure that worked for me. What hw are you using?
+The idea was that things we want to get rid of will go in OLD_REG. Static regdoms
+for US, JP and EU fall into that and so does the module parameter. I believe
+it is silly to keep the module parameter around as we already have userspace
+APIs to let users set this.
 
-I have tested it with ath5k and atk9k. Without this patch (tag: master-=
-2009-02-12) beaconing works fine. Have you test it with a passive scann=
-er like kismet?
-
-> > * If you create a new IBSS network it
-> >   scans for other networks to often
-> >   3 times a second.
->
-> That might've happened here too, but given that I never used ibss
-> usually I didn't realise it was wrong ;)
-
-This is to fast consecutively, so it scans and scans but it is not list=
-ening on the working channel.
-
-> > * If you join an existent IBSS it does
-> >   the following strange things:
->
-> That does look a little strange,
-
-The STA information is expired much to fast. This is all the same STA/N=
-ode in an endless loop.
-
-> even if you disregard the fact that
-> you're using compat without %pM :)
-
-Why is a strange pointer used to display a MAC address, why not %x:%x:%=
-x:%x:%x:%x? (?)
-
-> I'll take a look at it and fix it up.
-
-Thanks!
-
-Regards
-Alina
-
---=20
-Jetzt 1 Monat kostenlos! GMX FreeDSL - Telefonanschluss + DSL=20
-f=FCr nur 17,95 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
-569a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
