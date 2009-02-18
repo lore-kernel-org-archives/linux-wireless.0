@@ -1,127 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pne-smtpout1-sn2.hy.skanova.net ([81.228.8.83]:51977 "EHLO
-	pne-smtpout1-sn2.hy.skanova.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752718AbZBXHF5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 02:05:57 -0500
-From: "Lars Ericsson" <Lars_Ericsson@telia.com>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>,
-	"'John W. Linville'" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: RE: SIOCGIWSCAN-race
-Date: Tue, 24 Feb 2009 06:55:39 +0100
-Message-ID: <385AA299C8A542839E1BCA8302900524@gotws1589> (sfid-20090224_080559_249393_11FE66F6)
+Received: from mail.atheros.com ([12.36.123.2]:33521 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752988AbZBRElw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2009 23:41:52 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 20:41:52 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 05/15] cfg80211: add regulatory_hint_core() to separate the core reg hint
+Date: Tue, 17 Feb 2009 20:21:52 -0800
+Message-ID: <1234930922-29367-6-git-send-email-lrodriguez@atheros.com> (sfid-20090218_054157_483406_E795CB8A)
+In-Reply-To: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
+References: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-In-Reply-To: <1235440092.4455.40.camel@johannes.local>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Mon, 2009-02-23 at 16:11 -0500, John W. Linville wrote:
-> > On Sat, Feb 21, 2009 at 08:33:06AM +0100, Lars Ericsson wrote:
-> > > Hi Johannes,
-> > > 
-> > > I have discovered and patched a race in the scanning function since a
-couple
-> > > of releases.
-> > > To day I checked the current Linux git and the problem is still there.
-> > > 
-> > > The problem is the sequence of events when the scan result is reported
-back.
-> > > The wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL); 
-> > > is called before ieee80211_hw_config(local);
-> > > 
-> > > ieee80211_hw_config(local) will trig the wpa_supplicant to select an
-AP. 
-> > > That may happen before the ieee80211_hw_config() is executed since the
-> > > wpa_supplicant
-> > > generated actions is executed by an other thread (wpa_supplicant).
-> > > 
-> > > The result is that:
-> > > - wpa_supplicant setup for an association to an ap using correct
-channel.
-> > > - ieee80211_hw_config() reset the channel to the value before the SCAN
-started.
-> > > - the association request will be sent out using the wrong channel.
-> > > 
-> > > 
-> > > Attached you will find the patch for 2.6.27. 
-> > > It is not a perfect patch since the code is duplicated but it works :)
-> > 
-> > Looks like the patch would need to be reworked -- the code in 2.6.29
-> > and later is different.  
-> 
-> and the new code with cfg80211 is even more different ;)
-> 
+This makes the core hint path more readable and allows for us to
+later make it obvious under what circumstances we need locking or not.
 
-OK, I have not moved in to the 'cfg80211' world, yet.
-Johannes; do you create the patch for this ?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   34 +++++++++++++++++++++++++---------
+ 1 files changed, 25 insertions(+), 9 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ba82312..6373a78 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 	case REGDOM_SET_BY_INIT:
+ 		return -EINVAL;
+ 	case REGDOM_SET_BY_CORE:
+-		/*
+-		 * Always respect new wireless core hints, should only happen
+-		 * when updating the world regulatory domain at init.
+-		 */
+-		return 0;
++		return -EINVAL;
+ 	case REGDOM_SET_BY_COUNTRY_IE:
+ 		if (unlikely(!is_an_alpha2(alpha2)))
+ 			return -EINVAL;
+@@ -1183,6 +1179,26 @@ new_request:
+ 	return call_crda(alpha2);
+ }
  
-> > Also, any reason we can't just move the
-> > wireless_send_event() down to done:?
-> 
-> seems fine
-
-Perfect, is it to late for 2.6.29 ?
-
-Lars
-
-> > Still, this doesn't feel quite right.  Shouldn't we be able to queue
-> > the userland-driven channel change until after the scan completes?
-> 
-> ?
-> we do that, well, we set it here:
->         local->sw_scanning = false;
->         ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-> 
-> but we claim to be on the user requested channel at all times, so that
-> should be ok
-> 
-> johannes
-> 
-> > John
-> > 
-> > diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> > index f5c7c33..8c13a91 100644
-> > --- a/net/mac80211/scan.c
-> > +++ b/net/mac80211/scan.c
-> > @@ -437,15 +437,6 @@ void ieee80211_scan_completed(struct 
-> ieee80211_hw *hw)
-> >  	local->last_scan_completed = jiffies;
-> >  	memset(&wrqu, 0, sizeof(wrqu));
-> >  
-> > -	/*
-> > -	 * local->scan_sdata could have been NULLed by the interface
-> > -	 * down code in case we were scanning on an interface that is
-> > -	 * being taken down.
-> > -	 */
-> > -	sdata = local->scan_sdata;
-> > -	if (sdata)
-> > -		wireless_send_event(sdata->dev, SIOCGIWSCAN, 
-> &wrqu, NULL);
-> > -
-> >  	if (local->hw_scanning) {
-> >  		local->hw_scanning = false;
-> >  		/*
-> > @@ -486,6 +477,15 @@ void ieee80211_scan_completed(struct 
-> ieee80211_hw *hw)
-> >  	rcu_read_unlock();
-> >  
-> >   done:
-> > +	/*
-> > +	 * local->scan_sdata could have been NULLed by the interface
-> > +	 * down code in case we were scanning on an interface that is
-> > +	 * being taken down.
-> > +	 */
-> > +	sdata = local->scan_sdata;
-> > +	if (sdata)
-> > +		wireless_send_event(sdata->dev, SIOCGIWSCAN, 
-> &wrqu, NULL);
-> > +
-> >  	ieee80211_mlme_notify_scan_completed(local);
-> >  	ieee80211_mesh_notify_scan_completed(local);
-> >  }
-> > 
-> 
++static int regulatory_hint_core(const char *alpha2)
++{
++	struct regulatory_request *request;
++
++	BUG_ON(last_request);
++
++	request = kzalloc(sizeof(struct regulatory_request),
++			  GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request->alpha2[0] = alpha2[0];
++	request->alpha2[1] = alpha2[1];
++	request->initiator = REGDOM_SET_BY_CORE;
++
++	last_request = request;
++
++	return call_crda(alpha2);
++}
++
+ void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ {
+ 	int r;
+@@ -1616,16 +1632,16 @@ int regulatory_init(void)
+ 	 * stuck with the static values. We ignore "EU" code as
+ 	 * that is not a valid ISO / IEC 3166 alpha2 */
+ 	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
+-		err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE,
+-					ieee80211_regdom, 0, ENVIRON_ANY);
++		err = regulatory_hint_core(ieee80211_regdom);
+ #else
+ 	cfg80211_regdomain = cfg80211_world_regdom;
+ 
+-	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", 0, ENVIRON_ANY);
+-	if (err)
++	err = regulatory_hint_core("00");
++	if (err) {
+ 		printk(KERN_ERR "cfg80211: calling CRDA failed - "
+ 		       "unable to update world regulatory domain, "
+ 		       "using static definition\n");
++	}
+ #endif
+ 
+ 	return 0;
+-- 
+1.6.1.2.253.ga34a
 
