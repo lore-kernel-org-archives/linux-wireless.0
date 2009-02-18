@@ -1,283 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16411 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:2016 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751198AbZBCAR7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 19:17:59 -0500
-Subject: [PATCH 2/7 v3] iwlwifi: simplify parameter setting to allow
-	support for 6000 series
-From: reinette chatre <reinette.chatre@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>
-In-Reply-To: <1233356232.2411.110.camel@rc-desk>
-References: <> <1233256157-21290-1-git-send-email-reinette.chatre@intel.com>
-	 <1233256157-21290-2-git-send-email-reinette.chatre@intel.com>
-	 <1233256157-21290-3-git-send-email-reinette.chatre@intel.com>
-	 <1233356232.2411.110.camel@rc-desk>
-Content-Type: text/plain
-Date: Mon, 02 Feb 2009 16:21:14 -0800
-Message-Id: <1233620474.2411.178.camel@rc-desk> (sfid-20090203_011805_086793_CD7E3758)
-Mime-Version: 1.0
+	id S1753246AbZBRXuV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2009 18:50:21 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/8] iwl3945: use iwl_rx_scan handlers
+Date: Wed, 18 Feb 2009 15:54:26 -0800
+Message-Id: <1235001273-7808-2-git-send-email-reinette.chatre@intel.com> (sfid-20090219_005042_984152_1F7EEBED)
+In-Reply-To: <1235001273-7808-1-git-send-email-reinette.chatre@intel.com>
+References: <>
+ <1235001273-7808-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-by parametrizing the set hw function, in addition to allowing for
-supporting the 6000 family significantly simplify the addition of new
-hardware.
+Patch makes use of iwl_rx_scan handler for 3945.
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>
 Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
-v2 fix HW params initialization: antennas are antennas and chains are num_of_ant()
-v3 fix TX antenna initialization of 5100 and 5150
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |  128 +--------------------------
+ 1 files changed, 1 insertions(+), 127 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl-100.c  |    2 +
- drivers/net/wireless/iwlwifi/iwl-5000.c |   76 ++++++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-6000.c |   10 ++++
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 +
- 4 files changed, 53 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-100.c b/drivers/net/wireless/iwlwifi/iwl-100.c
-index dbadaf4..4c4d165 100644
---- a/drivers/net/wireless/iwlwifi/iwl-100.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-100.c
-@@ -66,5 +66,7 @@ struct iwl_cfg iwl100_bgn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_A,
-+	.valid_rx_ant = ANT_AB,
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index f78a69a..cbd8871 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1518,127 +1518,6 @@ static void iwl3945_rx_beacon_notif(struct iwl_priv *priv,
+ 		queue_work(priv->workqueue, &priv->beacon_update);
+ }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index c5e9a66..535a46c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -43,6 +43,7 @@
- #include "iwl-sta.h"
- #include "iwl-helpers.h"
- #include "iwl-5000-hw.h"
-+#include "iwl-6000-hw.h"
- 
- /* Highest firmware API version supported */
- #define IWL5000_UCODE_API_MAX 1
-@@ -840,8 +841,18 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.tfd_size = sizeof(struct iwl_tfd);
- 	priv->hw_params.max_stations = IWL5000_STATION_COUNT;
- 	priv->hw_params.bcast_sta_id = IWL5000_BROADCAST_ID;
--	priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
--	priv->hw_params.max_inst_size = IWL50_RTC_INST_SIZE;
-+
-+	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
-+	case CSR_HW_REV_TYPE_6x00:
-+	case CSR_HW_REV_TYPE_6x50:
-+		priv->hw_params.max_data_size = IWL60_RTC_DATA_SIZE;
-+		priv->hw_params.max_inst_size = IWL60_RTC_INST_SIZE;
-+		break;
-+	default:
-+		priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
-+		priv->hw_params.max_inst_size = IWL50_RTC_INST_SIZE;
-+	}
-+
- 	priv->hw_params.max_bsm_size = 0;
- 	priv->hw_params.fat_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
-@@ -849,61 +860,40 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 
- 	priv->hw_params.sens = &iwl5000_sensitivity;
- 
--	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
--	case CSR_HW_REV_TYPE_5100:
--		priv->hw_params.tx_chains_num = 1;
--		priv->hw_params.rx_chains_num = 2;
--		priv->hw_params.valid_tx_ant = ANT_B;
--		priv->hw_params.valid_rx_ant = ANT_AB;
--		break;
--	case CSR_HW_REV_TYPE_5150:
--		priv->hw_params.tx_chains_num = 1;
--		priv->hw_params.rx_chains_num = 2;
--		priv->hw_params.valid_tx_ant = ANT_A;
--		priv->hw_params.valid_rx_ant = ANT_AB;
--		break;
--	case CSR_HW_REV_TYPE_5300:
--	case CSR_HW_REV_TYPE_5350:
--		priv->hw_params.tx_chains_num = 3;
--		priv->hw_params.rx_chains_num = 3;
--		priv->hw_params.valid_tx_ant = ANT_ABC;
--		priv->hw_params.valid_rx_ant = ANT_ABC;
--		break;
--	}
-+	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
-+	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
-+	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
-+	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
- 
- 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
--	case CSR_HW_REV_TYPE_5100:
--	case CSR_HW_REV_TYPE_5300:
--	case CSR_HW_REV_TYPE_5350:
--		/* 5X00 and 5350 wants in Celsius */
--		priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
--		break;
- 	case CSR_HW_REV_TYPE_5150:
- 		/* 5150 wants in Kelvin */
- 		priv->hw_params.ct_kill_threshold =
- 				iwl5150_get_ct_threshold(priv);
- 		break;
-+	default:
-+		/* all others want Celsius */
-+		priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
-+		break;
- 	}
- 
- 	/* Set initial calibration set */
- 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
--	case CSR_HW_REV_TYPE_5100:
--	case CSR_HW_REV_TYPE_5300:
--	case CSR_HW_REV_TYPE_5350:
-+	case CSR_HW_REV_TYPE_5150:
- 		priv->hw_params.calib_init_cfg =
--			BIT(IWL_CALIB_XTAL)		|
-+			BIT(IWL_CALIB_DC)		|
- 			BIT(IWL_CALIB_LO)		|
- 			BIT(IWL_CALIB_TX_IQ) 		|
--			BIT(IWL_CALIB_TX_IQ_PERD)	|
- 			BIT(IWL_CALIB_BASE_BAND);
-+
- 		break;
--	case CSR_HW_REV_TYPE_5150:
-+	default:
- 		priv->hw_params.calib_init_cfg =
--			BIT(IWL_CALIB_DC)		|
-+			BIT(IWL_CALIB_XTAL)		|
- 			BIT(IWL_CALIB_LO)		|
- 			BIT(IWL_CALIB_TX_IQ) 		|
-+			BIT(IWL_CALIB_TX_IQ_PERD)	|
- 			BIT(IWL_CALIB_BASE_BAND);
+-/* Service response to REPLY_SCAN_CMD (0x80) */
+-static void iwl3945_rx_reply_scan(struct iwl_priv *priv,
+-			      struct iwl_rx_mem_buffer *rxb)
+-{
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
+-	struct iwl_scanreq_notification *notif =
+-	    (struct iwl_scanreq_notification *)pkt->u.raw;
 -
- 		break;
- 	}
+-	IWL_DEBUG_RX(priv, "Scan request status = 0x%x\n", notif->status);
+-#endif
+-}
+-
+-/* Service SCAN_START_NOTIFICATION (0x82) */
+-static void iwl3945_rx_scan_start_notif(struct iwl_priv *priv,
+-				    struct iwl_rx_mem_buffer *rxb)
+-{
+-	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
+-	struct iwl_scanstart_notification *notif =
+-	    (struct iwl_scanstart_notification *)pkt->u.raw;
+-	priv->scan_start_tsf = le32_to_cpu(notif->tsf_low);
+-	IWL_DEBUG_SCAN(priv, "Scan start: "
+-		       "%d [802.11%s] "
+-		       "(TSF: 0x%08X:%08X) - %d (beacon timer %u)\n",
+-		       notif->channel,
+-		       notif->band ? "bg" : "a",
+-		       notif->tsf_high,
+-		       notif->tsf_low, notif->status, notif->beacon_timer);
+-}
+-
+-/* Service SCAN_RESULTS_NOTIFICATION (0x83) */
+-static void iwl3945_rx_scan_results_notif(struct iwl_priv *priv,
+-				      struct iwl_rx_mem_buffer *rxb)
+-{
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
+-	struct iwl_scanresults_notification *notif =
+-	    (struct iwl_scanresults_notification *)pkt->u.raw;
+-#endif
+-
+-	IWL_DEBUG_SCAN(priv, "Scan ch.res: "
+-		       "%d [802.11%s] "
+-		       "(TSF: 0x%08X:%08X) - %d "
+-		       "elapsed=%lu usec (%dms since last)\n",
+-		       notif->channel,
+-		       notif->band ? "bg" : "a",
+-		       le32_to_cpu(notif->tsf_high),
+-		       le32_to_cpu(notif->tsf_low),
+-		       le32_to_cpu(notif->statistics[0]),
+-		       le32_to_cpu(notif->tsf_low) - priv->scan_start_tsf,
+-		       jiffies_to_msecs(elapsed_jiffies
+-					(priv->last_scan_jiffies, jiffies)));
+-
+-	priv->last_scan_jiffies = jiffies;
+-	priv->next_scan_jiffies = 0;
+-}
+-
+-/* Service SCAN_COMPLETE_NOTIFICATION (0x84) */
+-static void iwl3945_rx_scan_complete_notif(struct iwl_priv *priv,
+-				       struct iwl_rx_mem_buffer *rxb)
+-{
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
+-	struct iwl_scancomplete_notification *scan_notif = (void *)pkt->u.raw;
+-#endif
+-
+-	IWL_DEBUG_SCAN(priv, "Scan complete: %d channels (TSF 0x%08X:%08X) - %d\n",
+-		       scan_notif->scanned_channels,
+-		       scan_notif->tsf_low,
+-		       scan_notif->tsf_high, scan_notif->status);
+-
+-	/* The HW is no longer scanning */
+-	clear_bit(STATUS_SCAN_HW, &priv->status);
+-
+-	/* The scan completion notification came in, so kill that timer... */
+-	cancel_delayed_work(&priv->scan_check);
+-
+-	IWL_DEBUG_INFO(priv, "Scan pass on %sGHz took %dms\n",
+-		       (priv->scan_bands & BIT(IEEE80211_BAND_2GHZ)) ?
+-							"2.4" : "5.2",
+-		       jiffies_to_msecs(elapsed_jiffies
+-					(priv->scan_pass_start, jiffies)));
+-
+-	/* Remove this scanned band from the list of pending
+-	 * bands to scan, band G precedes A in order of scanning
+-	 * as seen in iwl3945_bg_request_scan */
+-	if (priv->scan_bands & BIT(IEEE80211_BAND_2GHZ))
+-		priv->scan_bands &= ~BIT(IEEE80211_BAND_2GHZ);
+-	else if (priv->scan_bands &  BIT(IEEE80211_BAND_5GHZ))
+-		priv->scan_bands &= ~BIT(IEEE80211_BAND_5GHZ);
+-
+-	/* If a request to abort was given, or the scan did not succeed
+-	 * then we reset the scan state machine and terminate,
+-	 * re-queuing another scan if one has been requested */
+-	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+-		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+-		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+-	} else {
+-		/* If there are more bands on this scan pass reschedule */
+-		if (priv->scan_bands > 0)
+-			goto reschedule;
+-	}
+-
+-	priv->last_scan_jiffies = jiffies;
+-	priv->next_scan_jiffies = 0;
+-	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+-
+-	clear_bit(STATUS_SCANNING, &priv->status);
+-
+-	IWL_DEBUG_INFO(priv, "Scan took %dms\n",
+-		jiffies_to_msecs(elapsed_jiffies(priv->scan_start, jiffies)));
+-
+-	queue_work(priv->workqueue, &priv->scan_completed);
+-
+-	return;
+-
+-reschedule:
+-	priv->scan_pass_start = jiffies;
+-	queue_work(priv->workqueue, &priv->request_scan);
+-}
+-
+ /* Handle notification from uCode that card's power state is changing
+  * due to software, hardware, or critical temperature RFKILL */
+ static void iwl3945_rx_card_state_notif(struct iwl_priv *priv,
+@@ -1707,12 +1586,7 @@ static void iwl3945_setup_rx_handlers(struct iwl_priv *priv)
+ 	priv->rx_handlers[REPLY_STATISTICS_CMD] = iwl3945_hw_rx_statistics;
+ 	priv->rx_handlers[STATISTICS_NOTIFICATION] = iwl3945_hw_rx_statistics;
  
-@@ -1556,6 +1546,8 @@ struct iwl_cfg iwl5300_agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_ABC,
-+	.valid_rx_ant = ANT_ABC,
- };
+-	priv->rx_handlers[REPLY_SCAN_CMD] = iwl3945_rx_reply_scan;
+-	priv->rx_handlers[SCAN_START_NOTIFICATION] = iwl3945_rx_scan_start_notif;
+-	priv->rx_handlers[SCAN_RESULTS_NOTIFICATION] =
+-	    iwl3945_rx_scan_results_notif;
+-	priv->rx_handlers[SCAN_COMPLETE_NOTIFICATION] =
+-	    iwl3945_rx_scan_complete_notif;
++	iwl_setup_rx_scan_handlers(priv);
+ 	priv->rx_handlers[CARD_STATE_NOTIFICATION] = iwl3945_rx_card_state_notif;
  
- struct iwl_cfg iwl5100_bg_cfg = {
-@@ -1569,6 +1561,8 @@ struct iwl_cfg iwl5100_bg_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_B,
-+	.valid_rx_ant = ANT_AB,
- };
- 
- struct iwl_cfg iwl5100_abg_cfg = {
-@@ -1582,6 +1576,8 @@ struct iwl_cfg iwl5100_abg_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_B,
-+	.valid_rx_ant = ANT_AB,
- };
- 
- struct iwl_cfg iwl5100_agn_cfg = {
-@@ -1595,6 +1591,8 @@ struct iwl_cfg iwl5100_agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_B,
-+	.valid_rx_ant = ANT_AB,
- };
- 
- struct iwl_cfg iwl5350_agn_cfg = {
-@@ -1608,6 +1606,8 @@ struct iwl_cfg iwl5350_agn_cfg = {
- 	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_ABC,
-+	.valid_rx_ant = ANT_ABC,
- };
- 
- struct iwl_cfg iwl5150_agn_cfg = {
-@@ -1621,6 +1621,8 @@ struct iwl_cfg iwl5150_agn_cfg = {
- 	.eeprom_ver = EEPROM_5050_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5050_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_A,
-+	.valid_rx_ant = ANT_AB,
- };
- 
- MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 4515a60..b78d676 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -72,6 +72,8 @@ struct iwl_cfg iwl6000_2ag_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_BC,
-+	.valid_rx_ant = ANT_BC,
- };
- 
- struct iwl_cfg iwl6000_2agn_cfg = {
-@@ -85,6 +87,8 @@ struct iwl_cfg iwl6000_2agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_BC,
-+	.valid_rx_ant = ANT_BC,
- };
- 
- struct iwl_cfg iwl6050_2agn_cfg = {
-@@ -98,6 +102,8 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_BC,
-+	.valid_rx_ant = ANT_BC,
- };
- 
- struct iwl_cfg iwl6000_3agn_cfg = {
-@@ -111,6 +117,8 @@ struct iwl_cfg iwl6000_3agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_ABC,
-+	.valid_rx_ant = ANT_ABC,
- };
- 
- struct iwl_cfg iwl6050_3agn_cfg = {
-@@ -124,6 +132,8 @@ struct iwl_cfg iwl6050_3agn_cfg = {
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_ABC,
-+	.valid_rx_ant = ANT_ABC,
- };
- 
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 0a719ae..02e92be 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -211,6 +211,8 @@ struct iwl_cfg {
- 	u16  eeprom_calib_ver;
- 	const struct iwl_ops *ops;
- 	const struct iwl_mod_params *mod_params;
-+	u8   valid_tx_ant;
-+	u8   valid_rx_ant;
- };
- 
- /***************************
+ 	/* Set up hardware specific Rx handlers */
 -- 
 1.5.4.3
 
