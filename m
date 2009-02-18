@@ -1,97 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46482 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1760729AbZB0WCS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 17:02:18 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Fri, 27 Feb 2009 23:02:15 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090227220215.254900@gmx.net> (sfid-20090227_230235_228364_84EE0888)
+Received: from mail.atheros.com ([12.36.123.2]:33552 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754862AbZBREqw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2009 23:46:52 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 20:46:52 -0800
+Date: Wed, 18 Feb 2009 10:16:44 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [ath9k-devel] [PATCH v2] ath9k: Fix panic upon attach failure
+Message-ID: <20090218044644.GA8119@vasanth-laptop> (sfid-20090218_054704_524358_511CF2F3)
+References: <1234772707-17796-1-git-send-email-vasanth@atheros.com> <43e72e890902171146u42ffc9e8rc274608cdc713812@mail.gmail.com>
 MIME-Version: 1.0
-Subject: [PATCH] ath9k: Fix FIF_BCN_PRBRESP_PROMISC handling
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <43e72e890902171146u42ffc9e8rc274608cdc713812@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So that a new created IBSS network
-doesn't break on the first scan.
+On Wed, Feb 18, 2009 at 01:16:03AM +0530, Luis R. Rodriguez wrote:
+> On Mon, Feb 16, 2009 at 12:25 AM, Vasanthakumar Thiagarajan
+> <vasanth@atheros.com> wrote:
+> > [246916.338046]
+> > [246916.338048] Pid: 29265, comm: insmod Not tainted (2.6.29-rc4-wl #64) 9461DUU
+> > [246916.338051] EIP: 0060:[<c02ca274>] EFLAGS: 00010202 CPU: 0
+> > [246916.338055] EIP is at rollback_registered+0x24/0x220
+> > [246916.338057] EAX: 00000001 EBX: 00000000 ECX: 00000000 EDX: f122e8fc
+> > [246916.338059] ESI: 00000000 EDI: 00000000 EBP: f6595d30 ESP: f6595d1c
+> > [246916.338062]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+> > [246916.338064] Process insmod (pid: 29265, ti=f6594000 task=f7343fe0 task.ti=f6594000)
+> > [246916.338067] Stack:
+> > [246916.338068]  c04a2920 22222222 f6595d48 00000000 f122f080 f6595d48 c02ca489 f122e8fc
+> > [246916.338076]  f122e220 f122f080 f122e220 f6595d5c f8a03156 f122e220 f122f080 f122e220
+> > [246916.338085]  f6595d80 f87359af f122f080 00002000 f874e129 f122f150 f122f080 f6290000
+> > [246916.338094] Call Trace:
+> > [246916.338096]  [<c02ca489>] ? unregister_netdevice+0x19/0x70
+> > [246916.338100]  [<f8a03156>] ? ieee80211_unregister_hw+0x36/0xd0 [mac80211]
+> > [246916.338112]  [<f87359af>] ? ath_detach+0xcf/0x250 [ath9k]
+> > [246916.338127]  [<f8735d9c>] ? ath_attach+0x26c/0x740 [ath9k]
+> > [246916.338139]  [<f873c33a>] ? ath_pci_probe+0x13a/0x310 [ath9k]
+> > [246916.338151]  [<c0233e28>] ? _raw_spin_unlock+0x68/0x80
+> > [246916.338158]  [<c023ab8e>] ? local_pci_probe+0xe/0x10
+> > [246916.338162]  [<c023b8e0>] ? pci_device_probe+0x60/0x80
+> > [246916.338169]  [<c029e042>] ? driver_probe_device+0x82/0x1b0
+> > [246916.338174]  [<c029e1f9>] ? __driver_attach+0x89/0x90
+> > [246916.338180]  [<c029d97b>] ? bus_for_each_dev+0x4b/0x70
+> > [246916.338184]  [<c023b820>] ? pci_device_remove+0x0/0x40
+> > [246916.338190]  [<c029ded9>] ? driver_attach+0x19/0x20
+> > [246916.338193]  [<c029e170>] ? __driver_attach+0x0/0x90
+> > [246916.338197]  [<c029d317>] ? bus_add_driver+0x1b7/0x230
+> > [246916.338203]  [<c023b820>] ? pci_device_remove+0x0/0x40
+> > [246916.338206]  [<c029e399>] ? driver_register+0x69/0x140
+> > [246916.338212]  [<f859d000>] ? ath9k_init+0x0/0x54 [ath9k]
+> > [246916.338221]  [<c023bb4e>] ? __pci_register_driver+0x4e/0x90
+> > [246916.338225]  [<f859d000>] ? ath9k_init+0x0/0x54 [ath9k]
+> > [246916.338232]  [<f859d06b>] ? ath_pci_init+0x17/0x19 [ath9k]
+> > [246916.338238]  [<f859d017>] ? ath9k_init+0x17/0x54 [ath9k]
+> > [246916.338245]  [<c017148e>] ? tracepoint_update_probe_range+0x7e/0xb0
+> > [246916.338249]  [<c010111a>] ? do_one_initcall+0x2a/0x170
+> > [246916.338252]  [<c0149f26>] ? up_read+0x16/0x30
+> > [246916.338256]  [<c014aa9d>] ? __blocking_notifier_call_chain+0x4d/0x60
+> > [246916.338265]  [<c0162b1a>] ? sys_init_module+0x8a/0x1c0
+> > [246916.338269]  [<c022f888>] ? trace_hardirqs_on_thunk+0xc/0x10
+> > [246916.338272]  [<c0103ebf>] ? sysenter_do_call+0x12/0x43
+> > [246916.338276] Code: 8d bc 27 00 00 00 00 55 89 e5 56 89 c6 53 83 ec 0c a1 74 27 4a c0 85 c0 0f 85 4b 01 00 00 e8 04 7d 00 00 85 c0 0f 84 c9 01 00 00 <8b> 86 18 03 00 00 85 c0 0f 84 86 01 00 00 83 e8 01 0f 85 71 01
+> > [246916.338328] EIP: [<c02ca274>] rollback_registered+0x24/0x220 SS:ESP 0068:f6595d1c
+> > [246916.338335] ---[ end trace 76357c56a75ea34e ]---
+> >
+> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath9k/main.c |   25 +++++++++++++++++--------
+> >  1 files changed, 17 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+> > index 787c6f7..8b2a7b8 100644
+> > --- a/drivers/net/wireless/ath9k/main.c
+> > +++ b/drivers/net/wireless/ath9k/main.c
+> > @@ -1562,6 +1562,7 @@ bad2:
+> >  bad:
+> >        if (ah)
+> >                ath9k_hw_detach(ah);
+> > +       ath9k_exit_debug(sc);
+> >
+> >        return error;
+> >  }
+> > @@ -1570,7 +1571,7 @@ int ath_attach(u16 devid, struct ath_softc *sc)
+> >  {
+> >        struct ieee80211_hw *hw = sc->hw;
+> >        const struct ieee80211_regdomain *regd;
+> > -       int error = 0;
+> > +       int error = 0, i;
+> 
+> Better to use unsigned int for when in use in loops, I'm told it
+> performs better on some archs.
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
----
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath=
-9k/hw.c
-index 2acbb84..cedf00a 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -3696,9 +3696,18 @@ void ath9k_hw_setbssidmask(struct ath_softc *sc)
-=20
- void ath9k_hw_write_associd(struct ath_softc *sc)
- {
--	REG_WRITE(sc->sc_ah, AR_BSS_ID0, get_unaligned_le32(sc->curbssid));
--	REG_WRITE(sc->sc_ah, AR_BSS_ID1, get_unaligned_le16(sc->curbssid + 4)=
- |
--		  ((sc->curaid & 0x3fff) << AR_BSS_ID1_AID_S));
-+	const u8 *curbssid =3D sc->curbssid;
-+	u16 curaid =3D sc->curaid;
-+
-+	/* implement FIF_BCN_PRBRESP_PROMISC handling */
-+	if(sc->sc_ah->bcn_prbresp_promisc) {
-+		curbssid =3D ath_bcast_mac;
-+		curaid =3D 0;
-+	}
-+
-+	REG_WRITE(sc->sc_ah, AR_BSS_ID0, get_unaligned_le32(curbssid));
-+	REG_WRITE(sc->sc_ah, AR_BSS_ID1, get_unaligned_le16(curbssid + 4) |
-+		  ((curaid & 0x3fff) << AR_BSS_ID1_AID_S));
- }
-=20
- u64 ath9k_hw_gettsf64(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath9k/hw.h b/drivers/net/wireless/ath=
-9k/hw.h
-index 5ec416b..4d930c7 100644
---- a/drivers/net/wireless/ath9k/hw.h
-+++ b/drivers/net/wireless/ath9k/hw.h
-@@ -441,6 +441,7 @@ struct ath_hw {
- 	u32 btactive_gpio;
- 	u32 wlanactive_gpio;
- 	u32 ah_flags;
-+	bool bcn_prbresp_promisc;
-=20
- 	enum nl80211_iftype opmode;
- 	enum ath9k_power_mode power_mode;
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/a=
-th9k/main.c
-index f5f5739..c0d5336 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2397,11 +2397,12 @@ static void ath9k_configure_filter(struct ieee8=
-0211_hw *hw,
- 	ath9k_hw_setrxfilter(sc->sc_ah, rfilt);
-=20
- 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
--		if (*total_flags & FIF_BCN_PRBRESP_PROMISC) {
--			memcpy(sc->curbssid, ath_bcast_mac, ETH_ALEN);
--			sc->curaid =3D 0;
--			ath9k_hw_write_associd(sc);
--		}
-+		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
-+			sc->sc_ah->bcn_prbresp_promisc =3D true;
-+		else
-+			sc->sc_ah->bcn_prbresp_promisc =3D false;
-+
-+		ath9k_hw_write_associd(sc);
- 	}
-=20
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Set HW RX filter: 0x%x\n", sc->rx.rxfilt=
-er);
+I agree signed int is useless in this case, u8 is more than enough.
+But there are few more places we are doing similar things, this can
+be cleaned up in a separate patch.
 
---=20
-Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
-f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
-69a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Vasanth
