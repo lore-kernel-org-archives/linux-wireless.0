@@ -1,110 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cathcart.site5.com ([74.54.107.137]:45868 "EHLO
-	cathcart.site5.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599AbZBCHeN (ORCPT
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:55262 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbZBRSLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 02:34:13 -0500
-Message-ID: <4987EC74.7040706@compulab.co.il> (sfid-20090203_083421_156251_52FC01BD)
-Date: Tue, 03 Feb 2009 09:04:20 +0200
-From: Mike Rapoport <mike@compulab.co.il>
+	Wed, 18 Feb 2009 13:11:12 -0500
+Received: by bwz5 with SMTP id 5so54443bwz.13
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 10:11:09 -0800 (PST)
+To: Oliver Neukum <oliver@neukum.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jason Andryuk <jandryuk@gmail.com>, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, milan.plzik@gmail.com
+Subject: Re: at76_usb development
+References: <c4d76b3b0902032005m3847235cu42f963ca6ad796af@mail.gmail.com>
+	<20090204144317.GA3845@tuxdriver.com>
+	<da94abde0902040748l6194cdd3i7044c839f3110e5a@mail.gmail.com>
+	<200902051008.04061.oliver@neukum.org>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 18 Feb 2009 20:11:06 +0200
+In-Reply-To: <200902051008.04061.oliver@neukum.org> (Oliver Neukum's message of "Thu\, 5 Feb 2009 10\:08\:02 +0100")
+Message-ID: <87wsbnzkcl.fsf@litku.valot.fi> (sfid-20090218_191118_324878_B6A68282)
 MIME-Version: 1.0
-To: libertas-dev@lists.infradead.org
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH] libertas: if_spi: add ability to call board specific setup/teardown
- methods
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In certain cases it is required to perform board specific actions
-before activating libertas G-SPI interface. These actions may include
-power up of the chip, GPIOs setup, proper pin-strapping and SPI
-controller config.
-This patch adds ability to call board specific setup/teardown methods
+Oliver Neukum <oliver@neukum.org> writes:
 
+> Am Wednesday 04 February 2009 16:48:11 schrieb Kalle Valo:
+>> Yes, please cc also me. I try to keep up-to-date what's happening with
+>> at76-usb so that the same fixes will be fixed in at76c50x-usb as well.
+>
+> Here is what I found with at76-usb as it is in the current kernel:
+>
+>  static int at76_wait_completion(struct at76_priv *priv, int cmd)
+>  {
+>         int status = 0;
+>
+>         unsigned long timeout = jiffies + CMD_COMPLETION_TIMEOUT;
+>
+>         do {
+>
+> This can go wrong in a preemptible kernel. You have no guarantee the full
+> timeout is granted.
+>
+> @@ -1631,7 +1633,7 @@ static void at76_rx_tasklet(unsigned long param)
+>         buf = (struct at76_rx_buffer *)priv->rx_skb->data;
+>
+>         if (urb->status != 0) {
+> -               if (urb->status != -ENOENT && urb->status != -ECONNRESET)
+> +               if (urb->status != -ENOENT && urb->status != -ECONNRESET && urb->status != -ESHUTDOWN)
+>
+> Should also check for ESHUTDOWN, also in at76_mac80211_tx_callback()
 
-Signed-off-by: Mike Rapoport <mike@compulab.co.il>
----
- drivers/net/wireless/libertas/if_spi.c |   15 +++++++++++++++
- include/linux/spi/libertas_spi.h       |    7 +++++++
- 2 files changed, 22 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 7c02ea3..07311e7 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -42,6 +42,7 @@ struct if_spi_packet {
- struct if_spi_card {
- 	struct spi_device		*spi;
- 	struct lbs_private		*priv;
-+	struct libertas_spi_platform_data *pdata;
-
- 	char				helper_fw_name[FIRMWARE_NAME_MAX];
- 	char				main_fw_name[FIRMWARE_NAME_MAX];
-@@ -1022,6 +1023,17 @@ static int __devinit if_spi_probe(struct spi_device *spi)
-
- 	lbs_deb_enter(LBS_DEB_SPI);
-
-+	if (!pdata) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (pdata->setup) {
-+		err = pdata->setup(spi);
-+		if (err)
-+			goto out;
-+	}
-+
- 	/* Allocate card structure to represent this specific device */
- 	card = kzalloc(sizeof(struct if_spi_card), GFP_KERNEL);
- 	if (!card) {
-@@ -1029,6 +1041,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
- 		goto out;
- 	}
- 	spi_set_drvdata(spi, card);
-+	card->pdata = pdata;
- 	card->spi = spi;
- 	card->gpio_cs = pdata->gpio_cs;
- 	card->prev_xfer_time = jiffies;
-@@ -1158,6 +1171,8 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
- 	if_spi_terminate_spi_thread(card);
- 	lbs_remove_card(priv); /* will call free_netdev */
- 	gpio_free(card->gpio_cs);
-+	if (card->pdata->teardown)
-+		card->pdata->teardown(spi);
- 	free_if_spi_card(card);
- 	lbs_deb_leave(LBS_DEB_SPI);
- 	return 0;
-diff --git a/include/linux/spi/libertas_spi.h b/include/linux/spi/libertas_spi.h
-index ada71b4..79506f5 100644
---- a/include/linux/spi/libertas_spi.h
-+++ b/include/linux/spi/libertas_spi.h
-@@ -10,6 +10,9 @@
-  */
- #ifndef _LIBERTAS_SPI_H_
- #define _LIBERTAS_SPI_H_
-+
-+struct spi_device;
-+
- struct libertas_spi_platform_data {
- 	/* There are two ways to read data from the WLAN module's SPI
- 	 * interface. Setting 0 or 1 here controls which one is used.
-@@ -21,5 +24,9 @@ struct libertas_spi_platform_data {
-
- 	/* GPIO number to use as chip select */
- 	u16 gpio_cs;
-+
-+	/* Board specific setup/teardown */
-+	int (*setup)(struct spi_device *spi);
-+	int (*teardown)(struct spi_device *spi);
- };
- #endif
+Thanks. I added these comments to my todo list, and will fix them
+later.
+ 
 -- 
-1.5.6.4
-
-
--- 
-Sincerely yours,
-Mike.
-
+Kalle Valo
