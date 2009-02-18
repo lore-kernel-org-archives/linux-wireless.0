@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56520 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756473AbZBTAWU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 19:22:20 -0500
-Subject: Re: [PATCH v4 00/15] cfg80211: add a workqueue for regulatory
-	processing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WF+SHd8qFbz6Gfc2Ur2X"
-Date: Thu, 19 Feb 2009 14:29:31 +0100
-Message-Id: <1235050171.4023.64.camel@johannes.local> (sfid-20090220_012222_577108_18B37332)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:26621 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751028AbZBREeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2009 23:34:14 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 20:34:14 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 10/15] cfg80211: remove likely from an 11d hint case
+Date: Tue, 17 Feb 2009 20:21:57 -0800
+Message-ID: <1234930922-29367-11-git-send-email-lrodriguez@atheros.com> (sfid-20090218_053417_434804_E1950F3E)
+In-Reply-To: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
+References: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Truth of the matter this was confusing people so mark it as
+unlikely as that is the case now.
 
---=-WF+SHd8qFbz6Gfc2Ur2X
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-On Wed, 2009-02-18 at 18:25 -0500, Luis R. Rodriguez wrote:
-> This series has a few cleanups and minor fixes but mainly
-> adds a workqueue for cfg80211 to use to process all regulatory
-> hints. This v4 just changes the spin_lock to only be held _only_ during
-> dequeing (not like this matters much).
->=20
-> This series is also rebased on today's pull of wl. Using a new
-> SMTP server now, so hopefully this goes through fine in one shot.
-
-Except for the unlikely(WARN_ON()) which still looks weird, this seems
-ok to me. I don't know why you insist on having a wrapper for
-wiphy->wiphy_idx but it's ok :)
-
-johannes
-
---=-WF+SHd8qFbz6Gfc2Ur2X
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJnV64AAoJEKVg1VMiehFYYEQP/j7adlems0SmTJRCw8z2j9Wn
-kRlE21fCS6y3Wqggmn9lu7v9uDCush4oouqZdAdRYtjHz6Z+W5XQZ9twD5/lwqgA
-FYEtPJL86kiFM11hyB5j5BOpyCyf216jL3IOyUqhl1dKJROs2LxXJGJjF8f28zLP
-p/EXgx3n96oOvgp3DsC1zSCbHPQAS0pNp2DEXJBMEEgsBxR8dKjZXcpmW2s3mAeC
-uJps8vdYYpncIBJ2EhR+PKEstXt+2XtqtxvhdJTCXjNsj9AShtbXWUWOwiWLqQsJ
-KgbKV2rpy6rdyuY8BNKFhugbHSkN5csZc8VVLgGcwDdXxpKSdZgzbEULcPJr/7/X
-D4NCee4fluEN6s9k3R/gZ3Xgu92YFy+JEvR3aOhQL2cMQ3FSroqHbZKYQ8WnS1zY
-dZIs51cRDz79oYvrET4TONx3PDkGoF1FAI/Q1P3zwYsMm8hlhdhmWGsCZd+2V1J4
-kMJoFi2sKtUatz8QQ2U2XXPHAuEMplyGafLW2HVK46X/qQJkpqzVjclEz+jUKowl
-1XQL6BfeZOiXsmXf/nT0gD/fe8/iBMcWHPk+wzHLPKI9u8ABkzp0rbo59R7VzOVM
-jQzL9ykmTTKNsJl3NfQc4dTKKKIus2q3WFkiU3RWMWPf22cuBEOkxRyYZcisx9JF
-vO6KNsvaN7j8XbSHneAV
-=f0EO
------END PGP SIGNATURE-----
-
---=-WF+SHd8qFbz6Gfc2Ur2X--
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b474452..69cd4f0 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1331,14 +1331,16 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	if (!rd)
+ 		goto out;
+ 
+-	/* This will not happen right now but we leave it here for the
++	/*
++	 * This will not happen right now but we leave it here for the
+ 	 * the future when we want to add suspend/resume support and having
+ 	 * the user move to another country after doing so, or having the user
+-	 * move to another AP. Right now we just trust the first AP. This is why
+-	 * this is marked as likley(). If we hit this before we add this support
+-	 * we want to be informed of it as it would indicate a mistake in the
+-	 * current design  */
+-	if (likely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
++	 * move to another AP. Right now we just trust the first AP.
++	 *
++	 * If we hit this before we add this support we want to be informed of
++	 * it as it would indicate a mistake in the current design
++	 */
++	if (unlikely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
+ 		goto out;
+ 
+ 	/* We keep this around for when CRDA comes back with a response so
+-- 
+1.6.1.2.253.ga34a
 
