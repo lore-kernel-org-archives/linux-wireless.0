@@ -1,94 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vilya.visn.co.uk ([193.254.210.161]:54843 "EHLO
-	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752207AbZBCQja (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 11:39:30 -0500
-Message-ID: <44120.62.172.74.16.1233679156.squirrel@www.phantomjinx.co.uk> (sfid-20090203_173932_845333_605272E3)
-In-Reply-To: <20090203142807.GC10968@tuxdriver.com>
-References: <33918.62.172.74.16.1233233185.squirrel@www.phantomjinx.co.uk>
-    <3ace41890901290952o6412c8dco660a36ffc2fcf485@mail.gmail.com>
-    <41405.91.85.186.216.1233323986.squirrel@www.phantomjinx.co.uk>
-    <3ace41890901301117na1a81e8g90b25d6e8ff469ae@mail.gmail.com>
-    <35757.91.85.186.216.1233353086.squirrel@www.phantomjinx.co.uk>
-    <3ace41890902011709h285b4e9bi40da145f841533ea@mail.gmail.com>
-    <37630.82.152.223.193.1233582663.squirrel@www.phantomjinx.co.uk>
-    <49871083.5040309@lwfinger.net>
-    <35040.82.152.223.193.1233590184.squirrel@www.phantomjinx.co.uk>
-    <3ace41890902021548o39b5f02veacc0bd650e92c7@mail.gmail.com>
-    <20090203142807.GC10968@tuxdriver.com>
-Date: Tue, 3 Feb 2009 16:39:16 -0000 (UTC)
-Subject: Re: rtl8187 wireless issues
-From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from mx2.redhat.com ([66.187.237.31]:52835 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751479AbZBRMUp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2009 07:20:45 -0500
+Subject: Re: Missing link quality with wireless-testing
+From: Dan Williams <dcbw@redhat.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090218082520.GA26280@jm.kir.nu>
+References: <1234896777.4678.7.camel@californication>
+	 <1234899806.29785.35.camel@johannes.local>
+	 <1234902294.4678.12.camel@californication>
+	 <1234904111.29785.44.camel@johannes.local>
+	 <1234904978.4678.31.camel@californication>
+	 <1234913132.11832.10.camel@70-5-246-164.pools.spcsdns.net>
+	 <1234933059.21412.28.camel@californication>
+	 <20090218073104.GA23366@jm.kir.nu>
+	 <1234944391.21412.47.camel@californication>
+	 <20090218082520.GA26280@jm.kir.nu>
+Content-Type: text/plain
+Date: Wed, 18 Feb 2009 07:18:43 -0500
+Message-Id: <1234959523.13950.47.camel@localhost> (sfid-20090218_132052_960524_888C1F9B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2009-02-18 at 10:25 +0200, Jouni Malinen wrote:
+> On Wed, Feb 18, 2009 at 09:06:31AM +0100, Marcel Holtmann wrote:
+> 
+> > so it seems the missing value is affecting the details wpa_supplicant is
+> > handing out via its D-Bus interface. I didn't check the code yet to see
+> > what is actually happening or if I just happen to run an outdated
+> > version.
+> 
+> Yes, it looks like the dbus interface will get all three wext values
+> (quality, noise, level) regardless of whether they were available from
+> kernel or not. This does not cause any issues for wpa_supplicant, but if
+> other programs (e.g., NM) are using the "quality" value in preference to
+> "level", they would be processing zeros for all BSSes. If I understood
+> correctly, NM does indeed prefer to use "quality", so this will likely
+> explain why you are seeing different behavior with the qual->qual value
+> removed (= 0 for wpa_supplicant).
+> 
+> I don't know how NM would react to the "quality" value being removed,
+> but it would sound reasonable to do that in wpa_supplicant (and same for
 
-> On Mon, Feb 02, 2009 at 11:48:55PM +0000, Hin-Tak Leung wrote:
->
->> About dates in wireless-testing log - I had an impression (I could b=
-e
->> wrong) that the dates are sometimes git-format-patch/posting dates a=
-nd
->> not dates at which John commits to wireless-testing? (i.e. the dates
->> shown could be a lot earlier than time of commit, or time of commit =
-is
->> not shown by the dates associated with a patch - I thought this make=
-s
->> sense since the date of a patch should be the first time it appears =
-in
->> the "system", not the first time it gets in-coporated in a particula=
-r
->> tree, and patches can go between trees and should *not* pick up date
->> change on the way).
->
-> Patch dates in 'git log' are based on their reported creation time or
-> (for patches not from git) their posting time.  That's just the way
-> git works (at least by default).
->
-> I generally tag wireless-testing updates on the master branch with
-> a date-based tag.  You can see them like this:
->
-> 	git fetch --tags # just in case...
-> 	git tag | grep master
->
-> Hth!
+With WEXT, there are three ways to calculate pretty bars.  They *all*
+require max_qual values returned from the GIWRANGE handler, because
+otherwise you have no f**king clue what the upper or lower bounds are.
 
-Apologies. there might be some confusion. When I mentioned the date of =
-the
-30/01/2009, I was referring to the snapshot date of the tarball
-downloaded, ie. compat-wireless-$(date -I).tar.bz2.
+QUAL.QUAL
+--------------
 
-I haven't used wireless-testing's git repo thus far. If it will help wi=
-th
-the rate issue I have then will definitely install that version instead=
-=2E
+Requires:
+  - max_qual.qual > 0
+  - !(max_qual.updated & IW_QUAL_QUAL_INVALID)
+  - !(qual.updated & IW_QUAL_QUAL_INVALID)
 
-Cheers
-
-PGR
+pct = 100 * (qual.qual / max_qual.qual)
 
 
+QUAL.LEVEL in dBm
+--------------
 
---=20
-Laws are partly formed for the sake of good men, in order to instruct t=
-hem
-how they may live on friendly terms with one another, and partly for th=
-e
-sake of those who refuse to be instructed, whose spirit cannot be subdu=
-ed,
-or softened, or hindered from plunging into evil. [The Laws, Plato]
+Requires:
+  - max_qual.level == 0 (ie, dBm values)
+  - !(max_qual.updated & IW_QUAL_LEVEL_INVALID)
+  - !(qual.updated & IW_QUAL_LEVEL_INVALID)
+  - (max_qual.noise > 0) && !(max_qual.updated & IW_QUAL_NOISE_INVALID)
+      OR
+    (qual.noise > 0) && !(qual.updated & IW_QUAL_NOISE_INVALID)
 
-You fiend! Never have I encountered such corrupt and foul-minded
-perversity=85 Have you ever considered a career in the church?
-Bishop of Bath and Wells (Blackadder II)
+pct = (clamp driver values between -90 dBm and -20 dBm, then some voodoo)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+QUAL.LEVEL in RSSI
+--------------
+
+Requires:
+  - max_qual.level != 0
+  - !(max_qual.updated & IW_QUAL_LEVEL_INVALID)
+  - !(qual.updated & IW_QUAL_LEVEL_INVALID)
+
+pct = 100 * (qual.level / max_qual.level)
+
+
+Anyone think all this stuff really, really sucks?  Yes!!!  So lets just
+have drivers/stack provide a few sane values that userspace really
+doesn't have to go through this shit to calculate...
+
+<rant ends>
+
+NM is probably fine here with qual == 0 because I doubt the GIWRANGE
+handler is returning a valid max_qual.qual > 0 anymore with Johannes'
+patch.  Could be wrong though.
+
+> "noise") if the value was not available from the driver (based on the
+> WEXT flags or in case of nl80211, just based on the fact that these
+> values are never reported). I would expect this change to go in shortly
+> (assuming it does not trigger any critical issue with NM), but anyway,
+> this does not help with old versions.
+
+Ah right; the dbus interface shouldn't be appending "quality" to the
+dict if the driver doesn't provide valid quality (ie, max_qual.updated
+has the QUAL_INVALID bit set).  Same thing for noise and level.
+
+Dan
+
+
