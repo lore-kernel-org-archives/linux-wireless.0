@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50489 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752233AbZBYBZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 20:25:26 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 17:25:25 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] cfg80211: unregister genl multicast groups on failure
-Date: Tue, 24 Feb 2009 17:24:41 -0800
-Message-ID: <1235525081-23293-1-git-send-email-lrodriguez@atheros.com> (sfid-20090225_022530_050597_CE2BD791)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48756
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751372AbZBSBdu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2009 20:33:50 -0500
+Date: Wed, 18 Feb 2009 17:33:34 -0800 (PST)
+Message-Id: <20090218.173334.110224475.davem@davemloft.net> (sfid-20090219_023355_765294_D3215971)
+To: johannes@sipsolutions.net
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, tgraf@redhat.com
+Subject: Re: [PATCH] genetlink: introduce pre/post methods
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1234515865.4204.16.camel@johannes.local>
+References: <1234515865.4204.16.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were not doing so before.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 13 Feb 2009 10:04:25 +0100
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+> Sometimes doit/dumpit callbacks for a given family consist
+> of quite a bit of boilerplate code, for example locking or
+> generic sanity checks on messages.
+> 
+> These methods allow writing the boilerplate code just once
+> instead of copying it into all handlers.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Here's a better commit log. Sorry.
+I'm fine with this:
 
- net/wireless/nl80211.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Acked-by: David S. Miller <davem@davemloft.net>
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 04ef828..e5d9060 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2806,9 +2806,12 @@ int nl80211_init(void)
- 
- 	err = genl_register_mc_group(&nl80211_fam, &nl80211_scan_mcgrp);
- 	if (err)
--		goto err_out;
-+		goto err_out_scan_mc;
- 
- 	return 0;
-+
-+ err_out_scan_mc:
-+	genl_unregister_mc_group(&nl80211_fam, &nl80211_config_mcgrp);
-  err_out:
- 	genl_unregister_family(&nl80211_fam);
- 	return err;
--- 
-1.6.1.2.253.ga34a
-
+Feel free to toss it into the wireless tree.
