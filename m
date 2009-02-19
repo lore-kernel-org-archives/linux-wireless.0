@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:33005 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752715AbZBXTCg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 14:02:36 -0500
-Received: by bwz5 with SMTP id 5so6064848bwz.13
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 11:02:33 -0800 (PST)
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
-References: <20090223163626.20939.4879.stgit@tikku>
-	<20090223163738.20939.25890.stgit@tikku>
-	<1235442058.4455.71.camel@johannes.local>
-	<20090224090137.GB10851@jm.kir.nu> <87k57fy964.fsf@litku.valot.fi>
-	<20090224184343.GA12620@jm.kir.nu>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 24 Feb 2009 21:02:24 +0200
-In-Reply-To: <20090224184343.GA12620@jm.kir.nu> (Jouni Malinen's message of "Tue\, 24 Feb 2009 20\:43\:43 +0200")
-Message-ID: <877i3fy7y7.fsf@litku.valot.fi> (sfid-20090224_200240_900452_C289B928)
+Received: from bu3sch.de ([62.75.166.246]:33106 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753382AbZBSTUT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Feb 2009 14:20:19 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] b43: Move DMA stop sanity check
+Date: Thu, 19 Feb 2009 20:17:36 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200902192017.36403.mb@bu3sch.de> (sfid-20090219_202024_783347_5188231A)
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen <j@w1.fi> writes:
+Move the DMA stop sanity check up a few lines, so it's actually
+theoretically possible to trigger. (But it still shouldn't trigger, of course).
 
-> On Tue, Feb 24, 2009 at 08:36:03PM +0200, Kalle Valo wrote:
->> I see your point, I also have had to suffer because of buggy APs
->> having unstable TBTT. But the cost for this is high, currently it
->> increases two seconds the time to signal a lost connection to the user
->> space. I would hope to have something faster.
->
-> How can that take two seconds?
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-I was just referring to the current implementation.
+---
 
-> All that would be needed here is to send out a unicast Probe Request
-> to the current AP and wait for a Probe Response for a short timeout,
-> say 20 ms. That shouldn't take more than 50 ms or so at most.. 
 
-I agree. Or sending a null frame and waiting for ack is even faster,
-but I think mac80211 doesn't yet have infrastructure to check the
-acks. And not all hardware can support this, unfortunately.
-
-> If the current implementation uses two seconds for this, there is
-> certainly room for improvement there and I would rather see that
-> done than lose this extra protection against buggy implementations
-> (either AP or STA for that matter).
-
-Sure. But the thing is that there are a lot of buggy APs which are
-broken is so many different ways that I would like to have a limit for
-workarounds we create. But I guess this workaround might still be
-useful. I'll revisit this whenever I find time to work on roaming
-improvements, hopefully after few weeks.
+Index: wireless-testing/drivers/net/wireless/b43/dma.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2008-12-26 22:47:29.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/dma.c	2009-02-19 20:14:56.000000000 +0100
+@@ -1306,16 +1306,18 @@ int b43_dma_tx(struct b43_wldev *dev, st
+ 	}
+ 
+ 	spin_lock_irqsave(&ring->lock, flags);
++
+ 	B43_WARN_ON(!ring->tx);
++	/* Check if the queue was stopped in mac80211,
++	 * but we got called nevertheless.
++	 * That would be a mac80211 bug. */
++	B43_WARN_ON(ring->stopped);
++
+ 	if (unlikely(free_slots(ring) < SLOTS_PER_PACKET)) {
+ 		b43warn(dev->wl, "DMA queue overflow\n");
+ 		err = -ENOSPC;
+ 		goto out_unlock;
+ 	}
+-	/* Check if the queue was stopped in mac80211,
+-	 * but we got called nevertheless.
+-	 * That would be a mac80211 bug. */
+-	B43_WARN_ON(ring->stopped);
+ 
+ 	/* Assign the queue number to the ring (if not already done before)
+ 	 * so TX status handling can use it. The queue to ring mapping is
 
 -- 
-Kalle Valo
+Greetings, Michael.
