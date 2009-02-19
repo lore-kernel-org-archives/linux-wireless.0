@@ -1,87 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toronto053.server4you.de ([62.75.220.53]:44776 "EHLO
-	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbZBSRTZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 12:19:25 -0500
-Date: Thu, 19 Feb 2009 18:20:02 +0100
-From: Daniel Wagner <wagi@monom.org>
-To: Kevin Wilson <wkevils@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, networkmanager-list@gnome.org
-Subject: Re: NetworkManager and mac80211_hwsim
-Message-ID: <20090219172002.GE28934@toronto053.server4you.de> (sfid-20090219_181929_620940_8904C308)
-References: <20090216160016.GA29509@toronto053.server4you.de> <1234800284.4219.136.camel@johannes.local> <20090216172528.GB29509@toronto053.server4you.de> <1234807251.1666.9.camel@localhost.localdomain> <20090218080636.GA25504@toronto053.server4you.de> <55c333c0902190617w7ced9b7cu45ab0aad44305c77@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:14463 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752285AbZBSKPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Feb 2009 05:15:06 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 02:15:06 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Filter out beacons from other BSS in STA mode
+Date: Thu, 19 Feb 2009 15:41:52 +0530
+Message-ID: <1235038312-17974-1-git-send-email-vasanth@atheros.com> (sfid-20090219_111511_995041_B838E117)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55c333c0902190617w7ced9b7cu45ab0aad44305c77@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 19, 2009 at 04:17:06PM +0200, Kevin Wilson wrote:
-> Hello,
-> 
-> Can you please tell against which version of hal source you
-> made this patch ? I tried it against the hal sources in my
-> fedora distro and got errors when patching.
+Passing beacons received from other BSS to s/w in non-scanning
+state is unnecessary in STA mode. This patch filters them out in
+h/w.
 
-Argh, I'm stupid. I created the patch against the last 0.5.11 release.
-I didn't see there is a 0.5.12rc on the fly. Anyway here is a new
-version against the head. I think it could be send upstream. It doesn`t
-look that bad anymore. What do you think?
-
-daniel
-
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
+ drivers/net/wireless/ath9k/mac.h  |    3 ++-
+ drivers/net/wireless/ath9k/recv.c |   11 ++++++-----
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
->From 14c76a6642a1ed4f93b6dfed96af6d7513102c88 Mon Sep 17 00:00:00 2001
-From: Daniel Wagner <wagi@monom.org>
-Date: Thu, 19 Feb 2009 18:14:09 +0100
-Subject: [PATCH] Add info.linux.driver property for mac80211_hwsim devices
-
-NetworkManager wants to read info.linux.driver for all devices.
-Since a mac80211_hwsim device doesn't have a real parent the
-property is not added. So let's add this property if there
-is no proper parent and it is a 80211 device.
-
-Signed-off-by: Daniel Wagner <wagi@monom.org>
----
- hald/linux/device.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
-
-diff --git a/hald/linux/device.c b/hald/linux/device.c
-index 21b9176..b68d3ef 100644
---- a/hald/linux/device.c
-+++ b/hald/linux/device.c
-@@ -1576,6 +1576,7 @@ net_add (const gchar *sysfs_path, const gchar *device_file, HalDevice *parent_de
- 	guint media_type;
- 	gint flags;
- 	gint addr_len;
-+	gboolean real_parent = TRUE;
+diff --git a/drivers/net/wireless/ath9k/mac.h b/drivers/net/wireless/ath9k/mac.h
+index 74b660a..862a63f 100644
+--- a/drivers/net/wireless/ath9k/mac.h
++++ b/drivers/net/wireless/ath9k/mac.h
+@@ -566,8 +566,9 @@ enum ath9k_rx_filter {
+ 	ATH9K_RX_FILTER_BEACON = 0x00000010,
+ 	ATH9K_RX_FILTER_PROM = 0x00000020,
+ 	ATH9K_RX_FILTER_PROBEREQ = 0x00000080,
+-	ATH9K_RX_FILTER_PSPOLL = 0x00004000,
+ 	ATH9K_RX_FILTER_PHYERR = 0x00000100,
++	ATH9K_RX_FILTER_MYBEACON = 0x00000200,
++	ATH9K_RX_FILTER_PSPOLL = 0x00004000,
+ 	ATH9K_RX_FILTER_PHYRADAR = 0x00002000,
+ };
  
- 	d = NULL;
- 	d = hal_device_new ();
-@@ -1588,6 +1589,7 @@ net_add (const gchar *sysfs_path, const gchar *device_file, HalDevice *parent_de
- 				HAL_ERROR (("Device '%s' has no parent and couldn't find computer root object."));
- 				goto error;
- 			}
-+			real_parent = FALSE;
- 		}
-         }
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 28ad1d5..23b6f54 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -375,14 +375,15 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 	if (sc->rx.rxfilter & FIF_CONTROL)
+ 		rfilt |= ATH9K_RX_FILTER_CONTROL;
  
-@@ -1662,6 +1664,11 @@ net_add (const gchar *sysfs_path, const gchar *device_file, HalDevice *parent_de
- 			hal_device_property_set_string (d, "info.category", "net.80211");
- 			hal_device_add_capability (d, "net.80211");
- 			hal_device_property_set_uint64 (d, "net.80211.mac_address", mac_address);
-+
-+			if (!real_parent) {
-+				/* This is must be a mac80211_hwsim device */
-+				hal_device_property_set_string (parent_dev, "info.linux.driver", "mac80211_hwsim");
-+			}
- 		} else if (stat (bridge_path, &s) == 0 && (s.st_mode & S_IFDIR)) {
- 			hal_device_property_set_string (d, "info.product", "Bridge Interface");
- 			hal_device_property_set_string (d, "info.category", "net.bridge");
+-	if (sc->sc_ah->opmode == NL80211_IFTYPE_STATION ||
+-	    sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC)
++	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
++	    !(sc->rx.rxfilter & FIF_BCN_PRBRESP_PROMISC))
++		rfilt |= ATH9K_RX_FILTER_MYBEACON;
++	else
+ 		rfilt |= ATH9K_RX_FILTER_BEACON;
+ 
+-	/* If in HOSTAP mode, want to enable reception of PSPOLL frames
+-	   & beacon frames */
++	/* If in HOSTAP mode, want to enable reception of PSPOLL frames */
+ 	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP)
+-		rfilt |= (ATH9K_RX_FILTER_BEACON | ATH9K_RX_FILTER_PSPOLL);
++		rfilt |= ATH9K_RX_FILTER_PSPOLL;
+ 
+ 	return rfilt;
+ 
 -- 
-1.6.0.2.GIT
+1.5.5.1
 
