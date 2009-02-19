@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:5093 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756748AbZB0Tbc (ORCPT
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:57246 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758529AbZBSGwA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 14:31:32 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so353734eya.37
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2009 11:31:29 -0800 (PST)
-Message-ID: <49A83F8E.1050201@gmail.com> (sfid-20090227_203135_998520_48299492)
-Date: Fri, 27 Feb 2009 20:31:26 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Thu, 19 Feb 2009 01:52:00 -0500
+Received: by bwz5 with SMTP id 5so645140bwz.13
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 22:51:58 -0800 (PST)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	marcel@holtmann.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: default OLD_REG to n
+References: <1235002285-14812-1-git-send-email-lrodriguez@atheros.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 19 Feb 2009 08:51:55 +0200
+In-Reply-To: <1235002285-14812-1-git-send-email-lrodriguez@atheros.com> (Luis R. Rodriguez's message of "Wed\, 18 Feb 2009 19\:11\:25 -0500")
+Message-ID: <878wo2j4vo.fsf@litku.valot.fi> (sfid-20090219_075208_448973_A88E244F)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Fwd: b43* linux driver, more ids dev
-References: <ee588a540902270946h13e03b6el71de5237a458b7a3@mail.gmail.com> <49A83765.30202@lwfinger.net> <49A83BC5.2020204@gmail.com> <200902272019.08275.mb@bu3sch.de>
-In-Reply-To: <200902272019.08275.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
+"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
 
-> On Friday 27 February 2009 20:15:17 Xose Vazquez Perez wrote:
- >>
->> It smells like another crap_driver for staging tree.
- >>
+> Since we are not following the schedule to remove OLD_REG by 2.6.29
+> lets simply set it to default to n for 2.6.30 and schedule its
+> removal for 2.6.31
 
-> No it doesn't. It is closed source.
-> Please read the documentation before posting the next mail. Thanks.
+[...]
 
-I did a grep and I saw "GPL", but now I also see the
-"special exception" in the head of the code and the lib/wlc_hybrid.o_shipped file
+>  config WIRELESS_OLD_REGULATORY
+>  	bool "Old wireless static regulatory definitions"
+> -	default y
+> +	default n
+>  	---help---
+>  	  This option enables the old static regulatory information
+>  	  and uses it within the new framework. This is available
 
-Sorry about that.
+What does this mean in practise? If a user compiles the kernel with
+the default settings, the wireless will work only if crda is
+installed?
 
--thanks-
+If that's the case, this is way too early. All lazy people, like me,
+will get very frustrated because of this. They don't want to make all
+those hoops to install crda, they just want their wireless to work.
 
-regards,
+For example, I still can't find crda from debian unstable. In my
+opinion we need to wait _at least_ a year after it's available in all
+distros, and only then we can make crda the default.
+
+Let's not make the same mistake the udev people did. That was a
+disaster few years back, I suffered from it multiple times.
+Fortunately things have calmed down now and I can safely update the
+kernel.
+
 -- 
-Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea, Prestige, ...
+Kalle Valo
