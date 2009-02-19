@@ -1,52 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:35855 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750882AbZBXSm1 (ORCPT
+Received: from mail-bw0-f167.google.com ([209.85.218.167]:39030 "EHLO
+	mail-bw0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbZBSGdl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 13:42:27 -0500
-Message-ID: <49A43F8A.5000500@lwfinger.net> (sfid-20090224_194239_154920_B74432D0)
-Date: Tue, 24 Feb 2009 12:42:18 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 19 Feb 2009 01:33:41 -0500
+Received: by bwz11 with SMTP id 11so317942bwz.13
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 22:33:39 -0800 (PST)
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] at76c50x-usb: support cfg80211 scanning
+References: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com>
+	<8763j7qyfx.fsf@litku.valot.fi> <1235014330.6344.18.camel@rainbow>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 19 Feb 2009 08:33:37 +0200
+In-Reply-To: <1235014330.6344.18.camel@rainbow> (Jason Andryuk's message of "Wed\, 18 Feb 2009 22\:32\:10 -0500")
+Message-ID: <87fxibhr5q.fsf@litku.valot.fi> (sfid-20090219_073345_972619_F6DA60F0)
 MIME-Version: 1.0
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-CC: Lorenzo Nava <navalorenx@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: More data on open-source firmware crash
-References: <49A1A331.9080205@lwfinger.net> <80C13710-6BA9-4F14-95B5-82C3043CE93B@ing.unibs.it> <49A41F1D.9060300@lwfinger.net> <03E07CC7-A971-4EDD-9363-628B61E94A92@ing.unibs.it> <49A421ED.7000801@lwfinger.net> <7528B52E-1B77-4CA9-A17F-01E24FDF81DC@ing.unibs.it>
-In-Reply-To: <7528B52E-1B77-4CA9-A17F-01E24FDF81DC@ing.unibs.it>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Francesco Gringoli wrote:
-> 
-> On Feb 24, 2009, at 5:35 PM, Larry Finger wrote:
-> 
->> Francesco Gringoli wrote:
->>> What about drop info from dmesg? Another try could be halve the dma
->>> queue, I believe now it is 64 slots. Could you give a try setting it
->>> to 32?
->>
->> The RX DMA queue was 64 and TX was 256. Both will be 32 in my next run.
->>
->> I don't understand the "drop info from dmesg" part.
-> Sorry Larry,
-> 
-> sometimes when I modify something, I can read
-> 
-> [334415.451028] b43-phy244 debug: RX: Packet dropped
-> 
-> in the dmesg because the received bytes were not correctly copied
-> between the "air-buffer" to the internal buffer and finally to the
-> rx-fifo along with the rxheader.
-> 
-> Did you notice something similar?
+Jason Andryuk <jandryuk@gmail.com> writes:
 
-I hadn't noticed them before, but I do see one of these messages just before
-some of my out-of-order cookies. There is no associated diagnostic message, thus
-it must come from the status.rate_index test. I'll see if I can get some info
-from there.
+> On Wed, 2009-02-18 at 22:31 +0200, Kalle Valo wrote:
+>> Jason Andryuk <jandryuk@gmail.com> writes:
+>> 
+>> > Additionally, I added some ieee80211_{wake,stop}_queues calls that
+>> > were contained in the older at76_usb.  There is ambiguity as to
+>> > whether at76_join should be called before or after waking the queues.
+>> 
+>> I would like to have a separate patch for this. Also I would like to
+>> know what kind of bug this fixes.
+>> 
+>> Sorry to be so picky, but I'm going to push the driver into mainline
+>> soon and I try avoid regressions right now.
+>
+> I must admit, I do not have the best understanding of the driver.
 
-Larry
+Don't worry, we both are new here. I'm not that familiar with usb :)
 
+> As such, I was making modifications to at76c50x-usb to be as similar
+> to at76_usb+mac80211 as possible to prevent the driver from
+> oops-ing.
+
+I'm very glad that you have been working with that, it has helped me a
+lot.
+
+> I don't know the proper usage of ieee80211_{wake,stop}_queues, but my
+> understanding is they should be called at different times to indicate
+> readiness for transmitting frames to the mac80211 stack.
+
+Yes, you have understood correctly. It's just that I don't see any
+problems with my device, so I would like to understand why these
+changes are needed and what issue they fix. I didn't analyse this
+properly yet, though.
+
+> I am having issues with my Linksys WUSB11 adapter.  It has the intersil
+> 3861 and the scan command is reporting Command Status of 0x03 - Invalid
+> parameter.  For right now, scanning does not work for me.
+
+Oh, that's bad. And the device is working fine with the old at76_usb
+driver? Can you send some debug logs, please? Especially I'm
+interested about hardware differences between your Linksys and the
+Belkin I have.
+
+> Sorry about the corrupt patches.  The gmail web interface was causing
+> problems.
+
+No problem, I'm used to this. For example at work our mail servers are
+corrupting all patches. We need to send them as attachments and even
+gzip so that the mail don't convert tabs to spaces. Not fun at all :/
+
+-- 
+Kalle Valo
