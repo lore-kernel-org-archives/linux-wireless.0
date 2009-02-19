@@ -1,87 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:56992 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751933AbZBIWdN (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.30]:46506 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752569AbZBSWTk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 17:33:13 -0500
-Received: by bwz5 with SMTP id 5so1969679bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 14:33:10 -0800 (PST)
+	Thu, 19 Feb 2009 17:19:40 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so258395yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 14:19:39 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4990AC02.6030703@lwfinger.net>
-References: <6ad5d99d0902091343v693173f2w61ff60a216bb15e9@mail.gmail.com>
-	 <4990AC02.6030703@lwfinger.net>
-Date: Mon, 9 Feb 2009 22:33:09 +0000
-Message-ID: <3ace41890902091433g4c4e0c17n9e01aabc613d5bb6@mail.gmail.com> (sfid-20090209_233317_718956_127A4E31)
-Subject: Re: rtl8187 in Toshiba L300 linux troubles
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Jorge Munoz <jorgeroden1@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <43e72e890902182351jae378d5m4515a23a3ae28a91@mail.gmail.com>
+References: <1235002285-14812-1-git-send-email-lrodriguez@atheros.com>
+	 <878wo2j4vo.fsf@litku.valot.fi>
+	 <43e72e890902182351jae378d5m4515a23a3ae28a91@mail.gmail.com>
+Date: Thu, 19 Feb 2009 14:19:39 -0800
+Message-ID: <43e72e890902191419j2c34e5adjc99285b9d3761fb6@mail.gmail.com> (sfid-20090219_231945_166675_759281DE)
+Subject: Re: [PATCH] cfg80211: default OLD_REG to n
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	marcel@holtmann.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 9, 2009 at 10:19 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Jorge Munoz wrote:
->> I'm a L300 Toshiba user, this laptop has a rtl8187 wifi card (Bus 007
->> Device 003: ID 0bda:8198 Realtek Semiconductor Corp.).
->> Running down  Ubuntu 8.10 kernel 2.6.27.9-generic based distro
->> (www.molinux.info <http://www.molinux.info>), wifi does not work
->> correctly, it fall down in few minutes. We can improve this behaviour by
->> fixing bit rate ($iwconfig wlan0 rate 12M fixed).
->> Now there is a new kernel 2.6.27-11-generic. I would like to know if
->> there are improvements about this bug.
->> All my colleagues from my region (Castilla La Mancha, Spain) have the
->> same laptop (28.000 were delivered by spanish goverment). We have
->> created a patch to fix the bit rate and I don't know if it's necessary
->> maintain it.
->>  I'll be grateful for your support.
+On Wed, Feb 18, 2009 at 11:51 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Feb 18, 2009 at 10:51 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+>> "Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
+>>
+>>> Since we are not following the schedule to remove OLD_REG by 2.6.29
+>>> lets simply set it to default to n for 2.6.30 and schedule its
+>>> removal for 2.6.31
+>>
+>> [...]
+>>
+>>>  config WIRELESS_OLD_REGULATORY
+>>>       bool "Old wireless static regulatory definitions"
+>>> -     default y
+>>> +     default n
+>>>       ---help---
+>>>         This option enables the old static regulatory information
+>>>         and uses it within the new framework. This is available
+>>
+>> What does this mean in practise? If a user compiles the kernel with
+>> the default settings, the wireless will work only if crda is
+>> installed?
+>
+> No, it means you get the static world regdomain by default instead of
+> the static US world regdomain by default.
+>
+>> If that's the case, this is way too early. All lazy people, like me,
+>> will get very frustrated because of this. They don't want to make all
+>> those hoops to install crda, they just want their wireless to work.
+>>
+>> For example, I still can't find crda from debian unstable. In my
+>> opinion we need to wait _at least_ a year after it's available in all
+>> distros, and only then we can make crda the default.
+>
+> Keep in mind OLD_REG still alows usage of CRDA, OLD_REG just means "3
+> static regdomains, ieee80211_regdom module parameter, and make the US
+> static regdom the default". That's all.
+>
+>> Let's not make the same mistake the udev people did. That was a
+>> disaster few years back, I suffered from it multiple times.
+>> Fortunately things have calmed down now and I can safely update the
+>> kernel.
+>
+> Whatever works.
 
-That sounds like various things we have worked on recently.
-Unfortunately you will need to install compat-wireless
-(see http://linuxwireless.org/), or wait until about 2.6.30 to get
-some of the improvements. I say go and install compat-wireless and
-publicise your experience with compat-wireless to your colleagues, and
-if it does not work, come back.
-2.6.27.9 is quite old.
+I'm going to re-work this patch a bit more with some other work to
+make it things a bit clear.
 
->
-> There have been patches for the RTL8187B in recent kernels that have
-> been sent to stable; however, I don't follow the updates to Ubuntu
-> kernels and do not know if they have been applied there.
->
-> The main patch that did the most to improve stability for the rtl8187
-> devices was:
->
-> ================
->
-> commit 2fcbab044a3faf4d4a6e269148dd1f188303b206
-> Author: Larry Finger <Larry.Finger@lwfinger.net>
-> Date:   Fri Jan 23 11:46:32 2009 -0600
->
->    rtl8187: Add termination packet to prevent stall
->
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> index 6ad6bac..22bc07e 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -273,6 +273,7 @@ static int rtl8187_tx(struct ieee80211_hw *dev,
-> struct sk_buff *skb)
->
->        usb_fill_bulk_urb(urb, priv->udev, usb_sndbulkpipe(priv->udev, ep),
->                          buf, skb->len, rtl8187_tx_cb, skb);
-> +       urb->transfer_flags |= URB_ZERO_PACKET;
->        usb_anchor_urb(urb, &priv->anchored);
->        rc = usb_submit_urb(urb, GFP_ATOMIC);
->        if (rc < 0) {
->
->
->
-> Larry
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+ Luis
