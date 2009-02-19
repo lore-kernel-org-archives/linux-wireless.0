@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57538 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754515AbZBEJ36 (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:28673 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082AbZBSDcO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2009 04:29:58 -0500
-Date: Thu, 5 Feb 2009 11:29:34 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Kishore Ramachandran <kishore@winlab.rutgers.edu>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Setting 11n MCS TX bitrate
-Message-ID: <20090205092934.GA12435@jm.kir.nu> (sfid-20090205_103003_622854_36EBC272)
-References: <604f6e750902041408k7335234bs565e8fe6868f0f54@mail.gmail.com> <20090204222203.GJ5581@tesla> <604f6e750902041451x340e0b14x4561125c1f7163c6@mail.gmail.com> <20090204231840.GL5581@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090204231840.GL5581@tesla>
+	Wed, 18 Feb 2009 22:32:14 -0500
+Received: by qw-out-2122.google.com with SMTP id 5so145213qwi.37
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 19:32:12 -0800 (PST)
+Subject: Re: [PATCH] at76c50x-usb: support cfg80211 scanning
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <8763j7qyfx.fsf@litku.valot.fi>
+References: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com>
+	 <8763j7qyfx.fsf@litku.valot.fi>
+Content-Type: text/plain
+Date: Wed, 18 Feb 2009 22:32:10 -0500
+Message-Id: <1235014330.6344.18.camel@rainbow> (sfid-20090219_043221_569988_EA9E240A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 04, 2009 at 03:18:40PM -0800, Luis R. Rodriguez wrote:
-> Well in general I was talking about IEEE-802.11 section 10.3 stuff.
-> In cfg80211/nl80211 we don't want to allow things like "set essid"
-> as iwconfig has, instead we want to break things down a bit more,
-> which can really help debugging. The MLME SAP already has some
-> decent layout of commands/responses but after a quick glance
-> I do not see anything for setting a static rate. May want to review
-> that a bit before implementing set rate though. Just remember
-> post early and review early. If you have an idea of how you want
-> to do it let us know to get feedback.
+On Wed, 2009-02-18 at 22:31 +0200, Kalle Valo wrote:
+> Jason Andryuk <jandryuk@gmail.com> writes:
+> 
+> > With the latest mac80211 stack, the driver needs to be updated for
+> > cfg80211 scanning.  I based the changes off of modifications for
+> > at76_usb found here:
+> > http://johannes.sipsolutions.net/patches/old/all/2008-09-19-13:35/020-cfg80211-scan.patch
+> >
+> > The trick was that max_signal also needs to be set to avoid a divide
+> > by zero Oops.  I just guessed and used the value 100 for now.
+> 
+> Thank you for doing this. Unfortunately the patch was corrupted, so I
+> had to manually take your changes. I also included the
+> ieee80211_scan_compileted() fix to this patch.
+> 
+> > Additionally, I added some ieee80211_{wake,stop}_queues calls that
+> > were contained in the older at76_usb.  There is ambiguity as to
+> > whether at76_join should be called before or after waking the queues.
+> 
+> I would like to have a separate patch for this. Also I would like to
+> know what kind of bug this fixes.
+> 
+> Sorry to be so picky, but I'm going to push the driver into mainline
+> soon and I try avoid regressions right now.
 
-TX rate control is outside the scope of IEEE Std 802.11-2007 (see 9.6
-Multirate support) and as such, there is no MLME SAP (or any other)
-primitives for this type of functionality defined in the standard. The
-parameters are passed into PHY through the PHY-SAP interface in TXVECTOR
-(e.g., DATARATE and MCS). How the MAC sublayer decides how to set these
-parameters or even things like how to control the decision process are
-very much out of scope.
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+I must admit, I do not have the best understanding of the driver.  As
+such, I was making modifications to at76c50x-usb to be as similar to
+at76_usb+mac80211 as possible to prevent the driver from oops-ing.
+
+I don't know the proper usage of ieee80211_{wake,stop}_queues, but my
+understanding is they should be called at different times to indicate
+readiness for transmitting frames to the mac80211 stack.
+
+I am having issues with my Linksys WUSB11 adapter.  It has the intersil
+3861 and the scan command is reporting Command Status of 0x03 - Invalid
+parameter.  For right now, scanning does not work for me.
+
+Sorry about the corrupt patches.  The gmail web interface was causing
+problems.
+
+Take care.
+
+Jason
+
