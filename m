@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:35762 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbZBDIQT (ORCPT
+Received: from toronto053.server4you.de ([62.75.220.53]:44048 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbZBSHBD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 03:16:19 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Jason Andryuk <jandryuk@gmail.com>
-Subject: Re: at76_usb development
-Date: Wed, 4 Feb 2009 09:17:12 +0100
-Cc: gregkh@suse.de, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, kalle.valo@iki.fi, milan.plzik@gmail.com
-References: <c4d76b3b0902032005m3847235cu42f963ca6ad796af@mail.gmail.com>
-In-Reply-To: <c4d76b3b0902032005m3847235cu42f963ca6ad796af@mail.gmail.com>
+	Thu, 19 Feb 2009 02:01:03 -0500
+Date: Thu, 19 Feb 2009 08:01:39 +0100
+From: Daniel Wagner <wagi@monom.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	networkmanager-list@gnome.org
+Subject: Re: NetworkManager and mac80211_hwsim
+Message-ID: <20090219070139.GA28934@toronto053.server4you.de> (sfid-20090219_080114_644752_4B965DD5)
+References: <20090216160016.GA29509@toronto053.server4you.de> <1234800284.4219.136.camel@johannes.local> <20090216172528.GB29509@toronto053.server4you.de> <1234807251.1666.9.camel@localhost.localdomain> <20090218080636.GA25504@toronto053.server4you.de> <1234946159.4149.0.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200902040917.14343.oliver@neukum.org> (sfid-20090204_091626_339536_A675895E)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1234946159.4149.0.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Wednesday 04 February 2009 05:05:04 schrieb Jason Andryuk:
-> Where should development on at76_usb take place?
-[..]
-> I have more or less tracked down an Oops on disconnect with the
-> wireless-testing version.  Hopefully the time spent has been
-> worthwhile.
+On Wed, Feb 18, 2009 at 09:35:59AM +0100, Johannes Berg wrote:
+> On Wed, 2009-02-18 at 09:06 +0100, Daniel Wagner wrote:
 > 
-> Let me know,
+> > +	if (parent_dev != NULL) {
+> > +		hal_device_property_set_string (d, "info.parent", hal_device_get_udi (parent_dev));
+> > +		hal_device_property_set_string (d, "net.originating_device", hal_device_get_udi (parent_dev));
+> > +	} else {
+> > +		hal_device_property_set_string (d, "info.parent", "/org/freedesktop/Hal/devices/computer");
+> > +		hal_device_property_set_string (d, "net.originating_device", "/org/freedesktop/Hal/devices/computer");
+> > +		hal_device_property_set_string (d, "info.linux.driver", "mac80211_hwsim");
+> > +		parent_dev = hal_device_store_find (hald_get_gdl (), "/org/freedesktop/Hal/devices/computer");
+> > +		hal_device_property_set_string (parent_dev, "info.linux.driver", "mac80211");
+> > +	}
+> 
+> This is actually not _that_ bad an idea, because it makes sure everybody
+> else will properly link up their parent pointer in sysfs. 
 
-This is an important question. We cannot develop against widely
-diverging versions. If the driver is changed a lot, development must happen
-against the kernel version or it should be removed from the kernel.
+That was exactly the problem. HAL creates only a 'correct' dbus tree if the
+sysfs parent pointers exists. The patch just fakes the parent 'computer'.
+This 'computer' node holds all parent-less nodes (eg alsa_sequencer, alsa_timer).
+One further problem is that the 'computer' node doesn't have a 'info.linux.driver'
+property which NM wants to read. Setting this property to 'mac80211' is
+not correct for all children of this node.
 
-	Regards
-		Oliver
- 
+> An alternative
+> that doesn't guarantee that would be to check "is it in the ieee80211
+> class".
+
+At the moment NM wants a proper parent->child construct to work. Adding something like
+/org/freedesktop/Hal/devices/virtual/mac80211_hwsim as parent for the child
+would propably be a solution. As I said I was not really ready for fixing
+this up. But if this is something worth to fix I'll do it.
+
+daniel
