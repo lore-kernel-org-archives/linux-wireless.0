@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:32494 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753281AbZBWNXP (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:11187 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751123AbZBSHv7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 08:23:15 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so1487520fkf.5
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 05:23:13 -0800 (PST)
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: ieee80211_scan_completed() calling config() and possible deadlock
-References: <87vdr1717z.fsf@litku.valot.fi> <200902231413.49289.mb@bu3sch.de>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 23 Feb 2009 15:23:09 +0200
-In-Reply-To: <200902231413.49289.mb@bu3sch.de> (Michael Buesch's message of "Mon\, 23 Feb 2009 14\:13\:49 +0100")
-Message-ID: <87r61p70ea.fsf@litku.valot.fi> (sfid-20090223_142318_819575_FF4888FA)
+	Thu, 19 Feb 2009 02:51:59 -0500
+Received: by yw-out-2324.google.com with SMTP id 5so114041ywh.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 23:51:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <878wo2j4vo.fsf@litku.valot.fi>
+References: <1235002285-14812-1-git-send-email-lrodriguez@atheros.com>
+	 <878wo2j4vo.fsf@litku.valot.fi>
+Date: Wed, 18 Feb 2009 23:51:57 -0800
+Message-ID: <43e72e890902182351jae378d5m4515a23a3ae28a91@mail.gmail.com> (sfid-20090219_085245_264815_8DC699F2)
+Subject: Re: [PATCH] cfg80211: default OLD_REG to n
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	marcel@holtmann.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch <mb@bu3sch.de> writes:
-
->> I'm just wondering what's the right way(tm) to handle this. I see
->> two options:
->> 
->> 1. Consider the (possible) deadlock as a feature, document it and
->> let the drivers handle it. This is relatively easy.
->> 
->> 2. Handle this in mac80211 (eg. schedule a workqueue) and drivers
->> don't need to care. This might complicate mac80211 implementation a
->> bit, but easier for the drivers.
->> 
->> I myself cannot decide which one is better. What do people think?
->> 
+On Wed, Feb 18, 2009 at 10:51 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> "Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
 >
-> I think drivers should not be able to call ieee80211_scan_completed()
-> directly. Instead they should call a function which schedules
-> ieee80211_scan_completed() on a workqueue.
+>> Since we are not following the schedule to remove OLD_REG by 2.6.29
+>> lets simply set it to default to n for 2.6.30 and schedule its
+>> removal for 2.6.31
+>
+> [...]
+>
+>>  config WIRELESS_OLD_REGULATORY
+>>       bool "Old wireless static regulatory definitions"
+>> -     default y
+>> +     default n
+>>       ---help---
+>>         This option enables the old static regulatory information
+>>         and uses it within the new framework. This is available
+>
+> What does this mean in practise? If a user compiles the kernel with
+> the default settings, the wireless will work only if crda is
+> installed?
 
-Yes, that was my option two.
+No, it means you get the static world regdomain by default instead of
+the static US world regdomain by default.
 
-> In general I consider it broken behavior, if a function called by
-> the driver can recurse into the driver. We had that behavior in
-> ieee80211-softmac and it was one of the main reasons it sucked so
-> much.
+> If that's the case, this is way too early. All lazy people, like me,
+> will get very frustrated because of this. They don't want to make all
+> those hoops to install crda, they just want their wireless to work.
+>
+> For example, I still can't find crda from debian unstable. In my
+> opinion we need to wait _at least_ a year after it's available in all
+> distros, and only then we can make crda the default.
 
-Ok, this is a very strong argument in favor of option 2.
+Keep in mind OLD_REG still alows usage of CRDA, OLD_REG just means "3
+static regdomains, ieee80211_regdom module parameter, and make the US
+static regdom the default". That's all.
 
-> The wq schedule code is trivial to implement in mac80211 and it's also
-> OK to do so. The function is not required to execute synchronously.
+> Let's not make the same mistake the udev people did. That was a
+> disaster few years back, I suffered from it multiple times.
+> Fortunately things have calmed down now and I can safely update the
+> kernel.
 
-I'm leaning on option two then. Thanks for the feedback!
+Whatever works.
 
--- 
-Kalle Valo
+  Luis
