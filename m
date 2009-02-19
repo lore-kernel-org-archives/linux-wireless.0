@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55336 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754092AbZBRXZr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 18:25:47 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 10/15] cfg80211: remove likely from an 11d hint case
-Date: Wed, 18 Feb 2009 18:25:40 -0500
-Message-Id: <1234999545-14357-11-git-send-email-lrodriguez@atheros.com> (sfid-20090219_005320_412474_EA841E80)
-In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+Received: from mail.gmx.net ([213.165.64.20]:56286 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754443AbZBSWqd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Feb 2009 17:46:33 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Thu, 19 Feb 2009 23:46:31 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090219224631.322560@gmx.net> (sfid-20090219_234639_207886_DD521032)
+MIME-Version: 1.0
+Subject: [PATCH] ath9k: Don't reset TSF after scanning automatically
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Truth of the matter this was confusing people so mark it as
-unlikely as that is the case now.
+Reset automatically the TSF on re-enabling beaconing after scanning in =
+IBSS mode causes several problems. For example a new created IBSS netwo=
+rk can't age before an other node has joined, because scans are done au=
+tomatically in that case. And several other strange bugs more...
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+The TSF reset is done manually in the higher level mac80211 code in the=
+ cases were it's needed, so we don't need to do it here.
+
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
 ---
- net/wireless/reg.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless=
+/ath9k/beacon.c
+index 390d510..18bda36 100644
+--- a/drivers/net/wireless/ath9k/beacon.c
++++ b/drivers/net/wireless/ath9k/beacon.c
+@@ -790,8 +790,6 @@ void ath_beacon_config(struct ath_softc *sc, int if=
+_id)
+ 		u64 tsf;
+ 		u32 tsftu;
+ 		ath9k_hw_set_interrupts(ah, 0);
+-		if (nexttbtt =3D=3D intval)
+-			intval |=3D ATH9K_BEACON_RESET_TSF;
+ 		if (sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_ADHOC) {
+ 			/*
+ 			 * Pull nexttbtt forward to reflect the current
+@@ -825,6 +823,9 @@ void ath_beacon_config(struct ath_softc *sc, int if=
+_id)
+ 				sc->imask |=3D ATH9K_INT_SWBA;
+ 			ath_beaconq_config(sc);
+ 		} else if (sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_AP) {
++			if (nexttbtt =3D=3D intval)
++				intval |=3D ATH9K_BEACON_RESET_TSF;
++
+ 			/*
+ 			 * In AP mode we enable the beacon timers and
+ 			 * SWBA interrupts to prepare beacon frames.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b474452..69cd4f0 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1331,14 +1331,16 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	if (!rd)
- 		goto out;
- 
--	/* This will not happen right now but we leave it here for the
-+	/*
-+	 * This will not happen right now but we leave it here for the
- 	 * the future when we want to add suspend/resume support and having
- 	 * the user move to another country after doing so, or having the user
--	 * move to another AP. Right now we just trust the first AP. This is why
--	 * this is marked as likley(). If we hit this before we add this support
--	 * we want to be informed of it as it would indicate a mistake in the
--	 * current design  */
--	if (likely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
-+	 * move to another AP. Right now we just trust the first AP.
-+	 *
-+	 * If we hit this before we add this support we want to be informed of
-+	 * it as it would indicate a mistake in the current design
-+	 */
-+	if (unlikely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
- 		goto out;
- 
- 	/* We keep this around for when CRDA comes back with a response so
--- 
-1.6.0.3
-
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
