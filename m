@@ -1,98 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:2016 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:36642 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753246AbZBRXuY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 18:50:24 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 8/8] iwlwifi: dma mapping read and write changes
-Date: Wed, 18 Feb 2009 15:54:33 -0800
-Message-Id: <1235001273-7808-9-git-send-email-reinette.chatre@intel.com> (sfid-20090219_005041_661908_7F446201)
-In-Reply-To: <1235001273-7808-8-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1235001273-7808-1-git-send-email-reinette.chatre@intel.com>
- <1235001273-7808-2-git-send-email-reinette.chatre@intel.com>
- <1235001273-7808-3-git-send-email-reinette.chatre@intel.com>
- <1235001273-7808-4-git-send-email-reinette.chatre@intel.com>
- <1235001273-7808-5-git-send-email-reinette.chatre@intel.com>
- <1235001273-7808-6-git-send-email-reinette.chatre@intel.com>
- <1235001273-7808-7-git-send-email-reinette.chatre@intel.com>
- <1235001273-7808-8-git-send-email-reinette.chatre@intel.com>
+	id S1752272AbZBTGMu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 01:12:50 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 22:12:50 -0800
+Date: Thu, 19 Feb 2009 22:12:03 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Tony Vroon <tony@linx.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	reinette chatre <reinette.chatre@intel.com>
+Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
+	ranges
+Message-ID: <20090220061203.GK4740@tesla> (sfid-20090220_071254_303149_2E11B621)
+References: <1234208152.6694.4.camel@localhost> <20090210013941.GA4386@tesla> <1234230689.3793.15.camel@localhost> <20090210020708.GC4386@tesla> <1234379981.4789.7.camel@localhost> <20090214045232.GA5769@tesla> <1234786124.4271.2.camel@localhost> <20090216154733.GA2870@tuxdriver.com> <20090217184230.GA4257@tesla> <20090217190646.GC4257@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090217190646.GC4257@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fenghua Yu <fenghua.yu@intel.com>
+On Tue, Feb 17, 2009 at 11:06:46AM -0800, Luis Rodriguez wrote:
+> On Tue, Feb 17, 2009 at 10:42:30AM -0800, Luis Rodriguez wrote:
+> > On Mon, Feb 16, 2009 at 07:47:33AM -0800, John W. Linville wrote:
+> > > On Mon, Feb 16, 2009 at 12:08:44PM +0000, Tony Vroon wrote:
+> > > > Just to confirm, if I use my early-boot hook that I used for your iw
+> > > > list to set the regulatory domain manually (iw reg set GB) all is well.
+> > > > If I allow the driver stack to get to the association stage without
+> > > > setting a regulatory domain, I can never get my 802.11A spectrum back
+> > > > after the fact.
+> > > > Would you still see this as a bug or rather a specific requirement of
+> > > > the new interface that hasn't yet been documented?
+> > >
+> > > Seems like a bug, or at least an unintended consequence of intersection...?
+> 
+> Sorry for the blank e-mail.
+> 
+> You are reporting you are disabling OLD_REG and your 5 GHz on iwlagn is disabled
+> upon bootup. You also reported from your log:
+> 
+> cfg80211: Calling CRDA to update world regulatory domain
+> cfg80211: calling CRDA failed - unable to update world regulatory domain, using static definition
+> 
+> This indicates to me your regulatory domain was simply never updated by CRDA. So what
+> would have happened is that iwlagn registers its device to mac80211 via ieee80211_register_hw()
+> then mac80211 registers it with cfg80211 via wiphy_register(). Upon that call cfg80211 will update
+> the device's regulatory ifnromation by calling
+> 
+> wiphy_update_regulatory(wiphy, REGDOM_SET_BY_CORE);
+> 
+> This in turn will check to see if it should ignore the request, and in your case
+> the check is:
+> 
+>         if (!last_request)
+>                 return true;
+>         if (setby == REGDOM_SET_BY_CORE &&
+>                   wiphy->custom_regulatory)
+>                 return true
+> 
+> Since iwlagn sets wiphy->custom_regulatory to true and since upon registration setby is
+> REGDOM_SET_BY_CORE the device will be ignored to change the regulatory domain. I see I
+> currently see no reason why your 5 GHz channels will be disabled unless I'm missing
+> something or the card's EEPROM disables them.
+> 
+> To debug this further we need more information. So please provide the output of both
+> the kernel *and*, 'iw list' _prior_ to associating to your AP. Before you do so please
+> recompile wireless-testing with these options enabled:
+> 
+> # Intel debug
+> CONFIG_IWL_DEBUG_INFO=y
+> 
+> # Cfg80211 regulatory debug
+> CONFIG_CFG80211_REG_DEBUG=y
+> 
+> So to re-iterate: I want both your kernel log _and_ 'iw list' output prior to association.
 
-When iwlwifi runs on IOMMU, IOMMU generates a lot of PTE write faults
-because PTE write bit is not set on some of PTE's. This is because iwlwifi
-driver calls DMA mapping with PCI_DMA_TODEVICE which is read only in mapping
-PTE. But iwlwifi device actually writes to the mapped page to update its contents.
-This issue is not exposed in swiotlb. But VT-d hardware can capture this fault and
-stop the fault transaction.
+To help isolate that orthogonal issue about having the udev rule not being
+created you can also test the new patch series I just posted and enable REG_DEBUG,
+this will give us a trace and hopefully we can see if call_usermodehelper() was
+the one that failed during early boot.
 
-The iwl TX command contains a scratch field that is updated by uCode to
-indicate retry counts. For 5000 series the patch is required also for
-regular frames, but this patch does not differenciate.
+http://marc.info/?l=linux-wireless&m=123510990625914&w=2
 
-Signed-off-by: Fenghua Yu <fenghua.yu@intel.com>
-Acked-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
-
-This patch was posted on lkml: http://lkml.org/lkml/2009/2/11/306
-
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c  |    6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3c053ea..7046ea7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -444,7 +444,7 @@ void iwl_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- 		pci_unmap_single(dev,
- 				pci_unmap_addr(&txq->cmd[index]->meta, mapping),
- 				pci_unmap_len(&txq->cmd[index]->meta, len),
--				PCI_DMA_TODEVICE);
-+				PCI_DMA_BIDIRECTIONAL);
- 
- 	/* Unmap chunks, if any. */
- 	for (i = 1; i < num_tbs; i++) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index ae04c20..dff60fb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -819,7 +819,7 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	 * within command buffer array. */
- 	txcmd_phys = pci_map_single(priv->pci_dev,
- 				    out_cmd, sizeof(struct iwl_cmd),
--				    PCI_DMA_TODEVICE);
-+				    PCI_DMA_BIDIRECTIONAL);
- 	pci_unmap_addr_set(&out_cmd->meta, mapping, txcmd_phys);
- 	pci_unmap_len_set(&out_cmd->meta, len, sizeof(struct iwl_cmd));
- 	/* Add buffer containing Tx command and MAC(!) header to TFD's
-@@ -968,7 +968,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 			IWL_MAX_SCAN_SIZE : sizeof(struct iwl_cmd);
- 
- 	phys_addr = pci_map_single(priv->pci_dev, out_cmd,
--				   len, PCI_DMA_TODEVICE);
-+				   len, PCI_DMA_BIDIRECTIONAL);
- 	pci_unmap_addr_set(&out_cmd->meta, mapping, phys_addr);
- 	pci_unmap_len_set(&out_cmd->meta, len, len);
- 	phys_addr += offsetof(struct iwl_cmd, hdr);
-@@ -1068,7 +1068,7 @@ static void iwl_hcmd_queue_reclaim(struct iwl_priv *priv, int txq_id,
- 	pci_unmap_single(priv->pci_dev,
- 		pci_unmap_addr(&txq->cmd[cmd_idx]->meta, mapping),
- 		pci_unmap_len(&txq->cmd[cmd_idx]->meta, len),
--		PCI_DMA_TODEVICE);
-+		PCI_DMA_BIDIRECTIONAL);
- 
- 	for (idx = iwl_queue_inc_wrap(idx, q->n_bd); q->read_ptr != idx;
- 	     q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd)) {
--- 
-1.5.4.3
-
+  Luis
