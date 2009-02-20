@@ -1,69 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailhub-lb1.unibe.ch ([130.92.0.82]:49420 "EHLO
-	mailhub-lb1.unibe.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495AbZBOVuW convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:52711 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751279AbZBTT7y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 16:50:22 -0500
-Received: from localhost (scanhub-lb3.unibe.ch [130.92.5.67])
-	by mailhub-lb1.unibe.ch (Postfix) with ESMTP id D84DD11C06E
-	for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 22:42:18 +0100 (CET)
-Received: from mailhub-lb1.unibe.ch ([130.92.0.82])
-	by localhost (scanhub-lb3.unibe.ch [130.92.5.67]) (amavisd-new, port 10024)
-	with LMTP id Mr9wkE8t1odY for <linux-wireless@vger.kernel.org>;
-	Sun, 15 Feb 2009 22:42:18 +0100 (CET)
-Received: from joker.unibe.ch (joker-eth0.unibe.ch [130.92.4.115])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mailhub-lb1.unibe.ch (Postfix) with ESMTP id 3C58211C088
-	for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 22:42:18 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by joker.unibe.ch (Postfix) with ESMTP id 165C695607C
-	for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 22:42:19 +0100 (CET)
-Received: from joker.unibe.ch ([127.0.0.1])
-	by localhost (joker.unibe.ch [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id zLdrX4Y+5iv1 for <linux-wireless@vger.kernel.org>;
-	Sun, 15 Feb 2009 22:42:19 +0100 (CET)
-Received: from localhost (nina [130.92.4.155])
-	by joker.unibe.ch (Postfix) with ESMTP id DCF1A956062
-	for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 22:42:18 +0100 (CET)
-Message-ID: <20090215224218.da9seiz3s0ks40cg@mail.unibe.ch> (sfid-20090215_225028_097245_5535E25A)
-Date: Sun, 15 Feb 2009 22:42:18 +0100
-From: =?iso-8859-1?b?UOl0ZXV0?= Alain <alain.peteut@space.unibe.ch>
-To: linux-wireless@vger.kernel.org
-Subject: compat-wireless-2.6-old (15.02.2009)
+	Fri, 20 Feb 2009 14:59:54 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so2072019fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 11:59:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	DelSp=Yes	format=flowed
+In-Reply-To: <1235109874-3966-2-git-send-email-lrodriguez@atheros.com>
+References: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
+	 <1235109874-3966-2-git-send-email-lrodriguez@atheros.com>
+Date: Fri, 20 Feb 2009 20:59:52 +0100
+Message-ID: <69e28c910902201159y1ba18657qdb1517892e6fe352@mail.gmail.com> (sfid-20090220_205959_217896_A239F8CC)
+Subject: Re: [PATCH 1/5] cfg80211: enable active-scan / beaconing on Ch 1-11
+	for world regdom
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	marcel@holtmann.org, kalle.valo@nokia.com, kyle@mcmartin.ca,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Feb 20, 2009 at 7:04 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> This enables active scan and beaconing on Channels 1 through 11
+> on the static world regulatory domain.
+>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+> =A0net/wireless/reg.c | =A0 =A05 ++---
+> =A01 files changed, 2 insertions(+), 3 deletions(-)
+>
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 605299f..8f64575 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -76,9 +76,8 @@ static const struct ieee80211_regdomain world_regdo=
+m =3D {
+> =A0 =A0 =A0 =A0.n_reg_rules =3D 1,
+> =A0 =A0 =A0 =A0.alpha2 =3D =A0"00",
+> =A0 =A0 =A0 =A0.reg_rules =3D {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 REG_RULE(2412-10, 2462+10, 40, 6, 20,
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 NL80211_RRF_PASSIVE_SCA=
+N |
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 NL80211_RRF_NO_IBSS),
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* IEEE 802.11b/g, channels 1..11 */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 REG_RULE(2412-10, 2462+10, 40, 6, 20, 0=
+),
+> =A0 =A0 =A0 =A0}
+> =A0};
+>
+> --
+> 1.6.0.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-I tried to find the solution, but I didn't found the root of the proble=
-m:
-for some reason ../drivers/net/wireless/iwl-4965.c wasn't compiled, but
-the CONFIG_IWL4965=3Dy was defined config.mk.
-This leads to a not existing struct iwl_cfg iwl4965_agn_cfg which was =20
-claimed by make during making iwl4965.ko.
+Are you sure there is no area of the world where the allowed range is
+stricter than b/g 1-11?
+Otherwise I am inclined to NACK this.
 
-Since I don't need support for 4965 I set CONFIG_IWL4965=3Dn to overcom=
-e =20
-this issue.
-
-I thought I'm fine but this leads to
-=2E.
-=46ATAL: Error inserting iwl4965 =20
-(/lib/modules/2.6.26-1-amd64/kernel/drivers/net/wireless/iwlwifi/iwl496=
-5.ko): =20
-Unknown symbol in module, or unknown parameter (see dmesg)
-=2E.
-during make load.
-Any suggestions?
-
-Best regards
-Alain P=E9teut
-
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
