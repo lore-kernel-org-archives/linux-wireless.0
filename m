@@ -1,89 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26593 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752230AbZBREa1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 23:30:27 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 20:30:27 -0800
+Received: from bombadil.infradead.org ([18.85.46.34]:53206 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614AbZBTFnB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 00:43:01 -0500
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, Greg KH <greg@kroah.com>
-Subject: [PATCH v3 06/15] cfg80211: propagate -ENOMEM during regulatory_init()
-Date: Tue, 17 Feb 2009 20:21:53 -0800
-Message-ID: <1234930922-29367-7-git-send-email-lrodriguez@atheros.com> (sfid-20090218_053030_819658_933B64F2)
-In-Reply-To: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
-References: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 07/15] cfg80211: add assert_cfg80211_lock() to ensure proper protection
+Date: Fri, 20 Feb 2009 00:42:42 -0500
+Message-Id: <1235108570-17652-8-git-send-email-lrodriguez@atheros.com> (sfid-20090220_064316_074143_650347E0)
+In-Reply-To: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
+References: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calling kobject_uevent_env() can fail mainly due to out of
-memory conditions. We do not want to continue during such
-conditions so propagate that as well instead of letting
-cfg80211 load as if everything is peachy.
-
-Additionally lets clarify that when CRDA is not called during
-cfg80211's initialization _and_ if the error is not an -ENOMEM
-its because kobject_uevent_env() failed to call CRDA, not because
-CRDA failed. For those who want to find out why we also let you
-do so by enabling the kernel config CONFIG_CFG80211_REG_DEBUG --
-you'll get an actual stack trace.
-
-So for now we'll treat non -ENOMEM kobject_uevent_env() failures as
-non fatal during cfg80211's initialization.
-
-CC: Greg KH <greg@kroah.com>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/wireless/reg.c |   22 +++++++++++++++++-----
- 1 files changed, 17 insertions(+), 5 deletions(-)
+ net/wireless/core.c    |    5 ++++-
+ net/wireless/core.h    |    6 ++++++
+ net/wireless/nl80211.c |    3 ++-
+ net/wireless/reg.c     |   15 +++++++++++++++
+ 4 files changed, 27 insertions(+), 2 deletions(-)
 
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 39d40d1..e347093 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -7,7 +7,6 @@
+ #include <linux/if.h>
+ #include <linux/module.h>
+ #include <linux/err.h>
+-#include <linux/mutex.h>
+ #include <linux/list.h>
+ #include <linux/nl80211.h>
+ #include <linux/debugfs.h>
+@@ -50,6 +49,8 @@ cfg80211_drv_by_wiphy_idx(int wiphy_idx)
+ 	if (!wiphy_idx_valid(wiphy_idx))
+ 		return NULL;
+ 
++	assert_cfg80211_lock();
++
+ 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
+ 		if (drv->wiphy_idx == wiphy_idx) {
+ 			result = drv;
+@@ -69,6 +70,8 @@ __cfg80211_drv_from_info(struct genl_info *info)
+ 	struct net_device *dev;
+ 	int err = -EINVAL;
+ 
++	assert_cfg80211_lock();
++
+ 	if (info->attrs[NL80211_ATTR_WIPHY]) {
+ 		bywiphyidx = cfg80211_drv_by_wiphy_idx(
+ 				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index f3ab00c..982cc6b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -10,6 +10,7 @@
+ #include <linux/netdevice.h>
+ #include <linux/kref.h>
+ #include <linux/rbtree.h>
++#include <linux/mutex.h>
+ #include <net/genetlink.h>
+ #include <net/wireless.h>
+ #include <net/cfg80211.h>
+@@ -73,6 +74,11 @@ bool wiphy_idx_valid(int wiphy_idx)
+ extern struct mutex cfg80211_mutex;
+ extern struct list_head cfg80211_drv_list;
+ 
++static inline void assert_cfg80211_lock(void)
++{
++	BUG_ON(!mutex_is_locked(&cfg80211_mutex));
++}
++
+ struct cfg80211_internal_bss {
+ 	struct list_head list;
+ 	struct rb_node rbn;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c99f0be..0b8f811 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7,7 +7,6 @@
+ #include <linux/if.h>
+ #include <linux/module.h>
+ #include <linux/err.h>
+-#include <linux/mutex.h>
+ #include <linux/list.h>
+ #include <linux/if_ether.h>
+ #include <linux/ieee80211.h>
+@@ -159,6 +158,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	int i;
+ 	u16 ifmodes = dev->wiphy.interface_modes;
+ 
++	assert_cfg80211_lock();
++
+ 	hdr = nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_WIPHY);
+ 	if (!hdr)
+ 		return -1;
 diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6373a78..47d5056 100644
+index 47d5056..e49ac9b 100644
 --- a/net/wireless/reg.c
 +++ b/net/wireless/reg.c
-@@ -1616,7 +1616,7 @@ void reg_device_remove(struct wiphy *wiphy)
+@@ -276,6 +276,8 @@ static bool alpha2_equal(const char *alpha2_x, const char *alpha2_y)
  
- int regulatory_init(void)
+ static bool regdom_changed(const char *alpha2)
  {
--	int err;
-+	int err = 0;
++	assert_cfg80211_lock();
++
+ 	if (!cfg80211_regdomain)
+ 		return true;
+ 	if (alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
+@@ -830,6 +832,8 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_channel *chan;
  
- 	reg_pdev = platform_device_register_simple("regulatory", 0, NULL, 0);
- 	if (IS_ERR(reg_pdev))
-@@ -1637,12 +1637,24 @@ int regulatory_init(void)
- 	cfg80211_regdomain = cfg80211_world_regdom;
++	assert_cfg80211_lock();
++
+ 	sband = wiphy->bands[band];
+ 	BUG_ON(chan_idx >= sband->n_channels);
+ 	chan = &sband->channels[chan_idx];
+@@ -1042,6 +1046,9 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
+ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 			  const char *alpha2)
+ {
++
++	assert_cfg80211_lock();
++
+ 	/* All initial requests are respected */
+ 	if (!last_request)
+ 		return 0;
+@@ -1122,6 +1129,8 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+ 	bool intersect = false;
+ 	int r = 0;
  
- 	err = regulatory_hint_core("00");
-+#endif
- 	if (err) {
--		printk(KERN_ERR "cfg80211: calling CRDA failed - "
--		       "unable to update world regulatory domain, "
--		       "using static definition\n");
--	}
-+		if (err == -ENOMEM)
-+			return err;
-+		/*
-+		 * N.B. kobject_uevent_env() can fail mainly for when we're out
-+		 * memory which is handled and propagated appropriately above
-+		 * but it can also fail during a netlink_broadcast() or during
-+		 * early boot for call_usermodehelper(). For now treat these
-+		 * errors as non-fatal.
-+		 */
-+		printk(KERN_ERR "cfg80211: kobject_uevent_env() was unable "
-+			"to call CRDA during init");
-+#ifdef CONFIG_CFG80211_REG_DEBUG
-+		/* We want to find out exactly why when debugging */
-+		WARN_ON(err);
- #endif
-+	}
++	assert_cfg80211_lock();
++
+ 	r = ignore_request(wiphy, set_by, alpha2);
  
- 	return 0;
- }
+ 	if (r == REG_INTERSECT) {
+@@ -1217,6 +1226,8 @@ EXPORT_SYMBOL(regulatory_hint);
+ static bool reg_same_country_ie_hint(struct wiphy *wiphy,
+ 			u32 country_ie_checksum)
+ {
++	assert_cfg80211_lock();
++
+ 	if (!last_request->wiphy)
+ 		return false;
+ 	if (likely(last_request->wiphy != wiphy))
+@@ -1583,6 +1594,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ {
+ 	int r;
+ 
++	assert_cfg80211_lock();
++
+ 	/* Note that this doesn't update the wiphys, this is done below */
+ 	r = __set_regdom(rd);
+ 	if (r) {
+@@ -1605,6 +1618,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ /* Caller must hold cfg80211_mutex */
+ void reg_device_remove(struct wiphy *wiphy)
+ {
++	assert_cfg80211_lock();
++
+ 	kfree(wiphy->regd);
+ 	if (!last_request || !last_request->wiphy)
+ 		return;
 -- 
-1.6.1.2.253.ga34a
+1.6.0.3
 
