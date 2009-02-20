@@ -1,105 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ammma.de ([213.83.39.131]:24861 "EHLO ammma.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751623AbZBHXpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2009 18:45:42 -0500
-Message-ID: <20090209004532.11356srchh8hvbwg@neo.wg.de> (sfid-20090209_004548_385773_AEC560D3)
-Date: Mon, 09 Feb 2009 00:45:32 +0100
-From: Jan Schneider <jan@horde.org>
-To: Jan Schneider <jan@horde.org>
-Cc: =?iso-8859-1?b?R+Fib3I=?= Stefanik <netrolller.3d@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: Microcode SW error detected.
-References: <20090206233134.11116cap9kcroxgc@neo.wg.de>
- <1233960318.11530.114.camel@rc-desk>
- <20090208192343.106487dmjra19g6o@neo.wg.de>
- <69e28c910902081159v1371ee70nb5e70ebdc648b54a@mail.gmail.com>
- <20090208235149.58334qon9gu98ykg@neo.wg.de>
-In-Reply-To: <20090208235149.58334qon9gu98ykg@neo.wg.de>
+Received: from mail.atheros.com ([12.36.123.2]:16430 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753759AbZBTJrT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 04:47:19 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 01:47:19 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	DelSp=Yes	format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18846.31552.431206.796054@gargle.gargle.HOWL> (sfid-20090220_104722_522780_6386708D)
+Date: Fri, 20 Feb 2009 15:13:28 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 5/5] ath9k: Add appropriate ANI values for AP mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zitat von Jan Schneider <jan@horde.org>:
+The short calibration interval is different for AP
+mode, fix this. Also, the timer should be rearmed in
+the calibration routine during scanning.
 
-> Zitat von G=E1bor Stefanik <netrolller.3d@gmail.com>:
->
->> On Sun, Feb 8, 2009 at 7:23 PM, Jan Schneider <jan@horde.org> wrote:
->>> Zitat von reinette chatre <reinette.chatre@intel.com>:
->>>
->>>> On Fri, 2009-02-06 at 14:31 -0800, Jan Schneider wrote:
->>>>>
->>>>> I've seen in a post from January that someone already had this pr=
-oblem
->>>>> but couldn't reproduce it.
->>>>> I can't reliably reproduce, but I see this more often than I like=
-=2E
->>>>> When this happens, it usually doesn't help to reload the kernel
->>>>> module. Sometimes it helps to use the rfkill switch though.
->>>>>
->>>>> Here's a log with debug=3D0x43fff:
->>>>
->>>> It does not seem as though your driver is compiled with debug supp=
-ort.
->>>> You can confirm that by looking at the version number of the drive=
-r
->>>> printed when it loads ... it should have a "d" in it like "1.2.26k=
-ds".
->>>> Could you please recompile the driver with debug support (IWLWIFI_=
-DEBUG)
->>>> and rerun your test?  This will provide us with a complete event l=
-og of
->>>> the uCode error.
->>>
->>> Enabling debug didn't help:
->>>
->>> Feb  7 00:04:40 tank kernel: [ 2769.084395] iwlagn: Intel(R) Wirele=
-ss WiFi
->>> Link
->>> AGN driver for Linux, 1.3.27kds
->>>
->>>
->>> /etc/modprobe.d/iwlagn:
->>>
->>> options iwlagn debug=3D0x43fff
->>>
->>>
->>> I still get:
->>>
->>> Feb  8 18:40:53 tank kernel: [77584.979829] iwlagn 0000:0c:00.0: Mi=
-crocode
->>> SW er
->>> ror detected.  Restarting 0x2000000.
->>> Feb  8 18:40:53 tank kernel: [77585.029747] Registered led device:
->>> iwl-phy0::rad
->>> io
->>> Feb  8 18:40:53 tank kernel: [77585.030765] Registered led device:
->>> iwl-phy0::ass
->>> oc
->>> Feb  8 18:40:53 tank kernel: [77585.031602] Registered led device:
->>> iwl-phy0::RX
->>> Feb  8 18:40:53 tank kernel: [77585.032467] Registered led device:
->>> iwl-phy0::TX
->>
->> No - enable IWLWIFI_DEBUG in your kernel config, then rebuild the
->> kernel (or at least the iwlwifi modules).
->
-> That's what I did, see the "d" in "1.2.26kds" above.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/ath9k.h |   12 +++++-------
+ drivers/net/wireless/ath9k/main.c  |   27 ++++++++++++---------------
+ 2 files changed, 17 insertions(+), 22 deletions(-)
 
-Eh, that was the wrong citation of course. But it's still a "d" in =20
-"1.3.27kds".
+diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+index 0b0f82c..6481ea4 100644
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -464,13 +464,11 @@ void ath_beacon_sync(struct ath_softc *sc, int if_id);
+ /* ANI */
+ /*******/
+ 
+-/* ANI values for STA only.
+-   FIXME: Add appropriate values for AP later */
+-
+-#define ATH_ANI_POLLINTERVAL    100     /* 100 milliseconds between ANI poll */
+-#define ATH_SHORT_CALINTERVAL   1000    /* 1 second between calibrations */
+-#define ATH_LONG_CALINTERVAL    30000   /* 30 seconds between calibrations */
+-#define ATH_RESTART_CALINTERVAL 1200000 /* 20 minutes between calibrations */
++#define ATH_STA_SHORT_CALINTERVAL 1000    /* 1 second */
++#define ATH_AP_SHORT_CALINTERVAL  100     /* 100 ms */
++#define ATH_ANI_POLLINTERVAL      100     /* 100 ms */
++#define ATH_LONG_CALINTERVAL      30000   /* 30 seconds */
++#define ATH_RESTART_CALINTERVAL   1200000 /* 20 minutes */
+ 
+ struct ath_ani {
+ 	bool caldone;
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 7264c4c..b47cbe9 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -308,23 +308,23 @@ static int ath_set_channel(struct ath_softc *sc, struct ath9k_channel *hchan)
+  */
+ static void ath_ani_calibrate(unsigned long data)
+ {
+-	struct ath_softc *sc;
+-	struct ath_hw *ah;
++	struct ath_softc *sc = (struct ath_softc *)data;
++	struct ath_hw *ah = sc->sc_ah;
+ 	bool longcal = false;
+ 	bool shortcal = false;
+ 	bool aniflag = false;
+ 	unsigned int timestamp = jiffies_to_msecs(jiffies);
+-	u32 cal_interval;
++	u32 cal_interval, short_cal_interval;
+ 
+-	sc = (struct ath_softc *)data;
+-	ah = sc->sc_ah;
++	short_cal_interval = (ah->opmode == NL80211_IFTYPE_AP) ?
++		ATH_AP_SHORT_CALINTERVAL : ATH_STA_SHORT_CALINTERVAL;
+ 
+ 	/*
+ 	* don't calibrate when we're scanning.
+ 	* we are most likely not on our home channel.
+ 	*/
+ 	if (sc->rx.rxfilter & FIF_BCN_PRBRESP_PROMISC)
+-		return;
++		goto set_timer;
+ 
+ 	/* Long calibration runs independently of short calibration. */
+ 	if ((timestamp - sc->ani.longcal_timer) >= ATH_LONG_CALINTERVAL) {
+@@ -335,8 +335,7 @@ static void ath_ani_calibrate(unsigned long data)
+ 
+ 	/* Short calibration applies only while caldone is false */
+ 	if (!sc->ani.caldone) {
+-		if ((timestamp - sc->ani.shortcal_timer) >=
+-		    ATH_SHORT_CALINTERVAL) {
++		if ((timestamp - sc->ani.shortcal_timer) >= short_cal_interval) {
+ 			shortcal = true;
+ 			DPRINTF(sc, ATH_DBG_ANI, "shortcal @%lu\n", jiffies);
+ 			sc->ani.shortcal_timer = timestamp;
+@@ -352,8 +351,7 @@ static void ath_ani_calibrate(unsigned long data)
+ 	}
+ 
+ 	/* Verify whether we must check ANI */
+-	if ((timestamp - sc->ani.checkani_timer) >=
+-	   ATH_ANI_POLLINTERVAL) {
++	if ((timestamp - sc->ani.checkani_timer) >= ATH_ANI_POLLINTERVAL) {
+ 		aniflag = true;
+ 		sc->ani.checkani_timer = timestamp;
+ 	}
+@@ -362,8 +360,7 @@ static void ath_ani_calibrate(unsigned long data)
+ 	if (longcal || shortcal || aniflag) {
+ 		/* Call ANI routine if necessary */
+ 		if (aniflag)
+-			ath9k_hw_ani_monitor(ah, &sc->nodestats,
+-					     ah->curchan);
++			ath9k_hw_ani_monitor(ah, &sc->nodestats, ah->curchan);
+ 
+ 		/* Perform calibration if necessary */
+ 		if (longcal || shortcal) {
+@@ -392,6 +389,7 @@ static void ath_ani_calibrate(unsigned long data)
+ 		}
+ 	}
+ 
++set_timer:
+ 	/*
+ 	* Set timer interval based on previous results.
+ 	* The interval must be the shortest necessary to satisfy ANI,
+@@ -401,7 +399,7 @@ static void ath_ani_calibrate(unsigned long data)
+ 	if (sc->sc_ah->config.enable_ani)
+ 		cal_interval = min(cal_interval, (u32)ATH_ANI_POLLINTERVAL);
+ 	if (!sc->ani.caldone)
+-		cal_interval = min(cal_interval, (u32)ATH_SHORT_CALINTERVAL);
++		cal_interval = min(cal_interval, (u32)short_cal_interval);
+ 
+ 	mod_timer(&sc->ani.timer, jiffies + msecs_to_jiffies(cal_interval));
+ }
+@@ -924,8 +922,7 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
+ 
+ 		/* Start ANI */
+ 		mod_timer(&sc->ani.timer,
+-			jiffies + msecs_to_jiffies(ATH_ANI_POLLINTERVAL));
+-
++			  jiffies + msecs_to_jiffies(ATH_ANI_POLLINTERVAL));
+ 	} else {
+ 		DPRINTF(sc, ATH_DBG_CONFIG, "Bss Info DISSOC\n");
+ 		sc->curaid = 0;
+-- 
+1.6.1
 
-Jan.
-
---=20
-Do you need professional PHP or Horde consulting?
-http://horde.org/consulting/
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
