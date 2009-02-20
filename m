@@ -1,58 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:44158 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756706AbZBMQGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 11:06:03 -0500
-Subject: Re: Automatic/manual regulatory settings
-From: Dan Williams <dcbw@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jan Schneider <jan@horde.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890902121443s307163ecide0f40bdc5a5818f@mail.gmail.com>
-References: <20090212181959.11876f8viq636hs0@neo.wg.de>
-	 <1234471883.24344.2.camel@localhost>
-	 <43e72e890902121443s307163ecide0f40bdc5a5818f@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 13 Feb 2009 10:44:41 -0500
-Message-Id: <1234539881.3173.8.camel@localhost> (sfid-20090213_170607_418595_9948A70D)
-Mime-Version: 1.0
+Received: from mk-outboundfilter-2.mail.uk.tiscali.com ([212.74.114.38]:42954
+	"EHLO mk-outboundfilter-2.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754916AbZBTXHi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 18:07:38 -0500
+From: Adam Baker <linux@baker-net.org.uk>
+To: Anders Eriksson <aeriksson@fastmail.fm>
+Subject: Re: [Rt2400-devel] No ProbeResp == dead interface?
+Date: Fri, 20 Feb 2009 23:07:33 +0000
+Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
+References: <20090218205849.5723293CD93@tippex.mynet.homeunix.org> <200902192316.11628.linux@baker-net.org.uk> <20090220074716.9AB622C4090@tippex.mynet.homeunix.org>
+In-Reply-To: <20090220074716.9AB622C4090@tippex.mynet.homeunix.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200902202307.34035.linux@baker-net.org.uk> (sfid-20090221_000748_555841_C69D7088)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-02-12 at 14:43 -0800, Luis R. Rodriguez wrote:
-> On Thu, Feb 12, 2009 at 12:51 PM, Dan Williams <dcbw@redhat.com> wrote:
-> > On Thu, 2009-02-12 at 18:19 +0100, Jan Schneider wrote:
-> >> While looking at logs collected for my microcode crash problem I
-> >> noticed that cfg80211 loads US regulatory settings.
-> >> If I understand the documentation correctly the actual country should
-> >> be set either by the AP or the device using cfg80211. Neither seems to
-> >> happen, so is it the "correct" way to do this through the
-> >> ieee80211_regdom module parameter? And I wonder how this is supposed
-> >> to happen "idiot-proof" in the future?
-> >
-> > In the future it would get set by whatever configures your network
-> > connection.  Either system scripts like ifup/ifdown, or configured
-> > manually in the config files that ifup/ifdown use, or automatically via
-> > NetworkManager based on some setting, or via NetworkManager based on a
-> > user-override.
-> >
-> > One idea I've toyed with for NetworkManager is using the city you select
-> > in the GUI Timezone control panel that all desktop environments for
-> > timezone selection.  Just a thought.  Or, it could come from a
-> > system-wide setting by your sysadmin in /etc, or set on a per-connection
-> > basis when you set up the NetworkManager connection for that AP in the
-> > NM connection editor.
-> 
-> I think it'd be nice to leverage all these different possible location
-> based hints to help with your location -- and more. I think GeoClue
-> does such a thing (works with dbus and all), but I have not yet had
-> time to try it.
-> 
-> http://www.freedesktop.org/wiki/Software/GeoClue
+On Friday 20 February 2009, Anders Eriksson wrote:
+> linux@baker-net.org.uk said:
+> > The first thing to try would be to see if rmmod rt61pci; modprobe rt61pci
+> > is enough to recover it. If it is actually a cardbus card then you could
+> > also try unplugging and replugging it.
+>
+> It's a rt2500, so I use that module. Should I use rt61pci?
 
-Yeah, if there's GPS available on the system we can certainly use that
-too :)
+No, I'm getting confused with another post. rt2500pci is correct.
 
-Dan
+> If memory servers, rmmod/modprobe does not help. It is a PCI card with no
+> loose parts on it so unplugging/plugging is not really an option.
+
+rmmod / modprobe not working isn't a good sign. After a modprobe there is a 
+pretty comprehensive reconfigure. When you say you currently have to power 
+cycle, have you also tried a reboot
+
+>
+> linux@baker-net.org.uk said:
+> > Neither of those is an ideal solution though. Do you fancy the task of
+> > trying to diagnose the underlying fault which is likely to require at the
+> > very least  making sure the driver is built with debugfs support enabled
+> > and may require  adding a few printk statements into the kernel modules
+> > to reveal more details  of the behaviour?
+>
+> No problem. I've never used debugfs, but I kind of know my way around the
+> kernel. The problem has existed at least since the opensource driver got
+> merged into mainline. I'm not sure if the closed source one had the same
+> issue. So bisecting is not really an option.
+
+The first thing to do is check that your kernel includes both 
+CONFIG_MAC80211_DEBUGFS=y
+and 
+CONFIG_RT2X00_LIB_DEBUGFS=y
+
+then you can mount the debugfs file system somewhere
+
+mount -t debugfs none /mnt_point
+
+and have a look in there under ieee80211/phy0/rt2500pci for first. Probable 
+the most useful thing there is the queue counters which should let you see if 
+the card is
+
+a) trying to transmit anything
+b) receiving anything
+
+Would be good to know if the legacy driver has the same issue - if it does 
+that might point to a hardware fault.
+
+>
+> So, where do I sprinkle the prink's, and what info is useful?
+>
+
+Adam.
 
 
