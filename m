@@ -1,96 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.31]:61978 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039AbZBTER1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 23:17:27 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so302267ywh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 20:17:26 -0800 (PST)
+Received: from mail.ammma.de ([213.83.39.131]:28752 "EHLO ammma.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752076AbZBTPFT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 10:05:19 -0500
+Received: from ammma.net (hydra.ammma.mil [192.168.110.1])
+	by ammma.de (8.11.6/8.11.6/AMMMa AG) with ESMTP id n1KF7AI09746
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 16:07:10 +0100
+Received: from neo.wg.de (hydra.ammma.mil [192.168.110.1])
+	by ammma.net (8.12.11.20060308/8.12.11/AMMMa AG) with ESMTP id n1KF5FQO003354
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 16:05:16 +0100
+Received: from localhost (localhost [127.0.0.1])
+	by neo.wg.de (Postfix) with ESMTP id 63D8D41B42B
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 16:05:15 +0100 (CET)
+Received: from neo.wg.de ([127.0.0.1])
+	by localhost (neo.wg.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id sC3m5rOZ8SAb for <linux-wireless@vger.kernel.org>;
+	Fri, 20 Feb 2009 16:05:02 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by neo.wg.de (Postfix) with ESMTP id 9A7A8436172
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 16:05:02 +0100 (CET)
+Message-ID: <20090220160502.112039tfocopragw@neo.wg.de> (sfid-20090220_160523_747379_1066EAD3)
+Date: Fri, 20 Feb 2009 16:05:02 +0100
+From: Jan Schneider <jan@horde.org>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Connection "interruptions"
+References: <20090216143915.18703m2wpmqic1ic@neo.wg.de>
+In-Reply-To: <20090216143915.18703m2wpmqic1ic@neo.wg.de>
 MIME-Version: 1.0
-In-Reply-To: <20090128121237.GB3197@sortiz.org>
-References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
-	 <20090126114453.GB3197@sortiz.org>
-	 <c4d76b3b0901261913s23427b19tbbe34ee7b4261068@mail.gmail.com>
-	 <c4d76b3b0901261935n1846b675w72cfa7308d198080@mail.gmail.com>
-	 <20090127162437.GA3596@sortiz.org>
-	 <c4d76b3b0901271531q19578871idbc59b5a23ac868e@mail.gmail.com>
-	 <1ba2fa240901272312j270eedb5x33534a9703d26e06@mail.gmail.com>
-	 <20090128113751.GA3197@sortiz.org>
-	 <1ba2fa240901280352o56ccbc07h50c7a4bfcd0ac9ab@mail.gmail.com>
-	 <20090128121237.GB3197@sortiz.org>
-Date: Thu, 19 Feb 2009 23:17:25 -0500
-Message-ID: <c4d76b3b0902192017n5ae6b23dg36e7aca54cbd703f@mail.gmail.com> (sfid-20090220_051738_142036_6D947AB4)
-Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
-From: Jason Andryuk <jandryuk@gmail.com>
-To: Samuel Ortiz <samuel@sortiz.org>
-Cc: Tomas Winkler <tomasw@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 28, 2009 at 7:12 AM, Samuel Ortiz <samuel@sortiz.org> wrote:
-> On Wed, Jan 28, 2009 at 01:52:17PM +0200, Tomas Winkler wrote:
->> On Wed, Jan 28, 2009 at 1:37 PM, Samuel Ortiz <samuel@sortiz.org> wrote:
->> > On Wed, Jan 28, 2009 at 09:12:48AM +0200, Tomas Winkler wrote:
->> >> On Wed, Jan 28, 2009 at 1:31 AM, Jason Andryuk <jandryuk@gmail.com> wrote:
->> >> >> No, that's just a consequence of the bug, not the bug itself.
->> >> >> Would you mind applying this patch on top of your latest wireless-testing tree
->> >> >> and testing 3945 with it ? Thanks for your patience.
->> >> >
->> >> > The patch did not cleanly apply, but I just removed the lines
->> >> > indicated in the patch.  It crashed with a NULL pointer dereference.
->> >>
->> >> Samuel
->> >> It was really wrong try, you cannot just leave place where firmware
->> >> updated read pointer unallocated. I would rather focus on differences
->> >> introduced by this patch.
->> > Well, that's what I did. I neglected to check if rb_stts were actually used.
->> >
->> >
->> >> commit 738910c064ff461051cd37e17199f270ff88a9a3 iwl3945: use rx queue
->> >> management infrastructure from iwlcore is the first to trigger the
->> >> BUG_ON. However, prior versions would dereference a NULL pointer
->> >> before the driver could get far enough to trigger the BUG_ON.
->> > I know, that's what Jason described.
->> > I think I now understand why. Prior to
->> > 738910c064ff461051cd37e17199f270ff88a9a3, you introduced
->> > c2a0aa3cb733452e749727680e380dca6cc10a68 without actually allocating the
->> > rb_stts pointer, which was really wrong too.
->>
->> Yes I made mistake then I tought that 3945 take also init path of agn
->> already... Now it's hard to besect :(.
->> I suspect the rx queue managment infrastructure more because we brohgt
->> iwlagn bug into 3945 I guess it wrong rx buffer index handling. It's
->> really important we nail it now this will solve also our troubles in
->> iwlagn, where it get lost upon tons of patches.
-> I agree. I also suspect that a lot more people will report the same problem
-> when this code leaves wireless-testing for upstream inclusion.
+Zitat von Jan Schneider <jan@horde.org>:
 
-I tried out wireless-testing as of 2009-02-18.  I was excited
-initially because I was able to connect to my AP and ping and access
-the internet.  I started writing an email over the connection, but
-then things went sour.
+> Hi,
+>
+> now that I got current wireless-compat snapshots running at all, I'm  
+> back to look into what I hoped had been fixed in newer versions:
+> I see arbitrary "interruptions" of the wireless connection. The  
+> transfer just halts for a few seconds, no traffic is going over the  
+> ether at all. Then suddenly, the connection resumes as if nothing  
+> happened. Nothing is being logged by kernel, wpa_supplicant or  
+> syslog. This is a draft-n-only thing, it does not happen if I tell  
+> either the AP or the driver module to not use draft-n. This is an  
+> Intel 5300 board.
+> I am wondering how to further track this down, or how to collect  
+> useful data for a bug report. Logging everything with the debug flag  
+> is probably not very helpful, since this produces huge logs, and  
+> it's not easy to determine the exact point when the connection  
+> drops. What might be useful flags for the debug50 parameter to get  
+> more information from the driver without getting lost in the sheer  
+> amount of debug messages?
 
-Logs showed a Microcode SW error, but that comes after successful
-authentication to the AP.
+No suggestions, anyone?
 
-[  323.904100] iwl3945 0000:03:00.0: Microcode SW error detected.
-Restarting 0x82000008.
-[  323.904119] iwl3945 0000:03:00.0: Error Reply type 0x00000005 cmd
-UNKNOWN (0x00) seq 0x013A ser 0x004E0000
+Jan.
 
-I think it was still working, but it then stopped and I discovered a
-second Microcode SW error.
+-- 
+Do you need professional PHP or Horde consulting?
+http://horde.org/consulting/
 
-[  713.561161] iwl3945 0000:03:00.0: Microcode SW error detected.
-Restarting 0x82000008.
-[  713.561172] iwl3945 0000:03:00.0: Error Reply type 0x00000005 cmd
-UNKNOWN (0x40) seq 0x013A ser 0x004E0000
-
-Debugging was not turned on, so I don't have further information.
-
-When I rebooted, iwl3945 failed to find the AP and hence did not connect.
-
-Jason
