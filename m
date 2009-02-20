@@ -1,71 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.28]:36649 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668AbZBDFOU (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56087 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752851AbZBTQ5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 00:14:20 -0500
-Received: by yw-out-2324.google.com with SMTP id 9so864230ywe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 21:14:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20090204045208.GA8086@hash.localnet>
-References: <20090131023147.GE3342@makis>
-	 <20090203161317.M71923@bobcopeland.com>
-	 <40f31dec0902030828v453fdeafh9d47a156c07f6c9d@mail.gmail.com>
-	 <20090204045208.GA8086@hash.localnet>
-Date: Wed, 4 Feb 2009 07:14:19 +0200
-Message-ID: <40f31dec0902032114k9df1715h6dd60746dcb1f6a4@mail.gmail.com> (sfid-20090204_061426_728907_4D0DA511)
-Subject: Re: [ath5k-devel] [PATCH 5/5] ath5k: Update reset code
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com
-Content-Type: text/plain; charset=UTF-8
+	Fri, 20 Feb 2009 11:57:31 -0500
+Subject: Re: [PATCH v4 00/15] cfg80211: add a workqueue for regulatory
+	processing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890902191640u107ff0fdse92367fccc975dba@mail.gmail.com> (sfid-20090220_014115_061983_954B3E1A)
+References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
+	 <1235050171.4023.64.camel@johannes.local>
+	 <43e72e890902191640u107ff0fdse92367fccc975dba@mail.gmail.com>
+	 (sfid-20090220_014115_061983_954B3E1A)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ds3y/xIPbsSxaJh+xP7X"
+Date: Fri, 20 Feb 2009 17:57:23 +0100
+Message-Id: <1235149043.4023.66.camel@johannes.local> (sfid-20090220_175739_970074_71A77760)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/2/4 Bob Copeland <me@bobcopeland.com>:
-> On Tue, Feb 03, 2009 at 06:28:47PM +0200, Nick Kossifidis wrote:
->> Nice catch ;-)
->>
->> Another difference i remembered is that we now don't set the TPC
->> register to 3f (until we fix the whole tx power stuff). I'll try to
->> reproduce this with my ar2425 as it turns it also has problems.
->
-> And the winning hunk is:
->
->        if (ah->ah_version != AR5K_AR5210) {
->                ath5k_hw_reg_write(ah, 0xffffffff, AR5K_PISR);
-> -               /* If we later allow tuning for this, store into sc structure */
-> -               data = AR5K_TUNE_RSSI_THRES |
-> -                       AR5K_TUNE_BMISS_THRES << AR5K_RSSI_THR_BMISS_S;
-> -               ath5k_hw_reg_write(ah, data, AR5K_RSSI_THR);
->        }
->
-> (hmm, bmiss threshold, should've seen that before...)
->
-> With that reverted from the rest of the patchset, I no longer get the
-> interrupt storm.  I do seem to get an occasional lockup at association
-> time, but I haven't caught an oops for that yet.  It could be unrelated.
->
 
-O.K. i got that from legacy HAL. It first reads the register and if
-it's zeroed it sets to the default value of 0x781 (which is the same
-really, it's  AR5K_TUNE_RSSI_THRES | AR5K_TUNE_BMISS_THRES <<
-AR5K_RSSI_THR_BMISS_S), if not it saves it and restores it after reset
-is done.
+--=-Ds3y/xIPbsSxaJh+xP7X
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-So can you see why this
+On Thu, 2009-02-19 at 16:40 -0800, Luis R. Rodriguez wrote:
 
-	/* Save RSSI thresholds (they 'll get zeroed from initvals) */
-	rssi_thr = ath5k_hw_reg_read(ah, AR5K_RSSI_THR);
-	/* If they are not set, set the default value */
-	if (!rssi_thr)
-		rssi_thr = AR5K_INIT_RSSI_THR;
+> > I don't know why you insist on having a wrapper for
+> > wiphy->wiphy_idx but it's ok :)
+>=20
+> Heh its just because wiphy->wiphy_idx does not exist, the drv has so
+> you must go to the container and then use that. If we move the idx to
+> the wiphy then I'm good to use wiphy->wiphy_idx. Want to do that?
 
-doesn't work ? What is the value of rssi_trh if not zero ?
+Ah. Not sure, but I don't think we need to expose that to drivers.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+johannes
+
+--=-Ds3y/xIPbsSxaJh+xP7X
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJnuDwAAoJEKVg1VMiehFYKtAP/irX8eMU7Lc3zFse7vTz7VAZ
+4yCryBPScFMDZVnTZJ/9+hownNEr5YTf4nlLCC61o7JnpKagUxH0sojfIvhB8vtO
+2TsHspidB+l9ybIAq81pgd1mAPtXHJf5OPMG13d5Pn73jbzvQh6wbJ3LiHemq/hg
++9C9EecGvSXwp41/xcN82eqFq97tlfhV+gYpiFW/hq9ceMfjjjvYZtTojo0BfQPl
+5qvCThuQX/sj+pMKjNCJI1BYgrsJxrsqu//uppstUUn7dJ+S5iITK17g9XGjvFpP
+jFO1HsDUc3wuQqiWuc0KTBeD0LhqIfxFC0NyfC394zwaEThM0iv6R3j1zt0yasBw
+PjOdsdw9GAlHiWjZy8lCrUY8BTh63WGI4AZT5AXQz4SLOrKtOMhS7ra/KImZJnAp
+rJFUhqKtCbV+U34jePNPFC7dE1EMzzMzp+RqQ/VpwiV4Cg4xmzgAwayv3KVuXOyq
+Z2MYSPrvsEMcnh0oqfNsTj/0dyOHXg4+5f07ux1q9Q5klh7zSUXouvWUfA/8zQ3F
+LKrHhVdcGei6wbqZ0wSlyTC8+C+BMoRjL+2236wpn4AmzJtxIfAZL1n+wL6qK8S9
+i3AJDRj6w43eSBQ0JdOWSHvWWXQwCnWOzxm8yJQ5eJ6sRg54YffMeAividwghU11
+ZVBkdYrV7LhV+IsULg4M
+=XX6P
+-----END PGP SIGNATURE-----
+
+--=-Ds3y/xIPbsSxaJh+xP7X--
+
