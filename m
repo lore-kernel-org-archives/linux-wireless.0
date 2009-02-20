@@ -1,90 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46896 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752654AbZBOK6y (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:49032 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752666AbZBTGFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 05:58:54 -0500
-Subject: Re: [PATCH 04/10] nl80211: disallow user requests prior to
-	regulatory_init()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1234589627-16977-5-git-send-email-lrodriguez@atheros.com>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-5-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dlx1/p0IZpqf/XAZNP89"
-Date: Sun, 15 Feb 2009 11:58:46 +0100
-Message-Id: <1234695526.4219.46.camel@johannes.local> (sfid-20090215_115900_117287_DBD3C563)
-Mime-Version: 1.0
+	Fri, 20 Feb 2009 01:05:07 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	marcel@holtmann.org, kalle.valo@nokia.com, kyle@mcmartin.ca
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 4/5] ath9k: follow beacon hints on reg_notifier when world roaming
+Date: Fri, 20 Feb 2009 01:04:33 -0500
+Message-Id: <1235109874-3966-5-git-send-email-lrodriguez@atheros.com> (sfid-20090220_070514_278305_16305A03)
+In-Reply-To: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
+References: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If we are roaming we allow to follow beacon hints.
 
---=-dlx1/p0IZpqf/XAZNP89
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/regd.c |   93 ++++++++++++++++++++++++-------------
+ 1 files changed, 61 insertions(+), 32 deletions(-)
 
-On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
-> If cfg80211 is built into the kernel there is perhaps a small
-> time window betwen nl80211_init() and regulatory_init() where
-> cfg80211_regdomain hasn't yet been initialized to let the
-> wireless core do its work. During that rare case and time
-> frame (if its even possible) we don't allow user regulatory
-> changes as cfg80211 is working on enabling its first regulatory
-> domain.
->=20
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  net/wireless/nl80211.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index db973f2..6f4dedb 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -1876,6 +1876,15 @@ static int nl80211_req_set_reg(struct sk_buff *skb=
-, struct genl_info *info)
->  	int r;
->  	char *data =3D NULL;
-> =20
-> +	/*
-> +	 * You should only get this when cfg80211 hasn't yet initialized
-> +	 * completely when built-in to the kernel right between the time
-> +	 * window between nl80211_init() and regulatory_init(), if that is
-> +	 * even possible.
-> +	 */
-> +	if (!cfg80211_regdomain)
-> +		return -EINPROGRESS;
-> +
-
-But that variable access here is racy too. It might be ok anyway because
-the variable can never be NULL again after the first assignment, but in
-that case the assignment needs to take care to assign something fully
-created ...
-
-johannes
-
---=-dlx1/p0IZpqf/XAZNP89
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJl/VjAAoJEKVg1VMiehFYZ8AQAKL57SVppDTKKKhBkV4D+Kfs
-kwv1S+Xcb+vRoDJ8IMPvBf92axyRySPSf2+b7lULIY6hYm0wjREYuydgVy7Vk/B2
-8mw0qJwQsbgwnOktExRXr5j2pvmXdXHZVG2cpDmaJ11kUzN+gIu2iMczqckQ2dEO
-PItOrI2cwlfgtPYngLikek0jHhxQGhVaYWTn5BChOZ6gwG45U90C93aLmsZA9o7k
-a2148xUugRYg2+2hmfwikrrtds4Ejt78Nm9YrzEy8IvqGLPQ2ZITR9dE1nOYbaJP
-wqkXzmfw4KQbLsugm63iF9x0oaELSIIR8W2iAU+fzI/YMtCWyIYS4dZHgHyGc1Nm
-mJuOTZ6To3jYYMdYCZoENXjVukIiO+0q3IiNFqQ2qmdnJ9YNRSyjjCti6NmoM819
-V0kczVa/pP4ozCW+68AESMAQhinO0Hqmj9/DQttsAKA9afFv/Z5MBJ3010GhHZ4O
-o7F/UWi9HPFko8tleLg1SYj715tk1EzLMP1NtyuCsxealiYxfjhR8RcY8W1sLdtf
-EGgUf2O53qdjPcczcFynMtnYTzWXB2QFPMXcJgBzWs24wkl31QPRJinuQ759JwQF
-OoqBQZSYds/89VXGoqDrfnRwdxyaL12yRmpE3kueNqkDp9peKAAvgTuLh171H74C
-My+Nk9B2DXAXtkFruMCK
-=BDfM
------END PGP SIGNATURE-----
-
---=-dlx1/p0IZpqf/XAZNP89--
+diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
+index eb0d1b7..f4595e2 100644
+--- a/drivers/net/wireless/ath9k/regd.c
++++ b/drivers/net/wireless/ath9k/regd.c
+@@ -160,13 +160,18 @@ static bool ath9k_is_radar_freq(u16 center_freq)
+ }
+ 
+ /*
+- * Enable adhoc on 5 GHz if allowed by 11d.
+- * Remove passive scan if channel is allowed by 11d,
+- * except when on radar frequencies.
++ * N.B: These exception rules do not apply radar freqs.
++ *
++ * - We enable adhoc (or beaconing) if allowed by 11d
++ * - We enable active scan if the channel is allowed by 11d
++ * - If no country IE has been processed and a we determine we have
++ *   received a beacon on a channel we can enable active scan and
++ *   adhoc (or beaconing).
+  */
+-static void ath9k_reg_apply_5ghz_beaconing_flags(struct wiphy *wiphy,
++static void ath9k_reg_apply_beaconing_flags(struct wiphy *wiphy,
+ 					     enum reg_set_by setby)
+ {
++	enum ieee80211_band band;
+ 	struct ieee80211_supported_band *sband;
+ 	const struct ieee80211_reg_rule *reg_rule;
+ 	struct ieee80211_channel *ch;
+@@ -174,29 +179,50 @@ static void ath9k_reg_apply_5ghz_beaconing_flags(struct wiphy *wiphy,
+ 	u32 bandwidth = 0;
+ 	int r;
+ 
+-	if (setby != REGDOM_SET_BY_COUNTRY_IE)
+-		return;
+-	if (!wiphy->bands[IEEE80211_BAND_5GHZ])
+-		return;
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 
+-	sband = wiphy->bands[IEEE80211_BAND_5GHZ];
+-	for (i = 0; i < sband->n_channels; i++) {
+-		ch = &sband->channels[i];
+-		r = freq_reg_info(wiphy, ch->center_freq,
+-			&bandwidth, &reg_rule);
+-		if (r)
++		if (!wiphy->bands[band])
+ 			continue;
+-		/* If 11d had a rule for this channel ensure we enable adhoc
+-		 * if it allows us to use it. Note that we would have disabled
+-		 * it by applying our static world regdomain by default during
+-		 * probe */
+-		if (!(reg_rule->flags & NL80211_RRF_NO_IBSS))
+-			ch->flags &= ~IEEE80211_CHAN_NO_IBSS;
+-		if (!ath9k_is_radar_freq(ch->center_freq))
+-			continue;
+-		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
+-			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++
++		sband = wiphy->bands[band];
++
++		for (i = 0; i < sband->n_channels; i++) {
++
++			ch = &sband->channels[i];
++
++			if (ath9k_is_radar_freq(ch->center_freq) ||
++			    (ch->flags & IEEE80211_CHAN_RADAR))
++				continue;
++
++			if (setby == REGDOM_SET_BY_COUNTRY_IE) {
++				r = freq_reg_info(wiphy, ch->center_freq,
++					&bandwidth, &reg_rule);
++				if (r)
++					continue;
++				/*
++				 * If 11d had a rule for this channel ensure
++				 * we enable adhoc/beaconing if it allows us to
++				 * use it. Note that we would have disabled it
++				 * by applying our static world regdomain by
++				 * default during init, prior to calling our
++				 * regulatory_hint().
++				 */
++				if (!(reg_rule->flags &
++				    NL80211_RRF_NO_IBSS))
++					ch->flags &=
++					  ~IEEE80211_CHAN_NO_IBSS;
++				if (!(reg_rule->flags &
++				    NL80211_RRF_PASSIVE_SCAN))
++					ch->flags &=
++					  ~IEEE80211_CHAN_PASSIVE_SCAN;
++			} else {
++				if (ch->beacon_found)
++					ch->flags &= ~(IEEE80211_CHAN_NO_IBSS |
++					  IEEE80211_CHAN_PASSIVE_SCAN);
++			}
++		}
+ 	}
++
+ }
+ 
+ /* Allows active scan scan on Ch 12 and 13 */
+@@ -209,11 +235,12 @@ static void ath9k_reg_apply_active_scan_flags(struct wiphy *wiphy,
+ 	u32 bandwidth = 0;
+ 	int r;
+ 
+-	/* Force passive scan on Channels 12-13 */
+ 	sband = wiphy->bands[IEEE80211_BAND_2GHZ];
+ 
+-	/* If no country IE has been received always enable active scan
+-	 * on these channels */
++	/*
++	 * If no country IE has been received always enable active scan
++	 * on these channels. This is only done for specific regulatory SKUs
++	 */
+ 	if (setby != REGDOM_SET_BY_COUNTRY_IE) {
+ 		ch = &sband->channels[11]; /* CH 12 */
+ 		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+@@ -224,10 +251,12 @@ static void ath9k_reg_apply_active_scan_flags(struct wiphy *wiphy,
+ 		return;
+ 	}
+ 
+-	/* If a country IE has been recieved check its rule for this
++	/*
++	 * If a country IE has been recieved check its rule for this
+ 	 * channel first before enabling active scan. The passive scan
+-	 * would have been enforced by the initial probe processing on
+-	 * our custom regulatory domain. */
++	 * would have been enforced by the initial processing of our
++	 * custom regulatory domain.
++	 */
+ 
+ 	ch = &sband->channels[11]; /* CH 12 */
+ 	r = freq_reg_info(wiphy, ch->center_freq, &bandwidth, &reg_rule);
+@@ -290,10 +319,10 @@ void ath9k_reg_apply_world_flags(struct wiphy *wiphy, enum reg_set_by setby)
+ 	case 0x63:
+ 	case 0x66:
+ 	case 0x67:
+-		ath9k_reg_apply_5ghz_beaconing_flags(wiphy, setby);
++		ath9k_reg_apply_beaconing_flags(wiphy, setby);
+ 		break;
+ 	case 0x68:
+-		ath9k_reg_apply_5ghz_beaconing_flags(wiphy, setby);
++		ath9k_reg_apply_beaconing_flags(wiphy, setby);
+ 		ath9k_reg_apply_active_scan_flags(wiphy, setby);
+ 		break;
+ 	}
+-- 
+1.6.0.3
 
