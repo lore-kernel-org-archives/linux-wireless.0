@@ -1,107 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:33552 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:58825 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754862AbZBREqw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 23:46:52 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 20:46:52 -0800
-Date: Wed, 18 Feb 2009 10:16:44 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [ath9k-devel] [PATCH v2] ath9k: Fix panic upon attach failure
-Message-ID: <20090218044644.GA8119@vasanth-laptop> (sfid-20090218_054704_524358_511CF2F3)
-References: <1234772707-17796-1-git-send-email-vasanth@atheros.com> <43e72e890902171146u42ffc9e8rc274608cdc713812@mail.gmail.com>
+	id S1751125AbZBTNtp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 08:49:45 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John W Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Honor the no-slow-clock boardflag
+Date: Fri, 20 Feb 2009 14:47:56 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <43e72e890902171146u42ffc9e8rc274608cdc713812@mail.gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200902201447.57019.mb@bu3sch.de> (sfid-20090220_144949_377863_FAF52033)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 18, 2009 at 01:16:03AM +0530, Luis R. Rodriguez wrote:
-> On Mon, Feb 16, 2009 at 12:25 AM, Vasanthakumar Thiagarajan
-> <vasanth@atheros.com> wrote:
-> > [246916.338046]
-> > [246916.338048] Pid: 29265, comm: insmod Not tainted (2.6.29-rc4-wl #64) 9461DUU
-> > [246916.338051] EIP: 0060:[<c02ca274>] EFLAGS: 00010202 CPU: 0
-> > [246916.338055] EIP is at rollback_registered+0x24/0x220
-> > [246916.338057] EAX: 00000001 EBX: 00000000 ECX: 00000000 EDX: f122e8fc
-> > [246916.338059] ESI: 00000000 EDI: 00000000 EBP: f6595d30 ESP: f6595d1c
-> > [246916.338062]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-> > [246916.338064] Process insmod (pid: 29265, ti=f6594000 task=f7343fe0 task.ti=f6594000)
-> > [246916.338067] Stack:
-> > [246916.338068]  c04a2920 22222222 f6595d48 00000000 f122f080 f6595d48 c02ca489 f122e8fc
-> > [246916.338076]  f122e220 f122f080 f122e220 f6595d5c f8a03156 f122e220 f122f080 f122e220
-> > [246916.338085]  f6595d80 f87359af f122f080 00002000 f874e129 f122f150 f122f080 f6290000
-> > [246916.338094] Call Trace:
-> > [246916.338096]  [<c02ca489>] ? unregister_netdevice+0x19/0x70
-> > [246916.338100]  [<f8a03156>] ? ieee80211_unregister_hw+0x36/0xd0 [mac80211]
-> > [246916.338112]  [<f87359af>] ? ath_detach+0xcf/0x250 [ath9k]
-> > [246916.338127]  [<f8735d9c>] ? ath_attach+0x26c/0x740 [ath9k]
-> > [246916.338139]  [<f873c33a>] ? ath_pci_probe+0x13a/0x310 [ath9k]
-> > [246916.338151]  [<c0233e28>] ? _raw_spin_unlock+0x68/0x80
-> > [246916.338158]  [<c023ab8e>] ? local_pci_probe+0xe/0x10
-> > [246916.338162]  [<c023b8e0>] ? pci_device_probe+0x60/0x80
-> > [246916.338169]  [<c029e042>] ? driver_probe_device+0x82/0x1b0
-> > [246916.338174]  [<c029e1f9>] ? __driver_attach+0x89/0x90
-> > [246916.338180]  [<c029d97b>] ? bus_for_each_dev+0x4b/0x70
-> > [246916.338184]  [<c023b820>] ? pci_device_remove+0x0/0x40
-> > [246916.338190]  [<c029ded9>] ? driver_attach+0x19/0x20
-> > [246916.338193]  [<c029e170>] ? __driver_attach+0x0/0x90
-> > [246916.338197]  [<c029d317>] ? bus_add_driver+0x1b7/0x230
-> > [246916.338203]  [<c023b820>] ? pci_device_remove+0x0/0x40
-> > [246916.338206]  [<c029e399>] ? driver_register+0x69/0x140
-> > [246916.338212]  [<f859d000>] ? ath9k_init+0x0/0x54 [ath9k]
-> > [246916.338221]  [<c023bb4e>] ? __pci_register_driver+0x4e/0x90
-> > [246916.338225]  [<f859d000>] ? ath9k_init+0x0/0x54 [ath9k]
-> > [246916.338232]  [<f859d06b>] ? ath_pci_init+0x17/0x19 [ath9k]
-> > [246916.338238]  [<f859d017>] ? ath9k_init+0x17/0x54 [ath9k]
-> > [246916.338245]  [<c017148e>] ? tracepoint_update_probe_range+0x7e/0xb0
-> > [246916.338249]  [<c010111a>] ? do_one_initcall+0x2a/0x170
-> > [246916.338252]  [<c0149f26>] ? up_read+0x16/0x30
-> > [246916.338256]  [<c014aa9d>] ? __blocking_notifier_call_chain+0x4d/0x60
-> > [246916.338265]  [<c0162b1a>] ? sys_init_module+0x8a/0x1c0
-> > [246916.338269]  [<c022f888>] ? trace_hardirqs_on_thunk+0xc/0x10
-> > [246916.338272]  [<c0103ebf>] ? sysenter_do_call+0x12/0x43
-> > [246916.338276] Code: 8d bc 27 00 00 00 00 55 89 e5 56 89 c6 53 83 ec 0c a1 74 27 4a c0 85 c0 0f 85 4b 01 00 00 e8 04 7d 00 00 85 c0 0f 84 c9 01 00 00 <8b> 86 18 03 00 00 85 c0 0f 84 86 01 00 00 83 e8 01 0f 85 71 01
-> > [246916.338328] EIP: [<c02ca274>] rollback_registered+0x24/0x220 SS:ESP 0068:f6595d1c
-> > [246916.338335] ---[ end trace 76357c56a75ea34e ]---
-> >
-> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> > ---
-> >  drivers/net/wireless/ath9k/main.c |   25 +++++++++++++++++--------
-> >  1 files changed, 17 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-> > index 787c6f7..8b2a7b8 100644
-> > --- a/drivers/net/wireless/ath9k/main.c
-> > +++ b/drivers/net/wireless/ath9k/main.c
-> > @@ -1562,6 +1562,7 @@ bad2:
-> >  bad:
-> >        if (ah)
-> >                ath9k_hw_detach(ah);
-> > +       ath9k_exit_debug(sc);
-> >
-> >        return error;
-> >  }
-> > @@ -1570,7 +1571,7 @@ int ath_attach(u16 devid, struct ath_softc *sc)
-> >  {
-> >        struct ieee80211_hw *hw = sc->hw;
-> >        const struct ieee80211_regdomain *regd;
-> > -       int error = 0;
-> > +       int error = 0, i;
-> 
-> Better to use unsigned int for when in use in loops, I'm told it
-> performs better on some archs.
+Do not turn off the crystal, if the boardflags tell us so.
 
-I agree signed int is useless in this case, u8 is more than enough.
-But there are few more places we are doing similar things, this can
-be cleaned up in a separate patch.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Vasanth
+---
+
+John, this doesn't fix known bugs. Please queue for the next feature release.
+
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-02-20 12:34:53.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-02-20 14:41:53.000000000 +0100
+@@ -4185,12 +4185,14 @@ static int b43_wireless_core_init(struct
+ 	if (phy->radio_ver == 0x2050) {
+ 		if (phy->radio_rev == 6)
+ 			hf |= B43_HF_4318TSSI;
+ 		if (phy->radio_rev < 6)
+ 			hf |= B43_HF_VCORECALC;
+ 	}
++	if (sprom->boardflags_lo & B43_BFL_XTAL_NOSLOW)
++		hf |= B43_HF_DSCRQ; /* Disable slowclock requests from ucode. */
+ 	b43_hf_write(dev, hf);
+ 
+ 	b43_set_retry_limits(dev, B43_DEFAULT_SHORT_RETRY_LIMIT,
+ 			     B43_DEFAULT_LONG_RETRY_LIMIT);
+ 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_SFFBLIM, 3);
+ 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_LFFBLIM, 2);
+@@ -4223,13 +4225,13 @@ static int b43_wireless_core_init(struct
+ 	if (err)
+ 		goto err_chip_exit;
+ 	b43_qos_init(dev);
+ 	b43_set_synth_pu_delay(dev, 1);
+ 	b43_bluetooth_coext_enable(dev);
+ 
+-	ssb_bus_powerup(bus, 1);	/* Enable dynamic PCTL */
++	ssb_bus_powerup(bus, !(sprom->boardflags_lo & B43_BFL_XTAL_NOSLOW));
+ 	b43_upload_card_macaddress(dev);
+ 	b43_security_init(dev);
+ 	if (!dev->suspend_in_progress)
+ 		b43_rng_init(wl);
+ 
+ 	b43_set_status(dev, B43_STAT_INITIALIZED);
+
+-- 
+Greetings, Michael.
