@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36008 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753066AbZBZQvZ (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:62500 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751659AbZBTCy1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 11:51:25 -0500
-Subject: Re: pull request: wireless-next-2.6 2009-02-23
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20090226161340.GA4430@tuxdriver.com>
-References: <20090223192659.GB3553@tuxdriver.com>
-	 <1235457113.4455.89.camel@johannes.local>
-	 <20090224.235510.30497146.davem@davemloft.net>
-	 <1235637360.29050.16.camel@johannes.local>
-	 <20090226161340.GA4430@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RUEAbgC57+vrXkf8xh9R"
-Date: Thu, 26 Feb 2009 08:47:34 -0800
-Message-Id: <1235666854.4099.0.camel@johannes.local> (sfid-20090226_175129_532389_F60708AC)
-Mime-Version: 1.0
+	Thu, 19 Feb 2009 21:54:27 -0500
+Message-ID: <499E1B61.20301@lwfinger.net> (sfid-20090220_035431_896289_C132BC1F)
+Date: Thu, 19 Feb 2009 20:54:25 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] compat-2.6: Add place holder for CONFIG_MAC80211_DEBUGFS
+ in config.mk
+References: <499DA503.4070404@hauke-m.de> <43e72e890902191345r74688e72hb9181aa1e4ae25aa@mail.gmail.com>
+In-Reply-To: <43e72e890902191345r74688e72hb9181aa1e4ae25aa@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+It is difficult to help someone debug a rate-setting problem when using
+compat-wireless because debugging is not set for mac80211. With this patch
+the place holder is in the make file even though the debug option is not
+set, and it will be easier to coach a user on turning it on.
 
---=-RUEAbgC57+vrXkf8xh9R
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-On Thu, 2009-02-26 at 11:13 -0500, John W. Linville wrote:
+Index: compat-wireless-2009-02-19/config.mk
+===================================================================
+--- compat-wireless-2009-02-19.orig/config.mk
++++ compat-wireless-2009-02-19/config.mk
+@@ -74,6 +74,7 @@ endif # kernel Makefile check
 
-> > Now I just have to get around to fixing it, it's proving to be harder
-> > than I thought, and I don't have much time right now.
->=20
-> I suppose I could just drop that one.  IIRC there was another patch
-> from you that depended upon that one as well?
+ # Wireless subsystem stuff
+ CONFIG_MAC80211=m
++# CONFIG_MAC80211_DEBUGFS is not set
 
-Yes, that's true, but then we'll be back at the wext vs. nl80211
-deadlock problem...
-
-johannes
-
---=-RUEAbgC57+vrXkf8xh9R
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJpsejAAoJEKVg1VMiehFYGJ4P/RYU/PhoIwaX0D6QyrHY5500
-/JXlj2/yv9E4zRMV6ItydsS/ipNBkNDATUsREWZEGsYLL29m4RYKlTDTuk61XHI0
-9wl1mvhK7H8kMpnVarPHtRCerB+PbDFx7Pawkx8Y3dhQStOJfBZMBCUKrjJljN/Y
-BWsqsGuh/Poz33mrFCTN2LAk4AQxomonIQ2TLrjLfgaAVwMgzdU8pZr4o4N4o59N
-oSOSADtzLba59Vr/fPcdPNMYfRKU4qy+PxbWde8JV7cO7fdi7GNxjD2uBCoY5e04
-oX5ek81WJT6xwheaixqPtYxeFsFnBLLRHY4DINeaxjE8TJKmNpgWnoOgqTM+2J45
-O3CNvJzfDK1xosdt5TkF6X+Li4fFMfX892JZx8W6Mc+8Jn8YR9HLSV2pJlE+KMSE
-PQLUxPI9GGfCNba1afVkOgsWSY+ADLwdFL1paoyfFDWfNUnxAcEBGMnjYm71x0Ru
-pveNUC0w0tMbET0ppoIvHsJb8sdC6bzHFD7Mgs8A2PVX64WW7tHOborvl4KCQTT0
-TpW4sNOOA/dfe/1F1PtiPeslVc2u5bbgJabW9SutRMP0Fwf1TvVqBV9pKeHYWwoW
-ShAK7wWCish9bVK/FMDgf8alVECsiybLsl7I3iZTJKDuRlgFdeJMnLv7RrCQ9ETS
-3KU7GEaq27NfdGDV8Pht
-=0e2K
------END PGP SIGNATURE-----
-
---=-RUEAbgC57+vrXkf8xh9R--
+ # choose between pid and minstrel as default rate control algorithm
+ CONFIG_MAC80211_RC_DEFAULT=minstrel
 
