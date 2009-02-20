@@ -1,45 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:15890 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751501AbZBCE2B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 23:28:01 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 20:28:01 -0800
-Date: Tue, 3 Feb 2009 09:57:54 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Remove bss information of the current AP
-	when it goes out of range
-Message-ID: <20090203042753.GA8246@vasanth-laptop> (sfid-20090203_052821_403408_5D846A3E)
-References: <1233583454-14957-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1233583454-14957-1-git-send-email-vasanth@atheros.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:53189 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750794AbZBTFm6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 00:42:58 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 02/15] cfg80211: add wiphy_idx_valid to check for wiphy_idx sanity
+Date: Fri, 20 Feb 2009 00:42:37 -0500
+Message-Id: <1235108570-17652-3-git-send-email-lrodriguez@atheros.com> (sfid-20090220_064311_623078_F5E401D8)
+In-Reply-To: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
+References: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 02, 2009 at 07:34:14PM +0530, Vasanth Thiagarajan wrote:
-> +               if (remove_bss) {
-> +                       struct ieee80211_bss *bss;
-> +
-> +                       bss = ieee80211_rx_bss_get(local, ifsta->bssid,
-> +                                       local->hw.conf.channel->center_freq,
-> +                                       ifsta->ssid, ifsta->ssid_len);
-> +                       if (bss)
-> +                               atomic_dec(&bss->users);
-> +                       ieee80211_rx_bss_put(local, bss);
+This will later be used by others, for now make use of it in
+cfg80211_drv_by_wiphy_idx() to return early if an invalid
+wiphy_idx has been provided.
 
-oops, I missed braces here.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/core.c |    5 ++++-
+ net/wireless/core.h |    7 +++++++
+ 2 files changed, 11 insertions(+), 1 deletions(-)
 
-> 
-> 
-> --
-> 1.5.5.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 2b3e786..35d457b 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -42,6 +42,9 @@ cfg80211_drv_by_wiphy_idx(int wiphy_idx)
+ {
+ 	struct cfg80211_registered_device *result = NULL, *drv;
+ 
++	if (!wiphy_idx_valid(wiphy_idx))
++		return NULL;
++
+ 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
+ 		if (drv->wiphy_idx == wiphy_idx) {
+ 			result = drv;
+@@ -225,7 +228,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
+ 
+ 	drv->wiphy_idx = wiphy_counter++;
+ 
+-	if (unlikely(drv->wiphy_idx < 0)) {
++	if (unlikely(!wiphy_idx_valid(drv->wiphy_idx))) {
+ 		wiphy_counter--;
+ 		mutex_unlock(&cfg80211_drv_mutex);
+ 		/* ugh, wrapped! */
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 1783781..4f2e0fe 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -63,6 +63,13 @@ struct cfg80211_registered_device *wiphy_to_dev(struct wiphy *wiphy)
+ 	return container_of(wiphy, struct cfg80211_registered_device, wiphy);
+ }
+ 
++/* Note 0 is valid, hence phy0 */
++static inline
++bool wiphy_idx_valid(int wiphy_idx)
++{
++	return (wiphy_idx >= 0);
++}
++
+ extern struct mutex cfg80211_drv_mutex;
+ extern struct list_head cfg80211_drv_list;
+ 
+-- 
+1.6.0.3
+
