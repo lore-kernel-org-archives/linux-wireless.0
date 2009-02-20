@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:44313 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754958AbZBZQjs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 11:39:48 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so172817eya.37
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2009 08:39:46 -0800 (PST)
+Received: from bu3sch.de ([62.75.166.246]:60702 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751846AbZBTKel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 05:34:41 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH] b43: Add slot count compiletime assertion
+Date: Fri, 20 Feb 2009 11:32:55 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <200902200009.42967.mb@bu3sch.de>
+In-Reply-To: <200902200009.42967.mb@bu3sch.de>
 MIME-Version: 1.0
-In-Reply-To: <1235615989-1323-1-git-send-email-lrodriguez@atheros.com>
-References: <1235615989-1323-1-git-send-email-lrodriguez@atheros.com>
-Date: Thu, 26 Feb 2009 08:39:44 -0800
-Message-ID: <43e72e890902260839n6e542652i31dc8652dc007720@mail.gmail.com> (sfid-20090226_173951_826909_C062472B)
-Subject: Re: [PATCH 0/3] cfg80211: send regulatory events to userspace
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, mb@bu3sch.de,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <200902201132.55783.mb@bu3sch.de> (sfid-20090220_113445_075167_4E4B2312)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 25, 2009 at 6:39 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> This series does the work to prep and then send regulatory
-> events to userspace. Userspace can now know if its requests
-> were applied or not and when.
->
-> This applies on top of Jouni's MLME patch for cfg80211.
+On Friday 20 February 2009 00:09:42 Michael Buesch wrote:
+> This adds a compiletime assertion for a recently introduced
+> assumption on the slot counts.
+> The tx header cache handling code assumes that the TX slot count
+> can be divided evenly by the number of TX slots per frame.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> ---
+> 
+> Please queue on top of the DMA optimizations.
 
-Will send a v2, noticed I forgot to remove the country ie env from
-nl80211.h as we don't need it. My initial though was to also send the
-country IE checksum and env but that is just pointless as users can
-already get the regulatory domain through 'iw reg get'. Will also need
-to update the documentation based on this.
+I wonder what I was smoking when doing this patch, yesterday.
 
-  Luis
+I'll immediately get a brown paper bag and redo a sane version of this... :)
+
+
+-- 
+Greetings, Michael.
