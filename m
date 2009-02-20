@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36317 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755790AbZBLEkd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 23:40:33 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 20:40:32 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:60513 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752301AbZBTCko (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Feb 2009 21:40:44 -0500
+Message-ID: <499E1826.8040903@lwfinger.net> (sfid-20090220_034048_241031_253B0CB2)
+Date: Thu, 19 Feb 2009 20:40:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18835.42851.30424.42167@gargle.gargle.HOWL> (sfid-20090212_054036_223315_612D7097)
-Date: Thu, 12 Feb 2009 10:06:51 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 6/8] ath9k: Fix bug in disabling MIB counters
+To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 cannot fix rate
+References: <35879.82.152.175.172.1234904444.squirrel@www.phantomjinx.co.uk>    <499B27A4.30708@lwfinger.net>    <42781.82.152.175.172.1234911183.squirrel@www.phantomjinx.co.uk>    <499B4526.1030705@lwfinger.net> <44177.82.152.175.172.1235088928.squirrel@www.phantomjinx.co.uk>
+In-Reply-To: <44177.82.152.175.172.1235088928.squirrel@www.phantomjinx.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a bug in ANI, where the MIB counters were
-being cleared before the stats were updated.
+P.G. Richardson wrote:
+> Hi Larry,
+> 
+> Been experimenting over last couple of days to enable this. Have
+> successfully recompiled the kernel and installed with above config option
+> enabled. This may have been unnecessary but could not compile without
+> doing it.
+> 
+> Anyway, now running the custom kernel and installed compart-wireless
+> snapshot from 09/02/2009 and still nothing has appeared using
+> find /sys -name rc_stats
+> 
+> I must be missing some vital step. Any thoughts please.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/ani.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+The configuration needs to be in compat-wireless. Please apply the following
+patch and rebuild the compat-wireless package.
 
-diff --git a/drivers/net/wireless/ath9k/ani.c b/drivers/net/wireless/ath9k/ani.c
-index d4df7e6..a39eb76 100644
---- a/drivers/net/wireless/ath9k/ani.c
-+++ b/drivers/net/wireless/ath9k/ani.c
-@@ -642,14 +642,13 @@ void ath9k_enable_mib_counters(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
- }
- 
-+/* Freeze the MIB counters, get the stats and then clear them */
- void ath9k_hw_disable_mib_counters(struct ath_hw *ah)
- {
- 	DPRINTF(ah->ah_sc, ATH_DBG_ANI, "Disable MIB counters\n");
--
--	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC | AR_MIBC_CMC);
--
-+	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
- 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
--
-+	REG_WRITE(ah, AR_MIBC, AR_MIBC_CMC);
- 	REG_WRITE(ah, AR_FILT_OFDM, 0);
- 	REG_WRITE(ah, AR_FILT_CCK, 0);
- }
--- 
-1.6.1
+Index: compat-wireless-2009-02-19/config.mk
+===================================================================
+--- compat-wireless-2009-02-19.orig/config.mk
++++ compat-wireless-2009-02-19/config.mk
+@@ -74,6 +74,7 @@ endif # kernel Makefile check
 
+ # Wireless subsystem stuff
+ CONFIG_MAC80211=m
++CONFIG_MAC80211_DEBUGFS=y
+
+ # choose between pid and minstrel as default rate control algorithm
+ CONFIG_MAC80211_RC_DEFAULT=minstrel
+
+
+Larry
