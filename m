@@ -1,87 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nexus.dynaweb.hu ([195.70.37.87]:52925 "EHLO nexus.dynaweb.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753263AbZBJMYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 07:24:10 -0500
-Date: Tue, 10 Feb 2009 13:14:18 +0100
-From: RUMI Szabolcs <rumi_ml@rtfm.hu>
-To: linux-wireless@vger.kernel.org
-Cc: "Nick Kossifidis" <mickflemm@gmail.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Pavel Roskin" <proski@gnu.org>,
-	"Matteo Brusa" <matteo.brusa@kaasa.com>
-Subject: Re: ath5k master (AP) mode
-Message-Id: <20090210131418.9c3408a9.rumi_ml@rtfm.hu> (sfid-20090210_132416_130384_0A275BE0)
-In-Reply-To: <20081114111559.56530874.rumi_ml@rtfm.hu>
-References: <20081112224810.8d4ca179.rumi_ml@rtfm.hu>
-	<1226530010.15173.0.camel@dv>
-	<20081113004632.d8d821c5.rumi_ml@rtfm.hu>
-	<20081113181155.c556bde1.rumi_ml@rtfm.hu>
-	<1226598550.5839.3.camel@johannes.berg>
-	<20081113235928.3ed79ff6.rumi_ml@rtfm.hu>
-	<40f31dec0811131507x7449112cy5746d28c848a2146@mail.gmail.com>
-	<20081114111559.56530874.rumi_ml@rtfm.hu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from toronto053.server4you.de ([62.75.220.53]:35904 "EHLO
+	toronto053.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752248AbZBTO5E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 09:57:04 -0500
+Date: Fri, 20 Feb 2009 15:57:43 +0100
+From: Daniel Wagner <wagi@monom.org>
+To: Kevin Wilson <wkevils@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, networkmanager-list@gnome.org
+Subject: Re: NetworkManager and mac80211_hwsim
+Message-ID: <20090220145743.GA9325@toronto053.server4you.de> (sfid-20090220_155709_952368_223B1FBF)
+References: <20090216160016.GA29509@toronto053.server4you.de> <1234800284.4219.136.camel@johannes.local> <20090216172528.GB29509@toronto053.server4you.de> <1234807251.1666.9.camel@localhost.localdomain> <20090218080636.GA25504@toronto053.server4you.de> <55c333c0902190617w7ced9b7cu45ab0aad44305c77@mail.gmail.com> <20090219172002.GE28934@toronto053.server4you.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090219172002.GE28934@toronto053.server4you.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Everyone!
+As it seems some more tweaking was needed to get it running
+with the current HAL head. Does this work for you?
 
-To put it simple: IT WORKS! :)
+daniel
 
-The recipe:
+---
 
-wireless-testing-git pull from earlier today with the only
-modification being this:
+NetworkManager wants to read info.linux.driver for all devices.
+Since a mac80211_hwsim device doesn't have a real parent the
+property is not added. So let's add this property if there
+is no proper parent and it is a 80211 device.
 
------8<----------------------------------------
+Signed-off-by: Daniel Wagner <wagi@monom.org>
 
---- wireless-testing/drivers/net/wireless/ath5k/base.c      2009-02-10 06:11:43.186470883 +0100
-+++ wireless-testing/drivers/net/wireless/ath5k/base.c.old       2008-11-14 09:36:40.000000000 +0100
-@@ -522,6 +501,7 @@
-        hw->wiphy->interface_modes =
-                BIT(NL80211_IFTYPE_STATION) |
-                BIT(NL80211_IFTYPE_ADHOC) |
-+               BIT(NL80211_IFTYPE_AP) |
-                BIT(NL80211_IFTYPE_MESH_POINT);
+---
+v2: Set address for wmaster devices to nil. Otherwise the real
+    networking device is overwritten.
 
-        hw->extra_tx_headroom = 2;
+ hald/linux/device.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
------8<----------------------------------------
+diff --git a/hald/linux/device.c b/hald/linux/device.c
+index 21b9176..83b4a30 100644
+--- a/hald/linux/device.c
++++ b/hald/linux/device.c
+@@ -1576,6 +1576,7 @@ net_add (const gchar *sysfs_path, const gchar *device_file, HalDevice *parent_de
+ 	guint media_type;
+ 	gint flags;
+ 	gint addr_len;
++	gboolean real_parent = TRUE;
+ 
+ 	d = NULL;
+ 	d = hal_device_new ();
+@@ -1588,6 +1589,7 @@ net_add (const gchar *sysfs_path, const gchar *device_file, HalDevice *parent_de
+ 				HAL_ERROR (("Device '%s' has no parent and couldn't find computer root object."));
+ 				goto error;
+ 			}
++			real_parent = FALSE;
+ 		}
+         }
+ 
+@@ -1662,6 +1664,11 @@ net_add (const gchar *sysfs_path, const gchar *device_file, HalDevice *parent_de
+ 			hal_device_property_set_string (d, "info.category", "net.80211");
+ 			hal_device_add_capability (d, "net.80211");
+ 			hal_device_property_set_uint64 (d, "net.80211.mac_address", mac_address);
++
++			if (!real_parent) {
++				/* This is must be a mac80211_hwsim device */
++				hal_device_property_set_string (parent_dev, "info.linux.driver", "mac80211_hwsim");
++			}
+ 		} else if (stat (bridge_path, &s) == 0 && (s.st_mode & S_IFDIR)) {
+ 			hal_device_property_set_string (d, "info.product", "Bridge Interface");
+ 			hal_device_property_set_string (d, "info.category", "net.bridge");
+@@ -1691,6 +1698,7 @@ net_add (const gchar *sysfs_path, const gchar *device_file, HalDevice *parent_de
+ 		hal_device_property_set_string (d, "info.product", "Networking Wireless Control Interface");
+ 		hal_device_property_set_string (d, "info.category", "net.80211control");
+ 		hal_device_add_capability (d, "net.80211control");
++		hal_device_property_set_string (d, "net.address", "00:00:00:00:00:00");
+ 	}
+ #else
+ #warning ARPHRD_IEEE80211_RADIOTAP and/or ARPHRD_IEEE80211_PRISM not defined!
+-- 
+1.6.0.2.GIT
 
-Otherwise hostapd-0.6.7, nothing special on the userland.
-
-In detail:
-
-- Open System mode works with Tx fluctuating between 4-6 Mbps
-and Rx between 10-14 Mbps regardless of the distance or signal
-strength. It was tested standing 1m away from the AP antenna
-(signal 100/100) up to 15m away with several thick walls in
-between (signal 60/100) but throughput figures remained the
-same.
-
-- MAC address filtering does work. It probably always did,
-I think I've just messed up the configuration the last time
-and that was the reason back then, sorry.
-
-- WEP mode does not work, apparently the driver does not allow
-setting it and hostapd is exiting on that error.
-
-- WPA and WPA2 have been tested and they seem to be working!
-
-A small hint is that the WPA pre-shared key should be given
-in hex both for hostapd and on the clients, otherwise there can
-be differences in translation from ASCII to hex which in turn
-may lead to an authentication failure.
-
-I've tried to push some 100 MBs through the link in both directions
-both with WPA/WPA2 turned off and then on and it seems to be rock
-solid so far. CPU usage both on the AP host and the client is
-negligible in any case, the throughput isn't affected by turning
-on WPA/WPA2 either.
-
-Thank you all!
-
-Best regards,
-Sab
