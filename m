@@ -1,63 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:43944 "EHLO mga03.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:20780 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756479AbZBJXPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 18:15:21 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/3] iwlwifi: drop PCIe workaround applicable for development boards
-Date: Tue, 10 Feb 2009 15:19:03 -0800
-Message-Id: <1234307944-21820-3-git-send-email-reinette.chatre@intel.com> (sfid-20090211_001540_812799_D531CF04)
-In-Reply-To: <1234307944-21820-2-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1234307944-21820-1-git-send-email-reinette.chatre@intel.com>
- <1234307944-21820-2-git-send-email-reinette.chatre@intel.com>
+	id S1751535AbZBTDCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Feb 2009 22:02:42 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 19:02:42 -0800
+Date: Thu, 19 Feb 2009 19:01:55 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] compat-2.6: Add place holder for
+	CONFIG_MAC80211_DEBUGFS in config.mk
+Message-ID: <20090220030155.GF4740@tesla> (sfid-20090220_040246_335508_02EFE92E)
+References: <499DA503.4070404@hauke-m.de> <43e72e890902191345r74688e72hb9181aa1e4ae25aa@mail.gmail.com> <499E1B61.20301@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <499E1B61.20301@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+On Thu, Feb 19, 2009 at 06:54:25PM -0800, Larry Finger wrote:
+> It is difficult to help someone debug a rate-setting problem when using
+> compat-wireless because debugging is not set for mac80211. With this patch
+> the place holder is in the make file even though the debug option is not
+> set, and it will be easier to coach a user on turning it on.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Thanks, applied and new tarball regenerated.
 
-This patch remove w/a used for development boards.
-These boards are not available thus no need to keep it inside driver
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |   10 ----------
- 1 files changed, 0 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index ead947b..bd0140b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -381,21 +381,11 @@ out:
- static void iwl4965_nic_config(struct iwl_priv *priv)
- {
- 	unsigned long flags;
--	u16 dctl;
- 	u16 radio_cfg;
- 	u16 lctl;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
--	if ((priv->rev_id & 0x80) == 0x80 && (priv->rev_id & 0x7f) < 8) {
--		int pos = pci_find_capability(priv->pci_dev, PCI_CAP_ID_EXP);
--		pci_read_config_word(priv->pci_dev, pos + PCI_EXP_DEVCTL, &dctl);
--
--		/* Enable No Snoop field */
--		pci_write_config_word(priv->pci_dev, pos + PCI_EXP_DEVCTL,
--					dctl & ~PCI_EXP_DEVCTL_NOSNOOP_EN);
--	}
--
- 	lctl = iwl_pcie_link_ctl(priv);
- 
- 	/* HW bug W/A - negligible power consumption */
--- 
-1.5.4.3
-
+  Luis
