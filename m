@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ammma.de ([213.83.39.131]:28752 "EHLO ammma.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752076AbZBTPFT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 10:05:19 -0500
-Received: from ammma.net (hydra.ammma.mil [192.168.110.1])
-	by ammma.de (8.11.6/8.11.6/AMMMa AG) with ESMTP id n1KF7AI09746
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 16:07:10 +0100
-Received: from neo.wg.de (hydra.ammma.mil [192.168.110.1])
-	by ammma.net (8.12.11.20060308/8.12.11/AMMMa AG) with ESMTP id n1KF5FQO003354
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 16:05:16 +0100
-Received: from localhost (localhost [127.0.0.1])
-	by neo.wg.de (Postfix) with ESMTP id 63D8D41B42B
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 16:05:15 +0100 (CET)
-Received: from neo.wg.de ([127.0.0.1])
-	by localhost (neo.wg.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id sC3m5rOZ8SAb for <linux-wireless@vger.kernel.org>;
-	Fri, 20 Feb 2009 16:05:02 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by neo.wg.de (Postfix) with ESMTP id 9A7A8436172
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 16:05:02 +0100 (CET)
-Message-ID: <20090220160502.112039tfocopragw@neo.wg.de> (sfid-20090220_160523_747379_1066EAD3)
-Date: Fri, 20 Feb 2009 16:05:02 +0100
-From: Jan Schneider <jan@horde.org>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Connection "interruptions"
-References: <20090216143915.18703m2wpmqic1ic@neo.wg.de>
-In-Reply-To: <20090216143915.18703m2wpmqic1ic@neo.wg.de>
+Received: from bombadil.infradead.org ([18.85.46.34]:36131 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754064AbZBTXl6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 18:41:58 -0500
+Date: Fri, 20 Feb 2009 18:41:55 -0500
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni.Malinen@atheros.com
+Subject: Re: [PATCH v4 00/15] cfg80211: add a workqueue for regulatory
+	processing
+Message-ID: <20090220234155.GC23428@bombadil.infradead.org> (sfid-20090221_004216_701339_C1DF1BD6)
+References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com> <1235050171.4023.64.camel@johannes.local> <43e72e890902191640u107ff0fdse92367fccc975dba@mail.gmail.com> <1235149043.4023.66.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1235149043.4023.66.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zitat von Jan Schneider <jan@horde.org>:
+On Fri, Feb 20, 2009 at 05:57:23PM +0100, Johannes Berg wrote:
+> On Thu, 2009-02-19 at 16:40 -0800, Luis R. Rodriguez wrote:
+> 
+> > > I don't know why you insist on having a wrapper for
+> > > wiphy->wiphy_idx but it's ok :)
+> > 
+> > Heh its just because wiphy->wiphy_idx does not exist, the drv has so
+> > you must go to the container and then use that. If we move the idx to
+> > the wiphy then I'm good to use wiphy->wiphy_idx. Want to do that?
+> 
+> Ah. Not sure, but I don't think we need to expose that to drivers.
 
-> Hi,
->
-> now that I got current wireless-compat snapshots running at all, I'm  
-> back to look into what I hoped had been fixed in newer versions:
-> I see arbitrary "interruptions" of the wireless connection. The  
-> transfer just halts for a few seconds, no traffic is going over the  
-> ether at all. Then suddenly, the connection resumes as if nothing  
-> happened. Nothing is being logged by kernel, wpa_supplicant or  
-> syslog. This is a draft-n-only thing, it does not happen if I tell  
-> either the AP or the driver module to not use draft-n. This is an  
-> Intel 5300 board.
-> I am wondering how to further track this down, or how to collect  
-> useful data for a bug report. Logging everything with the debug flag  
-> is probably not very helpful, since this produces huge logs, and  
-> it's not easy to determine the exact point when the connection  
-> drops. What might be useful flags for the debug50 parameter to get  
-> more information from the driver without getting lost in the sheer  
-> amount of debug messages?
+Unless we may need it later for virtual wiphys, not sure, Jouni?
 
-No suggestions, anyone?
-
-Jan.
-
--- 
-Do you need professional PHP or Horde consulting?
-http://horde.org/consulting/
-
+  Luis
