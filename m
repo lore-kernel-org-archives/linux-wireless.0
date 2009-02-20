@@ -1,97 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26570 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:16417 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751420AbZBRE0j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 23:26:39 -0500
-Received: from mail.atheros.com ([10.10.20.108])
+	id S1753165AbZBTJrI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 04:47:08 -0500
+Received: from mail.atheros.com ([10.10.20.86])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2009 20:26:39 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 04/15] nl80211: disallow user requests prior to regulatory_init()
-Date: Tue, 17 Feb 2009 20:21:51 -0800
-Message-ID: <1234930922-29367-5-git-send-email-lrodriguez@atheros.com> (sfid-20090218_052642_870878_37983D56)
-In-Reply-To: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
-References: <1234930922-29367-1-git-send-email-lrodriguez@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 01:47:08 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18846.31537.167252.116124@gargle.gargle.HOWL> (sfid-20090220_104714_557230_13129046)
+Date: Fri, 20 Feb 2009 15:13:13 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 1/5] ath9k: Remove multiple macro occurrences
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If cfg80211 is built into the kernel there is perhaps a small
-time window betwen nl80211_init() and regulatory_init() where
-cfg80211_regdomain hasn't yet been initialized to let the
-wireless core do its work. During that rare case and time
-frame (if its even possible) we don't allow user regulatory
-changes as cfg80211 is working on enabling its first regulatory
-domain.
+OLC_FOR_AR9280_20_LATER is defined in multiple places,
+move it to a common location.
 
-To check for cfg80211_regdomain we now contend the entire operation
-using the cfg80211_mutex.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- net/wireless/nl80211.c |   34 ++++++++++++++++++++++++++--------
- 1 files changed, 26 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath9k/calib.c  |    2 --
+ drivers/net/wireless/ath9k/eeprom.c |    2 --
+ drivers/net/wireless/ath9k/eeprom.h |    3 +++
+ drivers/net/wireless/ath9k/hw.c     |    2 --
+ 4 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f353e39..5d3e968 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1882,24 +1882,42 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	int r;
- 	char *data = NULL;
+diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
+index 93c6e1f..1c074c0 100644
+--- a/drivers/net/wireless/ath9k/calib.c
++++ b/drivers/net/wireless/ath9k/calib.c
+@@ -749,8 +749,6 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			u8 rxchainmask, bool longcal,
+ 			bool *isCalDone)
+ {
+-#define OLC_FOR_AR9280_20_LATER	(AR_SREV_9280_20_OR_LATER(ah) && \
+-				ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+ 	struct hal_cal_list *currCal = ah->cal_list_curr;
  
--	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
--		return -EINVAL;
-+	/*
-+	 * You should only get this when cfg80211 hasn't yet initialized
-+	 * completely when built-in to the kernel right between the time
-+	 * window between nl80211_init() and regulatory_init(), if that is
-+	 * even possible.
-+	 */
-+	mutex_lock(&cfg80211_mutex);
-+	if (unlikely(!cfg80211_regdomain)) {
-+		r = -EINPROGRESS;
-+		goto out;
-+	}
+ 	*isCalDone = true;
+diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
+index 8379a42..17b3d04 100644
+--- a/drivers/net/wireless/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath9k/eeprom.c
+@@ -2164,8 +2164,6 @@ static bool ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 				  struct ath9k_channel *chan,
+ 				  int16_t *pTxPowerIndexOffset)
+ {
+-#define OLC_FOR_AR9280_20_LATER	(AR_SREV_9280_20_OR_LATER(ah) && \
+-				ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+ #define SM_PD_GAIN(x) SM(0x38, AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_##x)
+ #define SM_PDGAIN_B(x, y) \
+ 		SM((gainBoundaries[x]), AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_##y)
+diff --git a/drivers/net/wireless/ath9k/eeprom.h b/drivers/net/wireless/ath9k/eeprom.h
+index 2cfea5d..6296e3e 100644
+--- a/drivers/net/wireless/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath9k/eeprom.h
+@@ -95,6 +95,9 @@
+ #define FREQ2FBIN(x, y)		((y) ? ((x) - 2300) : (((x) - 4800) / 5))
+ #define ath9k_hw_use_flash(_ah)	(!(_ah->ah_flags & AH_USE_EEPROM))
+ 
++#define OLC_FOR_AR9280_20_LATER (AR_SREV_9280_20_OR_LATER(ah) && \
++				 ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
 +
-+	if (!info->attrs[NL80211_ATTR_REG_ALPHA2]) {
-+		r = -EINVAL;
-+		goto out;
-+	}
- 
- 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
- 
- #ifdef CONFIG_WIRELESS_OLD_REGULATORY
- 	/* We ignore world regdom requests with the old regdom setup */
--	if (is_world_regdom(data))
--		return -EINVAL;
-+	if (is_world_regdom(data)) {
-+		r = -EINVAL;
-+		goto out;
-+	}
- #endif
--	mutex_lock(&cfg80211_mutex);
- 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
--	mutex_unlock(&cfg80211_mutex);
--	/* This means the regulatory domain was already set, however
-+	/*
-+	 * This means the regulatory domain was already set, however
- 	 * we don't want to confuse userspace with a "successful error"
--	 * message so lets just treat it as a success */
-+	 * message so lets just treat it as a success
-+	 */
- 	if (r == -EALREADY)
- 		r = 0;
-+out:
-+	mutex_unlock(&cfg80211_mutex);
- 	return r;
- }
- 
+ #define AR_EEPROM_RFSILENT_GPIO_SEL     0x001c
+ #define AR_EEPROM_RFSILENT_GPIO_SEL_S   2
+ #define AR_EEPROM_RFSILENT_POLARITY     0x0002
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 2c0173a..6f2e92e 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -1219,8 +1219,6 @@ static int ath9k_hw_process_ini(struct ath_hw *ah,
+ 				struct ath9k_channel *chan,
+ 				enum ath9k_ht_macmode macmode)
+ {
+-#define OLC_FOR_AR9280_20_LATER	(AR_SREV_9280_20_OR_LATER(ah) && \
+-				ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+ 	int i, regWrites = 0;
+ 	struct ieee80211_channel *channel = chan->chan;
+ 	u32 modesIndex, freqIndex;
 -- 
-1.6.1.2.253.ga34a
+1.6.1
 
