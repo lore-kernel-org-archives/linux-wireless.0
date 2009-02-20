@@ -1,44 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2335 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753337AbZBUTor (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 14:44:47 -0500
-Date: Sat, 21 Feb 2009 14:44:18 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, lrodriguez@atheros.com
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: fix 802.11g conformance test limit typo
-Message-ID: <20090221194418.GA31157@hash.localnet> (sfid-20090221_204451_866445_ADF8E504)
+Received: from mail.atheros.com ([12.36.123.2]:64346 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752574AbZBTXwL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 18:52:11 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 15:52:11 -0800
+Date: Fri, 20 Feb 2009 15:51:24 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Dennis Aliev <dennis@capricornsolutions.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Please add linksys wusb54gp to working devices list.
+Message-ID: <20090220235124.GB4719@tesla> (sfid-20090221_005217_667263_CAFFDFCA)
+References: <5cd984fd0902201421y5d8ee7ewa96d89b14efa6df8@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <5cd984fd0902201421y5d8ee7ewa96d89b14efa6df8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Its a wiki, please feel free to edit the page yourself.
 
-802.11g is in 2 ghz band, not 5 ghz.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath9k/regd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index eb0d1b7..a510917 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -478,7 +478,7 @@ u32 ath9k_regd_get_ctl(struct ath_hw *ah, struct ath9k_channel *chan)
- 	if (IS_CHAN_B(chan))
- 		ctl = ah->regulatory.regpair->reg_2ghz_ctl | CTL_11B;
- 	else if (IS_CHAN_G(chan))
--		ctl = ah->regulatory.regpair->reg_5ghz_ctl | CTL_11G;
-+		ctl = ah->regulatory.regpair->reg_2ghz_ctl | CTL_11G;
- 	else
- 		ctl = ah->regulatory.regpair->reg_5ghz_ctl | CTL_11A;
- 
--- 
-1.6.0.6
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
