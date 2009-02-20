@@ -1,372 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:33443 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:41545 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750944AbZBMFgx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 00:36:53 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 21:36:53 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/6] cfg80211: rename cfg80211_drv_mutex to cfg80211_mutex
-Date: Thu, 12 Feb 2009 21:36:00 -0800
-Message-ID: <1234503363-11014-4-git-send-email-lrodriguez@atheros.com> (sfid-20090213_063658_417195_65C783D3)
-In-Reply-To: <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
- <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
- <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1752841AbZBTR3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 12:29:21 -0500
+Subject: [PATCH] libertas: use private SDIO workqueue to avoid scheduling
+	latency
+From: Dan Williams <dcbw@redhat.com>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	David Anders <dave123_aml@yahoo.com>
 Content-Type: text/plain
+Date: Fri, 20 Feb 2009 12:27:38 -0500
+Message-Id: <1235150858.2859.4.camel@localhost> (sfid-20090220_182933_359418_FC34B07E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_drv_mutex is protecting more than the driver list,
-this renames it and documents what its currently supposed to
-protect.
+The libertas SDIO interface scheduled the packet worker, resulting in
+unwanted latency for every data packet or command sent to the firmware.
+Fix a bug on the SDIO probe error path too.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+
 ---
- net/wireless/core.c    |   35 ++++++++++++++++++++---------------
- net/wireless/core.h    |    6 +++---
- net/wireless/nl80211.c |   20 ++++++++++----------
- net/wireless/reg.c     |   18 +++++++++---------
- 4 files changed, 42 insertions(+), 37 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 55be3b0..f55040a 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -31,7 +31,12 @@ MODULE_DESCRIPTION("wireless configuration support");
-  * only read the list, and that can happen quite
-  * often because we need to do it for each command */
- LIST_HEAD(cfg80211_drv_list);
--DEFINE_MUTEX(cfg80211_drv_mutex);
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 9878368..76f4c65 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -95,6 +95,8 @@ struct if_sdio_card {
+ 
+ 	spinlock_t		lock;
+ 	struct if_sdio_packet	*packets;
 +
-+/*
-+ * This is used to protect the cfg80211_drv_list, cfg80211_regdomain, and
-+ * the last reguluatory request receipt in regd.c
-+ */
-+DEFINE_MUTEX(cfg80211_mutex);
++	struct workqueue_struct	*workqueue;
+ 	struct work_struct	packet_worker;
+ };
  
- /* for debugfs */
- static struct dentry *ieee80211_debugfs_dir;
-@@ -52,7 +57,7 @@ cfg80211_drv_by_wiphy_idx(int wiphy_idx)
- 	return result;
- }
+@@ -746,7 +748,7 @@ static int if_sdio_host_to_card(struct lbs_private *priv,
  
--/* requires cfg80211_drv_mutex to be held! */
-+/* requires cfg80211_mutex to be held! */
- static struct cfg80211_registered_device *
- __cfg80211_drv_from_info(struct genl_info *info)
- {
-@@ -99,7 +104,7 @@ cfg80211_get_dev_from_info(struct genl_info *info)
- {
- 	struct cfg80211_registered_device *drv;
+ 	spin_unlock_irqrestore(&card->lock, flags);
  
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 	drv = __cfg80211_drv_from_info(info);
+-	schedule_work(&card->packet_worker);
++	queue_work(card->workqueue, &card->packet_worker);
  
- 	/* if it is not an error we grab the lock on
-@@ -108,7 +113,7 @@ cfg80211_get_dev_from_info(struct genl_info *info)
- 	if (!IS_ERR(drv))
- 		mutex_lock(&drv->mtx);
+ 	ret = 0;
  
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
+@@ -836,6 +838,7 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	card->func = func;
+ 	card->model = model;
+ 	spin_lock_init(&card->lock);
++	card->workqueue = create_workqueue("libertas_sdio");
+ 	INIT_WORK(&card->packet_worker, if_sdio_host_to_card_worker);
  
- 	return drv;
- }
-@@ -119,7 +124,7 @@ cfg80211_get_dev_from_ifindex(int ifindex)
- 	struct cfg80211_registered_device *drv = ERR_PTR(-ENODEV);
- 	struct net_device *dev;
+ 	for (i = 0;i < ARRAY_SIZE(if_sdio_models);i++) {
+@@ -933,9 +936,8 @@ out:
+ 	return ret;
  
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 	dev = dev_get_by_index(&init_net, ifindex);
- 	if (!dev)
- 		goto out;
-@@ -130,7 +135,7 @@ cfg80211_get_dev_from_ifindex(int ifindex)
- 		drv = ERR_PTR(-ENODEV);
- 	dev_put(dev);
-  out:
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- 	return drv;
- }
+ err_activate_card:
+-	flush_scheduled_work();
+-	free_netdev(priv->dev);
+-	kfree(priv);
++	flush_workqueue(card->workqueue);
++	lbs_remove_card(priv);
+ reclaim:
+ 	sdio_claim_host(func);
+ release_int:
+@@ -945,6 +947,7 @@ disable:
+ release:
+ 	sdio_release_host(func);
+ free:
++	destroy_workqueue(card->workqueue);
+ 	while (card->packets) {
+ 		packet = card->packets;
+ 		card->packets = card->packets->next;
+@@ -971,7 +974,8 @@ static void if_sdio_remove(struct sdio_func *func)
+ 	lbs_stop_card(card->priv);
+ 	lbs_remove_card(card->priv);
  
-@@ -146,7 +151,7 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 	struct cfg80211_registered_device *drv;
- 	int wiphy_idx, taken = -1, result, digits;
+-	flush_scheduled_work();
++	flush_workqueue(card->workqueue);
++	destroy_workqueue(card->workqueue);
  
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 
- 	/* prohibit calling the thing phy%d when %d is not its number */
- 	sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken);
-@@ -194,7 +199,7 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 
- 	result = 0;
- out_unlock:
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- 	if (result == 0)
- 		nl80211_notify_dev_rename(rdev);
- 
-@@ -221,19 +226,19 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	drv->ops = ops;
- 
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 
- 	drv->wiphy_idx = wiphy_counter++;
- 
- 	if (!wiphy_idx_valid(drv->wiphy_idx)) {
- 		wiphy_counter--;
--		mutex_unlock(&cfg80211_drv_mutex);
-+		mutex_unlock(&cfg80211_mutex);
- 		/* ugh, wrapped! */
- 		kfree(drv);
- 		return NULL;
- 	}
- 
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- 
- 	/* give it a proper name */
- 	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->wiphy_idx);
-@@ -311,7 +316,7 @@ int wiphy_register(struct wiphy *wiphy)
- 	/* check and set up bitrates */
- 	ieee80211_set_bitrate_flags(wiphy);
- 
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 
- 	/* set up regulatory info */
- 	wiphy_update_regulatory(wiphy, REGDOM_SET_BY_CORE);
-@@ -331,7 +336,7 @@ int wiphy_register(struct wiphy *wiphy)
- 
- 	res = 0;
- out_unlock:
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- 	return res;
- }
- EXPORT_SYMBOL(wiphy_register);
-@@ -341,7 +346,7 @@ void wiphy_unregister(struct wiphy *wiphy)
- 	struct cfg80211_registered_device *drv = wiphy_to_dev(wiphy);
- 
- 	/* protect the device list */
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 
- 	BUG_ON(!list_empty(&drv->netdev_list));
- 
-@@ -367,7 +372,7 @@ void wiphy_unregister(struct wiphy *wiphy)
- 	device_del(&drv->wiphy.dev);
- 	debugfs_remove(drv->wiphy.debugfsdir);
- 
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- }
- EXPORT_SYMBOL(wiphy_unregister);
- 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index e24bc2a..ba0531e 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -69,7 +69,7 @@ bool wiphy_idx_valid(int wiphy_idx)
- 	return (likely(wiphy_idx >= 0));
- }
- 
--extern struct mutex cfg80211_drv_mutex;
-+extern struct mutex cfg80211_mutex;
- extern struct list_head cfg80211_drv_list;
- 
- struct cfg80211_internal_bss {
-@@ -88,13 +88,13 @@ struct cfg80211_internal_bss {
-  * the driver's mutex!
-  *
-  * This means that you need to call cfg80211_put_dev()
-- * before being allowed to acquire &cfg80211_drv_mutex!
-+ * before being allowed to acquire &cfg80211_mutex!
-  *
-  * This is necessary because we need to lock the global
-  * mutex to get an item off the list safely, and then
-  * we lock the drv mutex so it doesn't go away under us.
-  *
-- * We don't want to keep cfg80211_drv_mutex locked
-+ * We don't want to keep cfg80211_mutex locked
-  * for all the time in order to allow requests on
-  * other interfaces to go through at the same time.
-  *
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 47018bd..f5c2c05 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -256,7 +256,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
- 	int start = cb->args[0];
- 	struct cfg80211_registered_device *dev;
- 
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 	list_for_each_entry(dev, &cfg80211_drv_list, list) {
- 		if (++idx <= start)
- 			continue;
-@@ -267,7 +267,7 @@ static int nl80211_dump_wiphy(struct sk_buff *skb, struct netlink_callback *cb)
- 			break;
- 		}
- 	}
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- 
- 	cb->args[0] = idx;
- 
-@@ -470,7 +470,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
- 	struct cfg80211_registered_device *dev;
- 	struct wireless_dev *wdev;
- 
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 	list_for_each_entry(dev, &cfg80211_drv_list, list) {
- 		if (wp_idx < wp_start) {
- 			wp_idx++;
-@@ -497,7 +497,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
- 		wp_idx++;
- 	}
-  out:
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- 
- 	cb->args[0] = wp_idx;
- 	cb->args[1] = if_idx;
-@@ -1910,9 +1910,9 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	if (is_world_regdom(data))
- 		return -EINVAL;
- #endif
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- 	/* This means the regulatory domain was already set, however
- 	 * we don't want to confuse userspace with a "successful error"
- 	 * message so lets just treat it as a success */
-@@ -2106,7 +2106,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
- 	unsigned int i;
- 	int err = -EINVAL;
- 
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 
- 	if (!cfg80211_regdomain)
- 		goto out;
-@@ -2169,7 +2169,7 @@ nla_put_failure:
- 	genlmsg_cancel(msg, hdr);
- 	err = -EMSGSIZE;
- out:
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- 	return err;
- }
- 
-@@ -2228,9 +2228,9 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
- 
- 	BUG_ON(rule_idx != num_rules);
- 
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 	r = set_regdom(rd);
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- 	return r;
- 
-  bad_reg:
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2323644..ba82312 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1116,7 +1116,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 	return -EINVAL;
- }
- 
--/* Caller must hold &cfg80211_drv_mutex */
-+/* Caller must hold &cfg80211_mutex */
- int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
- 			const char *alpha2,
- 			u32 country_ie_checksum,
-@@ -1188,13 +1188,13 @@ void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- 	int r;
- 	BUG_ON(!alpha2);
- 
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 	r = __regulatory_hint(wiphy, REGDOM_SET_BY_DRIVER,
- 		alpha2, 0, ENVIRON_ANY);
- 	/* This is required so that the orig_* parameters are saved */
- 	if (r == -EALREADY && wiphy->strict_regulatory)
- 		wiphy_update_regulatory(wiphy, REGDOM_SET_BY_DRIVER);
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- }
- EXPORT_SYMBOL(regulatory_hint);
- 
-@@ -1225,7 +1225,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	if (!last_request)
- 		return;
- 
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 
- 	/* IE len must be evenly divisible by 2 */
- 	if (country_ie_len & 0x01)
-@@ -1307,7 +1307,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 		country_ie_regdomain->alpha2, checksum, env);
- 
- out:
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- }
- EXPORT_SYMBOL(regulatory_hint_11d);
- 
-@@ -1562,7 +1562,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 
- /* Use this call to set the current regulatory domain. Conflicts with
-  * multiple drivers can be ironed out later. Caller must've already
-- * kmalloc'd the rd structure. Caller must hold cfg80211_drv_mutex */
-+ * kmalloc'd the rd structure. Caller must hold cfg80211_mutex */
- int set_regdom(const struct ieee80211_regdomain *rd)
- {
- 	int r;
-@@ -1586,7 +1586,7 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- 	return r;
- }
- 
--/* Caller must hold cfg80211_drv_mutex */
-+/* Caller must hold cfg80211_mutex */
- void reg_device_remove(struct wiphy *wiphy)
- {
- 	kfree(wiphy->regd);
-@@ -1633,7 +1633,7 @@ int regulatory_init(void)
- 
- void regulatory_exit(void)
- {
--	mutex_lock(&cfg80211_drv_mutex);
-+	mutex_lock(&cfg80211_mutex);
- 
- 	reset_regdomains();
- 
-@@ -1644,5 +1644,5 @@ void regulatory_exit(void)
- 
- 	platform_device_unregister(reg_pdev);
- 
--	mutex_unlock(&cfg80211_drv_mutex);
-+	mutex_unlock(&cfg80211_mutex);
- }
--- 
-1.6.1.2.253.ga34a
+ 	sdio_claim_host(func);
+ 	sdio_release_irq(func);
+
 
