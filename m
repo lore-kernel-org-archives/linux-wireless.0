@@ -1,55 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:1490 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827AbZBONrh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 08:47:37 -0500
-Date: Sun, 15 Feb 2009 08:47:02 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Dhaval Giani <dhaval.lists@thegianis.in>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Dhaval Giani <dhaval@linux.vnet.ibm.com>,
-	linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
-Message-ID: <20090215134702.GA10180@hash.localnet> (sfid-20090215_144741_173572_740E4828)
-References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com> <1231338965-796-1-git-send-email-jirislaby@gmail.com> <20090107152208.GB4207@linux.vnet.ibm.com> <4964CAAA.3040801@gmail.com> <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com>
+Received: from mx3.mail.ru ([94.100.176.17]:3591 "EHLO mx3.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754281AbZBTS0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 13:26:19 -0500
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: orinoco-devel@lists.sourceforge.net
+Subject: Re: [Orinoco-devel] [PATCH 1/2] orinoco: validate firmware header
+Date: Fri, 20 Feb 2009 21:26:08 +0300
+Cc: David Kilroy <kilroyd@googlemail.com>,
+	linux-wireless@vger.kernel.org
+References: <1235087187-23425-1-git-send-email-kilroyd@googlemail.com> <1235087187-23425-2-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1235087187-23425-2-git-send-email-kilroyd@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com>
+Content-Type: multipart/signed;
+  boundary="nextPart4662805.4LgVx2D9MH";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200902202126.12230.arvidjaar@mail.ru> (sfid-20090220_192640_366900_5BB6450C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 02, 2009 at 01:27:39PM +0530, Dhaval Giani wrote:
-> So I finally managed to hit this on 2.6.29-rc3. It is hard to
-> reproduce, so I hope so much information is enough to give you a good
-> guess. This time it hit while trying to connect to an open network at
-> the airport.
+--nextPart4662805.4LgVx2D9MH
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> WARNING: at net/mac80211/rx.c:2236 __ieee80211_rx+0x96/0x571 [mac80211]()
-> Hardware name: 2007CS3
-> RATE=255, BAND=8
+On 20 of February 2009 02:46:26 David Kilroy wrote:
+>
+> +static const char *fw_err[] =3D {
+> +	"image too small",
+> +	"format not recognised",
+> +	"bad headersize",
+> +	"bad block offset",
+> +	"bad PDR offset",
+> +	"bad PRI offset",
+> +	"bad compat offset"
+> +};
+> +
+>  /* Structure used to access fields in FW
+>   * Make sure LE decoding macros are used
+>   */
+> @@ -43,6 +53,32 @@ struct orinoco_fw_header {
+>  	char signature[0];      /* FW signature length headersize-20 */
+>  } __attribute__ ((packed));
+>
+> +/* Check the range of various header entries */
+> +static int validate_fw(const struct orinoco_fw_header *hdr, size_t
+> len) +{
+> +	u16 hdrsize;
+> +
+> +	if (len < sizeof(*hdr))
+> +		return 1;
+> +	if (memcmp(hdr->hdr_vers, "HFW", 3) !=3D 0)
+> +		return 2;
+> +
+> +	hdrsize =3D le16_to_cpu(hdr->headersize);
+> +	if (hdrsize > len)
+> +		return 3;
+> +	if ((hdrsize + le32_to_cpu(hdr->block_offset)) > len)
+> +		return 4;
+> +	if ((hdrsize + le32_to_cpu(hdr->pdr_offset)) > len)
+> +		return 5;
+> +	if ((hdrsize + le32_to_cpu(hdr->pri_offset)) > len)
+> +		return 6;
+> +	if ((hdrsize + le32_to_cpu(hdr->compat_offset)) > len)
+> +		return 7;
+> +
+> +	/* TODO: consider adding a checksum or CRC to the firmware format
+> */ +	return 0;
+> +}
 
-band is supposed to be sc->curband?  8 is way wrong.  rate could be 255
-if, for some reason, the hardware rate wasn't in the rate table.
 
-> Pid: 2634, comm: X Not tainted 2.6.29-rc3 #18
-> Call Trace:
->  [<c0430636>] warn_slowpath+0x76/0xad
->  [<c04508d7>] ? __lock_acquire+0xb36/0xb45
->  [<f7dd0205>] __ieee80211_rx+0x96/0x571 [mac80211]
->  [<f7e37976>] ath5k_tasklet_rx+0x4fb/0x53d [ath5k]
->  [<c06fa5c3>] ? _spin_unlock_irq+0x27/0x34
->  [<c0434f91>] tasklet_action+0x85/0xf0
+I am afraid this can easily go off sync. Any reason those messages=20
+cannot be printed inline in validate_fw()?
 
-Interestingly I hit this just the other day -- I was debugging something
-else and had a serial console hooked up, otherwise I wouldn't have
-noticed at all.  It happened at some point during a suspend-to-ram
-sequence, which makes at least my version sound like a race condition
-of some sort.
+Otherwise what about
 
+#define FW_ERR_OK	0
+#define FW_ERR_TOO_SMALL 1
+=2E..
+static const char *fw_err[] =3D {
+	[FW_ERR_TOO_SMALL] =3D "image too small",
+=2E..
 
+	if (len < sizeof(*hdr))
+		return FW_ERR_TOO_SMALL;
+=2E..
+	return FW_ERR_OK;
 
+?
+
+--nextPart4662805.4LgVx2D9MH
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkme9cMACgkQR6LMutpd94wrXQCg0HeAL/mGnHe1u2WeMDujQTNI
+fy4AniRgyk+fZ2ecZJ2mOYOfoG1hlYAc
+=73Xs
+-----END PGP SIGNATURE-----
+
+--nextPart4662805.4LgVx2D9MH--
