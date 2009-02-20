@@ -1,74 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vilya.visn.co.uk ([193.254.210.161]:32781 "EHLO
-	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632AbZBQVAp (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53190 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430AbZBTFm6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 16:00:45 -0500
-Received: from localhost ([127.0.0.1] helo=www.phantomjinx.co.uk)
-	by vilya.visn.co.uk with esmtpa (Exim 4.69)
-	(envelope-from <p.g.richardson@phantomjinx.co.uk>)
-	id 1LZX3c-0004uj-Dj
-	for linux-wireless@vger.kernel.org; Tue, 17 Feb 2009 21:00:44 +0000
-Message-ID: <35879.82.152.175.172.1234904444.squirrel@www.phantomjinx.co.uk> (sfid-20090217_220049_786292_71B04981)
-Date: Tue, 17 Feb 2009 21:00:44 -0000 (UTC)
-Subject: rtl8187 cannot fix rate
-From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-To: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	Fri, 20 Feb 2009 00:42:58 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 04/15] nl80211: disallow user requests prior to regulatory_init()
+Date: Fri, 20 Feb 2009 00:42:39 -0500
+Message-Id: <1235108570-17652-5-git-send-email-lrodriguez@atheros.com> (sfid-20090220_064312_369533_7DA55E8E)
+In-Reply-To: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
+References: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
+If cfg80211 is built into the kernel there is perhaps a small
+time window betwen nl80211_init() and regulatory_init() where
+cfg80211_regdomain hasn't yet been initialized to let the
+wireless core do its work. During that rare case and time
+frame (if its even possible) we don't allow user regulatory
+changes as cfg80211 is working on enabling its first regulatory
+domain.
 
-More experimentation with my rtl8187. With some playing around with the
-access point location, I think I may have stumbled on a good position.
+To check for cfg80211_regdomain we now contend the entire operation
+using the cfg80211_mutex.
 
-Anyway ...
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/nl80211.c |   34 ++++++++++++++++++++++++++--------
+ 1 files changed, 26 insertions(+), 8 deletions(-)
 
-I noticed that the rate reported by iwconfig only ever gets to 11Mb/s
-despite the fact that I now have a signal level of 90/100 - 100/100. I
-found that I can do
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8d38609..c99f0be 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1882,24 +1882,42 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	int r;
+ 	char *data = NULL;
+ 
+-	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+-		return -EINVAL;
++	/*
++	 * You should only get this when cfg80211 hasn't yet initialized
++	 * completely when built-in to the kernel right between the time
++	 * window between nl80211_init() and regulatory_init(), if that is
++	 * even possible.
++	 */
++	mutex_lock(&cfg80211_mutex);
++	if (unlikely(!cfg80211_regdomain)) {
++		r = -EINPROGRESS;
++		goto out;
++	}
++
++	if (!info->attrs[NL80211_ATTR_REG_ALPHA2]) {
++		r = -EINVAL;
++		goto out;
++	}
+ 
+ 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+ 
+ #ifdef CONFIG_WIRELESS_OLD_REGULATORY
+ 	/* We ignore world regdom requests with the old regdom setup */
+-	if (is_world_regdom(data))
+-		return -EINVAL;
++	if (is_world_regdom(data)) {
++		r = -EINVAL;
++		goto out;
++	}
+ #endif
+-	mutex_lock(&cfg80211_mutex);
+ 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
+-	mutex_unlock(&cfg80211_mutex);
+-	/* This means the regulatory domain was already set, however
++	/*
++	 * This means the regulatory domain was already set, however
+ 	 * we don't want to confuse userspace with a "successful error"
+-	 * message so lets just treat it as a success */
++	 * message so lets just treat it as a success
++	 */
+ 	if (r == -EALREADY)
+ 		r = 0;
++out:
++	mutex_unlock(&cfg80211_mutex);
+ 	return r;
+ }
+ 
+-- 
+1.6.0.3
 
-iwconfig wlan0 rate 54M
-
-but it seems that although the card is still associated networking does=
-nt
-work (pings fail). If I change it back to auto
-
-iwconfig wlan0 rate auto
-
-then iwconfig reports 11Mb/s again and pinging resumes fine.
-
-Is there any chance that the driver is incorrectly reporting its mode o=
-r
-something in that the rates it displays bear the hallmarks of a b card
-rather than g?
-
-Using the compat-wireless snapshot from 9/2/2009
-Mandriva 2.6.27.10-desktop586-1mnb
-
-Any ideas appreciated.
-
-Regards
-
-PGR
-
---=20
-Laws are partly formed for the sake of good men, in order to instruct t=
-hem
-how they may live on friendly terms with one another, and partly for th=
-e
-sake of those who refuse to be instructed, whose spirit cannot be subdu=
-ed,
-or softened, or hindered from plunging into evil. [The Laws, Plato]
-
-You fiend! Never have I encountered such corrupt and foul-minded
-perversity=85 Have you ever considered a career in the church?
-Bishop of Bath and Wells (Blackadder II)
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
