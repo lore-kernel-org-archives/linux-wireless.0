@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp01.jazztel.es ([62.14.3.170]:34914 "EHLO smtp01.jazztel.es"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759709AbZBER0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2009 12:26:37 -0500
-Received: from [87.219.174.145] (helo=localhost)
-	by smtp01.jazztel.es with esmtpa (Exim 4.60)
-	(envelope-from <arnau60@casal.upc.edu>)
-	id 1LV7KX-0006ll-3C
-	for linux-wireless@vger.kernel.org; Thu, 05 Feb 2009 17:43:57 +0100
-Received: from arnau by localhost with local (Exim 4.63)
-	(envelope-from <arnau60@casal.upc.edu>)
-	id 1LV7Lu-0001vq-QS
-	for linux-wireless@vger.kernel.org; Thu, 05 Feb 2009 17:45:22 +0100
-Date: Thu, 5 Feb 2009 17:45:22 +0100
-From: Arnau Roig <arnau60@casal.upc.edu>
-To: linux-wireless@vger.kernel.org
-Subject: txpower and frequency settings: concept guidance needed
-Message-ID: <20090205164522.GA5580@purple> (sfid-20090205_182643_281266_66D68FD2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from bombadil.infradead.org ([18.85.46.34]:49012 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888AbZBTGE5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 01:04:57 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	marcel@holtmann.org, kalle.valo@nokia.com, kyle@mcmartin.ca
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 5/5] cfg80211: default OLD_REG to n
+Date: Fri, 20 Feb 2009 01:04:34 -0500
+Message-Id: <1235109874-3966-6-git-send-email-lrodriguez@atheros.com> (sfid-20090220_070504_568388_5224377E)
+In-Reply-To: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
+References: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello to everybody.
+Since we are not following the schedule to remove OLD_REG by 2.6.29
+lets simply set it to default to n for 2.6.30 and schedule its
+removal for 2.6.31
 
-I'm new in kernel development and in wireless networking also.
-I've read most of the documentation availible in wireless.kernel.org
-and, to be honest it's still not clear to me what are the uses of the
-mac80211, cfg80211 or nl80211.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ Documentation/feature-removal-schedule.txt |    5 +++--
+ net/wireless/Kconfig                       |    2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-I'm using a 2.6.24 kernel, compat-wireless-2.6-old (compat-release
-v4.5-g2badec7) and ath5k driver (v0.5.0).
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index ac98851..bf83b02 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -7,7 +7,7 @@ be removed from this file.
+ ---------------------------
+ 
+ What:	old static regulatory information and ieee80211_regdom module parameter
+-When:	2.6.29
++When:	2.6.31
+ Why:	The old regulatory infrastructure has been replaced with a new one
+ 	which does not require statically defined regulatory domains. We do
+ 	not want to keep static regulatory domains in the kernel due to the
+@@ -19,7 +19,8 @@ Why:	The old regulatory infrastructure has been replaced with a new one
+ 	and used by default the US when CONFIG_WIRELESS_OLD_REGULATORY was
+ 	set. We also kept around the ieee80211_regdom module parameter in case
+ 	some applications were relying on it. Changing regulatory domains
+-	can now be done instead by using nl80211, as is done with iw.
++	can now be done instead by using nl80211, as is done with iw, or
++	wpa_supplicant.
+ Who:	Luis R. Rodriguez <lrodriguez@atheros.com>
+ 
+ ---------------------------
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index e28e2b8..009f5b8 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -25,7 +25,7 @@ config NL80211
+ 
+ config WIRELESS_OLD_REGULATORY
+ 	bool "Old wireless static regulatory definitions"
+-	default y
++	default n
+ 	---help---
+ 	  This option enables the old static regulatory information
+ 	  and uses it within the new framework. This is available
+-- 
+1.6.0.3
 
-What I want to do is a userspace application that has to modify the
-frequency channel and the tx_power of the wireless device depending on
-several network statistics. Please, where do I have to start looking?
-
-Is the struct ieee80211_conf, declared in mac80211.h what I need for
-changing the current working channel and tx_power?
-Can I read network statistics with get_station, declared in the struct
-cfg80211_ops in cfg80211.h? Or the way to do it is using
-@NL80211_CMD_GET_WIPHY in nl80211_commands?
-
-Thank you for your time.
