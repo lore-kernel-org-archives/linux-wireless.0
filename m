@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.185]:19748 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751283AbZBVGjx (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53212 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673AbZBTFnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 01:39:53 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so1276374fkf.5
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Feb 2009 22:39:51 -0800 (PST)
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Signal quality strange since commit 708c57cf1709fb95
-References: <49A01922.1090106@lwfinger.net>
-	<1235241867.3284.44.camel@localhost> <49A05E35.70904@lwfinger.net>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 22 Feb 2009 08:39:49 +0200
-In-Reply-To: <49A05E35.70904@lwfinger.net> (Larry Finger's message of "Sat\, 21 Feb 2009 14\:04\:05 -0600")
-Message-ID: <8763j33rgq.fsf@litku.valot.fi> (sfid-20090222_074010_307862_EFC96D26)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 20 Feb 2009 00:43:11 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 09/15] cfg80211: protect first access of last_request on 11d hint under mutex
+Date: Fri, 20 Feb 2009 00:42:44 -0500
+Message-Id: <1235108570-17652-10-git-send-email-lrodriguez@atheros.com> (sfid-20090220_064316_943169_A42BACFA)
+In-Reply-To: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
+References: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+We were not protecting last_request there is a small possible race
+between an 11d hint and another routine which calls reset_regdomains()
+which can prevent a valid country IE from being processed. This is
+not critical as it will still be procesed soon after but locking prior
+to it is correct.
 
-> I know how it works with drivers that implement their own ioctl
-> calls for the WEXT interface; however, the 3 that I mentioned all
-> use mac80211 and get their WEXT support through cfg80211.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-Yes, something is wrong now. I noticed the same problem (/70 in signal
-strength) when I was implementing rssi support for at76c50x-usb.
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index d44f3b5..b474452 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1261,11 +1261,13 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	u32 checksum = 0;
+ 	enum environment_cap env = ENVIRON_ANY;
+ 
+-	if (!last_request)
+-		return;
+-
+ 	mutex_lock(&cfg80211_mutex);
+ 
++	if (unlikely(!last_request)) {
++		mutex_unlock(&cfg80211_mutex);
++		return;
++	}
++
+ 	/* IE len must be evenly divisible by 2 */
+ 	if (country_ie_len & 0x01)
+ 		goto out;
 -- 
-Kalle Valo
+1.6.0.3
+
