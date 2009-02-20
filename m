@@ -1,94 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56068 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750966AbZBUFEm (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:56776 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752791AbZBTUK0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 00:04:42 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v6 05/15] cfg80211: add regulatory_hint_core() to separate the core reg hint
-Date: Sat, 21 Feb 2009 00:04:23 -0500
-Message-Id: <1235192673-6314-6-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060451_401619_4AE4680D)
-In-Reply-To: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
-References: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 20 Feb 2009 15:10:26 -0500
+Message-ID: <499F0E25.6030405@lwfinger.net> (sfid-20090220_211030_419407_061AE161)
+Date: Fri, 20 Feb 2009 14:10:13 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/6] b43: Use spatch to convert register accesses
+References: <200902201854.22114.mb@bu3sch.de>
+In-Reply-To: <200902201854.22114.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the core hint path more readable and allows for us to
-later make it obvious under what circumstances we need locking or not.
+Michael Buesch wrote:
+> Some time ago I rejected a bunch of patches that converted the
+> PHY/radio register accesses to the new API. That was due to the patch=
+es
+> being created manually. This introduces a huge potential to add new b=
+ugs.
+>=20
+> However, this is an excellent task for coccinelle/spatch.
+> So here's a series of patches, to convert the API usage, that were ge=
+nerated
+> with spatch. This should keep the chances of breaking something as lo=
+w as possible.
+>=20
+> This reduces the .ko size by about 6 kiB.
+>=20
+> The used semantic patches will be included in the patch headers.
+>=20
+> John, please queue these patches for the next feature release.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   34 +++++++++++++++++++++++++---------
- 1 files changed, 25 insertions(+), 9 deletions(-)
+Michael,
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ba82312..6373a78 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 	case REGDOM_SET_BY_INIT:
- 		return -EINVAL;
- 	case REGDOM_SET_BY_CORE:
--		/*
--		 * Always respect new wireless core hints, should only happen
--		 * when updating the world regulatory domain at init.
--		 */
--		return 0;
-+		return -EINVAL;
- 	case REGDOM_SET_BY_COUNTRY_IE:
- 		if (unlikely(!is_an_alpha2(alpha2)))
- 			return -EINVAL;
-@@ -1183,6 +1179,26 @@ new_request:
- 	return call_crda(alpha2);
- }
- 
-+static int regulatory_hint_core(const char *alpha2)
-+{
-+	struct regulatory_request *request;
-+
-+	BUG_ON(last_request);
-+
-+	request = kzalloc(sizeof(struct regulatory_request),
-+			  GFP_KERNEL);
-+	if (!request)
-+		return -ENOMEM;
-+
-+	request->alpha2[0] = alpha2[0];
-+	request->alpha2[1] = alpha2[1];
-+	request->initiator = REGDOM_SET_BY_CORE;
-+
-+	last_request = request;
-+
-+	return call_crda(alpha2);
-+}
-+
- void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- {
- 	int r;
-@@ -1616,16 +1632,16 @@ int regulatory_init(void)
- 	 * stuck with the static values. We ignore "EU" code as
- 	 * that is not a valid ISO / IEC 3166 alpha2 */
- 	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
--		err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE,
--					ieee80211_regdom, 0, ENVIRON_ANY);
-+		err = regulatory_hint_core(ieee80211_regdom);
- #else
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
--	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", 0, ENVIRON_ANY);
--	if (err)
-+	err = regulatory_hint_core("00");
-+	if (err) {
- 		printk(KERN_ERR "cfg80211: calling CRDA failed - "
- 		       "unable to update world regulatory domain, "
- 		       "using static definition\n");
-+	}
- #endif
- 
- 	return 0;
--- 
-1.6.0.3
+With those patches applied on an x86_64 system, I get the following war=
+nings:
 
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D
+  CC [M]  drivers/net/wireless/b43/phy_a.o
+drivers/net/wireless/b43/phy_g.c: In function
+=E2=80=98b43_radio_interference_mitigation_enable=E2=80=99:
+drivers/net/wireless/b43/phy_g.c:974: warning: large integer implicitly
+truncated to unsigned type
+  CC [M]  drivers/net/wireless/b43/wa.o
+drivers/net/wireless/b43/wa.c: In function =E2=80=98b43_wa_altagc=E2=80=
+=99:
+drivers/net/wireless/b43/wa.c:391: warning: large integer implicitly tr=
+uncated
+to unsigned type
+drivers/net/wireless/b43/wa.c:409: warning: large integer implicitly tr=
+uncated
+to unsigned type
+drivers/net/wireless/b43/wa.c:411: warning: large integer implicitly tr=
+uncated
+to unsigned type
+drivers/net/wireless/b43/wa.c:421: warning: large integer implicitly tr=
+uncated
+to unsigned type
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D
+
+All of these occur where there is a constant of the form ~0xYXXX with Y=
+ in the
+range 8-F. To get rid of the warning, either use a u16 cast, or manuall=
+y
+complement the constant.
+
+Larry
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
