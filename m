@@ -1,67 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:7119 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753076AbZBPJBP (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54062 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbZBUFUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 04:01:15 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so922284yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 01:01:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1234774163.4219.100.camel@johannes.local>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-5-git-send-email-lrodriguez@atheros.com>
-	 <1234695526.4219.46.camel@johannes.local>
-	 <43e72e890902160013q48912fa1if1db7155e4fee1f1@mail.gmail.com>
-	 <1234774163.4219.100.camel@johannes.local>
-Date: Mon, 16 Feb 2009 01:01:14 -0800
-Message-ID: <43e72e890902160101y30671861o43faccf51726a191@mail.gmail.com> (sfid-20090216_100125_481792_972A4272)
-Subject: Re: [PATCH 04/10] nl80211: disallow user requests prior to
-	regulatory_init()
+	Sat, 21 Feb 2009 00:20:47 -0500
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 0/5] cfg80211: enhance world roaming
+Date: Sat, 21 Feb 2009 00:20:36 -0500
+Message-Id: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062056_481876_5C51A47F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 16, 2009 at 12:49 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-02-16 at 00:13 -0800, Luis R. Rodriguez wrote:
->
->> >> +     if (!cfg80211_regdomain)
->> >> +             return -EINPROGRESS;
->> >> +
->> >
->> > But that variable access here is racy too.
->>
->> Right.
->>
->> > It might be ok anyway because
->> > the variable can never be NULL again after the first assignment
->>
->> That's what I was going for.
->>
->> >  but in
->> > that case the assignment needs to take care to assign something fully
->> > created ...
->>
->> Can you elaborate on what you mean?
->
-> It'd have to be done in a RCU-like fashion,
+This v2 series addresses Johannes' comment on not making
+the beacon reg hint extern, nor do we have to EXPORT_SYMBOL
+it as only cfg80211 core is its user.
 
-I see what you're saying.
+Luis R. Rodriguez (5):
+  cfg80211: enable active-scan / beaconing on Ch 1-11 for world regdom
+  cfg80211: enable 5 GHz world roaming channels
+  cfg80211: Add AP beacon regulatory hints
+  ath9k: follow beacon hints on reg_notifier when world roaming
+  cfg80211: default OLD_REG to n
 
-> unless we only ever use it
-> as a bool here?
+ Documentation/feature-removal-schedule.txt |    5 +-
+ drivers/net/wireless/ath9k/regd.c          |   93 +++++++----
+ include/net/wireless.h                     |    5 +-
+ net/wireless/Kconfig                       |    2 +-
+ net/wireless/core.c                        |    5 +-
+ net/wireless/reg.c                         |  238 +++++++++++++++++++++++++++-
+ net/wireless/reg.h                         |   21 +++
+ net/wireless/scan.c                        |    3 +
+ 8 files changed, 331 insertions(+), 41 deletions(-)
 
-Its only used as a bool here, mind you __regulatory_hint() does do
-mucking with cfg80211 but my patches move the hint to a workqueue so
-that locking is now done later through the workqueue so under this new
-patch series -- yes cfg80211_regdomain will only be used as a bool.
-
-But come to think of it this is still racy -- think of the cases where
-reset_regdomains() is called and the small race between the end of of
-those calls and another CPU getting a new user reg hint. So we should
-just lock.
-
-  Luis
