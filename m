@@ -1,79 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:48636 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018AbZBVUan (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55972 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311AbZBUFYS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 15:30:43 -0500
-Date: Sun, 22 Feb 2009 21:30:39 +0100
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090222203038.GB6060@nowhere> (sfid-20090222_213048_027160_2D790AD8)
-References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <20090222171032.GD6003@nowhere> <49A1A72A.50102@gmail.com> <20090222194236.GA6060@nowhere> <20090222201821.GA21375@silver.sucs.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090222201821.GA21375@silver.sucs.org>
+	Sat, 21 Feb 2009 00:24:18 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 4/4] cfg80211: pass the regulatory_request to ignore_request
+Date: Sat, 21 Feb 2009 00:24:16 -0500
+Message-Id: <1235193856-3524-5-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062431_314462_87FD4A34)
+In-Reply-To: <1235193856-3524-1-git-send-email-lrodriguez@atheros.com>
+References: <1235193856-3524-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 22, 2009 at 08:18:22PM +0000, Sitsofe Wheeler wrote:
-> On Sun, Feb 22, 2009 at 08:42:37PM +0100, Frederic Weisbecker wrote:
-> > On Sun, Feb 22, 2009 at 08:27:38PM +0100, Jiri Slaby wrote:
-> > > On 22.2.2009 18:10, Frederic Weisbecker wrote:
-> > >> I have some troubles with kmemcheck, so I give up for now.
-> > >> Well, by reading the kmemcheck documentation, it tells that there can be some false
-> > >> positives so...
-> > >
-> > > This has nothing to do with kmemcheck.
-> > >
-> > >> Since we are not sure this is a real bug, I'm not sure it would be interesting.
-> > >
-> > > There is no false positive possibility with these checkers, so this is  
-> > > pretty much interesting, because it is a bug.
-> > 
-> > 
-> > If so, Documentation/kmemcheck.txt really needs an update.
-> 
-> kmemcheck is different to the slab object lifetime debugger (which is
-> what reported this error). kmemcheck may have turned up in the trace
-> because it was compiled in (and it ties into slab/slub) but wasn't
-> turned on (it can be dynamically toggled via sysfs).
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   22 ++++++++++------------
+ 1 files changed, 10 insertions(+), 12 deletions(-)
 
-
-Ah sorry, I thought it was a kmemcheck warning. That's why I didn't understand
-what Jiri said to me.
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6152a7a..ce66bfd 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1231,8 +1231,8 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
  
-> kmemcheck keeps a shadow of the memory and via the shadow memory it
-> records whether the memory has been written to yet. I believe
-> kmemcheck's problem is that it can't know when allocated but
-> uninitialised memory is being used on purpose/not really being used
-> (e.g. when gcc does a 32 bit read when only 16 bits have been used but
-> throws the upper 16 bits away). There may be other cases such as when a
-> previously uninitialised buffer is used but the buffer is actually used
-> by an mmaped device...
-
-
-Ok.
-
-> My understanding is that the slab debugger writes poison about the place
-> (e.g. to memory that has been freed and at the start/end of allocations)
-> and then checks to see if someone has scribbled on it. This case is more
-> coarse as it only deals with allocation rather than initialisation (and
-> if you scribble the same value as the poison pattern you go undetected)
-> but I believe this is what Jiri is referring to as a "no false positive
-> possibility" case - it's never right to write to unallocated memory.
-> 
-> (fixed up Bob's email address on the cc)
-
-
-Well I understand better now. Thanks for the explanations.
+ /* This has the logic which determines when a new request
+  * should be ignored. */
+-static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+-			  const char *alpha2)
++static int ignore_request(struct wiphy *wiphy,
++			  struct regulatory_request *pending_request)
+ {
+ 	struct wiphy *last_wiphy = NULL;
  
-> -- 
-> Sitsofe | http://sucs.org/~sits/
+@@ -1242,7 +1242,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 	if (!last_request)
+ 		return 0;
+ 
+-	switch (set_by) {
++	switch (pending_request->initiator) {
+ 	case REGDOM_SET_BY_INIT:
+ 		return -EINVAL;
+ 	case REGDOM_SET_BY_CORE:
+@@ -1251,7 +1251,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 
+ 		last_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+ 
+-		if (unlikely(!is_an_alpha2(alpha2)))
++		if (unlikely(!is_an_alpha2(pending_request->alpha2)))
+ 			return -EINVAL;
+ 		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
+ 			if (last_wiphy != wiphy) {
+@@ -1261,7 +1261,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 				 * intersect them, but that seems unlikely
+ 				 * to be correct. Reject second one for now.
+ 				 */
+-				if (regdom_changes(alpha2))
++				if (regdom_changes(pending_request->alpha2))
+ 					return -EOPNOTSUPP;
+ 				return -EALREADY;
+ 			}
+@@ -1269,7 +1269,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 			 * Two consecutive Country IE hints on the same wiphy.
+ 			 * This should be picked up early by the driver/stack
+ 			 */
+-			if (WARN_ON(regdom_changes(alpha2)))
++			if (WARN_ON(regdom_changes(pending_request->alpha2)))
+ 				return 0;
+ 			return -EALREADY;
+ 		}
+@@ -1278,7 +1278,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		if (last_request->initiator == REGDOM_SET_BY_CORE) {
+ 			if (is_old_static_regdom(cfg80211_regdomain))
+ 				return 0;
+-			if (regdom_changes(alpha2))
++			if (regdom_changes(pending_request->alpha2))
+ 				return 0;
+ 			return -EALREADY;
+ 		}
+@@ -1289,7 +1289,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		 * loaded card also agrees on the regulatory domain.
+ 		 */
+ 		if (last_request->initiator == REGDOM_SET_BY_DRIVER &&
+-		    !regdom_changes(alpha2))
++		    !regdom_changes(pending_request->alpha2))
+ 			return -EALREADY;
+ 
+ 		return REG_INTERSECT;
+@@ -1315,7 +1315,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		}
+ 
+ 		if (!is_old_static_regdom(cfg80211_regdomain) &&
+-		    !regdom_changes(alpha2))
++		    !regdom_changes(pending_request->alpha2))
+ 			return -EALREADY;
+ 
+ 		return 0;
+@@ -1346,9 +1346,7 @@ static int __regulatory_hint(struct wiphy *wiphy,
+ 
+ 	assert_cfg80211_lock();
+ 
+-	r = ignore_request(wiphy,
+-			  pending_request->initiator,
+-			  pending_request->alpha2);
++	r = ignore_request(wiphy, pending_request);
+ 
+ 	if (r == REG_INTERSECT) {
+ 		if (pending_request->initiator == REGDOM_SET_BY_DRIVER) {
+-- 
+1.6.0.3
 
