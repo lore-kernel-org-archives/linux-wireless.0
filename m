@@ -1,39 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59146 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752102AbZBZJKq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 04:10:46 -0500
-Date: Thu, 26 Feb 2009 11:10:37 +0200
-From: Jouni Malinen <j@w1.fi>
-To: pat-lkml <pat-lkml@erley.org>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath9k and TKIP hw crypto in AP mode
-Message-ID: <20090226091037.GA10941@jm.kir.nu> (sfid-20090226_101051_347290_997EC722)
-References: <20090224114201.GB21933@jm.kir.nu> <49A40320.1040902@erley.org> <20090224150710.GA1419@jm.kir.nu> <49A41315.3030007@erley.org> <49A45378.50009@erley.org> <20090225181953.GA23880@jm.kir.nu> <49A5D83A.1090602@erley.org> <49A5DDED.1080408@erley.org>
+Received: from mail.gmx.net ([213.165.64.20]:38817 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752403AbZBUAMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 19:12:25 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sat, 21 Feb 2009 01:12:23 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090221001223.65910@gmx.net> (sfid-20090221_011232_125134_08EF9278)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49A5DDED.1080408@erley.org>
+Subject: [PATCH] mac80211: Introduce a generic commit() to apply changes
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 25, 2009 at 07:10:21PM -0500, pat-lkml wrote:
-> pat-lkml wrote:
-> > I had to make some changes to get it to build, am going to test shortly.
+This patch introduces a generic commit() function which initiate a new =
+network joining process. It should be called after some interface confi=
+g changes, so that the changes get applied more cleanly. Currently set_=
+ssid() and set_bssid() call it. Others can be added in future patches.
 
-Ah.. I had made the patch on top of number of other changes and did not
-remember to rebase it on top of wireless-testing.
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+---
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 1bbfc70..aa8937c 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -788,6 +788,23 @@ void ieee80211_ibss_setup_sdata(struct ieee80211_s=
+ub_if_data *sdata)
+ 			IEEE80211_IBSS_AUTO_CHANNEL_SEL;
+ }
+=20
++int ieee80211_ibss_commit(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_ibss *ifibss =3D &sdata->u.ibss;
++
++	ifibss->flags &=3D ~IEEE80211_IBSS_PREV_BSSID_SET;
++
++	if (ifibss->ssid_len)
++		ifibss->flags |=3D IEEE80211_IBSS_SSID_SET;
++	else
++		ifibss->flags &=3D ~IEEE80211_IBSS_SSID_SET;
++
++	ifibss->ibss_join_req =3D jiffies;
++	ifibss->state =3D IEEE80211_IBSS_MLME_SEARCH;
++
++	return ieee80211_sta_find_ibss(sdata);
++}
++
+ int ieee80211_ibss_set_ssid(struct ieee80211_sub_if_data *sdata, char =
+*ssid, size_t len)
+ {
+ 	struct ieee80211_if_ibss *ifibss =3D &sdata->u.ibss;
+@@ -801,16 +818,7 @@ int ieee80211_ibss_set_ssid(struct ieee80211_sub_i=
+f_data *sdata, char *ssid, siz
+ 		ifibss->ssid_len =3D len;
+ 	}
+=20
+-	ifibss->flags &=3D ~IEEE80211_IBSS_PREV_BSSID_SET;
+-
+-	if (len)
+-		ifibss->flags |=3D IEEE80211_IBSS_SSID_SET;
+-	else
+-		ifibss->flags &=3D ~IEEE80211_IBSS_SSID_SET;
+-
+-	ifibss->ibss_join_req =3D jiffies;
+-	ifibss->state =3D IEEE80211_IBSS_MLME_SEARCH;
+-	return ieee80211_sta_find_ibss(sdata);
++	return ieee80211_ibss_commit(sdata);
+ }
+=20
+ int ieee80211_ibss_get_ssid(struct ieee80211_sub_if_data *sdata, char =
+*ssid, size_t *len)
+@@ -842,7 +850,7 @@ int ieee80211_ibss_set_bssid(struct ieee80211_sub_i=
+f_data *sdata, u8 *bssid)
+ 		}
+ 	}
+=20
+-	return ieee80211_ibss_set_ssid(sdata, ifibss->ssid, ifibss->ssid_len)=
+;
++	return ieee80211_ibss_commit(sdata);
+ }
+=20
+ /* scan finished notification */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5a49779..7f23858 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1855,6 +1855,20 @@ void ieee80211_sta_req_auth(struct ieee80211_sub=
+_if_data *sdata)
+ 	}
+ }
+=20
++int ieee80211_sta_commit(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *ifmgd =3D &sdata->u.mgd;
++
++	ifmgd->flags &=3D ~IEEE80211_STA_PREV_BSSID_SET;
++
++	if (ifmgd->ssid_len)
++		ifmgd->flags |=3D IEEE80211_STA_SSID_SET;
++	else
++		ifmgd->flags &=3D ~IEEE80211_STA_SSID_SET;
++
++	return 0;
++}
++
+ int ieee80211_sta_set_ssid(struct ieee80211_sub_if_data *sdata, char *=
+ssid, size_t len)
+ {
+ 	struct ieee80211_if_managed *ifmgd;
+@@ -1870,14 +1884,7 @@ int ieee80211_sta_set_ssid(struct ieee80211_sub_=
+if_data *sdata, char *ssid, size
+ 		ifmgd->ssid_len =3D len;
+ 	}
+=20
+-	ifmgd->flags &=3D ~IEEE80211_STA_PREV_BSSID_SET;
+-
+-	if (len)
+-		ifmgd->flags |=3D IEEE80211_STA_SSID_SET;
+-	else
+-		ifmgd->flags &=3D ~IEEE80211_STA_SSID_SET;
+-
+-	return 0;
++	return ieee80211_sta_commit(sdata);
+ }
+=20
+ int ieee80211_sta_get_ssid(struct ieee80211_sub_if_data *sdata, char *=
+ssid, size_t *len)
+@@ -1907,7 +1914,7 @@ int ieee80211_sta_set_bssid(struct ieee80211_sub_=
+if_data *sdata, u8 *bssid)
+ 		}
+ 	}
+=20
+-	return ieee80211_sta_set_ssid(sdata, ifmgd->ssid, ifmgd->ssid_len);
++	return ieee80211_sta_commit(sdata);
+ }
+=20
+ int ieee80211_sta_set_extra_ie(struct ieee80211_sub_if_data *sdata, ch=
+ar *ie, size_t len)
 
-> And it appears to be working.  I have it set to 10 minute rekeying, so I'll
-> have more success/failure for you then (and am waiting to send this e-mail
-> until then).
-> 
-> Well, it rekey'd with no interruption in service.  I'd call it a success.
-
-Thanks, nice to hear. I was also able to complete testing on this with
-both the newer and older hardware revisions and both for AP and STA
-modes.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
