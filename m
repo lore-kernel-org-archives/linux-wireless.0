@@ -1,112 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36354 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755174AbZB0OEz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 09:04:55 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: "Alina Friedrichsen" <x-alina@gmx.net>
-Subject: Re: [PATCH v2] mac80211: Call commit() on channel setting
-Date: Fri, 27 Feb 2009 15:03:13 +0100
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-References: <20090226234307.51520@gmx.net>
-In-Reply-To: <20090226234307.51520@gmx.net>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:39141 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752456AbZBUHx0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2009 02:53:26 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 2/4] at76c50x-usb: clean up DMA on stack
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 21 Feb 2009 09:53:22 +0200
+Message-ID: <20090221075322.15991.48422.stgit@tikku> (sfid-20090221_085328_726605_176ADF9E)
+In-Reply-To: <20090221075013.15991.66595.stgit@tikku>
+References: <20090221075013.15991.66595.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200902271503.13308.mb@bu3sch.de> (sfid-20090227_150458_168163_DB6EBEB5)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 February 2009 00:43:07 Alina Friedrichsen wrote:
-> This calls commit() on all logical interfaces of a physical interface, if the channel of it is changed. Before it works as it should, I must fix the joining process of STA and IBSS a little, which I will make tomorrow.
+From: Jason Andryuk <jandryuk@gmail.com>
 
+Cleanup dma on stack issues:
 
-Could you explain what commit is supposed to to after the channel switch?
-To me it's not clear what the difference in functionality is.
-What do you expect to happen on the commit call after the channel change.
+- no DMA on stack
+- cleanup unclear endianness issue
 
-> Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
-> ---
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index c43129e..015062e 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -1173,11 +1173,19 @@ static int ieee80211_set_channel(struct wiphy *wiphy,
->  				 enum nl80211_channel_type channel_type)
->  {
->  	struct ieee80211_local *local = wiphy_priv(wiphy);
-> +	struct ieee80211_sub_if_data *sdata;
-> +	int ret;
->  
->  	local->oper_channel = chan;
->  	local->oper_channel_type = channel_type;
->  
-> -	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-> +	ret = ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-> +
-> +	list_for_each_entry(sdata, &local->interfaces, list) {
-> +		ieee80211_commit(sdata);
-> +	}
+Corrected version of Oliver Neukum's original patch for at76_usb.
 
-Why do you commit, even if channel change failed?
+Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+---
 
-> +
-> +	return ret;
->  }
->  
->  static int set_mgmt_extra_ie_sta(struct ieee80211_sub_if_data *sdata,
-> diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-> index 1ac0516..dce1618 100644
-> --- a/net/mac80211/wext.c
-> +++ b/net/mac80211/wext.c
-> @@ -157,7 +157,10 @@ static int ieee80211_ioctl_siwfreq(struct net_device *dev,
->  				   struct iw_request_info *info,
->  				   struct iw_freq *freq, char *extra)
->  {
-> +	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
->  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	struct ieee80211_sub_if_data *nsdata;
-> +	int ret;
->  
->  	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
->  		sdata->u.ibss.flags &= ~IEEE80211_IBSS_AUTO_CHANNEL_SEL;
-> @@ -173,19 +176,25 @@ static int ieee80211_ioctl_siwfreq(struct net_device *dev,
->  			else if (sdata->vif.type == NL80211_IFTYPE_STATION)
->  				sdata->u.mgd.flags |=
->  					IEEE80211_STA_AUTO_CHANNEL_SEL;
-> -			return 0;
-> +			ret = 0;
->  		} else
-> -			return ieee80211_set_freq(sdata,
-> +			ret = ieee80211_set_freq(sdata,
->  				ieee80211_channel_to_frequency(freq->m));
->  	} else {
->  		int i, div = 1000000;
->  		for (i = 0; i < freq->e; i++)
->  			div /= 10;
->  		if (div > 0)
-> -			return ieee80211_set_freq(sdata, freq->m / div);
-> +			ret = ieee80211_set_freq(sdata, freq->m / div);
->  		else
-> -			return -EINVAL;
-> +			ret = -EINVAL;
->  	}
-> +
-> +	list_for_each_entry(nsdata, &local->interfaces, list) {
-> +		ieee80211_commit(nsdata);
-> +	}
+ drivers/net/wireless/at76c50x-usb.c |   35 +++++++++++++++++++++++------------
+ 1 files changed, 23 insertions(+), 12 deletions(-)
 
-dito.
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index c79591e..46ac9e2 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -580,18 +580,25 @@ static int at76_remap(struct usb_device *udev)
+ static int at76_get_op_mode(struct usb_device *udev)
+ {
+ 	int ret;
+-	u8 op_mode;
++	u8 saved;
++	u8 *op_mode;
+ 
++	op_mode = kmalloc(1, GFP_NOIO);
++	if (!op_mode)
++		return -ENOMEM;
+ 	ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x33,
+ 			      USB_TYPE_VENDOR | USB_DIR_IN |
+-			      USB_RECIP_INTERFACE, 0x01, 0, &op_mode, 1,
++			      USB_RECIP_INTERFACE, 0x01, 0, op_mode, 1,
+ 			      USB_CTRL_GET_TIMEOUT);
++	saved = *op_mode;
++	kfree(op_mode);
++
+ 	if (ret < 0)
+ 		return ret;
+ 	else if (ret < 1)
+ 		return -EIO;
+ 	else
+-		return op_mode;
++		return saved;
+ }
+ 
+ /* Load a block of the second ("external") part of the firmware */
+@@ -704,21 +711,25 @@ static inline int at76_get_mib(struct usb_device *udev, u16 mib, void *buf,
+ /* Return positive number for status, negative for an error */
+ static inline int at76_get_cmd_status(struct usb_device *udev, u8 cmd)
+ {
+-	u8 stat_buf[40];
++	u8 *stat_buf;
+ 	int ret;
+ 
++	stat_buf = kmalloc(40, GFP_NOIO);
++	if (!stat_buf)
++		return -ENOMEM;
++
+ 	ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0), 0x22,
+-			      USB_TYPE_VENDOR | USB_DIR_IN |
+-			      USB_RECIP_INTERFACE, cmd, 0, stat_buf,
+-			      sizeof(stat_buf), USB_CTRL_GET_TIMEOUT);
+-	if (ret < 0)
+-		return ret;
++			USB_TYPE_VENDOR | USB_DIR_IN |
++			USB_RECIP_INTERFACE, cmd, 0, stat_buf,
++			40, USB_CTRL_GET_TIMEOUT);
++	if (ret >= 0)
++		ret = stat_buf[5];
++	kfree(stat_buf);
+ 
+-	return stat_buf[5];
++	return ret;
+ }
+ 
+ #define MAKE_CMD_CASE(c) case (c): return #c
+-
+ static const char *at76_get_cmd_string(u8 cmd_status)
+ {
+ 	switch (cmd_status) {
+@@ -735,7 +746,7 @@ static const char *at76_get_cmd_string(u8 cmd_status)
+ 	return "UNKNOWN";
+ }
+ 
+-static int at76_set_card_command(struct usb_device *udev, int cmd, void *buf,
++static int at76_set_card_command(struct usb_device *udev, u8 cmd, void *buf,
+ 				 int buf_size)
+ {
+ 	int ret;
 
-> +
-> +	return ret;
->  }
->  
->  
-> 
-
-
-
--- 
-Greetings, Michael.
