@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49689 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752825AbZBFUsS (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56060 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbZBUFEm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 15:48:18 -0500
-Subject: Re: [PATCH] mac80211: disable IBSS beacon before join
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <498C5005.8060806@lwfinger.net>
-References: <1233930586.4175.11.camel@johannes.local>
-	 <498C5005.8060806@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-eaQRUg6RKC1MdB9X1l32"
-Date: Fri, 06 Feb 2009 21:48:12 +0100
-Message-Id: <1233953292.4175.31.camel@johannes.local> (sfid-20090206_214828_817806_3B971062)
-Mime-Version: 1.0
+	Sat, 21 Feb 2009 00:04:42 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v6 00/15] cfg80211: add a workqueue for regulatory processing
+Date: Sat, 21 Feb 2009 00:04:18 -0500
+Message-Id: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060445_855813_991DFACA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I found one bug in my v5 series on the workqueue patch -- I was
+accessing wiphy->custom_regulatory without first checking if the
+wiphy existed, in case there are any conflicts I am rebasing the
+other patches and just sending a new version 6 series.
 
---=-eaQRUg6RKC1MdB9X1l32
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Luis R. Rodriguez (15):
+  cfg80211: rename cfg80211_registered_device's idx to wiphy_idx
+  cfg80211: add wiphy_idx_valid to check for wiphy_idx sanity
+  cfg80211: rename cfg80211_drv_mutex to cfg80211_mutex
+  nl80211: disallow user requests prior to regulatory_init()
+  cfg80211: add regulatory_hint_core() to separate the core reg hint
+  cfg80211: propagate -ENOMEM during regulatory_init()
+  cfg80211: add assert_cfg80211_lock() to ensure proper protection
+  cfg80211: make regulatory_request use wiphy_idx instead of wiphy
+  cfg80211: protect first access of last_request on 11d hint under
+    mutex
+  cfg80211: remove likely from an 11d hint case
+  cfg80211: free rd on unlikely event on 11d hint
+  cfg80211: move all regulatory hints to workqueue
+  cfg80211: comments style cleanup
+  cfg80211: allow drivers that agree on regulatory to agree
+  cfg80211: rename regdom_changed to regdom_changes() and use it
 
-On Fri, 2009-02-06 at 08:58 -0600, Larry Finger wrote:
-> Johannes Berg wrote:
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
->=20
-> This patch needs a more-definitive commit message. In the git log, one
-> won't see the diff, and will have no idea what it does.
-
-Yeah, it should have some more text, I just couldn't think of anything
-more elaborate than the subject. Will come up with something and repost,
-I guess.
-
-johannes
-
---=-eaQRUg6RKC1MdB9X1l32
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJjKIHAAoJEKVg1VMiehFYsJsP/i3WXEyzFA4Auol+SAU1tu+L
-4tlElYYgJKpL1Ry61K6WmofHEkGszKVT3c0JxU+3f1ecAQHXiuOK276cXGuChrmT
-bHxs3x1HMQ5Kc1SrC73EPO8N5QmwhJG/WCFKjN0FUV3kLXiJ5KlB6/TLO8TpeKlF
-tsNPD+2r1QRihH1XfGf4oJYXjzVu/VCKTh86kLh8YwBEoJEEXlDSt7fRJuhkkjYp
-+gzvQBcOK0p9grp5pxB5GBWi6pOZLo6fCu70BZVuS1QbpRE0joCfRabzReD0QtS1
-XNlbBsPVfGIKg7mZeCt86wmF6T76Dzvl+sDUv7D8rfGo20Mx7AK4Kv1FcEBkJpmU
-6y8/9Epi6zBuXGlc/h2cfwAgJbNg8TTgKZ1lwlOqavHXZrVIVCGzZu+rD6HH2LIW
-crPNHXrPO4c9QW3DguyCnWiCXoM4ST9Zu158HGlzRMcO7IVUL4fu0++B7Ekt58PC
-XK+ORlOopg2J4OFFQxo/pWE0/YIRCXr2DG9hAdlDIDSEmrx/LvJyTsymsqgn8VL5
-otd/uc0YCWGpHpSyqdbvOcf9kHvrFwE2KxvNCyNHS5DsT9nxg285GuswS0pti04I
-IcpRJzhXpv19DjkCBnBR1lcgqmGqiVQwCoKjn9onNId9os6BDdlk5Az0druPrKZz
-KqbJJoKOmQYHcWpwidG+
-=ghUA
------END PGP SIGNATURE-----
-
---=-eaQRUg6RKC1MdB9X1l32--
+ drivers/net/wireless/ath9k/main.c      |    8 +-
+ drivers/net/wireless/zd1211rw/zd_mac.c |    6 +-
+ include/net/cfg80211.h                 |    8 +-
+ include/net/wireless.h                 |    9 +-
+ net/wireless/core.c                    |  102 ++++--
+ net/wireless/core.h                    |   33 ++-
+ net/wireless/nl80211.c                 |   47 ++-
+ net/wireless/reg.c                     |  665 +++++++++++++++++++++++--------
+ net/wireless/reg.h                     |    2 +
+ net/wireless/sysfs.c                   |    2 +-
+ 10 files changed, 644 insertions(+), 238 deletions(-)
 
