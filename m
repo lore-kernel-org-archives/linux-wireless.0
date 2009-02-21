@@ -1,31 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:39849 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751598AbZBBWkf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 17:40:35 -0500
-Message-ID: <49877655.8020408@lwfinger.net> (sfid-20090202_234041_146404_1E285C7A)
-Date: Mon, 02 Feb 2009 16:40:21 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hans Ekbrand <hans@sociologi.cjb.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: USB 1.1, usb-dongle, NETGEAR WG111v2, timing problems in	association
-References: <20090117204654.GB9079@amin> <4972B25B.7070306@lwfinger.net> <20090202155542.GE24485@samir> <498719F3.4070601@lwfinger.net> <20090202190255.GF24485@samir>
-In-Reply-To: <20090202190255.GF24485@samir>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx2.redhat.com ([66.187.237.31]:48814 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753058AbZBUSq0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2009 13:46:26 -0500
+Subject: Re: Signal quality strange since commit 708c57cf1709fb95
+From: Dan Williams <dcbw@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <49A01922.1090106@lwfinger.net>
+References: <49A01922.1090106@lwfinger.net>
+Content-Type: text/plain
+Date: Sat, 21 Feb 2009 13:44:27 -0500
+Message-Id: <1235241867.3284.44.camel@localhost> (sfid-20090221_194631_342564_8F23A186)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hans Ekbrand wrote:
-> 
-> Did it work on USB 1.1 even without your enhancements?
-> 
+On Sat, 2009-02-21 at 09:09 -0600, Larry Finger wrote:
+> I admit that I didn't follow the discussion of reporting signal quality very
+> closely; however since commit 708c57cf1709fb95, all of my wireless devices (b43,
+> p54usb, rtl8187) are reporting link quality as XX/70 rather than XX/100. I doubt
+> that this was an intended consequence of that patch. If the SIOCGIWRANGE ioctl
+> is now more correct, what changes are needed in the drivers to restore the old
+> behavior? Having written the qual calculation for 2 drivers, I understand the
+> uselessness of this number, but I also know the uproar such a change will cause
+> in the user community.
 
-Yes. Almost nothing I changed dealt with the USB interface - just with
-the TX part of the code. The part that did affect USB fixed a stalling
-problem on both 1.1 and 2.0.
+Intended.  It doesn't matter what the /X number is; it's simply the
+upper bound of what the # before the / will be.  Quality is in the range
+of [0 ... max_qual.qual].  You should be able to divide quality /
+max_qual.qual and get a reasonable number to use for pretty UI display.
 
-Larry
+Many drivers used to use something other than 100 for max quality, and
+many still do:
+
+airo.c:		range->max_qual.qual = airo_get_max_quality(&cap_rid);
+hostap/hostap_ioctl.c:		range->max_qual.qual = 70; /* what is correct max? This was not
+hostap/hostap_ioctl.c:		range->max_qual.qual = 92; /* 0 .. 92 */
+netwave_cs.c:	range->max_qual.qual = 255;
+orinoco/wext.c:		range->max_qual.qual = 0x8b - 0x2f;
+wavelan.c:	range->max_qual.qual = MMR_SGNL_QUAL;
+wavelan_cs.c:	range->max_qual.qual = MMR_SGNL_QUAL;
+zd1201.c:	range->max_qual.qual = 128;
+
+Dan
+
 
 
