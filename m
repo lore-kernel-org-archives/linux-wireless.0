@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:44454 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753679AbZBONn1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48998 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbZBUApU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 08:43:27 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so839903yxm.1
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 05:43:25 -0800 (PST)
+	Fri, 20 Feb 2009 19:45:20 -0500
+Date: Fri, 20 Feb 2009 19:31:34 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] iwlagn: default to MAX_UCODE_BEACON_INTERVAL in
+	iwl_adjust_beacon_interval
+Message-ID: <20090221003133.GB3890@tuxdriver.com> (sfid-20090221_014525_958814_725D4288)
+References: <154E55ADF9629D4E8D13F08BF92ABEB629C9D28B8D@PDSMSX501.ccr.corp.intel.com> <20090220145223.GA15006@tuxdriver.com> <1235155966.5860.44.camel@rc-desk> <20090220194306.GA4051@tuxdriver.com> <20090221003013.GA3890@tuxdriver.com>
 MIME-Version: 1.0
-Date: Sun, 15 Feb 2009 15:43:25 +0200
-Message-ID: <55c333c0902150543m6bc92789n3d299cf26e65236@mail.gmail.com> (sfid-20090215_144331_648583_009E8672)
-Subject: cfg80211_wext_siwmode() strange behaviour
-From: Kevin Wilson <wkevils@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090221003013.GA3890@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: John W. Linville <linville@tuxdriver.com>
 
-I had tried to set an rt73usb-based nic to work in secondary mode
-(NL80211_IFTYPE_AP_VLAN)
-by "iwconfig wlan3 mode secondary". (according to "man iwconfig", this
-operation is supported).
+Default to MAX_UCODE_BEACON_INTERVAL if the output of
+iwl_adjust_beacon_interval would otherwise be zero.  This prevents a
+division by zero on my iwl5300-equipped Lenovo T400 with kernels that
+include "mac80211: use cfg80211s BSS infrastructure".
 
-I get:
+This patch is a bit of a hack -- I'm not sure why iwl_setup_rxon_timing
+is giving iwl_adjust_beacon_interval a zero input (which is the only way
+it would output zero).  I would be happy to have a better fix.  But for
+now, this makes my box boot...
 
-Error for wireless request "Set Mode" (8B06) :
-    SET failed on device wlan3 ; Invalid argument.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-I traced the problem to cfg80211_wext_siwmode() method; (wext-compat.c)
-I see that when IW_MODE_SECOND is passed, it returns -EINVAL;
-according to this, you cannot set up a nic to IW_MODE_SECOND
-(NL80211_IFTYPE_AP_VLAN).
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 50f8c7f..ad31005 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -644,6 +644,9 @@ static u16 iwl_adjust_beacon_interval(u16 beacon_val)
+ 					/ MAX_UCODE_BEACON_INTERVAL;
+ 	new_val = beacon_val / beacon_factor;
+ 
++	if (!new_val)
++		new_val = MAX_UCODE_BEACON_INTERVAL;
++
+ 	return new_val;
+ }
+ 
+-- 
+1.6.0.6
 
-Nevertheless, in 		
-		
-
-		cfg80211_wext_giwmode() there is
-		...
-		case NL80211_IFTYPE_AP_VLAN:
-			*mode = IW_MODE_SECOND;		/* FIXME */
-
-So, maybe this should be removed at all ? or is there a different way to set
-a nic to work in NL80211_IFTYPE_AP_VLAN mode ?
-So, is there something wrong here? Or am I missing something ?
-
-(I had tested it with latest wireless-testing git tree).
-
-Regards,
-Kevin
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
