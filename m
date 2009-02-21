@@ -1,131 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:21768 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440AbZBFHrj (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56062 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905AbZBUFEm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 02:47:39 -0500
-MIME-Version: 1.0
-In-Reply-To: <1233846195.3028.14.camel@localhost>
-References: <1233819002-6912-1-git-send-email-cooloney@kernel.org>
-	 <1233846195.3028.14.camel@localhost>
-Date: Fri, 6 Feb 2009 15:47:38 +0800
-Message-ID: <386072610902052347m5754262bif18339809a00cb9f@mail.gmail.com> (sfid-20090206_084746_144312_674B23D8)
-Subject: Re: [PATCH] wireless: introduce POWEROF2_BLOCKSIZE_ONLY option
-From: Bryan Wu <cooloney@kernel.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Cliff Cai <cliff.cai@analog.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 21 Feb 2009 00:04:42 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v6 04/15] nl80211: disallow user requests prior to regulatory_init()
+Date: Sat, 21 Feb 2009 00:04:22 -0500
+Message-Id: <1235192673-6314-5-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060446_736076_AA26D6AC)
+In-Reply-To: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
+References: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 5, 2009 at 11:03 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Thu, 2009-02-05 at 15:30 +0800, Bryan Wu wrote:
->> From: Cliff Cai <cliff.cai@analog.com>
->>
->> Introduce POWEROF2_BLOCKSIZE_ONLY option for those SD/SDIO host
->> which only support transferring block with size of power-of-2
->
-> Is the point here to avoid copying in the controller code?  As with the
-> other patches on libertas-dev, I really dislike adding code to *every
-> SDIO driver* just because the host has certain restrictions.  I'd much
-> rather that the host/controller code became aware of it's own
-> restrictions, and exposed those generically to drivers above it.
-> Without a KConfig option.
->
-> Seriously.  The host knows what it needs.  The code to handle that
-> should go in the host.
->
+If cfg80211 is built into the kernel there is perhaps a small
+time window betwen nl80211_init() and regulatory_init() where
+cfg80211_regdomain hasn't yet been initialized to let the
+wireless core do its work. During that rare case and time
+frame (if its even possible) we don't allow user regulatory
+changes as cfg80211 is working on enabling its first regulatory
+domain.
 
-I agree here.
+To check for cfg80211_regdomain we now contend the entire operation
+using the cfg80211_mutex.
 
-> How about adding a method like "sdio_align_size" that takes the
-> controller's constraints into account?  That seems a lot cleaner than
-> adding #define/KConfig junk to every SDIO driver in the kernel.  One
-> less codepath to test, makes your life and all our lives easier.
->
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/nl80211.c |   34 ++++++++++++++++++++++++++--------
+ 1 files changed, 26 insertions(+), 8 deletions(-)
 
-So we plan to add method ".sdio_align_size" to SDIO stack.
-And Blackfin host driver will implement this method while others will
-implement this as a dummy function.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8d38609..c99f0be 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1882,24 +1882,42 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	int r;
+ 	char *data = NULL;
+ 
+-	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+-		return -EINVAL;
++	/*
++	 * You should only get this when cfg80211 hasn't yet initialized
++	 * completely when built-in to the kernel right between the time
++	 * window between nl80211_init() and regulatory_init(), if that is
++	 * even possible.
++	 */
++	mutex_lock(&cfg80211_mutex);
++	if (unlikely(!cfg80211_regdomain)) {
++		r = -EINPROGRESS;
++		goto out;
++	}
++
++	if (!info->attrs[NL80211_ATTR_REG_ALPHA2]) {
++		r = -EINVAL;
++		goto out;
++	}
+ 
+ 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+ 
+ #ifdef CONFIG_WIRELESS_OLD_REGULATORY
+ 	/* We ignore world regdom requests with the old regdom setup */
+-	if (is_world_regdom(data))
+-		return -EINVAL;
++	if (is_world_regdom(data)) {
++		r = -EINVAL;
++		goto out;
++	}
+ #endif
+-	mutex_lock(&cfg80211_mutex);
+ 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
+-	mutex_unlock(&cfg80211_mutex);
+-	/* This means the regulatory domain was already set, however
++	/*
++	 * This means the regulatory domain was already set, however
+ 	 * we don't want to confuse userspace with a "successful error"
+-	 * message so lets just treat it as a success */
++	 * message so lets just treat it as a success
++	 */
+ 	if (r == -EALREADY)
+ 		r = 0;
++out:
++	mutex_unlock(&cfg80211_mutex);
+ 	return r;
+ }
+ 
+-- 
+1.6.0.3
 
-In libertas, we need to call this method to take this constraints into account.
-
-Thanks
--Bryan
-
-
->> [ Bryan Wu <cooloney@kernel.org>:
->>  - remove some useless coding style cleanup
->>  - using roundup() function as upstream does
->> ]
->>
->> Signed-off-by: Cliff Cai <cliff.cai@analog.com>
->> Signed-off-by: Bryan Wu <cooloney@kernel.org>
->> ---
->>  drivers/net/wireless/Kconfig            |    6 ++++++
->>  drivers/net/wireless/libertas/if_sdio.c |   16 ++++++++++++++++
->>  2 files changed, 22 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
->> index e4f9f74..a2685fa 100644
->> --- a/drivers/net/wireless/Kconfig
->> +++ b/drivers/net/wireless/Kconfig
->> @@ -151,6 +151,12 @@ config LIBERTAS_SDIO
->>       ---help---
->>         A driver for Marvell Libertas 8385 and 8686 SDIO devices.
->>
->> +config POWEROF2_BLOCKSIZE_ONLY
->> +     bool "Support transferring block with size of power-of-2 only"
->> +     depends on LIBERTAS_SDIO
->> +     ---help---
->> +       For SD/SDIO host which only supports transferring block with size of power-of-2.
->> +
->>  config LIBERTAS_DEBUG
->>       bool "Enable full debugging output in the Libertas module."
->>       depends on LIBERTAS
->> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
->> index 4519d73..5efc056 100644
->> --- a/drivers/net/wireless/libertas/if_sdio.c
->> +++ b/drivers/net/wireless/libertas/if_sdio.c
->> @@ -272,6 +272,11 @@ static int if_sdio_card_to_host(struct if_sdio_card *card)
->>        */
->>       chunk = sdio_align_size(card->func, size);
->>
->> +/* For SD/SDIO host which only supports transferring block with size of power-of-2 */
->> +#if defined(CONFIG_POWEROF2_BLOCKSIZE_ONLY)
->> +     chunk = (chunk + card->func->cur_blksize - 1) /
->> +                     card->func->cur_blksize * card->func->cur_blksize;
->> +#endif
->>       ret = sdio_readsb(card->func, card->buffer, card->ioport, chunk);
->>       if (ret)
->>               goto out;
->> @@ -581,8 +586,14 @@ static int if_sdio_prog_real(struct if_sdio_card *card)
->>                       lbs_deb_sdio("sending %d bytes (%d bytes) chunk\n",
->>                               chunk_size, (chunk_size + 31) / 32 * 32);
->>  */
->> +/* For SD/SDIO host which only supports transferring block with size of power-of-2 */
->> +#if defined(CONFIG_POWEROF2_BLOCKSIZE_ONLY)
->> +                     ret = sdio_writesb(card->func, card->ioport,
->> +                             chunk_buffer, roundup(chunk_size, 256);
->> +#else
->>                       ret = sdio_writesb(card->func, card->ioport,
->>                               chunk_buffer, roundup(chunk_size, 32));
->> +#endif
->>                       if (ret)
->>                               goto release;
->>
->> @@ -699,6 +710,11 @@ static int if_sdio_host_to_card(struct lbs_private *priv,
->>        */
->>       size = sdio_align_size(card->func, nb + 4);
->>
->> +/* For SD/SDIO host which only supports transferring block with size of power-of-2 */
->> +#if defined(CONFIG_POWEROF2_BLOCKSIZE_ONLY)
->> +     size = (size + card->func->cur_blksize - 1) /
->> +                     card->func->cur_blksize * card->func->cur_blksize;
->> +#endif
->>       packet = kzalloc(sizeof(struct if_sdio_packet) + size,
->>                       GFP_ATOMIC);
->>       if (!packet) {
->
->
