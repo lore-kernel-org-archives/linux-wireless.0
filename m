@@ -1,45 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from symlink.to.noone.org ([85.10.207.172]:47491 "EHLO sym.noone.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754522AbZBIWeB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 17:34:01 -0500
-Date: Mon, 9 Feb 2009 23:06:53 +0100
-From: Tobias Klauser <tklauser@distanz.ch>
-To: proski@gnu.org, hermes@gibson.dropbear.id.au,
-	linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	kernel-janitors@vger.kernel.org, trivial@kernel.org
-Subject: [PATCH] orinoco: Storage class should be before const qualifier
-Message-ID: <20090209220653.GA8023@xenon.distanz.ch> (sfid-20090209_233409_757115_6C91AF47)
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:36930 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752183AbZBUPJY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2009 10:09:24 -0500
+Message-ID: <49A01922.1090106@lwfinger.net> (sfid-20090221_160928_943263_A64D4D4A)
+Date: Sat, 21 Feb 2009 09:09:22 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Signal quality strange since commit 708c57cf1709fb95
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The C99 specification states in section 6.11.5:
+I admit that I didn't follow the discussion of reporting signal quality very
+closely; however since commit 708c57cf1709fb95, all of my wireless devices (b43,
+p54usb, rtl8187) are reporting link quality as XX/70 rather than XX/100. I doubt
+that this was an intended consequence of that patch. If the SIOCGIWRANGE ioctl
+is now more correct, what changes are needed in the drivers to restore the old
+behavior? Having written the qual calculation for 2 drivers, I understand the
+uselessness of this number, but I also know the uproar such a change will cause
+in the user community.
 
-The placement of a storage-class specifier other than at the beginning
-of the declaration specifiers in a declaration is an obsolescent
-feature.
-
-Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
----
- drivers/net/wireless/orinoco/orinoco.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco/orinoco.c b/drivers/net/wireless/orinoco/orinoco.c
-index 45a04fa..32482c3 100644
---- a/drivers/net/wireless/orinoco/orinoco.c
-+++ b/drivers/net/wireless/orinoco/orinoco.c
-@@ -431,7 +431,7 @@ struct fw_info {
- 	u16 pda_size;
- };
- 
--const static struct fw_info orinoco_fw[] = {
-+static const struct fw_info orinoco_fw[] = {
- 	{ NULL, "agere_sta_fw.bin", "agere_ap_fw.bin", 0x00390000, 1000 },
- 	{ NULL, "prism_sta_fw.bin", "prism_ap_fw.bin", 0, 1024 },
- 	{ "symbol_sp24t_prim_fw", "symbol_sp24t_sec_fw", NULL, 0x00003100, 512 }
--- 
-1.5.6.5
-
+Larry
