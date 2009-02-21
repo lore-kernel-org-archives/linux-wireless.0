@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:37337 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750974AbZBVPej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2009 10:34:39 -0500
-Subject: Re: Signal quality strange since commit 708c57cf1709fb95
-From: Dan Williams <dcbw@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <49A05E35.70904@lwfinger.net>
-References: <49A01922.1090106@lwfinger.net>
-	 <1235241867.3284.44.camel@localhost>  <49A05E35.70904@lwfinger.net>
-Content-Type: text/plain
-Date: Sun, 22 Feb 2009 10:32:52 -0500
-Message-Id: <1235316773.28069.6.camel@localhost> (sfid-20090222_163442_284249_F9B80BEB)
-Mime-Version: 1.0
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:34822 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752797AbZBUAO3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2009 19:14:29 -0500
+Message-ID: <499F4763.70106@lwfinger.net> (sfid-20090221_011435_100621_EF1DCBD0)
+Date: Fri, 20 Feb 2009 18:14:27 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 cannot fix rate
+References: <35879.82.152.175.172.1234904444.squirrel@www.phantomjinx.co.uk>    <499B27A4.30708@lwfinger.net>    <42781.82.152.175.172.1234911183.squirrel@www.phantomjinx.co.uk>    <499B4526.1030705@lwfinger.net>    <44177.82.152.175.172.1235088928.squirrel@www.phantomjinx.co.uk>    <499E1826.8040903@lwfinger.net> <56183.82.152.175.172.1235173364.squirrel@www.phantomjinx.co.uk>
+In-Reply-To: <56183.82.152.175.172.1235173364.squirrel@www.phantomjinx.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-02-21 at 14:04 -0600, Larry Finger wrote:
-> Dan Williams wrote:
-> > On Sat, 2009-02-21 at 09:09 -0600, Larry Finger wrote:
-> >> I admit that I didn't follow the discussion of reporting signal quality very
-> >> closely; however since commit 708c57cf1709fb95, all of my wireless devices (b43,
-> >> p54usb, rtl8187) are reporting link quality as XX/70 rather than XX/100. I doubt
-> >> that this was an intended consequence of that patch. If the SIOCGIWRANGE ioctl
-> >> is now more correct, what changes are needed in the drivers to restore the old
-> >> behavior? Having written the qual calculation for 2 drivers, I understand the
-> >> uselessness of this number, but I also know the uproar such a change will cause
-> >> in the user community.
-> > 
-> > Intended.  It doesn't matter what the /X number is; it's simply the
-> > upper bound of what the # before the / will be.  Quality is in the range
-> > of [0 ... max_qual.qual].  You should be able to divide quality /
-> > max_qual.qual and get a reasonable number to use for pretty UI display.
-> > 
-> > Many drivers used to use something other than 100 for max quality, and
-> > many still do:
-> > 
-> > airo.c:		range->max_qual.qual = airo_get_max_quality(&cap_rid);
-> > hostap/hostap_ioctl.c:		range->max_qual.qual = 70; /* what is correct max? This was not
-> > hostap/hostap_ioctl.c:		range->max_qual.qual = 92; /* 0 .. 92 */
-> > netwave_cs.c:	range->max_qual.qual = 255;
-> > orinoco/wext.c:		range->max_qual.qual = 0x8b - 0x2f;
-> > wavelan.c:	range->max_qual.qual = MMR_SGNL_QUAL;
-> > wavelan_cs.c:	range->max_qual.qual = MMR_SGNL_QUAL;
-> > zd1201.c:	range->max_qual.qual = 128;
+P.G. Richardson wrote:
+> Right, in business ... took an effort but there we are.
 > 
-> I know how it works with drivers that implement their own ioctl calls for the
-> WEXT interface; however, the 3 that I mentioned all use mac80211 and get their
-> WEXT support through cfg80211.
+> Still couldnt get any info from "find /sys -name rc_stats". However, I
+> found an old thread from last year which interestingly seems exactly the
+> problem.
+> 
+> http://www.gossamer-threads.com/lists/linux/kernel/860544
+> 
+> So have done similar and mounted debugfs at /debug. This is the results of
+> cat /debug/ieee80211/phy0/stations/f6cefa14/rc_stats:
 
-It's not really relevant what mac80211/cfg80211 uses for max_qual.qual.
-What's relevant is that the calculation that the driver/stack makes for
-quality is appropriate for the max_qual.qual.  Again, it doesn't matter
-what the /XX number is, as long as you can take YY/XX and get something
-between 0 and 100 (inclusive) that changes on a linear scale and is
-usable for a generic "signal strength %" measure.
+My /etc/fsconfig has these two lines:
 
-Dan
+sysfs   /sys    sysfs   noauto 0 0
+debugfs /sys/kernel/debug       debugfs noauto 0 0
+
+For getting help with issues like this, you should probably mount debugfs this
+way as well. AFAIK, these were set up by openSUSE.
+
+> rate     throughput  ewma prob   this prob  this succ/attempt   success   
+> attempts
+>  tP  1         0.8       89.5      100.0          1(  1)        102       
+>  176
+>      2         0.7       39.3       50.0          0(  0)         11       
+>   56
+> T    5.5       3.4       68.7       50.0          1(  2)       1065       
+> 3462
+>     11         0.2        2.4        0.0          0(  0)       1158       
+> 1463
+>      6         0.1        2.6        0.0          0(  0)        232       
+>  935
+>      9         0.0        0.7        0.0          0(  0)         17       
+>  159
+>     12         0.0        0.7        0.0          0(  0)        106       
+>  338
+>     18         0.0        0.4        0.0          0(  0)         52       
+>  246
+>     24         0.0        0.1        0.0          0(  0)         17       
+>  207
+>     36         0.0        0.1        0.0          0(  0)         10       
+>  143
+>     48         0.0        0.0        0.0          0(  0)          0       
+>   28
+>     54         0.0        0.0        0.0          0(  0)          0       
+>   28
+> 
+> Total packet count::    ideal 2863      lookaround 150
+> 
+> Let me know if this means anything or you need further info. Certainly,
+> seems to confirm that connection never seems to go above 11Mb/s.
+
+I'm not an expert in reading these tables, but the success rates above 11 Mb/s
+are very low, which seems to indicate that 11 Mb/s is a reasonable rate for your
+device. There is, however, a possibility that the code is not reporting the
+retry count correctly. I know from your initial post that 54M doesn't work, but
+can you get any throughput at 24, 36, or 48M? There is also the possibility that
+your hardware is broken for OFDM encoding. That scheme is used for 6, 9, and all
+rates 18M and above.
+
+Larry
 
 
