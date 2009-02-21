@@ -1,76 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.183]:61603 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754453AbZBWQDT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 11:03:19 -0500
-MIME-Version: 1.0
-In-Reply-To: <20090223152724.M82409@bobcopeland.com>
-References: <20090222111807.GB5538@silver.sucs.org>
-	 <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org>
-	 <20090222144742.GA6078@nowhere>
-	 <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com>
-	 <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com>
-Date: Mon, 23 Feb 2009 18:03:16 +0200
-Message-ID: <40f31dec0902230803qcbd4c20kc66a50e6e2e8eef2@mail.gmail.com> (sfid-20090223_170323_335114_AFFBBEC7)
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:52155 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753349AbZBUR1I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2009 12:27:08 -0500
+Subject: Re: [PATCH] iwlagn: default to MAX_UCODE_BEACON_INTERVAL in
+	iwl_adjust_beacon_interval
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090221003133.GB3890@tuxdriver.com>
+References: <154E55ADF9629D4E8D13F08BF92ABEB629C9D28B8D@PDSMSX501.ccr.corp.intel.com>
+	 <20090220145223.GA15006@tuxdriver.com> <1235155966.5860.44.camel@rc-desk>
+	 <20090220194306.GA4051@tuxdriver.com> <20090221003013.GA3890@tuxdriver.com>
+	 <20090221003133.GB3890@tuxdriver.com>
+Content-Type: text/plain
+Date: Sat, 21 Feb 2009 09:31:33 -0800
+Message-Id: <1235237493.5860.122.camel@rc-desk> (sfid-20090221_182719_931374_A59F8F4D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/2/23 Bob Copeland <me@bobcopeland.com>:
-> On Mon, 23 Feb 2009 00:20:50 +0100, Jiri Slaby wrote
->> On 22.2.2009 22:56, Jiri Slaby wrote:
->> > Well, maybe we should try to reproduce with jumbo packets sent to the
->> > ath5k receiver, since I think it (1) is not very much test-covered code
->> > (2) appears to be related.
->>
->> According to the spec I have for older chip, there is not `done' flag
->> set for descriptors which have `more' flag set. We handle this wrongly.
->> Am I looking correctly, Nick, Luis, Bob?
->>
->> I still don't see what could have caused this though.
->
-> As I understand it, yes, we don't do the right thing when the more flag
-> is set.  We're supposed to keep processing packets until we get one with
-> the done flag, and then all of that is supposed to be merged into a single
-> packet.  Other flags such as the rx rate are only valid on the final
-> packet.
->
-> However, I did some debugging of this a while ago and concluded that the
-> 'jumbo' frames were largely garbage data.  The dma buffer size is certainly
-> large enough for a standard 802.11 frame and the 'more' flag is only
-> supposed to be set if the dma buffer size is too small for a packet.  In
-> all cases the dma buffer size was 2500+ bytes and the actual contents of
-> the packets looked like random values (I did have encryption turned on,
-> but there were no 802.11 headers I could see.)
->
-> So I am not sure if the jumbo packets are causing bad things to happen,
-> or if they are an indication that something bad has already happened.
->
+On Fri, 2009-02-20 at 16:31 -0800, John W. Linville wrote:
+> From: John W. Linville <linville@tuxdriver.com>
+> 
+> Default to MAX_UCODE_BEACON_INTERVAL if the output of
+> iwl_adjust_beacon_interval would otherwise be zero.  This prevents a
+> division by zero on my iwl5300-equipped Lenovo T400 with kernels that
+> include "mac80211: use cfg80211s BSS infrastructure".
+> 
+> This patch is a bit of a hack -- I'm not sure why iwl_setup_rxon_timing
+> is giving iwl_adjust_beacon_interval a zero input (which is the only way
+> it would output zero).  I would be happy to have a better fix.  But for
+> now, this makes my box boot...
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Hmm can someone test ath5k against an Atheros AP using fast frames ?
-Maybe they are jumbo frames but they don't have any header etc so that
-they look like one frame after un-fragmentation, documentation says
-that the current frame is continued in the next descriptor if more is
-set to 1 so i guess next buffer might not have the header. If more = 0
-then it's our last descriptor and only then other fields such as done,
-frame receive ok, rssi etc are valid.
+Unfortunately I do not have a better fix, but I could shed some light
+onto what may be going on and hope we can together figure out what is
+the problem.
 
-The fact that they are not reported as PHY error packets makes me
-wonder why would we have garbage data on our rx buffer. How about the
-FRAME_RECEIVE_OK or CRC_ERROR flags (also valid for the last
-descriptor) ? Are they set or not ?
+First, it appears that your problem occurs during association. The
+driver obtains the value of beacon interval from mac80211 at the time it
+is asked to associate (specifically, mac80211 calls bss_info_changed
+with BSS_CHANGED_ASSOC and ieee80211_bss_conf->assoc is true). The
+driver obtains beacon interval from iee80211_bss_conf structure at this
+time. As you indicate - the driver gets a zero and this causes an oops
+later.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Now, the patch you pointed out ("mac80211: use cfg80211s BSS
+infrastructure") changes the way in which the beacon interval value is
+obtained and stored ... but yet I cannot see how it can be different
+from before and cause zero to be returned. Here I hope that Johannes can
+shed some light.
+
+Before this patch we used mac80211's BSS infrastructure and placed the
+beacon interval from the beacon frame in that. Now we use cfg80211's BSS
+infrastructure and place the beacon interval from the probe response in
+that. Now, the function that does this (ieee80211_bss_info_update) does
+not currently distinguish between beacon and probe resp when it updates
+the BSS information and uses the probe resp fields (in
+cfg80211_inform_bss_frame). This should not matter because the beacon
+and probe resp fields are the same in this regard.
+
+So ... if the information is obtained in the same way there could maybe
+be an issue in how it is stored now? This has also changed significantly
+with the move to the rbtree. I don't know.
+
+Johannes, do you perhaps know how beacon interval was ok with the
+mac80211 BSS infrastructure, but now we get zero after moving to
+cfg80211 BSS infrastructure?
+
+Thank you
+
+Reinette
+
+
