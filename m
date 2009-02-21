@@ -1,101 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.29]:10157 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856AbZBPJRs (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:47983 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752414AbZBUHxT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 04:17:48 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so923040yxm.1
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 01:17:46 -0800 (PST)
+	Sat, 21 Feb 2009 02:53:19 -0500
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 1/4] at76c50x-usb: fix oops on disconnect
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Sat, 21 Feb 2009 09:53:14 +0200
+Message-ID: <20090221075314.15991.63558.stgit@tikku> (sfid-20090221_085322_324226_E618AC44)
+In-Reply-To: <20090221075013.15991.66595.stgit@tikku>
+References: <20090221075013.15991.66595.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <1234774211.4219.102.camel@johannes.local>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-6-git-send-email-lrodriguez@atheros.com>
-	 <1234695593.4219.47.camel@johannes.local>
-	 <43e72e890902160014k11ba609lbe1340750771b6c0@mail.gmail.com>
-	 <1234774211.4219.102.camel@johannes.local>
-Date: Mon, 16 Feb 2009 01:17:46 -0800
-Message-ID: <43e72e890902160117yd3a3b09o45ada7bc0aa0fbd7@mail.gmail.com> (sfid-20090216_101752_707890_A3DEE5FD)
-Subject: Re: [PATCH 05/10] cfg80211: add regulatory_hint_core() to separate
-	the core reg hint
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 16, 2009 at 12:50 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-02-16 at 00:14 -0800, Luis R. Rodriguez wrote:
->> On Sun, Feb 15, 2009 at 2:59 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Fri, 2009-02-13 at 21:33 -0800, Luis R. Rodriguez wrote:
->> >> This will allow us to clean up and make distinctions of who
->> >> needs locking or not.
->> >>
->> >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> >> ---
->> >>  net/wireless/reg.c |   36 +++++++++++++++++++++++++++---------
->> >>  1 files changed, 27 insertions(+), 9 deletions(-)
->> >>
->> >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> >> index ba82312..679fded 100644
->> >> --- a/net/wireless/reg.c
->> >> +++ b/net/wireless/reg.c
->> >> @@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
->> >>       case REGDOM_SET_BY_INIT:
->> >>               return -EINVAL;
->> >>       case REGDOM_SET_BY_CORE:
->> >> -             /*
->> >> -              * Always respect new wireless core hints, should only happen
->> >> -              * when updating the world regulatory domain at init.
->> >> -              */
->> >> -             return 0;
->> >> +             return -EINVAL;
->> >>       case REGDOM_SET_BY_COUNTRY_IE:
->> >>               if (unlikely(!is_an_alpha2(alpha2)))
->> >>                       return -EINVAL;
->> >> @@ -1183,6 +1179,26 @@ new_request:
->> >>       return call_crda(alpha2);
->> >>  }
->> >>
->> >> +static int regulatory_hint_core(const char *alpha2)
->> >> +{
->> >> +     struct regulatory_request *request;
->> >> +
->> >> +     BUG_ON(last_request);
->> >> +
->> >> +     request = kzalloc(sizeof(struct regulatory_request),
->> >> +                       GFP_KERNEL);
->> >> +     if (!request)
->> >> +             return -ENOMEM;
->> >> +
->> >> +     request->alpha2[0] = alpha2[0];
->> >> +     request->alpha2[1] = alpha2[1];
->> >> +     request->initiator = REGDOM_SET_BY_CORE;
->> >> +
->> >> +     last_request = request;
->> >
->> > So before you documented that cfg80211_mutex is used to protect this
->> > variable, but it's not used here.
->>
->> This is only used during initialization, have any better ideas?
->
-> If regulatory is initialised before netlink that is probably fine, is
-> it?
+From: Jason Andryuk <jandryuk@gmail.com>
 
-Yeah I was hoping that would be the case but then I realized that we
-also end up creating a udev event to call crda and we need nl80211
-initialized in order to process these hints so technically we have a
-race between regulatory_init() finishing and nl80211_init() get done
-before we can let nl80211 process the first CORE call to crda so it
-may be dropped -- unless we are sure udev will do some sort of
-retries.
+flush_workqueue needs to be called instead of the generic one and the
+associated functions need to be modified to prevent re-adding
+themselves to the workqueue.
 
-An alternative is to add the regulatory_request() for core to the
-queue and then call a reg_post_init() on core.c  that would just
-schedule the reg workqueue after nl80211_init().
+The rx_tasklet is also killed in the small (?) chance it is scheduled.
 
-Thoughts?
+Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+---
 
-  Luis
+ drivers/net/wireless/at76c50x-usb.c |   27 +++++++++++++++++++--------
+ 1 files changed, 19 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index aa06b90..c79591e 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -1848,6 +1848,9 @@ static void at76_dwork_hw_scan(struct work_struct *work)
+ 					      dwork_hw_scan.work);
+ 	int ret;
+ 
++	if (priv->device_unplugged)
++		return;
++
+ 	mutex_lock(&priv->mtx);
+ 
+ 	ret = at76_get_cmd_status(priv->udev, CMD_SCAN);
+@@ -1882,6 +1885,9 @@ static int at76_hw_scan(struct ieee80211_hw *hw,
+ 
+ 	at76_dbg(DBG_MAC80211, "%s():", __func__);
+ 
++	if (priv->device_unplugged)
++		return 0;
++
+ 	mutex_lock(&priv->mtx);
+ 
+ 	ieee80211_stop_queues(hw);
+@@ -1985,6 +1991,10 @@ static void at76_configure_filter(struct ieee80211_hw *hw,
+ 	flags = changed_flags & AT76_SUPPORTED_FILTERS;
+ 	*total_flags = AT76_SUPPORTED_FILTERS;
+ 
++	/* Bail out after updating flags to prevent a WARN_ON in mac80211. */
++	if (priv->device_unplugged)
++		return;
++
+ 	/* FIXME: access to priv->promisc should be protected with
+ 	 * priv->mtx, but it's impossible because this function needs to be
+ 	 * atomic */
+@@ -2085,8 +2095,7 @@ static struct at76_priv *at76_alloc_new_device(struct usb_device *udev)
+ 	INIT_WORK(&priv->work_submit_rx, at76_work_submit_rx);
+ 	INIT_DELAYED_WORK(&priv->dwork_hw_scan, at76_dwork_hw_scan);
+ 
+-	priv->rx_tasklet.func = at76_rx_tasklet;
+-	priv->rx_tasklet.data = 0;
++	tasklet_init(&priv->rx_tasklet, at76_rx_tasklet, 0);
+ 
+ 	priv->pm_mode = AT76_PM_OFF;
+ 	priv->pm_period = 0;
+@@ -2225,6 +2234,7 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	priv->scan_min_time = DEF_SCAN_MIN_TIME;
+ 	priv->scan_max_time = DEF_SCAN_MAX_TIME;
+ 	priv->scan_mode = SCAN_TYPE_ACTIVE;
++	priv->device_unplugged = 0;
+ 
+ 	/* mac80211 initialisation */
+ 	priv->hw->wiphy->max_scan_ssids = 1;
+@@ -2266,13 +2276,12 @@ static void at76_delete_device(struct at76_priv *priv)
+ 	/* The device is gone, don't bother turning it off */
+ 	priv->device_unplugged = 1;
+ 
+-	if (priv->mac80211_registered)
+-		ieee80211_unregister_hw(priv->hw);
++	tasklet_kill(&priv->rx_tasklet);
+ 
+-	/* assuming we used keventd, it must quiesce too */
+-	flush_scheduled_work();
+-
+-	kfree(priv->bulk_out_buffer);
++	if (priv->mac80211_registered) {
++		flush_workqueue(priv->hw->workqueue);
++		ieee80211_unregister_hw(priv->hw);
++	}
+ 
+ 	if (priv->tx_urb) {
+ 		usb_kill_urb(priv->tx_urb);
+@@ -2285,6 +2294,8 @@ static void at76_delete_device(struct at76_priv *priv)
+ 
+ 	at76_dbg(DBG_PROC_ENTRY, "%s: unlinked urbs", __func__);
+ 
++	kfree(priv->bulk_out_buffer);
++
+ 	if (priv->rx_skb)
+ 		kfree_skb(priv->rx_skb);
+ 
+
