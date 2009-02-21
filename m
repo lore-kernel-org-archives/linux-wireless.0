@@ -1,115 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:34930 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966AbZBCWl2 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56072 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198AbZBUFEn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 17:41:28 -0500
-Received: by mu-out-0910.google.com with SMTP id i10so179452mue.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 14:41:26 -0800 (PST)
-Subject: Re: [ath5k-devel] [PATCH 1/5] ath5k: PHY code cleanup
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com
-In-Reply-To: <40f31dec0902031006o6d0dd6ffkf6aae6d39cf078a5@mail.gmail.com>
-References: <20090131022310.GA3342@makis>
-	 <1233670130.16539.5.camel@maxim-laptop>
-	 <40f31dec0902030817h4afacc52uea4885d835444aac@mail.gmail.com>
-	 <40f31dec0902030824s65b90222j13ac9b691593f19f@mail.gmail.com>
-	 <1233679287.11183.7.camel@maxim-laptop>
-	 <40f31dec0902031006o6d0dd6ffkf6aae6d39cf078a5@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 04 Feb 2009 00:41:21 +0200
-Message-Id: <1233700881.9297.7.camel@maxim-laptop> (sfid-20090203_234134_740662_1B8ECE6C)
-Mime-Version: 1.0
+	Sat, 21 Feb 2009 00:04:43 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Greg KH <greg@kroah.com>
+Subject: [PATCH v6 06/15] cfg80211: propagate -ENOMEM during regulatory_init()
+Date: Sat, 21 Feb 2009 00:04:24 -0500
+Message-Id: <1235192673-6314-7-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062318_321423_5919CDFF)
+In-Reply-To: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
+References: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-02-03 at 20:06 +0200, Nick Kossifidis wrote:
-> 2009/2/3 Maxim Levitsky <maximlevitsky@gmail.com>:
-> > On Tue, 2009-02-03 at 18:24 +0200, Nick Kossifidis wrote:
-> >> 2009/2/3 Nick Kossifidis <mickflemm@gmail.com>:
-> >> > 2009/2/3 Maxim Levitsky <maximlevitsky@gmail.com>:
-> >> >> I just tried your 5 patches, as they could fix hangs in the device,
-> >> >> that I experience occasionally, when resuming my aspire one from
-> >> ram.
-> >> >>
-> >> >> I applied the patches, and I got very unstable system, that tended
-> >> to
-> >> >> hang even before X.
-> >> >>
-> >> >> When it didn't hang, I tried suspend to ram cycle, but it hanged
-> >> then.
-> >> >>
-> >> >>
-> >> >> Best regards,
-> >> >>        Maxim Levitsky
-> >> >>
-> >> >>
-> >> >
-> >> > It's related to unhandled BMISS interrupts, Bob is working on it to
-> >> > see what triggers them. A quick solution is to disable them (as we
-> >> > don't handle them anyway) but it would be better to know the
-> >> problem.
-> >> >
-> >
-> > Acer aspire one.
-> >
-> > -wireless-testing tree + 5 patches
-> > I test without X running, maybe I could spot an oops or so,
-> > currently, system just hangs cold.
-> >
-> 
-> What's your AP, your RSSI etc ?
+Calling kobject_uevent_env() can fail mainly due to out of
+memory conditions. We do not want to continue during such
+conditions so propagate that as well instead of letting
+cfg80211 load as if everything is peachy.
 
-AP?, just some Siemens b/g device
-signal quality is around 100%, ap is in nearby room
-WPA2 is used.
+Additionally lets clarify that when CRDA is not called during
+cfg80211's initialization _and_ if the error is not an -ENOMEM
+its because kobject_uevent_env() failed to call CRDA, not because
+CRDA failed. For those who want to find out why we also let you
+do so by enabling the kernel config CONFIG_CFG80211_REG_DEBUG --
+you'll get an actual stack trace.
 
-I did further test, by switching to console and doing there a
-pm-suspend, and system did hand exactly same way, but I did see a
-message about softlockup in ath5k.
-(in phy-...) 
+So for now we'll treat non -ENOMEM kobject_uevent_env() failures as
+non fatal during cfg80211's initialization.
 
-Also have seen a message about 'not being able to query synaptic...'
-and eveything was dead including keyboard and touchpad. (even sysrq
-didn't work )
+CC: Greg KH <greg@kroah.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   22 +++++++++++++++++-----
+ 1 files changed, 17 insertions(+), 5 deletions(-)
 
-
-
-> 
-> >
-> > PS:
-> >
-> > Atheros devices consist of MAC and PHY (which sometimes is called radio)
-> >
-> > It seems that my device has 2425 MAC, but what radio it has?
-> > It also seems that most of the driver treats it as a AR5112.
-> > I thought before that 5112 was the MAC and 2425 was the radio, but it
-> > doesn't seem to be true, can you explain this?
-> >
-> >
-> 
-> A card consists (among other things) of a MAC chip (includes PCU, QCU,
-> DCU, DMA unit), a radio chip (has synth, bias control etc) and in
-> between there is baseband (what's called PHY) that drives the radio
-> chip and provides data i/o to the MAC chip.
-> 
-> First Atheros cards (before 2413) have MAC and PHY on the same chip
-> and radio on a separate chip, MAC/BB chips are named AR52XX and radio
-> chips RF51XX.
-> Newer Atheros cards have all parts on the same chip, MAC is mostly the
-> same as AR5212 (that's why we mark them as AR5K_AR5212) but PHY and
-> (especially) RF change so the whole chip gets the name of the radio
-> chip (RFX4XX -> ARX4XX). So AR2425 has an AR5212 MAC with minor
-> modifications and an RF2425 radio chip. SREV register marks the whole
-> chip (since it's not only a MAC/BB chip anymore) so this might be
-> confusing.
-
-Thanks a lot for explanation, now it is all clear.
-
-Best regards,
-	Maxim Levitsky
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6373a78..47d5056 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1616,7 +1616,7 @@ void reg_device_remove(struct wiphy *wiphy)
+ 
+ int regulatory_init(void)
+ {
+-	int err;
++	int err = 0;
+ 
+ 	reg_pdev = platform_device_register_simple("regulatory", 0, NULL, 0);
+ 	if (IS_ERR(reg_pdev))
+@@ -1637,12 +1637,24 @@ int regulatory_init(void)
+ 	cfg80211_regdomain = cfg80211_world_regdom;
+ 
+ 	err = regulatory_hint_core("00");
++#endif
+ 	if (err) {
+-		printk(KERN_ERR "cfg80211: calling CRDA failed - "
+-		       "unable to update world regulatory domain, "
+-		       "using static definition\n");
+-	}
++		if (err == -ENOMEM)
++			return err;
++		/*
++		 * N.B. kobject_uevent_env() can fail mainly for when we're out
++		 * memory which is handled and propagated appropriately above
++		 * but it can also fail during a netlink_broadcast() or during
++		 * early boot for call_usermodehelper(). For now treat these
++		 * errors as non-fatal.
++		 */
++		printk(KERN_ERR "cfg80211: kobject_uevent_env() was unable "
++			"to call CRDA during init");
++#ifdef CONFIG_CFG80211_REG_DEBUG
++		/* We want to find out exactly why when debugging */
++		WARN_ON(err);
+ #endif
++	}
+ 
+ 	return 0;
+ }
+-- 
+1.6.0.3
 
