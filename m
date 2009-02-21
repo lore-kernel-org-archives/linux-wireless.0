@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.189]:39380 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752787AbZBRUbe (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54060 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671AbZBUFUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 15:31:34 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so72206fkf.5
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 12:31:32 -0800 (PST)
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] at76c50x-usb: support cfg80211 scanning
-References: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 18 Feb 2009 22:31:30 +0200
-In-Reply-To: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com> (Jason Andryuk's message of "Mon\, 16 Feb 2009 19\:43\:55 -0500")
-Message-ID: <8763j7qyfx.fsf@litku.valot.fi> (sfid-20090218_213145_271771_96ECD149)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 21 Feb 2009 00:20:47 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 2/5] cfg80211: enable 5 GHz world roaming channels
+Date: Sat, 21 Feb 2009 00:20:38 -0500
+Message-Id: <1235193641-17993-3-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062057_208748_B18D2032)
+In-Reply-To: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
+References: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jason Andryuk <jandryuk@gmail.com> writes:
+The current static world regulatory domain is too restrictive,
+we can use some 5 GHz channels world wide so long as they do not
+touch frequencies which require DFS. The compromise is we must
+also enforce passive scanning and disallow usage of a mode of
+operation that beacons: (AP | IBSS | Mesh)
 
-> With the latest mac80211 stack, the driver needs to be updated for
-> cfg80211 scanning.  I based the changes off of modifications for
-> at76_usb found here:
-> http://johannes.sipsolutions.net/patches/old/all/2008-09-19-13:35/020-cfg80211-scan.patch
->
-> The trick was that max_signal also needs to be set to avoid a divide
-> by zero Oops.  I just guessed and used the value 100 for now.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-Thank you for doing this. Unfortunately the patch was corrupted, so I
-had to manually take your changes. I also included the
-ieee80211_scan_compileted() fix to this patch.
-
-> Additionally, I added some ieee80211_{wake,stop}_queues calls that
-> were contained in the older at76_usb.  There is ambiguity as to
-> whether at76_join should be called before or after waking the queues.
-
-I would like to have a separate patch for this. Also I would like to
-know what kind of bug this fixes.
-
-Sorry to be so picky, but I'm going to push the driver into mainline
-soon and I try avoid regressions right now.
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 85c2c31..da2a8ac 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -73,11 +73,22 @@ static spinlock_t reg_requests_lock;
+ 
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+-	.n_reg_rules = 1,
++	.n_reg_rules = 3,
+ 	.alpha2 =  "00",
+ 	.reg_rules = {
+ 		/* IEEE 802.11b/g, channels 1..11 */
+ 		REG_RULE(2412-10, 2462+10, 40, 6, 20, 0),
++		/* IEEE 802.11a, channel 36..48 */
++		REG_RULE(5180-10, 5240+10, 40, 6, 23,
++			NL80211_RRF_PASSIVE_SCAN |
++			NL80211_RRF_NO_IBSS),
++
++		/* NB: 5260 MHz - 5700 MHz requies DFS */
++
++		/* IEEE 802.11a, channel 149..165 */
++		REG_RULE(5745-10, 5825+10, 40, 6, 23,
++			NL80211_RRF_PASSIVE_SCAN |
++			NL80211_RRF_NO_IBSS),
+ 	}
+ };
+ 
 -- 
-Kalle Valo
+1.6.0.3
+
