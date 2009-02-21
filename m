@@ -1,428 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55337 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754093AbZBRXZr (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:34254 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753345AbZBUPbZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 18:25:47 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 12/15] cfg80211: move all regulatory hints to workqueue
-Date: Wed, 18 Feb 2009 18:25:42 -0500
-Message-Id: <1234999545-14357-13-git-send-email-lrodriguez@atheros.com> (sfid-20090219_005319_437455_2FA77273)
-In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+	Sat, 21 Feb 2009 10:31:25 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so2225818fgg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Feb 2009 07:31:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20090220234032.GB23428@bombadil.infradead.org>
+References: <499C7DC0.4040608@lwfinger.net>
+	 <1234992712.4023.60.camel@johannes.local>
+	 <20090218220531.GD4246@tesla> <499C8DD2.7000800@lwfinger.net>
+	 <20090218224833.GB28733@bombadil.infradead.org>
+	 <69e28c910902201145h6d9fa472rc81da56ffce16dc0@mail.gmail.com>
+	 <43e72e890902201233w95b4aaew1fa0bbf06196d74f@mail.gmail.com>
+	 <69e28c910902201307i398b4a89na4ce0205d66ee921@mail.gmail.com>
+	 <20090220234032.GB23428@bombadil.infradead.org>
+Date: Sat, 21 Feb 2009 16:31:23 +0100
+Message-ID: <69e28c910902210731x46fab8a7qfecb276a66f7a890@mail.gmail.com> (sfid-20090221_163130_197252_34C665CD)
+Subject: Re: ieee80211_regdom module parameter for cfg80211
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All regulatory hints (core, driver, userspace and 11d) are now processed in
-a workqueue.
+On Sat, Feb 21, 2009 at 12:40 AM, Luis R. Rodriguez
+<mcgrof@bombadil.infradead.org> wrote:
+> On Fri, Feb 20, 2009 at 10:07:05PM +0100, G=E1bor Stefanik wrote:
+>> On Fri, Feb 20, 2009 at 9:33 PM, Luis R. Rodriguez <mcgrof@gmail.com=
+> wrote:
+>> > On Fri, Feb 20, 2009 at 11:45 AM, G=E1bor Stefanik
+>> > <netrolller.3d@gmail.com> wrote:
+>> >> On Wed, Feb 18, 2009 at 11:48 PM, Luis R. Rodriguez
+>> >> <mcgrof@bombadil.infradead.org> wrote:
+>> >>> On Wed, Feb 18, 2009 at 04:38:10PM -0600, Larry Finger wrote:
+>> >>>> Luis R. Rodriguez wrote:
+>> >>>> > On Wed, Feb 18, 2009 at 01:31:52PM -0800, Johannes Berg wrote=
+:
+>> >>>> >> On Wed, 2009-02-18 at 15:29 -0600, Larry Finger wrote:
+>> >>>> >>> On at least one forum, I have seen the recommendation that =
+a user set their
+>> >>>> >>> regulatory domain by creating the file /etc/modprobe.d/cfg8=
+0211 with the
+>> >>>> >>> contents "ieee80211_regdom=3DUS".
+>> >>>> >>>
+>> >>>> >>> That works as long as CONFIG_WIRELESS_OLD_REGULATORY is set=
+ in their .config,
+>> >>>> >>> but will fail if it is not.
+>> >>>> >>>
+>> >>>> >>> Should the module_param statement be moved outside the ifde=
+f
+>> >>>> >>> CONFIG_WIRELESS_OLD...? Setting the module parameter that w=
+ay might not make any
+>> >>>> >>> sense, but it surely shouldn't kill wireless.
+>> >>>> >> I actually see no reason to not just /honour/ it by calling =
+crda with
+>> >>>> >> its parameter if CONFIG_WIRELESS_OLD_REGULATORY isn't set.
+>> >>>> >
+>> >>>> > The idea was that things we want to get rid of will go in OLD=
+_REG. Static regdoms
+>> >>>> > for US, JP and EU fall into that and so does the module param=
+eter. I believe
+>> >>>> > it is silly to keep the module parameter around as we already=
+ have userspace
+>> >>>> > APIs to let users set this.
+>> >>>>
+>> >>>> I guess we leave it the way it is. At least the only people tha=
+t will get caught
+>> >>>> are those that upgrade their distro.
+>> >>>
+>> >>> Yeah, if they disable OLD_REG -- but I am curious which distribu=
+tions are using this
+>> >>> themselves as well. Would you happen to know ? Or are you mostly=
+ seeing just users
+>> >>> doing that themselves?
+>> >>
+>> >> Yes, I was talking about users doing this, users who upgrade thei=
+r
+>> >> kernel without upgrading their distro. Keeping a modparam provide=
+s an
+>> >> easy way for users to upgrade kernels without a full distro upgra=
+de -
+>> >> modparams have a much simpler syntax than init scripts. If we kee=
+p the
+>> >> modparam as a way to control CRDA, this is what an user has to do=
+ to
+>> >> upgrade:
+>> >> 1. Compile and install the new kernel. (Mostly straightforward, a=
+s
+>> >> long as the user has a config and knows how to use make.)
+>> >> 2. Compile and install CRDA. (Straightforward.)
+>> >> 3. echo options cfg80211 ieee80211_regdom=3D"HU" >>
+>> >> /etc/modprobe.d/options (Straightforward.)
+>> >>
+>> >> Removing the modparam changes step 3 to:
+>> >> 3. Find the init scripts, and edit them to include "iw reg set HU=
+",
+>> >> making sure it happens early enough, caring about the syntax, tak=
+ing
+>> >> into account differences between distros, etc. Possibly includes
+>> >> modifying the initramfs/initrd by hand in some odd distros. (Not
+>> >> straightforward at all, requires knowledge of the distro's inner
+>> >> workings, such as the init version used, e.g. sysvinit, bsdinit,
+>> >> upstart, etc.)
+>> >
+>> > It seems reasonable to keep the module parameter in case iw is not
+>> > installed but if users went through the trouble of installing crda=
+ are
+>> > we to not expect users to have iw also by 2.6.30?
+>> >
+>> > =A0Luis
+>> >
+>>
+>> I am not talking about the case when iw is not installed - even if i=
+w
+>> is installed, it is much easier to edit the module options file than
+>> the init scripts.
+>
+> We should strive away from using module parameters and provided we ha=
+ve
+> a good userspace API it should be up to userspace to figure that stuf=
+f out.
+>
+> Although an ieee80211_regdom module parameter may be convenient its n=
+ot
+> productive towards what we want as well -- we shouldn't strive to let=
+ your
+> module parameter be the only place to put your location information f=
+rom
+> userspace. Say you suspend to ram, fly to another country -- you'd wa=
+nt
+> more of an intelligent usersapce figuring out your location for you a=
+nd you
+> don't want it to muck with your module parameters.
+>
+> =A0Luis
+>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c      |    8 +-
- drivers/net/wireless/zd1211rw/zd_mac.c |    6 +-
- include/net/cfg80211.h                 |    2 +
- include/net/wireless.h                 |    9 ++-
- net/wireless/nl80211.c                 |   30 ++----
- net/wireless/reg.c                     |  175 +++++++++++++++++++++++++++++---
- net/wireless/reg.h                     |    2 +
- 7 files changed, 191 insertions(+), 41 deletions(-)
+In my proposal, the userspace can still override the regdom set in the
+modparam - it is only for setting the initial regdomain. So, you
+suspend to ram, fly to another country, resume and if you have the
+right utilities installed, userspace will reconfigure your regdomain
+to match the current place. However, it is up to distributors to
+include such utilities, it is quite hard for users to install them
+from sources
+Distributors can also easily include the necessary CRDA command in
+their init scripts, but I am not talking about new distributions, but
+rather users who upgrade their kernel. Removing the modparam would
+amount to requiring users to either upgrade their distro or be
+absolutely confident editing all types of init scripts (be it
+sysvinit, bsdinit, upstart or some other apocryphal init program) to
+get a proper initial regdomain. (In fact, due to the lack of such
+modparam support, right now I am always doing "iw reg set HU" by hand
+on every boot, as I can't figure out how to properly edit the init
+scripts without YaST corrupting them upon the next system update!)
+New distros can do fancy userspace tricks like setting the regdomain
+based on GPS position, but for users of old distros who upgraded their
+kernel/installed compat-wireless, the choice is to either use only the
+world regdomain channels (bad) or set regdomain by hand on every boot
+(inconvenient).
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 7264c4c..9079d32 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1659,8 +1659,12 @@ int ath_attach(u16 devid, struct ath_softc *sc)
- 
- 	error = ieee80211_register_hw(hw);
- 
--	if (!ath9k_is_world_regd(sc->sc_ah))
--		regulatory_hint(hw->wiphy, sc->sc_ah->regulatory.alpha2);
-+	if (!ath9k_is_world_regd(sc->sc_ah)) {
-+		error = regulatory_hint(hw->wiphy,
-+			sc->sc_ah->regulatory.alpha2);
-+		if (error)
-+			goto error_attach;
-+	}
- 
- 	/* Initialize LED control */
- 	ath_init_leds(sc);
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 7579af2..da9214e 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -170,10 +170,10 @@ int zd_mac_init_hw(struct ieee80211_hw *hw)
- 		goto disable_int;
- 
- 	r = zd_reg2alpha2(mac->regdomain, alpha2);
--	if (!r)
--		regulatory_hint(hw->wiphy, alpha2);
-+	if (r)
-+		goto disable_int;
- 
--	r = 0;
-+	r = regulatory_hint(hw->wiphy, alpha2);
- disable_int:
- 	zd_chip_disable_int(chip);
- out:
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3551821..91cc57f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -404,6 +404,7 @@ enum environment_cap {
-  * 	country IE
-  * @country_ie_env: lets us know if the AP is telling us we are outdoor,
-  * 	indoor, or if it doesn't matter
-+ * @list: used to insert into the reg_requests_list linked list
-  */
- struct regulatory_request {
- 	int wiphy_idx;
-@@ -412,6 +413,7 @@ struct regulatory_request {
- 	bool intersect;
- 	u32 country_ie_checksum;
- 	enum environment_cap country_ie_env;
-+	struct list_head list;
- };
- 
- struct ieee80211_freq_range {
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 1c6285e..afeade9 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -398,8 +398,15 @@ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
-  * domain should be in or by providing a completely build regulatory domain.
-  * If the driver provides an ISO/IEC 3166 alpha2 userspace will be queried
-  * for a regulatory domain structure for the respective country.
-+ *
-+ * The wiphy must have been registered to cfg80211 prior to this call.
-+ * For cfg80211 drivers this means you must first use wiphy_register(),
-+ * for mac80211 drivers you must first use ieee80211_register_hw().
-+ *
-+ * Drivers should check the return value, its possible you can get
-+ * an -ENOMEM.
-  */
--extern void regulatory_hint(struct wiphy *wiphy, const char *alpha2);
-+extern int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
- 
- /**
-  * regulatory_hint_11d - hints a country IE as a regulatory domain
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 768a65c..a3be01e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1891,34 +1891,24 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	 */
- 	mutex_lock(&cfg80211_mutex);
- 	if (unlikely(!cfg80211_regdomain)) {
--		r = -EINPROGRESS;
--		goto out;
-+		mutex_unlock(&cfg80211_mutex);
-+		return -EINPROGRESS;
- 	}
-+	mutex_unlock(&cfg80211_mutex);
- 
--	if (!info->attrs[NL80211_ATTR_REG_ALPHA2]) {
--		r = -EINVAL;
--		goto out;
--	}
-+	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
-+		return -EINVAL;
- 
- 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
- 
- #ifdef CONFIG_WIRELESS_OLD_REGULATORY
- 	/* We ignore world regdom requests with the old regdom setup */
--	if (is_world_regdom(data)) {
--		r = -EINVAL;
--		goto out;
--	}
-+	if (is_world_regdom(data))
-+		return -EINVAL;
- #endif
--	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
--	/*
--	 * This means the regulatory domain was already set, however
--	 * we don't want to confuse userspace with a "successful error"
--	 * message so lets just treat it as a success
--	 */
--	if (r == -EALREADY)
--		r = 0;
--out:
--	mutex_unlock(&cfg80211_mutex);
-+
-+	r = regulatory_hint_user(data);
-+
- 	return r;
- }
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f5354df..0e33655 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -64,6 +64,9 @@ const struct ieee80211_regdomain *cfg80211_regdomain;
-  * what it thinks should apply for the same country */
- static const struct ieee80211_regdomain *country_ie_regdomain;
- 
-+static LIST_HEAD(reg_requests_list);
-+static spinlock_t reg_requests_lock;
-+
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
- 	.n_reg_rules = 1,
-@@ -831,7 +834,7 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 	const struct ieee80211_power_rule *power_rule = NULL;
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
--	struct wiphy *request_wiphy;
-+	struct wiphy *request_wiphy = NULL;
- 
- 	assert_cfg80211_lock();
- 
-@@ -1195,6 +1198,89 @@ new_request:
- 	return call_crda(alpha2);
- }
- 
-+/* This currently only processes user and driver regulatory hints */
-+static int reg_process_hint(struct regulatory_request *reg_request)
-+{
-+	int r = 0;
-+	struct wiphy *wiphy = NULL;
-+
-+	BUG_ON(!reg_request->alpha2);
-+
-+	mutex_lock(&cfg80211_mutex);
-+
-+	if (wiphy_idx_valid(reg_request->wiphy_idx))
-+		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
-+
-+	if (reg_request->initiator == REGDOM_SET_BY_DRIVER &&
-+	    !wiphy) {
-+		r = -ENODEV;
-+		goto out;
-+	}
-+
-+	r = __regulatory_hint(wiphy,
-+			      reg_request->initiator,
-+			      reg_request->alpha2,
-+			      reg_request->country_ie_checksum,
-+			      reg_request->country_ie_env);
-+	/* This is required so that the orig_* parameters are saved */
-+	if (r == -EALREADY && wiphy->strict_regulatory)
-+		wiphy_update_regulatory(wiphy, reg_request->initiator);
-+out:
-+	mutex_unlock(&cfg80211_mutex);
-+
-+	if (r == -EALREADY)
-+		r = 0;
-+
-+	return r;
-+}
-+
-+static void reg_process_pending_hints(void)
-+	{
-+	struct regulatory_request *reg_request;
-+	int r;
-+
-+	spin_lock(&reg_requests_lock);
-+	while (!list_empty(&reg_requests_list)) {
-+		reg_request = list_first_entry(&reg_requests_list,
-+					       struct regulatory_request,
-+					       list);
-+		list_del_init(&reg_request->list);
-+		spin_unlock(&reg_requests_lock);
-+
-+		r = reg_process_hint(reg_request);
-+#ifdef CONFIG_CFG80211_REG_DEBUG
-+		if (r && (reg_request->initiator == REGDOM_SET_BY_DRIVER ||
-+		    reg_request->initiator == REGDOM_SET_BY_COUNTRY_IE))
-+			printk(KERN_ERR "cfg80211: wiphy_idx %d sent a "
-+				"regulatory hint for %c%c but now has "
-+				"gone fishing, ignoring request\n",
-+				reg_request->wiphy_idx,
-+				reg_request->alpha2[0],
-+				reg_request->alpha2[1]);
-+#endif
-+		kfree(reg_request);
-+		spin_lock(&reg_requests_lock);
-+	}
-+	spin_unlock(&reg_requests_lock);
-+}
-+
-+static void reg_todo(struct work_struct *work)
-+{
-+	reg_process_pending_hints();
-+}
-+
-+static DECLARE_WORK(reg_work, reg_todo);
-+
-+static void queue_regulatory_request(struct regulatory_request *request)
-+{
-+	spin_lock(&reg_requests_lock);
-+	list_add_tail(&request->list, &reg_requests_list);
-+	spin_unlock(&reg_requests_lock);
-+
-+	schedule_work(&reg_work);
-+}
-+
-+/* Core regulatory hint -- happens once during cfg80211_init() */
- static int regulatory_hint_core(const char *alpha2)
- {
- 	struct regulatory_request *request;
-@@ -1210,23 +1296,56 @@ static int regulatory_hint_core(const char *alpha2)
- 	request->alpha2[1] = alpha2[1];
- 	request->initiator = REGDOM_SET_BY_CORE;
- 
--	last_request = request;
-+	queue_regulatory_request(request);
- 
--	return call_crda(alpha2);
-+	return 0;
- }
- 
--void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
-+/* User hints */
-+int regulatory_hint_user(const char *alpha2)
- {
--	int r;
-+	struct regulatory_request *request;
-+
- 	BUG_ON(!alpha2);
- 
--	mutex_lock(&cfg80211_mutex);
--	r = __regulatory_hint(wiphy, REGDOM_SET_BY_DRIVER,
--		alpha2, 0, ENVIRON_ANY);
--	/* This is required so that the orig_* parameters are saved */
--	if (r == -EALREADY && wiphy->strict_regulatory)
--		wiphy_update_regulatory(wiphy, REGDOM_SET_BY_DRIVER);
--	mutex_unlock(&cfg80211_mutex);
-+	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	if (!request)
-+		return -ENOMEM;
-+
-+	request->wiphy_idx = WIPHY_IDX_STALE;
-+	request->alpha2[0] = alpha2[0];
-+	request->alpha2[1] = alpha2[1];
-+	request->initiator = REGDOM_SET_BY_USER,
-+
-+	queue_regulatory_request(request);
-+
-+	return 0;
-+}
-+
-+/* Driver hints */
-+int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
-+{
-+	struct regulatory_request *request;
-+
-+	BUG_ON(!alpha2);
-+	BUG_ON(!wiphy);
-+
-+	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	if (!request)
-+		return -ENOMEM;
-+
-+	request->wiphy_idx = get_wiphy_idx(wiphy);
-+
-+	/* Must have registered wiphy first */
-+	BUG_ON(!wiphy_idx_valid(request->wiphy_idx));
-+
-+	request->alpha2[0] = alpha2[0];
-+	request->alpha2[1] = alpha2[1];
-+	request->initiator = REGDOM_SET_BY_DRIVER;
-+
-+	queue_regulatory_request(request);
-+
-+	return 0;
- }
- EXPORT_SYMBOL(regulatory_hint);
- 
-@@ -1260,6 +1379,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	char alpha2[2];
- 	u32 checksum = 0;
- 	enum environment_cap env = ENVIRON_ANY;
-+	struct regulatory_request *request;
- 
- 	mutex_lock(&cfg80211_mutex);
- 
-@@ -1343,14 +1463,26 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	if (unlikely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
- 		goto free_rd_out;
- 
-+	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	if (!request)
-+		goto free_rd_out;
-+
- 	/* We keep this around for when CRDA comes back with a response so
- 	 * we can intersect with that */
- 	country_ie_regdomain = rd;
- 
--	__regulatory_hint(wiphy, REGDOM_SET_BY_COUNTRY_IE,
--		country_ie_regdomain->alpha2, checksum, env);
-+	request->wiphy_idx = get_wiphy_idx(wiphy);
-+	request->alpha2[0] = rd->alpha2[0];
-+	request->alpha2[1] = rd->alpha2[1];
-+	request->initiator = REGDOM_SET_BY_COUNTRY_IE;
-+	request->country_ie_checksum = checksum;
-+	request->country_ie_env = env;
-+
-+	mutex_unlock(&cfg80211_mutex);
-+
-+	queue_regulatory_request(request);
- 
--	goto out;
-+	return;
- 
- free_rd_out:
- 	kfree(rd);
-@@ -1661,6 +1793,8 @@ int regulatory_init(void)
- 	if (IS_ERR(reg_pdev))
- 		return PTR_ERR(reg_pdev);
- 
-+	spin_lock_init(&reg_requests_lock);
-+
- #ifdef CONFIG_WIRELESS_OLD_REGULATORY
- 	cfg80211_regdomain = static_regdom(ieee80211_regdom);
- 
-@@ -1700,6 +1834,11 @@ int regulatory_init(void)
- 
- void regulatory_exit(void)
- {
-+	struct regulatory_request *reg_request, *tmp;
-+
-+	cancel_work_sync(&reg_work);
-+
-+	spin_lock(&reg_requests_lock);
- 	mutex_lock(&cfg80211_mutex);
- 
- 	reset_regdomains();
-@@ -1711,5 +1850,11 @@ void regulatory_exit(void)
- 
- 	platform_device_unregister(reg_pdev);
- 
-+	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
-+		list_del(&reg_request->list);
-+		kfree(reg_request);
-+	}
-+
- 	mutex_unlock(&cfg80211_mutex);
-+	spin_unlock(&reg_requests_lock);
- }
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index fe8c83f..4730def 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -6,6 +6,8 @@ extern const struct ieee80211_regdomain *cfg80211_regdomain;
- bool is_world_regdom(const char *alpha2);
- bool reg_is_valid_request(const char *alpha2);
- 
-+int regulatory_hint_user(const char *alpha2);
-+
- void reg_device_remove(struct wiphy *wiphy);
- 
- int regulatory_init(void);
--- 
-1.6.0.3
+So, here is a more "visual" approach to the proposal (in all of these
+examples, iw and crda are installed):
 
+Case 1: Compat-wireless installed on e.g. Ubuntu Intrepid, in Israel
+1. System boots up. Cfg80211 from newly installed compat-wireless (and
+NOT the one shipped by the distro) loads with regdom=3DIL.
+--- The regdomain is now Israel. Channels 12 and 13 are available. ---
+2. During the init process, network startup is reached. The system
+auto-connects to ESSID "MyNET123", which is on channel 13. IP address
+assigned via DHCP.
+3. When X starts up, the system is ready for the user to browse the web=
+=2E
+
+Case 2: Same system if modparam support is removed
+1. System boots up. Cfg80211 of compat-wireless loads. Initial
+regdomain is hardcoded to World.
+--- The regdomain is World. Only b/g channels 1-11 are available. ---
+2. Network startup is reached. Auto-connect impossible, as channel 13
+is disabled.
+3. X starts up, but no networking - the user must "iw reg set IL" and
+connect by hand, requiring root access.
+
+Case 3: Fedora 11 (with support for setting regdomain based on GPS - I
+hope it will!), in Germany (the user iften roams throughout Europe)
+1. System boots up. Cfg80211 of the distro loads with regdom=3DEU.
+--- The regdomain is now EU. ---
+2. The GPS device is initialized.
+3. Upon network startup, location is identified as Darmstadt
+University, Germany, so "iw reg set DE" is called.
+--- The regdomain is now DE, which is correct. ---
+4. Network startup continues, auto-connect to ESSID "Universit=E4t" suc=
+cessful.
+5. Upon X startup, wireless is up with regdom=3DDE.
+6. User files to Denmark. Regdomain changes to DK.
+
+Case 4: Same system without modparam support:
+1. System boots up. Cfg80211 of the distro loads with hardcoded "World"=
+=2E
+--- The regdomain is now World. ---
+2. The GPS device is initialized.
+3. Upon network startup, location is identified as Darmstadt
+University, Germany, so "iw reg set DE" is called.
+--- The regdomain is now DE, which is correct. ---
+4. Network startup continues, auto-connect to ESSID "Universit=E4t" suc=
+cessful.
+5. Upon X startup, wireless is up with regdom=3DDE.
+6. User files to Denmark. Regdomain changes to DK.
+
+So, cases 3 and 4 (new, regdomain-aware distro) are equivalent from
+the user's standpoint - but case 1 (old, regdomain-unaware distro with
+compat-wireless adding "aftermarket" CRDA support) is much better than
+case 2.
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
