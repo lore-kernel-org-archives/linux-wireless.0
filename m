@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f222.google.com ([209.85.217.222]:63104 "EHLO
-	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753122AbZBPKJk (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2335 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753337AbZBUTor (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 05:09:40 -0500
-Received: by gxk22 with SMTP id 22so2849331gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 02:09:39 -0800 (PST)
+	Sat, 21 Feb 2009 14:44:47 -0500
+Date: Sat, 21 Feb 2009 14:44:18 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, lrodriguez@atheros.com
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: fix 802.11g conformance test limit typo
+Message-ID: <20090221194418.GA31157@hash.localnet> (sfid-20090221_204451_866445_ADF8E504)
 MIME-Version: 1.0
-In-Reply-To: <1234778113.4219.117.camel@johannes.local>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-10-git-send-email-lrodriguez@atheros.com>
-	 <1234696212.4219.60.camel@johannes.local>
-	 <43e72e890902160148n5a383a96t8e20dc4bc9d10687@mail.gmail.com>
-	 <1234778113.4219.117.camel@johannes.local>
-Date: Mon, 16 Feb 2009 02:09:39 -0800
-Message-ID: <43e72e890902160209q2106331ds540a711e9badfa3f@mail.gmail.com> (sfid-20090216_110943_946881_9117E065)
-Subject: Re: [PATCH 09/10] cfg80211: move regulatory hints to workqueue
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 16, 2009 at 1:55 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-02-16 at 01:48 -0800, Luis R. Rodriguez wrote:
->
->> > Are you sure the mutex order reg_mutex --> cfg80211_mutex is a good
->> > idea? Is there a need for two locks at all?
->>
->> I think so. So reg_mutex would prevent any new requests to be added
->> into the queue, that's the only thing that mutex protects. Once you
->> are sure you have no one adding requests to the queue you then need to
->> ensure no one is processing a regulatory request and hence the
->> cfg80211_mutex.
->>
->> We need to protect the queue from additions to the queue from having
->> the workqueue process it.
->
-> Maybe just use a spinlock for the list, and do the loop manually like in
-> mac80211/key.c then?
->
->        spin_lock(&todo_lock);
->        while (!list_empty(&todo_list)) {
->                key = list_first_entry(&todo_list, struct ieee80211_key, todo);
->                list_del_init(&key->todo);
->                spin_unlock(&todo_lock);
-> ........
->                spin_lock(&todo_lock);
->        }
->        spin_unlock(&todo_lock);
 
-Sure, is the benefit you see that we won't contend userspace longer if
-the workqueue is busy?
+802.11g is in 2 ghz band, not 5 ghz.
 
-  Luis
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath9k/regd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
+index eb0d1b7..a510917 100644
+--- a/drivers/net/wireless/ath9k/regd.c
++++ b/drivers/net/wireless/ath9k/regd.c
+@@ -478,7 +478,7 @@ u32 ath9k_regd_get_ctl(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	if (IS_CHAN_B(chan))
+ 		ctl = ah->regulatory.regpair->reg_2ghz_ctl | CTL_11B;
+ 	else if (IS_CHAN_G(chan))
+-		ctl = ah->regulatory.regpair->reg_5ghz_ctl | CTL_11G;
++		ctl = ah->regulatory.regpair->reg_2ghz_ctl | CTL_11G;
+ 	else
+ 		ctl = ah->regulatory.regpair->reg_5ghz_ctl | CTL_11A;
+ 
+-- 
+1.6.0.6
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
