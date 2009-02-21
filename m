@@ -1,82 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42802 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753373AbZBEMLg (ORCPT
+Received: from el-out-1112.google.com ([209.85.162.180]:49522 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753182AbZBUVoN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2009 07:11:36 -0500
-Subject: Re: [PATCH RFC] mac80211: Filter scan results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Dan Williams <dcbw@redhat.com>, Samuel Ortiz <samuel@sortiz.org>,
-	John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090205120730.GA18339@jm.kir.nu>
-References: <20090204150857.GA5069@sortiz.org>
-	 <1233789837.24227.19.camel@localhost.localdomain>
-	 <1233790539.7390.23.camel@johannes.local>
-	 <20090205084407.GA11126@jm.kir.nu> <20090205111058.GA16422@jm.kir.nu>
-	 <1233834907.3931.4.camel@johannes.local> <20090205120730.GA18339@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ycjKwp6Gwr88ZeXeBn6Y"
-Date: Thu, 05 Feb 2009 13:10:54 +0100
-Message-Id: <1233835854.3931.18.camel@johannes.local> (sfid-20090205_131140_878818_A2CC689E)
-Mime-Version: 1.0
+	Sat, 21 Feb 2009 16:44:13 -0500
+Received: by el-out-1112.google.com with SMTP id b25so747576elf.1
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Feb 2009 13:44:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87hc2okyrm.fsf@litku.valot.fi>
+References: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com>
+	 <8763j7qyfx.fsf@litku.valot.fi> <1235014330.6344.18.camel@rainbow>
+	 <87fxibhr5q.fsf@litku.valot.fi>
+	 <c4d76b3b0902192007s347ea4e3hcfa3fae1a1e3060b@mail.gmail.com>
+	 <87hc2okyrm.fsf@litku.valot.fi>
+Date: Sat, 21 Feb 2009 16:44:11 -0500
+Message-ID: <c4d76b3b0902211344j5cefcdd3p4e34ddc0ac5d78d@mail.gmail.com> (sfid-20090221_224457_209017_754BE6DB)
+Subject: Re: [PATCH] at76c50x-usb: support cfg80211 scanning
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Feb 21, 2009 at 2:57 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> Jason Andryuk <jandryuk@gmail.com> writes:
+>
+>> I thought before I was not getting any scan results.  I may have been
+>> wrong.  However right now with the driver from wireless-testing
+>> 2009-02-18, 4 APs show up in NetworkManager.  Unfortunately, my AP is
+>> not one of them.
+>
+> What's your distance to the AP?
 
---=-ycjKwp6Gwr88ZeXeBn6Y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Maybe twenty feet through some walls.  I successfully tested with a
+Windows machine and the adapter in more or less the same place.
 
-On Thu, 2009-02-05 at 14:07 +0200, Jouni Malinen wrote:
+>> No signal strength is reported for any of them.
+>
+> Yes, this is a know issue. I'll try to fix it soon.
+>
+>> Curiously, there are distinct results for each of at76c50x-usb, a
+>> semi-operational iwl3945 and the functional rtl8187.
+>>
+>> CMD_SCAN is receiving a lot of status 0x03 CMD_STATUS_INVALID_PARAMETER
+>>
+>> With debug=0xf022c001 I get the output below.  I was wondering if
+>> status=0x03 was being received because CMD_SET_MIB was called before
+>> CMD_SCAN's status was checked.  Hopefully you can make some sense out
+>> of the below logs.
+>
+> After a quick look I didn't find anything, but I will investigate this
+> more.
+>
+> Is at76_usb (the staging driver) is working fine with your device? Can
+> you take logs from it so that we can compare?
 
-> (a) Currently not, but once people realize that the length field has a
-> maximum value of 65535, using it as the largest attempt sounds like the
-> most logical choice. In other words, yes, this will require a small
-> change in programs that care (wpa_supplicant, which I already changed;
-> iwlist; etc.), but the change is minimal and not doing this does not brea=
-k
-> anything new.
+How do scan results get returned from the device to the host computer?
+ I can't see any place that the scans are actually received.  Does the
+rx_tasklet handle this?  Are the few listed scan results just those
+that are extracted by mac80211?  I ask because you can see the calls
+to ieee80211_rx_irqsafe.
 
-True.
+I was trying at76_usb + mac80211 when that was in staging, but I have
+not tried ~ at76c503a.berlios.de staging version.  I can take a look.
 
-> (b) Yes, user space apps better be prepared to read the results even if
-> the last entry is truncated (can happen with current kernel). There is
-> no clear way for the app to know that there could be more scan results
-> (well, it could guess that this is the case if the returned buffer is
-> very close to 64 kB), but it is not like scanning is that reliable
-> operation anyway, so applications better be prepared to not always
-> find every BSS in the results.
-
-Yeah, the truncation is a little worrying. I doubt any program but
-wpa_supplicant is prepared to handle that. Should we completely remove
-the entry, and add some new/custom piece to stream that indicates that
-we had to truncate here?
-
-johannes
-
---=-ycjKwp6Gwr88ZeXeBn6Y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJitdMAAoJEKVg1VMiehFYbtkP/2IkesOBMkmveTpKV81DhbTj
-lN0FaMZtw/6KwXmg5L1fin7PFk343KNpbD1j4R6mzvYc9V5LvV/uWTPjKqcOESpH
-b2j5Hbae8Jdrxpk6Po8O6/46LetT33hJCLiOAPK2xFn43lKGIlxOXVZe+QZmW0sP
-gwahzHQF3ONzcYEz1uEtCl4UuKb4e85yjChS1jqfEiwLZWOSEdrwv4hiL+6wyhTo
-Os/ZInKRsDpHh6n+fFp639ULZdAIZPgx/okFBaa4RdmvT1fvrpb/fGZWDhxz7pCK
-dPX5a9xjlXk6DhMT79Su9hUYi8FMd4P/qLAaMTUVTZd89rUBARV2h9+KTQDIYkTT
-lrFn0ykro6H3rL4JHLZZ+65bdaWG1pyK+wToG09qUQGFJBaAvM/veLuhK8ClZZRy
-R1C6NNx3nklGGvG3tbEAWoxHlTGrvBZ4jl0qeom12G5myqwlpMmICe9LCsEyp/Ky
-6W5Pn2AQoRlgN4s+aRJI1svcUIsRSEkgvOYh+bj8PmxoVkP2mR3vJV/0YXWINZuZ
-ywQ5iPEm2LKxKMGPiKEgxedVhA+bXrJrhT7up8wXj6TdJg9/15lkDzCZ63M/QPeH
-DuEAKHihojiD96P5vf2Y5zkrzqGgag9Adn03/dMDIyZHSrGzYhhRWQZM4CbucLoh
-8Og80z5lVWnGwkGvpTyG
-=0fp6
------END PGP SIGNATURE-----
-
---=-ycjKwp6Gwr88ZeXeBn6Y--
-
+Jason
