@@ -1,33 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f222.google.com ([209.85.217.222]:38446 "EHLO
-	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750883AbZBMFpg (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56064 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750963AbZBUFEm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 00:45:36 -0500
-Received: by gxk22 with SMTP id 22so492818gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 21:45:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1234463938-1350-4-git-send-email-me@bobcopeland.com>
-References: <1234463938-1350-4-git-send-email-me@bobcopeland.com>
-Date: Thu, 12 Feb 2009 21:45:35 -0800
-Message-ID: <43e72e890902122145n33a6d99ao5ae883c33a6125b7@mail.gmail.com> (sfid-20090213_064540_500089_9C80563B)
-Subject: Re: [ath5k-devel] [PATCH 3/6] ath9k: convert isWwrSKU macro into C
-	code
+	Sat, 21 Feb 2009 00:04:42 -0500
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v6 10/15] cfg80211: remove likely from an 11d hint case
+Date: Sat, 21 Feb 2009 00:04:28 -0500
+Message-Id: <1235192673-6314-11-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060452_108547_2CAB08B5)
+In-Reply-To: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
+References: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 12, 2009 at 10:38 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> Write isWwrSKU as an inline function and nix the camel-case to make
-> the routine slightly clearer.  Change its argument to take the regd
-> value directly so it can eventually be used by ath5k as well.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Truth of the matter this was confusing people so mark it as
+unlikely as that is the case now.
 
-Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-  Luis
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b474452..baf50ca 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1331,14 +1331,16 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	if (!rd)
+ 		goto out;
+ 
+-	/* This will not happen right now but we leave it here for the
++	/*
++	 * This will not happen right now but we leave it here for the
+ 	 * the future when we want to add suspend/resume support and having
+ 	 * the user move to another country after doing so, or having the user
+-	 * move to another AP. Right now we just trust the first AP. This is why
+-	 * this is marked as likley(). If we hit this before we add this support
+-	 * we want to be informed of it as it would indicate a mistake in the
+-	 * current design  */
+-	if (likely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
++	 * move to another AP. Right now we just trust the first AP.
++	 *
++	 * If we hit this before we add this support we want to be informed of
++	 * it as it would indicate a mistake in the current design
++	 */
++	if (WARN_ON(reg_same_country_ie_hint(wiphy, checksum)))
+ 		goto out;
+ 
+ 	/* We keep this around for when CRDA comes back with a response so
+-- 
+1.6.0.3
+
