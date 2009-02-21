@@ -1,167 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:2016 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753372AbZBRXuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 18:50:22 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
+Received: from bombadil.infradead.org ([18.85.46.34]:56063 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbZBUFEm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2009 00:04:42 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/8] iwl3945: use iwl rx handlers
-Date: Wed, 18 Feb 2009 15:54:28 -0800
-Message-Id: <1235001273-7808-4-git-send-email-reinette.chatre@intel.com> (sfid-20090219_005040_917888_4C1A7CB6)
-In-Reply-To: <1235001273-7808-3-git-send-email-reinette.chatre@intel.com>
-References: <>
- <1235001273-7808-1-git-send-email-reinette.chatre@intel.com>
- <1235001273-7808-2-git-send-email-reinette.chatre@intel.com>
- <1235001273-7808-3-git-send-email-reinette.chatre@intel.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v6 11/15] cfg80211: free rd on unlikely event on 11d hint
+Date: Sat, 21 Feb 2009 00:04:29 -0500
+Message-Id: <1235192673-6314-12-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060449_644419_81A0EA8B)
+In-Reply-To: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
+References: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+This was never happening but it was still wrong, so correct it.
 
-Patch removes duplicate rx handlers(pm_sleep and pm_debug) from 3945 and
-uses handlers from iwlwifi.
-
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   21 ---------------------
- drivers/net/wireless/iwlwifi/iwl-core.c     |   23 +++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    8 ++++++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   26 ++------------------------
- 4 files changed, 33 insertions(+), 45 deletions(-)
+ net/wireless/reg.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 0027a77..aac75b2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -765,27 +765,6 @@ static void iwl_rx_reply_error(struct iwl_priv *priv,
- 		le32_to_cpu(pkt->u.err_resp.error_info));
- }
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index baf50ca..af762be 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1341,7 +1341,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	 * it as it would indicate a mistake in the current design
+ 	 */
+ 	if (WARN_ON(reg_same_country_ie_hint(wiphy, checksum)))
+-		goto out;
++		goto free_rd_out;
  
--static void iwl_rx_pm_sleep_notif(struct iwl_priv *priv,
--				      struct iwl_rx_mem_buffer *rxb)
--{
--#ifdef CONFIG_IWLWIFI_DEBUG
--	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
--	struct iwl_sleep_notification *sleep = &(pkt->u.sleep_notif);
--	IWL_DEBUG_RX(priv, "sleep mode: %d, src: %d\n",
--		     sleep->pm_sleep_mode, sleep->pm_wakeup_src);
--#endif
--}
--
--static void iwl_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
--					     struct iwl_rx_mem_buffer *rxb)
--{
--	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
--	IWL_DEBUG_RADIO(priv, "Dumping %d bytes of unhandled "
--			"notification for %s:\n",
--			le32_to_cpu(pkt->len), get_cmd_string(pkt->hdr.cmd));
--	iwl_print_hex_dump(priv, IWL_DL_RADIO, pkt->u.raw, le32_to_cpu(pkt->len));
--}
--
- static void iwl_bg_beacon_update(struct work_struct *work)
- {
- 	struct iwl_priv *priv =
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 4a51044..7a2c695 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1979,3 +1979,26 @@ void iwl_bg_rf_kill(struct work_struct *work)
- 	iwl_rfkill_set_hw_state(priv);
- }
- EXPORT_SYMBOL(iwl_bg_rf_kill);
+ 	/* We keep this around for when CRDA comes back with a response so
+ 	 * we can intersect with that */
+@@ -1350,6 +1350,10 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	__regulatory_hint(wiphy, REGDOM_SET_BY_COUNTRY_IE,
+ 		country_ie_regdomain->alpha2, checksum, env);
+ 
++	goto out;
 +
-+void iwl_rx_pm_sleep_notif(struct iwl_priv *priv,
-+			   struct iwl_rx_mem_buffer *rxb)
-+{
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
-+	struct iwl_sleep_notification *sleep = &(pkt->u.sleep_notif);
-+	IWL_DEBUG_RX(priv, "sleep mode: %d, src: %d\n",
-+		     sleep->pm_sleep_mode, sleep->pm_wakeup_src);
-+#endif
-+}
-+EXPORT_SYMBOL(iwl_rx_pm_sleep_notif);
-+
-+void iwl_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
-+				      struct iwl_rx_mem_buffer *rxb)
-+{
-+	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
-+	IWL_DEBUG_RADIO(priv, "Dumping %d bytes of unhandled "
-+			"notification for %s:\n",
-+			le32_to_cpu(pkt->len), get_cmd_string(pkt->hdr.cmd));
-+	iwl_print_hex_dump(priv, IWL_DL_RADIO, pkt->u.raw, le32_to_cpu(pkt->len));
-+}
-+EXPORT_SYMBOL(iwl_rx_pm_debug_statistics_notif);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index f3aa07c..8ecbe4b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -250,6 +250,14 @@ int iwl_init_drv(struct iwl_priv *priv);
- void iwl_uninit_drv(struct iwl_priv *priv);
- 
- /*****************************************************
-+ * RX handlers.
-+ * **************************************************/
-+void iwl_rx_pm_sleep_notif(struct iwl_priv *priv,
-+			   struct iwl_rx_mem_buffer *rxb);
-+void iwl_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
-+				      struct iwl_rx_mem_buffer *rxb);
-+
-+/*****************************************************
- * RX
- ******************************************************/
- void iwl_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index d348b7d..e8bb11c 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1417,28 +1417,6 @@ static void iwl3945_rx_spectrum_measure_notif(struct iwl_priv *priv,
- #endif
++free_rd_out:
++	kfree(rd);
+ out:
+ 	mutex_unlock(&cfg80211_mutex);
  }
- 
--static void iwl3945_rx_pm_sleep_notif(struct iwl_priv *priv,
--				  struct iwl_rx_mem_buffer *rxb)
--{
--#ifdef CONFIG_IWLWIFI_DEBUG
--	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
--	struct iwl_sleep_notification *sleep = &(pkt->u.sleep_notif);
--	IWL_DEBUG_RX(priv, "sleep mode: %d, src: %d\n",
--		     sleep->pm_sleep_mode, sleep->pm_wakeup_src);
--#endif
--}
--
--static void iwl3945_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
--					     struct iwl_rx_mem_buffer *rxb)
--{
--	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
--	IWL_DEBUG_RADIO(priv, "Dumping %d bytes of unhandled "
--			"notification for %s:\n",
--			le32_to_cpu(pkt->len), get_cmd_string(pkt->hdr.cmd));
--	iwl_print_hex_dump(priv, IWL_DL_RADIO, pkt->u.raw,
--			   le32_to_cpu(pkt->len));
--}
--
- static void iwl3945_bg_beacon_update(struct work_struct *work)
- {
- 	struct iwl_priv *priv =
-@@ -1541,9 +1519,9 @@ static void iwl3945_setup_rx_handlers(struct iwl_priv *priv)
- 	priv->rx_handlers[CHANNEL_SWITCH_NOTIFICATION] = iwl_rx_csa;
- 	priv->rx_handlers[SPECTRUM_MEASURE_NOTIFICATION] =
- 	    iwl3945_rx_spectrum_measure_notif;
--	priv->rx_handlers[PM_SLEEP_NOTIFICATION] = iwl3945_rx_pm_sleep_notif;
-+	priv->rx_handlers[PM_SLEEP_NOTIFICATION] = iwl_rx_pm_sleep_notif;
- 	priv->rx_handlers[PM_DEBUG_STATISTIC_NOTIFIC] =
--	    iwl3945_rx_pm_debug_statistics_notif;
-+	    iwl_rx_pm_debug_statistics_notif;
- 	priv->rx_handlers[BEACON_NOTIFICATION] = iwl3945_rx_beacon_notif;
- 
- 	/*
 -- 
-1.5.4.3
+1.6.0.3
 
