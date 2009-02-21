@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:43872 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753121AbZBGEmq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 23:42:46 -0500
-Subject: Re: location of binaries and libraries of new wifi tools
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Mierswa <impulze@impulze.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <498CC07F.3080800@impulze.org>
-References: <498CC07F.3080800@impulze.org>
-Content-Type: text/plain
-Date: Fri, 06 Feb 2009 23:41:11 -0500
-Message-Id: <1233981671.3652.6.camel@localhost> (sfid-20090207_054251_020424_C56C7082)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:42780 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753497AbZBUWdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2009 17:33:13 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sat, 21 Feb 2009 23:33:10 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090221223310.227280@gmx.net> (sfid-20090221_233401_880114_10CEFE16)
+MIME-Version: 1.0
+Subject: [PATCH v2] mac80211: Give it some time to do the TSF sync
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-02-06 at 23:58 +0100, Daniel Mierswa wrote:
-> Hey list, I was wondering where to put binaries for the new
-> wireless-stack based tools. Most default installations put libnl, crypto
-> and gcrypt into /usr. Applications like iw, wpa_supplicant and crda need
-> those to run, yet they do not link statically. So if the default
-> location for the new binaries is /sbin or /bin and the libraries it
-> links against are default installed somewhere into /usr things will
-> break. I wonder now what to do for consistency. Either statically link
-> libraries that are default installed into /usr, put those libs into /lib
-> or install the binaries into /usr aswell. I'd appreciate any comments on
-> that. :) Thanks and have a nice weekend.
+Give slow hardware some time to do the TSF sync, to not run into an IBS=
+S merging endless loop in some rarely situations.
 
-Stuff in /bin or /sbin can certainly link to stuff in /usr without
-breaking.  The only time it breaks is when you're using network
-mounted /usr and you need the wireless stack to boot the machine and
-mount /usr.  But then you have to ask yourself, why are you using a
-network mounted /usr over wifi?  That seems odd.  Somebody turns on a
-microwave or starts to use a cordless phone and you're hosed.
+Version 2 adds a comment.
 
-Dan
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+---
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 1bbfc70..ea737bf 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -332,6 +332,10 @@ static void ieee80211_rx_bss_info(struct ieee80211=
+_sub_if_data *sdata,
+ 	       jiffies);
+ #endif
+=20
++	/* give slow hardware some time to do the TSF sync */
++	if (rx_timestamp > 0x400000)
++		goto put_bss;
++
+ 	if (beacon_timestamp > rx_timestamp) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+ 		printk(KERN_DEBUG "%s: beacon TSF higher than "
 
-
+--=20
+Jetzt 1 Monat kostenlos! GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 17,95 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
+569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
