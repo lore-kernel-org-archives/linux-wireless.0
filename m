@@ -1,96 +1,436 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:43284 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708AbZBCUnL (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54065 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729AbZBUFUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 15:43:11 -0500
-Received: by mail-ew0-f21.google.com with SMTP id 14so2846565ewy.13
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 12:43:10 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 17/17] orinoco: hermes doesn't need to be a separate module
-Date: Tue,  3 Feb 2009 20:40:39 +0000
-Message-Id: <1233693639-8608-18-git-send-email-kilroyd@googlemail.com> (sfid-20090203_214315_799670_DE148BAA)
-In-Reply-To: <1233693639-8608-17-git-send-email-kilroyd@googlemail.com>
-References: <1233693639-8608-1-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-2-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-3-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-4-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-5-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-6-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-7-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-8-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-9-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-10-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-11-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-12-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-13-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-14-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-15-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-16-git-send-email-kilroyd@googlemail.com>
- <1233693639-8608-17-git-send-email-kilroyd@googlemail.com>
+	Sat, 21 Feb 2009 00:20:47 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 3/5] cfg80211: Add AP beacon regulatory hints
+Date: Sat, 21 Feb 2009 00:20:39 -0500
+Message-Id: <1235193641-17993-4-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062059_557729_31EA7F68)
+In-Reply-To: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
+References: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just compile it into the orinoco module. If we merge USB support, the
-module can then be split as appropriate.
+When devices are world roaming they cannot beacon or do active scan
+on 5 GHz or on channels 12, 13 and 14 on the 2 GHz band. Although
+we have a good regulatory API some cards may _always_ world roam, this
+is also true when a system does not have CRDA present. Devices doing world
+roaming can still passive scan, if they find a beacon from an AP on
+one of the world roaming frequencies we make the assumption we can do
+the same and we also remove the passive scan requirement.
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+This adds support for providing beacon regulatory hints based on scans.
+This works for devices that do either hardware or software scanning.
+If a channel has not yet been marked as having had a beacon present
+on it we queue the beacon hint processing into the workqueue.
+
+All wireless devices will benefit from beacon regulatory hints from
+any wireless device on a system including new devices connected to
+the system at a later time.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/orinoco/Makefile |    4 ++--
- drivers/net/wireless/orinoco/hermes.c |   18 ------------------
- 2 files changed, 2 insertions(+), 20 deletions(-)
+ include/net/wireless.h |    5 +-
+ net/wireless/core.c    |    5 +-
+ net/wireless/reg.c     |  224 +++++++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/reg.h     |   21 +++++
+ net/wireless/scan.c    |    3 +
+ 5 files changed, 254 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/Makefile b/drivers/net/wireless/orinoco/Makefile
-index 2f3e0dd..1fc7409 100644
---- a/drivers/net/wireless/orinoco/Makefile
-+++ b/drivers/net/wireless/orinoco/Makefile
-@@ -1,9 +1,9 @@
- #
- # Makefile for the orinoco wireless device drivers.
- #
--orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o hermes_dld.o
-+orinoco-objs := main.o fw.o hw.o mic.o scan.o wext.o hermes_dld.o hermes.o
- 
--obj-$(CONFIG_HERMES)		+= orinoco.o hermes.o
-+obj-$(CONFIG_HERMES)		+= orinoco.o
- obj-$(CONFIG_PCMCIA_HERMES)	+= orinoco_cs.o
- obj-$(CONFIG_APPLE_AIRPORT)	+= airport.o
- obj-$(CONFIG_PLX_HERMES)	+= orinoco_plx.o
-diff --git a/drivers/net/wireless/orinoco/hermes.c b/drivers/net/wireless/orinoco/hermes.c
-index 3946a40..64be359 100644
---- a/drivers/net/wireless/orinoco/hermes.c
-+++ b/drivers/net/wireless/orinoco/hermes.c
-@@ -45,12 +45,6 @@
- 
- #include "hermes.h"
- 
--MODULE_DESCRIPTION("Low-level driver helper for Lucent Hermes chipset"
--		   " and Prism II HFA384x wireless MAC controller");
--MODULE_AUTHOR("Pavel Roskin <proski@gnu.org>"
--	" & David Gibson <hermes@gibson.dropbear.id.au>");
--MODULE_LICENSE("Dual MPL/GPL");
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index 1f4707d..64a7620 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -69,6 +69,9 @@ enum ieee80211_channel_flags {
+  * @band: band this channel belongs to.
+  * @max_antenna_gain: maximum antenna gain in dBi
+  * @max_power: maximum transmission power (in dBm)
++ * @beacon_found: helper to regulatory code to indicate when a beacon
++ *	has been found on this channel. Use regulatory_hint_found_beacon()
++ *	to enable this, this is is useful only on 5 GHz band.
+  * @orig_mag: internal use
+  * @orig_mpwr: internal use
+  */
+@@ -80,6 +83,7 @@ struct ieee80211_channel {
+ 	u32 flags;
+ 	int max_antenna_gain;
+ 	int max_power;
++	bool beacon_found;
+ 	u32 orig_flags;
+ 	int orig_mag, orig_mpwr;
+ };
+@@ -425,7 +429,6 @@ extern int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
+ extern void regulatory_hint_11d(struct wiphy *wiphy,
+ 				u8 *country_ie,
+ 				u8 country_ie_len);
 -
- /* These are maximum timeouts. Most often, card wil react much faster */
- #define CMD_BUSY_TIMEOUT (100) /* In iterations of ~1us */
- #define CMD_INIT_TIMEOUT (50000) /* in iterations of ~10us */
-@@ -542,15 +536,3 @@ int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
- 	return err;
+ /**
+  * wiphy_apply_custom_regulatory - apply a custom driver regulatory domain
+  * @wiphy: the wireless device we want to process the regulatory domain on
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index b1a354b..dd7f222 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -32,8 +32,9 @@ MODULE_DESCRIPTION("wireless configuration support");
+ LIST_HEAD(cfg80211_drv_list);
+ 
+ /*
+- * This is used to protect the cfg80211_drv_list, cfg80211_regdomain, and
+- * the last reguluatory request receipt in regd.c
++ * This is used to protect the cfg80211_drv_list, cfg80211_regdomain,
++ * country_ie_regdomain, the reg_beacon_list and the the last regulatory
++ * request receipt (last_request).
+  */
+ DEFINE_MUTEX(cfg80211_mutex);
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index da2a8ac..e5e432d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -68,9 +68,22 @@ const struct ieee80211_regdomain *cfg80211_regdomain;
+  */
+ static const struct ieee80211_regdomain *country_ie_regdomain;
+ 
++/* Used to queue up regulatory hints */
+ static LIST_HEAD(reg_requests_list);
+ static spinlock_t reg_requests_lock;
+ 
++/* Used to queue up beacon hints for review */
++static LIST_HEAD(reg_pending_beacons);
++static spinlock_t reg_pending_beacons_lock;
++
++/* Used to keep track of processed beacon hints */
++static LIST_HEAD(reg_beacon_list);
++
++struct reg_beacon {
++	struct list_head list;
++	struct ieee80211_channel chan;
++};
++
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+ 	.n_reg_rules = 3,
+@@ -1011,16 +1024,120 @@ static void update_all_wiphy_regulatory(enum reg_set_by setby)
+ 		wiphy_update_regulatory(&drv->wiphy, setby);
  }
- EXPORT_SYMBOL(hermes_write_ltv);
--
--static int __init init_hermes(void)
--{
--	return 0;
--}
--
--static void __exit exit_hermes(void)
--{
--}
--
--module_init(init_hermes);
--module_exit(exit_hermes);
+ 
++static void handle_reg_beacon(struct wiphy *wiphy,
++			      unsigned int chan_idx,
++			      struct reg_beacon *reg_beacon)
++{
++#ifdef CONFIG_CFG80211_REG_DEBUG
++#define REG_DEBUG_BEACON_FLAG(desc) \
++	printk(KERN_DEBUG "cfg80211: Enabling " desc " on " \
++		"frequency: %d MHz (Ch %d) on %s\n", \
++		reg_beacon->chan.center_freq, \
++		ieee80211_frequency_to_channel(reg_beacon->chan.center_freq), \
++		wiphy_name(wiphy));
++#else
++#define REG_DEBUG_BEACON_FLAG(desc) do {} while (0)
++#endif
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *chan;
++
++	assert_cfg80211_lock();
++
++	sband = wiphy->bands[reg_beacon->chan.band];
++	chan = &sband->channels[chan_idx];
++
++	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
++		return;
++
++	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
++		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		REG_DEBUG_BEACON_FLAG("active scanning");
++	}
++
++	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
++		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
++		REG_DEBUG_BEACON_FLAG("beaconing");
++	}
++
++	chan->beacon_found = true;
++#undef REG_DEBUG_BEACON_FLAG
++}
++
++/*
++ * Called when a scan on a wiphy finds a beacon on
++ * new channel
++ */
++static void wiphy_update_new_beacon(struct wiphy *wiphy,
++				    struct reg_beacon *reg_beacon)
++{
++	unsigned int i;
++	struct ieee80211_supported_band *sband;
++
++	assert_cfg80211_lock();
++
++	if (!wiphy->bands[reg_beacon->chan.band])
++		return;
++
++	sband = wiphy->bands[reg_beacon->chan.band];
++
++	for (i = 0; i < sband->n_channels; i++)
++		handle_reg_beacon(wiphy, i, reg_beacon);
++}
++
++/*
++ * Called upon reg changes or a new wiphy is added
++ */
++static void wiphy_update_beacon_reg(struct wiphy *wiphy)
++{
++	unsigned int i;
++	struct ieee80211_supported_band *sband;
++	struct reg_beacon *reg_beacon;
++
++	assert_cfg80211_lock();
++
++	if (list_empty(&reg_beacon_list))
++		return;
++
++	list_for_each_entry(reg_beacon, &reg_beacon_list, list) {
++		if (!wiphy->bands[reg_beacon->chan.band])
++			continue;
++		sband = wiphy->bands[reg_beacon->chan.band];
++		for (i = 0; i < sband->n_channels; i++)
++			handle_reg_beacon(wiphy, i, reg_beacon);
++	}
++}
++
++static bool reg_is_world_roaming(struct wiphy *wiphy)
++{
++	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
++	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
++		return true;
++	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
++	    wiphy->custom_regulatory)
++		return true;
++	return false;
++}
++
++/* Reap the advantages of previously found beacons */
++static void reg_process_beacons(struct wiphy *wiphy)
++{
++	if (!reg_is_world_roaming(wiphy))
++		return;
++	wiphy_update_beacon_reg(wiphy);
++}
++
+ void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
+ {
+ 	enum ieee80211_band band;
+ 
+ 	if (ignore_reg_update(wiphy, setby))
+-		return;
++		goto out;
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		if (wiphy->bands[band])
+ 			handle_band(wiphy, band);
+ 	}
++out:
++	reg_process_beacons(wiphy);
+ 	if (wiphy->reg_notifier)
+ 		wiphy->reg_notifier(wiphy, last_request);
+ }
+@@ -1314,6 +1431,7 @@ out:
+ 	return r;
+ }
+ 
++/* Processes regulatory hints, this is all the REGDOM_SET_BY_* */
+ static void reg_process_pending_hints(void)
+ 	{
+ 	struct regulatory_request *reg_request;
+@@ -1344,9 +1462,44 @@ static void reg_process_pending_hints(void)
+ 	spin_unlock(&reg_requests_lock);
+ }
+ 
++/* Processes beacon hints -- this has nothing to do with country IEs */
++static void reg_process_pending_beacon_hints(void)
++{
++	struct cfg80211_registered_device *drv;
++	struct reg_beacon *pending_beacon, *tmp;
++
++	mutex_lock(&cfg80211_mutex);
++
++	/* This goes through the _pending_ beacon list */
++	spin_lock_bh(&reg_pending_beacons_lock);
++
++	if (list_empty(&reg_pending_beacons)) {
++		spin_unlock_bh(&reg_pending_beacons_lock);
++		goto out;
++	}
++
++	list_for_each_entry_safe(pending_beacon, tmp,
++				 &reg_pending_beacons, list) {
++
++		list_del_init(&pending_beacon->list);
++
++		/* Applies the beacon hint to current wiphys */
++		list_for_each_entry(drv, &cfg80211_drv_list, list)
++			wiphy_update_new_beacon(&drv->wiphy, pending_beacon);
++
++		/* Remembers the beacon hint for new wiphys or reg changes */
++		list_add_tail(&pending_beacon->list, &reg_beacon_list);
++	}
++
++	spin_unlock_bh(&reg_pending_beacons_lock);
++out:
++	mutex_unlock(&cfg80211_mutex);
++}
++
+ static void reg_todo(struct work_struct *work)
+ {
+ 	reg_process_pending_hints();
++	reg_process_pending_beacon_hints();
+ }
+ 
+ static DECLARE_WORK(reg_work, reg_todo);
+@@ -1587,6 +1740,55 @@ out:
+ }
+ EXPORT_SYMBOL(regulatory_hint_11d);
+ 
++static bool freq_is_chan_12_13_14(u16 freq)
++{
++	if (freq == ieee80211_channel_to_frequency(12) ||
++	    freq == ieee80211_channel_to_frequency(13) ||
++	    freq == ieee80211_channel_to_frequency(14))
++		return true;
++	return false;
++}
++
++int regulatory_hint_found_beacon(struct wiphy *wiphy,
++				 struct ieee80211_channel *beacon_chan,
++				 gfp_t gfp)
++{
++	struct reg_beacon *reg_beacon;
++
++	if (likely((beacon_chan->beacon_found ||
++	    (beacon_chan->flags & IEEE80211_CHAN_RADAR) ||
++	    (beacon_chan->band == IEEE80211_BAND_2GHZ &&
++	     !freq_is_chan_12_13_14(beacon_chan->center_freq)))))
++		return 0;
++
++	reg_beacon = kzalloc(sizeof(struct reg_beacon), gfp);
++	if (!reg_beacon)
++		return -ENOMEM;
++
++#ifdef CONFIG_CFG80211_REG_DEBUG
++	printk(KERN_DEBUG "cfg80211: Found new beacon on "
++		"frequency: %d MHz (Ch %d) on %s\n",
++		beacon_chan->center_freq,
++		ieee80211_frequency_to_channel(beacon_chan->center_freq),
++		wiphy_name(wiphy));
++#endif
++	memcpy(&reg_beacon->chan, beacon_chan,
++		sizeof(struct ieee80211_channel));
++
++
++	/*
++	 * Since we can be called from BH or and non-BH context
++	 * we must use spin_lock_bh()
++	 */
++	spin_lock_bh(&reg_pending_beacons_lock);
++	list_add_tail(&reg_beacon->list, &reg_pending_beacons);
++	spin_unlock_bh(&reg_pending_beacons_lock);
++
++	schedule_work(&reg_work);
++
++	return 0;
++}
++
+ static void print_rd_rules(const struct ieee80211_regdomain *rd)
+ {
+ 	unsigned int i;
+@@ -1908,6 +2110,7 @@ int regulatory_init(void)
+ 		return PTR_ERR(reg_pdev);
+ 
+ 	spin_lock_init(&reg_requests_lock);
++	spin_lock_init(&reg_pending_beacons_lock);
+ 
+ #ifdef CONFIG_WIRELESS_OLD_REGULATORY
+ 	cfg80211_regdomain = static_regdom(ieee80211_regdom);
+@@ -1951,6 +2154,7 @@ int regulatory_init(void)
+ void regulatory_exit(void)
+ {
+ 	struct regulatory_request *reg_request, *tmp;
++	struct reg_beacon *reg_beacon, *btmp;
+ 
+ 	cancel_work_sync(&reg_work);
+ 
+@@ -1965,6 +2169,24 @@ void regulatory_exit(void)
+ 
+ 	platform_device_unregister(reg_pdev);
+ 
++	spin_lock_bh(&reg_pending_beacons_lock);
++	if (!list_empty(&reg_pending_beacons)) {
++		list_for_each_entry_safe(reg_beacon, btmp,
++					 &reg_pending_beacons, list) {
++			list_del(&reg_beacon->list);
++			kfree(reg_beacon);
++		}
++	}
++	spin_unlock_bh(&reg_pending_beacons_lock);
++
++	if (!list_empty(&reg_beacon_list)) {
++		list_for_each_entry_safe(reg_beacon, btmp,
++					 &reg_beacon_list, list) {
++			list_del(&reg_beacon->list);
++			kfree(reg_beacon);
++		}
++	}
++
+ 	spin_lock(&reg_requests_lock);
+ 	if (!list_empty(&reg_requests_list)) {
+ 		list_for_each_entry_safe(reg_request, tmp,
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 4730def..65bfd05 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -38,4 +38,25 @@ extern int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+ 			     const char *alpha2, u32 country_ie_checksum,
+ 			     enum environment_cap country_ie_env);
+ 
++/**
++ * regulatory_hint_found_beacon - hints a beacon was found on a channel
++ * @wiphy: the wireless device where the beacon was found on
++ * @beacon_chan: the channel on which the beacon was found on
++ * @gfp: context flags
++ *
++ * This informs the wireless core that a beacon from an AP was found on
++ * the channel provided. This allows the wireless core to make educated
++ * guesses on regulatory to help with world roaming. This is only used for
++ * world roaming -- when we do not know our current location. This is
++ * only useful on channels 12, 13 and 14 on the 2 GHz band as channels
++ * 1-11 are already enabled by the world regulatory domain; and on
++ * non-radar 5 GHz channels.
++ *
++ * Drivers do not need to call this, cfg80211 will do it for after a scan
++ * on a newly found BSS.
++ */
++int regulatory_hint_found_beacon(struct wiphy *wiphy,
++					struct ieee80211_channel *beacon_chan,
++					gfp_t gfp);
++
+ #endif  /* __NET_WIRELESS_REG_H */
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 6060065..280dbcd 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -430,6 +430,9 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
+ 	if (!res)
+ 		return NULL;
+ 
++	if (res->pub.capability & WLAN_CAPABILITY_ESS)
++		regulatory_hint_found_beacon(wiphy, channel, gfp);
++
+ 	/* cfg80211_bss_update gives us a referenced result */
+ 	return &res->pub;
+ }
 -- 
-1.6.0.6
+1.6.0.3
 
