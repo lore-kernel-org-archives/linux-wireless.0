@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:40233 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753124AbZBOQn2 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56057 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbZBUFEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 11:43:28 -0500
-Received: by ewy14 with SMTP id 14so1607517ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 08:43:26 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 3/3] rt2x00: Add various new USB IDs for rt73usb
-Date: Sun, 15 Feb 2009 17:43:05 +0100
-Cc: rt2400-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org
-References: <200902151742.01372.IvDoorn@gmail.com> <200902151742.30220.IvDoorn@gmail.com> <200902151742.48677.IvDoorn@gmail.com>
-In-Reply-To: <200902151742.48677.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200902151743.05405.IvDoorn@gmail.com> (sfid-20090215_174332_552854_A231430C)
+	Sat, 21 Feb 2009 00:04:39 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v6 09/15] cfg80211: protect first access of last_request on 11d hint under mutex
+Date: Sat, 21 Feb 2009 00:04:27 -0500
+Message-Id: <1235192673-6314-10-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060444_166332_C42D22F5)
+In-Reply-To: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
+References: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt73usb.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+We were not protecting last_request there is a small possible race
+between an 11d hint and another routine which calls reset_regdomains()
+which can prevent a valid country IE from being processed. This is
+not critical as it will still be procesed soon after but locking prior
+to it is correct.
 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 846996c..90ace51 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2342,6 +2342,9 @@ static const struct rt2x00_ops rt73usb_ops = {
- static struct usb_device_id rt73usb_device_table[] = {
- 	/* AboCom */
- 	{ USB_DEVICE(0x07b8, 0xb21d), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* Amigo */
-+	{ USB_DEVICE(0x148f, 0x9021), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x0eb0, 0x9021), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Askey */
- 	{ USB_DEVICE(0x1690, 0x0722), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* ASUS */
-@@ -2389,6 +2392,7 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x0db0, 0xa861), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x0db0, 0xa874), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Ralink */
-+	{ USB_DEVICE(0x04bb, 0x093d), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2671), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Qcom */
-@@ -2405,6 +2409,8 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	/* Planex */
- 	{ USB_DEVICE(0x2019, 0xab01), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x2019, 0xab50), USB_DEVICE_DATA(&rt73usb_ops) },
-+	/* ZyXEL */
-+	{ USB_DEVICE(0x0586, 0x3415), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ 0, }
- };
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index d44f3b5..b474452 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1261,11 +1261,13 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	u32 checksum = 0;
+ 	enum environment_cap env = ENVIRON_ANY;
  
+-	if (!last_request)
+-		return;
+-
+ 	mutex_lock(&cfg80211_mutex);
+ 
++	if (unlikely(!last_request)) {
++		mutex_unlock(&cfg80211_mutex);
++		return;
++	}
++
+ 	/* IE len must be evenly divisible by 2 */
+ 	if (country_ie_len & 0x01)
+ 		goto out;
 -- 
-1.5.6.1
+1.6.0.3
 
