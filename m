@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:57997 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754331AbZBJRTK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 12:19:10 -0500
-To: Dan Williams <dcbw@redhat.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Coelho Luciano \(Nokia-D\/Helsinki\)" <Luciano.Coelho@nokia.com>
-Subject: Re: wl12xx: driver for TI wl1251 chipset
-References: <87iqnishuj.fsf@nokia.com> <1234279279.3119.12.camel@localhost>
-	<87mycuxnum.fsf@nokia.com> <1234283159.3119.62.camel@localhost>
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Tue, 10 Feb 2009 19:18:29 +0200
-In-Reply-To: <1234283159.3119.62.camel@localhost> (ext Dan Williams's message of "Tue\, 10 Feb 2009 17\:25\:59 +0100")
-Message-ID: <87iqnixlay.fsf@nokia.com> (sfid-20090210_181915_888478_C384DFAF)
+Received: from mail.gmx.net ([213.165.64.20]:58688 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753575AbZBUXHb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2009 18:07:31 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sun, 22 Feb 2009 00:07:28 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090221230728.227290@gmx.net> (sfid-20090222_000755_305003_3581962C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH] mac80211: Don't merge with the same BSSID
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Dan Williams <dcbw@redhat.com> writes:
+It was not a good idea to do a TSF reset on strange IBSS merges to the =
+same BSSID. For example it will break the TSF sync of ath9k completely =
+and it is unnecessary as all hardware I have tested do a TSF sync to a =
+higher value automatically and IBSS merges are only done to higher TSF =
+values. It only need a TSF reset to accept a lower value, when the IBSS=
+ network is changed manually.
 
-> On Tue, 2009-02-10 at 18:23 +0200, Kalle Valo wrote:
->> Dan Williams <dcbw@redhat.com> writes:
->>
->> >> production line tests and pushing the calibration data from user
->> >> space.
->> >
->> > When is the calibration data required
->>
->> When we boot the firmware, that is during interface up.
->>
->> > and is it likely to change at runtime?
->>
->> It's device specific. Each device is calibrated in the factory and the
->> calibration data is stored to a special partition in the device.
->
-> By "special partition", you mean a filesystem?  Or something else?
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+---
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 1bbfc70..cf20575 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -291,6 +291,10 @@ static void ieee80211_rx_bss_info(struct ieee80211=
+_sub_if_data *sdata,
+ 				sdata->u.ibss.ssid_len))
+ 		goto put_bss;
+=20
++	/* same BSSID */
++	if (memcmp(bss->cbss.bssid, sdata->u.ibss.bssid, ETH_ALEN) =3D=3D 0)
++		goto put_bss;
++
+ 	if (rx_status->flag & RX_FLAG_TSFT) {
+ 		/*
+ 		 * For correct IBSS merging we need mactime; since mactime is
 
-A proprietary binary format in a mtd partition basically.
-
--- 
-Kalle Valo
+--=20
+Jetzt 1 Monat kostenlos! GMX FreeDSL - Telefonanschluss + DSL=20
+f=FCr nur 17,95 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T4=
+569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
