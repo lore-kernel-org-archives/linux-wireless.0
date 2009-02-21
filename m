@@ -1,59 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:48479 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751316AbZB0A6m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 19:58:42 -0500
-Subject: Re: [Ipw2100-devel] ipw2100: race between isr_indicate_associated
- and rx path
-From: Zhu Yi <yi.zhu@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <200902251340.02010.helmut.schaa@gmail.com>
-References: <200901211734.48625.helmut.schaa@gmail.com>
-	 <200902241315.43128.helmut.schaa@gmail.com>
-	 <1235524696.6354.562.camel@debian>
-	 <200902251340.02010.helmut.schaa@gmail.com>
-Content-Type: text/plain
-Date: Fri, 27 Feb 2009 08:55:39 +0800
-Message-Id: <1235696139.6354.584.camel@debian> (sfid-20090227_015847_987192_2CD1E108)
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:55976 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752559AbZBUFYT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2009 00:24:19 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/4] cfg80211: pass the regulatory_request struct in __regulatory_hint()
+Date: Sat, 21 Feb 2009 00:24:14 -0500
+Message-Id: <1235193856-3524-3-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062427_749436_6C0C611A)
+In-Reply-To: <1235193856-3524-1-git-send-email-lrodriguez@atheros.com>
+References: <1235193856-3524-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-02-25 at 20:39 +0800, Helmut Schaa wrote:
-> Argh! Just found out why dev_activate is called such late after
-> netif_carrier_on:
-> 
-> ipw2100 calls netif_carrier_on followed by netif_wake_queue when the
-> driver
-> moves from associating to associated state. netif_carrier_on will then
-> call linkwatch_fire_event. However the carrier_on event is not treated
-> as
-> urgent and as such the event is delayed (and thus dev_activate too).
-> 
-> An event is considered urgent if the netdev is running, has a carrier
-> _and_ any of the TX qdiscs changed. Since ipw2100 first calls
-> carrier_on,
-> the last condition is not met and thus the event is not considered
-> urgent and gets delayed.
+We were passing value by value, lets just pass the struct.
 
-Calling netif_wake_queue() before netif_carrier_on() is not correct in
-semantics. Even it works, it looks like a workaround hack. I still think
-making a sync version of netif_carrier_on is the way to go.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   45 ++++++++++++++++++---------------------------
+ 1 files changed, 18 insertions(+), 27 deletions(-)
 
-> Just changing the order to first wake up the queues followed by the
-> carrier_on results in an urgent event. I ran a few tests with that
-> change
-> (+ frame buffering patch) and wasn't able to trigger the race again.
-> 
-> I'll fold that into the frame buffer patch and send it to
-> ipw2100-devel
-> once I finished the tests.
-
-Sounds good.
-
-Thanks,
--yi
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 0253d01..6e17337 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1328,26 +1328,18 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
+  * __regulatory_hint - hint to the wireless core a regulatory domain
+  * @wiphy: if the hint comes from country information from an AP, this
+  *	is required to be set to the wiphy that received the information
+- * @alpha2: the ISO/IEC 3166 alpha2 being claimed the regulatory domain
+- *	should be in.
+- * @country_ie_checksum: checksum of processed country IE, set this to 0
+- * 	if the hint did not come from a country IE
+- * @country_ie_env: the environment the IE told us we are in, %ENVIRON_*
++ * @pending_request: the regulatory request currently being processed
+  *
+  * The Wireless subsystem can use this function to hint to the wireless core
+- * what it believes should be the current regulatory domain by giving it an
+- * ISO/IEC 3166 alpha2 country code it knows its regulatory domain should be
+- * in.
++ * what it believes should be the current regulatory domain.
+  *
+  * Returns zero if all went fine, %-EALREADY if a regulatory domain had
+  * already been set or other standard error codes.
+  *
+  * Caller must hold &cfg80211_mutex
+  */
+-static int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+-			const char *alpha2,
+-			u32 country_ie_checksum,
+-			enum environment_cap env)
++static int __regulatory_hint(struct wiphy *wiphy,
++			     struct regulatory_request *pending_request)
+ {
+ 	struct regulatory_request *request;
+ 	bool intersect = false;
+@@ -1355,10 +1347,12 @@ static int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+ 
+ 	assert_cfg80211_lock();
+ 
+-	r = ignore_request(wiphy, set_by, alpha2);
++	r = ignore_request(wiphy,
++			  pending_request->initiator,
++			  pending_request->alpha2);
+ 
+ 	if (r == REG_INTERSECT) {
+-		if (set_by == REGDOM_SET_BY_DRIVER) {
++		if (pending_request->initiator == REGDOM_SET_BY_DRIVER) {
+ 			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
+ 			if (r)
+ 				return r;
+@@ -1370,7 +1364,8 @@ static int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
+ 		 * driver has already been set just copy it to the
+ 		 * wiphy
+ 		 */
+-		if (r == -EALREADY && set_by == REGDOM_SET_BY_DRIVER) {
++		if (r == -EALREADY &&
++		    pending_request->initiator == REGDOM_SET_BY_DRIVER) {
+ 			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
+ 			if (r)
+ 				return r;
+@@ -1386,13 +1381,13 @@ new_request:
+ 	if (!request)
+ 		return -ENOMEM;
+ 
+-	request->alpha2[0] = alpha2[0];
+-	request->alpha2[1] = alpha2[1];
+-	request->initiator = set_by;
+-	request->wiphy_idx = get_wiphy_idx(wiphy);
++	request->alpha2[0] = pending_request->alpha2[0];
++	request->alpha2[1] = pending_request->alpha2[1];
++	request->initiator = pending_request->initiator;
++	request->wiphy_idx = pending_request->wiphy_idx;
+ 	request->intersect = intersect;
+-	request->country_ie_checksum = country_ie_checksum;
+-	request->country_ie_env = env;
++	request->country_ie_checksum = pending_request->country_ie_checksum;
++	request->country_ie_env = pending_request->country_ie_env;
+ 
+ 	kfree(last_request);
+ 	last_request = request;
+@@ -1411,7 +1406,7 @@ new_request:
+ 	 *
+ 	 * to intersect with the static rd
+ 	 */
+-	return call_crda(alpha2);
++	return call_crda(request->alpha2);
+ }
+ 
+ /* This currently only processes user and driver regulatory hints */
+@@ -1433,11 +1428,7 @@ static int reg_process_hint(struct regulatory_request *reg_request)
+ 		goto out;
+ 	}
+ 
+-	r = __regulatory_hint(wiphy,
+-			      reg_request->initiator,
+-			      reg_request->alpha2,
+-			      reg_request->country_ie_checksum,
+-			      reg_request->country_ie_env);
++	r = __regulatory_hint(wiphy, reg_request);
+ 	/* This is required so that the orig_* parameters are saved */
+ 	if (r == -EALREADY && wiphy && wiphy->strict_regulatory)
+ 		wiphy_update_regulatory(wiphy, reg_request->initiator);
+-- 
+1.6.0.3
 
