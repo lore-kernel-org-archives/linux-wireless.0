@@ -1,96 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ammma.de ([213.83.39.131]:24346 "EHLO ammma.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752772AbZBHWv6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2009 17:51:58 -0500
-Message-ID: <20090208235149.58334qon9gu98ykg@neo.wg.de> (sfid-20090208_235202_944123_D60132BF)
-Date: Sun, 08 Feb 2009 23:51:49 +0100
-From: Jan Schneider <jan@horde.org>
-To: =?iso-8859-1?b?R+Fib3I=?= Stefanik <netrolller.3d@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: Microcode SW error detected.
-References: <20090206233134.11116cap9kcroxgc@neo.wg.de>
- <1233960318.11530.114.camel@rc-desk>
- <20090208192343.106487dmjra19g6o@neo.wg.de>
- <69e28c910902081159v1371ee70nb5e70ebdc648b54a@mail.gmail.com>
-In-Reply-To: <69e28c910902081159v1371ee70nb5e70ebdc648b54a@mail.gmail.com>
+Received: from yw-out-2324.google.com ([74.125.46.31]:56068 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753545AbZBWART (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Feb 2009 19:17:19 -0500
+Received: by yw-out-2324.google.com with SMTP id 5so709724ywh.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2009 16:17:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	DelSp=Yes	format=flowed
+In-Reply-To: <87tz6md748.fsf@litku.valot.fi>
+References: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com>
+	 <8763j7qyfx.fsf@litku.valot.fi> <1235014330.6344.18.camel@rainbow>
+	 <87fxibhr5q.fsf@litku.valot.fi>
+	 <c4d76b3b0902192007s347ea4e3hcfa3fae1a1e3060b@mail.gmail.com>
+	 <87hc2okyrm.fsf@litku.valot.fi>
+	 <c4d76b3b0902211344j5cefcdd3p4e34ddc0ac5d78d@mail.gmail.com>
+	 <c4d76b3b0902211400t7f5909d1o9ea8325f40db2aff@mail.gmail.com>
+	 <87tz6md748.fsf@litku.valot.fi>
+Date: Sun, 22 Feb 2009 18:54:42 -0500
+Message-ID: <c4d76b3b0902221554h4cec5204xeaf10c28386c658e@mail.gmail.com> (sfid-20090223_011722_949979_89927274)
+Subject: Re: [PATCH] at76c50x-usb: support cfg80211 scanning
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zitat von G=E1bor Stefanik <netrolller.3d@gmail.com>:
-
-> On Sun, Feb 8, 2009 at 7:23 PM, Jan Schneider <jan@horde.org> wrote:
->> Zitat von reinette chatre <reinette.chatre@intel.com>:
->>
->>> On Fri, 2009-02-06 at 14:31 -0800, Jan Schneider wrote:
->>>>
->>>> I've seen in a post from January that someone already had this pro=
-blem
->>>> but couldn't reproduce it.
->>>> I can't reliably reproduce, but I see this more often than I like.
->>>> When this happens, it usually doesn't help to reload the kernel
->>>> module. Sometimes it helps to use the rfkill switch though.
->>>>
->>>> Here's a log with debug=3D0x43fff:
->>>
->>> It does not seem as though your driver is compiled with debug suppo=
-rt.
->>> You can confirm that by looking at the version number of the driver
->>> printed when it loads ... it should have a "d" in it like "1.2.26kd=
-s".
->>> Could you please recompile the driver with debug support (IWLWIFI_D=
-EBUG)
->>> and rerun your test?  This will provide us with a complete event lo=
-g of
->>> the uCode error.
->>
->> Enabling debug didn't help:
->>
->> Feb  7 00:04:40 tank kernel: [ 2769.084395] iwlagn: Intel(R) Wireles=
-s WiFi
->> Link
->> AGN driver for Linux, 1.3.27kds
->>
->>
->> /etc/modprobe.d/iwlagn:
->>
->> options iwlagn debug=3D0x43fff
->>
->>
->> I still get:
->>
->> Feb  8 18:40:53 tank kernel: [77584.979829] iwlagn 0000:0c:00.0: Mic=
-rocode
->> SW er
->> ror detected.  Restarting 0x2000000.
->> Feb  8 18:40:53 tank kernel: [77585.029747] Registered led device:
->> iwl-phy0::rad
->> io
->> Feb  8 18:40:53 tank kernel: [77585.030765] Registered led device:
->> iwl-phy0::ass
->> oc
->> Feb  8 18:40:53 tank kernel: [77585.031602] Registered led device:
->> iwl-phy0::RX
->> Feb  8 18:40:53 tank kernel: [77585.032467] Registered led device:
->> iwl-phy0::TX
+On Sun, Feb 22, 2009 at 6:49 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> Jason Andryuk <jandryuk@gmail.com> writes:
+>> at76_usb in staging does not compile.
 >
-> No - enable IWLWIFI_DEBUG in your kernel config, then rebuild the
-> kernel (or at least the iwlwifi modules).
+> This is in linux-wireless, right? That's because net/ieee80211.h was
+> just removed. I'll have a patch ready for at76_usb and I'll send it to
+> Greg.
 
-That's what I did, see the "d" in "1.2.26kds" above.
+Thanks for making the changes.  Yes, it was with the wireless-testing
+git tree.  I did replace net/ieee80211.h with linux/iee80211.h, but I
+gave up when compilations errors were still reported.
 
-Jan.
+The good news it, I am writing this email with the staging/at76_usb
+driver.  It is working at the same location as the Windows driver was
+tested.
 
---=20
-Do you need professional PHP or Horde consulting?
-http://horde.org/consulting/
+I'll start looking into what may have changed.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks again.
+
+Jason
