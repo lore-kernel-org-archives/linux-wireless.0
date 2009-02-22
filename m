@@ -1,29 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40468
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751075AbZBJHoP (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:20260 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751834AbZBVV4W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 02:44:15 -0500
-Date: Mon, 09 Feb 2009 23:44:09 -0800 (PST)
-Message-Id: <20090209.234409.91352825.davem@davemloft.net> (sfid-20090210_084420_735578_C4CBFFE0)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-02-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090209202314.GF6069@tuxdriver.com>
-References: <20090209202314.GF6069@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 22 Feb 2009 16:56:22 -0500
+Message-ID: <49A1CA01.9030501@gmail.com> (sfid-20090222_225628_049307_DBA51BFB)
+Date: Sun, 22 Feb 2009 22:56:17 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Sitsofe Wheeler <sitsofe@yahoo.com>
+CC: Frederic Weisbecker <fweisbec@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, Bob Copeland <me@bob>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org>
+In-Reply-To: <20090222170201.GA27360@silver.sucs.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 9 Feb 2009 15:23:14 -0500
+On 22.2.2009 18:02, Sitsofe Wheeler wrote:
+> On Sun, Feb 22, 2009 at 03:47:44PM +0100, Frederic Weisbecker wrote:
+>> Looks like it happens with ath5k driver.
+>> Well, I have an atheros card, so I'm testing it.
+>
+> Good luck! I've just switched to a different location (with faster wifi
+> and more single network access points ) and I've been totally unable to
+> reproduce this warning.
 
-> Another round of update intended for 2.6.30.  Along with a few mac80211
-> updates, there is the usual ton of driver updates with no real unifying
-> theme.  FWIW, this has spent a little time in linux-next already.
-> 
-> Please let me know if there are problems!
+Well, maybe we should try to reproduce with jumbo packets sent to the 
+ath5k receiver, since I think it (1) is not very much test-covered code 
+(2) appears to be related.
 
-Pulled, thanks a lot John.
+Could you append lspci -vvnnxxx of your adapter? Better along with 
+ath_info[1] output.
+
+[1] svn co http://svn.madwifi-project.org/ath_info/trunk ath_info
