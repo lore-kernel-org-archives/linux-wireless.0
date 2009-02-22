@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36741 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754382AbZBXC3u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 21:29:50 -0500
-Subject: Re: [PATCH 0/4] cfg80211: few minor enhancements based on reg
-	requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1235193856-3524-1-git-send-email-lrodriguez@atheros.com>
-References: <1235193856-3524-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qmLN4lAVJhqAOGUaq6YP"
-Date: Mon, 23 Feb 2009 18:00:23 -0800
-Message-Id: <1235440823.4455.53.camel@johannes.local> (sfid-20090224_032952_457547_ED53FBBA)
+Received: from mx2.redhat.com ([66.187.237.31]:37337 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750974AbZBVPej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Feb 2009 10:34:39 -0500
+Subject: Re: Signal quality strange since commit 708c57cf1709fb95
+From: Dan Williams <dcbw@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <49A05E35.70904@lwfinger.net>
+References: <49A01922.1090106@lwfinger.net>
+	 <1235241867.3284.44.camel@localhost>  <49A05E35.70904@lwfinger.net>
+Content-Type: text/plain
+Date: Sun, 22 Feb 2009 10:32:52 -0500
+Message-Id: <1235316773.28069.6.camel@localhost> (sfid-20090222_163442_284249_F9B80BEB)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2009-02-21 at 14:04 -0600, Larry Finger wrote:
+> Dan Williams wrote:
+> > On Sat, 2009-02-21 at 09:09 -0600, Larry Finger wrote:
+> >> I admit that I didn't follow the discussion of reporting signal quality very
+> >> closely; however since commit 708c57cf1709fb95, all of my wireless devices (b43,
+> >> p54usb, rtl8187) are reporting link quality as XX/70 rather than XX/100. I doubt
+> >> that this was an intended consequence of that patch. If the SIOCGIWRANGE ioctl
+> >> is now more correct, what changes are needed in the drivers to restore the old
+> >> behavior? Having written the qual calculation for 2 drivers, I understand the
+> >> uselessness of this number, but I also know the uproar such a change will cause
+> >> in the user community.
+> > 
+> > Intended.  It doesn't matter what the /X number is; it's simply the
+> > upper bound of what the # before the / will be.  Quality is in the range
+> > of [0 ... max_qual.qual].  You should be able to divide quality /
+> > max_qual.qual and get a reasonable number to use for pretty UI display.
+> > 
+> > Many drivers used to use something other than 100 for max quality, and
+> > many still do:
+> > 
+> > airo.c:		range->max_qual.qual = airo_get_max_quality(&cap_rid);
+> > hostap/hostap_ioctl.c:		range->max_qual.qual = 70; /* what is correct max? This was not
+> > hostap/hostap_ioctl.c:		range->max_qual.qual = 92; /* 0 .. 92 */
+> > netwave_cs.c:	range->max_qual.qual = 255;
+> > orinoco/wext.c:		range->max_qual.qual = 0x8b - 0x2f;
+> > wavelan.c:	range->max_qual.qual = MMR_SGNL_QUAL;
+> > wavelan_cs.c:	range->max_qual.qual = MMR_SGNL_QUAL;
+> > zd1201.c:	range->max_qual.qual = 128;
+> 
+> I know how it works with drivers that implement their own ioctl calls for the
+> WEXT interface; however, the 3 that I mentioned all use mac80211 and get their
+> WEXT support through cfg80211.
 
---=-qmLN4lAVJhqAOGUaq6YP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+It's not really relevant what mac80211/cfg80211 uses for max_qual.qual.
+What's relevant is that the calculation that the driver/stack makes for
+quality is appropriate for the max_qual.qual.  Again, it doesn't matter
+what the /XX number is, as long as you can take YY/XX and get something
+between 0 and 100 (inclusive) that changes on a linear scale and is
+usable for a generic "signal strength %" measure.
 
-On Sat, 2009-02-21 at 00:24 -0500, Luis R. Rodriguez wrote:
-> These are a few cleanups based on the new strategy to use regutory reques=
-ts
-> structures from the workqueue. We still pass the wiphy directly to
-> __regulatory_hint() and ignore_request() as its used often.
+Dan
 
-Looks good, and the "[PATCH v2 0/5] cfg80211: enhance world roaming"
-looks good too (well I had two comments or so)
-
-johannes
-
---=-qmLN4lAVJhqAOGUaq6YP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJo1S1AAoJEKVg1VMiehFYYAEQAMEEsntc+PPAvLDJPF23n2Ju
-l9MoxTWIQsM4uqKju5kJC113H8vPGkXiS/E4Qcex6gZ/jxSqiZ/SOEuKRHqyppsr
-zPnCY0cujjV6WrWsNA0KacU7lv6E9JYRfD7afNSevbhS/RH4BFnikqPddMgK6nqv
-osYcLI2VHuqKwKy/IG4DUDE82A4tZVV3LarpNPPUnvyP8ibTKkjWlBD2mmlYr1WA
-AZ5DGffIHwMTpS/HHDm+38Nb2Audbgpg7bmOjm0fu/ajGemrPe4lN8NwDBaLvTEf
-oDFqewQ2WlWTQ9p5YVoxkho9LhIVdtlc455ztYiW4uQZw3PSPfN0OwOefIo2Scdd
-fHgIWd+Fgs6bgSXFEIp538aYOLO47q45duTASoyfQ03eQ03lP0j9KlFUpw2/IAhB
-fdfe1Y5P7GYWuxEx5rlTYrystTa+CsEI3dWtnILJr07e1CPGqHxilMulC7rcX7kC
-OTNoRZWURJrdzAdrO8F2XSFGKqB8TBGY/zUVBxbqkmM6IHYvNaIKs+RP10PphBeT
-My/WGXDzlOznMoGRJzZoHGECzQVboPZCLpLpZ40JGlOzoVh1b1uYiWKziTQpBKac
-PRCX1Co+5o2J2wf61wDOSKw7R0P348psgFy+BTJLAW6w0EeTYsm8Vi3GUJ4tpz/H
-ZpfsnqdpXNxku7R8paiN
-=z7yL
------END PGP SIGNATURE-----
-
---=-qmLN4lAVJhqAOGUaq6YP--
 
