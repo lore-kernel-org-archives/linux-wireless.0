@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:27449 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:36314 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750865AbZBNFeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Feb 2009 00:34:36 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 21:34:36 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/10] nl80211: disallow user requests prior to regulatory_init()
-Date: Fri, 13 Feb 2009 21:33:41 -0800
-Message-ID: <1234589627-16977-5-git-send-email-lrodriguez@atheros.com> (sfid-20090214_063440_955532_AE18692E)
-In-Reply-To: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1753645AbZBVPcU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Feb 2009 10:32:20 -0500
+Subject: Re: Signal quality strange since commit 708c57cf1709fb95
+From: Dan Williams <dcbw@redhat.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <8763j33rgq.fsf@litku.valot.fi>
+References: <49A01922.1090106@lwfinger.net>
+	 <1235241867.3284.44.camel@localhost> <49A05E35.70904@lwfinger.net>
+	 <8763j33rgq.fsf@litku.valot.fi>
 Content-Type: text/plain
+Date: Sun, 22 Feb 2009 10:30:28 -0500
+Message-Id: <1235316628.28069.2.camel@localhost> (sfid-20090222_163225_075328_0A42C692)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If cfg80211 is built into the kernel there is perhaps a small
-time window betwen nl80211_init() and regulatory_init() where
-cfg80211_regdomain hasn't yet been initialized to let the
-wireless core do its work. During that rare case and time
-frame (if its even possible) we don't allow user regulatory
-changes as cfg80211 is working on enabling its first regulatory
-domain.
+On Sun, 2009-02-22 at 08:39 +0200, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+> 
+> > I know how it works with drivers that implement their own ioctl
+> > calls for the WEXT interface; however, the 3 that I mentioned all
+> > use mac80211 and get their WEXT support through cfg80211.
+> 
+> Yes, something is wrong now. I noticed the same problem (/70 in signal
+> strength) when I was implementing rssi support for at76c50x-usb.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/nl80211.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+The /70 *by itself* is not a problem.  There could be a problem with the
+quality calculation that cfg80211/mac80211 are doing with the reported
+signal strength from the hardware-specific driver.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index db973f2..6f4dedb 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1876,6 +1876,15 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	int r;
- 	char *data = NULL;
- 
-+	/*
-+	 * You should only get this when cfg80211 hasn't yet initialized
-+	 * completely when built-in to the kernel right between the time
-+	 * window between nl80211_init() and regulatory_init(), if that is
-+	 * even possible.
-+	 */
-+	if (!cfg80211_regdomain)
-+		return -EINPROGRESS;
-+
- 	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
- 		return -EINVAL;
- 
--- 
-1.6.1.2.253.ga34a
+Dan
+
 
