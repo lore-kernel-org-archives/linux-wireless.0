@@ -1,27 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:41559 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441AbZBMWtX (ORCPT
+Received: from mail-fx0-f167.google.com ([209.85.220.167]:48029 "EHLO
+	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752062AbZBVT1o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 17:49:23 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so712809ywh.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 14:49:21 -0800 (PST)
+	Sun, 22 Feb 2009 14:27:44 -0500
+Message-ID: <49A1A72A.50102@gmail.com> (sfid-20090222_202748_809116_A20CEAFC)
+Date: Sun, 22 Feb 2009 20:27:38 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1925ef8a0902130454i7b72a7fftb13cc6b77413b70c@mail.gmail.com>
-References: <1925ef8a0902130015o6df0c962n3fe05ec420d0aef@mail.gmail.com>
-	 <43e72e890902130023w3c192b04r3a41b4643eedb530@mail.gmail.com>
-	 <1925ef8a0902130454i7b72a7fftb13cc6b77413b70c@mail.gmail.com>
-Date: Fri, 13 Feb 2009 14:49:21 -0800
-Message-ID: <43e72e890902131449n153b606fne9a6dba1af071915@mail.gmail.com> (sfid-20090213_234934_362870_C4B6FCE2)
-Subject: Re: compat-wireless with CONFIG_MAC80211disabled
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Vitja Makarov <vitja.makarov@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Frederic Weisbecker <fweisbec@gmail.com>
+CC: Sitsofe Wheeler <sitsofe@yahoo.com>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, Bob Copeland <me@bob>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <20090222171032.GD6003@nowhere>
+In-Reply-To: <20090222171032.GD6003@nowhere>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 13, 2009 at 4:54 AM, Vitja Makarov <vitja.makarov@gmail.com> wrote:
-> This should be problem for 2.6.27 too.
+On 22.2.2009 18:10, Frederic Weisbecker wrote:
+> I have some troubles with kmemcheck, so I give up for now.
+> Well, by reading the kmemcheck documentation, it tells that there can be some false
+> positives so...
 
-modified for 27 and applied, thanks
+This has nothing to do with kmemcheck.
+
+> Since we are not sure this is a real bug, I'm not sure it would be interesting.
+
+There is no false positive possibility with these checkers, so this is 
+pretty much interesting, because it is a bug.
