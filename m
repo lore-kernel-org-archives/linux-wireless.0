@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from india533.server4you.de ([85.25.151.41]:9311 "EHLO
-	india533.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754592AbZBKS5i (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.190]:48092 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753820AbZBWWnx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 13:57:38 -0500
-Received: from [192.168.0.17] (pD95FE930.dip.t-dialin.net [217.95.233.48])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by india533.server4you.de (Postfix) with ESMTP id 7D65E770510
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 19:47:44 +0100 (CET)
-Message-ID: <49931D52.90904@smash-net.org> (sfid-20090211_195742_743713_3AE76E31)
-Date: Wed, 11 Feb 2009 19:47:46 +0100
-From: =?ISO-8859-15?Q?Norman_Rie=DF?= <norman@smash-net.org>
+	Mon, 23 Feb 2009 17:43:53 -0500
+Message-ID: <49A326A4.8090103@gmail.com> (sfid-20090223_234357_254340_93D75DB5)
+Date: Mon, 23 Feb 2009 23:43:48 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: ath5k master (AP) mode
-Content-Type: text/plain; charset=ISO-8859-15
+To: Bob Copeland <me@bobcopeland.com>
+CC: Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <49A321BA.2040500@gmail.com>
+In-Reply-To: <49A321BA.2040500@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 23.2.2009 23:22, Jiri Slaby wrote:
+> We should hit (unlikely(ret == -EINPROGRESS)) test
+> everytime.
 
-i pulled wireless-testing kernel today and installed hostapd-0.6.7,  but
-it still does not work.
-
-
-iwconfig wlan0 mode master
-Error for wireless request "Set Mode" (8B06) :
-    SET failed on device wlan0 ; Invalid argument.
-
-hostapd v0.6.7
-User space daemon for IEEE 802.11 AP management,
-IEEE 802.1X/WPA/WPA2/EAP/RADIUS Authenticator
-Copyright (c) 2002-2009, Jouni Malinen <j@w1.fi> and contributors
-
-
-hostapd -dd /etc/hostapd/hostapd.conf
-Configuration file: /etc/hostapd/hostapd.conf
-ctrl_interface_group=0
-Failed to set interface wlan0 to master mode.
-nl80211 driver initialization failed.
-wlan0: Unable to setup interface.
-rmdir[ctrl_interface]: No such file or directory
-ELOOP: remaining socket: sock=5 eloop_data=0x95f39e8 user_data=(nil)
-handler=0x8075908
-
-
-The card is Atheros Communications Inc. AR2413 802.11bg NIC (rev 01).
-
-Regards,
-
-Norman
+I get on a AR2413
+XX 000 128c0054 cb980203
+XX 001 00000000 00000000
+XX 000 128c0054 cfb80003
+XX 001 00000000 00000000
+XX 000 00001420 00000001
+ath5k phy5: unsupported jumbo
+XX 001 126c001c 80600003
+XX 002 00000000 00000000
+XX 000 127d8079 44ca0003
+XX 001 00000000 00000000
+XX 000 128d8079 54cc0003
+(count, status_0, status_1)
+so it means, it sets done flag even for more flag descs and thus we 
+handle it well in this particular case.
