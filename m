@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4933 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753158AbZBZBGh (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:13716 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751571AbZBWT43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 20:06:37 -0500
-Date: Wed, 25 Feb 2009 20:06:25 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090226010625.GA10577@hash.localnet> (sfid-20090226_020641_304267_C7E831B9)
-References: <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <49A321BA.2040500@gmail.com> <49A326A4.8090103@gmail.com> <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org>
+	Mon, 23 Feb 2009 14:56:29 -0500
+Received: by wf-out-1314.google.com with SMTP id 28so2652154wfa.4
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 11:56:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090225140139.GA18694@silver.sucs.org>
+In-Reply-To: <20090223193704.GC3553@tuxdriver.com>
+References: <87wsbobfza.wl%peter@chubb.wattle.id.au>
+	 <20090223193704.GC3553@tuxdriver.com>
+Date: Mon, 23 Feb 2009 14:56:26 -0500
+Message-ID: <b6c5339f0902231156r6498fb6as219b7ba18b8cce5e@mail.gmail.com> (sfid-20090223_205632_819034_F11D84B3)
+Subject: Re: [ath5k-devel] [PATCH] Fix transmit LED on Acer Aspire One
+From: Bob Copeland <me@bobcopeland.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Peter Chubb <peterc@gelato.unsw.edu.au>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	lrodriguz@atheros.com, jirislaby@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 25, 2009 at 02:01:39PM +0000, Sitsofe Wheeler wrote:
-> NAS is the name of a nearby access point. This is really tough to
-> reproduce but if there's anything (e.g. ftrace) I can always turn on
-> that will help you track this thing down let me know. Unfortunately the
-> machine is an EeePC 900 so any logging would have to be cyclic and held
-> in RAM...
+On Mon, Feb 23, 2009 at 2:37 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Feb 18, 2009 at 02:07:05PM +1100, Peter Chubb wrote:
+>> +     /* Enable softled on Acer Aspire One */
+>> +     else if (pdev->subsystem_vendor == 0x105b && pdev->subsystem_device == 0xe008) {
+>> +             __set_bit(ATH_STAT_LEDSOFT, sc->status);
+>> +             sc->led_pin = 3;
+>> +             sc->led_on = 0;
+>> +     }
+>>       if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
+>>               goto out;
+>
+> Any comment on this from the ath5k guys?  That 0x105b subvendor ID
+> would seem to correspond to "Foxconn International, Inc.", which
+> doesn't sound much like "Acer"...
 
-Hmm, I suppose there could be some error paths under memory pressure that
-aren't quite right.  Here's one, but I don't think it can cause any problems,
-at least without error spew.
+It's already in wireless-testing with similar values.
 
-Looking over the code, perhaps there's a race with ath5k_rx_start,
-namely sc->rxlink is changed out from under the rxbuflock.  Still can't
-immediately see a use-after-free there.
-
-============
-
-ath5k: don't overwrite bf->skbaddr unless pcu mapping fails.
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 1d77ee9..6d91335 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1140,12 +1140,14 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
- 	struct ath5k_hw *ah = sc->ah;
- 	struct sk_buff *skb = bf->skb;
- 	struct ath5k_desc *ds;
-+	dma_addr_t dma_addr;
- 
- 	if (!skb) {
--		skb = ath5k_rx_skb_alloc(sc, &bf->skbaddr);
-+		skb = ath5k_rx_skb_alloc(sc, &dma_addr);
- 		if (!skb)
- 			return -ENOMEM;
- 		bf->skb = skb;
-+		bf->skbaddr = dma_addr;
- 	}
- 
- 	/*
+Not quite apropos to this patch, someone with the ambit chipset said
+the values didn't match up with his laptop, so we do need to add a
+subsystem_device test I think, but it should have a #define in pci.h.
+In any case there's usually no harm in enabling the wrong gpio pin,
+unless rfkill happens to sit there.
 
 -- 
 Bob Copeland %% www.bobcopeland.com
-
