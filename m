@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:60242 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754737AbZBTAAC (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:35711 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbZBWVYC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 19:00:02 -0500
-Received: by bwz5 with SMTP id 5so1892042bwz.13
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 16:00:00 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 0/2] orinoco: improve robustness of firmware load
-Date: Thu, 19 Feb 2009 23:46:25 +0000
-Message-Id: <1235087187-23425-1-git-send-email-kilroyd@googlemail.com> (sfid-20090220_010011_199990_C3DE4A09)
+	Mon, 23 Feb 2009 16:24:02 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so502016eya.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 13:23:59 -0800 (PST)
+Message-ID: <49A313EC.4070005@gmail.com> (sfid-20090223_222407_032517_36668C9E)
+Date: Mon, 23 Feb 2009 22:23:56 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: new pci_ids device for ath[59]k ?
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't currently do any verification of the firmware that we attempt
-to load, and it is possible to cause a kernel oops. For example, see
-<http://marc.info/?l=orinoco-users&m=123411762524637>
+hi,
 
-This series introduces a few nominal checks to reject files which are
-incorrectly formatted, and then makes sure that we do not attempt to
-read data outside the firmware.
+I have found in windows inf file a new device not supported by
+ath[59]k drivers: 0x168C,0x1014
 
-It is still possible to load a duff firmware. However it shouldn't be
-possible to cause any permanent damage. Hopefully it can't oops either.
+the labels only are:
+11b/g   Wireless LAN Mini PCI Express Adapter
+11a/b/g Wireless LAN Mini PCI Express Adapter
+11a/b/g Wireless LAN Mini PCI Adapter II
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
-David Kilroy (2):
-  orinoco: validate firmware header
-  orinoco: prevent accessing memory outside the firmware image
 
- drivers/net/wireless/orinoco/fw.c         |   55 ++++++++++++++++-
- drivers/net/wireless/orinoco/hermes_dld.c |   89 +++++++++++++++--------------
- drivers/net/wireless/orinoco/hermes_dld.h |   10 ++-
- 3 files changed, 103 insertions(+), 51 deletions(-)
+is this device out there ? or was it only a manufacturer's HW test ?
 
+-thanks-
+
+regards,
+-- 
+Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea, Prestige, ...
