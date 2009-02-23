@@ -1,59 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:53763
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752079AbZBZAK0 (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.217.174]:43391 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751858AbZBWQPx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 19:10:26 -0500
-Message-ID: <49A5DDED.1080408@erley.org> (sfid-20090226_011032_103628_F50DCEF8)
-Date: Wed, 25 Feb 2009 19:10:21 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Mon, 23 Feb 2009 11:15:53 -0500
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: Jouni Malinen <jouni.malinen@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath9k and TKIP hw crypto in AP mode
-References: <20090224114201.GB21933@jm.kir.nu> <49A40320.1040902@erley.org> <20090224150710.GA1419@jm.kir.nu> <49A41315.3030007@erley.org> <49A45378.50009@erley.org> <20090225181953.GA23880@jm.kir.nu> <49A5D83A.1090602@erley.org>
-In-Reply-To: <49A5D83A.1090602@erley.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <40f31dec0902230803qcbd4c20kc66a50e6e2e8eef2@mail.gmail.com>
+References: <20090222111807.GB5538@silver.sucs.org>
+	 <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org>
+	 <20090222144742.GA6078@nowhere>
+	 <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com>
+	 <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com>
+	 <40f31dec0902230803qcbd4c20kc66a50e6e2e8eef2@mail.gmail.com>
+Date: Mon, 23 Feb 2009 18:15:51 +0200
+Message-ID: <40f31dec0902230815x6b43fa50h41edfeead96822a3@mail.gmail.com> (sfid-20090223_171558_042912_E24DD8F0)
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pat-lkml wrote:
-> Jouni Malinen wrote:
->> On Tue, Feb 24, 2009 at 03:07:20PM -0500, pat-lkml wrote:
->>> pass phrase.  Use nohwcrypt=1, hostapd now works perfectly with wep/wpa/wpa2, while
->>> with nohwcrypt=0, I get errors (that I'll need physical access to my computer to 
->>> debug/log) in wpa only.
->> Thanks, I was able to reproduce this and figure out what was happening.
->> It looks like I have not tested TKIP in AP mode before (I've been mainly
->> testing HT and that does not allow TKIP..). Anyway, the Michael MIC
->> TX/RX keys are set incorrectly for the group key which will trigger
->> Michael MIC errors on every broadcast frame.
+2009/2/23 Nick Kossifidis <mickflemm@gmail.com>:
+> 2009/2/23 Bob Copeland <me@bobcopeland.com>:
+>> On Mon, 23 Feb 2009 00:20:50 +0100, Jiri Slaby wrote
+>>> On 22.2.2009 22:56, Jiri Slaby wrote:
+>>> > Well, maybe we should try to reproduce with jumbo packets sent to the
+>>> > ath5k receiver, since I think it (1) is not very much test-covered code
+>>> > (2) appears to be related.
+>>>
+>>> According to the spec I have for older chip, there is not `done' flag
+>>> set for descriptors which have `more' flag set. We handle this wrongly.
+>>> Am I looking correctly, Nick, Luis, Bob?
+>>>
+>>> I still don't see what could have caused this though.
 >>
->> I have more complete cleanup of the key configuration for ath9k in
->> progress, but as far as this particular issue is concerned, the
->> following change should resolve it. So far, I've only tested this with
->> the current hardware revision, but I will test this with older design,
->> too, and submit a proper patch later. Anyway, you may want to test this
->> as a fix for TKIP in AP mode.
+>> As I understand it, yes, we don't do the right thing when the more flag
+>> is set.  We're supposed to keep processing packets until we get one with
+>> the done flag, and then all of that is supposed to be merged into a single
+>> packet.  Other flags such as the rx rate are only valid on the final
+>> packet.
 >>
+>> However, I did some debugging of this a while ago and concluded that the
+>> 'jumbo' frames were largely garbage data.  The dma buffer size is certainly
+>> large enough for a standard 802.11 frame and the 'more' flag is only
+>> supposed to be set if the dma buffer size is too small for a packet.  In
+>> all cases the dma buffer size was 2500+ bytes and the actual contents of
+>> the packets looked like random values (I did have encryption turned on,
+>> but there were no 802.11 headers I could see.)
 >>
-> I had to make some changes to get it to build, am going to test shortly.
-> 
-> The relevant changes were adding:
-> 
-> struct ieee80211_vif *vif;
-> vif = sc->vifs[0];
-> 
-> to the 'else' condition, like the if(key->keyidx) condition.
-That should have read 'below' the else condition.
+>> So I am not sure if the jumbo packets are causing bad things to happen,
+>> or if they are an indication that something bad has already happened.
+>>
+>
+> Hmm can someone test ath5k against an Atheros AP using fast frames ?
+> Maybe they are jumbo frames but they don't have any header etc so that
+> they look like one frame after un-fragmentation, documentation says
+> that the current frame is continued in the next descriptor if more is
+> set to 1 so i guess next buffer might not have the header. If more = 0
+> then it's our last descriptor and only then other fields such as done,
+> frame receive ok, rssi etc are valid.
+>
+> The fact that they are not reported as PHY error packets makes me
+> wonder why would we have garbage data on our rx buffer. How about the
+> FRAME_RECEIVE_OK or CRC_ERROR flags (also valid for the last
+> descriptor) ? Are they set or not ?
+>
 
-And it appears to be working.  I have it set to 10 minute rekeying, so I'll
-have more success/failure for you then (and am waiting to send this e-mail
-until then).
+Typo alert...
+rs->rs_more = !!(rx_status->rx_status_0 & AR5K_5212_RX_DESC_STATUS0_MORE);
 
-Well, it rekey'd with no interruption in service.  I'd call it a success.
 
-Thanks!
-
-Pat Erley
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
