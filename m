@@ -1,691 +1,619 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:27455 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751213AbZBNFep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Feb 2009 00:34:45 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 21:34:45 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
-	<linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/10] cfg80211: comments style cleanup
-Date: Fri, 13 Feb 2009 21:33:47 -0800
-Message-ID: <1234589627-16977-11-git-send-email-lrodriguez@atheros.com> (sfid-20090214_065318_952387_021C1C75)
-In-Reply-To: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from mail-qy0-f11.google.com ([209.85.221.11]:54746 "EHLO
+	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752328AbZBWEhy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Feb 2009 23:37:54 -0500
+Received: by qyk4 with SMTP id 4so2650856qyk.13
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2009 20:37:52 -0800 (PST)
+Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
+From: Jason Andryuk <jandryuk@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Samuel Ortiz <samuel@sortiz.org>, Tomas Winkler <tomasw@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <c4d76b3b0902221610rc85a87j4b0eb0b902689dd9@mail.gmail.com>
+References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
+	 <c4d76b3b0901261935n1846b675w72cfa7308d198080@mail.gmail.com>
+	 <20090127162437.GA3596@sortiz.org>
+	 <c4d76b3b0901271531q19578871idbc59b5a23ac868e@mail.gmail.com>
+	 <1ba2fa240901272312j270eedb5x33534a9703d26e06@mail.gmail.com>
+	 <20090128113751.GA3197@sortiz.org>
+	 <1ba2fa240901280352o56ccbc07h50c7a4bfcd0ac9ab@mail.gmail.com>
+	 <20090128121237.GB3197@sortiz.org>
+	 <c4d76b3b0902192017n5ae6b23dg36e7aca54cbd703f@mail.gmail.com>
+	 <1235159397.5860.81.camel@rc-desk>
+	 <c4d76b3b0902221610rc85a87j4b0eb0b902689dd9@mail.gmail.com>
 Content-Type: text/plain
+Date: Sun, 22 Feb 2009 23:37:45 -0500
+Message-Id: <1235363865.6190.8.camel@rainbow> (sfid-20090223_053801_000948_038DF8D4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |  299 ++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 199 insertions(+), 100 deletions(-)
+On Sun, 2009-02-22 at 19:10 -0500, Jason Andryuk wrote:
+> On Fri, Feb 20, 2009 at 2:49 PM, reinette chatre
+> <reinette.chatre@intel.com> wrote:
+> > Running with full debugging on all the time will not be practical - but
+> > there is a debug flag that will only be used when encountering a
+> > firmware error. This flag will cause a dump of event information that
+> > will help with debugging. Would it be possible to run your driver with
+> > debug=0x40000 all the time?
+> 
+> Unfortunately, debug=0x40000 results in an NULL pointer dereference in
+> iwl_dump_nic_error_log.  iwl_dump_nic_error_log+0x3a =>
+> iwl-core.c:1668.  Logs below.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6c8c719..9dce86a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -54,14 +54,18 @@ static u32 supported_bandwidths[] = {
- 	MHZ_TO_KHZ(20),
+Created a patch to fix the problem and got the below output.  The second
+hunk fixes the segfault.  The first hunk re-includes a ret that was
+dropped in another commit.  Without it, ret is assigned a return value
+prior to the less than zero check.  You may not want the first hunk.
+
+Jason
+
+Initialize .is_valid_rtc_data_addr for iwl3945.
+
+Prevent iwl_dump_nic_error_log from segfaulting when it calls the
+function pointer.
+
+Signed-off-by Jason Andryuk <jandryuk@gmail.com>
+--
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index d49e48b..0a75053 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1073,7 +1073,7 @@ static int iwl3945_apm_init(struct iwl_priv *priv)
+ 	* D0U* --> D0A* state */
+ 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+ 
+-	iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
++	ret = iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
+ 			    CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
+ 	if (ret < 0) {
+ 		IWL_DEBUG_INFO(priv, "Failed to init the card\n");
+@@ -2747,6 +2747,7 @@ static struct iwl_lib_ops iwl3945_lib = {
+ 		.query_addr = iwlcore_eeprom_query_addr,
+ 	},
+ 	.send_tx_power	= iwl3945_send_tx_power,
++	.is_valid_rtc_data_addr = iwl3945_hw_valid_rtc_data_addr,
  };
  
--/* Central wireless core regulatory domains, we only need two,
-+/*
-+ * Central wireless core regulatory domains, we only need two,
-  * the current one and a world regulatory domain in case we have no
-- * information to give us an alpha2 */
-+ * information to give us an alpha2
-+ */
- const struct ieee80211_regdomain *cfg80211_regdomain;
- 
--/* We use this as a place for the rd structure built from the
-+/*
-+ * We use this as a place for the rd structure built from the
-  * last parsed country IE to rest until CRDA gets back to us with
-- * what it thinks should apply for the same country */
-+ * what it thinks should apply for the same country
-+ */
- static const struct ieee80211_regdomain *country_ie_regdomain;
- 
- static LIST_HEAD(reg_requests_list);
-@@ -95,9 +99,11 @@ static char *ieee80211_regdom = "US";
- module_param(ieee80211_regdom, charp, 0444);
- MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
- 
--/* We assume 40 MHz bandwidth for the old regulatory work.
-+/*
-+ * We assume 40 MHz bandwidth for the old regulatory work.
-  * We make emphasis we are using the exact same frequencies
-- * as before */
-+ * as before
-+ */
- 
- static const struct ieee80211_regdomain us_regdom = {
- 	.n_reg_rules = 6,
-@@ -136,8 +142,10 @@ static const struct ieee80211_regdomain jp_regdom = {
- 
- static const struct ieee80211_regdomain eu_regdom = {
- 	.n_reg_rules = 6,
--	/* This alpha2 is bogus, we leave it here just for stupid
--	 * backward compatibility */
-+	/*
-+	 * This alpha2 is bogus, we leave it here just for stupid
-+	 * backward compatibility
-+	 */
- 	.alpha2 =  "EU",
- 	.reg_rules = {
- 		/* IEEE 802.11b/g, channels 1..13 */
-@@ -206,8 +214,10 @@ static void reset_regdomains(void)
- 	cfg80211_regdomain = NULL;
- }
- 
--/* Dynamic world regulatory domain requested by the wireless
-- * core upon initialization */
-+/*
-+ * Dynamic world regulatory domain requested by the wireless
-+ * core upon initialization
-+ */
- static void update_world_regdomain(const struct ieee80211_regdomain *rd)
- {
- 	BUG_ON(!last_request);
-@@ -248,8 +258,10 @@ static bool is_unknown_alpha2(const char *alpha2)
- {
- 	if (!alpha2)
- 		return false;
--	/* Special case where regulatory domain was built by driver
--	 * but a specific alpha2 cannot be determined */
-+	/*
-+	 * Special case where regulatory domain was built by driver
-+	 * but a specific alpha2 cannot be determined
-+	 */
- 	if (alpha2[0] == '9' && alpha2[1] == '9')
- 		return true;
- 	return false;
-@@ -259,9 +271,11 @@ static bool is_intersected_alpha2(const char *alpha2)
- {
- 	if (!alpha2)
- 		return false;
--	/* Special case where regulatory domain is the
-+	/*
-+	 * Special case where regulatory domain is the
- 	 * result of an intersection between two regulatory domain
--	 * structures */
-+	 * structures
-+	 */
- 	if (alpha2[0] == '9' && alpha2[1] == '8')
- 		return true;
- 	return false;
-@@ -314,8 +328,10 @@ static bool country_ie_integrity_changes(u32 checksum)
- 	return false;
- }
- 
--/* This lets us keep regulatory code which is updated on a regulatory
-- * basis in userspace. */
-+/*
-+ * This lets us keep regulatory code which is updated on a regulatory
-+ * basis in userspace.
-+ */
- static int call_crda(const char *alpha2)
- {
- 	char country_env[9 + 2] = "COUNTRY=";
-@@ -426,10 +442,12 @@ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
- #undef ONE_GHZ_IN_KHZ
- }
- 
--/* Converts a country IE to a regulatory domain. A regulatory domain
-+/*
-+ * Converts a country IE to a regulatory domain. A regulatory domain
-  * structure has a lot of information which the IE doesn't yet have,
-  * so for the other values we use upper max values as we will intersect
-- * with our userspace regulatory agent to get lower bounds. */
-+ * with our userspace regulatory agent to get lower bounds.
-+ */
- static struct ieee80211_regdomain *country_ie_2_rd(
- 				u8 *country_ie,
- 				u8 country_ie_len,
-@@ -474,9 +492,11 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 
- 	*checksum ^= ((flags ^ alpha2[0] ^ alpha2[1]) << 8);
- 
--	/* We need to build a reg rule for each triplet, but first we must
-+	/*
-+	 * We need to build a reg rule for each triplet, but first we must
- 	 * calculate the number of reg rules we will need. We will need one
--	 * for each channel subband */
-+	 * for each channel subband
-+	 */
- 	while (country_ie_len >= 3) {
- 		int end_channel = 0;
- 		struct ieee80211_country_ie_triplet *triplet =
-@@ -514,9 +534,11 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 		if (cur_sub_max_channel < cur_channel)
- 			return NULL;
- 
--		/* Do not allow overlapping channels. Also channels
-+		/*
-+		 * Do not allow overlapping channels. Also channels
- 		 * passed in each subband must be monotonically
--		 * increasing */
-+		 * increasing
-+		 */
- 		if (last_sub_max_channel) {
- 			if (cur_channel <= last_sub_max_channel)
- 				return NULL;
-@@ -524,10 +546,12 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 				return NULL;
- 		}
- 
--		/* When dot11RegulatoryClassesRequired is supported
-+		/*
-+		 * When dot11RegulatoryClassesRequired is supported
- 		 * we can throw ext triplets as part of this soup,
- 		 * for now we don't care when those change as we
--		 * don't support them */
-+		 * don't support them
-+		 */
- 		*checksum ^= ((cur_channel ^ cur_sub_max_channel) << 8) |
- 		  ((cur_sub_max_channel ^ cur_sub_max_channel) << 16) |
- 		  ((triplet->chans.max_power ^ cur_sub_max_channel) << 24);
-@@ -538,8 +562,10 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 		country_ie_len -= 3;
- 		num_rules++;
- 
--		/* Note: this is not a IEEE requirement but
--		 * simply a memory requirement */
-+		/*
-+		 * Note: this is not a IEEE requirement but
-+		 * simply a memory requirement
-+		 */
- 		if (num_rules > NL80211_MAX_SUPP_REG_RULES)
- 			return NULL;
- 	}
-@@ -567,8 +593,10 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 		struct ieee80211_freq_range *freq_range = NULL;
- 		struct ieee80211_power_rule *power_rule = NULL;
- 
--		/* Must parse if dot11RegulatoryClassesRequired is true,
--		 * we don't support this yet */
-+		/*
-+		 * Must parse if dot11RegulatoryClassesRequired is true,
-+		 * we don't support this yet
-+		 */
- 		if (triplet->ext.reg_extension_id >=
- 				IEEE80211_COUNTRY_EXTENSION_ID) {
- 			country_ie += 3;
-@@ -590,10 +618,12 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 			end_channel =  triplet->chans.first_channel +
- 				(4 * (triplet->chans.num_channels - 1));
- 
--		/* The +10 is since the regulatory domain expects
-+		/*
-+		 * The +10 is since the regulatory domain expects
- 		 * the actual band edge, not the center of freq for
- 		 * its start and end freqs, assuming 20 MHz bandwidth on
--		 * the channels passed */
-+		 * the channels passed
-+		 */
- 		freq_range->start_freq_khz =
- 			MHZ_TO_KHZ(ieee80211_channel_to_frequency(
- 				triplet->chans.first_channel) - 10);
-@@ -601,9 +631,11 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- 			MHZ_TO_KHZ(ieee80211_channel_to_frequency(
- 				end_channel) + 10);
- 
--		/* Large arbitrary values, we intersect later */
--		/* Increment this if we ever support >= 40 MHz channels
--		 * in IEEE 802.11 */
-+		/*
-+		 * These are large arbitrary values we use to intersect later.
-+		 * Increment this if we ever support >= 40 MHz channels
-+		 * in IEEE 802.11
-+		 */
- 		freq_range->max_bandwidth_khz = MHZ_TO_KHZ(40);
- 		power_rule->max_antenna_gain = DBI_TO_MBI(100);
- 		power_rule->max_eirp = DBM_TO_MBM(100);
-@@ -619,8 +651,10 @@ static struct ieee80211_regdomain *country_ie_2_rd(
- }
- 
- 
--/* Helper for regdom_intersect(), this does the real
-- * mathematical intersection fun */
-+/*
-+ * Helper for regdom_intersect(), this does the real
-+ * mathematical intersection fun
-+ */
- static int reg_rules_intersect(
- 	const struct ieee80211_reg_rule *rule1,
- 	const struct ieee80211_reg_rule *rule2,
-@@ -698,11 +732,13 @@ static struct ieee80211_regdomain *regdom_intersect(
- 	if (!rd1 || !rd2)
- 		return NULL;
- 
--	/* First we get a count of the rules we'll need, then we actually
-+	/*
-+	 * First we get a count of the rules we'll need, then we actually
- 	 * build them. This is to so we can malloc() and free() a
- 	 * regdomain once. The reason we use reg_rules_intersect() here
- 	 * is it will return -EINVAL if the rule computed makes no sense.
--	 * All rules that do check out OK are valid. */
-+	 * All rules that do check out OK are valid.
-+	 */
- 
- 	for (x = 0; x < rd1->n_reg_rules; x++) {
- 		rule1 = &rd1->reg_rules[x];
-@@ -730,14 +766,18 @@ static struct ieee80211_regdomain *regdom_intersect(
- 		rule1 = &rd1->reg_rules[x];
- 		for (y = 0; y < rd2->n_reg_rules; y++) {
- 			rule2 = &rd2->reg_rules[y];
--			/* This time around instead of using the stack lets
-+			/*
-+			 * This time around instead of using the stack lets
- 			 * write to the target rule directly saving ourselves
--			 * a memcpy() */
-+			 * a memcpy()
-+			 */
- 			intersected_rule = &rd->reg_rules[rule_idx];
- 			r = reg_rules_intersect(rule1, rule2,
- 				intersected_rule);
--			/* No need to memset here the intersected rule here as
--			 * we're not using the stack anymore */
-+			/*
-+			 * No need to memset here the intersected rule here as
-+			 * we're not using the stack anymore
-+			 */
- 			if (r)
- 				continue;
- 			rule_idx++;
-@@ -756,8 +796,10 @@ static struct ieee80211_regdomain *regdom_intersect(
- 	return rd;
- }
- 
--/* XXX: add support for the rest of enum nl80211_reg_rule_flags, we may
-- * want to just have the channel structure use these */
-+/*
-+ * XXX: add support for the rest of enum nl80211_reg_rule_flags, we may
-+ * want to just have the channel structure use these
-+ */
- static u32 map_regdom_flags(u32 rd_flags)
- {
- 	u32 channel_flags = 0;
-@@ -783,8 +825,10 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
- 
- 	regd = custom_regd ? custom_regd : cfg80211_regdomain;
- 
--	/* Follow the driver's regulatory domain, if present, unless a country
--	 * IE has been processed or a user wants to help complaince further */
-+	/*
-+	 * Follow the driver's regulatory domain, if present, unless a country
-+	 * IE has been processed or a user wants to help complaince further
-+	 */
- 	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
- 	    last_request->initiator != REGDOM_SET_BY_USER &&
- 	    wiphy->regd)
-@@ -802,9 +846,11 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
- 		fr = &rr->freq_range;
- 		pr = &rr->power_rule;
- 
--		/* We only need to know if one frequency rule was
-+		/*
-+		 * We only need to know if one frequency rule was
- 		 * was in center_freq's band, that's enough, so lets
--		 * not overwrite it once found */
-+		 * not overwrite it once found
-+		 */
- 		if (!band_rule_found)
- 			band_rule_found = freq_in_rule_band(fr, center_freq);
- 
-@@ -857,7 +903,8 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 		&max_bandwidth, &reg_rule);
- 
- 	if (r) {
--		/* This means no regulatory rule was found in the country IE
-+		/*
-+		 * This means no regulatory rule was found in the country IE
- 		 * with a frequency range on the center_freq's band, since
- 		 * IEEE-802.11 allows for a country IE to have a subset of the
- 		 * regulatory information provided in a country we ignore
-@@ -876,8 +923,10 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 				chan->center_freq, wiphy_name(wiphy));
- #endif
- 		} else {
--		/* In this case we know the country IE has at least one reg rule
--		 * for the band so we respect its band definitions */
-+		/*
-+		 * In this case we know the country IE has at least one reg rule
-+		 * for the band so we respect its band definitions
-+		 */
- #ifdef CONFIG_CFG80211_REG_DEBUG
- 			if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
- 				printk(KERN_DEBUG "cfg80211: Disabling "
-@@ -896,9 +945,11 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 	if (last_request->initiator == REGDOM_SET_BY_DRIVER &&
- 	    request_wiphy && request_wiphy == wiphy &&
- 	    request_wiphy->strict_regulatory) {
--		/* This gaurantees the driver's requested regulatory domain
-+		/*
-+		 * This gaurantees the driver's requested regulatory domain
- 		 * will always be used as a base for further regulatory
--		 * settings */
-+		 * settings
-+		 */
- 		chan->flags = chan->orig_flags =
- 			map_regdom_flags(reg_rule->flags);
- 		chan->max_antenna_gain = chan->orig_mag =
-@@ -939,8 +990,10 @@ static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
- 	if (setby == REGDOM_SET_BY_CORE &&
- 		  wiphy->custom_regulatory)
- 		return true;
--	/* wiphy->regd will be set once the device has its own
--	 * desired regulatory domain set */
-+	/*
-+	 * wiphy->regd will be set once the device has its own
-+	 * desired regulatory domain set
-+	 */
- 	if (wiphy->strict_regulatory && !wiphy->regd &&
- 	    !is_world_regdom(last_request->alpha2))
- 		return true;
-@@ -1050,8 +1103,10 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
- 	return 0;
- }
- 
--/* Return value which can be used by ignore_request() to indicate
-- * it has been determined we should intersect two regulatory domains */
-+/*
-+ * Return value which can be used by ignore_request() to indicate
-+ * it has been determined we should intersect two regulatory domains
-+ */
- #define REG_INTERSECT	1
- 
- /* This has the logic which determines when a new request
-@@ -1091,8 +1146,10 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 					return -EOPNOTSUPP;
- 				return -EALREADY;
- 			}
--			/* Two consecutive Country IE hints on the same wiphy.
--			 * This should be picked up early by the driver/stack */
-+			/*
-+			 * Two consecutive Country IE hints on the same wiphy.
-+			 * This should be picked up early by the driver/stack
-+			 */
- 			if (WARN_ON(!alpha2_equal(cfg80211_regdomain->alpha2,
- 				  alpha2)))
- 				return 0;
-@@ -1111,13 +1168,17 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 	case REGDOM_SET_BY_USER:
- 		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
- 			return REG_INTERSECT;
--		/* If the user knows better the user should set the regdom
--		 * to their country before the IE is picked up */
-+		/*
-+		 * If the user knows better the user should set the regdom
-+		 * to their country before the IE is picked up
-+		 */
- 		if (last_request->initiator == REGDOM_SET_BY_USER &&
- 			  last_request->intersect)
- 			return -EOPNOTSUPP;
--		/* Process user requests only after previous user/driver/core
--		 * requests have been processed */
-+		/*
-+		 * Process user requests only after previous user/driver/core
-+		 * requests have been processed
-+		 */
- 		if (last_request->initiator == REGDOM_SET_BY_CORE ||
- 		    last_request->initiator == REGDOM_SET_BY_DRIVER ||
- 		    last_request->initiator == REGDOM_SET_BY_USER) {
-@@ -1158,9 +1219,11 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
- 		}
- 		intersect = true;
- 	} else if (r) {
--		/* If the regulatory domain being requested by the
-+		/*
-+		 * If the regulatory domain being requested by the
- 		 * driver has already been set just copy it to the
--		 * wiphy */
-+		 * wiphy
-+		 */
- 		if (r == -EALREADY && set_by == REGDOM_SET_BY_DRIVER) {
- 			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
- 			if (r)
-@@ -1297,9 +1360,11 @@ static bool reg_same_country_ie_hint(struct wiphy *wiphy,
- 
- 	if (likely(request_wiphy != wiphy))
- 		return !country_ie_integrity_changes(country_ie_checksum);
--	/* We should not have let these through at this point, they
-+	/*
-+	 * We should not have let these through at this point, they
- 	 * should have been picked up earlier by the first alpha2 check
--	 * on the device */
-+	 * on the device
-+	 */
- 	if (WARN_ON(!country_ie_integrity_changes(country_ie_checksum)))
- 		return true;
- 	return false;
-@@ -1326,9 +1391,11 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	if (country_ie_len < IEEE80211_COUNTRY_IE_MIN_LEN)
- 		goto out;
- 
--	/* Pending country IE processing, this can happen after we
-+	/*
-+	 * Pending country IE processing, this can happen after we
- 	 * call CRDA and wait for a response if a beacon was received before
--	 * we were able to process the last regulatory_hint_11d() call */
-+	 * we were able to process the last regulatory_hint_11d() call
-+	 */
- 	if (country_ie_regdomain)
- 		goto out;
- 
-@@ -1340,34 +1407,44 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	else if (country_ie[2] == 'O')
- 		env = ENVIRON_OUTDOOR;
- 
--	/* We will run this for *every* beacon processed for the BSSID, so
-+	/*
-+	 * We will run this for *every* beacon processed for the BSSID, so
- 	 * we optimize an early check to exit out early if we don't have to
--	 * do anything */
-+	 * do anything
-+	 */
- 	if (likely(wiphy_idx_valid(last_request->wiphy_idx))) {
- 		struct cfg80211_registered_device *drv_last_ie;
- 
- 		drv_last_ie =
- 			cfg80211_drv_by_wiphy_idx(last_request->wiphy_idx);
- 
--		/* Lets keep this simple -- we trust the first AP
--		 * after we intersect with CRDA */
-+		/*
-+		 * Lets keep this simple -- we trust the first AP
-+		 * after we intersect with CRDA
-+		 */
- 		if (likely(&drv_last_ie->wiphy == wiphy)) {
--			/* Ignore IEs coming in on this wiphy with
--			 * the same alpha2 and environment cap */
-+			/*
-+			 * Ignore IEs coming in on this wiphy with
-+			 * the same alpha2 and environment cap
-+			 */
- 			if (likely(alpha2_equal(drv_last_ie->country_ie_alpha2,
- 				  alpha2) &&
- 				  env == drv_last_ie->env)) {
- 				goto out;
- 			}
--			/* the wiphy moved on to another BSSID or the AP
-+			/*
-+			 * the wiphy moved on to another BSSID or the AP
- 			 * was reconfigured. XXX: We need to deal with the
- 			 * case where the user suspends and goes to goes
- 			 * to another country, and then gets IEs from an
--			 * AP with different settings */
-+			 * AP with different settings
-+			 */
- 			goto out;
- 		} else {
--			/* Ignore IEs coming in on two separate wiphys with
--			 * the same alpha2 and environment cap */
-+			/*
-+			 * Ignore IEs coming in on two separate wiphys with
-+			 * the same alpha2 and environment cap
-+			 */
- 			if (likely(alpha2_equal(drv_last_ie->country_ie_alpha2,
- 				  alpha2) &&
- 				  env == drv_last_ie->env)) {
-@@ -1382,18 +1459,22 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	if (!rd)
- 		goto out;
- 
--	/* This will not happen right now but we leave it here for the
-+	/*
-+	 * This will not happen right now but we leave it here for the
- 	 * the future when we want to add suspend/resume support and having
- 	 * the user move to another country after doing so, or having the user
- 	 * move to another AP. Right now we just trust the first AP. This is why
- 	 * this is marked as likley(). If we hit this before we add this support
- 	 * we want to be informed of it as it would indicate a mistake in the
--	 * current design  */
-+	 * current design
-+	 */
- 	if (likely(WARN_ON(reg_same_country_ie_hint(wiphy, checksum))))
- 		goto out;
- 
--	/* We keep this around for when CRDA comes back with a response so
--	 * we can intersect with that */
-+	/*
-+	 * We keep this around for when CRDA comes back with a response so
-+	 * we can intersect with that
-+	 */
- 	country_ie_regdomain = rd;
- 
- 	__regulatory_hint(wiphy, REGDOM_SET_BY_COUNTRY_IE,
-@@ -1419,8 +1500,10 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
- 		freq_range = &reg_rule->freq_range;
- 		power_rule = &reg_rule->power_rule;
- 
--		/* There may not be documentation for max antenna gain
--		 * in certain regions */
-+		/*
-+		 * There may not be documentation for max antenna gain
-+		 * in certain regions
-+		 */
- 		if (power_rule->max_antenna_gain)
- 			printk(KERN_INFO "\t(%d KHz - %d KHz @ %d KHz), "
- 				"(%d mBi, %d mBm)\n",
-@@ -1531,9 +1614,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	if (!last_request)
- 		return -EINVAL;
- 
--	/* Lets only bother proceeding on the same alpha2 if the current
-+	/*
-+	 * Lets only bother proceeding on the same alpha2 if the current
- 	 * rd is non static (it means CRDA was present and was used last)
--	 * and the pending request came in from a country IE */
-+	 * and the pending request came in from a country IE
-+	 */
- 	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE) {
- 		/* If someone else asked us to change the rd lets only bother
- 		 * checking if the alpha2 changes if CRDA was already called */
-@@ -1542,10 +1627,12 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 			return -EINVAL;
- 	}
- 
--	/* Now lets set the regulatory domain, update all driver channels
-+	/*
-+	 * Now lets set the regulatory domain, update all driver channels
- 	 * and finally inform them of what we have done, in case they want
- 	 * to review or adjust their own settings based on their own
--	 * internal EEPROM data */
-+	 * internal EEPROM data
-+	 */
- 
- 	if (WARN_ON(!reg_is_valid_request(rd->alpha2)))
- 		return -EINVAL;
-@@ -1568,8 +1655,10 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 			return 0;
- 		}
- 
--		/* For a driver hint, lets copy the regulatory domain the
--		 * driver wanted to the wiphy to deal with conflicts */
-+		/*
-+		 * For a driver hint, lets copy the regulatory domain the
-+		 * driver wanted to the wiphy to deal with conflicts
-+		 */
- 
- 		BUG_ON(request_wiphy->regd);
- 
-@@ -1590,9 +1679,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		if (!intersected_rd)
- 			return -EINVAL;
- 
--		/* We can trash what CRDA provided now.
-+		/*
-+		 * We can trash what CRDA provided now.
- 		 * However if a driver requested this specific regulatory
--		 * domain we keep it for its private use */
-+		 * domain we keep it for its private use
-+		 */
- 		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
- 			request_wiphy->regd = rd;
- 		else
-@@ -1614,8 +1705,10 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	BUG_ON(!country_ie_regdomain);
- 
- 	if (rd != country_ie_regdomain) {
--		/* Intersect what CRDA returned and our what we
--		 * had built from the Country IE received */
-+		/*
-+		 * Intersect what CRDA returned and our what we
-+		 * had built from the Country IE received
-+		 */
- 
- 		intersected_rd = regdom_intersect(rd, country_ie_regdomain);
- 
-@@ -1625,9 +1718,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		kfree(country_ie_regdomain);
- 		country_ie_regdomain = NULL;
- 	} else {
--		/* This would happen when CRDA was not present and
-+		/*
-+		 * This would happen when CRDA was not present and
- 		 * OLD_REGULATORY was enabled. We intersect our Country
--		 * IE rd and what was set on cfg80211 originally */
-+		 * IE rd and what was set on cfg80211 originally
-+		 */
- 		intersected_rd = regdom_intersect(rd, cfg80211_regdomain);
- 	}
- 
-@@ -1652,9 +1747,11 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- }
- 
- 
--/* Use this call to set the current regulatory domain. Conflicts with
-+/*
-+ * Use this call to set the current regulatory domain. Conflicts with
-  * multiple drivers can be ironed out later. Caller must've already
-- * kmalloc'd the rd structure. Caller must hold cfg80211_mutex */
-+ * kmalloc'd the rd structure. Caller must hold cfg80211_mutex
-+ */
- int set_regdom(const struct ieee80211_regdomain *rd)
- {
- 	int r;
-@@ -1763,10 +1860,12 @@ int regulatory_init(void)
- 
- 	printk(KERN_INFO "cfg80211: Using static regulatory domain info\n");
- 	print_regdomain_info(cfg80211_regdomain);
--	/* The old code still requests for a new regdomain and if
-+	/*
-+	 * The old code still requests for a new regdomain and if
- 	 * you have CRDA you get it updated, otherwise you get
- 	 * stuck with the static values. We ignore "EU" code as
--	 * that is not a valid ISO / IEC 3166 alpha2 */
-+	 * that is not a valid ISO / IEC 3166 alpha2
-+	 */
- 	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
- 		err = regulatory_hint_core(ieee80211_regdom);
- #else
--- 
-1.6.1.2.253.ga34a
+ static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
+
+
+---
+[   27.847036] iwl3945 0000:03:00.0: Microcode SW error detected. Restarting 0x82000008.
+[   27.847065] iwl3945 0000:03:00.0: Start IWL Error Log Dump:
+[   27.847066] iwl3945 0000:03:00.0: Status: 0x000202E4, count: 1
+[   27.847157] iwl3945 0000:03:00.0: Desc                               Time       data1      data2      line
+[   27.847159] iwl3945 0000:03:00.0: SYSASSERT                    (#05) 0000000000 0x0000004E 0x00000000 0
+[   27.847161] iwl3945 0000:03:00.0: blink1  blink2  ilink1  ilink2
+[   27.847162] iwl3945 0000:03:00.0: 0x0089A 0x0025E 0x00304 0x04BC6
+[   27.847223] iwl3945 0000:03:00.0: Start IWL Event Log Dump: display count 512, wraps 8
+[   27.847253] iwl3945 0000:03:00.0: EVT_LOGT:0000000256:0x0000044e:200804
+[   27.847282] iwl3945 0000:03:00.0: EVT_LOGT:0000000056:0x0000044e:1452958
+[   27.847312] iwl3945 0000:03:00.0: EVT_LOGT:0008585298:0x0000044e:1452960
+[   27.847341] iwl3945 0000:03:00.0: EVT_LOGT:0008585299:0x0000044e:1452961
+[   27.847371] iwl3945 0000:03:00.0: EVT_LOGT:0008323156:0x0000044e:1452963
+[   27.847400] iwl3945 0000:03:00.0: EVT_LOGT:0008192085:0x0000044e:1452964
+[   27.847429] iwl3945 0000:03:00.0: EVT_LOGT:0000000086:0x0000044e:1452966
+[   27.847459] iwl3945 0000:03:00.0: EVT_LOGT:0000028752:0x0000044e:1452967
+[   27.847488] iwl3945 0000:03:00.0: EVT_LOGT:0000094289:0x0000044e:1452969
+[   27.847517] iwl3945 0000:03:00.0: EVT_LOGT:0000033284:0x0000044e:1452971
+[   27.847547] iwl3945 0000:03:00.0: EVT_LOGT:0000098821:0x0000044d:1452973
+[   27.847576] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x0000044e:1452976
+[   27.847605] iwl3945 0000:03:00.0: EVT_LOGT:0009109603:0x00000450:1452977
+[   27.847634] iwl3945 0000:03:00.0: EVT_LOGT:0000000029:0x0000044d:1452979
+[   27.847664] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:1452981
+[   27.847699] iwl3945 0000:03:00.0: EVT_LOGT:0008556607:0x0000044e:1452982
+[   27.847728] iwl3945 0000:03:00.0: EVT_LOGT:0000053779:0x0000044d:1452984
+[   27.847758] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:1452987
+[   27.847787] iwl3945 0000:03:00.0: EVT_LOGT:0000381446:0x0000044e:1452988
+[   27.847817] iwl3945 0000:03:00.0: EVT_LOGT:0008884286:0x0000044d:1452990
+[   27.847847] iwl3945 0000:03:00.0: EVT_LOGT:0000000090:0x0000044d:1452994
+[   27.847876] iwl3945 0000:03:00.0: EVT_LOGT:0000000019:0x00000453:1453095
+[   27.847906] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x00000456:1453112
+[   27.847935] iwl3945 0000:03:00.0: EVT_LOGT:0234963396:0x000001c6:1453628
+[   27.847971] iwl3945 0000:03:00.0: EVT_LOGT:4294967125:0x000001d8:1453640
+[   27.848000] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000001d0:1453641
+[   27.848029] iwl3945 0000:03:00.0: EVT_LOGT:0000000153:0x00000457:1453653
+[   27.848058] iwl3945 0000:03:00.0: EVT_LOGT:4294967125:0x00000452:1453655
+[   27.848088] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453678
+[   27.848117] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x00000452:1453678
+[   27.848146] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453683
+[   27.848176] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453687
+[   27.848205] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453691
+[   27.848234] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453695
+[   27.848263] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453700
+[   27.848292] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453704
+[   27.848322] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453708
+[   27.848351] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453713
+[   27.848380] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453717
+[   27.848409] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453721
+[   27.848439] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453725
+[   27.848468] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453730
+[   27.848497] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453734
+[   27.848526] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453738
+[   27.848555] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453742
+[   27.848585] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453747
+[   27.848614] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453751
+[   27.848643] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453755
+[   27.848673] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453760
+[   27.848702] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453764
+[   27.848731] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453768
+[   27.848760] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453772
+[   27.848790] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453777
+[   27.848819] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453781
+[   27.848848] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453785
+[   27.848877] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453789
+[   27.848907] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453794
+[   27.848936] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453798
+[   27.848965] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453802
+[   27.848994] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453807
+[   27.849024] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453811
+[   27.849053] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453815
+[   27.849082] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453819
+[   27.849111] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1453824
+[   27.849140] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x00000452:1453828
+[   27.849170] iwl3945 0000:03:00.0: EVT_LOGT:0000000015:0x00000451:1453829
+[   27.849199] iwl3945 0000:03:00.0: EVT_LOGT:0000000884:0x0000045b:1453830
+[   27.849228] iwl3945 0000:03:00.0: EVT_LOGT:0000001256:0x000001d0:1453834
+[   27.849257] iwl3945 0000:03:00.0: EVT_LOGT:0000000157:0x000001ce:1453839
+[   27.849287] iwl3945 0000:03:00.0: EVT_LOGT:0000000157:0x0000006a:1453840
+[   27.849316] iwl3945 0000:03:00.0: EVT_LOGT:0000000217:0x0000012e:1505815
+[   27.849346] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000161:1505817
+[   27.849375] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x0000006a:1505839
+[   27.849404] iwl3945 0000:03:00.0: EVT_LOGT:0000000217:0x0000012e:1505857
+[   27.849433] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000161:1505859
+[   27.849463] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000006a:1505888
+[   27.849492] iwl3945 0000:03:00.0: EVT_LOGT:0000000217:0x0000012e:1505915
+[   27.849521] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x0000015e:1505917
+[   27.849551] iwl3945 0000:03:00.0: EVT_LOGT:0000032768:0x0000006a:1505925
+[   27.849580] iwl3945 0000:03:00.0: EVT_LOGT:0000000217:0x0000012e:1506006
+[   27.849609] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x0000015e:1506008
+[   27.849639] iwl3945 0000:03:00.0: EVT_LOGT:0000032768:0x0000006a:1506016
+[   27.849668] iwl3945 0000:03:00.0: EVT_LOGT:0000000217:0x0000012e:1506031
+[   27.849697] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x0000015e:1506033
+[   27.849726] iwl3945 0000:03:00.0: EVT_LOGT:0000032768:0x0000006a:1506041
+[   27.849755] iwl3945 0000:03:00.0: EVT_LOGT:0000000217:0x0000012e:1506053
+[   27.849785] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x0000015e:1506054
+[   27.849814] iwl3945 0000:03:00.0: EVT_LOGT:0000032768:0x0000006a:1506058
+[   27.849843] iwl3945 0000:03:00.0: EVT_LOGT:0000000217:0x0000012e:1506122
+[   27.849872] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000161:1506124
+[   27.849902] iwl3945 0000:03:00.0: EVT_LOGT:0000000003:0x00000454:1506146
+[   27.849931] iwl3945 0000:03:00.0: EVT_LOGT:0000000161:0x0000044d:1566527
+[   27.849960] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x0000044e:1566529
+[   27.849990] iwl3945 0000:03:00.0: EVT_LOGT:0006815796:0x0000044e:1566530
+[   27.850019] iwl3945 0000:03:00.0: EVT_LOGT:0006815797:0x0000044e:1566531
+[   27.850048] iwl3945 0000:03:00.0: EVT_LOGT:0008126518:0x0000044e:1566533
+[   27.850078] iwl3945 0000:03:00.0: EVT_LOGT:0008192055:0x0000044e:1566534
+[   27.850107] iwl3945 0000:03:00.0: EVT_LOGT:0000000056:0x0000044e:1566536
+[   27.850136] iwl3945 0000:03:00.0: EVT_LOGT:0008585298:0x0000044e:1566537
+[   27.850166] iwl3945 0000:03:00.0: EVT_LOGT:0008585299:0x0000044e:1566539
+[   27.850195] iwl3945 0000:03:00.0: EVT_LOGT:0008323156:0x0000044e:1566540
+[   27.850224] iwl3945 0000:03:00.0: EVT_LOGT:0008192085:0x0000044e:1566542
+[   27.850253] iwl3945 0000:03:00.0: EVT_LOGT:0000000086:0x0000044e:1566544
+[   27.850283] iwl3945 0000:03:00.0: EVT_LOGT:0000028752:0x0000044e:1566545
+[   27.850312] iwl3945 0000:03:00.0: EVT_LOGT:0000094289:0x0000044e:1566547
+[   27.850341] iwl3945 0000:03:00.0: EVT_LOGT:0000033284:0x0000044e:1566549
+[   27.850371] iwl3945 0000:03:00.0: EVT_LOGT:0000098821:0x0000044d:1566551
+[   27.850400] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x0000044e:1566554
+[   27.850429] iwl3945 0000:03:00.0: EVT_LOGT:0009109603:0x00000450:1566555
+[   27.850459] iwl3945 0000:03:00.0: EVT_LOGT:0000000029:0x0000044d:1566557
+[   27.850488] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:1566559
+[   27.850517] iwl3945 0000:03:00.0: EVT_LOGT:0008556607:0x0000044e:1566560
+[   27.850546] iwl3945 0000:03:00.0: EVT_LOGT:0000053779:0x0000044d:1566562
+[   27.850576] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:1566565
+[   27.850605] iwl3945 0000:03:00.0: EVT_LOGT:0000381446:0x0000044e:1566566
+[   27.850634] iwl3945 0000:03:00.0: EVT_LOGT:0008884286:0x0000044d:1566567
+[   27.850664] iwl3945 0000:03:00.0: EVT_LOGT:0000000090:0x0000044d:1566571
+[   27.850693] iwl3945 0000:03:00.0: EVT_LOGT:0000000019:0x00000453:1566673
+[   27.850722] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x00000456:1566689
+[   27.850751] iwl3945 0000:03:00.0: EVT_LOGT:0251729434:0x000001c6:1567206
+[   27.850781] iwl3945 0000:03:00.0: EVT_LOGT:4294967125:0x000001d8:1567218
+[   27.850810] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000001d0:1567219
+[   27.850839] iwl3945 0000:03:00.0: EVT_LOGT:0000000157:0x00000457:1567230
+[   27.850869] iwl3945 0000:03:00.0: EVT_LOGT:4294967125:0x00000452:1567232
+[   27.850898] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567255
+[   27.850927] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x00000452:1567255
+[   27.850957] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567260
+[   27.850986] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567264
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567268
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567272
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567277
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567281
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567285
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567290
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567294
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567298
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567302
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567307
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567311
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567315
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567319
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567324
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567328
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567332
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567337
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567341
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567345
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567349
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567354
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567358
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567362
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567366
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567371
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567375
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567379
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567384
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567388
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567392
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567396
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567401
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567405
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567409
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567413
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567418
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1567422
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x00000452:1567426
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000015:0x00000451:1567427
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000905:0x0000045b:1567429
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000001256:0x000001d0:1567432
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000161:0x000001ce:1567438
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000161:0x00000454:1567439
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000165:0x0000044d:1680126
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x0000044e:1680128
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0006815796:0x0000044e:1680129
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0006815797:0x0000044e:1680130
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008126518:0x0000044e:1680132
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008192055:0x0000044e:1680133
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000056:0x0000044e:1680135
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008585298:0x0000044e:1680136
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008585299:0x0000044e:1680138
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008323156:0x0000044e:1680139
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008192085:0x0000044e:1680141
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000086:0x0000044e:1680142
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000028752:0x0000044e:1680144
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000094289:0x0000044e:1680146
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000033284:0x0000044e:1680148
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000098821:0x0000044d:1680150
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x0000044e:1680153
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0009109603:0x00000450:1680154
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000028:0x0000044d:1680156
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:1680157
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008556607:0x0000044e:1680158
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000053779:0x0000044d:1680160
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:1680163
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000381446:0x0000044e:1680164
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008884286:0x0000044d:1680166
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000090:0x0000044d:1680170
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000019:0x00000453:1680271
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x00000456:1680288
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0268495451:0x000001c6:1680805
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:4294967126:0x000001d8:1680817
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000001d0:1680818
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000161:0x00000457:1680830
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:4294967126:0x00000452:1680832
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680854
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x00000452:1680854
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680859
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680863
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680867
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680871
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680876
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680880
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680884
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680889
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680893
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680897
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680901
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680906
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680910
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680914
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680918
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680923
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680927
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680931
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680936
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680940
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680944
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680948
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680953
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680957
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680961
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680965
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680970
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680974
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680978
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680983
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680987
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680991
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1680995
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1681000
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1681004
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1681008
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1681012
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1681017
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1681021
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1681025
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x00000452:1681030
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000015:0x00000451:1681030
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000910:0x0000045b:1681032
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000001256:0x000001d0:1681035
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000165:0x000001ce:1681041
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000165:0x000003ed:1681042
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000440:0x00000454:1793719
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000257:0x0000044d:1793723
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x0000044e:1793725
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0006815796:0x0000044e:1793726
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0006750261:0x0000044e:1793727
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008257590:0x0000044e:1793729
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008126519:0x0000044e:1793730
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000056:0x0000044e:1793732
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008650834:0x0000044e:1793733
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008650835:0x0000044e:1793735
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008257620:0x0000044e:1793737
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008192085:0x0000044e:1793738
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000086:0x0000044e:1793740
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000028752:0x0000044e:1793741
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000094289:0x0000044e:1793743
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000033284:0x0000044e:1793745
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000098821:0x0000044d:1793747
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x0000044e:1793750
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0009109603:0x00000450:1793751
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000029:0x0000044d:1793753
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:1793755
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008622143:0x0000044e:1793756
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000119315:0x0000044d:1793758
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:1793761
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000250374:0x0000044e:1793762
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008622142:0x0000044d:1793764
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000089:0x0000044d:1793767
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000019:0x00000453:1793868
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000004:0x00000456:1793885
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0285261471:0x000001c6:1794401
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:4294967125:0x000001d8:1794413
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000001d0:1794414
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000165:0x00000457:1794425
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:4294967125:0x00000452:1794428
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794454
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x00000452:1794455
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794459
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794464
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794468
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794472
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794477
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794481
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794485
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794489
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794494
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794498
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794502
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794506
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794511
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794515
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794519
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794524
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794528
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794532
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794536
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794541
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794545
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794549
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794554
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794558
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794562
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794566
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794571
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794575
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794579
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794583
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794588
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794592
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794596
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794601
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794605
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794609
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794613
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794618
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794622
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794626
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794630
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794635
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794639
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794643
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794648
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794652
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794656
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794660
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794665
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794669
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794673
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794677
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794682
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794686
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794690
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794695
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794699
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794703
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794707
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794712
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794716
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794720
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794725
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794729
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794733
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794737
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794742
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794746
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794750
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794754
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794759
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794763
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1794767
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000047:0x00000452:8397512
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x00000452:1794776
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000015:0x00000451:1794777
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000001057:0x0000045b:1794778
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000001256:0x000001cf:1794782
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x000001ce:1794785
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x00000191:1794786
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0068550807:0x000001c3:1794981
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x000001c3:1794983
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000191:1795003
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0068616208:0x000003ed:1795196
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000373:0x000003e9:1795252
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000003ea:1795253
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000003ed:1795254
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000440:0x00000454:0012
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000262:0x0000044d:0024
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x0000044e:0026
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0006815796:0x0000044e:0027
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0006750261:0x0000044e:0028
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008257590:0x0000044e:0030
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008126519:0x0000044e:0031
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000056:0x0000044e:0033
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008650834:0x0000044e:0034
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008650835:0x0000044e:0036
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008257620:0x0000044e:0037
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008192085:0x0000044e:0039
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000086:0x0000044e:0040
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000028752:0x0000044e:0042
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000094289:0x0000044e:0044
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000033284:0x0000044e:0046
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000098821:0x0000044d:0048
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x0000044e:0051
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0009109603:0x00000450:0052
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000028:0x0000044d:0054
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:0056
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008622143:0x0000044e:0056
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000119315:0x0000044d:0058
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000044e:0062
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000250374:0x0000044e:0062
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0008622142:0x0000044d:0064
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000089:0x0000044d:0068
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000019:0x00000453:0168
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000004:0x00000456:0186
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000101647:0x000001c6:0754
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:4294967125:0x000001d8:0765
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000001cf:0766
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x00000457:0776
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:4294967125:0x00000452:0779
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0784
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000014:0x00000452:0784
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0789
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0793
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0797
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0801
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0806
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0810
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0814
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0819
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0823
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0827
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0831
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0836
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0840
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0844
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0848
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0853
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0857
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0861
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0866
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0870
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0874
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0878
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0883
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0887
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0891
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0895
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0900
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0904
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0908
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0913
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0917
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0921
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0925
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0930
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0934
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0938
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0943
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0947
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0951
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0955
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0960
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0964
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0968
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0972
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0977
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0981
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0985
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0990
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0994
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:0998
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1002
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1007
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1011
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1015
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1019
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000452:1024
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x00000452:1028
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000015:0x00000451:1029
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000001008:0x0000045b:1031
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000001256:0x000001cf:1034
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000006:0x000001ce:1038
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000006:0x00000067:1039
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000170:0x00000191:1060
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0068681879:0x000001c3:1207
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000006:0x000001c3:1209
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000191:1229
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0068747288:0x00000191:1371
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0068812871:0x00000191:1503
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0068878407:0x00000191:1602
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0068943888:0x000003ed:1721
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000373:0x000003e9:1778
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000003ea:1779
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000003ed:1780
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000440:0x00000067:0012
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000170:0x00000191:0040
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0069009559:0x000001c3:0190
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000006:0x000001c3:0193
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000191:0212
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0069074968:0x00000191:0352
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0069140551:0x00000191:0485
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0069206087:0x00000191:0600
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0069271568:0x000003ed:0722
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000373:0x000003e9:0779
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000003ea:0780
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x000003ed:0781
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000440:0x00000067:0012
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000170:0x0000006a:0040
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000217:0x0000012d:0147
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000161:0149
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000001:0x00000160:0223
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000191:0233
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0069337239:0x000001c3:0241
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000006:0x000001c3:0243
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000000:0x00000191:0263
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0069402648:0x00000191:0408
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0069468231:0x00000191:0535
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0069533767:0x000001cf:0650
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000006:0x000000fa:0814
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000065671:0x000000da:0818
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000028:0x0000007b:0824
+[   27.850999] iwl3945 0000:03:00.0: EVT_LOGT:0000000002:0x0000007d:200801
+[   27.850999] ieee80211 phy0: I iwl_irq_handle_error Restarting adapter due to uCode error.
+[   27.850999] iwl3945 0000:03:00.0: Error Reply type 0x00000005 cmd REPLY_PHY_CALIBRATION_CMD (0xB0) seq 0x013A ser 0x004E0000
+[   27.910006] Registered led device: iwl-phy0::radio
+[   27.910095] Registered led device: iwl-phy0::assoc
+[   27.910120] Registered led device: iwl-phy0::RX
+[   27.910143] Registered led device: iwl-phy0::TX
+[   28.048085] wlan0: authenticate with AP 00:e0:98:fe:06:75
+[   28.248069] wlan0: authentication with AP 00:e0:98:fe:06:75 timed out
+[   46.512150] iwl3945 0000:03:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+[   47.012123] iwl3945 0000:03:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+[   76.520903] iwl3945 0000:03:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+[   77.016073] iwl3945 0000:03:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+[  116.512104] iwl3945 0000:03:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+[  117.012101] iwl3945 0000:03:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
 
