@@ -1,36 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.217.174]:61247 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754188AbZBSVpw (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.31]:36848 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756741AbZBWQlE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 16:45:52 -0500
-Received: by gxk22 with SMTP id 22so1734616gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 13:45:51 -0800 (PST)
+	Mon, 23 Feb 2009 11:41:04 -0500
 MIME-Version: 1.0
-In-Reply-To: <499DA503.4070404@hauke-m.de>
-References: <499DA503.4070404@hauke-m.de>
-Date: Thu, 19 Feb 2009 13:45:50 -0800
-Message-ID: <43e72e890902191345r74688e72hb9181aa1e4ae25aa@mail.gmail.com> (sfid-20090219_224556_828023_B7D7EE90)
-Subject: Re: [PATCH] compat-2.6: compat.diff update for master-2009-02-18
-	wireless-testing.
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090223163032.GA3450@hash.localnet>
+References: <20090222122036.GC5538@silver.sucs.org>
+	 <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com>
+	 <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com>
+	 <40f31dec0902230803qcbd4c20kc66a50e6e2e8eef2@mail.gmail.com>
+	 <40f31dec0902230815x6b43fa50h41edfeead96822a3@mail.gmail.com>
+	 <20090223162103.GA3383@hash.localnet>
+	 <40f31dec0902230827j5c0f9f20je02c7fb02709f71e@mail.gmail.com>
+	 <20090223163032.GA3450@hash.localnet>
+Date: Mon, 23 Feb 2009 18:41:01 +0200
+Message-ID: <40f31dec0902230841m712acff4qe1c1617819f028be@mail.gmail.com> (sfid-20090223_174117_164687_DF6CDC2E)
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 19, 2009 at 10:29 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Hi Luis,
+2009/2/23 Bob Copeland <me@bobcopeland.com>:
+> On Mon, Feb 23, 2009 at 06:27:35PM +0200, Nick Kossifidis wrote:
+>> 2009/2/23 Bob Copeland <me@bobcopeland.com>:
+>> > On Mon, Feb 23, 2009 at 06:15:51PM +0200, Nick Kossifidis wrote:
+>> >> Typo alert...
+>> >> rs->rs_more = !!(rx_status->rx_status_0 & AR5K_5212_RX_DESC_STATUS0_MORE);
+>> >
+>> > I'm slow... what's wrong with it?
+>> >
+>>
+>> "!!"
+>>
+>> it should be just
+>>
+>> rs->rs_more = (rx_status->rx_status_0 & AR5K_5212_RX_DESC_STATUS0_MORE);
 >
-> this patch makes compat-wireless work with the latest wireless-testing
-> again.
-> It also adds the at76c50x-usb driver.
-> I tested b43 with kernel 2.6.27 and rtl8187 with kernel 2.6.29-rc5.
+> No, that's intentional.  That was actually a bug we had at some point
+> (rs_more is a u8 so the bitwise AND overflowed).  The "!!" makes it zero
+> or one so it fits.
+>
 
-Thanks! Applied with some small changes (leave iwlwifi kconfig changes
-in a separate patch).
+AR5K_REG_MS is used for that, we should just shift it as we do with
+the other fields and btw i think we must change flags to be bool.
 
-compat-wireless updated and new tarball regenerated.
 
-  Luis
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
