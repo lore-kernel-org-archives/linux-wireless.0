@@ -1,355 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:59019 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752358AbZBDXGX (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:55164 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755262AbZBWQiG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 18:06:23 -0500
-Received: by nf-out-0910.google.com with SMTP id d3so446063nfc.21
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2009 15:06:20 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Cc: David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH v2 04/16] orinoco: keep line length below 80 characters
-Date: Wed,  4 Feb 2009 23:05:46 +0000
-Message-Id: <1233788758-9850-5-git-send-email-kilroyd@googlemail.com> (sfid-20090205_000626_524448_96A362E9)
-In-Reply-To: <1233788758-9850-4-git-send-email-kilroyd@googlemail.com>
-References: <1233788758-9850-1-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-2-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-3-git-send-email-kilroyd@googlemail.com>
- <1233788758-9850-4-git-send-email-kilroyd@googlemail.com>
+	Mon, 23 Feb 2009 11:38:06 -0500
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [RFC PATCH v1 2/3] mac80211: track beacons separately from the rx
+	path activity
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 23 Feb 2009 18:37:31 +0200
+Message-ID: <20090223163731.20939.62567.stgit@tikku> (sfid-20090223_173810_092520_BBEE21A5)
+In-Reply-To: <20090223163626.20939.4879.stgit@tikku>
+References: <20090223163626.20939.4879.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove most checkpatch warnings of the type
-WARNING: line over 80 characters
+Separate beacon and rx path tracking in preparation for the beacon filtering
+support. At the same time change ieee80211_associated() to look a bit simpler.
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Probe requests are now sent only after IEEE80211_PROBE_IDLE_TIME, which
+is now set to 60 seconds.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/orinoco/orinoco.c |  113 +++++++++++++++++++-------------
- 1 files changed, 68 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/orinoco.c b/drivers/net/wireless/orinoco/orinoco.c
-index b1c763f..acfced8 100644
---- a/drivers/net/wireless/orinoco/orinoco.c
-+++ b/drivers/net/wireless/orinoco/orinoco.c
-@@ -101,8 +101,10 @@
- /* Module information                                               */
- /********************************************************************/
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   75 +++++++++++++++++++++++++-------------------
+ net/mac80211/rx.c          |    6 +++-
+ 3 files changed, 49 insertions(+), 33 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 7851135..2a19e4c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -305,6 +305,7 @@ struct ieee80211_if_managed {
+ 	unsigned long request;
  
--MODULE_AUTHOR("Pavel Roskin <proski@gnu.org> & David Gibson <hermes@gibson.dropbear.id.au>");
--MODULE_DESCRIPTION("Driver for Lucent Orinoco, Prism II based and similar wireless cards");
-+MODULE_AUTHOR("Pavel Roskin <proski@gnu.org> & "
-+	      "David Gibson <hermes@gibson.dropbear.id.au>");
-+MODULE_DESCRIPTION("Driver for Lucent Orinoco, Prism II based "
-+		   "and similar wireless cards");
- MODULE_LICENSE("Dual MPL/GPL");
+ 	unsigned long last_probe;
++	unsigned long last_beacon;
  
- /* Level of debugging. Used in the macros in orinoco.h */
-@@ -116,9 +118,11 @@ EXPORT_SYMBOL(orinoco_debug);
- static int suppress_linkstatus; /* = 0 */
- module_param(suppress_linkstatus, bool, 0644);
- MODULE_PARM_DESC(suppress_linkstatus, "Don't log link status changes");
+ 	unsigned int flags;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b3caac0..d2cc1e0 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -30,7 +30,7 @@
+ #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
+ #define IEEE80211_ASSOC_MAX_TRIES 3
+ #define IEEE80211_MONITORING_INTERVAL (2 * HZ)
+-#define IEEE80211_PROBE_INTERVAL (60 * HZ)
++#define IEEE80211_PROBE_IDLE_TIME (60 * HZ)
+ #define IEEE80211_RETRY_AUTH_INTERVAL (1 * HZ)
+ 
+ /* utils */
+@@ -924,7 +924,7 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+-	int disassoc;
++	bool disassoc = false;
+ 
+ 	/* TODO: start monitoring current AP signal quality and number of
+ 	 * missed beacons. Scan other channels every now and then and search
+@@ -939,36 +939,39 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
+ 	if (!sta) {
+ 		printk(KERN_DEBUG "%s: No STA entry for own AP %pM\n",
+ 		       sdata->dev->name, ifmgd->bssid);
+-		disassoc = 1;
+-	} else {
+-		disassoc = 0;
+-		if (time_after(jiffies,
+-			       sta->last_rx + IEEE80211_MONITORING_INTERVAL)) {
+-			if (ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL) {
+-				printk(KERN_DEBUG "%s: No ProbeResp from "
+-				       "current AP %pM - assume out of "
+-				       "range\n",
+-				       sdata->dev->name, ifmgd->bssid);
+-				disassoc = 1;
+-			} else
+-				ieee80211_send_probe_req(sdata, ifmgd->bssid,
+-							 ifmgd->ssid,
+-							 ifmgd->ssid_len,
+-							 NULL, 0);
+-			ifmgd->flags ^= IEEE80211_STA_PROBEREQ_POLL;
+-		} else {
+-			ifmgd->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
+-			if (time_after(jiffies, ifmgd->last_probe +
+-				       IEEE80211_PROBE_INTERVAL)) {
+-				ifmgd->last_probe = jiffies;
+-				ieee80211_send_probe_req(sdata, ifmgd->bssid,
+-							 ifmgd->ssid,
+-							 ifmgd->ssid_len,
+-							 NULL, 0);
+-			}
+-		}
++		disassoc = true;
++		goto unlock;
++	}
 +
- static int ignore_disconnect; /* = 0 */
- module_param(ignore_disconnect, int, 0644);
--MODULE_PARM_DESC(ignore_disconnect, "Don't report lost link to the network layer");
-+MODULE_PARM_DESC(ignore_disconnect,
-+		 "Don't report lost link to the network layer");
- 
- static int force_monitor; /* = 0 */
- module_param(force_monitor, int, 0644);
-@@ -840,7 +844,8 @@ static struct iw_statistics *orinoco_get_wireless_stats(struct net_device *dev)
- 			wstats->qual.qual = priv->spy_data.spy_stat[0].qual;
- 			wstats->qual.level = priv->spy_data.spy_stat[0].level;
- 			wstats->qual.noise = priv->spy_data.spy_stat[0].noise;
--			wstats->qual.updated = priv->spy_data.spy_stat[0].updated;
-+			wstats->qual.updated =
-+				priv->spy_data.spy_stat[0].updated;
- 		}
- 	} else {
- 		struct {
-@@ -854,7 +859,8 @@ static struct iw_statistics *orinoco_get_wireless_stats(struct net_device *dev)
- 			wstats->qual.qual = (int)le16_to_cpu(cq.qual);
- 			wstats->qual.level = (int)le16_to_cpu(cq.signal) - 0x95;
- 			wstats->qual.noise = (int)le16_to_cpu(cq.noise) - 0x95;
--			wstats->qual.updated = IW_QUAL_ALL_UPDATED | IW_QUAL_DBM;
-+			wstats->qual.updated =
-+				IW_QUAL_ALL_UPDATED | IW_QUAL_DBM;
- 		}
++	if ((ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL) &&
++	    time_after(jiffies, sta->last_rx + IEEE80211_MONITORING_INTERVAL)) {
++		printk(KERN_DEBUG "%s: no probe response from AP %pM "
++		       "- disassociating\n",
++		       sdata->dev->name, ifmgd->bssid);
++		disassoc = true;
++		ifmgd->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
++		goto unlock;
++	}
++
++	if (time_after(jiffies,
++		       ifmgd->last_beacon + IEEE80211_MONITORING_INTERVAL)) {
++		printk(KERN_DEBUG "%s: beacon loss from AP %pM "
++		       "- sending probe request\n",
++		       sdata->dev->name, ifmgd->bssid);
++		ifmgd->flags |= IEEE80211_STA_PROBEREQ_POLL;
++		ieee80211_send_probe_req(sdata, ifmgd->bssid, ifmgd->ssid,
++					 ifmgd->ssid_len, NULL, 0);
++		goto unlock;
++
  	}
  
-@@ -1571,7 +1577,8 @@ static void orinoco_rx(struct net_device *dev,
- 		/* These indicate a SNAP within 802.2 LLC within
- 		   802.11 frame which we'll need to de-encapsulate to
- 		   the original EthernetII frame. */
--		hdr = (struct ethhdr *)skb_push(skb, ETH_HLEN - ENCAPS_OVERHEAD);
-+		hdr = (struct ethhdr *)skb_push(skb,
-+						ETH_HLEN - ENCAPS_OVERHEAD);
- 	} else {
- 		/* 802.3 frame - prepend 802.3 header as is */
- 		hdr = (struct ethhdr *)skb_push(skb, ETH_HLEN);
-@@ -2379,25 +2386,26 @@ int orinoco_reinit_firmware(struct net_device *dev)
- static int __orinoco_hw_set_bitrate(struct orinoco_private *priv)
- {
- 	hermes_t *hw = &priv->hw;
-+	int ratemode = priv->bitratemode;
- 	int err = 0;
++	if (time_after(jiffies, sta->last_rx + IEEE80211_PROBE_IDLE_TIME)) {
++		ifmgd->flags |= IEEE80211_STA_PROBEREQ_POLL;
++		ieee80211_send_probe_req(sdata, ifmgd->bssid, ifmgd->ssid,
++					 ifmgd->ssid_len, NULL, 0);
++	}
++
++ unlock:
+ 	rcu_read_unlock();
  
--	if (priv->bitratemode >= BITRATE_TABLE_SIZE) {
-+	if (ratemode >= BITRATE_TABLE_SIZE) {
- 		printk(KERN_ERR "%s: BUG: Invalid bitrate mode %d\n",
--		       priv->ndev->name, priv->bitratemode);
-+		       priv->ndev->name, ratemode);
- 		return -EINVAL;
- 	}
- 
- 	switch (priv->firmware_type) {
- 	case FIRMWARE_TYPE_AGERE:
- 		err = hermes_write_wordrec(hw, USER_BAP,
--					   HERMES_RID_CNFTXRATECONTROL,
--					   bitrate_table[priv->bitratemode].agere_txratectrl);
-+				HERMES_RID_CNFTXRATECONTROL,
-+				bitrate_table[ratemode].agere_txratectrl);
- 		break;
- 	case FIRMWARE_TYPE_INTERSIL:
- 	case FIRMWARE_TYPE_SYMBOL:
- 		err = hermes_write_wordrec(hw, USER_BAP,
--					   HERMES_RID_CNFTXRATECONTROL,
--					   bitrate_table[priv->bitratemode].intersil_txratectrl);
-+				HERMES_RID_CNFTXRATECONTROL,
-+				bitrate_table[ratemode].intersil_txratectrl);
- 		break;
- 	default:
- 		BUG();
-@@ -2465,7 +2473,8 @@ static int __orinoco_hw_setup_wepkeys(struct orinoco_private *priv)
- 			int keylen;
- 			int i;
- 
--			/* Force uniform key length to work around firmware bugs */
-+			/* Force uniform key length to work around
-+			 * firmware bugs */
- 			keylen = le16_to_cpu(priv->keys[priv->tx_key].len);
- 
- 			if (keylen > LARGE_KEY_SIZE) {
-@@ -2477,17 +2486,17 @@ static int __orinoco_hw_setup_wepkeys(struct orinoco_private *priv)
- 			/* Write all 4 keys */
- 			for (i = 0; i < ORINOCO_MAX_KEYS; i++) {
- 				err = hermes_write_ltv(hw, USER_BAP,
--						       HERMES_RID_CNFDEFAULTKEY0 + i,
--						       HERMES_BYTES_TO_RECLEN(keylen),
--						       priv->keys[i].data);
-+						HERMES_RID_CNFDEFAULTKEY0 + i,
-+						HERMES_BYTES_TO_RECLEN(keylen),
-+						priv->keys[i].data);
- 				if (err)
- 					return err;
- 			}
- 
- 			/* Write the index of the key used in transmission */
- 			err = hermes_write_wordrec(hw, USER_BAP,
--						   HERMES_RID_CNFWEPDEFAULTKEYID,
--						   priv->tx_key);
-+						HERMES_RID_CNFWEPDEFAULTKEYID,
-+						priv->tx_key);
- 			if (err)
- 				return err;
- 		}
-@@ -2526,8 +2535,8 @@ static int __orinoco_hw_setup_enc(struct orinoco_private *priv)
- 		if (priv->encode_alg == IW_ENCODE_ALG_WEP) {
- 			/* Enable the shared-key authentication. */
- 			err = hermes_write_wordrec(hw, USER_BAP,
--						   HERMES_RID_CNFAUTHENTICATION_AGERE,
--						   auth_flag);
-+					HERMES_RID_CNFAUTHENTICATION_AGERE,
-+					auth_flag);
- 		}
- 		err = hermes_write_wordrec(hw, USER_BAP,
- 					   HERMES_RID_CNFWEPENABLED_AGERE,
-@@ -2730,16 +2739,16 @@ static int __orinoco_program_rids(struct net_device *dev)
- 	memcpy(&idbuf.val, priv->desired_essid, sizeof(idbuf.val));
- 	/* WinXP wants partner to configure OWNSSID even in IBSS mode. (jimc) */
- 	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNSSID,
--			       HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
--			       &idbuf);
-+			HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
-+			&idbuf);
- 	if (err) {
- 		printk(KERN_ERR "%s: Error %d setting OWNSSID\n",
- 		       dev->name, err);
- 		return err;
- 	}
- 	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFDESIREDSSID,
--			       HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
--			       &idbuf);
-+			HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
-+			&idbuf);
- 	if (err) {
- 		printk(KERN_ERR "%s: Error %d setting DESIREDSSID\n",
- 		       dev->name, err);
-@@ -2764,7 +2773,7 @@ static int __orinoco_program_rids(struct net_device *dev)
- 					   HERMES_RID_CNFSYSTEMSCALE,
- 					   priv->ap_density);
- 		if (err) {
--			printk(KERN_WARNING "%s: Error %d setting SYSTEMSCALE.  "
-+			printk(KERN_WARNING "%s: Error %d setting SYSTEMSCALE. "
- 			       "Disabling sensitivity control\n",
- 			       dev->name, err);
- 
-@@ -3002,7 +3011,8 @@ static void orinoco_reset(struct work_struct *work)
- 		goto disable;
- 	}
- 
--	spin_lock_irq(&priv->lock); /* This has to be called from user context */
-+	/* This has to be called from user context */
-+	spin_lock_irq(&priv->lock);
- 
- 	priv->hw_unavailable--;
- 
-@@ -3293,7 +3303,8 @@ static int determine_firmware(struct net_device *dev)
- 				      SYMBOL_MAX_VER_LEN, NULL, &tmp);
- 		if (err) {
- 			printk(KERN_WARNING
--			       "%s: Error %d reading Symbol firmware info. Wildly guessing capabilities...\n",
-+			       "%s: Error %d reading Symbol firmware info. "
-+			       "Wildly guessing capabilities...\n",
- 			       dev->name, err);
- 			firmver = 0;
- 			tmp[0] = '\0';
-@@ -3302,8 +3313,10 @@ static int determine_firmware(struct net_device *dev)
- 			 * something like : "V2.20-01".
- 			 * Quick and dirty parsing... - Jean II
- 			 */
--			firmver = ((tmp[1] - '0') << 16) | ((tmp[3] - '0') << 12)
--				| ((tmp[4] - '0') << 8) | ((tmp[6] - '0') << 4)
-+			firmver = ((tmp[1] - '0') << 16)
-+				| ((tmp[3] - '0') << 12)
-+				| ((tmp[4] - '0') << 8)
-+				| ((tmp[6] - '0') << 4)
- 				| (tmp[7] - '0');
- 
- 			tmp[SYMBOL_MAX_VER_LEN] = '\0';
-@@ -3336,7 +3349,7 @@ static int determine_firmware(struct net_device *dev)
- 		priv->do_fw_download = (priv->stop_fw != NULL);
- 
- 		priv->broken_disableport = (firmver == 0x25013) ||
--					   (firmver >= 0x30000 && firmver <= 0x31000);
-+				(firmver >= 0x30000 && firmver <= 0x31000);
- 		priv->has_hostscan = (firmver >= 0x31001) ||
- 				     (firmver >= 0x29057 && firmver < 0x30000);
- 		/* Tested with Intel firmware : 0x20015 => Jean II */
-@@ -3423,7 +3436,8 @@ static int orinoco_init(struct net_device *dev)
- 	}
- 
- 	if (priv->has_port3)
--		printk(KERN_DEBUG "%s: Ad-hoc demo mode supported\n", dev->name);
-+		printk(KERN_DEBUG "%s: Ad-hoc demo mode supported\n",
-+		       dev->name);
- 	if (priv->has_ibss)
- 		printk(KERN_DEBUG "%s: IEEE standard IBSS ad-hoc mode supported\n",
- 		       dev->name);
-@@ -3515,7 +3529,8 @@ static int orinoco_init(struct net_device *dev)
- 					  HERMES_RID_CNFMWOROBUST_AGERE,
- 					  &priv->mwo_robust);
+ 	if (disassoc)
+@@ -976,7 +979,7 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
+ 					WLAN_REASON_PREV_AUTH_NOT_VALID);
  	else
--		err = hermes_read_wordrec(hw, USER_BAP, HERMES_RID_CNFFRAGMENTATIONTHRESHOLD,
-+		err = hermes_read_wordrec(hw, USER_BAP,
-+					  HERMES_RID_CNFFRAGMENTATIONTHRESHOLD,
- 					  &priv->frag_thresh);
- 	if (err) {
- 		printk(KERN_ERR "%s: failed to read fragmentation settings!\n",
-@@ -3758,7 +3773,8 @@ static int orinoco_hw_get_freq(struct orinoco_private *priv)
- 	if (orinoco_lock(priv, &flags) != 0)
- 		return -EBUSY;
+ 		mod_timer(&ifmgd->timer, jiffies +
+-				      IEEE80211_MONITORING_INTERVAL);
++			  IEEE80211_MONITORING_INTERVAL);
+ }
  
--	err = hermes_read_wordrec(hw, USER_BAP, HERMES_RID_CURRENTCHANNEL, &channel);
-+	err = hermes_read_wordrec(hw, USER_BAP, HERMES_RID_CURRENTCHANNEL,
-+				  &channel);
- 	if (err)
- 		goto out;
  
-@@ -4064,7 +4080,8 @@ static int orinoco_ioctl_getiwrange(struct net_device *dev,
- 	range->max_pmt = 65535 * 1000;	/* ??? */
- 	range->pmp_flags = IW_POWER_PERIOD;
- 	range->pmt_flags = IW_POWER_TIMEOUT;
--	range->pm_capa = IW_POWER_PERIOD | IW_POWER_TIMEOUT | IW_POWER_UNICAST_R;
-+	range->pm_capa = (IW_POWER_PERIOD | IW_POWER_TIMEOUT |
-+			  IW_POWER_UNICAST_R);
+@@ -1356,6 +1359,8 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 	bss_conf->assoc_capability = capab_info;
+ 	ieee80211_set_associated(sdata, changed);
  
- 	range->retry_capa = IW_RETRY_LIMIT | IW_RETRY_LIFETIME;
- 	range->retry_flags = IW_RETRY_LIMIT;
-@@ -4506,9 +4523,10 @@ static int orinoco_ioctl_setfrag(struct net_device *dev,
- 			priv->mwo_robust = 0;
- 		else {
- 			if (frq->fixed)
--				printk(KERN_WARNING "%s: Fixed fragmentation is "
--				       "not supported on this firmware. "
--				       "Using MWO robust instead.\n", dev->name);
-+				printk(KERN_WARNING "%s: Fixed fragmentation "
-+				       "is not supported on this firmware. "
-+				       "Using MWO robust instead.\n",
-+				       dev->name);
- 			priv->mwo_robust = 1;
- 		}
- 	} else {
-@@ -4518,7 +4536,8 @@ static int orinoco_ioctl_setfrag(struct net_device *dev,
- 			if ((frq->value < 256) || (frq->value > 2346))
- 				err = -EINVAL;
- 			else
--				priv->frag_thresh = frq->value & ~0x1; /* must be even */
-+				/* must be even */
-+				priv->frag_thresh = frq->value & ~0x1;
- 		}
++	ifmgd->last_beacon = jiffies;
++
+ 	ieee80211_associated(sdata);
+ }
+ 
+@@ -1403,9 +1408,12 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 					 size_t len,
+ 					 struct ieee80211_rx_status *rx_status)
+ {
++	struct ieee80211_if_managed *ifmgd;
+ 	size_t baselen;
+ 	struct ieee802_11_elems elems;
+ 
++	ifmgd = &sdata->u.mgd;
++
+ 	if (memcmp(mgmt->da, sdata->dev->dev_addr, ETH_ALEN))
+ 		return; /* ignore ProbeResp to foreign address */
+ 
+@@ -1420,11 +1428,14 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* direct probe may be part of the association flow */
+ 	if (test_and_clear_bit(IEEE80211_STA_REQ_DIRECT_PROBE,
+-	    &sdata->u.mgd.request)) {
++			       &ifmgd->request)) {
+ 		printk(KERN_DEBUG "%s direct probe responded\n",
+ 		       sdata->dev->name);
+ 		ieee80211_authenticate(sdata);
+ 	}
++
++	if (ifmgd->flags & IEEE80211_STA_PROBEREQ_POLL)
++		ifmgd->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
+ }
+ 
+ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 4afb639..ce58e02 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -849,7 +849,11 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 		 * Mesh beacons will update last_rx when if they are found to
+ 		 * match the current local configuration when processed.
+ 		 */
+-		sta->last_rx = jiffies;
++		if (rx->sdata->vif.type == NL80211_IFTYPE_STATION &&
++		    ieee80211_is_beacon(hdr->frame_control)) {
++			rx->sdata->u.mgd.last_beacon = jiffies;
++		} else
++			sta->last_rx = jiffies;
  	}
  
-@@ -4552,7 +4571,8 @@ static int orinoco_ioctl_getfrag(struct net_device *dev,
- 		frq->disabled = !val;
- 		frq->fixed = 0;
- 	} else {
--		err = hermes_read_wordrec(hw, USER_BAP, HERMES_RID_CNFFRAGMENTATIONTHRESHOLD,
-+		err = hermes_read_wordrec(hw, USER_BAP,
-+					  HERMES_RID_CNFFRAGMENTATIONTHRESHOLD,
- 					  &val);
- 		if (err)
- 			val = 0;
-@@ -4747,7 +4767,8 @@ static int orinoco_ioctl_getpower(struct net_device *dev,
- 	if (orinoco_lock(priv, &flags) != 0)
- 		return -EBUSY;
- 
--	err = hermes_read_wordrec(hw, USER_BAP, HERMES_RID_CNFPMENABLED, &enable);
-+	err = hermes_read_wordrec(hw, USER_BAP,
-+				  HERMES_RID_CNFPMENABLED, &enable);
- 	if (err)
- 		goto out;
- 
-@@ -4756,11 +4777,13 @@ static int orinoco_ioctl_getpower(struct net_device *dev,
- 	if (err)
- 		goto out;
- 
--	err = hermes_read_wordrec(hw, USER_BAP, HERMES_RID_CNFPMHOLDOVERDURATION, &timeout);
-+	err = hermes_read_wordrec(hw, USER_BAP,
-+				  HERMES_RID_CNFPMHOLDOVERDURATION, &timeout);
- 	if (err)
- 		goto out;
- 
--	err = hermes_read_wordrec(hw, USER_BAP, HERMES_RID_CNFMULTICASTRECEIVE, &mcast);
-+	err = hermes_read_wordrec(hw, USER_BAP,
-+				  HERMES_RID_CNFMULTICASTRECEIVE, &mcast);
- 	if (err)
- 		goto out;
- 
-@@ -5486,9 +5509,9 @@ static int orinoco_ioctl_setscan(struct net_device *dev,
- 		switch (priv->firmware_type) {
- 		case FIRMWARE_TYPE_SYMBOL:
- 			err = hermes_write_wordrec(hw, USER_BAP,
--						   HERMES_RID_CNFHOSTSCAN_SYMBOL,
--						   HERMES_HOSTSCAN_SYMBOL_ONCE |
--						   HERMES_HOSTSCAN_SYMBOL_BCAST);
-+						HERMES_RID_CNFHOSTSCAN_SYMBOL,
-+						HERMES_HOSTSCAN_SYMBOL_ONCE |
-+						HERMES_HOSTSCAN_SYMBOL_BCAST);
- 			break;
- 		case FIRMWARE_TYPE_INTERSIL: {
- 			__le16 req[3];
--- 
-1.6.0.6
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
 
