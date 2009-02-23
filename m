@@ -1,83 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50547 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753177AbZBPKCv (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56760 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814AbZBWVPU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 05:02:51 -0500
-Subject: Re: [PATCH 08/10] cfg80211: make regulatory_request use wiphy_idx
-	instead of wiphy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890902160155j402e887an9c5ea3ca9b9f64f3@mail.gmail.com> (sfid-20090216_105534_710168_C595F3A3)
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-9-git-send-email-lrodriguez@atheros.com>
-	 <1234695858.4219.54.camel@johannes.local>
-	 <43e72e890902160155j402e887an9c5ea3ca9b9f64f3@mail.gmail.com>
-	 (sfid-20090216_105534_710168_C595F3A3)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dlBNSdiLL7vh0RLGZY9A"
-Date: Mon, 16 Feb 2009 11:02:46 +0100
-Message-Id: <1234778566.4219.120.camel@johannes.local> (sfid-20090216_110255_562148_F76CCAC7)
-Mime-Version: 1.0
+	Mon, 23 Feb 2009 16:15:20 -0500
+Date: Mon, 23 Feb 2009 16:11:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Lars Ericsson <Lars_Ericsson@telia.com>
+Cc: "'Johannes Berg'" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: SIOCGIWSCAN-race
+Message-ID: <20090223211155.GA8814@tuxdriver.com> (sfid-20090223_221524_088890_C081F26F)
+References: <B944EEED4BC94818AF57142C1687A0A0@gotws1589>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <B944EEED4BC94818AF57142C1687A0A0@gotws1589>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Feb 21, 2009 at 08:33:06AM +0100, Lars Ericsson wrote:
+> Hi Johannes,
+> 
+> I have discovered and patched a race in the scanning function since a couple
+> of releases.
+> To day I checked the current Linux git and the problem is still there.
+> 
+> The problem is the sequence of events when the scan result is reported back.
+> The wireless_send_event(dev, SIOCGIWSCAN, &wrqu, NULL); 
+> is called before ieee80211_hw_config(local);
+> 
+> ieee80211_hw_config(local) will trig the wpa_supplicant to select an AP. 
+> That may happen before the ieee80211_hw_config() is executed since the
+> wpa_supplicant
+> generated actions is executed by an other thread (wpa_supplicant).
+> 
+> The result is that:
+> - wpa_supplicant setup for an association to an ap using correct channel.
+> - ieee80211_hw_config() reset the channel to the value before the SCAN
+> started.
+> - the association request will be sent out using the wrong channel.
+> 
+> 
+> Attached you will find the patch for 2.6.27. 
+> It is not a perfect patch since the code is duplicated but it works :)
 
---=-dlBNSdiLL7vh0RLGZY9A
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Looks like the patch would need to be reworked -- the code in 2.6.29
+and later is different.  Also, any reason we can't just move the
+wireless_send_event() down to done:?
 
-On Mon, 2009-02-16 at 01:55 -0800, Luis R. Rodriguez wrote:
+Still, this doesn't feel quite right.  Shouldn't we be able to queue
+the userland-driven channel change until after the scan completes?
 
-> >> +static inline
-> >> +int wiphy_idx(struct wiphy *wiphy)
-> >> +{
-> >> +     struct cfg80211_registered_device *drv;
-> >> +     if (!wiphy)
-> >> +             return WIPHY_IDX_STALE;
-> >> +     drv =3D wiphy_to_dev(wiphy);
-> >> +     return drv->wiphy_idx;
-> >> +}
-> >
-> > I neither like the name of this function (same as the variable name) no=
-r
-> > the function -- you're using it in exactly one place where you cannot
-> > ever pass NULL afaict.
->=20
-> Nope, I'm calling it from 2 places:
->=20
-> * Driver hints which never have the wiphy NULL
-> * __regulatory_hint: called from 11d hints, and from the workqueue
-> that processes the pending requests (which can come from userspace or
-> from drivers right now).
+John
 
-Ok, but in the first case you can't have NULL, and in the second you
-could just inline it. It's not an operation that requires an inline here
-for it.
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index f5c7c33..8c13a91 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -437,15 +437,6 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 	local->last_scan_completed = jiffies;
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 
+-	/*
+-	 * local->scan_sdata could have been NULLed by the interface
+-	 * down code in case we were scanning on an interface that is
+-	 * being taken down.
+-	 */
+-	sdata = local->scan_sdata;
+-	if (sdata)
+-		wireless_send_event(sdata->dev, SIOCGIWSCAN, &wrqu, NULL);
+-
+ 	if (local->hw_scanning) {
+ 		local->hw_scanning = false;
+ 		/*
+@@ -486,6 +477,15 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw)
+ 	rcu_read_unlock();
+ 
+  done:
++	/*
++	 * local->scan_sdata could have been NULLed by the interface
++	 * down code in case we were scanning on an interface that is
++	 * being taken down.
++	 */
++	sdata = local->scan_sdata;
++	if (sdata)
++		wireless_send_event(sdata->dev, SIOCGIWSCAN, &wrqu, NULL);
++
+ 	ieee80211_mlme_notify_scan_completed(local);
+ 	ieee80211_mesh_notify_scan_completed(local);
+ }
 
-johannes
-
---=-dlBNSdiLL7vh0RLGZY9A
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJmTnCAAoJEKVg1VMiehFYqEQP/1pMuzPC9f1C0UoiRKxtU/4t
-avX4ClJArCqpPQwo39aEKruPbFpnYtvc/J4H1JyfSredKm6h0zYHRoec5iktif5Z
-TXsyC+tDFIg4R5EGFD0j7V3C5r0vNGNHbln9mcUcma2SSKXpo8BCiBX54iK//MFc
-wqb5C/7q+bzubHlf9LqJCieWvWsgQ8OSfMou8NgDsaoxqkXCf/wAaPq/WqofkA1G
-z03Wzylbz81xXj1Gds7+3xgf+Fh9B6tgc0Hw8bTMMwWBcd/0GVmk1y51vXXxJxso
-tzVetwPZ3Efrt6mzMeDug7dhasMn4YKP5VwwtKVMBU+eT/yz8stLhfE274idCfG5
-vAMWkX8oqkN0dCDgk4smYZJ+XOist/cF5LyjQ/2F1Bw2fODF4hikrgSD0RKCovZZ
-EzRry/hgCFctTFg3lfDTQX/RycOiaXyHxnnBe1nKBQp98nfjAQpAPDAFqqYERuJ2
-wI4UXNkul5AfMHLVw32dNgzffWe81TgoqWe/+0KzpykY71iKy5y+b6E1RATNrbKp
-0L+ZTeePcoVGoACM/uTzootarvhVzwm8Q8gbXlYewfe0Skv4n+HC5UP+9r+Bn9GK
-d4QpoelKVY16PyOx3Go3PIVnADz49lYka4cXX+fKOOEAZx0XRvANmrMtEcm9VC3z
-FktlIfi9c/jixdKGJOg/
-=H5o2
------END PGP SIGNATURE-----
-
---=-dlBNSdiLL7vh0RLGZY9A--
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
