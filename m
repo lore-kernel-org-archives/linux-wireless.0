@@ -1,135 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:25352 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751899AbZBLTHT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 14:07:19 -0500
-Subject: possible circular locking triggered from iw
-From: reinette chatre <reinette.chatre@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Thu, 12 Feb 2009 11:11:10 -0800
-Message-Id: <1234465870.30608.20.camel@rc-desk> (sfid-20090212_200727_602309_F0E5BB47)
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.105.134]:35940 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752934AbZBWQjP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2009 11:39:15 -0500
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 23 Feb 2009 18:37:38 +0200
+Message-ID: <20090223163738.20939.25890.stgit@tikku> (sfid-20090223_173917_558042_EC281C54)
+In-Reply-To: <20090223163626.20939.4879.stgit@tikku>
+References: <20090223163626.20939.4879.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add IEEE80211_HW_BEACON_FILTERING flag so that driver inform that it supports
+beacon filtering. Drivers need to call the new function
+ieee80211_beacon_loss() to notify about beacon loss.
 
-Running "iw dev wlan0 scan trigger" resulted in the message below. This
-is on the latest wireless-testing and iw. It only happened the first
-time I triggered the scan.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-[  450.148335] =======================================================
-[  450.148453] [ INFO: possible circular locking dependency detected ]
-[  450.148521] 2.6.29-rc4-wl #22
-[  450.148586] -------------------------------------------------------
-[  450.148651] iw/6265 is trying to acquire lock:
-[  450.148711]  (rtnl_mutex){--..}, at: [<ffffffff804414c2>] rtnl_lock+0x12/0x20
-[  450.148898] 
-[  450.148899] but task is already holding lock:
-[  450.149008]  (&drv->mtx){--..}, at: [<ffffffffa018e68b>] cfg80211_get_dev_from_ifindex+0x5b/0x80 [cfg80211]
-[  450.149221] 
-[  450.149222] which lock already depends on the new lock.
-[  450.149224] 
-[  450.149384] 
-[  450.149385] the existing dependency chain (in reverse order) is:
-[  450.149498] 
-[  450.149499] -> #2 (&drv->mtx){--..}:
-[  450.149717]        [<ffffffff8026146f>] validate_chain+0xc1f/0x1270
-[  450.149825]        [<ffffffff80261dde>] __lock_acquire+0x31e/0xa30
-[  450.149929]        [<ffffffff80262548>] lock_acquire+0x58/0x80
-[  450.150032]        [<ffffffff804c523d>] mutex_lock_nested+0x9d/0x2f0
-[  450.150138]        [<ffffffffa018e68b>] cfg80211_get_dev_from_ifindex+0x5b/0x80 [cfg80211]
-[  450.150265]        [<ffffffffa0191d08>] cfg80211_wext_siwscan+0x58/0x210 [cfg80211]
-[  450.150392]        [<ffffffff804b0423>] ioctl_standard_call+0x1a3/0x390
-[  450.150498]        [<ffffffff804aff31>] wext_handle_ioctl+0xf1/0x220
-[  450.150602]        [<ffffffff80437be9>] dev_ioctl+0x559/0x5b0
-[  450.150706]        [<ffffffff80425aa5>] sock_ioctl+0xe5/0x260
-[  450.150810]        [<ffffffff802d12b1>] vfs_ioctl+0x31/0x90
-[  450.150913]        [<ffffffff802d1640>] do_vfs_ioctl+0x330/0x540
-[  450.151015]        [<ffffffff802d18d2>] sys_ioctl+0x82/0xa0
-[  450.151117]        [<ffffffff8020c35b>] system_call_fastpath+0x16/0x1b
-[  450.151223]        [<ffffffffffffffff>] 0xffffffffffffffff
-[  450.151330] 
-[  450.151332] -> #1 (cfg80211_drv_mutex){--..}:
-[  450.151551]        [<ffffffff8026146f>] validate_chain+0xc1f/0x1270
-[  450.151656]        [<ffffffff80261dde>] __lock_acquire+0x31e/0xa30
-[  450.151759]        [<ffffffff80262548>] lock_acquire+0x58/0x80
-[  450.151861]        [<ffffffff804c523d>] mutex_lock_nested+0x9d/0x2f0
-[  450.151965]        [<ffffffffa018e64e>] cfg80211_get_dev_from_ifindex+0x1e/0x80 [cfg80211]
-[  450.152010]        [<ffffffffa0191d08>] cfg80211_wext_siwscan+0x58/0x210 [cfg80211]
-[  450.152010]        [<ffffffff804b0423>] ioctl_standard_call+0x1a3/0x390
-[  450.152010]        [<ffffffff804aff31>] wext_handle_ioctl+0xf1/0x220
-[  450.152010]        [<ffffffff80437be9>] dev_ioctl+0x559/0x5b0
-[  450.152010]        [<ffffffff80425aa5>] sock_ioctl+0xe5/0x260
-[  450.152010]        [<ffffffff802d12b1>] vfs_ioctl+0x31/0x90
-[  450.152010]        [<ffffffff802d1640>] do_vfs_ioctl+0x330/0x540
-[  450.152010]        [<ffffffff802d18d2>] sys_ioctl+0x82/0xa0
-[  450.152010]        [<ffffffff8020c35b>] system_call_fastpath+0x16/0x1b
-[  450.152010]        [<ffffffffffffffff>] 0xffffffffffffffff
-[  450.152010] 
-[  450.152010] -> #0 (rtnl_mutex){--..}:
-[  450.152010]        [<ffffffff80261020>] validate_chain+0x7d0/0x1270
-[  450.152010]        [<ffffffff80261dde>] __lock_acquire+0x31e/0xa30
-[  450.152010]        [<ffffffff80262548>] lock_acquire+0x58/0x80
-[  450.152010]        [<ffffffff804c523d>] mutex_lock_nested+0x9d/0x2f0
-[  450.152010]        [<ffffffff804414c2>] rtnl_lock+0x12/0x20
-[  450.152010]        [<ffffffffa0194c12>] nl80211_trigger_scan+0x52/0x490 [cfg80211]
-[  450.152010]        [<ffffffff80453bc1>] genl_rcv_msg+0x181/0x1c0
-[  450.152010]        [<ffffffff804509f9>] netlink_rcv_skb+0x89/0xb0
-[  450.152010]        [<ffffffff80452f39>] genl_rcv+0x29/0x40
-[  450.152010]        [<ffffffff8045077f>] netlink_unicast+0x27f/0x2c0
-[  450.152010]        [<ffffffff80450fe1>] netlink_sendmsg+0x231/0x2e0
-[  450.152010]        [<ffffffff80426797>] sock_sendmsg+0x127/0x140
-[  450.152010]        [<ffffffff804268f2>] sys_sendmsg+0x142/0x260
-[  450.152010]        [<ffffffff8020c35b>] system_call_fastpath+0x16/0x1b
-[  450.152010]        [<ffffffffffffffff>] 0xffffffffffffffff
-[  450.152010] 
-[  450.152010] other info that might help us debug this:
-[  450.152010] 
-[  450.152010] 2 locks held by iw/6265:
-[  450.152010]  #0:  (genl_mutex){--..}, at: [<ffffffff80452f2a>] genl_rcv+0x1a/0x40
-[  450.152010]  #1:  (&drv->mtx){--..}, at: [<ffffffffa018e68b>] cfg80211_get_dev_from_ifindex+0x5b/0x80 [cfg80211]
-[  450.152010] 
-[  450.152010] stack backtrace:
-[  450.152010] Pid: 6265, comm: iw Not tainted 2.6.29-rc4-wl #22
-[  450.152010] Call Trace:
-[  450.152010]  [<ffffffff80260805>] print_circular_bug_tail+0x95/0xe0
-[  450.152010]  [<ffffffff80261020>] validate_chain+0x7d0/0x1270
-[  450.152010]  [<ffffffff80261dde>] ? __lock_acquire+0x31e/0xa30
-[  450.152010]  [<ffffffff80261dde>] __lock_acquire+0x31e/0xa30
-[  450.152010]  [<ffffffff804414c2>] ? rtnl_lock+0x12/0x20
-[  450.152010]  [<ffffffff80262548>] lock_acquire+0x58/0x80
-[  450.152010]  [<ffffffff804414c2>] ? rtnl_lock+0x12/0x20
-[  450.152010]  [<ffffffff804c523d>] mutex_lock_nested+0x9d/0x2f0
-[  450.152010]  [<ffffffff804414c2>] ? rtnl_lock+0x12/0x20
-[  450.152010]  [<ffffffffa018e69e>] ? cfg80211_get_dev_from_ifindex+0x6e/0x80 [cfg80211]
-[  450.152010]  [<ffffffff804414c2>] rtnl_lock+0x12/0x20
-[  450.152010]  [<ffffffffa0194c12>] nl80211_trigger_scan+0x52/0x490 [cfg80211]
-[  450.152010]  [<ffffffff80453bc1>] genl_rcv_msg+0x181/0x1c0
-[  450.152010]  [<ffffffff80453a40>] ? genl_rcv_msg+0x0/0x1c0
-[  450.152010]  [<ffffffff804509f9>] netlink_rcv_skb+0x89/0xb0
-[  450.152010]  [<ffffffff80452f39>] genl_rcv+0x29/0x40
-[  450.152010]  [<ffffffff804505e8>] ? netlink_unicast+0xe8/0x2c0
-[  450.152010]  [<ffffffff8045077f>] netlink_unicast+0x27f/0x2c0
-[  450.152010]  [<ffffffff8042e159>] ? __alloc_skb+0x89/0x140
-[  450.152010]  [<ffffffff80450fe1>] netlink_sendmsg+0x231/0x2e0
-[  450.152010]  [<ffffffff80426797>] sock_sendmsg+0x127/0x140
-[  450.152010]  [<ffffffff8024f400>] ? autoremove_wake_function+0x0/0x40
-[  450.152010]  [<ffffffff8029a725>] ? get_page_from_freelist+0x485/0x590
-[  450.152010]  [<ffffffff8026004a>] ? trace_hardirqs_on_caller+0x15a/0x1b0
-[  450.152010]  [<ffffffff802600ad>] ? trace_hardirqs_on+0xd/0x10
-[  450.152010]  [<ffffffff8029a648>] ? get_page_from_freelist+0x3a8/0x590
-[  450.152010]  [<ffffffff80427357>] ? move_addr_to_kernel+0x57/0x60
-[  450.152010]  [<ffffffff8043017c>] ? verify_iovec+0x3c/0xc0
-[  450.152010]  [<ffffffff804268f2>] sys_sendmsg+0x142/0x260
-[  450.152010]  [<ffffffff804c72f5>] ? _spin_unlock_irqrestore+0x55/0x60
-[  450.152010]  [<ffffffff8026004a>] ? trace_hardirqs_on_caller+0x15a/0x1b0
-[  450.152010]  [<ffffffff802600ad>] ? trace_hardirqs_on+0xd/0x10
-[  450.152010]  [<ffffffff80368c36>] ? __up_read+0x46/0xb0
-[  450.152010]  [<ffffffff802530f6>] ? up_read+0x26/0x30
-[  450.152010]  [<ffffffff8026004a>] ? trace_hardirqs_on_caller+0x15a/0x1b0
-[  450.152010]  [<ffffffff804c6911>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-[  450.152010]  [<ffffffff8020c35b>] system_call_fastpath+0x16/0x1b
+ include/net/mac80211.h     |    2 ++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/iface.c       |    3 +++
+ net/mac80211/mlme.c        |   34 +++++++++++++++++++++++++++++++++-
+ 4 files changed, 40 insertions(+), 1 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e01c63a..f74bada 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -903,6 +903,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_PS_NULLFUNC_STACK			= 1<<11,
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
+ 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
++	IEEE80211_HW_BEACON_FILTERING			= 1<<14,
+ };
+ 
+ /**
+@@ -1971,6 +1972,7 @@ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_hw *hw, const u8 *ra,
+ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
+ 					 const u8 *addr);
+ 
++void ieee80211_beacon_loss(struct ieee80211_hw *hw);
+ 
+ /* Rate control API */
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 2a19e4c..5cd6296 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -272,6 +272,7 @@ struct ieee80211_if_managed {
+ 	struct timer_list chswitch_timer;
+ 	struct work_struct work;
+ 	struct work_struct chswitch_work;
++	struct work_struct beacon_loss_work;
+ 
+ 	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
+ 
+@@ -1080,6 +1081,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 			     struct ieee80211_sub_if_data *sdata,
+ 			     int powersave);
+ void ieee80211_rx_trigger(struct ieee80211_sub_if_data *sdata);
++void ieee80211_beacon_loss_work(struct work_struct *work);
+ 
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 				     enum queue_stop_reason reason);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 2acc416..e0fa20f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -470,6 +470,9 @@ static int ieee80211_stop(struct net_device *dev)
+ 		 */
+ 		cancel_work_sync(&sdata->u.mgd.work);
+ 		cancel_work_sync(&sdata->u.mgd.chswitch_work);
++
++		cancel_work_sync(&sdata->u.mgd.beacon_loss_work);
++
+ 		/*
+ 		 * When we get here, the interface is marked down.
+ 		 * Call synchronize_rcu() to wait for the RX path
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d2cc1e0..22cc8e4 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -919,6 +919,36 @@ void ieee80211_rx_trigger(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
++void ieee80211_beacon_loss_work(struct work_struct *work)
++{
++	struct ieee80211_sub_if_data *sdata =
++		container_of(work, struct ieee80211_sub_if_data,
++			     u.mgd.beacon_loss_work);
++
++	printk(KERN_DEBUG "%s: beacon loss from AP %pM "
++	       "- disassociating\n", sdata->dev->name, sdata->u.mgd.bssid);
++
++	ieee80211_set_disassoc(sdata, true, true,
++			       WLAN_REASON_PREV_AUTH_NOT_VALID);
++}
++
++void ieee80211_beacon_loss(struct ieee80211_hw *hw)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++
++	rcu_read_lock();
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (sdata->vif.type != NL80211_IFTYPE_STATION)
++			continue;
++
++		queue_work(local->hw.workqueue,
++			   &sdata->u.mgd.beacon_loss_work);
++	}
++	rcu_read_unlock();
++}
++EXPORT_SYMBOL(ieee80211_beacon_loss);
++
+ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -953,7 +983,8 @@ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
+ 		goto unlock;
+ 	}
+ 
+-	if (time_after(jiffies,
++	if (!(local->hw.flags & IEEE80211_HW_BEACON_FILTERING) &&
++	    time_after(jiffies,
+ 		       ifmgd->last_beacon + IEEE80211_MONITORING_INTERVAL)) {
+ 		printk(KERN_DEBUG "%s: beacon loss from AP %pM "
+ 		       "- sending probe request\n",
+@@ -1834,6 +1865,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 	ifmgd = &sdata->u.mgd;
+ 	INIT_WORK(&ifmgd->work, ieee80211_sta_work);
+ 	INIT_WORK(&ifmgd->chswitch_work, ieee80211_chswitch_work);
++	INIT_WORK(&ifmgd->beacon_loss_work, ieee80211_beacon_loss_work);
+ 	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
+ 		    (unsigned long) sdata);
+ 	setup_timer(&ifmgd->chswitch_timer, ieee80211_chswitch_timer,
 
