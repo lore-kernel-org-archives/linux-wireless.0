@@ -1,135 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f11.google.com ([209.85.221.11]:39395 "EHLO
-	mail-qy0-f11.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622AbZBCRi2 (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.185]:32494 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753281AbZBWNXP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 12:38:28 -0500
-Received: by qyk4 with SMTP id 4so2751100qyk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 09:38:22 -0800 (PST)
+	Mon, 23 Feb 2009 08:23:15 -0500
+Received: by fk-out-0910.google.com with SMTP id f33so1487520fkf.5
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 05:23:13 -0800 (PST)
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: ieee80211_scan_completed() calling config() and possible deadlock
+References: <87vdr1717z.fsf@litku.valot.fi> <200902231413.49289.mb@bu3sch.de>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 23 Feb 2009 15:23:09 +0200
+In-Reply-To: <200902231413.49289.mb@bu3sch.de> (Michael Buesch's message of "Mon\, 23 Feb 2009 14\:13\:49 +0100")
+Message-ID: <87r61p70ea.fsf@litku.valot.fi> (sfid-20090223_142318_819575_FF4888FA)
 MIME-Version: 1.0
-In-Reply-To: <1233676302.11344.21.camel@localhost.localdomain>
-References: <4987EC74.7040706@compulab.co.il>
-	 <1233676302.11344.21.camel@localhost.localdomain>
-Date: Tue, 3 Feb 2009 09:38:22 -0800
-Message-ID: <45e8e6c40902030938x3ce2aaf2o7365a4337783c8ee@mail.gmail.com> (sfid-20090203_183838_763608_FE863ED0)
-Subject: Re: [PATCH] libertas: if_spi: add ability to call board specific
-	setup/teardown methods
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Mike Rapoport <mike@compulab.co.il>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 3, 2009 at 7:51 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Tue, 2009-02-03 at 09:04 +0200, Mike Rapoport wrote:
->> In certain cases it is required to perform board specific actions
->> before activating libertas G-SPI interface. These actions may include
->> power up of the chip, GPIOs setup, proper pin-strapping and SPI
->> controller config.
->> This patch adds ability to call board specific setup/teardown methods
->>
->>
->> Signed-off-by: Mike Rapoport <mike@compulab.co.il>
->
-> Andrey, does this look OK to you?  Seems fine to me, though what's the
-> lifetime of the platform data 'pdata' in the probe function?  Is that
-> guaranteed to be valid for the entire lifetime of the libertas SPI
-> device?
->
-> Dan
+Michael Buesch <mb@bu3sch.de> writes:
 
-Yes, this looks good to me.  'pdata' will span the lifetime of the
-device as it's set up in if_spi_probe and stays around until
-libertas_spi_remove
+>> I'm just wondering what's the right way(tm) to handle this. I see
+>> two options:
+>> 
+>> 1. Consider the (possible) deadlock as a feature, document it and
+>> let the drivers handle it. This is relatively easy.
+>> 
+>> 2. Handle this in mac80211 (eg. schedule a workqueue) and drivers
+>> don't need to care. This might complicate mac80211 implementation a
+>> bit, but easier for the drivers.
+>> 
+>> I myself cannot decide which one is better. What do people think?
+>> 
+>
+> I think drivers should not be able to call ieee80211_scan_completed()
+> directly. Instead they should call a function which schedules
+> ieee80211_scan_completed() on a workqueue.
 
-Acked-by: Andrey Yurovsky <andrey@cozybit.com>
+Yes, that was my option two.
 
->> ---
->>  drivers/net/wireless/libertas/if_spi.c |   15 +++++++++++++++
->>  include/linux/spi/libertas_spi.h       |    7 +++++++
->>  2 files changed, 22 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
->> index 7c02ea3..07311e7 100644
->> --- a/drivers/net/wireless/libertas/if_spi.c
->> +++ b/drivers/net/wireless/libertas/if_spi.c
->> @@ -42,6 +42,7 @@ struct if_spi_packet {
->>  struct if_spi_card {
->>       struct spi_device               *spi;
->>       struct lbs_private              *priv;
->> +     struct libertas_spi_platform_data *pdata;
->>
->>       char                            helper_fw_name[FIRMWARE_NAME_MAX];
->>       char                            main_fw_name[FIRMWARE_NAME_MAX];
->> @@ -1022,6 +1023,17 @@ static int __devinit if_spi_probe(struct spi_device *spi)
->>
->>       lbs_deb_enter(LBS_DEB_SPI);
->>
->> +     if (!pdata) {
->> +             err = -EINVAL;
->> +             goto out;
->> +     }
->> +
->> +     if (pdata->setup) {
->> +             err = pdata->setup(spi);
->> +             if (err)
->> +                     goto out;
->> +     }
->> +
->>       /* Allocate card structure to represent this specific device */
->>       card = kzalloc(sizeof(struct if_spi_card), GFP_KERNEL);
->>       if (!card) {
->> @@ -1029,6 +1041,7 @@ static int __devinit if_spi_probe(struct spi_device *spi)
->>               goto out;
->>       }
->>       spi_set_drvdata(spi, card);
->> +     card->pdata = pdata;
->>       card->spi = spi;
->>       card->gpio_cs = pdata->gpio_cs;
->>       card->prev_xfer_time = jiffies;
->> @@ -1158,6 +1171,8 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
->>       if_spi_terminate_spi_thread(card);
->>       lbs_remove_card(priv); /* will call free_netdev */
->>       gpio_free(card->gpio_cs);
->> +     if (card->pdata->teardown)
->> +             card->pdata->teardown(spi);
->>       free_if_spi_card(card);
->>       lbs_deb_leave(LBS_DEB_SPI);
->>       return 0;
->> diff --git a/include/linux/spi/libertas_spi.h b/include/linux/spi/libertas_spi.h
->> index ada71b4..79506f5 100644
->> --- a/include/linux/spi/libertas_spi.h
->> +++ b/include/linux/spi/libertas_spi.h
->> @@ -10,6 +10,9 @@
->>   */
->>  #ifndef _LIBERTAS_SPI_H_
->>  #define _LIBERTAS_SPI_H_
->> +
->> +struct spi_device;
->> +
->>  struct libertas_spi_platform_data {
->>       /* There are two ways to read data from the WLAN module's SPI
->>        * interface. Setting 0 or 1 here controls which one is used.
->> @@ -21,5 +24,9 @@ struct libertas_spi_platform_data {
->>
->>       /* GPIO number to use as chip select */
->>       u16 gpio_cs;
->> +
->> +     /* Board specific setup/teardown */
->> +     int (*setup)(struct spi_device *spi);
->> +     int (*teardown)(struct spi_device *spi);
->>  };
->>  #endif
->> --
->> 1.5.6.4
->>
->>
->
->
-> _______________________________________________
-> libertas-dev mailing list
-> libertas-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/libertas-dev
->
+> In general I consider it broken behavior, if a function called by
+> the driver can recurse into the driver. We had that behavior in
+> ieee80211-softmac and it was one of the main reasons it sucked so
+> much.
+
+Ok, this is a very strong argument in favor of option 2.
+
+> The wq schedule code is trivial to implement in mac80211 and it's also
+> OK to do so. The function is not required to execute synchronously.
+
+I'm leaning on option two then. Thanks for the feedback!
+
+-- 
+Kalle Valo
