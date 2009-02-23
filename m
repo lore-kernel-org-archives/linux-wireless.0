@@ -1,172 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56074 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbZBUFEn (ORCPT
+Received: from mail-gx0-f163.google.com ([209.85.217.163]:63225 "EHLO
+	mail-gx0-f163.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754801AbZBWXIH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 00:04:43 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
+	Mon, 23 Feb 2009 18:08:07 -0500
+MIME-Version: 1.0
+In-Reply-To: <49A326A4.8090103@gmail.com>
+References: <20090222111807.GB5538@silver.sucs.org>
+	 <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org>
+	 <20090222144742.GA6078@nowhere>
+	 <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com>
+	 <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com>
+	 <49A321BA.2040500@gmail.com> <49A326A4.8090103@gmail.com>
+Date: Tue, 24 Feb 2009 01:08:03 +0200
+Message-ID: <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> (sfid-20090224_000811_700976_82E3C86C)
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v6 07/15] cfg80211: add assert_cfg80211_lock() to ensure proper protection
-Date: Sat, 21 Feb 2009 00:04:25 -0500
-Message-Id: <1235192673-6314-8-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060455_490223_AC33B7CB)
-In-Reply-To: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
-References: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/core.c    |    5 ++++-
- net/wireless/core.h    |    6 ++++++
- net/wireless/nl80211.c |    3 ++-
- net/wireless/reg.c     |   15 +++++++++++++++
- 4 files changed, 27 insertions(+), 2 deletions(-)
+2009/2/24 Jiri Slaby <jirislaby@gmail.com>:
+> On 23.2.2009 23:22, Jiri Slaby wrote:
+>>
+>> We should hit (unlikely(ret == -EINPROGRESS)) test
+>> everytime.
+>
+> I get on a AR2413
+> XX 000 128c0054 cb980203
+> XX 001 00000000 00000000
+> XX 000 128c0054 cfb80003
+> XX 001 00000000 00000000
+> XX 000 00001420 00000001
+> ath5k phy5: unsupported jumbo
+> XX 001 126c001c 80600003
+> XX 002 00000000 00000000
+> XX 000 127d8079 44ca0003
+> XX 001 00000000 00000000
+> XX 000 128d8079 54cc0003
+> (count, status_0, status_1)
+> so it means, it sets done flag even for more flag descs and thus we handle
+> it well in this particular case.
+>
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 39d40d1..e347093 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -7,7 +7,6 @@
- #include <linux/if.h>
- #include <linux/module.h>
- #include <linux/err.h>
--#include <linux/mutex.h>
- #include <linux/list.h>
- #include <linux/nl80211.h>
- #include <linux/debugfs.h>
-@@ -50,6 +49,8 @@ cfg80211_drv_by_wiphy_idx(int wiphy_idx)
- 	if (!wiphy_idx_valid(wiphy_idx))
- 		return NULL;
- 
-+	assert_cfg80211_lock();
-+
- 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
- 		if (drv->wiphy_idx == wiphy_idx) {
- 			result = drv;
-@@ -69,6 +70,8 @@ __cfg80211_drv_from_info(struct genl_info *info)
- 	struct net_device *dev;
- 	int err = -EINVAL;
- 
-+	assert_cfg80211_lock();
-+
- 	if (info->attrs[NL80211_ATTR_WIPHY]) {
- 		bywiphyidx = cfg80211_drv_by_wiphy_idx(
- 				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index f3ab00c..982cc6b 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -10,6 +10,7 @@
- #include <linux/netdevice.h>
- #include <linux/kref.h>
- #include <linux/rbtree.h>
-+#include <linux/mutex.h>
- #include <net/genetlink.h>
- #include <net/wireless.h>
- #include <net/cfg80211.h>
-@@ -73,6 +74,11 @@ bool wiphy_idx_valid(int wiphy_idx)
- extern struct mutex cfg80211_mutex;
- extern struct list_head cfg80211_drv_list;
- 
-+static inline void assert_cfg80211_lock(void)
-+{
-+	BUG_ON(!mutex_is_locked(&cfg80211_mutex));
-+}
-+
- struct cfg80211_internal_bss {
- 	struct list_head list;
- 	struct rb_node rbn;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c99f0be..0b8f811 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7,7 +7,6 @@
- #include <linux/if.h>
- #include <linux/module.h>
- #include <linux/err.h>
--#include <linux/mutex.h>
- #include <linux/list.h>
- #include <linux/if_ether.h>
- #include <linux/ieee80211.h>
-@@ -159,6 +158,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	int i;
- 	u16 ifmodes = dev->wiphy.interface_modes;
- 
-+	assert_cfg80211_lock();
-+
- 	hdr = nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_WIPHY);
- 	if (!hdr)
- 		return -1;
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 47d5056..e49ac9b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -276,6 +276,8 @@ static bool alpha2_equal(const char *alpha2_x, const char *alpha2_y)
- 
- static bool regdom_changed(const char *alpha2)
- {
-+	assert_cfg80211_lock();
-+
- 	if (!cfg80211_regdomain)
- 		return true;
- 	if (alpha2_equal(cfg80211_regdomain->alpha2, alpha2))
-@@ -830,6 +832,8 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
- 
-+	assert_cfg80211_lock();
-+
- 	sband = wiphy->bands[band];
- 	BUG_ON(chan_idx >= sband->n_channels);
- 	chan = &sband->channels[chan_idx];
-@@ -1042,6 +1046,9 @@ static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
- static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 			  const char *alpha2)
- {
-+
-+	assert_cfg80211_lock();
-+
- 	/* All initial requests are respected */
- 	if (!last_request)
- 		return 0;
-@@ -1122,6 +1129,8 @@ int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
- 	bool intersect = false;
- 	int r = 0;
- 
-+	assert_cfg80211_lock();
-+
- 	r = ignore_request(wiphy, set_by, alpha2);
- 
- 	if (r == REG_INTERSECT) {
-@@ -1217,6 +1226,8 @@ EXPORT_SYMBOL(regulatory_hint);
- static bool reg_same_country_ie_hint(struct wiphy *wiphy,
- 			u32 country_ie_checksum)
- {
-+	assert_cfg80211_lock();
-+
- 	if (!last_request->wiphy)
- 		return false;
- 	if (likely(last_request->wiphy != wiphy))
-@@ -1583,6 +1594,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- {
- 	int r;
- 
-+	assert_cfg80211_lock();
-+
- 	/* Note that this doesn't update the wiphys, this is done below */
- 	r = __set_regdom(rd);
- 	if (r) {
-@@ -1605,6 +1618,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- /* Caller must hold cfg80211_mutex */
- void reg_device_remove(struct wiphy *wiphy)
- {
-+	assert_cfg80211_lock();
-+
- 	kfree(wiphy->regd);
- 	if (!last_request || !last_request->wiphy)
- 		return;
+We have to ignore done flag when more flag is set, done flag is only
+valid when more flag is cleared according to docs.
+
+Also check out Sam's version here ->
+http://svn.freebsd.org/viewvc/base/projects/ath_hal/ar5212/ar5212_recv.c?revision=185406&view=markup
+
+He does an extra check...
+
+	/*
+	 * Given the use of a self-linked tail be very sure that the hw is
+	 * done with this descriptor; the hw may have done this descriptor
+	 * once and picked it up again...make sure the hw has moved on.
+	 */
+	if ((ands->ds_rxstatus1&AR_Done) == 0 && OS_REG_READ(ah, AR_RXDP) == pa)
+		return HAL_EINPROGRESS;
+
+
+
 -- 
-1.6.0.3
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
