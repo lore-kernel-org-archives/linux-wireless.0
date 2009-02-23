@@ -1,111 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:50741 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754237AbZBZXVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 18:21:52 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Fri, 27 Feb 2009 00:21:49 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090226232149.51510@gmx.net> (sfid-20090227_002156_575899_9F0F3D93)
-MIME-Version: 1.0
-Subject: [PATCH v2] mac80211: Implement commit in wireless extensions
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:34112 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757578AbZBWWoL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2009 17:44:11 -0500
+Received: by bwz5 with SMTP id 5so5287287bwz.13
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 14:44:07 -0800 (PST)
+Subject: [BUG] [REGRESSION] Hardware scanning broken in latest git
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain
+Date: Tue, 24 Feb 2009 00:44:03 +0200
+Message-Id: <1235429043.12816.14.camel@maxim-laptop> (sfid-20090223_234422_321223_E9D8BC07)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This implements commit in wireless extensions for completeness and mayb=
-e it could be useful for debugging to initiate a new rejoining process =
-without changing the config.
+I have just rebuilt a kernel (same kernel, but
+I needed few drivers), and using this chance pulled latest
+wireless-testing.
 
-I not so familiar with nl80211 at the moment, so I want add it to nl802=
-11 in a second patch.
+result - wifi doesn't work unless I use disable_hw_scan - my wifi
+is iwl3945.
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
----
-Version 2: Fix bad header.
+Trying to do 'sudo iwlist scan' tells that device is busy.
+it seems that at first nm connects, as it receives first scan results.
+but then it can't scan again - probably something in scanning code is
+broken so it never finishes a scan.
 
-Hope we can find a compromise in the conception.
+My AP is WPA-2 protected.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ecbc8e0..7f00c70 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -920,6 +920,7 @@ static inline int ieee80211_bssid_match(const u8 *r=
-addr, const u8 *addr)
-=20
- int ieee80211_hw_config(struct ieee80211_local *local, u32 changed);
- int ieee80211_if_config(struct ieee80211_sub_if_data *sdata, u32 chang=
-ed);
-+void ieee80211_commit(struct ieee80211_sub_if_data *sdata);
- void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
- void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sd=
-ata,
- 				      u32 changed);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index f38db4d..1b2d598 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -294,6 +294,20 @@ int ieee80211_hw_config(struct ieee80211_local *lo=
-cal, u32 changed)
- 	return ret;
- }
-=20
-+void ieee80211_commit(struct ieee80211_sub_if_data *sdata)
-+{
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_ADHOC:
-+		ieee80211_ibss_commit(sdata);
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		ieee80211_sta_commit(sdata);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
- void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sd=
-ata,
- 				      u32 changed)
- {
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index f6924fc..1ac0516 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -121,6 +121,15 @@ static int ieee80211_set_encryption(struct ieee802=
-11_sub_if_data *sdata, u8 *sta
- 	return err;
- }
-=20
-+static int ieee80211_ioctl_commit(struct net_device *dev,
-+				  struct iw_request_info *info,
-+				  struct iw_point *data, char *extra)
-+{
-+	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
-+	ieee80211_commit(sdata);
-+	return 0;
-+}
-+
- static int ieee80211_ioctl_siwgenie(struct net_device *dev,
- 				    struct iw_request_info *info,
- 				    struct iw_point *data, char *extra)
-@@ -1035,7 +1044,7 @@ static int ieee80211_ioctl_siwencodeext(struct ne=
-t_device *dev,
-=20
- static const iw_handler ieee80211_handler[] =3D
- {
--	(iw_handler) NULL,				/* SIOCSIWCOMMIT */
-+	(iw_handler) ieee80211_ioctl_commit,		/* SIOCSIWCOMMIT */
- 	(iw_handler) cfg80211_wext_giwname,		/* SIOCGIWNAME */
- 	(iw_handler) NULL,				/* SIOCSIWNWID */
- 	(iw_handler) NULL,				/* SIOCGIWNWID */
+Also I noticed long ago that wpa_suppicant doesn't connect to the
+network at first try since ts wpa handshake fail. This is probably
+its bug, but just for reference - this is very annoying.
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger01
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(I use latest nm and wpa_supplicant from -git - but this problem have
+always existed).
+
+
+And of course I noticed another very strange bug with iwlwifi.
+At my university often I can't connect to the wifi - usually because of
+the week signal - but at some rooms I noticed that if I somehow manage
+to connect (get dhcp address that is) - connection is very fast and
+stable. 
+
+In other words association usually works (forgot to say that they use
+open network - duh ), then DHCP stalls - but if it succeeds and I move
+to different part of the class - even where I never had any reception -
+it continues to work well.
+(It could be that transmission speed is lowered - but I tried to set low
+speed - and never got any better results)
+
+
+Thats all for bugs I have on my intel wireless - keep up the good work -
+recently iwlwifi drivers improved a lot.
+(even the led blinks correctly now in monitor mode)
+
+
+
+Best regards,
+	Maxim Levitsky
+
+
+
