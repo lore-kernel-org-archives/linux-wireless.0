@@ -1,31 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:43351 "EHLO
-	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754011AbZBXQgA (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.186]:36401 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752171AbZBWV0p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 11:36:00 -0500
-Message-ID: <49A421ED.7000801@lwfinger.net> (sfid-20090224_173604_543220_78E3BE45)
-Date: Tue, 24 Feb 2009 10:35:57 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 23 Feb 2009 16:26:45 -0500
+Date: Mon, 23 Feb 2009 22:26:15 +0100
+From: "Carlos R. Mafra" <crmafra2@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: iwlagn warning in 2.6.29-rc6
+Message-ID: <20090223212615.GA5047@Pilar.Speedport_W_303V_Typ_A> (sfid-20090223_222649_743143_192DB51E)
 MIME-Version: 1.0
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-CC: Lorenzo Nava <navalorenx@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: Re: More data on open-source firmware crash
-References: <49A1A331.9080205@lwfinger.net> <80C13710-6BA9-4F14-95B5-82C3043CE93B@ing.unibs.it> <49A41F1D.9060300@lwfinger.net> <03E07CC7-A971-4EDD-9363-628B61E94A92@ing.unibs.it>
-In-Reply-To: <03E07CC7-A971-4EDD-9363-628B61E94A92@ing.unibs.it>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Francesco Gringoli wrote:
-> What about drop info from dmesg? Another try could be halve the dma
-> queue, I believe now it is 64 slots. Could you give a try setting it to 32?
+I've just got this warning in my Vaio laptop:
 
-The RX DMA queue was 64 and TX was 256. Both will be 32 in my next run.
+------------[ cut here ]------------
+WARNING: at drivers/net/wireless/iwlwifi/iwl-tx.c:1254 iwl_tx_cmd_complete+0x28a/0x2e0()
+Hardware name: VGN-FZ240E
+wrong command queue 31, sequence 0x7FFF readp=241 writep=241
+Modules linked in: usbhid nvram snd_hda_codec_idt snd_hda_intel snd_hda_codec uvcvideo snd_hwdep snd_pcm iwlagn videodev snd_timer sky2 v4l1_compat v4l2_compat_ioctl32 evdev sg i2c_i801 snd_page_alloc sr_mod ata_piix ahci libata sd_mod scsi_mod uhci_hcd ohci_hcd ehci_hcd usbcore [last unloaded: scsi_wait_scan]
+Pid: 0, comm: swapper Not tainted 2.6.29-rc6 #37
+Call Trace:
+ <IRQ>  [<ffffffff8023d850>] warn_slowpath+0xd0/0x130
+ [<ffffffff8025072d>] ? queue_work_on+0x4d/0x60
+ [<ffffffff802508da>] ? queue_work+0x1a/0x20
+ [<ffffffff8053bb70>] ? ieee80211_sta_rx_mgmt+0xc0/0xf0
+ [<ffffffff80540f45>] ? ieee80211_invoke_rx_handlers+0x12c5/0x1650
+ [<ffffffff80233530>] ? enqueue_task_fair+0x190/0x2d0
+ [<ffffffff8022ecc0>] ? enqueue_task+0x50/0x60
+ [<ffffffff8025c049>] ? getnstimeofday+0x59/0xe0
+ [<ffffffff80234c24>] ? find_busiest_group+0x234/0x760
+ [<ffffffff8041eb3a>] iwl_tx_cmd_complete+0x28a/0x2e0
+ [<ffffffffa0124245>] iwl_rx_handle+0x115/0x4a0 [iwlagn]
+ [<ffffffffa01249ef>] iwl_irq_tasklet+0x41f/0xb30 [iwlagn]
+ [<ffffffff8025c049>] ? getnstimeofday+0x59/0xe0
+ [<ffffffff80242c39>] tasklet_action+0x69/0xf0
+ [<ffffffff80243784>] __do_softirq+0x94/0x160
+ [<ffffffff8020d57c>] call_softirq+0x1c/0x30
+ [<ffffffff8020ef35>] do_softirq+0x45/0x90
+ [<ffffffff80243435>] irq_exit+0x75/0xa0
+ [<ffffffff8020f196>] do_IRQ+0x86/0x110
+ [<ffffffff8020ce53>] ret_from_intr+0x0/0xa
+ <EOI>  [<ffffffff803a0322>] ? acpi_idle_enter_bm+0x2bf/0x344
+ [<ffffffff803a0318>] ? acpi_idle_enter_bm+0x2b5/0x344
+ [<ffffffff802587cf>] ? notifier_call_chain+0x3f/0x80
+ [<ffffffff80455345>] ? cpuidle_idle_call+0xa5/0x100
+ [<ffffffff8020b492>] ? cpu_idle+0x62/0xc0
+ [<ffffffff80549c7c>] ? rest_init+0x5c/0x70
+---[ end trace 281a546e35661751 ]---
 
-I don't understand the "drop info from dmesg" part.
+The wireless connection still seems to be good after this (I've
+found this warning after a curious look in the dmesg), but I
+thought I should send the warning to lkml just in case it has
+a deeper meaning to people out there.
 
-Larry
+The card is this one,
+Network controller: Intel Corporation PRO/Wireless 4965 AG or AGN Network Connection (rev 61)
 
+I can provide the whole dmesg output if needed too.
