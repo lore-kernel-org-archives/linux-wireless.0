@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f222.google.com ([209.85.217.222]:54645 "EHLO
-	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539AbZBPJY0 (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2040 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755136AbZBWPfQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 04:24:26 -0500
-Received: by gxk22 with SMTP id 22so2831876gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 01:24:24 -0800 (PST)
+	Mon, 23 Feb 2009 10:35:16 -0500
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Jiri Slaby <jirislaby@gmail.com>,
+	Sitsofe Wheeler <sitsofe@yahoo.com>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Date: Mon, 23 Feb 2009 10:35:02 -0500
+Message-Id: <20090223152724.M82409@bobcopeland.com> (sfid-20090223_163522_510336_A5190263)
+In-Reply-To: <49A1DDD2.7040706@gmail.com>
+References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1234775709.4219.111.camel@johannes.local>
-References: <1234589627-16977-1-git-send-email-lrodriguez@atheros.com>
-	 <1234589627-16977-7-git-send-email-lrodriguez@atheros.com>
-	 <1234695674.4219.50.camel@johannes.local>
-	 <43e72e890902160018r40d8c694qa1da55c9fa7ec376@mail.gmail.com>
-	 <1234774345.4219.106.camel@johannes.local>
-	 <43e72e890902160109i386d78bydd36f182ed3e6dcd@mail.gmail.com>
-	 <1234775709.4219.111.camel@johannes.local>
-Date: Mon, 16 Feb 2009 01:24:24 -0800
-Message-ID: <43e72e890902160124v2f36f7e1y70b0273cc456b916@mail.gmail.com> (sfid-20090216_102429_590484_52AC488F)
-Subject: Re: [PATCH 06/10] cfg80211: propagate -ENOMEM during
-	regulatory_init()
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 16, 2009 at 1:15 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-02-16 at 01:09 -0800, Luis R. Rodriguez wrote:
->
->> We're strictly checking just for ENOMEMs which if you are getting will
->> get you into problems anyway so might as well propagate that
->> information.
->>
->> kobject_uevent_env() can fail for a short set of other non-memory
->> related issues and those are the cases we are ignoring here including
->> the possible call to call_usermodehelper() during early boot (which
->> I'm not even sure how likely it is, Greg?).
->>
->> >, and then how is it different from crda
->> > failing in userspace to warrant stopping cfg80211 from moving on?
->>
->> This is based on the premise that we are simply bailing out for all
->> conditions on the creation of a udev event but that is not the case --
->> prior to this we were disregarding -ENOMEMs which I do not believe is
->> correct. Why wouldn't you want to propagate that?
->
-> Dunno, it just seems pointless to check for an error condition that
-> covers so few of the possible ways to fail here.
+On Mon, 23 Feb 2009 00:20:50 +0100, Jiri Slaby wrote
+> On 22.2.2009 22:56, Jiri Slaby wrote:
+> > Well, maybe we should try to reproduce with jumbo packets sent to the
+> > ath5k receiver, since I think it (1) is not very much test-covered code
+> > (2) appears to be related.
+> 
+> According to the spec I have for older chip, there is not `done' flag 
+> set for descriptors which have `more' flag set. We handle this wrongly. 
+> Am I looking correctly, Nick, Luis, Bob?
+> 
+> I still don't see what could have caused this though.
 
-RIght -- I hear ya, I am not sure how critical the other failures in
-kobject_uevent_env() are compared to -ENOMEM so this is why I didn't
-just propagate all errors and since one user already reported
-kobject_uevent_env() failing during initialization I was hesitant to
-simply let cfg80211 not be loaded because of this routine's failure.
+As I understand it, yes, we don't do the right thing when the more flag
+is set.  We're supposed to keep processing packets until we get one with
+the done flag, and then all of that is supposed to be merged into a single
+packet.  Other flags such as the rx rate are only valid on the final
+packet.
 
-On the other hand, if we let -ENOMEM be propagated I believe it would
-be easier to narrow down failures of kobject_uevent_env() during
-intialization but I have to understand exactly how common those other
-possible failure are and for what reason.
+However, I did some debugging of this a while ago and concluded that the
+'jumbo' frames were largely garbage data.  The dma buffer size is certainly
+large enough for a standard 802.11 frame and the 'more' flag is only
+supposed to be set if the dma buffer size is too small for a packet.  In
+all cases the dma buffer size was 2500+ bytes and the actual contents of
+the packets looked like random values (I did have encryption turned on,
+but there were no 802.11 headers I could see.)
 
-  Luis
+So I am not sure if the jumbo packets are causing bad things to happen,
+or if they are an indication that something bad has already happened.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
+
