@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55780 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473AbZBMLEU (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3061 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752851AbZBWQoY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 06:04:20 -0500
-Subject: Re: [PATCH 5/6] cfg80211: make regulatory_request use wiphy_idx
-	instead of wiphy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S0/MkLWvEwTG1qmuSYGs"
-Date: Fri, 13 Feb 2009 12:04:15 +0100
-Message-Id: <1234523055.4219.15.camel@johannes.local> (sfid-20090213_120424_512080_7D02885D)
-Mime-Version: 1.0
+	Mon, 23 Feb 2009 11:44:24 -0500
+Date: Mon, 23 Feb 2009 11:44:15 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090223164415.GA3558@hash.localnet> (sfid-20090223_174427_702725_7DB7F806)
+References: <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <40f31dec0902230803qcbd4c20kc66a50e6e2e8eef2@mail.gmail.com> <40f31dec0902230815x6b43fa50h41edfeead96822a3@mail.gmail.com> <20090223162103.GA3383@hash.localnet> <40f31dec0902230827j5c0f9f20je02c7fb02709f71e@mail.gmail.com> <20090223163032.GA3450@hash.localnet> <40f31dec0902230841m712acff4qe1c1617819f028be@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0902230841m712acff4qe1c1617819f028be@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Feb 23, 2009 at 06:41:01PM +0200, Nick Kossifidis wrote:
+> > No, that's intentional.  That was actually a bug we had at some point
+> > (rs_more is a u8 so the bitwise AND overflowed).  The "!!" makes it zero
+> > or one so it fits.
+> >
+> 
+> AR5K_REG_MS is used for that, we should just shift it as we do with
+> the other fields and btw i think we must change flags to be bool.
 
---=-S0/MkLWvEwTG1qmuSYGs
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Fine with me, in fact I wrote it that way first but someone suggested
+"!!" instead in a patch review.  Either way works.  Also ACK on using 
+bool.
 
-On Thu, 2009-02-12 at 21:36 -0800, Luis R. Rodriguez wrote:
->=20
-> +       if (wiphy_idx_valid(last_request->wiphy_idx))
-> +               request_wiphy =3D wiphy_idx_to_wiphy(last_request->wiphy_=
-idx);
-
-All this seems pointless, wiphy_idx_to_wiphy will just return NULL if
-the index isn't valid. This is in a number of places, and it's not like
-it being invalid will be happening often so we'd have to optimise for
-it.
-
-johannes
-
---=-S0/MkLWvEwTG1qmuSYGs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJlVOtAAoJEKVg1VMiehFYqboP/3F79/ZfJbF3LiE+V6J7fOKY
-boaXcVcZNNzX30z9S/NyhIZ5a99jLREe0uuDFe8+wlvUn0ZUlQUMHb1VGshkpbBS
-iGb+SLvUEv2vSKUEFrbHdj6b0UCS4HWeB7evWPLsq1U7xRqmpF9Rl7A9zL4V8GfM
-nbHTPgB/glNIO4zWFlaURX0cO/ll3mtyLfehJfhH2iRwMjEERTQ7U9EkNhhoECV3
-rNXBNtphuTiz7JlDpwix0q79uveb41UeGAgm+Fp+TehaW3J3YdOFJBFIbuuDNGLC
-X2mb9q2t78x7cmu11LFBHotnE1cinkOBe7clAPkQgFilZ//TmwLEVOc3z7BLIwkA
-cbYHMAf2aUU/O79nDFkR+ohxemRvgGhjYG7V7/bh1qbkNjMdbw1hMG9yLUBgG8/0
-MlMZ5hePTWiNRYezyUAhyfNO34Nf9d/EbY08t3JJE84D5NfHfAPezYJh6Akfjckw
-AdgzCxAQiY0Dr7BBi1oO/FvFMfWIL/udR77eCSUmbvgzvBuOraIHm2bOA6SUlngE
-NGIaY51HheIT94vEG/h0ClGzBoCLAoRghJp0xi3zkNB/bPTnPb5Z3pHabbStdXhc
-VRvNh2F+IOlu+g86ZbqvdEF3ilY66r2WtwHFLXM7acCDN6TnHkBQvr6j0vzkATO6
-3ggEmf6LVIV8eIU8rkD4
-=NDsH
------END PGP SIGNATURE-----
-
---=-S0/MkLWvEwTG1qmuSYGs--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
