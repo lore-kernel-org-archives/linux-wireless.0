@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42597 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:42657 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754869AbZBKT2F (ORCPT
+	with ESMTP id S1751601AbZBXNtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 14:28:05 -0500
-Subject: [PATCH] mac80211: disallow moving netns
+	Tue, 24 Feb 2009 08:49:47 -0500
+Subject: Re: [PATCH] ath9k: Add module parameter to disable hardware crypto
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Content-Type: text/plain
-Date: Wed, 11 Feb 2009 20:27:30 +0100
-Message-Id: <1234380450.16004.42.camel@johannes.local> (sfid-20090211_202810_877192_DC595C24)
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090224114201.GB21933@jm.kir.nu> (sfid-20090224_124211_250628_44CBCB11)
+References: <20090224114201.GB21933@jm.kir.nu>
+	 (sfid-20090224_124211_250628_44CBCB11)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-/Pncri8LHPkc3lNVGg3m"
+Date: Tue, 24 Feb 2009 05:49:07 -0800
+Message-Id: <1235483347.4320.7.camel@johannes.local> (sfid-20090224_144949_685088_0B1710C5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 currently assumes init_net for all interfaces,
-so really will not cope well with network namespaces,
-at least at this time.
 
-To change this, we would have keep track of the netns
-in addition to the ifindex, which is not something I
-want to think about right now.
+--=-/Pncri8LHPkc3lNVGg3m
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eric W. Biederman <ebiederm@xmission.com>
----
- net/mac80211/iface.c |    1 +
- net/mac80211/main.c  |    1 +
- 2 files changed, 2 insertions(+)
+On Tue, 2009-02-24 at 13:42 +0200, Jouni Malinen wrote:
+> In
+> addition, this allows management frame protection to be tested with
+> older hardware revisions.
 
---- wireless-testing.orig/net/mac80211/iface.c	2009-02-11 20:17:10.000000000 +0100
-+++ wireless-testing/net/mac80211/iface.c	2009-02-11 20:18:14.000000000 +0100
-@@ -810,6 +810,7 @@ int ieee80211_if_add(struct ieee80211_lo
- 
- 	memcpy(ndev->dev_addr, local->hw.wiphy->perm_addr, ETH_ALEN);
- 	SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
-+	ndev->features |= NETIF_F_NETNS_LOCAL;
- 
- 	/* don't use IEEE80211_DEV_TO_SUB_IF because it checks too much */
- 	sdata = netdev_priv(ndev);
---- wireless-testing.orig/net/mac80211/main.c	2009-02-11 20:17:10.000000000 +0100
-+++ wireless-testing/net/mac80211/main.c	2009-02-11 20:18:15.000000000 +0100
-@@ -922,6 +922,7 @@ int ieee80211_register_hw(struct ieee802
- 
- 	memcpy(local->mdev->dev_addr, local->hw.wiphy->perm_addr, ETH_ALEN);
- 	SET_NETDEV_DEV(local->mdev, wiphy_dev(local->hw.wiphy));
-+	local->mdev->features |= NETIF_F_NETNS_LOCAL;
- 
- 	result = register_netdevice(local->mdev);
- 	if (result < 0)
+This is odd, shouldn't older revisions refuse the hw key setup and use
+software anyway? Or are they unable to distinguish between management
+and data frames and thus it all goes wrong?
 
+johannes
+
+--=-/Pncri8LHPkc3lNVGg3m
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJo/rFAAoJEKVg1VMiehFYF2YP/A6YHozGbdBQQYBQZ3f+towe
+rkuQBcBBem5mAQXlTwwnfQP/v3OFtipR0Xr6TGdP4UYMZ70fyjOW142DcOZg5JrN
+hAYwrsf/+mszudKrp5WeWZhCiOD0J7MvXan/JVAyeCHwJVRJUl/f8HvN2WmUSjEw
+8kt+3OOoqlbf4FFKs2S1CwjcJEcvSBTE6yoE1vZwD6uw6yT9M3ZjxS2XNIrYqcML
+NlJYPxsl7IL+Us6zvn+MYLf8gm5NfqxqkqmhlaAZE6ENQzmqJARtinwCwRAuhE2j
+LUZ71Dc0pl+28rLiupxcjGx6wshxYtLZQOFSGO/Is9B9tRNwTd6xoOuOsmkt8n7O
+7JuKusGGahkd9JohlBOv9VqRNWkZEWZ0eh+P4SyAN4l3cDVnTF4hMbjaLXVzRJph
+ACPTy0K6utm52a0kNyrJAVgs8OSqRHJyk7iXJsqK4ITtnKjUfgAUCUMQ9AN4vwlk
+bc85MIhgyfLJo6nUV8X+BS7oTM1jDlIz30aFDCwy3i4S7gSOoLr92hhI8iss8y02
+3yC7XZDgu49BpXXp1KLYtAUPhFH9E6Yv5FSlhuoR5NoWw4Sh7MAph/2RjjJJiNll
+46A+fdoWY/NSwVZV1hFZSNvm4Pr9aJVwB4cTREWLQ3/+GrhNUZFKNYdTGwalARpR
+hKAeW0goVGXBeKeTNYao
+=hZ5z
+-----END PGP SIGNATURE-----
+
+--=-/Pncri8LHPkc3lNVGg3m--
 
