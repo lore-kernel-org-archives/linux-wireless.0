@@ -1,91 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43424 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbZBQQoX (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49347 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751652AbZBXSn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 11:44:23 -0500
-Subject: Re: [PATCH -next/mmotm/resend/lost] wireless: fix for
-	CONFIG_NL80211=n
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: lkml <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, akpm <akpm@linux-foundation.org>,
-	linville@tuxdriver.com
-In-Reply-To: <20090213163935.ea924a9a.randy.dunlap@oracle.com> (sfid-20090214_013927_260784_1DD3BDE7)
-References: <20090213163935.ea924a9a.randy.dunlap@oracle.com>
-	 (sfid-20090214_013927_260784_1DD3BDE7)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZtTcPGLy+nSr2Z/uNMVj"
-Date: Tue, 17 Feb 2009 17:44:17 +0100
-Message-Id: <1234889057.29785.5.camel@johannes.local> (sfid-20090217_174427_878472_DAE79B87)
-Mime-Version: 1.0
+	Tue, 24 Feb 2009 13:43:58 -0500
+Date: Tue, 24 Feb 2009 20:43:43 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
+Message-ID: <20090224184343.GA12620@jm.kir.nu> (sfid-20090224_194400_283729_BD81731A)
+References: <20090223163626.20939.4879.stgit@tikku> <20090223163738.20939.25890.stgit@tikku> <1235442058.4455.71.camel@johannes.local> <20090224090137.GB10851@jm.kir.nu> <87k57fy964.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87k57fy964.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Feb 24, 2009 at 08:36:03PM +0200, Kalle Valo wrote:
+> I see your point, I also have had to suffer because of buggy APs
+> having unstable TBTT. But the cost for this is high, currently it
+> increases two seconds the time to signal a lost connection to the user
+> space. I would hope to have something faster.
 
---=-ZtTcPGLy+nSr2Z/uNMVj
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+How can that take two seconds? All that would be needed here is to send
+out a unicast Probe Request to the current AP and wait for a Probe
+Response for a short timeout, say 20 ms. That shouldn't take more than
+50 ms or so at most.. If the current implementation uses two seconds for
+this, there is certainly room for improvement there and I would rather
+see that done than lose this extra protection against buggy
+implementations (either AP or STA for that matter).
 
-On Fri, 2009-02-13 at 16:39 -0800, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
->=20
-> Add empty function for case of CONFIG_NL80211=3Dn:
->=20
-> net/wireless/scan.c:35: error: implicit declaration of function 'nl80211_=
-send_scan_aborted'
->=20
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-
-bump &
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-I forgot this when adding the scan abort part.
-
-> ---
->  net/wireless/nl80211.h |    4 ++++
->  1 file changed, 4 insertions(+)
->=20
-> --- linux-next-20090212.orig/net/wireless/nl80211.h
-> +++ linux-next-20090212/net/wireless/nl80211.h
-> @@ -27,6 +27,10 @@ static inline void
->  nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
->  		       struct net_device *netdev)
->  {}
-> +static inline void nl80211_send_scan_aborted(
-> +					struct cfg80211_registered_device *rdev,
-> +					struct net_device *netdev)
-> +{}
->  #endif /* CONFIG_NL80211 */
-> =20
->  #endif /* __NET_WIRELESS_NL80211_H */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---=-ZtTcPGLy+nSr2Z/uNMVj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJmuldAAoJEKVg1VMiehFYaPsP/ArQ2cAA12EPOgvyB8nyKsqt
-q0ZZl0fInOTPN8uDCpdM8KyWAXLwkFD86i36kjkCsEk5uWN55UzabaGXnp20t61y
-Xpd4f2pGmvOdRuX44MA8HlAa6Can5fseSDNHVUA4JKSlWcOeiprB9wgph+0jhAoJ
-lCDAzk11xxeWA49yPiNQ/aIsHcuLNnx3F/wvoF8uOAUljkNT5PEKXBKSE+DNj4WS
-Nez27RqaBgHyyI5sggqTl0KR7o/NmzXof+k/b3QL7aP5JNsojo5g3zl4exFbPnkn
-Km0XMgH0pMg7KPjgKlCxqPdoCj+qIMvTEkZ0hupwzGka99cxc9cCPR9Mm30cQLX/
-0OwblI8zV2P27M4L7dqghS7Fa3mx5HsXw0hzLe8ZYyBWq1LDNjwwdcGNdBScqxoc
-VNwgG2rYjHPIKwY/B1Wp0Ko8ASb2Wh3a9NFJ8nVZKgMwDtS1W6ssvWl+By5IhTza
-gspW5CpBWsMe1/t5rHiQNScHE/BmcvPs32C826FtMrt1x0YNNCCVdlvEQWUIkvie
-0l+EXfPJGpbENrSxK5kyxx5mT3r3n/UaRs5kt74WdxXH6lybZRA4BRzdp3vaB9kg
-H5nPtKivj9+YNGFxM1EuEn8wxhFgFGn4m62MrAeTu+I1I5VgRmPKuJl37o4k7Og7
-OeMNvGyu5sdjMALX6KAk
-=OHg2
------END PGP SIGNATURE-----
-
---=-ZtTcPGLy+nSr2Z/uNMVj--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
