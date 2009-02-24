@@ -1,59 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52359 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758237AbZBIUDG (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49813 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753965AbZBXI64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 15:03:06 -0500
-Subject: Re: [PATCH] mac80211: reject extra IEs for probe resp when hw_scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1234209631.4175.242.camel@johannes.local> (sfid-20090209_210133_384668_7BC4C69F)
-References: <1234209631.4175.242.camel@johannes.local>
-	 (sfid-20090209_210133_384668_7BC4C69F)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-8NEWgLGtQV9CUChyJ9LR"
-Date: Mon, 09 Feb 2009 21:02:34 +0100
-Message-Id: <1234209754.4175.244.camel@johannes.local> (sfid-20090209_210324_781597_A0DEA8A4)
-Mime-Version: 1.0
+	Tue, 24 Feb 2009 03:58:56 -0500
+Date: Tue, 24 Feb 2009 10:58:34 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
+Message-ID: <20090224085834.GA10851@jm.kir.nu> (sfid-20090224_095859_101697_BCAA338E)
+References: <20090223163626.20939.4879.stgit@tikku> <20090223163738.20939.25890.stgit@tikku> <43e72e890902230947x6e55bf36ve715295f43f74fbb@mail.gmail.com> <87prh9ht22.fsf@litku.valot.fi> <43e72e890902231111g3705c5bh445e3317de5967f3@mail.gmail.com> <87bpst7xxd.fsf@litku.valot.fi> <43e72e890902232046v3c785a01s42e411e47a22288f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890902232046v3c785a01s42e411e47a22288f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Feb 23, 2009 at 08:46:59PM -0800, Luis R. Rodriguez wrote:
 
---=-8NEWgLGtQV9CUChyJ9LR
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> How does the hardware deal with IEs that may change order? I am not
+> sure how common this is but I do wonder.
 
-On Mon, 2009-02-09 at 21:00 +0100, Johannes Berg wrote:
-> We cannot currently hand off extra IEs to hw_scan, so reject
-> configuring extra IEs for probe response frames when hw_scan
-> is set.
+There are no such IEs; there is an explicit requirement for the order of
+IEs in the Beacon frames. Or well, the last slot is for vendor specific
+stuff, but anyway, I would agree with Johannes on someone changing the
+order of IEs in Beacons to be quite idiotic.
 
-Umm, that was screwed up, should be in probe request! Ignore this patch.
-
-johannes
-
---=-8NEWgLGtQV9CUChyJ9LR
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJkIvXAAoJEKVg1VMiehFYWAEP+wZ4lZ7pfVELF8fmnIDe6xX8
-eFXl7hCMiTjVxUYBl4Zcw6SlAo0XPlr3Uof4ucEJHLeLOazSAx43uGFnY9yDbsKS
-2yjZA8zJ/UbBpAWH9VGwpv3fNB0paU17cMHTNM2cDR1kh3+xX0+ZZZZ27GRtceW0
-wvcevhIhL2fXVnzf+YnT5VEhv2g7REHHh0nJVJMVFa3QrXaFGO+EePlLpTuzBsih
-CJ3zP6PAfEI5C7oDyFm/FQlMj/1IS9TPBfy9TTYXWX+fEk59lWzMdjcakjxO4Ohe
-bpMIh7iRgsoY5vDcg9DyeSibaseGtkVHmhDsAZBWM+Izm67q79eeHkqlQZdKR4Bf
-QF4P6TRCU2fo7BMfuP7GSSbhPk0LCuZC8FNpvHxo7sNzN36CdGmShy8GLUZ/Rjrr
-qxG1U+15wD1OcxIEpS1Hf+SNaJTFgO2X2VvIXjQqAjKa/3vRVbVOw6HzWRfYlMcC
-ufPGC5LsMiYEL8B3c+FChVGtL/sUjAfbgifu5whgoBdV/r98aE5hVeu8WZ2u+3Z7
-xjF9kYCJWkNEnuMP99EUFe9ymk1S3y2cHzr4LN+HqR10hCXIIuAgvu4yFyKHEKeo
-ioNekAG8eohzKC1hK2C6U7dyR0N5bFjL46HoXjHLsVzgfuG2xlQGJkA9G4CWMUej
-ZR+SM9wlCGurdOA+HRPM
-=LAkx
------END PGP SIGNATURE-----
-
---=-8NEWgLGtQV9CUChyJ9LR--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
