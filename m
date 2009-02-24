@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48812 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:58265 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754976AbZBLKGO (ORCPT
+	with ESMTP id S1753383AbZBXGc0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 05:06:14 -0500
-Subject: Re: soft-safe -> soft-unsafe lock order detected
+	Tue, 24 Feb 2009 01:32:26 -0500
+Subject: Re: pull request: wireless-next-2.6 2009-02-23
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4991AC67.90104@openwrt.org> (sfid-20090210_173417_726855_7504F887)
-References: <4991AC67.90104@openwrt.org>
-	 (sfid-20090210_173417_726855_7504F887)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RtfHxQCwtbS4hvCkG/kP"
-Date: Thu, 12 Feb 2009 11:05:41 +0100
-Message-Id: <1234433141.16004.85.camel@johannes.local> (sfid-20090212_110619_890286_88E79878)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20090223192659.GB3553@tuxdriver.com> (sfid-20090223_203027_265294_231D2366)
+References: <20090223192659.GB3553@tuxdriver.com>
+	 (sfid-20090223_203027_265294_231D2366)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-vpFpMKN3DZUuZOMiaCd/"
+Date: Mon, 23 Feb 2009 22:31:53 -0800
+Message-Id: <1235457113.4455.89.camel@johannes.local> (sfid-20090224_073230_009099_24738113)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-RtfHxQCwtbS4hvCkG/kP
+--=-vpFpMKN3DZUuZOMiaCd/
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-02-10 at 17:33 +0100, Gabor Juhos wrote:
+On Mon, 2009-02-23 at 14:26 -0500, John W. Linville wrote:
 
-> I'm testing the ath9k driver in STA mode on an Atheros AR913x based board=
-.
+> Johannes Berg (10):
+>       mac80211: disallow moving netns
+>       mac80211: fix aggregation for hardware with ampdu queues
+>       mac80211: split IBSS/managed code
+>       genetlink: introduce pre/post methods
 
->  (&local->sta_lock){.+..}
-> ... which became soft-irq-safe at:
->   [<800b21cc>] __lock_acquire+0x5a8/0x844
->   [<800b24c4>] lock_acquire+0x5c/0x84
->   [<8006b980>] _spin_lock_irqsave+0x50/0x74
->   [<c020570c>] ieee80211_beacon_get+0x14c/0x3a4 [mac80211]
->   [<c0341e08>] ath9k_beacon_tasklet+0x304/0x5c4 [ath9k]
-
-Something is mismatched here. STA mode !=3D beaconing.
+Hold off on this please, the genetlink patch here introduced a problem
+with locking and I'm going to rework/fix that.
 
 johannes
 
---=-RtfHxQCwtbS4hvCkG/kP
+--=-vpFpMKN3DZUuZOMiaCd/
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJk/RyAAoJEKVg1VMiehFYfOwP/jROdA9qNf82krnXIrpKBV66
-IwdkPUmZ/H7ID7FQ+Jn+Cf+uunYwWuQcpDeOyXhA9cuxMkyZB+iSZ8nGJI5FhBwg
-XjAD9ls6h2CzSIZtPF7pOuYTySfCYyLKM9ydjDjSAk4BDI0jcfXhE1x1w4/Y50lm
-8tK9EnzNk4SBF7wJnhrHD+mTlBAPbJpXMTsSKXDgVDz3sDfPtMoWVdJHrRFBnVYG
-gpfUBnWB5afSIKkdtB3N00xEXp5HT1I48ELF8nurNRI+QyooG0YvXYVJZW+v4uKW
-WIwsLCtu1JtIKE5CSUMtzyOvjhwjTmGr6PjE8NFHTLtXZkSAZYCJmNHb1dQ+VFKr
-YcUSJBfavUjqSgb3dyLrnbyLqnLmcWT6t3smCjSGPHiDSshiePJsKdkCfNdzQ45W
-9njwBxkNBOdtsXvZweeZbMEp5RMGzv1zeWQgScozpx105sMEA8M0Px5ZGm1Y/1MX
-kPYChqk0DGwKz0by3dVRWWhT11RQNilIoAkbhkCQ/xxjOvP/vS56HdVlmCpjWmvm
-KJWKBHB1S+VYpA2ALNa2cOcrKgm2+YXiQ7P4IsX/2wtSb+hi0IeTWiBvmbskMQqH
-OTRCOskGc1m0ByVoLWQv/NH2uJXkiXlafFCg5VYabXGBHR8QwQ9W1vhUJQbUSDs2
-I2zcFrIFtYsSHudz8hMB
-=Wgs2
+iQIcBAABAgAGBQJJo5RXAAoJEKVg1VMiehFYmlkQALYaKEsjnHkCbd0yaDVVIHd/
+v/YLEwLICJssImgY5GvB/RASOZc7mI7jpxVWywXLuRTtkGrv4+NJWdQwIeHnx5c8
+LGgPWPBPRmvGLKg9j1E73Pg87mSCaAWOSzEFfqVkZzUxN/RRJCsjSBYcpa8eUxMo
++OfxUbKalZSw7cXHrz+rb+bFwacUV8Ng6t2nfnfsW7VTGr5DVfGPoewrwSMUDUhu
+W2gIwqa+GAL/SFXSjy8+exCUD6DEqJw53JlQQUnvKTemekSfY0KJpzUDK9YYsA4x
+VuMoM+Ut3+BlMp13ZgAyHABg2TJ5TXjSPAEr32taiRazg3MPwTMr2b2Sy4ZdsNiI
+mn6qL0puQVzqZUAuDzksEMHNJ6OjEllb+S8RSfez3UbdDqIBS4YDKmQtf87KBvn2
+lwGZBgXuNztBXijXEvUdkbHvfcYyAXZEK3VFVDJn7YBYRYQF2EmV0cMpV7QYothw
+DB1UE3mkNypGsrr9mCbALi3JEjljC6CfXGfDt37qZRkymYxSg6uhJaZrHtpXoWbv
+j/FxbovX3syzgBR10scrIvgbPYvyAJ8Cf4Wr1yNal/GXG5LZ8s6x1UIeqHcYvFwI
+oTi8YKBnuo+FTEZyDmzIikCY7V3dmWpL0N3joz68pZ73THC22No55a5QhcTQ5J7G
+yswhwInHjtFaOVi1RwJZ
+=yL27
 -----END PGP SIGNATURE-----
 
---=-RtfHxQCwtbS4hvCkG/kP--
+--=-vpFpMKN3DZUuZOMiaCd/--
 
