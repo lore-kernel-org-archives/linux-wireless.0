@@ -1,47 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:35372 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754498AbZBKWc6 (ORCPT
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:41019
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752642AbZBXPcm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 17:32:58 -0500
-Received: by ewy14 with SMTP id 14so361923ewy.13
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 14:32:55 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "Christoph .J Thompson" <cjsthompson@gmail.com>
-Subject: Re: Sitecom WL-608 USB WiFi
-Date: Wed, 11 Feb 2009 23:32:53 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
-In-Reply-To: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
+	Tue, 24 Feb 2009 10:32:42 -0500
+Message-ID: <49A41315.3030007@erley.org> (sfid-20090224_163245_282743_97436981)
+Date: Tue, 24 Feb 2009 10:32:37 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200902112332.53480.IvDoorn@gmail.com> (sfid-20090211_233302_407511_1B3D233E)
+To: Jouni Malinen <j@w1.fi>
+CC: Jouni Malinen <jouni.malinen@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Add module parameter to disable hardware crypto
+References: <20090224114201.GB21933@jm.kir.nu> <49A40320.1040902@erley.org> <20090224150710.GA1419@jm.kir.nu>
+In-Reply-To: <20090224150710.GA1419@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Jouni Malinen wrote:
+> On Tue, Feb 24, 2009 at 09:24:32AM -0500, pat-lkml wrote:
+> 
+>> With this patch, and nohwcrypt=1, I get the following in hostapd (this
+>> system runs as an access point) when I try to associate with a client.
+>>
+>> I can't say whether this is a hostapd problem or an ath9k problem yet,
+>> but it's a different behavior than with nohwcrypt=0 or without this 
+>> patch.  With this patch, wpa2 works perfectly, as without it, as well
+>> as wep working perfectly.  
+> 
+> Are you saying that you get different behavior from hostapd when
+> comparing nohwcrypt=0 and nohwcrypt=1 (i.e., no changes in the driver
+> code, just the module parameter change)?
 
-> I just baught a Sitecom WL-608 USB WIFI dongle and it seems it isn't supported out of the box yet. Here is some info on the device:
+Yes.  
 
-Looks like a new USB id. Since it isn't an 11n device it can only be a rt73usb or rt2500usb device.
-Could you try below patch? My current bet is that the device contains the rt73 chipset,
-so this will enable rt73usb to use the device.
+>> I wouldn't call this report a 'ACK/NACK' report as it has caused no
+>> new problems, nor fixed any old problems.  Unfortunately I don't have 
+>> a log around of the old behavior right now, for comparison.  I just 
+>> wanted to report what I've found based on this patch.
+> 
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key frame (2/4 Pairwise)
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: invalid MIC in msg 2/4 of 4-Way Handshake
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
+>> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
+> 
+> Which client are you using? Are you sure that the passphrase/PSK is set
+> correctly? The nohwcrypt patch should make absolutely no difference for
+> this part (this is key handshake which in the initial phase is sent
+> without encrypted EAPOL-Key frames, so neither sw nor hw crypto used).
 
-Ivo
+I've tried 3 different clients with identical behavior:
 
----
+1.  Playstation 3
+2.  Dell Axim / WM6
+3.  ath5k Laptop
 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 846996c..84f2ee8 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2398,6 +2398,7 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	/* Senao */
- 	{ USB_DEVICE(0x1740, 0x7100), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Sitecom */
-+	{ USB_DEVICE(0x0df6, 0x003f), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x0df6, 0x9712), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x0df6, 0x90ac), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Surecom */
+I get that (afore mentioned invalid MIC in msg 2/4) with nohwcrypt=1, while
+nohwcrypt=0 I get 'STA Detected Michael MIC error' during stage 3 I believe. 
+
+I'll have more time after about 6:00PM EST to test this and provide the full
+logs of each client associating, along with  wpa_supplicant logs.  I'm running
+git hostapd, and I've NEVER had wpa1 work correctly with it, which is why I said
+that that report wasn't an 'ACK/NACK' just reporting that I see a difference in 
+behavior with it.  
+
+Pat
 
