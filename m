@@ -1,104 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19171 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751967AbZBTCcb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 21:32:31 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 18:32:31 -0800
-Date: Thu, 19 Feb 2009 18:31:44 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: Lockdep rtnl_mutex and genl_mutex circular dependency
-Message-ID: <20090220023144.GE4740@tesla> (sfid-20090220_033236_226088_BAC87115)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from xc.sipsolutions.net ([83.246.72.84]:46780 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752578AbZBXHO3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 02:14:29 -0500
+Subject: Re: Signal quality strange since commit 708c57cf1709fb95
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kalle.valo@iki.fi>, Dan Williams <dcbw@redhat.com>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <49A39C9C.7040002@lwfinger.net>
+References: <49A01922.1090106@lwfinger.net>
+	 <1235241867.3284.44.camel@localhost> <49A05E35.70904@lwfinger.net>
+	 <8763j33rgq.fsf@litku.valot.fi>
+	 (sfid-20090222_074023_562332_D346678B) <1235441441.4455.58.camel@johannes.local>
+	 <49A37531.70907@lwfinger.net> <1235452576.4455.81.camel@johannes.local>
+	 <49A39C9C.7040002@lwfinger.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rlOx2F+0FsvVUyDTb91B"
+Date: Mon, 23 Feb 2009 23:13:46 -0800
+Message-Id: <1235459626.4320.3.camel@johannes.local> (sfid-20090224_081432_459157_E571CC87)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just running 'iw list' a few times I got this. I have a few patches on
-top of wl, but this doesn't seem to be related to those.
 
-[ 1210.318826] =======================================================
-[ 1210.319991] [ INFO: possible circular locking dependency detected ]
-[ 1210.319991] 2.6.29-rc5-wl #10
-[ 1210.319991] -------------------------------------------------------
-[ 1210.319991] iw/6553 is trying to acquire lock:
-[ 1210.319991]  (genl_mutex){--..}, at: [<ffffffff804f6e42>] netlink_dump_start+0xf2/0x1b0
-[ 1210.444143] 
-[ 1210.444143] but task is already holding lock:
-[ 1210.444143]  (rtnl_mutex){--..}, at: [<ffffffff804e5db2>] rtnl_lock+0x12/0x20
-[ 1210.444143] 
-[ 1210.444143] which lock already depends on the new lock.
-[ 1210.444143] 
-[ 1210.444143] 
-[ 1210.444143] the existing dependency chain (in reverse order) is:
-[ 1210.444143] 
-[ 1210.444143] -> #1 (rtnl_mutex){--..}:
-[ 1210.444143]        [<ffffffff8026ba09>] __lock_acquire+0xd99/0x12c0
-[ 1210.444143]        [<ffffffff8026bf86>] lock_acquire+0x56/0x80
-[ 1210.444143]        [<ffffffff805bb682>] mutex_lock_nested+0xa2/0x320
-[ 1210.444143]        [<ffffffff804e5db2>] rtnl_lock+0x12/0x20
-[ 1210.444143]        [<ffffffffa00bcf59>] 0xffffffffa00bcf59
-[ 1210.444143]        [<ffffffff804f8450>] genl_rcv_msg+0x1d0/0x260
-[ 1210.444143]        [<ffffffff804f66e9>] netlink_rcv_skb+0x89/0xb0
-[ 1210.444143]        [<ffffffff804f8269>] genl_rcv+0x29/0x40
-[ 1210.444143]        [<ffffffff804f6484>] netlink_unicast+0x2d4/0x2f0
-[ 1210.444143]        [<ffffffff804f75a9>] netlink_sendmsg+0x1f9/0x2e0
-[ 1210.444143]        [<ffffffff804ca43f>] sock_sendmsg+0xdf/0x110
-[ 1210.444143]        [<ffffffff804ca5b5>] sys_sendmsg+0x145/0x280
-[ 1210.444143]        [<ffffffff8020c6db>] system_call_fastpath+0x16/0x1b
-[ 1210.444143]        [<ffffffffffffffff>] 0xffffffffffffffff
-[ 1210.444143] 
-[ 1210.444143] -> #0 (genl_mutex){--..}:
-[ 1210.444143]        [<ffffffff8026bad2>] __lock_acquire+0xe62/0x12c0
-[ 1210.444143]        [<ffffffff8026bf86>] lock_acquire+0x56/0x80
-[ 1210.444143]        [<ffffffff805bb682>] mutex_lock_nested+0xa2/0x320
-[ 1210.444143]        [<ffffffff804f6e42>] netlink_dump_start+0xf2/0x1b0
-[ 1210.444143]        [<ffffffff804f848f>] genl_rcv_msg+0x20f/0x260
-[ 1210.444143]        [<ffffffff804f66e9>] netlink_rcv_skb+0x89/0xb0
-[ 1210.444143]        [<ffffffff804f8269>] genl_rcv+0x29/0x40
-[ 1210.444143]        [<ffffffff804f6484>] netlink_unicast+0x2d4/0x2f0
-[ 1210.444143]        [<ffffffff804f75a9>] netlink_sendmsg+0x1f9/0x2e0
-[ 1210.444143]        [<ffffffff804ca43f>] sock_sendmsg+0xdf/0x110
-[ 1210.444143]        [<ffffffff804ca5b5>] sys_sendmsg+0x145/0x280
-[ 1210.444143]        [<ffffffff8020c6db>] system_call_fastpath+0x16/0x1b
-[ 1210.444143]        [<ffffffffffffffff>] 0xffffffffffffffff
-[ 1210.444143] other info that might help us debug this:
-[ 1210.444143] 
-[ 1210.444143] 1 lock held by iw/6553:
-[ 1210.444143]  #0:  (rtnl_mutex){--..}, at: [<ffffffff804e5db2>] rtnl_lock+0x12/0x20
-[ 1210.444143] 
-[ 1210.444143] stack backtrace:
-[ 1210.444143] Pid: 6553, comm: iw Not tainted 2.6.29-rc5-wl #10
-[ 1210.444143] Call Trace:
-[ 1210.444143]  [<ffffffff80269e5c>] print_circular_bug_tail+0xac/0x110
-[ 1210.444143]  [<ffffffff8026bad2>] __lock_acquire+0xe62/0x12c0
-[ 1210.444143]  [<ffffffff804f6e42>] ? netlink_dump_start+0xf2/0x1b0
-[ 1210.444143]  [<ffffffff8026bf86>] lock_acquire+0x56/0x80
-[ 1210.444143]  [<ffffffff804f6e42>] ? netlink_dump_start+0xf2/0x1b0
-[ 1210.444143]  [<ffffffff805bb682>] mutex_lock_nested+0xa2/0x320
-[ 1210.444143]  [<ffffffff804f6e42>] ? netlink_dump_start+0xf2/0x1b0
-[ 1210.444143]  [<ffffffff804f6e42>] netlink_dump_start+0xf2/0x1b0
-[ 1210.444143]  [<ffffffff804f848f>] genl_rcv_msg+0x20f/0x260
-[ 1210.444143]  [<ffffffff805bb82c>] ? mutex_lock_nested+0x24c/0x320
-[ 1210.444143]  [<ffffffff804f825a>] ? genl_rcv+0x1a/0x40
-[ 1210.444143]  [<ffffffff804f8280>] ? genl_rcv_msg+0x0/0x260
-[ 1210.444143]  [<ffffffff804f66e9>] netlink_rcv_skb+0x89/0xb0
-[ 1210.444143]  [<ffffffff804f8269>] genl_rcv+0x29/0x40
-[ 1210.444143]  [<ffffffff804f62d3>] ? netlink_unicast+0x123/0x2f0
-[ 1210.444143]  [<ffffffff804f6484>] netlink_unicast+0x2d4/0x2f0
-[ 1210.444143]  [<ffffffff804d17de>] ? __alloc_skb+0x6e/0x140
-[ 1210.444143]  [<ffffffff804f75a9>] netlink_sendmsg+0x1f9/0x2e0
-[ 1210.444143]  [<ffffffff804ca43f>] sock_sendmsg+0xdf/0x110
-[ 1210.444143]  [<ffffffff80258700>] ? autoremove_wake_function+0x0/0x40
-[ 1210.444143]  [<ffffffff804cb047>] ? move_addr_to_kernel+0x57/0x60
-[ 1210.444143]  [<ffffffff804d424f>] ? verify_iovec+0x3f/0xe0
-[ 1210.444143]  [<ffffffff804ca5b5>] sys_sendmsg+0x145/0x280
-[ 1210.444143]  [<ffffffff805c04b6>] ? do_page_fault+0x316/0xa10
-[ 1210.444143]  [<ffffffff804cb37d>] ? move_addr_to_user+0x9d/0xb0
-[ 1210.444143]  [<ffffffff804cb809>] ? sys_getsockname+0x99/0xa0
-[ 1210.444143]  [<ffffffff8026a9ba>] ? trace_hardirqs_on_caller+0x14a/0x1a0
-[ 1210.444143]  [<ffffffff805bd1ef>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-[ 1210.444143]  [<ffffffff8020c6db>] system_call_fastpath+0x16/0x1b
+--=-rlOx2F+0FsvVUyDTb91B
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2009-02-24 at 01:07 -0600, Larry Finger wrote:
+> Johannes Berg wrote:
+> > On Mon, 2009-02-23 at 22:18 -0600, Larry Finger wrote:
+> >=20
+> >> No, I just wondered if it was intentional that it was changed to /70. =
+It appears
+> >> that it was, therefore, at least 3 drivers must be changed as they are
+> >> calculating on the basis of /100. For example, my b43 is showing an iw=
+config
+> >> Link Quality of 93/70 while the KNM applet is showing 50%.
+> >=20
+> > Well that _is_ a bug, since this shouldn't have required driver changes=
+!
+> > I'll take a look into why that might be happening.
+>=20
+> Drivers b43, b43legacy, rtl8187, and p54usb all assume a Link Quality sca=
+led to
+> 100, which was the behavior before the commit in the subject. I don't qui=
+te
+> understand why as the old code had this fragment:
+
+Ahh. I see now, you're talking wireless_stats and I'm thinking scan
+results. Yeah, I see what's going on, I'll fix it tomorrow.
+
+johannes
+
+--=-rlOx2F+0FsvVUyDTb91B
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJo54nAAoJEKVg1VMiehFYyT4QAJ46rPPmVAZuPXeayUEnRy/H
+wDP0s2IN95/9dLjm2/A+K6tMVBJgijaaCyWBZ+g0+rkSAjWMGKED4sQEt8aRe8Fz
+qR4ZsbgOP8MRWkUrEfkrbDAuhccOcE62HPm9iC/Dmg02DimtYCC66jvZuM24LMcO
+qow5dWXZVNHmMVUQdldFbwnFi+geTAapK9E0i+nNLM/ZMY1qzpakKxYiF5Qy9Ovp
+KhLAj3JRs393Akh6um7+B46rLC3mtruimc8GmkVGFl7U9jBEugYqpK/1M8jhTjL5
+4y95CPulJ30tLEHKz+hg2Jl8ZnRVysg96qJBNmnLTGSVm4536c7EB1F1n0n/G2JU
+nYXAytKGLnUaNJG/TbMvSfS2c7FE9SBbPQla7cKYfCeRIzMynJ0/xR6v7Pl5v2M3
+PD0FgITtE2pDr7p9AvFfE7qB62szuidQKSGsLQ63Pa6lWDn9Lm63WFUtsxsa1nzJ
+0/wfS3ndrlFGJAB5/wWbjihnykjMgCr7g5OLFUhBVv3f+0LDO8e9GZTq82HMhI+Q
+3LIdvnronA6ss6mKRvyZ2df71nNdn0tT8fdFJIDJdphS/5AUYS8s6zk5moRzpsV5
+U7SE/6506lIPbxSAjj+FYsAqJZr0TI1Fjr7gg8kDbUl80mxkYccHuJcM5PCdRg3T
+sYsIRJtU0cHhTxKssveK
+=GWfq
+-----END PGP SIGNATURE-----
+
+--=-rlOx2F+0FsvVUyDTb91B--
 
