@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ammma.de ([213.83.39.131]:3272 "EHLO ammma.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755162AbZBPNjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 08:39:24 -0500
-Received: from ammma.net (hydra.ammma.mil [192.168.110.1])
-	by ammma.de (8.11.6/8.11.6/AMMMa AG) with ESMTP id n1GDf9I14307
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 14:41:09 +0100
-Received: from neo.wg.de (hydra.ammma.mil [192.168.110.1])
-	by ammma.net (8.12.11.20060308/8.12.11/AMMMa AG) with ESMTP id n1GDdKXI030039
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 14:39:20 +0100
-Received: from localhost (localhost [127.0.0.1])
-	by neo.wg.de (Postfix) with ESMTP id 8535C434FE4
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 14:39:20 +0100 (CET)
-Received: from neo.wg.de ([127.0.0.1])
-	by localhost (neo.wg.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id tzl+UvGlS1aH for <linux-wireless@vger.kernel.org>;
-	Mon, 16 Feb 2009 14:39:15 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by neo.wg.de (Postfix) with ESMTP id 95CCF434FE6
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 14:39:15 +0100 (CET)
-Message-ID: <20090216143915.18703m2wpmqic1ic@neo.wg.de> (sfid-20090216_143928_045937_879E5230)
-Date: Mon, 16 Feb 2009 14:39:15 +0100
-From: Jan Schneider <jan@horde.org>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Connection "interruptions"
+Received: from mail-fx0-f167.google.com ([209.85.220.167]:43174 "EHLO
+	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175AbZBXMQC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 07:16:02 -0500
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [Ipw2100-devel] ipw2100: race between isr_indicate_associated and rx path
+Date: Tue, 24 Feb 2009 13:15:42 +0100
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+References: <200901211734.48625.helmut.schaa@gmail.com> <200902231138.58067.helmut.schaa@gmail.com> <1235446447.6354.549.camel@debian>
+In-Reply-To: <1235446447.6354.549.camel@debian>
 MIME-Version: 1.0
 Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+  charset="iso-8859-1"
+Message-Id: <200902241315.43128.helmut.schaa@gmail.com> (sfid-20090224_131613_074304_2BBCD1B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Am Dienstag, 24. Februar 2009 schrieb Zhu Yi:
 
-now that I got current wireless-compat snapshots running at all, I'm  
-back to look into what I hoped had been fixed in newer versions:
-I see arbitrary "interruptions" of the wireless connection. The  
-transfer just halts for a few seconds, no traffic is going over the  
-ether at all. Then suddenly, the connection resumes as if nothing  
-happened. Nothing is being logged by kernel, wpa_supplicant or syslog.  
-This is a draft-n-only thing, it does not happen if I tell either the  
-AP or the driver module to not use draft-n. This is an Intel 5300 board.
-I am wondering how to further track this down, or how to collect  
-useful data for a bug report. Logging everything with the debug flag  
-is probably not very helpful, since this produces huge logs, and it's  
-not easy to determine the exact point when the connection drops. What  
-might be useful flags for the debug50 parameter to get more  
-information from the driver without getting lost in the sheer amount  
-of debug messages?
+[...]
 
-Jan.
+> Thanks for the analysis. Are you sure noop_qdisc is still used when we
+> are about to netif_carrier_on() after receiving the association success
+> response? 
 
--- 
-Do you need professional PHP or Horde consulting?
-http://horde.org/consulting/
+Yes, had a printk in noop_enqueue.
 
+> From dev_open(), dev_activate() is called after netdev->open.
+> So the txq->qdisc_sleeping should be already replaced with pfifo_fast.
+> But the state is still DEACTIVATED.
+
+Right. But for example when a connection cannot be established by ipw2100
+it will call netif_carrier_off on disassociation which in turn leads to a
+call to dev_deavtivate. Hence, it is possible that a noop_qdisc is
+assigned while the device is up and carrier is off.
+
+> Should the packet from 
+> wpa_supplicant be dropped by dev_queue_xmit()?
+>
+> > So, how should I proceed here?
+> > 
+> > Some possibilities that come to mind:
+> > 
+> > 1) let the noop_qdisc return NET_XMIT_DROP instead of NET_XMIT_CN and extend
+> >    wpa_supplicant to retry after a short timeout. Already tried this approach
+> >    and it works fine for me. wpa_supplicant typically needs one retry (200ms
+> >    delay) until the frame is successfully send out.
+> > 
+> > 2) Run activate_dev somehow without a delay. I guess this could be achieved by
+> >    changing linkwatch_urgent_event. I haven't tested this yet. But I guess we
+> >    would still have a small race here.
+> > 
+> > 3) Wait until activate_dev was called in ipw2100 before replaying the cached
+> >    frames.
+> 
+> I think making a sync version of netif_carrier_on/activate_dev should be
+> the way to go. This could be a requirement from wireless. In wired
+> network, netif_carrier_on() is called after a network cable plug event
+> is detected. Some delay should be OK.
+
+Maybe, but I can imagine a similar race when using a wired 802.1x secured
+network. The switch might send an EAP-request very quickly after the carrier
+was detected.
+
+> But in wireless, 
+> netif_carrier_on() is usually called after an association is succeeded.
+> The driver has already some management frames transfered with AP. Now
+> it's the time to open the data frame transmission. The driver requires
+> to get the activate_dev() result (synchronously or via callback) because
+> otherwise the driver has no idea when the Qdisc is ready and then it can
+> start to deliver data frames to network stack and user space.
+
+Exactly.
+
+[...]
+
+Helmut
 
