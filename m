@@ -1,122 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19348 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752131AbZBDCoD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 21:44:03 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 18:44:03 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:52397 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756567AbZBXOuV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 09:50:21 -0500
+Date: Tue, 24 Feb 2009 16:49:58 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] nl80211: Avoid AP mode BUG_ON hang with invalid lock assert
+Message-ID: <20090224144958.GA467@jm.kir.nu> (sfid-20090224_155029_426458_2650CE9F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18825.26.863392.575020@gargle.gargle.HOWL> (sfid-20090204_034413_742399_8BEBD4A4)
-Date: Wed, 4 Feb 2009 08:10:26 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 4/4] ath9k: Add retry counters to rate control debug file
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+2b1d3f8fbd188d84713d25e9d1c3126e3852a1b3 added assert_cfg80211_lock()
+calls into various places. At least one of them, nl80211_send_wiphy(),
+should not have been there. That triggers the BUG_ON in
+assert_cfg80211_lock() and pretty much kills the kernel whenever
+someone runs hostapd.. Remove that call and make assert_cfg80211_lock()
+use WARN_ON instead of BUG_ON to be a bit more friendly to users.
+
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
 ---
- drivers/net/wireless/ath9k/core.h  |    9 +++++++++
- drivers/net/wireless/ath9k/debug.c |   23 +++++++++++++++++++----
- drivers/net/wireless/ath9k/rc.c    |    2 ++
- 3 files changed, 30 insertions(+), 4 deletions(-)
+ net/wireless/core.h    |    2 +-
+ net/wireless/nl80211.c |    2 --
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 63d3eb6..64fc5c2 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -137,6 +137,8 @@ struct ath_legacy_rc_stats {
+--- wireless-testing.orig/net/wireless/core.h	2009-02-24 16:32:53.000000000 +0200
++++ wireless-testing/net/wireless/core.h	2009-02-24 16:33:18.000000000 +0200
+@@ -76,7 +76,7 @@ extern struct list_head cfg80211_drv_lis
  
- struct ath_11n_rc_stats {
- 	u32 success;
-+	u32 retries;
-+	u32 xretries;
- };
- 
- struct ath_stats {
-@@ -160,6 +162,8 @@ int ath9k_init_debug(struct ath_softc *sc);
- void ath9k_exit_debug(struct ath_softc *sc);
- void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status);
- void ath_debug_stat_rc(struct ath_softc *sc, struct sk_buff *skb);
-+void ath_debug_stat_retries(struct ath_softc *sc, int rix,
-+			    int xretries, int retries);
- 
- #else
- 
-@@ -187,6 +191,11 @@ static inline void ath_debug_stat_rc(struct ath_softc *sc,
+ static inline void assert_cfg80211_lock(void)
  {
+-	BUG_ON(!mutex_is_locked(&cfg80211_mutex));
++	WARN_ON(!mutex_is_locked(&cfg80211_mutex));
  }
  
-+static inline void ath_debug_stat_retries(struct ath_softc *sc, int rix,
-+					  int xretries, int retries)
-+{
-+}
-+
- #endif /* CONFIG_ATH9K_DEBUG */
+ /*
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-02-24 16:33:57.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-02-24 16:34:28.000000000 +0200
+@@ -158,8 +158,6 @@ static int nl80211_send_wiphy(struct sk_
+ 	int i;
+ 	u16 ifmodes = dev->wiphy.interface_modes;
  
- struct ath_config {
-diff --git a/drivers/net/wireless/ath9k/debug.c b/drivers/net/wireless/ath9k/debug.c
-index 6181e49..2de1b8a 100644
---- a/drivers/net/wireless/ath9k/debug.c
-+++ b/drivers/net/wireless/ath9k/debug.c
-@@ -258,21 +258,36 @@ void ath_debug_stat_rc(struct ath_softc *sc, struct sk_buff *skb)
- 		ath_debug_stat_legacy_rc(sc, skb);
- }
- 
-+/* FIXME: legacy rates, later on .. */
-+void ath_debug_stat_retries(struct ath_softc *sc, int rix,
-+			    int xretries, int retries)
-+{
-+	if (conf_is_ht(&sc->hw->conf)) {
-+		int idx = sc->cur_rate_table->info[rix].dot11rate;
-+
-+		sc->sc_debug.stats.n_rcstats[idx].xretries += xretries;
-+		sc->sc_debug.stats.n_rcstats[idx].retries += retries;
-+	}
-+}
-+
- static ssize_t ath_read_file_stat_11n_rc(struct file *file,
- 					 char __user *user_buf,
- 					 size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	char buf[512];
-+	char buf[1024];
- 	unsigned int len = 0;
- 	int i = 0;
- 
--	len += sprintf(buf, "%7s %13s\n\n", "Rate", "Success");
-+	len += sprintf(buf, "%7s %13s %8s %8s\n\n", "Rate", "Success",
-+		       "Retries", "XRetries");
- 
- 	for (i = 0; i <= 15; i++) {
- 		len += snprintf(buf + len, sizeof(buf) - len,
--				"%5s%3d: %8u\n", "MCS", i,
--				sc->sc_debug.stats.n_rcstats[i].success);
-+				"%5s%3d: %8u %8u %8u\n", "MCS", i,
-+				sc->sc_debug.stats.n_rcstats[i].success,
-+				sc->sc_debug.stats.n_rcstats[i].retries,
-+				sc->sc_debug.stats.n_rcstats[i].xretries);
- 	}
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 704b627..69a4ca4 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1267,6 +1267,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 		ath_rc_priv->per_down_time = now_msec;
- 	}
- 
-+	ath_debug_stat_retries(sc, tx_rate, xretries, retries);
-+
- #undef CHK_RSSI
- }
- 
+-	assert_cfg80211_lock();
+-
+ 	hdr = nl80211hdr_put(msg, pid, seq, flags, NL80211_CMD_NEW_WIPHY);
+ 	if (!hdr)
+ 		return -1;
+
 -- 
-1.6.1
-
+Jouni Malinen                                            PGP id EFC895FA
