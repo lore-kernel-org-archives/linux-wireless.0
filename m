@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37716 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753321AbZBRVc2 (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:44253 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752666AbZBXQ3d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 16:32:28 -0500
-Subject: Re: ieee80211_regdom module parameter for cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 24 Feb 2009 11:29:33 -0500
+Cc: Lorenzo Nava <navalorenx@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Message-Id: <03E07CC7-A971-4EDD-9363-628B61E94A92@ing.unibs.it> (sfid-20090224_172936_470162_3A928BAF)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <499C7DC0.4040608@lwfinger.net>
-References: <499C7DC0.4040608@lwfinger.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kfizLggx3fxcqGJh3g0F"
-Date: Wed, 18 Feb 2009 22:31:52 +0100
-Message-Id: <1234992712.4023.60.camel@johannes.local> (sfid-20090218_223230_825736_E7DFBB17)
-Mime-Version: 1.0
+In-Reply-To: <49A41F1D.9060300@lwfinger.net>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: More data on open-source firmware crash
+Date: Tue, 24 Feb 2009 17:29:28 +0100
+References: <49A1A331.9080205@lwfinger.net> <80C13710-6BA9-4F14-95B5-82C3043CE93B@ing.unibs.it> <49A41F1D.9060300@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Feb 24, 2009, at 5:23 PM, Larry Finger wrote:
 
---=-kfizLggx3fxcqGJh3g0F
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>
+> Francesco,
+>
+> I don't think the problem results from an overrun of the TX FIFO. In  
+> my latest
+> test, I added code in routine handle_irq_transmit_status() that  
+> would print a
+> message if the while loop count reached 16 or more. That print did  
+> not occur.
+> The largest queue depth reached during the run was 14. When the first
+> out-of-order cookie was received, the largest depth in the last 64  
+> transactions
+> was only 5.
+>
+> I'm going to increase the number of transactions saved for my next  
+> run. Any
+> other info that I should capture?
+What about drop info from dmesg? Another try could be halve the dma  
+queue, I believe now it is 64 slots. Could you give a try setting it  
+to 32?
 
-On Wed, 2009-02-18 at 15:29 -0600, Larry Finger wrote:
-> On at least one forum, I have seen the recommendation that a user set the=
-ir
-> regulatory domain by creating the file /etc/modprobe.d/cfg80211 with the
-> contents "ieee80211_regdom=3DUS".
->=20
-> That works as long as CONFIG_WIRELESS_OLD_REGULATORY is set in their .con=
-fig,
-> but will fail if it is not.
->=20
-> Should the module_param statement be moved outside the ifdef
-> CONFIG_WIRELESS_OLD...? Setting the module parameter that way might not m=
-ake any
-> sense, but it surely shouldn't kill wireless.
+Cheers,
+-FG
 
-I actually see no reason to not just /honour/ it by calling crda with
-its parameter if CONFIG_WIRELESS_OLD_REGULATORY isn't set.
+>
+>
+> Larry
 
-johannes
+-------
 
---=-kfizLggx3fxcqGJh3g0F
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Francesco Gringoli, PhD - Assistant Professor
+Dept. of Electrical Engineering for Automation
+University of Brescia
+via Branze, 38
+25123 Brescia
+ITALY
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Ph:  ++39.030.3715843
+FAX: ++39.030.380014
+WWW: http://www.ing.unibs.it/~gringoli
 
-iQIcBAABAgAGBQJJnH5GAAoJEKVg1VMiehFY2NcP/3PpF5K4I/LoMlg7JgVJLi2r
-JZfkEOMNvaxY2lniTK6JVQ+RF4qbdu6lzUPDoPCw1m8UQnltcM2hRR/YeaGlZgvr
-lXVo36Caxmx2IQVZgUSmsyGFbYsBV+9VD+wb5JXQw0XMe4agQ5tllWkpD5FuSgFB
-YGIwYQwiXT5+4of0iMpHMcSOdKnNIlzvQYRIAx7UqK7e67hqWYCSzuZIvVTLtuNT
-jPQ3gwJqbxMRhfROj1po4tiaY5lcilh2XcLgt6VHhctKEivfZrczGG1fbFK1kXlX
-icfGw7bcinRJmFd32EDLi1m/YAWz3D116P6BKrtHeO2qbQYbyZWF6lnnq2i+dsmz
-1mflN4NaxC3XvpEXm6XfRCxA+2+/EOUanDs647QoZITs3Q/OewZg+x/BTFXNvXLV
-b9e7UCQ6aTIrOwsmcjM2M3j8Tcyq4CNRT2FS5akE7yimSrwy+USQlU9dCx8HsbEZ
-mzJRqCy/A2PNVcJ2I5saDt12+ORGk1ae0XWzKLHKj0SXEOAhgdSVJoRpl6tuagwv
-6sVx2xEr6E7yreZlNU7JWxIjGHzQlKuvXatlVIzjPV0b1UhrlHGV0z6tlmJqIPOy
-BEIv8JEpGjLfXlETzP38+noHxf1qeQZdy3p9/F7CMo/ysviHguwPEnm9A5WzRLVQ
-VlUW1CnkM+51gDU9EocK
-=wQxT
------END PGP SIGNATURE-----
 
---=-kfizLggx3fxcqGJh3g0F--
+
 
