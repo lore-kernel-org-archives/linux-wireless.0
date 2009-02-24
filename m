@@ -1,148 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f20.google.com ([209.85.220.20]:38620 "EHLO
-	mail-fx0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752619AbZBBLPN (ORCPT
+Received: from mtiwmhc11.worldnet.att.net ([204.127.131.115]:48398 "EHLO
+	mtiwmhc11.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753628AbZBXHHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 06:15:13 -0500
-Received: by fxm13 with SMTP id 13so1395883fxm.13
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 03:15:11 -0800 (PST)
+	Tue, 24 Feb 2009 02:07:12 -0500
+Message-ID: <49A39C9C.7040002@lwfinger.net> (sfid-20090224_080716_250692_0C5ABCC3)
+Date: Tue, 24 Feb 2009 01:07:08 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <18822.51903.216795.888284@gargle.gargle.HOWL>
-References: <18822.51903.216795.888284@gargle.gargle.HOWL>
-Date: Mon, 2 Feb 2009 13:15:10 +0200
-Message-ID: <1ba2fa240902020315w49a67afg6ddf8a0e5d367548@mail.gmail.com> (sfid-20090202_121520_299184_F008470B)
-Subject: Re: [PATCH] mac80211: Extend the rate control API with an update
-	callback
-From: Tomas Winkler <tomasw@gmail.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	Jouni.Malinen@atheros.com, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Kalle Valo <kalle.valo@iki.fi>, Dan Williams <dcbw@redhat.com>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Signal quality strange since commit 708c57cf1709fb95
+References: <49A01922.1090106@lwfinger.net>	 <1235241867.3284.44.camel@localhost> <49A05E35.70904@lwfinger.net>	 <8763j33rgq.fsf@litku.valot.fi>	 (sfid-20090222_074023_562332_D346678B) <1235441441.4455.58.camel@johannes.local>	 <49A37531.70907@lwfinger.net> <1235452576.4455.81.camel@johannes.local>
+In-Reply-To: <1235452576.4455.81.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 2, 2009 at 12:28 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> The AP can switch dynamically between 20/40 Mhz channel width,
-> in which case we switch the local operating channel, but the
-> rate control algorithm is not notified. This patch adds a new callback
-> to indicate such changes to the RC algorithm.
->
-> Currently, HT channel width change is notified, but this callback
-> can be used to indicate any new requirements that might come up later on.
+Johannes Berg wrote:
+> On Mon, 2009-02-23 at 22:18 -0600, Larry Finger wrote:
+> 
+>> No, I just wondered if it was intentional that it was changed to /70. It appears
+>> that it was, therefore, at least 3 drivers must be changed as they are
+>> calculating on the basis of /100. For example, my b43 is showing an iwconfig
+>> Link Quality of 93/70 while the KNM applet is showing 50%.
+> 
+> Well that _is_ a bug, since this shouldn't have required driver changes!
+> I'll take a look into why that might be happening.
 
-I like the idea. It's good for any coexistence  such G protection
-(CTS/RTS) which also affects throughput and RC.
-I'm not sure if it's not better to connect it directly somehow with
-BSS info changed.
-Thanks
-Tomas
+Drivers b43, b43legacy, rtl8187, and p54usb all assume a Link Quality scaled to
+100, which was the behavior before the commit in the subject. I don't quite
+understand why as the old code had this fragment:
 
->
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> ---
->  include/net/mac80211.h |   13 +++++++++++++
->  net/mac80211/ht.c      |   12 ++++++++++++
->  net/mac80211/rate.h    |   12 ++++++++++++
->  3 files changed, 37 insertions(+), 0 deletions(-)
->
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index e2144f0..88d4b8c 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1984,6 +1984,16 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_hw *hw,
->  /* Rate control API */
->
->  /**
-> + * enum rate_control_changed - flags to indicate which parameter changed
-> + *
-> + * @IEEE80211_RC_CHANNEL_CHANGED: The operating channel has changed, rate
-> + *     control algorithm can update its internal state if needed.
-> + */
-> +enum rate_control_changed {
-> +       IEEE80211_RC_CHANNEL_CHANGED = BIT(0)
-> +};
-> +
-> +/**
->  * struct ieee80211_tx_rate_control - rate control information for/from RC algo
->  *
->  * @hw: The hardware the algorithm is invoked for.
-> @@ -2019,6 +2029,9 @@ struct rate_control_ops {
->        void *(*alloc_sta)(void *priv, struct ieee80211_sta *sta, gfp_t gfp);
->        void (*rate_init)(void *priv, struct ieee80211_supported_band *sband,
->                          struct ieee80211_sta *sta, void *priv_sta);
-> +       void (*rate_update)(void *priv, struct ieee80211_supported_band *sband,
-> +                           struct ieee80211_sta *sta,
-> +                           void *priv_sta, u32 changed);
->        void (*free_sta)(void *priv, struct ieee80211_sta *sta,
->                         void *priv_sta);
->
-> diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-> index 7a38d2e..d2daddd 100644
-> --- a/net/mac80211/ht.c
-> +++ b/net/mac80211/ht.c
-> @@ -19,6 +19,7 @@
->  #include "ieee80211_i.h"
->  #include "sta_info.h"
->  #include "wme.h"
-> +#include "rate.h"
->
->  void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
->                                       struct ieee80211_ht_cap *ht_cap_ie,
-> @@ -94,8 +95,10 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
->                        u16 ap_ht_cap_flags)
->  {
->        struct ieee80211_local *local = sdata->local;
-> +       struct ieee80211_if_sta *ifsta = &sdata->u.sta;
->        struct ieee80211_supported_band *sband;
->        struct ieee80211_bss_ht_conf ht;
-> +       struct sta_info *sta;
->        u32 changed = 0;
->        bool enable_ht = true, ht_changed;
->        enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-> @@ -138,6 +141,15 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
->        if (ht_changed) {
->                 /* channel_type change automatically detected */
->                ieee80211_hw_config(local, 0);
-> +
-> +               rcu_read_lock();
-> +
-> +               sta = sta_info_get(local, ifsta->bssid);
-> +               if (sta)
-> +                       rate_control_rate_update(local, sband, sta,
-> +                                        IEEE80211_RC_CHANNEL_CHANGED);
-> +
-> +               rcu_read_unlock();
->         }
->
->        /* disable HT */
-> diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-> index 928da62..8b869f2 100644
-> --- a/net/mac80211/rate.h
-> +++ b/net/mac80211/rate.h
-> @@ -62,6 +62,18 @@ static inline void rate_control_rate_init(struct sta_info *sta)
->        ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
->  }
->
-> +static inline void rate_control_rate_update(struct ieee80211_local *local,
-> +                                           struct ieee80211_supported_band *sband,
-> +                                           struct sta_info *sta, u32 changed)
-> +{
-> +       struct rate_control_ref *ref = local->rate_ctrl;
-> +       struct ieee80211_sta *ista = &sta->sta;
-> +       void *priv_sta = sta->rate_ctrl_priv;
-> +
-> +       if (ref->ops->rate_update)
-> +               ref->ops->rate_update(ref->priv, sband, ista,
-> +                                     priv_sta, changed);
-> +}
->
->  static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
->                                           struct ieee80211_sta *sta,
-> --
-> 1.6.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+-       if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
+-               /*
+-                * cfg80211 assumes -110 to -40 dBm and clamps to that range
+-                * for qual.qual, so tell userspace this is what we give it
+-                * but take into account that we have to start from 0.
+-                */
+-               range->max_qual.qual = 70;
+-               range->avg_qual.qual = 35;
+-       } else {
+-               /*
+-                * cfg80211 just uses the level value for qual too, and it
+-                * requires the level value to be 0 .. 100.
+-                */
+-               range->max_qual.qual = 100;
+-               range->avg_qual.qual = 50;
+-       }
+
+That should have set max_qual.qual to 70 as all the drivers set
+IEEE80211_HW_SIGNAL_DBM. I don't know why, but the code took the other branch,
+which seems to have been some other bug.
+
+Larry
