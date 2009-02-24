@@ -1,436 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54065 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729AbZBUFUr (ORCPT
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:33005 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752715AbZBXTCg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 00:20:47 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 3/5] cfg80211: Add AP beacon regulatory hints
-Date: Sat, 21 Feb 2009 00:20:39 -0500
-Message-Id: <1235193641-17993-4-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062059_557729_31EA7F68)
-In-Reply-To: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
-References: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 24 Feb 2009 14:02:36 -0500
+Received: by bwz5 with SMTP id 5so6064848bwz.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 11:02:33 -0800 (PST)
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
+References: <20090223163626.20939.4879.stgit@tikku>
+	<20090223163738.20939.25890.stgit@tikku>
+	<1235442058.4455.71.camel@johannes.local>
+	<20090224090137.GB10851@jm.kir.nu> <87k57fy964.fsf@litku.valot.fi>
+	<20090224184343.GA12620@jm.kir.nu>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 24 Feb 2009 21:02:24 +0200
+In-Reply-To: <20090224184343.GA12620@jm.kir.nu> (Jouni Malinen's message of "Tue\, 24 Feb 2009 20\:43\:43 +0200")
+Message-ID: <877i3fy7y7.fsf@litku.valot.fi> (sfid-20090224_200240_900452_C289B928)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When devices are world roaming they cannot beacon or do active scan
-on 5 GHz or on channels 12, 13 and 14 on the 2 GHz band. Although
-we have a good regulatory API some cards may _always_ world roam, this
-is also true when a system does not have CRDA present. Devices doing world
-roaming can still passive scan, if they find a beacon from an AP on
-one of the world roaming frequencies we make the assumption we can do
-the same and we also remove the passive scan requirement.
+Jouni Malinen <j@w1.fi> writes:
 
-This adds support for providing beacon regulatory hints based on scans.
-This works for devices that do either hardware or software scanning.
-If a channel has not yet been marked as having had a beacon present
-on it we queue the beacon hint processing into the workqueue.
+> On Tue, Feb 24, 2009 at 08:36:03PM +0200, Kalle Valo wrote:
+>> I see your point, I also have had to suffer because of buggy APs
+>> having unstable TBTT. But the cost for this is high, currently it
+>> increases two seconds the time to signal a lost connection to the user
+>> space. I would hope to have something faster.
+>
+> How can that take two seconds?
 
-All wireless devices will benefit from beacon regulatory hints from
-any wireless device on a system including new devices connected to
-the system at a later time.
+I was just referring to the current implementation.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/wireless.h |    5 +-
- net/wireless/core.c    |    5 +-
- net/wireless/reg.c     |  224 +++++++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/reg.h     |   21 +++++
- net/wireless/scan.c    |    3 +
- 5 files changed, 254 insertions(+), 4 deletions(-)
+> All that would be needed here is to send out a unicast Probe Request
+> to the current AP and wait for a Probe Response for a short timeout,
+> say 20 ms. That shouldn't take more than 50 ms or so at most.. 
 
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 1f4707d..64a7620 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -69,6 +69,9 @@ enum ieee80211_channel_flags {
-  * @band: band this channel belongs to.
-  * @max_antenna_gain: maximum antenna gain in dBi
-  * @max_power: maximum transmission power (in dBm)
-+ * @beacon_found: helper to regulatory code to indicate when a beacon
-+ *	has been found on this channel. Use regulatory_hint_found_beacon()
-+ *	to enable this, this is is useful only on 5 GHz band.
-  * @orig_mag: internal use
-  * @orig_mpwr: internal use
-  */
-@@ -80,6 +83,7 @@ struct ieee80211_channel {
- 	u32 flags;
- 	int max_antenna_gain;
- 	int max_power;
-+	bool beacon_found;
- 	u32 orig_flags;
- 	int orig_mag, orig_mpwr;
- };
-@@ -425,7 +429,6 @@ extern int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
- extern void regulatory_hint_11d(struct wiphy *wiphy,
- 				u8 *country_ie,
- 				u8 country_ie_len);
--
- /**
-  * wiphy_apply_custom_regulatory - apply a custom driver regulatory domain
-  * @wiphy: the wireless device we want to process the regulatory domain on
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index b1a354b..dd7f222 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -32,8 +32,9 @@ MODULE_DESCRIPTION("wireless configuration support");
- LIST_HEAD(cfg80211_drv_list);
- 
- /*
-- * This is used to protect the cfg80211_drv_list, cfg80211_regdomain, and
-- * the last reguluatory request receipt in regd.c
-+ * This is used to protect the cfg80211_drv_list, cfg80211_regdomain,
-+ * country_ie_regdomain, the reg_beacon_list and the the last regulatory
-+ * request receipt (last_request).
-  */
- DEFINE_MUTEX(cfg80211_mutex);
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index da2a8ac..e5e432d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -68,9 +68,22 @@ const struct ieee80211_regdomain *cfg80211_regdomain;
-  */
- static const struct ieee80211_regdomain *country_ie_regdomain;
- 
-+/* Used to queue up regulatory hints */
- static LIST_HEAD(reg_requests_list);
- static spinlock_t reg_requests_lock;
- 
-+/* Used to queue up beacon hints for review */
-+static LIST_HEAD(reg_pending_beacons);
-+static spinlock_t reg_pending_beacons_lock;
-+
-+/* Used to keep track of processed beacon hints */
-+static LIST_HEAD(reg_beacon_list);
-+
-+struct reg_beacon {
-+	struct list_head list;
-+	struct ieee80211_channel chan;
-+};
-+
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
- 	.n_reg_rules = 3,
-@@ -1011,16 +1024,120 @@ static void update_all_wiphy_regulatory(enum reg_set_by setby)
- 		wiphy_update_regulatory(&drv->wiphy, setby);
- }
- 
-+static void handle_reg_beacon(struct wiphy *wiphy,
-+			      unsigned int chan_idx,
-+			      struct reg_beacon *reg_beacon)
-+{
-+#ifdef CONFIG_CFG80211_REG_DEBUG
-+#define REG_DEBUG_BEACON_FLAG(desc) \
-+	printk(KERN_DEBUG "cfg80211: Enabling " desc " on " \
-+		"frequency: %d MHz (Ch %d) on %s\n", \
-+		reg_beacon->chan.center_freq, \
-+		ieee80211_frequency_to_channel(reg_beacon->chan.center_freq), \
-+		wiphy_name(wiphy));
-+#else
-+#define REG_DEBUG_BEACON_FLAG(desc) do {} while (0)
-+#endif
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *chan;
-+
-+	assert_cfg80211_lock();
-+
-+	sband = wiphy->bands[reg_beacon->chan.band];
-+	chan = &sband->channels[chan_idx];
-+
-+	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
-+		return;
-+
-+	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
-+		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
-+		REG_DEBUG_BEACON_FLAG("active scanning");
-+	}
-+
-+	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
-+		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
-+		REG_DEBUG_BEACON_FLAG("beaconing");
-+	}
-+
-+	chan->beacon_found = true;
-+#undef REG_DEBUG_BEACON_FLAG
-+}
-+
-+/*
-+ * Called when a scan on a wiphy finds a beacon on
-+ * new channel
-+ */
-+static void wiphy_update_new_beacon(struct wiphy *wiphy,
-+				    struct reg_beacon *reg_beacon)
-+{
-+	unsigned int i;
-+	struct ieee80211_supported_band *sband;
-+
-+	assert_cfg80211_lock();
-+
-+	if (!wiphy->bands[reg_beacon->chan.band])
-+		return;
-+
-+	sband = wiphy->bands[reg_beacon->chan.band];
-+
-+	for (i = 0; i < sband->n_channels; i++)
-+		handle_reg_beacon(wiphy, i, reg_beacon);
-+}
-+
-+/*
-+ * Called upon reg changes or a new wiphy is added
-+ */
-+static void wiphy_update_beacon_reg(struct wiphy *wiphy)
-+{
-+	unsigned int i;
-+	struct ieee80211_supported_band *sband;
-+	struct reg_beacon *reg_beacon;
-+
-+	assert_cfg80211_lock();
-+
-+	if (list_empty(&reg_beacon_list))
-+		return;
-+
-+	list_for_each_entry(reg_beacon, &reg_beacon_list, list) {
-+		if (!wiphy->bands[reg_beacon->chan.band])
-+			continue;
-+		sband = wiphy->bands[reg_beacon->chan.band];
-+		for (i = 0; i < sband->n_channels; i++)
-+			handle_reg_beacon(wiphy, i, reg_beacon);
-+	}
-+}
-+
-+static bool reg_is_world_roaming(struct wiphy *wiphy)
-+{
-+	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
-+	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
-+		return true;
-+	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
-+	    wiphy->custom_regulatory)
-+		return true;
-+	return false;
-+}
-+
-+/* Reap the advantages of previously found beacons */
-+static void reg_process_beacons(struct wiphy *wiphy)
-+{
-+	if (!reg_is_world_roaming(wiphy))
-+		return;
-+	wiphy_update_beacon_reg(wiphy);
-+}
-+
- void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
- {
- 	enum ieee80211_band band;
- 
- 	if (ignore_reg_update(wiphy, setby))
--		return;
-+		goto out;
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (wiphy->bands[band])
- 			handle_band(wiphy, band);
- 	}
-+out:
-+	reg_process_beacons(wiphy);
- 	if (wiphy->reg_notifier)
- 		wiphy->reg_notifier(wiphy, last_request);
- }
-@@ -1314,6 +1431,7 @@ out:
- 	return r;
- }
- 
-+/* Processes regulatory hints, this is all the REGDOM_SET_BY_* */
- static void reg_process_pending_hints(void)
- 	{
- 	struct regulatory_request *reg_request;
-@@ -1344,9 +1462,44 @@ static void reg_process_pending_hints(void)
- 	spin_unlock(&reg_requests_lock);
- }
- 
-+/* Processes beacon hints -- this has nothing to do with country IEs */
-+static void reg_process_pending_beacon_hints(void)
-+{
-+	struct cfg80211_registered_device *drv;
-+	struct reg_beacon *pending_beacon, *tmp;
-+
-+	mutex_lock(&cfg80211_mutex);
-+
-+	/* This goes through the _pending_ beacon list */
-+	spin_lock_bh(&reg_pending_beacons_lock);
-+
-+	if (list_empty(&reg_pending_beacons)) {
-+		spin_unlock_bh(&reg_pending_beacons_lock);
-+		goto out;
-+	}
-+
-+	list_for_each_entry_safe(pending_beacon, tmp,
-+				 &reg_pending_beacons, list) {
-+
-+		list_del_init(&pending_beacon->list);
-+
-+		/* Applies the beacon hint to current wiphys */
-+		list_for_each_entry(drv, &cfg80211_drv_list, list)
-+			wiphy_update_new_beacon(&drv->wiphy, pending_beacon);
-+
-+		/* Remembers the beacon hint for new wiphys or reg changes */
-+		list_add_tail(&pending_beacon->list, &reg_beacon_list);
-+	}
-+
-+	spin_unlock_bh(&reg_pending_beacons_lock);
-+out:
-+	mutex_unlock(&cfg80211_mutex);
-+}
-+
- static void reg_todo(struct work_struct *work)
- {
- 	reg_process_pending_hints();
-+	reg_process_pending_beacon_hints();
- }
- 
- static DECLARE_WORK(reg_work, reg_todo);
-@@ -1587,6 +1740,55 @@ out:
- }
- EXPORT_SYMBOL(regulatory_hint_11d);
- 
-+static bool freq_is_chan_12_13_14(u16 freq)
-+{
-+	if (freq == ieee80211_channel_to_frequency(12) ||
-+	    freq == ieee80211_channel_to_frequency(13) ||
-+	    freq == ieee80211_channel_to_frequency(14))
-+		return true;
-+	return false;
-+}
-+
-+int regulatory_hint_found_beacon(struct wiphy *wiphy,
-+				 struct ieee80211_channel *beacon_chan,
-+				 gfp_t gfp)
-+{
-+	struct reg_beacon *reg_beacon;
-+
-+	if (likely((beacon_chan->beacon_found ||
-+	    (beacon_chan->flags & IEEE80211_CHAN_RADAR) ||
-+	    (beacon_chan->band == IEEE80211_BAND_2GHZ &&
-+	     !freq_is_chan_12_13_14(beacon_chan->center_freq)))))
-+		return 0;
-+
-+	reg_beacon = kzalloc(sizeof(struct reg_beacon), gfp);
-+	if (!reg_beacon)
-+		return -ENOMEM;
-+
-+#ifdef CONFIG_CFG80211_REG_DEBUG
-+	printk(KERN_DEBUG "cfg80211: Found new beacon on "
-+		"frequency: %d MHz (Ch %d) on %s\n",
-+		beacon_chan->center_freq,
-+		ieee80211_frequency_to_channel(beacon_chan->center_freq),
-+		wiphy_name(wiphy));
-+#endif
-+	memcpy(&reg_beacon->chan, beacon_chan,
-+		sizeof(struct ieee80211_channel));
-+
-+
-+	/*
-+	 * Since we can be called from BH or and non-BH context
-+	 * we must use spin_lock_bh()
-+	 */
-+	spin_lock_bh(&reg_pending_beacons_lock);
-+	list_add_tail(&reg_beacon->list, &reg_pending_beacons);
-+	spin_unlock_bh(&reg_pending_beacons_lock);
-+
-+	schedule_work(&reg_work);
-+
-+	return 0;
-+}
-+
- static void print_rd_rules(const struct ieee80211_regdomain *rd)
- {
- 	unsigned int i;
-@@ -1908,6 +2110,7 @@ int regulatory_init(void)
- 		return PTR_ERR(reg_pdev);
- 
- 	spin_lock_init(&reg_requests_lock);
-+	spin_lock_init(&reg_pending_beacons_lock);
- 
- #ifdef CONFIG_WIRELESS_OLD_REGULATORY
- 	cfg80211_regdomain = static_regdom(ieee80211_regdom);
-@@ -1951,6 +2154,7 @@ int regulatory_init(void)
- void regulatory_exit(void)
- {
- 	struct regulatory_request *reg_request, *tmp;
-+	struct reg_beacon *reg_beacon, *btmp;
- 
- 	cancel_work_sync(&reg_work);
- 
-@@ -1965,6 +2169,24 @@ void regulatory_exit(void)
- 
- 	platform_device_unregister(reg_pdev);
- 
-+	spin_lock_bh(&reg_pending_beacons_lock);
-+	if (!list_empty(&reg_pending_beacons)) {
-+		list_for_each_entry_safe(reg_beacon, btmp,
-+					 &reg_pending_beacons, list) {
-+			list_del(&reg_beacon->list);
-+			kfree(reg_beacon);
-+		}
-+	}
-+	spin_unlock_bh(&reg_pending_beacons_lock);
-+
-+	if (!list_empty(&reg_beacon_list)) {
-+		list_for_each_entry_safe(reg_beacon, btmp,
-+					 &reg_beacon_list, list) {
-+			list_del(&reg_beacon->list);
-+			kfree(reg_beacon);
-+		}
-+	}
-+
- 	spin_lock(&reg_requests_lock);
- 	if (!list_empty(&reg_requests_list)) {
- 		list_for_each_entry_safe(reg_request, tmp,
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 4730def..65bfd05 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -38,4 +38,25 @@ extern int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
- 			     const char *alpha2, u32 country_ie_checksum,
- 			     enum environment_cap country_ie_env);
- 
-+/**
-+ * regulatory_hint_found_beacon - hints a beacon was found on a channel
-+ * @wiphy: the wireless device where the beacon was found on
-+ * @beacon_chan: the channel on which the beacon was found on
-+ * @gfp: context flags
-+ *
-+ * This informs the wireless core that a beacon from an AP was found on
-+ * the channel provided. This allows the wireless core to make educated
-+ * guesses on regulatory to help with world roaming. This is only used for
-+ * world roaming -- when we do not know our current location. This is
-+ * only useful on channels 12, 13 and 14 on the 2 GHz band as channels
-+ * 1-11 are already enabled by the world regulatory domain; and on
-+ * non-radar 5 GHz channels.
-+ *
-+ * Drivers do not need to call this, cfg80211 will do it for after a scan
-+ * on a newly found BSS.
-+ */
-+int regulatory_hint_found_beacon(struct wiphy *wiphy,
-+					struct ieee80211_channel *beacon_chan,
-+					gfp_t gfp);
-+
- #endif  /* __NET_WIRELESS_REG_H */
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 6060065..280dbcd 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -430,6 +430,9 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
- 	if (!res)
- 		return NULL;
- 
-+	if (res->pub.capability & WLAN_CAPABILITY_ESS)
-+		regulatory_hint_found_beacon(wiphy, channel, gfp);
-+
- 	/* cfg80211_bss_update gives us a referenced result */
- 	return &res->pub;
- }
+I agree. Or sending a null frame and waiting for ack is even faster,
+but I think mac80211 doesn't yet have infrastructure to check the
+acks. And not all hardware can support this, unfortunately.
+
+> If the current implementation uses two seconds for this, there is
+> certainly room for improvement there and I would rather see that
+> done than lose this extra protection against buggy implementations
+> (either AP or STA for that matter).
+
+Sure. But the thing is that there are a lot of buggy APs which are
+broken is so many different ways that I would like to have a limit for
+workarounds we create. But I guess this workaround might still be
+useful. I'll revisit this whenever I find time to work on roaming
+improvements, hopefully after few weeks.
+
 -- 
-1.6.0.3
-
+Kalle Valo
