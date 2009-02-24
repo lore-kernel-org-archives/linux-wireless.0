@@ -1,46 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58654 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751863AbZBEX2G (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:52527 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753087AbZBXLmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2009 18:28:06 -0500
-Subject: [PATCH 2.6.29] mac80211: restrict to AP in outgoing interface
-	heuristic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 06 Feb 2009 00:27:32 +0100
-Message-Id: <1233876452.4101.24.camel@johannes.local> (sfid-20090206_002811_575250_339CE35B)
-Mime-Version: 1.0
+	Tue, 24 Feb 2009 06:42:08 -0500
+Date: Tue, 24 Feb 2009 13:42:01 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Add module parameter to disable hardware crypto
+Message-ID: <20090224114201.GB21933@jm.kir.nu> (sfid-20090224_124211_250628_44CBCB11)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We try to find the correct outgoing interface for injected frames
-based on the TA, but since this is a hack for hostapd 11w, restrict
-the heuristic to AP mode interfaces. At some point we'll add the
-ability to give an interface index in radiotap or so and just
-remove this heuristic again.
+nohwcrypt=1 module parameter can now be used to disable hardware
+crypto in ath9k. While the hardware acceleration handles most cases,
+it may be useful to be able to force mac80211 software implementation
+to be used for some tests, e.g., with virtual interface combinations
+that may not yet be supported in the key cache configuration. In
+addition, this allows management frame protection to be tested with
+older hardware revisions.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: stable@kernel.org [2.6.28.x]
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
-Otherwise we end up passing the monitor vif pointer to drivers, which
-may cause them to crash.
+ drivers/net/wireless/ath9k/main.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
- net/mac80211/tx.c |    2 ++
- 1 file changed, 2 insertions(+)
+--- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-02-24 13:34:44.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-02-24 13:35:01.000000000 +0200
+@@ -26,6 +26,10 @@ MODULE_DESCRIPTION("Support for Atheros 
+ MODULE_SUPPORTED_DEVICE("Atheros 802.11n WLAN cards");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
++static int modparam_nohwcrypt;
++module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
++MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
++
+ /* We use the hw_value as an index into our private channel structure */
+ 
+ #define CHAN2G(_freq, _idx)  { \
+@@ -1587,7 +1591,7 @@ int ath_attach(u16 devid, struct ath_sof
+ 		IEEE80211_HW_SUPPORTS_PS |
+ 		IEEE80211_HW_PS_NULLFUNC_STACK;
+ 
+-	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah))
++	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || modparam_nohwcrypt)
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+ 
+ 	hw->wiphy->interface_modes =
+@@ -2468,6 +2472,9 @@ static int ath9k_set_key(struct ieee8021
+ 	struct ath_softc *sc = hw->priv;
+ 	int ret = 0;
+ 
++	if (modparam_nohwcrypt)
++		return -ENOSPC;
++
+ 	mutex_lock(&sc->mutex);
+ 	ath9k_ps_wakeup(sc);
+ 	DPRINTF(sc, ATH_DBG_KEYCACHE, "Set HW Key\n");
 
---- wireless-testing.orig/net/mac80211/tx.c	2009-02-06 00:16:38.000000000 +0100
-+++ wireless-testing/net/mac80211/tx.c	2009-02-06 00:22:30.000000000 +0100
-@@ -1394,6 +1394,8 @@ int ieee80211_master_start_xmit(struct s
- 						list) {
- 				if (!netif_running(sdata->dev))
- 					continue;
-+				if (sdata->vif.type != NL80211_IFTYPE_AP)
-+					continue;
- 				if (compare_ether_addr(sdata->dev->dev_addr,
- 						       hdr->addr2)) {
- 					dev_hold(sdata->dev);
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
