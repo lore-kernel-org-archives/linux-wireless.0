@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:1998 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945AbZBFDvA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2009 22:51:00 -0500
-Date: Thu, 5 Feb 2009 22:50:36 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, mcgrof@gmail.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 5/5] ath5k: Update reset code
-Message-ID: <20090206035036.GA10581@hash.localnet> (sfid-20090206_045111_850584_B91C3C75)
-References: <20090131023147.GE3342@makis> <20090204215706.GA5651@makis> <20090205154532.M30551@bobcopeland.com> <40f31dec0902051528q3c9f82c2v69c4689ed3b1592f@mail.gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:44951 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754422AbZBXQRb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 11:17:31 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Subject: Re: [PATCH] ath9k: Add module parameter to disable hardware crypto
+Date: Tue, 24 Feb 2009 17:15:49 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20090224114201.GB21933@jm.kir.nu>
+In-Reply-To: <20090224114201.GB21933@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0902051528q3c9f82c2v69c4689ed3b1592f@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200902241715.49803.mb@bu3sch.de> (sfid-20090224_171734_587234_14BEAC99)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 06, 2009 at 01:28:07AM +0200, Nick Kossifidis wrote:
-> > This works much better, except I still get some hard hangs
-> > occasionally.  Doesn't appear to be bmiss storm this time.  I did it
-> > with a VT up and didn't get an oops; I guess I'll try a serial console
-> > or some printks.
-> 
-> Did you disable BMISS interrupts on base.c ?
+On Tuesday 24 February 2009 12:42:01 Jouni Malinen wrote:
+>  #define CHAN2G(_freq, _idx)  { \
+> @@ -1587,7 +1591,7 @@ int ath_attach(u16 devid, struct ath_sof
+>  		IEEE80211_HW_SUPPORTS_PS |
+>  		IEEE80211_HW_PS_NULLFUNC_STACK;
+>  
+> -	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah))
+> +	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || modparam_nohwcrypt)
+>  		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
 
-Nope this is just vanilla wireless testing + your patchset.
+Are you sure this is correct?
+The hardware capability doesn't magically change by switching a modparam.
+Either the HW is MFP capable or it isn't.
+
+If hwcrypto is disabled (set_key returns error), mac80211 should be smart
+enough to do crypto (including MFP) in software anyway.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+Greetings, Michael.
