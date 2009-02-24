@@ -1,249 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19331 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751046AbZBDCnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2009 21:43:53 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2009 18:43:53 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18825.7.637355.728769@gargle.gargle.HOWL> (sfid-20090204_034411_110255_2848C18F)
-Date: Wed, 4 Feb 2009 08:10:07 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 1/4] ath9k: Lock mac80211 callbacks with a mutex
+Received: from xc.sipsolutions.net ([83.246.72.84]:49462 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633AbZBXFQx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 00:16:53 -0500
+Subject: Re: [PATCH v2 3/5] cfg80211: Add AP beacon regulatory hints
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090224022923.GK4264@tesla>
+References: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
+	 <1235193641-17993-4-git-send-email-lrodriguez@atheros.com>
+	 <1235440730.4455.51.camel@johannes.local>  <20090224022923.GK4264@tesla>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xn+9GafHWcqv7wqVsRU7"
+Date: Mon, 23 Feb 2009 18:47:43 -0800
+Message-Id: <1235443663.4455.79.camel@johannes.local> (sfid-20090224_061700_638848_5D54A915)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |   60 ++++++++++++++++++++++++++++--------
- 1 files changed, 46 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 1c0f893..9b040ba 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1938,6 +1938,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Starting driver with "
- 		"initial channel: %d MHz\n", curchan->center_freq);
- 
-+	mutex_lock(&sc->mutex);
-+
- 	/* setup initial channel */
- 
- 	pos = curchan->hw_value;
-@@ -1963,7 +1965,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 			"(freq %u MHz)\n", r,
- 			curchan->center_freq);
- 		spin_unlock_bh(&sc->sc_resetlock);
--		return r;
-+		goto mutex_unlock;
- 	}
- 	spin_unlock_bh(&sc->sc_resetlock);
- 
-@@ -1983,7 +1985,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	if (ath_startrecv(sc) != 0) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to start recv logic\n");
--		return -EIO;
-+		r = -EIO;
-+		goto mutex_unlock;
- 	}
- 
- 	/* Setup our intr mask. */
-@@ -2010,6 +2013,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
- #if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	r = ath_start_rfkill_poll(sc);
- #endif
-+
-+mutex_unlock:
-+	mutex_unlock(&sc->mutex);
-+
- 	return r;
- }
- 
-@@ -2074,7 +2081,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 		return;
- 	}
- 
--	DPRINTF(sc, ATH_DBG_CONFIG, "Cleaning up\n");
-+	mutex_lock(&sc->mutex);
- 
- 	ieee80211_stop_queues(sc->hw);
- 
-@@ -2099,6 +2106,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	sc->sc_flags |= SC_OP_INVALID;
- 
-+	mutex_unlock(&sc->mutex);
-+
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Driver halt\n");
- }
- 
-@@ -2114,6 +2123,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	if (sc->sc_nvaps)
- 		return -ENOBUFS;
- 
-+	mutex_lock(&sc->mutex);
-+
- 	switch (conf->type) {
- 	case NL80211_IFTYPE_STATION:
- 		ic_opmode = NL80211_IFTYPE_STATION;
-@@ -2173,6 +2184,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 			  jiffies + msecs_to_jiffies(ATH_ANI_POLLINTERVAL));
- 	}
- 
-+	mutex_unlock(&sc->mutex);
-+
- 	return 0;
- }
- 
-@@ -2184,6 +2197,8 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Detach Interface\n");
- 
-+	mutex_lock(&sc->mutex);
-+
- 	/* Stop ANI */
- 	del_timer_sync(&sc->sc_ani.timer);
- 
-@@ -2198,6 +2213,8 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 
- 	sc->sc_vaps[0] = NULL;
- 	sc->sc_nvaps--;
-+
-+	mutex_unlock(&sc->mutex);
- }
- 
- static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
-@@ -2206,6 +2223,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	struct ieee80211_conf *conf = &hw->conf;
- 
- 	mutex_lock(&sc->mutex);
-+
- 	if (changed & IEEE80211_CONF_CHANGE_PS) {
- 		if (conf->flags & IEEE80211_CONF_PS) {
- 			if ((sc->sc_imask & ATH9K_INT_TIM_TIMER) == 0) {
-@@ -2250,6 +2268,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		sc->sc_config.txpowlimit = 2 * conf->power_level;
- 
- 	mutex_unlock(&sc->mutex);
-+
- 	return 0;
- }
- 
-@@ -2392,8 +2411,7 @@ static void ath9k_sta_notify(struct ieee80211_hw *hw,
- 	}
- }
- 
--static int ath9k_conf_tx(struct ieee80211_hw *hw,
--			 u16 queue,
-+static int ath9k_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 			 const struct ieee80211_tx_queue_params *params)
- {
- 	struct ath_softc *sc = hw->priv;
-@@ -2403,6 +2421,8 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
- 	if (queue >= WME_NUM_AC)
- 		return 0;
- 
-+	mutex_lock(&sc->mutex);
-+
- 	qi.tqi_aifs = params->aifs;
- 	qi.tqi_cwmin = params->cw_min;
- 	qi.tqi_cwmax = params->cw_max;
-@@ -2419,6 +2439,8 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw,
- 	if (ret)
- 		DPRINTF(sc, ATH_DBG_FATAL, "TXQ Update failed\n");
- 
-+	mutex_unlock(&sc->mutex);
-+
- 	return ret;
- }
- 
-@@ -2431,6 +2453,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = hw->priv;
- 	int ret = 0;
- 
-+	mutex_lock(&sc->mutex);
- 	ath9k_ps_wakeup(sc);
- 	DPRINTF(sc, ATH_DBG_KEYCACHE, "Set HW Key\n");
- 
-@@ -2456,6 +2479,8 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 	}
- 
- 	ath9k_ps_restore(sc);
-+	mutex_unlock(&sc->mutex);
-+
- 	return ret;
- }
- 
-@@ -2466,6 +2491,8 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	struct ath_softc *sc = hw->priv;
- 
-+	mutex_lock(&sc->mutex);
-+
- 	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
- 		DPRINTF(sc, ATH_DBG_CONFIG, "BSS Changed PREAMBLE %d\n",
- 			bss_conf->use_short_preamble);
-@@ -2490,15 +2517,18 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 			bss_conf->assoc);
- 		ath9k_bss_assoc_info(sc, vif, bss_conf);
- 	}
-+
-+	mutex_unlock(&sc->mutex);
- }
- 
- static u64 ath9k_get_tsf(struct ieee80211_hw *hw)
- {
- 	u64 tsf;
- 	struct ath_softc *sc = hw->priv;
--	struct ath_hal *ah = sc->sc_ah;
- 
--	tsf = ath9k_hw_gettsf64(ah);
-+	mutex_lock(&sc->mutex);
-+	tsf = ath9k_hw_gettsf64(sc->sc_ah);
-+	mutex_unlock(&sc->mutex);
- 
- 	return tsf;
- }
-@@ -2506,23 +2536,25 @@ static u64 ath9k_get_tsf(struct ieee80211_hw *hw)
- static void ath9k_set_tsf(struct ieee80211_hw *hw, u64 tsf)
- {
- 	struct ath_softc *sc = hw->priv;
--	struct ath_hal *ah = sc->sc_ah;
- 
--	ath9k_hw_settsf64(ah, tsf);
-+	mutex_lock(&sc->mutex);
-+	ath9k_hw_settsf64(sc->sc_ah, tsf);
-+	mutex_unlock(&sc->mutex);
- }
- 
- static void ath9k_reset_tsf(struct ieee80211_hw *hw)
- {
- 	struct ath_softc *sc = hw->priv;
--	struct ath_hal *ah = sc->sc_ah;
- 
--	ath9k_hw_reset_tsf(ah);
-+	mutex_lock(&sc->mutex);
-+	ath9k_hw_reset_tsf(sc->sc_ah);
-+	mutex_unlock(&sc->mutex);
- }
- 
- static int ath9k_ampdu_action(struct ieee80211_hw *hw,
--		       enum ieee80211_ampdu_mlme_action action,
--		       struct ieee80211_sta *sta,
--		       u16 tid, u16 *ssn)
-+			      enum ieee80211_ampdu_mlme_action action,
-+			      struct ieee80211_sta *sta,
-+			      u16 tid, u16 *ssn)
- {
- 	struct ath_softc *sc = hw->priv;
- 	int ret = 0;
--- 
-1.6.1
+--=-xn+9GafHWcqv7wqVsRU7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2009-02-23 at 18:29 -0800, Luis R. Rodriguez wrote:
+> On Mon, Feb 23, 2009 at 05:58:50PM -0800, Johannes Berg wrote:
+> > On Sat, 2009-02-21 at 00:20 -0500, Luis R. Rodriguez wrote:
+> >=20
+> > > +static bool freq_is_chan_12_13_14(u16 freq)
+> > > +{
+> > > +	if (freq =3D=3D ieee80211_channel_to_frequency(12) ||
+> > > +	    freq =3D=3D ieee80211_channel_to_frequency(13) ||
+> > > +	    freq =3D=3D ieee80211_channel_to_frequency(14))
+> > > +		return true;
+> > > +	return false;
+> > > +}
+> > > +
+> > > +int regulatory_hint_found_beacon(struct wiphy *wiphy,
+> > > +				 struct ieee80211_channel *beacon_chan,
+> > > +				 gfp_t gfp)
+> > > +{
+> > > +	struct reg_beacon *reg_beacon;
+> > > +
+> > > +	if (likely((beacon_chan->beacon_found ||
+> > > +	    (beacon_chan->flags & IEEE80211_CHAN_RADAR) ||
+> > > +	    (beacon_chan->band =3D=3D IEEE80211_BAND_2GHZ &&
+> > > +	     !freq_is_chan_12_13_14(beacon_chan->center_freq)))))
+> > > +		return 0;
+> >=20
+> > This doesn't seem right, shouldn't it use the world regulatory domain t=
+o
+> > check against rather than hardcoding it?
+>=20
+> I'm not sure I understand, can you elaborate on what you mean.
+
+Well this looks like a check "is it outside the world regulatory domain
+but in 2.4 ghz", right? So it should check the world regulatory domain,
+rather than hardcoding?
+
+johannes
+
+--=-xn+9GafHWcqv7wqVsRU7
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJo1/KAAoJEKVg1VMiehFYU9sP/iEt6vIU9G57xHHEIFgmGwlm
+++sN9xlltQUlRDQde1Osz2Bs/x/kC55Usd475iqsMQ9YsMzn8g4Vgn60Ykx59fQ2
+lknnZp5I8b44GGFN9adZi3nQqdPfSaJE/DJUi96AZpSY9ZqppsOLboiUOCkKHyko
+6/Si+Xvdk5KbTb4mSxl0CnqKnp+UaVQ6yFTg98xXpXo4hNx9s5g/ttxn6s/KNqua
+CFBG9wUAfN2bk0uwCm0oYtwJaK0U1LdmL8jRQPL8R65f5bfKZZt9F++p4sT52sYf
+tukmPizTf5FxttbngoH2h5DIYsRMatV8+EOn/EBH55PALEdy/3goRCOw0QT7BXlj
+PjMgggtTNSBnb5pkX0m2Aiau9w8m+yABR9zlMFP1ILZiXQdhY3ivjaIdimXP7z4X
+kLEibmAHWy9aIVj8s0ffpPpQzrcbKRL9/4GrkHNfTbGW3TNkliebkl8TeuhWiIUw
+88xl/ycFPn3751zsAz5R4bh9aaeeFhNIMbYLLFu1BfSD3CnL5Xp5NDThHdQI31uy
+V2GizVPcN7Z7tnmDy+yQTU59igUdS3BZqUMr9NOHj8kQ8OpW79muBdvxx3Lmjwk+
+7Hos8+u+kZC6fNUpdkvpzojVs2sPnfaEbRgtJ6HHzad9UQTOr12T1kuDMRND5k4F
+DAvzgaFPJsJ86oFSVWuB
+=zYT/
+-----END PGP SIGNATURE-----
+
+--=-xn+9GafHWcqv7wqVsRU7--
 
