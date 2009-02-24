@@ -1,128 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:37050 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753585AbZBQLZR (ORCPT
+Received: from mail-fx0-f167.google.com ([209.85.220.167]:39574 "EHLO
+	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbZBXSg1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2009 06:25:17 -0500
-Date: Tue, 17 Feb 2009 13:24:57 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Provide access to STA TX/RX packet counters
-Message-ID: <20090217112457.GA22926@jm.kir.nu> (sfid-20090217_122535_761731_C0816CB0)
+	Tue, 24 Feb 2009 13:36:27 -0500
+Received: by fxm11 with SMTP id 11so3034930fxm.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 10:36:24 -0800 (PST)
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
+References: <20090223163626.20939.4879.stgit@tikku>
+	<20090223163738.20939.25890.stgit@tikku>
+	<1235442058.4455.71.camel@johannes.local>
+	<20090224090137.GB10851@jm.kir.nu>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 24 Feb 2009 20:36:03 +0200
+In-Reply-To: <20090224090137.GB10851@jm.kir.nu> (Jouni Malinen's message of "Tue\, 24 Feb 2009 11\:01\:37 +0200")
+Message-ID: <87k57fy964.fsf@litku.valot.fi> (sfid-20090224_193631_044113_56003DA9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TX/RX packet counters are needed to fill in RADIUS Accounting
-attributes Acct-Output-Packets and Acct-Input-Packets. We already
-collect the needed information, but only the TX/RX bytes were
-previously exposed through nl80211. Allow applications to fetch the
-packet counters, too, to provide more complete support for accounting.
+Jouni Malinen <j@w1.fi> writes:
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+> On Mon, Feb 23, 2009 at 06:20:58PM -0800, Johannes Berg wrote:
+>
+>> We used to go through a probe request cycle once to make sure, but I'm
+>> not sure there's a point in that. Just pointing out the change here.
+>
+> Having seen some hardware implementations of Beacon miss getting out of
+> sync with the AP timing and causing way too frequent disconnections, I
+> would think that there may well be good reasons to check in software
+> that report was indeed correct, e.g., by sending the probe request
+> before giving up on the AP.
 
----
- include/linux/nl80211.h |    5 +++++
- include/net/cfg80211.h  |    8 ++++++++
- net/mac80211/cfg.c      |    4 ++++
- net/wireless/nl80211.c  |    6 ++++++
- 4 files changed, 23 insertions(+)
+I see your point, I also have had to suffer because of buggy APs
+having unstable TBTT. But the cost for this is high, currently it
+increases two seconds the time to signal a lost connection to the user
+space. I would hope to have something faster.
 
---- uml.orig/include/linux/nl80211.h	2009-02-17 13:09:52.000000000 +0200
-+++ uml/include/linux/nl80211.h	2009-02-17 13:11:11.000000000 +0200
-@@ -526,6 +526,9 @@ enum nl80211_rate_info {
-  * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dBm)
-  * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
-  * 	containing info as possible, see &enum nl80211_sta_info_txrate.
-+ * @NL80211_STA_INFO_RX_PACKETS: total received packet (u32, from this station)
-+ * @NL80211_STA_INFO_TX_PACKETS: total transmitted packets (u32, to this
-+ *	station)
-  */
- enum nl80211_sta_info {
- 	__NL80211_STA_INFO_INVALID,
-@@ -537,6 +540,8 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_PLINK_STATE,
- 	NL80211_STA_INFO_SIGNAL,
- 	NL80211_STA_INFO_TX_BITRATE,
-+	NL80211_STA_INFO_RX_PACKETS,
-+	NL80211_STA_INFO_TX_PACKETS,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
---- uml.orig/include/net/cfg80211.h	2009-02-17 13:11:25.000000000 +0200
-+++ uml/include/net/cfg80211.h	2009-02-17 13:12:37.000000000 +0200
-@@ -178,6 +178,8 @@ struct station_parameters {
-  * @STATION_INFO_SIGNAL: @signal filled
-  * @STATION_INFO_TX_BITRATE: @tx_bitrate fields are filled
-  *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
-+ * @STATION_INFO_RX_PACKETS: @rx_packets filled
-+ * @STATION_INFO_TX_PACKETS: @tx_packets filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -188,6 +190,8 @@ enum station_info_flags {
- 	STATION_INFO_PLINK_STATE	= 1<<5,
- 	STATION_INFO_SIGNAL		= 1<<6,
- 	STATION_INFO_TX_BITRATE		= 1<<7,
-+	STATION_INFO_RX_PACKETS		= 1<<8,
-+	STATION_INFO_TX_PACKETS		= 1<<9,
- };
- 
- /**
-@@ -235,6 +239,8 @@ struct rate_info {
-  * @plink_state: mesh peer link state
-  * @signal: signal strength of last received packet in dBm
-  * @txrate: current unicast bitrate to this station
-+ * @rx_packets: packets received from this station
-+ * @tx_packets: packets transmitted to this station
-  */
- struct station_info {
- 	u32 filled;
-@@ -246,6 +252,8 @@ struct station_info {
- 	u8 plink_state;
- 	s8 signal;
- 	struct rate_info txrate;
-+	u32 rx_packets;
-+	u32 tx_packets;
- };
- 
- /**
---- uml.orig/net/mac80211/cfg.c	2009-02-17 13:13:59.000000000 +0200
-+++ uml/net/mac80211/cfg.c	2009-02-17 13:14:40.000000000 +0200
-@@ -341,11 +341,15 @@ static void sta_set_sinfo(struct sta_inf
- 	sinfo->filled = STATION_INFO_INACTIVE_TIME |
- 			STATION_INFO_RX_BYTES |
- 			STATION_INFO_TX_BYTES |
-+			STATION_INFO_RX_PACKETS |
-+			STATION_INFO_TX_PACKETS |
- 			STATION_INFO_TX_BITRATE;
- 
- 	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
- 	sinfo->rx_bytes = sta->rx_bytes;
- 	sinfo->tx_bytes = sta->tx_bytes;
-+	sinfo->rx_packets = sta->rx_packets;
-+	sinfo->tx_packets = sta->tx_packets;
- 
- 	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
- 		sinfo->filled |= STATION_INFO_SIGNAL;
---- uml.orig/net/wireless/nl80211.c	2009-02-17 13:12:55.000000000 +0200
-+++ uml/net/wireless/nl80211.c	2009-02-17 13:13:54.000000000 +0200
-@@ -1206,6 +1206,12 @@ static int nl80211_send_station(struct s
- 
- 		nla_nest_end(msg, txrate);
- 	}
-+	if (sinfo->filled & STATION_INFO_RX_PACKETS)
-+		NLA_PUT_U32(msg, NL80211_STA_INFO_RX_PACKETS,
-+			    sinfo->rx_packets);
-+	if (sinfo->filled & STATION_INFO_TX_PACKETS)
-+		NLA_PUT_U32(msg, NL80211_STA_INFO_TX_PACKETS,
-+			    sinfo->tx_packets);
- 	nla_nest_end(msg, sinfoattr);
- 
- 	return genlmsg_end(msg, hdr);
+>> The code looks pretty good, but this will lead to an interesting
+>> situation where "iwlist wlan1 scan last" ("iw dev wlan1 scan dump") will
+>> not show _any_ BSS, which will probably trip up NM; this happens because
+>> the BSS will not be updated and expire after 10 seconds. I think we need
+>> a way to "hold on" to the BSS.
+>
+> Dropping the BSS is not good.. The scan results should always include
+> the current BSS so that information from it is available for things like
+> 4-way handshake (WPA/RSN IE is needed from Beacon/ProbeResp).
+
+Understood. Thanks for bringing this up.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Kalle Valo
