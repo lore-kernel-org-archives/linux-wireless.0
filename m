@@ -1,82 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:44378
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755395AbZBXUH1 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54108 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751493AbZBXCv7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 15:07:27 -0500
-Message-ID: <49A45378.50009@erley.org> (sfid-20090224_210731_540318_6654F8D5)
-Date: Tue, 24 Feb 2009 15:07:20 -0500
-From: pat-lkml <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: Jouni Malinen <jouni.malinen@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Add module parameter to disable hardware crypto
-References: <20090224114201.GB21933@jm.kir.nu> <49A40320.1040902@erley.org> <20090224150710.GA1419@jm.kir.nu> <49A41315.3030007@erley.org>
-In-Reply-To: <49A41315.3030007@erley.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 23 Feb 2009 21:51:59 -0500
+Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090223163738.20939.25890.stgit@tikku>
+References: <20090223163626.20939.4879.stgit@tikku>
+	 <20090223163738.20939.25890.stgit@tikku>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-nJzgcNfz3seSs2P6h3qY"
+Date: Mon, 23 Feb 2009 18:20:58 -0800
+Message-Id: <1235442058.4455.71.camel@johannes.local> (sfid-20090224_035201_386088_91DEBBA1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pat-lkml wrote:
-> Jouni Malinen wrote:
->> On Tue, Feb 24, 2009 at 09:24:32AM -0500, pat-lkml wrote:
->>
->>> With this patch, and nohwcrypt=1, I get the following in hostapd (this
->>> system runs as an access point) when I try to associate with a client.
->>>
->>> I can't say whether this is a hostapd problem or an ath9k problem yet,
->>> but it's a different behavior than with nohwcrypt=0 or without this 
->>> patch.  With this patch, wpa2 works perfectly, as without it, as well
->>> as wep working perfectly.  
->> Are you saying that you get different behavior from hostapd when
->> comparing nohwcrypt=0 and nohwcrypt=1 (i.e., no changes in the driver
->> code, just the module parameter change)?
-> 
-> Yes.  
-> 
->>> I wouldn't call this report a 'ACK/NACK' report as it has caused no
->>> new problems, nor fixed any old problems.  Unfortunately I don't have 
->>> a log around of the old behavior right now, for comparison.  I just 
->>> wanted to report what I've found based on this patch.
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key frame (2/4 Pairwise)
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: invalid MIC in msg 2/4 of 4-Way Handshake
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
->>> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
->> Which client are you using? Are you sure that the passphrase/PSK is set
->> correctly? The nohwcrypt patch should make absolutely no difference for
->> this part (this is key handshake which in the initial phase is sent
->> without encrypted EAPOL-Key frames, so neither sw nor hw crypto used).
-> 
-> I've tried 3 different clients with identical behavior:
-> 
-> 1.  Playstation 3
-> 2.  Dell Axim / WM6
-> 3.  ath5k Laptop
-> 
-> I get that (afore mentioned invalid MIC in msg 2/4) with nohwcrypt=1, while
-> nohwcrypt=0 I get 'STA Detected Michael MIC error' during stage 3 I believe. 
-> 
-> I'll have more time after about 6:00PM EST to test this and provide the full
-> logs of each client associating, along with  wpa_supplicant logs.  I'm running
-> git hostapd, and I've NEVER had wpa1 work correctly with it, which is why I said
-> that that report wasn't an 'ACK/NACK' just reporting that I see a difference in 
-> behavior with it.  
-> 
-> Pat
 
-Ok, I feel VERY sheepish now.  In doing further testing, I discovered a typo in my
-hostapd.conf for the wpa config, specifically, an extra char that snuck into my wpa
-pass phrase.  Use nohwcrypt=1, hostapd now works perfectly with wep/wpa/wpa2, while
-with nohwcrypt=0, I get errors (that I'll need physical access to my computer to 
-debug/log) in wpa only.  I'm testing with my usual, rate limited scp transfer over 
-wireless right now, as previous 'issues' have arisen when a re-key occurs during a 
-transfer.
+--=-nJzgcNfz3seSs2P6h3qY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Pat Erley
+On Mon, 2009-02-23 at 18:37 +0200, Kalle Valo wrote:
+
+> +void ieee80211_beacon_loss_work(struct work_struct *work)
+> +{
+> +	struct ieee80211_sub_if_data *sdata =3D
+> +		container_of(work, struct ieee80211_sub_if_data,
+> +			     u.mgd.beacon_loss_work);
+> +
+> +	printk(KERN_DEBUG "%s: beacon loss from AP %pM "
+> +	       "- disassociating\n", sdata->dev->name, sdata->u.mgd.bssid);
+> +
+> +	ieee80211_set_disassoc(sdata, true, true,
+> +			       WLAN_REASON_PREV_AUTH_NOT_VALID);
+> +}
+
+We used to go through a probe request cycle once to make sure, but I'm
+not sure there's a point in that. Just pointing out the change here.
+
+The code looks pretty good, but this will lead to an interesting
+situation where "iwlist wlan1 scan last" ("iw dev wlan1 scan dump") will
+not show _any_ BSS, which will probably trip up NM; this happens because
+the BSS will not be updated and expire after 10 seconds. I think we need
+a way to "hold on" to the BSS.
+
+johannes
+
+--=-nJzgcNfz3seSs2P6h3qY
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJo1mHAAoJEKVg1VMiehFYndkP/1nACm1V6qtwzxmFDuAXdV8p
+THN4JYZUI6FyXx0KX1OjSc6qONvh1Pz85OD8vXD+H8RfXDJeIlozh7vU8K5gBAAR
+h/eUUNLzebccn4zDnG4yc9y3Hni6GNchVO72xsJiF6MqowRLYqEShespkGFnZ8il
+KIMQBaYV484ptkM6usAzPw8c2o+iU0oxp7UG9ObCK7uDUwn/bU74Yu1+hM6h2srx
+8MAXSX0/EO3c7OloIvpNM3YMzeVkqnaqKwUwbOGyO5zm5D+ncxs7YyUmS1aQeCdF
+/o7Mwjprt0OJQH1hT64orMg6sFWQBjqt9bdK9vliDKglVoUwxKU7Xzs0x85ryfHe
+C95qYgvR8wpYkbsa7eojknCFAEBrNTJWla4KFj6cHgzJ0UyaKK4kzFbeUwTHOjN5
++1HfSR8xdeiaowa5Pu2Hxo+ZdfYmN/xA1qWuCpOWKzwZqsP5mVgLgKpCfN2toe6S
+nkdIIw5pHt/PyXyqlWXvAhKFnLt1xb8K59ef8k+MqGzhdmuln18yNkDMKgi9W8BT
+MPqPfiUUb12MVsm3NdxBaYs6W/CPmodoCDw6nkP+O3WhzFatv2DUjvbhVVOZI516
+ToYcdFo4x0KJww3YhYjfQhHrF89Z0IsEq1gPRXtxewr80Ox2FWRVA2Hx+tlmZ/lS
+TixhH2GWrhpR5bBEW/XS
+=StcB
+-----END PGP SIGNATURE-----
+
+--=-nJzgcNfz3seSs2P6h3qY--
+
