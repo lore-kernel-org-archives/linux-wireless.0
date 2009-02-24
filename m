@@ -1,51 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35741 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752960AbZBFUv2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 15:51:28 -0500
-Subject: Re: turning off IBSS (with wext)
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1233952826.4175.21.camel@johannes.local>
-References: <1233928622.4175.9.camel@johannes.local>
-	 <1233938496.28437.10.camel@localhost>
-	 <1233952826.4175.21.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 06 Feb 2009 15:49:57 -0500
-Message-Id: <1233953398.3476.11.camel@localhost> (sfid-20090206_215133_128670_D4F7DD50)
-Mime-Version: 1.0
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:58619 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751777AbZBXSuT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 13:50:19 -0500
+Cc: Lorenzo Nava <navalorenx@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Message-Id: <9CC7CE2A-C80A-4620-B441-EAD6371710E1@ing.unibs.it> (sfid-20090224_195022_006124_F80B3665)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <49A43F8A.5000500@lwfinger.net>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: More data on open-source firmware crash
+Date: Tue, 24 Feb 2009 19:50:15 +0100
+References: <49A1A331.9080205@lwfinger.net> <80C13710-6BA9-4F14-95B5-82C3043CE93B@ing.unibs.it> <49A41F1D.9060300@lwfinger.net> <03E07CC7-A971-4EDD-9363-628B61E94A92@ing.unibs.it> <49A421ED.7000801@lwfinger.net> <7528B52E-1B77-4CA9-A17F-01E24FDF81DC@ing.unibs.it> <49A43F8A.5000500@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-02-06 at 21:40 +0100, Johannes Berg wrote:
-> On Fri, 2009-02-06 at 11:41 -0500, Dan Williams wrote:
-> > On Fri, 2009-02-06 at 14:57 +0100, Johannes Berg wrote:
-> > > Hi,
-> > > 
-> > > so I was testing IBSS, and found this strange behaviour:
-> > > 
-> > >  * wpa_supplicant (or NM?) will try to do SIWMLME(disassoc) in IBSS
-> > >    mode, which seems kinda wrong. Why do we accept it? We send out a
-> > >    frame and then do nothing else.
-> > >  * Then I thought "iwconfig wlan1 essid off" - but that fails with
-> > >    -EINVAL due to ieee80211_sta_find_ibss
-> > > 
-> > > It seems to me that either one of those, or both, should actually turn
-> > > off beaconing.
-> > 
-> > Either one; the supplicant uses SIWMLME(disassoc) at various times (like
-> > when leaving a BSS), and NM will sometimes set a NULL SSID when
-> > deactivating the device.
-> 
-> Fun. Neither one actually works.
+On Feb 24, 2009, at 7:42 PM, Larry Finger wrote:
 
-Yeah; I had to recently patch wpa_supplicant to really disassociate at
-Jouni's suggestion; just telling the driver to disassoc isn't adequate
-in all cases, because some drivers will just try to reassoc.  Instead,
-unlocking the BSSID and setting a bogus SSID will usually actually
-accomplish the disassociation in addition to the MLME disassoc...
+> Francesco Gringoli wrote:
+>>
+>> On Feb 24, 2009, at 5:35 PM, Larry Finger wrote:
+>>
+>>> Francesco Gringoli wrote:
+>>>> What about drop info from dmesg? Another try could be halve the dma
+>>>> queue, I believe now it is 64 slots. Could you give a try setting  
+>>>> it
+>>>> to 32?
+>>>
+>>> The RX DMA queue was 64 and TX was 256. Both will be 32 in my next  
+>>> run.
+>>>
+>>> I don't understand the "drop info from dmesg" part.
+>> Sorry Larry,
+>>
+>> sometimes when I modify something, I can read
+>>
+>> [334415.451028] b43-phy244 debug: RX: Packet dropped
+>>
+>> in the dmesg because the received bytes were not correctly copied
+>> between the "air-buffer" to the internal buffer and finally to the
+>> rx-fifo along with the rxheader.
+>>
+>> Did you notice something similar?
+>
+> I hadn't noticed them before, but I do see one of these messages  
+> just before
+> some of my out-of-order cookies. There is no associated diagnostic  
+> message, thus
+> it must come from the status.rate_index test. I'll see if I can get  
+> some info
+> from there.
+>
+> Larry
+>
+Larry, take care that they are not due to massive usage of b43-fwdump.  
+Sometime this utility forces the firmware to slow down and produce  
+such messages. If you didn't use the utility and got that message  
+anyway, we can try to investigate on this.
 
-Dan
+Cheers,
+-FG
+
+
+-------
+
+Francesco Gringoli, PhD - Assistant Professor
+Dept. of Electrical Engineering for Automation
+University of Brescia
+via Branze, 38
+25123 Brescia
+ITALY
+
+Ph:  ++39.030.3715843
+FAX: ++39.030.380014
+WWW: http://www.ing.unibs.it/~gringoli
+
+
+
 
