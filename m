@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37342 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753188AbZBJUa5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2009 15:30:57 -0500
-Message-Id: <20090210202552.887470598@sipsolutions.net> (sfid-20090210_213059_885718_8F05444B)
-References: <20090210202536.425266119@sipsolutions.net>
-Date: Tue, 10 Feb 2009 21:25:38 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 02/27] mac80211: disable IBSS beacon before join
+Received: from mga11.intel.com ([192.55.52.93]:44482 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750867AbZBXFCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 00:02:54 -0500
+Subject: Re: [PATCH] iwl3945: initialize is_valid_rtc_data_addr function
+	pointer
+From: reinette chatre <reinette.chatre@intel.com>
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1235443410.7047.25.camel@rainbow>
+References: <1235443410.7047.25.camel@rainbow>
+Content-Type: text/plain
+Date: Mon, 23 Feb 2009 21:07:28 -0800
+Message-Id: <1235452048.23783.9.camel@rc-desk> (sfid-20090224_060257_889538_DB9DAF5A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before we have a probe response frame (which is used as the
-beacon too) there's no need to ask drivers to beacon, they
-will not get a beacon anyway.
+On Mon, 2009-02-23 at 18:43 -0800, Jason Andryuk wrote:
+> Initialize is_valid_rtc_data_addr function pointer for iwl3945 to
+> prevent a NULL pointer dereference in iwl_dump_nic_error_log.
+> 
+> Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
+> --
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> index d49e48b..6ae0df5 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -2747,6 +2747,7 @@ static struct iwl_lib_ops iwl3945_lib = {
+>  		.query_addr = iwlcore_eeprom_query_addr,
+>  	},
+>  	.send_tx_power	= iwl3945_send_tx_power,
+> +	.is_valid_rtc_data_addr = iwl3945_hw_valid_rtc_data_addr,
+>  };
+>  
+>  static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
+> 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/main.c |    2 ++
- 1 file changed, 2 insertions(+)
+Thank you very much
 
---- wireless-testing.orig/net/mac80211/main.c	2009-02-10 20:59:28.000000000 +0100
-+++ wireless-testing/net/mac80211/main.c	2009-02-10 20:59:29.000000000 +0100
-@@ -210,6 +210,8 @@ int ieee80211_if_config(struct ieee80211
- 					!!rcu_dereference(sdata->u.ap.beacon);
- 				break;
- 			case NL80211_IFTYPE_ADHOC:
-+				conf.enable_beacon = !!sdata->u.sta.probe_resp;
-+				break;
- 			case NL80211_IFTYPE_MESH_POINT:
- 				conf.enable_beacon = true;
- 				break;
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
--- 
+
+Reinette
+
 
