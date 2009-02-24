@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:41607 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221AbZBIS4N convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f161.google.com ([209.85.218.161]:56217 "EHLO
+	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754923AbZBXSaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 13:56:13 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so1115427fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2009 10:56:10 -0800 (PST)
+	Tue, 24 Feb 2009 13:30:35 -0500
+Received: by bwz5 with SMTP id 5so6036510bwz.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 10:30:32 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
+References: <20090223163626.20939.4879.stgit@tikku>
+	<20090223163738.20939.25890.stgit@tikku>
+	<1235442058.4455.71.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 24 Feb 2009 20:30:13 +0200
+In-Reply-To: <1235442058.4455.71.camel@johannes.local> (Johannes Berg's message of "Mon\, 23 Feb 2009 18\:20\:58 -0800")
+Message-ID: <87ocwry9fu.fsf@litku.valot.fi> (sfid-20090224_193044_793012_1773506B)
 MIME-Version: 1.0
-Date: Mon, 9 Feb 2009 19:56:10 +0100
-Message-ID: <69e28c910902091056h119b3fa4g460e5e18288c1c3c@mail.gmail.com> (sfid-20090209_195617_922348_5BA0F2FF)
-Subject: Proposal: Add a new flag to the proposed TX flags field to control
-	the sequence number of injected packets
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-To: radiotap@radiotap.org, Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the TX Flags field is defined as a bitmap containing:
-0x0001 Transmission failed due to excessive retries
-0x0002 Transmission used CTS-to-self protection
-0x0004 Transmission used RTS/CTS handshake
-0x0008 Transmission shall not expect an ACK frame and not retry when
-no ACK is received
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-I'd like to propose the following additional bit:
-0x0010 Transmission has the sequence and fragment numbers pre-set from
-userspace and should not be renumbered
+> On Mon, 2009-02-23 at 18:37 +0200, Kalle Valo wrote:
+>
+>> +void ieee80211_beacon_loss_work(struct work_struct *work)
+>> +{
+>> +	struct ieee80211_sub_if_data *sdata =
+>> +		container_of(work, struct ieee80211_sub_if_data,
+>> +			     u.mgd.beacon_loss_work);
+>> +
+>> +	printk(KERN_DEBUG "%s: beacon loss from AP %pM "
+>> +	       "- disassociating\n", sdata->dev->name, sdata->u.mgd.bssid);
+>> +
+>> +	ieee80211_set_disassoc(sdata, true, true,
+>> +			       WLAN_REASON_PREV_AUTH_NOT_VALID);
+>> +}
+>
+> We used to go through a probe request cycle once to make sure, but I'm
+> not sure there's a point in that. Just pointing out the change here.
 
-This bit is useful for packet injection, where userspace injectors
-might want to control the sequence and fragment numbers of the packets
-it injects. A particular example is aireplay-ng's -5 mode
-(fragmentation attack), where userspace injects pre-made fragments
-one-by-one. The wireless stack usually can't recognize that the
-injected packets are fragments, and instead treats them as complete
-packets, assigning a new sequence number to each fragment, preventing
-the receiving party from correctly reassembling the fragmented packet.
-The userspace does however know that the packets being injected are
-fragments, and such can produce much more correct sequence numbers for
-them. So, userspace can in these cases set TX_FLAGS |=3D3D 0x0010 and p=
-ut
-pre-generated sequence numbers on the packets it injects.
+Good catch, I'll fix this in v2.
 
-Similar to how 0x0008 works, this bit also should be used when packets
-are being sent, as opposed to when they are being reported as having
-been sent (like the first 3 bits).
+I'm also not sure if it's good idea to send a probe request when we
+have lost beacons. It slows down the AP lost case quite a lot. But
+this can be considered in a separate patch, for now I want to have the
+same functionality. Most probably I will revisit when I'll start
+working with roaming improvements.
 
-I have posted a reference implementation on the linux-wireless mailing
-list about a month ago, and it is also available here:
-http://trac.aircrack-ng.org/svn/trunk/patches/mac80211_2.6.28-rc8-wl_fr=
-ag+a=3D
-ck_radiotap.patch
-(Note that this patch may not clearly apply to 2.6.29-rc2 or the
-current wireless-testing kernel, as it was made against the
-master-2008-12-17 tag of wireless-testing.)
+> The code looks pretty good, but this will lead to an interesting
+> situation where "iwlist wlan1 scan last" ("iw dev wlan1 scan dump") will
+> not show _any_ BSS, which will probably trip up NM; this happens because
+> the BSS will not be updated and expire after 10 seconds. I think we need
+> a way to "hold on" to the BSS.
 
-G=E1bor
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'll take a look at this and try to come up with something. 
+
+Thanks for reviewing the patches.
+
+-- 
+Kalle Valo
