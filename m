@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39116 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750733AbZBYFBo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2009 00:01:44 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 21:01:43 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: Configure Power control register appropriately for h/w with 4k eeprom
-Date: Wed, 25 Feb 2009 10:28:22 +0530
-Message-ID: <1235537903-5551-1-git-send-email-vasanth@atheros.com> (sfid-20090225_060148_804562_643136F0)
+Received: from mail.deathmatch.net ([70.167.247.36]:3262 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754230AbZBXN60 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 08:58:26 -0500
+Date: Tue, 24 Feb 2009 08:58:17 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090224135817.GB6019@hash.localnet> (sfid-20090224_145829_042008_75661FAF)
+References: <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <49A321BA.2040500@gmail.com> <49A326A4.8090103@gmail.com> <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath9k/eeprom.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+On Tue, Feb 24, 2009 at 01:08:03AM +0200, Nick Kossifidis wrote:
+> He does an extra check...
+> 
+> 	/*
+> 	 * Given the use of a self-linked tail be very sure that the hw is
+> 	 * done with this descriptor; the hw may have done this descriptor
+> 	 * once and picked it up again...make sure the hw has moved on.
+> 	 */
+> 	if ((ands->ds_rxstatus1&AR_Done) == 0 && OS_REG_READ(ah, AR_RXDP) == pa)
+> 		return HAL_EINPROGRESS;
 
-diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
-index 17b3d04..b1cf590 100644
---- a/drivers/net/wireless/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath9k/eeprom.c
-@@ -752,8 +752,7 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
- 		      xpdGainValues[0]);
- 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_2,
- 		      xpdGainValues[1]);
--	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_3,
--		      xpdGainValues[2]);
-+	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_3, 0);
- 
- 	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
- 		if (AR_SREV_5416_V20_OR_LATER(ah) &&
+Sounds like we definitely need that.  If the hw uses up all the dma buffers
+in one go, there's a good chance we can send the skb to mac80211 while
+the hardware is still using it.  I guess an easy way to test would be to
+set the max rx buffers to 3 or so and watch the fireworks.
+
 -- 
-1.5.5.1
+Bob Copeland %% www.bobcopeland.com
 
