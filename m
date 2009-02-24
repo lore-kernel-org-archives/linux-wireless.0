@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:4450 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775AbZBMFu2 (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.24]:46328 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217AbZBXCpj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 00:50:28 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so575014ywh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 21:50:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1234463938-1350-7-git-send-email-me@bobcopeland.com>
-References: <1234463938-1350-7-git-send-email-me@bobcopeland.com>
-Date: Thu, 12 Feb 2009 21:50:26 -0800
-Message-ID: <43e72e890902122150n3964d5eud19ffce7577fb60c@mail.gmail.com> (sfid-20090213_065031_951039_6F1FA471)
-Subject: Re: [ath5k-devel] [PATCH 6/6] ath9k: move common regulatory code out
-	of if() branches
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 23 Feb 2009 21:45:39 -0500
+Received: by qw-out-2122.google.com with SMTP id 5so1558802qwi.37
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 18:45:37 -0800 (PST)
+Subject: [PATCH] iwl3945: re-add iwl_poll_direct_bit return value check
+From: Jason Andryuk <jandryuk@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	reinette chatre <reinette.chatre@intel.com>
+Content-Type: text/plain
+Date: Mon, 23 Feb 2009 21:45:34 -0500
+Message-Id: <1235443534.7047.28.camel@rainbow> (sfid-20090224_034541_268526_8763ED20)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 12, 2009 at 10:38 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> Both branches of the regulatory check in ath_attach() set up a
-> custom regulatory domain and apply radar and world flags, so extract
-> those into a single path.
->
-> While at it, fix a couple of spelling errors and an unnecessary extra
-> pointer traversal.
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Re-add the iwl_poll_direct_bit return value assignment dropped in Commit
+3fdd4102abceb4c99c5091674047b5c61fd3ebba "iwl3945: add apm ops".
 
-Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
+--
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 6ae0df5..0a75053 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1073,7 +1073,7 @@ static int iwl3945_apm_init(struct iwl_priv *priv)
+ 	* D0U* --> D0A* state */
+ 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+ 
+-	iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
++	ret = iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
+ 			    CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
+ 	if (ret < 0) {
+ 		IWL_DEBUG_INFO(priv, "Failed to init the card\n");
+
