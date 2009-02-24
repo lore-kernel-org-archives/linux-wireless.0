@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54745 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751234AbZBDKxL (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:45872 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903AbZBXQoH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 05:53:11 -0500
-Subject: Re: [PATCH 2/2] Document CONFIG_DRIVER_NL80211 in
-	wpa_supplicant/defconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <20090204062037.12891.4454.stgit@ct.roinet.com> (sfid-20090204_072101_015392_5CF80812)
-References: <20090204062021.12891.96607.stgit@ct.roinet.com>
-	 <20090204062037.12891.4454.stgit@ct.roinet.com>
-	 (sfid-20090204_072101_015392_5CF80812)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-j+LvombhFSVWo3XDKtPS"
-Date: Wed, 04 Feb 2009 11:52:35 +0100
-Message-Id: <1233744755.3992.2.camel@johannes.local> (sfid-20090204_115315_068387_4981665B)
-Mime-Version: 1.0
+	Tue, 24 Feb 2009 11:44:07 -0500
+Cc: Lorenzo Nava <navalorenx@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Message-Id: <7528B52E-1B77-4CA9-A17F-01E24FDF81DC@ing.unibs.it> (sfid-20090224_174411_135856_95848098)
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <49A421ED.7000801@lwfinger.net>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: More data on open-source firmware crash
+Date: Tue, 24 Feb 2009 17:44:01 +0100
+References: <49A1A331.9080205@lwfinger.net> <80C13710-6BA9-4F14-95B5-82C3043CE93B@ing.unibs.it> <49A41F1D.9060300@lwfinger.net> <03E07CC7-A971-4EDD-9363-628B61E94A92@ing.unibs.it> <49A421ED.7000801@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-j+LvombhFSVWo3XDKtPS
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On Feb 24, 2009, at 5:35 PM, Larry Finger wrote:
 
-On Wed, 2009-02-04 at 01:20 -0500, Pavel Roskin wrote:
-> Put it after CONFIG_DRIVER_WEXT, as it's the new Linux wireless API.
-> Move comments about kernel includes next to CONFIG_DRIVER_NL80211, away
-> from CONFIG_CLIENT_MLME.
+> Francesco Gringoli wrote:
+>> What about drop info from dmesg? Another try could be halve the dma
+>> queue, I believe now it is 64 slots. Could you give a try setting  
+>> it to 32?
+>
+> The RX DMA queue was 64 and TX was 256. Both will be 32 in my next  
+> run.
+>
+> I don't understand the "drop info from dmesg" part.
+Sorry Larry,
 
-Eh, no? The kernel includes are not required for nl80211 if everything
-is set up correctly, or maybe for client mlme only?
+sometimes when I modify something, I can read
 
-johannes
+[334415.451028] b43-phy244 debug: RX: Packet dropped
 
---=-j+LvombhFSVWo3XDKtPS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+in the dmesg because the received bytes were not correctly copied  
+between the "air-buffer" to the internal buffer and finally to the rx- 
+fifo along with the rxheader.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Did you notice something similar?
 
-iQIcBAABAgAGBQJJiXNwAAoJEKVg1VMiehFYx3cQAIkTkP5HzDflllpvJV/jEsT2
-8I8hIcnP5qWBmtwNLA10SFfJLBa706fotMQjYMzlUty6E5VQPG0Mwcv+OlgzHqH4
-PJ3LvGlBzQkjZ7h8Znj2HREMwLabz30czWjnTKQEJqSFkJwcBwuRQYATfa8jHajq
-F+orutAKvB7ibiqR4WrR0Gi0Ft5u3QM9TKQcELd05qNRNVShKkkrTaj+MTyIbAo7
-eueTxhJv5s9jUcS7qWZVLABUCIFXjUZOhwwqXlMUKBynr5G8XYsdrA2iu+CYUt49
-dsR92iE0S2W2+/HDl4Z9o2HwAqSKQyyIwrddtpt2blM8saVMu1YsUtVx5xzjZjPS
-L+AvIoBot3oHQbos4fOj2bcW6V7xEkpPojC2Qim0cD5GHkTmZULJSn+XNC6sDL+c
-qoBuZPS1pvJtYTsa114ngayFi16j9WUjar+yt9q9sSh1mESVaSBb8OdpXkOEmezM
-qkPNEePBETOxdlKxHQHL/rV/0f7k4nOcvQf3lGCMKeHGDmo9mWB1RSbEO0A45Nvl
-jFEs61fnL5/Hs7mQSAgzyJY9ZA2n1FliB5T4DyDkskPZAOYg4YwGPi/4QzrGTMsV
-PPpIRcv/DXyxzo74TtA1RdzEZaxnolzvL43vfMtVsbvX5NGOzhe1jh2iPoMKsg1c
-DgSvNDQXp74FtyxnZndK
-=QARt
------END PGP SIGNATURE-----
+Cheers,
+-FG
 
---=-j+LvombhFSVWo3XDKtPS--
+>
+>
+> Larry
+>
+
+-------
+
+Francesco Gringoli, PhD - Assistant Professor
+Dept. of Electrical Engineering for Automation
+University of Brescia
+via Branze, 38
+25123 Brescia
+ITALY
+
+Ph:  ++39.030.3715843
+FAX: ++39.030.380014
+WWW: http://www.ing.unibs.it/~gringoli
+
+
+
 
