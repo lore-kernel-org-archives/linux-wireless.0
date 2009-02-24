@@ -1,77 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36618 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296AbZBXC0A (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42498 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753414AbZBXPHT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 21:26:00 -0500
-Subject: Re: [PATCH v2 3/5] cfg80211: Add AP beacon regulatory hints
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1235193641-17993-4-git-send-email-lrodriguez@atheros.com>
-References: <1235193641-17993-1-git-send-email-lrodriguez@atheros.com>
-	 <1235193641-17993-4-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Y4jegACWykfF93CCnppq"
-Date: Mon, 23 Feb 2009 17:58:50 -0800
-Message-Id: <1235440730.4455.51.camel@johannes.local> (sfid-20090224_032605_125032_61C94183)
-Mime-Version: 1.0
+	Tue, 24 Feb 2009 10:07:19 -0500
+Date: Tue, 24 Feb 2009 17:07:10 +0200
+From: Jouni Malinen <j@w1.fi>
+To: pat-lkml <pat-lkml@erley.org>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Add module parameter to disable hardware crypto
+Message-ID: <20090224150710.GA1419@jm.kir.nu> (sfid-20090224_160723_912297_91387B92)
+References: <20090224114201.GB21933@jm.kir.nu> <49A40320.1040902@erley.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49A40320.1040902@erley.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Feb 24, 2009 at 09:24:32AM -0500, pat-lkml wrote:
 
---=-Y4jegACWykfF93CCnppq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> With this patch, and nohwcrypt=1, I get the following in hostapd (this
+> system runs as an access point) when I try to associate with a client.
+> 
+> I can't say whether this is a hostapd problem or an ath9k problem yet,
+> but it's a different behavior than with nohwcrypt=0 or without this 
+> patch.  With this patch, wpa2 works perfectly, as without it, as well
+> as wep working perfectly.  
 
-On Sat, 2009-02-21 at 00:20 -0500, Luis R. Rodriguez wrote:
+Are you saying that you get different behavior from hostapd when
+comparing nohwcrypt=0 and nohwcrypt=1 (i.e., no changes in the driver
+code, just the module parameter change)?
 
-> +static bool freq_is_chan_12_13_14(u16 freq)
-> +{
-> +	if (freq =3D=3D ieee80211_channel_to_frequency(12) ||
-> +	    freq =3D=3D ieee80211_channel_to_frequency(13) ||
-> +	    freq =3D=3D ieee80211_channel_to_frequency(14))
-> +		return true;
-> +	return false;
-> +}
-> +
-> +int regulatory_hint_found_beacon(struct wiphy *wiphy,
-> +				 struct ieee80211_channel *beacon_chan,
-> +				 gfp_t gfp)
-> +{
-> +	struct reg_beacon *reg_beacon;
-> +
-> +	if (likely((beacon_chan->beacon_found ||
-> +	    (beacon_chan->flags & IEEE80211_CHAN_RADAR) ||
-> +	    (beacon_chan->band =3D=3D IEEE80211_BAND_2GHZ &&
-> +	     !freq_is_chan_12_13_14(beacon_chan->center_freq)))))
-> +		return 0;
+> I wouldn't call this report a 'ACK/NACK' report as it has caused no
+> new problems, nor fixed any old problems.  Unfortunately I don't have 
+> a log around of the old behavior right now, for comparison.  I just 
+> wanted to report what I've found based on this patch.
 
-This doesn't seem right, shouldn't it use the world regulatory domain to
-check against rather than hardcoding it?
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key frame (2/4 Pairwise)
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: invalid MIC in msg 2/4 of 4-Way Handshake
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
+> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
 
-johannes
+Which client are you using? Are you sure that the passphrase/PSK is set
+correctly? The nohwcrypt patch should make absolutely no difference for
+this part (this is key handshake which in the initial phase is sent
+without encrypted EAPOL-Key frames, so neither sw nor hw crypto used).
 
---=-Y4jegACWykfF93CCnppq
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJo1RYAAoJEKVg1VMiehFYBKAQAJd5bxE8N5+uJHlROYt63WWe
-oG2Uu/6TDw/NOxlP23ZpuEt8sBoXZ1WWkK1ULQ3pCc6aJ2Px4BlloUN8hItRVIi4
-I5xnnoT1nOYUS9TrAgG4rI9VOFQpDG3PIDwB2qrCD5VjwIR5BI6DF5BfiYEu0X+T
-TiBeuG2eP4fAwyo9asSyGSPHWB4jK9fLPvJkiLKgJNmsrX+gPX0W7Unubw1GWzqW
-J7sg45Lxfkgi2Svot1Wt8vm8cOvK/AXXOFZiZ+pwY3croutuRVajc+Csy9C3aEAQ
-G9TgoHuG+cm2dMcFmQeLMK+nttd0NXgbONQA74o7OTNuOy5vn2sWNv30s6yULREa
-eqs2fO5+FiBDKfA+X39h7pANOdNrsvxD4L4CIVE4e2/XtojfkkCMfzIIhMYwdnrW
-RN3TkyNXiT8inzl33wA3QcUFL4wkb44ByEYZBO8hOLAhuj5V6b9ySLUI//mygGj7
-bW5vYU4xiozSyWGy7vj1PWiucIIRpC3PtN5kc49qGy2dvESGnjcMA242aYS8mwBd
-zWECZd5GH9ggg3VuNc1wKbCiLeVbZRe+fgq6ua8SGplV00JSIB7vLPdXp+6EnaCB
-1dfppoM4LURrDPngDvYF2NuA5CaH1yIfb/sxsGDVZKUC1fVZccgIb2MCrG/L+rUL
-FTmvyvW1JyL5PkQcIRtK
-=9hL3
------END PGP SIGNATURE-----
-
---=-Y4jegACWykfF93CCnppq--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
