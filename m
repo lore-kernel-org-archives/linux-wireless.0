@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:32040 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752771AbZBLWnD (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:35855 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750882AbZBXSm1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 17:43:03 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so508441yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 14:43:01 -0800 (PST)
+	Tue, 24 Feb 2009 13:42:27 -0500
+Message-ID: <49A43F8A.5000500@lwfinger.net> (sfid-20090224_194239_154920_B74432D0)
+Date: Tue, 24 Feb 2009 12:42:18 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1234471883.24344.2.camel@localhost>
-References: <20090212181959.11876f8viq636hs0@neo.wg.de>
-	 <1234471883.24344.2.camel@localhost>
-Date: Thu, 12 Feb 2009 14:43:01 -0800
-Message-ID: <43e72e890902121443s307163ecide0f40bdc5a5818f@mail.gmail.com> (sfid-20090212_234310_613430_6CFC39C5)
-Subject: Re: Automatic/manual regulatory settings
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Jan Schneider <jan@horde.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+CC: Lorenzo Nava <navalorenx@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: Re: More data on open-source firmware crash
+References: <49A1A331.9080205@lwfinger.net> <80C13710-6BA9-4F14-95B5-82C3043CE93B@ing.unibs.it> <49A41F1D.9060300@lwfinger.net> <03E07CC7-A971-4EDD-9363-628B61E94A92@ing.unibs.it> <49A421ED.7000801@lwfinger.net> <7528B52E-1B77-4CA9-A17F-01E24FDF81DC@ing.unibs.it>
+In-Reply-To: <7528B52E-1B77-4CA9-A17F-01E24FDF81DC@ing.unibs.it>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 12, 2009 at 12:51 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Thu, 2009-02-12 at 18:19 +0100, Jan Schneider wrote:
->> While looking at logs collected for my microcode crash problem I
->> noticed that cfg80211 loads US regulatory settings.
->> If I understand the documentation correctly the actual country should
->> be set either by the AP or the device using cfg80211. Neither seems to
->> happen, so is it the "correct" way to do this through the
->> ieee80211_regdom module parameter? And I wonder how this is supposed
->> to happen "idiot-proof" in the future?
->
-> In the future it would get set by whatever configures your network
-> connection.  Either system scripts like ifup/ifdown, or configured
-> manually in the config files that ifup/ifdown use, or automatically via
-> NetworkManager based on some setting, or via NetworkManager based on a
-> user-override.
->
-> One idea I've toyed with for NetworkManager is using the city you select
-> in the GUI Timezone control panel that all desktop environments for
-> timezone selection.  Just a thought.  Or, it could come from a
-> system-wide setting by your sysadmin in /etc, or set on a per-connection
-> basis when you set up the NetworkManager connection for that AP in the
-> NM connection editor.
+Francesco Gringoli wrote:
+> 
+> On Feb 24, 2009, at 5:35 PM, Larry Finger wrote:
+> 
+>> Francesco Gringoli wrote:
+>>> What about drop info from dmesg? Another try could be halve the dma
+>>> queue, I believe now it is 64 slots. Could you give a try setting it
+>>> to 32?
+>>
+>> The RX DMA queue was 64 and TX was 256. Both will be 32 in my next run.
+>>
+>> I don't understand the "drop info from dmesg" part.
+> Sorry Larry,
+> 
+> sometimes when I modify something, I can read
+> 
+> [334415.451028] b43-phy244 debug: RX: Packet dropped
+> 
+> in the dmesg because the received bytes were not correctly copied
+> between the "air-buffer" to the internal buffer and finally to the
+> rx-fifo along with the rxheader.
+> 
+> Did you notice something similar?
 
-I think it'd be nice to leverage all these different possible location
-based hints to help with your location -- and more. I think GeoClue
-does such a thing (works with dbus and all), but I have not yet had
-time to try it.
+I hadn't noticed them before, but I do see one of these messages just before
+some of my out-of-order cookies. There is no associated diagnostic message, thus
+it must come from the status.rate_index test. I'll see if I can get some info
+from there.
 
-http://www.freedesktop.org/wiki/Software/GeoClue
+Larry
 
-  Luis
