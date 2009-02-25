@@ -1,84 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:56363 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754953AbZBLDTD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2009 22:19:03 -0500
-Received: by rv-out-0506.google.com with SMTP id g37so154964rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2009 19:19:02 -0800 (PST)
-Message-ID: <49939516.8050607@gmail.com> (sfid-20090212_041909_404793_E07A9C0A)
-Date: Wed, 11 Feb 2009 19:18:46 -0800
-From: John Daiker <daikerjohn@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:39117 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750804AbZBYFBq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Feb 2009 00:01:46 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 21:01:45 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Remove ununsed ack duration stuff with long/short preamble
+Date: Wed, 25 Feb 2009 10:28:23 +0530
+Message-ID: <1235537903-5551-2-git-send-email-vasanth@atheros.com> (sfid-20090225_060151_452238_32899C91)
+In-Reply-To: <1235537903-5551-1-git-send-email-vasanth@atheros.com>
+References: <1235537903-5551-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH,RFC] initial mwl8k driver for marvell topdog wireless
-References: <20081216025542.GO18056@xi.wantstofly.org>	 <1231435410.21643.59.camel@localhost.localdomain>	 <49821FF1.4060200@gmail.com> <1233276553.4085.51.camel@localhost.localdomain>
-In-Reply-To: <1233276553.4085.51.camel@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2009 04:49 PM, Dan Williams wrote:
-> On Thu, 2009-01-29 at 13:30 -0800, John Daiker wrote:
->    
->> On 01/08/2009 09:23 AM, Dan Williams wrote:
->>      
->>> On Tue, 2008-12-16 at 03:55 +0100, Lennert Buytenhek wrote:
->>>
->>>        
->>>> Hi all,
->>>>
->>>> Attached is an initial version of the mwl8k driver for Marvell 88w8xxx
->>>> PCI/PCIe wireless parts (against 2.6.27.1).  This version was written
->>>> and tested against the 88w8687 (802.11b/g), but it shouldn't be hard to
->>>> extend the support to other parts in the 8xxx series, since the firmware
->>>> interface is very similar between parts.
->>>>
->>>> There's an occasional timeout warning with mwl8k_stop(), and hardware
->>>> crypto is still a work-in-progress, but other than that it looks pretty
->>>> stable.
->>>>
->>>> Feedback appreciated!
->>>>
->>>>          
->>> Would you guys mind if we split this up into an mwl8k core, and separate
->>> mwl8335 and mwl8687 modules?  In starting to add at least firmware
->>> upload for the 8335 last night, I realized that  most of the 8687
->>> hardware access code won't work, because it's using DMA for passing the
->>> firmware image to the card, while the 8335 uses many small writes to the
->>> registers.  So I'd like to refactor the driver into those 3 distinct
->>> modules instead.  Eventually there will probably be 8361 and 8362
->>> modules as well once the TopDog N parts get added.
->>>
->>> Sound OK?  I'm working locally with git, but if I go too far it'll be a
->>> ton of work to merge any changes you have.  Can we put this in a git
->>> tree somewhere and all work from that while we wait for a merge?
->>>
->>> Dan
->>>
->>>        
->> Has any of this landed in a git repo yet?  I have an 8335 chip and would
->> love to help with testing, but need a place to find bits, first.
->>      
->
-> It's not in wireless-testing yet, because I don't think Lennert posted
-> an updated patchset addressing the comments from before Christmas.
->
-> Dan
->    
-I'm anxious to see some progress on this, and also willing to help with 
-coding as well.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath9k/rc.c |   27 ---------------------------
+ drivers/net/wireless/ath9k/rc.h |    2 --
+ 2 files changed, 0 insertions(+), 29 deletions(-)
 
-I'll offer my time and testing abilities, under the caveat that my 
-802.11 knowledge is extremely weak. (I know how to read, though!)
-My C abilities and kernel coding are great, though.
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index cf0559f..18d19c3 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -1656,27 +1656,6 @@ static struct rate_control_ops ath_rate_ops = {
+ 	.free_sta = ath_rate_free_sta,
+ };
+ 
+-static void ath_setup_rate_table(struct ath_softc *sc,
+-				 struct ath_rate_table *rate_table)
+-{
+-	int i;
+-
+-	for (i = 0; i < rate_table->rate_cnt; i++) {
+-		u8 cix = rate_table->info[i].ctrl_rate;
+-
+-		rate_table->info[i].lpAckDuration =
+-			ath9k_hw_computetxtime(sc->sc_ah, rate_table,
+-					       WLAN_CTRL_FRAME_SIZE,
+-					       cix,
+-					       false);
+-		rate_table->info[i].spAckDuration =
+-			ath9k_hw_computetxtime(sc->sc_ah, rate_table,
+-					       WLAN_CTRL_FRAME_SIZE,
+-					       cix,
+-					       true);
+-	}
+-}
+-
+ void ath_rate_attach(struct ath_softc *sc)
+ {
+ 	sc->hw_rate_table[ATH9K_MODE_11B] =
+@@ -1697,12 +1676,6 @@ void ath_rate_attach(struct ath_softc *sc)
+ 		&ar5416_11ng_ratetable;
+ 	sc->hw_rate_table[ATH9K_MODE_11NG_HT40MINUS] =
+ 		&ar5416_11ng_ratetable;
+-
+-	ath_setup_rate_table(sc, &ar5416_11b_ratetable);
+-	ath_setup_rate_table(sc, &ar5416_11a_ratetable);
+-	ath_setup_rate_table(sc, &ar5416_11g_ratetable);
+-	ath_setup_rate_table(sc, &ar5416_11na_ratetable);
+-	ath_setup_rate_table(sc, &ar5416_11ng_ratetable);
+ }
+ 
+ int ath_rate_control_register(void)
+diff --git a/drivers/net/wireless/ath9k/rc.h b/drivers/net/wireless/ath9k/rc.h
+index d688ec5..a6dc82d 100644
+--- a/drivers/net/wireless/ath9k/rc.h
++++ b/drivers/net/wireless/ath9k/rc.h
+@@ -120,8 +120,6 @@ struct ath_rate_table {
+ 		u8 sgi_index;
+ 		u8 ht_index;
+ 		u32 max_4ms_framelen;
+-		u16 lpAckDuration;
+-		u16 spAckDuration;
+ 	} info[RATE_TABLE_SIZE];
+ 	u32 probe_interval;
+ 	u32 rssi_reduce_interval;
+-- 
+1.5.5.1
 
-If someone would care to mentor my progress on making initial changes, I 
-would be happy to get started.
-My initial effort would be centered around Dan Williams' comments on 
-2008-12-16 08:10am PST.
-
-Thanks,
-John Daiker
