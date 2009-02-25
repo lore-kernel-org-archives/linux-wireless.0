@@ -1,95 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55327 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753518AbZBRXZr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59614 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755224AbZBYDcD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 18:25:47 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 05/15] cfg80211: add regulatory_hint_core() to separate the core reg hint
-Date: Wed, 18 Feb 2009 18:25:35 -0500
-Message-Id: <1234999545-14357-6-git-send-email-lrodriguez@atheros.com> (sfid-20090219_002558_288115_115740D6)
-In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+	Tue, 24 Feb 2009 22:32:03 -0500
+Subject: Re: [PATCH v3] mac80211: Give it some time to do the TSF sync
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090225004955.227080@gmx.net> (sfid-20090225_015029_602384_627C04D3)
+References: <20090221231800.227280@gmx.net>
+	 (sfid-20090222_001831_559891_2537405E) <1235439633.4455.33.camel@johannes.local>
+	 <20090225004955.227080@gmx.net> (sfid-20090225_015029_602384_627C04D3)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-K955j96BquD3WE4fyNdG"
+Date: Tue, 24 Feb 2009 17:45:34 -0800
+Message-Id: <1235526334.28635.2.camel@johannes.local> (sfid-20090225_043207_902102_D51109C3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the core hint path more readable and allows for us to
-later make it obvious under what circumstances we need locking or not.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   34 +++++++++++++++++++++++++---------
- 1 files changed, 25 insertions(+), 9 deletions(-)
+--=-K955j96BquD3WE4fyNdG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ba82312..6373a78 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1050,11 +1050,7 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 	case REGDOM_SET_BY_INIT:
- 		return -EINVAL;
- 	case REGDOM_SET_BY_CORE:
--		/*
--		 * Always respect new wireless core hints, should only happen
--		 * when updating the world regulatory domain at init.
--		 */
--		return 0;
-+		return -EINVAL;
- 	case REGDOM_SET_BY_COUNTRY_IE:
- 		if (unlikely(!is_an_alpha2(alpha2)))
- 			return -EINVAL;
-@@ -1183,6 +1179,26 @@ new_request:
- 	return call_crda(alpha2);
- }
- 
-+static int regulatory_hint_core(const char *alpha2)
-+{
-+	struct regulatory_request *request;
-+
-+	BUG_ON(last_request);
-+
-+	request = kzalloc(sizeof(struct regulatory_request),
-+			  GFP_KERNEL);
-+	if (!request)
-+		return -ENOMEM;
-+
-+	request->alpha2[0] = alpha2[0];
-+	request->alpha2[1] = alpha2[1];
-+	request->initiator = REGDOM_SET_BY_CORE;
-+
-+	last_request = request;
-+
-+	return call_crda(alpha2);
-+}
-+
- void regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- {
- 	int r;
-@@ -1616,16 +1632,16 @@ int regulatory_init(void)
- 	 * stuck with the static values. We ignore "EU" code as
- 	 * that is not a valid ISO / IEC 3166 alpha2 */
- 	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
--		err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE,
--					ieee80211_regdom, 0, ENVIRON_ANY);
-+		err = regulatory_hint_core(ieee80211_regdom);
- #else
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
--	err = __regulatory_hint(NULL, REGDOM_SET_BY_CORE, "00", 0, ENVIRON_ANY);
--	if (err)
-+	err = regulatory_hint_core("00");
-+	if (err) {
- 		printk(KERN_ERR "cfg80211: calling CRDA failed - "
- 		       "unable to update world regulatory domain, "
- 		       "using static definition\n");
-+	}
- #endif
- 
- 	return 0;
--- 
-1.6.0.3
+On Wed, 2009-02-25 at 01:49 +0100, Alina Friedrichsen wrote:
+> Hello Johannes!
+>=20
+> > Please elaborate on what this does. This uses the assumption that
+> > reset_tsf() makes it start at 0, and that then the hardware won't sync
+> > up until N seconds etc.
+>=20
+> The ath5k and ath9k drivers do so. If a driver/hardware don't, it
+> causes other problems. For example ("iwconfig wlan0 essid new_ibss")
+> if the sync isn't done before the first beacon is send and the TSF of
+> the old IBSS-Network was higher the the TSF of the new one, so the all
+> nodes of the new network now sync to the higher TSF of the old
+> network.
+
+Right. I just want to see an explanation in the code.
+
+johannes
+
+--=-K955j96BquD3WE4fyNdG
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJpKK8AAoJEKVg1VMiehFYmukQALX+5h3SIKlNWekccG3kUf+v
+FXNMWtbt7/PjBJPmZYgjEtNeZSJ4aRwv9TaX/bRWMGyyfeJ3fRnDHHw8q2KMa74Z
+VKU7GbesoMte9dgL3AP1ne028uqr+I4dNQd3+9W8zUHmc28grspI6gpz8nU4nUno
+b9zAw4H/+tnKlVNNNggpFa2t+d6eowhwgrgG/B97+jUKI7pFDBkIZ6aPwg/BtqLZ
+/3hznr58I5ULph+QBnf8xXu1wmgUiRRr1+SQSJhBkhvYnLqKwFxp2kaM5ZFF1iWv
+6JjHm2SGA91V3hw6+6/k9zOsZ7N6crNXr8VxBGiDGZ3i1VaIc81abDvHfwgar7xH
+cp90BDmxsrLy4R84yRC+pCbb1bYTGGJVhhV04o4X8rNQbUpmiOv7uBWJh+6pNCbY
+XLHhaFAhOqQpcSsJrmbHOTGponnWOjBuBVo4n6lUuLX4dEM5LqkqcZ1qcPMvApiK
+4iDTMvrDJ8NvFa4H0Fz8rhXLQ58OQWQO9BQ+G1iGMQHT7N8H1mppSkSTKKHCXtyo
+Bauu65FCXWnUSeWMxI3a9vIl7Z5CK7CqtPXl1l3VfCQTHoKZMKWByCwBGI7CtfwW
+vCYIFsV/9X8sVZHRgmDFIonpzMijOJMMlB3KOXxUMq5rHz/BMT5lb+1O0bV/jVL6
+krf8o45qeZDHEDGoknpc
+=uOCV
+-----END PGP SIGNATURE-----
+
+--=-K955j96BquD3WE4fyNdG--
 
