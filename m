@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:64216 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:49935 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751160AbZBITZw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2009 14:25:52 -0500
-Subject: Re: [ipw3945-devel] [PATCH v2.6.29] iwlwifi: save PCI state before
-	suspend, restore after resume
-From: reinette chatre <reinette.chatre@intel.com>
-To: drago01 <drago01@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <f6ca9fed0902091117k7326e51ag8469887cb1a99d53@mail.gmail.com>
-References: <> <1233685203-5093-1-git-send-email-reinette.chatre@intel.com>
-	 <f6ca9fed0902091117k7326e51ag8469887cb1a99d53@mail.gmail.com>
+	id S1753895AbZBYBO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 20:14:56 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 17:14:55 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: unregister ml groups on failure
+Date: Tue, 24 Feb 2009 17:14:10 -0800
+Message-ID: <1235524450-22624-1-git-send-email-lrodriguez@atheros.com> (sfid-20090225_021500_255045_7684E1AD)
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Mon, 09 Feb 2009 11:29:32 -0800
-Message-Id: <1234207772.11530.164.camel@rc-desk> (sfid-20090209_202555_867639_3836B110)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-02-09 at 11:17 -0800, drago01 wrote:
-> On Tue, Feb 3, 2009 at 7:20 PM, Reinette Chatre
-> <reinette.chatre@intel.com> wrote:
-> > This is the right thing to do and fixes the following warning:
-> > [...]
-> 
-> With 2.6.29-rc4-git1 (which has this patch) I sometimes get:
-> 
-> iwl3945: Wait for START_ALIVE timeout after 2000ms.
-> iwl3945 0000:07:00.0: PCI INT A disabled
-> 
-> After resume with results into no working wireless until the module is reloaded.
-> I am not sure if this patch is the culprit (have not tried to revert
-> it), but that's the only change that might have caused this (with rc3
-> it was working fine, it just triggered the warning that this patch
-> supposed to solve).
+We were not doing so before.
 
-That patch is the culprit. Please see current status at
-http://bugzilla.kernel.org/show_bug.cgi?id=12656
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/nl80211.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-Reinette
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 04ef828..e5d9060 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2806,9 +2806,12 @@ int nl80211_init(void)
+ 
+ 	err = genl_register_mc_group(&nl80211_fam, &nl80211_scan_mcgrp);
+ 	if (err)
+-		goto err_out;
++		goto err_out_scan_mc;
+ 
+ 	return 0;
++
++ err_out_scan_mc:
++	genl_unregister_mc_group(&nl80211_fam, &nl80211_config_mcgrp);
+  err_out:
+ 	genl_unregister_family(&nl80211_fam);
+ 	return err;
+-- 
+1.6.1.2.253.ga34a
 
