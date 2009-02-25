@@ -1,92 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56062 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750905AbZBUFEm (ORCPT
+Received: from uhweb15152.united-hoster.com ([85.88.15.152]:56490 "EHLO
+	uhweb15152.united-hoster.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753618AbZBYOqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 00:04:42 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v6 04/15] nl80211: disallow user requests prior to regulatory_init()
-Date: Sat, 21 Feb 2009 00:04:22 -0500
-Message-Id: <1235192673-6314-5-git-send-email-lrodriguez@atheros.com> (sfid-20090221_060446_736076_AA26D6AC)
-In-Reply-To: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
-References: <1235192673-6314-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 25 Feb 2009 09:46:42 -0500
+Message-ID: <49A5583D.5050502@f-seidel.de> (sfid-20090225_154645_104186_62C80D5D)
+Date: Wed, 25 Feb 2009 15:39:57 +0100
+From: Frank Seidel <frank@f-seidel.de>
+MIME-Version: 1.0
+To: linux kernel <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	akpm@linux-foundation.org, hannes@hanneseder.net,
+	johannes@sipsolutions.net, "David S. Miller" <davem@davemloft.net>,
+	Frank Seidel <fseidel@suse.de>,
+	Frank Seidel <frank@f-seidel.de>, wangchen@cn.fujitsu.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH][trivial] airo: reduce stack memory footpring
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If cfg80211 is built into the kernel there is perhaps a small
-time window betwen nl80211_init() and regulatory_init() where
-cfg80211_regdomain hasn't yet been initialized to let the
-wireless core do its work. During that rare case and time
-frame (if its even possible) we don't allow user regulatory
-changes as cfg80211 is working on enabling its first regulatory
-domain.
+From: Frank Seidel <frank@f-seidel.de>
 
-To check for cfg80211_regdomain we now contend the entire operation
-using the cfg80211_mutex.
+Applying kernel janitors todos (reduce stack
+footprint where possible) to airo wireless driver.
+(Before 1124 bytes on i386, now 876)
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Frank Seidel <frank@f-seidel.de>
 ---
- net/wireless/nl80211.c |   34 ++++++++++++++++++++++++++--------
- 1 files changed, 26 insertions(+), 8 deletions(-)
+ drivers/net/wireless/airo.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8d38609..c99f0be 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1882,24 +1882,42 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	int r;
- 	char *data = NULL;
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -7031,11 +7031,15 @@ static int airo_get_aplist(struct net_de
+ {
+ 	struct airo_info *local = dev->ml_priv;
+ 	struct sockaddr *address = (struct sockaddr *) extra;
+-	struct iw_quality qual[IW_MAX_AP];
++	struct iw_quality *qual;
+ 	BSSListRid BSSList;
+ 	int i;
+ 	int loseSync = capable(CAP_NET_ADMIN) ? 1: -1;
  
--	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
--		return -EINVAL;
-+	/*
-+	 * You should only get this when cfg80211 hasn't yet initialized
-+	 * completely when built-in to the kernel right between the time
-+	 * window between nl80211_init() and regulatory_init(), if that is
-+	 * even possible.
-+	 */
-+	mutex_lock(&cfg80211_mutex);
-+	if (unlikely(!cfg80211_regdomain)) {
-+		r = -EINPROGRESS;
-+		goto out;
-+	}
++	qual = kmalloc(IW_MAX_AP * sizeof(*qual), GFP_KERNEL);
++	if (!qual)
++		return -ENOMEM;
 +
-+	if (!info->attrs[NL80211_ATTR_REG_ALPHA2]) {
-+		r = -EINVAL;
-+		goto out;
-+	}
+ 	for (i = 0; i < IW_MAX_AP; i++) {
+ 		u16 dBm;
+ 		if (readBSSListRid(local, loseSync, &BSSList))
+@@ -7090,6 +7094,7 @@ static int airo_get_aplist(struct net_de
+ 	}
+ 	dwrq->length = i;
  
- 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
- 
- #ifdef CONFIG_WIRELESS_OLD_REGULATORY
- 	/* We ignore world regdom requests with the old regdom setup */
--	if (is_world_regdom(data))
--		return -EINVAL;
-+	if (is_world_regdom(data)) {
-+		r = -EINVAL;
-+		goto out;
-+	}
- #endif
--	mutex_lock(&cfg80211_mutex);
- 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
--	mutex_unlock(&cfg80211_mutex);
--	/* This means the regulatory domain was already set, however
-+	/*
-+	 * This means the regulatory domain was already set, however
- 	 * we don't want to confuse userspace with a "successful error"
--	 * message so lets just treat it as a success */
-+	 * message so lets just treat it as a success
-+	 */
- 	if (r == -EALREADY)
- 		r = 0;
-+out:
-+	mutex_unlock(&cfg80211_mutex);
- 	return r;
++	kfree(qual);
+ 	return 0;
  }
  
--- 
-1.6.0.3
-
