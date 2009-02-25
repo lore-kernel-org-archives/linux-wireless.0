@@ -1,73 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:46506 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569AbZBSWTk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 17:19:40 -0500
-Received: by yx-out-2324.google.com with SMTP id 8so258395yxm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 14:19:39 -0800 (PST)
+Received: from bu3sch.de ([62.75.166.246]:56778 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754761AbZBYShu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Feb 2009 13:37:50 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Latest test  with open-source firmware
+Date: Wed, 25 Feb 2009 19:36:10 +0100
+Cc: Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
+	Lorenzo Nava <navalorenx@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <49A56B1F.80702@lwfinger.net> <200902251846.31531.mb@bu3sch.de> <49A58F63.9090309@lwfinger.net>
+In-Reply-To: <49A58F63.9090309@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890902182351jae378d5m4515a23a3ae28a91@mail.gmail.com>
-References: <1235002285-14812-1-git-send-email-lrodriguez@atheros.com>
-	 <878wo2j4vo.fsf@litku.valot.fi>
-	 <43e72e890902182351jae378d5m4515a23a3ae28a91@mail.gmail.com>
-Date: Thu, 19 Feb 2009 14:19:39 -0800
-Message-ID: <43e72e890902191419j2c34e5adjc99285b9d3761fb6@mail.gmail.com> (sfid-20090219_231945_166675_759281DE)
-Subject: Re: [PATCH] cfg80211: default OLD_REG to n
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	marcel@holtmann.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <200902251936.10658.mb@bu3sch.de> (sfid-20090225_193752_744242_D23B30E1)
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 18, 2009 at 11:51 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Wed, Feb 18, 2009 at 10:51 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
->> "Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
->>
->>> Since we are not following the schedule to remove OLD_REG by 2.6.29
->>> lets simply set it to default to n for 2.6.30 and schedule its
->>> removal for 2.6.31
->>
->> [...]
->>
->>>  config WIRELESS_OLD_REGULATORY
->>>       bool "Old wireless static regulatory definitions"
->>> -     default y
->>> +     default n
->>>       ---help---
->>>         This option enables the old static regulatory information
->>>         and uses it within the new framework. This is available
->>
->> What does this mean in practise? If a user compiles the kernel with
->> the default settings, the wireless will work only if crda is
->> installed?
->
-> No, it means you get the static world regdomain by default instead of
-> the static US world regdomain by default.
->
->> If that's the case, this is way too early. All lazy people, like me,
->> will get very frustrated because of this. They don't want to make all
->> those hoops to install crda, they just want their wireless to work.
->>
->> For example, I still can't find crda from debian unstable. In my
->> opinion we need to wait _at least_ a year after it's available in all
->> distros, and only then we can make crda the default.
->
-> Keep in mind OLD_REG still alows usage of CRDA, OLD_REG just means "3
-> static regdomains, ieee80211_regdom module parameter, and make the US
-> static regdom the default". That's all.
->
->> Let's not make the same mistake the udev people did. That was a
->> disaster few years back, I suffered from it multiple times.
->> Fortunately things have calmed down now and I can safely update the
->> kernel.
->
-> Whatever works.
+On Wednesday 25 February 2009 19:35:15 Larry Finger wrote:
+> Michael Buesch wrote:
+> > On Wednesday 25 February 2009 17:00:31 Larry Finger wrote:
+> >>
+> >> The 00:26:24 event was the interface going offline. That happens with
+> >> proprietary firmware, thus I think that problem is with the driver, rather than
+> >> the firmware.
+> > 
+> > Are you sure it's a problem at all and not just simply failure to deliver
+> > certain important management frames due to _extreme_ queue pressure?
+> > Especially the tight RX queue will have effects like dropped frames.
+> 
+> No, I don't know. If I get the same problem with a queue depth of 64, is there
+> any problem with increasing it to 128 for testing?
 
-I'm going to re-work this patch a bit more with some other work to
-make it things a bit clear.
+The RX queue length can have any size.
+The TX queue length % 2 must be zero. But a BUILD_BUG_ON will trigger if it isn't.
 
- Luis
+-- 
+Greetings, Michael.
