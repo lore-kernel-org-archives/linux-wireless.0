@@ -1,192 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42153 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751536AbZBMKxZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 05:53:25 -0500
-Date: Fri, 13 Feb 2009 12:53:06 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] nl80211: Optional IEs into scan request
-Message-ID: <20090213105306.GA18754@jm.kir.nu> (sfid-20090213_115331_325403_65643DA6)
+Received: from mail.gmx.net ([213.165.64.20]:34005 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1759828AbZBYV4f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Feb 2009 16:56:35 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Wed, 25 Feb 2009 22:56:31 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090225215631.289250@gmx.net> (sfid-20090225_225640_347262_7915CAB7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH] mac80211: Implement commit in wireless extensions
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends the NL80211_CMD_TRIGGER_SCAN command to allow applications
-to specify a set of information element(s) to be added into Probe
-Request frames with NL80211_ATTR_IE. This provides support for the
-MLME-SCAN.request primitive parameter VendorSpecificInfo and can be
-used, e.g., to implement WPS scanning.
+This implements commit in wireless extensions for completeness and mayb=
+e it could be useful for debugging to initiate a new rejoining process =
+without changing the config.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+I not so familiar with nl80211 at the moment, so I want add it to nl802=
+11 in a second patch.
 
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
 ---
- include/net/cfg80211.h     |    4 ++++
- net/mac80211/ieee80211_i.h |    3 ++-
- net/mac80211/mlme.c        |   14 +++++++++-----
- net/mac80211/scan.c        |    3 ++-
- net/wireless/nl80211.c     |   21 ++++++++++++++++++++-
- 5 files changed, 37 insertions(+), 8 deletions(-)
-
---- wireless-testing.orig/include/net/cfg80211.h	2009-02-13 12:47:56.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-02-13 12:48:45.000000000 +0200
-@@ -525,6 +525,8 @@ struct cfg80211_ssid {
-  * @n_ssids: number of SSIDs
-  * @channels: channels to scan on.
-  * @n_channels: number of channels for each band
-+ * @ie: optional information element(s) to add into Probe Request or %NULL
-+ * @ie_len: length of ie in octets
-  * @wiphy: the wiphy this was for
-  * @ifidx: the interface index
-  */
-@@ -533,6 +535,8 @@ struct cfg80211_scan_request {
- 	int n_ssids;
- 	struct ieee80211_channel **channels;
- 	u32 n_channels;
-+	u8 *ie;
-+	size_t ie_len;
- 
- 	/* internal */
- 	struct wiphy *wiphy;
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-02-13 12:47:56.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-02-13 12:48:45.000000000 +0200
-@@ -911,7 +911,8 @@ u32 ieee80211_sta_get_rates(struct ieee8
- 			    struct ieee802_11_elems *elems,
- 			    enum ieee80211_band band);
- void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
--			      u8 *ssid, size_t ssid_len);
-+			      u8 *ssid, size_t ssid_len,
-+			      u8 *ie, size_t ie_len);
- void ieee80211_send_pspoll(struct ieee80211_local *local,
- 			   struct ieee80211_sub_if_data *sdata);
- 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-02-13 12:47:56.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-02-13 12:48:45.000000000 +0200
-@@ -139,7 +139,8 @@ static void add_extra_ies(struct sk_buff
- 
- /* also used by scanning code */
- void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
--			      u8 *ssid, size_t ssid_len)
-+			      u8 *ssid, size_t ssid_len,
-+			      u8 *ie, size_t ie_len)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-@@ -149,7 +150,7 @@ void ieee80211_send_probe_req(struct iee
- 	int i;
- 
- 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt) + 200 +
--			    sdata->u.sta.ie_probereq_len);
-+			    ie_len + sdata->u.sta.ie_probereq_len);
- 	if (!skb) {
- 		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
- 		       "request\n", sdata->dev->name);
-@@ -196,6 +197,7 @@ void ieee80211_send_probe_req(struct iee
- 		*pos = rate->bitrate / 5;
- 	}
- 
-+	add_extra_ies(skb, ie, ie_len);
- 	add_extra_ies(skb, sdata->u.sta.ie_probereq,
- 		      sdata->u.sta.ie_probereq_len);
- 
-@@ -891,7 +893,7 @@ static void ieee80211_direct_probe(struc
- 	 * will not answer to direct packet in unassociated state.
- 	 */
- 	ieee80211_send_probe_req(sdata, NULL,
--				 ifsta->ssid, ifsta->ssid_len);
-+				 ifsta->ssid, ifsta->ssid_len, NULL, 0);
- 
- 	mod_timer(&ifsta->timer, jiffies + IEEE80211_AUTH_TIMEOUT);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ecbc8e0..7f00c70 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -920,6 +920,7 @@ static inline int ieee80211_bssid_match(const u8 *r=
+addr, const u8 *addr)
+=20
+ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed);
+ int ieee80211_if_config(struct ieee80211_sub_if_data *sdata, u32 chang=
+ed);
++int ieee80211_commit(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
+ void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sd=
+ata,
+ 				      u32 changed);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index f38db4d..1b2d598 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -294,6 +294,20 @@ int ieee80211_hw_config(struct ieee80211_local *lo=
+cal, u32 changed)
+ 	return ret;
  }
-@@ -1116,7 +1118,8 @@ static void ieee80211_associated(struct 
- 			} else
- 				ieee80211_send_probe_req(sdata, ifsta->bssid,
- 							 ifsta->ssid,
--							 ifsta->ssid_len);
-+							 ifsta->ssid_len,
-+							 NULL, 0);
- 			ifsta->flags ^= IEEE80211_STA_PROBEREQ_POLL;
- 		} else {
- 			ifsta->flags &= ~IEEE80211_STA_PROBEREQ_POLL;
-@@ -1125,7 +1128,8 @@ static void ieee80211_associated(struct 
- 				ifsta->last_probe = jiffies;
- 				ieee80211_send_probe_req(sdata, ifsta->bssid,
- 							 ifsta->ssid,
--							 ifsta->ssid_len);
-+							 ifsta->ssid_len,
-+							 NULL, 0);
- 			}
- 		}
- 	}
---- wireless-testing.orig/net/mac80211/scan.c	2009-02-13 12:47:56.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2009-02-13 12:48:45.000000000 +0200
-@@ -367,7 +367,8 @@ void ieee80211_scan_work(struct work_str
- 			ieee80211_send_probe_req(
- 				sdata, NULL,
- 				local->scan_req->ssids[i].ssid,
--				local->scan_req->ssids[i].ssid_len);
-+				local->scan_req->ssids[i].ssid_len,
-+				local->scan_req->ie, local->scan_req->ie_len);
- 		next_delay = IEEE80211_CHANNEL_TIME;
- 		break;
- 	}
---- wireless-testing.orig/net/wireless/nl80211.c	2009-02-13 12:47:56.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-02-13 12:48:45.000000000 +0200
-@@ -2286,6 +2286,7 @@ static int nl80211_trigger_scan(struct s
- 	struct wiphy *wiphy;
- 	int err, tmp, n_ssids = 0, n_channels = 0, i;
- 	enum ieee80211_band band;
-+	size_t ie_len;
- 
- 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
- 	if (err)
-@@ -2327,9 +2328,15 @@ static int nl80211_trigger_scan(struct s
- 		goto out_unlock;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_IE])
-+		ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
-+	else
-+		ie_len = 0;
-+
- 	request = kzalloc(sizeof(*request)
- 			+ sizeof(*ssid) * n_ssids
--			+ sizeof(channel) * n_channels, GFP_KERNEL);
-+			+ sizeof(channel) * n_channels
-+			+ ie_len, GFP_KERNEL);
- 	if (!request) {
- 		err = -ENOMEM;
- 		goto out_unlock;
-@@ -2340,6 +2347,12 @@ static int nl80211_trigger_scan(struct s
- 	if (n_ssids)
- 		request->ssids = (void *)(request->channels + n_channels);
- 	request->n_ssids = n_ssids;
-+	if (ie_len) {
-+		if (request->ssids)
-+			request->ie = (void *)(request->ssids + n_ssids);
-+		else
-+			request->ie = (void *)(request->channels + n_channels);
+=20
++void ieee80211_commit(struct ieee80211_sub_if_data *sdata)
++{
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_ADHOC:
++		ieee80211_ibss_commit(sdata);
++		break;
++	case NL80211_IFTYPE_STATION:
++		ieee80211_sta_commit(sdata);
++		break;
++	default:
++		break;
 +	}
- 
- 	if (info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
- 		/* user specified, bail out if channel not found */
-@@ -2380,6 +2393,12 @@ static int nl80211_trigger_scan(struct s
- 		}
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_IE]) {
-+		request->ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
-+		memcpy(request->ie, nla_data(info->attrs[NL80211_ATTR_IE]),
-+		       request->ie_len);
-+	}
++}
 +
- 	request->ifidx = dev->ifindex;
- 	request->wiphy = &drv->wiphy;
- 
+ void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sd=
+ata,
+ 				      u32 changed)
+ {
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index f6924fc..1ac0516 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -121,6 +121,15 @@ static int ieee80211_set_encryption(struct ieee802=
+11_sub_if_data *sdata, u8 *sta
+ 	return err;
+ }
+=20
++static int ieee80211_ioctl_commit(struct net_device *dev,
++				  struct iw_request_info *info,
++				  struct iw_point *data, char *extra)
++{
++	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
++	ieee80211_commit(sdata);
++	return 0;
++}
++
+ static int ieee80211_ioctl_siwgenie(struct net_device *dev,
+ 				    struct iw_request_info *info,
+ 				    struct iw_point *data, char *extra)
+@@ -1035,7 +1044,7 @@ static int ieee80211_ioctl_siwencodeext(struct ne=
+t_device *dev,
+=20
+ static const iw_handler ieee80211_handler[] =3D
+ {
+-	(iw_handler) NULL,				/* SIOCSIWCOMMIT */
++	(iw_handler) ieee80211_ioctl_commit,		/* SIOCSIWCOMMIT */
+ 	(iw_handler) cfg80211_wext_giwname,		/* SIOCGIWNAME */
+ 	(iw_handler) NULL,				/* SIOCSIWNWID */
+ 	(iw_handler) NULL,				/* SIOCGIWNWID */
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
