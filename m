@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47010 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbZBPQA5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 11:00:57 -0500
-Date: Mon, 16 Feb 2009 10:47:33 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tony Vroon <tony@linx.net>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>
-Subject: Re: IWL5300, 2.6.29-rc4, CRDA 1.0.1: Missing out 802.11A frequency
-	ranges
-Message-ID: <20090216154733.GA2870@tuxdriver.com> (sfid-20090216_170100_497595_3C0F9A59)
-References: <1234203811.21570.19.camel@localhost> <20090209183924.GA6069@tuxdriver.com> <1234207263.6694.1.camel@localhost> <1234208152.6694.4.camel@localhost> <20090210013941.GA4386@tesla> <1234230689.3793.15.camel@localhost> <20090210020708.GC4386@tesla> <1234379981.4789.7.camel@localhost> <20090214045232.GA5769@tesla> <1234786124.4271.2.camel@localhost>
+Received: from mail.atheros.com ([12.36.123.2]:50489 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752233AbZBYBZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2009 20:25:26 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 17:25:25 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] cfg80211: unregister genl multicast groups on failure
+Date: Tue, 24 Feb 2009 17:24:41 -0800
+Message-ID: <1235525081-23293-1-git-send-email-lrodriguez@atheros.com> (sfid-20090225_022530_050597_CE2BD791)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1234786124.4271.2.camel@localhost>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 16, 2009 at 12:08:44PM +0000, Tony Vroon wrote:
-> Just to confirm, if I use my early-boot hook that I used for your iw
-> list to set the regulatory domain manually (iw reg set GB) all is well.
-> If I allow the driver stack to get to the association stage without
-> setting a regulatory domain, I can never get my 802.11A spectrum back
-> after the fact.
-> Would you still see this as a bug or rather a specific requirement of
-> the new interface that hasn't yet been documented?
+We were not doing so before.
 
-Seems like a bug, or at least an unintended consequence of intersection...?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
+Here's a better commit log. Sorry.
+
+ net/wireless/nl80211.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 04ef828..e5d9060 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2806,9 +2806,12 @@ int nl80211_init(void)
+ 
+ 	err = genl_register_mc_group(&nl80211_fam, &nl80211_scan_mcgrp);
+ 	if (err)
+-		goto err_out;
++		goto err_out_scan_mc;
+ 
+ 	return 0;
++
++ err_out_scan_mc:
++	genl_unregister_mc_group(&nl80211_fam, &nl80211_config_mcgrp);
+  err_out:
+ 	genl_unregister_family(&nl80211_fam);
+ 	return err;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.1.2.253.ga34a
+
