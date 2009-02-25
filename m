@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:58032 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753068AbZBZUxQ (ORCPT
+Received: from gundega.hpl.hp.com ([192.6.19.190]:55553 "EHLO
+	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752062AbZBYRYk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 15:53:16 -0500
-Message-ID: <49A70134.4070700@gmail.com> (sfid-20090226_215326_052598_525E2737)
-Date: Thu, 26 Feb 2009 21:53:08 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Wed, 25 Feb 2009 12:24:40 -0500
+Date: Wed, 25 Feb 2009 09:24:02 -0800
+From: Jean Tourrilhes <jt@hpl.hp.com>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] wireless, wavelan: spin off by 1
+Message-ID: <20090225172402.GA21301@bougret.hpl.hp.com> (sfid-20090225_182444_134057_4F3103E9)
+Reply-To: jt@hpl.hp.com
+References: <49A53B16.8010605@gmail.com>
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-References: <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <49A321BA.2040500@gmail.com> <49A326A4.8090103@gmail.com> <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226010625.GA10577@hash.localnet>
-In-Reply-To: <20090226010625.GA10577@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49A53B16.8010605@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26.2.2009 02:06, Bob Copeland wrote:
-> --- a/drivers/net/wireless/ath5k/base.c
-> +++ b/drivers/net/wireless/ath5k/base.c
-> @@ -1140,12 +1140,14 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
->   	struct ath5k_hw *ah = sc->ah;
->   	struct sk_buff *skb = bf->skb;
->   	struct ath5k_desc *ds;
-> +	dma_addr_t dma_addr;
->
->   	if (!skb) {
-> -		skb = ath5k_rx_skb_alloc(sc,&bf->skbaddr);
-> +		skb = ath5k_rx_skb_alloc(sc,&dma_addr);
->   		if (!skb)
->   			return -ENOMEM;
->   		bf->skb = skb;
-> +		bf->skbaddr = dma_addr;
+On Wed, Feb 25, 2009 at 01:35:34PM +0100, Roel Kluin wrote:
+> spin can reach -1 after the loop, so 0 is still success.
+> 
 
-Hmm, rather than the caller, ath5k_rx_skb_alloc is wrong here in my 
-eyes. It shouldn't touch the second parameter unless it knows it won't 
-fail anymore.
+	You are probably technically right, but it does not matter in
+practice. The chip should answer way faster than this timeout, and we
+would loose only 0.1% of the overall timeout value. If the chip answer
+was that close to the timeout, because of variation, we would fail
+half the time and would need a bigger timeout anyway.
+	A better way would be to not test spin, but to test the status
+register itself. That way, it's less ambiguous.
+	Anyway, such low level code is tricky, and I personally would
+not want any change without thourough testing with the hardware. We
+know the curent code work, and I don't have time to test, so I would
+vote to not change the code.
+
+	Regards,
+
+	Jean
+
+
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+> diff --git a/drivers/net/wireless/wavelan_cs.c b/drivers/net/wireless/wavelan_cs.c
+> index de717f8..1565a0a 100644
+> --- a/drivers/net/wireless/wavelan_cs.c
+> +++ b/drivers/net/wireless/wavelan_cs.c
+> @@ -838,9 +838,8 @@ wv_82593_cmd(struct net_device *	dev,
+>      }
+>    while(((status & SR3_EXEC_STATE_MASK) != SR3_EXEC_IDLE) && (spin-- > 0));
+>  
+> -  /* If the interrupt hasn't be posted */
+> -  if(spin <= 0)
+> -    {
+> +  /* If the interrupt hasn't been posted */
+> +  if (spin < 0) {
+>  #ifdef DEBUG_INTERRUPT_ERROR
+>        printk(KERN_INFO "wv_82593_cmd: %s timeout (previous command), status 0x%02x\n",
+>  	     str, status);
