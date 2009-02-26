@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f167.google.com ([209.85.220.167]:51618 "EHLO
-	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753024AbZBWWW4 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:34759 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754383AbZBZXXl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 17:22:56 -0500
-Message-ID: <49A321BA.2040500@gmail.com> (sfid-20090223_232303_127309_9B4045D5)
-Date: Mon, 23 Feb 2009 23:22:50 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
+	Thu, 26 Feb 2009 18:23:41 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, mb@bu3sch.de,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-References: <20090222111807.GB5538@silver.sucs.org> <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com>
-In-Reply-To: <20090223152724.M82409@bobcopeland.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: [PATCH v2 0/3] cfg80211: send regulatory events
+Date: Thu, 26 Feb 2009 18:23:32 -0500
+Message-Id: <1235690615-12109-1-git-send-email-lrodriguez@atheros.com> (sfid-20090227_002349_045357_7B22B1EC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23.2.2009 16:35, Bob Copeland wrote:
-> As I understand it, yes, we don't do the right thing when the more flag
-> is set.  We're supposed to keep processing packets until we get one with
-> the done flag, and then all of that is supposed to be merged into a single
-> packet.  Other flags such as the rx rate are only valid on the final
-> packet.
+This series does the work to prep and then send regulatory
+events to userspace. This v2 keeps the country IE environment
+within cfg80211.h as we don't want to inform userspace about
+details of the country IE. We also now add the defines to help
+userspace determine when the kernel has the new command request
+and attributes.
 
-What I don't understand is how we can proceed further, if we should 
-never get done flag set according to the specs for the buffer which has 
-more flag set. We should hit (unlikely(ret == -EINPROGRESS)) test everytime.
+Luis R. Rodriguez (3):
+  cfg80211: remove REGDOM_SET_BY_INIT
+  cfg80211: move enum reg_set_by to nl80211.h
+  cfg80211: add regulatory netlink multicast group
 
-> So I am not sure if the jumbo packets are causing bad things to happen,
-> or if they are an indication that something bad has already happened.
+ drivers/net/wireless/ath9k/main.c |    2 +-
+ drivers/net/wireless/ath9k/regd.c |   32 +++++++------
+ drivers/net/wireless/ath9k/regd.h |    3 +-
+ include/linux/nl80211.h           |   45 +++++++++++++++++
+ include/net/cfg80211.h            |   27 +---------
+ net/wireless/core.c               |    2 +-
+ net/wireless/core.h               |    3 +-
+ net/wireless/nl80211.c            |   46 +++++++++++++++++
+ net/wireless/nl80211.h            |    5 ++
+ net/wireless/reg.c                |   97 ++++++++++++++++++++++---------------
+ 10 files changed, 179 insertions(+), 83 deletions(-)
 
-I don't know, it was just an idea. I tried to lower rxbufsize to 1000 
-and see no problems so far (except unsupported jumbo warnings and packet 
-loss indeed).
