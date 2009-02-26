@@ -1,68 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:51116 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752018AbZB0K4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2009 05:56:41 -0500
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=iso-8859-1
-Date: Fri, 27 Feb 2009 11:56:34 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <18855.48369.413479.945570@gargle.gargle.HOWL>
-Message-ID: <20090227105634.291200@gmx.net> (sfid-20090227_115644_204612_B4322B47)
-MIME-Version: 1.0
-References: <18855.26210.618690.891378@gargle.gargle.HOWL>
-	<20090227082545.291220@gmx.net>
-	<18855.43002.100899.931613@gargle.gargle.HOWL>
-	<20090227095312.291210@gmx.net> <18855.48369.413479.945570@gargle.gargle.HOWL>
-Subject: Re: IBSS issues
-To: Sujith <Sujith.Manoharan@atheros.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:34760 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466AbZBZXXl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2009 18:23:41 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, mb@bu3sch.de,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 1/3] cfg80211: remove REGDOM_SET_BY_INIT
+Date: Thu, 26 Feb 2009 18:23:33 -0500
+Message-Id: <1235690615-12109-2-git-send-email-lrodriguez@atheros.com> (sfid-20090227_002353_372287_B0B47DD2)
+In-Reply-To: <1235690615-12109-1-git-send-email-lrodriguez@atheros.com>
+References: <1235690615-12109-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+This is not used as we can always just assume the first
+regulatory domain set will _always_ be a static regulatory
+domain. REGDOM_SET_BY_CORE will be the first request from
+cfg80211 for a regdomain and that then populates the first
+regulatory request.
 
-> Yes, the TBTT is calculated only once after joining the BSS network.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |    2 +-
+ drivers/net/wireless/ath9k/regd.c |    1 -
+ include/net/cfg80211.h            |    3 ---
+ net/wireless/reg.c                |    2 --
+ 4 files changed, 1 insertions(+), 7 deletions(-)
 
-What about the following, which is called after scanning?
-ieee80211_if_config(sdata, IEEE80211_IFCC_BEACON_ENABLED);
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index f5f5739..67a151e 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1652,7 +1652,7 @@ int ath_attach(u16 devid, struct ath_softc *sc)
+ 	}
+ 	wiphy_apply_custom_regulatory(hw->wiphy, regd);
+ 	ath9k_reg_apply_radar_flags(hw->wiphy);
+-	ath9k_reg_apply_world_flags(hw->wiphy, REGDOM_SET_BY_INIT);
++	ath9k_reg_apply_world_flags(hw->wiphy, REGDOM_SET_BY_DRIVER);
+ 
+ 	error = ieee80211_register_hw(hw);
+ 
+diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
+index f7d7cc2..4f27cec 100644
+--- a/drivers/net/wireless/ath9k/regd.c
++++ b/drivers/net/wireless/ath9k/regd.c
+@@ -339,7 +339,6 @@ int ath9k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
+ 
+ 	switch (request->initiator) {
+ 	case REGDOM_SET_BY_DRIVER:
+-	case REGDOM_SET_BY_INIT:
+ 	case REGDOM_SET_BY_CORE:
+ 	case REGDOM_SET_BY_USER:
+ 		break;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 75fa556..f195ea4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -350,8 +350,6 @@ struct bss_parameters {
+ 
+ /**
+  * enum reg_set_by - Indicates who is trying to set the regulatory domain
+- * @REGDOM_SET_BY_INIT: regulatory domain was set by initialization. We will be
+- * 	using a static world regulatory domain by default.
+  * @REGDOM_SET_BY_CORE: Core queried CRDA for a dynamic world regulatory domain.
+  * @REGDOM_SET_BY_USER: User asked the wireless core to set the
+  * 	regulatory domain.
+@@ -362,7 +360,6 @@ struct bss_parameters {
+  *	should consider.
+  */
+ enum reg_set_by {
+-	REGDOM_SET_BY_INIT,
+ 	REGDOM_SET_BY_CORE,
+ 	REGDOM_SET_BY_USER,
+ 	REGDOM_SET_BY_DRIVER,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ce66bfd..a230d4b 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1243,8 +1243,6 @@ static int ignore_request(struct wiphy *wiphy,
+ 		return 0;
+ 
+ 	switch (pending_request->initiator) {
+-	case REGDOM_SET_BY_INIT:
+-		return -EINVAL;
+ 	case REGDOM_SET_BY_CORE:
+ 		return -EINVAL;
+ 	case REGDOM_SET_BY_COUNTRY_IE:
+-- 
+1.6.0.3
 
-This calls indirectly the function which looks in the template for the =
-TSF.
-
-> Am not sure I understand the proposal. What would the tsf value in
-> set_tsf() be ?
-> 11.1.4 (IEEE802.11-2007) says that the TSF has to be reset to zero on
-> joining
-> an IBSS network. We do that correctly.
-
-In the praxis setting the TSF should not a problem as log the value is =
-not higher then the original TSF from the other node. As long the clock=
-s are working correct and the other node is not moved with nearly light=
--speed this shouldn't happen. ;)
-
-> To calculate the next TBTT, we
-> can't use the
-> HW TSF, since it has just been reset. And the Beacon's timestamp + in=
-tval
-> + FUDGE
-> is what we do in ath9k to get the TBTT for this peer, which I think i=
-s
-> correct.
-> A sniffer shows the beacon generation being evenly distributed.
-
-I think the TSF timer keep this value more up-to-date than a static var=
-iable in RAM, so that e.g. the speed of the CPU has a lower effect on t=
-he de-sync of this value.
-
-Regards
-Alina
-
---=20
-Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
-f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
-69a
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
