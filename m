@@ -1,78 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51600 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752109AbZBZIgo (ORCPT
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:64149 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754659AbZBZXdA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 03:36:44 -0500
-Subject: Re: pull request: wireless-next-2.6 2009-02-23
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20090224.235510.30497146.davem@davemloft.net> (sfid-20090225_085557_984527_FF340420)
-References: <20090223192659.GB3553@tuxdriver.com>
-	 <1235457113.4455.89.camel@johannes.local>
-	 <20090224.235510.30497146.davem@davemloft.net>
-	 (sfid-20090225_085557_984527_FF340420)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-A5Ldsm3E1PHy4+xMvr7e"
-Date: Thu, 26 Feb 2009 00:36:00 -0800
-Message-Id: <1235637360.29050.16.camel@johannes.local> (sfid-20090226_093648_375745_BB9AD49C)
-Mime-Version: 1.0
+	Thu, 26 Feb 2009 18:33:00 -0500
+Message-ID: <49A726A7.6090809@gmail.com> (sfid-20090227_003305_059290_F90337E1)
+Date: Fri, 27 Feb 2009 00:32:55 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@venema.h4ckr.net
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
+References: <1235688271-22346-1-git-send-email-jirislaby@gmail.com>	 <20090226230338.M86894@bobcopeland.com> <49A7236E.2020807@gmail.com> <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com>
+In-Reply-To: <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 27.2.2009 00:28, Bob Copeland wrote:
+> hw_to_driver_rix() returns sc->rate_idx[x][y] as an int, and that
+> array is initialized to (u8)-1 for invalid rates.  So, it can
+> return 255 if the hardware rate index (y) is bad, then the check
+> "rxs.rate_idx>= 0" would always be true, right?  If it's not a
+> real bug yet, it likely will be one day :)
 
---=-A5Ldsm3E1PHy4+xMvr7e
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2009-02-24 at 23:55 -0800, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Mon, 23 Feb 2009 22:31:53 -0800
->=20
-> > On Mon, 2009-02-23 at 14:26 -0500, John W. Linville wrote:
-> >=20
-> > > Johannes Berg (10):
-> > >       mac80211: disallow moving netns
-> > >       mac80211: fix aggregation for hardware with ampdu queues
-> > >       mac80211: split IBSS/managed code
-> > >       genetlink: introduce pre/post methods
-> >=20
-> > Hold off on this please, the genetlink patch here introduced a problem
-> > with locking and I'm going to rework/fix that.
->=20
-> Ok.
->=20
-> In fact it's better this way, since now John can send me the pull
-> request after the net-2.6 --> net-next-2.6 merge conflicts are
-> resolved.
-
-Now I just have to get around to fixing it, it's proving to be harder
-than I thought, and I don't have much time right now.
-
-johannes
-
---=-A5Ldsm3E1PHy4+xMvr7e
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJplRuAAoJEKVg1VMiehFY9w0P/iK7rE1CjPNwyXMwi96CwTlU
-jUAcmUNt0VG9vGlD8w/IJTiALbSLob+1Xy7LAepnV1fYyK7DWnLEYpcQDqRzoWqQ
-t/3Vb6yGKU8aqJCMvqT9wJ5mjq1qf2dyvowvjdKdNNwi+twPDj81LJ3MenZjlv/M
-btnCn66/Wr2SFJoLI6+tEKQY1jWQB4ZtsuCZXE5+ohZD6WV/nojfJB45/6ydWFCx
-T7qXh9uwulL+SKr86sr7FWXRuzZTljEtWoGpK99PkaRG6RBW4OiVJwgZn+Uc1iA1
-0QHniukFvyiV5Ssh7lbdflZBXzhjpoS6PH0sSMJQjhy1zPwwmdz9E2XMnD27Hp+U
-p2w0cjl/ZDIoKLvzpZOLvWtPznSlPdrdAr/sCYm3X9kpXpr4XNA0ELHpQXQlz3YL
-qjFr5OpBtxZ58LW1NZniAzaEmeAHso5d9CzXmhSzghC7b/8OoPk5FIp/103oV7DC
-A4B2IGMtRWPSwet9TbtfzNLZif1qvveOh1z1arY2t9MP5amwPbsT9GNAo0vR9yJB
-dvrTlskvjGwi1CQZRno/x1yesIZG+WXhnZrxVTbv1iBHx4Gj/Z1635yVogb4zBjs
-puDaxaDYRCc7t9XGtZ8BwMeaOT1pXWfVU5AnPS/tONvmWY1A1zsH/MuLNCikQ5z1
-X5nAYe/hxz1PFbbxRru8
-=KeLo
------END PGP SIGNATURE-----
-
---=-A5Ldsm3E1PHy4+xMvr7e--
-
+Ah, yes, it really is a bug(tm), care to post a fix?
