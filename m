@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:47861 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925AbZBRUp3 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:58032 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753068AbZBZUxQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 15:45:29 -0500
-Received: by bwz5 with SMTP id 5so239927bwz.13
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2009 12:45:27 -0800 (PST)
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] at76c50x-usb: fix Oops on disconnect
-References: <c4d76b3b0902161739w2fc3bc6fp31fee6ea082702bf@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 18 Feb 2009 22:45:25 +0200
-In-Reply-To: <c4d76b3b0902161739w2fc3bc6fp31fee6ea082702bf@mail.gmail.com> (Jason Andryuk's message of "Mon\, 16 Feb 2009 20\:39\:06 -0500")
-Message-ID: <871vtvqxsq.fsf@litku.valot.fi> (sfid-20090218_214533_153299_D53E5DC5)
+	Thu, 26 Feb 2009 15:53:16 -0500
+Message-ID: <49A70134.4070700@gmail.com> (sfid-20090226_215326_052598_525E2737)
+Date: Thu, 26 Feb 2009 21:53:08 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Bob Copeland <me@bobcopeland.com>
+CC: Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+References: <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <49A321BA.2040500@gmail.com> <49A326A4.8090103@gmail.com> <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226010625.GA10577@hash.localnet>
+In-Reply-To: <20090226010625.GA10577@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jason Andryuk <jandryuk@gmail.com> writes:
-
-> flush_workqueue needs to be called instead of the generic one and the
-> associated functions need to be modified to prevent re-adding
-> themselves to the workqueue.
+On 26.2.2009 02:06, Bob Copeland wrote:
+> --- a/drivers/net/wireless/ath5k/base.c
+> +++ b/drivers/net/wireless/ath5k/base.c
+> @@ -1140,12 +1140,14 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+>   	struct ath5k_hw *ah = sc->ah;
+>   	struct sk_buff *skb = bf->skb;
+>   	struct ath5k_desc *ds;
+> +	dma_addr_t dma_addr;
 >
-> The rx_tasklet is also killed in the small (?) chance it is scheduled.
+>   	if (!skb) {
+> -		skb = ath5k_rx_skb_alloc(sc,&bf->skbaddr);
+> +		skb = ath5k_rx_skb_alloc(sc,&dma_addr);
+>   		if (!skb)
+>   			return -ENOMEM;
+>   		bf->skb = skb;
+> +		bf->skbaddr = dma_addr;
 
-Unfortunately the patch is corrupted:
-
-patching file drivers/net/wireless/at76c50x-usb.c
-Hunk #1 FAILED at 1860.
-Hunk #2 FAILED at 1900.
-patch: **** malformed patch at line 80: ieee80211_hw *hw,
-
-Can you resend it?
-
--- 
-Kalle Valo
+Hmm, rather than the caller, ath5k_rx_skb_alloc is wrong here in my 
+eyes. It shouldn't touch the second parameter unless it knows it won't 
+fail anymore.
