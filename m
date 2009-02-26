@@ -1,132 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f222.google.com ([209.85.217.222]:41132 "EHLO
-	mail-gx0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334AbZBQAn6 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43780 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754907AbZBZJSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 19:43:58 -0500
-Received: by gxk22 with SMTP id 22so3629961gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 16:43:56 -0800 (PST)
+	Thu, 26 Feb 2009 04:18:53 -0500
+Date: Thu, 26 Feb 2009 11:18:46 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Fix hw crypto configuration for TKIP in AP mode
+Message-ID: <20090226091846.GA11508@jm.kir.nu> (sfid-20090226_101910_450564_3D329E70)
 MIME-Version: 1.0
-Date: Mon, 16 Feb 2009 19:43:55 -0500
-Message-ID: <c4d76b3b0902161643p73101b29hb55a9da696d16da9@mail.gmail.com> (sfid-20090217_014402_763116_51616F18)
-Subject: [PATCH] at76c50x-usb: support cfg80211 scanning
-From: Jason Andryuk <jandryuk@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the latest mac80211 stack, the driver needs to be updated for
-cfg80211 scanning.  I based the changes off of modifications for
-at76_usb found here:
-http://johannes.sipsolutions.net/patches/old/all/2008-09-19-13:35/020-cfg80211-scan.patch
+Incorrect Michael MIC key (RX, should have been TX) was set for the
+group key in AP mode. This resulted in all broadcast frames triggering
+Michael MIC errors and eventual TKIP countermeasures. The change here
+sets the correct Michael MIC key based on whether the local end is the
+authenticator (well, AP for now).
 
-The trick was that max_signal also needs to be set to avoid a divide
-by zero Oops.  I just guessed and used the value 100 for now.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Tested-by: Pat Erley <pat-lkml@erley.org>
 
-Additionally, I added some ieee80211_{wake,stop}_queues calls that
-were contained in the older at76_usb.  There is ambiguity as to
-whether at76_join should be called before or after waking the queues.
+---
+ drivers/net/wireless/ath9k/main.c |   18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
---
-
-diff --git a/drivers/net/wireless/at76c50x-usb.c
-b/drivers/net/wireless/at76c50x-usb.c
-index 2f18248..8d508ca 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -1875,8 +1875,10 @@ static void at76_dwork_hw_scan(struct work_struct *work)
-
-     ieee80211_scan_completed(priv->hw, false);
-
--    if (is_valid_ether_addr(priv->bssid))
-+    if (is_valid_ether_addr(priv->bssid)) {
-+        ieee80211_wake_queues(priv->hw);
-         at76_join(priv);
-+    }
-
-     ieee80211_wake_queues(priv->hw);
-
-@@ -1884,14 +1886,16 @@ exit:
-     mutex_unlock(&priv->mtx);
+--- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-02-26 10:49:43.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-02-26 10:51:41.000000000 +0200
+@@ -648,8 +648,8 @@ static int ath_keyset(struct ath_softc *
  }
-
--static int at76_hw_scan(struct ieee80211_hw *hw, u8 *ssid, size_t len)
-+static int at76_hw_scan(struct ieee80211_hw *hw,
-+            struct cfg80211_scan_request *req)
+ 
+ static int ath_setkey_tkip(struct ath_softc *sc, u16 keyix, const u8 *key,
+-			   struct ath9k_keyval *hk,
+-			   const u8 *addr)
++			   struct ath9k_keyval *hk, const u8 *addr,
++			   bool authenticator)
  {
-     struct at76_priv *priv = hw->priv;
-     struct at76_req_scan scan;
-     int ret;
-+    u8 *ssid = NULL;
-+    int len = 0;
+ 	const u8 *key_rxmic;
+ 	const u8 *key_txmic;
+@@ -659,7 +659,13 @@ static int ath_setkey_tkip(struct ath_so
+ 
+ 	if (addr == NULL) {
+ 		/* Group key installation */
+-		memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
++		if (authenticator) {
++			memcpy(hk->kv_mic, key_txmic, sizeof(hk->kv_mic));
++			memcpy(hk->kv_txmic, key_txmic, sizeof(hk->kv_mic));
++		} else {
++			memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
++			memcpy(hk->kv_txmic, key_rxmic, sizeof(hk->kv_mic));
++		}
+ 		return ath_keyset(sc, keyix, hk, addr);
+ 	}
+ 	if (!sc->splitmic) {
+@@ -769,6 +775,7 @@ static int ath_reserve_key_cache_slot(st
+ }
+ 
+ static int ath_key_config(struct ath_softc *sc,
++			  struct ieee80211_vif *vif,
+ 			  struct ieee80211_sta *sta,
+ 			  struct ieee80211_key_conf *key)
+ {
+@@ -828,7 +835,8 @@ static int ath_key_config(struct ath_sof
+ 	}
+ 
+ 	if (key->alg == ALG_TKIP)
+-		ret = ath_setkey_tkip(sc, idx, key->key, &hk, mac);
++		ret = ath_setkey_tkip(sc, idx, key->key, &hk, mac,
++				      vif->type == NL80211_IFTYPE_AP);
+ 	else
+ 		ret = ath_keyset(sc, idx, &hk, mac);
+ 
+@@ -2481,7 +2489,7 @@ static int ath9k_set_key(struct ieee8021
+ 
+ 	switch (cmd) {
+ 	case SET_KEY:
+-		ret = ath_key_config(sc, sta, key);
++		ret = ath_key_config(sc, vif, sta, key);
+ 		if (ret >= 0) {
+ 			key->hw_key_idx = ret;
+ 			/* push IV and Michael MIC generation to stack */
 
-     at76_dbg(DBG_MAC80211, "%s():", __func__);
--    at76_dbg_dump(DBG_MAC80211, ssid, len, "ssid %zd bytes:", len);
-
-     mutex_lock(&priv->mtx);
-
-@@ -1899,8 +1903,14 @@ static int at76_hw_scan(struct ieee80211_hw
-*hw, u8 *ssid, size_t len)
-
-     memset(&scan, 0, sizeof(struct at76_req_scan));
-     memset(scan.bssid, 0xFF, ETH_ALEN);
--    scan.scan_type = SCAN_TYPE_ACTIVE;
--    if (priv->essid_size > 0) {
-+    if (req->n_ssids) {
-+        scan.scan_type = SCAN_TYPE_ACTIVE;
-+        ssid = req->ssids[0].ssid;
-+        len = req->ssids[0].ssid_len;
-+    } else {
-+        scan.scan_type = SCAN_TYPE_PASSIVE;
-+    }
-+    if (len) {
-         memcpy(scan.essid, ssid, len);
-         scan.essid_size = len;
-     }
-@@ -1939,10 +1949,13 @@ static int at76_config(struct ieee80211_hw
-*hw, u32 changed)
-
-     priv->channel = hw->conf.channel->hw_value;
-
--    if (is_valid_ether_addr(priv->bssid))
-+    if (is_valid_ether_addr(priv->bssid)) {
-         at76_join(priv);
--    else
-+        ieee80211_wake_queues(priv->hw);
-+    } else {
-+        ieee80211_stop_queues(priv->hw);
-         at76_start_monitor(priv);
-+    }
-
-     mutex_unlock(&priv->mtx);
-
-@@ -1962,9 +1975,12 @@ static int at76_config_interface(struct ieee80211_hw *hw,
-
-     memcpy(priv->bssid, conf->bssid, ETH_ALEN);
-
--    if (is_valid_ether_addr(priv->bssid))
-+    if (is_valid_ether_addr(priv->bssid)) {
-         /* mac80211 is joining a bss */
-+        ieee80211_wake_queues(priv->hw);
-         at76_join(priv);
-+    } else
-+        ieee80211_stop_queues(priv->hw);
-
-     mutex_unlock(&priv->mtx);
-
-@@ -2229,10 +2245,12 @@ static int at76_init_new_device(struct at76_priv *priv,
-     priv->scan_mode = SCAN_TYPE_ACTIVE;
-
-     /* mac80211 initialisation */
-+    priv->hw->wiphy->max_scan_ssids = 1;
-     priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-     priv->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &at76_supported_band;
-     priv->hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
-               IEEE80211_HW_SIGNAL_UNSPEC;
-+    priv->hw->max_signal = 100;
-
-     SET_IEEE80211_DEV(priv->hw, &interface->dev);
-     SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
+-- 
+Jouni Malinen                                            PGP id EFC895FA
