@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60618 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752264AbZBHSBD (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59146 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752102AbZBZJKq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2009 13:01:03 -0500
-Date: Sun, 8 Feb 2009 12:56:49 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, mcgrof@gmail.com, nbd@openwrt.org
-Subject: Re: [PATCH 5/5] ath5k: Update reset code
-Message-ID: <20090208175649.GA25417@tuxdriver.com> (sfid-20090208_190116_619002_E7F60B8E)
-References: <20090131023147.GE3342@makis> <20090204215706.GA5651@makis> <20090205154532.M30551@bobcopeland.com> <40f31dec0902051306m769712ecn858672ba24524c63@mail.gmail.com> <20090207050356.GA16457@hash.localnet> <40f31dec0902062120o1234e462k450c7bc6f61d6753@mail.gmail.com> <20090207143944.GB16457@hash.localnet> <40f31dec0902070813x10b49b33sf77962deb4bdf379@mail.gmail.com>
+	Thu, 26 Feb 2009 04:10:46 -0500
+Date: Thu, 26 Feb 2009 11:10:37 +0200
+From: Jouni Malinen <j@w1.fi>
+To: pat-lkml <pat-lkml@erley.org>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath9k and TKIP hw crypto in AP mode
+Message-ID: <20090226091037.GA10941@jm.kir.nu> (sfid-20090226_101051_347290_997EC722)
+References: <20090224114201.GB21933@jm.kir.nu> <49A40320.1040902@erley.org> <20090224150710.GA1419@jm.kir.nu> <49A41315.3030007@erley.org> <49A45378.50009@erley.org> <20090225181953.GA23880@jm.kir.nu> <49A5D83A.1090602@erley.org> <49A5DDED.1080408@erley.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0902070813x10b49b33sf77962deb4bdf379@mail.gmail.com>
+In-Reply-To: <49A5DDED.1080408@erley.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 07, 2009 at 06:13:55PM +0200, Nick Kossifidis wrote:
-> 2009/2/7 Bob Copeland <me@bobcopeland.com>:
-> > On Sat, Feb 07, 2009 at 07:20:52AM +0200, Nick Kossifidis wrote:
-> >> O.K. do you want me to put these fixes on this patch or post a separate ?
-> >
-> > I think a separate patch is fine, it's a valid change by itself.
-> >
-> > --
-> > Bob Copeland %% www.bobcopeland.com
-> >
-> >
+On Wed, Feb 25, 2009 at 07:10:21PM -0500, pat-lkml wrote:
+> pat-lkml wrote:
+> > I had to make some changes to get it to build, am going to test shortly.
+
+Ah.. I had made the patch on top of number of other changes and did not
+remember to rebase it on top of wireless-testing.
+
+> And it appears to be working.  I have it set to 10 minute rekeying, so I'll
+> have more success/failure for you then (and am waiting to send this e-mail
+> until then).
 > 
-> O.K. i'm sending a separate patch for this ;-)
-> 
-> John is it ok to push these 5 patches on wireless-testing or should i
-> re-send the whole series along with the next one ?
+> Well, it rekey'd with no interruption in service.  I'd call it a success.
 
-There has been a ton of discussion in this thread.  It would make
-things more clear in my inbox if you reposted the whole revised series.
+Thanks, nice to hear. I was also able to complete testing on this with
+both the newer and older hardware revisions and both for AP and STA
+modes.
 
-Thanks!
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jouni Malinen                                            PGP id EFC895FA
