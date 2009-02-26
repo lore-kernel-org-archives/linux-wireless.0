@@ -1,123 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:16419 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753165AbZBTJrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 04:47:10 -0500
-Received: from mail.atheros.com ([10.10.20.86])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2009 01:47:10 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:33709
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753638AbZBZWxf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2009 17:53:35 -0500
+Message-ID: <49A71D6B.2040109@erley.org> (sfid-20090226_235340_142466_DF43458A)
+Date: Thu, 26 Feb 2009 17:53:31 -0500
+From: pat-lkml <pat-lkml@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18846.31544.511129.753988@gargle.gargle.HOWL> (sfid-20090220_104715_234439_6888C582)
-Date: Fri, 20 Feb 2009 15:13:20 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 2/5] ath9k: Add PER to RC debug statistics
+To: "Christoph .J Thompson" <cjsthompson@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: D-Link GWL-122 and AP/WPA2
+References: <20090226223155.d2d40946.cjsthompson@gmail.com> <4c9ebaa2648020c2fc9ad54547385f4d@127.0.0.1>
+In-Reply-To: <4c9ebaa2648020c2fc9ad54547385f4d@127.0.0.1>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/debug.c |   12 +++++++-----
- drivers/net/wireless/ath9k/debug.h |    9 +++++----
- drivers/net/wireless/ath9k/rc.c    |    3 ++-
- 3 files changed, 14 insertions(+), 10 deletions(-)
+pat-lkml@erley.org wrote:
+> On Thu, 26 Feb 2009 22:31:55 +0100, "Christoph .J Thompson"
+> <cjsthompson@gmail.com> wrote:
+>> After trying to get a Sitecom WL-608 wireless USB adapter to work in AP
+>> mode to no avail I gave up and ordered a Belkin F5D7050 wireless USB
+>> adapter thinking it used a Prism based chipset which would enable me to
+> use
+>> it in AP mode. Almost two weeks later I finally got it this morning
+> (kudos
+>> to UPS for the "fast" delivery). To my dismay some clown at Belkin
+> thought
+>> it was funny to use a new chipset with each revision of their F5D7050. I
+>> got a revision "e" which has a Realtek rtl8187 chipset which won't be of
+>> any use for what I want to do. So I'm back at my starting point with my
+>> pockets ~50 euros lighter. I'm going to have to buy another USB wifi
+>> adapter and I'm considering the D-Link GWL-122. It seems that the D-Link
+>> GWL-122 uses the Prism chipset. Has anyone here any experience with this
+>> device? Will it work in AP mode with WPA2?
+> 
+> Have you considered other chipsets?  If you HAVE to go with USB, you might
+> try:
+> 
+--SNIPPED--
+> 
+> which is rt2500usb based.  I'll test a rt2500usb device tonight for AP mode
+> for
+> ya.  You'll be able to see my results at:  http://wireless.erley.org/
 
-diff --git a/drivers/net/wireless/ath9k/debug.c b/drivers/net/wireless/ath9k/debug.c
-index 800ad59..0c422c5 100644
---- a/drivers/net/wireless/ath9k/debug.c
-+++ b/drivers/net/wireless/ath9k/debug.c
-@@ -258,13 +258,14 @@ void ath_debug_stat_rc(struct ath_softc *sc, struct sk_buff *skb)
- 
- /* FIXME: legacy rates, later on .. */
- void ath_debug_stat_retries(struct ath_softc *sc, int rix,
--			    int xretries, int retries)
-+			    int xretries, int retries, u8 per)
- {
- 	if (conf_is_ht(&sc->hw->conf)) {
- 		int idx = sc->cur_rate_table->info[rix].dot11rate;
- 
- 		sc->debug.stats.n_rcstats[idx].xretries += xretries;
- 		sc->debug.stats.n_rcstats[idx].retries += retries;
-+		sc->debug.stats.n_rcstats[idx].per = per;
- 	}
- }
- 
-@@ -277,15 +278,16 @@ static ssize_t ath_read_file_stat_11n_rc(struct file *file,
- 	unsigned int len = 0;
- 	int i = 0;
- 
--	len += sprintf(buf, "%7s %13s %8s %8s\n\n", "Rate", "Success",
--		       "Retries", "XRetries");
-+	len += sprintf(buf, "%7s %13s %8s %8s %6s\n\n", "Rate", "Success",
-+		       "Retries", "XRetries", "PER");
- 
- 	for (i = 0; i <= 15; i++) {
- 		len += snprintf(buf + len, sizeof(buf) - len,
--				"%5s%3d: %8u %8u %8u\n", "MCS", i,
-+				"%5s%3d: %8u %8u %8u %8u\n", "MCS", i,
- 				sc->debug.stats.n_rcstats[i].success,
- 				sc->debug.stats.n_rcstats[i].retries,
--				sc->debug.stats.n_rcstats[i].xretries);
-+				sc->debug.stats.n_rcstats[i].xretries,
-+				sc->debug.stats.n_rcstats[i].per);
- 	}
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-diff --git a/drivers/net/wireless/ath9k/debug.h b/drivers/net/wireless/ath9k/debug.h
-index 61e9698..d9970c7 100644
---- a/drivers/net/wireless/ath9k/debug.h
-+++ b/drivers/net/wireless/ath9k/debug.h
-@@ -91,12 +91,13 @@ struct ath_11n_rc_stats {
- 	u32 success;
- 	u32 retries;
- 	u32 xretries;
-+	u8 per;
- };
- 
- struct ath_stats {
- 	struct ath_interrupt_stats istats;
--	struct ath_legacy_rc_stats legacy_rcstats[12]; /* max(11a,11b,11g) */
--	struct ath_11n_rc_stats n_rcstats[16]; /* 0..15 MCS rates */
-+	struct ath_legacy_rc_stats legacy_rcstats[12];	/* max(11a,11b,11g) */
-+	struct ath_11n_rc_stats n_rcstats[16];		/* 0..15 MCS rates */
- };
- 
- struct ath9k_debug {
-@@ -115,7 +116,7 @@ void ath9k_exit_debug(struct ath_softc *sc);
- void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status);
- void ath_debug_stat_rc(struct ath_softc *sc, struct sk_buff *skb);
- void ath_debug_stat_retries(struct ath_softc *sc, int rix,
--			    int xretries, int retries);
-+			    int xretries, int retries, u8 per);
- 
- #else
- 
-@@ -144,7 +145,7 @@ static inline void ath_debug_stat_rc(struct ath_softc *sc,
- }
- 
- static inline void ath_debug_stat_retries(struct ath_softc *sc, int rix,
--					  int xretries, int retries)
-+					  int xretries, int retries, u8 per);
- {
- }
- 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 0e3e2b7..cf0559f 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1267,7 +1267,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 		ath_rc_priv->per_down_time = now_msec;
- 	}
- 
--	ath_debug_stat_retries(sc, tx_rate, xretries, retries);
-+	ath_debug_stat_retries(sc, tx_rate, xretries, retries,
-+			       ath_rc_priv->state[tx_rate].per);
- 
- #undef CHK_RSSI
- }
--- 
-1.6.1
+Well, same result as last time I checked.  It lets me put it into AP mode, and
+when I scan I can pick it up, but I could not associate with it, but beyond 
+that, I haven't done any debugging.  If any rt2500usb devs could suggest the 
+next steps in debugging this, let me know.
 
+As for making an AP, I recommend something ath9k based, as it works quite well.
+It's only pci/pci-e, as far as I know though.
+
+Pat
