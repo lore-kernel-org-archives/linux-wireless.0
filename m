@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f167.google.com ([209.85.220.167]:39574 "EHLO
-	mail-fx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117AbZBXSg1 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:30688 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840AbZBZX24 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 13:36:27 -0500
-Received: by fxm11 with SMTP id 11so3034930fxm.13
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2009 10:36:24 -0800 (PST)
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v1 3/3] mac80211: add beacon filtering support
-References: <20090223163626.20939.4879.stgit@tikku>
-	<20090223163738.20939.25890.stgit@tikku>
-	<1235442058.4455.71.camel@johannes.local>
-	<20090224090137.GB10851@jm.kir.nu>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 24 Feb 2009 20:36:03 +0200
-In-Reply-To: <20090224090137.GB10851@jm.kir.nu> (Jouni Malinen's message of "Tue\, 24 Feb 2009 11\:01\:37 +0200")
-Message-ID: <87k57fy964.fsf@litku.valot.fi> (sfid-20090224_193631_044113_56003DA9)
+	Thu, 26 Feb 2009 18:28:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49A7236E.2020807@gmail.com>
+References: <1235688271-22346-1-git-send-email-jirislaby@gmail.com>
+	 <20090226230338.M86894@bobcopeland.com> <49A7236E.2020807@gmail.com>
+Date: Thu, 26 Feb 2009 18:28:54 -0500
+Message-ID: <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com> (sfid-20090227_002902_948751_7015C35B)
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
+From: Bob Copeland <me@bobcopeland.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen <j@w1.fi> writes:
-
-> On Mon, Feb 23, 2009 at 06:20:58PM -0800, Johannes Berg wrote:
+On Thu, Feb 26, 2009 at 6:19 PM, Jiri Slaby <jirislaby@gmail.com> wrote=
+:
+> On 27.2.2009 00:15, Bob Copeland wrote:
+>> Speaking of, I think there's another potential oob array access at:
+>>
+>> if (rxs.rate_idx>=3D 0&& =A0rs.rs_rate =3D=3D
+>> =A0 =A0 =A0sc->curband->bitrates[rxs.rate_idx].hw_value_short)
+>> =A0 =A0 =A0 =A0 =A0rxs.flag |=3D RX_FLAG_SHORTPRE;
+>>
+>> because sc->rate_idx is u8 instead of s8.
 >
->> We used to go through a probe request cycle once to make sure, but I'm
->> not sure there's a point in that. Just pointing out the change here.
+> strcmp("sc->rate_idx", "rxs.rate_idx") !=3D 0 :)
 >
-> Having seen some hardware implementations of Beacon miss getting out of
-> sync with the AP timing and causing way too frequent disconnections, I
-> would think that there may well be good reasons to check in software
-> that report was indeed correct, e.g., by sending the probe request
-> before giving up on the AP.
+> Or did I miss something?
 
-I see your point, I also have had to suffer because of buggy APs
-having unstable TBTT. But the cost for this is high, currently it
-increases two seconds the time to signal a lost connection to the user
-space. I would hope to have something faster.
+:)  Sorry, I should've been clearer.
 
->> The code looks pretty good, but this will lead to an interesting
->> situation where "iwlist wlan1 scan last" ("iw dev wlan1 scan dump") will
->> not show _any_ BSS, which will probably trip up NM; this happens because
->> the BSS will not be updated and expire after 10 seconds. I think we need
->> a way to "hold on" to the BSS.
->
-> Dropping the BSS is not good.. The scan results should always include
-> the current BSS so that information from it is available for things like
-> 4-way handshake (WPA/RSN IE is needed from Beacon/ProbeResp).
+hw_to_driver_rix() returns sc->rate_idx[x][y] as an int, and that
+array is initialized to (u8)-1 for invalid rates.  So, it can
+return 255 if the hardware rate index (y) is bad, then the check
+"rxs.rate_idx >=3D 0" would always be true, right?  If it's not a
+real bug yet, it likely will be one day :)
 
-Understood. Thanks for bringing this up.
-
--- 
-Kalle Valo
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
