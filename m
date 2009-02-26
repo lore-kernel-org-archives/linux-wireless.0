@@ -1,51 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:57310 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546AbZBLOiP (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:49185 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754676AbZBZXdB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 09:38:15 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so87720eya.37
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 06:38:13 -0800 (PST)
-Date: Thu, 12 Feb 2009 15:33:48 +0100
-From: "Christoph .J Thompson" <cjsthompson@gmail.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Sitecom WL-608 USB WiFi
-Message-Id: <20090212153348.e69a7508.cjsthompson@gmail.com> (sfid-20090212_153820_052594_1B2ED928)
-In-Reply-To: <a32f33a40902120040odc535cp3ecdeef3bc9565ab@mail.gmail.com>
-References: <20090211211707.d5e71ddb.cjsthompson@gmail.com>
-	<200902112332.53480.IvDoorn@gmail.com>
-	<3ace41890902111451n6c9cbdc4me410609479b1ac4f@mail.gmail.com>
-	<20090212042217.b05e83b4.cjsthompson@gmail.com>
-	<a32f33a40902120000g1e95df1eq8a221ddc539f351c@mail.gmail.com>
-	<20090212092658.1ad4bb08.cjsthompson@gmail.com>
-	<a32f33a40902120040odc535cp3ecdeef3bc9565ab@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 26 Feb 2009 18:33:01 -0500
+Message-ID: <49A726A9.7060503@lwfinger.net> (sfid-20090227_003305_974762_43835444)
+Date: Thu, 26 Feb 2009 17:32:57 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+CC: Lorenzo Nava <navalorenx@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Tests of open-source firmware 2/25-26
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 12 Feb 2009 09:40:22 +0100
-Ivo Van Doorn <ivdoorn@gmail.com> wrote:
-> As far as I know the rt2870 driver provided by Ralink contains support
-> for Master mode, and it should even cooperate with hostapd. Not sure
-> if anybody has tested that yet. But you could give it a try.
+Francesco,
 
-I've looked at the RaLink 1.4.0.0 driver for the rt2870usb available on RaLink's
-website and there is only station mode support. Maybe I'm missing something and
-there is a fork or older driver with AP support?
+With the RX queue set at 64 and the TX queue at 32, my system has been running
+V5.1 open firmware for nearly 32 hours without a glitch. This is much longer
+than any previous run.
 
-> Otherwise
-> you can check rt2x00.git to see if the rt2800usb driver can send out
-> beacons correctly. So far I have only tested managed mode and that
-> worked reasonable (if you ignore the lack of 11n AP scan results, and
-> some startup kickups). Note that you should use the module parameter
-> nohwcrypt for rt2800usb to disable HW crypto.
+The TX status queue has only reached a maximum of 14. As far as I know, the
+failures have only occurred after that queue has reached the 16 entry limit.
 
-I think I'll have to resort to that. Sorry if the question is stupid, but
-what version of the kernel is in rt2x00.git? Can I backport the changes
-to 2.6.28.4 by making a diff between rt2x00.git's drivers/net/wireless
-and 2.6.28.4's drivers/net/wireless directory?
+I will leave the test running until you have a firmware patch to test.
 
--- 
-Christoph .J Thompson <cjsthompson@gmail.com>
+Larry
