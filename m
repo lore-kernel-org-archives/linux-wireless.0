@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.188]:24411 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121AbZBXVrJ (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54621 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752254AbZBZS52 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 16:47:09 -0500
-Message-ID: <49A46AD4.3060007@gmail.com> (sfid-20090224_224715_368668_EEDBA657)
-Date: Tue, 24 Feb 2009 22:47:00 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Thu, 26 Feb 2009 13:57:28 -0500
+Date: Thu, 26 Feb 2009 20:57:10 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] nl80211: Authentication and association events
+Message-ID: <20090226185710.GA22925@jm.kir.nu> (sfid-20090226_195735_691767_BACBB799)
+References: <20090218200210.GA13955@jm.kir.nu> <1234988740.4023.51.camel@johannes.local> <20090220192557.GA17914@jm.kir.nu> <1235440527.4455.45.camel@johannes.local> <20090226143758.GB24380@jm.kir.nu> <1235666926.4099.2.camel@johannes.local>
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-References: <49A13E91.1090601@gmail.com> <20090222122036.GC5538@silver.sucs.org> <20090222144742.GA6078@nowhere> <20090222170201.GA27360@silver.sucs.org> <49A1CA01.9030501@gmail.com> <49A1DDD2.7040706@gmail.com> <20090223152724.M82409@bobcopeland.com> <49A321BA.2040500@gmail.com> <49A326A4.8090103@gmail.com> <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet>
-In-Reply-To: <20090224135817.GB6019@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1235666926.4099.2.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24.2.2009 14:58, Bob Copeland wrote:
-> On Tue, Feb 24, 2009 at 01:08:03AM +0200, Nick Kossifidis wrote:
->> He does an extra check...
->>
->> 	/*
->> 	 * Given the use of a self-linked tail be very sure that the hw is
->> 	 * done with this descriptor; the hw may have done this descriptor
->> 	 * once and picked it up again...make sure the hw has moved on.
->> 	 */
->> 	if ((ands->ds_rxstatus1&AR_Done) == 0&&  OS_REG_READ(ah, AR_RXDP) == pa)
->> 		return HAL_EINPROGRESS;
->
-> Sounds like we definitely need that.If the hw uses up all the dma buffers
-> in one go, there's a good chance we can send the skb to mac80211 while
-> the hardware is still using it.  I guess an easy way to test would be to
-> set the max rx buffers to 3 or so and watch the fireworks.
+On Thu, Feb 26, 2009 at 08:48:46AM -0800, Johannes Berg wrote:
+> On Thu, 2009-02-26 at 16:37 +0200, Jouni Malinen wrote:
+> > On Mon, Feb 23, 2009 at 05:55:27PM -0800, Johannes Berg wrote:
+> > > Should we have some more code in cfg80211 to keep track of the BSSes
+> > > we're authenticated/the one we're associated to, and have some commands
+> > > to query those from userspace?
+> > 
+> > It would probably be useful to add this eventually. Whatever is
+> > requesting the association has most of the information, but it would be
+> > could to allow other applications have access to it and also remove the
+> > need to store that in the control application.
+> 
+> I guess we'll kinda need that to have iwconfig print out something useful.
 
-I added a check for this in rx tasklet some time ago, because I hit it. 
-So no fireworks really should happen ;).
+Actually, iwconfig works fine in my current version since it just uses
+the information from same functions that were used in
+net/mac80211/mlme.c. In other words, when I complete association with an
+external SME (wpa_supplicant), iwconfig can still show the BSSID etc.
+info.
 
-And yes, we ought to use this much better test (I knew nothing about 
-AR_RXDP reg) than mine.
+I'm now able to complete authentication and association in two steps and
+use only nl80211 for it (i.e., no WEXT code needed in driver_nl80211.c
+for auth/assoc/deauth/disassoc processing). The mlme.c changes are not
+the cleanest possible and there are still couple of places where mlme.c
+shows its SME nature by deciding to automatically do something, but
+other than that, this seems to be functional.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
