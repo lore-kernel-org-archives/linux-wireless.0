@@ -1,40 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34759 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754383AbZBZXXl (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51600 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109AbZBZIgo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 18:23:41 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, mb@bu3sch.de,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 0/3] cfg80211: send regulatory events
-Date: Thu, 26 Feb 2009 18:23:32 -0500
-Message-Id: <1235690615-12109-1-git-send-email-lrodriguez@atheros.com> (sfid-20090227_002349_045357_7B22B1EC)
+	Thu, 26 Feb 2009 03:36:44 -0500
+Subject: Re: pull request: wireless-next-2.6 2009-02-23
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20090224.235510.30497146.davem@davemloft.net> (sfid-20090225_085557_984527_FF340420)
+References: <20090223192659.GB3553@tuxdriver.com>
+	 <1235457113.4455.89.camel@johannes.local>
+	 <20090224.235510.30497146.davem@davemloft.net>
+	 (sfid-20090225_085557_984527_FF340420)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-A5Ldsm3E1PHy4+xMvr7e"
+Date: Thu, 26 Feb 2009 00:36:00 -0800
+Message-Id: <1235637360.29050.16.camel@johannes.local> (sfid-20090226_093648_375745_BB9AD49C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series does the work to prep and then send regulatory
-events to userspace. This v2 keeps the country IE environment
-within cfg80211.h as we don't want to inform userspace about
-details of the country IE. We also now add the defines to help
-userspace determine when the kernel has the new command request
-and attributes.
 
-Luis R. Rodriguez (3):
-  cfg80211: remove REGDOM_SET_BY_INIT
-  cfg80211: move enum reg_set_by to nl80211.h
-  cfg80211: add regulatory netlink multicast group
+--=-A5Ldsm3E1PHy4+xMvr7e
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/ath9k/main.c |    2 +-
- drivers/net/wireless/ath9k/regd.c |   32 +++++++------
- drivers/net/wireless/ath9k/regd.h |    3 +-
- include/linux/nl80211.h           |   45 +++++++++++++++++
- include/net/cfg80211.h            |   27 +---------
- net/wireless/core.c               |    2 +-
- net/wireless/core.h               |    3 +-
- net/wireless/nl80211.c            |   46 +++++++++++++++++
- net/wireless/nl80211.h            |    5 ++
- net/wireless/reg.c                |   97 ++++++++++++++++++++++---------------
- 10 files changed, 179 insertions(+), 83 deletions(-)
+On Tue, 2009-02-24 at 23:55 -0800, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Mon, 23 Feb 2009 22:31:53 -0800
+>=20
+> > On Mon, 2009-02-23 at 14:26 -0500, John W. Linville wrote:
+> >=20
+> > > Johannes Berg (10):
+> > >       mac80211: disallow moving netns
+> > >       mac80211: fix aggregation for hardware with ampdu queues
+> > >       mac80211: split IBSS/managed code
+> > >       genetlink: introduce pre/post methods
+> >=20
+> > Hold off on this please, the genetlink patch here introduced a problem
+> > with locking and I'm going to rework/fix that.
+>=20
+> Ok.
+>=20
+> In fact it's better this way, since now John can send me the pull
+> request after the net-2.6 --> net-next-2.6 merge conflicts are
+> resolved.
+
+Now I just have to get around to fixing it, it's proving to be harder
+than I thought, and I don't have much time right now.
+
+johannes
+
+--=-A5Ldsm3E1PHy4+xMvr7e
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJplRuAAoJEKVg1VMiehFY9w0P/iK7rE1CjPNwyXMwi96CwTlU
+jUAcmUNt0VG9vGlD8w/IJTiALbSLob+1Xy7LAepnV1fYyK7DWnLEYpcQDqRzoWqQ
+t/3Vb6yGKU8aqJCMvqT9wJ5mjq1qf2dyvowvjdKdNNwi+twPDj81LJ3MenZjlv/M
+btnCn66/Wr2SFJoLI6+tEKQY1jWQB4ZtsuCZXE5+ohZD6WV/nojfJB45/6ydWFCx
+T7qXh9uwulL+SKr86sr7FWXRuzZTljEtWoGpK99PkaRG6RBW4OiVJwgZn+Uc1iA1
+0QHniukFvyiV5Ssh7lbdflZBXzhjpoS6PH0sSMJQjhy1zPwwmdz9E2XMnD27Hp+U
+p2w0cjl/ZDIoKLvzpZOLvWtPznSlPdrdAr/sCYm3X9kpXpr4XNA0ELHpQXQlz3YL
+qjFr5OpBtxZ58LW1NZniAzaEmeAHso5d9CzXmhSzghC7b/8OoPk5FIp/103oV7DC
+A4B2IGMtRWPSwet9TbtfzNLZif1qvveOh1z1arY2t9MP5amwPbsT9GNAo0vR9yJB
+dvrTlskvjGwi1CQZRno/x1yesIZG+WXhnZrxVTbv1iBHx4Gj/Z1635yVogb4zBjs
+puDaxaDYRCc7t9XGtZ8BwMeaOT1pXWfVU5AnPS/tONvmWY1A1zsH/MuLNCikQ5z1
+X5nAYe/hxz1PFbbxRru8
+=KeLo
+-----END PGP SIGNATURE-----
+
+--=-A5Ldsm3E1PHy4+xMvr7e--
 
