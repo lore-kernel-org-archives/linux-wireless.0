@@ -1,93 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55328 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753569AbZBRXZr (ORCPT
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:35280 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753666AbZBZXTQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2009 18:25:47 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v4 04/15] nl80211: disallow user requests prior to regulatory_init()
-Date: Wed, 18 Feb 2009 18:25:34 -0500
-Message-Id: <1234999545-14357-5-git-send-email-lrodriguez@atheros.com> (sfid-20090219_002559_299962_3AB7B1BE)
-In-Reply-To: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+	Thu, 26 Feb 2009 18:19:16 -0500
+Message-ID: <49A7236E.2020807@gmail.com> (sfid-20090227_001920_599639_222317F1)
+Date: Fri, 27 Feb 2009 00:19:10 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	linux-kernel@vger.kernel.org,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
+References: <1235688271-22346-1-git-send-email-jirislaby@gmail.com> <20090226230338.M86894@bobcopeland.com>
+In-Reply-To: <20090226230338.M86894@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If cfg80211 is built into the kernel there is perhaps a small
-time window betwen nl80211_init() and regulatory_init() where
-cfg80211_regdomain hasn't yet been initialized to let the
-wireless core do its work. During that rare case and time
-frame (if its even possible) we don't allow user regulatory
-changes as cfg80211 is working on enabling its first regulatory
-domain.
+On 27.2.2009 00:15, Bob Copeland wrote:
+> Speaking of, I think there's another potential oob array access at:
+>
+> if (rxs.rate_idx>= 0&&  rs.rs_rate ==
+>      sc->curband->bitrates[rxs.rate_idx].hw_value_short)
+>          rxs.flag |= RX_FLAG_SHORTPRE;
+>
+> because sc->rate_idx is u8 instead of s8.
 
-To check for cfg80211_regdomain we now contend the entire operation
-using the cfg80211_mutex.
+strcmp("sc->rate_idx", "rxs.rate_idx") != 0 :)
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/nl80211.c |   34 ++++++++++++++++++++++++++--------
- 1 files changed, 26 insertions(+), 8 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f353e39..5d3e968 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1882,24 +1882,42 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 	int r;
- 	char *data = NULL;
- 
--	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
--		return -EINVAL;
-+	/*
-+	 * You should only get this when cfg80211 hasn't yet initialized
-+	 * completely when built-in to the kernel right between the time
-+	 * window between nl80211_init() and regulatory_init(), if that is
-+	 * even possible.
-+	 */
-+	mutex_lock(&cfg80211_mutex);
-+	if (unlikely(!cfg80211_regdomain)) {
-+		r = -EINPROGRESS;
-+		goto out;
-+	}
-+
-+	if (!info->attrs[NL80211_ATTR_REG_ALPHA2]) {
-+		r = -EINVAL;
-+		goto out;
-+	}
- 
- 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
- 
- #ifdef CONFIG_WIRELESS_OLD_REGULATORY
- 	/* We ignore world regdom requests with the old regdom setup */
--	if (is_world_regdom(data))
--		return -EINVAL;
-+	if (is_world_regdom(data)) {
-+		r = -EINVAL;
-+		goto out;
-+	}
- #endif
--	mutex_lock(&cfg80211_mutex);
- 	r = __regulatory_hint(NULL, REGDOM_SET_BY_USER, data, 0, ENVIRON_ANY);
--	mutex_unlock(&cfg80211_mutex);
--	/* This means the regulatory domain was already set, however
-+	/*
-+	 * This means the regulatory domain was already set, however
- 	 * we don't want to confuse userspace with a "successful error"
--	 * message so lets just treat it as a success */
-+	 * message so lets just treat it as a success
-+	 */
- 	if (r == -EALREADY)
- 		r = 0;
-+out:
-+	mutex_unlock(&cfg80211_mutex);
- 	return r;
- }
- 
--- 
-1.6.0.3
-
+Or did I miss something?
