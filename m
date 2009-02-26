@@ -1,50 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.177]:21887 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752469AbZBTAkp (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:34762 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754881AbZBZXXm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2009 19:40:45 -0500
-Received: by el-out-1112.google.com with SMTP id b25so359928elf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2009 16:40:43 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1235050171.4023.64.camel@johannes.local>
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-	 <1235050171.4023.64.camel@johannes.local>
-Date: Thu, 19 Feb 2009 16:40:43 -0800
-Message-ID: <43e72e890902191640u107ff0fdse92367fccc975dba@mail.gmail.com> (sfid-20090220_014049_203166_80033F6E)
-Subject: Re: [PATCH v4 00/15] cfg80211: add a workqueue for regulatory
-	processing
+	Thu, 26 Feb 2009 18:23:42 -0500
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, mb@bu3sch.de,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 3/3] cfg80211: add regulatory netlink multicast group
+Date: Thu, 26 Feb 2009 18:23:35 -0500
+Message-Id: <1235690615-12109-4-git-send-email-lrodriguez@atheros.com> (sfid-20090227_002355_052223_12405318)
+In-Reply-To: <1235690615-12109-1-git-send-email-lrodriguez@atheros.com>
+References: <1235690615-12109-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 19, 2009 at 5:29 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-02-18 at 18:25 -0500, Luis R. Rodriguez wrote:
->> This series has a few cleanups and minor fixes but mainly
->> adds a workqueue for cfg80211 to use to process all regulatory
->> hints. This v4 just changes the spin_lock to only be held _only_ during
->> dequeing (not like this matters much).
->>
->> This series is also rebased on today's pull of wl. Using a new
->> SMTP server now, so hopefully this goes through fine in one shot.
->
-> Except for the unlikely(WARN_ON()) which still looks weird, this seems
-> ok to me.
+This allows us to send to userspace "regulatory" events.
+For now we just send an event when we change regulatory domains.
 
-Great thanks, I'll post a new series without the unlikely on the
-WARN_ON() but also I will change around the spin_lock() so it doesn't
-happen before the cfg80211_mutex, that's just not needed as you had
-hinted before.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/linux/nl80211.h |   26 ++++++++++++++++++++++++++
+ net/wireless/nl80211.c  |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    5 +++++
+ net/wireless/reg.c      |   13 ++++++++++++-
+ 4 files changed, 89 insertions(+), 1 deletions(-)
 
-> I don't know why you insist on having a wrapper for
-> wiphy->wiphy_idx but it's ok :)
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index c0fd432..b4b65ad 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -150,6 +150,16 @@
+  * @NL80211_CMD_SCAN_ABORTED: scan was aborted, for unspecified reasons,
+  *	partial scan results may be available
+  *
++ * @NL80211_CMD_REG_CHANGE: indicates to userspace the regulatory domain
++ * 	has been changed and provides details of the request information
++ * 	that caused the change such as who initiated the regulatory request
++ * 	(%NL80211_ATTR_REG_INITIATOR), the alpha2 to which we have moved on
++ * 	to (%NL80211_ATTR_REG_ALPHA2), whether or not the regulatory domain
++ * 	is the product of an intersection (%NL80211_ATTR_REG_INTERSECT) and
++ * 	the registered device's wiphy_idx (NL80211_ATTR_WIPHY) on which the
++ * 	request was made from (if the request came from a country IE or a
++ * 	driver regulatory hint).
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -204,6 +214,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_NEW_SCAN_RESULTS,
+ 	NL80211_CMD_SCAN_ABORTED,
+ 
++	NL80211_CMD_REG_CHANGE,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -218,6 +230,8 @@ enum nl80211_commands {
+ #define NL80211_CMD_SET_BSS NL80211_CMD_SET_BSS
+ #define NL80211_CMD_SET_MGMT_EXTRA_IE NL80211_CMD_SET_MGMT_EXTRA_IE
+ 
++#define NL80211_CMD_REG_CHANGE NL80211_CMD_REG_CHANGE
++
+ /**
+  * enum nl80211_attrs - nl80211 netlink attributes
+  *
+@@ -329,6 +343,13 @@ enum nl80211_commands {
+  *	messages carried the same generation number)
+  * @NL80211_ATTR_BSS: scan result BSS
+  *
++ * @NL80211_ATTR_REG_INITIATOR: indicates who requested the regulatory domain
++ * 	currently in effect. This could be any of the %NL80211_REGDOM_SET_BY_*
++ * @NL80211_ATTR_REG_INTERSECT: indicates whether or not the current regulatory
++ * 	domain is the product of an interesection between two regulatory
++ * 	domains. This is a boolean value so if this is set it means it was
++ * 	the product of an intersection.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -403,6 +424,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_SCAN_GENERATION,
+ 	NL80211_ATTR_BSS,
+ 
++	NL80211_ATTR_REG_INITIATOR,
++	NL80211_ATTR_REG_INTERSECT,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -420,6 +444,8 @@ enum nl80211_attrs {
+ #define NL80211_ATTR_WIPHY_CHANNEL_TYPE NL80211_ATTR_WIPHY_CHANNEL_TYPE
+ #define NL80211_ATTR_MGMT_SUBTYPE NL80211_ATTR_MGMT_SUBTYPE
+ #define NL80211_ATTR_IE NL80211_ATTR_IE
++#define NL80211_ATTR_REG_INITIATOR NL80211_ATTR_REG_INITIATOR
++#define NL80211_ATTR_REG_INTERSECT NL80211_ATTR_REG_INTERSECT
+ 
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_MAX_SUPP_REG_RULES		32
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 04ef828..f384fab 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2705,6 +2705,9 @@ static struct genl_multicast_group nl80211_config_mcgrp = {
+ static struct genl_multicast_group nl80211_scan_mcgrp = {
+ 	.name = "scan",
+ };
++static struct genl_multicast_group nl80211_regulatory_mcgrp = {
++	.name = "regulatory",
++};
+ 
+ /* notification functions */
+ 
+@@ -2784,6 +2787,45 @@ void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
+ 	genlmsg_multicast(msg, 0, nl80211_scan_mcgrp.id, GFP_KERNEL);
+ }
+ 
++void nl80211_send_reg_change_event(struct regulatory_request *request)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_REG_CHANGE);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	/* Userspace can count on these two always being set */
++	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, request->alpha2);
++	NLA_PUT_U8(msg, NL80211_ATTR_REG_INITIATOR, request->initiator);
++
++	if (wiphy_idx_valid(request->wiphy_idx))
++		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, request->wiphy_idx);
++
++	if (request->intersect)
++		NLA_PUT_U8(msg, NL80211_ATTR_REG_INTERSECT, 1);
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast(msg, 0, nl80211_regulatory_mcgrp.id, GFP_KERNEL);
++
++	return;
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
+ /* initialisation/exit functions */
+ 
+ int nl80211_init(void)
+@@ -2808,6 +2850,10 @@ int nl80211_init(void)
+ 	if (err)
+ 		goto err_out;
+ 
++	err = genl_register_mc_group(&nl80211_fam, &nl80211_regulatory_mcgrp);
++	if (err)
++		goto err_out;
++
+ 	return 0;
+  err_out:
+ 	genl_unregister_family(&nl80211_fam);
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 69787b6..e65a3c3 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -11,6 +11,7 @@ extern void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+ 				   struct net_device *netdev);
+ extern void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
+ 				      struct net_device *netdev);
++extern void nl80211_send_reg_change_event(struct regulatory_request *request);
+ #else
+ static inline int nl80211_init(void)
+ {
+@@ -31,6 +32,10 @@ static inline void nl80211_send_scan_aborted(
+ 					struct cfg80211_registered_device *rdev,
+ 					struct net_device *netdev)
+ {}
++static inline void
++nl80211_send_reg_change_event(struct regulatory_request *request)
++{
++}
+ #endif /* CONFIG_NL80211 */
+ 
+ #endif /* __NET_WIRELESS_NL80211_H */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 7341288..a9ce557 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -41,6 +41,7 @@
+ #include <net/cfg80211.h>
+ #include "core.h"
+ #include "reg.h"
++#include "nl80211.h"
+ 
+ /* Receipt of information from last regulatory request */
+ static struct regulatory_request *last_request;
+@@ -1391,8 +1392,16 @@ new_request:
+ 	pending_request = NULL;
+ 
+ 	/* When r == REG_INTERSECT we do need to call CRDA */
+-	if (r < 0)
++	if (r < 0) {
++		/*
++		 * Since CRDA will not be called in this case as we already
++		 * have applied the requested regulatory domain before we just
++		 * inform userspace we have processed the request
++		 */
++		if (r == -EALREADY)
++			nl80211_send_reg_change_event(last_request);
+ 		return r;
++	}
+ 
+ 	/*
+ 	 * Note: When CONFIG_WIRELESS_OLD_REGULATORY is enabled
+@@ -2072,6 +2081,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 
+ 	print_regdomain(cfg80211_regdomain);
+ 
++	nl80211_send_reg_change_event(last_request);
++
+ 	return r;
+ }
+ 
+-- 
+1.6.0.3
 
-Heh its just because wiphy->wiphy_idx does not exist, the drv has so
-you must go to the container and then use that. If we move the idx to
-the wiphy then I'm good to use wiphy->wiphy_idx. Want to do that?
-
-  Luis
