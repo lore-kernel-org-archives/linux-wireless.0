@@ -1,33 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f161.google.com ([209.85.218.161]:38859 "EHLO
-	mail-bw0-f161.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600AbZBQADk (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48888 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752912AbZB0BlO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2009 19:03:40 -0500
-Received: by bwz5 with SMTP id 5so3524962bwz.13
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2009 16:03:38 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4999F427.4060008@lwfinger.net>
-References: <4999F3A6.7020208@gmail.com> <4999F427.4060008@lwfinger.net>
-Date: Tue, 17 Feb 2009 00:03:38 +0000
-Message-ID: <3ace41890902161603o447ae321obb536586dcafad69@mail.gmail.com> (sfid-20090217_010345_020703_2C91A891)
-Subject: Re: rtl8187 not handling my usb card
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	viktor.ilijasic@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 26 Feb 2009 20:41:14 -0500
+Subject: Re: pull request: wireless-next-2.6 2009-02-23
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, mcgrof <mcgrof@gmail.com>
+In-Reply-To: <20090226161340.GA4430@tuxdriver.com>
+References: <20090223192659.GB3553@tuxdriver.com>
+	 <1235457113.4455.89.camel@johannes.local>
+	 <20090224.235510.30497146.davem@davemloft.net>
+	 <1235637360.29050.16.camel@johannes.local>
+	 <20090226161340.GA4430@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-kbKDvDmrKJf/QQRDVtBM"
+Date: Thu, 26 Feb 2009 17:37:20 -0800
+Message-Id: <1235698640.4936.6.camel@johannes.local> (sfid-20090227_024118_144187_56658767)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hiya,
 
-A quick search on google shows Airlive hosting a linux driver here:
+--=-kbKDvDmrKJf/QQRDVtBM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://www.airlive.com/support/support_3a.jsp?pdid=PD1223473034861
+On Thu, 2009-02-26 at 11:13 -0500, John W. Linville wrote:
 
-I had a quick look  and indeed it looks like the realtek vendor driver
-(or a variant of) for 8187L.
-Note that this is for reference, since we all know the vendor driver
-has some issues with the latest wireless stack, etc.
+> > Now I just have to get around to fixing it, it's proving to be harder
+> > than I thought, and I don't have much time right now.
+>=20
+> I suppose I could just drop that one.  IIRC there was another patch
+> from you that depended upon that one as well?
+
+Ok, so I looked into this, and it turns out that it's harder to fix than
+I thought. Fixing the genl code to call the pre_dumpit at the right
+place is hard and requires netlink (not genl) changes. I'm not in a
+position to do such changes right now, so I would suggest to revert it,
+and for now take the easy way of restructuring nl80211 to take, in each
+operation, the rtnl before any other locks instead of trying to do this
+generically.
+
+Luis, would you be up to that? Basically go from
+
+        mutex_lock(&cfg80211_mtx)
+        ...
+        rtnl_lock()
+        ...
+        rtnl_unlock()
+        ...
+        mutex_unlock(&cfg80211_mtx)
+       =20
+to
+       =20
+        rtnl_lock()
+        ...
+        mutex_lock(&cfg80211_mtx)
+        ...
+        mutex_unlock(&cfg80211_mtx)
+        ...
+        rtnl_unlock()
+       =20
+everywhere.
+
+johannes
+
+--=-kbKDvDmrKJf/QQRDVtBM
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJp0PNAAoJEKVg1VMiehFY050P/0O8hIUYTp+lHmBSKjlDPm7b
+j1fqf2KnMO32TYGicxQ4vYlydUH6WoM30U7VKNgwjdittXGg0ABB4jrej7q6QaWw
+fCngP2Z3BTnr3odXiZnEyCR7iw56wEOXEPHySR2gX2McOYMYJ9J3SV/cuQt8Dguk
+1aYjohbhT4AbAwtxZuYBuhZAzZm0L9giqKKgF+HiZmtT/0ywwyqdePY3qU7o0WFd
+sxgYxJyaLHAv6YOS01bGd54L/d2sKw5TzfIasn3cXj3hnFiuyWM6hfuDyfNW4MZR
+2a57P54WWQm3KlRszkZJq6TvNVTRSDcjk+TfhZFeCpkA4nKbDGTS2/5H0s3fflTD
+XmtxF4Mj5Tt42ySV72mY1nGLlasmEyX8PevSGnJKBVNsPpT1E0KaSAs/uPofRH/3
+8DDAcLllTkWF4+dCEP0O13waKEwzED8H5Citpe59dB+np7WpN3+jNKXi8yB/PR7Y
+oTJJvTb5ontRd0WKlyft7yHs/2ySwuHkpyU0HjZhYfXINSvzTr9uUEWBDR4GaLcK
+qrlXIZyNXFtiGzvBmV3ik4ACjbtLeZetpmMmghE5vNYAlZRcyUAk9NzUP28iWrOR
+zPBTSqrMmnDQiFBbl2qYmoCOfudUXYem5Eo4s7+2Y/ZfQYiQpjqSQ+DeiG8pdedK
+p+mDwx03XMSc1oQ61aXF
+=Yjqh
+-----END PGP SIGNATURE-----
+
+--=-kbKDvDmrKJf/QQRDVtBM--
+
