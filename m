@@ -1,170 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:39618 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757040AbZBLRea (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 12:34:30 -0500
-Subject: [PATCH] make net/ieee80211.h private to ipw2x00
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	reinette chatre <reinette.chatre@intel.com>
-In-Reply-To: <1234390630.14687.9.camel@localhost>
-References: <1234390630.14687.9.camel@localhost>
-Content-Type: text/plain
-Date: Thu, 12 Feb 2009 12:32:55 -0500
-Message-Id: <1234459975.15402.4.camel@localhost> (sfid-20090212_183435_045406_8149C75C)
+Received: from xc.sipsolutions.net ([83.246.72.84]:59874 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756398AbZB0VH3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 16:07:29 -0500
+Subject: Re: [PATCH] mac80211: Replacement for: Implement commit in
+	wireless extensions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20090227184314.42290@gmx.net> (sfid-20090227_194348_299848_A96EDA18)
+References: <20090227184314.42290@gmx.net>
+	 (sfid-20090227_194348_299848_A96EDA18)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-L2v3o1OoXCvpgRbZMNJK"
+Date: Fri, 27 Feb 2009 22:05:25 +0100
+Message-Id: <1235768725.7426.83.camel@johannes.local> (sfid-20090227_220731_770835_E1A77374)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only ipw2x00 now uses it.  Reduce confusion.  Profit!
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+--=-L2v3o1OoXCvpgRbZMNJK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
-Depends on "[PATCH] hostap: convert usage of net/ieee80211.h to linux/ieee80211.h" of course...
+On Fri, 2009-02-27 at 19:43 +0100, Alina Friedrichsen wrote:
+> This patch _not_ implements commit in wireless extensions, but solves som=
+e dependencies needed by the other patches.
+>=20
+> The maybe usage of this ioctl must discussed after the complete joining p=
+rocess (STA and *IBSS*) in nl80211 defined.
+>=20
+> I hope this is a compromise.
+>=20
+> Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+> ---
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index ecbc8e0..7f00c70 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -920,6 +920,7 @@ static inline int ieee80211_bssid_match(const u8 *rad=
+dr, const u8 *addr)
+> =20
+>  int ieee80211_hw_config(struct ieee80211_local *local, u32 changed);
+>  int ieee80211_if_config(struct ieee80211_sub_if_data *sdata, u32 changed=
+);
+> +void ieee80211_commit(struct ieee80211_sub_if_data *sdata);
+>  void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
+>  void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdat=
+a,
+>  				      u32 changed);
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index f38db4d..1b2d598 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -294,6 +294,20 @@ int ieee80211_hw_config(struct ieee80211_local *loca=
+l, u32 changed)
+>  	return ret;
+>  }
+> =20
+> +void ieee80211_commit(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	switch (sdata->vif.type) {
+> +	case NL80211_IFTYPE_ADHOC:
+> +		ieee80211_ibss_commit(sdata);
+> +		break;
+> +	case NL80211_IFTYPE_STATION:
+> +		ieee80211_sta_commit(sdata);
+> +		break;
+> +	default:
+> +		break;
+> +	}
 
- drivers/net/wireless/ipw2x00/Kconfig               |    2 +-
- .../net/wireless/ipw2x00}/ieee80211.h              |    0
- drivers/net/wireless/ipw2x00/ipw2100.h             |    4 ++--
- drivers/net/wireless/ipw2x00/ipw2200.h             |    3 ++-
- drivers/net/wireless/ipw2x00/libipw_geo.c          |    2 +-
- drivers/net/wireless/ipw2x00/libipw_module.c       |    2 +-
- drivers/net/wireless/ipw2x00/libipw_rx.c           |    3 ++-
- drivers/net/wireless/ipw2x00/libipw_tx.c           |    2 +-
- drivers/net/wireless/ipw2x00/libipw_wx.c           |    3 ++-
- 9 files changed, 12 insertions(+), 9 deletions(-)
- rename {include/net => drivers/net/wireless/ipw2x00}/ieee80211.h (100%)
+I don't really see a need for that, it's only called in what, two
+places? And it makes things interdependent. At _least_ put it into a
+more appropriate file like wext.c and open-code it in cfg.c
 
-diff --git a/drivers/net/wireless/ipw2x00/Kconfig b/drivers/net/wireless/ipw2x00/Kconfig
-index 1d5dc3e..85cc799 100644
---- a/drivers/net/wireless/ipw2x00/Kconfig
-+++ b/drivers/net/wireless/ipw2x00/Kconfig
-@@ -186,7 +186,7 @@ config LIBIPW_DEBUG
- 	  % echo 0x00000FFO > /proc/net/ieee80211/debug_level
- 
- 	  For a list of values you can assign to debug_level, you
--	  can look at the bit mask values in <net/ieee80211.h>
-+	  can look at the bit mask values in ieee80211.h
- 
- 	  If you are not trying to debug or develop the libipw
- 	  component, you most likely want to say N here.
-diff --git a/include/net/ieee80211.h b/drivers/net/wireless/ipw2x00/ieee80211.h
-similarity index 100%
-rename from include/net/ieee80211.h
-rename to drivers/net/wireless/ipw2x00/ieee80211.h
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
-index bbf1ddc..46b135d 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.h
-@@ -39,8 +39,6 @@
- #include <linux/wireless.h>
- #include <net/iw_handler.h>	// new driver API
- 
--#include <net/ieee80211.h>
--
- #ifdef CONFIG_IPW2100_MONITOR
- #include <net/ieee80211_radiotap.h>
- #endif
-@@ -48,6 +46,8 @@
- #include <linux/workqueue.h>
- #include <linux/mutex.h>
- 
-+#include "ieee80211.h"
-+
- struct ipw2100_priv;
- struct ipw2100_tx_packet;
- struct ipw2100_rx_packet;
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.h b/drivers/net/wireless/ipw2x00/ipw2200.h
-index 277b274..3e66c99 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.h
-@@ -49,13 +49,14 @@
- #include <asm/io.h>
- 
- #include <net/lib80211.h>
--#include <net/ieee80211.h>
- #include <net/ieee80211_radiotap.h>
- 
- #define DRV_NAME	"ipw2200"
- 
- #include <linux/workqueue.h>
- 
-+#include "ieee80211.h"
-+
- /* Authentication  and Association States */
- enum connection_manager_assoc_states {
- 	CMAS_INIT = 0,
-diff --git a/drivers/net/wireless/ipw2x00/libipw_geo.c b/drivers/net/wireless/ipw2x00/libipw_geo.c
-index 960ad13..9dfbb87 100644
---- a/drivers/net/wireless/ipw2x00/libipw_geo.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_geo.c
-@@ -41,7 +41,7 @@
- #include <linux/etherdevice.h>
- #include <asm/uaccess.h>
- 
--#include <net/ieee80211.h>
-+#include "ieee80211.h"
- 
- int ieee80211_is_valid_channel(struct ieee80211_device *ieee, u8 channel)
- {
-diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
-index a2f5616..0f233ab 100644
---- a/drivers/net/wireless/ipw2x00/libipw_module.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_module.c
-@@ -50,7 +50,7 @@
- #include <net/net_namespace.h>
- #include <net/arp.h>
- 
--#include <net/ieee80211.h>
-+#include "ieee80211.h"
- 
- #define DRV_DESCRIPTION "802.11 data/management/control stack"
- #define DRV_NAME        "ieee80211"
-diff --git a/drivers/net/wireless/ipw2x00/libipw_rx.c b/drivers/net/wireless/ipw2x00/libipw_rx.c
-index 9c67dfa..4865475 100644
---- a/drivers/net/wireless/ipw2x00/libipw_rx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_rx.c
-@@ -33,7 +33,8 @@
- #include <linux/ctype.h>
- 
- #include <net/lib80211.h>
--#include <net/ieee80211.h>
-+
-+#include "ieee80211.h"
- 
- static void ieee80211_monitor_rx(struct ieee80211_device *ieee,
- 					struct sk_buff *skb,
-diff --git a/drivers/net/wireless/ipw2x00/libipw_tx.c b/drivers/net/wireless/ipw2x00/libipw_tx.c
-index f78f57e..a874e90 100644
---- a/drivers/net/wireless/ipw2x00/libipw_tx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_tx.c
-@@ -41,7 +41,7 @@
- #include <linux/etherdevice.h>
- #include <asm/uaccess.h>
- 
--#include <net/ieee80211.h>
-+#include "ieee80211.h"
- 
- /*
- 
-diff --git a/drivers/net/wireless/ipw2x00/libipw_wx.c b/drivers/net/wireless/ipw2x00/libipw_wx.c
-index 31ea3ab..dfbadb3 100644
---- a/drivers/net/wireless/ipw2x00/libipw_wx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_wx.c
-@@ -35,9 +35,10 @@
- #include <linux/jiffies.h>
- 
- #include <net/lib80211.h>
--#include <net/ieee80211.h>
- #include <linux/wireless.h>
- 
-+#include "ieee80211.h"
-+
- static const char *ieee80211_modes[] = {
- 	"?", "a", "b", "ab", "g", "ag", "bg", "abg"
- };
--- 
-1.6.1.3
+johannes
 
+--=-L2v3o1OoXCvpgRbZMNJK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJqFWSAAoJEKVg1VMiehFYkx8P/32i17TK/kD/bZ43I6ufX37e
+zSh2WqVuD4EHdTrja7/WsZIGY1vz+2G1vd9fLm5tMcUi1dG2zDjMOG8ssUlU0upq
+8ulCdAzeYqq6IioBnAz+i2oQBkzDlHxFZksq7B9FEAy6bFAl1HguUzcMLHRS/KsR
+1WMJOwIuE4ASBkcWiWYYe6kF65Y2Nkd0hrggexmz/qsQcPR8RRBmLN8msu20yVC5
+zmpogse6eg5pONC6mporf04+KHUbuXcw/OC1v9o2TGSa85LSqhF2XxBlejhc1Hd8
+XNCqgbBqQBFPjT05i5j6U7FHVQKnH/LinrPjLYO8+f9dkAgFhD+CWMjxapoK0R+U
+e9sYAIK0/lflAJWjJZRcQ+qywvdBXc/rxOrmwDslYYoZ/2RXE3dbjNQl9MUKtl/L
+e/58eVg1R9ydmy5520Y5gBwc5Zj9Lf6CuskRcTKhZufIiHjdkgijsUYqfBNe1spE
+N/MAIc1C+jrkgRSa/TUD0oB0zhsa/GtZUDUIrEaSaJVT+9FmJ4oGOo9QvcSHfHiA
+s36SEwGAGBvml8mlKAR5v3kDwTDmMlZSxjvcB1siGO6TfwEQvKlIA09AEMyux2ka
+K3Lk2dw5AMdF7x+9B1q9yi0AHmZ2AhxgjYyeI1iLaUEFht8T/DWfaQcSbZ5etnSx
+rwaVHGI/pbpts5pp/sWy
+=kCps
+-----END PGP SIGNATURE-----
+
+--=-L2v3o1OoXCvpgRbZMNJK--
 
