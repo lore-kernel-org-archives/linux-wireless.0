@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53922 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:43412 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751409AbZBCEfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 23:35:46 -0500
-Received: from mail.atheros.com ([10.10.20.105])
+	id S1752963AbZB0Isj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 03:48:39 -0500
+Received: from mail.atheros.com ([10.10.20.86])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 20:35:46 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: fix reg_notifier() flags used upon a country IE
-Date: Mon, 2 Feb 2009 20:35:05 -0800
-Message-ID: <1233635705-12890-1-git-send-email-lrodriguez@atheros.com> (sfid-20090203_053551_474020_136600E9)
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2009 00:48:38 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18855.43002.100899.931613@gargle.gargle.HOWL> (sfid-20090227_094851_036127_025D664A)
+Date: Fri, 27 Feb 2009 14:14:42 +0530
+To: Alina Friedrichsen <x-alina@gmx.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: IBSS issues
+In-Reply-To: <20090227082545.291220@gmx.net>
+References: <18855.26210.618690.891378@gargle.gargle.HOWL>
+	<20090227082545.291220@gmx.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The nl80211 rule flags were being used.
+Alina Friedrichsen wrote:
+> > Scenario:
+> >
+> >  * Create a new cell using ath9k.
+> >  * Wait for a while to do a background merge scan run.
+> >  * Join the cell from another peer ( say, using ath5k ).
+> >  * Station dump in peer1 1 doesn't show the new peer right away.
+> >  * The merge runs are not supposed to happen if a cell has more than one
+> > peer.
+> >    It didn't happen before, but it keeps running repeatedly now.
+> >  * Ping from peer2 to peer1 doesn't go through - peer1 to peer2 works
+> > though.
+> 
+> The strange thing is after the ping from peer1 to peer2, the ping from peer2 to peer1 works too.
+> The same is if I start tcpdump on peer1. After stopping tcpdump it keeps working. Looking...
+> 
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/regd.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Yep. It works after the ping from peer1 to peer2.
 
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index dfcc3b5..fe08a4f 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -192,11 +192,11 @@ static void ath9k_reg_apply_5ghz_beaconing_flags(struct wiphy *wiphy,
- 		 * it by applying our static world regdomain by default during
- 		 * probe */
- 		if (!(reg_rule->flags & NL80211_RRF_NO_IBSS))
--			ch->flags &= ~NL80211_RRF_NO_IBSS;
-+			ch->flags &= ~IEEE80211_CHAN_NO_IBSS;
- 		if (!ath9k_is_radar_freq(ch->center_freq))
- 			continue;
- 		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
--			ch->flags &= ~NL80211_RRF_PASSIVE_SCAN;
-+			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
- 	}
- }
- 
--- 
-1.6.1.2.253.ga34a
+> > I identified one bug, where the timestamp in the beacon template was not
+> > updated.
+> > Patch below. But it doesn't fix the issue.
+> 
+> The TSF of the beacon is setted by the hardware automatically, so to write it in the template is not needed.
 
+When peer2 joins the cell, the next TBTT is calculated based on the received beacon's
+timestamp. And since the TSF is reset in __ieee80211_sta_join_ibss(), to program
+the TBTT timers, the timestamp is needed.
+
+Sujith
