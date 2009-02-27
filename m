@@ -1,109 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44770 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752411AbZBXCOA (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47562 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755360AbZB0SpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 21:14:00 -0500
-Subject: Re: [RFC] nl80211: Authentication and association events
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
+	Fri, 27 Feb 2009 13:45:23 -0500
+Date: Fri, 27 Feb 2009 13:41:58 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090220192557.GA17914@jm.kir.nu>
-References: <20090218200210.GA13955@jm.kir.nu>
-	 <1234988740.4023.51.camel@johannes.local>
-	 <20090220192557.GA17914@jm.kir.nu>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-6LOASSxsWXBel+47SAyP"
-Date: Mon, 23 Feb 2009 17:55:27 -0800
-Message-Id: <1235440527.4455.45.camel@johannes.local> (sfid-20090224_031404_064497_CB535182)
-Mime-Version: 1.0
+Subject: Re: Fwd: b43* linux driver, more ids dev
+Message-ID: <20090227184157.GE3687@tuxdriver.com> (sfid-20090227_194525_521296_82056BF2)
+References: <ee588a540902270946h13e03b6el71de5237a458b7a3@mail.gmail.com> <ee588a540902270955j214d98d2uf58858d12a7787cc@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <ee588a540902270955j214d98d2uf58858d12a7787cc@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Feb 27, 2009 at 06:55:15PM +0100, Xose Vazquez Perez wrote:
+> fwd to linux-wireless@vger.kernel.org
+>=20
+>=20
+> ---------- Forwarded message ----------
+> From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> Date: Fri, Feb 27, 2009 at 18:46
+> Subject: b43* linux driver, more ids dev
+> To: mb@bu3sch.de, Larry.Finger@lwfinger.net,
+> johannes@sipsolutions.net, stefano.brivio@polimi.it
+>=20
+>=20
+> hi,
+>=20
+> are there any trouble with these devices ? why are they not =A0inside
+> b43* drivers ?
+>=20
+> PCI_VENDOR_ID_BROADCOM, 0x4313
+> PCI_VENDOR_ID_BROADCOM, 0x4315
+> PCI_VENDOR_ID_BROADCOM, 0x432a
+> PCI_VENDOR_ID_BROADCOM, 0x432b
+> PCI_VENDOR_ID_BROADCOM, 0x432c
+> PCI_VENDOR_ID_BROADCOM, 0x432d
+>=20
+>=20
+> taken from the vendor's driver src:
+> http://www.broadcom.com/docs/linux_sta/hybrid-portsrc-x86_32-v5_10_27=
+_14.tar.gz
+>=20
+> more info at: http://www.broadcom.com/support/802.11/linux_sta.php
 
---=-6LOASSxsWXBel+47SAyP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If I'm not mistaken, that driver only covers hardware that is _not_
+supported by b43 or b43legacy today.
 
-On Fri, 2009-02-20 at 21:25 +0200, Jouni Malinen wrote:
-
-> nl80211: Event notifications for MLME events
-
-That looks good to me.
-
-> +/**
-> + * enum nl80211_auth_type - AuthenticationType
-> + *
-> + * @NL80211_AUTHTYPE_OPEN_SYSTEM
-> + */
-> +enum nl80211_auth_type {
-> +	NL80211_AUTHTYPE_UNSPECIFIED,
-
-This seems a little odd, is that really useful? And if it is, what do we
-do? Try all?
-
-
-> +struct cfg80211_auth_request {
-> +	struct ieee80211_channel *chan;
-> +	u8 *peer_addr;
-> +	const u8 *ssid;
-> +	size_t ssid_len;
-> +	enum nl80211_auth_type auth_type;
-> +	const u8 *ie;
-> +	size_t ie_len;
-> +};
-> +
-> +struct cfg80211_assoc_request {
-> +	struct ieee80211_channel *chan;
-> +	u8 *peer_addr;
-> +	const u8 *ssid;
-> +	size_t ssid_len;
-> +	const u8 *ie;
-> +	size_t ie_len;
-> +};
-> +
-> +struct cfg80211_deauth_request {
-> +	u8 *peer_addr;
-> +	u16 reason_code;
-> +	const u8 *ie;
-> +	size_t ie_len;
-> +};
-> +
-> +struct cfg80211_disassoc_request {
-> +	u8 *peer_addr;
-> +	u16 reason_code;
-> +	const u8 *ie;
-> +	size_t ie_len;
-> +};
-
-Seems sensible to me.
-
-Should we have some more code in cfg80211 to keep track of the BSSes
-we're authenticated/the one we're associated to, and have some commands
-to query those from userspace?
-
-johannes
-
---=-6LOASSxsWXBel+47SAyP
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJo1ONAAoJEKVg1VMiehFYh1sQAIGTcKLXNre2vSBnXATzO0vP
-p3e37sThNFHMmcKdiaZxjhFgGOe6ABOVtVo/tL1msiC6cPSZKcah/4sILF3gY01u
-xQlrMf4gt62/lyrfmUvKeCYAn9TmxGeLJsDC2yyS0Ik9FDqhEXDkNgW/9Jg7ZCuR
-KKhsKtEJ6xbYHTmdPvnwpYeZi9czMHTQEUjQbN9xi2eTfYPbq+Zj6DbyLwUvJ63J
-4Kt0jyurkkjb7YWY0MeI49Qf916qa2VbVU4TVWSrzmxM5YYGJYSgNWccdXLMt6yB
-UTHMGlAKIC0EZYbfJkWF0J8oXUSYZCczHdf5CvgeqVOMjryDLzinM8zZaK4jyuqo
-0uEPJGMfTTY3hH4e1cW/LMWxbqYkAJKc3iqYz6NLl7/86burlO46B1ayR7v/xtua
-KxEFmvC8Ief6dLtxF9D0pxND6gdhu439O8M6CIZJTzZyldaQ7cn1rskk8lIHSrtd
-ndSYXUDFV0JsUhOegsE3xiBpI1imQrYc4LXcdG+0/vdAPrAS7gV7mllZfSd2j0Ye
-o9W7q5lHjKLfsHcisk/J81WWCmiM6SbEn1wTKhawGmhnm30af3Zbq+X7o4a2C4eS
-HuO7aaXvbpZj3qdUo2/0OXS98w7E/vqAj1OHhyq6Q0RGn11Vt/C7cOobdBJFgISB
-jXN3KQbFEk2LilvVPSz+
-=cK0g
------END PGP SIGNATURE-----
-
---=-6LOASSxsWXBel+47SAyP--
-
+John
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
