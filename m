@@ -1,84 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:55150 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039AbZBWQh7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 11:37:59 -0500
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [RFC PATCH v1 1/3] mac80211: decrease execution of the associated
-	timer
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 23 Feb 2009 18:37:24 +0200
-Message-ID: <20090223163724.20939.22893.stgit@tikku> (sfid-20090223_173802_998474_9413E679)
-In-Reply-To: <20090223163626.20939.4879.stgit@tikku>
-References: <20090223163626.20939.4879.stgit@tikku>
+Received: from mail.gmx.net ([213.165.64.20]:38408 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754271AbZB0PjY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 10:39:24 -0500
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Fri, 27 Feb 2009 16:39:21 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090227153516.318880@gmx.net>
+Message-ID: <20090227153921.254900@gmx.net> (sfid-20090227_163927_307466_29923B6A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+References: <20090226234307.51520@gmx.net> <200902271503.13308.mb@bu3sch.de>
+ <20090227153516.318880@gmx.net>
+Subject: Re: [PATCH v2] mac80211: Call commit() on channel setting
+To: mb@bu3sch.de
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the timer is triggering every two seconds
-(IEEE80211_MONITORING_INTERVAL). Decrease the timer to only trigger when
-nothing is received to avoid waking up CPU.
+> I think after all changes which affect the selected network a rejoin
+> should be done.
+>=20
+> For example you have at channel 4 a AP with the SSID "test" und at ch=
+annel
+> 11 an other AP with the same SSID, too.
+>=20
+> If you now first say set_ssid("test") and then set_channel(11), we fi=
+rst
+> join the network at channel 4 and then we switch the hardware low-lev=
+el to
+> channel 11. So we hang now in channel 4 with the BSSID of the network=
+ in
+> channel 4 and nothing works anymore.
 
-Now there's a functional change that probe requests are sent only when the
-data path is idle, earlier they were sent also while there was activity
-on the data path.
+So we hang now in channel _11_ with the BSSID of the network in
+channel 4 and nothing works anymore.
 
-This is also preparation for beacon filtering support. Thanks to Johannes
-Berg for the idea.
+> I think the order of the commands should not affect the result on the=
+ end
+> and the driver should never hang in an broken/undefined state if it c=
+an be
+> recovered.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
-
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    7 +++++++
- net/mac80211/rx.c          |    3 +++
- 3 files changed, 11 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d06c757..7851135 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1078,6 +1078,7 @@ void ieee80211_dynamic_ps_timer(unsigned long data);
- void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 			     struct ieee80211_sub_if_data *sdata,
- 			     int powersave);
-+void ieee80211_rx_trigger(struct ieee80211_sub_if_data *sdata);
- 
- void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
- 				     enum queue_stop_reason reason);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5a49779..b3caac0 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -911,6 +911,13 @@ static void ieee80211_associate(struct ieee80211_sub_if_data *sdata)
- 	mod_timer(&ifmgd->timer, jiffies + IEEE80211_ASSOC_TIMEOUT);
- }
- 
-+void ieee80211_rx_trigger(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+		mod_timer(&sdata->u.mgd.timer,
-+			  jiffies + IEEE80211_MONITORING_INTERVAL);
-+	}
-+}
- 
- static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 66f7ecf..4afb639 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -855,6 +855,9 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
- 		return RX_CONTINUE;
- 
-+	if (!is_multicast_ether_addr(hdr->addr1))
-+		ieee80211_rx_trigger(rx->sdata);
-+
- 	sta->rx_fragments++;
- 	sta->rx_bytes += rx->skb->len;
- 	sta->last_signal = rx->status->signal;
-
+--=20
+Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
+f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
+69a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
