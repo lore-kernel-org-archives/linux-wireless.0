@@ -1,64 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36207 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373AbZBMG4b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 01:56:31 -0500
-Subject: Re: [PATCH 6/6] cfg80211: move regulatory hints to workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
-References: <1234503363-11014-1-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-2-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-3-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-4-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-5-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-6-git-send-email-lrodriguez@atheros.com>
-	 <1234503363-11014-7-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ca0Msjb2tHKHJl3fnRxV"
-Date: Fri, 13 Feb 2009 07:56:27 +0100
-Message-Id: <1234508187.1327.19.camel@johannes.local> (sfid-20090213_075634_857464_53BAE057)
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:54802 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753404AbZB0SZY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 13:25:24 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Fri, 27 Feb 2009 19:25:20 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090227171618.254890@gmx.net>
+Message-ID: <20090227182520.97260@gmx.net> (sfid-20090227_192527_989669_286BD396)
+MIME-Version: 1.0
+References: <20090226234307.51520@gmx.net> <200902271503.13308.mb@bu3sch.de>
+ <20090227153418.254900@gmx.net> <200902271714.54181.mb@bu3sch.de>
+ <20090227171618.254890@gmx.net>
+Subject: [PATCH v3] mac80211: Call commit() on channel setting
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This calls commit() on all logical interfaces of a physical interface, =
+if the channel of it is changed. Before it works as it should, I must f=
+ix the joining process of STA and IBSS a little, which I will make tomo=
+rrow.
 
---=-Ca0Msjb2tHKHJl3fnRxV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This version call it only in the wireless extensions, because the handl=
+ing in nl80211 must discussed more, but I think in the case of wext it =
+is the right way.
 
-On Thu, 2009-02-12 at 21:36 -0800, Luis R. Rodriguez wrote:
-> Driver and userspace regulatory hints are now processed in
-> a workqueue. This should fix some lockdep warnings which complain
-> about possible circular locking dependencies such as:
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+---
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 1ac0516..dce1618 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -157,7 +157,10 @@ static int ieee80211_ioctl_siwfreq(struct net_devi=
+ce *dev,
+ 				   struct iw_request_info *info,
+ 				   struct iw_freq *freq, char *extra)
+ {
++	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
+ 	struct ieee80211_sub_if_data *sdata =3D IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_sub_if_data *nsdata;
++	int ret;
+=20
+ 	if (sdata->vif.type =3D=3D NL80211_IFTYPE_ADHOC)
+ 		sdata->u.ibss.flags &=3D ~IEEE80211_IBSS_AUTO_CHANNEL_SEL;
+@@ -173,19 +176,25 @@ static int ieee80211_ioctl_siwfreq(struct net_dev=
+ice *dev,
+ 			else if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION)
+ 				sdata->u.mgd.flags |=3D
+ 					IEEE80211_STA_AUTO_CHANNEL_SEL;
+-			return 0;
++			ret =3D 0;
+ 		} else
+-			return ieee80211_set_freq(sdata,
++			ret =3D ieee80211_set_freq(sdata,
+ 				ieee80211_channel_to_frequency(freq->m));
+ 	} else {
+ 		int i, div =3D 1000000;
+ 		for (i =3D 0; i < freq->e; i++)
+ 			div /=3D 10;
+ 		if (div > 0)
+-			return ieee80211_set_freq(sdata, freq->m / div);
++			ret =3D ieee80211_set_freq(sdata, freq->m / div);
+ 		else
+-			return -EINVAL;
++			ret =3D -EINVAL;
+ 	}
++
++	list_for_each_entry(nsdata, &local->interfaces, list) {
++		ieee80211_commit(nsdata);
++	}
++
++	return ret;
+ }
+=20
+=20
 
-Yes, but I need to look at the one Reinette posted and fix that one,
-which will probably require a different solution.
-
-johannes
-
---=-Ca0Msjb2tHKHJl3fnRxV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJlRmYAAoJEKVg1VMiehFYqx8P/3km81LtETvXXZtdT4LqoGKv
-eURc8cM6Dw7t0mjFbnK8UsT1Ok3z/sSmsXWvJs3KB6DNmwaJvRvgPt7etW20XO9Z
-r1uXxqOIIOv1LlcJjJwWNq7PVdAJ/By9y8E1lNIMBsz/slyiPRgvCcwxRQZtWHz4
-6L1Xq6Z+OdVLIzrph/DTeuPV6U29PSxRWZeuSFNx8SD7zXf0Ml4YIV+7rhh/f1/0
-odcLpjwTx4qyvFlx97L/jxhWMSDmLRUiONNPRcWlxa2YX4v+vKKkQSauADQ99I4Y
-3+D66v2Vi7jFVhDQ9HetmCxpLGOnbftWo8qB1HCeR7jHg3L294Bq+SgPFvRmxwJk
-JL2mjMOdCiXSWvj36kTbY0kWz6ehr7LHRvDG3LeuPDG8+Z9j0gGawGFR2TxC6ZEs
-IVY+24WKdQaKbWfhDJaUawm7vMV2vKvebjYbwfi3WfavJrLmQy7icTVPwTOHgGes
-bWi4HoHxjmuxI0K1PsZdBNc+QWgD7egdPJYRWrTCl2cp5Mb/qabyFu7dQ0KbI9DQ
-arnoO3KUsfjIrBx2lbMs7UchR+WuF8souVMBcjbHmtqxp7G8I9Oe9BAzkYkXwMDu
-wM53cVyXBybBHrbhYPYQPrc9bvfCck/gKbbEG4mdvyvj/gM+bZQMF8x3KW9rIb4y
-fI2DZGR3MtniCdR2yxqd
-=ohgQ
------END PGP SIGNATURE-----
-
---=-Ca0Msjb2tHKHJl3fnRxV--
-
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
