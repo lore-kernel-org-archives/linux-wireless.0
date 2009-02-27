@@ -1,123 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47248 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751431AbZBMJHz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2009 04:07:55 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2009 01:07:55 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: Fix panic upon attach failure
-Date: Fri, 13 Feb 2009 14:34:52 +0530
-Message-ID: <1234515892-6267-1-git-send-email-vasanth@atheros.com> (sfid-20090213_100758_340173_80000227)
+Received: from mail.gmx.net ([213.165.64.20]:35112 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755460AbZB0PfT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 10:35:19 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Fri, 27 Feb 2009 16:35:16 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <200902271503.13308.mb@bu3sch.de>
+Message-ID: <20090227153516.318880@gmx.net> (sfid-20090227_163521_723860_96E29F82)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <20090226234307.51520@gmx.net> <200902271503.13308.mb@bu3sch.de>
+Subject: Re: [PATCH v2] mac80211: Call commit() on channel setting
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[246916.338046]
-[246916.338048] Pid: 29265, comm: insmod Not tainted (2.6.29-rc4-wl #64) 9461DUU
-[246916.338051] EIP: 0060:[<c02ca274>] EFLAGS: 00010202 CPU: 0
-[246916.338055] EIP is at rollback_registered+0x24/0x220
-[246916.338057] EAX: 00000001 EBX: 00000000 ECX: 00000000 EDX: f122e8fc
-[246916.338059] ESI: 00000000 EDI: 00000000 EBP: f6595d30 ESP: f6595d1c
-[246916.338062]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-[246916.338064] Process insmod (pid: 29265, ti=f6594000 task=f7343fe0 task.ti=f6594000)
-[246916.338067] Stack:
-[246916.338068]  c04a2920 22222222 f6595d48 00000000 f122f080 f6595d48 c02ca489 f122e8fc
-[246916.338076]  f122e220 f122f080 f122e220 f6595d5c f8a03156 f122e220 f122f080 f122e220
-[246916.338085]  f6595d80 f87359af f122f080 00002000 f874e129 f122f150 f122f080 f6290000
-[246916.338094] Call Trace:
-[246916.338096]  [<c02ca489>] ? unregister_netdevice+0x19/0x70
-[246916.338100]  [<f8a03156>] ? ieee80211_unregister_hw+0x36/0xd0 [mac80211]
-[246916.338112]  [<f87359af>] ? ath_detach+0xcf/0x250 [ath9k]
-[246916.338127]  [<f8735d9c>] ? ath_attach+0x26c/0x740 [ath9k]
-[246916.338139]  [<f873c33a>] ? ath_pci_probe+0x13a/0x310 [ath9k]
-[246916.338151]  [<c0233e28>] ? _raw_spin_unlock+0x68/0x80
-[246916.338158]  [<c023ab8e>] ? local_pci_probe+0xe/0x10
-[246916.338162]  [<c023b8e0>] ? pci_device_probe+0x60/0x80
-[246916.338169]  [<c029e042>] ? driver_probe_device+0x82/0x1b0
-[246916.338174]  [<c029e1f9>] ? __driver_attach+0x89/0x90
-[246916.338180]  [<c029d97b>] ? bus_for_each_dev+0x4b/0x70
-[246916.338184]  [<c023b820>] ? pci_device_remove+0x0/0x40
-[246916.338190]  [<c029ded9>] ? driver_attach+0x19/0x20
-[246916.338193]  [<c029e170>] ? __driver_attach+0x0/0x90
-[246916.338197]  [<c029d317>] ? bus_add_driver+0x1b7/0x230
-[246916.338203]  [<c023b820>] ? pci_device_remove+0x0/0x40
-[246916.338206]  [<c029e399>] ? driver_register+0x69/0x140
-[246916.338212]  [<f859d000>] ? ath9k_init+0x0/0x54 [ath9k]
-[246916.338221]  [<c023bb4e>] ? __pci_register_driver+0x4e/0x90
-[246916.338225]  [<f859d000>] ? ath9k_init+0x0/0x54 [ath9k]
-[246916.338232]  [<f859d06b>] ? ath_pci_init+0x17/0x19 [ath9k]
-[246916.338238]  [<f859d017>] ? ath9k_init+0x17/0x54 [ath9k]
-[246916.338245]  [<c017148e>] ? tracepoint_update_probe_range+0x7e/0xb0
-[246916.338249]  [<c010111a>] ? do_one_initcall+0x2a/0x170
-[246916.338252]  [<c0149f26>] ? up_read+0x16/0x30
-[246916.338256]  [<c014aa9d>] ? __blocking_notifier_call_chain+0x4d/0x60
-[246916.338265]  [<c0162b1a>] ? sys_init_module+0x8a/0x1c0
-[246916.338269]  [<c022f888>] ? trace_hardirqs_on_thunk+0xc/0x10
-[246916.338272]  [<c0103ebf>] ? sysenter_do_call+0x12/0x43
-[246916.338276] Code: 8d bc 27 00 00 00 00 55 89 e5 56 89 c6 53 83 ec 0c a1 74 27 4a c0 85 c0 0f 85 4b 01 00 00 e8 04 7d 00 00 85 c0 0f 84 c9 01 00 00 <8b> 86 18 03 00 00 85 c0 0f 84 86 01 00 00 83 e8 01 0f 85 71 01
-[246916.338328] EIP: [<c02ca274>] rollback_registered+0x24/0x220 SS:ESP 0068:f6595d1c
-[246916.338335] ---[ end trace 76357c56a75ea34e ]---
+Hello Michael!
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |   20 +++++++++++++-------
- 1 files changed, 13 insertions(+), 7 deletions(-)
+> Could you explain what commit is supposed to to after the channel swi=
+tch?
+> To me it's not clear what the difference in functionality is.
+> What do you expect to happen on the commit call after the channel cha=
+nge.
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 787c6f7..d63311a 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1622,11 +1622,11 @@ int ath_attach(u16 devid, struct ath_softc *sc)
- 	/* initialize tx/rx engine */
- 	error = ath_tx_init(sc, ATH_TXBUF);
- 	if (error != 0)
--		goto detach;
-+		goto error_txinit;
- 
- 	error = ath_rx_init(sc, ATH_RXBUF);
- 	if (error != 0)
--		goto detach;
-+		goto error_rxinit;
- 
- #if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
- 	/* Initialze h/w Rfkill */
-@@ -1634,8 +1634,9 @@ int ath_attach(u16 devid, struct ath_softc *sc)
- 		INIT_DELAYED_WORK(&sc->rf_kill.rfkill_poll, ath_rfkill_poll);
- 
- 	/* Initialize s/w rfkill */
--	if (ath_init_sw_rfkill(sc))
--		goto detach;
-+	error = ath_init_sw_rfkill(sc);
-+	if (error)
-+		goto error_rfkillinit;
- #endif
- 
- 	if (ath9k_is_world_regd(sc->sc_ah)) {
-@@ -1662,10 +1663,15 @@ int ath_attach(u16 devid, struct ath_softc *sc)
- 	/* Initialize LED control */
- 	ath_init_leds(sc);
- 
--
- 	return 0;
--detach:
--	ath_detach(sc);
-+
-+error_rfkillinit:
-+	ath_deinit_rfkill(sc);
-+error_rxinit:
-+	ath_rx_cleanup(sc);
-+error_txinit:
-+	ath_tx_cleanup(sc);
-+
- 	return error;
- }
- 
--- 
-1.5.5.1
+I think after all changes which affect the selected network a rejoin sh=
+ould be done.
 
+=46or example you have at channel 4 a AP with the SSID "test" und at ch=
+annel 11 an other AP with the same SSID, too.
+
+If you now first say set_ssid("test") and then set_channel(11), we firs=
+t join the network at channel 4 and then we switch the hardware low-lev=
+el to channel 11. So we hang now in channel 4 with the BSSID of the net=
+work in channel 4 and nothing works anymore.
+
+I think the order of the commands should not affect the result on the e=
+nd and the driver should never hang in an broken/undefined state if it =
+can be recovered.
+
+Regards
+Alina
+
+--=20
+Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
+f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
+69a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
