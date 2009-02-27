@@ -1,75 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:41019
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642AbZBXPcm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2009 10:32:42 -0500
-Message-ID: <49A41315.3030007@erley.org> (sfid-20090224_163245_282743_97436981)
-Date: Tue, 24 Feb 2009 10:32:37 -0500
-From: pat-lkml <pat-lkml@erley.org>
+Received: from mail.gmx.net ([213.165.64.20]:46482 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1760729AbZB0WCS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 17:02:18 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Fri, 27 Feb 2009 23:02:15 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090227220215.254900@gmx.net> (sfid-20090227_230235_228364_84EE0888)
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: Jouni Malinen <jouni.malinen@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Add module parameter to disable hardware crypto
-References: <20090224114201.GB21933@jm.kir.nu> <49A40320.1040902@erley.org> <20090224150710.GA1419@jm.kir.nu>
-In-Reply-To: <20090224150710.GA1419@jm.kir.nu>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH] ath9k: Fix FIF_BCN_PRBRESP_PROMISC handling
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen wrote:
-> On Tue, Feb 24, 2009 at 09:24:32AM -0500, pat-lkml wrote:
-> 
->> With this patch, and nohwcrypt=1, I get the following in hostapd (this
->> system runs as an access point) when I try to associate with a client.
->>
->> I can't say whether this is a hostapd problem or an ath9k problem yet,
->> but it's a different behavior than with nohwcrypt=0 or without this 
->> patch.  With this patch, wpa2 works perfectly, as without it, as well
->> as wep working perfectly.  
-> 
-> Are you saying that you get different behavior from hostapd when
-> comparing nohwcrypt=0 and nohwcrypt=1 (i.e., no changes in the driver
-> code, just the module parameter change)?
+So that a new created IBSS network
+doesn't break on the first scan.
 
-Yes.  
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+---
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath=
+9k/hw.c
+index 2acbb84..cedf00a 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -3696,9 +3696,18 @@ void ath9k_hw_setbssidmask(struct ath_softc *sc)
+=20
+ void ath9k_hw_write_associd(struct ath_softc *sc)
+ {
+-	REG_WRITE(sc->sc_ah, AR_BSS_ID0, get_unaligned_le32(sc->curbssid));
+-	REG_WRITE(sc->sc_ah, AR_BSS_ID1, get_unaligned_le16(sc->curbssid + 4)=
+ |
+-		  ((sc->curaid & 0x3fff) << AR_BSS_ID1_AID_S));
++	const u8 *curbssid =3D sc->curbssid;
++	u16 curaid =3D sc->curaid;
++
++	/* implement FIF_BCN_PRBRESP_PROMISC handling */
++	if(sc->sc_ah->bcn_prbresp_promisc) {
++		curbssid =3D ath_bcast_mac;
++		curaid =3D 0;
++	}
++
++	REG_WRITE(sc->sc_ah, AR_BSS_ID0, get_unaligned_le32(curbssid));
++	REG_WRITE(sc->sc_ah, AR_BSS_ID1, get_unaligned_le16(curbssid + 4) |
++		  ((curaid & 0x3fff) << AR_BSS_ID1_AID_S));
+ }
+=20
+ u64 ath9k_hw_gettsf64(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath9k/hw.h b/drivers/net/wireless/ath=
+9k/hw.h
+index 5ec416b..4d930c7 100644
+--- a/drivers/net/wireless/ath9k/hw.h
++++ b/drivers/net/wireless/ath9k/hw.h
+@@ -441,6 +441,7 @@ struct ath_hw {
+ 	u32 btactive_gpio;
+ 	u32 wlanactive_gpio;
+ 	u32 ah_flags;
++	bool bcn_prbresp_promisc;
+=20
+ 	enum nl80211_iftype opmode;
+ 	enum ath9k_power_mode power_mode;
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/a=
+th9k/main.c
+index f5f5739..c0d5336 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -2397,11 +2397,12 @@ static void ath9k_configure_filter(struct ieee8=
+0211_hw *hw,
+ 	ath9k_hw_setrxfilter(sc->sc_ah, rfilt);
+=20
+ 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
+-		if (*total_flags & FIF_BCN_PRBRESP_PROMISC) {
+-			memcpy(sc->curbssid, ath_bcast_mac, ETH_ALEN);
+-			sc->curaid =3D 0;
+-			ath9k_hw_write_associd(sc);
+-		}
++		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
++			sc->sc_ah->bcn_prbresp_promisc =3D true;
++		else
++			sc->sc_ah->bcn_prbresp_promisc =3D false;
++
++		ath9k_hw_write_associd(sc);
+ 	}
+=20
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "Set HW RX filter: 0x%x\n", sc->rx.rxfilt=
+er);
 
->> I wouldn't call this report a 'ACK/NACK' report as it has caused no
->> new problems, nor fixed any old problems.  Unfortunately I don't have 
->> a log around of the old behavior right now, for comparison.  I just 
->> wanted to report what I've found based on this patch.
-> 
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: sending 1/4 msg of 4-Way Handshake
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key frame (2/4 Pairwise)
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: invalid MIC in msg 2/4 of 4-Way Handshake
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
->> wlan0: STA 00:1f:a7:70:2d:8d WPA: EAPOL-Key timeout
-> 
-> Which client are you using? Are you sure that the passphrase/PSK is set
-> correctly? The nohwcrypt patch should make absolutely no difference for
-> this part (this is key handshake which in the initial phase is sent
-> without encrypted EAPOL-Key frames, so neither sw nor hw crypto used).
-
-I've tried 3 different clients with identical behavior:
-
-1.  Playstation 3
-2.  Dell Axim / WM6
-3.  ath5k Laptop
-
-I get that (afore mentioned invalid MIC in msg 2/4) with nohwcrypt=1, while
-nohwcrypt=0 I get 'STA Detected Michael MIC error' during stage 3 I believe. 
-
-I'll have more time after about 6:00PM EST to test this and provide the full
-logs of each client associating, along with  wpa_supplicant logs.  I'm running
-git hostapd, and I've NEVER had wpa1 work correctly with it, which is why I said
-that that report wasn't an 'ACK/NACK' just reporting that I see a difference in 
-behavior with it.  
-
-Pat
-
+--=20
+Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
+f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
+69a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
