@@ -1,62 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:28147 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbZBLR74 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2009 12:59:56 -0500
-Received: by nf-out-0910.google.com with SMTP id d21so77916nfb.21
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2009 09:59:54 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "Christoph .J Thompson" <cjsthompson@gmail.com>
-Subject: Re: Sitecom WL-608 USB WiFi
-Date: Thu, 12 Feb 2009 18:59:51 +0100
+Received: from bu3sch.de ([62.75.166.246]:36395 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757364AbZB0VVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 16:21:54 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: b43/mac80211: RX rate_idx warning triggers
+Date: Fri, 27 Feb 2009 22:20:10 +0100
 Cc: linux-wireless@vger.kernel.org
-References: <20090211211707.d5e71ddb.cjsthompson@gmail.com> <a32f33a40902120040odc535cp3ecdeef3bc9565ab@mail.gmail.com> <20090212153348.e69a7508.cjsthompson@gmail.com>
-In-Reply-To: <20090212153348.e69a7508.cjsthompson@gmail.com>
+References: <200902241514.31289.mb@bu3sch.de> <1235755182.7426.62.camel@johannes.local>
+In-Reply-To: <1235755182.7426.62.camel@johannes.local>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200902121859.51935.IvDoorn@gmail.com> (sfid-20090212_185959_797236_72420FF7)
+  charset="utf-8"
+Message-Id: <200902272220.10889.mb@bu3sch.de> (sfid-20090227_222159_217942_F5A9CDDC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 12 February 2009, Christoph .J Thompson wrote:
-> On Thu, 12 Feb 2009 09:40:22 +0100
-> Ivo Van Doorn <ivdoorn@gmail.com> wrote:
-> > As far as I know the rt2870 driver provided by Ralink contains support
-> > for Master mode, and it should even cooperate with hostapd. Not sure
-> > if anybody has tested that yet. But you could give it a try.
+On Friday 27 February 2009 18:19:42 Johannes Berg wrote:
+> On Tue, 2009-02-24 at 15:14 +0100, Michael Buesch wrote:
+> > Any idea why this could happen?
+> > 
+> > [ 2860.155778] Badness at net/mac80211/rx.c:2488
+> > [ 2860.155782] NIP: f2797fdc LR: f2784528 CTR: 00000000
+> > [ 2860.155787] REGS: eeaf3d60 TRAP: 0700   Not tainted  (2.6.29-rc5-wl-wltest)
+> > [ 2860.155791] MSR: 00029032 <EE,ME,CE,IR,DR>  CR: 22000446  XER: 20000000
+> > [ 2860.155804] TASK = eea92d00[2771] 'Xorg' THREAD: eeaf2000
+> > [ 2860.155807] GPR00: 00000001 eeaf3e10 eea92d00 edde9220 edc1a9c0 eeaf3e48 eeaf3e6c 000000ff 
+> > [ 2860.155818] GPR08: 00000002 000000ff 00000000 f2a30274 42000442 101f3d44 00000000 00000000 
+> > [ 2860.155829] GPR16: 0000029e 00000199 00000240 5168a060 00000099 c07d47cc 00000000 c09458c0 
+> > [ 2860.155839] GPR24: c09458c0 f27ade88 edde93d0 edde9220 eeaf3e48 edde93b4 edc1a9c0 edc1a9c0 
+> > [ 2860.155909] NIP [f2797fdc] __ieee80211_rx+0x8c/0x690 [mac80211]
+> > [ 2860.155921] LR [f2784528] ieee80211_tasklet_handler+0x114/0x130 [mac80211]
+> > [ 2860.155925] Call Trace:
+> > [ 2860.155929] [eeaf3e10] [edde93c0] 0xedde93c0 (unreliable)
+> > [ 2860.155942] [eeaf3e40] [f2784528] ieee80211_tasklet_handler+0x114/0x130 [mac80211]
+> > [ 2860.155954] [eeaf3ea0] [c003e85c] tasklet_action+0x80/0x100
+> > [ 2860.155961] [eeaf3ec0] [c003f240] __do_softirq+0x90/0x128
+> > [ 2860.155970] [eeaf3f00] [c0006f74] do_softirq+0x58/0x5c
+> > [ 2860.155975] [eeaf3f10] [c003f118] irq_exit+0x8c/0xb8
+> > [ 2860.155980] [eeaf3f20] [c0007028] do_IRQ+0xb0/0xec
+> > [ 2860.155988] [eeaf3f40] [c00171a8] ret_from_except+0x0/0x14
+> > [ 2860.155992] --- Exception: 501 at 0xff05c40
+> > [ 2860.155994]     LR = 0xf6838e8
+> > [ 2860.155996] Instruction dump:
+> > [ 2860.156001] 80050024 70090200 408200c8 81250020 38000001 2f890000 419c0018 800b0010 
+> > [ 2860.156011] 7f890000 4fdce042 7c000026 5400fffe <0f000000> 2f800000 40beff98 55202036 
+> > 
+> > We have the following code in b43:
+> > 
+> > 604         if (phystat0 & B43_RX_PHYST0_OFDM)
+> > 605                 status.rate_idx = b43_plcp_get_bitrate_idx_ofdm(plcp,
+> > 606                                                 phytype == B43_PHYTYPE_A);
+> > 607         else
+> > 608                 status.rate_idx = b43_plcp_get_bitrate_idx_cck(plcp);
+> > 609         if (unlikely(status.rate_idx == -1))
+> > 610                 goto drop;
+> > 
+> > So IMO the only possible way for the WARN_ON to trigger is
+> > (status->rate_idx >= sband->n_bitrates)
+> > 
+> > Why is rate_idx bigger than n_bitrates?
 > 
-> I've looked at the RaLink 1.4.0.0 driver for the rt2870usb available on RaLink's
-> website and there is only station mode support. Maybe I'm missing something and
-> there is a fork or older driver with AP support?
+> Did you ever see this again? It seems weird, since you never return any
+> value larger than the max afaict.
 
-Hmm, the driver does contain comments and some code for master mode,
-so perhaps the implementation isn't complete or indeed restricted to an
-internal or private version of the driver.
+This was the only time I saw this after we patched b43 to not pass -1 anymore.
 
-> > Otherwise
-> > you can check rt2x00.git to see if the rt2800usb driver can send out
-> > beacons correctly. So far I have only tested managed mode and that
-> > worked reasonable (if you ignore the lack of 11n AP scan results, and
-> > some startup kickups). Note that you should use the module parameter
-> > nohwcrypt for rt2800usb to disable HW crypto.
-> 
-> I think I'll have to resort to that. Sorry if the question is stupid, but
-> what version of the kernel is in rt2x00.git? Can I backport the changes
-> to 2.6.28.4 by making a diff between rt2x00.git's drivers/net/wireless
-> and 2.6.28.4's drivers/net/wireless directory?
+> Some form of corruption? Can you make 
+> that warning should print out the entire skb->cb as a hex dump so we can
+> tell what's in there, and maybe the header of the 802.11 packet as well.
+> And please submit the patch, it'll be useful :)
 
-rt2x00.git = wireless-testing + rt2800usb
-So that makes it 2.6.29-rcx.
+Yeah, lemme do that. But I can't reproduce it.
 
-It won't be possible to copy the drivers only, you need to copy mac80211
-as well, and even then you might run into problems for other API changes.
-
-You might want to grab the compat-wireless testing package, copy the drivers/net/wireless/rt2x00
-sourcecode into the compat-wireless folder (just override the existing rt2x00 code). After that it
-might be needed to update some Makefiles and config options, but that shouldn't be too hard.
-
-Ivo
-
-
+-- 
+Greetings, Michael.
