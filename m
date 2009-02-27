@@ -1,95 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55975 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752550AbZBUFYT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59529 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757016AbZB0VBc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2009 00:24:19 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/4] cfg80211: make __regulatory_hint() static
-Date: Sat, 21 Feb 2009 00:24:13 -0500
-Message-Id: <1235193856-3524-2-git-send-email-lrodriguez@atheros.com> (sfid-20090221_062428_993864_99D32875)
-In-Reply-To: <1235193856-3524-1-git-send-email-lrodriguez@atheros.com>
-References: <1235193856-3524-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 27 Feb 2009 16:01:32 -0500
+Subject: Re: [PATCH v2] mac80211: Implement commit in wireless extensions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20090226232149.51510@gmx.net> (sfid-20090227_002221_567849_E4A0B0C8)
+References: <20090226232149.51510@gmx.net>
+	 (sfid-20090227_002221_567849_E4A0B0C8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-MCKh36ya5/9pK9XbqkUb"
+Date: Fri, 27 Feb 2009 08:19:14 -0800
+Message-Id: <1235751554.7426.3.camel@johannes.local> (sfid-20090227_220136_821470_BC1F8D54)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   23 +++++++++++++++++++++--
- net/wireless/reg.h |   23 -----------------------
- 2 files changed, 21 insertions(+), 25 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e5e432d..0253d01 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1324,8 +1324,27 @@ static int ignore_request(struct wiphy *wiphy, enum reg_set_by set_by,
- 	return -EINVAL;
- }
- 
--/* Caller must hold &cfg80211_mutex */
--int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
-+/**
-+ * __regulatory_hint - hint to the wireless core a regulatory domain
-+ * @wiphy: if the hint comes from country information from an AP, this
-+ *	is required to be set to the wiphy that received the information
-+ * @alpha2: the ISO/IEC 3166 alpha2 being claimed the regulatory domain
-+ *	should be in.
-+ * @country_ie_checksum: checksum of processed country IE, set this to 0
-+ * 	if the hint did not come from a country IE
-+ * @country_ie_env: the environment the IE told us we are in, %ENVIRON_*
-+ *
-+ * The Wireless subsystem can use this function to hint to the wireless core
-+ * what it believes should be the current regulatory domain by giving it an
-+ * ISO/IEC 3166 alpha2 country code it knows its regulatory domain should be
-+ * in.
-+ *
-+ * Returns zero if all went fine, %-EALREADY if a regulatory domain had
-+ * already been set or other standard error codes.
-+ *
-+ * Caller must hold &cfg80211_mutex
-+ */
-+static int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
- 			const char *alpha2,
- 			u32 country_ie_checksum,
- 			enum environment_cap env)
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 65bfd05..e37829a 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -16,29 +16,6 @@ void regulatory_exit(void);
- int set_regdom(const struct ieee80211_regdomain *rd);
- 
- /**
-- * __regulatory_hint - hint to the wireless core a regulatory domain
-- * @wiphy: if the hint comes from country information from an AP, this
-- *	is required to be set to the wiphy that received the information
-- * @alpha2: the ISO/IEC 3166 alpha2 being claimed the regulatory domain
-- *	should be in.
-- * @country_ie_checksum: checksum of processed country IE, set this to 0
-- * 	if the hint did not come from a country IE
-- * @country_ie_env: the environment the IE told us we are in, %ENVIRON_*
-- *
-- * The Wireless subsystem can use this function to hint to the wireless core
-- * what it believes should be the current regulatory domain by giving it an
-- * ISO/IEC 3166 alpha2 country code it knows its regulatory domain should be
-- * in.
-- *
-- * Returns zero if all went fine, %-EALREADY if a regulatory domain had
-- * already been set or other standard error codes.
-- *
-- */
--extern int __regulatory_hint(struct wiphy *wiphy, enum reg_set_by set_by,
--			     const char *alpha2, u32 country_ie_checksum,
--			     enum environment_cap country_ie_env);
--
--/**
-  * regulatory_hint_found_beacon - hints a beacon was found on a channel
-  * @wiphy: the wireless device where the beacon was found on
-  * @beacon_chan: the channel on which the beacon was found on
--- 
-1.6.0.3
+--=-MCKh36ya5/9pK9XbqkUb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2009-02-27 at 00:21 +0100, Alina Friedrichsen wrote:
+> This implements commit in wireless extensions for completeness and
+> maybe it could be useful for debugging to initiate a new rejoining
+> process without changing the config.
+>=20
+> I not so familiar with nl80211 at the moment, so I want add it to
+> nl80211 in a second patch.
+>=20
+> Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+> ---
+> Version 2: Fix bad header.
+>=20
+> Hope we can find a compromise in the conception.
+
+I stand by my opinion that I don't want to have this in the code since
+there's no real reason to have it.
+
+johannes
+
+--=-MCKh36ya5/9pK9XbqkUb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJqBJ/AAoJEKVg1VMiehFY1LIP/AuxlRaXrCpJctZ70T0jqdAG
+Yce0fUtoQgpKQnP0Y9k0w1sRK80mQqyQ4Snm+L+7CsiZCPY5EO5bQmMY4DPrE3bC
+g13Qv+oZlPfMmehSYgttuD1U91r0R98pZPnYYmjHnl/GXfs4KW80eYU4cE/9r4OG
+8VakjyoF4WgLlvfMOdFRYTXz2s4FnEfsd6IthBIzXEMtWDwWbFcBBEWP2+LeTTEr
+1wAeClQSuP5111nK++/0MUvt/NtxpC9B1P4u2b8tgjHjvL2k5TgQI6V/Q4ATidM/
+XZwnUDcazsptRiixNIAc+Apf2POsC7RqzNcZA6031je7EWOYSWi2mXozxxEq4fzD
+xqXCO5hTnc5lx9Tt0DU0KPwpgWpsuE8rMY7qtT5N00ubYJqmhnTx3uIw7spsp+d+
+kRr/PZ4+F2aEWiejg4JeBKwxRXAHGNAbFQx+RU3utcDLYIOEqE0hy4AYcB+H0QDj
+US/NbCsU4aFcLQl9OYzJCT/NvKIpXKdcZBHrkKjvgRnGnyIULMVr6nGeEYVro4Pr
+lNSHjsaMoAYOfMSiqt5nkqhtmIs/IsngzPAFXUbfXINqTPxhaK332uDhMY3gsLm2
+O1lC28J67UA3lzO/wCg+AXc85sk4D9fpSV0O2uxUrp7iRvzFkn41Uz39/CNO8nnf
+VoWSFAIzH1J8PAWSB4O2
+=rpLx
+-----END PGP SIGNATURE-----
+
+--=-MCKh36ya5/9pK9XbqkUb--
 
