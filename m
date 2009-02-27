@@ -1,149 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f21.google.com ([209.85.219.21]:41538 "EHLO
-	mail-ew0-f21.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753137AbZBORVZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59561 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753623AbZB0VCb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2009 12:21:25 -0500
-Received: by ewy14 with SMTP id 14so1616308ewy.13
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2009 09:21:23 -0800 (PST)
-Message-ID: <49984F0F.3090401@gmail.com> (sfid-20090215_182140_550090_4CEB840F)
-Date: Sun, 15 Feb 2009 17:21:19 +0000
-From: Dave <kilroyd@googlemail.com>
-MIME-Version: 1.0
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-CC: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Subject: Re: [PATCH] orinoco: firmware: consistently compile out fw cache
- support if not requested
-References: <20090215100902.7895.2670.stgit@cooker.net>
-In-Reply-To: <20090215100902.7895.2670.stgit@cooker.net>
-Content-Type: text/plain; charset=utf-8
+	Fri, 27 Feb 2009 16:02:31 -0500
+Subject: Re: [PATCH v2] mac80211: Call commit() on channel setting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <20090226234307.51520@gmx.net> (sfid-20090227_004341_064030_7F5271DC)
+References: <20090226234307.51520@gmx.net>
+	 (sfid-20090227_004341_064030_7F5271DC)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Kuta6lGw2UGzeKO67g+1"
+Date: Fri, 27 Feb 2009 08:20:53 -0800
+Message-Id: <1235751653.7426.6.camel@johannes.local> (sfid-20090227_220234_402795_322B1174)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Borzenkov wrote:
-> Currently part of support for FW caching is unconditionally compiled
-> in even if it is never used. Consistently remove caching support if
-> not requested by user.
-> 
-> Signed-off-by: Andrey Borzenkov <arvidjaar@mail.ru>
 
-I don't see much point, but...
+--=-Kuta6lGw2UGzeKO67g+1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> diff --git a/drivers/net/wireless/orinoco/fw.c b/drivers/net/wireless/orinoco/fw.c
-> index 7d2292d..842834e 100644
-> --- a/drivers/net/wireless/orinoco/fw.c
-> +++ b/drivers/net/wireless/orinoco/fw.c
-> @@ -79,7 +79,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
->  	if (err)
->  		goto free;
->  
-> -	if (!priv->cached_fw) {
-> +	if (!orinoco_cached_fw_get(priv)) {
->  		err = request_firmware(&fw_entry, firmware, priv->dev);
->  
->  		if (err) {
-> @@ -89,7 +89,7 @@ orinoco_dl_firmware(struct orinoco_private *priv,
->  			goto free;
->  		}
->  	} else
-> -		fw_entry = priv->cached_fw;
-> +		fw_entry = orinoco_cached_fw_get(priv);
+On Fri, 2009-02-27 at 00:43 +0100, Alina Friedrichsen wrote:
+> This calls commit() on all logical interfaces of a physical interface, if=
+ the channel of it is changed. Before it works as it should, I must fix the=
+ joining process of STA and IBSS a little, which I will make tomorrow.
 
-Rather than fiddling with how we access the pointers, I think it would
-be better to refactor these if..elses into function calls like
+You really should remember to linewrap your descriptions.
 
-fw_entry = orinoco_get_pri_fw(...);
+> +	list_for_each_entry(sdata, &local->interfaces, list) {
+> +		ieee80211_commit(sdata);
+> +	}
 
-#if CACHING
-struct firmware *orinoco_get_pri_fw(...) {
-    priv->cached_fw;
-}
-#else
-struct firmware *orinoco_get_pri_fw(...) {
-    return request_firmware(..);
-}
-#endif
+That doesn't look like it can work? sta_commit/ibss_commit? Separate by
+interface type?
 
+johannes
 
-> --- a/drivers/net/wireless/orinoco/fw.h
-> +++ b/drivers/net/wireless/orinoco/fw.h
-> @@ -5,12 +5,52 @@
->  #ifndef _ORINOCO_FW_H_
->  #define _ORINOCO_FW_H_
->  
-> -/* Forward declations */
-> -struct orinoco_private;
-> -
+--=-Kuta6lGw2UGzeKO67g+1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-Don't remove the forward declaration, you introduce a dependency of this
-header on orinoco.h, which is otherwise unnecessary.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
->  int orinoco_download(struct orinoco_private *priv);
->  
-> -void orinoco_cache_fw(struct orinoco_private *priv, int ap);
-> -void orinoco_uncache_fw(struct orinoco_private *priv);
-> +#if defined(CONFIG_HERMES_CACHE_FW_ON_INIT) || defined(CONFIG_PM_SLEEP)
-> +static inline const struct firmware *
-> +orinoco_cached_fw_get(struct orinoco_private *priv)
-> +{
-> +	return priv->cached_fw;
-> +}
-> +
-> +static inline const struct firmware *
-> +orinoco_cached_pri_fw_get(struct orinoco_private *priv)
-> +{
-> +	return priv->cached_pri_fw;
-> +}
-> +
-> +static inline void
-> +orinoco_cached_fw_set(struct orinoco_private *priv, struct firmware *fw)
-> +{
-> +	priv->cached_fw = fw;
-> +}
-> +
-> +static inline void
-> +orinoco_cached_pri_fw_set(struct orinoco_private *priv, struct firmware *fw)
-> +{
-> +	priv->cached_pri_fw = fw;
-> +}
+iQIcBAABAgAGBQJJqBLjAAoJEKVg1VMiehFYxNcP/R11b0Oot5eLbOZddIJCtrbP
+RFz6qrJ4r6U/C4JSgK3b48hwcTDvXvtY0GoFXDOsEXZFOGElntY8lkG9LtjC1dej
+gp3VQD3TbRX2t14kfvuv1XNA6YQ1EbgUe4GfgoDSnYqSzTyopI/xARep36tcjNIM
+CQhhUOmO2VQ++aDcz7AOGozr0bWmkenLFUCuopJFL5gQ8WIig2lzwdQBt0uNOtT3
+ByeJ4N3i+cZkT9ORruLlZAZxfnIPoGYTZYISEEvz2Snou5A5OUmdmUoQN3m6AN2/
+970knvME5vW2o/xaQYuGMkUYopCuV4J5xL5msyUP9QSL4CPc4u4VlGSUT23Pwz2K
+cJPvi0MlGqYyMnGf1z0wCBsDdbdvYVdh6sz79EVtyjav/1zO3sLJ5dIf7XbLH+Yg
+ZWZBC0Bq5z6hVvEdsiL7dyOfkxx0ljv3TJBBpC4G5t/A4py79LLj9odwAUy4J/ux
+4BDrW+K2Y4a8+BSYrFEU5JXmZbYkcilF/9vDNGs7+zbm9LI7FPAnX4SrrEvEdkXL
+qsGk78eUpIZWunuyJ6h7EBnBcfkGa34v+DuHoGLr6EVA7CCXJRIwAMIoR80L26Ex
+gMWdJcCXw7sIep4+HfyLYG2o0rNe6bWPV+D/URv0NBymdI3IcNKqHunwtn8rKUL+
+ptm5b0gco7S1keRmqz6W
+=Co7Y
+-----END PGP SIGNATURE-----
 
-Ick. Only fw.c needs the _get calls so they should not be in the header.
-Because the _set makes the other half of the pair I would argue they
-don't want to be there either. I'd suggest adding orinoco_fw_init
-instead, which cleared both elements.
+--=-Kuta6lGw2UGzeKO67g+1--
 
-> +extern void orinoco_cache_fw(struct orinoco_private *priv, int ap);
-> +extern void orinoco_uncache_fw(struct orinoco_private *priv);
-
-Why do we want to make the extern explicit?
-
-> diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-> index f953059..2afab2a 100644
-> --- a/drivers/net/wireless/orinoco/main.c
-> +++ b/drivers/net/wireless/orinoco/main.c
-> @@ -89,6 +89,8 @@
->  #include <linux/ieee80211.h>
->  #include <net/iw_handler.h>
->  
-> +#include "orinoco.h"
-> +
->  #include "hermes_rid.h"
->  #include "hermes_dld.h"
->  #include "hw.h"
-> @@ -98,8 +100,6 @@
->  #include "wext.h"
->  #include "main.h"
->  
-> -#include "orinoco.h"
-> -
-
-Suggest you don't move the inclusion forward. I don't know if it's just
-me, but I always keep the header which declares what the compilation
-unit exports as the final include. In this case that's orinoco.h.
-
-If you really want to, do it in a separate patch so it isn't hidden away.
-
-
-
-
-Dave.
