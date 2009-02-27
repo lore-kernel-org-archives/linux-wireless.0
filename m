@@ -1,82 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c1.cosetrain.com ([213.239.209.213]:49142 "EHLO
-	mail.cosetrain.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753126AbZBHTrG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2009 14:47:06 -0500
-Message-ID: <498F36B7.40806@cosetrain.com> (sfid-20090208_204711_605640_93656C49)
-Date: Sun, 08 Feb 2009 20:47:03 +0100
-From: Florian Sesser <flomaillist@cosetrain.com>
+Received: from mail.gmx.net ([213.165.64.20]:51359 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754879AbZB0VnT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 16:43:19 -0500
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Fri, 27 Feb 2009 22:43:17 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1235768725.7426.83.camel@johannes.local>
+Message-ID: <20090227214317.254870@gmx.net> (sfid-20090227_224322_694535_8164DDEF)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Cc: Benedikt Elser <elser@in.tum.de>
-Subject: [RFC/RFT v2] mac80211 / o11s mesh: Modularize Path Selection Protocol
-Content-Type: text/plain; charset=ISO-8859-1
+References: <20090227184314.42290@gmx.net>	
+ (sfid-20090227_194348_299848_A96EDA18)
+ <1235768725.7426.83.camel@johannes.local>
+Subject: Re: [PATCH] mac80211: Replacement for: Implement commit in	wireless
+ extensions
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all!
+Hello Johannes!
 
-Here is my second version of my abstraction modularizing the o80211s
-mesh path selection protocol.
+> I don't really see a need for that, it's only called in what, two
+> places? And it makes things interdependent.
 
-Sorry for taking so long, thanks for your comments!
+One centralized function is in
+every case easier to maintain.
+=46or example if you add mesh mode to it.
 
-I once again welcome your suggestions. Please have a look at my
-mesh_path_selection_ops: Do you think they will suffice? It seems to me
-that they do for mesh_hwmp, but I also might have overseen something
-trivial here?
+> At _least_ put it into a
+> more appropriate file like wext.c
 
-Where are the o11s guys BTW?
+This function is config interface independent,
+so wext.c is not the right place for it.
 
-Changes from v1:
+> and open-code it in cfg.c
 
- * Incorporated suggestions from Rami and Johannes, especially:
-   * checkpatch.pl (sorry 'bout that)
-   * Moved two or so unnecessary comments to commit msgs
-   * removed two unnecessary EXPORT_SYMBOLs
-     (mesh_..._algo_find and mesh_..._algo_set)
-   * removed mesh_..._find_by_name, use only find(u32 id)
-     (that only breaks loading missing modules from disk,
-     but that isn't really needed.)
-   * keep mesh_hwmp built into mac80211, not as seperate module.
-     registers itself on load.
-   * wrote a Kconfig for my mesh_pptest skeleton module (although
-     I don't think anybody wants this in vanilla?! I merely included
-     it for reference...)
+This would be a better place for it
+if it should be added to
+mac80211_config_ops. If not I think
+main.c is the best place for it.
 
- * Renamed mesh_path_sel_algo_(un)register to
-    ieee80211_mesh_path_sel_proto_(un)register
+Regards
+Alina
 
- * Moved mesh_path_timer/ieee80211_mesh_path_timer from mesh.c
-   to mesh_pathtbl.c
-
- * Removed the typedefs for the function pointers in mesh_path_sel_ops
-   and renamed them to avoid 'hungarian notation'
-
-What I didn't do:
-
- * Change seven or so different calls via function pointers to
-   static inlines. Johannes pointed me to rate_control, but the code
-   there also isn't explicitly elegant IMHO - half a page of empty
-   static inlines for the case of an algorithm being *not* used.
-   Of course that gets compiled out, but the functions here aren't
-   called very often, and in the case of HWMP, which heavily floods and
-   by the draft standard is expected to work for mesh networks of up to
-   32 nodes, the performance benefit is negligible IMHO. [The block
-   device IO scheduler, where I took most of my inspiration from, also
-   does not do that - and the functions there do get called a lot.]
-
-What I don't know if I should do:
-
- * The names of the six extra EXPORT_SYMBOLS that are needed by mesh
-   path selection algorithms (mainly form mesh_pathtbl.c and mesh.c)
-   begin with mesh_ ... not ieee80211_... . Should I rename them?
-
-
-Greetings!
-
-Florian
-
-
-
+--=20
+Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
+f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
+69a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
