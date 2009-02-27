@@ -1,65 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56087 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752851AbZBTQ5b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 11:57:31 -0500
-Subject: Re: [PATCH v4 00/15] cfg80211: add a workqueue for regulatory
-	processing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890902191640u107ff0fdse92367fccc975dba@mail.gmail.com> (sfid-20090220_014115_061983_954B3E1A)
-References: <1234999545-14357-1-git-send-email-lrodriguez@atheros.com>
-	 <1235050171.4023.64.camel@johannes.local>
-	 <43e72e890902191640u107ff0fdse92367fccc975dba@mail.gmail.com>
-	 (sfid-20090220_014115_061983_954B3E1A)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Ds3y/xIPbsSxaJh+xP7X"
-Date: Fri, 20 Feb 2009 17:57:23 +0100
-Message-Id: <1235149043.4023.66.camel@johannes.local> (sfid-20090220_175739_970074_71A77760)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:57420 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753942AbZB0EIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2009 23:08:49 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2009 20:08:48 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18855.26210.618690.891378@gargle.gargle.HOWL> (sfid-20090227_050902_022335_FE798F0F)
+Date: Fri, 27 Feb 2009 09:34:50 +0530
+To: <linux-wireless@vger.kernel.org>
+Subject: IBSS issues
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I am seeing some strange behavior in IBSS mode with current wireless-testing.
 
---=-Ds3y/xIPbsSxaJh+xP7X
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Scenario:
 
-On Thu, 2009-02-19 at 16:40 -0800, Luis R. Rodriguez wrote:
+ * Create a new cell using ath9k.
+ * Wait for a while to do a background merge scan run.
+ * Join the cell from another peer ( say, using ath5k ).
+ * Station dump in peer1 1 doesn't show the new peer right away.
+ * The merge runs are not supposed to happen if a cell has more than one peer.
+   It didn't happen before, but it keeps running repeatedly now.
+ * Ping from peer2 to peer1 doesn't go through - peer1 to peer2 works though.
 
-> > I don't know why you insist on having a wrapper for
-> > wiphy->wiphy_idx but it's ok :)
->=20
-> Heh its just because wiphy->wiphy_idx does not exist, the drv has so
-> you must go to the container and then use that. If we move the idx to
-> the wiphy then I'm good to use wiphy->wiphy_idx. Want to do that?
+Joining an existing IBSS network using ath9k works fine, no issues here.
+Also, if the second peer joins the cell quickly, before the scan run, things are okay.
 
-Ah. Not sure, but I don't think we need to expose that to drivers.
+I identified one bug, where the timestamp in the beacon template was not updated.
+Patch below. But it doesn't fix the issue.
 
-johannes
+Any clues ?
 
---=-Ds3y/xIPbsSxaJh+xP7X
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+Sujith
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+In IBSS mode, the beacon timestamp has to be filled with the
+BSS's timestamp when joining, and set to zero when creating
+a new BSS.
 
-iQIcBAABAgAGBQJJnuDwAAoJEKVg1VMiehFYKtAP/irX8eMU7Lc3zFse7vTz7VAZ
-4yCryBPScFMDZVnTZJ/9+hownNEr5YTf4nlLCC61o7JnpKagUxH0sojfIvhB8vtO
-2TsHspidB+l9ybIAq81pgd1mAPtXHJf5OPMG13d5Pn73jbzvQh6wbJ3LiHemq/hg
-+9C9EecGvSXwp41/xcN82eqFq97tlfhV+gYpiFW/hq9ceMfjjjvYZtTojo0BfQPl
-5qvCThuQX/sj+pMKjNCJI1BYgrsJxrsqu//uppstUUn7dJ+S5iITK17g9XGjvFpP
-jFO1HsDUc3wuQqiWuc0KTBeD0LhqIfxFC0NyfC394zwaEThM0iv6R3j1zt0yasBw
-PjOdsdw9GAlHiWjZy8lCrUY8BTh63WGI4AZT5AXQz4SLOrKtOMhS7ra/KImZJnAp
-rJFUhqKtCbV+U34jePNPFC7dE1EMzzMzp+RqQ/VpwiV4Cg4xmzgAwayv3KVuXOyq
-Z2MYSPrvsEMcnh0oqfNsTj/0dyOHXg4+5f07ux1q9Q5klh7zSUXouvWUfA/8zQ3F
-LKrHhVdcGei6wbqZ0wSlyTC8+C+BMoRjL+2236wpn4AmzJtxIfAZL1n+wL6qK8S9
-i3AJDRj6w43eSBQ0JdOWSHvWWXQwCnWOzxm8yJQ5eJ6sRg54YffMeAividwghU11
-ZVBkdYrV7LhV+IsULg4M
-=XX6P
------END PGP SIGNATURE-----
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 
---=-Ds3y/xIPbsSxaJh+xP7X--
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index a96ce9d..f4becc1 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -64,7 +64,7 @@ static int __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				     const int freq,
+ 				     const size_t supp_rates_len,
+ 				     const u8 *supp_rates,
+-				     const u16 capability)
++				     const u16 capability, u64 tsf)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -127,6 +127,7 @@ static int __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
+ 	mgmt->u.beacon.beacon_int =
+ 		cpu_to_le16(local->hw.conf.beacon_int);
++	mgmt->u.beacon.timestamp = cpu_to_le64(tsf);
+ 	mgmt->u.beacon.capab_info = cpu_to_le16(capability);
+ 
+ 	pos = skb_put(skb, 2 + ifibss->ssid_len);
+@@ -199,7 +200,8 @@ static int ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 					 bss->cbss.beacon_interval,
+ 					 bss->cbss.channel->center_freq,
+ 					 bss->supp_rates_len, bss->supp_rates,
+-					 bss->cbss.capability);
++					 bss->cbss.capability,
++					 bss->cbss.tsf);
+ }
+ 
+ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+@@ -502,7 +504,7 @@ static int ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 					 bssid, local->hw.conf.beacon_int,
+ 					 local->hw.conf.channel->center_freq,
+ 					 sband->n_bitrates, supp_rates,
+-					 capability);
++					 capability, 0);
+ }
+ 
+ static int ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
