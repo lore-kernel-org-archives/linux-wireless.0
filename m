@@ -1,424 +1,270 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:49005 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805AbZBTGEz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39409 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756398AbZB0Ukm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 01:04:55 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	marcel@holtmann.org, kalle.valo@nokia.com, kyle@mcmartin.ca
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 3/5] cfg80211: Add AP beacon regulatory hints
-Date: Fri, 20 Feb 2009 01:04:32 -0500
-Message-Id: <1235109874-3966-4-git-send-email-lrodriguez@atheros.com> (sfid-20090220_070501_871345_3FA64C5A)
-In-Reply-To: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
-References: <1235109874-3966-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 27 Feb 2009 15:40:42 -0500
+Date: Fri, 27 Feb 2009 15:40:02 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-02-23
+Message-ID: <20090227204002.GI3687@tuxdriver.com> (sfid-20090227_214054_886680_FA4E036D)
+References: <20090223192659.GB3553@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090223192659.GB3553@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When devices are world roaming they cannot beacon or do active scan
-on 5 GHz or on channels 12, 13 and 14 on the 2 GHz band. Although
-we have a good regulatory API some cards may _always_ world roam, this
-is also true when a system does not have CRDA present. Devices doing world
-roaming can still passive scan, if they find a beacon from an AP on
-one of the world roaming frequencies we make the assumption we can do
-the same and we also remove the passive scan requirement.
+Consider this withdrawn.  I'm sending a new request momentarily.
 
-This adds support for providing beacon regulatory hints based on scans.
-This works for devices that do either hardware or software scanning.
-If a channel has not yet been marked as having had a beacon present
-on it we queue the beacon hint processing into the workqueue.
+John
 
-All wireless devices will benefit from beacon regulatory hints from
-any wireless device on a system including new devices connected to
-the system at a later time.
+On Mon, Feb 23, 2009 at 02:26:59PM -0500, John W. Linville wrote:
+> Dave,
+> 
+> Here is a big batch of changes intended for 2.6.30.  They run the usual
+> gamut of wireless driver and mac80211 changes...
+> 
+> There is an ugly one from me.  It is a kluge but it prevents a crash on
+> my Lenovo T400.  I bisected the crash down to "mac80211: use cfg80211s
+> BSS infrastructure", which is already in net-next-2.6.  Still, if it is
+> too ugly then let me know and I'll reformulate without it.
+> 
+> Please let me know if there are problems!
+> 
+> Thanks,
+> 
+> John
+> 
+> ---
+> 
+> Individual patches are available here:
+> 
+> 	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
+> 
+> ---
+> 
+> The following changes since commit ce16c5337ab0d165f95c88aa857207efd7c01139:
+>   Eric W. Biederman (1):
+>         netns: Remove net_alive
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+> 
+> Bing Zhao (1):
+>       libertas: fix power save issue in libertas_sdio module
+> 
+> Bob Copeland (10):
+>       ath9k: remove write-only current_rd_inuse
+>       ath9k: save a few calls to ath9k_regd_get_eepromRD
+>       ath9k: convert isWwrSKU macro into C code
+>       ath9k: remove ath9k_regd_get_rd()
+>       ath9k: remove prototype for ath9k_regd_get_current_country
+>       ath9k: move common regulatory code out of if() branches
+>       ath5k: don't mask off interrupt bits
+>       ath5k: use spin_lock_irqsave for beacon lock
+>       ath5k: move beacon processing to a tasklet
+>       ath5k: compute rts/cts duration after computing full pktlen
+> 
+> Dan Williams (4):
+>       hostap: convert usage of net/ieee80211.h to linux/ieee80211.h
+>       make net/ieee80211.h private to ipw2x00
+>       cfg80211: age scan results on resume
+>       ipw2x00: age scan results on resume
+> 
+> Helmut Schaa (1):
+>       iwlagn: clean up error path in iwl_pci_probe
+> 
+> Ivo van Doorn (4):
+>       rt2x00: uncomment get_tsf
+>       rt2x00: Remove check for rf word 0
+>       rt2x00: Add various new USB IDs for rt73usb
+>       rt2x00: Fix RF offset
+> 
+> Jiri Slaby (1):
+>       ipw2200, fix ipw io functions
+> 
+> Johannes Berg (10):
+>       mac80211: disallow moving netns
+>       mac80211: fix aggregation for hardware with ampdu queues
+>       mac80211: split IBSS/managed code
+>       genetlink: introduce pre/post methods
+>       nl80211: lock rtnl around all operations
+>       cfg80211/mac80211: fill qual.qual value/adjust max_qual.qual
+>       mac80211: add missing kernel-doc
+>       nl80211: remove admin requirement from station get
+>       cfg80211: clean up signal type
+>       mac80211/cfg80211: move iwrange handler to cfg80211
+> 
+> John W. Linville (2):
+>       airo: correct improper initialization of local variable
+>       iwlagn: default to MAX_UCODE_BEACON_INTERVAL in iwl_adjust_beacon_interval
+> 
+> Jouni Malinen (2):
+>       nl80211: Optional IEs into scan request
+>       nl80211: Provide access to STA TX/RX packet counters
+> 
+> Randy Dunlap (1):
+>       wireless: fix for CONFIG_NL80211=n
+> 
+> Reinette Chatre (2):
+>       iwlwifi: use singlethread workqueue
+>       iwlwifi: Fix and rework Kconfig file
+> 
+> Roel Kluin (3):
+>       wavelan: Test arraysize before an element of the array.
+>       p54: misplaced parentheses
+>       b43: Fix LO calibration txctl reg value
+> 
+> Senthil Balasubramanian (1):
+>       ath9k: Add open loop control support
+> 
+> Sujith (16):
+>       ath9k: Store the correct max TX power level
+>       ath9k: Fix rd_ext EEPROM capability for AR9285
+>       ath9k: Enable Fractional N mode
+>       ath9k: Enable TSF Out of Range Interrupt
+>       ath9k: Initialize AGC calibration properly
+>       ath9k: Fix bug in disabling MIB counters
+>       ath9k: Fix incorrect noise floor reading for 4k EEPROM
+>       ath9k: Decrease minimum NF threshold
+>       mac80211: Extend the rate control API with an update callback
+>       ath9k: Program the RTC registers correctly
+>       ath9k: Fix HW wait timeout
+>       ath9k: Fix antenna assignment bug in TX status processing
+>       ath9k: Initialize channel change time
+>       ath9k: Remove a few unused capability macros
+>       ath9k: Remove ath_txq_depth and get the queue depth directly
+>       ath9k: Use beacon interval directly
+> 
+> Vasanthakumar Thiagarajan (2):
+>       mac80211: Make sure non-HT connection when IEEE80211_STA_TKIP_WEP_USED is set
+>       ath9k: Fix PTK/GTK handshake timeout
+> 
+> Wu, Fengguang (1):
+>       iwlwifi: report correct and detailed values about requested txpower
+> 
+>  drivers/net/wireless/airo.c                        |    3 +-
+>  drivers/net/wireless/ath5k/base.c                  |   84 +-
+>  drivers/net/wireless/ath5k/base.h                  |    1 +
+>  drivers/net/wireless/ath9k/ani.c                   |    7 +-
+>  drivers/net/wireless/ath9k/beacon.c                |    3 +
+>  drivers/net/wireless/ath9k/calib.c                 |   66 +-
+>  drivers/net/wireless/ath9k/calib.h                 |    2 +-
+>  drivers/net/wireless/ath9k/eeprom.c                |  234 +++-
+>  drivers/net/wireless/ath9k/eeprom.h                |   34 +-
+>  drivers/net/wireless/ath9k/hw.c                    |  106 +-
+>  drivers/net/wireless/ath9k/hw.h                    |   20 +-
+>  drivers/net/wireless/ath9k/mac.c                   |   30 +-
+>  drivers/net/wireless/ath9k/main.c                  |   36 +-
+>  drivers/net/wireless/ath9k/pci.c                   |    3 +-
+>  drivers/net/wireless/ath9k/phy.c                   |   19 +-
+>  drivers/net/wireless/ath9k/phy.h                   |   29 +
+>  drivers/net/wireless/ath9k/rc.c                    |    7 +-
+>  drivers/net/wireless/ath9k/recv.c                  |    1 -
+>  drivers/net/wireless/ath9k/reg.h                   |   12 +-
+>  drivers/net/wireless/ath9k/regd.c                  |   28 +-
+>  drivers/net/wireless/ath9k/regd.h                  |    9 -
+>  drivers/net/wireless/ath9k/xmit.c                  |   28 +-
+>  drivers/net/wireless/b43/lo.c                      |    2 +-
+>  drivers/net/wireless/hostap/hostap.h               |    2 +-
+>  drivers/net/wireless/hostap/hostap_80211.h         |    2 +-
+>  drivers/net/wireless/hostap/hostap_80211_rx.c      |   88 +-
+>  drivers/net/wireless/hostap/hostap_80211_tx.c      |   51 +-
+>  drivers/net/wireless/hostap/hostap_ap.c            |  138 +-
+>  drivers/net/wireless/hostap/hostap_ap.h            |    6 +-
+>  drivers/net/wireless/hostap/hostap_hw.c            |   24 +-
+>  drivers/net/wireless/hostap/hostap_info.c          |    1 +
+>  drivers/net/wireless/hostap/hostap_ioctl.c         |    1 +
+>  drivers/net/wireless/hostap/hostap_main.c          |   38 +-
+>  drivers/net/wireless/ipw2x00/Kconfig               |    2 +-
+>  .../net/wireless/ipw2x00}/ieee80211.h              |    3 +
+>  drivers/net/wireless/ipw2x00/ipw2100.c             |   12 +-
+>  drivers/net/wireless/ipw2x00/ipw2100.h             |    8 +-
+>  drivers/net/wireless/ipw2x00/ipw2200.c             |  116 +-
+>  drivers/net/wireless/ipw2x00/ipw2200.h             |    7 +-
+>  drivers/net/wireless/ipw2x00/libipw_geo.c          |    2 +-
+>  drivers/net/wireless/ipw2x00/libipw_module.c       |   17 +-
+>  drivers/net/wireless/ipw2x00/libipw_rx.c           |    5 +-
+>  drivers/net/wireless/ipw2x00/libipw_tx.c           |    2 +-
+>  drivers/net/wireless/ipw2x00/libipw_wx.c           |   27 +-
+>  drivers/net/wireless/iwlwifi/Kconfig               |   56 +-
+>  drivers/net/wireless/iwlwifi/Makefile              |    4 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn.c             |   13 +-
+>  drivers/net/wireless/iwlwifi/iwl-core.c            |   10 +-
+>  drivers/net/wireless/iwlwifi/iwl-core.h            |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-dev.h             |    4 +-
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c        |    2 +-
+>  drivers/net/wireless/libertas/defs.h               |    1 +
+>  drivers/net/wireless/libertas/if_sdio.c            |    6 +
+>  drivers/net/wireless/p54/p54common.c               |    4 +-
+>  drivers/net/wireless/rt2x00/rt2400pci.c            |    3 -
+>  drivers/net/wireless/rt2x00/rt2400pci.h            |    4 +-
+>  drivers/net/wireless/rt2x00/rt2500pci.c            |    3 -
+>  drivers/net/wireless/rt2x00/rt2500pci.h            |    4 +-
+>  drivers/net/wireless/rt2x00/rt2500usb.c            |    3 -
+>  drivers/net/wireless/rt2x00/rt2500usb.h            |    4 +-
+>  drivers/net/wireless/rt2x00/rt2x00debug.c          |   10 +-
+>  drivers/net/wireless/rt2x00/rt61pci.c              |    3 -
+>  drivers/net/wireless/rt2x00/rt61pci.h              |    4 +-
+>  drivers/net/wireless/rt2x00/rt73usb.c              |   19 +-
+>  drivers/net/wireless/rt2x00/rt73usb.h              |    4 +-
+>  drivers/net/wireless/wavelan.c                     |    3 +-
+>  include/linux/nl80211.h                            |    5 +
+>  include/net/cfg80211.h                             |   23 +-
+>  include/net/genetlink.h                            |   47 +-
+>  include/net/mac80211.h                             |   18 +-
+>  include/net/wireless.h                             |    3 +
+>  net/mac80211/Makefile                              |    1 +
+>  net/mac80211/agg-rx.c                              |    6 +-
+>  net/mac80211/agg-tx.c                              |  191 ++-
+>  net/mac80211/cfg.c                                 |   49 +-
+>  net/mac80211/debugfs_netdev.c                      |   48 +-
+>  net/mac80211/ht.c                                  |   19 +-
+>  net/mac80211/ibss.c                                |  888 +++++++++++
+>  net/mac80211/ieee80211_i.h                         |  138 ++-
+>  net/mac80211/iface.c                               |   77 +-
+>  net/mac80211/key.c                                 |    2 +-
+>  net/mac80211/main.c                                |   24 +-
+>  net/mac80211/mlme.c                                | 1648 +++++---------------
+>  net/mac80211/rate.h                                |   12 +
+>  net/mac80211/rx.c                                  |   37 +-
+>  net/mac80211/scan.c                                |   57 +-
+>  net/mac80211/spectmgmt.c                           |   26 +-
+>  net/mac80211/sta_info.c                            |   15 +-
+>  net/mac80211/sta_info.h                            |    5 +-
+>  net/mac80211/tx.c                                  |   29 +-
+>  net/mac80211/util.c                                |  254 +++-
+>  net/mac80211/wext.c                                |  262 ++--
+>  net/mac80211/wme.c                                 |  161 +--
+>  net/mac80211/wme.h                                 |    6 -
+>  net/netlink/genetlink.c                            |   19 +-
+>  net/wireless/core.h                                |    3 +
+>  net/wireless/nl80211.c                             |  124 +-
+>  net/wireless/nl80211.h                             |    4 +
+>  net/wireless/scan.c                                |   61 +-
+>  net/wireless/sysfs.c                               |    7 +
+>  net/wireless/wext-compat.c                         |   97 ++
+>  101 files changed, 3315 insertions(+), 2533 deletions(-)
+>  rename {include/net => drivers/net/wireless/ipw2x00}/ieee80211.h (99%)
+>  create mode 100644 net/mac80211/ibss.c
+> 
+> Omnibus patch is available here:
+> 
+> 	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2009-02-23.patch.bz2
+> 
+> -- 
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/wireless.h |   21 +++++
- net/wireless/core.c    |    5 +-
- net/wireless/reg.c     |  226 +++++++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/scan.c    |    3 +
- 4 files changed, 252 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index 1f4707d..13f7aef 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -69,6 +69,9 @@ enum ieee80211_channel_flags {
-  * @band: band this channel belongs to.
-  * @max_antenna_gain: maximum antenna gain in dBi
-  * @max_power: maximum transmission power (in dBm)
-+ * @beacon_found: helper to regulatory code to indicate when a beacon
-+ *	has been found on this channel. Use regulatory_hint_found_beacon()
-+ *	to enable this, this is is useful only on 5 GHz band.
-  * @orig_mag: internal use
-  * @orig_mpwr: internal use
-  */
-@@ -80,6 +83,7 @@ struct ieee80211_channel {
- 	u32 flags;
- 	int max_antenna_gain;
- 	int max_power;
-+	bool beacon_found;
- 	u32 orig_flags;
- 	int orig_mag, orig_mpwr;
- };
-@@ -425,6 +429,23 @@ extern int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
- extern void regulatory_hint_11d(struct wiphy *wiphy,
- 				u8 *country_ie,
- 				u8 country_ie_len);
-+/**
-+ * regulatory_hint_found_beacon - hints a beacon was found on a channel
-+ * @wiphy: the wireless device where the beacon was found on
-+ * @beacon_chan: the channel on which the beacon was found on
-+ * @gfp: context flags
-+ *
-+ * This informs the wireless core that a beacon from an AP was found on
-+ * the channel provided. This allows the wireless core to make educated
-+ * guesses on regulatory to help with world roaming. This is only used for
-+ * world roaming -- when we do not know our current location. This is
-+ * only useful on channels 12, 13 and 14 on the 2 GHz band as all other
-+ * channels are already enabled by the world regulatory domain (channels
-+ * 1-11); and on non-radar 5 GHz channels.
-+ */
-+extern int regulatory_hint_found_beacon(struct wiphy *wiphy,
-+					struct ieee80211_channel *beacon_chan,
-+					gfp_t gfp);
- 
- /**
-  * wiphy_apply_custom_regulatory - apply a custom driver regulatory domain
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index b1a354b..dd7f222 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -32,8 +32,9 @@ MODULE_DESCRIPTION("wireless configuration support");
- LIST_HEAD(cfg80211_drv_list);
- 
- /*
-- * This is used to protect the cfg80211_drv_list, cfg80211_regdomain, and
-- * the last reguluatory request receipt in regd.c
-+ * This is used to protect the cfg80211_drv_list, cfg80211_regdomain,
-+ * country_ie_regdomain, the reg_beacon_list and the the last regulatory
-+ * request receipt (last_request).
-  */
- DEFINE_MUTEX(cfg80211_mutex);
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 8e86505..67a193a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -68,9 +68,22 @@ const struct ieee80211_regdomain *cfg80211_regdomain;
-  */
- static const struct ieee80211_regdomain *country_ie_regdomain;
- 
-+/* Used to queue up regulatory hints */
- static LIST_HEAD(reg_requests_list);
- static spinlock_t reg_requests_lock;
- 
-+/* Used to queue up beacon hints for review */
-+static LIST_HEAD(reg_pending_beacons);
-+static spinlock_t reg_pending_beacons_lock;
-+
-+/* Used to keep track of processed beacon hints */
-+static LIST_HEAD(reg_beacon_list);
-+
-+struct reg_beacon {
-+	struct list_head list;
-+	struct ieee80211_channel chan;
-+};
-+
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
- 	.n_reg_rules = 3,
-@@ -1011,16 +1024,120 @@ static void update_all_wiphy_regulatory(enum reg_set_by setby)
- 		wiphy_update_regulatory(&drv->wiphy, setby);
- }
- 
-+static void handle_reg_beacon(struct wiphy *wiphy,
-+			      unsigned int chan_idx,
-+			      struct reg_beacon *reg_beacon)
-+{
-+#ifdef CONFIG_CFG80211_REG_DEBUG
-+#define REG_DEBUG_BEACON_FLAG(desc) \
-+	printk(KERN_DEBUG "cfg80211: Enabling " desc " on " \
-+		"frequency: %d MHz (Ch %d) on %s\n", \
-+		reg_beacon->chan.center_freq, \
-+		ieee80211_frequency_to_channel(reg_beacon->chan.center_freq), \
-+		wiphy_name(wiphy));
-+#else
-+#define REG_DEBUG_BEACON_FLAG(desc) do {} while (0)
-+#endif
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *chan;
-+
-+	assert_cfg80211_lock();
-+
-+	sband = wiphy->bands[reg_beacon->chan.band];
-+	chan = &sband->channels[chan_idx];
-+
-+	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
-+		return;
-+
-+	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
-+		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
-+		REG_DEBUG_BEACON_FLAG("active scanning");
-+	}
-+
-+	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
-+		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
-+		REG_DEBUG_BEACON_FLAG("beaconing");
-+	}
-+
-+	chan->beacon_found = true;
-+#undef REG_DEBUG_BEACON_FLAG
-+}
-+
-+/*
-+ * Called when a scan on a wiphy finds a beacon on
-+ * new channel
-+ */
-+static void wiphy_update_new_beacon(struct wiphy *wiphy,
-+				    struct reg_beacon *reg_beacon)
-+{
-+	unsigned int i;
-+	struct ieee80211_supported_band *sband;
-+
-+	assert_cfg80211_lock();
-+
-+	if (!wiphy->bands[reg_beacon->chan.band])
-+		return;
-+
-+	sband = wiphy->bands[reg_beacon->chan.band];
-+
-+	for (i = 0; i < sband->n_channels; i++)
-+		handle_reg_beacon(wiphy, i, reg_beacon);
-+}
-+
-+/*
-+ * Called upon reg changes or a new wiphy is added
-+ */
-+static void wiphy_update_beacon_reg(struct wiphy *wiphy)
-+{
-+	unsigned int i;
-+	struct ieee80211_supported_band *sband;
-+	struct reg_beacon *reg_beacon;
-+
-+	assert_cfg80211_lock();
-+
-+	if (list_empty(&reg_beacon_list))
-+		return;
-+
-+	list_for_each_entry(reg_beacon, &reg_beacon_list, list) {
-+		if (!wiphy->bands[reg_beacon->chan.band])
-+			continue;
-+		sband = wiphy->bands[reg_beacon->chan.band];
-+		for (i = 0; i < sband->n_channels; i++)
-+			handle_reg_beacon(wiphy, i, reg_beacon);
-+	}
-+}
-+
-+static bool reg_is_world_roaming(struct wiphy *wiphy)
-+{
-+	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
-+	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
-+		return true;
-+	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
-+	    wiphy->custom_regulatory)
-+		return true;
-+	return false;
-+}
-+
-+/* Reap the advantages of previously found beacons */
-+static void reg_process_beacons(struct wiphy *wiphy)
-+{
-+	if (!reg_is_world_roaming(wiphy))
-+		return;
-+	wiphy_update_beacon_reg(wiphy);
-+}
-+
- void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
- {
- 	enum ieee80211_band band;
- 
- 	if (ignore_reg_update(wiphy, setby))
--		return;
-+		goto out;
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (wiphy->bands[band])
- 			handle_band(wiphy, band);
- 	}
-+out:
-+	reg_process_beacons(wiphy);
- 	if (wiphy->reg_notifier)
- 		wiphy->reg_notifier(wiphy, last_request);
- }
-@@ -1314,6 +1431,7 @@ out:
- 	return r;
- }
- 
-+/* Processes regulatory hints, this is all the REGDOM_SET_BY_* */
- static void reg_process_pending_hints(void)
- 	{
- 	struct regulatory_request *reg_request;
-@@ -1344,9 +1462,44 @@ static void reg_process_pending_hints(void)
- 	spin_unlock(&reg_requests_lock);
- }
- 
-+/* Processes beacon hints -- this has nothing to do with country IEs */
-+static void reg_process_pending_beacon_hints(void)
-+{
-+	struct cfg80211_registered_device *drv;
-+	struct reg_beacon *pending_beacon, *tmp;
-+
-+	mutex_lock(&cfg80211_mutex);
-+
-+	/* This goes through the _pending_ beacon list */
-+	spin_lock_bh(&reg_pending_beacons_lock);
-+
-+	if (list_empty(&reg_pending_beacons)) {
-+		spin_unlock_bh(&reg_pending_beacons_lock);
-+		goto out;
-+	}
-+
-+	list_for_each_entry_safe(pending_beacon, tmp,
-+				 &reg_pending_beacons, list) {
-+
-+		list_del_init(&pending_beacon->list);
-+
-+		/* Applies the beacon hint to current wiphys */
-+		list_for_each_entry(drv, &cfg80211_drv_list, list)
-+			wiphy_update_new_beacon(&drv->wiphy, pending_beacon);
-+
-+		/* Remembers the beacon hint for new wiphys or reg changes */
-+		list_add_tail(&pending_beacon->list, &reg_beacon_list);
-+	}
-+
-+	spin_unlock_bh(&reg_pending_beacons_lock);
-+out:
-+	mutex_unlock(&cfg80211_mutex);
-+}
-+
- static void reg_todo(struct work_struct *work)
- {
- 	reg_process_pending_hints();
-+	reg_process_pending_beacon_hints();
- }
- 
- static DECLARE_WORK(reg_work, reg_todo);
-@@ -1587,6 +1740,57 @@ out:
- }
- EXPORT_SYMBOL(regulatory_hint_11d);
- 
-+static bool freq_is_chan_12_13_14(u16 freq)
-+{
-+	if (freq == ieee80211_channel_to_frequency(12) ||
-+	    freq == ieee80211_channel_to_frequency(13) ||
-+	    freq == ieee80211_channel_to_frequency(14))
-+		return true;
-+	return false;
-+}
-+
-+int regulatory_hint_found_beacon(struct wiphy *wiphy,
-+				 struct ieee80211_channel *beacon_chan,
-+				 gfp_t gfp)
-+{
-+	struct reg_beacon *reg_beacon;
-+
-+	if (likely((beacon_chan->beacon_found ||
-+	    (beacon_chan->flags & IEEE80211_CHAN_RADAR) ||
-+	    (beacon_chan->band == IEEE80211_BAND_2GHZ &&
-+	     !freq_is_chan_12_13_14(beacon_chan->center_freq)))))
-+		return 0;
-+
-+	reg_beacon = kzalloc(sizeof(struct reg_beacon), gfp);
-+	if (!reg_beacon)
-+		return -ENOMEM;
-+
-+#ifdef CONFIG_CFG80211_REG_DEBUG
-+	printk(KERN_DEBUG "cfg80211: Found new beacon on "
-+		"frequency: %d MHz (Ch %d) on %s\n",
-+		beacon_chan->center_freq,
-+		ieee80211_frequency_to_channel(beacon_chan->center_freq),
-+		wiphy_name(wiphy));
-+#endif
-+	memcpy(&reg_beacon->chan, beacon_chan,
-+		sizeof(struct ieee80211_channel));
-+
-+
-+	/*
-+	 * Since we can be called from BH or and non-BH context
-+	 * we must use spin_lock_bh()
-+	 */
-+	spin_lock_bh(&reg_pending_beacons_lock);
-+	list_add_tail(&reg_beacon->list, &reg_pending_beacons);
-+	spin_unlock_bh(&reg_pending_beacons_lock);
-+
-+	schedule_work(&reg_work);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(regulatory_hint_found_beacon);
-+
-+
- static void print_rd_rules(const struct ieee80211_regdomain *rd)
- {
- 	unsigned int i;
-@@ -1908,6 +2112,7 @@ int regulatory_init(void)
- 		return PTR_ERR(reg_pdev);
- 
- 	spin_lock_init(&reg_requests_lock);
-+	spin_lock_init(&reg_pending_beacons_lock);
- 
- #ifdef CONFIG_WIRELESS_OLD_REGULATORY
- 	cfg80211_regdomain = static_regdom(ieee80211_regdom);
-@@ -1951,6 +2156,7 @@ int regulatory_init(void)
- void regulatory_exit(void)
- {
- 	struct regulatory_request *reg_request, *tmp;
-+	struct reg_beacon *reg_beacon, *btmp;
- 
- 	cancel_work_sync(&reg_work);
- 
-@@ -1965,6 +2171,24 @@ void regulatory_exit(void)
- 
- 	platform_device_unregister(reg_pdev);
- 
-+	spin_lock_bh(&reg_pending_beacons_lock);
-+	if (!list_empty(&reg_pending_beacons)) {
-+		list_for_each_entry_safe(reg_beacon, btmp,
-+					 &reg_pending_beacons, list) {
-+			list_del(&reg_beacon->list);
-+			kfree(reg_beacon);
-+		}
-+	}
-+	spin_unlock_bh(&reg_pending_beacons_lock);
-+
-+	if (!list_empty(&reg_beacon_list)) {
-+		list_for_each_entry_safe(reg_beacon, btmp,
-+					 &reg_beacon_list, list) {
-+			list_del(&reg_beacon->list);
-+			kfree(reg_beacon);
-+		}
-+	}
-+
- 	spin_lock(&reg_requests_lock);
- 	if (!list_empty(&reg_requests_list)) {
- 		list_for_each_entry_safe(reg_request, tmp,
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 6060065..280dbcd 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -430,6 +430,9 @@ cfg80211_inform_bss_frame(struct wiphy *wiphy,
- 	if (!res)
- 		return NULL;
- 
-+	if (res->pub.capability & WLAN_CAPABILITY_ESS)
-+		regulatory_hint_found_beacon(wiphy, channel, gfp);
-+
- 	/* cfg80211_bss_update gives us a referenced result */
- 	return &res->pub;
- }
 -- 
-1.6.0.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
