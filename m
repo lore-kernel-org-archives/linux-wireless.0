@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:45929 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065AbZBXCnk (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58115 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755782AbZB0Vfu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2009 21:43:40 -0500
-Received: by qw-out-2122.google.com with SMTP id 5so1557833qwi.37
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2009 18:43:38 -0800 (PST)
-Subject: [PATCH] iwl3945: initialize is_valid_rtc_data_addr function pointer
-From: Jason Andryuk <jandryuk@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	reinette chatre <reinette.chatre@intel.com>
+	Fri, 27 Feb 2009 16:35:50 -0500
+Subject: Re: [PATCH v2] mac80211: Call commit() on channel setting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090227212625.219210@gmx.net> (sfid-20090227_222656_514709_DC1701C7)
+References: <20090226234307.51520@gmx.net>
+	 (sfid-20090227_004341_064030_7F5271DC) <1235751653.7426.6.camel@johannes.local>
+	 <20090227212625.219210@gmx.net> (sfid-20090227_222656_514709_DC1701C7)
 Content-Type: text/plain
-Date: Mon, 23 Feb 2009 21:43:30 -0500
-Message-Id: <1235443410.7047.25.camel@rainbow> (sfid-20090224_034343_676010_8D003747)
+Date: Fri, 27 Feb 2009 22:35:47 +0100
+Message-Id: <1235770547.7426.89.camel@johannes.local> (sfid-20090227_223553_574363_8D4CFB17)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize is_valid_rtc_data_addr function pointer for iwl3945 to
-prevent a NULL pointer dereference in iwl_dump_nic_error_log.
+On Fri, 2009-02-27 at 22:26 +0100, Alina Friedrichsen wrote:
+> Hello Johannes!
+> 
+> > You really should remember to linewrap your descriptions.
+> 
+> Sorry, I'm accustomed that the software wrap it
+> automatically to the screen width. (XHTML and so...)
+> 
+> Can you please describe how a IBSS join should done with
+> nl80211? "Das sich wext und nl80211 nicht gegenseitig
+> auf die Fuesse treten." (Sorry I can't translate this to
+> English - locution.)
 
-Signed-off-by: Jason Andryuk <jandryuk@gmail.com>
---
+on the todo list
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index d49e48b..6ae0df5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2747,6 +2747,7 @@ static struct iwl_lib_ops iwl3945_lib = {
- 		.query_addr = iwlcore_eeprom_query_addr,
- 	},
- 	.send_tx_power	= iwl3945_send_tx_power,
-+	.is_valid_rtc_data_addr = iwl3945_hw_valid_rtc_data_addr,
- };
- 
- static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
+> Regards
+> Alina
+> 
+> P.S.: I have received this mail 5 hours to late.
+
+well I\m travelling and wrote that on plane -- off for a week now
+
+johannes
 
