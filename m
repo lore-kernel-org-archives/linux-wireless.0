@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55968 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050AbZBDOpz (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:4130 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbZB0C1m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2009 09:45:55 -0500
-Date: Wed, 4 Feb 2009 09:43:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Jason Andryuk <jandryuk@gmail.com>, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, kalle.valo@iki.fi,
-	milan.plzik@gmail.com
-Subject: Re: at76_usb development
-Message-ID: <20090204144317.GA3845@tuxdriver.com> (sfid-20090204_154559_374118_D4BA6677)
-References: <c4d76b3b0902032005m3847235cu42f963ca6ad796af@mail.gmail.com> <200902040917.14343.oliver@neukum.org>
+	Thu, 26 Feb 2009 21:27:42 -0500
+Date: Thu, 26 Feb 2009 21:27:04 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Jiri Slaby <jirislaby@gmail.com>, proski@gnu.org
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@venema.h4ckr.net
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
+Message-ID: <20090227022704.GA29850@hash.localnet> (sfid-20090227_032751_187484_B205E656)
+References: <1235688271-22346-1-git-send-email-jirislaby@gmail.com> <20090226230338.M86894@bobcopeland.com> <49A7236E.2020807@gmail.com> <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com> <49A726A7.6090809@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200902040917.14343.oliver@neukum.org>
+In-Reply-To: <49A726A7.6090809@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 04, 2009 at 09:17:12AM +0100, Oliver Neukum wrote:
-> Am Wednesday 04 February 2009 05:05:04 schrieb Jason Andryuk:
-> > Where should development on at76_usb take place?
-> [..]
-> > I have more or less tracked down an Oops on disconnect with the
-> > wireless-testing version.  Hopefully the time spent has been
-> > worthwhile.
-> > 
-> > Let me know,
-> 
-> This is an important question. We cannot develop against widely
-> diverging versions. If the driver is changed a lot, development must happen
-> against the kernel version or it should be removed from the kernel.
+On Fri, Feb 27, 2009 at 12:32:55AM +0100, Jiri Slaby wrote:
+> On 27.2.2009 00:28, Bob Copeland wrote:
+>> hw_to_driver_rix() returns sc->rate_idx[x][y] as an int, and that
+>> array is initialized to (u8)-1 for invalid rates.  So, it can
+>> return 255 if the hardware rate index (y) is bad, then the check
+>> "rxs.rate_idx>= 0" would always be true, right?  If it's not a
+>> real bug yet, it likely will be one day :)
+>
+> Ah, yes, it really is a bug(tm), care to post a fix?
 
-AFAIK you should be sending patches to Greg against the version in
-drivers/staging.  Kalle may want to be copied.
+Actually, I remembered in the dark recesses of my moldering brain 
+that someone had a lost patch for this a while ago, so I searched
+the archives.  Pavel, ok to add your s-o-b?
 
-FWIW, I haven't seen the revised driver that Kalle is developing.
-Hopefully we will see that before too long.
+From: Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] ath5k: use signed elements for rate index table
 
-John
+A lookup table is used to convert from hardware rate indexes back
+to driver-based rate indexes.  For unknown hardware rates, we
+initialize these values to -1, but since the array elements are of
+type u8, they will be in the range 0-255.  This can cause array
+overruns because subsequent sanity checks only check for negative
+values.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/base.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
+index 20e0d14..8229561 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -112,7 +112,7 @@ struct ath5k_softc {
+ 	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
+ 	struct ieee80211_channel channels[ATH_CHAN_MAX];
+ 	struct ieee80211_rate	rates[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
+-	u8			rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
++	s8			rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
+ 	enum nl80211_iftype	opmode;
+ 	struct ath5k_hw		*ah;		/* Atheros HW */
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.5.4.1
+
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
