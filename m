@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.235]:22652 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753986AbZBCAPt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2009 19:15:49 -0500
-Received: by rv-out-0506.google.com with SMTP id k40so1732101rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2009 16:15:48 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:14154 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754633AbZB0EXh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2009 23:23:37 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2009 20:23:36 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <49878B8B.4020005@erley.org>
-References: <49878B8B.4020005@erley.org>
-Date: Tue, 3 Feb 2009 11:15:48 +1100
-Message-ID: <646765f40902021615v521d0031y27885b56a74fd2f2@mail.gmail.com> (sfid-20090203_011553_070371_32750EC9)
-Subject: Re: [patch] iw: align output for HT capabilities
-From: Julian Calaby <julian.calaby@gmail.com>
-To: pat-lkml <pat-lkml@erley.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18855.27087.578785.199636@gargle.gargle.HOWL> (sfid-20090227_052340_698689_879ED2FE)
+Date: Fri, 27 Feb 2009 09:49:27 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<Jouni.Malinen@Atheros.com>
+Subject: [PATCH] mac80211: Notify the driver only when the beacon interval changes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 3, 2009 at 11:10, pat-lkml <pat-lkml@erley.org> wrote:
-> The HT capabilities have an additional space in front of them causing
-> them not to line up with the rest of the listed outputs.  This patch
-> removes that space.
->
-> Signed-off-by: Pat Erley <pat-lkml@erley.org>
->
-> ---
->
-> diff --git a/info.c b/info.c
-> index bf3b8bd..69be500 100644
-> --- a/info.c
-> +++ b/info.c
-> @@ -70,7 +70,7 @@ static int print_phy_handler(struct nl_msg *msg, void
-> *arg)
->  #ifdef NL80211_BAND_ATTR_HT_CAPA
->                if (tb_band[NL80211_BAND_ATTR_HT_CAPA]) {
->                        unsigned short cap = nla_get_u16(tb_band[NL80211_BAND_ATTR_HT_CAPA]);
-> -#define PCOM(fmt, args...) do { printf("\t\t\t * " fmt "\n", ##args); }
-> while (0)
-> +#define PCOM(fmt, args...) do { printf("\t\t\t* " fmt "\n", ##args); }
-> while (0)
+Currently, the driver is unconditionally notified of beacon
+interval. This is a problem in AP mode, because the driver has
+to know that the beacon interval has actualy changed to recalculate
+TBTT and reset the HW TSF. Fix this to make mac80211 notify the driver
+only when the beacon interval has been reconfigured to a new value.
 
-Is it just me or is this patch line-wrapped?
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
 
-Thanks,
+( CC the list properly this time. )
 
+ net/mac80211/cfg.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c43129e..58693e5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -451,7 +451,8 @@ static int ieee80211_config_beacon(struct ieee80211_sub_if_data *sdata,
+ 	 * This is a kludge. beacon interval should really be part
+ 	 * of the beacon information.
+ 	 */
+-	if (params->interval) {
++	if (params->interval && (sdata->local->hw.conf.beacon_int !=
++				 params->interval)) {
+ 		sdata->local->hw.conf.beacon_int = params->interval;
+ 		err = ieee80211_hw_config(sdata->local,
+ 					IEEE80211_CONF_CHANGE_BEACON_INTERVAL);
 -- 
+1.6.1
 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
