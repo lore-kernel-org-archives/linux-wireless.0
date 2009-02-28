@@ -1,30 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:49185 "EHLO
-	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754676AbZBZXdB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2009 18:33:01 -0500
-Message-ID: <49A726A9.7060503@lwfinger.net> (sfid-20090227_003305_974762_43835444)
-Date: Thu, 26 Feb 2009 17:32:57 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-CC: Lorenzo Nava <navalorenx@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Tests of open-source firmware 2/25-26
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:13154 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752593AbZB1AQt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 19:16:49 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/6] iwlwifi driver updates 02/27/2009
+Date: Fri, 27 Feb 2009 16:21:18 -0800
+Message-Id: <1235780484-27979-1-git-send-email-reinette.chatre@intel.com> (sfid-20090228_011656_370603_F5E19FE8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Francesco,
+This series contains mostly 3945 porting patches. We include one fix in the
+probe function's error flow. The API version of uCode for new hardware is
+updated, backport support already present.
 
-With the RX queue set at 64 and the TX queue at 32, my system has been running
-V5.1 open firmware for nearly 32 hours without a glitch. This is much longer
-than any previous run.
+[PATCH 1/6] iwlwifi: update 5150 API version to support new firmware
+[PATCH 2/6] iwl3945: synchronize timestamp with uCode
+[PATCH 3/6] iwl3945: unify set key flow with iwlwifi
+[PATCH 4/6] iwlwifi: fix *pci_probe error flow
+[PATCH 5/6] iwl3945: add iwl3945_setup_mac
+[PATCH 6/6] iwl3945 : use iwl_activate_qos
 
-The TX status queue has only reached a maximum of 14. As far as I know, the
-failures have only occurred after that queue has reached the 16 entry limit.
 
-I will leave the test running until you have a firmware patch to test.
+Thank you
 
-Larry
+Reinette
+
