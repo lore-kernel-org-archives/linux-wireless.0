@@ -1,177 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53192 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531AbZBTFm7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2009 00:42:59 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
+Received: from mga11.intel.com ([192.55.52.93]:13154 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753022AbZB1AQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2009 19:16:50 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v5 01/15] cfg80211: rename cfg80211_registered_device's idx to wiphy_idx
-Date: Fri, 20 Feb 2009 00:42:36 -0500
-Message-Id: <1235108570-17652-2-git-send-email-lrodriguez@atheros.com> (sfid-20090220_064314_724908_7AF93C64)
-In-Reply-To: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
-References: <1235108570-17652-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/6] iwlwifi: fix *pci_probe error flow
+Date: Fri, 27 Feb 2009 16:21:22 -0800
+Message-Id: <1235780484-27979-5-git-send-email-reinette.chatre@intel.com> (sfid-20090228_011656_743786_78B7316B)
+In-Reply-To: <1235780484-27979-4-git-send-email-reinette.chatre@intel.com>
+References: <1235780484-27979-1-git-send-email-reinette.chatre@intel.com>
+ <1235780484-27979-2-git-send-email-reinette.chatre@intel.com>
+ <1235780484-27979-3-git-send-email-reinette.chatre@intel.com>
+ <1235780484-27979-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Makes it clearer to read when comparing to ifidx
+for iwlagn:
+- Have to free eeprom of version check fails - otherwise we end up with
+  memory leak.
+- Include removal of workqueue (created in _setup_deferred_work) in error
+  handling.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+for iwl3945:
+- Fix a few places to jump to correct error handling.
+- Reorganize error handling to match with code flow.
+- Include iwl_free_channel_map as part of error handling.
+- Include releasing eeprom as part of error handling.
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/wireless/core.c    |   35 ++++++++++++++++++-----------------
- net/wireless/core.h    |    2 +-
- net/wireless/nl80211.c |    4 ++--
- net/wireless/sysfs.c   |    2 +-
- 4 files changed, 22 insertions(+), 21 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 +++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   22 ++++++++++++----------
+ 2 files changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 0668b2b..2b3e786 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -37,12 +37,13 @@ DEFINE_MUTEX(cfg80211_drv_mutex);
- static struct dentry *ieee80211_debugfs_dir;
- 
- /* requires cfg80211_drv_mutex to be held! */
--static struct cfg80211_registered_device *cfg80211_drv_by_wiphy(int wiphy)
-+static struct cfg80211_registered_device *
-+cfg80211_drv_by_wiphy_idx(int wiphy_idx)
- {
- 	struct cfg80211_registered_device *result = NULL, *drv;
- 
- 	list_for_each_entry(drv, &cfg80211_drv_list, list) {
--		if (drv->idx == wiphy) {
-+		if (drv->wiphy_idx == wiphy_idx) {
- 			result = drv;
- 			break;
- 		}
-@@ -56,12 +57,12 @@ static struct cfg80211_registered_device *
- __cfg80211_drv_from_info(struct genl_info *info)
- {
- 	int ifindex;
--	struct cfg80211_registered_device *bywiphy = NULL, *byifidx = NULL;
-+	struct cfg80211_registered_device *bywiphyidx = NULL, *byifidx = NULL;
- 	struct net_device *dev;
- 	int err = -EINVAL;
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY]) {
--		bywiphy = cfg80211_drv_by_wiphy(
-+		bywiphyidx = cfg80211_drv_by_wiphy_idx(
- 				nla_get_u32(info->attrs[NL80211_ATTR_WIPHY]));
- 		err = -ENODEV;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index b49f9f7..18f6f68 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3405,7 +3405,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	}
-@@ -78,14 +79,14 @@ __cfg80211_drv_from_info(struct genl_info *info)
- 		err = -ENODEV;
+ 	err = iwl_eeprom_check_version(priv);
+ 	if (err)
+-		goto out_iounmap;
++		goto out_free_eeprom;
+ 
+ 	/* extract MAC Address */
+ 	iwl_eeprom_get_mac(priv, priv->mac_addr);
+@@ -3501,6 +3501,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	return 0;
+ 
+  out_remove_sysfs:
++	destroy_workqueue(priv->workqueue);
++	priv->workqueue = NULL;
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl_attribute_group);
+  out_free_irq:
+ 	free_irq(priv->pci_dev->irq, priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 18735aa..913d1a5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -5053,7 +5053,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 			"invalid queues_num, should be between %d and %d\n",
+ 			IWL_MIN_NUM_QUEUES, IWL39_MAX_NUM_QUEUES);
+ 		err = -EINVAL;
+-		goto out;
++		goto out_ieee80211_free_hw;
  	}
  
--	if (bywiphy && byifidx) {
--		if (bywiphy != byifidx)
-+	if (bywiphyidx && byifidx) {
-+		if (bywiphyidx != byifidx)
- 			return ERR_PTR(-EINVAL);
- 		else
--			return bywiphy; /* == byifidx */
-+			return bywiphyidx; /* == byifidx */
+ 	/*
+@@ -5147,7 +5147,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	err = iwl_eeprom_init(priv);
+ 	if (err) {
+ 		IWL_ERR(priv, "Unable to init EEPROM\n");
+-		goto out_remove_sysfs;
++		goto out_iounmap;
  	}
--	if (bywiphy)
--		return bywiphy;
-+	if (bywiphyidx)
-+		return bywiphyidx;
+ 	/* MAC Address location in EEPROM same for 3945/4965 */
+ 	eeprom = (struct iwl3945_eeprom *)priv->eeprom;
+@@ -5161,7 +5161,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	/* Device-specific setup */
+ 	if (iwl3945_hw_set_hw_params(priv)) {
+ 		IWL_ERR(priv, "failed to set hw settings\n");
+-		goto out_iounmap;
++		goto out_eeprom_free;
+ 	}
  
- 	if (byifidx)
- 		return byifidx;
-@@ -143,16 +144,16 @@ int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 			char *newname)
- {
- 	struct cfg80211_registered_device *drv;
--	int idx, taken = -1, result, digits;
-+	int wiphy_idx, taken = -1, result, digits;
+ 	/***********************
+@@ -5171,7 +5171,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	err = iwl3945_init_drv(priv);
+ 	if (err) {
+ 		IWL_ERR(priv, "initializing driver failed\n");
+-		goto out_free_geos;
++		goto out_unset_hw_params;
+ 	}
  
- 	mutex_lock(&cfg80211_drv_mutex);
+ 	IWL_INFO(priv, "Detected Intel Wireless WiFi Link %s\n",
+@@ -5242,17 +5242,19 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	return 0;
  
- 	/* prohibit calling the thing phy%d when %d is not its number */
--	sscanf(newname, PHY_NAME "%d%n", &idx, &taken);
--	if (taken == strlen(newname) && idx != rdev->idx) {
--		/* count number of places needed to print idx */
-+	sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken);
-+	if (taken == strlen(newname) && wiphy_idx != rdev->wiphy_idx) {
-+		/* count number of places needed to print wiphy_idx */
- 		digits = 1;
--		while (idx /= 10)
-+		while (wiphy_idx /= 10)
- 			digits++;
- 		/*
- 		 * deny the name if it is phy<idx> where <idx> is printed
-@@ -222,9 +223,9 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	mutex_lock(&cfg80211_drv_mutex);
- 
--	drv->idx = wiphy_counter++;
-+	drv->wiphy_idx = wiphy_counter++;
- 
--	if (unlikely(drv->idx < 0)) {
-+	if (unlikely(drv->wiphy_idx < 0)) {
- 		wiphy_counter--;
- 		mutex_unlock(&cfg80211_drv_mutex);
- 		/* ugh, wrapped! */
-@@ -235,7 +236,7 @@ struct wiphy *wiphy_new(struct cfg80211_ops *ops, int sizeof_priv)
- 	mutex_unlock(&cfg80211_drv_mutex);
- 
- 	/* give it a proper name */
--	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->idx);
-+	dev_set_name(&drv->wiphy.dev, PHY_NAME "%d", drv->wiphy_idx);
- 
- 	mutex_init(&drv->mtx);
- 	mutex_init(&drv->devlist_mtx);
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 5d0c682..1783781 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -37,7 +37,7 @@ struct cfg80211_registered_device {
- 	enum environment_cap env;
- 
- 	/* wiphy index, internal only */
--	int idx;
-+	int wiphy_idx;
- 
- 	/* associate netdev list */
- 	struct mutex devlist_mtx;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c157d60..7bc4d16 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -163,7 +163,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	if (!hdr)
- 		return -1;
- 
--	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, dev->wiphy_idx);
- 	NLA_PUT_STRING(msg, NL80211_ATTR_WIPHY_NAME, wiphy_name(&dev->wiphy));
- 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
- 		   dev->wiphy.max_scan_ssids);
-@@ -2729,7 +2729,7 @@ static int nl80211_send_scan_donemsg(struct sk_buff *msg,
- 	if (!hdr)
- 		return -1;
- 
--	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
- 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
- 
- 	/* XXX: we should probably bounce back the request? */
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index 15feaeb..efe3c5c 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -31,7 +31,7 @@ static ssize_t name ## _show(struct device *dev,			\
- 	return sprintf(buf, fmt "\n", dev_to_rdev(dev)->member);	\
- }
- 
--SHOW_FMT(index, "%d", idx);
-+SHOW_FMT(index, "%d", wiphy_idx);
- SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
- 
- static struct device_attribute ieee80211_dev_attrs[] = {
+  out_remove_sysfs:
++	destroy_workqueue(priv->workqueue);
++	priv->workqueue = NULL;
+ 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
+- out_free_geos:
+-	iwlcore_free_geos(priv);
+-
+  out_release_irq:
+ 	free_irq(priv->pci_dev->irq, priv);
+-	destroy_workqueue(priv->workqueue);
+-	priv->workqueue = NULL;
+-	iwl3945_unset_hw_params(priv);
+  out_disable_msi:
+ 	pci_disable_msi(priv->pci_dev);
++	iwlcore_free_geos(priv);
++	iwl_free_channel_map(priv);
++ out_unset_hw_params:
++	iwl3945_unset_hw_params(priv);
++ out_eeprom_free:
++	iwl_eeprom_free(priv);
+  out_iounmap:
+ 	pci_iounmap(pdev, priv->hw_base);
+  out_pci_release_regions:
 -- 
-1.6.0.3
+1.5.6.3
 
