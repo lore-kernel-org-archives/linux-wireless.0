@@ -1,63 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52309 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553AbZBFVLZ (ORCPT
+Received: from mail-ew0-f177.google.com ([209.85.219.177]:49070 "EHLO
+	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753939AbZB1AQ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2009 16:11:25 -0500
-Subject: Re: [PATCH] mac80211: Remove TSF atomic requirement from the
-	documentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Alina Friedrichsen <x-alina@gmx.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <87ocxfp937.fsf@litku.valot.fi> (sfid-20090206_220815_144086_DD693107)
-References: <20090205165834.63840@gmx.net> <87fxirpe1q.fsf@litku.valot.fi>
-	 <1233953047.4175.27.camel@johannes.local>  <87ocxfp937.fsf@litku.valot.fi>
-	 (sfid-20090206_220815_144086_DD693107)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LzDT3VCxCtwrO4fXqHil"
-Date: Fri, 06 Feb 2009 22:11:20 +0100
-Message-Id: <1233954680.4175.36.camel@johannes.local> (sfid-20090206_221129_062795_322845E5)
+	Fri, 27 Feb 2009 19:16:57 -0500
+Received: by ewy25 with SMTP id 25so1545480ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2009 16:16:53 -0800 (PST)
+Date: Sat, 28 Feb 2009 01:13:49 +0100
+From: "Christoph .J Thompson" <cjsthompson@gmail.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: D-Link GWL-122 and AP/WPA2
+Message-Id: <20090228011349.bf8ab119.cjsthompson@gmail.com> (sfid-20090228_011659_895007_F3FFF3BB)
+In-Reply-To: <3ace41890902270734v5a70ffb6x3b797c25a51734c9@mail.gmail.com>
+References: <20090226223155.d2d40946.cjsthompson@gmail.com>
+	<3ace41890902270734v5a70ffb6x3b797c25a51734c9@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 27 Feb 2009 15:34:48 +0000
+Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> Sorry to hear about your misfortune... can I ask if the F5D7050 works
+> well with the in-kernel rtl8187 driver in STA mode?
 
---=-LzDT3VCxCtwrO4fXqHil
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Well I can't be sure, because I don't have a known working AP here. That's what I'm trying to build. I have a PCMCIA rt2x00 (RT2561/RT61) based wireless card on a laptop running 2.6.29-rc6. It should work as an AP (at least that's what 'iw dev wlan0 info' advertises). I installed hostapd 0.6.8, configured it to not hide the SSID. If I do 'iwlist scan' on the router with the Belkin USB wifi dongle with the Realtek chip on it, I can see the wireless networks of some neighbors, but not the AP I just configured on the laptop. The router also runs 2.6.29-rc6. So it's like a chicken and egg problem.
 
-On Fri, 2009-02-06 at 23:08 +0200, Kalle Valo wrote:
 
-> Alina, it would be nice to explicitly mention that the function can
-> sleep. Otherwise driver authors need to guess if sleeping is allowed
-> or not.
-
-That's a larger project to actually annotate all of them either way ;) I
-think we only mention atomicity requirements right now.
-
-johannes
-
---=-LzDT3VCxCtwrO4fXqHil
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJjKdxAAoJEKVg1VMiehFYtxYP/Rwlydw1Y6XgYeNiOGj5Fh+0
-IU8uc7qBfV1bMY6keYak57NsQx8I9niKGWfpc1On1eJZtPfDjtEmMM3sK42aDsK2
-eUesXaSribhro8ilCTaxjnSwfT3EOMfc5AOmVmaSbs4tiI985IF2UmjvpR26k51c
-PoWybjNeJQez/ahpHqpXATwSd/Heh/3dHY7qJ7PbA214/D8+Gjt1vyPV+N8Z6SPu
-jRbV2C2mpwdyTRL283IE3rOayiXfE3QIJpdPiolZnfSyoT4PninKp+/IleEGo04Q
-gd2PUsPKtOErXqzT/MEIk+C7a9NT4uwyd0Kl+WDcWoVvow4+dNcaMJ9YXrplT3QQ
-9N8s39d37pP7Q061B+ZMcKWp/5m4MkF6PnMKl+mLXjSMZ6bp4MKw6ZS5xTWRQuHJ
-jSKUWSwJ4wxvy060nPDzP5A3HJIMZhbALm9AfxytzJZtai5dX8P4LdHpXkn6eEYC
-HsyM8eyAEdlYswJEbTdLgs4En2wlkfGKdD2CLa82OD7AN3CGNcd0bDJGRBVZmTrh
-0ShawBtRyxD0m3GPhRJ43n4uxZBgDbSJiEQrWigW0nMPDH6qZupEcriuGJdf5kyX
-Rk/o6Fq1Euz+Q48/GVrp9k7e3V0idz4px5dBad9S6dVILt370yWXjGWztCewZMWG
-VSgxfMpQW8s8/zFekW8B
-=GaAI
------END PGP SIGNATURE-----
-
---=-LzDT3VCxCtwrO4fXqHil--
-
+-- 
+Christoph .J Thompson <cjsthompson@gmail.com>
