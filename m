@@ -1,71 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59910 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764038AbZCXUYp (ORCPT
+Received: from vilya.visn.co.uk ([193.254.210.161]:52017 "EHLO
+	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755970AbZCAT7M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 16:24:45 -0400
-Subject: Re: [PATCH 0/8] mac80211 aggregation improvements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090324194847.GC19335@tuxdriver.com>
-References: <20090323162834.154525349@sipsolutions.net>
-	 <1237883293.6278.9.camel@johannes.local>
-	 <43e72e890903240913iee51dcbnfa2409e01d4dd5c0@mail.gmail.com>
-	 <20090324194847.GC19335@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SFMcqqoPdlYPDOAtYW/R"
-Date: Tue, 24 Mar 2009 21:24:38 +0100
-Message-Id: <1237926278.4320.129.camel@johannes.local> (sfid-20090324_212510_376573_7C8CAC25)
-Mime-Version: 1.0
+	Sun, 1 Mar 2009 14:59:12 -0500
+Message-ID: <48082.82.152.175.172.1235937549.squirrel@www.phantomjinx.co.uk> (sfid-20090301_205916_243550_549E93AA)
+In-Reply-To: <49AAE22A.3080808@lwfinger.net>
+References: <35879.82.152.175.172.1234904444.squirrel@www.phantomjinx.co.uk>
+    <499B27A4.30708@lwfinger.net>
+    <42781.82.152.175.172.1234911183.squirrel@www.phantomjinx.co.uk>
+    <499B4526.1030705@lwfinger.net>
+    <44177.82.152.175.172.1235088928.squirrel@www.phantomjinx.co.uk>
+    <499E1826.8040903@lwfinger.net>
+    <56183.82.152.175.172.1235173364.squirrel@www.phantomjinx.co.uk>
+    <499F4763.70106@lwfinger.net>
+    <60836.82.152.175.172.1235929727.squirrel@www.phantomjinx.co.uk>
+    <49AAE22A.3080808@lwfinger.net>
+Date: Sun, 1 Mar 2009 19:59:09 -0000 (UTC)
+Subject: Re: rtl8187 performance diagnostics
+From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Larry,
 
---=-SFMcqqoPdlYPDOAtYW/R
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>> Is there anything I can do to help improve this situation? These res=
+ults
+>> seems to rule out hardware in favour of being driver related. Are th=
+ere
+>> other tests I could perform to determine where the fragility lies?
+>>
+>> Any thoughts, let me know.
+>
+> OK, the Windows driver is better than the Linux one. Unfortunately, s=
+ource
+> is not available.
 
-On Tue, 2009-03-24 at 15:48 -0400, John W. Linville wrote:
+Unsurprisingly, I imagine that the windows environment was what the
+manufacturer had in mind. I mean no disrespect to anyone regarding thes=
+e
+tests. They simply serve to rule out hardware failures and mean that I =
+can
+help in my probably small and naive way to improve the driver.
 
-> > It is not accurate to say Sujith has extensively tested this for
-> > ath9k, he probably just ran it a few times. So I cannot say we are as
-> > comfortable with the patches as you or Intel seem to be already.
+> You can check what we did when the RTL8187B was implemented. To do th=
+at,
+> you
+> need to download the Realtek vendor-written Linux driver and check wh=
+at
+> they do
+> against what is in the current in-kernel driver. The critical areas w=
+ill
+> likely
+> be associated with power settings for the radio. Be aware that their =
+code
+> is
+> quite difficult to read as it has multiple conditional compilations t=
+hat
+> are
+> hard to keep straight.
 
-Indeed, both Sujith and I just gave it a few test runs. Given that ath9k
-enables aggregation on the first packet always though, the code was
-definitely exercised.
+Okay, I shall see how I go. I doubt my ability to come up with somethin=
+g
+awe inspiring but if I can help and contribute then I shall make it a
+point.
 
-> Given Luis's objection I'm inclined to delay.  I have asked
-> him to try to "get comfortable" with this patch series over the next
-> few days.  If that happens, then I'll try to get this merged during
-> the window.
+> I will be happy to test any improvements that you suggest.
 
-Fair enough.
+Thanks
 
-johannes
+PGR
 
---=-SFMcqqoPdlYPDOAtYW/R
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+--=20
+Laws are partly formed for the sake of good men, in order to instruct t=
+hem
+how they may live on friendly terms with one another, and partly for th=
+e
+sake of those who refuse to be instructed, whose spirit cannot be subdu=
+ed,
+or softened, or hindered from plunging into evil. [The Laws, Plato]
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+You fiend! Never have I encountered such corrupt and foul-minded
+perversity=85 Have you ever considered a career in the church?
+Bishop of Bath and Wells (Blackadder II)
 
-iQIcBAABAgAGBQJJyUGEAAoJEKVg1VMiehFYvQIQAINBQ3rcZuQSwcDnklCXrX3z
-dX/t/7gohy5pXywWOR/RJ2B0923btx+k1rIaF0CRbf5NI+wF5F9N7kWykvMxFW/l
-hkQQ/s2UEkE0WZNR/w4G3lggDYFi7Zf+oNi9lRJ6mojGcxMdLBGqdVl+q7TwLhFA
-sBlE9JM8lseWgBM8I+HOwa3f4OTjZM6UGn4iVmPNpmbBfhzSq//QYnqJ0gB0FF5P
-VqTrUmM87vD60m/qQ5s32Jtz5EwsfeS/awkbhiNQUVE/3sPJluyyjh0+v+OP8NZp
-MG2S5RZPZzGsvRH9wlXPXf1qmakl3/qMEEKPqXbz2KTwUou3yGtH9TGQa1UmFjZD
-qHcV2L3u25Z3h8/NXzd1ypKQltENbUx7LIE7vdey8GPpZ4cIb8vfxhBuo2z0l5q0
-o8BlLnSuUoEFRxM+zN/328Or7EVs1EbI3IzEDmGQY2Slpuhi8coeiff9HxxkUKG5
-U8KKvpOW0Y4K9lHKySl1TbmXjxM7jq+EbUlgh2KIkTCQjJNs2mX7w/WBdPpEEQF4
-2CHf/o3FJgzhx2vxscq3jt7z8AOcigpkBxAdaWm7DLq+TGoQ4RTo0rFhryo0Tlfs
-2RGCvBe6a8ihEbAXqVplw7DepPLD5ALZaTi57DZZ6RUrs6+sCL4z+qLSl1VHSfRK
-y38dCBvQv6NaAj6jC9Xj
-=SaOs
------END PGP SIGNATURE-----
-
---=-SFMcqqoPdlYPDOAtYW/R--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
