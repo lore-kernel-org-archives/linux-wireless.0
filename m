@@ -1,40 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:43243 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511AbZCOUKt (ORCPT
+Received: from vilya.visn.co.uk ([193.254.210.161]:45442 "EHLO
+	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756158AbZCARst (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2009 16:10:49 -0400
-Message-ID: <49BD609B.4010406@nokia.com> (sfid-20090315_211101_050657_DA225877)
-Date: Sun, 15 Mar 2009 22:10:03 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
+	Sun, 1 Mar 2009 12:48:49 -0500
+Received: from localhost ([127.0.0.1] helo=www.phantomjinx.co.uk)
+	by vilya.visn.co.uk with esmtpa (Exim 4.69)
+	(envelope-from <p.g.richardson@phantomjinx.co.uk>)
+	id 1LdpmR-00058y-9S
+	for linux-wireless@vger.kernel.org; Sun, 01 Mar 2009 17:48:47 +0000
+Message-ID: <60836.82.152.175.172.1235929727.squirrel@www.phantomjinx.co.uk> (sfid-20090301_184853_854118_7AE391DC)
+In-Reply-To: <499F4763.70106@lwfinger.net>
+References: <35879.82.152.175.172.1234904444.squirrel@www.phantomjinx.co.uk>
+    <499B27A4.30708@lwfinger.net>
+    <42781.82.152.175.172.1234911183.squirrel@www.phantomjinx.co.uk>
+    <499B4526.1030705@lwfinger.net>
+    <44177.82.152.175.172.1235088928.squirrel@www.phantomjinx.co.uk>
+    <499E1826.8040903@lwfinger.net>
+    <56183.82.152.175.172.1235173364.squirrel@www.phantomjinx.co.uk>
+    <499F4763.70106@lwfinger.net>
+Date: Sun, 1 Mar 2009 17:48:47 -0000 (UTC)
+Subject: rtl8187 performance diagnostics (was: rtl8187 cannot fix rate)
+From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
-References: <20090314171234.11126.21125.stgit@tikku>	 <20090314171452.11126.11618.stgit@tikku>	 <43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com>	 <87r60z1c8x.fsf@nokia.com> <1237139955.24381.2.camel@johannes.local> <43e72e890903151227q2b1cc5a8vd5dcc0e102fa7350@mail.gmail.com>
-In-Reply-To: <43e72e890903151227q2b1cc5a8vd5dcc0e102fa7350@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Sun, Mar 15, 2009 at 10:59 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Sun, 2009-03-15 at 09:22 +0200, Kalle Valo wrote:
->>
->>> I think this is future stuff, I would like to get the basic (and the
->>> simplest) implementation to the tree first and then we can start
->>> improving and extending it.
->> Agreed, anything that is more complex than this basic stuff which
->> requires proper beacon change watching by the firmware is too much for
->> the first cut here -- we're having enough trouble as-is, for example
->> with the BSS struct stuff.
-> 
-> Understood, can we just add some text to the doc then elaborating what
-> is expected of the hardware for now.
+> I'm not an expert in reading these tables, but the success rates abov=
+e 11
+> Mb/s
+> are very low, which seems to indicate that 11 Mb/s is a reasonable ra=
+te
+> for your
+> device. There is, however, a possibility that the code is not reporti=
+ng
+> the
+> retry count correctly. I know from your initial post that 54M doesn't
+> work, but
+> can you get any throughput at 24, 36, or 48M? There is also the
+> possibility that
+> your hardware is broken for OFDM encoding. That scheme is used for 6,=
+ 9,
+> and all
+> rates 18M and above.
+>
+> Larry
 
-Sure thing. I already have a todo item to write a better description.
+=46urther playing around with my rtl8187b card. I have installed window=
+s
+onto my laptop too for performance comparisons. Just how crude or accur=
+ate
+such comparisons are I dont know so if anyone has any experience then d=
+o
+shout.
 
-Kalle
+After installing windows, I did the following:
+
+1) ping -n 10000 [server]
+Result: Ping replies were good from throughout the house. Only 1 packet
+lost out of about 600.
+
+2) Observation of wireless connection
+Result: From the little diagnostics there are on windows, it reckons it
+connected at 54g (completely false as windows might just say that anywa=
+y).
+Walking around the house, the signal bars only ever went down to 3 out =
+of
+5.
+
+3) iperf -c [server]
+Result: From 3 different locations in the house, the performance is
+reported at 5.5 - 6Mbits/sec.
+
+
+Rebooted back into Mandriva 2009 using the compat-wireless snapshot fro=
+m
+the 24/2/2009.
+
+1) ping [server]
+Result: Ping is brittle. Movements around the house can ensure a packet=
+ is
+lost with minimal effort. Locations away from the router but within ran=
+ge,
+that could be pinged from under Windows, resulted in lost packets and e=
+ven
+"Destination unreachables". Slight turnings of the laptop either left o=
+r
+right when placed on a table impact ping connectivity.
+
+2) Observation of wireless connection
+Result: running iwconfig and looking at the signal strength indicates a
+range of 28-100. The locations where 28 occurs rarely get a decent ping
+test.
+
+3) iperf -c [server]
+Result: From 3 different locations in the house, the performance is
+reported at 3 - 4Mbits/sec.
+
+So my rather crude conclusions at the moment is the rtl8187 under mandr=
+iva
+performs at a slower rate than under windows. More interestingly, it se=
+ems
+that its receiver is not performing as well either, meaning the signal
+coverage area for my laptop is much smaller.
+
+Is there anything I can do to help improve this situation? These result=
+s
+seems to rule out hardware in favour of being driver related. Are there
+other tests I could perform to determine where the fragility lies?
+
+Any thoughts, let me know.
+
+Regards
+
+PGR
+
+--=20
+Laws are partly formed for the sake of good men, in order to instruct t=
+hem
+how they may live on friendly terms with one another, and partly for th=
+e
+sake of those who refuse to be instructed, whose spirit cannot be subdu=
+ed,
+or softened, or hindered from plunging into evil. [The Laws, Plato]
+
+You fiend! Never have I encountered such corrupt and foul-minded
+perversity=85 Have you ever considered a career in the church?
+Bishop of Bath and Wells (Blackadder II)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
