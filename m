@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:56516 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752626AbZCBWbt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2009 17:31:49 -0500
-Message-ID: <49AC5E4C.2020201@hauke-m.de> (sfid-20090302_233151_822090_2FDC1C6E)
-Date: Mon, 02 Mar 2009 23:31:40 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from rv-out-0506.google.com ([209.85.198.226]:16420 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752980AbZCAOhB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2009 09:37:01 -0500
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: pat-lkml <pat-lkml@erley.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [patch] Update compat.diff
-References: <49A88FF8.1040607@erley.org> <43e72e890903021322n2005bf79jda8df4497498d5a6@mail.gmail.com>
-In-Reply-To: <43e72e890903021322n2005bf79jda8df4497498d5a6@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1235884043.9224.12.camel@mj>
+References: <1235688271-22346-1-git-send-email-jirislaby@gmail.com>
+	 <20090226230338.M86894@bobcopeland.com> <49A7236E.2020807@gmail.com>
+	 <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com>
+	 <49A726A7.6090809@gmail.com> <20090227022704.GA29850@hash.localnet>
+	 <1235884043.9224.12.camel@mj>
+Date: Sun, 1 Mar 2009 09:36:59 -0500
+Message-ID: <b6c5339f0903010636o15afa42en4e1b1eb81c2c06e2@mail.gmail.com> (sfid-20090301_153711_167739_7F17C9A3)
+Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
+From: Bob Copeland <me@bobcopeland.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, Mar 1, 2009 at 12:07 AM, Pavel Roskin <proski@gnu.org> wrote:
+> On Thu, 2009-02-26 at 21:27 -0500, Bob Copeland wrote:
+>
+>> Actually, I remembered in the dark recesses of my moldering brain
+>> that someone had a lost patch for this a while ago, so I searched
+>> the archives. =A0Pavel, ok to add your s-o-b?
+>
+> Since my patch was dropped and the new patch was implemented without =
+my
+> participation, it makes no sense to put my s-o-b on the code I didn't
+> write (even though I wrote something similar before).
 
-this patch does not look very nice.
-The part of compat.diff for net/wireless/nl80211.c was for Johannes
-commit b8120417fc6ee609430c5436fe9ed07ffc2e63ba in wireless-testing.
-This patch was reverted in commit
-4d8bfeff50982158c4ec4ed6c38388ba3bfc9c9c. The whole patch for nl80211.c
-is useless for kernel older than 2.6.30 and will case problems on this
-kernel. (I know it does not exist for now ;-) ).
-In my opinion it will be the best to delete the part for nl80211.c from
-compat.diff for now.
+Ok, I just wanted to be sure to maintain proper credit, the "From" shou=
+ld
+suffice.  I did rewrite the patch but it actually had an identical diff=
+=2E
+=46WIW, the thread didn't give a clue why it didn't make it upstream, j=
+ust
+missed I guess (http://marc.info/?l=3Dlinux-wireless&m=3D12248000251962=
+7&w=3D2,
+ultimately that problem was fixed by correctly setting the rs_more flag=
+).
 
-Hauke
+Anyway, the patch, while IMO correct, will still result in mac80211
+warning in ieee80211_rx with -1 just as 255 will; it just fixes the
+subsequent out of bound read.  If we want to tell mac80211 a real rate,
+I think we should change it to s8 then hw_to_driver_rix should do
+something like:
 
-Luis R. Rodriguez wrote:
-> On Fri, Feb 27, 2009 at 5:14 PM, pat-lkml <pat-lkml@erley.org> wrote:
->> This updates compat.diff for wireless-testing commit
->> 68a4ef439847ed4bc07f17d398fe06c34f15d5da
->>
->> Signed-off-by: Pat Erley<pat-lkml@erley.org>
-> 
-> Thanks applied, now just waiting for git pull to finish on wireless.kernel.org.
-> 
->   Luis
+idx =3D array[x][y];
+if (WARN_ON(idx < 0))
+   idx =3D 0;
+
+return idx;
+
+Then we get the warning in the driver and we also return a real rate up
+the stack.  I'll prep a patch for this unless there are any objections.
+
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
