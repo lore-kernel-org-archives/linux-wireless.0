@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33832 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753101AbZCJCJp (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:58742 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753734AbZCBP7W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 22:09:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH 1/2] ath9k: downgrade xmit queue full message to xmit debug
-Date: Mon,  9 Mar 2009 22:09:41 -0400
-Message-Id: <1236650982-11520-2-git-send-email-lrodriguez@atheros.com> (sfid-20090310_032927_169893_760D4FAF)
-In-Reply-To: <1236650982-11520-1-git-send-email-lrodriguez@atheros.com>
-References: <1236650982-11520-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 2 Mar 2009 10:59:22 -0500
+Date: Mon, 2 Mar 2009 17:58:47 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Remove unused key xoring
+Message-ID: <20090302155847.GA4891@jm.kir.nu> (sfid-20090302_165927_163592_A6E566BE)
+References: <20090302130728.GB30293@jm.kir.nu> <b6c5339f0903020720x3b2b8ef8ldf726d99c32a5202@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <b6c5339f0903020720x3b2b8ef8ldf726d99c32a5202@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not a fatal message, hitting it simply means we're
-going to tell the upper layers to slow their horses down but
-as we make more descriptors available we let the show continue
-by waking up the queues in ath_wake_mac80211_queue().
+On Mon, Mar 02, 2009 at 10:20:07AM -0500, Bob Copeland wrote:
+> > - =C2=A0 =C2=A0 =C2=A0 key1 =3D (get_unaligned_le16(k->kv_val + 4) =
+^ xorMask) & 0xffff;
+> > - =C2=A0 =C2=A0 =C2=A0 key3 =3D (get_unaligned_le16(k->kv_val + 10)=
+ ^ xorMask) & 0xffff;
 
-We downgrade this as otherwise we fill up your kernel log with
-messages which can be common under heavy traffic.
+> > + =C2=A0 =C2=A0 =C2=A0 key1 =3D get_unaligned_le16(k->kv_val + 4);
+> > + =C2=A0 =C2=A0 =C2=A0 key3 =3D get_unaligned_le16(k->kv_val + 10) =
+& 0xffff;
 
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+> key1 lost the mask but key3 kept it?
 
-Greg, the second patch in this series is not relevant for stable,
-just this patch.
-
- drivers/net/wireless/ath9k/xmit.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index a82d2ab..465e5bb 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -891,7 +891,7 @@ struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb)
- 	spin_lock_bh(&txq->axq_lock);
- 
- 	if (txq->axq_depth >= (ATH_TXBUF - 20)) {
--		DPRINTF(sc, ATH_DBG_FATAL,
-+		DPRINTF(sc, ATH_DBG_XMIT,
- 			"TX queue: %d is full, depth: %d\n",
- 			qnum, txq->axq_depth);
- 		ieee80211_stop_queue(sc->hw, skb_get_queue_mapping(skb));
--- 
-1.6.0.6
-
+Heh.. Interesting editing bug that probably happened when I cleaned up
+some of my pending patches. I don't think the '& 0xffff' part is really
+needed here in either case.
+=20
+--=20
+Jouni Malinen                                            PGP id EFC895F=
+A
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
