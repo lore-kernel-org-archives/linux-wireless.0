@@ -1,72 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49221 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbZCNQHX (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33674 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750837AbZCBNGn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 12:07:23 -0400
-Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <49BBCE18.4090606@nokia.com>
-References: <20090314144405.670.16447.stgit@tikku>
-	 <1237043931.5235.67.camel@johannes.local>  <49BBCE18.4090606@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ad1dnZ6UVArYxC7WKcLt"
-Date: Sat, 14 Mar 2009 17:07:19 +0100
-Message-Id: <1237046839.5235.86.camel@johannes.local> (sfid-20090314_170734_362051_D492D2DA)
-Mime-Version: 1.0
+	Mon, 2 Mar 2009 08:06:43 -0500
+Date: Mon, 2 Mar 2009 15:06:31 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Document keycache operations
+Message-ID: <20090302130631.GA30293@jm.kir.nu> (sfid-20090302_140648_258669_33F02529)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There are number of small details about the keycache operations that
+are very easy to miss (and forget), so better include detailed
+comments in ath9k_hw_set_keycache_entry() to avoid having to figure
+out this every time when having to touch this area.
 
---=-ad1dnZ6UVArYxC7WKcLt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-On Sat, 2009-03-14 at 17:32 +0200, Kalle Valo wrote:
-> Johannes Berg wrote:
-> > On Sat, 2009-03-14 at 16:44 +0200, Kalle Valo wrote:
-> >> ieee80211_tx_h_check_assoc() was dropping everything else than probe
-> >> requests during software scan. So the null frame with the power save
-> >> bit was dropped and AP never received it. This meant that AP never
-> >> buffered any frames for the station during software scan.
-> >>
-> >> Fix this by allowing to transmit both probe request and null frames
-> >> during software scan. Tested with stlc45xx.
-> >=20
-> > Would it make sense to reorder the scan code instead?
->=20
-> Perhaps. I chose this path only because it was simple to implement :)=20
-> I'll take a look at the scan code in more detail and fix it there.
+---
+ drivers/net/wireless/ath9k/hw.c  |   76 +++++++++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath9k/mac.h |    8 ++--
+ 2 files changed, 78 insertions(+), 6 deletions(-)
 
-You're kinda right too, we want to disable the queues first, then set
-sw_scanning/notify the driver, and then send the nullfunc, I think. So
-it's either this patch, or iterating the interface list twice.
+--- wireless-testing.orig/drivers/net/wireless/ath9k/hw.c	2009-03-02 14:23:03.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/hw.c	2009-03-02 14:23:07.000000000 +0200
+@@ -2482,18 +2482,49 @@ bool ath9k_hw_set_keycache_entry(struct 
+ 	if (k->kv_len <= LEN_WEP104)
+ 		key4 &= 0xff;
+ 
++	/*
++	 * Note: Key cache registers access special memory area that requires
++	 * two 32-bit writes to actually update the values in the internal
++	 * memory. Consequently, the exact order and pairs used here must be
++	 * maintained.
++	 */
++
+ 	if (keyType == AR_KEYTABLE_TYPE_TKIP && ATH9K_IS_MIC_ENABLED(ah)) {
+ 		u16 micentry = entry + 64;
+ 
++		/*
++		 * Write inverted key[47:0] first to avoid Michael MIC errors
++		 * on frames that could be sent or received at the same time.
++		 * The correct key will be written in the end once everything
++		 * else is ready.
++		 */
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY0(entry), ~key0);
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY1(entry), ~key1);
++
++		/* Write key[95:48] */
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY2(entry), key2);
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY3(entry), key3);
++
++		/* Write key[127:96] and key type */
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY4(entry), key4);
+ 		REG_WRITE(ah, AR_KEYTABLE_TYPE(entry), keyType);
++
++		/* Write MAC address for the entry */
+ 		(void) ath9k_hw_keysetmac(ah, entry, mac);
+ 
+ 		if (ah->misc_mode & AR_PCU_MIC_NEW_LOC_ENA) {
++			/*
++			 * TKIP uses two key cache entries:
++			 * Michael MIC TX/RX keys in the same key cache entry
++			 * (idx = main index + 64):
++			 * key0 [31:0] = RX key [31:0]
++			 * key1 [15:0] = TX key [31:16]
++			 * key1 [31:16] = reserved
++			 * key2 [31:0] = RX key [63:32]
++			 * key3 [15:0] = TX key [15:0]
++			 * key3 [31:16] = reserved
++			 * key4 [31:0] = TX key [63:32]
++			 */
+ 			u32 mic0, mic1, mic2, mic3, mic4;
+ 
+ 			mic0 = get_unaligned_le32(k->kv_mic + 0);
+@@ -2501,45 +2532,84 @@ bool ath9k_hw_set_keycache_entry(struct 
+ 			mic1 = get_unaligned_le16(k->kv_txmic + 2) & 0xffff;
+ 			mic3 = get_unaligned_le16(k->kv_txmic + 0) & 0xffff;
+ 			mic4 = get_unaligned_le32(k->kv_txmic + 4);
++
++			/* Write RX[31:0] and TX[31:16] */
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY0(micentry), mic0);
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY1(micentry), mic1);
++
++			/* Write RX[63:32] and TX[15:0] */
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY2(micentry), mic2);
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY3(micentry), mic3);
++
++			/* Write TX[63:32] and keyType(reserved) */
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY4(micentry), mic4);
+ 			REG_WRITE(ah, AR_KEYTABLE_TYPE(micentry),
+ 				  AR_KEYTABLE_TYPE_CLR);
+ 
+ 		} else {
++			/*
++			 * TKIP uses four key cache entries (two for group
++			 * keys):
++			 * Michael MIC TX/RX keys are in different key cache
++			 * entries (idx = main index + 64 for TX and
++			 * main index + 32 + 96 for RX):
++			 * key0 [31:0] = TX/RX MIC key [31:0]
++			 * key1 [31:0] = reserved
++			 * key2 [31:0] = TX/RX MIC key [63:32]
++			 * key3 [31:0] = reserved
++			 * key4 [31:0] = reserved
++			 *
++			 * Upper layer code will call this function separately
++			 * for TX and RX keys when these registers offsets are
++			 * used.
++			 */
+ 			u32 mic0, mic2;
+ 
+ 			mic0 = get_unaligned_le32(k->kv_mic + 0);
+ 			mic2 = get_unaligned_le32(k->kv_mic + 4);
++
++			/* Write MIC key[31:0] */
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY0(micentry), mic0);
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY1(micentry), 0);
++
++			/* Write MIC key[63:32] */
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY2(micentry), mic2);
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY3(micentry), 0);
++
++			/* Write TX[63:32] and keyType(reserved) */
+ 			REG_WRITE(ah, AR_KEYTABLE_KEY4(micentry), 0);
+ 			REG_WRITE(ah, AR_KEYTABLE_TYPE(micentry),
+ 				  AR_KEYTABLE_TYPE_CLR);
+ 		}
++
++		/* MAC address registers are reserved for the MIC entry */
+ 		REG_WRITE(ah, AR_KEYTABLE_MAC0(micentry), 0);
+ 		REG_WRITE(ah, AR_KEYTABLE_MAC1(micentry), 0);
++
++		/*
++		 * Write the correct (un-inverted) key[47:0] last to enable
++		 * TKIP now that all other registers are set with correct
++		 * values.
++		 */
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY0(entry), key0);
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY1(entry), key1);
+ 	} else {
++		/* Write key[47:0] */
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY0(entry), key0);
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY1(entry), key1);
++
++		/* Write key[95:48] */
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY2(entry), key2);
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY3(entry), key3);
++
++		/* Write key[127:96] and key type */
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY4(entry), key4);
+ 		REG_WRITE(ah, AR_KEYTABLE_TYPE(entry), keyType);
+ 
++		/* Write MAC address for the entry */
+ 		(void) ath9k_hw_keysetmac(ah, entry, mac);
+ 	}
+ 
+-	if (ah->curchan == NULL)
+-		return true;
+-
+ 	return true;
+ }
+ 
+--- wireless-testing.orig/drivers/net/wireless/ath9k/mac.h	2009-03-02 14:23:03.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/mac.h	2009-03-02 14:23:07.000000000 +0200
+@@ -588,9 +588,11 @@ struct ath9k_keyval {
+ 	u8 kv_type;
+ 	u8 kv_pad;
+ 	u16 kv_len;
+-	u8 kv_val[16];
+-	u8 kv_mic[8];
+-	u8 kv_txmic[8];
++	u8 kv_val[16]; /* TK */
++	u8 kv_mic[8]; /* Michael MIC key */
++	u8 kv_txmic[8]; /* Michael MIC TX key (used only if the hardware
++			 * supports both MIC keys in the same key cache entry;
++			 * in that case, kv_mic is the RX key) */
+ };
+ 
+ enum ath9k_key_type {
 
-johannes
-
---=-ad1dnZ6UVArYxC7WKcLt
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJu9Y0AAoJEKVg1VMiehFY/YkP/jW2OSrZTHyp3B7SU7n4n7mQ
-Vdw4a8AupyeRqL/QXhuM/grWIegS7/S3pdR921jV6kq2lc5kLv6BTY45JI7L5I/X
-Mabe9inO+4Y2YYwqFxAefFZZQUWrWx3xUH78avIVvvkHoFEH+zmVQwv6pG4Qp2Et
-AlANMIDOM62Orb2eNdZrSIW+X34IN+o2c4eyFDKoJUIqiJrdaJ+RI77usDgsQPfB
-qJVCmsd2df0uuA/PlsUqixhv43nHKXXu+neKa2t8O7AXz8fm+tYsPTU0rOjBcdKl
-G6rxNgD36PYM29H340sxa0wT0R1D0gIcRVHFmb7f18oZB90zI2uNoanwFq5ma22j
-YlWBiaB2zlxjIorWZSLcpALqkkrz7u4PPwh0FKrg9xSJqzD+l/QsXQGdVCMV+C/v
-es32wOjWqZcl5XOGX5OJf+/gkiPJXoJkZjgtDKSgEwTCZefS+DwErAZikCGYwaiT
-WPsMx1vvGZq3WLJ5xft4J+/oKrSVxbWg27z/juFYpMm7zrSQGEKavoHLkVYDsPw9
-coD1wyVsglgqZ6/zyrzcv5GuEkzUHQLF/zpYwJZpfgn73vSis6kVMN3ARwsoYt1C
-RB143MpaGM6wf95/9bCFmkhsxYrLqVf92Ir6pFrOSqc17UtLvHUYvZBQMDu6IFUX
-a6fPLdXR45TxoMn+5880
-=qmb0
------END PGP SIGNATURE-----
-
---=-ad1dnZ6UVArYxC7WKcLt--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
