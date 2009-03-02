@@ -1,103 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:49810 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755907AbZCQDKh (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50038 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750948AbZCBXHR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 23:10:37 -0400
-From: Christian Lamparter <chunkeey@web.de>
+	Mon, 2 Mar 2009 18:07:17 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Subject: [RFC][PATCH 5/5] ar9170: update Makefile, Kconfig and MAINTAINERS
-Date: Tue, 17 Mar 2009 04:10:35 +0100
-MIME-Version: 1.0
-Cc: mcgrof@gmail.com, Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200903170410.35771.chunkeey@web.de> (sfid-20090317_041039_676901_CDB66033)
+Cc: johannes@sipsolutions.net, jussi.kivilinna@mbnet.fi,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rndis_wlan: convert get/set mode to cfg80211
+Date: Mon,  2 Mar 2009 18:00:06 -0500
+Message-Id: <1236034806-13809-1-git-send-email-linville@tuxdriver.com> (sfid-20090303_000723_005556_1A0B06D8)
+In-Reply-To: <1236029064-3836-1-git-send-email-linville@tuxdriver.com>
+References: <1236029064-3836-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-update Makefile, Kconfig and MAINTAINERS files
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1c2ca1d..b4f3699 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -765,6 +765,14 @@ L:	linux-wireless@vger.kernel.org
- L:	ath9k-devel@lists.ath9k.org
- S:	Supported
+Obviously this depends on "rndis_wlan: initiate cfg80211 conversion"...
+
+ drivers/net/wireless/rndis_wlan.c |   95 +++++++++++++++++--------------------
+ 1 files changed, 43 insertions(+), 52 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index ebed802..fa9b9dd 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -406,8 +406,17 @@ struct rndis_wext_private {
+ 	u8 command_buffer[COMMAND_BUFFER_SIZE];
+ };
  
-+ATHEROS AR9170 WIRELESS DRIVER
-+P:	Christian Lamparter
-+M:	chunkeey@web.de
-+L:	linux-wireless@vger.kernel.org
-+W:	http://wireless.kernel.org/en/users/Drivers/ar9170
-+S:	Maintained
-+F:	drivers/net/wireless/ar9170/
++/*
++ * cfg80211 ops
++ */
++int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
++				enum nl80211_iftype type, u32 *flags,
++				struct vif_params *params);
 +
- ATI_REMOTE2 DRIVER
- P:	Ville Syrjala
- M:	syrjala@sci.fi
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 612fffe..8a08235 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -485,6 +485,7 @@ config MWL8K
- source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/ath5k/Kconfig"
- source "drivers/net/wireless/ath9k/Kconfig"
-+source "drivers/net/wireless/ar9170/Kconfig"
- source "drivers/net/wireless/ipw2x00/Kconfig"
- source "drivers/net/wireless/iwlwifi/Kconfig"
- source "drivers/net/wireless/hostap/Kconfig"
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index d780487..5e7c9ac 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -57,5 +57,6 @@ obj-$(CONFIG_P54_COMMON)	+= p54/
++struct cfg80211_ops rndis_config_ops = {
++	.change_virtual_intf = rndis_change_virtual_intf,
++};
  
- obj-$(CONFIG_ATH5K)	+= ath5k/
- obj-$(CONFIG_ATH9K)	+= ath9k/
-+obj-$(CONFIG_AR9170_COMMON)	+= ar9170/
+-struct cfg80211_ops rndis_config_ops = { };
+ void *rndis_wiphy_privid = &rndis_wiphy_privid;
  
- obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
-diff --git a/drivers/net/wireless/ar9170/Kconfig b/drivers/net/wireless/ar9170/Kconfig
-new file mode 100644
-index 0000000..bc77741
---- /dev/null
-+++ b/drivers/net/wireless/ar9170/Kconfig
-@@ -0,0 +1,23 @@
-+config AR9170_COMMON
-+	tristate "Atheros AR9170 support"
-+	depends on WLAN_80211 && MAC80211 && FW_LOADER && EXPERIMENTAL
-+	help
-+	  This is common code for AR9170 based devices.
-+	  This module does nothing by itself - the USB/(SPI) frontends
-+	  also need to be enabled in order to support any devices.
+ static const int bcm4320_power_output[4] = { 25, 50, 75, 100 };
+@@ -1125,6 +1134,37 @@ static void set_multicast_list(struct usbnet *usbdev)
+ 
+ 
+ /*
++ * cfg80211 ops
++ */
++int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
++				enum nl80211_iftype type, u32 *flags,
++				struct vif_params *params)
++{
++	struct net_device *dev;
++	struct usbnet *usbdev;
++	int mode;
 +
-+	  These devices require firmware which can be found in the offical
-+	  driver wiki at:
-+	  http://wireless.kernel.org/en/users/Drivers/ar9170
++	/* we're under RTNL */
++	dev = __dev_get_by_index(&init_net, ifindex);
++	if (!dev)
++		return -ENODEV;
++	usbdev = netdev_priv(dev);
 +
-+	  Say Y if you have the hardware, or M to build a module called
-+	  ar9170common.
++	switch (type) {
++	case NL80211_IFTYPE_ADHOC:
++		mode = ndis_80211_infra_adhoc;
++		break;
++	case NL80211_IFTYPE_STATION:
++		mode = ndis_80211_infra_infra;
++		break;
++	default:
++		return -EINVAL;
++	}
 +
-+config AR9170_USB
-+	tristate "Atheros AR9170 USB support"
-+	depends on AR9170_COMMON && USB
-+	help
-+	  This is a mac80211-based driver for the Atheros "otus" 802.11n
-+	  (2.4 and 5 GHz) USB devices.
++	return set_infra_mode(usbdev, mode);
++}
 +
-+	  If you choose to build a module, it'll be called ar9170usb.
-diff --git a/drivers/net/wireless/ar9170/Makefile b/drivers/net/wireless/ar9170/Makefile
-new file mode 100644
-index 0000000..4af4217
---- /dev/null
-+++ b/drivers/net/wireless/ar9170/Makefile
-@@ -0,0 +1,6 @@
-+ar9170common-objs += main.o cmd.o mac.o phy.o led.o
-+ar9170usb-objs += usb.o
-+
-+obj-$(CONFIG_AR9170_COMMON) += ar9170common.o
-+obj-$(CONFIG_AR9170_USB) += ar9170usb.o
-+
++/*
+  * wireless extension handlers
+  */
+ 
+@@ -1450,55 +1490,6 @@ static int rndis_iw_get_auth(struct net_device *dev,
+ }
+ 
+ 
+-static int rndis_iw_get_mode(struct net_device *dev,
+-				struct iw_request_info *info,
+-				union iwreq_data *wrqu, char *extra)
+-{
+-	struct usbnet *usbdev = netdev_priv(dev);
+-	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+-
+-	switch (priv->infra_mode) {
+-	case ndis_80211_infra_adhoc:
+-		wrqu->mode = IW_MODE_ADHOC;
+-		break;
+-	case ndis_80211_infra_infra:
+-		wrqu->mode = IW_MODE_INFRA;
+-		break;
+-	/*case ndis_80211_infra_auto_unknown:*/
+-	default:
+-		wrqu->mode = IW_MODE_AUTO;
+-		break;
+-	}
+-	devdbg(usbdev, "SIOCGIWMODE: %08x", wrqu->mode);
+-	return 0;
+-}
+-
+-
+-static int rndis_iw_set_mode(struct net_device *dev,
+-    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+-{
+-	struct usbnet *usbdev = netdev_priv(dev);
+-	int mode;
+-
+-	devdbg(usbdev, "SIOCSIWMODE: %08x", wrqu->mode);
+-
+-	switch (wrqu->mode) {
+-	case IW_MODE_ADHOC:
+-		mode = ndis_80211_infra_adhoc;
+-		break;
+-	case IW_MODE_INFRA:
+-		mode = ndis_80211_infra_infra;
+-		break;
+-	/*case IW_MODE_AUTO:*/
+-	default:
+-		mode = ndis_80211_infra_auto_unknown;
+-		break;
+-	}
+-
+-	return set_infra_mode(usbdev, mode);
+-}
+-
+-
+ static int rndis_iw_set_encode(struct net_device *dev,
+     struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+ {
+@@ -2196,8 +2187,8 @@ static const iw_handler rndis_iw_handler[] =
+ 	IW_IOCTL(SIOCGIWNAME)      = (iw_handler) cfg80211_wext_giwname,
+ 	IW_IOCTL(SIOCSIWFREQ)      = rndis_iw_set_freq,
+ 	IW_IOCTL(SIOCGIWFREQ)      = rndis_iw_get_freq,
+-	IW_IOCTL(SIOCSIWMODE)      = rndis_iw_set_mode,
+-	IW_IOCTL(SIOCGIWMODE)      = rndis_iw_get_mode,
++	IW_IOCTL(SIOCSIWMODE)      = (iw_handler) cfg80211_wext_siwmode,
++	IW_IOCTL(SIOCGIWMODE)      = (iw_handler) cfg80211_wext_giwmode,
+ 	IW_IOCTL(SIOCGIWRANGE)     = rndis_iw_get_range,
+ 	IW_IOCTL(SIOCSIWAP)        = rndis_iw_set_bssid,
+ 	IW_IOCTL(SIOCGIWAP)        = rndis_iw_get_bssid,
+-- 
+1.6.0.6
+
