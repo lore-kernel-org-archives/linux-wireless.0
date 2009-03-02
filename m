@@ -1,34 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4027 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751735AbZCXDih (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.191]:65006 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755534AbZCBRnG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 23:38:37 -0400
-Date: Mon, 23 Mar 2009 23:38:18 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
-Message-ID: <20090324033818.GB9333@hash.localnet> (sfid-20090324_043839_763531_7A5F8B8A)
-References: <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com> <49A726A7.6090809@gmail.com> <20090227022704.GA29850@hash.localnet> <20090227023912.GF13456@tesla> <20090227030608.GA29974@hash.localnet> <1235884912.9224.26.camel@mj> <20090303034600.GA3757@hash.localnet> <40f31dec0903022031l20ecc3dcx9ba7859cb24fa5ae@mail.gmail.com> <20090323030419.GA5803@hash.localnet> <20090323195328.GH3285@tuxdriver.com>
+	Mon, 2 Mar 2009 12:43:06 -0500
+Received: by ti-out-0910.google.com with SMTP id d10so2887592tib.23
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2009 09:43:03 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090323195328.GH3285@tuxdriver.com>
+Message-ID: <18860.6782.4168.588808@gargle.gargle.HOWL> (sfid-20090302_184311_107465_23216F73)
+Date: Mon, 2 Mar 2009 23:12:22 +0530
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Handle power modes in isr for power save.
+In-Reply-To: <20090302145514.GB4660@myhost.users.atheros.com>
+References: <20090302145514.GB4660@myhost.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 23, 2009 at 03:53:28PM -0400, John W. Linville wrote:
-> I've got this one now.  Just FYI, I'll be prone to losing any
-> patches posted in the middle of a thread if the Subject isn't changed
-> appropriately.  FWIW, 'git send-email' can accept an "--in-reply-to"
-> argument.  
+Vivek Natarajan wrote:
+> Restore network sleep mode in isr if power save is enabled.
+> 
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+>  drivers/net/wireless/ath9k/ath9k.h |    3 ++-
+>  drivers/net/wireless/ath9k/main.c  |    2 ++
+>  2 files changed, 4 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+> index 6481ea4..69292f3 100644
+> --- a/drivers/net/wireless/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath9k/ath9k.h
+> @@ -677,7 +677,8 @@ static inline void ath9k_ps_wakeup(struct ath_softc *sc)
+>  static inline void ath9k_ps_restore(struct ath_softc *sc)
+>  {
+>  	if (atomic_dec_and_test(&sc->ps_usecount))
+> -		if (sc->hw->conf.flags & IEEE80211_CONF_PS)
+> +		if ((sc->hw->conf.flags & IEEE80211_CONF_PS) &&
+> +		    !(sc->sc_flags & SC_OP_WAIT_FOR_BEACON))
+>  			ath9k_hw_setpower(sc->sc_ah,
+>  					  sc->sc_ah->restore_mode);
+>  }
+> diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+> index fd6cc73..96194ef 100644
+> --- a/drivers/net/wireless/ath9k/main.c
+> +++ b/drivers/net/wireless/ath9k/main.c
+> @@ -516,6 +516,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+>  			return IRQ_NONE;
+>  
+>  		sc->intrstatus = status;
+> +		ath9k_ps_wakeup(sc);
+>  
+>  		if (status & ATH9K_INT_FATAL) {
+>  			/* need a chip reset */
+> @@ -581,6 +582,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+>  				sched = true;
+>  			}
+>  		}
+> +		ath9k_ps_restore(sc);
+>  	} while (0);
+>  
 
-Great, thanks -- and thanks for the tip!
+This needs proper locking.
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Sujith
