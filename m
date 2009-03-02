@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f177.google.com ([209.85.219.177]:46214 "EHLO
-	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbZCDW0z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 17:26:55 -0500
-Received: by ewy25 with SMTP id 25so2848240ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 14:26:52 -0800 (PST)
-Date: Wed, 4 Mar 2009 23:26:25 +0100
-From: "Christoph .J Thompson" <cjsthompson@gmail.com>
-To: Alexey Yudichev <ayudichev@yahoo.co.uk>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath5k master (AP) mode
-Message-Id: <20090304232625.cc47eb46.cjsthompson@gmail.com> (sfid-20090304_232658_903869_49F82B48)
-In-Reply-To: <4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com>
-References: <4dd58f490903041329p54ec56ceh1b64ab000027eac5@mail.gmail.com>
-	<4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.gmx.net ([213.165.64.20]:39128 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750929AbZCBW3v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2009 17:29:51 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Mon, 02 Mar 2009 23:29:48 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090302222948.76770@gmx.net> (sfid-20090302_232954_242801_449A3FE7)
+MIME-Version: 1.0
+Subject: [PATCH] ath5k: Set TSF fix
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 4 Mar 2009 21:33:21 +0000
-Alexey Yudichev <ayudichev@yahoo.co.uk> wrote:
-> Hello,
->=20
-> I've just joined the list so don't know how to join the same thread s=
-o
-> to indicate that it's the same matter I use the same subject. I am
-> trying to make my "04:01.0 Ethernet controller: Atheros Communication=
-s
-> Inc. Atheros AR5001X+ Wireless Network Adapter (rev 01)" which is
-> identified by ath5k as
-> [=A0=A0 10.356742] ath5k phy0: Atheros AR5213A chip found (MAC: 0x59,=
- PHY: 0x43)
-> [=A0=A0 10.356748] ath5k phy0: RF5112B multiband radio found (0x36)
+The old code doesn't work correctly e.g. on newer chipsets like AR5418+=
+AR2122 and AR5416+AR2133.
 
-I have the exact same card (AR5001X+) working in master mode with hosta=
-pd. What kernel version and hostapd version do you use?
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+---
+diff -urN wireless-testing.orig/drivers/net/wireless/ath5k/pcu.c wirele=
+ss-testing/drivers/net/wireless/ath5k/pcu.c
+--- wireless-testing.orig/drivers/net/wireless/ath5k/pcu.c	2009-01-23 2=
+2:54:07.000000000 +0100
++++ wireless-testing/drivers/net/wireless/ath5k/pcu.c	2009-01-24 08:47:=
+16.000000000 +0100
+@@ -657,9 +657,8 @@
+ {
+ 	ATH5K_TRACE(ah->ah_sc);
+=20
+-	ath5k_hw_reg_write(ah, 0x00000000, AR5K_TSF_L32);
+-	ath5k_hw_reg_write(ah, (tsf64 >> 32) & 0xffffffff, AR5K_TSF_U32);
+ 	ath5k_hw_reg_write(ah, tsf64 & 0xffffffff, AR5K_TSF_L32);
++	ath5k_hw_reg_write(ah, (tsf64 >> 32) & 0xffffffff, AR5K_TSF_U32);
+ }
+=20
+ /**
 
 --=20
-Christoph .J Thompson <cjsthompson@gmail.com>
+Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
+f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
+69a
 --
 To unsubscribe from this list: send the line "unsubscribe linux-wireles=
 s" in
