@@ -1,142 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49836 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952AbZCMKZw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52772 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538AbZCBVaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 06:25:52 -0400
-Subject: [PATCH] mac80211: resume properly, add suspend/resume test
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-Content-Type: text/plain
-Date: Fri, 13 Mar 2009 11:25:17 +0100
-Message-Id: <1236939917.5235.7.camel@johannes.local> (sfid-20090313_112555_620577_8A85228F)
-Mime-Version: 1.0
+	Mon, 2 Mar 2009 16:30:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rndis_wlan: initiate cfg80211 conversion
+Date: Mon,  2 Mar 2009 16:24:24 -0500
+Message-Id: <1236029064-3836-1-git-send-email-linville@tuxdriver.com> (sfid-20090302_223029_043831_D9E22337)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When mac80211 resumes, it currently doesn't reconfigure the interfaces
-entirely and also doesn't reconfigure BSS information -- fix this.
-
-Also, to be able to test this, add a debugfs file that just calls
-the suspend/resume code to see what happens when we go through that,
-without needing the time-consuming suspend/resume cycle.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
-zd1211rw currently doesn't survive this properly, I'm not sure why,
-but it keeps saying
-	zd1211rw 1-1:1.0: error ioread32(CR_REG1): -11
+I've been meaning to finish this up for a while...maybe I should just go
+ahead and send it out instead...
 
-Please test with other hardware, we need to figure out whether or
-not something is missing in mac80211.
+ drivers/net/wireless/rndis_wlan.c |  114 +++++++++++++++++++++++++++---------
+ 1 files changed, 85 insertions(+), 29 deletions(-)
 
- net/mac80211/debugfs.c     |   24 ++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/pm.c          |   29 +++++++++++++++++++++++++++++
- 3 files changed, 54 insertions(+)
-
---- wireless-testing.orig/net/mac80211/pm.c	2009-03-13 10:44:34.000000000 +0100
-+++ wireless-testing/net/mac80211/pm.c	2009-03-13 11:09:29.000000000 +0100
-@@ -113,5 +113,34 @@ int __ieee80211_resume(struct ieee80211_
- 	ieee80211_configure_filter(local);
- 	netif_addr_unlock_bh(local->mdev);
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 105f214..ebed802 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -42,6 +42,8 @@
+ #include <linux/ctype.h>
+ #include <linux/spinlock.h>
+ #include <net/iw_handler.h>
++#include <net/wireless.h>
++#include <net/cfg80211.h>
+ #include <linux/usb/usbnet.h>
+ #include <linux/usb/rndis_host.h>
  
-+	/* Finally also reconfigure all the BSS information */
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		u32 changed = ~0;
-+		if (!netif_running(sdata->dev))
-+			continue;
-+		switch (sdata->vif.type) {
-+		case NL80211_IFTYPE_STATION:
-+			/* disable beacon change bits */
-+			changed &= ~IEEE80211_IFCC_BEACON;
-+			/* fall through */
-+		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_AP:
-+		case NL80211_IFTYPE_MESH_POINT:
-+			WARN_ON(ieee80211_if_config(sdata, changed));
-+			ieee80211_bss_info_change_notify(sdata, ~0);
-+			break;
-+		case NL80211_IFTYPE_WDS:
-+			break;
-+		case NL80211_IFTYPE_AP_VLAN:
-+		case NL80211_IFTYPE_MONITOR:
-+			/* ignore virtual */
-+			break;
-+		case NL80211_IFTYPE_UNSPECIFIED:
-+		case __NL80211_IFTYPE_AFTER_LAST:
-+			WARN_ON(1);
-+			break;
-+		}
-+	}
-+
- 	return 0;
- }
---- wireless-testing.orig/net/mac80211/debugfs.c	2009-03-13 10:52:51.000000000 +0100
-+++ wireless-testing/net/mac80211/debugfs.c	2009-03-13 11:24:09.000000000 +0100
-@@ -40,6 +40,10 @@ static const struct file_operations name
- 	local->debugfs.name = debugfs_create_file(#name, 0400, phyd,	\
- 						  local, &name## _ops);
+@@ -316,12 +318,44 @@ enum wpa_key_mgmt { KEY_MGMT_802_1X, KEY_MGMT_PSK, KEY_MGMT_NONE,
  
-+#define DEBUGFS_ADD_MODE(name, mode)					\
-+	local->debugfs.name = debugfs_create_file(#name, mode, phyd,	\
-+						  local, &name## _ops);
-+
- #define DEBUGFS_DEL(name)						\
- 	debugfs_remove(local->debugfs.name);				\
- 	local->debugfs.name = NULL;
-@@ -113,6 +117,24 @@ static const struct file_operations tsf_
- 	.open = mac80211_open_file_generic
- };
+ #define COMMAND_BUFFER_SIZE	(CONTROL_BUFFER_SIZE + sizeof(struct rndis_set))
  
-+static ssize_t reset_write(struct file *file, const char __user *user_buf,
-+			   size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_local *local = file->private_data;
-+
-+	rtnl_lock();
-+	__ieee80211_suspend(&local->hw);
-+	__ieee80211_resume(&local->hw);
-+	rtnl_unlock();
-+
-+	return count;
-+}
-+
-+static const struct file_operations reset_ops = {
-+	.write = reset_write,
-+	.open = mac80211_open_file_generic,
++static const struct ieee80211_channel rndis_channels[] = {
++	{ .center_freq = 2412 },
++	{ .center_freq = 2417 },
++	{ .center_freq = 2422 },
++	{ .center_freq = 2427 },
++	{ .center_freq = 2432 },
++	{ .center_freq = 2437 },
++	{ .center_freq = 2442 },
++	{ .center_freq = 2447 },
++	{ .center_freq = 2452 },
++	{ .center_freq = 2457 },
++	{ .center_freq = 2462 },
++	{ .center_freq = 2467 },
++	{ .center_freq = 2472 },
++	{ .center_freq = 2484 },
 +};
 +
- /* statistics stuff */
++static const struct ieee80211_rate rndis_rates[] = {
++	{ .bitrate = 10 },
++	{ .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 55, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 60 },
++	{ .bitrate = 90 },
++	{ .bitrate = 120 },
++	{ .bitrate = 180 },
++	{ .bitrate = 240 },
++	{ .bitrate = 360 },
++	{ .bitrate = 480 },
++	{ .bitrate = 540 }
++};
++
+ /* RNDIS device private data */
+ struct rndis_wext_private {
+-	char name[32];
+-
+ 	struct usbnet *usbdev;
  
- #define DEBUGFS_STATS_FILE(name, buflen, fmt, value...)			\
-@@ -254,6 +276,7 @@ void debugfs_hw_add(struct ieee80211_loc
- 	DEBUGFS_ADD(total_ps_buffered);
- 	DEBUGFS_ADD(wep_iv);
- 	DEBUGFS_ADD(tsf);
-+	DEBUGFS_ADD_MODE(reset, 0200);
++	struct wireless_dev wdev;
++
+ 	struct workqueue_struct *workqueue;
+ 	struct delayed_work stats_work;
+ 	struct work_struct work;
+@@ -329,6 +363,10 @@ struct rndis_wext_private {
+ 	spinlock_t stats_lock;
+ 	unsigned long work_pending;
  
- 	statsd = debugfs_create_dir("statistics", phyd);
- 	local->debugfs.statistics = statsd;
-@@ -308,6 +331,7 @@ void debugfs_hw_del(struct ieee80211_loc
- 	DEBUGFS_DEL(total_ps_buffered);
- 	DEBUGFS_DEL(wep_iv);
- 	DEBUGFS_DEL(tsf);
-+	DEBUGFS_DEL(reset);
++	struct ieee80211_supported_band band;
++	struct ieee80211_channel channels[ARRAY_SIZE(rndis_channels)];
++	struct ieee80211_rate rates[ARRAY_SIZE(rndis_rates)];
++
+ 	struct iw_statistics iwstats;
+ 	struct iw_statistics privstats;
  
- 	DEBUGFS_STATS_DEL(transmitted_fragment_count);
- 	DEBUGFS_STATS_DEL(multicast_transmitted_frame_count);
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-03-13 10:55:52.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-03-13 10:55:57.000000000 +0100
-@@ -777,6 +777,7 @@ struct ieee80211_local {
- 		struct dentry *total_ps_buffered;
- 		struct dentry *wep_iv;
- 		struct dentry *tsf;
-+		struct dentry *reset;
- 		struct dentry *statistics;
- 		struct local_debugfsdentries_statsdentries {
- 			struct dentry *transmitted_fragment_count;
-
+@@ -369,7 +407,8 @@ struct rndis_wext_private {
+ };
+ 
+ 
+-static const int rates_80211g[8] = { 6, 9, 12, 18, 24, 36, 48, 54 };
++struct cfg80211_ops rndis_config_ops = { };
++void *rndis_wiphy_privid = &rndis_wiphy_privid;
+ 
+ static const int bcm4320_power_output[4] = { 25, 50, 75, 100 };
+ 
+@@ -1151,15 +1190,15 @@ static int rndis_iw_get_range(struct net_device *dev,
+ 	/* fill in 802.11g rates */
+ 	if (has_80211g_rates) {
+ 		num = range->num_bitrates;
+-		for (i = 0; i < ARRAY_SIZE(rates_80211g); i++) {
++		for (i = 4; i < ARRAY_SIZE(rndis_rates); i++) {
+ 			for (j = 0; j < num; j++) {
+ 				if (range->bitrate[j] ==
+-					rates_80211g[i] * 1000000)
++					rndis_rates[i].bitrate * 100000)
+ 					break;
+ 			}
+ 			if (j == num)
+ 				range->bitrate[range->num_bitrates++] =
+-					rates_80211g[i] * 1000000;
++					rndis_rates[i].bitrate * 100000;
+ 			if (range->num_bitrates == IW_MAX_BITRATES)
+ 				break;
+ 		}
+@@ -1204,17 +1243,6 @@ static int rndis_iw_get_range(struct net_device *dev,
+ }
+ 
+ 
+-static int rndis_iw_get_name(struct net_device *dev,
+-    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+-{
+-	struct usbnet *usbdev = netdev_priv(dev);
+-	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+-
+-	strcpy(wrqu->name, priv->name);
+-	return 0;
+-}
+-
+-
+ static int rndis_iw_set_essid(struct net_device *dev,
+     struct iw_request_info *info, union iwreq_data *wrqu, char *essid)
+ {
+@@ -2165,7 +2193,7 @@ static struct iw_statistics *rndis_get_wireless_stats(struct net_device *dev)
+ static const iw_handler rndis_iw_handler[] =
+ {
+ 	IW_IOCTL(SIOCSIWCOMMIT)    = rndis_iw_commit,
+-	IW_IOCTL(SIOCGIWNAME)      = rndis_iw_get_name,
++	IW_IOCTL(SIOCGIWNAME)      = (iw_handler) cfg80211_wext_giwname,
+ 	IW_IOCTL(SIOCSIWFREQ)      = rndis_iw_set_freq,
+ 	IW_IOCTL(SIOCGIWFREQ)      = rndis_iw_get_freq,
+ 	IW_IOCTL(SIOCSIWMODE)      = rndis_iw_set_mode,
+@@ -2338,12 +2366,6 @@ static int rndis_wext_get_caps(struct usbnet *usbdev)
+ 				break;
+ 			}
+ 		}
+-		if (priv->caps & CAP_MODE_80211A)
+-			strcat(priv->name, "a");
+-		if (priv->caps & CAP_MODE_80211B)
+-			strcat(priv->name, "b");
+-		if (priv->caps & CAP_MODE_80211G)
+-			strcat(priv->name, "g");
+ 	}
+ 
+ 	return retval;
+@@ -2527,20 +2549,28 @@ static int bcm4320_early_init(struct usbnet *usbdev)
+ 
+ static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ {
++	struct wiphy *wiphy;
+ 	struct rndis_wext_private *priv;
+ 	int retval, len;
+ 	__le32 tmp;
+ 
+-	/* allocate rndis private data */
+-	priv = kzalloc(sizeof(struct rndis_wext_private), GFP_KERNEL);
+-	if (!priv)
++	/* allocate wiphy and rndis private data
++	 * NOTE: We only support a single virtual interface, so wiphy
++	 * and wireless_dev are somewhat synonymous for this device.
++	 */
++	wiphy = wiphy_new(&rndis_config_ops, sizeof(struct rndis_wext_private));
++	if (!wiphy)
+ 		return -ENOMEM;
+ 
++	priv = wiphy_priv(wiphy);
++	usbdev->net->ieee80211_ptr = &priv->wdev;
++	priv->wdev.wiphy = wiphy;
++	priv->wdev.iftype = NL80211_IFTYPE_STATION;
++
+ 	/* These have to be initialized before calling generic_rndis_bind().
+ 	 * Otherwise we'll be in big trouble in rndis_wext_early_init().
+ 	 */
+ 	usbdev->driver_priv = priv;
+-	strcpy(priv->name, "IEEE802.11");
+ 	usbdev->net->wireless_handlers = &rndis_iw_handlers;
+ 	priv->usbdev = usbdev;
+ 
+@@ -2583,7 +2613,31 @@ static int rndis_wext_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 					| IW_QUAL_QUAL_INVALID
+ 					| IW_QUAL_LEVEL_INVALID;
+ 
++	/* fill-out wiphy structure and register w/ cfg80211 */
++	memcpy(wiphy->perm_addr, usbdev->net->dev_addr, ETH_ALEN);
++	wiphy->privid = rndis_wiphy_privid;
++	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION)
++					| BIT(NL80211_IFTYPE_ADHOC);
++	wiphy->max_scan_ssids = 1;
++
++	/* TODO: fill-out band information based on priv->caps */
+ 	rndis_wext_get_caps(usbdev);
++
++	memcpy(priv->channels, rndis_channels, sizeof(rndis_channels));
++	memcpy(priv->rates, rndis_rates, sizeof(rndis_rates));
++	priv->band.channels = priv->channels;
++	priv->band.n_channels = ARRAY_SIZE(rndis_channels);
++	priv->band.bitrates = priv->rates;
++	priv->band.n_bitrates = ARRAY_SIZE(rndis_rates);
++	wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band;
++
++	set_wiphy_dev(wiphy, &usbdev->udev->dev);
++
++	if (wiphy_register(wiphy)) {
++		wiphy_free(wiphy);
++		return -ENODEV;
++	}
++
+ 	set_default_iw_params(usbdev);
+ 
+ 	/* turn radio on */
+@@ -2620,9 +2674,11 @@ static void rndis_wext_unbind(struct usbnet *usbdev, struct usb_interface *intf)
+ 
+ 	if (priv && priv->wpa_ie_len)
+ 		kfree(priv->wpa_ie);
+-	kfree(priv);
+ 
+ 	rndis_unbind(usbdev, intf);
++
++	wiphy_unregister(priv->wdev.wiphy);
++	wiphy_free(priv->wdev.wiphy);
+ }
+ 
+ 
+-- 
+1.6.0.6
 
