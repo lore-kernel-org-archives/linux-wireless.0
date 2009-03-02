@@ -1,29 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out2.libero.it ([212.52.84.102]:47476 "EHLO
-	cp-out2.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754368AbZCYKom convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 06:44:42 -0400
-Received: from libero.it (192.168.17.3) by cp-out2.libero.it (8.5.016.1)
-        id 49BA73C200C85037 for linux-wireless@vger.kernel.org; Wed, 25 Mar 2009 11:44:39 +0100
-Date: Wed, 25 Mar 2009 11:44:34 +0100
-Message-Id: <KH25UA$46381FB49C4432567980A061BF3970A2@libero.it> (sfid-20090325_114445_503026_5A269973)
-Subject: mac80211: 802.11e / WMM support?
+Received: from mail.gmx.net ([213.165.64.20]:50694 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752212AbZCBW2l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2009 17:28:41 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Mon, 02 Mar 2009 23:28:38 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090302222838.76740@gmx.net> (sfid-20090302_232844_320012_29CAAD09)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-From: "ffileppo" <ffileppo@libero.it>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Set TSF fix
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+The old code doesn't work correctly e.g. on newer chipsets like AR5418+=
+AR2122 and AR5416+AR2133.
 
-I would like to ask some questions about 802.11e / WMM:
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
+---
+diff -urN wireless-testing.orig/drivers/net/wireless/ath9k/hw.c wireles=
+s-testing/drivers/net/wireless/ath9k/hw.c
+--- wireless-testing.orig/drivers/net/wireless/ath9k/hw.c	2009-01-23 22=
+:54:08.000000000 +0100
++++ wireless-testing/drivers/net/wireless/ath9k/hw.c	2009-01-24 08:47:4=
+5.000000000 +0100
+@@ -3736,9 +3736,8 @@
+=20
+ void ath9k_hw_settsf64(struct ath_hal *ah, u64 tsf64)
+ {
+-	REG_WRITE(ah, AR_TSF_L32, 0x00000000);
+-	REG_WRITE(ah, AR_TSF_U32, (tsf64 >> 32) & 0xffffffff);
+ 	REG_WRITE(ah, AR_TSF_L32, tsf64 & 0xffffffff);
++	REG_WRITE(ah, AR_TSF_U32, (tsf64 >> 32) & 0xffffffff);
+ }
+=20
+ void ath9k_hw_reset_tsf(struct ath_hal *ah)
 
-Is WMM currently supported by mac80211?
-Is there any plan to get WMM working with ad-hoc mode?
-
-Thank you,
-
-Francesco
-
+--=20
+Computer Bild Tarifsieger! GMX FreeDSL - Telefonanschluss + DSL
+f=FCr nur 17,95 =BF/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K11308T45=
+69a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
