@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40962 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750730AbZCWXRO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 19:17:14 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Michael.Green@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/2] wireless-regdb: BN was missing two 5 GHz bands
-Date: Mon, 23 Mar 2009 19:17:11 -0400
-Message-Id: <1237850232-24513-1-git-send-email-lrodriguez@atheros.com> (sfid-20090324_001718_375058_1E822BC2)
+Received: from mail.gmx.net ([213.165.64.20]:49721 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755687AbZCBWNo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2009 17:13:44 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Date: Mon, 02 Mar 2009 23:13:40 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+Message-ID: <20090302221340.76770@gmx.net> (sfid-20090302_231348_924791_483067F8)
+MIME-Version: 1.0
+Subject: [PATCH v2] ath9k: Fix FIF_BCN_PRBRESP_PROMISC handling
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two 5 GHz bands regulatory rules were missing for
-Brunei Darussalam (BN). The document we referred to
-is the:
+So that a new created IBSS network
+doesn't break on the first scan.
 
-"Spectrum Policy and Planning - Joint Policy
-Issued by the TRA and the MOT   27 June 2006"
+It seems to Sujith and me that this
+stupid code unnecessary, too.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+So remove it...
+
+Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
 ---
- db.txt |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/a=
+th9k/main.c
+index f5f5739..e242852 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -2396,14 +2396,6 @@ static void ath9k_configure_filter(struct ieee80=
+211_hw *hw,
+ 	rfilt =3D ath_calcrxfilter(sc);
+ 	ath9k_hw_setrxfilter(sc->sc_ah, rfilt);
+=20
+-	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
+-		if (*total_flags & FIF_BCN_PRBRESP_PROMISC) {
+-			memcpy(sc->curbssid, ath_bcast_mac, ETH_ALEN);
+-			sc->curaid =3D 0;
+-			ath9k_hw_write_associd(sc);
+-		}
+-	}
+-
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "Set HW RX filter: 0x%x\n", sc->rx.rxfilt=
+er);
+ }
+=20
 
-diff --git a/db.txt b/db.txt
-index d3a05ea..77f1754 100644
---- a/db.txt
-+++ b/db.txt
-@@ -82,6 +82,8 @@ country BL:
- 
- country BN:
- 	(2402 - 2482 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 40), (N/A, 20)
-+	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5735 - 5835 @ 40), (N/A, 30)
- 
- country BO:
--- 
-1.6.0.6
-
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
