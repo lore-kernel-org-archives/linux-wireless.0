@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50649 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752969AbZCXUdT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 16:33:19 -0400
-Subject: Re: Adhoc-demo support in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: ming li <mingli@cs.umass.edu>, linux-wireless@vger.kernel.org
-In-Reply-To: <871vsmrekh.fsf@litku.valot.fi> (sfid-20090324_185523_729790_00545A16)
-References: <c03d7e680903240959s51aa4864uaad281bd7487e823@mail.gmail.com>
-	 <871vsmrekh.fsf@litku.valot.fi> (sfid-20090324_185523_729790_00545A16)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-T3B7EDIPhrY8oO0IyKHh"
-Date: Tue, 24 Mar 2009 21:33:14 +0100
-Message-Id: <1237926794.4320.132.camel@johannes.local> (sfid-20090324_213321_421086_2DF8C6B9)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:43386 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752583AbZCCJyx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2009 04:54:53 -0500
+Received: from mail.atheros.com ([10.10.20.86])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2009 01:54:52 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18860.64890.657290.185346@gargle.gargle.HOWL> (sfid-20090303_105501_481254_A5951670)
+Date: Tue, 3 Mar 2009 15:20:50 +0530
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: Handle power modes in isr for power save.
+In-Reply-To: <8e92b4100903030137r4c412ccdu17020c482d6cb1b3@mail.gmail.com>
+References: <20090302145514.GB4660@myhost.users.atheros.com>
+	<18860.6782.4168.588808@gargle.gargle.HOWL>
+	<8e92b4100903030137r4c412ccdu17020c482d6cb1b3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Vivek Natarajan wrote:
+> SC_OP_WAIT_FOR_BEACON is being changed in rx_tasklet and in isr which
+> are mutually exclusive. Even though it might be changed  in these two
+> regions, it won't affect the ps_wake/ps_restore cycle.
+> 
+> IEEE80211_CONF_PS is changed in siwpower() and also in
+> dynamic_ps_work. Even if it is changed while we are executing this
+> ps_restore, there won't be any race condition on ps_wake/ps_restore
+> cycle and it will work fine.
+> 
+> hw_setpower is just a register write function which may not need a protection(?)
+> 
+> And for the protection of ps_wake/ps_restore itself, there is
+> ps_count(atomic) which takes care of properly restoring power save
+> state.
+> 
+> Overall, from my perspective there is no need for any more lock.
 
---=-T3B7EDIPhrY8oO0IyKHh
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sorry, I saw sc_flags and just assumed it would be set from process context.
+Thanks for the explanation.
 
-On Tue, 2009-03-24 at 19:55 +0200, Kalle Valo wrote:
-
-> Can you provide more information about this Adhoc-demo mode? I have
-> never heard of it.
-
-I /think/ it's a pre-standards version of IBSS. I think I had an ancient
-11b card that supported it somehow...
-
-johannes
-
---=-T3B7EDIPhrY8oO0IyKHh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJyUOHAAoJEKVg1VMiehFYTNkP/jTWD3ciYPcapEjDuVBd3Otz
-KJIGxwqwPwYZtBxLNkfhyFK73VlJlZ38SnmDHmB3bKnDO+QDBTiyK+64p/H3TNMI
-OJb36P7kUHnWOpYRpeiQ1B6z+y6jR1cqy7Xs4e+9+mwCFbVf4IcJjeKOcsnsGRFP
-IxX24EumzDZhyB9/8BOUqH4Y5lwhAMtb162G8OsXiBs1dC9f+KqXbW0BL/ssZyGF
-SoaUUC351oGZQdOhHA8TOu4zM0+vtXc1yKjwPt60k1USGnP2x+NTq30tChqPyU0f
-Xu+MYeb/Tnd+uja1N356ralcyiLmwki/W91QDMHINeOwlmKgZWocc0gbz/a9xHMk
-pEXVAlVWRGc8ycYdnjwSdpOWyRjJIU2l8zuUBJOZpmLev1GUi0b16KJ+i9Az6owC
-PUIDlh+yNGCoqr/OatduBy1R+bBabhzwQSHvS+eS92mLiob/3GeEKeoSNN/oygvz
-hbXJyhi47sEhzs+Xp/qgSClF21Cq3NyTkGS4G59vPWb8sFd/IAhupzVz9PxJjVfE
-5YQoSdCtF1V13ndHHzWP4O03FxQrD8VqI5KaOA5mHztR4GJBwM8a0i6GMUOYHk0E
-4ICcNw03lutuxnqrAAgxxQFwAZ1auetYCD/0wLWS60BBPImJ+8ILsRHR8RO8YL+p
-ikCYnS19NQu3ahrApAJ/
-=PEV8
------END PGP SIGNATURE-----
-
---=-T3B7EDIPhrY8oO0IyKHh--
-
+Sujith
