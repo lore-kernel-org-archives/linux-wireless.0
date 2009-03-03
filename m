@@ -1,165 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch-smtp01.sth.basefarm.net ([80.76.149.212]:47395 "EHLO
-	ch-smtp01.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752463AbZCHQ2x (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34726 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751420AbZCCLMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Mar 2009 12:28:53 -0400
-To: Adam Baker <linux@baker-net.org.uk>
-cc: Anders Eriksson <aeriksson@fastmail.fm>,
-	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-Subject: Re: [Rt2400-devel] No ProbeResp == dead interface?
-In-reply-to: <200902212123.21950.linux@baker-net.org.uk>
-References: <20090218205849.5723293CD93@tippex.mynet.homeunix.org> <200902202307.34035.linux@baker-net.org.uk> <20090221145528.5B11B2C4090@tippex.mynet.homeunix.org> <200902212123.21950.linux@baker-net.org.uk>
-Mime-Version: 1.0
+	Tue, 3 Mar 2009 06:12:06 -0500
+Date: Tue, 3 Mar 2009 13:11:53 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Clean up setkey operations
+Message-ID: <20090303111153.GA17684@jm.kir.nu> (sfid-20090303_121212_070199_70408C71)
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Date: Sun, 08 Mar 2009 17:20:23 +0100
-From: Anders Eriksson <aeriksson@fastmail.fm>
-Message-Id: <20090308162023.BBD122C40D0@tippex.mynet.homeunix.org> (sfid-20090308_172857_136280_3E315708)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There is no need to use ath_keyset() wrapper for
+ath9k_hw_set_keycache_entry() calls. In addition, improve the comments
+describing the key setting operations.
 
-So, 
-Now it has happened again. :-(
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-I can conclude that a rmmod/modprobe cycle does not help. 
+---
+ drivers/net/wireless/ath9k/main.c |   42 ++++++++++++++------------------------
+ 1 file changed, 16 insertions(+), 26 deletions(-)
 
-Some logs:
+--- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-03 13:08:14.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-03 13:08:18.000000000 +0200
+@@ -636,17 +636,6 @@ static u32 ath_get_extchanmode(struct at
+ 	return chanmode;
+ }
+ 
+-static int ath_keyset(struct ath_softc *sc, u16 keyix,
+-	       struct ath9k_keyval *hk, const u8 mac[ETH_ALEN])
+-{
+-	bool status;
+-
+-	status = ath9k_hw_set_keycache_entry(sc->sc_ah,
+-		keyix, hk, mac);
+-
+-	return status != false;
+-}
+-
+ static int ath_setkey_tkip(struct ath_softc *sc, u16 keyix, const u8 *key,
+ 			   struct ath9k_keyval *hk, const u8 *addr,
+ 			   bool authenticator)
+@@ -658,7 +647,11 @@ static int ath_setkey_tkip(struct ath_so
+ 	key_rxmic = key + NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY;
+ 
+ 	if (addr == NULL) {
+-		/* Group key installation */
++		/*
++		 * Group key installation - only two key cache entries are used
++		 * regardless of splitmic capability since group key is only
++		 * used either for TX or RX.
++		 */
+ 		if (authenticator) {
+ 			memcpy(hk->kv_mic, key_txmic, sizeof(hk->kv_mic));
+ 			memcpy(hk->kv_txmic, key_txmic, sizeof(hk->kv_mic));
+@@ -666,24 +659,21 @@ static int ath_setkey_tkip(struct ath_so
+ 			memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
+ 			memcpy(hk->kv_txmic, key_rxmic, sizeof(hk->kv_mic));
+ 		}
+-		return ath_keyset(sc, keyix, hk, addr);
++		return ath9k_hw_set_keycache_entry(sc->sc_ah, keyix, hk, addr);
+ 	}
+ 	if (!sc->splitmic) {
+-		/*
+-		 * data key goes at first index,
+-		 * the hal handles the MIC keys at index+64.
+-		 */
++		/* TX and RX keys share the same key cache entry. */
+ 		memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
+ 		memcpy(hk->kv_txmic, key_txmic, sizeof(hk->kv_txmic));
+-		return ath_keyset(sc, keyix, hk, addr);
++		return ath9k_hw_set_keycache_entry(sc->sc_ah, keyix, hk, addr);
+ 	}
+-	/*
+-	 * TX key goes at first index, RX key at +32.
+-	 * The hal handles the MIC keys at index+64.
+-	 */
++
++	/* Separate key cache entries for TX and RX */
++
++	/* TX key goes at first index, RX key at +32. */
+ 	memcpy(hk->kv_mic, key_txmic, sizeof(hk->kv_mic));
+-	if (!ath_keyset(sc, keyix, hk, NULL)) {
+-		/* Txmic entry failed. No need to proceed further */
++	if (!ath9k_hw_set_keycache_entry(sc->sc_ah, keyix, hk, NULL)) {
++		/* TX MIC entry failed. No need to proceed further */
+ 		DPRINTF(sc, ATH_DBG_KEYCACHE,
+ 			"Setting TX MIC Key Failed\n");
+ 		return 0;
+@@ -691,7 +681,7 @@ static int ath_setkey_tkip(struct ath_so
+ 
+ 	memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
+ 	/* XXX delete tx key on failure? */
+-	return ath_keyset(sc, keyix + 32, hk, addr);
++	return ath9k_hw_set_keycache_entry(sc->sc_ah, keyix + 32, hk, addr);
+ }
+ 
+ static int ath_reserve_key_cache_slot_tkip(struct ath_softc *sc)
+@@ -838,7 +828,7 @@ static int ath_key_config(struct ath_sof
+ 		ret = ath_setkey_tkip(sc, idx, key->key, &hk, mac,
+ 				      vif->type == NL80211_IFTYPE_AP);
+ 	else
+-		ret = ath_keyset(sc, idx, &hk, mac);
++		ret = ath9k_hw_set_keycache_entry(sc->sc_ah, idx, &hk, mac);
+ 
+ 	if (!ret)
+ 		return -EIO;
 
-At around noon, there was some hickup, from which we recovered:
-Mar  8 12:54:30 tippex wlan0: deauthenticated (Reason: 7)
-Mar  8 12:54:31 tippex wlan0: direct probe to AP 00:18:39:c0:5f:50 try 1
-Mar  8 12:54:31 tippex wlan0 direct probe responded
-Mar  8 12:54:31 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
-Mar  8 12:54:31 tippex wlan0: authenticated
-Mar  8 12:54:31 tippex wlan0: associate with AP 00:18:39:c0:5f:50
-Mar  8 12:54:31 tippex wlan0: RX ReassocResp from 00:18:39:c0:5f:50 (capab=0x431 status=0 aid=1)
-Mar  8 12:54:31 tippex wlan0: associated
-
-
-The, at 15:18, we got the dreaded "No ProbeResp" again. Now I have a debugfs 
-dump for that time as well:
-Mar  8 15:09:01 tippex cron[6326]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:09:02 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:09:02 tippex wlan_queue: 14   0       24      51143   23      0       0
-Mar  8 15:09:02 tippex wlan_queue: 0    4233    24      0       9       9       0
-Mar  8 15:09:02 tippex wlan_queue: 1    1356551 24      0       23      23      0
-Mar  8 15:09:02 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:09:02 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:10:01 tippex cron[6334]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:10:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:10:01 tippex wlan_queue: 14   0       24      51854   14      0       0
-Mar  8 15:10:01 tippex wlan_queue: 0    4235    24      0       11      11      0
-Mar  8 15:10:01 tippex wlan_queue: 1    1356618 24      0       18      18      0
-Mar  8 15:10:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:10:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:11:01 tippex cron[6362]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:11:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:11:01 tippex wlan_queue: 14   0       24      52586   2       0       0
-Mar  8 15:11:01 tippex wlan_queue: 0    4236    24      0       12      12      0
-Mar  8 15:11:01 tippex wlan_queue: 1    1356712 24      0       16      16      0
-Mar  8 15:11:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:11:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:12:01 tippex cron[6379]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:12:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:12:01 tippex wlan_queue: 14   0       24      53363   11      0       0
-Mar  8 15:12:01 tippex wlan_queue: 0    4237    24      0       13      13      0
-Mar  8 15:12:01 tippex wlan_queue: 1    1356822 24      0       6       6       0
-Mar  8 15:12:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:12:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:13:01 tippex cron[6386]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:13:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:13:01 tippex wlan_queue: 14   0       24      54037   13      0       0
-Mar  8 15:13:01 tippex wlan_queue: 0    4238    24      0       14      14      0
-Mar  8 15:13:01 tippex wlan_queue: 1    1356876 24      0       12      12      0
-Mar  8 15:13:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:13:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:14:01 tippex cron[6392]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:14:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:14:01 tippex wlan_queue: 14   0       24      54762   18      0       0
-Mar  8 15:14:01 tippex wlan_queue: 0    4239    24      0       15      15      0
-Mar  8 15:14:01 tippex wlan_queue: 1    1356949 24      0       13      13      0
-Mar  8 15:14:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:14:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:14:18 tippex wlan0: No ProbeResp from current AP 00:18:39:c0:5f:50 - assume out of range
-Mar  8 15:15:01 tippex cron[6397]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:15:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:15:01 tippex wlan_queue: 14   0       24      55174   22      0       0
-Mar  8 15:15:01 tippex wlan_queue: 0    4243    24      0       19      19      0
-Mar  8 15:15:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
-Mar  8 15:15:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:15:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:16:01 tippex cron[6404]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:16:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:16:01 tippex wlan_queue: 14   0       24      55791   15      0       0
-Mar  8 15:16:01 tippex wlan_queue: 0    4243    24      0       19      19      0
-Mar  8 15:16:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
-Mar  8 15:16:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:16:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:17:01 tippex cron[6410]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:17:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:17:01 tippex wlan_queue: 14   0       24      56411   11      0       0
-Mar  8 15:17:01 tippex wlan_queue: 0    4243    24      0       19      19      0
-Mar  8 15:17:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
-Mar  8 15:17:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:17:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:18:01 tippex cron[6416]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:18:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:18:01 tippex wlan_queue: 14   0       24      57031   7       0       0
-Mar  8 15:18:01 tippex wlan_queue: 0    4243    24      0       19      19      0
-Mar  8 15:18:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
-Mar  8 15:18:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:18:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:19:01 tippex cron[6422]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:19:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:19:01 tippex wlan_queue: 14   0       24      57644   20      0       0
-Mar  8 15:19:01 tippex wlan_queue: 0    4243    24      0       19      19      0
-Mar  8 15:19:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
-Mar  8 15:19:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:19:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:20:01 tippex cron[6431]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:20:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:20:01 tippex wlan_queue: 14   0       24      58269   21      0       0
-Mar  8 15:20:01 tippex wlan_queue: 0    4243    24      0       19      19      0
-Mar  8 15:20:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
-Mar  8 15:20:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:20:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:21:01 tippex cron[6445]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:21:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:21:01 tippex wlan_queue: 14   0       24      58909   13      0       0
-Mar  8 15:21:01 tippex wlan_queue: 0    4243    24      0       19      19      0
-Mar  8 15:21:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
-Mar  8 15:21:01 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:21:01 tippex wlan_queue: 17   0       8       0       0       0       0
-Mar  8 15:22:01 tippex cron[6451]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
-Mar  8 15:22:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
-Mar  8 15:22:01 tippex wlan_queue: 14   0       24      59538   18      0       0
-Mar  8 15:22:02 tippex wlan_queue: 0    4243    24      0       19      19      0
-Mar  8 15:22:02 tippex wlan_queue: 1    1356953 24      0       17      17      0
-Mar  8 15:22:02 tippex wlan_queue: 16   0       1       0       0       0       0
-Mar  8 15:22:02 tippex wlan_queue: 17   0       8       0       0       0       0
-
-
-
-Trying to rmmod/modprobe, I end up with:
-
-ar  8 17:07:17 tippex ADDRCONF(NETDEV_UP): wlan0: link is not ready
-Mar  8 17:07:18 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
-Mar  8 17:07:18 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
-Mar  8 17:07:18 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
-Mar  8 17:07:18 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
-Mar  8 17:07:18 tippex wlan0: authentication with AP 00:18:39:c0:5f:50 timed out
-Mar  8 17:07:28 tippex /etc/init.d/net.wlan0[7602]: Failed to configure wireless for wlan0
-Mar  8 17:07:28 tippex wlan0: direct probe to AP 00:18:39:c0:5f:50 try 1
-Mar  8 17:07:28 tippex wlan0: direct probe to AP 00:18:39:c0:5f:50 try 1
-Mar  8 17:07:28 tippex wlan0: deauthenticating by local choice (reason=3)
-Mar  8 17:07:28 tippex /etc/init.d/net.wlan0[7487]: ERROR: net.wlan0 failed to start
-
-
-The only way to get the interface back to operational status is to 
-/sbin/reboot the machine.
-
-Any ideas how this can be solved?
-/Anders 
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
