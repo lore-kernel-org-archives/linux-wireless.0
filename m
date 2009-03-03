@@ -1,109 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:43562 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760230AbZCTThE (ORCPT
+Received: from yx-out-2324.google.com ([74.125.44.29]:36312 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754248AbZCCRXo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 15:37:04 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC][PATCH 5/5 v5] ar9170: update Makefile, Kconfig and MAINTAINERS
-Date: Fri, 20 Mar 2009 20:36:57 +0100
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-References: <200903170410.35771.chunkeey@web.de>
-In-Reply-To: <200903170410.35771.chunkeey@web.de>
+	Tue, 3 Mar 2009 12:23:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903202036.58041.chunkeey@web.de> (sfid-20090320_203714_649332_79150E43)
+In-Reply-To: <49AD4C74.1060704@s5r6.in-berlin.de>
+References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>
+	 <49ACC6B0.409@garzik.org>
+	 <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>
+	 <20090303072637.GB4440@kroah.com>
+	 <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>
+	 <49AD4C74.1060704@s5r6.in-berlin.de>
+Date: Tue, 3 Mar 2009 09:23:41 -0800
+Message-ID: <43e72e890903030923v27c47f5anc184c0e8085bc5c1@mail.gmail.com> (sfid-20090303_182347_276050_163C5AE7)
+Subject: Re: Elaboration on "Equivalent fix must already exist in Linus' tree"
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Greg KH <greg@kroah.com>, Jeff Garzik <jeff@garzik.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Theodore Tso <tytso@mit.edu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-update Makefile, Kconfig and MAINTAINERS files
----
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1ba59d8..f0b1c45 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -765,6 +765,14 @@ L:	linux-wireless@vger.kernel.org
- L:	ath9k-devel@lists.ath9k.org
- S:	Supported
- 
-+ATHEROS AR9170 WIRELESS DRIVER
-+P:	Christian Lamparter
-+M:	chunkeey@web.de
-+L:	linux-wireless@vger.kernel.org
-+W:	http://wireless.kernel.org/en/users/Drivers/ar9170
-+S:	Maintained
-+F:	drivers/net/wireless/ar9170/
-+
- ATI_REMOTE2 DRIVER
- P:	Ville Syrjala
- M:	syrjala@sci.fi
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 612fffe..8a08235 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -485,6 +485,7 @@ config MWL8K
- source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/ath5k/Kconfig"
- source "drivers/net/wireless/ath9k/Kconfig"
-+source "drivers/net/wireless/ar9170/Kconfig"
- source "drivers/net/wireless/ipw2x00/Kconfig"
- source "drivers/net/wireless/iwlwifi/Kconfig"
- source "drivers/net/wireless/hostap/Kconfig"
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index d780487..5e7c9ac 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -57,5 +57,6 @@ obj-$(CONFIG_P54_COMMON)	+= p54/
- 
- obj-$(CONFIG_ATH5K)	+= ath5k/
- obj-$(CONFIG_ATH9K)	+= ath9k/
-+obj-$(CONFIG_AR9170_COMMON)	+= ar9170/
- 
- obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
-diff --git a/drivers/net/wireless/ar9170/Kconfig b/drivers/net/wireless/ar9170/Kconfig
-new file mode 100644
-index 0000000..f661187
---- /dev/null
-+++ b/drivers/net/wireless/ar9170/Kconfig
-@@ -0,0 +1,28 @@
-+config AR9170_COMMON
-+	tristate "Atheros AR9170 support"
-+	depends on WLAN_80211 && MAC80211 && EXPERIMENTAL
-+	help
-+	  This is common code for AR9170 based devices.
-+	  This module does nothing by itself - the USB/(SPI) frontends
-+	  also need to be enabled in order to support any devices.
-+
-+	  Say Y if you have the hardware, or M to build a module called
-+	  ar9170common.
-+
-+config AR9170_USB
-+	tristate "Atheros AR9170 USB support"
-+	depends on AR9170_COMMON && USB
-+	select FW_LOADER
-+	help
-+	  This is a driver for the Atheros "otus" 802.11n USB devices.
-+
-+	  These devices require additional firmware (2 files).
-+	  For now, these files can be downloaded from here:
-+	  http://wireless.kernel.org/en/users/Drivers/ar9170
-+
-+	  If you choose to build a module, it'll be called ar9170usb.
-+
-+config AR9170_LEDS
-+	bool
-+	depends on AR9170_COMMON && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = AR9170_COMMON)
-+	default y
-diff --git a/drivers/net/wireless/ar9170/Makefile b/drivers/net/wireless/ar9170/Makefile
-new file mode 100644
-index 0000000..3f0e468
---- /dev/null
-+++ b/drivers/net/wireless/ar9170/Makefile
-@@ -0,0 +1,5 @@
-+ar9170common-objs += main.o cmd.o mac.o phy.o led.o
-+ar9170usb-objs += usb.o
-+
-+obj-$(CONFIG_AR9170_COMMON) += ar9170common.o
-+obj-$(CONFIG_AR9170_USB) += ar9170usb.o
+On Tue, Mar 3, 2009 at 7:27 AM, Stefan Richter
+<stefanr@s5r6.in-berlin.de> wrote:
+> Luis R. Rodriguez wrote:
+>> On Mon, Mar 2, 2009 at 11:26 PM, Greg KH <greg@kroah.com> wrote:
+>>> Who are these "people" that you are trying to convince?
+>>
+>> OK small silly example is convincing distributions it may be a good
+>> idea to carry linux-next kernel packages as options to users to
+>> hopefully down the road reduce the delta between what they carry and
+>> what is actually upstream.
+>
+> Distros would do their users a bigger favour if they didn't just dump=
+ a
+> random new driver into their kernel package, but if they instead (or =
+in
+> addition) support the process to get new drivers into the mainline.
+>
+> It's a favour to their users because maintenance in mainline generall=
+y
+> means better quality. =C2=A0(Less drivers which break suspend/resume =
+etc. pp.).
+>
+> It's also a favour to themselves because the maintenance of their ker=
+nel
+> as a whole will cost less if it is a stabilized derivative of the
+> mainline instead of an unstable (and merely potential) predecessor of
+> the mainline.
+
+I don't think I was very clear in what I meant about "carrying
+linux-next kernel packages as an option". What I meant was carrying it
+just as an option for those users who want to test bleeding edge
+without compiling their own linux-next, _not_ to merge linux-next
+things into their own default kernel release and shove it down users
+throats.
+
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
