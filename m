@@ -1,126 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35456 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754918AbZCCRZW (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.235]:14636 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbZCCHhf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 12:25:22 -0500
-Message-Id: <20090303172511.808072634@atheros.com> (sfid-20090303_182525_819408_C992151D)
-References: <20090303172325.437810138@atheros.com>
-Date: Tue, 03 Mar 2009 19:23:33 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 08/15] ath9k: Make start/stop operations aware of virtual wiphys
+	Tue, 3 Mar 2009 02:37:35 -0500
+MIME-Version: 1.0
+In-Reply-To: <20090303072637.GB4440@kroah.com>
+References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>
+	 <49ACC6B0.409@garzik.org>
+	 <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>
+	 <20090303072637.GB4440@kroah.com>
+Date: Mon, 2 Mar 2009 23:37:33 -0800
+Message-ID: <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com> (sfid-20090303_083739_822077_C89E3184)
+Subject: Re: Elaboration on "Equivalent fix must already exist in Linus' tree"
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Greg KH <greg@kroah.com>
+Cc: Jeff Garzik <jeff@garzik.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of always going through initialization/deinitialization steps,
-do this only for the first/last wiphy to not break the other wiphys.
+On Mon, Mar 2, 2009 at 11:26 PM, Greg KH <greg@kroah.com> wrote:
+> - Show quoted text -
+> On Mon, Mar 02, 2009 at 10:44:40PM -0800, Luis R. Rodriguez wrote:
+>> On Mon, Mar 2, 2009 at 9:57 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>> > Luis R. Rodriguez wrote:
+>> >>
+>> >> While extending the documentation for submitting Linux wireless bug
+>> >> reports [1] we note the stable series policy on patches -- that of
+>> >> having an equivalent fix already in Linus' tree. I find this
+>> >> documented in Documentation/stable_kernel_rules.txt but I'm curious if
+>> >> there is any other resource which documents this or elaborates on this
+>> >> a bit more. I often tell people about this rule or push _really_ hard
+>> >> on testing "upstream" but some people tend to not understand. I think
+>> >> that elaborating a little on this can help and will hopefully create
+>> >> more awareness around the importance of trees like Stephen's
+>> >> linux-next tree.
+>> >
+>> > Just have people google for GregKH's copious messages, telling people a fix
+>> > needs to be upstream before it goes into -stable.
+>> >
+>> > Typically you make things easy by emailing stable@kernel.org with a commit
+>> > id.
+>> >
+>> > There are only two exceptions:
+>> > * fix is upstream, but needs to be modified for -stable
+>> > * fix is not needed at all in upstream, but -stable still needs it
+>>
+>> This certainly helps, I'm also looking for good arguments to support
+>> the reasoning behind the policy so that not only will people follow
+>> this to help development but _understand_ it and so that they can
+>> themselves promote things like linux-next and realize why its so
+>> important. Mind you -- upstream for us in wireless for example is not
+>> Linus its John's tree so what we promote is not to get the fix first
+>> into Linus' tree but first into John's tree. Which is obvious to
+>> developers but perhaps not to others.
+>
+> Who are these "people" that you are trying to convince?
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+OK small silly example is convincing distributions it may be a good
+idea to carry linux-next kernel packages as options to users to
+hopefully down the road reduce the delta between what they carry and
+what is actually upstream.
 
----
- drivers/net/wireless/ath9k/ath9k.h   |    2 ++
- drivers/net/wireless/ath9k/main.c    |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/virtual.c |   19 +++++++++++++++++++
- 3 files changed, 49 insertions(+)
+> If they aren't
+> developers, why would any "others" care about our development
+> proceedures?
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:31:20.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:31:30.000000000 +0200
-@@ -627,6 +627,7 @@ struct ath_wiphy {
- 	struct ath_softc *sc; /* shared for all virtual wiphys */
- 	struct ieee80211_hw *hw;
- 	enum ath_wiphy_state {
-+		ATH_WIPHY_INACTIVE,
- 		ATH_WIPHY_ACTIVE,
- 		ATH_WIPHY_PAUSING,
- 		ATH_WIPHY_PAUSED,
-@@ -707,5 +708,6 @@ int ath9k_wiphy_pause(struct ath_wiphy *
- int ath9k_wiphy_unpause(struct ath_wiphy *aphy);
- int ath9k_wiphy_select(struct ath_wiphy *aphy);
- void ath9k_wiphy_chan_work(struct work_struct *work);
-+bool ath9k_wiphy_started(struct ath_softc *sc);
- 
- #endif /* ATH9K_H */
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-03 18:31:20.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-03 18:31:30.000000000 +0200
-@@ -1963,6 +1963,27 @@ static int ath9k_start(struct ieee80211_
- 
- 	mutex_lock(&sc->mutex);
- 
-+	if (ath9k_wiphy_started(sc)) {
-+		if (sc->chan_idx == curchan->hw_value) {
-+			/*
-+			 * Already on the operational channel, the new wiphy
-+			 * can be marked active.
-+			 */
-+			aphy->state = ATH_WIPHY_ACTIVE;
-+			ieee80211_wake_queues(hw);
-+		} else {
-+			/*
-+			 * Another wiphy is on another channel, start the new
-+			 * wiphy in paused state.
-+			 */
-+			aphy->state = ATH_WIPHY_PAUSED;
-+			ieee80211_stop_queues(hw);
-+		}
-+		mutex_unlock(&sc->mutex);
-+		return 0;
-+	}
-+	aphy->state = ATH_WIPHY_ACTIVE;
-+
- 	/* setup initial channel */
- 
- 	pos = curchan->hw_value;
-@@ -2102,6 +2123,8 @@ static void ath9k_stop(struct ieee80211_
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 
-+	aphy->state = ATH_WIPHY_INACTIVE;
-+
- 	if (sc->sc_flags & SC_OP_INVALID) {
- 		DPRINTF(sc, ATH_DBG_ANY, "Device not present\n");
- 		return;
-@@ -2111,6 +2134,11 @@ static void ath9k_stop(struct ieee80211_
- 
- 	ieee80211_stop_queues(hw);
- 
-+	if (ath9k_wiphy_started(sc)) {
-+		mutex_unlock(&sc->mutex);
-+		return; /* another wiphy still in use */
-+	}
-+
- 	/* make sure h/w will not generate any interrupt
- 	 * before setting the invalid flag. */
- 	ath9k_hw_set_interrupts(sc->sc_ah, 0);
---- wireless-testing.orig/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:31:20.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:31:30.000000000 +0200
-@@ -477,3 +477,22 @@ int ath9k_wiphy_select(struct ath_wiphy 
- 
- 	return 0;
- }
-+
-+bool ath9k_wiphy_started(struct ath_softc *sc)
-+{
-+	int i;
-+	spin_lock_bh(&sc->wiphy_lock);
-+	if (sc->pri_wiphy->state != ATH_WIPHY_INACTIVE) {
-+		spin_unlock_bh(&sc->wiphy_lock);
-+		return true;
-+	}
-+	for (i = 0; i < sc->num_sec_wiphy; i++) {
-+		if (sc->sec_wiphy[i] &&
-+		    sc->sec_wiphy[i]->state != ATH_WIPHY_INACTIVE) {
-+			spin_unlock_bh(&sc->wiphy_lock);
-+			return true;
-+		}
-+	}
-+	spin_unlock_bh(&sc->wiphy_lock);
-+	return false;
-+}
+Right -- in this case above "others" could be developers but could
+also be distribution guys. Essentially I was looking for arguments to
+push and show why linux-next is the next best thing since sliced bread
+for all those nasty deltas.
 
--- 
+Which OK -- maybe they can never disappear (?) but hopefully it can at
+least be reduced in size over time.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> Heck, very few developers even read the Documentation files, I'd never
+> expect an "other" to do that :)
+
+Heh.. Maybe I expect too much of people and things.
+
+  Luis
