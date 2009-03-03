@@ -1,80 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41879 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755193AbZCYKqA (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.226]:14890 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753388AbZCCH5Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 06:46:00 -0400
-Subject: Re: wireless powersaving (in NM?)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Matthew Garrett <mjg@redhat.com>
-In-Reply-To: <1237890734.4740.7.camel@localhost.localdomain>
-References: <1237891149.4320.73.camel@johannes.local>
-	 <1237890734.4740.7.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-H+tKhgfNYIjoSoU6qHh4"
-Date: Wed, 25 Mar 2009 11:45:25 +0100
-Message-Id: <1237977925.4320.138.camel@johannes.local> (sfid-20090325_114608_425965_59180286)
-Mime-Version: 1.0
+	Tue, 3 Mar 2009 02:57:25 -0500
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.1.10.0903022340060.14744@asgard.lang.hm>
+References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>
+	 <49ACC6B0.409@garzik.org>
+	 <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>
+	 <20090303072637.GB4440@kroah.com>
+	 <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>
+	 <alpine.DEB.1.10.0903022340060.14744@asgard.lang.hm>
+Date: Mon, 2 Mar 2009 23:57:23 -0800
+Message-ID: <43e72e890903022357p7594cf98gd7c1061a78f8828a@mail.gmail.com> (sfid-20090303_085729_542366_D6B8BBCD)
+Subject: Re: Elaboration on "Equivalent fix must already exist in Linus' tree"
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: david@lang.hm
+Cc: Greg KH <greg@kroah.com>, Jeff Garzik <jeff@garzik.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 2, 2009 at 11:42 PM,  <david@lang.hm> wrote:
+> - Show quoted text -
+> On Mon, 2 Mar 2009, Luis R. Rodriguez wrote:
+>
+>> On Mon, Mar 2, 2009 at 11:26 PM, Greg KH <greg@kroah.com> wrote:
+>>>
+>>> - Show quoted text -
+>>> On Mon, Mar 02, 2009 at 10:44:40PM -0800, Luis R. Rodriguez wrote:
+>>>>
+>>>> On Mon, Mar 2, 2009 at 9:57 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>>>>>
+>>>>> Luis R. Rodriguez wrote:
+>>>>>>
+>>>>>> While extending the documentation for submitting Linux wireless bug
+>>>>>> reports [1] we note the stable series policy on patches -- that of
+>>>>>> having an equivalent fix already in Linus' tree. I find this
+>>>>>> documented in Documentation/stable_kernel_rules.txt but I'm curious if
+>>>>>> there is any other resource which documents this or elaborates on this
+>>>>>> a bit more. I often tell people about this rule or push _really_ hard
+>>>>>> on testing "upstream" but some people tend to not understand. I think
+>>>>>> that elaborating a little on this can help and will hopefully create
+>>>>>> more awareness around the importance of trees like Stephen's
+>>>>>> linux-next tree.
+>>>>>
+>>>>> Just have people google for GregKH's copious messages, telling people a
+>>>>> fix
+>>>>> needs to be upstream before it goes into -stable.
+>>>>>
+>>>>> Typically you make things easy by emailing stable@kernel.org with a
+>>>>> commit
+>>>>> id.
+>>>>>
+>>>>> There are only two exceptions:
+>>>>> * fix is upstream, but needs to be modified for -stable
+>>>>> * fix is not needed at all in upstream, but -stable still needs it
+>>>>
+>>>> This certainly helps, I'm also looking for good arguments to support
+>>>> the reasoning behind the policy so that not only will people follow
+>>>> this to help development but _understand_ it and so that they can
+>>>> themselves promote things like linux-next and realize why its so
+>>>> important. Mind you -- upstream for us in wireless for example is not
+>>>> Linus its John's tree so what we promote is not to get the fix first
+>>>> into Linus' tree but first into John's tree. Which is obvious to
+>>>> developers but perhaps not to others.
+>>>
+>>> Who are these "people" that you are trying to convince?
+>>
+>> OK small silly example is convincing distributions it may be a good
+>> idea to carry linux-next kernel packages as options to users to
+>> hopefully down the road reduce the delta between what they carry and
+>> what is actually upstream.
+>
+> linux-next is a testing tree for developers, it changes day to day, doesn't
+> contain all relavent changes, and is definantly _not_ something that distros
+> should be pushing to users.
 
---=-H+tKhgfNYIjoSoU6qHh4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Why not? Just as people may want to get bleeding edge wireless I don't
+see why a user may not want to simply get bleeding edge wireless and
+bleeding edge audio, and video. The latest RC series helps but lets
+face it there are also a lot of good stuff queued for the -next
+releases as well. The way I'm seeing this is if a user has no support
+for a device on their system it should look something like this:
 
-On Tue, 2009-03-24 at 11:32 +0100, Marcel Holtmann wrote:
+Distribution kernel -->
+  Distribution next stable kernel release (2.6.27 --> 2.6.28) -->
+    Distribution RC kernel (if one is available) | kernel.org RC kernel -->
+      Development tree kernel for a specific device -->
+        Staging
 
-> I prefer that we not export this over WEXT at all and only via nl80211
-> so we get async notification if some one changes it. We should extend
-> wpa_supplicant with an option to set power saving on/off/default and
-> then make sure it gets exported via its CLI or D-Bus. So if Network
-> Manger or ConnMan cares to change these values they can.
->=20
-> However personally I think the need for enabling or disabling power
-> savings is not really useful except for testing purposes. In a real life
-> deployed system it should be enabled all the time. Broken drivers or
-> hardware that is limited can disable it on kernel level, but for
-> userspace we only need this for debugging.
+If the have multiple devices which are not yet supported by the latest
+RC kernel but on -next then you have little options but I think a
+concrete one should exist and it does.
 
-Kalle makes a point about broken APs, which I personally haven't run
-into but I'm sure exist -- and I see no way to automatically detect
-that. Therefore, it seems necessary to allow overriding this even for
-non-debugging purposes.
+>> Heh.. Maybe I expect too much of people and things.
+>
+> I think you are misunderstanding linux-next and how it relates to users and
+> distros.
 
-I have no problem with just changing the default to be enabled though,
-but that requires some work to turn off automatically for most virtual
-interface combinations. As I said before -- this needs to be fairly
-conservative and only when applications register their requirements can
-we go to lower power states with higher latency.
+Probably if the above is not something a user may not actually want to test.
 
-johannes
-
---=-H+tKhgfNYIjoSoU6qHh4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJygtCAAoJEKVg1VMiehFYIG8P/jmuGp0r4I/rOJFp8l16A6Pj
-bgVO0vbhteXwEQ4km9foiKtkYeG5qpyEj/68/hBSvW9cp0Iy4YykwFT65lIJUgdp
-5YscNwzvBhshMy5Ilwro2xzJirJrDZLcv7eKT+G4tLH823Mrg2AiVhj3nD0nBl1C
-1SLR7cuz663ceiCwpvs6wuIhmw7dm+NKaKICSCebfIKsZ+UAgObQIeZosEV0sSFx
-iz+J0YKYX3KpTfu3XL9v4HY9qGH549Z25Ds5wV/7Q3PxzgRuyOHdRyI2D3aCZrT/
-mW0dJo3P/tAl3g5sDRb+ZQidsDNH9q3Y9TvJa8FQJ+SG+faBw6xhskFUp7sp6EPv
-Ds06aj3M+BWqirJ/Pi6ndEvx2SmPx9lqqMWkjKs5dAyaPQwFha8jIlukpX7QnGnw
-z7dqi6rNL5ps7izzTpBO9skkMicNb56l+jCPHpfVl8x8BOn95WQQz5QrJs7kkwXi
-OqjWDBIIuZPif15nq7UoFLJpKXKcFZEQ2uz/axaE0WXptmAPLJdimRRLfN/brrDn
-TSw22pmdq6QiBHHM6PRZSESdN2n+WvDRgocQvabFFcfyBm5i2eDB22pJcDPujI3l
-gvg8AnUcu1m0tZXFIAEMGWt1BJoU0wuGBXPt2b5pq1BD2N3VFszLh7PoFrrykvKR
-SgOb9oAuHUoBdrC2P6Sk
-=n8CZ
------END PGP SIGNATURE-----
-
---=-H+tKhgfNYIjoSoU6qHh4--
-
+  Luis
