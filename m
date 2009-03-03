@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:50018 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845AbZCDWvE convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35434 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754787AbZCCRZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 17:51:04 -0500
-Received: by fxm24 with SMTP id 24so3115739fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 14:51:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20090304232625.cc47eb46.cjsthompson@gmail.com>
-References: <4dd58f490903041329p54ec56ceh1b64ab000027eac5@mail.gmail.com>
-	 <4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com>
-	 <20090304232625.cc47eb46.cjsthompson@gmail.com>
-Date: Wed, 4 Mar 2009 22:51:01 +0000
-Message-ID: <4dd58f490903041451x5044b464k47d70b1210b12f11@mail.gmail.com> (sfid-20090304_235109_880263_97718C21)
-Subject: Re: ath5k master (AP) mode
-From: Alexey Yudichev <ayudichev@yahoo.co.uk>
-To: "Christoph .J Thompson" <cjsthompson@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 3 Mar 2009 12:25:05 -0500
+Message-Id: <20090303172459.014230103@atheros.com> (sfid-20090303_182508_709230_9C8306D8)
+References: <20090303172325.437810138@atheros.com>
+Date: Tue, 03 Mar 2009 19:23:30 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 05/15] ath9k: Configure RX filter for multi-BSSID broadcast
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Wed, 4 Mar 2009 21:33:21 +0000
-> Alexey Yudichev <ayudichev@yahoo.co.uk> wrote:
->> Hello,
->>
->> I've just joined the list so don't know how to join the same thread =
-so
->> to indicate that it's the same matter I use the same subject. I am
->> trying to make my "04:01.0 Ethernet controller: Atheros Communicatio=
-ns
->> Inc. Atheros AR5001X+ Wireless Network Adapter (rev 01)" which is
->> identified by ath5k as
->> [=C2=A0=C2=A0 10.356742] ath5k phy0: Atheros AR5213A chip found (MAC=
-: 0x59, PHY: 0x43)
->> [=C2=A0=C2=A0 10.356748] ath5k phy0: RF5112B multiband radio found (=
-0x36)
->
-> I have the exact same card (AR5001X+) working in master mode with hos=
-tapd. What kernel version and hostapd version do you use?
+Allow RX filter to pass through all broadcast/multicast frames (i.e.,
+no BSSID filtering) if virtual interfaces are used. Software filtering
+will be used in this case to drop broadcast/multicast frames for
+foreign BSSIDs.
 
-Hi, I use 2.6.27-11-generic (from ubuntu's
-linux-backports-modules-intrepid-generic), hostapd v0.5.10.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
+---
+ drivers/net/wireless/ath9k/mac.h  |    1 +
+ drivers/net/wireless/ath9k/recv.c |    8 ++++++++
+ 2 files changed, 9 insertions(+)
+
+--- wireless-testing.orig/drivers/net/wireless/ath9k/recv.c	2009-03-03 18:30:47.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/recv.c	2009-03-03 18:30:59.000000000 +0200
+@@ -407,6 +407,14 @@ u32 ath_calcrxfilter(struct ath_softc *s
+ 	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP)
+ 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
+ 
++	if (sc->sec_wiphy) {
++		/* TODO: only needed if more than one BSSID is in use in
++		 * station/adhoc mode */
++		/* TODO: for older chips, may need to add ATH9K_RX_FILTER_PROM
++		 */
++		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
++	}
++
+ 	return rfilt;
+ 
+ #undef RX_FILTER_PRESERVE
+--- wireless-testing.orig/drivers/net/wireless/ath9k/mac.h	2009-03-02 22:17:55.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/mac.h	2009-03-03 18:30:59.000000000 +0200
+@@ -570,6 +570,7 @@ enum ath9k_rx_filter {
+ 	ATH9K_RX_FILTER_MYBEACON = 0x00000200,
+ 	ATH9K_RX_FILTER_PSPOLL = 0x00004000,
+ 	ATH9K_RX_FILTER_PHYRADAR = 0x00002000,
++	ATH9K_RX_FILTER_MCAST_BCAST_ALL = 0x00008000,
+ };
+ 
+ #define ATH9K_RATESERIES_RTS_CTS  0x0001
+
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
