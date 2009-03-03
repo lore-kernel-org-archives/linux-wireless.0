@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:59787 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222AbZCYHnK convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35807 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752003AbZCCPAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 03:43:10 -0400
-Received: by ewy9 with SMTP id 9so2395444ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 00:43:07 -0700 (PDT)
+	Tue, 3 Mar 2009 10:00:25 -0500
+Date: Tue, 3 Mar 2009 09:52:33 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mike Cui <cuicui@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Bug in iw prevents setting the "cook" monitor flag
+Message-ID: <20090303145233.GB17678@tuxdriver.com> (sfid-20090303_160028_557796_2CCEEB48)
+References: <7c8826910903021516t640aa84dxfbb61a278b69c740@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <c1e027750903250041qfb28bb5g69bc219da57736c0@mail.gmail.com>
-References: <c1e027750903250041qfb28bb5g69bc219da57736c0@mail.gmail.com>
-Date: Wed, 25 Mar 2009 13:13:07 +0530
-Message-ID: <c1e027750903250043n1e6bfffdnd6a6a3889a1f68d6@mail.gmail.com> (sfid-20090325_084315_988851_2D5CBF51)
-Subject: Scan in compat-wireless
-From: Venkat Ch <venkatch@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7c8826910903021516t640aa84dxfbb61a278b69c740@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+On Mon, Mar 02, 2009 at 03:16:14PM -0800, Mike Cui wrote:
+> There is an off by one error in interface.c of iw that prevents
+> passing of the cook flag when creating a monitor interface. The fix is
+> simple:
+> 
+> 
+> --- a/interface.c       2009-03-02 15:11:58.748078548 -0800
+> +++ b/interface.c       2009-03-02 15:12:14.695203787 -0800
+> @@ -36,7 +36,7 @@ static int parse_mntr_flags(int *_argc,
+>         while (argc) {
+>                 int ok = 0;
+>                 for (flag = __NL80211_MNTR_FLAG_INVALID;
+> -                    flag < NL80211_MNTR_FLAG_MAX; flag++) {
+> +                    flag < NL80211_MNTR_FLAG_MAX + 1; flag++) {
+>                         if (strcmp(*argv, mntr_flags[flag]) == 0) {
+>                                 ok = 1;
+>                                 /*
 
-=A0Last week I have downloaded compat-wireless driver. I have installed
-the same into my laptop which has AR242x based WiFi card. Though the
-drivers are loaded correctly, the STA (my laptop) did not associate
-with the nearby AP. This used to happen well with madwifi driver.
+FWIW, I think I like "x <= Y" instead of "x < Y + 1".
 
-With my past experience with the details of madwifi driver, I have
-browsed through the code base of compat-wireless driver. I observed
-that with madwifi driver when the device is made up, the scan process
-is kicked off. Where as the same is not happening in compat-wireless.
-Does not the scan process need to be kicked off at the end of
-ieee80211_open (net/mac80211/iface.c)?
+Also, please make sure you are following the guidelines explained here:
 
-Also for ath5k driver, both the hw_scan and sw_scan_start are not
-defined. These two functions are used in ieee80211_start_scan to start
-the scan process (net/mac80211/scan.c). I observed that the scan
-process is not started because the above two functions are not
-defined.
+	http://linux.yyz.us/patch-format.html
 
-Is the scan functionlaity yet to be added? I have verified the TODO
-list of linux-wireless page. I did not find scan in the agenda. Is
-some one already implementing the functionality? Please let me know if
-I need to provide further details.
+In particular, I need a Signed-off-by line from you.
 
+Thanks!
 
-Thanks & Regards
-Venkat
-
---
-Peace is its own reward
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
