@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34218 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310AbZC1C1E (ORCPT
+Received: from mail-qy0-f20.google.com ([209.85.221.20]:65220 "EHLO
+	mail-qy0-f20.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719AbZCCOfV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 22:27:04 -0400
-Date: Fri, 27 Mar 2009 22:27:00 -0400
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/8] mac80211: unify and fix TX aggregation start
-Message-ID: <20090328022659.GD5543@bombadil.infradead.org> (sfid-20090328_032712_797334_7FD45176)
-References: <20090323162834.154525349@sipsolutions.net> <20090323163052.823346545@sipsolutions.net>
+	Tue, 3 Mar 2009 09:35:21 -0500
+Received: by qyk28 with SMTP id 28so1048888qyk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2009 06:35:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090323163052.823346545@sipsolutions.net>
+In-Reply-To: <1233666319.3957.1.camel@johannes.local>
+References: <1233666319.3957.1.camel@johannes.local>
+Date: Tue, 3 Mar 2009 09:27:38 -0500
+Message-ID: <30353c3d0903030627g5c5323f8l88e551a8b43a066a@mail.gmail.com> (sfid-20090303_153525_633473_7E9C6E66)
+Subject: Re: Cardbus wireless cards
+From: David Ellingsworth <david@identd.dyndns.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 23, 2009 at 05:28:39PM +0100, Johannes Berg wrote:
-> When TX aggregation becomes operational, we do a number of steps:
->  1) print a debug message
->  2) wake the virtual queue
->  3) notify the driver
-> 
-> Unfortunately, 1) and 3) are only done if the driver is first to
-> reply to the aggregation request, it is, however, possible that the
-> remote station replies before the driver! Thus, unify the code for
-> this and call the new function ieee80211_agg_tx_operational in both
-> places where TX aggregation can become operational.
-> 
-> Additionally, rename the driver notification from
-> IEEE80211_AMPDU_TX_RESUME to IEEE80211_AMPDU_TX_OPERATIONAL.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Tue, Feb 3, 2009 at 8:05 AM, Johannes Berg <johannes@sipsolutions.ne=
+t> wrote:
+> Hi,
+>
+> Some of you know that I got a new laptop, and it doesn't have a cardb=
+us
+> slot any more. I still have my powerbook, and it's still working fine=
+,
+> but I'm not using it any more, it hasn't even booted in a month. I co=
+uld
+> test on my powerbook, but given my regular time budget it seems unlik=
+ely
+> that I ever will.
+>
+> Hence, I'm offering my collection of cardbus/pcmcia wireless test car=
+ds
+> to anyone I can afford shipping to.
+>
+> * Broadcom PCMCIA (not cardbus, in cardbus slot adapter)
+> =A0requires external single antenna (u.fl, have one if I can find it)
+> * Airgo-based Belkin F5D8010 ("true MIMO")
+> * rt61pci (Conceptronic)
+> * Broadcom 11n (4321)
+> * acx111 based card (D-Link AirPlus XTreme G+)
+>
+> I also have a Broadcom 11g (4306 I think, might be 4318) PCI card
+> somewhere that I will most likely never again have a use for.
+>
+> johannes
+>
 
-Nice catch man!
+I'm interested in the PCI card if it's still available.
 
-Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Regards,
 
-  Luis
+David Ellingsworth
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
