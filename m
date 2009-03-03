@@ -1,69 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59541 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752968AbZCXI2S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 04:28:18 -0400
-Subject: Re: [PATCH 0/8] mac80211 aggregation improvements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090323162834.154525349@sipsolutions.net> (sfid-20090323_173225_411533_528EB86B)
-References: <20090323162834.154525349@sipsolutions.net>
-	 (sfid-20090323_173225_411533_528EB86B)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-71myUTzeQj7SDzJYJHTH"
-Date: Tue, 24 Mar 2009 09:28:13 +0100
-Message-Id: <1237883293.6278.9.camel@johannes.local> (sfid-20090324_092822_038866_C439D2FE)
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:40012 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757435AbZCCEur (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2009 23:50:47 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2009 20:50:46 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18860.46645.574808.942575@gargle.gargle.HOWL> (sfid-20090303_055052_241684_FB365B9F)
+Date: Tue, 3 Mar 2009 10:16:45 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 1/7] ath9k: Use new scan notifiers from mac80211
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The only use case for this right now is ANI calibration,
+but more might come up in the future.
 
---=-71myUTzeQj7SDzJYJHTH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/ath9k.h |    2 ++
+ drivers/net/wireless/ath9k/main.c  |   22 +++++++++++++++++++++-
+ 2 files changed, 23 insertions(+), 1 deletions(-)
 
-On Mon, 2009-03-23 at 17:28 +0100, Johannes Berg wrote:
-  =20
-> Here's my patch set for improving aggregation
-
-John, can I convince you to put this on track for .30 despite being
-posted just hours before the merge window officially opened? The reason
-I'm asking is that otherwise I'll have to support two code bases with
-rather different ways to have aggregation working for iwlwifi again,
-with different sets of bugs and different ways to fix it. This patch set
-has also been tested fairly extensively already [1] inside Intel for
-iwlwifi hardware and by Sujith for ath9k (and myself for both).
-
-The decision isn't mine to make, obviously, and I'll put up with
-whatever you decide is best, even if that means supporting both code
-bases.
-
-johannes
-
-[1] unlike that patch to remove the superfluous code, sorry about that
-
---=-71myUTzeQj7SDzJYJHTH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJyJmbAAoJEKVg1VMiehFYqTMP/1fnjr07yY6+b61Cvobk9doc
-g1x2f0X+gfJpur2NsVkAJb+kfycE2bNw1GWZH9ZlqzcHNIeaAzmnU93rz+F/MrDF
-d6H6y0dzsdNfiDNF+KqAC3ob9hwAQDCv8vs3Vmjas7M3ceqWxm6vvQ6D2Ispb4bh
-2qb8LIBL5mvU2ZD1X4ikUsS92bCn1do9gSwz0odTOsFbUpOjSlUrqS7kaxy3Y0eV
-Zxx08hxNwWbUltOcne+VGzTZeXRpXz2EjV0T+ilUJTXVVN+WYFuDYhALjVkKKrh9
-C6Ymk17wuVbyBdnQSz+kHzckjPXAS3rUEMT+Z2Xy06Jdr0FiS86aBgACljPeTk4+
-3NRzUc6lBBkDsnZCm8JbEY0IOtd9m55DyGuV1ND4yoKTM5gaiyA4Spz2pXMDMmDZ
-hp1AfqFccaX8Ws5QhIiej2rsOrbSRCO3w1q3YBSuuJOgvb8y9im0rbEXKmedvDKo
-3+rSALHCU7lUKbOG30WnTaYyRGHVNQTdF54wSdlZTOWDCiaSrGWjkaL3+XSNr/6d
-bYjJDrWNse2tAm92wGwfrJzOyqlZTZUAdh+4qIDSaXL1wUm3Foq12bEpEs2o6Fg+
-Y5GaBynZqc9sNkXpkdtNzdhOIz3yPZSwFCZsNNG1Gzahq/E18pNV/Ylus9W5lYgG
-e06d6JOdxwDaZRS/s6D/
-=YihW
------END PGP SIGNATURE-----
-
---=-71myUTzeQj7SDzJYJHTH--
+diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+index 6481ea4..b60ad8d 100644
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -559,6 +559,7 @@ struct ath_rfkill {
+ #define SC_OP_RFKILL_HW_BLOCKED	BIT(13)
+ #define SC_OP_WAIT_FOR_BEACON	BIT(14)
+ #define SC_OP_LED_ON		BIT(15)
++#define SC_OP_SCANNING		BIT(16)
+ 
+ struct ath_bus_ops {
+ 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
+@@ -681,4 +682,5 @@ static inline void ath9k_ps_restore(struct ath_softc *sc)
+ 			ath9k_hw_setpower(sc->sc_ah,
+ 					  sc->sc_ah->restore_mode);
+ }
++
+ #endif /* ATH9K_H */
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index fef2303..5f409b1 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -327,7 +327,7 @@ static void ath_ani_calibrate(unsigned long data)
+ 	* don't calibrate when we're scanning.
+ 	* we are most likely not on our home channel.
+ 	*/
+-	if (sc->rx.rxfilter & FIF_BCN_PRBRESP_PROMISC)
++	if (sc->sc_flags & SC_OP_SCANNING)
+ 		goto set_timer;
+ 
+ 	/* Long calibration runs independently of short calibration. */
+@@ -2614,6 +2614,24 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 	return ret;
+ }
+ 
++static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
++{
++	struct ath_softc *sc = hw->priv;
++
++	mutex_lock(&sc->mutex);
++	sc->sc_flags |= SC_OP_SCANNING;
++	mutex_unlock(&sc->mutex);
++}
++
++static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
++{
++	struct ath_softc *sc = hw->priv;
++
++	mutex_lock(&sc->mutex);
++	sc->sc_flags &= ~SC_OP_SCANNING;
++	mutex_unlock(&sc->mutex);
++}
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2631,6 +2649,8 @@ struct ieee80211_ops ath9k_ops = {
+ 	.set_tsf 	    = ath9k_set_tsf,
+ 	.reset_tsf 	    = ath9k_reset_tsf,
+ 	.ampdu_action       = ath9k_ampdu_action,
++	.sw_scan_start      = ath9k_sw_scan_start,
++	.sw_scan_complete   = ath9k_sw_scan_complete,
+ };
+ 
+ static struct {
+-- 
+1.6.1
 
