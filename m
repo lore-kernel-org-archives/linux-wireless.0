@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4198 "EHLO mga14.intel.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:57525 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754658AbZCFVsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 16:48:04 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/2] iwl3945: add test for new association
-Date: Fri,  6 Mar 2009 13:52:54 -0800
-Message-Id: <1236376375-27927-2-git-send-email-reinette.chatre@intel.com> (sfid-20090306_224807_433970_AFCAB17A)
-In-Reply-To: <1236376375-27927-1-git-send-email-reinette.chatre@intel.com>
-References: <1236376375-27927-1-git-send-email-reinette.chatre@intel.com>
+	id S1750858AbZCCF5J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2009 00:57:09 -0500
+Message-ID: <49ACC6B0.409@garzik.org> (sfid-20090303_065715_127470_6A49A1E9)
+Date: Tue, 03 Mar 2009 00:57:04 -0500
+From: Jeff Garzik <jeff@garzik.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: Elaboration on "Equivalent fix must already exist in Linus' tree"
+References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>
+In-Reply-To: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Luis R. Rodriguez wrote:
+> While extending the documentation for submitting Linux wireless bug
+> reports [1] we note the stable series policy on patches -- that of
+> having an equivalent fix already in Linus' tree. I find this
+> documented in Documentation/stable_kernel_rules.txt but I'm curious if
+> there is any other resource which documents this or elaborates on this
+> a bit more. I often tell people about this rule or push _really_ hard
+> on testing "upstream" but some people tend to not understand. I think
+> that elaborating a little on this can help and will hopefully create
+> more awareness around the importance of trees like Stephen's
+> linux-next tree.
 
-Add check for new association to ease reading.
+Just have people google for GregKH's copious messages, telling people a 
+fix needs to be upstream before it goes into -stable.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Typically you make things easy by emailing stable@kernel.org with a 
+commit id.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index f75309c..e5c6295 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -328,6 +328,8 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv)
- 	struct iwl3945_rxon_cmd *active_rxon = (void *)&priv->active_rxon;
- 	struct iwl3945_rxon_cmd *staging_rxon = (void *)&priv->staging_rxon;
- 	int rc = 0;
-+	bool new_assoc =
-+		!!(priv->staging_rxon.filter_flags & RXON_FILTER_ASSOC_MSK);
- 
- 	if (!iwl_is_alive(priv))
- 		return -1;
-@@ -366,8 +368,7 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv)
- 	 * an RXON_ASSOC and the new config wants the associated mask enabled,
- 	 * we must clear the associated from the active configuration
- 	 * before we apply the new config */
--	if (iwl_is_associated(priv) &&
--	    (staging_rxon->filter_flags & RXON_FILTER_ASSOC_MSK)) {
-+	if (iwl_is_associated(priv) && new_assoc) {
- 		IWL_DEBUG_INFO(priv, "Toggling associated bit on current RXON\n");
- 		active_rxon->filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 
-@@ -395,8 +396,7 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv)
- 		       "* with%s RXON_FILTER_ASSOC_MSK\n"
- 		       "* channel = %d\n"
- 		       "* bssid = %pM\n",
--		       ((priv->staging_rxon.filter_flags &
--			 RXON_FILTER_ASSOC_MSK) ? "" : "out"),
-+		       (new_assoc ? "" : "out"),
- 		       le16_to_cpu(staging_rxon->channel),
- 		       staging_rxon->bssid_addr);
- 
--- 
-1.5.6.3
+There are only two exceptions:
+* fix is upstream, but needs to be modified for -stable
+* fix is not needed at all in upstream, but -stable still needs it
+
+	Jeff
+
+
+
 
