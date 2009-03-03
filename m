@@ -1,233 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32842 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812AbZC0LlG (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.29]:53870 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646AbZCCQ7O convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 07:41:06 -0400
-Subject: [PATCH] nl80211: validate some input better
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
+	Tue, 3 Mar 2009 11:59:14 -0500
+Received: by yw-out-2324.google.com with SMTP id 5so1873642ywh.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2009 08:59:12 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1896462f4248df441aea8ebf3dd57f91@127.0.0.1>
+References: <1233666319.3957.1.camel@johannes.local>
+	 <30353c3d0903030627g5c5323f8l88e551a8b43a066a@mail.gmail.com>
+	 <1896462f4248df441aea8ebf3dd57f91@127.0.0.1>
+Date: Tue, 3 Mar 2009 11:59:03 -0500
+Message-ID: <30353c3d0903030859m30d3b107o9221ab9650c8a85b@mail.gmail.com> (sfid-20090303_175920_084525_90CAEDAE)
+Subject: Re: Cardbus wireless cards
+From: David Ellingsworth <david@identd.dyndns.org>
+To: pat-lkml@erley.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 27 Mar 2009 12:40:28 +0100
-Message-Id: <1238154028.4331.115.camel@johannes.local> (sfid-20090327_124112_873764_BFEBC6CC)
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes nl80211 to:
- * validate that any IE input is a valid IE (stream)
- * move some validation code before locking
- * require that a reason code is given for both deauth/disassoc
+On Tue, Mar 3, 2009 at 11:29 AM,  <pat-lkml@erley.org> wrote:
+> On Tue, 3 Mar 2009 09:27:38 -0500, David Ellingsworth
+> <david@identd.dyndns.org> wrote:
+>> On Tue, Feb 3, 2009 at 8:05 AM, Johannes Berg <johannes@sipsolutions=
+=2Enet>
+>> wrote:
+>>> Hi,
+>>>
+>>> Some of you know that I got a new laptop, and it doesn't have a car=
+dbus
+>>> slot any more. I still have my powerbook, and it's still working fi=
+ne,
+>>> but I'm not using it any more, it hasn't even booted in a month. I =
+could
+>>> test on my powerbook, but given my regular time budget it seems unl=
+ikely
+>>> that I ever will.
+>>>
+>>> Hence, I'm offering my collection of cardbus/pcmcia wireless test c=
+ards
+>>> to anyone I can afford shipping to.
+>>>
+>>> * Broadcom PCMCIA (not cardbus, in cardbus slot adapter)
+>>> =A0requires external single antenna (u.fl, have one if I can find i=
+t)
+>>> * Airgo-based Belkin F5D8010 ("true MIMO")
+>>> * rt61pci (Conceptronic)
+>>> * Broadcom 11n (4321)
+>>> * acx111 based card (D-Link AirPlus XTreme G+)
+>>>
+>>> I also have a Broadcom 11g (4306 I think, might be 4318) PCI card
+>>> somewhere that I will most likely never again have a use for.
+>>>
+>>> johannes
+>>>
+>>
+>> I'm interested in the PCI card if it's still available.
+>>
+>> Regards,
+>>
+>> David Ellingsworth
+>
+> This card found it's way to me, I do believe. =A0I've almost complete=
+d all
+> the testing I had planned on using it for. =A0I'd be fine with partin=
+g with
+> it after I complete my testing.
+>
+> Pat Erley
+>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/nl80211.c |  114 +++++++++++++++++++++++++++++++++----------------
- 1 file changed, 77 insertions(+), 37 deletions(-)
+That's alright.. you can keep it. I'm sure you'll do a lot more
+testing on it then I'll ever get a chance to. I'll look for one
+elsewhere.
 
---- wireless-testing.orig/net/wireless/nl80211.c	2009-03-27 12:14:56.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.c	2009-03-27 12:39:52.000000000 +0100
-@@ -118,6 +118,36 @@ static struct nla_policy nl80211_policy[
- 	[NL80211_ATTR_REASON_CODE] = { .type = NLA_U16 },
- };
- 
-+/* IE validation */
-+static bool is_valid_ie_attr(const struct nlattr *attr)
-+{
-+	const u8 *pos;
-+	int len;
-+
-+	if (!attr)
-+		return true;
-+
-+	pos = nla_data(attr);
-+	len = nla_len(attr);
-+
-+	while (len) {
-+		u8 elemlen;
-+
-+		if (len < 2)
-+			return false;
-+		len -= 2;
-+
-+		elemlen = pos[1];
-+		if (elemlen > len)
-+			return false;
-+
-+		len -= elemlen;
-+		pos += 2 + elemlen;
-+	}
-+
-+	return true;
-+}
-+
- /* message building helper */
- static inline void *nl80211hdr_put(struct sk_buff *skb, u32 pid, u32 seq,
- 				   int flags, u8 cmd)
-@@ -1071,6 +1101,9 @@ static int nl80211_addset_beacon(struct 
- 	struct beacon_parameters params;
- 	int haveinfo = 0;
- 
-+	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_BEACON_TAIL]))
-+		return -EINVAL;
-+
- 	rtnl_lock();
- 
- 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
-@@ -2444,6 +2477,9 @@ static int nl80211_trigger_scan(struct s
- 	enum ieee80211_band band;
- 	size_t ie_len;
- 
-+	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
-+		return -EINVAL;
-+
- 	rtnl_lock();
- 
- 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
-@@ -2718,6 +2754,12 @@ static int nl80211_authenticate(struct s
- 	struct wiphy *wiphy;
- 	int err;
- 
-+	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
-+		return -EINVAL;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC])
-+		return -EINVAL;
-+
- 	rtnl_lock();
- 
- 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
-@@ -2739,11 +2781,6 @@ static int nl80211_authenticate(struct s
- 		goto out;
- 	}
- 
--	if (!info->attrs[NL80211_ATTR_MAC]) {
--		err = -EINVAL;
--		goto out;
--	}
--
- 	wiphy = &drv->wiphy;
- 	memset(&req, 0, sizeof(req));
- 
-@@ -2796,6 +2833,13 @@ static int nl80211_associate(struct sk_b
- 	struct wiphy *wiphy;
- 	int err;
- 
-+	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
-+		return -EINVAL;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC] ||
-+	    !info->attrs[NL80211_ATTR_SSID])
-+		return -EINVAL;
-+
- 	rtnl_lock();
- 
- 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
-@@ -2817,12 +2861,6 @@ static int nl80211_associate(struct sk_b
- 		goto out;
- 	}
- 
--	if (!info->attrs[NL80211_ATTR_MAC] ||
--	    !info->attrs[NL80211_ATTR_SSID]) {
--		err = -EINVAL;
--		goto out;
--	}
--
- 	wiphy = &drv->wiphy;
- 	memset(&req, 0, sizeof(req));
- 
-@@ -2864,6 +2902,15 @@ static int nl80211_deauthenticate(struct
- 	struct wiphy *wiphy;
- 	int err;
- 
-+	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
-+		return -EINVAL;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC])
-+		return -EINVAL;
-+
-+	if (!info->attrs[NL80211_ATTR_REASON_CODE])
-+		return -EINVAL;
-+
- 	rtnl_lock();
- 
- 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
-@@ -2885,24 +2932,16 @@ static int nl80211_deauthenticate(struct
- 		goto out;
- 	}
- 
--	if (!info->attrs[NL80211_ATTR_MAC]) {
--		err = -EINVAL;
--		goto out;
--	}
--
- 	wiphy = &drv->wiphy;
- 	memset(&req, 0, sizeof(req));
- 
- 	req.peer_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
--		req.reason_code =
--			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
--		if (req.reason_code == 0) {
--			/* Reason Code 0 is reserved */
--			err = -EINVAL;
--			goto out;
--		}
-+	req.reason_code = nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
-+	if (req.reason_code == 0) {
-+		/* Reason Code 0 is reserved */
-+		err = -EINVAL;
-+		goto out;
- 	}
- 
- 	if (info->attrs[NL80211_ATTR_IE]) {
-@@ -2928,6 +2967,15 @@ static int nl80211_disassociate(struct s
- 	struct wiphy *wiphy;
- 	int err;
- 
-+	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
-+		return -EINVAL;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC])
-+		return -EINVAL;
-+
-+	if (!info->attrs[NL80211_ATTR_REASON_CODE])
-+		return -EINVAL;
-+
- 	rtnl_lock();
- 
- 	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
-@@ -2949,24 +2997,16 @@ static int nl80211_disassociate(struct s
- 		goto out;
- 	}
- 
--	if (!info->attrs[NL80211_ATTR_MAC]) {
--		err = -EINVAL;
--		goto out;
--	}
--
- 	wiphy = &drv->wiphy;
- 	memset(&req, 0, sizeof(req));
- 
- 	req.peer_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
--		req.reason_code =
--			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
--		if (req.reason_code == 0) {
--			/* Reason Code 0 is reserved */
--			err = -EINVAL;
--			goto out;
--		}
-+	req.reason_code = nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
-+	if (req.reason_code == 0) {
-+		/* Reason Code 0 is reserved */
-+		err = -EINVAL;
-+		goto out;
- 	}
- 
- 	if (info->attrs[NL80211_ATTR_IE]) {
+Regards,
 
-
+David Ellingsworth
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
