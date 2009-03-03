@@ -1,81 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from suva.vyatta.com ([76.74.103.44]:36739 "EHLO suva.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761166AbZCUFsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 01:48:30 -0400
-Message-Id: <20090321053718.224939952@vyatta.com> (sfid-20090321_065009_580489_78B01364)
-References: <20090321053527.316395697@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:41 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: David Miller <davem@davemloft.net>, jkosina@suse.cz,
-	dstreba@suse.cz
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 74/77] ipw2200: convert to net_device_ops
+Received: from einhorn.in-berlin.de ([192.109.42.8]:34039 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751286AbZCCSO1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2009 13:14:27 -0500
+Message-ID: <49AD7361.308@s5r6.in-berlin.de> (sfid-20090303_191430_777197_8E3C3257)
+Date: Tue, 03 Mar 2009 19:13:53 +0100
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Greg KH <greg@kroah.com>, Jeff Garzik <jeff@garzik.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Theodore Tso <tytso@mit.edu>
+Subject: Re: Elaboration on "Equivalent fix must already exist in Linus' tree"
+References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>	 <49ACC6B0.409@garzik.org>	 <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>	 <20090303072637.GB4440@kroah.com>	 <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>	 <49AD4C74.1060704@s5r6.in-berlin.de> <43e72e890903030923v27c47f5anc184c0e8085bc5c1@mail.gmail.com>
+In-Reply-To: <43e72e890903030923v27c47f5anc184c0e8085bc5c1@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+Luis R. Rodriguez wrote:
+> On Tue, Mar 3, 2009 at 7:27 AM, Stefan Richter
+> <stefanr@s5r6.in-berlin.de> wrote:
+>> Luis R. Rodriguez wrote:
+>>> OK small silly example is convincing distributions it may be a good
+>>> idea to carry linux-next kernel packages as options to users to
+>>> hopefully down the road reduce the delta between what they carry and
+>>> what is actually upstream.
+>> Distros would do their users a bigger favour if [...]
+> 
+> I don't think I was very clear in what I meant about "carrying
+> linux-next kernel packages as an option". What I meant was carrying it
+> just as an option for those users who want to test bleeding edge
+> without compiling their own linux-next, _not_ to merge linux-next
+> things into their own default kernel release and shove it down users
+> throats.
 
---- a/drivers/net/wireless/ipw2x00/ipw2200.c	2009-03-20 21:17:26.008902901 -0700
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c	2009-03-20 21:17:55.282652680 -0700
-@@ -11529,6 +11529,15 @@ static int ipw_prom_hard_start_xmit(stru
- 	return -EOPNOTSUPP;
- }
- 
-+static const struct net_device_ops ipw_prom_netdev_ops = {
-+	.ndo_open 		= ipw_prom_open,
-+	.ndo_stop		= ipw_prom_stop,
-+	.ndo_start_xmit		= ipw_prom_hard_start_xmit,
-+	.ndo_change_mtu		= ieee80211_change_mtu,
-+	.ndo_set_mac_address 	= eth_mac_addr,
-+	.ndo_validate_addr	= eth_validate_addr,
-+};
-+
- static int ipw_prom_alloc(struct ipw_priv *priv)
- {
- 	int rc = 0;
-@@ -11548,9 +11557,7 @@ static int ipw_prom_alloc(struct ipw_pri
- 	memcpy(priv->prom_net_dev->dev_addr, priv->mac_addr, ETH_ALEN);
- 
- 	priv->prom_net_dev->type = ARPHRD_IEEE80211_RADIOTAP;
--	priv->prom_net_dev->open = ipw_prom_open;
--	priv->prom_net_dev->stop = ipw_prom_stop;
--	priv->prom_net_dev->hard_start_xmit = ipw_prom_hard_start_xmit;
-+	priv->prom_net_dev->netdev_ops = &ipw_prom_netdev_ops;
- 
- 	priv->prom_priv->ieee->iw_mode = IW_MODE_MONITOR;
- 	SET_NETDEV_DEV(priv->prom_net_dev, &priv->pci_dev->dev);
-@@ -11578,6 +11585,17 @@ static void ipw_prom_free(struct ipw_pri
- 
- #endif
- 
-+static const struct net_device_ops ipw_netdev_ops = {
-+	.ndo_init		= ipw_net_init,
-+	.ndo_open		= ipw_net_open,
-+	.ndo_stop		= ipw_net_stop,
-+	.ndo_set_multicast_list	= ipw_net_set_multicast_list,
-+	.ndo_set_mac_address	= ipw_net_set_mac_address,
-+	.ndo_start_xmit		= ieee80211_xmit,
-+	.ndo_change_mtu		= ieee80211_change_mtu,
-+	.ndo_set_mac_address 	= eth_mac_addr,
-+	.ndo_validate_addr	= eth_validate_addr,
-+};
- 
- static int __devinit ipw_pci_probe(struct pci_dev *pdev,
- 				   const struct pci_device_id *ent)
-@@ -11679,11 +11697,7 @@ static int __devinit ipw_pci_probe(struc
- 	priv->ieee->perfect_rssi = -20;
- 	priv->ieee->worst_rssi = -85;
- 
--	net_dev->open = ipw_net_open;
--	net_dev->stop = ipw_net_stop;
--	net_dev->init = ipw_net_init;
--	net_dev->set_multicast_list = ipw_net_set_multicast_list;
--	net_dev->set_mac_address = ipw_net_set_mac_address;
-+	net_dev->netdev_ops = &ipw_netdev_ops;
- 	priv->wireless_data.spy_data = &priv->ieee->spy_data;
- 	net_dev->wireless_data = &priv->wireless_data;
- 	net_dev->wireless_handlers = &ipw_wx_handler_def;
+Sorry, I meant "bigger favour" relative to carrying an own delta of
+considerable size.
 
+Packaging linux-next would be fine if the workload isn't a problem for
+the packager.  As pointed out elsewhere, there are caveats with
+linux-next (e.g. a functionality which was in it yesterday could be gone
+today because of a merge issue), but that's the nature of bleeding edge
+of course.
 -- 
-
+Stefan Richter
+-=====-==--= --== ---==
+http://arcgraph.de/sr/
