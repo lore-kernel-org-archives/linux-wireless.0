@@ -1,94 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:44952 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751915AbZCQOyL (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35479 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755335AbZCCRZn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 10:54:11 -0400
-Received: by nf-out-0910.google.com with SMTP id d21so11236nfb.21
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 07:54:08 -0700 (PDT)
-Message-ID: <49BFB988.8040209@gmail.com> (sfid-20090317_155414_696418_8F1E9239)
-Date: Tue, 17 Mar 2009 10:54:00 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] fix wireless-regdb enforcement oddities
-References: <49BEE56C.9050202@gmail.com> <20090317090922.GA2721@jm.kir.nu>
-In-Reply-To: <20090317090922.GA2721@jm.kir.nu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 3 Mar 2009 12:25:43 -0500
+Message-Id: <20090303172535.964036855@atheros.com> (sfid-20090303_182545_878412_525FD7CE)
+References: <20090303172325.437810138@atheros.com>
+Date: Tue, 03 Mar 2009 19:23:39 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 14/15] ath9k: Add a simple virtual wiphy scheduler
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen wrote:
-> On Mon, Mar 16, 2009 at 07:49:00PM -0400, Richard Farina wrote:
->
->   
->> For the sake of sanity, I think that the way rules from wireless-regdb  
->> are enforced needs to be changed. An example:
->>
->> country US:
->>        (5170 - 5250 @ 40), (3, 17)
->>        (5250 - 5330 @ 40), (3, 20), DFS
->>
->> In this case, you will see that I have removed all of the rules that I  
->> do not intend to cite to lower the complexity of the ruleset.
->>
->> Take for example, channel 48, center frequency 5240.  A standard 20 mhz  
->> mode will work as expected, as well as HT40-, however HT40+ cannot be  
->> set because it would need to cross the rule boundary.  Each line of a  
->> regulatory domain section is enforced by itself.  Channel 52 has a  
->> similiar problem where 20 and HT40+ work but HT40- will not.
->>     
->
-> Channel 48 with HT40+ would not work regardless of the regulatory rules;
-> (48,52) is not one of the allowed HT40 channel pairs. You can use
-> (36,40), (44,48), (52,56), and (60,64), but not (40,44), (48,52),
-> (56,60). This is not really a regulatory limit but restriction stated in
-> IEEE 802.11n Annex J. And same applies to channel 52 with HT40-.
->
-> There may be some other examples where the processing of the ruleset
-> could be improved, but this particular example does not look like
-> something that would benefit much from a change here.
->
->   
->> As this specific example includes frequencies in the DFS range, you can  
->> obviously see why no one has noticed this failing before.  The obviously  
->> expected result is that if two rules abut and a channel is requested  
->> that stradles them, it should take the most restrictive mix between the  
->> two.  For instance, if I set channel 48 in HT40+ mode (and we have DFS  
->> support) the rule would be enforced as (3, 17), DFS; while HT40- would  
->> be enforced as the standard (3, 17).
->>     
->
-> If the channel pair (48,52) were allowed by IEEE 802.11n and we
-> supported DFS, yes, I would agree with this. However, neither of those
-> are the case at the moment (and I don't see the former changing in the
-> future either).
->
->   
+This is a very simple scheduler that goes through the wiphys and
+schedules one at a time every N milliseconds (current default value:
+500 ms). This is enough for initial testing, but there are number of
+areas where a more complex scheduler can improve operations greatly.
 
-Okay, so my example isn't good enough because that specific setup is not 
-allowed, maybe some later time we can discuss the fact that the rules 
-really are not enforced as a whole and not argue the semantics of my 
-specific examples.  My eventual goal is to have 1-10,000 in the allowed 
-rules with a NOTX flag for all the frequencies which are monitor 
-only...but I suppose for now I'll just use that ugly overlapping 
-regdomain hack until it starts to bite me. I'm sure overlapping two 
-rules by 20 mhz couldn't possibly confuse things...
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-If I have no choice but to write funny rules then so be it, but at least 
-if I could understand how this is interpreted?
+---
+ drivers/net/wireless/ath9k/ath9k.h   |    5 ++
+ drivers/net/wireless/ath9k/main.c    |    3 +
+ drivers/net/wireless/ath9k/virtual.c |   64 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 72 insertions(+)
 
-        (2402 - 2472 @ 40), (3, 20)
-        (2457 - 2482 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
+--- wireless-testing.orig/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:32:41.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:32:52.000000000 +0200
+@@ -569,6 +569,9 @@ struct ath_softc {
+ 	struct work_struct chan_work;
+ 	int wiphy_select_failures;
+ 	unsigned long wiphy_select_first_fail;
++	struct delayed_work wiphy_work;
++	unsigned long wiphy_scheduler_int;
++	int wiphy_scheduler_index;
+ 
+ 	struct tasklet_struct intr_tq;
+ 	struct tasklet_struct bcon_tasklet;
+@@ -712,10 +715,12 @@ void ath9k_tx_status(struct ieee80211_hw
+ int ath9k_wiphy_pause(struct ath_wiphy *aphy);
+ int ath9k_wiphy_unpause(struct ath_wiphy *aphy);
+ int ath9k_wiphy_select(struct ath_wiphy *aphy);
++void ath9k_wiphy_set_scheduler(struct ath_softc *sc, unsigned int msec_int);
+ void ath9k_wiphy_chan_work(struct work_struct *work);
+ bool ath9k_wiphy_started(struct ath_softc *sc);
+ void ath9k_wiphy_pause_all_forced(struct ath_softc *sc,
+ 				  struct ath_wiphy *selected);
+ bool ath9k_wiphy_scanning(struct ath_softc *sc);
++void ath9k_wiphy_work(struct work_struct *work);
+ 
+ #endif /* ATH9K_H */
+--- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-03 18:32:41.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-03 18:32:52.000000000 +0200
+@@ -1323,6 +1323,7 @@ void ath_detach(struct ath_softc *sc)
+ #endif
+ 	ath_deinit_leds(sc);
+ 	cancel_work_sync(&sc->chan_work);
++	cancel_delayed_work_sync(&sc->wiphy_work);
+ 
+ 	for (i = 0; i < sc->num_sec_wiphy; i++) {
+ 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+@@ -1670,6 +1671,8 @@ int ath_attach(u16 devid, struct ath_sof
+ 	ath9k_reg_apply_world_flags(hw->wiphy, REGDOM_SET_BY_INIT);
+ 
+ 	INIT_WORK(&sc->chan_work, ath9k_wiphy_chan_work);
++	INIT_DELAYED_WORK(&sc->wiphy_work, ath9k_wiphy_work);
++	sc->wiphy_scheduler_int = msecs_to_jiffies(500);
+ 
+ 	error = ieee80211_register_hw(hw);
+ 
+--- wireless-testing.orig/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:32:41.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:32:52.000000000 +0200
+@@ -154,6 +154,11 @@ int ath9k_wiphy_add(struct ath_softc *sc
+ 
+ 	error = ieee80211_register_hw(hw);
+ 
++	if (error == 0) {
++		/* Make sure wiphy scheduler is started (if enabled) */
++		ath9k_wiphy_set_scheduler(sc, sc->wiphy_scheduler_int);
++	}
++
+ 	return error;
+ }
+ 
+@@ -596,3 +601,62 @@ void ath9k_wiphy_pause_all_forced(struct
+ 	}
+ 	spin_unlock_bh(&sc->wiphy_lock);
+ }
++
++void ath9k_wiphy_work(struct work_struct *work)
++{
++	struct ath_softc *sc = container_of(work, struct ath_softc,
++					    wiphy_work.work);
++	struct ath_wiphy *aphy = NULL;
++	bool first = true;
++
++	spin_lock_bh(&sc->wiphy_lock);
++
++	if (sc->wiphy_scheduler_int == 0) {
++		/* wiphy scheduler is disabled */
++		spin_unlock_bh(&sc->wiphy_lock);
++		return;
++	}
++
++try_again:
++	sc->wiphy_scheduler_index++;
++	while (sc->wiphy_scheduler_index <= sc->num_sec_wiphy) {
++		aphy = sc->sec_wiphy[sc->wiphy_scheduler_index - 1];
++		if (aphy && aphy->state != ATH_WIPHY_INACTIVE)
++			break;
++
++		sc->wiphy_scheduler_index++;
++		aphy = NULL;
++	}
++	if (aphy == NULL) {
++		sc->wiphy_scheduler_index = 0;
++		if (sc->pri_wiphy->state == ATH_WIPHY_INACTIVE) {
++			if (first) {
++				first = false;
++				goto try_again;
++			}
++			/* No wiphy is ready to be scheduled */
++		} else
++			aphy = sc->pri_wiphy;
++	}
++
++	spin_unlock_bh(&sc->wiphy_lock);
++
++	if (aphy &&
++	    aphy->state != ATH_WIPHY_ACTIVE && aphy->state != ATH_WIPHY_SCAN &&
++	    ath9k_wiphy_select(aphy)) {
++		printk(KERN_DEBUG "ath9k: Failed to schedule virtual wiphy "
++		       "change\n");
++	}
++
++	queue_delayed_work(sc->hw->workqueue, &sc->wiphy_work,
++			   sc->wiphy_scheduler_int);
++}
++
++void ath9k_wiphy_set_scheduler(struct ath_softc *sc, unsigned int msec_int)
++{
++	cancel_delayed_work_sync(&sc->wiphy_work);
++	sc->wiphy_scheduler_int = msecs_to_jiffies(msec_int);
++	if (sc->wiphy_scheduler_int)
++		queue_delayed_work(sc->hw->workqueue, &sc->wiphy_work,
++				   sc->wiphy_scheduler_int);
++}
 
+-- 
 
-What rules are applied if I set channel 11 in 10 Mhz mode? Considering 
-support for using 10 mhz channels is being worked on I'm just kinda 
-curious.  I'm also not 100% sure on the rules but since the way 
-wireless-regdb/crda currently enforces things will allow you to set 
-20mhz channels in a 40mhz rule I'm also going to assume that it will 
-allow 10 and 5 mhz channels to be set too (@40 appears to mean "40 or 
-less" as far as I understand it).
-
-thanks,
-Rick
+-- 
+Jouni Malinen                                            PGP id EFC895FA
