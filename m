@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39996 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750910AbZCCEtM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2009 23:49:12 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2009 20:49:11 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18860.46550.551064.448896@gargle.gargle.HOWL> (sfid-20090303_054925_305807_D0C61226)
-Date: Tue, 3 Mar 2009 10:15:10 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	<Jouni.Malinen@Atheros.com>
-Subject: [PATCH] mac80211: Update IBSS beacon timestamp properly
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35457 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754943AbZCCRZW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2009 12:25:22 -0500
+Message-Id: <20090303172515.987598674@atheros.com> (sfid-20090303_182527_491250_B3C2233C)
+References: <20090303172325.437810138@atheros.com>
+Date: Tue, 03 Mar 2009 19:23:34 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 09/15] ath9k: Register larger listen interval
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In IBSS mode, the beacon timestamp has to be filled with the
-BSS's timestamp when joining, and set to zero when creating
-a new BSS.
+Notify the AP that we may be sleeping longer to allow the AP power
+save code to buffer larger number of frames for us when using virtual
+wiphys.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
- net/mac80211/ibss.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath9k/main.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index a96ce9d..f4becc1 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -64,7 +64,7 @@ static int __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				     const int freq,
- 				     const size_t supp_rates_len,
- 				     const u8 *supp_rates,
--				     const u16 capability)
-+				     const u16 capability, u64 tsf)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct ieee80211_local *local = sdata->local;
-@@ -127,6 +127,7 @@ static int __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
- 	mgmt->u.beacon.beacon_int =
- 		cpu_to_le16(local->hw.conf.beacon_int);
-+	mgmt->u.beacon.timestamp = cpu_to_le64(tsf);
- 	mgmt->u.beacon.capab_info = cpu_to_le16(capability);
- 
- 	pos = skb_put(skb, 2 + ifibss->ssid_len);
-@@ -199,7 +200,8 @@ static int ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 					 bss->cbss.beacon_interval,
- 					 bss->cbss.channel->center_freq,
- 					 bss->supp_rates_len, bss->supp_rates,
--					 bss->cbss.capability);
-+					 bss->cbss.capability,
-+					 bss->cbss.tsf);
- }
- 
- static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
-@@ -502,7 +504,7 @@ static int ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
- 					 bssid, local->hw.conf.beacon_int,
- 					 local->hw.conf.channel->center_freq,
- 					 sband->n_bitrates, supp_rates,
--					 capability);
-+					 capability, 0);
- }
- 
- static int ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+--- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-03 18:31:30.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-03 18:31:43.000000000 +0200
+@@ -1595,6 +1595,7 @@ void ath_set_hw_capab(struct ath_softc *
+ 	hw->queues = 4;
+ 	hw->max_rates = 4;
+ 	hw->channel_change_time = 5000;
++	hw->max_listen_interval = 10;
+ 	hw->max_rate_tries = ATH_11N_TXMAXTRY;
+ 	hw->sta_data_size = sizeof(struct ath_node);
+ 	hw->vif_data_size = sizeof(struct ath_vif);
+
 -- 
-1.6.1
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
