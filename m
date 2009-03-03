@@ -1,65 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55537 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751085AbZC0VdR (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35462 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755059AbZCCRZ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 17:33:17 -0400
-Subject: Re: [GIT PATCH] rfkill updates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <1238168651-28891-1-git-send-email-hmh@hmh.eng.br> (sfid-20090327_164420_522932_F0E97847)
-References: <1238168651-28891-1-git-send-email-hmh@hmh.eng.br>
-	 (sfid-20090327_164420_522932_F0E97847)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xgd3A6KmoUPiFjt0dqhw"
-Date: Fri, 27 Mar 2009 22:33:10 +0100
-Message-Id: <1238189590.4452.24.camel@johannes.local> (sfid-20090327_223319_819940_2A5B6E9E)
-Mime-Version: 1.0
+	Tue, 3 Mar 2009 12:25:26 -0500
+Message-Id: <20090303172520.075046478@atheros.com> (sfid-20090303_182927_729171_71D467DD)
+References: <20090303172325.437810138@atheros.com>
+Date: Tue, 03 Mar 2009 19:23:35 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 10/15] ath9k: Pause other virtual wiphys on channel change
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+For now, allow channel changes immediately and just force the other
+virtual wiphys to paused state. This is needed to allow
+mac80211-controlled scan to control channel changes.
 
---=-xgd3A6KmoUPiFjt0dqhw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Henrique,
+---
+ drivers/net/wireless/ath9k/ath9k.h   |    2 ++
+ drivers/net/wireless/ath9k/main.c    |    8 +++++++-
+ drivers/net/wireless/ath9k/virtual.c |   24 ++++++++++++++++++++++++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
-Can we drop all this? I'm rewriting the entire rfkill core to better
-support hard/soft kills, and all this code pretty much goes away anyway.
+--- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-03 18:31:43.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-03 18:31:50.000000000 +0200
+@@ -2341,7 +2341,13 @@ static int ath9k_config(struct ieee80211
+ 		aphy->chan_is_ht = conf_is_ht(conf);
+ 
+ 		/* TODO: do not change operation channel immediately if there
+-		 * are other virtual wiphys that use another channel */
++		 * are other virtual wiphys that use another channel. For now,
++		 * we do the change immediately to allow mac80211-operated scan
++		 * to work. Once the scan operation is moved into ath9k, we can
++		 * just move the current aphy in PAUSED state if the channel is
++		 * changed into something different from the current operation
++		 * channel. */
++		ath9k_wiphy_pause_all_forced(sc, aphy);
+ 
+ 		DPRINTF(sc, ATH_DBG_CONFIG, "Set channel: %d MHz\n",
+ 			curchan->center_freq);
+--- wireless-testing.orig/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:31:30.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:31:50.000000000 +0200
+@@ -709,5 +709,7 @@ int ath9k_wiphy_unpause(struct ath_wiphy
+ int ath9k_wiphy_select(struct ath_wiphy *aphy);
+ void ath9k_wiphy_chan_work(struct work_struct *work);
+ bool ath9k_wiphy_started(struct ath_softc *sc);
++void ath9k_wiphy_pause_all_forced(struct ath_softc *sc,
++				  struct ath_wiphy *selected);
+ 
+ #endif /* ATH9K_H */
+--- wireless-testing.orig/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:31:30.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:31:50.000000000 +0200
+@@ -496,3 +496,27 @@ bool ath9k_wiphy_started(struct ath_soft
+ 	spin_unlock_bh(&sc->wiphy_lock);
+ 	return false;
+ }
++
++static void ath9k_wiphy_pause_chan(struct ath_wiphy *aphy,
++				   struct ath_wiphy *selected)
++{
++	if (aphy->chan_idx == selected->chan_idx)
++		return;
++	aphy->state = ATH_WIPHY_PAUSED;
++	ieee80211_stop_queues(aphy->hw);
++}
++
++void ath9k_wiphy_pause_all_forced(struct ath_softc *sc,
++				  struct ath_wiphy *selected)
++{
++	int i;
++	spin_lock_bh(&sc->wiphy_lock);
++	if (sc->pri_wiphy->state == ATH_WIPHY_ACTIVE)
++		ath9k_wiphy_pause_chan(sc->pri_wiphy, selected);
++	for (i = 0; i < sc->num_sec_wiphy; i++) {
++		if (sc->sec_wiphy[i] &&
++		    sc->sec_wiphy[i]->state == ATH_WIPHY_ACTIVE)
++			ath9k_wiphy_pause_chan(sc->sec_wiphy[i], selected);
++	}
++	spin_unlock_bh(&sc->wiphy_lock);
++}
 
-It's very frustrating to see a subsystem stagnate forever, and then once
-somebody else starts working on it see a bunch of patches that break all
-that work being posted.
+-- 
 
-Clearly those "bugs" are minor enough that nobody has even found them
-yet, so it's not worth fixing them.
-
-johannes
-
-
---=-xgd3A6KmoUPiFjt0dqhw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJzUYUAAoJEKVg1VMiehFYBMYP/0n1TdcN31yTpnFe/pPSkHMP
-bf20aGVZdNGoLkgkrDe7O1/2fOdPofBeaxaZSYyRPIe+GzmTdNn1C2Rph1cwsxZU
-f3fmVA69AgAajMu6r+QzHe4xPE9iLRt99y5ACq/mg+wFlnKHvwCfQzik3u0adItg
-9G2boBQUNgXDoUKt4DVaqOrxGnXtkKWXJwXUiWUgHr4h5Cbkx6uBymRAuB5Tv/YM
-ByfYnXovf3Ggq54MvdNvnpBTvR5c5S6S9Y9HdzpS07vmNLmnNnUpSSCRm12khpSz
-xME0HySafbmkfp5E9J2Ypz1P7NZHOcEicyKhYsPWA8ImdjEFc96Me52PgK7CG9DS
-B+I5zZJu8uUblyIa8yOBBL9mfxyuQLgfKXsTq/rjO9wTNsE7LmURDqJjmgoXBjct
-iiQm3t5rO7CTONU5tzwLnqU078FUAsdz//7aI9YZ3OQBA1yruqOXHQSpylqpDCD+
-vzPQ8NHi1LKnb91t3PmISORwmidlYFmiPDznwyxVlf9Eu7QewSqVsqmf/5yIRXgP
-eWkHx009JR4YCu2KRnmgFoBZWK9kfD3DyGU6MIEKKlkpd4ef/q8KVHzaK5XUzVQD
-0SDe90l7SaB7YAJvTtgcqXkrD/eM2KoFKtgNvooIiU+3Cxk+uddsZnrDqXmtczo7
-uvGa3JO5jmQkxQndW6V4
-=m1gT
------END PGP SIGNATURE-----
-
---=-xgd3A6KmoUPiFjt0dqhw--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
