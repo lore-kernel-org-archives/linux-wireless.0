@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40401 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754791AbZCaQ3F (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.185]:38403 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751021AbZCDOVv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 12:29:05 -0400
-Subject: Re: wireless powersaving (in NM?)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1237891149.4320.73.camel@johannes.local> (sfid-20090324_133306_274219_3B7517AB)
-References: <1237891149.4320.73.camel@johannes.local>
-	 (sfid-20090324_133306_274219_3B7517AB)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ovaRWymvDsICFdRZS3dx"
-Date: Tue, 31 Mar 2009 18:28:30 +0200
-Message-Id: <1238516910.5970.102.camel@johannes.local> (sfid-20090331_182919_194844_9E109657)
-Mime-Version: 1.0
+	Wed, 4 Mar 2009 09:21:51 -0500
+Received: by ti-out-0910.google.com with SMTP id d10so3478527tib.23
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 06:21:48 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18862.36430.959276.440720@gargle.gargle.HOWL> (sfid-20090304_152153_626428_88D71CC0)
+Date: Wed, 4 Mar 2009 19:51:02 +0530
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k: use correct init values for ar9100 devices
+In-Reply-To: <49AE8466.3040906@openwrt.org>
+References: <1236103846-1672-1-git-send-email-juhosg@openwrt.org>
+	<18862.1025.217829.656599@gargle.gargle.HOWL>
+	<18862.4870.138381.234256@gargle.gargle.HOWL>
+	<49AE8466.3040906@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Gabor Juhos wrote:
+> Apart from the last line, this patch simply swaps the two initval sets as i see
+> it. Would not be simpler to rename them, and then change this line only?
+> 
 
---=-ovaRWymvDsICFdRZS3dx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I didn't bother to check if the initvals were to be swapped or not.
+The patch was a line-by-line copy of the latest initvals. :-)
+Figured this would also make it easier to roll out future updates.
 
-On Tue, 2009-03-24 at 11:39 +0100, Johannes Berg wrote:
+> > +#define AR_SREV_VERSION_9100		0x014
+> 
+> 0x14?
 
-> However, by putting the burden onto drivers, drivers can choose a
-> conservative power saving level when no application has registered its
-> pm_qos requirements
+Yep, this can be fixed.
 
-Actually, should it? I'm now thinking that defaulting to a high latency
-sleep state would sort of be required by the pm_qos API -- after all if
-nobody registers a latency requirement then there is no latency
-requirement!
-
-I think we need some GUI though to adjust this -- like the "inhibit
-screensaver" applet that exists -- so that users of applications that
-don't register requirements can still do something useful.
-
-johannes
-
---=-ovaRWymvDsICFdRZS3dx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ0kSqAAoJEKVg1VMiehFYcbsP/RXnBhXlk78vqvx+bIfFCaK+
-mTDWZfnYjiYxwrBcThjbEf6BlE2vQ5Z10V7DPK7RxFjXurEdD0nzgOS5v7QmePXB
-7+etR74vJewwwd2Uj7AfnvTXyeMgs9ig4q/4ITCLqv3gLSxWSt1N1kNDwAnypc8e
-X6JAQvDQ21lzvbWFR4KnSu0aIJqChHEWptNDpn4mMEKhRBN+vhsO1FMUHcJl09IC
-oGndi3b8DGb366G9sh6zGba7Z5jdvaIJl8InaNy5/qVDCByj6/mFBOaHXoS2NH73
-fE/N/LwpPlKhbl6/QbJW7yOh0apOdwsbCM2NuL2764QJlLcDbxzkhlAmpdovwhFJ
-sC+XI3CSt/Ukv/Q2PGcrt4wExde5ibk3Wf97yCJw3bA6P3W625rkilGFe/usGmEL
-LYikBM2cWKp3tyVa10eElQa919iq9MRwRkp9Pjo6UocXwVgzYd5V9q1i8OtpAmwY
-BtBhKebN8EBg9tVyl53vzaAO9cvr+oaC6r51eB+0mNy3j837kuwG3xJK/QxwqT/n
-Wxo7HJt3DclsUQImfQjwGd/KtCalcUYFTKaVl5lT1o/rxDlL2De/+ggoHp/lhgE7
-tUoCO30Q3ElrO+xzVkrkhX8tpj004Ki1VJSvTnJqKSlEMCMgtPF4L6TjYADyE4bE
-HCGwK4HUXrfJYRfTM+KB
-=6s1Z
------END PGP SIGNATURE-----
-
---=-ovaRWymvDsICFdRZS3dx--
-
+Sujith
