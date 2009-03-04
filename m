@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46671 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699AbZC0HP1 (ORCPT
+Received: from rcsinet13.oracle.com ([148.87.113.125]:38247 "EHLO
+	rgminet13.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584AbZCDQu3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 03:15:27 -0400
-Message-ID: <148ad3659dd1afe81ce6408e2a48715a.squirrel@secure.sipsolutions.net>
-In-Reply-To: <1238113267.29544.14.camel@blob> 
-References: <1238113267.29544.14.camel@blob>
-Date: Fri, 27 Mar 2009 08:15:20 +0100 (CET)
-Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on
-     5GHz
-From: "Johannes Berg" <johannes@sipsolutions.net>
-To: "Bernhard Seibold" <bernhard.seibold@uni-ulm.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+	Wed, 4 Mar 2009 11:50:29 -0500
+Message-ID: <49AEB18E.5050901@oracle.com> (sfid-20090304_175033_167451_D0ED6789)
+Date: Wed, 04 Mar 2009 08:51:26 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: Michael Buesch <mb@bu3sch.de>
+CC: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH] b43: Fix compilation for devices without PCI core
+References: <200903041641.11302.mb@bu3sch.de>
+In-Reply-To: <200903041641.11302.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bernhard Seibold wrote:
+Michael Buesch wrote:
+> This fixes compilation, if the PCI core is disabled.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> ---
 
-> The current regdb is missing a frequency range for Germany. That
-> freq-range is military-controlled, so to be on the safe side, I asked
-> the responsible agency, and they confirmed to me that it's legal to use.
-> They also sent me the attached pdf (German only) which contains some
-> details.
+Ack. Thanks.
+
+> 
+> John, I think this is only needed for the next feature release, as the patch
+> that broke that was only merged for next, afaik.
+> 
+> Index: wireless-testing/drivers/net/wireless/b43/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-03-04 16:35:07.000000000 +0100
+> +++ wireless-testing/drivers/net/wireless/b43/main.c	2009-03-04 16:36:08.000000000 +0100
+> @@ -4176,15 +4176,17 @@ static int b43_wireless_core_init(struct
+>  			hf |= B43_HF_4318TSSI;
+>  		if (phy->radio_rev < 6)
+>  			hf |= B43_HF_VCORECALC;
+>  	}
+>  	if (sprom->boardflags_lo & B43_BFL_XTAL_NOSLOW)
+>  		hf |= B43_HF_DSCRQ; /* Disable slowclock requests from ucode. */
+> +#ifdef CONFIG_SSB_DRIVER_PCICORE
+>  	if ((bus->bustype == SSB_BUSTYPE_PCI) &&
+>  	    (bus->pcicore.dev->id.revision <= 10))
+>  		hf |= B43_HF_PCISCW; /* PCI slow clock workaround. */
+> +#endif
+>  	hf &= ~B43_HF_SKCFPUP;
+>  	b43_hf_write(dev, hf);
+>  
+>  	b43_set_retry_limits(dev, B43_DEFAULT_SHORT_RETRY_LIMIT,
+>  			     B43_DEFAULT_LONG_RETRY_LIMIT);
+>  	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_SFFBLIM, 3);
+> 
 
 
-Odd, that document is from 2006, you'd think they would integrate it into
-the 2008 release of the entire freq plan...
-
-Can we find a URL for this one?
-
-johannes
-
-> Please CC me on replies.
->
->
-> --- a/db.txt	2009-03-25 19:38:22.838975857 +0100
-> +++ b/db.txt	2009-03-25 19:39:37.722248019 +0100
-> @@ -165,8 +165,8 @@
->  country DE:
->  	# entries 279004 and 280006
->  	(2400 - 2483.5 @ 40), (N/A, 100 mW)
-> -	# entries 303005 and 304002
-> -	(5150 - 5255 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
-> +	# entries 303005, 304002 and 305002
-> +	(5150 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
->  	# entries 308002 and 309001
->  	(5470 - 5650 @ 40), (N/A, 1000 mW), DFS
->
->
->
-
+-- 
+~Randy
