@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:31211
-	"EHLO VA3EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751036AbZC3SFi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 14:05:38 -0400
-Message-ID: <49D10994.2010204@am.sony.com> (sfid-20090330_200541_959720_8C7C7BF7)
-Date: Mon, 30 Mar 2009 11:04:04 -0700
-From: Geoff Levand <geoffrey.levand@am.sony.com>
-MIME-Version: 1.0
-To: <jgarzik@pobox.com>
-CC: <linville@tuxdriver.com>, <netdev@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>,
-	Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Subject: [patch] net/ps3: Update maintainer
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from main.gmane.org ([80.91.229.2]:58322 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753209AbZCDOxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2009 09:53:15 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LesTA-0001tD-J7
+	for linux-wireless@vger.kernel.org; Wed, 04 Mar 2009 14:53:12 +0000
+Received: from dslb-092-076-233-225.pools.arcor-ip.net ([92.76.233.225])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 14:53:12 +0000
+Received: from feldmann_markus by dslb-092-076-233-225.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 14:53:12 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: Re: BCM4303 on HP zv5265ea
+Date: Wed, 04 Mar 2009 15:52:59 +0100
+Message-ID: <gom4ke$vle$1@ger.gmane.org> (sfid-20090304_155330_784933_62F3FE76)
+References: <gohr71$48f$1@ger.gmane.org> <49AC742D.9030309@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <49AC742D.9030309@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
+Larry Finger schrieb:
+> 
+> This card works in most cases.
+> 
+> What does the command 'dmesg | grep b43' show?
+Hi Larry,
 
-Update the MAINTAINERS entry for PS3 NETWORK SUPPORT.
+nice to read you again. :-)
 
-CC: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
----
+The needed modul for this card is <b43-legacy>.
 
-I will take over maintenance of the ps3 network drivers.
+I talked to you some time ago.
+The subject was <Do not get BCM4303 to work>.
 
-Mokuno-san, thank you for the excellent work.
+As i understood, only some of the developers for the
+<acpiphp> can solve this Problem, because the card
+will not be activated if this doesn't work.
+For example <M a t t h e w_G a r r e t> i think could solve this.
 
--Geoff
+But he seems not to be online a long time.
 
- MAINTAINERS |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+So maybe the card could work, but only if i can activate
+it.
 
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3503,8 +3503,8 @@ L:	linux-ide@vger.kernel.org
- S:	Maintained
- 
- PS3 NETWORK SUPPORT
--P:	Masakazu Mokuno
--M:	mokuno@sm.sony.co.jp
-+P:	Geoff Levand
-+M:	geoffrey.levand@am.sony.com
- L:	netdev@vger.kernel.org
- L:	cbe-oss-dev@ozlabs.org
- S:	Supported
+Do you know which Developer also works on this Modul ?
 
-
+Regards Markus
 
