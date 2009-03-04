@@ -1,37 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58099
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752398AbZCQTdG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 15:33:06 -0400
-Date: Tue, 17 Mar 2009 12:32:53 -0700 (PDT)
-Message-Id: <20090317.123253.171955525.davem@davemloft.net> (sfid-20090317_203315_440502_4BEAA6CF)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-03-17
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090317192129.GG6737@tuxdriver.com>
-References: <20090317192129.GG6737@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bu3sch.de ([62.75.166.246]:54370 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754841AbZCDQB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2009 11:01:56 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: John W Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix compilation for devices without PCI core
+Date: Wed, 4 Mar 2009 16:41:10 +0100
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Randy Dunlap <randy.dunlap@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903041641.11302.mb@bu3sch.de> (sfid-20090304_170224_123904_F19199BA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 17 Mar 2009 15:21:29 -0400
+This fixes compilation, if the PCI core is disabled.
 
-> Dave,
-> 
-> Top o' the mornin' to ya!
-> 
-> Here is another big round of wireless updates intended for 2.6.30.  They
-> just keep coming!  Lots of driver bits and some more regulatory stuff
-> from Luis...
-> 
-> Please let me know if there are problems!
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Oh, there will be problems, when I try to merge all of this
-stuff together :-)
+---
 
-It might make sense to do the net-2.6 --> net-next-2.6 merge while
-sober, so it might have to wait until tomorrow :)
+John, I think this is only needed for the next feature release, as the patch
+that broke that was only merged for next, afaik.
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-03-04 16:35:07.000000000 +0100
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-03-04 16:36:08.000000000 +0100
+@@ -4176,15 +4176,17 @@ static int b43_wireless_core_init(struct
+ 			hf |= B43_HF_4318TSSI;
+ 		if (phy->radio_rev < 6)
+ 			hf |= B43_HF_VCORECALC;
+ 	}
+ 	if (sprom->boardflags_lo & B43_BFL_XTAL_NOSLOW)
+ 		hf |= B43_HF_DSCRQ; /* Disable slowclock requests from ucode. */
++#ifdef CONFIG_SSB_DRIVER_PCICORE
+ 	if ((bus->bustype == SSB_BUSTYPE_PCI) &&
+ 	    (bus->pcicore.dev->id.revision <= 10))
+ 		hf |= B43_HF_PCISCW; /* PCI slow clock workaround. */
++#endif
+ 	hf &= ~B43_HF_SKCFPUP;
+ 	b43_hf_write(dev, hf);
+ 
+ 	b43_set_retry_limits(dev, B43_DEFAULT_SHORT_RETRY_LIMIT,
+ 			     B43_DEFAULT_LONG_RETRY_LIMIT);
+ 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_SFFBLIM, 3);
+
+-- 
+Greetings, Michael.
