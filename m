@@ -1,94 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:45305 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754597AbZC0P6M (ORCPT
+Received: from smtp4.dnainternet.fi ([87.94.96.72]:26031 "EHLO
+	smtp4.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630AbZCDSJO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 11:58:12 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH 4/4] rfkill: export events for global state changes
-Date: Fri, 27 Mar 2009 12:58:05 -0300
-Message-Id: <1238169485-29298-5-git-send-email-hmh@hmh.eng.br> (sfid-20090327_165816_505645_15FBACBE)
-In-Reply-To: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br>
-References: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br>
+	Wed, 4 Mar 2009 13:09:14 -0500
+Message-ID: <20090304200906.63419u6tdqcub3cw@hayate.sektori.org> (sfid-20090304_190918_527873_E097750A)
+Date: Wed, 04 Mar 2009 20:09:06 +0200
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH] rndis_wlan: convert get/set mode to cfg80211
+References: <1236029064-3836-1-git-send-email-linville@tuxdriver.com>
+	<1236034806-13809-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1236034806-13809-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Issue uevents for global rfkill state changes.
+Looks ok to me. I very busy with studies atm, so I don't think I have much
+time to test these changes, sorry.
 
-Signed-off-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- net/rfkill/rfkill.c |   39 +++++++++++++++++++++++++++++++++++++++
- 1 files changed, 39 insertions(+), 0 deletions(-)
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 
-diff --git a/net/rfkill/rfkill.c b/net/rfkill/rfkill.c
-index 901e6c2..2f23cf7 100644
---- a/net/rfkill/rfkill.c
-+++ b/net/rfkill/rfkill.c
-@@ -56,6 +56,8 @@ static unsigned long rfkill_states_lockdflt[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
- static bool rfkill_epo_lock_active;
- 
- static void rfkill_uevent(struct rfkill *rfkill);
-+static void rfkill_global_uevent(enum rfkill_type type,
-+				 enum rfkill_state state);
- 
- #ifdef CONFIG_RFKILL_LEDS
- static void rfkill_led_trigger(struct rfkill *rfkill,
-@@ -188,6 +190,7 @@ static void __rfkill_switch_all(const enum rfkill_type type,
- 			mutex_unlock(&rfkill->mutex);
- 		}
- 	}
-+	rfkill_global_uevent(type, state);
- }
- 
- /**
-@@ -1238,6 +1241,42 @@ static struct platform_driver rfkill_pdrv = {
- 		.owner = THIS_MODULE,
- 	},
- };
-+
-+/*
-+ * Global rfkill uevents
-+ */
-+
-+static void rfkill_global_uevent(enum rfkill_type type,
-+				 enum rfkill_state state)
-+{
-+	struct kobj_uevent_env *env;
-+
-+	env = kzalloc(sizeof(*env), GFP_KERNEL);
-+	if (WARN(!env, "rfkill: out of memory while trying to issue "
-+			"RFKILL_GLOBAL_STATE_CHANGED uevent for type "
-+			"%u\n", type))
-+		return;
-+
-+	if (add_uevent_var(env, "RFKILL_GLOBAL_TYPE=%s",
-+				rfkill_get_type_str(type)) ||
-+	    add_uevent_var(env, "RFKILL_GLOBAL_STATE=%d",
-+				state))
-+		goto err_exit;
-+
-+	kobject_uevent_env(&rfkill_pdev->dev.kobj, KOBJ_CHANGE,
-+			   (char **)&env->envp);
-+	kfree(env);
-+	return;
-+
-+err_exit:
-+	WARN(1, "rfkill: failed to build uevent RFKILL_GLOBAL_STATE_CHANGED "
-+		"data structures for type %u\n", type);
-+	kfree(env);
-+	return;
-+}
-+#else
-+static void rfkill_global_uevent(enum rfkill_type type,
-+				 enum rfkill_state state) {};
- #endif /* CONFIG_RFKILL_GLOBAL_UAPI && !CONFIG_RFKILL_NO_CORE_UAPI */
- 
- /*
--- 
-1.6.2.1
+Quoting "John W. Linville" <linville@tuxdriver.com>:
+
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> Obviously this depends on "rndis_wlan: initiate cfg80211 conversion"...
+>
+>  drivers/net/wireless/rndis_wlan.c |   95  
+> +++++++++++++++++--------------------
+>  1 files changed, 43 insertions(+), 52 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rndis_wlan.c  
+> b/drivers/net/wireless/rndis_wlan.c
+> index ebed802..fa9b9dd 100644
+> --- a/drivers/net/wireless/rndis_wlan.c
+> +++ b/drivers/net/wireless/rndis_wlan.c
+> @@ -406,8 +406,17 @@ struct rndis_wext_private {
+>  	u8 command_buffer[COMMAND_BUFFER_SIZE];
+>  };
+>
+> +/*
+> + * cfg80211 ops
+> + */
+> +int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
+> +				enum nl80211_iftype type, u32 *flags,
+> +				struct vif_params *params);
+> +
+> +struct cfg80211_ops rndis_config_ops = {
+> +	.change_virtual_intf = rndis_change_virtual_intf,
+> +};
+>
+> -struct cfg80211_ops rndis_config_ops = { };
+>  void *rndis_wiphy_privid = &rndis_wiphy_privid;
+>
+>  static const int bcm4320_power_output[4] = { 25, 50, 75, 100 };
+> @@ -1125,6 +1134,37 @@ static void set_multicast_list(struct usbnet *usbdev)
+>
+>
+>  /*
+> + * cfg80211 ops
+> + */
+> +int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
+> +				enum nl80211_iftype type, u32 *flags,
+> +				struct vif_params *params)
+> +{
+> +	struct net_device *dev;
+> +	struct usbnet *usbdev;
+> +	int mode;
+> +
+> +	/* we're under RTNL */
+> +	dev = __dev_get_by_index(&init_net, ifindex);
+> +	if (!dev)
+> +		return -ENODEV;
+> +	usbdev = netdev_priv(dev);
+> +
+> +	switch (type) {
+> +	case NL80211_IFTYPE_ADHOC:
+> +		mode = ndis_80211_infra_adhoc;
+> +		break;
+> +	case NL80211_IFTYPE_STATION:
+> +		mode = ndis_80211_infra_infra;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +
+> +	return set_infra_mode(usbdev, mode);
+> +}
+> +
+> +/*
+>   * wireless extension handlers
+>   */
+>
+> @@ -1450,55 +1490,6 @@ static int rndis_iw_get_auth(struct net_device *dev,
+>  }
+>
+>
+> -static int rndis_iw_get_mode(struct net_device *dev,
+> -				struct iw_request_info *info,
+> -				union iwreq_data *wrqu, char *extra)
+> -{
+> -	struct usbnet *usbdev = netdev_priv(dev);
+> -	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
+> -
+> -	switch (priv->infra_mode) {
+> -	case ndis_80211_infra_adhoc:
+> -		wrqu->mode = IW_MODE_ADHOC;
+> -		break;
+> -	case ndis_80211_infra_infra:
+> -		wrqu->mode = IW_MODE_INFRA;
+> -		break;
+> -	/*case ndis_80211_infra_auto_unknown:*/
+> -	default:
+> -		wrqu->mode = IW_MODE_AUTO;
+> -		break;
+> -	}
+> -	devdbg(usbdev, "SIOCGIWMODE: %08x", wrqu->mode);
+> -	return 0;
+> -}
+> -
+> -
+> -static int rndis_iw_set_mode(struct net_device *dev,
+> -    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+> -{
+> -	struct usbnet *usbdev = netdev_priv(dev);
+> -	int mode;
+> -
+> -	devdbg(usbdev, "SIOCSIWMODE: %08x", wrqu->mode);
+> -
+> -	switch (wrqu->mode) {
+> -	case IW_MODE_ADHOC:
+> -		mode = ndis_80211_infra_adhoc;
+> -		break;
+> -	case IW_MODE_INFRA:
+> -		mode = ndis_80211_infra_infra;
+> -		break;
+> -	/*case IW_MODE_AUTO:*/
+> -	default:
+> -		mode = ndis_80211_infra_auto_unknown;
+> -		break;
+> -	}
+> -
+> -	return set_infra_mode(usbdev, mode);
+> -}
+> -
+> -
+>  static int rndis_iw_set_encode(struct net_device *dev,
+>      struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+>  {
+> @@ -2196,8 +2187,8 @@ static const iw_handler rndis_iw_handler[] =
+>  	IW_IOCTL(SIOCGIWNAME)      = (iw_handler) cfg80211_wext_giwname,
+>  	IW_IOCTL(SIOCSIWFREQ)      = rndis_iw_set_freq,
+>  	IW_IOCTL(SIOCGIWFREQ)      = rndis_iw_get_freq,
+> -	IW_IOCTL(SIOCSIWMODE)      = rndis_iw_set_mode,
+> -	IW_IOCTL(SIOCGIWMODE)      = rndis_iw_get_mode,
+> +	IW_IOCTL(SIOCSIWMODE)      = (iw_handler) cfg80211_wext_siwmode,
+> +	IW_IOCTL(SIOCGIWMODE)      = (iw_handler) cfg80211_wext_giwmode,
+>  	IW_IOCTL(SIOCGIWRANGE)     = rndis_iw_get_range,
+>  	IW_IOCTL(SIOCSIWAP)        = rndis_iw_set_bssid,
+>  	IW_IOCTL(SIOCGIWAP)        = rndis_iw_get_bssid,
+> --
+> 1.6.0.6
+>
+>
+>
+
 
