@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:49721 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755687AbZCBWNo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2009 17:13:44 -0500
-Content-Type: text/plain; charset=iso-8859-1
-Date: Mon, 02 Mar 2009 23:13:40 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-Message-ID: <20090302221340.76770@gmx.net> (sfid-20090302_231348_924791_483067F8)
+Received: from rv-out-0506.google.com ([209.85.198.226]:36244 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752839AbZCDA6F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2009 19:58:05 -0500
+Received: by rv-out-0506.google.com with SMTP id g37so3037423rvb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2009 16:58:02 -0800 (PST)
 MIME-Version: 1.0
-Subject: [PATCH v2] ath9k: Fix FIF_BCN_PRBRESP_PROMISC handling
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
+Date: Wed, 4 Mar 2009 01:58:02 +0100
+Message-ID: <655e2d30903031658w3e752090mdcba7c9090068393@mail.gmail.com> (sfid-20090304_015811_451856_492DD848)
+Subject: MAC/PHY layer implementation
+From: Rahul Jain <rahul@schmizz.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So that a new created IBSS network
-doesn't break on the first scan.
+First of all, apologies for asking this again, but this time the question is
+very specific.
 
-It seems to Sujith and me that this
-stupid code unnecessary, too.
+I am working on a related project for my Bachelor's
+thesis and would really appreciate any help that I can get in this regard. I
+am supposed to develop a device driver for the IEEE 802.15.4 nanoLOC
+transceiver (for Linux boards) and I have a few questions about how exactly to
+go about it.
+As far as I understand it, I first need a kernel stack for IEEE 802.15.4 (as
+far as I understand mac80211 is the kernel stack for the IEEE 802.11 and I
+would need something similar). This Kernel stack, as I understand it, would
+then provide a common API for driver development.
 
-So remove it...
+So, I would really appreciate if some one could inform me as to what exactly
+does programming this stack incorporate? Do I need to implement the PHY and
+the MAC layers, and if yes, how do I go about that?
 
-Signed-off-by: Alina Friedrichsen <x-alina@gmx.net>
----
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/a=
-th9k/main.c
-index f5f5739..e242852 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -2396,14 +2396,6 @@ static void ath9k_configure_filter(struct ieee80=
-211_hw *hw,
- 	rfilt =3D ath_calcrxfilter(sc);
- 	ath9k_hw_setrxfilter(sc->sc_ah, rfilt);
-=20
--	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
--		if (*total_flags & FIF_BCN_PRBRESP_PROMISC) {
--			memcpy(sc->curbssid, ath_bcast_mac, ETH_ALEN);
--			sc->curaid =3D 0;
--			ath9k_hw_write_associd(sc);
--		}
--	}
--
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Set HW RX filter: 0x%x\n", sc->rx.rxfilt=
-er);
- }
-=20
+Please Help!
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger01
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Rahul Jain
