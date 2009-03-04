@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:58096 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750721AbZCFFNv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 00:13:51 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 21:13:50 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <j@w1.fi>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] mac80211_hwsim: add regulatory_hint support
-Date: Thu, 5 Mar 2009 21:13:07 -0800
-Message-ID: <1236316387-9718-2-git-send-email-lrodriguez@atheros.com> (sfid-20090306_061402_995415_05AEAE08)
-In-Reply-To: <1236316387-9718-1-git-send-email-lrodriguez@atheros.com>
-References: <1236316387-9718-1-git-send-email-lrodriguez@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56178 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbZCDOP0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2009 09:15:26 -0500
+Date: Wed, 4 Mar 2009 09:14:02 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Mike Cui <cuicui@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Bug in iw prevents setting the "cook" monitor flag
+Message-ID: <20090304141402.GB7965@tuxdriver.com> (sfid-20090304_151529_108318_FCDFB214)
+References: <7c8826910903021516t640aa84dxfbb61a278b69c740@mail.gmail.com> <20090303145233.GB17678@tuxdriver.com> <87tz69six4.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87tz69six4.fsf@litku.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ACME Inc. only sells these in Finland.
+On Wed, Mar 04, 2009 at 12:04:39PM +0200, Kalle Valo wrote:
+> "John W. Linville" <linville@tuxdriver.com> writes:
+> 
+> > On Mon, Mar 02, 2009 at 03:16:14PM -0800, Mike Cui wrote:
+> >> There is an off by one error in interface.c of iw that prevents
+> >> passing of the cook flag when creating a monitor interface. The fix is
+> >> simple:
+> >> 
+> >> 
+> >> --- a/interface.c       2009-03-02 15:11:58.748078548 -0800
+> >> +++ b/interface.c       2009-03-02 15:12:14.695203787 -0800
+> 
+> [...]
+> 
+> > FWIW, I think I like "x <= Y" instead of "x < Y + 1".
+> 
+> I agree.
+> 
+> > Also, please make sure you are following the guidelines explained here:
+> >
+> > 	http://linux.yyz.us/patch-format.html
+> >
+> > In particular, I need a Signed-off-by line from you.
+> 
+> But this is for iw, not for wireless-testing. Or did I miss something?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Ah, you're right... :-)  Then I'll let Johannes worry about that.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index d8716be..395f13d 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -878,6 +878,12 @@ static int __init init_mac80211_hwsim(void)
- 			goto failed_hw;
- 		}
- 
-+		/*
-+		 * We have no EEPROM but we know ACME Inc. only sells
-+		 * these in Finland.
-+		 */
-+		regulatory_hint(hw->wiphy, "FI");
-+
- 		printk(KERN_DEBUG "%s: hwaddr %pM registered\n",
- 		       wiphy_name(hw->wiphy),
- 		       hw->wiphy->perm_addr);
+John
 -- 
-1.6.1.2.253.ga34a
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
