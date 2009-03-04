@@ -1,79 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43620 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753355AbZCSJTh (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:44666 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753334AbZCDPTE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 05:19:37 -0400
-Subject: Re: [PATCH] iw: add support to print HT40-/+ on channels
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890903182310o58cf15f9yeeba8c86c45627d7@mail.gmail.com> (sfid-20090319_071033_987418_7147E5F7)
-References: <1237442241-29803-1-git-send-email-lrodriguez@atheros.com>
-	 <43e72e890903182310o58cf15f9yeeba8c86c45627d7@mail.gmail.com>
-	 (sfid-20090319_071033_987418_7147E5F7)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-s8LaZGRWe2Ev2RIIoG/3"
-Date: Thu, 19 Mar 2009 10:19:01 +0100
-Message-Id: <1237454341.5100.52.camel@johannes.local> (sfid-20090319_101941_803916_D4594804)
-Mime-Version: 1.0
+	Wed, 4 Mar 2009 10:19:04 -0500
+Message-ID: <49AE9BDD.7070603@lwfinger.net> (sfid-20090304_161907_672434_49A90D49)
+Date: Wed, 04 Mar 2009 09:18:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Markus Feldmann <feldmann_markus@gmx.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: BCM4303 on HP zv5265ea
+References: <gohr71$48f$1@ger.gmane.org> <49AC742D.9030309@lwfinger.net> <gom4ke$vle$1@ger.gmane.org>
+In-Reply-To: <gom4ke$vle$1@ger.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Markus Feldmann wrote:
+> Larry Finger schrieb:
+>>
+>> This card works in most cases.
+>>
+>> What does the command 'dmesg | grep b43' show?
+> Hi Larry,
+> 
+> nice to read you again. :-)
+> 
+> The needed modul for this card is <b43-legacy>.
 
---=-s8LaZGRWe2Ev2RIIoG/3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, I know that b43legacy is the right module for this device; however, the
 
+dmesg | grep b43
 
->                 Frequencies:
->                         * 2412 MHz [1] (27.0 dBm / 20 MHz) (HT40- disallo=
-wed)
->                         * 2417 MHz [2] (27.0 dBm / 20 MHz) (HT40- disallo=
-wed)
->                         * 2422 MHz [3] (27.0 dBm / 20 MHz) (HT40- disallo=
-wed)
->                         * 2427 MHz [4] (27.0 dBm / 20 MHz) (HT40- disallo=
-wed)
->                         * 2432 MHz [5] (27.0 dBm / 20 MHz)
->                         * 2437 MHz [6] (27.0 dBm / 20 MHz)
->                         * 2442 MHz [7] (27.0 dBm / 20 MHz)
->                         * 2447 MHz [8] (27.0 dBm / 20 MHz) (HT40+ disallo=
-wed)
->                         * 2452 MHz [9] (27.0 dBm / 20 MHz) (HT40+ disallo=
-wed)
->                         * 2457 MHz [10] (27.0 dBm / 20 MHz) (HT40+ disall=
-owed)
->                         * 2462 MHz [11] (27.0 dBm / 20 MHz) (HT40+ disall=
-owed)
->                         * 2467 MHz [12] (disabled)
->                         * 2472 MHz [13] (disabled)
->                         * 2484 MHz [14] (disabled)
+will work for both b43leagacy and b43, which is why I use that form.
 
-Eh, that doesn't look right. What's with 2432-2443 MHz?
+> I talked to you some time ago.
+> The subject was <Do not get BCM4303 to work>.
 
-johannes
+I looked at that mail again. Have you figured out how to get your radio switch on?
 
---=-s8LaZGRWe2Ev2RIIoG/3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> As i understood, only some of the developers for the
+> <acpiphp> can solve this Problem, because the card
+> will not be activated if this doesn't work.
+> For example <M a t t h e w_G a r r e t> i think could solve this.
+> 
+> But he seems not to be online a long time.
+> 
+> So maybe the card could work, but only if i can activate
+> it.
+> 
+> Do you know which Developer also works on this Modul ?
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+There are no developers that are working on b43legacy. Whenever a bug is found
+in b43, I will propagate it to b43legacy, but that is the extent of development.
 
-iQIcBAABAgAGBQJJwg3+AAoJEKVg1VMiehFYIhkP/j+cAIp2AnnMbLpVoxY1DJ4a
-dw/m6CgZzYgpb7eWd9trTEFb68N3vDn/OSt9nmGrougaljAwgZLCmW0jsJqz44ZB
-zMRqd4342HIpw7QitX0Bcb/s5DWLt/47wJY9063M5ZGVHk8JaECAAQwWk036X5gE
-rOX3vev6y1SBzUCbMDGrGzwLVKeb3jBpaj+q3iU4IppA1ebgNVDhPCEGP6BwAzmU
-zrga9+gjj+OT9jUd/CbD3zH8+IrWGRWvcivI8BrLc1Y1AZE3L2ZPDnu+x3g7SZUn
-nz7ePNGfzEJ8IzHUtSv5VxCwaEHIIMKUbm+tYeKAa0MJJ4/rm/grHuL6HY13+u+1
-UfG6qX604wDVQX7QqbeHUlO8uAP6M7D0FIMnLqsA30ACOWj9/RFvmr1OM16ejlgC
-EcD+vxEe7Hn1Qj8A/tn5wDvuoifYIBeQo7sIC/VuObYTnXqBco9P8i+IkQz+JPG5
-wyjt3C5X21unwOlQKtliSYJzPHxBPEzHVaxElAEYcjkNl9FVZ0vb70ndwrGWCwZ3
-W69NSoAiHS5G99lC9yOItJIBUM9/ks8H7wKY8B3iCw2oQzomEgcUIvHNbYPlH2oR
-Z5IG6Vs0bmMI09PVXQS1MLan+buUpjynbRTV6bSQPyixAipDfq4mm2n7FuQwyaf6
-+XRA5JS3usA6Y2Wp0l34
-=M4hL
------END PGP SIGNATURE-----
+Unfortunately, none of us have a card with an RFKILL switch that uses b43legacy.
+Without hardware in hand, debugging is too difficult. You will need to put
+printk statements in your copy of the driver to find out where it fails.
 
---=-s8LaZGRWe2Ev2RIIoG/3--
+Larry
 
