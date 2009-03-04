@@ -1,78 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60317 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765AbZCMKvS (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.188]:45750 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751269AbZCDOaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 06:51:18 -0400
-Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-In-Reply-To: <1236941339.5235.14.camel@johannes.local> (sfid-20090313_114936_050438_5FF0B5AA)
-References: <1236939917.5235.7.camel@johannes.local>
-	 (sfid-20090313_112555_620577_8A85228F)  <1236941058.5235.12.camel@johannes.local>
-	 (sfid-20090313_114453_238290_13C307AD)  <1236941339.5235.14.camel@johannes.local>
-	 (sfid-20090313_114936_050438_5FF0B5AA)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-S5WIGGC7nAyVXBPNGxU2"
-Date: Fri, 13 Mar 2009 11:50:44 +0100
-Message-Id: <1236941444.5235.16.camel@johannes.local> (sfid-20090313_115121_028006_EDA2006A)
-Mime-Version: 1.0
+	Wed, 4 Mar 2009 09:30:09 -0500
+Received: by ti-out-0910.google.com with SMTP id d10so3480320tib.23
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 06:30:06 -0800 (PST)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18862.36931.112561.497768@gargle.gargle.HOWL> (sfid-20090304_153014_025858_A59021B7)
+Date: Wed, 4 Mar 2009 19:59:23 +0530
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k: use correct init values for ar9100
+	devices
+In-Reply-To: <49AE851B.2070709@openwrt.org>
+References: <1236103846-1672-1-git-send-email-juhosg@openwrt.org>
+	<18862.1025.217829.656599@gargle.gargle.HOWL>
+	<49AE851B.2070709@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Gabor Juhos wrote:
+> >> +#define AR_SREV_5416(_ah) \
+> >> +       (((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE) || \
+> >> +       ((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI))
+> >> +#define AR_SREV_5416_V20_OR_LATER(_ah) \
+> >> +       (((_ah)->hw_version.macVersion > AR_SREV_VERSION_5416_PCIE) || \
+> >> +       ((AR_SREV_5416(_ah)) && \
+> >> +       ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)))
+> >> +#define AR_SREV_5416_V22_OR_LATER(_ah) \
+> >> +       (((_ah)->hw_version.macVersion > AR_SREV_VERSION_5416_PCIE) || \
+> >> +       ((AR_SREV_5416(_ah)) && \
+> >> +       ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22)))
+> >> +
+> > 
+> > Hm, the 5416_V1, 5416_V2 macros have to check 3 different HW (5416, 9100, 9160).
+> 
+> I don't see any 5416_V1 macro here. The AR_SREV_5416 should check the silicon
+> revision of the AR5416 cards only. But if we would be consistent, we should have
+> a _V10_OR_LATER although i don't see where it would be useful. The _V20_OR_LATER
+> and the _V22_OR_LATER macro I proposed above will cover the 9100 and 9160 chips.
+> 
 
---=-S5WIGGC7nAyVXBPNGxU2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I meant the AR_SREV_5416_V20_OR_LATER and AR_SREV_5416_V22_OR_LATER macros.
+Yes, the naming implies that they are meant for AR5416 chipsets only, but they
+do handle AR9100 and AR9160 chipsets.
 
-On Fri, 2009-03-13 at 11:48 +0100, Johannes Berg wrote:
-> On Fri, 2009-03-13 at 11:44 +0100, Johannes Berg wrote:
-> > When mac80211 resumes, it currently doesn't reconfigure the interfaces
-> > entirely and also doesn't reconfigure BSS information -- fix this.
-> >=20
-> > Also, to be able to test this, add a debugfs file that just calls
-> > the suspend/resume code to see what happens when we go through that,
-> > without needing the time-consuming suspend/resume cycle.
-> >=20
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > ---
-> > v2: rebased on top of "stop queues across suspend/resume"
-> >=20
-> > zd1211rw currently doesn't survive this properly, I'm not sure why,
-> > but it keeps saying
-> > 	zd1211rw 1-1:1.0: error ioread32(CR_REG1): -11
-> >=20
-> > Please test with other hardware, we need to figure out whether or
-> > not something is missing in mac80211.
->=20
-> ath9k survives ping -f without even blinking.
+The proposed macros don't have the AR9100 and AR9160 macVersion checks, no ?
 
-So does iwlwifi.
-
-johannes
-
---=-S5WIGGC7nAyVXBPNGxU2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJujqBAAoJEKVg1VMiehFYMmgP/jN0ZKhpmDkNmiuos8HM0ZWq
-i++wfg1VCAckm4nHgOV7q/pJOyQa9wQI0QyHgV/vLTm67LaUQ0RgUJRzghI0Rkfn
-rVSLN9mIzqjV9XSemZcL++q3z82pYIPNcycLYxnjtDG3MVrS8Zv7xZT3lsrehMrD
-0HYL5oSiT1QMVEbj9GwgSFCrgjd4ntOdtGV3sdBUTJfLmN4U1KHtGJeojW6mBfJ/
-PO+crSE1Vm+D4JDi0+qENAkdTqsMrZ00FWWX6HvDslokTkdS1T/ISphguRPRhm45
-IWaQDAsznYOGjT048oE+J6WaGgukSse0fmusZJ4cRE/tQf4tGfn+DQ1APPXZsAOS
-i/mMmaD0aE7vnAMX0zs6Xn5LAxnd3iP2q2UKIrVn8lEu062JoLLihX1rO7871JTq
-w+x+YlU0BKkXzaGrgyZcSgSFvyOO+w3QEHLDafASHS0cLgcM/UpxQx7FCLQTuitP
-mfCv6w0iavGmqKSgfeOIjavnU/mgP0x/77sk1vNvv892l3CYt4j8xO94emXxdpFR
-3Z5VZxMjKHa8KYnRN0ikerB6vJqVvy1x8jKWOi8IE7SZcW3IdXkfV41fdania59p
-OYSGuyXk8mKmRNpUGs6N6oaywiZl1ygN0z70WC3Sj8F+8EnB+c1Ts57CcwsHDzTT
-Ogm6OmOXZ609+a0QOS7m
-=je8F
------END PGP SIGNATURE-----
-
---=-S5WIGGC7nAyVXBPNGxU2--
-
+Sujith
