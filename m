@@ -1,41 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48568 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753335AbZCJJK0 (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.248]:1687 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755764AbZCDTsA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 05:10:26 -0400
-Date: Tue, 10 Mar 2009 11:10:20 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] cfg80211: send regulatory beacon hint events to userspace
-Message-ID: <20090310091020.GA2578@jm.kir.nu> (sfid-20090310_101028_214589_B37532F0)
-References: <1236653332-3515-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 4 Mar 2009 14:48:00 -0500
+Received: by an-out-0708.google.com with SMTP id c2so2518261anc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 11:47:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1236653332-3515-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1236194370.6612.73.camel@rc-desk>
+References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
+	 <c4d76b3b0901261913s23427b19tbbe34ee7b4261068@mail.gmail.com>
+	 <c4d76b3b0901261935n1846b675w72cfa7308d198080@mail.gmail.com>
+	 <20090127162437.GA3596@sortiz.org>
+	 <c4d76b3b0901271531q19578871idbc59b5a23ac868e@mail.gmail.com>
+	 <1ba2fa240901272312j270eedb5x33534a9703d26e06@mail.gmail.com>
+	 <20090128113751.GA3197@sortiz.org>
+	 <c4d76b3b0903011937p6538adbfpc0dab859a6742394@mail.gmail.com>
+	 <1236141120.12734.2.camel@rainbow> <1236194370.6612.73.camel@rc-desk>
+Date: Wed, 4 Mar 2009 14:47:56 -0500
+Message-ID: <c4d76b3b0903041147s2138e72bjb39864f87b4cd09e@mail.gmail.com> (sfid-20090304_204806_305410_24E203C9)
+Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
+From: Jason Andryuk <jandryuk@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Samuel Ortiz <samuel@sortiz.org>, Tomas Winkler <tomasw@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 09, 2009 at 10:48:52PM -0400, Luis R. Rodriguez wrote:
+On Wed, Mar 4, 2009 at 2:19 PM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> On Tue, 2009-03-03 at 20:32 -0800, Jason Andryuk wrote:
+>> On Sun, Mar 1, 2009 at 10:37 PM, Jason Andryuk <jandryuk@gmail.com> =
+wrote:
+>> > I tested c2a0aa3cb733452e749727680e380dca6cc10a68 "iwl3945: use
+>> > iwl_rb_status" with the additional patches to initialize rb_stts
+>> > (copied from iwl_rx_queue_alloc) and to convert the BUG_ON to a
+>> > WARN_ON.
+>> >
+>> > The driver runs without segfaulting. =A0So far the WARN_ON has not=
+ been
+>> > triggered, but the driver fails to finish authentication with the =
+AP.
+>> > I receive "wlan0: authentication with AP 00:30:bd:c0:90:24 timed o=
+ut"
+>>
+>> Ok, I started poking around with manually checking interesting commi=
+ts instead of git bisect.
+>>
+>> 55b3e21... iwl3945: use iwl-io.h and delete iwl-3945-io.h with BUG->=
+WARN patch works.
+>>
+>> bb64785... iwlwifi: use iwl_cmd instead of iwl3945_cmd
+>> fails to authenticate to the AP. =A0It generates a Microcode SW Erro=
+r attached below.
+>>
+>> The previous revision:
+>> a0dedce... iwlwifi: replace IWL_ERROR with IWL_ERR
+>> Authenticates to the AP and works just fine.
+>>
+>> I keep looking over commitdiff bb64785... but I cannot see what is c=
+ausing problems. =A0I even tried modifying iwl3945_cmd in various ways =
+from a0dedce... but those attempts kept working.
+>>
+>> During testing, I saw a lot of UNKNOWN 0x1b
+>> [ 8892.625374] ieee80211 phy0: I iwl3945_rx_handle r =3D 162, i =3D =
+160, UNKNOWN, 0x1b
+>> Currently in the logs for commit a0dedce... it shows up as REPLY_394=
+5_RX.
+>>
+>> Any ideas?
+>
+> Thank you very much for this digging.
+>
+> Are you running on 64bit?
 
-> There is something awefully wrong with this patch and after some
-> good review I cannot determine what is wrong with it. The issue is
-> I end up following bug complaint saying I'm sleeping while I'm atomic..
-> but this is all from a workqueue so what gives?
+Yes, 64bit.
 
-You hold a spinlock while trying to alloc memory with GFP_KERNEL..
-
-> [14462.644641]  [<ffffffff804a40c4>] __alloc_skb+0x44/0x140
-> [14462.644652]  [<ffffffffa051a8b3>] nl80211_send_beacon_hint_event+0x33/0x370 [cfg80211]
-> [14462.644660]  [<ffffffff8026960e>] ? put_lock_stats+0xe/0x30
-> [14462.644671]  [<ffffffffa0511f19>] handle_reg_beacon+0xa9/0xc0 [cfg80211]
-> [14462.644685]  [<ffffffffa0512500>] ? reg_todo+0x0/0x5c0 [cfg80211]
-> [14462.644696]  [<ffffffff80541a1d>] ? _spin_lock_bh+0x6d/0x80
-
-That would be spin_lock_bh() from reg_process_pending_beacon_hints(), I
-would assume.. nl80211_send_beacon_hint_event() cannot use GFP_KERNEL on
-such a call path.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Jason
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
