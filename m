@@ -1,398 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3565 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980AbZCHFlQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Mar 2009 00:41:16 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/3] ath5k: extract LED code into a separate file
-Date: Sun,  8 Mar 2009 00:10:20 -0500
-Message-Id: <1236489022-16199-1-git-send-email-me@bobcopeland.com> (sfid-20090308_064132_485955_F8926F78)
+Received: from mga09.intel.com ([134.134.136.24]:58737 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754149AbZCEAAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2009 19:00:05 -0500
+Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
+From: reinette chatre <reinette.chatre@intel.com>
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: Samuel Ortiz <samuel@sortiz.org>, Tomas Winkler <tomasw@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <c4d76b3b0903041147s2138e72bjb39864f87b4cd09e@mail.gmail.com>
+References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
+	 <c4d76b3b0901261913s23427b19tbbe34ee7b4261068@mail.gmail.com>
+	 <c4d76b3b0901261935n1846b675w72cfa7308d198080@mail.gmail.com>
+	 <20090127162437.GA3596@sortiz.org>
+	 <c4d76b3b0901271531q19578871idbc59b5a23ac868e@mail.gmail.com>
+	 <1ba2fa240901272312j270eedb5x33534a9703d26e06@mail.gmail.com>
+	 <20090128113751.GA3197@sortiz.org>
+	 <c4d76b3b0903011937p6538adbfpc0dab859a6742394@mail.gmail.com>
+	 <1236141120.12734.2.camel@rainbow> <1236194370.6612.73.camel@rc-desk>
+	 <c4d76b3b0903041147s2138e72bjb39864f87b4cd09e@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 04 Mar 2009 16:04:53 -0800
+Message-Id: <1236211493.6612.90.camel@rc-desk> (sfid-20090305_010010_804294_A974D7BF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move LED code out of base.c for clarity.
+On Wed, 2009-03-04 at 11:47 -0800, Jason Andryuk wrote:
+> On Wed, Mar 4, 2009 at 2:19 PM, reinette chatre
+> <reinette.chatre@intel.com> wrote:
+> > On Tue, 2009-03-03 at 20:32 -0800, Jason Andryuk wrote:
+> >> On Sun, Mar 1, 2009 at 10:37 PM, Jason Andryuk <jandryuk@gmail.com> wrote:
+> >> > I tested c2a0aa3cb733452e749727680e380dca6cc10a68 "iwl3945: use
+> >> > iwl_rb_status" with the additional patches to initialize rb_stts
+> >> > (copied from iwl_rx_queue_alloc) and to convert the BUG_ON to a
+> >> > WARN_ON.
+> >> >
+> >> > The driver runs without segfaulting.  So far the WARN_ON has not been
+> >> > triggered, but the driver fails to finish authentication with the AP.
+> >> > I receive "wlan0: authentication with AP 00:30:bd:c0:90:24 timed out"
+> >>
+> >> Ok, I started poking around with manually checking interesting commits instead of git bisect.
+> >>
+> >> 55b3e21... iwl3945: use iwl-io.h and delete iwl-3945-io.h with BUG->WARN patch works.
+> >>
+> >> bb64785... iwlwifi: use iwl_cmd instead of iwl3945_cmd
+> >> fails to authenticate to the AP.  It generates a Microcode SW Error attached below.
+> >>
+> >> The previous revision:
+> >> a0dedce... iwlwifi: replace IWL_ERROR with IWL_ERR
+> >> Authenticates to the AP and works just fine.
+> >>
+> >> I keep looking over commitdiff bb64785... but I cannot see what is causing problems.  I even tried modifying iwl3945_cmd in various ways from a0dedce... but those attempts kept working.
+> >>
+> >> During testing, I saw a lot of UNKNOWN 0x1b
+> >> [ 8892.625374] ieee80211 phy0: I iwl3945_rx_handle r = 162, i = 160, UNKNOWN, 0x1b
+> >> Currently in the logs for commit a0dedce... it shows up as REPLY_3945_RX.
+> >>
+> >> Any ideas?
+> >
+> > Thank you very much for this digging.
+> >
+> > Are you running on 64bit?
+> 
+> Yes, 64bit.
 
-Changes-licensed-under: 3-Clause-BSD
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
+could you please try this patch on top of latest wireless-testing?
 
-This series just has a few cleanups to the LED code and addition of
-a new system ID.
+Thanks
 
- drivers/net/wireless/ath5k/Makefile |    1 +
- drivers/net/wireless/ath5k/ath5k.h  |    6 ++
- drivers/net/wireless/ath5k/base.c   |  140 -----------------------------
- drivers/net/wireless/ath5k/led.c    |  169 +++++++++++++++++++++++++++++++++++
- 4 files changed, 176 insertions(+), 140 deletions(-)
- create mode 100644 drivers/net/wireless/ath5k/led.c
+Reinette
 
-diff --git a/drivers/net/wireless/ath5k/Makefile b/drivers/net/wireless/ath5k/Makefile
-index 719cfae..84a74c5 100644
---- a/drivers/net/wireless/ath5k/Makefile
-+++ b/drivers/net/wireless/ath5k/Makefile
-@@ -10,5 +10,6 @@ ath5k-y				+= phy.o
- ath5k-y				+= reset.o
- ath5k-y				+= attach.o
- ath5k-y				+= base.o
-+ath5k-y				+= led.o
- ath5k-$(CONFIG_ATH5K_DEBUG)	+= debug.o
- obj-$(CONFIG_ATH5K)		+= ath5k.o
-diff --git a/drivers/net/wireless/ath5k/ath5k.h b/drivers/net/wireless/ath5k/ath5k.h
-index b9af2b8..0dc2c73 100644
---- a/drivers/net/wireless/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath5k/ath5k.h
-@@ -1129,6 +1129,12 @@ struct ath5k_hw {
- extern struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version);
- extern void ath5k_hw_detach(struct ath5k_hw *ah);
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 0a75053..00b25a8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -743,6 +743,7 @@ void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ 	struct iwl3945_tfd *tfd_tmp = (struct iwl3945_tfd *)txq->tfds;
+ 	struct iwl3945_tfd *tfd = &tfd_tmp[txq->q.read_ptr];
+ 	struct pci_dev *dev = priv->pci_dev;
++	int index = txq->q.read_ptr;
+ 	int i;
+ 	int counter;
  
-+/* LED functions */
-+extern int ath5k_init_leds(struct ath5k_softc *sc);
-+extern void ath5k_led_enable(struct ath5k_softc *sc);
-+extern void ath5k_led_off(struct ath5k_softc *sc);
-+extern void ath5k_unregister_leds(struct ath5k_softc *sc);
-+
- /* Reset Functions */
- extern int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial);
- extern int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode, struct ieee80211_channel *channel, bool change_channel);
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index f7c424d..b7a5811 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -370,11 +370,6 @@ static irqreturn_t ath5k_intr(int irq, void *dev_id);
- static void 	ath5k_tasklet_reset(unsigned long data);
+@@ -759,6 +760,13 @@ void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ 		return;
+ 	}
  
- static void 	ath5k_calibrate(unsigned long data);
--/* LED functions */
--static int	ath5k_init_leds(struct ath5k_softc *sc);
--static void	ath5k_led_enable(struct ath5k_softc *sc);
--static void	ath5k_led_off(struct ath5k_softc *sc);
--static void	ath5k_unregister_leds(struct ath5k_softc *sc);
++	/* Unmap tx_cmd */
++	if (counter)
++		pci_unmap_single(dev,
++				pci_unmap_addr(&txq->cmd[index]->meta, mapping),
++				pci_unmap_len(&txq->cmd[index]->meta, len),
++				PCI_DMA_TODEVICE);
++
+ 	/* unmap chunks if any */
  
- /*
-  * Module init/exit functions
-@@ -2530,141 +2525,6 @@ ath5k_calibrate(unsigned long data)
- }
- 
- 
--
--/***************\
--* LED functions *
--\***************/
--
--static void
--ath5k_led_enable(struct ath5k_softc *sc)
--{
--	if (test_bit(ATH_STAT_LEDSOFT, sc->status)) {
--		ath5k_hw_set_gpio_output(sc->ah, sc->led_pin);
--		ath5k_led_off(sc);
--	}
--}
--
--static void
--ath5k_led_on(struct ath5k_softc *sc)
--{
--	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
--		return;
--	ath5k_hw_set_gpio(sc->ah, sc->led_pin, sc->led_on);
--}
--
--static void
--ath5k_led_off(struct ath5k_softc *sc)
--{
--	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
--		return;
--	ath5k_hw_set_gpio(sc->ah, sc->led_pin, !sc->led_on);
--}
--
--static void
--ath5k_led_brightness_set(struct led_classdev *led_dev,
--	enum led_brightness brightness)
--{
--	struct ath5k_led *led = container_of(led_dev, struct ath5k_led,
--		led_dev);
--
--	if (brightness == LED_OFF)
--		ath5k_led_off(led->sc);
--	else
--		ath5k_led_on(led->sc);
--}
--
--static int
--ath5k_register_led(struct ath5k_softc *sc, struct ath5k_led *led,
--		   const char *name, char *trigger)
--{
--	int err;
--
--	led->sc = sc;
--	strncpy(led->name, name, sizeof(led->name));
--	led->led_dev.name = led->name;
--	led->led_dev.default_trigger = trigger;
--	led->led_dev.brightness_set = ath5k_led_brightness_set;
--
--	err = led_classdev_register(&sc->pdev->dev, &led->led_dev);
--	if (err) {
--		ATH5K_WARN(sc, "could not register LED %s\n", name);
--		led->sc = NULL;
--	}
--	return err;
--}
--
--static void
--ath5k_unregister_led(struct ath5k_led *led)
--{
--	if (!led->sc)
--		return;
--	led_classdev_unregister(&led->led_dev);
--	ath5k_led_off(led->sc);
--	led->sc = NULL;
--}
--
--static void
--ath5k_unregister_leds(struct ath5k_softc *sc)
--{
--	ath5k_unregister_led(&sc->rx_led);
--	ath5k_unregister_led(&sc->tx_led);
--}
--
--
--static int
--ath5k_init_leds(struct ath5k_softc *sc)
--{
--	int ret = 0;
--	struct ieee80211_hw *hw = sc->hw;
--	struct pci_dev *pdev = sc->pdev;
--	char name[ATH5K_LED_MAX_NAME_LEN + 1];
--
--	/*
--	 * Auto-enable soft led processing for IBM cards and for
--	 * 5211 minipci cards.
--	 */
--	if (pdev->device == PCI_DEVICE_ID_ATHEROS_AR5212_IBM ||
--	    pdev->device == PCI_DEVICE_ID_ATHEROS_AR5211) {
--		__set_bit(ATH_STAT_LEDSOFT, sc->status);
--		sc->led_pin = 0;
--		sc->led_on = 0;  /* active low */
--	}
--	/* Enable softled on PIN1 on HP Compaq nc6xx, nc4000 & nx5000 laptops */
--	if (pdev->subsystem_vendor == PCI_VENDOR_ID_COMPAQ) {
--		__set_bit(ATH_STAT_LEDSOFT, sc->status);
--		sc->led_pin = 1;
--		sc->led_on = 1;  /* active high */
--	}
--	/*
--	 * Pin 3 on Foxconn chips used in Acer Aspire One (0x105b:e008) and
--	 * in emachines notebooks with AMBIT subsystem.
--	 */
--	if (pdev->subsystem_vendor == PCI_VENDOR_ID_FOXCONN ||
--	    pdev->subsystem_vendor == PCI_VENDOR_ID_AMBIT) {
--		__set_bit(ATH_STAT_LEDSOFT, sc->status);
--		sc->led_pin = 3;
--		sc->led_on = 0;  /* active low */
--	}
--
--	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
--		goto out;
--
--	ath5k_led_enable(sc);
--
--	snprintf(name, sizeof(name), "ath5k-%s::rx", wiphy_name(hw->wiphy));
--	ret = ath5k_register_led(sc, &sc->rx_led, name,
--		ieee80211_get_rx_led_name(hw));
--	if (ret)
--		goto out;
--
--	snprintf(name, sizeof(name), "ath5k-%s::tx", wiphy_name(hw->wiphy));
--	ret = ath5k_register_led(sc, &sc->tx_led, name,
--		ieee80211_get_tx_led_name(hw));
--out:
--	return ret;
--}
--
--
- /********************\
- * Mac80211 functions *
- \********************/
-diff --git a/drivers/net/wireless/ath5k/led.c b/drivers/net/wireless/ath5k/led.c
-new file mode 100644
-index 0000000..7cef2bb
---- /dev/null
-+++ b/drivers/net/wireless/ath5k/led.c
-@@ -0,0 +1,169 @@
-+/*
-+ * Copyright (c) 2002-2005 Sam Leffler, Errno Consulting
-+ * Copyright (c) 2004-2005 Atheros Communications, Inc.
-+ * Copyright (c) 2007 Jiri Slaby <jirislaby@gmail.com>
-+ * Copyright (c) 2009 Bob Copeland <me@bobcopeland.com>
-+ *
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ * 1. Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer,
-+ *    without modification.
-+ * 2. Redistributions in binary form must reproduce at minimum a disclaimer
-+ *    similar to the "NO WARRANTY" disclaimer below ("Disclaimer") and any
-+ *    redistribution must be conditioned upon including a substantially
-+ *    similar Disclaimer requirement for further binary redistribution.
-+ * 3. Neither the names of the above-listed copyright holders nor the names
-+ *    of any contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * Alternatively, this software may be distributed under the terms of the
-+ * GNU General Public License ("GPL") version 2 as published by the Free
-+ * Software Foundation.
-+ *
-+ * NO WARRANTY
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF NONINFRINGEMENT, MERCHANTIBILITY
-+ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-+ * THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR SPECIAL, EXEMPLARY,
-+ * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-+ * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-+ * THE POSSIBILITY OF SUCH DAMAGES.
-+ *
-+ */
-+
-+#include <linux/pci.h>
-+#include "ath5k.h"
-+#include "base.h"
-+
-+void ath5k_led_enable(struct ath5k_softc *sc)
-+{
-+	if (test_bit(ATH_STAT_LEDSOFT, sc->status)) {
-+		ath5k_hw_set_gpio_output(sc->ah, sc->led_pin);
-+		ath5k_led_off(sc);
-+	}
-+}
-+
-+void ath5k_led_on(struct ath5k_softc *sc)
-+{
-+	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
-+		return;
-+	ath5k_hw_set_gpio(sc->ah, sc->led_pin, sc->led_on);
-+}
-+
-+void ath5k_led_off(struct ath5k_softc *sc)
-+{
-+	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
-+		return;
-+	ath5k_hw_set_gpio(sc->ah, sc->led_pin, !sc->led_on);
-+}
-+
-+static void
-+ath5k_led_brightness_set(struct led_classdev *led_dev,
-+	enum led_brightness brightness)
-+{
-+	struct ath5k_led *led = container_of(led_dev, struct ath5k_led,
-+		led_dev);
-+
-+	if (brightness == LED_OFF)
-+		ath5k_led_off(led->sc);
-+	else
-+		ath5k_led_on(led->sc);
-+}
-+
-+static int
-+ath5k_register_led(struct ath5k_softc *sc, struct ath5k_led *led,
-+		   const char *name, char *trigger)
-+{
-+	int err;
-+
-+	led->sc = sc;
-+	strncpy(led->name, name, sizeof(led->name));
-+	led->led_dev.name = led->name;
-+	led->led_dev.default_trigger = trigger;
-+	led->led_dev.brightness_set = ath5k_led_brightness_set;
-+
-+	err = led_classdev_register(&sc->pdev->dev, &led->led_dev);
-+	if (err) {
-+		ATH5K_WARN(sc, "could not register LED %s\n", name);
-+		led->sc = NULL;
-+	}
-+	return err;
-+}
-+
-+static void
-+ath5k_unregister_led(struct ath5k_led *led)
-+{
-+	if (!led->sc)
-+		return;
-+	led_classdev_unregister(&led->led_dev);
-+	ath5k_led_off(led->sc);
-+	led->sc = NULL;
-+}
-+
-+void ath5k_unregister_leds(struct ath5k_softc *sc)
-+{
-+	ath5k_unregister_led(&sc->rx_led);
-+	ath5k_unregister_led(&sc->tx_led);
-+}
-+
-+
-+int ath5k_init_leds(struct ath5k_softc *sc)
-+{
-+	int ret = 0;
-+	struct ieee80211_hw *hw = sc->hw;
-+	struct pci_dev *pdev = sc->pdev;
-+	char name[ATH5K_LED_MAX_NAME_LEN + 1];
-+
-+	/*
-+	 * Auto-enable soft led processing for IBM cards and for
-+	 * 5211 minipci cards.
-+	 */
-+	if (pdev->device == PCI_DEVICE_ID_ATHEROS_AR5212_IBM ||
-+	    pdev->device == PCI_DEVICE_ID_ATHEROS_AR5211) {
-+		__set_bit(ATH_STAT_LEDSOFT, sc->status);
-+		sc->led_pin = 0;
-+		sc->led_on = 0;  /* active low */
-+	}
-+	/* Enable softled on PIN1 on HP Compaq nc6xx, nc4000 & nx5000 laptops */
-+	if (pdev->subsystem_vendor == PCI_VENDOR_ID_COMPAQ) {
-+		__set_bit(ATH_STAT_LEDSOFT, sc->status);
-+		sc->led_pin = 1;
-+		sc->led_on = 1;  /* active high */
-+	}
-+	/*
-+	 * Pin 3 on Foxconn chips used in Acer Aspire One (0x105b:e008) and
-+	 * in emachines notebooks with AMBIT subsystem.
-+	 */
-+	if (pdev->subsystem_vendor == PCI_VENDOR_ID_FOXCONN ||
-+	    pdev->subsystem_vendor == PCI_VENDOR_ID_AMBIT) {
-+		__set_bit(ATH_STAT_LEDSOFT, sc->status);
-+		sc->led_pin = 3;
-+		sc->led_on = 0;  /* active low */
-+	}
-+
-+	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
-+		goto out;
-+
-+	ath5k_led_enable(sc);
-+
-+	snprintf(name, sizeof(name), "ath5k-%s::rx", wiphy_name(hw->wiphy));
-+	ret = ath5k_register_led(sc, &sc->rx_led, name,
-+		ieee80211_get_rx_led_name(hw));
-+	if (ret)
-+		goto out;
-+
-+	snprintf(name, sizeof(name), "ath5k-%s::tx", wiphy_name(hw->wiphy));
-+	ret = ath5k_register_led(sc, &sc->tx_led, name,
-+		ieee80211_get_tx_led_name(hw));
-+out:
-+	return ret;
-+}
-+
--- 
-1.6.0.6
+ 	for (i = 1; i < counter; i++) {
+
+
 
 
