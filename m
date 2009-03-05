@@ -1,137 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:38160 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758064AbZCXOSM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 10:18:12 -0400
-Received: by bwz17 with SMTP id 17so2240244bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 07:18:08 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"Guy\, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: wireless powersaving (in NM?)
-References: <1237891149.4320.73.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 24 Mar 2009 16:17:58 +0200
-In-Reply-To: <1237891149.4320.73.camel@johannes.local> (Johannes Berg's message of "Tue\, 24 Mar 2009 11\:39\:09 +0100")
-Message-ID: <87ab7bqa21.fsf@litku.valot.fi> (sfid-20090324_151823_930182_EAEFB867)
+Received: from mail.tpi.com ([70.99.223.143]:1776 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755208AbZCEXMg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 18:12:36 -0500
+Message-ID: <49B056FA.2020605@canonical.com> (sfid-20090306_001251_373427_46A2F70E)
+Date: Thu, 05 Mar 2009 15:49:30 -0700
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: reinette chatre <reinette.chatre@intel.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Please apply to stable: cfg80211: add support for custom firmware
+ 	regulatory solutions
+References: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com>	 <1236275668.6612.134.camel@rc-desk> <43e72e890903051124t42ce5c7blfd741da4a2b4fa79@mail.gmail.com>
+In-Reply-To: <43e72e890903051124t42ce5c7blfd741da4a2b4fa79@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Luis R. Rodriguez wrote:
+> On Thu, Mar 5, 2009 at 9:54 AM, reinette chatre
+> <reinette.chatre@intel.com> wrote:
+>> On Wed, 2009-03-04 at 13:35 -0800, Luis R. Rodriguez wrote:
+>>> Forgot to Cc: stable@kernel.org for this patch during its submission,
+>>> this is needed on 2.6.28 as otherwise there is an issue for Intel
+>>> cards which get their channels 5 GHz disabled if OLD_REG is set to no
+>>> (this is not the default) or the channels 12-14 are disabled if
+>>> OLD_REG is set to yes (default) set to no and the ieee80211_module
+>>> parameter is not used. The later issue is resolved by userspace as
+>>> well but we cannot yet expect 2.6.28 kernels to have enough userspace
+>>> interfaces to set the regulatory domain just yet. This is why OLD_REG
+>>> is still set to default with 2.6.28.
+>>>
+>>> 14b9815af3f4fe0e171ee0c4325c31d2a2c1570b
+>>> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>> Date:   Wed Nov 12 14:22:03 2008 -0800
+>>>
+>>>    cfg80211: add support for custom firmware regulatory solutions
+>>>
+>>>    This adds API to cfg80211 to allow wireless drivers to inform
+>>>    us if their firmware can handle regulatory considerations *and*
+>>>    they cannot map these regulatory domains to an ISO / IEC 3166
+>>>    alpha2. In these cases we skip the first regulatory hint instead
+>>>    of expecting the driver to build their own regulatory structure,
+>>>    providing us with an alpha2, or using the reg_notifier().
+>>>
+>>>    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>>    Acked-by: Zhu Yi <yi.zhu@intel.com>
+>>>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> Could you please also add commit
+>> ea4a82dceec7b5782b1259079c8de508d0afe33a? This is the commit that
+>> enables the Intel cards to take advantage of the parameter introduced in
+>> previous commit.
+>>
+>> commit ea4a82dceec7b5782b1259079c8de508d0afe33a
+>> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> Date:   Wed Nov 12 14:22:04 2008 -0800
+>>
+>>    iwlwifi: enable custom fw regulatory solution
+>>
+>>    This enables the custom firmware regulatory solution option
+>>    on iwlwifi drivers. These devices are uncapable of mapping their
+>>    EEPROM regulatory domain to a specific ISO / IEC alpha2.
+>>    Although the new 11n devices (>= iwl 5000) have only
+>>    3 regultaory SKUs -- MOW, ABG (no N) and BG -- the older
+>>    devices (3945 and 4965) have a more complex SKU arrangement
+>>    and therefore its not practical to move this to the driver.
+>>
+>>    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>    Acked-by: Zhu Yi <yi.zhu@intel.com>
+>>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> Doh yes that would be required or it would make this pointless.
+> 
+>   Luis
+> 
 
-> Hi,
+Looks like it requires a preparatory commit:
 
-Hallo Johannes,
+commit f3b407fba52e1b86ca286ee7c218a4fb00bd29e0
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Tue Oct 21 09:57:41 2008 +0200
 
-> We're looking into turning on powersaving by default at least when
-> on battery power, and I think that it needs to be done in userspace,
-> simply by calling the equivalent of "iwconfig wlan0 power on".
+    wireless: remove cfg80211_reg_mutex
 
-I agree, this decision definitely needs to be done in userspace.
+    This mutex is wrong, we use cfg80211_drv_mutex (which should
+    possibly be renamed to just cfg80211_mutex) everywhere except
+    in one place, fix that and get rid of the extra mutex.
 
-> iwlwifi currently supports 5 or 6 power saving levels, and some people
-> think we should allow those to be exposed to "iwconfig wlan0 power
-> saving <N>", but as I've said before I don't see how the user can
-> possibly make an informed choice.
+    Also get rid of a spurious regulatory_requests list definition.
 
-I also don't like this interface at all. The values have no meaning
-and the interface simply doesn't make any sense to me.
+    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-> Therefore, I think the "power saving level" needs to be determined
-> by pm_qos. The design of how to do that, however, is still up in the
-> air.
-
-Maybe. At least it "feels" a lot better than the five magic numbers :)
-
-Unfortunately I haven't thought about this so I cannot comment on it.
-And by the looks of it, I won't find the time for some time.
-
-> One question, for example, is whether the driver should be adjusting
-> the power savings parameters, with mac80211 only asking for it to be
-> enabled or disabled. I'm thinking that the driver is in the best
-> position to do so since various drivers have various parameters that
-> can be tweaked. This would depend on pm_qos notifications being used
-> in the driver, when power saving is enabled by mac80211.
-
-Actually I have to disagree here....
-
-> The alternative would be to expose all the possible parameters and/or
-> levels to mac80211 and have it make choices based on pm_qos, but it
-> seems that this interface would rapidly become extremely complex,
-> fragile and buggy.
-
-I think this alternative would be better in the long run. My feeling
-is that the settings between different hardware don't wary that much
-based on what I have seen and we would eventually find settings which
-work for all, maybe small hackery needed somewhere but that's it.
-
-But at the same time I admit that it needs a lot of work to do this
-properly in mac80211. One needs to study different hardware
-implementations etc. With the current pace it would take at least a
-year to have something really usable.
-
-Also remember that in !IEEE80211_HW_SUPPORTS_DYNAMIC_PS case the
-dynamic timer is in mac80211. So the driver cannot make all decisions.
-
-> Kalle, there's a related question here -- what's the value of exposing
-> the sleep timeout to users? It seems to be quite unnecessary, since you
-> seem to be using a fixed value of 500ms anyway. 
-
-In Maemo products (n800, n810 etc) we use it to select the power save
-aggressiveness. IIRC in diablo it was so that when the display was on
-200 ms timeout value was used, and then it was off the value was set
-to 100 ms. The decision was made in userspace, in wlancond (our dbus
-WE wrapper). The idea here was that user won't most probably mind if
-the network is slower then the display is off.
-
-> Can we remove that, leaving wext only with turning on/off power
-> saving? [2][3]
-
-I would hate to loose it, at least in the near future. If there's a
-good alternative and a proper deprecation period, I don't mind it
-going away.
-
-> Ultimately, power saving mode should always be enabled unless the user
-> specifically requires it being turned off (why?), regardless of AC power
-> status; there's no reason not to do that if we integrate it into the
-> entire system well enough so that things "just work". But that requires
-> applications to change to register their network latency/throughput
-> requirements.
-
-I fully agree here. We just have to make the power save implementation
-so good that the user won't notice that it's even enabled.
-
-And I really don't get the idea that if AC is connected we can waste
-all power we want, what's the point in that? That's not good from any
-perspective: device gets warmer, electricity bill gets higher and
-"global worming" increases ;)
-
-Disabling the power save should always be a visible option for the
-users because of the broken APs. There are still APs which have
-problems with power save enabled clients.
-
-> However, by putting the burden onto drivers, drivers can choose a
-> conservative power saving level when no application has registered its
-> pm_qos requirements, and once applications start using the it deeper
-> power levels can be chosen as appropriate.
-
-It will take years for the applications to adapt this, I would not
-want to depend on that. I would like to have usable already without
-application support.
-
-> This still requires some userspace to turn on power saving to start
-> with, which I think would be appropriately placed in NM (or connman,
-> of course).
-
-Agree, NM and connman are the correct places in my opinion.
-wpa_supplicant maybe could provide a dbus interface, but NM or connman
-would make the decision.
 
 -- 
-Kalle Valo
+Tim Gardner tim.gardner@canonical.com
