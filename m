@@ -1,828 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:52220 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811AbZCDFjO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 00:39:14 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2009 21:39:13 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from yx-out-2324.google.com ([74.125.44.30]:62778 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756616AbZCETYa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 14:24:30 -0500
+Received: by yx-out-2324.google.com with SMTP id 8so65990yxm.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 11:24:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18862.4870.138381.234256@gargle.gargle.HOWL> (sfid-20090304_063919_602896_2AC38920)
-Date: Wed, 4 Mar 2009 11:05:02 +0530
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [RFC] ath9k: use correct init values for ar9100 devices
-In-Reply-To: <18862.1025.217829.656599@gargle.gargle.HOWL>
-References: <1236103846-1672-1-git-send-email-juhosg@openwrt.org>
-	<18862.1025.217829.656599@gargle.gargle.HOWL>
+In-Reply-To: <1236275668.6612.134.camel@rc-desk>
+References: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com>
+	 <1236275668.6612.134.camel@rc-desk>
+Date: Thu, 5 Mar 2009 11:24:27 -0800
+Message-ID: <43e72e890903051124t42ce5c7blfd741da4a2b4fa79@mail.gmail.com> (sfid-20090305_202457_907620_AEA5C31F)
+Subject: Re: Please apply to stable: cfg80211: add support for custom firmware
+	regulatory solutions
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "stable@kernel.org" <stable@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan wrote:
-> I'll check the initval arrays and update.
-> 
+On Thu, Mar 5, 2009 at 9:54 AM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> On Wed, 2009-03-04 at 13:35 -0800, Luis R. Rodriguez wrote:
+>> Forgot to Cc: stable@kernel.org for this patch during its submission=
+,
+>> this is needed on 2.6.28 as otherwise there is an issue for Intel
+>> cards which get their channels 5 GHz disabled if OLD_REG is set to n=
+o
+>> (this is not the default) or the channels 12-14 are disabled if
+>> OLD_REG is set to yes (default) set to no and the ieee80211_module
+>> parameter is not used. The later issue is resolved by userspace as
+>> well but we cannot yet expect 2.6.28 kernels to have enough userspac=
+e
+>> interfaces to set the regulatory domain just yet. This is why OLD_RE=
+G
+>> is still set to default with 2.6.28.
+>>
+>> 14b9815af3f4fe0e171ee0c4325c31d2a2c1570b
+>> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> Date: =C2=A0 Wed Nov 12 14:22:03 2008 -0800
+>>
+>> =C2=A0 =C2=A0cfg80211: add support for custom firmware regulatory so=
+lutions
+>>
+>> =C2=A0 =C2=A0This adds API to cfg80211 to allow wireless drivers to =
+inform
+>> =C2=A0 =C2=A0us if their firmware can handle regulatory consideratio=
+ns *and*
+>> =C2=A0 =C2=A0they cannot map these regulatory domains to an ISO / IE=
+C 3166
+>> =C2=A0 =C2=A0alpha2. In these cases we skip the first regulatory hin=
+t instead
+>> =C2=A0 =C2=A0of expecting the driver to build their own regulatory s=
+tructure,
+>> =C2=A0 =C2=A0providing us with an alpha2, or using the reg_notifier(=
+).
+>>
+>> =C2=A0 =C2=A0Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.co=
+m>
+>> =C2=A0 =C2=A0Acked-by: Zhu Yi <yi.zhu@intel.com>
+>> =C2=A0 =C2=A0Signed-off-by: John W. Linville <linville@tuxdriver.com=
+>
+>
+> Could you please also add commit
+> ea4a82dceec7b5782b1259079c8de508d0afe33a? This is the commit that
+> enables the Intel cards to take advantage of the parameter introduced=
+ in
+> previous commit.
+>
+> commit ea4a82dceec7b5782b1259079c8de508d0afe33a
+> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Date: =C2=A0 Wed Nov 12 14:22:04 2008 -0800
+>
+> =C2=A0 =C2=A0iwlwifi: enable custom fw regulatory solution
+>
+> =C2=A0 =C2=A0This enables the custom firmware regulatory solution opt=
+ion
+> =C2=A0 =C2=A0on iwlwifi drivers. These devices are uncapable of mappi=
+ng their
+> =C2=A0 =C2=A0EEPROM regulatory domain to a specific ISO / IEC alpha2.
+> =C2=A0 =C2=A0Although the new 11n devices (>=3D iwl 5000) have only
+> =C2=A0 =C2=A03 regultaory SKUs -- MOW, ABG (no N) and BG -- the older
+> =C2=A0 =C2=A0devices (3945 and 4965) have a more complex SKU arrangem=
+ent
+> =C2=A0 =C2=A0and therefore its not practical to move this to the driv=
+er.
+>
+> =C2=A0 =C2=A0Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com=
+>
+> =C2=A0 =C2=A0Acked-by: Zhu Yi <yi.zhu@intel.com>
+> =C2=A0 =C2=A0Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Does this patch help ? I haven't tested on 9100, but 5416 works fine.
+Doh yes that would be required or it would make this pointless.
 
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index eb750a5..d7b3c44 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -760,7 +760,7 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
- 			INIT_INI_ARRAY(&ah->iniAddac, ar5416Addac_9160,
- 				       ARRAY_SIZE(ar5416Addac_9160), 2);
- 		}
--	} else if (AR_SREV_9100_OR_LATER(ah)) {
-+	} else if (AR_SREV_9100(ah)) {
- 		INIT_INI_ARRAY(&ah->iniModes, ar5416Modes_9100,
- 			       ARRAY_SIZE(ar5416Modes_9100), 6);
- 		INIT_INI_ARRAY(&ah->iniCommon, ar5416Common_9100,
-diff --git a/drivers/net/wireless/ath9k/initvals.h b/drivers/net/wireless/ath9k/initvals.h
-index d492363..0b579b4 100644
---- a/drivers/net/wireless/ath9k/initvals.h
-+++ b/drivers/net/wireless/ath9k/initvals.h
-@@ -27,38 +27,48 @@ static const u32 ar5416Modes_9100[][6] = {
-     { 0x00009828, 0x0a020001, 0x0a020001, 0x0a020001, 0x0a020001, 0x0a020001 },
-     { 0x00009834, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e },
-     { 0x00009838, 0x00000007, 0x00000007, 0x00000007, 0x00000007, 0x00000007 },
--    { 0x00009844, 0x1372161e, 0x1372161e, 0x137216a0, 0x137216a0, 0x137216a0 },
-+    { 0x00009844, 0x0372161e, 0x0372161e, 0x037216a0, 0x037216a0, 0x037216a0 },
-     { 0x00009848, 0x001a6a65, 0x001a6a65, 0x00197a68, 0x00197a68, 0x00197a68 },
-     { 0x0000a848, 0x001a6a65, 0x001a6a65, 0x00197a68, 0x00197a68, 0x00197a68 },
-     { 0x0000b848, 0x001a6a65, 0x001a6a65, 0x00197a68, 0x00197a68, 0x00197a68 },
--    { 0x00009850, 0x6c48b4e0, 0x6c48b4e0, 0x6c48b0de, 0x6c48b0de, 0x6c48b0de },
--    { 0x00009858, 0x7ec82d2e, 0x7ec82d2e, 0x7ec82d2e, 0x7ec82d2e, 0x7ec82d2e },
--    { 0x0000985c, 0x31395d5e, 0x31395d5e, 0x31395d5e, 0x31395d5e, 0x31395d5e },
--    { 0x00009860, 0x00049d18, 0x00049d18, 0x00049d18, 0x00049d18, 0x00049d18 },
-+    { 0x00009850, 0x6d48b4e2, 0x6d48b4e2, 0x6d48b0e2, 0x6d48b0e2, 0x6d48b0e2 },
-+    { 0x00009858, 0x7ec82d2e, 0x7ec82d2e, 0x7ec86d2e, 0x7ec84d2e, 0x7ec82d2e },
-+    { 0x0000985c, 0x3139605e, 0x3139605e, 0x3139605e, 0x3139605e, 0x3139605e },
-+    { 0x00009860, 0x00048d18, 0x00048d18, 0x00048d20, 0x00048d20, 0x00048d18 },
-     { 0x0000c864, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00 },
--    { 0x00009868, 0x409a4190, 0x409a4190, 0x409a4190, 0x409a4190, 0x409a4190 },
-+    { 0x00009868, 0x409a40d0, 0x409a40d0, 0x409a40d0, 0x409a40d0, 0x409a40d0 },
-     { 0x0000986c, 0x050cb081, 0x050cb081, 0x050cb081, 0x050cb081, 0x050cb081 },
--    { 0x00009914, 0x000007d0, 0x00000fa0, 0x00001130, 0x00000898, 0x000007d0 },
--    { 0x00009918, 0x000001b8, 0x00000370, 0x00000268, 0x00000134, 0x00000134 },
--    { 0x00009924, 0xd0058a0b, 0xd0058a0b, 0xd0058a0b, 0xd0058a0b, 0xd0058a0b },
--    { 0x00009944, 0xffb81020, 0xffb81020, 0xffb81020, 0xffb81020, 0xffb81020 },
--    { 0x00009960, 0x00000900, 0x00000900, 0x00012d80, 0x00012d80, 0x00012d80 },
--    { 0x0000a960, 0x00000900, 0x00000900, 0x00012d80, 0x00012d80, 0x00012d80 },
--    { 0x0000b960, 0x00000900, 0x00000900, 0x00012d80, 0x00012d80, 0x00012d80 },
--    { 0x00009964, 0x00000000, 0x00000000, 0x00001120, 0x00001120, 0x00001120 },
--    { 0x0000c9bc, 0x001a0a00, 0x001a0a00, 0x001a0a00, 0x001a0a00, 0x001a0a00 },
-+    { 0x00009914, 0x000007d0, 0x000007d0, 0x00000898, 0x00000898, 0x000007d0 },
-+    { 0x00009918, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b, 0x00000016 },
-+    { 0x00009924, 0xd00a8a07, 0xd00a8a07, 0xd00a8a11, 0xd00a8a0d, 0xd00a8a0d },
-+    { 0x00009940, 0x00754604, 0x00754604, 0xfff81204, 0xfff81204, 0xfff81204 },
-+    { 0x00009944, 0xdfb81020, 0xdfb81020, 0xdfb81020, 0xdfb81020, 0xdfb81020 },
-+    { 0x00009954, 0x5f3ca3de, 0x5f3ca3de, 0xe250a51e, 0xe250a51e, 0xe250a51e },
-+    { 0x00009958, 0x2108ecff, 0x2108ecff, 0x3388ffff, 0x3388ffff, 0x3388ffff },
-+#ifdef TB243
-+    { 0x00009960, 0x00000900, 0x00000900, 0x00009b40, 0x00009b40, 0x00012d80 },
-+    { 0x0000a960, 0x00000900, 0x00000900, 0x00009b40, 0x00009b40, 0x00012d80 },
-+    { 0x0000b960, 0x00000900, 0x00000900, 0x00009b40, 0x00009b40, 0x00012d80 },
-+    { 0x00009964, 0x00000000, 0x00000000, 0x00002210, 0x00002210, 0x00001120 },
-+#else
-+    { 0x00009960, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0 },
-+    { 0x0000a960, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0 },
-+    { 0x0000b960, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0 },
-+    { 0x00009964, 0x00001120, 0x00001120, 0x00001120, 0x00001120, 0x00001120 },
-+#endif
-+    { 0x0000c9bc, 0x001a0600, 0x001a0600, 0x001a1000, 0x001a0c00, 0x001a0c00 },
-     { 0x000099c0, 0x038919be, 0x038919be, 0x038919be, 0x038919be, 0x038919be },
-     { 0x000099c4, 0x06336f77, 0x06336f77, 0x06336f77, 0x06336f77, 0x06336f77 },
--    { 0x000099c8, 0x60f6532c, 0x60f6532c, 0x60f6532c, 0x60f6532c, 0x60f6532c },
-+    { 0x000099c8, 0x60f65329, 0x60f65329, 0x60f65329, 0x60f65329, 0x60f65329 },
-     { 0x000099cc, 0x08f186c8, 0x08f186c8, 0x08f186c8, 0x08f186c8, 0x08f186c8 },
-     { 0x000099d0, 0x00046384, 0x00046384, 0x00046384, 0x00046384, 0x00046384 },
-     { 0x000099d4, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
-     { 0x000099d8, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
-     { 0x0000a204, 0x00000880, 0x00000880, 0x00000880, 0x00000880, 0x00000880 },
-     { 0x0000a208, 0xd6be4788, 0xd6be4788, 0xd03e4788, 0xd03e4788, 0xd03e4788 },
--    { 0x0000a20c, 0x002ec1e0, 0x002ec1e0, 0x002ac120, 0x002ac120, 0x002ac120 },
--    { 0x0000b20c, 0x002ec1e0, 0x002ec1e0, 0x002ac120, 0x002ac120, 0x002ac120 },
--    { 0x0000c20c, 0x002ec1e0, 0x002ec1e0, 0x002ac120, 0x002ac120, 0x002ac120 },
-+    { 0x0000a20c, 0x002fc160, 0x002fc160, 0x002ac120, 0x002ac120, 0x002ac120 },
-+    { 0x0000b20c, 0x002fc160, 0x002fc160, 0x002ac120, 0x002ac120, 0x002ac120 },
-+    { 0x0000c20c, 0x002fc160, 0x002fc160, 0x002ac120, 0x002ac120, 0x002ac120 },
-     { 0x0000a21c, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a },
-     { 0x0000a230, 0x00000000, 0x00000000, 0x00000210, 0x00000108, 0x00000000 },
-     { 0x0000a274, 0x0a1a9caa, 0x0a1a9caa, 0x0a1a7caa, 0x0a1a7caa, 0x0a1a7caa },
-@@ -160,10 +170,8 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x000013fc, 0x00000000 },
-     { 0x0000143c, 0x00000000 },
-     { 0x0000147c, 0x00000000 },
--    { 0x00004030, 0x00000002 },
--    { 0x0000403c, 0x00000002 },
--    { 0x00007010, 0x00000000 },
--    { 0x00007038, 0x000004c2 },
-+    { 0x00020010, 0x00000003 },
-+    { 0x00020038, 0x000004c2 },
-     { 0x00008004, 0x00000000 },
-     { 0x00008008, 0x00000000 },
-     { 0x0000800c, 0x00000000 },
-@@ -172,7 +180,7 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x00008038, 0x00000000 },
-     { 0x0000803c, 0x00000000 },
-     { 0x00008048, 0x40000000 },
--    { 0x00008054, 0x00000000 },
-+    { 0x00008054, 0x00004000 },
-     { 0x00008058, 0x00000000 },
-     { 0x0000805c, 0x000fc78f },
-     { 0x00008060, 0x0000000f },
-@@ -266,7 +274,7 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x0000832c, 0x00000007 },
-     { 0x00008330, 0x00000302 },
-     { 0x00008334, 0x00000e00 },
--    { 0x00008338, 0x00070000 },
-+    { 0x00008338, 0x00000000 },
-     { 0x0000833c, 0x00000000 },
-     { 0x00008340, 0x000107ff },
-     { 0x00009808, 0x00000000 },
-@@ -277,7 +285,7 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x0000982c, 0x0000a000 },
-     { 0x00009830, 0x00000000 },
-     { 0x0000983c, 0x00200400 },
--    { 0x00009840, 0x206a002e },
-+    { 0x00009840, 0x206a01ae },
-     { 0x0000984c, 0x1284233c },
-     { 0x00009854, 0x00000859 },
-     { 0x00009900, 0x00000000 },
-@@ -295,8 +303,6 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x0000993c, 0x00000000 },
-     { 0x00009948, 0x9280b212 },
-     { 0x0000994c, 0x00020028 },
--    { 0x00009954, 0x5d50e188 },
--    { 0x00009958, 0x00081fff },
-     { 0x0000c95c, 0x004b6a8e },
-     { 0x0000c968, 0x000003ce },
-     { 0x00009970, 0x190fb515 },
-@@ -313,14 +319,14 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x0000999c, 0x00000000 },
-     { 0x000099a0, 0x00000000 },
-     { 0x000099a4, 0x00000001 },
--    { 0x000099a8, 0x001fff00 },
--    { 0x000099ac, 0x00000000 },
-+    { 0x000099a8, 0x201fff00 },
-+    { 0x000099ac, 0x006f0000 },
-     { 0x000099b0, 0x03051000 },
-     { 0x000099dc, 0x00000000 },
-     { 0x000099e0, 0x00000200 },
-     { 0x000099e4, 0xaaaaaaaa },
-     { 0x000099e8, 0x3c466478 },
--    { 0x000099ec, 0x000000aa },
-+    { 0x000099ec, 0x0cc80caa },
-     { 0x000099fc, 0x00001042 },
-     { 0x00009b00, 0x00000000 },
-     { 0x00009b04, 0x00000001 },
-@@ -391,11 +397,11 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x0000a218, 0x009c4060 },
-     { 0x0000a220, 0x018830c6 },
-     { 0x0000a224, 0x00000400 },
--    { 0x0000a228, 0x00000bb5 },
--    { 0x0000a22c, 0x00000011 },
-+    { 0x0000a228, 0x001a0bb5 },
-+    { 0x0000a22c, 0x00000000 },
-     { 0x0000a234, 0x20202020 },
-     { 0x0000a238, 0x20202020 },
--    { 0x0000a23c, 0x13c889af },
-+    { 0x0000a23c, 0x13c889ae },
-     { 0x0000a240, 0x38490a20 },
-     { 0x0000a244, 0x00007bb6 },
-     { 0x0000a248, 0x0fff3ffc },
-@@ -405,13 +411,13 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x0000a258, 0x0cc75380 },
-     { 0x0000a25c, 0x0f0f0f01 },
-     { 0x0000a260, 0xdfa91f01 },
--    { 0x0000a268, 0x00000000 },
-+    { 0x0000a268, 0x00000001 },
-     { 0x0000a26c, 0x0ebae9c6 },
-     { 0x0000b26c, 0x0ebae9c6 },
-     { 0x0000c26c, 0x0ebae9c6 },
-     { 0x0000d270, 0x00820820 },
-     { 0x0000a278, 0x1ce739ce },
--    { 0x0000a27c, 0x051701ce },
-+    { 0x0000a27c, 0x050701ce },
-     { 0x0000a338, 0x00000000 },
-     { 0x0000a33c, 0x00000000 },
-     { 0x0000a340, 0x00000000 },
-@@ -420,7 +426,7 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x0000a34c, 0x3fffffff },
-     { 0x0000a350, 0x3fffffff },
-     { 0x0000a354, 0x0003ffff },
--    { 0x0000a358, 0x79a8aa1f },
-+    { 0x0000a358, 0x79a8aa33 },
-     { 0x0000d35c, 0x07ffffef },
-     { 0x0000d360, 0x0fffffe7 },
-     { 0x0000d364, 0x17ffffe5 },
-@@ -432,7 +438,7 @@ static const u32 ar5416Common_9100[][2] = {
-     { 0x0000d37c, 0x7fffffe2 },
-     { 0x0000d380, 0x7f3c7bba },
-     { 0x0000d384, 0xf3307ff0 },
--    { 0x0000a388, 0x08000000 },
-+    { 0x0000a388, 0x0c000000 },
-     { 0x0000a38c, 0x20202020 },
-     { 0x0000a390, 0x20202020 },
-     { 0x0000a394, 0x1ce739ce },
-@@ -529,13 +535,13 @@ static const u32 ar5416BB_RfGain_9100[][3] = {
- };
- 
- static const u32 ar5416Bank1_9100[][2] = {
--    { 0x000098b0, 0x02108421 },
--    { 0x000098ec, 0x00000008 },
-+    { 0x000098b0, 0x02108421},
-+    { 0x000098ec, 0x00000008},
- };
- 
- static const u32 ar5416Bank2_9100[][2] = {
--    { 0x000098b0, 0x0e73ff17 },
--    { 0x000098e0, 0x00000420 },
-+    { 0x000098b0, 0x0e73ff17},
-+    { 0x000098e0, 0x00000420},
- };
- 
- static const u32 ar5416Bank3_9100[][3] = {
-@@ -543,7 +549,6 @@ static const u32 ar5416Bank3_9100[][3] = {
- };
- 
- static const u32 ar5416Bank6_9100[][3] = {
--
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-@@ -555,7 +560,7 @@ static const u32 ar5416Bank6_9100[][3] = {
-     { 0x0000989c, 0x00ff0000, 0x00ff0000 },
-     { 0x0000989c, 0x00ff0000, 0x00ff0000 },
-     { 0x0000989c, 0x00ff0000, 0x00ff0000 },
--    { 0x0000989c, 0x40ff0000, 0x40ff0000 },
-+    { 0x0000989c, 0x00ff0000, 0x00ff0000 },
-     { 0x0000989c, 0x005f0000, 0x005f0000 },
-     { 0x0000989c, 0x00870000, 0x00870000 },
-     { 0x0000989c, 0x00f90000, 0x00f90000 },
-@@ -566,15 +571,15 @@ static const u32 ar5416Bank6_9100[][3] = {
-     { 0x0000989c, 0x00110000, 0x00110000 },
-     { 0x0000989c, 0x006100a8, 0x006100a8 },
-     { 0x0000989c, 0x004210a2, 0x004210a2 },
--    { 0x0000989c, 0x0014008f, 0x0014008f },
--    { 0x0000989c, 0x00c40003, 0x00c40003 },
-+    { 0x0000989c, 0x0014000f, 0x0014000f },
-+    { 0x0000989c, 0x00c40002, 0x00c40002 },
-     { 0x0000989c, 0x003000f2, 0x003000f2 },
-     { 0x0000989c, 0x00440016, 0x00440016 },
-     { 0x0000989c, 0x00410040, 0x00410040 },
--    { 0x0000989c, 0x0001805e, 0x0001805e },
--    { 0x0000989c, 0x0000c0ab, 0x0000c0ab },
--    { 0x0000989c, 0x000000f1, 0x000000f1 },
--    { 0x0000989c, 0x00002081, 0x00002081 },
-+    { 0x0000989c, 0x000180d6, 0x000180d6 },
-+    { 0x0000989c, 0x0000c0aa, 0x0000c0aa },
-+    { 0x0000989c, 0x000000b1, 0x000000b1 },
-+    { 0x0000989c, 0x00002000, 0x00002000 },
-     { 0x0000989c, 0x000000d4, 0x000000d4 },
-     { 0x000098d0, 0x0000000f, 0x0010000f },
- };
-@@ -602,7 +607,7 @@ static const u32 ar5416Bank6TPC_9100[][3] = {
-     { 0x0000989c, 0x00110000, 0x00110000 },
-     { 0x0000989c, 0x006100a8, 0x006100a8 },
-     { 0x0000989c, 0x00423022, 0x00423022 },
--    { 0x0000989c, 0x201400df, 0x201400df },
-+    { 0x0000989c, 0x2014008f, 0x2014008f },
-     { 0x0000989c, 0x00c40002, 0x00c40002 },
-     { 0x0000989c, 0x003000f2, 0x003000f2 },
-     { 0x0000989c, 0x00440016, 0x00440016 },
-@@ -610,7 +615,7 @@ static const u32 ar5416Bank6TPC_9100[][3] = {
-     { 0x0000989c, 0x0001805e, 0x0001805e },
-     { 0x0000989c, 0x0000c0ab, 0x0000c0ab },
-     { 0x0000989c, 0x000000e1, 0x000000e1 },
--    { 0x0000989c, 0x00007081, 0x00007081 },
-+    { 0x0000989c, 0x00007080, 0x00007080 },
-     { 0x0000989c, 0x000000d4, 0x000000d4 },
-     { 0x000098d0, 0x0000000f, 0x0010000f },
- };
-@@ -622,43 +627,38 @@ static const u32 ar5416Bank7_9100[][2] = {
- };
- 
- static const u32 ar5416Addac_9100[][2] = {
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000003 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x0000000c },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000030 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000060 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000058 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x0000989c,  0x00000000 },
--    {0x000098cc,  0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000010 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x000000c0 },
-+    {0x0000989c, 0x00000015 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x0000989c, 0x00000000 },
-+    {0x000098cc, 0x00000000 },
- };
- 
- static const u32 ar5416Modes[][6] = {
-@@ -674,48 +674,38 @@ static const u32 ar5416Modes[][6] = {
-     { 0x00009828, 0x0a020001, 0x0a020001, 0x0a020001, 0x0a020001, 0x0a020001 },
-     { 0x00009834, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e },
-     { 0x00009838, 0x00000007, 0x00000007, 0x00000007, 0x00000007, 0x00000007 },
--    { 0x00009844, 0x0372161e, 0x0372161e, 0x037216a0, 0x037216a0, 0x037216a0 },
-+    { 0x00009844, 0x1372161e, 0x1372161e, 0x137216a0, 0x137216a0, 0x137216a0 },
-     { 0x00009848, 0x001a6a65, 0x001a6a65, 0x00197a68, 0x00197a68, 0x00197a68 },
-     { 0x0000a848, 0x001a6a65, 0x001a6a65, 0x00197a68, 0x00197a68, 0x00197a68 },
-     { 0x0000b848, 0x001a6a65, 0x001a6a65, 0x00197a68, 0x00197a68, 0x00197a68 },
--    { 0x00009850, 0x6d48b4e2, 0x6d48b4e2, 0x6d48b0e2, 0x6d48b0e2, 0x6d48b0e2 },
--    { 0x00009858, 0x7ec82d2e, 0x7ec82d2e, 0x7ec86d2e, 0x7ec84d2e, 0x7ec82d2e },
--    { 0x0000985c, 0x3139605e, 0x3139605e, 0x3139605e, 0x3139605e, 0x3139605e },
--    { 0x00009860, 0x00048d18, 0x00048d18, 0x00048d20, 0x00048d20, 0x00048d18 },
-+    { 0x00009850, 0x6c48b4e0, 0x6c48b4e0, 0x6c48b0de, 0x6c48b0de, 0x6c48b0de },
-+    { 0x00009858, 0x7ec82d2e, 0x7ec82d2e, 0x7ec82d2e, 0x7ec82d2e, 0x7ec82d2e },
-+    { 0x0000985c, 0x31395d5e, 0x31395d5e, 0x31395d5e, 0x31395d5e, 0x31395d5e },
-+    { 0x00009860, 0x00049d18, 0x00049d18, 0x00049d18, 0x00049d18, 0x00049d18 },
-     { 0x0000c864, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00 },
--    { 0x00009868, 0x409a40d0, 0x409a40d0, 0x409a40d0, 0x409a40d0, 0x409a40d0 },
-+    { 0x00009868, 0x409a4190, 0x409a4190, 0x409a4190, 0x409a4190, 0x409a4190 },
-     { 0x0000986c, 0x050cb081, 0x050cb081, 0x050cb081, 0x050cb081, 0x050cb081 },
--    { 0x00009914, 0x000007d0, 0x000007d0, 0x00000898, 0x00000898, 0x000007d0 },
--    { 0x00009918, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b, 0x00000016 },
--    { 0x00009924, 0xd00a8a07, 0xd00a8a07, 0xd00a8a11, 0xd00a8a0d, 0xd00a8a0d },
--    { 0x00009940, 0x00754604, 0x00754604, 0xfff81204, 0xfff81204, 0xfff81204 },
--    { 0x00009944, 0xdfb81020, 0xdfb81020, 0xdfb81020, 0xdfb81020, 0xdfb81020 },
--    { 0x00009954, 0x5f3ca3de, 0x5f3ca3de, 0xe250a51e, 0xe250a51e, 0xe250a51e },
--    { 0x00009958, 0x2108ecff, 0x2108ecff, 0x3388ffff, 0x3388ffff, 0x3388ffff },
--#ifdef TB243
--    { 0x00009960, 0x00000900, 0x00000900, 0x00009b40, 0x00009b40, 0x00012d80 },
--    { 0x0000a960, 0x00000900, 0x00000900, 0x00009b40, 0x00009b40, 0x00012d80 },
--    { 0x0000b960, 0x00000900, 0x00000900, 0x00009b40, 0x00009b40, 0x00012d80 },
--    { 0x00009964, 0x00000000, 0x00000000, 0x00002210, 0x00002210, 0x00001120 },
--#else
--    { 0x00009960, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0 },
--    { 0x0000a960, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0 },
--    { 0x0000b960, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0, 0x0001bfc0 },
--    { 0x00009964, 0x00001120, 0x00001120, 0x00001120, 0x00001120, 0x00001120 },
--#endif
--    { 0x0000c9bc, 0x001a0600, 0x001a0600, 0x001a1000, 0x001a0c00, 0x001a0c00 },
-+    { 0x00009914, 0x000007d0, 0x00000fa0, 0x00001130, 0x00000898, 0x000007d0 },
-+    { 0x00009918, 0x000001b8, 0x00000370, 0x00000268, 0x00000134, 0x00000134 },
-+    { 0x00009924, 0xd0058a0b, 0xd0058a0b, 0xd0058a0b, 0xd0058a0b, 0xd0058a0b },
-+    { 0x00009944, 0xffb81020, 0xffb81020, 0xffb81020, 0xffb81020, 0xffb81020 },
-+    { 0x00009960, 0x00000900, 0x00000900, 0x00012d80, 0x00012d80, 0x00012d80 },
-+    { 0x0000a960, 0x00000900, 0x00000900, 0x00012d80, 0x00012d80, 0x00012d80 },
-+    { 0x0000b960, 0x00000900, 0x00000900, 0x00012d80, 0x00012d80, 0x00012d80 },
-+    { 0x00009964, 0x00000000, 0x00000000, 0x00001120, 0x00001120, 0x00001120 },
-+    { 0x0000c9bc, 0x001a0a00, 0x001a0a00, 0x001a0a00, 0x001a0a00, 0x001a0a00 },
-     { 0x000099c0, 0x038919be, 0x038919be, 0x038919be, 0x038919be, 0x038919be },
-     { 0x000099c4, 0x06336f77, 0x06336f77, 0x06336f77, 0x06336f77, 0x06336f77 },
--    { 0x000099c8, 0x60f65329, 0x60f65329, 0x60f65329, 0x60f65329, 0x60f65329 },
-+    { 0x000099c8, 0x60f6532c, 0x60f6532c, 0x60f6532c, 0x60f6532c, 0x60f6532c },
-     { 0x000099cc, 0x08f186c8, 0x08f186c8, 0x08f186c8, 0x08f186c8, 0x08f186c8 },
-     { 0x000099d0, 0x00046384, 0x00046384, 0x00046384, 0x00046384, 0x00046384 },
-     { 0x000099d4, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
-     { 0x000099d8, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
-     { 0x0000a204, 0x00000880, 0x00000880, 0x00000880, 0x00000880, 0x00000880 },
-     { 0x0000a208, 0xd6be4788, 0xd6be4788, 0xd03e4788, 0xd03e4788, 0xd03e4788 },
--    { 0x0000a20c, 0x002fc160, 0x002fc160, 0x002ac120, 0x002ac120, 0x002ac120 },
--    { 0x0000b20c, 0x002fc160, 0x002fc160, 0x002ac120, 0x002ac120, 0x002ac120 },
--    { 0x0000c20c, 0x002fc160, 0x002fc160, 0x002ac120, 0x002ac120, 0x002ac120 },
-+    { 0x0000a20c, 0x002ec1e0, 0x002ec1e0, 0x002ac120, 0x002ac120, 0x002ac120 },
-+    { 0x0000b20c, 0x002ec1e0, 0x002ec1e0, 0x002ac120, 0x002ac120, 0x002ac120 },
-+    { 0x0000c20c, 0x002ec1e0, 0x002ec1e0, 0x002ac120, 0x002ac120, 0x002ac120 },
-     { 0x0000a21c, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a },
-     { 0x0000a230, 0x00000000, 0x00000000, 0x00000210, 0x00000108, 0x00000000 },
-     { 0x0000a274, 0x0a1a9caa, 0x0a1a9caa, 0x0a1a7caa, 0x0a1a7caa, 0x0a1a7caa },
-@@ -817,8 +807,10 @@ static const u32 ar5416Common[][2] = {
-     { 0x000013fc, 0x00000000 },
-     { 0x0000143c, 0x00000000 },
-     { 0x0000147c, 0x00000000 },
--    { 0x00020010, 0x00000003 },
--    { 0x00020038, 0x000004c2 },
-+    { 0x00004030, 0x00000002 },
-+    { 0x0000403c, 0x00000002 },
-+    { 0x00007010, 0x00000000 },
-+    { 0x00007038, 0x000004c2 },
-     { 0x00008004, 0x00000000 },
-     { 0x00008008, 0x00000000 },
-     { 0x0000800c, 0x00000000 },
-@@ -827,7 +819,7 @@ static const u32 ar5416Common[][2] = {
-     { 0x00008038, 0x00000000 },
-     { 0x0000803c, 0x00000000 },
-     { 0x00008048, 0x40000000 },
--    { 0x00008054, 0x00004000 },
-+    { 0x00008054, 0x00000000 },
-     { 0x00008058, 0x00000000 },
-     { 0x0000805c, 0x000fc78f },
-     { 0x00008060, 0x0000000f },
-@@ -862,7 +854,7 @@ static const u32 ar5416Common[][2] = {
-     { 0x00008134, 0x00000000 },
-     { 0x00008138, 0x00000000 },
-     { 0x0000813c, 0x00000000 },
--    { 0x00008144, 0x00000000 },
-+    { 0x00008144, 0xffffffff },
-     { 0x00008168, 0x00000000 },
-     { 0x0000816c, 0x00000000 },
-     { 0x00008170, 0x32143320 },
-@@ -921,7 +913,7 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000832c, 0x00000007 },
-     { 0x00008330, 0x00000302 },
-     { 0x00008334, 0x00000e00 },
--    { 0x00008338, 0x00000000 },
-+    { 0x00008338, 0x00070000 },
-     { 0x0000833c, 0x00000000 },
-     { 0x00008340, 0x000107ff },
-     { 0x00009808, 0x00000000 },
-@@ -932,7 +924,7 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000982c, 0x0000a000 },
-     { 0x00009830, 0x00000000 },
-     { 0x0000983c, 0x00200400 },
--    { 0x00009840, 0x206a01ae },
-+    { 0x00009840, 0x206a002e },
-     { 0x0000984c, 0x1284233c },
-     { 0x00009854, 0x00000859 },
-     { 0x00009900, 0x00000000 },
-@@ -950,6 +942,8 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000993c, 0x00000000 },
-     { 0x00009948, 0x9280b212 },
-     { 0x0000994c, 0x00020028 },
-+    { 0x00009954, 0x5d50e188 },
-+    { 0x00009958, 0x00081fff },
-     { 0x0000c95c, 0x004b6a8e },
-     { 0x0000c968, 0x000003ce },
-     { 0x00009970, 0x190fb515 },
-@@ -966,14 +960,14 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000999c, 0x00000000 },
-     { 0x000099a0, 0x00000000 },
-     { 0x000099a4, 0x00000001 },
--    { 0x000099a8, 0x201fff00 },
--    { 0x000099ac, 0x006f0000 },
-+    { 0x000099a8, 0x001fff00 },
-+    { 0x000099ac, 0x00000000 },
-     { 0x000099b0, 0x03051000 },
-     { 0x000099dc, 0x00000000 },
-     { 0x000099e0, 0x00000200 },
-     { 0x000099e4, 0xaaaaaaaa },
-     { 0x000099e8, 0x3c466478 },
--    { 0x000099ec, 0x0cc80caa },
-+    { 0x000099ec, 0x000000aa },
-     { 0x000099fc, 0x00001042 },
-     { 0x00009b00, 0x00000000 },
-     { 0x00009b04, 0x00000001 },
-@@ -1044,11 +1038,11 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000a218, 0x009c4060 },
-     { 0x0000a220, 0x018830c6 },
-     { 0x0000a224, 0x00000400 },
--    { 0x0000a228, 0x001a0bb5 },
--    { 0x0000a22c, 0x00000000 },
-+    { 0x0000a228, 0x00000bb5 },
-+    { 0x0000a22c, 0x00000011 },
-     { 0x0000a234, 0x20202020 },
-     { 0x0000a238, 0x20202020 },
--    { 0x0000a23c, 0x13c889ae },
-+    { 0x0000a23c, 0x13c889af },
-     { 0x0000a240, 0x38490a20 },
-     { 0x0000a244, 0x00007bb6 },
-     { 0x0000a248, 0x0fff3ffc },
-@@ -1058,13 +1052,13 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000a258, 0x0cc75380 },
-     { 0x0000a25c, 0x0f0f0f01 },
-     { 0x0000a260, 0xdfa91f01 },
--    { 0x0000a268, 0x00000001 },
-+    { 0x0000a268, 0x00000000 },
-     { 0x0000a26c, 0x0ebae9c6 },
-     { 0x0000b26c, 0x0ebae9c6 },
-     { 0x0000c26c, 0x0ebae9c6 },
-     { 0x0000d270, 0x00820820 },
-     { 0x0000a278, 0x1ce739ce },
--    { 0x0000a27c, 0x050701ce },
-+    { 0x0000a27c, 0x051701ce },
-     { 0x0000a338, 0x00000000 },
-     { 0x0000a33c, 0x00000000 },
-     { 0x0000a340, 0x00000000 },
-@@ -1073,7 +1067,7 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000a34c, 0x3fffffff },
-     { 0x0000a350, 0x3fffffff },
-     { 0x0000a354, 0x0003ffff },
--    { 0x0000a358, 0x79a8aa33 },
-+    { 0x0000a358, 0x79a8aa1f },
-     { 0x0000d35c, 0x07ffffef },
-     { 0x0000d360, 0x0fffffe7 },
-     { 0x0000d364, 0x17ffffe5 },
-@@ -1085,7 +1079,7 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000d37c, 0x7fffffe2 },
-     { 0x0000d380, 0x7f3c7bba },
-     { 0x0000d384, 0xf3307ff0 },
--    { 0x0000a388, 0x0c000000 },
-+    { 0x0000a388, 0x08000000 },
-     { 0x0000a38c, 0x20202020 },
-     { 0x0000a390, 0x20202020 },
-     { 0x0000a394, 0x1ce739ce },
-@@ -1182,13 +1176,13 @@ static const u32 ar5416BB_RfGain[][3] = {
- };
- 
- static const u32 ar5416Bank1[][2] = {
--    { 0x000098b0, 0x02108421},
--    { 0x000098ec, 0x00000008},
-+    { 0x000098b0, 0x02108421 },
-+    { 0x000098ec, 0x00000008 },
- };
- 
- static const u32 ar5416Bank2[][2] = {
--    { 0x000098b0, 0x0e73ff17},
--    { 0x000098e0, 0x00000420},
-+    { 0x000098b0, 0x0e73ff17 },
-+    { 0x000098e0, 0x00000420 },
- };
- 
- static const u32 ar5416Bank3[][3] = {
-@@ -1196,7 +1190,6 @@ static const u32 ar5416Bank3[][3] = {
- };
- 
- static const u32 ar5416Bank6[][3] = {
--
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-@@ -1208,7 +1201,7 @@ static const u32 ar5416Bank6[][3] = {
-     { 0x0000989c, 0x00ff0000, 0x00ff0000 },
-     { 0x0000989c, 0x00ff0000, 0x00ff0000 },
-     { 0x0000989c, 0x00ff0000, 0x00ff0000 },
--    { 0x0000989c, 0x00ff0000, 0x00ff0000 },
-+    { 0x0000989c, 0x40ff0000, 0x40ff0000 },
-     { 0x0000989c, 0x005f0000, 0x005f0000 },
-     { 0x0000989c, 0x00870000, 0x00870000 },
-     { 0x0000989c, 0x00f90000, 0x00f90000 },
-@@ -1219,22 +1212,20 @@ static const u32 ar5416Bank6[][3] = {
-     { 0x0000989c, 0x00110000, 0x00110000 },
-     { 0x0000989c, 0x006100a8, 0x006100a8 },
-     { 0x0000989c, 0x004210a2, 0x004210a2 },
--    { 0x0000989c, 0x0014000f, 0x0014000f },
--    { 0x0000989c, 0x00c40002, 0x00c40002 },
-+    { 0x0000989c, 0x0014008f, 0x0014008f },
-+    { 0x0000989c, 0x00c40003, 0x00c40003 },
-     { 0x0000989c, 0x003000f2, 0x003000f2 },
-     { 0x0000989c, 0x00440016, 0x00440016 },
-     { 0x0000989c, 0x00410040, 0x00410040 },
--    { 0x0000989c, 0x000180d6, 0x000180d6 },
--    { 0x0000989c, 0x0000c0aa, 0x0000c0aa },
--    { 0x0000989c, 0x000000b1, 0x000000b1 },
--    { 0x0000989c, 0x00002000, 0x00002000 },
-+    { 0x0000989c, 0x0001805e, 0x0001805e },
-+    { 0x0000989c, 0x0000c0ab, 0x0000c0ab },
-+    { 0x0000989c, 0x000000f1, 0x000000f1 },
-+    { 0x0000989c, 0x00002081, 0x00002081 },
-     { 0x0000989c, 0x000000d4, 0x000000d4 },
-     { 0x000098d0, 0x0000000f, 0x0010000f },
- };
- 
--
- static const u32 ar5416Bank6TPC[][3] = {
--
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-     { 0x0000989c, 0x00000000, 0x00000000 },
-@@ -1257,7 +1248,7 @@ static const u32 ar5416Bank6TPC[][3] = {
-     { 0x0000989c, 0x00110000, 0x00110000 },
-     { 0x0000989c, 0x006100a8, 0x006100a8 },
-     { 0x0000989c, 0x00423022, 0x00423022 },
--    { 0x0000989c, 0x2014008f, 0x2014008f },
-+    { 0x0000989c, 0x201400df, 0x201400df },
-     { 0x0000989c, 0x00c40002, 0x00c40002 },
-     { 0x0000989c, 0x003000f2, 0x003000f2 },
-     { 0x0000989c, 0x00440016, 0x00440016 },
-@@ -1265,7 +1256,7 @@ static const u32 ar5416Bank6TPC[][3] = {
-     { 0x0000989c, 0x0001805e, 0x0001805e },
-     { 0x0000989c, 0x0000c0ab, 0x0000c0ab },
-     { 0x0000989c, 0x000000e1, 0x000000e1 },
--    { 0x0000989c, 0x00007080, 0x00007080 },
-+    { 0x0000989c, 0x00007081, 0x00007081 },
-     { 0x0000989c, 0x000000d4, 0x000000d4 },
-     { 0x000098d0, 0x0000000f, 0x0010000f },
- };
-@@ -1277,38 +1268,43 @@ static const u32 ar5416Bank7[][2] = {
- };
- 
- static const u32 ar5416Addac[][2] = {
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000010 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x000000c0 },
--    {0x0000989c, 0x00000015 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x0000989c, 0x00000000 },
--    {0x000098cc, 0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000003 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x0000000c },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000030 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000060 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000058 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x0000989c,  0x00000000 },
-+    {0x000098c4,  0x00000000 },
- };
- 
- static const u32 ar5416Modes_9160[][6] = {
-diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
-index 91442da..cef1570 100644
---- a/drivers/net/wireless/ath9k/reg.h
-+++ b/drivers/net/wireless/ath9k/reg.h
-@@ -158,14 +158,6 @@
- #define AR_CST_TIMEOUT_LIMIT      0xFFFF0000
- #define AR_CST_TIMEOUT_LIMIT_S    16
- 
--#define AR_SREV_VERSION_9100                  0x014
--
--#define AR_SREV_9100(ah) ((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
--#define AR_SREV_5416_V20_OR_LATER(_ah) \
--	(AR_SREV_9100((_ah)) || AR_SREV_5416_20_OR_LATER(_ah))
--#define AR_SREV_5416_V22_OR_LATER(_ah) \
--	(AR_SREV_9100((_ah)) || AR_SREV_5416_22_OR_LATER(_ah))
--
- #define AR_ISR               0x0080
- #define AR_ISR_RXOK          0x00000001
- #define AR_ISR_RXDESC        0x00000002
-@@ -729,31 +721,36 @@
- #define AR_SREV_REVISION2        	      0x00000F00
- #define AR_SREV_REVISION2_S     	      8
- 
--#define AR_SREV_VERSION_5416_PCI               0xD
--#define AR_SREV_VERSION_5416_PCIE              0xC
--#define AR_SREV_REVISION_5416_10               0
--#define AR_SREV_REVISION_5416_20               1
--#define AR_SREV_REVISION_5416_22               2
--#define AR_SREV_VERSION_9160        	      0x40
--#define AR_SREV_REVISION_9160_10    	      0
--#define AR_SREV_REVISION_9160_11    	      1
--#define AR_SREV_VERSION_9280                0x80
--#define AR_SREV_REVISION_9280_10            0
--#define AR_SREV_REVISION_9280_20            1
--#define AR_SREV_REVISION_9280_21            2
--#define AR_SREV_VERSION_9285                  0xC0
--#define AR_SREV_REVISION_9285_10              0
--#define AR_SREV_REVISION_9285_11              1
--#define AR_SREV_REVISION_9285_12              2
--
--#define AR_SREV_9100_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_5416_PCIE))
-+#define AR_SREV_VERSION_5416_PCI	0xD
-+#define AR_SREV_VERSION_5416_PCIE	0xC
-+#define AR_SREV_REVISION_5416_10	0
-+#define AR_SREV_REVISION_5416_20	1
-+#define AR_SREV_REVISION_5416_22	2
-+#define AR_SREV_VERSION_9100		0x014
-+#define AR_SREV_VERSION_9160		0x40
-+#define AR_SREV_REVISION_9160_10	0
-+#define AR_SREV_REVISION_9160_11	1
-+#define AR_SREV_VERSION_9280		0x80
-+#define AR_SREV_REVISION_9280_10	0
-+#define AR_SREV_REVISION_9280_20	1
-+#define AR_SREV_REVISION_9280_21	2
-+#define AR_SREV_VERSION_9285		0xC0
-+#define AR_SREV_REVISION_9285_10	0
-+#define AR_SREV_REVISION_9285_11	1
-+#define AR_SREV_REVISION_9285_12	2
-+
-+#define AR_SREV_9100(ah) ((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
-+#define AR_SREV_5416_V20_OR_LATER(_ah) \
-+	(AR_SREV_9100(_ah) || AR_SREV_5416_20_OR_LATER(_ah))
-+#define AR_SREV_5416_V22_OR_LATER(_ah) \
-+	(AR_SREV_9100(_ah) || AR_SREV_5416_22_OR_LATER(_ah))
-+
- #define AR_SREV_5416_20_OR_LATER(_ah) \
- 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9160) || \
--		((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20))
-+	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20))
- #define AR_SREV_5416_22_OR_LATER(_ah) \
- 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9160) || \
--		((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22))
-+	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22))
- #define AR_SREV_9160(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9160))
- #define AR_SREV_9160_10_OR_LATER(_ah) \
-@@ -778,14 +775,14 @@
- #define AR_SREV_9285_10_OR_LATER(_ah) \
- 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9285))
- #define AR_SREV_9285_11(_ah) \
--	(AR_SREV_9280(ah) && \
-+	(AR_SREV_9285(ah) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9285_11))
- #define AR_SREV_9285_11_OR_LATER(_ah) \
- 	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9285) || \
- 	 (AR_SREV_9285(ah) && ((_ah)->hw_version.macRev >= \
- 			       AR_SREV_REVISION_9285_11)))
- #define AR_SREV_9285_12(_ah) \
--	(AR_SREV_9280(ah) && \
-+	(AR_SREV_9285(ah) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9285_12))
- #define AR_SREV_9285_12_OR_LATER(_ah) \
- 	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9285) || \
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
