@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:8890 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757029AbZCJV6n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 17:58:43 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so2826123wfa.4
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2009 14:58:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090310223757.a8618b61.cjsthompson@gmail.com>
-References: <4dd58f490903041329p54ec56ceh1b64ab000027eac5@mail.gmail.com>
-	 <4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com>
-	 <20090304232625.cc47eb46.cjsthompson@gmail.com>
-	 <4dd58f490903041451x5044b464k47d70b1210b12f11@mail.gmail.com>
-	 <20090304232527.058017da.cjsthompson@gmail.com>
-	 <4dd58f490903051449h3b2eb96ay5d83d7ea8129370f@mail.gmail.com>
-	 <20090306084527.5a3b6300.cjsthompson@gmail.com>
-	 <4dd58f490903101404m3678728ag13735851e232a8f4@mail.gmail.com>
-	 <20090310223757.a8618b61.cjsthompson@gmail.com>
-Date: Tue, 10 Mar 2009 17:58:41 -0400
-Message-ID: <b6c5339f0903101458k1aaf9455x80a0288daf46a4e3@mail.gmail.com> (sfid-20090310_225850_536939_780ACA13)
-Subject: Re: ath5k master (AP) mode
-From: Bob Copeland <me@bobcopeland.com>
-To: "Christoph .J Thompson" <cjsthompson@gmail.com>
-Cc: Alexey Yudichev <ayudichev@yahoo.co.uk>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from main.gmane.org ([80.91.229.2]:56410 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752650AbZCEUcx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 15:32:53 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1LfKFP-0004fF-FT
+	for linux-wireless@vger.kernel.org; Thu, 05 Mar 2009 20:32:51 +0000
+Received: from dslb-092-076-255-001.pools.arcor-ip.net ([92.76.255.1])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 20:32:51 +0000
+Received: from feldmann_markus by dslb-092-076-255-001.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 20:32:51 +0000
+To: linux-wireless@vger.kernel.org
+From: Markus Feldmann <feldmann_markus@gmx.de>
+Subject: Re: BCM4303 on HP zv5265ea
+Date: Thu, 05 Mar 2009 21:32:43 +0100
+Message-ID: <gopctb$rn2$1@ger.gmane.org> (sfid-20090305_213257_063893_4A7EDF7C)
+References: <gohr71$48f$1@ger.gmane.org> <49AC742D.9030309@lwfinger.net> <gom4ke$vle$1@ger.gmane.org> <49AE9BDD.7070603@lwfinger.net> <gomq5f$n64$1@ger.gmane.org> <49AEF58E.30302@lwfinger.net> <gon99n$b1t$1@ger.gmane.org> <49B00306.8050000@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <49B00306.8050000@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 10, 2009 at 5:37 PM, Christoph .J Thompson
-<cjsthompson@gmail.com> wrote:
-> On Tue, 10 Mar 2009 21:04:17 +0000
-> Alexey Yudichev <ayudichev@yahoo.co.uk> wrote:
->> Do you know, if I got this far, can unstable connection and not
->> working WPA be related to older kernel?
->
-> I can't be sure. I don't have the unstable connection problem but I didn't
-> use WPA yet. So maybe the unstable connection problem only happens with WPA.
+Larry Finger schrieb:
+> I can add a little more information. It turns out that I have one PCIe module
+> that will work with b43legacy as it uses ucode5 firmware. I modified my system
+> to load b43legacy, rather than b43, for this device. After I did that, the
+> RFKILL switch works correctly, just as it does in b43.
+> 
+> From the above experiment, I conclude that the rfkill implementation in
+> b43legacy is correct. Any problems that you are having are the result of some
+> quirk in your hardware, therefore, none of us can debug it as we will not be
+> able to reproduce the problem.
+> 
+> Does your RFKILL switch generate a keycode? You can test that by switching to
+> console 1 (CTRL/ALT/F1), log in, run the command 'showkey', and operate the
+> radio switch. On my system, I get a keycode of 238. BTW, use CTRL/ALT/F7 to get
+> back to the X console.
+Thank you for your help.
 
-It's possible ath5k has bugs in the crypto for AP mode like the ones fixed
-in ath9k recently - you can always try the nohwcrypt=1 modparam.
+With the kernel version 2.6.28.X it doesn't produce
+any keycode. I will try out the current developement
+version in the next days and wrote the results here.
+Ont this Laptop are 2 Operating Systems. Win XP and Debian Lenny.
+On WIn Xp the wlan card works fine. So i think the hardware
+is ok.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+So please watch here again next week. I think i could fit up
+the newest kernel version until next weekend.
+
+Regards Markus
+
