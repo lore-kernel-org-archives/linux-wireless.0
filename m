@@ -1,76 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25184 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758287AbZC3KCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 06:02:55 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:02:53 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:37223 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753975AbZCEQiu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 11:38:50 -0500
+Message-ID: <49B00011.1030001@openwrt.org> (sfid-20090305_173853_185886_D835D493)
+Date: Thu, 05 Mar 2009 17:38:41 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18896.38867.997551.983464@gargle.gargle.HOWL> (sfid-20090330_120316_648460_61360475)
-Date: Mon, 30 Mar 2009 15:28:43 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 11/17] ath9k: Remove TIM from the interrupt mask
+To: Sujith <m.sujith@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH] ath9k: create a common debugfs_root for
+ all	device instances
+References: <1236268518-31873-1-git-send-email-juhosg@openwrt.org> <18863.64330.683644.463962@gargle.gargle.HOWL>
+In-Reply-To: <18863.64330.683644.463962@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We never handle TIM, TIM_TIMER is used instead.
-Remove this and the unnecessary swBeaconProcess variable.
+Sujith =EDrta:
+> Gabor Juhos wrote:
+>> The driver are trying to create an 'ath9k' directory in debugfs for =
+each
+>> device currently. If there are more than one device in the system, t=
+he
+>> second try will always fail.
+>=20
+> Looks good. Thanks.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/ath9k.h |    1 -
- drivers/net/wireless/ath9k/main.c  |   14 --------------
- 2 files changed, 0 insertions(+), 15 deletions(-)
+Thank you for the review.
 
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index bdd5c6b..6aba991 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -70,7 +70,6 @@ struct ath_config {
- 	u32 ath_aggr_prot;
- 	u16 txpowlimit;
- 	u8 cabqReadytime;
--	u8 swBeaconProcess;
- };
- 
- /*************************/
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index b252a1f..d510c4e 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1543,9 +1543,6 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 		sc->beacon.bslot_aphy[i] = NULL;
- 	}
- 
--	/* save MISC configurations */
--	sc->config.swBeaconProcess = 1;
--
- 	/* setup channels and rates */
- 
- 	sc->sbands[IEEE80211_BAND_2GHZ].channels = ath9k_2ghz_chantable;
-@@ -2254,17 +2251,6 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 		sc->imask |= ATH9K_INT_TSFOOR;
- 	}
- 
--	/*
--	 * Some hardware processes the TIM IE and fires an
--	 * interrupt when the TIM bit is set.  For hardware
--	 * that does, if not overridden by configuration,
--	 * enable the TIM interrupt when operating as station.
--	 */
--	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_ENHANCEDPM) &&
--	    (conf->type == NL80211_IFTYPE_STATION) &&
--	    !sc->config.swBeaconProcess)
--		sc->imask |= ATH9K_INT_TIM;
--
- 	ath9k_hw_set_interrupts(sc->sc_ah, sc->imask);
- 
- 	if (conf->type == NL80211_IFTYPE_AP) {
--- 
-1.6.2.1
+>=20
+> Also, reading 'rcstat' when the interface is down would cause a NULL
+> pointer dereference.=20
 
+Indeed. :)
+
+root@OpenWrt:/# cat /tmp/debug/ath9k/phy0/rcstat
+CPU 0 Unable to handle kernel paging request at virtual address 0000000=
+0, epc =3D=3D
+c02886c8, ra =3D=3D c0288674
+Oops[#1]:
+Cpu 0
+$ 0   : 00000000 fffffff8 00000000 00000000
+$ 4   : ffffffff 00000200 c02a0000 00000005
+$ 8   : 00000000 80000008 ffffffff 00000000
+$12   : 82d8d080 00000000 2ab935ac 00404995
+$16   : 00000017 82f30ae0 82f30ae0 00000000
+$20   : 00000000 7fc3d130 00001000 82d9bf18
+$24   : 00000166 c028853c
+$28   : 82d9a000 82d9bab0 00000003 c0288674
+Hi    : 0000025b
+Lo    : 000001df
+epc   : c02886c8 0xc02886c8
+    Not tainted
+ra    : c0288674 0xc0288674
+Status: 1000f403    KERNEL EXL IE
+Cause : 00800008
+BadVA : 00000000
+PrId  : 00019374 (MIPS 24Kc)
+Modules linked in: leds_gpio nf_nat_tftp nf_conntrack_tftp nf_nat_irc
+nf_conntrack_irc nf_nat_ftp nf_conntrack_ftp ipt_MASQUi
+Process cat (pid: 852, threadinfo=3D82d9a000, task=3D82ddba18, tls=3D00=
+000000)
+Stack : 8027809c 00000000 c029b96c c029b974 83889f48 00000001 80278098 =
+00000200
+        00000000 2aaed0d8 20202052 61746520 20202020 20205375 63636573 =
+730a0a00
+        00000001 00000044 00000000 2aaed0d8 00000000 001200d2 81065c60 =
+8284b2a8
+        82897528 82897528 00000001 00000200 81065c60 00000000 800bee0c =
+800bee0c
+        82897528 82897528 82e904b4 00000000 00000001 00000005 2aaed000 =
+81065c60
+        ...
+
+> Will send out a patch fixing this.
+
+Superb.
+
+Gabor
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
