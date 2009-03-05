@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36240 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751869AbZCRUEu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50104 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754652AbZCETNG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2009 16:04:50 -0400
-Subject: Re:
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Thornton <david@villagepublishing.com.au>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <254CF60C-B61D-434B-BE34-0A1FDDDA6F4B@villagepublishing.com.au> (sfid-20090318_210350_597088_061DA824)
-References: <254CF60C-B61D-434B-BE34-0A1FDDDA6F4B@villagepublishing.com.au>
-	 (sfid-20090318_210350_597088_061DA824)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SRbX7O9sRmuMi1zv4F7T"
-Date: Wed, 18 Mar 2009 21:04:17 +0100
-Message-Id: <1237406657.5100.47.camel@johannes.local> (sfid-20090318_210452_536409_93C1BA21)
-Mime-Version: 1.0
+	Thu, 5 Mar 2009 14:13:06 -0500
+Message-ID: <49B02425.5030005@candelatech.com> (sfid-20090305_201321_705998_F5BB2D26)
+Date: Thu, 05 Mar 2009 11:12:37 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: pat-lkml@erley.org
+CC: Dan Williams <dcbw@redhat.com>,
+	Alexey Yudichev <ayudichev@yahoo.co.uk>,
+	"Christoph .J Thompson" <cjsthompson@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath5k master (AP) mode
+References: <4dd58f490903041329p54ec56ceh1b64ab000027eac5@mail.gmail.com> <4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com> <20090304232625.cc47eb46.cjsthompson@gmail.com> <4dd58f490903041451x5044b464k47d70b1210b12f11@mail.gmail.com> <49AF077D.2020408@erley.org> <1236253402.31456.8.camel@localhost> <041a41424b1a9851b471a7a3b794dc47@127.0.0.1>
+In-Reply-To: <041a41424b1a9851b471a7a3b794dc47@127.0.0.1>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+pat-lkml@erley.org wrote:
 
---=-SRbX7O9sRmuMi1zv4F7T
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>>> I don't know if it's intended, or just not implemented, but iwconfig
+>>> <iface> mode master
+>>> won't work with mac80211 drivers.  Hostapd knows how to set master mode
+>>> on it's own.
+>> Hostapd needs to be used for master mode in *any* case.  So yes, its
+>> intended that you need hostapd for master mode with mac80211 drivers.
+>> Just switching the card to master mode simply won't work, because
+>> there's oh-so-much-more setup required in addition to that, which
+>> hostapd knows how to do.
+>>
+>> Dan
+> 
+> Thanks for confirming this.  It was what I understood to be the case, 
+> and what experimentation had shown, but I was not sure if it was by 
+> design, or just not implemented yet.
 
-On Thu, 2009-03-19 at 07:03 +1100, David Thornton wrote:
-> unsubscribe linux-wireless
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Seems like iwconfig should have a more useful error message,
+telling users to use hostapd for this particular driver,
+instead of just a generic error...
 
-Try reading more closely.
+Ben
 
-johannes
-
---=-SRbX7O9sRmuMi1zv4F7T
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJwVO/AAoJEKVg1VMiehFYLZgP/3S5bsGEATjX8/tdb34O60GA
-Gqtb1BtayXX2+keI0ZRZOUA2DQj+3d1EztYajx71vHYcMhtujrsQ3dBUGjUVZ1Fz
-0Prbm2BlDvD5h7pcFZHaOyr48b23SBuF76v+FirzbnW1baFgKVu4clP+6QTFhtZ5
-PB5FtGQ8o9opp6Wwkn183BY+6zAmWoj2reld6TYRsZaNG9AqInu6y5P1hPYPhcmg
-d0CnoV2/bxuYISKJXFXWAtUwruU5E3R/XqpysvidbSvhbjbLkc/UE8Bg61lj/bJO
-jrz3Is6bnS2D7Sdd1nOjVH6xguavBQ7gENT4PAZckA4ESNp/JPfP1qJoQ3aQKy+C
-5xEBID/9b0B6bNkX9COrYkjTfs9JcJRiK07MOSSxeG3OImkiv5NjeCUwBZbGrODF
-xih252Sv/rIMFkPM4CuE3qpgSQzvcamefoe4FhgLQnYtJyY7xgxOu5MEOTXWKRJr
-uM64kF3gwzIAgUIapP2LsJUED2xRkVaxQjopdQxbefu5vf22wsWfFESiNEkx7P5x
-1D26twUNC2K5RVc46PturwF8iMEX045G+Moe5H8Ympd84euMLUndQUPTDqgeNO3j
-bubY/XN1lXyp8Q5QldfyFKjeXTzF23zGRvGA8viNZel/Z+QuU568QbyiJ04Ua/4C
-s7n9sRKj2S6X8i9HacSr
-=o2Pw
------END PGP SIGNATURE-----
-
---=-SRbX7O9sRmuMi1zv4F7T--
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
