@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:63582
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750882AbZCCJ1D (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:38032 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756800AbZCEU3y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 04:27:03 -0500
-Message-ID: <49ACF7E3.6080305@gmail.com> (sfid-20090303_102707_810368_926EFF57)
-Date: Tue, 03 Mar 2009 10:26:59 +0100
-From: Korrignu <korrignu@gmail.com>
-MIME-Version: 1.0
+	Thu, 5 Mar 2009 15:29:54 -0500
+From: Christian Lamparter <chunkeey@web.de>
 To: linux-wireless@vger.kernel.org
-Subject: Re: informations about BCM4312
-References: <49A7E9FC.7070904@gmail.com>
-In-Reply-To: <49A7E9FC.7070904@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH 2/7] p54usb: stop USB core interference in exit path
+Date: Thu, 5 Mar 2009 21:29:51 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903052129.51790.chunkeey@web.de> (sfid-20090305_213000_768578_AD6A2045)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>Korrignu wrote:
+The patch fixes a problem when the (Soft)LED stayed on after the module was unloaded.
+It turned out that the USB core disables all endpoints before calling the disconnect method.
+So it was impossible to switch off the radio & LEDs.
 
->> hello,
->> 
->> i have a *BCM4312* (rev02) chipset on my laptop, and I can't understand on
->> this webpage http://wireless.kernel.org/en/users/Drivers/b43#supported
->> if it is supported by b43 module or not
->> 
->> in fact, when i load the module, there is no new network interface
->> created...
->> and i can't find informations about it on the web...
->> 
->> could get me some informations about this problem ?
->
->The *BCM4312* is somewhat of a problem as there are two completely different
->devices that use that identification. You need to look at the PCI ID to tell if
->it is supported. Use the command 'lspci -n'and look for a line that has
->"14e5:43XX" in it. If XX is 15, it is not supported. The fact that you have to
->load the b43 module manually suggests that it is not supported. The other thing
->to do is the command 'dmesg | grep b43'.
->
->Larry
->--
->To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->the body of a message to majordomo@... <http://gmane.org/get-address.php?address=majordomo%2du79uwXL29TY76Z2rM5mHXA%40public.gmane.org>
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-In fact XX is 15 so it is not supported thanks for your quick answer 
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff -Nurp a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+--- a/drivers/net/wireless/p54/p54usb.c	2009-03-04 22:17:37.000000000 +0100
++++ b/drivers/net/wireless/p54/p54usb.c	2009-03-05 14:49:43.000000000 +0100
+@@ -1024,6 +1024,7 @@ static struct usb_driver p54u_driver = {
+ 	.disconnect = p54u_disconnect,
+ 	.pre_reset = p54u_pre_reset,
+ 	.post_reset = p54u_post_reset,
++	.soft_unbind = 1,
+ };
+ 
+ static int __init p54u_init(void)
