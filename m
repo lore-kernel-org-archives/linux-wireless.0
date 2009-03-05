@@ -1,146 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45574 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351AbZC0NRS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 09:17:18 -0400
-Subject: [PATCH] rfkill-input: remove unused code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:21572 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754024AbZCERtg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 12:49:36 -0500
+Subject: Re: Please apply to stable: cfg80211: add support for custom
+ firmware regulatory solutions
+From: reinette chatre <reinette.chatre@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "stable@kernel.org" <stable@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Tim Gardner <tim.gardner@canonical.com>
+In-Reply-To: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com>
+References: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com>
 Content-Type: text/plain
-Date: Fri, 27 Mar 2009 14:16:44 +0100
-Message-Id: <1238159804.4452.4.camel@johannes.local> (sfid-20090327_141721_928490_D07305F3)
+Date: Thu, 05 Mar 2009 09:54:28 -0800
+Message-Id: <1236275668.6612.134.camel@rc-desk> (sfid-20090305_184942_799938_88197D44)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's a lot of rfkill-input code that cannot ever be
-compiled and is useless until somebody needs and tests
-it -- therefore remove it.
+On Wed, 2009-03-04 at 13:35 -0800, Luis R. Rodriguez wrote:
+> Forgot to Cc: stable@kernel.org for this patch during its submission,
+> this is needed on 2.6.28 as otherwise there is an issue for Intel
+> cards which get their channels 5 GHz disabled if OLD_REG is set to no
+> (this is not the default) or the channels 12-14 are disabled if
+> OLD_REG is set to yes (default) set to no and the ieee80211_module
+> parameter is not used. The later issue is resolved by userspace as
+> well but we cannot yet expect 2.6.28 kernels to have enough userspace
+> interfaces to set the regulatory domain just yet. This is why OLD_REG
+> is still set to default with 2.6.28.
+> 
+> 14b9815af3f4fe0e171ee0c4325c31d2a2c1570b
+> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Date:   Wed Nov 12 14:22:03 2008 -0800
+> 
+>    cfg80211: add support for custom firmware regulatory solutions
+> 
+>    This adds API to cfg80211 to allow wireless drivers to inform
+>    us if their firmware can handle regulatory considerations *and*
+>    they cannot map these regulatory domains to an ISO / IEC 3166
+>    alpha2. In these cases we skip the first regulatory hint instead
+>    of expecting the driver to build their own regulatory structure,
+>    providing us with an alpha2, or using the reg_notifier().
+> 
+>    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>    Acked-by: Zhu Yi <yi.zhu@intel.com>
+>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/rfkill/rfkill-input.c |   69 ----------------------------------------------
- 1 file changed, 69 deletions(-)
+Could you please also add commit
+ea4a82dceec7b5782b1259079c8de508d0afe33a? This is the commit that
+enables the Intel cards to take advantage of the parameter introduced in
+previous commit.
 
---- wireless-testing.orig/net/rfkill/rfkill-input.c	2009-03-27 13:14:54.000000000 +0100
-+++ wireless-testing/net/rfkill/rfkill-input.c	2009-03-27 13:15:29.000000000 +0100
-@@ -47,12 +47,6 @@ enum rfkill_global_sched_op {
- 	RFKILL_GLOBAL_OP_UNBLOCK,
- };
- 
--/*
-- * Currently, the code marked with RFKILL_NEED_SWSET is inactive.
-- * If handling of EV_SW SW_WLAN/WWAN/BLUETOOTH/etc is needed in the
-- * future, when such events are added, that code will be necessary.
-- */
--
- struct rfkill_task {
- 	struct delayed_work dwork;
- 
-@@ -65,14 +59,6 @@ struct rfkill_task {
- 	/* pending regular switch operations (1=pending) */
- 	unsigned long sw_pending[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
- 
--#ifdef RFKILL_NEED_SWSET
--	/* set operation pending (1=pending) */
--	unsigned long sw_setpending[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
--
--	/* desired state for pending set operation (1=unblock) */
--	unsigned long sw_newstate[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
--#endif
--
- 	/* should the state be complemented (1=yes) */
- 	unsigned long sw_togglestate[BITS_TO_LONGS(RFKILL_TYPE_MAX)];
- 
-@@ -111,24 +97,6 @@ static void __rfkill_handle_global_op(en
- 	}
- }
- 
--#ifdef RFKILL_NEED_SWSET
--static void __rfkill_handle_normal_op(const enum rfkill_type type,
--			const bool sp, const bool s, const bool c)
--{
--	enum rfkill_state state;
--
--	if (sp)
--		state = (s) ? RFKILL_STATE_UNBLOCKED :
--			      RFKILL_STATE_SOFT_BLOCKED;
--	else
--		state = rfkill_get_global_state(type);
--
--	if (c)
--		state = rfkill_state_complement(state);
--
--	rfkill_switch_all(type, state);
--}
--#else
- static void __rfkill_handle_normal_op(const enum rfkill_type type,
- 			const bool c)
- {
-@@ -140,7 +108,6 @@ static void __rfkill_handle_normal_op(co
- 
- 	rfkill_switch_all(type, state);
- }
--#endif
- 
- static void rfkill_task_handler(struct work_struct *work)
- {
-@@ -171,21 +138,11 @@ static void rfkill_task_handler(struct w
- 						i < RFKILL_TYPE_MAX) {
- 				if (test_and_clear_bit(i, task->sw_pending)) {
- 					bool c;
--#ifdef RFKILL_NEED_SWSET
--					bool sp, s;
--					sp = test_and_clear_bit(i,
--							task->sw_setpending);
--					s = test_bit(i, task->sw_newstate);
--#endif
- 					c = test_and_clear_bit(i,
- 							task->sw_togglestate);
- 					spin_unlock_irq(&task->lock);
- 
--#ifdef RFKILL_NEED_SWSET
--					__rfkill_handle_normal_op(i, sp, s, c);
--#else
- 					__rfkill_handle_normal_op(i, c);
--#endif
- 
- 					spin_lock_irq(&task->lock);
- 				}
-@@ -238,32 +195,6 @@ static void rfkill_schedule_global_op(en
- 	spin_unlock_irqrestore(&rfkill_task.lock, flags);
- }
- 
--#ifdef RFKILL_NEED_SWSET
--/* Use this if you need to add EV_SW SW_WLAN/WWAN/BLUETOOTH/etc handling */
--
--static void rfkill_schedule_set(enum rfkill_type type,
--				enum rfkill_state desired_state)
--{
--	unsigned long flags;
--
--	if (rfkill_is_epo_lock_active())
--		return;
--
--	spin_lock_irqsave(&rfkill_task.lock, flags);
--	if (!rfkill_task.global_op_pending) {
--		set_bit(type, rfkill_task.sw_pending);
--		set_bit(type, rfkill_task.sw_setpending);
--		clear_bit(type, rfkill_task.sw_togglestate);
--		if (desired_state)
--			set_bit(type,  rfkill_task.sw_newstate);
--		else
--			clear_bit(type, rfkill_task.sw_newstate);
--		rfkill_schedule_ratelimited();
--	}
--	spin_unlock_irqrestore(&rfkill_task.lock, flags);
--}
--#endif
--
- static void rfkill_schedule_toggle(enum rfkill_type type)
- {
- 	unsigned long flags;
+commit ea4a82dceec7b5782b1259079c8de508d0afe33a
+Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+Date:   Wed Nov 12 14:22:04 2008 -0800
+
+    iwlwifi: enable custom fw regulatory solution
+    
+    This enables the custom firmware regulatory solution option
+    on iwlwifi drivers. These devices are uncapable of mapping their
+    EEPROM regulatory domain to a specific ISO / IEC alpha2.
+    Although the new 11n devices (>= iwl 5000) have only
+    3 regultaory SKUs -- MOW, ABG (no N) and BG -- the older
+    devices (3945 and 4965) have a more complex SKU arrangement
+    and therefore its not practical to move this to the driver.
+    
+    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+    Acked-by: Zhu Yi <yi.zhu@intel.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
 
