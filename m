@@ -1,29 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:36229 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753711AbZC2UfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2009 16:35:04 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1Lo1ig-0006qF-Qn
-	for linux-wireless@vger.kernel.org; Sun, 29 Mar 2009 20:35:03 +0000
-Received: from pool-173-55-78-196.lsanca.fios.verizon.net ([173.55.78.196])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 20:35:02 +0000
-Received: from davidc by pool-173-55-78-196.lsanca.fios.verizon.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 20:35:02 +0000
-To: linux-wireless@vger.kernel.org
-From: DAVID CHRISTENSEN <davidc@connect4less.com>
-Subject: Re: compile error compat-wireless-2009-03-29
-Date: Sun, 29 Mar 2009 20:31:05 +0000 (UTC)
-Message-ID: <loom.20090329T202700-0@post.gmane.org> (sfid-20090329_223507_303732_560BBF1B)
-References: <49CFD043.6020708@tls-tautenburg.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:39709 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754370AbZCETyE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 14:54:04 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Imre Kaloz <kaloz@openwrt.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 3/3] ath9k: fix AR_SREV_9100_OR_LATER macro
+Date: Thu,  5 Mar 2009 20:53:57 +0100
+Message-Id: <1236282837-6612-4-git-send-email-juhosg@openwrt.org> (sfid-20090305_205412_265153_56968D53)
+In-Reply-To: <1236282837-6612-1-git-send-email-juhosg@openwrt.org>
+References: <1236282837-6612-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FYI compat-wireless-2009-03-27 seems to compile w/o error on Gentoo kernel 
-2.6.27-r8
+The current macro is wrong, because detects some AR5416 devices as an
+AR9100 device. The AR5416 devices would have performance issues after
+this change, because the contents of the ar5416 specific and of the
+ar9100 specificinitval arrays are swapped. Fortunately we can correct
+this with the rename of the arrays simply.
+
+Changes-licesed-under: ISC
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/initvals.h |   44 ++++++++++++++++----------------
+ drivers/net/wireless/ath9k/reg.h      |    2 +-
+ 2 files changed, 23 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/initvals.h b/drivers/net/wireless/ath9k/initvals.h
+index d492363..4eb8b59 100644
+--- a/drivers/net/wireless/ath9k/initvals.h
++++ b/drivers/net/wireless/ath9k/initvals.h
+@@ -14,7 +14,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-static const u32 ar5416Modes_9100[][6] = {
++static const u32 ar5416Modes[][6] = {
+     { 0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160, 0x000001e0 },
+     { 0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c, 0x000001e0 },
+     { 0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38, 0x00001180 },
+@@ -78,7 +78,7 @@ static const u32 ar5416Modes_9100[][6] = {
+     { 0x0000a334, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+ };
+ 
+-static const u32 ar5416Common_9100[][2] = {
++static const u32 ar5416Common[][2] = {
+     { 0x0000000c, 0x00000000 },
+     { 0x00000030, 0x00020015 },
+     { 0x00000034, 0x00000005 },
+@@ -456,12 +456,12 @@ static const u32 ar5416Common_9100[][2] = {
+     { 0x0000a3e0, 0x000001ce },
+ };
+ 
+-static const u32 ar5416Bank0_9100[][2] = {
++static const u32 ar5416Bank0[][2] = {
+     { 0x000098b0, 0x1e5795e5 },
+     { 0x000098e0, 0x02008020 },
+ };
+ 
+-static const u32 ar5416BB_RfGain_9100[][3] = {
++static const u32 ar5416BB_RfGain[][3] = {
+     { 0x00009a00, 0x00000000, 0x00000000 },
+     { 0x00009a04, 0x00000040, 0x00000040 },
+     { 0x00009a08, 0x00000080, 0x00000080 },
+@@ -528,21 +528,21 @@ static const u32 ar5416BB_RfGain_9100[][3] = {
+     { 0x00009afc, 0x000000f9, 0x000000f9 },
+ };
+ 
+-static const u32 ar5416Bank1_9100[][2] = {
++static const u32 ar5416Bank1[][2] = {
+     { 0x000098b0, 0x02108421 },
+     { 0x000098ec, 0x00000008 },
+ };
+ 
+-static const u32 ar5416Bank2_9100[][2] = {
++static const u32 ar5416Bank2[][2] = {
+     { 0x000098b0, 0x0e73ff17 },
+     { 0x000098e0, 0x00000420 },
+ };
+ 
+-static const u32 ar5416Bank3_9100[][3] = {
++static const u32 ar5416Bank3[][3] = {
+     { 0x000098f0, 0x01400018, 0x01c00018 },
+ };
+ 
+-static const u32 ar5416Bank6_9100[][3] = {
++static const u32 ar5416Bank6[][3] = {
+ 
+     { 0x0000989c, 0x00000000, 0x00000000 },
+     { 0x0000989c, 0x00000000, 0x00000000 },
+@@ -579,7 +579,7 @@ static const u32 ar5416Bank6_9100[][3] = {
+     { 0x000098d0, 0x0000000f, 0x0010000f },
+ };
+ 
+-static const u32 ar5416Bank6TPC_9100[][3] = {
++static const u32 ar5416Bank6TPC[][3] = {
+     { 0x0000989c, 0x00000000, 0x00000000 },
+     { 0x0000989c, 0x00000000, 0x00000000 },
+     { 0x0000989c, 0x00000000, 0x00000000 },
+@@ -615,13 +615,13 @@ static const u32 ar5416Bank6TPC_9100[][3] = {
+     { 0x000098d0, 0x0000000f, 0x0010000f },
+ };
+ 
+-static const u32 ar5416Bank7_9100[][2] = {
++static const u32 ar5416Bank7[][2] = {
+     { 0x0000989c, 0x00000500 },
+     { 0x0000989c, 0x00000800 },
+     { 0x000098cc, 0x0000000e },
+ };
+ 
+-static const u32 ar5416Addac_9100[][2] = {
++static const u32 ar5416Addac[][2] = {
+     {0x0000989c,  0x00000000 },
+     {0x0000989c,  0x00000003 },
+     {0x0000989c,  0x00000000 },
+@@ -661,7 +661,7 @@ static const u32 ar5416Addac_9100[][2] = {
+     {0x000098cc,  0x00000000 },
+ };
+ 
+-static const u32 ar5416Modes[][6] = {
++static const u32 ar5416Modes_9100[][6] = {
+     { 0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160, 0x000001e0 },
+     { 0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c, 0x000001e0 },
+     { 0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38, 0x00001180 },
+@@ -735,7 +735,7 @@ static const u32 ar5416Modes[][6] = {
+     { 0x0000a334, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
+ };
+ 
+-static const u32 ar5416Common[][2] = {
++static const u32 ar5416Common_9100[][2] = {
+     { 0x0000000c, 0x00000000 },
+     { 0x00000030, 0x00020015 },
+     { 0x00000034, 0x00000005 },
+@@ -1109,12 +1109,12 @@ static const u32 ar5416Common[][2] = {
+     { 0x0000a3e0, 0x000001ce },
+ };
+ 
+-static const u32 ar5416Bank0[][2] = {
++static const u32 ar5416Bank0_9100[][2] = {
+     { 0x000098b0, 0x1e5795e5 },
+     { 0x000098e0, 0x02008020 },
+ };
+ 
+-static const u32 ar5416BB_RfGain[][3] = {
++static const u32 ar5416BB_RfGain_9100[][3] = {
+     { 0x00009a00, 0x00000000, 0x00000000 },
+     { 0x00009a04, 0x00000040, 0x00000040 },
+     { 0x00009a08, 0x00000080, 0x00000080 },
+@@ -1181,21 +1181,21 @@ static const u32 ar5416BB_RfGain[][3] = {
+     { 0x00009afc, 0x000000f9, 0x000000f9 },
+ };
+ 
+-static const u32 ar5416Bank1[][2] = {
++static const u32 ar5416Bank1_9100[][2] = {
+     { 0x000098b0, 0x02108421},
+     { 0x000098ec, 0x00000008},
+ };
+ 
+-static const u32 ar5416Bank2[][2] = {
++static const u32 ar5416Bank2_9100[][2] = {
+     { 0x000098b0, 0x0e73ff17},
+     { 0x000098e0, 0x00000420},
+ };
+ 
+-static const u32 ar5416Bank3[][3] = {
++static const u32 ar5416Bank3_9100[][3] = {
+     { 0x000098f0, 0x01400018, 0x01c00018 },
+ };
+ 
+-static const u32 ar5416Bank6[][3] = {
++static const u32 ar5416Bank6_9100[][3] = {
+ 
+     { 0x0000989c, 0x00000000, 0x00000000 },
+     { 0x0000989c, 0x00000000, 0x00000000 },
+@@ -1233,7 +1233,7 @@ static const u32 ar5416Bank6[][3] = {
+ };
+ 
+ 
+-static const u32 ar5416Bank6TPC[][3] = {
++static const u32 ar5416Bank6TPC_9100[][3] = {
+ 
+     { 0x0000989c, 0x00000000, 0x00000000 },
+     { 0x0000989c, 0x00000000, 0x00000000 },
+@@ -1270,13 +1270,13 @@ static const u32 ar5416Bank6TPC[][3] = {
+     { 0x000098d0, 0x0000000f, 0x0010000f },
+ };
+ 
+-static const u32 ar5416Bank7[][2] = {
++static const u32 ar5416Bank7_9100[][2] = {
+     { 0x0000989c, 0x00000500 },
+     { 0x0000989c, 0x00000800 },
+     { 0x000098cc, 0x0000000e },
+ };
+ 
+-static const u32 ar5416Addac[][2] = {
++static const u32 ar5416Addac_9100[][2] = {
+     {0x0000989c, 0x00000000 },
+     {0x0000989c, 0x00000000 },
+     {0x0000989c, 0x00000000 },
+diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
+index 2512e9b..28af0d1 100644
+--- a/drivers/net/wireless/ath9k/reg.h
++++ b/drivers/net/wireless/ath9k/reg.h
+@@ -754,7 +754,7 @@
+ #define AR_SREV_9100(ah) \
+ 	((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
+ #define AR_SREV_9100_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_5416_PCIE))
++	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
+ 
+ #define AR_SREV_9160(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9160))
+-- 
+1.5.3.2
 
