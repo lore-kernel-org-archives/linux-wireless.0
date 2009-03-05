@@ -1,65 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:52842 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753252AbZCLOOM convert rfc822-to-8bit (ORCPT
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:1279 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbZCES7V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 10:14:12 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so997932ywh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 07:14:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
-References: <1236728344.26432.26.camel@maxim-laptop>
-	 <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
-Date: Thu, 12 Mar 2009 10:14:09 -0400
-Message-ID: <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com> (sfid-20090312_151416_482579_1C9B83FE)
-Subject: Re: Thanks for TX power patch
-From: Bob Copeland <me@bobcopeland.com>
-To: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 5 Mar 2009 13:59:21 -0500
+Subject: Re: [PATCH wireless-testing] airo_cs: checkpatch.pl cleanups
+From: Joe Perches <joe@perches.com>
+To: John Daiker <daikerjohn@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <49AF1BD7.3020508@gmail.com>
+References: <49AF1BD7.3020508@gmail.com>
+Content-Type: text/plain
+Date: Thu, 05 Mar 2009 11:01:28 -0800
+Message-Id: <1236279688.15246.43.camel@localhost> (sfid-20090305_195925_365189_9FE9630F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 11, 2009 at 4:15 AM, Tulio Magno Quites Machado Filho
-<tuliom@gmail.com> wrote:
-> On Wed, Mar 11, 2009 at 12:39 AM, Maxim Levitsky
-> <maximlevitsky@gmail.com> wrote:
->> If I unload/reload the ath5k, it seems to work. but at next suspend =
-to
->> disk, once =A0system hung, other time it showed many panic, in somet=
-hing
->> related to page allocator (one even was in page_alloc_pages or so)
->
-> I'm getting some Kernel oopses after unloading ath5k with Nick patche=
-s.
-> But I'm still debugging it to find where is the problem.
+On Wed, 2009-03-04 at 16:24 -0800, John Daiker wrote:
+> Hopefully nothing controversial here, since the driver hasn't been touched in a while!
+> 
+> Before: 36 errors, 6 warnings, 482 lines checked
+> After:  0 errors, 3 warnings, 485 lines checked
+> 
+> This was nearly all trailing whitespace, * and parenthesis spacing, and code indent changes.
+> 
+> md5sum of object file before and after are identical.
+> 
+> ---
+> 
+> Signed-off-by: John Daiker <daikerjohn@gmail.com>
+> 
+> diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
+> index 27696c2..6b96add 100644
+> --- a/drivers/net/wireless/airo_cs.c
+> +++ b/drivers/net/wireless/airo_cs.c
+> @@ -16,8 +16,8 @@
+>      In addition this module was derived from dummy_cs.
+>      The initial developer of dummy_cs is David A. Hinds
+>      <dahinds@users.sourceforge.net>.  Portions created by David A. Hinds
+> -    are Copyright (C) 1999 David A. Hinds.  All Rights Reserved.    
+> -    
+> +    are Copyright (C) 1999 David A. Hinds.  All Rights Reserved.
+> +
+>  ======================================================================*/
+>  
+>  #ifdef __IN_PCMCIA_PACKAGE__
+> @@ -38,7 +38,7 @@
+>  #include <pcmcia/cisreg.h>
+>  #include <pcmcia/ds.h>
+>  
+> -#include <asm/io.h>
+> +#include <linux/io.h>
+>  #include <asm/system.h>
+>  
+>  #include "airo.h"
+> @@ -54,7 +54,7 @@
+>  static int pc_debug = PCMCIA_DEBUG;
+>  module_param(pc_debug, int, 0);
+>  static char *version = "$Revision: 1.2 $";
+> -#define DEBUG(n, args...) if (pc_debug>(n)) printk(KERN_DEBUG args);
+> +#define DEBUG(n, args...) if (pc_debug > (n)) printk(KERN_DEBUG args);
+>  #else
+>  #define DEBUG(n, args...)
+>  #endif
+> @@ -63,7 +63,7 @@ static char *version = "$Revision: 1.2 $";
+>  
+>  MODULE_AUTHOR("Benjamin Reed");
+>  MODULE_DESCRIPTION("Support for Cisco/Aironet 802.11 wireless
+> ethernet \
+> -                   cards.  This is the module that links the PCMCIA
+> card \
+> +		   cards.  This is the module that links the PCMCIA card \
+>  		   with the airo module.");
 
-Ditto here.. looks like a bug in ath5k_eeprom_free_pcal_info(), which h=
-as:
+This should use " at the start and end of every line.
 
-    struct ath5k_pdgain_info *pd =3D &chinfo->pd_curves[pdg];
+MODULE_DESCRIPTION("Support for Cisco/Aironet 802.11 wireless ethernet "
+		   "cards.  This is the module that links the PCMCIA card "
+		   "with the airo module.");
 
-    if (pd !=3D NULL) {
-        kfree(pd->pd_step);
-        kfree(pd->pd_pwr);
-        kfree(pd);
-    }
 
-kfree(pd) looks wrong, because pd_curves is the kzalloc()ed part, not
-the array elements themselves.  But I tried removing that and freeing
-the pd_curves array outside of the loop and got more slab debugging
-poop.  So, I punt for now.
-
-Also, every alloc of pd_step, and pd_pwr can potentially leak earlier
-allocated memory on ENOMEM.
-
---=20
-Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
