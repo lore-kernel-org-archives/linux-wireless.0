@@ -1,64 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34133 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851AbZCSFyq (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:38248 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756779AbZCEUaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 01:54:46 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 4/6] cfg80211: check allowed channel type upon userspace requests
-Date: Thu, 19 Mar 2009 01:54:38 -0400
-Message-Id: <1237442080-27509-5-git-send-email-lrodriguez@atheros.com> (sfid-20090319_065452_202028_5904B3AF)
-In-Reply-To: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
-References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 5 Mar 2009 15:30:14 -0500
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/7] p54: unify ieee80211 device registration
+Date: Thu, 5 Mar 2009 21:30:10 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903052130.11112.chunkeey@web.de> (sfid-20090305_213023_189097_08794807)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks to nl80211 userspace can be verify specific upon device
-configuration. Before processing the request for the new HT40
-channel types (HT40- or HT40+) we need to ensure we can use them
-regulatory-wise. This wasn't required with wireless extensions as
-specifying the channel type wasn't not available and configuration
-was done towards the end implicitly upon association or reception
-of beacons from the AP. For the new nl80211 we have to check this
-when configuring the interfaces explicitly.
+All three drivers (p54pci, p54usb and p54spi) are implementing the
+same functionality three times. So, why not put it into the shared library?!
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
- net/wireless/nl80211.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 53fe209..e03c9a2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -426,6 +426,24 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
- 			goto bad_res;
+diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+--- a/drivers/net/wireless/p54/p54common.c	2009-03-05 14:49:27.000000000 +0100
++++ b/drivers/net/wireless/p54/p54common.c	2009-03-05 15:10:35.000000000 +0100
+@@ -2481,6 +2481,21 @@ struct ieee80211_hw *p54_init_common(siz
+ }
+ EXPORT_SYMBOL_GPL(p54_init_common);
  
-+		if (channel_type == NL80211_CHAN_HT40MINUS ||
-+		    channel_type == NL80211_CHAN_HT40PLUS)
-+			if (chan->flags & IEEE80211_CHAN_NO_HT40)
-+				goto bad_res;
++int p54_register_common(struct ieee80211_hw *dev, struct device *pdev)
++{
++	int err;
 +
-+		if (channel_type == NL80211_CHAN_HT40MINUS &&
-+		    (chan->flags & IEEE80211_CHAN_NO_HT40MINUS))
-+			goto bad_res;
-+		else if (channel_type == NL80211_CHAN_HT40PLUS &&
-+			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS))
-+			goto bad_res;
++	err = ieee80211_register_hw(dev);
++	if (err) {
++		dev_err(pdev, "Cannot register device (%d).\n", err);
++		return err;
++	}
 +
-+		/*
-+		 * At this point we know if that if HT40 was requested
-+		 * we are allowed to use it and the extension channel
-+		 * exists.
-+		 */
++	dev_info(pdev, "is registered as '%s'\n", wiphy_name(dev->wiphy));
++	return 0;
++}
++EXPORT_SYMBOL_GPL(p54_register_common);
 +
- 		if (channel_type == NL80211_CHAN_HT40MINUS)
- 			sec_freq = freq - 20;
- 		else if (channel_type == NL80211_CHAN_HT40PLUS)
--- 
-1.6.0.6
-
+ void p54_free_common(struct ieee80211_hw *dev)
+ {
+ 	struct p54_common *priv = dev->priv;
+diff -Nurp a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+--- a/drivers/net/wireless/p54/p54.h	2009-03-05 14:49:27.000000000 +0100
++++ b/drivers/net/wireless/p54/p54.h	2009-03-05 15:08:21.000000000 +0100
+@@ -165,6 +165,7 @@ int p54_parse_firmware(struct ieee80211_
+ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len);
+ int p54_read_eeprom(struct ieee80211_hw *dev);
+ struct ieee80211_hw *p54_init_common(size_t priv_data_len);
++int p54_register_common(struct ieee80211_hw *dev, struct device *pdev);
+ void p54_free_common(struct ieee80211_hw *dev);
+ 
+ #endif /* P54_H */
+diff -Nurp a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+--- a/drivers/net/wireless/p54/p54pci.c	2009-03-05 14:49:27.000000000 +0100
++++ b/drivers/net/wireless/p54/p54pci.c	2009-03-05 15:07:16.000000000 +0100
+@@ -565,12 +565,9 @@ static int __devinit p54p_probe(struct p
+ 	if (err)
+ 		goto err_free_common;
+ 
+-	err = ieee80211_register_hw(dev);
+-	if (err) {
+-		printk(KERN_ERR "%s (p54pci): Cannot register netdevice\n",
+-		       pci_name(pdev));
++	err = p54_register_common(dev, &pdev->dev);
++	if (err)
+ 		goto err_free_common;
+-	}
+ 
+ 	return 0;
+ 
+diff -Nurp a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+--- a/drivers/net/wireless/p54/p54spi.c	2009-03-05 14:49:27.000000000 +0100
++++ b/drivers/net/wireless/p54/p54spi.c	2009-03-05 15:08:06.000000000 +0100
+@@ -694,15 +694,10 @@ static int __devinit p54spi_probe(struct
+ 	if (ret)
+ 		goto err_free_common;
+ 
+-	ret = ieee80211_register_hw(hw);
+-	if (ret) {
+-		dev_err(&priv->spi->dev, "unable to register "
+-					 "mac80211 hw: %d", ret);
++	ret = p54_register_common(hw, &priv->spi->dev);
++	if (ret)
+ 		goto err_free_common;
+-	}
+ 
+-	dev_info(&priv->spi->dev, "device is bound to %s\n",
+-		 wiphy_name(hw->wiphy));
+ 	return 0;
+ 
+ err_free_common:
+diff -Nurp a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+--- a/drivers/net/wireless/p54/p54usb.c	2009-03-05 14:49:43.000000000 +0100
++++ b/drivers/net/wireless/p54/p54usb.c	2009-03-05 15:07:41.000000000 +0100
+@@ -976,11 +976,9 @@ static int __devinit p54u_probe(struct u
+ 	if (err)
+ 		goto err_free_dev;
+ 
+-	err = ieee80211_register_hw(dev);
+-	if (err) {
+-		dev_err(&udev->dev, "(p54usb) Cannot register netdevice\n");
++	err = p54_register_common(dev, &udev->dev);
++	if (err)
+ 		goto err_free_dev;
+-	}
+ 
+ 	return 0;
+ 
