@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:41375 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751291AbZCEWtT convert rfc822-to-8bit (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:48658 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756781AbZCEQvd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 17:49:19 -0500
-Received: by fk-out-0910.google.com with SMTP id f33so68583fkf.5
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 14:49:16 -0800 (PST)
+	Thu, 5 Mar 2009 11:51:33 -0500
+Message-ID: <49B00306.8050000@lwfinger.net> (sfid-20090305_175155_914120_936E7B2B)
+Date: Thu, 05 Mar 2009 10:51:18 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20090304232527.058017da.cjsthompson@gmail.com>
-References: <4dd58f490903041329p54ec56ceh1b64ab000027eac5@mail.gmail.com>
-	 <4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com>
-	 <20090304232625.cc47eb46.cjsthompson@gmail.com>
-	 <4dd58f490903041451x5044b464k47d70b1210b12f11@mail.gmail.com>
-	 <20090304232527.058017da.cjsthompson@gmail.com>
-Date: Thu, 5 Mar 2009 22:49:16 +0000
-Message-ID: <4dd58f490903051449h3b2eb96ay5d83d7ea8129370f@mail.gmail.com> (sfid-20090305_234937_608344_62849CDE)
-Subject: Re: ath5k master (AP) mode
-From: Alexey Yudichev <ayudichev@yahoo.co.uk>
-To: "Christoph J. Thompson" <cjsthompson@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Markus Feldmann <feldmann_markus@gmx.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: BCM4303 on HP zv5265ea
+References: <gohr71$48f$1@ger.gmane.org> <49AC742D.9030309@lwfinger.net> <gom4ke$vle$1@ger.gmane.org> <49AE9BDD.7070603@lwfinger.net> <gomq5f$n64$1@ger.gmane.org> <49AEF58E.30302@lwfinger.net> <gon99n$b1t$1@ger.gmane.org>
+In-Reply-To: <gon99n$b1t$1@ger.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Wed, 4 Mar 2009 22:51:01 +0000
-> Alexey Yudichev <ayudichev@yahoo.co.uk> wrote:
->> Hi, I use 2.6.27-11-generic (from ubuntu's
->> linux-backports-modules-intrepid-generic), hostapd v0.5.10.
->
-> I use 2.6.29-rc6 and hostapd 0.6.8. I know that on kernels < 2.6.29 you need another patch to enable AP support, not just the one that enables AP support in ath5k. If you upgrade to 2.6.29 the old regulatory rules will be disabled by default. So unless you re-enable them (but I haven't tested with that) you'll have to install crda and the wireless regulatory database. In hostapd.conf you will have to change channel=0 to something else. That's how I got it working.
->
-> --
-> Christoph J. Thompson <cjsthompson@gmail.com>
+I can add a little more information. It turns out that I have one PCIe module
+that will work with b43legacy as it uses ucode5 firmware. I modified my system
+to load b43legacy, rather than b43, for this device. After I did that, the
+RFKILL switch works correctly, just as it does in b43.
 
-Thanks Christoph, looks like ubuntu is currently at 2.6.28 and I do
-not want to attempt installing non-ubuntu-patched kernel. Also, what
-is the driver option value in your hostapd config? Is it nl80211? And
-last question, do you know anything about that "another" patch for pre
-2.6.29 kernels?
+>From the above experiment, I conclude that the rfkill implementation in
+b43legacy is correct. Any problems that you are having are the result of some
+quirk in your hardware, therefore, none of us can debug it as we will not be
+able to reproduce the problem.
+
+Does your RFKILL switch generate a keycode? You can test that by switching to
+console 1 (CTRL/ALT/F1), log in, run the command 'showkey', and operate the
+radio switch. On my system, I get a keycode of 238. BTW, use CTRL/ALT/F7 to get
+back to the X console.
+
+Larry
+
