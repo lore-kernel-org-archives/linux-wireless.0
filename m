@@ -1,95 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56877 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752137AbZCVI22 (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:39695 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754182AbZCETyE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 04:28:28 -0400
-Subject: Re: Japan regulations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@atheros.com>
-In-Reply-To: <43e72e890903211246r5e5aa2cev7ad3e790716966ed@mail.gmail.com> (sfid-20090321_204624_299605_151B529C)
-References: <1237646363.5100.209.camel@johannes.local>
-	 <43e72e890903211246r5e5aa2cev7ad3e790716966ed@mail.gmail.com>
-	 (sfid-20090321_204624_299605_151B529C)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-o2a68+4O0DrOBBt823Px"
-Date: Sun, 22 Mar 2009 09:28:23 +0100
-Message-Id: <1237710503.5100.731.camel@johannes.local> (sfid-20090322_092850_201321_2AAFC901)
-Mime-Version: 1.0
+	Thu, 5 Mar 2009 14:54:04 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Imre Kaloz <kaloz@openwrt.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/3] ath9k: cleanup AR5416 version checking macros
+Date: Thu,  5 Mar 2009 20:53:55 +0100
+Message-Id: <1236282837-6612-2-git-send-email-juhosg@openwrt.org> (sfid-20090305_205409_939279_3F0D55F4)
+In-Reply-To: <1236282837-6612-1-git-send-email-juhosg@openwrt.org>
+References: <1236282837-6612-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently we have two different versions of this macros. Because they
+would have to do the same thing, we should simplify and merge them.
 
---=-o2a68+4O0DrOBBt823Px
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Changes-licensed-under: ISC
 
-On Sat, 2009-03-21 at 12:46 -0700, Luis R. Rodriguez wrote:
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+---
+ drivers/net/wireless/ath9k/eeprom.c |   16 ++++++++--------
+ drivers/net/wireless/ath9k/hw.c     |    4 ++--
+ drivers/net/wireless/ath9k/mac.h    |    2 +-
+ drivers/net/wireless/ath9k/reg.h    |   19 +++++++++++--------
+ 4 files changed, 22 insertions(+), 19 deletions(-)
 
-> > country JP:
-> >        (2402.000 - 2472.000 @ 40.000), (N/A, 20.00)
-> >        (2457.000 - 2482.000 @ 20.000), (N/A, 20.00)
-> >        (2474.000 - 2494.000 @ 20.000), (N/A, 20.00), NO-OFDM
-
-> > Also, how
-> > should the 2.4GHz part be interpreted?
->=20
-> Channels 1-11 allow 40 width channels, so HT40 is allowed.
-> Channels 12, 13 only allow 20 MHz width channels, so HT40 is disallowed.
-> Channel 14 only allows OFDM.
-
-s/OFDM/non-OFDM/
-
-Ok, this is a bit of a problem. Let me break out of this thread and
-propose new, slightly changed, interpretation rules.
-
-> > Currently we are not interpreting overlapping ranges properly at all --
-> > we really need to fix a set of interpretation rules.
->=20
-> Sort of, we currently stick to the first reg rule which fits our
-> desired bandwidth. Right now we iterate through 2 possible max
-> bandwidths -- 40 and 20 and then set the channel max bandwidth based
-> on which one fits. Note though that we do disregard the freq_range max
-> bandwidth, which my patches correct.
-
-True. I'm rather keen on removing that code though -- it is rather
-confusing to hardcode 20/40 in there and try them.
-
-> We also need to consider for future usage custom bandwidths, which I
-> guess why we had the first JP rule for 4 GHz (but yeah the second rule
-> seem to imply what the first one intends on allowing). First step
-> might be to say allow drivers to use monitor mode with 10 MHz
-> bandwidth or 5 MHz bandwidth. That of course would also need further
-> work other than regulatory.
-
-Indeed. The question is how we want to capture this. So far I was always
-thinking that we would capture this as an extra channel type -- like
-HT40+, but going the other direction -- "10MHZ"/"5MHZ".
-
-johannes
-
---=-o2a68+4O0DrOBBt823Px
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJxfahAAoJEKVg1VMiehFYHBkQAL6Tz/FhMWhSukRe1kYuJZi/
-LFuSuENweX/Wrkr9YPkJqSyW3XxTW6VYvXiS2Lw6K5ZhNnDKoHclJPwX/xRh34ep
-atw8q2anhZTICCPgUOZRnrZidySwTb7Sz2BiBzkcxj5vXUa0GoD0pZXPmQcW/Ix3
-6cZRkB5/YsHT/9lWZDuVZHV1EgJv3MejMu6inW/QzQaoUlt+y+H2mWxfcDhSLzYd
-ZyC0foOKOLH0KtIDH/qXdMAwrBPVrrdVwWlk3TFk1Wq5+6FD7ZgLSHBB8DFImbiN
-SODkAT97PWkMrVjwHPdfmfQ1/gEnD6+bp5JTyZ1diH4KMD7ndaVGKLtaQC4smVR/
-Ap+bjcAPATXtTBsmfwPez1rtVp/BfGnLImH9envhvR/h4L/2RUsLj6rx8Vq8eqzg
-WEc2DcXFHOfbEvPZo5s3HBDJdZfsoSi31uftx8FdenNVFSw8N4C6/peMuEWVXafl
-X+rwO6BKGXbMojOnaoEJcIQfmrppIYU5Ns2urdWf9n6gle/dAP8kGFLbTeH5WWEe
-3LAukld9RvtiCy/9I3FYPqfGFiS0hozxLbDmId/ef5LF7SuYShNxSv8eETfewJh3
-4KtoJWDYsGy9/ccjh+2jzd531mJA6V41noUk4AUgXOaLOMZjugkT1VEZB/uyhvw+
-m4fe4/HqQv21zQtNk7mC
-=PnUn
------END PGP SIGNATURE-----
-
---=-o2a68+4O0DrOBBt823Px--
+diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
+index b1cf590..8a9e062 100644
+--- a/drivers/net/wireless/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath9k/eeprom.c
+@@ -640,7 +640,7 @@ static void ath9k_hw_get_4k_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 		pPdGainBoundaries[i] =
+ 			min((u16)AR5416_MAX_RATE_POWER, pPdGainBoundaries[i]);
+ 
+-		if ((i == 0) && !AR_SREV_5416_V20_OR_LATER(ah)) {
++		if ((i == 0) && !AR_SREV_5416_20_OR_LATER(ah)) {
+ 			minDelta = pPdGainBoundaries[0] - 23;
+ 			pPdGainBoundaries[0] = 23;
+ 		} else {
+@@ -755,7 +755,7 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_3, 0);
+ 
+ 	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
+-		if (AR_SREV_5416_V20_OR_LATER(ah) &&
++		if (AR_SREV_5416_20_OR_LATER(ah) &&
+ 		    (ah->rxchainmask == 5 || ah->txchainmask == 5) &&
+ 		    (i != 0)) {
+ 			regChainOffset = (i == 1) ? 0x2000 : 0x1000;
+@@ -771,7 +771,7 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 					    &tMinCalPower, gainBoundaries,
+ 					    pdadcValues, numXpdGain);
+ 
+-			if ((i == 0) || AR_SREV_5416_V20_OR_LATER(ah)) {
++			if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
+ 				REG_WRITE(ah, AR_PHY_TPCRG5 + regChainOffset,
+ 					  SM(pdGainOverlap_t2,
+ 					     AR_PHY_TPCRG5_PD_GAIN_OVERLAP)
+@@ -1707,7 +1707,7 @@ static bool ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 				break;
+ 		}
+ 
+-		if (AR_SREV_5416_V20_OR_LATER(ah) &&
++		if (AR_SREV_5416_20_OR_LATER(ah) &&
+ 		    (ah->rxchainmask == 5 || ah->txchainmask == 5)
+ 		    && (i != 0))
+ 			regChainOffset = (i == 1) ? 0x2000 : 0x1000;
+@@ -1728,7 +1728,7 @@ static bool ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 			  SM(pModal->iqCalQCh[i],
+ 			     AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF));
+ 
+-		if ((i == 0) || AR_SREV_5416_V20_OR_LATER(ah)) {
++		if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
+ 			if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_3) {
+ 				txRxAttenLocal = pModal->txRxAttenCh[i];
+ 				if (AR_SREV_9280_10_OR_LATER(ah)) {
+@@ -2094,7 +2094,7 @@ static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 		pPdGainBoundaries[i] =
+ 			min((u16)AR5416_MAX_RATE_POWER, pPdGainBoundaries[i]);
+ 
+-		if ((i == 0) && !AR_SREV_5416_V20_OR_LATER(ah)) {
++		if ((i == 0) && !AR_SREV_5416_20_OR_LATER(ah)) {
+ 			minDelta = pPdGainBoundaries[0] - 23;
+ 			pPdGainBoundaries[0] = 23;
+ 		} else {
+@@ -2228,7 +2228,7 @@ static bool ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 		      xpdGainValues[2]);
+ 
+ 	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
+-		if (AR_SREV_5416_V20_OR_LATER(ah) &&
++		if (AR_SREV_5416_20_OR_LATER(ah) &&
+ 		    (ah->rxchainmask == 5 || ah->txchainmask == 5) &&
+ 		    (i != 0)) {
+ 			regChainOffset = (i == 1) ? 0x2000 : 0x1000;
+@@ -2262,7 +2262,7 @@ static bool ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 							numXpdGain);
+ 			}
+ 
+-			if ((i == 0) || AR_SREV_5416_V20_OR_LATER(ah)) {
++			if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
+ 				if (OLC_FOR_AR9280_20_LATER) {
+ 					REG_WRITE(ah,
+ 						AR_PHY_TPCRG5 + regChainOffset,
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index c8929ed..d1326a5 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -1153,7 +1153,7 @@ static void ath9k_hw_override_ini(struct ath_hw *ah,
+ 	REG_SET_BIT(ah, AR_DIAG_SW, (AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT));
+ 
+ 
+-	if (!AR_SREV_5416_V20_OR_LATER(ah) ||
++	if (!AR_SREV_5416_20_OR_LATER(ah) ||
+ 	    AR_SREV_9280_10_OR_LATER(ah))
+ 		return;
+ 
+@@ -1255,7 +1255,7 @@ static int ath9k_hw_process_ini(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_PHY_ADC_SERIAL_CTL, AR_PHY_SEL_EXTERNAL_RADIO);
+ 	ah->eep_ops->set_addac(ah, chan);
+ 
+-	if (AR_SREV_5416_V22_OR_LATER(ah)) {
++	if (AR_SREV_5416_22_OR_LATER(ah)) {
+ 		REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
+ 	} else {
+ 		struct ar5416IniArray temp;
+diff --git a/drivers/net/wireless/ath9k/mac.h b/drivers/net/wireless/ath9k/mac.h
+index fbd2d6a..7fd6122 100644
+--- a/drivers/net/wireless/ath9k/mac.h
++++ b/drivers/net/wireless/ath9k/mac.h
+@@ -17,7 +17,7 @@
+ #ifndef MAC_H
+ #define MAC_H
+ 
+-#define RXSTATUS_RATE(ah, ads) (AR_SREV_5416_V20_OR_LATER(ah) ?		\
++#define RXSTATUS_RATE(ah, ads) (AR_SREV_5416_20_OR_LATER(ah) ?		\
+ 				MS(ads->ds_rxstatus0, AR_RxRate) :	\
+ 				(ads->ds_rxstatus3 >> 2) & 0xFF)
+ 
+diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
+index 8d85106..fcddef5 100644
+--- a/drivers/net/wireless/ath9k/reg.h
++++ b/drivers/net/wireless/ath9k/reg.h
+@@ -161,10 +161,6 @@
+ #define AR_SREV_VERSION_9100                  0x014
+ 
+ #define AR_SREV_9100(ah) ((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
+-#define AR_SREV_5416_V20_OR_LATER(_ah) \
+-	(AR_SREV_9100((_ah)) || AR_SREV_5416_20_OR_LATER(_ah))
+-#define AR_SREV_5416_V22_OR_LATER(_ah) \
+-	(AR_SREV_9100((_ah)) || AR_SREV_5416_22_OR_LATER(_ah))
+ 
+ #define AR_ISR               0x0080
+ #define AR_ISR_RXOK          0x00000001
+@@ -748,12 +744,19 @@
+ 
+ #define AR_SREV_9100_OR_LATER(_ah) \
+ 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_5416_PCIE))
++
++#define AR_SREV_5416(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
++	 ((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE))
+ #define AR_SREV_5416_20_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9160) || \
+-		((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20))
++	(((AR_SREV_5416(_ah)) && \
++	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)) || \
++	 ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
+ #define AR_SREV_5416_22_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9160) || \
+-		((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22))
++	(((AR_SREV_5416(_ah)) && \
++	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22)) || \
++	 ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
++
+ #define AR_SREV_9160(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9160))
+ #define AR_SREV_9160_10_OR_LATER(_ah) \
+-- 
+1.5.3.2
 
