@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.168]:31520 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbZCTBFk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 21:05:40 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so938111wff.4
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 18:05:38 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:15909 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750763AbZCFFUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2009 00:20:06 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 21:20:05 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
+	<linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] cfg80211: fix max tx power for world regdom on 5 GHz to 20dBm
+Date: Thu, 5 Mar 2009 21:19:22 -0800
+Message-ID: <1236316762-10348-2-git-send-email-lrodriguez@atheros.com> (sfid-20090306_062010_643556_4AFE9C2B)
+In-Reply-To: <1236316762-10348-1-git-send-email-lrodriguez@atheros.com>
+References: <1236316762-10348-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Date: Thu, 19 Mar 2009 18:05:38 -0700
-Message-ID: <43e72e890903191805x19344034w2bb8be34a9000a89@mail.gmail.com> (sfid-20090320_020544_730582_651B32A4)
-Subject: nl80211 data prior to nested attributes funky
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	pat-lkml <pat-lkml@erley.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you try to rename a wiphy multiple times with iw you will get
-something like this:
+This is the lowest value amongst countries which do enable 5 GHz operation.
 
-wiphy rename: phy #1 to 2
-wiphy rename: phy #1 to 3
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-This just shows an example of an issue I am seeing with another
-multicast message I'm working on. I thought it was my code but I've
-asked Pat to test and he also saw it. I'd dig more but I have am going
-to work on fixing the cfg80211 reg oops with "EU" now.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3f438fb..4519219 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -103,14 +103,14 @@ static const struct ieee80211_regdomain world_regdom = {
+ 			NL80211_RRF_NO_IBSS |
+ 			NL80211_RRF_NO_OFDM),
+ 		/* IEEE 802.11a, channel 36..48 */
+-		REG_RULE(5180-10, 5240+10, 40, 6, 23,
++		REG_RULE(5180-10, 5240+10, 40, 6, 20,
+                         NL80211_RRF_PASSIVE_SCAN |
+                         NL80211_RRF_NO_IBSS),
+ 
+ 		/* NB: 5260 MHz - 5700 MHz requies DFS */
+ 
+ 		/* IEEE 802.11a, channel 149..165 */
+-		REG_RULE(5745-10, 5825+10, 40, 6, 23,
++		REG_RULE(5745-10, 5825+10, 40, 6, 20,
+ 			NL80211_RRF_PASSIVE_SCAN |
+ 			NL80211_RRF_NO_IBSS),
+ 	}
+-- 
+1.6.1.2.253.ga34a
 
-  Luis
