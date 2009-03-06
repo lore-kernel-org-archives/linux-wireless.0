@@ -1,187 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.wellnetcz.com ([212.24.148.102]:55086 "EHLO
-	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752067AbZCGJ1h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2009 04:27:37 -0500
-From: Jiri Slaby <jirislaby@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/2] ath5k: constify stuff
-Date: Sat,  7 Mar 2009 10:26:41 +0100
-Message-Id: <1236418002-2189-1-git-send-email-jirislaby@gmail.com> (sfid-20090307_102756_492888_462E3442)
+Received: from mail.atheros.com ([12.36.123.2]:43780 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752371AbZCFBqy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 20:46:54 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 17:46:53 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] wireless-regdb: allow passive scan on Channels 12-14
+Date: Thu, 5 Mar 2009 17:46:09 -0800
+Message-ID: <1236303969-22454-3-git-send-email-lrodriguez@atheros.com> (sfid-20090306_024656_465209_DC84359F)
+In-Reply-To: <1236303969-22454-1-git-send-email-lrodriguez@atheros.com>
+References: <1236303969-22454-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make some structures const to place them in .rodata, since we won't
-change them.
-
-Most important parts of objdump -h:
--  0 .text         00011170
-+  0 .text         00011140
--  5 .rodata       0000828e
-+  5 .rodata       0000895e
-- 13 .data         00000560
-+ 13 .data         00000110
-- 14 .devinit.data 00000260
-
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
-Cc: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath5k/attach.c |   13 ++++++-------
- drivers/net/wireless/ath5k/base.c   |    8 ++++----
- drivers/net/wireless/ath5k/debug.c  |   10 +++++-----
- drivers/net/wireless/ath5k/reset.c  |    2 +-
- 4 files changed, 16 insertions(+), 17 deletions(-)
+ db.txt |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath5k/attach.c b/drivers/net/wireless/ath5k/attach.c
-index 05bc5cb..656cb9d 100644
---- a/drivers/net/wireless/ath5k/attach.c
-+++ b/drivers/net/wireless/ath5k/attach.c
-@@ -34,14 +34,14 @@
- static int ath5k_hw_post(struct ath5k_hw *ah)
- {
+diff --git a/db.txt b/db.txt
+index 3de2c9b..2ed2ee1 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1,5 +1,12 @@
++# This is the world regulatory domain
+ country 00:
++	# Channels 1-11 are allowed world wide
+ 	(2402 - 2472 @ 40), (3, 20)
++	# Channel 12 - 14. No HT40 channel fits here, note
++	# that channel 14 is currently only used by JP and
++	# exclusively only for 802.11b operation anyway.
++	(2457 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
++	# Channel 36 - 48
+ 	(5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
  
--	int i, c;
--	u16 cur_reg;
--	u16 regs[2] = {AR5K_STA_ID0, AR5K_PHY(8)};
--	u32 var_pattern;
--	u32 static_pattern[4] = {
-+	static const u32 static_pattern[4] = {
- 		0x55555555,	0xaaaaaaaa,
- 		0x66666666,	0x99999999
- 	};
-+	static const u16 regs[2] = { AR5K_STA_ID0, AR5K_PHY(8) };
-+	int i, c;
-+	u16 cur_reg;
-+	u32 var_pattern;
- 	u32 init_val;
- 	u32 cur_val;
- 
-@@ -106,7 +106,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- {
- 	struct ath5k_hw *ah;
- 	struct pci_dev *pdev = sc->pdev;
--	u8 mac[ETH_ALEN] = {};
- 	int ret;
- 	u32 srev;
- 
-@@ -312,7 +311,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 	}
- 
- 	/* MAC address is cleared until add_interface */
--	ath5k_hw_set_lladdr(ah, mac);
-+	ath5k_hw_set_lladdr(ah, (u8[ETH_ALEN]){});
- 
- 	/* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
- 	memset(ah->ah_bssid, 0xff, ETH_ALEN);
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 08d691d..780fe6c 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -79,7 +79,7 @@ MODULE_VERSION("0.6.0 (EXPERIMENTAL)");
- 
- 
- /* Known PCI ids */
--static struct pci_device_id ath5k_pci_id_table[] __devinitdata = {
-+static const struct pci_device_id ath5k_pci_id_table[] = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0207), .driver_data = AR5K_AR5210 }, /* 5210 early */
- 	{ PCI_VDEVICE(ATHEROS, 0x0007), .driver_data = AR5K_AR5210 }, /* 5210 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0011), .driver_data = AR5K_AR5211 }, /* 5311 - this is on AHB bus !*/
-@@ -103,7 +103,7 @@ static struct pci_device_id ath5k_pci_id_table[] __devinitdata = {
- MODULE_DEVICE_TABLE(pci, ath5k_pci_id_table);
- 
- /* Known SREVs */
--static struct ath5k_srev_name srev_names[] = {
-+static const struct ath5k_srev_name srev_names[] = {
- 	{ "5210",	AR5K_VERSION_MAC,	AR5K_SREV_AR5210 },
- 	{ "5311",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311 },
- 	{ "5311A",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311A },
-@@ -142,7 +142,7 @@ static struct ath5k_srev_name srev_names[] = {
- 	{ "xxxxx",	AR5K_VERSION_RAD,	AR5K_SREV_UNKNOWN },
- };
- 
--static struct ieee80211_rate ath5k_rates[] = {
-+static const struct ieee80211_rate ath5k_rates[] = {
- 	{ .bitrate = 10,
- 	  .hw_value = ATH5K_RATE_CODE_1M, },
- 	{ .bitrate = 20,
-@@ -248,7 +248,7 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 		struct ieee80211_bss_conf *bss_conf,
- 		u32 changes);
- 
--static struct ieee80211_ops ath5k_hw_ops = {
-+static const struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
- 	.start 		= ath5k_start,
- 	.stop 		= ath5k_stop,
-diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
-index 413ed68..9770bb3 100644
---- a/drivers/net/wireless/ath5k/debug.c
-+++ b/drivers/net/wireless/ath5k/debug.c
-@@ -82,14 +82,14 @@ static int ath5k_debugfs_open(struct inode *inode, struct file *file)
- /* debugfs: registers */
- 
- struct reg {
--	char *name;
-+	const char *name;
- 	int addr;
- };
- 
- #define REG_STRUCT_INIT(r) { #r, r }
- 
- /* just a few random registers, might want to add more */
--static struct reg regs[] = {
-+static const struct reg regs[] = {
- 	REG_STRUCT_INIT(AR5K_CR),
- 	REG_STRUCT_INIT(AR5K_RXDP),
- 	REG_STRUCT_INIT(AR5K_CFG),
-@@ -142,7 +142,7 @@ static struct reg regs[] = {
- 
- static void *reg_start(struct seq_file *seq, loff_t *pos)
- {
--	return *pos < ARRAY_SIZE(regs) ? &regs[*pos] : NULL;
-+	return *pos < ARRAY_SIZE(regs) ? (void *)&regs[*pos] : NULL;
- }
- 
- static void reg_stop(struct seq_file *seq, void *p)
-@@ -153,7 +153,7 @@ static void reg_stop(struct seq_file *seq, void *p)
- static void *reg_next(struct seq_file *seq, void *p, loff_t *pos)
- {
- 	++*pos;
--	return *pos < ARRAY_SIZE(regs) ? &regs[*pos] : NULL;
-+	return *pos < ARRAY_SIZE(regs) ? (void *)&regs[*pos] : NULL;
- }
- 
- static int reg_show(struct seq_file *seq, void *p)
-@@ -290,7 +290,7 @@ static const struct file_operations fops_reset = {
- 
- /* debugfs: debug level */
- 
--static struct {
-+static const struct {
- 	enum ath5k_debug_level level;
- 	const char *name;
- 	const char *desc;
-diff --git a/drivers/net/wireless/ath5k/reset.c b/drivers/net/wireless/ath5k/reset.c
-index 1531ccd..685dc21 100644
---- a/drivers/net/wireless/ath5k/reset.c
-+++ b/drivers/net/wireless/ath5k/reset.c
-@@ -102,7 +102,7 @@ static inline int ath5k_hw_write_ofdm_timings(struct ath5k_hw *ah,
-  * index into rates for control rates, we can set it up like this because
-  * this is only used for AR5212 and we know it supports G mode
-  */
--static int control_rates[] =
-+static const unsigned int control_rates[] =
- 	{ 0, 1, 1, 1, 4, 4, 6, 6, 8, 8, 8, 8 };
- 
- /**
+ country AE:
 -- 
-1.6.1.3
+1.6.1.2.253.ga34a
 
