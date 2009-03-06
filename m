@@ -1,190 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35475 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755221AbZCCRZj (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:44042 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326AbZCFII5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 12:25:39 -0500
-Message-Id: <20090303172531.802161983@atheros.com> (sfid-20090303_182545_186929_9F50EFAD)
-References: <20090303172325.437810138@atheros.com>
-Date: Tue, 03 Mar 2009 19:23:38 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
+	Fri, 6 Mar 2009 03:08:57 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 13/15] ath9k: Special processing for channel changes during scan
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Imre Kaloz <kaloz@openwrt.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 1/3] ath9k: cleanup AR5416 version checking macros
+Date: Fri,  6 Mar 2009 09:08:51 +0100
+Message-Id: <1236326933-27412-2-git-send-email-juhosg@openwrt.org> (sfid-20090306_090859_828542_EBBF1AEF)
+In-Reply-To: <1236326933-27412-1-git-send-email-juhosg@openwrt.org>
+References: <1236326933-27412-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow mac80211-controlled channel changes on an active wiphy and
-especially during a scan. We need this as long as the scan is
-controlled by mac80211. Moving this control into the driver could
-allow some optimizations on scanning while using multiple virtual
-interfaces, but for now, try to work as well as possible with the
-current scan mechanism.
+Currently we have two different versions of this macros. Because they
+would have to do the same thing, we should simplify and merge them.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Changes-licensed-under: ISC
 
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
 ---
- drivers/net/wireless/ath9k/ath9k.h   |    2 +
- drivers/net/wireless/ath9k/main.c    |   35 ++++++++++++++++++++++-------
- drivers/net/wireless/ath9k/virtual.c |   41 ++++++++++++++++++++++++++++++++++-
- 3 files changed, 68 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath9k/eeprom.c |   16 ++++++++--------
+ drivers/net/wireless/ath9k/hw.c     |    4 ++--
+ drivers/net/wireless/ath9k/mac.h    |    2 +-
+ drivers/net/wireless/ath9k/reg.h    |   19 +++++++++++--------
+ 4 files changed, 22 insertions(+), 19 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:32:06.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:32:41.000000000 +0200
-@@ -633,6 +633,7 @@ struct ath_wiphy {
- 		ATH_WIPHY_ACTIVE,
- 		ATH_WIPHY_PAUSING,
- 		ATH_WIPHY_PAUSED,
-+		ATH_WIPHY_SCAN,
- 	} state;
- 	int chan_idx;
- 	int chan_is_ht;
-@@ -715,5 +716,6 @@ void ath9k_wiphy_chan_work(struct work_s
- bool ath9k_wiphy_started(struct ath_softc *sc);
- void ath9k_wiphy_pause_all_forced(struct ath_softc *sc,
- 				  struct ath_wiphy *selected);
-+bool ath9k_wiphy_scanning(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
+index b1cf590..8a9e062 100644
+--- a/drivers/net/wireless/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath9k/eeprom.c
+@@ -640,7 +640,7 @@ static void ath9k_hw_get_4k_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 		pPdGainBoundaries[i] =
+ 			min((u16)AR5416_MAX_RATE_POWER, pPdGainBoundaries[i]);
  
- #endif /* ATH9K_H */
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-03 18:32:06.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-03 18:32:41.000000000 +0200
-@@ -2075,7 +2075,7 @@ static int ath9k_tx(struct ieee80211_hw 
- 	struct ath_tx_control txctl;
- 	int hdrlen, padsize;
+-		if ((i == 0) && !AR_SREV_5416_V20_OR_LATER(ah)) {
++		if ((i == 0) && !AR_SREV_5416_20_OR_LATER(ah)) {
+ 			minDelta = pPdGainBoundaries[0] - 23;
+ 			pPdGainBoundaries[0] = 23;
+ 		} else {
+@@ -755,7 +755,7 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_3, 0);
  
--	if (aphy->state != ATH_WIPHY_ACTIVE) {
-+	if (aphy->state != ATH_WIPHY_ACTIVE && aphy->state != ATH_WIPHY_SCAN) {
- 		printk(KERN_DEBUG "ath9k: %s: TX in unexpected wiphy state "
- 		       "%d\n", wiphy_name(hw->wiphy), aphy->state);
- 		goto exit;
-@@ -2346,14 +2346,16 @@ static int ath9k_config(struct ieee80211
- 		aphy->chan_idx = pos;
- 		aphy->chan_is_ht = conf_is_ht(conf);
+ 	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
+-		if (AR_SREV_5416_V20_OR_LATER(ah) &&
++		if (AR_SREV_5416_20_OR_LATER(ah) &&
+ 		    (ah->rxchainmask == 5 || ah->txchainmask == 5) &&
+ 		    (i != 0)) {
+ 			regChainOffset = (i == 1) ? 0x2000 : 0x1000;
+@@ -771,7 +771,7 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 					    &tMinCalPower, gainBoundaries,
+ 					    pdadcValues, numXpdGain);
  
--		/* TODO: do not change operation channel immediately if there
--		 * are other virtual wiphys that use another channel. For now,
--		 * we do the change immediately to allow mac80211-operated scan
--		 * to work. Once the scan operation is moved into ath9k, we can
--		 * just move the current aphy in PAUSED state if the channel is
--		 * changed into something different from the current operation
--		 * channel. */
--		ath9k_wiphy_pause_all_forced(sc, aphy);
-+		if (aphy->state == ATH_WIPHY_SCAN ||
-+		    aphy->state == ATH_WIPHY_ACTIVE)
-+			ath9k_wiphy_pause_all_forced(sc, aphy);
-+		else {
-+			/*
-+			 * Do not change operational channel based on a paused
-+			 * wiphy changes.
-+			 */
-+			goto skip_chan_change;
-+		}
- 
- 		DPRINTF(sc, ATH_DBG_CONFIG, "Set channel: %d MHz\n",
- 			curchan->center_freq);
-@@ -2370,6 +2372,7 @@ static int ath9k_config(struct ieee80211
+-			if ((i == 0) || AR_SREV_5416_V20_OR_LATER(ah)) {
++			if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
+ 				REG_WRITE(ah, AR_PHY_TPCRG5 + regChainOffset,
+ 					  SM(pdGainOverlap_t2,
+ 					     AR_PHY_TPCRG5_PD_GAIN_OVERLAP)
+@@ -1707,7 +1707,7 @@ static bool ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 				break;
  		}
- 	}
  
-+skip_chan_change:
- 	if (changed & IEEE80211_CONF_CHANGE_POWER)
- 		sc->config.txpowlimit = 2 * conf->power_level;
+-		if (AR_SREV_5416_V20_OR_LATER(ah) &&
++		if (AR_SREV_5416_20_OR_LATER(ah) &&
+ 		    (ah->rxchainmask == 5 || ah->txchainmask == 5)
+ 		    && (i != 0))
+ 			regChainOffset = (i == 1) ? 0x2000 : 0x1000;
+@@ -1728,7 +1728,7 @@ static bool ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 			  SM(pModal->iqCalQCh[i],
+ 			     AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF));
  
-@@ -2737,6 +2740,19 @@ static void ath9k_sw_scan_start(struct i
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
+-		if ((i == 0) || AR_SREV_5416_V20_OR_LATER(ah)) {
++		if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
+ 			if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_3) {
+ 				txRxAttenLocal = pModal->txRxAttenCh[i];
+ 				if (AR_SREV_9280_10_OR_LATER(ah)) {
+@@ -2094,7 +2094,7 @@ static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 		pPdGainBoundaries[i] =
+ 			min((u16)AR5416_MAX_RATE_POWER, pPdGainBoundaries[i]);
  
-+	if (ath9k_wiphy_scanning(sc)) {
-+		printk(KERN_DEBUG "ath9k: Two wiphys trying to scan at the "
-+		       "same time\n");
-+		/*
-+		 * Do not allow the concurrent scanning state for now. This
-+		 * could be improved with scanning control moved into ath9k.
-+		 */
-+		return;
-+	}
-+
-+	aphy->state = ATH_WIPHY_SCAN;
-+	ath9k_wiphy_pause_all_forced(sc, aphy);
-+
- 	mutex_lock(&sc->mutex);
- 	sc->sc_flags |= SC_OP_SCANNING;
- 	mutex_unlock(&sc->mutex);
-@@ -2748,6 +2764,7 @@ static void ath9k_sw_scan_complete(struc
- 	struct ath_softc *sc = aphy->sc;
+-		if ((i == 0) && !AR_SREV_5416_V20_OR_LATER(ah)) {
++		if ((i == 0) && !AR_SREV_5416_20_OR_LATER(ah)) {
+ 			minDelta = pPdGainBoundaries[0] - 23;
+ 			pPdGainBoundaries[0] = 23;
+ 		} else {
+@@ -2228,7 +2228,7 @@ static bool ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 		      xpdGainValues[2]);
  
- 	mutex_lock(&sc->mutex);
-+	aphy->state = ATH_WIPHY_ACTIVE;
- 	sc->sc_flags &= ~SC_OP_SCANNING;
- 	mutex_unlock(&sc->mutex);
- }
---- wireless-testing.orig/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:32:06.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:32:41.000000000 +0200
-@@ -244,6 +244,28 @@ static bool ath9k_wiphy_pausing(struct a
- 	return ret;
- }
+ 	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
+-		if (AR_SREV_5416_V20_OR_LATER(ah) &&
++		if (AR_SREV_5416_20_OR_LATER(ah) &&
+ 		    (ah->rxchainmask == 5 || ah->txchainmask == 5) &&
+ 		    (i != 0)) {
+ 			regChainOffset = (i == 1) ? 0x2000 : 0x1000;
+@@ -2262,7 +2262,7 @@ static bool ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 							numXpdGain);
+ 			}
  
-+static bool __ath9k_wiphy_scanning(struct ath_softc *sc)
-+{
-+	int i;
-+	if (sc->pri_wiphy->state == ATH_WIPHY_SCAN)
-+		return true;
-+	for (i = 0; i < sc->num_sec_wiphy; i++) {
-+		if (sc->sec_wiphy[i] &&
-+		    sc->sec_wiphy[i]->state == ATH_WIPHY_SCAN)
-+			return true;
-+	}
-+	return false;
-+}
-+
-+bool ath9k_wiphy_scanning(struct ath_softc *sc)
-+{
-+	bool ret;
-+	spin_lock_bh(&sc->wiphy_lock);
-+	ret = __ath9k_wiphy_scanning(sc);
-+	spin_unlock_bh(&sc->wiphy_lock);
-+	return ret;
-+}
-+
- static int __ath9k_wiphy_unpause(struct ath_wiphy *aphy);
+-			if ((i == 0) || AR_SREV_5416_V20_OR_LATER(ah)) {
++			if ((i == 0) || AR_SREV_5416_20_OR_LATER(ah)) {
+ 				if (OLC_FOR_AR9280_20_LATER) {
+ 					REG_WRITE(ah,
+ 						AR_PHY_TPCRG5 + regChainOffset,
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index eb750a5..5d72588 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -1153,7 +1153,7 @@ static void ath9k_hw_override_ini(struct ath_hw *ah,
+ 	REG_SET_BIT(ah, AR_DIAG_SW, (AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT));
  
- /* caller must hold wiphy_lock */
-@@ -463,6 +485,16 @@ int ath9k_wiphy_select(struct ath_wiphy 
- 	bool now;
  
- 	spin_lock_bh(&sc->wiphy_lock);
-+	if (__ath9k_wiphy_scanning(sc)) {
-+		/*
-+		 * For now, we are using mac80211 sw scan and it expects to
-+		 * have full control over channel changes, so avoid wiphy
-+		 * scheduling during a scan. This could be optimized if the
-+		 * scanning control were moved into the driver.
-+		 */
-+		spin_unlock_bh(&sc->wiphy_lock);
-+		return -EBUSY;
-+	}
- 	if (__ath9k_wiphy_pausing(sc)) {
- 		if (sc->wiphy_select_failures == 0)
- 			sc->wiphy_select_first_fail = jiffies;
-@@ -537,7 +569,14 @@ bool ath9k_wiphy_started(struct ath_soft
- static void ath9k_wiphy_pause_chan(struct ath_wiphy *aphy,
- 				   struct ath_wiphy *selected)
- {
--	if (aphy->chan_idx == selected->chan_idx)
-+	if (selected->state == ATH_WIPHY_SCAN) {
-+		if (aphy == selected)
-+			return;
-+		/*
-+		 * Pause all other wiphys for the duration of the scan even if
-+		 * they are on the current channel now.
-+		 */
-+	} else if (aphy->chan_idx == selected->chan_idx)
+-	if (!AR_SREV_5416_V20_OR_LATER(ah) ||
++	if (!AR_SREV_5416_20_OR_LATER(ah) ||
+ 	    AR_SREV_9280_10_OR_LATER(ah))
  		return;
- 	aphy->state = ATH_WIPHY_PAUSED;
- 	ieee80211_stop_queues(aphy->hw);
-
+ 
+@@ -1255,7 +1255,7 @@ static int ath9k_hw_process_ini(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_PHY_ADC_SERIAL_CTL, AR_PHY_SEL_EXTERNAL_RADIO);
+ 	ah->eep_ops->set_addac(ah, chan);
+ 
+-	if (AR_SREV_5416_V22_OR_LATER(ah)) {
++	if (AR_SREV_5416_22_OR_LATER(ah)) {
+ 		REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
+ 	} else {
+ 		struct ar5416IniArray temp;
+diff --git a/drivers/net/wireless/ath9k/mac.h b/drivers/net/wireless/ath9k/mac.h
+index 37e3948..a75f65d 100644
+--- a/drivers/net/wireless/ath9k/mac.h
++++ b/drivers/net/wireless/ath9k/mac.h
+@@ -17,7 +17,7 @@
+ #ifndef MAC_H
+ #define MAC_H
+ 
+-#define RXSTATUS_RATE(ah, ads) (AR_SREV_5416_V20_OR_LATER(ah) ?		\
++#define RXSTATUS_RATE(ah, ads) (AR_SREV_5416_20_OR_LATER(ah) ?		\
+ 				MS(ads->ds_rxstatus0, AR_RxRate) :	\
+ 				(ads->ds_rxstatus3 >> 2) & 0xFF)
+ 
+diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
+index 91442da..a40c0bb 100644
+--- a/drivers/net/wireless/ath9k/reg.h
++++ b/drivers/net/wireless/ath9k/reg.h
+@@ -161,10 +161,6 @@
+ #define AR_SREV_VERSION_9100                  0x014
+ 
+ #define AR_SREV_9100(ah) ((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
+-#define AR_SREV_5416_V20_OR_LATER(_ah) \
+-	(AR_SREV_9100((_ah)) || AR_SREV_5416_20_OR_LATER(_ah))
+-#define AR_SREV_5416_V22_OR_LATER(_ah) \
+-	(AR_SREV_9100((_ah)) || AR_SREV_5416_22_OR_LATER(_ah))
+ 
+ #define AR_ISR               0x0080
+ #define AR_ISR_RXOK          0x00000001
+@@ -748,12 +744,19 @@
+ 
+ #define AR_SREV_9100_OR_LATER(_ah) \
+ 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_5416_PCIE))
++
++#define AR_SREV_5416(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
++	 ((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE))
+ #define AR_SREV_5416_20_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9160) || \
+-		((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20))
++	(((AR_SREV_5416(_ah)) && \
++	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)) || \
++	 ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
+ #define AR_SREV_5416_22_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9160) || \
+-		((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22))
++	(((AR_SREV_5416(_ah)) && \
++	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22)) || \
++	 ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
++
+ #define AR_SREV_9160(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9160))
+ #define AR_SREV_9160_10_OR_LATER(_ah) \
 -- 
+1.5.3.2
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
