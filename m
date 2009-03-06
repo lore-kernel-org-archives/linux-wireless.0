@@ -1,46 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:41084 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047AbZCaMJB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 08:09:01 -0400
-Received: by fxm2 with SMTP id 2so2400794fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2009 05:08:58 -0700 (PDT)
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: Sujith <Sujith.Manoharan@atheros.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, Jouni.Malinen@atheros.com,
-	Luis.Rodriguez@atheros.com
-Subject: Re: [PATCH 11/17] ath9k: Remove TIM from the interrupt mask
-References: <18896.38867.997551.983464@gargle.gargle.HOWL>
-	<8763hqnccb.fsf@litku.valot.fi>
-	<8e92b4100903302322t531f5badt84fab14eeab943ff@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 31 Mar 2009 15:08:56 +0300
-In-Reply-To: <8e92b4100903302322t531f5badt84fab14eeab943ff@mail.gmail.com> (Vivek Natarajan's message of "Tue\, 31 Mar 2009 11\:52\:15 +0530")
-Message-ID: <87eiwdsxlz.fsf@litku.valot.fi> (sfid-20090331_140906_499299_8F854716)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga02.intel.com ([134.134.136.20]:58967 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753953AbZCFATx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 19:19:53 -0500
+Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
+From: reinette chatre <reinette.chatre@intel.com>
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: Samuel Ortiz <samuel@sortiz.org>, Tomas Winkler <tomasw@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1236297052.6153.4.camel@rainbow>
+References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
+	 <c4d76b3b0901261913s23427b19tbbe34ee7b4261068@mail.gmail.com>
+	 <c4d76b3b0901261935n1846b675w72cfa7308d198080@mail.gmail.com>
+	 <20090127162437.GA3596@sortiz.org>
+	 <c4d76b3b0901271531q19578871idbc59b5a23ac868e@mail.gmail.com>
+	 <1ba2fa240901272312j270eedb5x33534a9703d26e06@mail.gmail.com>
+	 <20090128113751.GA3197@sortiz.org>
+	 <c4d76b3b0903011937p6538adbfpc0dab859a6742394@mail.gmail.com>
+	 <1236141120.12734.2.camel@rainbow> <1236194370.6612.73.camel@rc-desk>
+	 <c4d76b3b0903041147s2138e72bjb39864f87b4cd09e@mail.gmail.com>
+	 <1236211493.6612.90.camel@rc-desk>  <1236297052.6153.4.camel@rainbow>
+Content-Type: text/plain
+Date: Thu, 05 Mar 2009 16:24:45 -0800
+Message-Id: <1236299085.6612.229.camel@rc-desk> (sfid-20090306_012001_149300_DF370BA4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan <vivek.natraj@gmail.com> writes:
+On Thu, 2009-03-05 at 15:50 -0800, Jason Andryuk wrote:
+> On Wed, 2009-03-04 at 16:04 -0800, reinette chatre wrote:
+> > On Wed, 2009-03-04 at 11:47 -0800, Jason Andryuk wrote:
+> > > On Wed, Mar 4, 2009 at 2:19 PM, reinette chatre
+> > > <reinette.chatre@intel.com> wrote:
+> > > > On Tue, 2009-03-03 at 20:32 -0800, Jason Andryuk wrote:
+> > > >> On Sun, Mar 1, 2009 at 10:37 PM, Jason Andryuk <jandryuk@gmail.com> wrote:
+> > > >> > I tested c2a0aa3cb733452e749727680e380dca6cc10a68 "iwl3945: use
+> > > >> > iwl_rb_status" with the additional patches to initialize rb_stts
+> > > >> > (copied from iwl_rx_queue_alloc) and to convert the BUG_ON to a
+> > > >> > WARN_ON.
+> > > >> >
+> > > >> > The driver runs without segfaulting.  So far the WARN_ON has not been
+> > > >> > triggered, but the driver fails to finish authentication with the AP.
+> > > >> > I receive "wlan0: authentication with AP 00:30:bd:c0:90:24 timed out"
+> > > >>
+> > > >> Ok, I started poking around with manually checking interesting commits instead of git bisect.
+> > > >>
+> > > >> 55b3e21... iwl3945: use iwl-io.h and delete iwl-3945-io.h with BUG->WARN patch works.
+> > > >>
+> > > >> bb64785... iwlwifi: use iwl_cmd instead of iwl3945_cmd
+> > > >> fails to authenticate to the AP.  It generates a Microcode SW Error attached below.
+> > > >>
+> > > >> The previous revision:
+> > > >> a0dedce... iwlwifi: replace IWL_ERROR with IWL_ERR
+> > > >> Authenticates to the AP and works just fine.
+> > > >>
+> > > >> I keep looking over commitdiff bb64785... but I cannot see what is causing problems.  I even tried modifying iwl3945_cmd in various ways from a0dedce... but those attempts kept working.
+> > > >>
+> > > >> During testing, I saw a lot of UNKNOWN 0x1b
+> > > >> [ 8892.625374] ieee80211 phy0: I iwl3945_rx_handle r = 162, i = 160, UNKNOWN, 0x1b
+> > > >> Currently in the logs for commit a0dedce... it shows up as REPLY_3945_RX.
+> > > >>
+> > > >> Any ideas?
+> > > >
+> > > > Thank you very much for this digging.
+> > > >
+> > > > Are you running on 64bit?
+> > >
+> > > Yes, 64bit.
+> >
+> > could you please try this patch on top of latest wireless-testing?
+> >
+> > Thanks
+> >
+> > Reinette
+> >
+> >
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> > index 0a75053..00b25a8 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> > @@ -743,6 +743,7 @@ void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+> >       struct iwl3945_tfd *tfd_tmp = (struct iwl3945_tfd *)txq->tfds;
+> >       struct iwl3945_tfd *tfd = &tfd_tmp[txq->q.read_ptr];
+> >       struct pci_dev *dev = priv->pci_dev;
+> > +     int index = txq->q.read_ptr;
+> >       int i;
+> >       int counter;
+> >
+> > @@ -759,6 +760,13 @@ void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+> >               return;
+> >       }
+> >
+> > +     /* Unmap tx_cmd */
+> > +     if (counter)
+> > +             pci_unmap_single(dev,
+> > +                             pci_unmap_addr(&txq->cmd[index]->meta, mapping),
+> > +                             pci_unmap_len(&txq->cmd[index]->meta, len),
+> > +                             PCI_DMA_TODEVICE);
+> > +
+> >       /* unmap chunks if any */
+> >
+> >       for (i = 1; i < counter; i++) {
+> 
+> Reinette,
+> 
+> I applied the patch, but iwl3945 did not authenticate with my AP
+> 
 
->> This might be useful for beacon filtering. Does the hardware know to
->> parse the beacons in more detail, for example ERP protection or WMM
->> settings?
->
-> After a quick glance into the datasheet, I understand that the
-> current version of hardware supports reading TIM, TSF and some more
-> bits related to DTIM from a beacon.
+oh no.
 
-Is the datasheet available somewhere?
+I will install a 64bit system here to try and reproduce this ...
 
-> As far as this patch is concerned, since ath9k can use mac80211 for
-> sending a null data frame, it is quite redundant to enable the TIM
-> interrupt as it can be parsed in mac80211 itself.
+Reinette
 
-Sure. But I was thinking the possibility of having beacon filtering in
-ath9k and then mac80211 wouldn't receive the beacons.
 
--- 
-Kalle Valo
+
