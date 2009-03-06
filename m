@@ -1,78 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50749 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754564AbZCUOj0 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.229]:8508 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753373AbZCFPJs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 10:39:26 -0400
-Subject: Japan regulations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uDbDZsSNEsEd8nsrj4EJ"
-Date: Sat, 21 Mar 2009 15:39:23 +0100
-Message-Id: <1237646363.5100.209.camel@johannes.local> (sfid-20090321_153929_909353_98F35CDA)
-Mime-Version: 1.0
+	Fri, 6 Mar 2009 10:09:48 -0500
+Received: by rv-out-0506.google.com with SMTP id g37so540182rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2009 07:09:45 -0800 (PST)
+Message-ID: <49B13CB5.90204@gmail.com> (sfid-20090306_160951_870161_A2899B15)
+Date: Fri, 06 Mar 2009 07:09:41 -0800
+From: John Daiker <daikerjohn@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: "John W. Linville" <linville@tuxdriver.com>, joe@perches.com,
+	daikerjohn@gmail.com
+Subject: [PATCH v2] airo_cs: checkpatch.pl cleanups
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hopefully nothing controversial here, since the driver hasn't been touched in a while!
 
---=-uDbDZsSNEsEd8nsrj4EJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Before: 36 errors, 6 warnings, 482 lines checked
+After:  0 errors, 3 warnings, 485 lines checked
 
-The regulatory info for JP looks very odd
-(http://wireless.kernel.org/en/developers/Regulatory/Database?alpha2=3DJP):
+This was nearly all trailing whitespace, * and parenthesis spacing, and code indent changes.
 
-country JP:
-        (2402.000 - 2472.000 @ 40.000), (N/A, 20.00)
-        (2457.000 - 2482.000 @ 20.000), (N/A, 20.00)
-        (2474.000 - 2494.000 @ 20.000), (N/A, 20.00), NO-OFDM
+md5sum of object file before and after are identical.
 
-        (4910.000 - 4930.000 @ 10.000), (N/A, 23.00)
-        (4910.000 - 4990.000 @ 40.000), (N/A, 23.00)
+v2: MODULE_DESCRIPTION text now uses double quotes instead of forward slashes.
 
-        (4930.000 - 4950.000 @ 10.000), (N/A, 23.00)
-
-        (5030.000 - 5045.000 @ 10.000), (N/A, 23.00)
-        (5030.000 - 5090.000 @ 40.000), (N/A, 23.00)
-        (5050.000 - 5060.000 @ 10.000), (N/A, 23.00)
-
-        (5170.000 - 5250.000 @ 40.000), (N/A, 20.00)
-
-        (5250.000 - 5330.000 @ 40.000), (N/A, 20.00), DFS
-
-        (5490.000 - 5710.000 @ 40.000), (N/A, 23.00), DFS
-
-multiple of the ranges (blocked) overlap, especially the 4910 MHz part
-is strange, seems like that first rule should be killed. Also, how
-should the 2.4GHz part be interpreted?
-
-Currently we are not interpreting overlapping ranges properly at all --
-we really need to fix a set of interpretation rules.
-
-johannes
-
---=-uDbDZsSNEsEd8nsrj4EJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJxPwYAAoJEKVg1VMiehFYFawQAJw53yjOxi9SE6Q+EQswBfzx
-GKvkmMUWNqzDb2cheHVcFAz4BGFIzCRlEGr0sdtLsZC3HLMkqZnhU7Lua3bIRUVo
-ub9CHiodmfFlqGfWOpY+4GKuYHYt4JOus+iSYosE0JUiuiZMq2QZGmV38xgoet4M
-Tn8ikikuWj19H1PdRKnV5ES9WgKoKC3I+QgKc8qoSs0AisYKSXWenVmQJJe9ZxdH
-Kp91pjktERtmBeqk9aXH8cbfUBr0KVHyNShjhUbW2V0+5IlskoLQ6sGtRlPIT1BW
-qVKcwvUk7tU/jbnZikbK1MvJM3wnSnaFh3ATedM/JqUiY2fYzgaHq0ZhxA1yq1+Q
-RsWEH61KKMDyPMhYN6kFsYB0fy5Huxy9Jrt5KEJPbo1yOQJ+E9PsV5MV8UCab9R3
-5Nei6uDYUnZCpiGRjUevAIZagdqECno0H2A2kh/XiJYbp6ZGO2g8KvCIMfah9565
-UIGJpBh0HpxQKqulClcbSy4SRR+EcgJkepulMg9t6Mlq+nIpFdkg1EoC9vM0uab6
-dlOIdwf5dTSjkUJ58T5uO+im9y5q+XmJGfvKSzwVVZ55LErbmYQKjtyCK06U0F5f
-aIMEMMB4kKwl+TpaIQVZ/Y23HAYCert8mbaNRKQ95o5f7aDypUvd2YCz+BdqC5zr
-8JaGgegeJQ5K0U57H9uI
-=glV6
------END PGP SIGNATURE-----
-
---=-uDbDZsSNEsEd8nsrj4EJ--
-
+Signed-off-by: John Daiker <daikerjohn@gmail.com>
+---
+diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
+index 27696c2..d0593ed 100644
+--- a/drivers/net/wireless/airo_cs.c
++++ b/drivers/net/wireless/airo_cs.c
+@@ -16,8 +16,8 @@
+     In addition this module was derived from dummy_cs.
+     The initial developer of dummy_cs is David A. Hinds
+     <dahinds@users.sourceforge.net>.  Portions created by David A. Hinds
+-    are Copyright (C) 1999 David A. Hinds.  All Rights Reserved.    
+-    
++    are Copyright (C) 1999 David A. Hinds.  All Rights Reserved.
++
+ ======================================================================*/
+ 
+ #ifdef __IN_PCMCIA_PACKAGE__
+@@ -38,7 +38,7 @@
+ #include <pcmcia/cisreg.h>
+ #include <pcmcia/ds.h>
+ 
+-#include <asm/io.h>
++#include <linux/io.h>
+ #include <asm/system.h>
+ 
+ #include "airo.h"
+@@ -54,7 +54,7 @@
+ static int pc_debug = PCMCIA_DEBUG;
+ module_param(pc_debug, int, 0);
+ static char *version = "$Revision: 1.2 $";
+-#define DEBUG(n, args...) if (pc_debug>(n)) printk(KERN_DEBUG args);
++#define DEBUG(n, args...) if (pc_debug > (n)) printk(KERN_DEBUG args);
+ #else
+ #define DEBUG(n, args...)
+ #endif
+@@ -62,9 +62,9 @@ static char *version = "$Revision: 1.2 $";
+ /*====================================================================*/
+ 
+ MODULE_AUTHOR("Benjamin Reed");
+-MODULE_DESCRIPTION("Support for Cisco/Aironet 802.11 wireless ethernet \
+-                   cards.  This is the module that links the PCMCIA card \
+-		   with the airo module.");
++MODULE_DESCRIPTION("Support for Cisco/Aironet 802.11 wireless ethernet "
++		   "cards.  This is the module that links the PCMCIA card "
++		   "with the airo module.");
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_SUPPORTED_DEVICE("Aironet 4500, 4800 and Cisco 340 PCMCIA cards");
+ 
+@@ -76,7 +76,7 @@ MODULE_SUPPORTED_DEVICE("Aironet 4500, 4800 and Cisco 340 PCMCIA cards");
+    event is received.  The config() and release() entry points are
+    used to configure or release a socket, in response to card
+    insertion and ejection events.  They are invoked from the airo_cs
+-   event handler. 
++   event handler.
+ */
+ 
+ static int airo_config(struct pcmcia_device *link);
+@@ -103,8 +103,9 @@ static void airo_detach(struct pcmcia_device *p_dev);
+    by one struct pcmcia_device structure (defined in ds.h).
+ 
+    You may not want to use a linked list for this -- for example, the
+-   memory card driver uses an array of struct pcmcia_device pointers, where minor
+-   device numbers are used to derive the corresponding array index.
++   memory card driver uses an array of struct pcmcia_device pointers,
++   where minor device numbers are used to derive the corresponding
++   array index.
+ */
+ 
+ /*
+@@ -122,22 +123,22 @@ static void airo_detach(struct pcmcia_device *p_dev);
+    device IO routines can use a flag like this to throttle IO to a
+    card that is not ready to accept it.
+ */
+-   
++
+ typedef struct local_info_t {
+ 	dev_node_t	node;
+ 	struct net_device *eth_dev;
+ } local_info_t;
+ 
+ /*======================================================================
+-  
++
+   airo_attach() creates an "instance" of the driver, allocating
+   local data structures for one device.  The device is registered
+   with Card Services.
+-  
++
+   The dev_link structure is initialized, but we don't actually
+   configure the card at this point -- we wait until we receive a
+   card insertion event.
+-  
++
+   ======================================================================*/
+ 
+ static int airo_probe(struct pcmcia_device *p_dev)
+@@ -150,7 +151,7 @@ static int airo_probe(struct pcmcia_device *p_dev)
+ 	p_dev->irq.Attributes = IRQ_TYPE_DYNAMIC_SHARING;
+ 	p_dev->irq.IRQInfo1 = IRQ_LEVEL_ID;
+ 	p_dev->irq.Handler = NULL;
+-	
++
+ 	/*
+ 	  General socket configuration defaults can go here.  In this
+ 	  client, we assume very little, and rely on the CIS for almost
+@@ -160,7 +161,7 @@ static int airo_probe(struct pcmcia_device *p_dev)
+ 	*/
+ 	p_dev->conf.Attributes = 0;
+ 	p_dev->conf.IntType = INT_MEMORY_AND_IO;
+-	
++
+ 	/* Allocate space for private device-specific data */
+ 	local = kzalloc(sizeof(local_info_t), GFP_KERNEL);
+ 	if (!local) {
+@@ -173,12 +174,12 @@ static int airo_probe(struct pcmcia_device *p_dev)
+ } /* airo_attach */
+ 
+ /*======================================================================
+-  
++
+   This deletes a driver "instance".  The device is de-registered
+   with Card Services.  If it has been released, all local data
+   structures are freed.  Otherwise, the structures will be freed
+   when the device is released.
+-  
++
+   ======================================================================*/
+ 
+ static void airo_detach(struct pcmcia_device *link)
+@@ -187,20 +188,20 @@ static void airo_detach(struct pcmcia_device *link)
+ 
+ 	airo_release(link);
+ 
+-	if ( ((local_info_t*)link->priv)->eth_dev ) {
+-		stop_airo_card( ((local_info_t*)link->priv)->eth_dev, 0 );
++	if (((local_info_t *)link->priv)->eth_dev) {
++		stop_airo_card(((local_info_t *)link->priv)->eth_dev, 0);
+ 	}
+-	((local_info_t*)link->priv)->eth_dev = NULL;
++	((local_info_t *)link->priv)->eth_dev = NULL;
+ 
+ 	kfree(link->priv);
+ } /* airo_detach */
+ 
+ /*======================================================================
+-  
++
+   airo_config() is scheduled to run after a CARD_INSERTION event
+   is received, to configure the PCMCIA socket, and to make the
+   device available to the system.
+-  
++
+   ======================================================================*/
+ 
+ #define CS_CHECK(fn, ret) \
+@@ -325,26 +326,28 @@ static int airo_config(struct pcmcia_device *link)
+ 	*/
+ 	if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 		CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
+-	
++
+ 	/*
+ 	  This actually configures the PCMCIA socket -- setting up
+ 	  the I/O windows and the interrupt mapping, and putting the
+ 	  card and host interface into "Memory and IO" mode.
+ 	*/
+-	CS_CHECK(RequestConfiguration, pcmcia_request_configuration(link, &link->conf));
+-	((local_info_t*)link->priv)->eth_dev = 
+-		init_airo_card( link->irq.AssignedIRQ,
+-				link->io.BasePort1, 1, &handle_to_dev(link) );
+-	if (!((local_info_t*)link->priv)->eth_dev) goto cs_failed;
+-	
++	CS_CHECK(RequestConfiguration,
++		 pcmcia_request_configuration(link, &link->conf));
++	((local_info_t *)link->priv)->eth_dev =
++		init_airo_card(link->irq.AssignedIRQ,
++			       link->io.BasePort1, 1, &handle_to_dev(link));
++	if (!((local_info_t *)link->priv)->eth_dev)
++		goto cs_failed;
++
+ 	/*
+ 	  At this point, the dev_node_t structure(s) need to be
+ 	  initialized and arranged in a linked list at link->dev_node.
+ 	*/
+-	strcpy(dev->node.dev_name, ((local_info_t*)link->priv)->eth_dev->name );
++	strcpy(dev->node.dev_name, ((local_info_t *)link->priv)->eth_dev->name);
+ 	dev->node.major = dev->node.minor = 0;
+ 	link->dev_node = &dev->node;
+-	
++
+ 	/* Finally, report what we've done */
+ 	printk(KERN_INFO "%s: index 0x%02x: ",
+ 	       dev->node.dev_name, link->conf.ConfigIndex);
+@@ -374,11 +377,11 @@ static int airo_config(struct pcmcia_device *link)
+ } /* airo_config */
+ 
+ /*======================================================================
+-  
++
+   After a card is removed, airo_release() will unregister the
+   device, and release the PCMCIA configuration.  If the device is
+   still open, this will be postponed until it is closed.
+-  
++
+   ======================================================================*/
+ 
+ static void airo_release(struct pcmcia_device *link)
+@@ -475,7 +478,7 @@ static void airo_cs_cleanup(void)
+     HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+     STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+     IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-    POSSIBILITY OF SUCH DAMAGE.    
++    POSSIBILITY OF SUCH DAMAGE.
+ */
+ 
+ module_init(airo_cs_init);
