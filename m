@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12734 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:27319 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755477AbZC3KC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 06:02:27 -0400
+	id S1752888AbZCFDtE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 22:49:04 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:02:26 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 19:49:03 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] wireless-regdb: enable passive scanning for world regdomain on other channels
+Date: Thu, 5 Mar 2009 19:48:18 -0800
+Message-ID: <1236311299-30407-1-git-send-email-lrodriguez@atheros.com> (sfid-20090306_044910_500818_55DAEF8F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18896.38830.285708.842901@gargle.gargle.HOWL> (sfid-20090330_120229_839901_241912CE)
-Date: Mon, 30 Mar 2009 15:28:06 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 00/17] Driver cleanup
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+We allow passive scanning on other standard IEEE-802.11 channels.
 
-A bunch of cleanups and a few fixes.
-Please apply.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-Sujith
+John I just put the 2 GHz stuff and 5 GHz stuff into one. I also
+realized we had to separate channel 14 separately as it requires
+no OFDM.
 
-Sujith (17):
-  ath9k: Remove a few unused flags
-  ath9k: Remove redundant chainmask check
-  ath9k: Cleanup debug messages
-  ath9k: Change return value of ath9k_hw_fill_cap_info
-  ath9k: Remove redundant variable for Interrupt Mitigation
-  ath9k: Avoid unneeded casts
-  ath9k: Cleanup buffer status handling
-  ath9k: Remove a couple of unused variables in descriptor handling
-  ath9k: Remove unused structures
-  ath9k: Check for root debugfs file
-  ath9k: Remove TIM from the interrupt mask
-  ath9k: Remove the useless do..while loops
-  ath9k: Initialize values when setting up the queue parameters
-  ath9k: Trivial fix to handle AMPDU params properly
-  ath9k: Clean Interrupt handling routine
-  ath9k: Determine number of streams from HT capabilities
-  ath9k: Fix bug in determining HT40 mode
+ db.txt         |   11 +++++++++++
+ 1 file changed, 11 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/ath9k/ani.c    |    8 +-
- drivers/net/wireless/ath9k/ath9k.h  |   65 +++-------
- drivers/net/wireless/ath9k/beacon.c |   17 +--
- drivers/net/wireless/ath9k/debug.c  |    3 +
- drivers/net/wireless/ath9k/debug.h  |   24 ++--
- drivers/net/wireless/ath9k/eeprom.c |   24 ++--
- drivers/net/wireless/ath9k/hw.c     |  154 ++++++++---------------
- drivers/net/wireless/ath9k/hw.h     |   57 +++------
- drivers/net/wireless/ath9k/mac.c    |   63 ++++++----
- drivers/net/wireless/ath9k/main.c   |  239 ++++++++++++++++-------------------
- drivers/net/wireless/ath9k/phy.c    |    4 +-
- drivers/net/wireless/ath9k/phy.h    |    3 -
- drivers/net/wireless/ath9k/rc.c     |   24 ++--
- drivers/net/wireless/ath9k/rc.h     |    4 -
- drivers/net/wireless/ath9k/recv.c   |   85 ++++++-------
- drivers/net/wireless/ath9k/xmit.c   |   59 ++++-----
- 16 files changed, 350 insertions(+), 483 deletions(-)
-
+diff --git a/db.txt b/db.txt
+index 89a9d52..d3a05ea 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1,5 +1,16 @@
++# This is the word regulatory domain
+ country 00:
+ 	(2402 - 2472 @ 40), (3, 20)
++        # Channel 12 - 14. No HT40 channel fits here
++        (2457 - 2482 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
++        # Channel 14. Only JP enables this and for 802.11b only
++        (2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
++        # Channel 36 - 48
++        (5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
++        # NB: 5260 MHz - 5700 MHz requies DFS
++        # Channel 149 - 165
++        (5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
++
+ 
+ country AE:
+ 	(2402 - 2482 @ 40), (N/A, 20)
