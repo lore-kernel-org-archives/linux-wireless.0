@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.237]:21035 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654AbZCOSrR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2009 14:47:17 -0400
-Received: by rv-out-0506.google.com with SMTP id g37so1229062rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 11:47:15 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:25516 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750846AbZCFKag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2009 05:30:36 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2009 02:30:35 -0800
+Subject: Re: [ath9k-devel] [PATCH 0/2] ath9k: fix compile errors
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1236329859-17911-1-git-send-email-juhosg@openwrt.org>
+References: <1236329859-17911-1-git-send-email-juhosg@openwrt.org>
+Content-Type: text/plain
+Date: Fri, 6 Mar 2009 12:29:33 +0200
+Message-ID: <1236335373.16873.1.camel@jm-desktop> (sfid-20090306_113039_618245_A3D6DF39)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18877.19828.446040.815905@gargle.gargle.HOWL> (sfid-20090315_194722_143459_E0B4189A)
-Date: Mon, 16 Mar 2009 00:18:20 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	me@bobcopeland.com
-Subject: Re: [PATCH] mac80211: Tear down aggregation sessions for
- suspend/resume
-In-Reply-To: <1237140134.24621.0.camel@johannes.local>
-References: <18876.41851.397740.847705@gargle.gargle.HOWL>
-	<1237140134.24621.0.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Sun, 2009-03-15 at 12:13 +0530, Sujith wrote:
-> > When the driver has been notified with a STA_REMOVE, it tears down
-> > the internal ADDBA state. On resume, trying to initiate aggregation would
-> > fail because mac80211 has not cleared the operational state for that <TID,STA>.
-> > This can be fixed by tearing down the existing sessions on a suspend.
-> 
-> Agreed, but Bob said there were some deadlocks with this?
-> 
+On Fri, 2009-03-06 at 00:57 -0800, Gabor Juhos wrote:
+> This set will correct two compilation errors in master-2009-03-04
+> of wireless-testing.
 
-It works with ath9k, I don't see any deadlocks.
-And I have been testing with the 'reset' debugfs file.
-Too lazy to do a full suspend/resume cycle. :)
-It shouldn't matter though, right ?
+Thanks for fixing these and the no-RFKILL build issue! Looks like I
+should try to get a build setup for testing ahb.c build myself..
 
-Sujith
+- Jouni
+
+
