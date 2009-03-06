@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:57878 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750825AbZCMESD (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52906 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753795AbZCFOpa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 00:18:03 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so191399wfa.4
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 21:18:01 -0700 (PDT)
+	Fri, 6 Mar 2009 09:45:30 -0500
+Date: Fri, 6 Mar 2009 09:36:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: tim.gardner@canonical.com,
+	reinette chatre <reinette.chatre@intel.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Please apply to stable: cfg80211: add support for custom
+	firmware regulatory solutions
+Message-ID: <20090306143612.GA3712@tuxdriver.com> (sfid-20090306_154534_609293_CA6968E8)
+References: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com> <1236275668.6612.134.camel@rc-desk> <43e72e890903051124t42ce5c7blfd741da4a2b4fa79@mail.gmail.com> <49B056FA.2020605@canonical.com> <43e72e890903051513n44cf5281y32cc11e06754aa3@mail.gmail.com> <49B06DA6.7070000@canonical.com> <43e72e890903051633w7880648djdd798c5a28285a6b@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <18873.53124.115355.862512@gargle.gargle.HOWL>
-References: <43e72e890903122009h25c7f6d9qcf4365ec32532e31@mail.gmail.com>
-	 <18873.53124.115355.862512@gargle.gargle.HOWL>
-Date: Thu, 12 Mar 2009 21:18:01 -0700
-Message-ID: <43e72e890903122118p5533bb4eke512f947c8879edf@mail.gmail.com> (sfid-20090313_051815_017454_89A4E5F1)
-Subject: Re: Which APs to disregards from in inputting into the bss list
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>, Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890903051633w7880648djdd798c5a28285a6b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 12, 2009 at 8:14 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> Luis R. Rodriguez wrote:
->> Do we want to ignore certain APs if we determine they are bogus? An
->> example is 11n APs with WEP/TKIP.
->
-> They are not bogus, we just fall back to legacy association.
+On Thu, Mar 05, 2009 at 04:33:37PM -0800, Luis R. Rodriguez wrote:
+> On Thu, Mar 5, 2009 at 4:26 PM, Tim Gardner <tim.gardner@canonical.com> wrote:
 
-What if its HT only.
+> > What is the downside of just turning OLD_REG back on for 2.6.28?
+> 
+> You default to the "US" regulatory domain so channels 12-14 will not
+> be available by default. This is also why we offloaded regulatory crap
+> to userspace in the first place, so you won't have to upgrade your
+> kernel based on reg changes or fixes.
+> 
+> I'll send a patch to enable passive scan on channels 12-14 for the
+> world regulatory domain. That and the 5 GHz patch should at least let
+> you see channels 12-14 with a fix from userspace. This can also go
+> into 28 for the world regulatory domain and since it would be fixing
+> an issue maybe we should consider it.
+> 
+> Thoughts John?
 
-  Luis
+Honestly I don't think it is worth swizzling -stable for this.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
