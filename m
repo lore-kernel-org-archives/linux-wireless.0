@@ -1,124 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22026 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:42576 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750771AbZCCTcQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 14:32:16 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH v2.6.29] iwlwifi: fix error flow in iwl*_pci_probe
-Date: Tue,  3 Mar 2009 11:37:04 -0800
-Message-Id: <1236109024-24221-1-git-send-email-reinette.chatre@intel.com> (sfid-20090303_203219_876338_4CFB7B03)
+	id S1750718AbZCFPMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2009 10:12:17 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2009 07:12:16 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Use suitable macros with 4k eeprom data
+Date: Fri, 6 Mar 2009 20:38:36 +0530
+Message-ID: <1236352117-18466-1-git-send-email-vasanth@atheros.com> (sfid-20090306_161220_243339_AE13229B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+This patch improves range and connection stability in AR9285.
 
-Both the agn and 3945 drivers has some problems with dealing with
-errors in their probe functions. Ensure that a goto will undo only
-things that was done before the goto was called.
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 ++++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   17 +++++++----------
- 2 files changed, 11 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath9k/eeprom.c |   18 +++++++++---------
+ 1 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 36bafeb..129e2d3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3868,7 +3868,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	}
- 	err = iwl_eeprom_check_version(priv);
- 	if (err)
--		goto out_iounmap;
-+		goto out_free_eeprom;
+diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
+index 8a9e062..dd280cb 100644
+--- a/drivers/net/wireless/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath9k/eeprom.c
+@@ -679,7 +679,7 @@ static void ath9k_hw_get_4k_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 				    vpdTableI[i][sizeCurrVpdTable - 2]);
+ 		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
  
- 	/* extract MAC Address */
- 	iwl_eeprom_get_mac(priv, priv->mac_addr);
-@@ -3945,6 +3945,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	return 0;
+-		if (tgtIndex > maxIndex) {
++		if (tgtIndex >= maxIndex) {
+ 			while ((ss <= tgtIndex) &&
+ 			       (k < (AR5416_NUM_PDADC_VALUES - 1))) {
+ 				tmpVal = (int16_t) TMP_VAL_VPD_TABLE;
+@@ -713,11 +713,11 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 	u8 *pCalBChans = NULL;
+ 	u16 pdGainOverlap_t2;
+ 	static u8 pdadcValues[AR5416_NUM_PDADC_VALUES];
+-	u16 gainBoundaries[AR5416_PD_GAINS_IN_MASK];
++	u16 gainBoundaries[AR5416_EEP4K_PD_GAINS_IN_MASK];
+ 	u16 numPiers, i, j;
+ 	int16_t tMinCalPower;
+ 	u16 numXpdGain, xpdMask;
+-	u16 xpdGainValues[AR5416_NUM_PD_GAINS] = { 0, 0, 0, 0 };
++	u16 xpdGainValues[AR5416_EEP4K_NUM_PD_GAINS] = { 0, 0 };
+ 	u32 reg32, regOffset, regChainOffset;
  
-  out_remove_sysfs:
-+	destroy_workqueue(priv->workqueue);
-+	priv->workqueue = NULL;
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl_attribute_group);
-  out_uninit_drv:
- 	iwl_uninit_drv(priv);
-@@ -3953,8 +3955,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
-  out_iounmap:
- 	pci_iounmap(pdev, priv->hw_base);
-  out_pci_release_regions:
--	pci_release_regions(pdev);
- 	pci_set_drvdata(pdev, NULL);
-+	pci_release_regions(pdev);
-  out_pci_disable_device:
- 	pci_disable_device(pdev);
-  out_ieee80211_free_hw:
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 93be74a..57dd34e 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -7911,7 +7911,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 				CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
- 	if (err < 0) {
- 		IWL_DEBUG_INFO("Failed to init the card\n");
--		goto out_remove_sysfs;
-+		goto out_iounmap;
+ 	xpdMask = pEepData->modalHeader.xpdGain;
+@@ -732,16 +732,16 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
  	}
  
- 	/***********************
-@@ -7921,7 +7921,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	err = iwl3945_eeprom_init(priv);
- 	if (err) {
- 		IWL_ERROR("Unable to init EEPROM\n");
--		goto out_remove_sysfs;
-+		goto out_iounmap;
- 	}
- 	/* MAC Address location in EEPROM same for 3945/4965 */
- 	get_eeprom_mac(priv, priv->mac_addr);
-@@ -7975,7 +7975,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	err = iwl3945_init_channel_map(priv);
- 	if (err) {
- 		IWL_ERROR("initializing regulatory failed: %d\n", err);
--		goto out_release_irq;
-+		goto out_unset_hw_setting;
- 	}
+ 	pCalBChans = pEepData->calFreqPier2G;
+-	numPiers = AR5416_NUM_2G_CAL_PIERS;
++	numPiers = AR5416_EEP4K_NUM_2G_CAL_PIERS;
  
- 	err = iwl3945_init_geos(priv);
-@@ -8045,25 +8045,22 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	return 0;
+ 	numXpdGain = 0;
  
-  out_remove_sysfs:
-+	destroy_workqueue(priv->workqueue);
-+	priv->workqueue = NULL;
- 	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
-  out_free_geos:
- 	iwl3945_free_geos(priv);
-  out_free_channel_map:
- 	iwl3945_free_channel_map(priv);
--
--
-- out_release_irq:
--	destroy_workqueue(priv->workqueue);
--	priv->workqueue = NULL;
-+ out_unset_hw_setting:
- 	iwl3945_unset_hw_setting(priv);
--
-  out_iounmap:
- 	pci_iounmap(pdev, priv->hw_base);
-  out_pci_release_regions:
- 	pci_release_regions(pdev);
-  out_pci_disable_device:
--	pci_disable_device(pdev);
- 	pci_set_drvdata(pdev, NULL);
-+	pci_disable_device(pdev);
-  out_ieee80211_free_hw:
- 	ieee80211_free_hw(priv->hw);
-  out:
+-	for (i = 1; i <= AR5416_PD_GAINS_IN_MASK; i++) {
+-		if ((xpdMask >> (AR5416_PD_GAINS_IN_MASK - i)) & 1) {
+-			if (numXpdGain >= AR5416_NUM_PD_GAINS)
++	for (i = 1; i <= AR5416_EEP4K_PD_GAINS_IN_MASK; i++) {
++		if ((xpdMask >> (AR5416_EEP4K_PD_GAINS_IN_MASK - i)) & 1) {
++			if (numXpdGain >= AR5416_EEP4K_NUM_PD_GAINS)
+ 				break;
+ 			xpdGainValues[numXpdGain] =
+-				(u16)(AR5416_PD_GAINS_IN_MASK - i);
++				(u16)(AR5416_EEP4K_PD_GAINS_IN_MASK - i);
+ 			numXpdGain++;
+ 		}
+ 	}
+@@ -754,7 +754,7 @@ static bool ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 		      xpdGainValues[1]);
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_3, 0);
+ 
+-	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
++	for (i = 0; i < AR5416_EEP4K_MAX_CHAINS; i++) {
+ 		if (AR_SREV_5416_20_OR_LATER(ah) &&
+ 		    (ah->rxchainmask == 5 || ah->txchainmask == 5) &&
+ 		    (i != 0)) {
 -- 
-1.5.6.3
+1.5.5.1
 
