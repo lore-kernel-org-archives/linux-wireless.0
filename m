@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:55583 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754036AbZCQLCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 07:02:45 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFT/RFC 2/2] b43legacy: Beacon IRQ changes
-Date: Tue, 17 Mar 2009 12:01:36 +0100
-Cc: david@identd.dyndns.org, linux-wireless@vger.kernel.org
-References: <49bf248f.XzFFJoNYeRJgRKi6%Larry.Finger@lwfinger.net>
-In-Reply-To: <49bf248f.XzFFJoNYeRJgRKi6%Larry.Finger@lwfinger.net>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:43981 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750827AbZCFIIJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2009 03:08:09 -0500
+Message-ID: <49B0D9E3.3010704@openwrt.org> (sfid-20090306_090812_932732_039B55AE)
+Date: Fri, 06 Mar 2009 09:08:03 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903171201.36211.mb@bu3sch.de> (sfid-20090317_120248_077151_00B031CC)
+To: Sujith <Sujith.Manoharan@atheros.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Imre Kaloz <kaloz@openwrt.org>
+Subject: Re: [PATCH 0/3] ath9k: version checking macro cleanup (was [RFC]
+ ath9k: use correct init values for ar9100 devices)
+References: <1236282837-6612-1-git-send-email-juhosg@openwrt.org> <18864.43811.679236.970207@gargle.gargle.HOWL>
+In-Reply-To: <18864.43811.679236.970207@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 17 March 2009 05:18:23 Larry Finger wrote:
-> This patch ports commit c97a4ccc1fad35d3 "b43: Fix beacon BH update" to
-> b43legacy. It fixes beacon updating in the bottomhalf. In case the device
-> is busy, we will defer to later in the IRQ handler.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Sujith =EDrta:
+> Gabor Juhos wrote:
+>> According to Luis request, here is the new patch-set with detailed
+>> explanations.
+>=20
+> Series looks good, but it doesn't apply on current wireless-testing.
+> A rebase is needed ?
 
-Both patches look fine. Please add my ack to both of them and forward them
-to John after some testing.
+Probably. I will do it.
 
--- 
-Greetings, Michael.
+Gabor
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
