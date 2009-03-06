@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34130 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753716AbZCSFyp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 01:54:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+Received: from mga14.intel.com ([143.182.124.37]:4198 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754658AbZCFVsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2009 16:48:04 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 0/6] Use the regulatory bandwidth and export HT40 stuff
-Date: Thu, 19 Mar 2009 01:54:34 -0400
-Message-Id: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com> (sfid-20090319_065450_760231_096A1FC6)
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/2] iwl3945: add test for new association
+Date: Fri,  6 Mar 2009 13:52:54 -0800
+Message-Id: <1236376375-27927-2-git-send-email-reinette.chatre@intel.com> (sfid-20090306_224807_433970_AFCAB17A)
+In-Reply-To: <1236376375-27927-1-git-send-email-reinette.chatre@intel.com>
+References: <1236376375-27927-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This took a little more consideration than I thought. This is a redesign
-of the bandwidth regulatory stuff, it also keeps in mind preferences in
-the future to use alternative bandwidths like 10 MHz and 5 MHz for things
-like 802.11p.
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Ultimately you'll now get proper interpretation of the regulatory
-bandwidth supported, we'll export the bandwidth allowed per channel,
-and we'll also export the channel HT40-/+ capabilities -- if they are
-allowed or not.
+Add check for new association to ease reading.
 
-This should also help considerably with testing regulatory settings.
-And for users planning to use HT40 it'll give you a direct guide which
-channels to pick on your AP.
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-This second series completely abandons our old strategy to use the channel
-bandwidth to determine whether or not we support HT40, instead we use it for
-to determine the supported actual bandwidth _per_channel_, not per channel
-set (the pair of channels on an HT40 configuration).
-
-Luis R. Rodriguez (6):
-  cfg80211: Process regulatory max bandwidth checks for HT40
-  wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
-  mac80211: check if HT40+/- is allowed before sending assoc
-  cfg80211: check allowed channel type upon userspace requests
-  cfg80211: send channel max bandwidth to userspace
-  cfg80211: send to userspace if HT40-/+ is allowed on each channel
-
- drivers/net/wireless/ath9k/regd.c         |   10 +-
- drivers/net/wireless/iwlwifi/iwl-core.c   |    4 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 +-
- include/linux/nl80211.h                   |   18 +++
- include/net/wireless.h                    |   23 +++--
- net/mac80211/ht.c                         |   11 ++-
- net/mac80211/mlme.c                       |    4 +-
- net/wireless/nl80211.c                    |   27 ++++-
- net/wireless/reg.c                        |  194 ++++++++++++++++++++++------
- 9 files changed, 234 insertions(+), 65 deletions(-)
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index f75309c..e5c6295 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -328,6 +328,8 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv)
+ 	struct iwl3945_rxon_cmd *active_rxon = (void *)&priv->active_rxon;
+ 	struct iwl3945_rxon_cmd *staging_rxon = (void *)&priv->staging_rxon;
+ 	int rc = 0;
++	bool new_assoc =
++		!!(priv->staging_rxon.filter_flags & RXON_FILTER_ASSOC_MSK);
+ 
+ 	if (!iwl_is_alive(priv))
+ 		return -1;
+@@ -366,8 +368,7 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv)
+ 	 * an RXON_ASSOC and the new config wants the associated mask enabled,
+ 	 * we must clear the associated from the active configuration
+ 	 * before we apply the new config */
+-	if (iwl_is_associated(priv) &&
+-	    (staging_rxon->filter_flags & RXON_FILTER_ASSOC_MSK)) {
++	if (iwl_is_associated(priv) && new_assoc) {
+ 		IWL_DEBUG_INFO(priv, "Toggling associated bit on current RXON\n");
+ 		active_rxon->filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 
+@@ -395,8 +396,7 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv)
+ 		       "* with%s RXON_FILTER_ASSOC_MSK\n"
+ 		       "* channel = %d\n"
+ 		       "* bssid = %pM\n",
+-		       ((priv->staging_rxon.filter_flags &
+-			 RXON_FILTER_ASSOC_MSK) ? "" : "out"),
++		       (new_assoc ? "" : "out"),
+ 		       le16_to_cpu(staging_rxon->channel),
+ 		       staging_rxon->bssid_addr);
+ 
+-- 
+1.5.6.3
 
