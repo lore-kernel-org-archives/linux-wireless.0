@@ -1,65 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36590 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbZCUPJX (ORCPT
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:52078 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbZCFOci (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 11:09:23 -0400
-Subject: Re: [RFC][RFT][PATCH 0/5 v5] ar9170: ar9170 driver (aka mac80211's
- otus)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: chunkeey@web.de, linux-wireless@vger.kernel.org,
-	otus-devel@lists.madwifi-project.org, greg@kroah.com,
-	linville@tuxdriver.com, lrodriguez@atheros.com
-In-Reply-To: <20090321145933.102650@gmx.net> (sfid-20090321_160004_602859_A9B03B14)
-References: <200903170408.12626.chunkeey@web.de>
-	 <200903202036.09255.chunkeey@web.de> <20090320200736.261050@gmx.net>
-	 <200903202159.41613.chunkeey@web.de> <20090320230448.261020@gmx.net>
-	 <20090321145933.102650@gmx.net> (sfid-20090321_160004_602859_A9B03B14)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VvfXVw5xSgb659gCxVHu"
-Date: Sat, 21 Mar 2009 16:09:19 +0100
-Message-Id: <1237648159.5100.218.camel@johannes.local> (sfid-20090321_160926_983137_C6877A5A)
-Mime-Version: 1.0
+	Fri, 6 Mar 2009 09:32:38 -0500
+Received: by fxm24 with SMTP id 24so402680fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2009 06:32:35 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linville@tuxdriver.com
+Subject: [PATCH 1/3] ipw2x00: remove duplicated defines
+Date: Fri, 6 Mar 2009 15:32:20 +0100
+Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903061532.22200.helmut.schaa@gmail.com> (sfid-20090306_153241_650180_FF919A37)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Remove several duplicated defines from ipw2x00/ieee80211.h which are
+also available in linux/ieee80211.h.
 
---=-VvfXVw5xSgb659gCxVHu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
 
-On Sat, 2009-03-21 at 15:59 +0100, Alina Friedrichsen wrote:
-> Hello Christian,
->=20
-> your new code is not compatible with compat-wireless. The function
-> usb_poison_anchored_urbs() is missing in the 2.6.27 kernel.
-
-That's something compat has to fix then -- we don't impose any backward
-compatibility rules for the kernel code.
-
-johannes
-
---=-VvfXVw5xSgb659gCxVHu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJxQMYAAoJEKVg1VMiehFY/f4QAIiENMf66M+vVApPulOrP9SN
-sZUTHJ+xDe73rUc+Y7f4YN9AYrrP+bfZgU4+NhzfIlyhl3GlzY8kqfXTSVba0mAX
-qfm+QLYBr0iz7936IL9z+DdqSvDS3Aten0k6ATS1kiWJ+cQsxBrshhpnbdKch6bW
-gpFwWZ4xU7vFhmdKujhJNDjwn3nj/YNY7ciwV6xglQ115pgVFnHvqra470+8p0Vm
-ZQSoi9+sPN7ORd2/dBVTUVqVC1+CSrdh5yk3pTQsNxKua+Z/BBHW5/CM+9BhwMjg
-hpxUlvF7MpoL4zYfzPzSYBXybsKZRaXLS2sbkuikxO1zsRdIvKbOMniO6yqIHs1c
-exR2NxIpvehWsOMkMiEzj0EVXgVkzhA2d9syDuEiOHlUlgQUel+mTkCw2qtffEnh
-aEbhq/O7OPUjVa3DNlO5gqT4FcCMhQZ5FFji4im5JW90BLKSsbXMzQxKHKlwgZZe
-+P3GzGit2P7FIUVOLmQCavmbiUZ6nc4/AbM2uuqbEo1Rz9Hw2PgX1IHuFI5jWDRO
-lo1+cHvrE8XaMzA1GwvCVEI4vQDGm/g9xTEFBtHwfrGDdGwR+38sPBeC2huFJ0Xn
-BoaY/jyf6liUbFMkc/qD7rJk9Vn36nLA38E5PW3Bo7h7twNPFnAt9HIwklAH637q
-8EyJbNlXdp0cJgt84t1u
-=aRiJ
------END PGP SIGNATURE-----
-
---=-VvfXVw5xSgb659gCxVHu--
-
+diff --git a/drivers/net/wireless/ipw2x00/ieee80211.h b/drivers/net/wireless/ipw2x00/ieee80211.h
+index 97c7cfc..e292114 100644
+--- a/drivers/net/wireless/ipw2x00/ieee80211.h
++++ b/drivers/net/wireless/ipw2x00/ieee80211.h
+@@ -54,59 +54,6 @@
+ #define MIN_FRAG_THRESHOLD     256U
+ #define	MAX_FRAG_THRESHOLD     2346U
+ 
+-/* Frame control field constants */
+-#define IEEE80211_FCTL_VERS		0x0003
+-#define IEEE80211_FCTL_FTYPE		0x000c
+-#define IEEE80211_FCTL_STYPE		0x00f0
+-#define IEEE80211_FCTL_TODS		0x0100
+-#define IEEE80211_FCTL_FROMDS		0x0200
+-#define IEEE80211_FCTL_MOREFRAGS	0x0400
+-#define IEEE80211_FCTL_RETRY		0x0800
+-#define IEEE80211_FCTL_PM		0x1000
+-#define IEEE80211_FCTL_MOREDATA		0x2000
+-#define IEEE80211_FCTL_PROTECTED	0x4000
+-#define IEEE80211_FCTL_ORDER		0x8000
+-
+-#define IEEE80211_FTYPE_MGMT		0x0000
+-#define IEEE80211_FTYPE_CTL		0x0004
+-#define IEEE80211_FTYPE_DATA		0x0008
+-
+-/* management */
+-#define IEEE80211_STYPE_ASSOC_REQ	0x0000
+-#define IEEE80211_STYPE_ASSOC_RESP 	0x0010
+-#define IEEE80211_STYPE_REASSOC_REQ	0x0020
+-#define IEEE80211_STYPE_REASSOC_RESP	0x0030
+-#define IEEE80211_STYPE_PROBE_REQ	0x0040
+-#define IEEE80211_STYPE_PROBE_RESP	0x0050
+-#define IEEE80211_STYPE_BEACON		0x0080
+-#define IEEE80211_STYPE_ATIM		0x0090
+-#define IEEE80211_STYPE_DISASSOC	0x00A0
+-#define IEEE80211_STYPE_AUTH		0x00B0
+-#define IEEE80211_STYPE_DEAUTH		0x00C0
+-#define IEEE80211_STYPE_ACTION		0x00D0
+-
+-/* control */
+-#define IEEE80211_STYPE_PSPOLL		0x00A0
+-#define IEEE80211_STYPE_RTS		0x00B0
+-#define IEEE80211_STYPE_CTS		0x00C0
+-#define IEEE80211_STYPE_ACK		0x00D0
+-#define IEEE80211_STYPE_CFEND		0x00E0
+-#define IEEE80211_STYPE_CFENDACK	0x00F0
+-
+-/* data */
+-#define IEEE80211_STYPE_DATA		0x0000
+-#define IEEE80211_STYPE_DATA_CFACK	0x0010
+-#define IEEE80211_STYPE_DATA_CFPOLL	0x0020
+-#define IEEE80211_STYPE_DATA_CFACKPOLL	0x0030
+-#define IEEE80211_STYPE_NULLFUNC	0x0040
+-#define IEEE80211_STYPE_CFACK		0x0050
+-#define IEEE80211_STYPE_CFPOLL		0x0060
+-#define IEEE80211_STYPE_CFACKPOLL	0x0070
+-#define IEEE80211_STYPE_QOS_DATA        0x0080
+-
+-#define IEEE80211_SCTL_FRAG		0x000F
+-#define IEEE80211_SCTL_SEQ		0xFFF0
+-
+ /* QOS control */
+ #define IEEE80211_QCTL_TID		0x000F
