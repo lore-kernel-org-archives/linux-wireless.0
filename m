@@ -1,104 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1458 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752147AbZCWDEg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 23:04:36 -0400
-Date: Sun, 22 Mar 2009 23:04:19 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
-Message-ID: <20090323030419.GA5803@hash.localnet> (sfid-20090323_040448_431371_B9D97201)
-References: <20090226230338.M86894@bobcopeland.com> <49A7236E.2020807@gmail.com> <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com> <49A726A7.6090809@gmail.com> <20090227022704.GA29850@hash.localnet> <20090227023912.GF13456@tesla> <20090227030608.GA29974@hash.localnet> <1235884912.9224.26.camel@mj> <20090303034600.GA3757@hash.localnet> <40f31dec0903022031l20ecc3dcx9ba7859cb24fa5ae@mail.gmail.com>
+Received: from mail.tpi.com ([70.99.223.143]:2743 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750781AbZCFA0S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2009 19:26:18 -0500
+Message-ID: <49B06DA6.7070000@canonical.com> (sfid-20090306_012621_686521_7AC3E406)
+Date: Thu, 05 Mar 2009 17:26:14 -0700
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0903022031l20ecc3dcx9ba7859cb24fa5ae@mail.gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: reinette chatre <reinette.chatre@intel.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Please apply to stable: cfg80211: add support for custom firmware
+ 	regulatory solutions
+References: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com>	 <1236275668.6612.134.camel@rc-desk>	 <43e72e890903051124t42ce5c7blfd741da4a2b4fa79@mail.gmail.com>	 <49B056FA.2020605@canonical.com> <43e72e890903051513n44cf5281y32cc11e06754aa3@mail.gmail.com>
+In-Reply-To: <43e72e890903051513n44cf5281y32cc11e06754aa3@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 03, 2009 at 06:31:05AM +0200, Nick Kossifidis wrote:
-> and i don't believe i've ever seen them, so we can warn on them too
-> and print something like "Reserved rate code: %x", also it would be
-> nice to warn on XR rates (1,2,3,6,7) in case we want to debug this in
-> the future.
+Luis R. Rodriguez wrote:
+> On Thu, Mar 5, 2009 at 2:49 PM, Tim Gardner <tim.gardner@canonical.com> wrote:
+>> Luis R. Rodriguez wrote:
+>>> On Thu, Mar 5, 2009 at 9:54 AM, reinette chatre
+>>> <reinette.chatre@intel.com> wrote:
+>>>> On Wed, 2009-03-04 at 13:35 -0800, Luis R. Rodriguez wrote:
+>>>>> Forgot to Cc: stable@kernel.org for this patch during its submission,
+>>>>> this is needed on 2.6.28 as otherwise there is an issue for Intel
+>>>>> cards which get their channels 5 GHz disabled if OLD_REG is set to no
+>>>>> (this is not the default) or the channels 12-14 are disabled if
+>>>>> OLD_REG is set to yes (default) set to no and the ieee80211_module
+>>>>> parameter is not used. The later issue is resolved by userspace as
+>>>>> well but we cannot yet expect 2.6.28 kernels to have enough userspace
+>>>>> interfaces to set the regulatory domain just yet. This is why OLD_REG
+>>>>> is still set to default with 2.6.28.
+>>>>>
+>>>>> 14b9815af3f4fe0e171ee0c4325c31d2a2c1570b
+>>>>> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>>>> Date:   Wed Nov 12 14:22:03 2008 -0800
+>>>>>
+>>>>>    cfg80211: add support for custom firmware regulatory solutions
+>>>>>
+>>>>>    This adds API to cfg80211 to allow wireless drivers to inform
+>>>>>    us if their firmware can handle regulatory considerations *and*
+>>>>>    they cannot map these regulatory domains to an ISO / IEC 3166
+>>>>>    alpha2. In these cases we skip the first regulatory hint instead
+>>>>>    of expecting the driver to build their own regulatory structure,
+>>>>>    providing us with an alpha2, or using the reg_notifier().
+>>>>>
+>>>>>    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>>>>    Acked-by: Zhu Yi <yi.zhu@intel.com>
+>>>>>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>>> Could you please also add commit
+>>>> ea4a82dceec7b5782b1259079c8de508d0afe33a? This is the commit that
+>>>> enables the Intel cards to take advantage of the parameter introduced in
+>>>> previous commit.
+>>>>
+>>>> commit ea4a82dceec7b5782b1259079c8de508d0afe33a
+>>>> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>>> Date:   Wed Nov 12 14:22:04 2008 -0800
+>>>>
+>>>>    iwlwifi: enable custom fw regulatory solution
+>>>>
+>>>>    This enables the custom firmware regulatory solution option
+>>>>    on iwlwifi drivers. These devices are uncapable of mapping their
+>>>>    EEPROM regulatory domain to a specific ISO / IEC alpha2.
+>>>>    Although the new 11n devices (>= iwl 5000) have only
+>>>>    3 regultaory SKUs -- MOW, ABG (no N) and BG -- the older
+>>>>    devices (3945 and 4965) have a more complex SKU arrangement
+>>>>    and therefore its not practical to move this to the driver.
+>>>>
+>>>>    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>>>    Acked-by: Zhu Yi <yi.zhu@intel.com>
+>>>>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>> Doh yes that would be required or it would make this pointless.
+>>>
+>>>   Luis
+>>>
+>> Looks like it requires a preparatory commit:
+>>
+>> commit f3b407fba52e1b86ca286ee7c218a4fb00bd29e0
+>> Author: Johannes Berg <johannes@sipsolutions.net>
+>> Date:   Tue Oct 21 09:57:41 2008 +0200
+>>
+>>    wireless: remove cfg80211_reg_mutex
+>>
+>>    This mutex is wrong, we use cfg80211_drv_mutex (which should
+>>    possibly be renamed to just cfg80211_mutex) everywhere except
+>>    in one place, fix that and get rid of the extra mutex.
+>>
+>>    Also get rid of a spurious regulatory_requests list definition.
+>>
+>>    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> Ah crap. This may be too much for stable. Did you get a hang without
+> it? Or is it not applying cleanly? If the later then a port may be
+> required.
+> 
+>   Luis
 
-Nick, are you ok with taking this patch as-is and adding the other stuff
-in later?  It does fix a warning in mac80211 for unknown rates and 
-instead warns with the actual hw rate code we get.
+I spoke too soon. Its doesn't compile even with
+f3b407fba52e1b86ca286ee7c218a4fb00bd29e0 applied.
 
-Here's a repost (rebased, if it matters):
+What is the downside of just turning OLD_REG back on for 2.6.28?
 
-From: Bob Copeland <me@bobcopeland.com>
-Date: Mon, 2 Mar 2009 21:55:18 -0500
-Subject: [PATCH] ath5k: warn and correct rate for unknown hw rate indexes
-
-ath5k sets up a mapping table from the hardware rate index to
-the rate index used by mac80211; however, we have seen some
-received frames with incorrect rate indexes.  Such frames
-normally get dropped with a warning in __ieee80211_rx(),
-but it doesn't include enough information to track down the
-error.
-
-This patch adds a warning to hw_to_driver_rix for any lookups
-that result in a rate index of -1, then returns a valid rate so
-the frame can be processed.
-
-Changes-licensed-under: 3-Clause-BSD
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/base.c |   15 ++++++++++++---
- drivers/net/wireless/ath5k/base.h |    2 +-
- 2 files changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index f28b86c..6580df2 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1088,9 +1088,18 @@ ath5k_mode_setup(struct ath5k_softc *sc)
- static inline int
- ath5k_hw_to_driver_rix(struct ath5k_softc *sc, int hw_rix)
- {
--	WARN(hw_rix < 0 || hw_rix >= AR5K_MAX_RATES,
--			"hw_rix out of bounds: %x\n", hw_rix);
--	return sc->rate_idx[sc->curband->band][hw_rix];
-+	int rix;
-+
-+	/* return base rate on errors */
-+	if (WARN(hw_rix < 0 || hw_rix >= AR5K_MAX_RATES,
-+			"hw_rix out of bounds: %x\n", hw_rix))
-+		return 0;
-+
-+	rix = sc->rate_idx[sc->curband->band][hw_rix];
-+	if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_rix))
-+		rix = 0;
-+
-+	return rix;
- }
- 
- /***************\
-diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-index 20e0d14..8229561 100644
---- a/drivers/net/wireless/ath5k/base.h
-+++ b/drivers/net/wireless/ath5k/base.h
-@@ -112,7 +112,7 @@ struct ath5k_softc {
- 	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
- 	struct ieee80211_channel channels[ATH_CHAN_MAX];
- 	struct ieee80211_rate	rates[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
--	u8			rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
-+	s8			rate_idx[IEEE80211_NUM_BANDS][AR5K_MAX_RATES];
- 	enum nl80211_iftype	opmode;
- 	struct ath5k_hw		*ah;		/* Atheros HW */
- 
+rtg
 -- 
-1.6.0.6
-
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Tim Gardner tim.gardner@canonical.com
