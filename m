@@ -1,45 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mk-outboundfilter-5.mail.uk.tiscali.com ([212.74.114.1]:58750
-	"EHLO mk-outboundfilter-5.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758379AbZCSV5B (ORCPT
+Received: from nf-out-0910.google.com ([64.233.182.185]:59632 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750946AbZCGMGJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 17:57:01 -0400
-From: Adam Baker <linux@baker-net.org.uk>
-To: Anders Eriksson <aeriksson@fastmail.fm>
-Subject: Re: [Rt2400-devel] No ProbeResp == dead interface?
-Date: Thu, 19 Mar 2009 21:56:55 +0000
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
-References: <20090218205849.5723293CD93@tippex.mynet.homeunix.org> <200902212123.21950.linux@baker-net.org.uk> <20090308162023.BBD122C40D0@tippex.mynet.homeunix.org>
-In-Reply-To: <20090308162023.BBD122C40D0@tippex.mynet.homeunix.org>
+	Sat, 7 Mar 2009 07:06:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903192156.55843.linux@baker-net.org.uk> (sfid-20090319_225706_646372_5E11CA51)
+In-Reply-To: <1236418002-2189-2-git-send-email-jirislaby@gmail.com>
+References: <1236418002-2189-1-git-send-email-jirislaby@gmail.com>
+	 <1236418002-2189-2-git-send-email-jirislaby@gmail.com>
+Date: Sat, 7 Mar 2009 14:06:06 +0200
+Message-ID: <40f31dec0903070406j65b869fau3359ae8148824d83@mail.gmail.com> (sfid-20090307_130614_294507_1E454229)
+Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: don't change mac in
+	eeprom_read_mac on error
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 08 March 2009, Anders Eriksson wrote:
-> So,
-> Now it has happened again. :-(
+2009/3/7 Jiri Slaby <jirislaby@gmail.com>:
+> Do not touch mac parameter passed to ath5k_eeprom_read_mac unless
+> we are sure we have correct address. I.e. when returning error, do
+> not change it.
 >
-> I can conclude that a rmmod/modprobe cycle does not help.
+> While at it, use '=3D {}' compiler trick for memsetting mac_d.
+>
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: Nick Kossifidis <jirislaby@gmail.com>
+> Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Cc: Bob Copeland <me@bobcopeland.com>
+> ---
+> =C2=A0drivers/net/wireless/ath5k/eeprom.c | =C2=A0 =C2=A09 +++------
+> =C2=A01 files changed, 3 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath5k/eeprom.c b/drivers/net/wirele=
+ss/ath5k/eeprom.c
+> index a54ee7e..ac45ca4 100644
+> --- a/drivers/net/wireless/ath5k/eeprom.c
+> +++ b/drivers/net/wireless/ath5k/eeprom.c
+> @@ -1418,14 +1418,11 @@ ath5k_eeprom_init(struct ath5k_hw *ah)
+> =C2=A0*/
+> =C2=A0int ath5k_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac)
+> =C2=A0{
+> - =C2=A0 =C2=A0 =C2=A0 u8 mac_d[ETH_ALEN];
+> + =C2=A0 =C2=A0 =C2=A0 u8 mac_d[ETH_ALEN] =3D {};
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0u32 total, offset;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0u16 data;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int octet, ret;
+>
+> - =C2=A0 =C2=A0 =C2=A0 memset(mac, 0, ETH_ALEN);
+> - =C2=A0 =C2=A0 =C2=A0 memset(mac_d, 0, ETH_ALEN);
+> -
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ath5k_hw_eeprom_read(ah, 0x20, &da=
+ta);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return ret;
+> @@ -1441,11 +1438,11 @@ int ath5k_eeprom_read_mac(struct ath5k_hw *ah=
+, u8 *mac)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0octet +=3D 2;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>
+> - =C2=A0 =C2=A0 =C2=A0 memcpy(mac, mac_d, ETH_ALEN);
+> -
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (!total || total =3D=3D 3 * 0xffff)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return -EINVAL=
+;
+>
+> + =C2=A0 =C2=A0 =C2=A0 memcpy(mac, mac_d, ETH_ALEN);
+> +
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0return 0;
+> =C2=A0}
 >
 
-Well I can see from those logs that it is only the transmit side that is 
-failing, some traffic is being seen on the receive side.
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Does your hardware have an rfkill button and do you have rfkill support 
-enabled? I'm wondering if rfkill could be activated by a glitch on the 
-signal.
 
-Other than that this is going to be tricky to do anything with. The fact that 
-rmmod doesn't help suggests that there is a reasonable possibility of this 
-being a hardware issue that the software can't fix (assuming this is a rt2500 
-issue, not something deeper in the stack). You can't do any very intrusive 
-monitoring as the system needs to be left too long before it fails, except 
-possibly by rmmodding the original driver when it fails and insmodding a new 
-one that contains lots of printk statements in the tx path to see which het 
-triggered. If trying that approach don't forget to instrument 
-rt2500pci_interrupt as well as rt2x00mac_tx
-
-Adam
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
