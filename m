@@ -1,74 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:28239 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752292AbZCTB4K (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:16690 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753563AbZCGN4K convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 21:56:10 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so131853fga.17
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 18:56:06 -0700 (PDT)
+	Sat, 7 Mar 2009 08:56:10 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so137927eya.37
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Mar 2009 05:56:06 -0800 (PST)
+From: Florian Fainelli <florian@openwrt.org>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Subject: Re: [PATCH 00/15] ath9k: Virtual interfaces and radios
+Date: Sat, 7 Mar 2009 14:56:03 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <20090303172325.437810138@atheros.com>
+In-Reply-To: <20090303172325.437810138@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <49C2D537.6080406@giuppi.com>
-References: <49C12DFA.80308@giuppi.com>
-	 <3ace41890903191439q1c375925md2e4227f79147399@mail.gmail.com>
-	 <49C2D537.6080406@giuppi.com>
-Date: Fri, 20 Mar 2009 01:56:05 +0000
-Message-ID: <3ace41890903191856s234118c9j2f4de15486cb37a9@mail.gmail.com> (sfid-20090320_025613_913770_D89A84B0)
-Subject: Re: rtl8187 bug report
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "Info[at]Giuppi" <info@giuppi.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Message-Id: <200903071456.03827.florian@openwrt.org> (sfid-20090307_145621_148826_97936F4F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 19, 2009 at 11:28 PM, Info[at]Giuppi <info@giuppi.com> wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+Hello Jouni,
+
+Le Tuesday 03 March 2009 18:23:25 Jouni Malinen, vous avez =C3=A9crit=C2=
+=A0:
+> When using virtual wiphys, the APs that the virtual interfaces are
+> associated with do not need to be on the same channel. One of the
+> wiphys could also be used with hostapd to bring up an AP. However, it
+> should be noted that most client implementation do not exactly like
+> the AP disappearing all the time, so using a virtual station interfac=
+e
+> on another channel at the same time may not be that good of an idea
+> for most use cases now. This will hopefully improve somewhat with
+> future optimizations.
 >
-> Hin-Tak Leung ha scritto:
->>
->> I am not familiar with aircrack-ng, but I believe it can be used with
->> a modified version of the vendor rtl8187 driver, (and the aircrack-ng
->> people hosts a modified version of the vendor driver on their web
->> site). I have not actually looked at their modification so I have no
->> idea what modification is required for aircrack-ng to work well, but I
->> believe *some* adaptation is required?
-> RTL8187B has no official linux support by the vendor. The driver
-> you're referencing to has been adapted by one guy and "works" for old
-> kernel versions only.
-> I'm very happy with this new rtl8187. The problem in not related to
-> the aircrack-ng software. I'm just saying I think there's something
-> wrong with WEP networks in monitor mode. Using a tool from the suite
-> to scan local wireless networks I've found out that strange behaviour
-> only with WEPs.
-
-You are somewhat wrong about Realtek's position - I am speaking as one
-of the 3 current maintainers of the new rtl8187 code, by the way, if
-you didn't know that... - Realtek staff have been quite co-operative,
-and while the vendor driver is behind and have some other issues, they
-have regular releases through OEM channels. (there is also a chance
-that the "one guy" you refer to is me - at least 3 people had tried to
-port the vendor driver forward).
-
->> On a different issue - I think such adaptation are frown upon and will
->> not make it into the standard kernel, due to its nature of typical
->> usage in a controversal scenario. Maybe other wireless dev people,
->> especially Herton and Larry, can advise.
-> As far as I know there are no adaptations needed. Wanted or not, it
-> already works in those "controversal scenario".
-> The rt73usb driver comes from the same compat-wireless package and it
-> hasn't that problem, for example. The rtl8187 driver itself works
-> great for networks other than WEP.
 >
-> Thanks very much for your reply, I hope some of the devs can take the
-> time to check if I'm wrong.
+> It would be useful to hear what others think about this sort of
+> functionality and how this should be integrated with Linux, including
+> the user space interface, applications managing the virtual interface
+> functionality, and user interface that the end users would see. This
+> is still quite an early step in the progress, but the goal here is to
+> get this functionality into mature state and provide something that
+> makes it easier to use wireless LAN in general for connecting devices
+> in various scenarios. All feedback would be welcome!
 
-According to http://www.aircrack-ng.org/doku.php?id=rtl8187 , two
-small patches are recommended.
-vs the vendor driver, which needs one rather big patch:
-http://www.aircrack-ng.org/doku.php?id=r8187
+I am only commenting from a user point of view this feature. This defin=
+itively=20
+is very useful since quite a lot of people stick to madwifi instead of =
+using=20
+ath5k or ath9k since there was not real support before this patch for v=
+irtual=20
+interfaces.
 
-The fragmentation patch applies to both rtl8187 anf rt73usb, but the
-injection patch is rtl8187-specific. If the latter works better for
-you and have no detrimental effect on "normal" usage, we can consider
-putting it in. (it looks a bit wrong though)
+One thing that I did not like with wlanconfig and I would like not to f=
+ind=20
+with mac80211/cfg80211 is the incompatibility of some setups (i.e: AP s=
+hould=20
+be created first, STA interface later with nosbeacon), not sure this is=
+=20
+possible, but if it is, one should be able to add a virtual interface w=
+ithout=20
+knowing the state of the other interfaces before.
+
+I really like the way we can create mesh point interfaces with iw, so t=
+his=20
+could be the user interface to configure virtual interfaces, say like t=
+his :
+
+iw dev wlan0 interface add sta0 type sta
+iw dev wlan0 interface add ap0 type master
+
+On a broader perspective, I really hope other drivers will become capab=
+le of=20
+supporting virtual interfaces as well.
+
+Thank you for your work.
+--=20
+Best regards, Florian Fainelli
+Email : florian@openwrt.org
+http://openwrt.org
+-------------------------------
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
