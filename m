@@ -1,107 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42232 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760964AbZCYMIU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 08:08:20 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 05:08:19 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2] mac80211: Fix bug in getting rx status for frames pending in reorder buffer
-Date: Wed, 25 Mar 2009 17:34:11 +0530
-Message-ID: <1237982651-6761-1-git-send-email-vasanth@atheros.com> (sfid-20090325_130831_352072_0AF1A2E2)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.wellnetcz.com ([212.24.148.102]:55085 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752072AbZCGJ1h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Mar 2009 04:27:37 -0500
+From: Jiri Slaby <jirislaby@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/2] ath5k: don't change mac in eeprom_read_mac on error
+Date: Sat,  7 Mar 2009 10:26:42 +0100
+Message-Id: <1236418002-2189-2-git-send-email-jirislaby@gmail.com> (sfid-20090307_102759_090306_8B88B481)
+In-Reply-To: <1236418002-2189-1-git-send-email-jirislaby@gmail.com>
+References: <1236418002-2189-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently rx status for frames which are completed from reorder buffer
-is taken from it's cb area which is not always right, cb is not holding
-the rx status when driver uses mac80211's non-irq rx handler to pass it's
-received frames. This results in dropping almost all frames from reorder 
-buffer when security is enabled by doing double decryption (first in hw, 
-second in sw because of wrong rx status). This patch copies rx status into 
-cb area before the frame is put into reorder buffer. After this patch, 
-there is a significant improvement in throughput with ath9k + WPA2(AES).
+Do not touch mac parameter passed to ath5k_eeprom_read_mac unless
+we are sure we have correct address. I.e. when returning error, do
+not change it.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+While at it, use '= {}' compiler trick for memsetting mac_d.
+
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <jirislaby@gmail.com>
+Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
+Cc: Bob Copeland <me@bobcopeland.com>
 ---
-v2
----
-As issue lies only in non-irq rx handler path, change
-the commit log accordingly.
+ drivers/net/wireless/ath5k/eeprom.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
- net/mac80211/rx.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 64ebe66..5fa7aed 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -29,6 +29,7 @@
- static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 					   struct tid_ampdu_rx *tid_agg_rx,
- 					   struct sk_buff *skb,
-+					   struct ieee80211_rx_status *status,
- 					   u16 mpdu_seq_num,
- 					   int bar_req);
- /*
-@@ -1688,7 +1689,7 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
- 		/* manage reordering buffer according to requested */
- 		/* sequence number */
- 		rcu_read_lock();
--		ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, NULL,
-+		ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, NULL, NULL,
- 						 start_seq_num, 1);
- 		rcu_read_unlock();
- 		return RX_DROP_UNUSABLE;
-@@ -2293,6 +2294,7 @@ static inline u16 seq_sub(u16 sq1, u16 sq2)
- static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 					   struct tid_ampdu_rx *tid_agg_rx,
- 					   struct sk_buff *skb,
-+					   struct ieee80211_rx_status *rxstatus,
- 					   u16 mpdu_seq_num,
- 					   int bar_req)
+diff --git a/drivers/net/wireless/ath5k/eeprom.c b/drivers/net/wireless/ath5k/eeprom.c
+index a54ee7e..ac45ca4 100644
+--- a/drivers/net/wireless/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath5k/eeprom.c
+@@ -1418,14 +1418,11 @@ ath5k_eeprom_init(struct ath5k_hw *ah)
+  */
+ int ath5k_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac)
  {
-@@ -2374,6 +2376,8 @@ static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+-	u8 mac_d[ETH_ALEN];
++	u8 mac_d[ETH_ALEN] = {};
+ 	u32 total, offset;
+ 	u16 data;
+ 	int octet, ret;
  
- 	/* put the frame in the reordering buffer */
- 	tid_agg_rx->reorder_buf[index] = skb;
-+	memcpy(tid_agg_rx->reorder_buf[index]->cb, rxstatus,
-+	       sizeof(*rxstatus));
- 	tid_agg_rx->stored_mpdu_num++;
- 	/* release the buffer until next missing frame */
- 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn)
-@@ -2399,7 +2403,8 @@ static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- }
- 
- static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
--				     struct sk_buff *skb)
-+				     struct sk_buff *skb,
-+				     struct ieee80211_rx_status *status)
- {
- 	struct ieee80211_hw *hw = &local->hw;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -2448,7 +2453,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
- 
- 	/* according to mpdu sequence number deal with reordering buffer */
- 	mpdu_seq_num = (sc & IEEE80211_SCTL_SEQ) >> 4;
--	ret = ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb,
-+	ret = ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb, status,
- 						mpdu_seq_num, 0);
-  end_reorder:
- 	return ret;
-@@ -2512,7 +2517,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		return;
+-	memset(mac, 0, ETH_ALEN);
+-	memset(mac_d, 0, ETH_ALEN);
+-
+ 	ret = ath5k_hw_eeprom_read(ah, 0x20, &data);
+ 	if (ret)
+ 		return ret;
+@@ -1441,11 +1438,11 @@ int ath5k_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac)
+ 		octet += 2;
  	}
  
--	if (!ieee80211_rx_reorder_ampdu(local, skb))
-+	if (!ieee80211_rx_reorder_ampdu(local, skb, status))
- 		__ieee80211_rx_handle_packet(hw, skb, status, rate);
+-	memcpy(mac, mac_d, ETH_ALEN);
+-
+ 	if (!total || total == 3 * 0xffff)
+ 		return -EINVAL;
  
- 	rcu_read_unlock();
++	memcpy(mac, mac_d, ETH_ALEN);
++
+ 	return 0;
+ }
+ 
 -- 
-1.5.5.1
+1.6.1.3
 
