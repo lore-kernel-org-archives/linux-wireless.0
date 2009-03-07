@@ -1,95 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60383 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbZCUDxM (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32816 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754439AbZCGTa3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 23:53:12 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Quentin@armitage.org.uk,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 4/5] cfg80211: remove code about country IE support with OLD_REG
-Date: Fri, 20 Mar 2009 23:53:07 -0400
-Message-Id: <1237607588-6316-5-git-send-email-lrodriguez@atheros.com> (sfid-20090321_045325_222292_7783BC35)
-In-Reply-To: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
-References: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 7 Mar 2009 14:30:29 -0500
+Date: Sat, 7 Mar 2009 14:24:17 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Chuck Anderson <cra@WPI.EDU>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwlagn won't scan 5 GHz band
+Message-ID: <20090307192417.GA6648@tuxdriver.com> (sfid-20090307_203033_624156_2A713A41)
+References: <20090306230124.GU10097@angus.ind.WPI.EDU>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="8t9RHnE3ZwKMSgU+"
+In-Reply-To: <20090306230124.GU10097@angus.ind.WPI.EDU>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We had left in code to allow interested developers to add
-support for parsing country IEs when OLD_REG was enabled.
-This never happened and since we're going to remove OLD_REG
-lets just remove these comments and code for it.
 
-This code path was never being entered so this has no
-functional change.
+--8t9RHnE3ZwKMSgU+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |   39 +++++++++++----------------------------
- 1 files changed, 11 insertions(+), 28 deletions(-)
+On Fri, Mar 06, 2009 at 06:01:24PM -0500, Chuck Anderson wrote:
+> Please Cc: me on replies as I'm not subscribed.  Thanks.
+> 
+> I have a 4965, using kernel-2.6.29-0.197.rc7.fc11.x86_64 (Intel(R) 
+> Wireless WiFi Link AGN driver for Linux, 1.3.27kds).  I can connect to 
+> 802.11n on 2.4 GHz, but it never finds the 5 GHz cell of the AP.  Is 5 
+> GHz 802.11n supported yet?  For that matter, shouldn't I be seeing the 
+> 802.11a from my APs?  How do I get this thing to scan the A/N 5 GHz 
+> band?
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ac048a1..6327e16 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1420,16 +1420,6 @@ new_request:
- 		return r;
- 	}
- 
--	/*
--	 * Note: When CONFIG_WIRELESS_OLD_REGULATORY is enabled
--	 * AND if CRDA is NOT present nothing will happen, if someone
--	 * wants to bother with 11d with OLD_REG you can add a timer.
--	 * If after x amount of time nothing happens you can call:
--	 *
--	 * return set_regdom(country_ie_regdomain);
--	 *
--	 * to intersect with the static rd
--	 */
- 	return call_crda(last_request->alpha2);
- }
- 
-@@ -2033,28 +2023,21 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	 */
- 
- 	BUG_ON(!country_ie_regdomain);
-+	BUG_ON(rd == country_ie_regdomain);
- 
--	if (rd != country_ie_regdomain) {
--		/*
--		 * Intersect what CRDA returned and our what we
--		 * had built from the Country IE received
--		 */
-+	/*
-+	 * Intersect what CRDA returned and our what we
-+	 * had built from the Country IE received
-+	 */
- 
--		intersected_rd = regdom_intersect(rd, country_ie_regdomain);
-+	intersected_rd = regdom_intersect(rd, country_ie_regdomain);
- 
--		reg_country_ie_process_debug(rd, country_ie_regdomain,
--			intersected_rd);
-+	reg_country_ie_process_debug(rd,
-+				     country_ie_regdomain,
-+				     intersected_rd);
- 
--		kfree(country_ie_regdomain);
--		country_ie_regdomain = NULL;
--	} else {
--		/*
--		 * This would happen when CRDA was not present and
--		 * OLD_REGULATORY was enabled. We intersect our Country
--		 * IE rd and what was set on cfg80211 originally
--		 */
--		intersected_rd = regdom_intersect(rd, cfg80211_regdomain);
--	}
-+	kfree(country_ie_regdomain);
-+	country_ie_regdomain = NULL;
- 
- 	if (!intersected_rd)
- 		return -EINVAL;
+Ah, the joys of Rawhide...
+
+Make sure you have "iw" installed.
+
+	yum install iw
+
+Then you need to specify your regulatory domain:
+
+	iw reg set US # Use ISO/IEC 3166-1 alpha2 as appropriate for you
+
+Does that change things for you?
+
+We are still discussing ways to get this set automatically.  We are
+hoping that NetworkManager grows this capability "soon"...  In the
+meantime, you might try calling the attached script from /etc/rc.local.
+
+Hth!
+
+John
 -- 
-1.6.0.6
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
 
+--8t9RHnE3ZwKMSgU+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=set-regdomain
+
+#!/bin/sh
+
+CLOCK=/etc/sysconfig/clock
+
+if [ -f $CLOCK ]
+then
+	# This should set ZONE
+	. $CLOCK
+else
+	echo "Timezone information not found!  Unable to set regulatory domain."
+	exit
+fi
+
+if [ -z "$ZONE" ]
+then
+	echo "Timezone information not set!  Unable to set regulatory domain."
+	exit
+fi
+
+COOKED_ZONE=$(echo $ZONE | sed -e 's/ /_/')
+
+COUNTRY=$(grep $COOKED_ZONE /usr/share/zoneinfo/zone.tab | awk '{ print $1 }')
+
+if [ -z "$COUNTRY" ]
+then
+	echo "Could not determine country!  Unable to set regulatory domain."
+	exit
+fi
+
+iw reg set $COUNTRY
+
+--8t9RHnE3ZwKMSgU+--
