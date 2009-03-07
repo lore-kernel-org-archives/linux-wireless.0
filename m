@@ -1,74 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:28999 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbZCTBAc (ORCPT
+Received: from smtp.wellnetcz.com ([212.24.148.102]:55086 "EHLO
+	smtp.wellnetcz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067AbZCGJ1h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 21:00:32 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so936102wff.4
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 18:00:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1237224184.5027.600.camel@samson.armitage.org.uk>
-References: <1237224184.5027.600.camel@samson.armitage.org.uk>
-Date: Thu, 19 Mar 2009 18:00:30 -0700
-Message-ID: <43e72e890903191800y7f30a58fheeb1b8f25eb6d7f2@mail.gmail.com> (sfid-20090320_020038_358404_90869F76)
-Subject: Re: Oops and other problems in cfg80211
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Quentin Armitage <Quentin@armitage.org.uk>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sat, 7 Mar 2009 04:27:37 -0500
+From: Jiri Slaby <jirislaby@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/2] ath5k: constify stuff
+Date: Sat,  7 Mar 2009 10:26:41 +0100
+Message-Id: <1236418002-2189-1-git-send-email-jirislaby@gmail.com> (sfid-20090307_102756_492888_462E3442)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2009 at 10:23 AM, Quentin Armitage
-<Quentin@armitage.org.uk> wrote:
-> If cfg80211 is compiled with CONFIG_WIRELESS_OLD_REGULATORY defined, if
-> insmod is loaded with "insmod cfg80211 ieee80211_regdom=EU" then the
-> execution of insmod mac80211, executing insmod ath5k causes an oops.
-> This is caused by wiphy_update_regulatory being called when last_request
-> == NULL, and the call of reg_is_world_roaming (via reg_process_beacons)
-> causes the oops at last_request->initiator != REGDOM_SET_BY_COUNTRY_IE.
->
-> If reg_is_world_roaming is modified to check for last_request not being
-> NULL, e.g.
-> if (last_request && last_request->initiator != REGDOM_SET_BY_COUNTRY_IE
-> &&
-> then I also get an oops in reg_device_remove where last_request is
-> referenced and there is only a subsequent check for it being NULL.
->
-> Even if the above two are fixed, it will not associate with the access
-> point, and `iwlist wlan0 channels` produces a rather confused list. It
-> appears that, despite the comment, in regulatory_init it is necessary to
-> call regulatory_hint_core even for the pseudo country EU.
+Make some structures const to place them in .rodata, since we won't
+change them.
 
-Yes, good catch, the entire code in reg.c assumes this was always
-done. We overlooked the fact when "EU" became the only exemption.
+Most important parts of objdump -h:
+-  0 .text         00011170
++  0 .text         00011140
+-  5 .rodata       0000828e
++  5 .rodata       0000895e
+- 13 .data         00000560
++ 13 .data         00000110
+- 14 .devinit.data 00000260
 
-> Patch1 below covers the points above, although I am not sure how useful
-> the BUG_ON (!last_request) in reg_is_world_roaming is.
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
+Cc: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/attach.c |   13 ++++++-------
+ drivers/net/wireless/ath5k/base.c   |    8 ++++----
+ drivers/net/wireless/ath5k/debug.c  |   10 +++++-----
+ drivers/net/wireless/ath5k/reset.c  |    2 +-
+ 4 files changed, 16 insertions(+), 17 deletions(-)
 
-Its better to understand the code than sprinkle random BUG_ONs, and in
-this particular case you've already found the issue. So lets address
-and fix that appropriately.
+diff --git a/drivers/net/wireless/ath5k/attach.c b/drivers/net/wireless/ath5k/attach.c
+index 05bc5cb..656cb9d 100644
+--- a/drivers/net/wireless/ath5k/attach.c
++++ b/drivers/net/wireless/ath5k/attach.c
+@@ -34,14 +34,14 @@
+ static int ath5k_hw_post(struct ath5k_hw *ah)
+ {
+ 
+-	int i, c;
+-	u16 cur_reg;
+-	u16 regs[2] = {AR5K_STA_ID0, AR5K_PHY(8)};
+-	u32 var_pattern;
+-	u32 static_pattern[4] = {
++	static const u32 static_pattern[4] = {
+ 		0x55555555,	0xaaaaaaaa,
+ 		0x66666666,	0x99999999
+ 	};
++	static const u16 regs[2] = { AR5K_STA_ID0, AR5K_PHY(8) };
++	int i, c;
++	u16 cur_reg;
++	u32 var_pattern;
+ 	u32 init_val;
+ 	u32 cur_val;
+ 
+@@ -106,7 +106,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ {
+ 	struct ath5k_hw *ah;
+ 	struct pci_dev *pdev = sc->pdev;
+-	u8 mac[ETH_ALEN] = {};
+ 	int ret;
+ 	u32 srev;
+ 
+@@ -312,7 +311,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 	}
+ 
+ 	/* MAC address is cleared until add_interface */
+-	ath5k_hw_set_lladdr(ah, mac);
++	ath5k_hw_set_lladdr(ah, (u8[ETH_ALEN]){});
+ 
+ 	/* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
+ 	memset(ah->ah_bssid, 0xff, ETH_ALEN);
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 08d691d..780fe6c 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -79,7 +79,7 @@ MODULE_VERSION("0.6.0 (EXPERIMENTAL)");
+ 
+ 
+ /* Known PCI ids */
+-static struct pci_device_id ath5k_pci_id_table[] __devinitdata = {
++static const struct pci_device_id ath5k_pci_id_table[] = {
+ 	{ PCI_VDEVICE(ATHEROS, 0x0207), .driver_data = AR5K_AR5210 }, /* 5210 early */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0007), .driver_data = AR5K_AR5210 }, /* 5210 */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0011), .driver_data = AR5K_AR5211 }, /* 5311 - this is on AHB bus !*/
+@@ -103,7 +103,7 @@ static struct pci_device_id ath5k_pci_id_table[] __devinitdata = {
+ MODULE_DEVICE_TABLE(pci, ath5k_pci_id_table);
+ 
+ /* Known SREVs */
+-static struct ath5k_srev_name srev_names[] = {
++static const struct ath5k_srev_name srev_names[] = {
+ 	{ "5210",	AR5K_VERSION_MAC,	AR5K_SREV_AR5210 },
+ 	{ "5311",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311 },
+ 	{ "5311A",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311A },
+@@ -142,7 +142,7 @@ static struct ath5k_srev_name srev_names[] = {
+ 	{ "xxxxx",	AR5K_VERSION_RAD,	AR5K_SREV_UNKNOWN },
+ };
+ 
+-static struct ieee80211_rate ath5k_rates[] = {
++static const struct ieee80211_rate ath5k_rates[] = {
+ 	{ .bitrate = 10,
+ 	  .hw_value = ATH5K_RATE_CODE_1M, },
+ 	{ .bitrate = 20,
+@@ -248,7 +248,7 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
+ 		struct ieee80211_bss_conf *bss_conf,
+ 		u32 changes);
+ 
+-static struct ieee80211_ops ath5k_hw_ops = {
++static const struct ieee80211_ops ath5k_hw_ops = {
+ 	.tx 		= ath5k_tx,
+ 	.start 		= ath5k_start,
+ 	.stop 		= ath5k_stop,
+diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+index 413ed68..9770bb3 100644
+--- a/drivers/net/wireless/ath5k/debug.c
++++ b/drivers/net/wireless/ath5k/debug.c
+@@ -82,14 +82,14 @@ static int ath5k_debugfs_open(struct inode *inode, struct file *file)
+ /* debugfs: registers */
+ 
+ struct reg {
+-	char *name;
++	const char *name;
+ 	int addr;
+ };
+ 
+ #define REG_STRUCT_INIT(r) { #r, r }
+ 
+ /* just a few random registers, might want to add more */
+-static struct reg regs[] = {
++static const struct reg regs[] = {
+ 	REG_STRUCT_INIT(AR5K_CR),
+ 	REG_STRUCT_INIT(AR5K_RXDP),
+ 	REG_STRUCT_INIT(AR5K_CFG),
+@@ -142,7 +142,7 @@ static struct reg regs[] = {
+ 
+ static void *reg_start(struct seq_file *seq, loff_t *pos)
+ {
+-	return *pos < ARRAY_SIZE(regs) ? &regs[*pos] : NULL;
++	return *pos < ARRAY_SIZE(regs) ? (void *)&regs[*pos] : NULL;
+ }
+ 
+ static void reg_stop(struct seq_file *seq, void *p)
+@@ -153,7 +153,7 @@ static void reg_stop(struct seq_file *seq, void *p)
+ static void *reg_next(struct seq_file *seq, void *p, loff_t *pos)
+ {
+ 	++*pos;
+-	return *pos < ARRAY_SIZE(regs) ? &regs[*pos] : NULL;
++	return *pos < ARRAY_SIZE(regs) ? (void *)&regs[*pos] : NULL;
+ }
+ 
+ static int reg_show(struct seq_file *seq, void *p)
+@@ -290,7 +290,7 @@ static const struct file_operations fops_reset = {
+ 
+ /* debugfs: debug level */
+ 
+-static struct {
++static const struct {
+ 	enum ath5k_debug_level level;
+ 	const char *name;
+ 	const char *desc;
+diff --git a/drivers/net/wireless/ath5k/reset.c b/drivers/net/wireless/ath5k/reset.c
+index 1531ccd..685dc21 100644
+--- a/drivers/net/wireless/ath5k/reset.c
++++ b/drivers/net/wireless/ath5k/reset.c
+@@ -102,7 +102,7 @@ static inline int ath5k_hw_write_ofdm_timings(struct ath5k_hw *ah,
+  * index into rates for control rates, we can set it up like this because
+  * this is only used for AR5212 and we know it supports G mode
+  */
+-static int control_rates[] =
++static const unsigned int control_rates[] =
+ 	{ 0, 1, 1, 1, 4, 4, 6, 6, 8, 8, 8, 8 };
+ 
+ /**
+-- 
+1.6.1.3
 
-> Having modified the above, I then found that the regulatory domain was
-> not being updated from the Country IE sent by the access point.
->  It
-> appears that the code following the comment "so we optimize an early
-> check ..." in regulatory_hint_11d is a little over optimized, since if
-> the following if statement is true, every path through that block ends
-> in "goto out;". Patch 2 below allows the Country IE to be processed
-> (note it also needs an extra check around a WARN_ON, and so the
-> preceeding comment to that needs considering).
-
-Thanks for reporting this as well, as you noted we didn't check for
-the last_request type and just made an assumption. The check should go
-on earlier.
-
-Will spin some patches to address this. The right solution really is
-to abandon OLD_REG, but that won't happen for stable right now so will
-spin some patches to address this for stable.
-
-Thanks,
-
-  Luis
