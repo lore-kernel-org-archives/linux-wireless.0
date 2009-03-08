@@ -1,89 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:51616 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751777AbZCDEfA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 23:35:00 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2009 20:34:59 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18862.1025.217829.656599@gargle.gargle.HOWL> (sfid-20090304_053502_466784_63BA16D1)
-Date: Wed, 4 Mar 2009 10:00:57 +0530
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Imre Kaloz <kaloz@openwrt.org>
-Subject: [RFC] ath9k: use correct init values for ar9100 devices
-In-Reply-To: <1236103846-1672-1-git-send-email-juhosg@openwrt.org>
-References: <1236103846-1672-1-git-send-email-juhosg@openwrt.org>
+Received: from ch-smtp01.sth.basefarm.net ([80.76.149.212]:47395 "EHLO
+	ch-smtp01.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752463AbZCHQ2x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Mar 2009 12:28:53 -0400
+To: Adam Baker <linux@baker-net.org.uk>
+cc: Anders Eriksson <aeriksson@fastmail.fm>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] No ProbeResp == dead interface?
+In-reply-to: <200902212123.21950.linux@baker-net.org.uk>
+References: <20090218205849.5723293CD93@tippex.mynet.homeunix.org> <200902202307.34035.linux@baker-net.org.uk> <20090221145528.5B11B2C4090@tippex.mynet.homeunix.org> <200902212123.21950.linux@baker-net.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Date: Sun, 08 Mar 2009 17:20:23 +0100
+From: Anders Eriksson <aeriksson@fastmail.fm>
+Message-Id: <20090308162023.BBD122C40D0@tippex.mynet.homeunix.org> (sfid-20090308_172857_136280_3E315708)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gabor Juhos wrote:
-> 1. In some cases the ethernet interface goes down for a short time
-> after'ifconfig wlan0 up'.
-> 2. Sometimes the device simply reboots itself after 'ifconfig wlan0 up'.
-> 
-> After I have added some printk statements into the code, I noticed that the
-> ar5416 and ar9100 devices use the same initval arrays currently. I assume
-> that they requires different initialization, because we have different
-> arrays for them.
-> 
 
-Yep, this is a bug, and AR_SREV_9100_OR_LATER is probably wrong.
+So, 
+Now it has happened again. :-(
 
-> Although I have no detailed knowledge about the evolution of the ath9k devices,
-> but the version checking macros for ther AR5416 cards seemed weird enough, so I
-> have replaced them. Unfortunately, this leaded to very bad performance with the
-> ar5416 cards I have, but the driver was working on the ar913x boards.
-> 
-> After some digging, I have found an interesting ifdef statement in Sam's current
-> HAL. In his ar5416Common initval array, this ifdef conditionally selects the
-> right RTC register offsets for the ar5416/ar9100 devices. The strange thing,
-> that in the ath9k driver the ar5416 specific RTC register offsets are used in
-> the ar5416Common_ar9100 array, while the ar9100 specific offsets are used in the
-> ar5416Common.
-> 
+I can conclude that a rmmod/modprobe cycle does not help. 
 
-I'll check the initval arrays and update.
+Some logs:
 
-> +#define AR_SREV_5416(_ah) \
-> +       (((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE) || \
-> +       ((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI))
-> +#define AR_SREV_5416_V20_OR_LATER(_ah) \
-> +       (((_ah)->hw_version.macVersion > AR_SREV_VERSION_5416_PCIE) || \
-> +       ((AR_SREV_5416(_ah)) && \
-> +       ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)))
-> +#define AR_SREV_5416_V22_OR_LATER(_ah) \
-> +       (((_ah)->hw_version.macVersion > AR_SREV_VERSION_5416_PCIE) || \
-> +       ((AR_SREV_5416(_ah)) && \
-> +       ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22)))
-> +
+At around noon, there was some hickup, from which we recovered:
+Mar  8 12:54:30 tippex wlan0: deauthenticated (Reason: 7)
+Mar  8 12:54:31 tippex wlan0: direct probe to AP 00:18:39:c0:5f:50 try 1
+Mar  8 12:54:31 tippex wlan0 direct probe responded
+Mar  8 12:54:31 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
+Mar  8 12:54:31 tippex wlan0: authenticated
+Mar  8 12:54:31 tippex wlan0: associate with AP 00:18:39:c0:5f:50
+Mar  8 12:54:31 tippex wlan0: RX ReassocResp from 00:18:39:c0:5f:50 (capab=0x431 status=0 aid=1)
+Mar  8 12:54:31 tippex wlan0: associated
 
-Hm, the 5416_V1, 5416_V2 macros have to check 3 different HW (5416, 9100, 9160).
 
-> +#define AR_SREV_9100(ah) \
-> +       ((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
->  #define AR_SREV_9100_OR_LATER(_ah) \
-> -       (((_ah)->hw_version.macVersion >= AR_SREV_VERSION_5416_PCIE))
-> -#define AR_SREV_5416_20_OR_LATER(_ah) \
-> -       (((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9160) || \
-> -               ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20))
-> -#define AR_SREV_5416_22_OR_LATER(_ah) \
-> -       (((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9160) || \
-> -               ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22))
-> +       ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100)
-> +
->  #define AR_SREV_9160(_ah) \
->         (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9160))
->  #define AR_SREV_9160_10_OR_LATER(_ah) \
-> --
-> 1.5.3.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The, at 15:18, we got the dreaded "No ProbeResp" again. Now I have a debugfs 
+dump for that time as well:
+Mar  8 15:09:01 tippex cron[6326]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:09:02 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:09:02 tippex wlan_queue: 14   0       24      51143   23      0       0
+Mar  8 15:09:02 tippex wlan_queue: 0    4233    24      0       9       9       0
+Mar  8 15:09:02 tippex wlan_queue: 1    1356551 24      0       23      23      0
+Mar  8 15:09:02 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:09:02 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:10:01 tippex cron[6334]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:10:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:10:01 tippex wlan_queue: 14   0       24      51854   14      0       0
+Mar  8 15:10:01 tippex wlan_queue: 0    4235    24      0       11      11      0
+Mar  8 15:10:01 tippex wlan_queue: 1    1356618 24      0       18      18      0
+Mar  8 15:10:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:10:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:11:01 tippex cron[6362]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:11:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:11:01 tippex wlan_queue: 14   0       24      52586   2       0       0
+Mar  8 15:11:01 tippex wlan_queue: 0    4236    24      0       12      12      0
+Mar  8 15:11:01 tippex wlan_queue: 1    1356712 24      0       16      16      0
+Mar  8 15:11:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:11:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:12:01 tippex cron[6379]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:12:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:12:01 tippex wlan_queue: 14   0       24      53363   11      0       0
+Mar  8 15:12:01 tippex wlan_queue: 0    4237    24      0       13      13      0
+Mar  8 15:12:01 tippex wlan_queue: 1    1356822 24      0       6       6       0
+Mar  8 15:12:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:12:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:13:01 tippex cron[6386]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:13:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:13:01 tippex wlan_queue: 14   0       24      54037   13      0       0
+Mar  8 15:13:01 tippex wlan_queue: 0    4238    24      0       14      14      0
+Mar  8 15:13:01 tippex wlan_queue: 1    1356876 24      0       12      12      0
+Mar  8 15:13:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:13:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:14:01 tippex cron[6392]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:14:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:14:01 tippex wlan_queue: 14   0       24      54762   18      0       0
+Mar  8 15:14:01 tippex wlan_queue: 0    4239    24      0       15      15      0
+Mar  8 15:14:01 tippex wlan_queue: 1    1356949 24      0       13      13      0
+Mar  8 15:14:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:14:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:14:18 tippex wlan0: No ProbeResp from current AP 00:18:39:c0:5f:50 - assume out of range
+Mar  8 15:15:01 tippex cron[6397]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:15:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:15:01 tippex wlan_queue: 14   0       24      55174   22      0       0
+Mar  8 15:15:01 tippex wlan_queue: 0    4243    24      0       19      19      0
+Mar  8 15:15:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
+Mar  8 15:15:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:15:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:16:01 tippex cron[6404]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:16:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:16:01 tippex wlan_queue: 14   0       24      55791   15      0       0
+Mar  8 15:16:01 tippex wlan_queue: 0    4243    24      0       19      19      0
+Mar  8 15:16:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
+Mar  8 15:16:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:16:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:17:01 tippex cron[6410]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:17:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:17:01 tippex wlan_queue: 14   0       24      56411   11      0       0
+Mar  8 15:17:01 tippex wlan_queue: 0    4243    24      0       19      19      0
+Mar  8 15:17:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
+Mar  8 15:17:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:17:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:18:01 tippex cron[6416]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:18:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:18:01 tippex wlan_queue: 14   0       24      57031   7       0       0
+Mar  8 15:18:01 tippex wlan_queue: 0    4243    24      0       19      19      0
+Mar  8 15:18:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
+Mar  8 15:18:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:18:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:19:01 tippex cron[6422]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:19:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:19:01 tippex wlan_queue: 14   0       24      57644   20      0       0
+Mar  8 15:19:01 tippex wlan_queue: 0    4243    24      0       19      19      0
+Mar  8 15:19:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
+Mar  8 15:19:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:19:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:20:01 tippex cron[6431]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:20:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:20:01 tippex wlan_queue: 14   0       24      58269   21      0       0
+Mar  8 15:20:01 tippex wlan_queue: 0    4243    24      0       19      19      0
+Mar  8 15:20:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
+Mar  8 15:20:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:20:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:21:01 tippex cron[6445]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:21:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:21:01 tippex wlan_queue: 14   0       24      58909   13      0       0
+Mar  8 15:21:01 tippex wlan_queue: 0    4243    24      0       19      19      0
+Mar  8 15:21:01 tippex wlan_queue: 1    1356953 24      0       17      17      0
+Mar  8 15:21:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:21:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar  8 15:22:01 tippex cron[6451]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar  8 15:22:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar  8 15:22:01 tippex wlan_queue: 14   0       24      59538   18      0       0
+Mar  8 15:22:02 tippex wlan_queue: 0    4243    24      0       19      19      0
+Mar  8 15:22:02 tippex wlan_queue: 1    1356953 24      0       17      17      0
+Mar  8 15:22:02 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar  8 15:22:02 tippex wlan_queue: 17   0       8       0       0       0       0
+
+
+
+Trying to rmmod/modprobe, I end up with:
+
+ar  8 17:07:17 tippex ADDRCONF(NETDEV_UP): wlan0: link is not ready
+Mar  8 17:07:18 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
+Mar  8 17:07:18 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
+Mar  8 17:07:18 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
+Mar  8 17:07:18 tippex wlan0: authenticate with AP 00:18:39:c0:5f:50
+Mar  8 17:07:18 tippex wlan0: authentication with AP 00:18:39:c0:5f:50 timed out
+Mar  8 17:07:28 tippex /etc/init.d/net.wlan0[7602]: Failed to configure wireless for wlan0
+Mar  8 17:07:28 tippex wlan0: direct probe to AP 00:18:39:c0:5f:50 try 1
+Mar  8 17:07:28 tippex wlan0: direct probe to AP 00:18:39:c0:5f:50 try 1
+Mar  8 17:07:28 tippex wlan0: deauthenticating by local choice (reason=3)
+Mar  8 17:07:28 tippex /etc/init.d/net.wlan0[7487]: ERROR: net.wlan0 failed to start
+
+
+The only way to get the interface back to operational status is to 
+/sbin/reboot the machine.
+
+Any ideas how this can be solved?
+/Anders 
+
+
