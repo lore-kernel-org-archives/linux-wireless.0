@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43983 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902AbZCJCFH (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54008 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752556AbZCHORX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 22:05:07 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 3/4] mac80211: disallow HT40 if max channel bandwidth is less than 40 MHz
-Date: Mon,  9 Mar 2009 22:04:58 -0400
-Message-Id: <1236650699-30538-4-git-send-email-lrodriguez@atheros.com> (sfid-20090310_030522_588890_70448F87)
-In-Reply-To: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
-References: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 8 Mar 2009 10:17:23 -0400
+Date: Sun, 8 Mar 2009 16:17:03 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix WMM ACM parsing and AC downgrade
+	operation
+Message-ID: <20090308141703.GA10782@jm.kir.nu> (sfid-20090308_151732_168574_74BD8C83)
+References: <20090305152346.GA30029@jm.kir.nu> <1236515287.4205.11.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1236515287.4205.11.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/util.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+On Sun, Mar 08, 2009 at 01:28:07PM +0100, Johannes Berg wrote:
+> On Thu, 2009-03-05 at 17:23 +0200, Jouni Malinen wrote:
+> 
+> > @@ -99,10 +99,13 @@ static u16 classify80211(struct ieee8021
+> >  	/* in case we are a client verify acm is not set for this ac */
+> >  	while (unlikely(local->wmm_acm & BIT(skb->priority))) {
+> >  		if (wme_downgrade_ac(skb)) {
+> > -			/* The old code would drop the packet in this
+> > -			 * case.
+> > +			/*
+> > +			 * This should not really happen. The AP has marked all
+> > +			 * lower ACs to require admission control which is not
+> > +			 * a reasonable configuration. Allow the frame to be
+> > +			 * transmitted using AC_BK as a workaround.
+> >  			 */
+> > -			return 0;
+> > +			break;
+> 
+> It seems to me that return 0 here was incorrect, or wme_downgrade_ac
+> needs changes?
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 32610a0..a891d7e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -796,6 +796,9 @@ int ieee80211_set_freq(struct ieee80211_sub_if_data *sdata, int freqMHz)
- 	if (!chan || (chan->flags & IEEE80211_CHAN_DISABLED))
- 		return ret;
- 
-+	if (conf_is_ht40(&local->hw.conf) && chan->max_bandwidth < 40)
-+		return ret;
-+
- 	if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
- 	    chan->flags & IEEE80211_CHAN_NO_IBSS)
- 		return ret;
+Yes, this return 0 was incorrect and that's why I'm fixing it to not
+return 0 in this patch.. ;-) In theory, the correct behavior would be to
+drop the frame if the AP is using mandatory admission control for all
+ACs, but in practice, it is probably better not to break the connection
+completely if the AP is misconfigured. The behavior after this patch is
+to downgrade the AC until one is found without ACM and if no such AC
+exists, use the lowest priority (AC_BK).
+
 -- 
-1.6.0.6
-
+Jouni Malinen                                            PGP id EFC895FA
