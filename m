@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:22224 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbZCMSvX convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:2624 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751478AbZCHDJh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 14:51:23 -0400
-Received: by yx-out-2324.google.com with SMTP id 8so383389yxm.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 11:51:20 -0700 (PDT)
+	Sat, 7 Mar 2009 22:09:37 -0500
+Date: Sat, 7 Mar 2009 22:09:28 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Sitsofe Wheeler <sitsofe@yahoo.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090308030928.GB14966@hash.localnet> (sfid-20090308_040942_864845_1779B1B5)
+References: <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org>
 MIME-Version: 1.0
-In-Reply-To: <1236941908.5235.27.camel@johannes.local>
-References: <1236939917.5235.7.camel@johannes.local>
-	 <1236941058.5235.12.camel@johannes.local>
-	 <1236941339.5235.14.camel@johannes.local>
-	 <1236941908.5235.27.camel@johannes.local>
-Date: Fri, 13 Mar 2009 14:51:20 -0400
-Message-ID: <b6c5339f0903131151m2dc43fbo52ace9d9070096c@mail.gmail.com> (sfid-20090313_195129_820956_2D983446)
-Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
-From: Bob Copeland <bcopeland@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090306094249.GA10236@silver.sucs.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 13, 2009 at 6:58 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> ath9k survives ping -f without even blinking.
->
-> Actually, not quite:
->
-> [ =A0289.753866]
-> [ =A0289.753869] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> [ =A0289.754164] [ INFO: inconsistent lock state ]
-> [ =A0289.754372] 2.6.29-rc7-wl-17155-g2f7ab92-dirty #29
-> [ =A0289.754598] ---------------------------------
-> [ =A0289.754805] inconsistent {in-softirq-W} -> {softirq-on-W} usage.
+On Fri, Mar 06, 2009 at 09:42:49AM +0000, Sitsofe Wheeler wrote:
+> > parallel with iwlist wlan0 scan (as root, so scans are actually 
+> > performed), in parallel with iperf or ping.  I didn't personally have
+> > luck with that workload, though.
 
-[softirq-on-W stack looks like:
+So I looked through this log for a few hours today.  Sorry to say
+that I don't have any answers, but here's a summary of what I saw:
 
-  sta_notify
-    ath_node_detach
-      ath_tx_node_cleanup
-        spin_lock()
+- it didn't seem like there were any obvious race conditions at play;
+  that is, I didn't see other ath5k_XXX functions being pre-empted
+  by ath5k_intr, followed by the softirq.
 
-vs the ath9k_tx_tasklet]
+- there were a few errors prior to catching the poison.  I don't think
+  the trace contains enough info to say whether they were phy errors,
+  unsupported jumbo type errors, or whatever.  Anyway there didn't seem
+  to be any obvious causal pattern, nothing like an error on the
+  40th previous buffer or a cascading series of errors.  Of course, 
+  the error could have happened much earlier compared to when the skbuff
+  in the freelist got reused.
 
-> Looks like we need to disable BHs for the sta functions or something?
->
-> johannes
+At this point, I guess the best way forward is to have a special debug
+patch for when we pass an skb up the stack, when it gets allocated, and
+what is in the descriptors.
 
-Yup... or pm can take sta_lock with spin_lock_irqsave() like the other
-callers of sta_notify.
+Jiri, I really think we should implement that better check for the
+self linked descriptor using the rxdp register.  bf_last is no longer a
+valid marker for the self-linked descriptor at the end of the loop since
+we re-add the just-processed descriptor every time through the loop  
+(or am I missing something?)...  If you want I'll cook up a patch for 
+that too.
 
-=46eel free to add my Acked-by on both the PM patches.  I'd been using
-CONFIG_PM_DEBUG to simulate suspend/resume but since you have to
-do 'devices' anyway to get the desired effect, the debug file here
-is nicer.
-
---=20
+-- 
 Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
