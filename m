@@ -1,275 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45330 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754190AbZCGDNi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 22:13:38 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2009 19:13:37 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <j@w1.fi>, <j@w1.fi>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211_hwsim: add regulatory testing options
-Date: Fri, 6 Mar 2009 19:12:55 -0800
-Message-ID: <1236395575-28930-1-git-send-email-lrodriguez@atheros.com> (sfid-20090307_041342_233792_4ADA0458)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:53232 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751999AbZCHOZj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Mar 2009 10:25:39 -0400
+Subject: Re: [PATCH] mac80211: Fix WMM ACM parsing and AC downgrade
+	operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090308141703.GA10782@jm.kir.nu>
+References: <20090305152346.GA30029@jm.kir.nu>
+	 <1236515287.4205.11.camel@johannes.local>
+	 <20090308141703.GA10782@jm.kir.nu>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dZVHGO8QscFzvRUqXBZ0"
+Date: Sun, 08 Mar 2009 15:25:33 +0100
+Message-Id: <1236522333.4205.37.camel@johannes.local> (sfid-20090308_152541_839043_D6BA6253)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the static regulatory hint and actually moves
-it to a module parameter. While at it we allow for different
-regulatory testing options. If you want to test different
-alpha2s just use the userspace regulatory request, this
-module parameter is designed specifically to help driver
-specific regulatory requests and also to help test world
-roaming without any hardware.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/mac80211_hwsim.c |  214 ++++++++++++++++++++++++++++++++-
- 1 files changed, 209 insertions(+), 5 deletions(-)
+--=-dZVHGO8QscFzvRUqXBZ0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 395f13d..6e883d9 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -30,6 +30,112 @@ static int radios = 2;
- module_param(radios, int, 0444);
- MODULE_PARM_DESC(radios, "Number of simulated radios");
- 
-+/**
-+ * enum hwsim_regtest - the type of regulatory tests we offer
-+ *
-+ * These are the different values you can use for the regtest
-+ * module parameter. This is useful to help test world roaming
-+ * and the driver regulatory_hint() call and combinations of these.
-+ * If you want to do specific alpha2 regulatory domain tests simply
-+ * use the userspace regulatory request as that will be respected as
-+ * well without the need of this module parameter. This is designed
-+ * only for testing the driver regulatory request, world roaming
-+ * and all possible combinations.
-+ *
-+ * @HWSIM_REGTEST_DISABLED: No regulatory tests are performed,
-+ * 	this is the default value.
-+ * @HWSIM_REGTEST_DRIVER_REG_FOLLOW: Used for testing the driver regulatory hint,
-+ * 	only one driver regulatory hint will be sent as such the
-+ * 	secondary radios are expected to follow.
-+ * @HWSIM_REGTEST_DRIVER_REG_ALL: Used for testing the driver regulatory
-+ * 	request with all radios reporting the same regulatory domain.
-+ * @HWSIM_REGTEST_DIFF_COUNTRY: Used for testing the drivers calling
-+ * 	different regulatory domains requests. Expected behaviour is for
-+ * 	an intersection to occur but each device will still use their
-+ * 	respective regulatory requested domains. Subsequent radios will
-+ * 	use the resulting intersection.
-+ * @HWSIM_REGTEST_WORLD_ROAM: Used for testing the world roaming. We acomplish
-+ *	this by using a custom beacon-capable regulatory domain for the first
-+ *	radio. All other device world roam.
-+ * @HWSIM_REGTEST_CUSTOM_WORLD: Used for testing the custom world regulatory
-+ * 	domain requests. All radios will adhere to this custom world regulatory
-+ * 	domain.
-+ * @HWSIM_REGTEST_CUSTOM_WORLD_2: Used for testing 2 custom world regulatory
-+ * 	domain requests. The first radio will adhere to the first custom world
-+ * 	regulatory domain, the second one to the second custom world regulatory
-+ * 	domain. All other devices will world roam.
-+ * @HWSIM_REGTEST_STRICT_FOLLOW_: Used for testing strict regulatory domain
-+ *	settings, only the first radio will send a regulatory domain request
-+ *	and use strict settings. The rest of the radios are expected to follow.
-+ * @HWSIM_REGTEST_STRICT_ALL: Used for testing strict regulatory domain settings.
-+ * 	All radios will adhere to this.
-+ * @HWSIM_REGTEST_STRICT_AND_DRIVER_REG: Used for testing strict regulatory
-+ *	domain settings, combined with secondary driver regulatory domain
-+ *	settings. The first radio will get a strict regulatory domain setting
-+ *	using the first driver regulatory request and the second radio will use
-+ *	non-strict settings using the second driver regulatory request. All
-+ *	other devices should follow the intersection created between the
-+ *	first two.
-+ * @HWSIM_REGTEST_ALL: Used for testing every possible mix. You will need
-+ * 	at least 6 radios for a complete test. We will test in this order:
-+ * 	1 - driver custom world regulatory domain
-+ * 	2 - second custom world regulatory domain
-+ * 	3 - first driver regulatory domain request
-+ * 	4 - second driver regulatory domain request
-+ * 	5 - strict regulatory domain settings using the third driver regulatory
-+ * 	    domain request
-+ * 	6 and on - should follow the intersection of the 3rd, 4rth and 5th radio
-+ * 	           regulatory requests.
-+ */
-+enum hwsim_regtest {
-+	HWSIM_REGTEST_DISABLED = 0,
-+	HWSIM_REGTEST_DRIVER_REG_FOLLOW = 1,
-+	HWSIM_REGTEST_DRIVER_REG_ALL = 2,
-+	HWSIM_REGTEST_DIFF_COUNTRY = 3,
-+	HWSIM_REGTEST_WORLD_ROAM = 4,
-+	HWSIM_REGTEST_CUSTOM_WORLD = 5,
-+	HWSIM_REGTEST_CUSTOM_WORLD_2 = 6,
-+	HWSIM_REGTEST_STRICT_FOLLOW = 7,
-+	HWSIM_REGTEST_STRICT_ALL = 8,
-+	HWSIM_REGTEST_STRICT_AND_DRIVER_REG = 9,
-+	HWSIM_REGTEST_ALL = 10,
-+};
-+
-+/* Set to one of the HWSIM_REGTEST_* values above */
-+static int regtest = HWSIM_REGTEST_DISABLED;
-+module_param(regtest, int, 0444);
-+MODULE_PARM_DESC(regtest, "The type of regulatory test we want to run");
-+
-+static const char *hwsim_alpha2s[] = {
-+	"FI",
-+	"AL",
-+	"US",
-+	"DE",
-+	"JP",
-+	"AL",
-+};
-+
-+static const struct ieee80211_regdomain hwsim_world_regdom_custom_01 = {
-+	.n_reg_rules = 4,
-+	.alpha2 =  "99",
-+	.reg_rules = {
-+		REG_RULE(2412-10, 2462+10, 40, 0, 20, 0),
-+		REG_RULE(2484-10, 2484+10, 40, 0, 20, 0),
-+		REG_RULE(5150-10, 5240+10, 40, 0, 30, 0),
-+		REG_RULE(5745-10, 5825+10, 40, 0, 30, 0),
-+	}
-+};
-+
-+static const struct ieee80211_regdomain hwsim_world_regdom_custom_02 = {
-+	.n_reg_rules = 2,
-+	.alpha2 =  "99",
-+	.reg_rules = {
-+		REG_RULE(2412-10, 2462+10, 40, 0, 20, 0),
-+		REG_RULE(5725-10, 5850+10, 40, 0, 30,
-+			NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS),
-+	}
-+};
-+
- struct hwsim_vif_priv {
- 	u32 magic;
- 	u8 bssid[ETH_ALEN];
-@@ -871,6 +977,64 @@ static int __init init_mac80211_hwsim(void)
- 			hw->wiphy->bands[band] = sband;
- 		}
- 
-+		/* Work to be done prior to ieee80211_register_hw() */
-+		switch (regtest) {
-+		case HWSIM_REGTEST_DISABLED:
-+		case HWSIM_REGTEST_DRIVER_REG_FOLLOW:
-+		case HWSIM_REGTEST_DRIVER_REG_ALL:
-+		case HWSIM_REGTEST_DIFF_COUNTRY:
-+			/*
-+			 * Nothing to be done for driver regulatory domain
-+			 * hints prior to ieee80211_register_hw()
-+			 */
-+			break;
-+		case HWSIM_REGTEST_WORLD_ROAM:
-+			if (i == 0) {
-+				hw->wiphy->custom_regulatory = true;
-+				wiphy_apply_custom_regulatory(hw->wiphy,
-+					&hwsim_world_regdom_custom_01);
-+			}
-+			break;
-+		case HWSIM_REGTEST_CUSTOM_WORLD:
-+			hw->wiphy->custom_regulatory = true;
-+			wiphy_apply_custom_regulatory(hw->wiphy,
-+				&hwsim_world_regdom_custom_01);
-+			break;
-+		case HWSIM_REGTEST_CUSTOM_WORLD_2:
-+			if (i == 0) {
-+				hw->wiphy->custom_regulatory = true;
-+				wiphy_apply_custom_regulatory(hw->wiphy,
-+					&hwsim_world_regdom_custom_01);
-+			} else if (i == 1) {
-+				hw->wiphy->custom_regulatory = true;
-+				wiphy_apply_custom_regulatory(hw->wiphy,
-+					&hwsim_world_regdom_custom_02);
-+			}
-+			break;
-+		case HWSIM_REGTEST_STRICT_ALL:
-+			hw->wiphy->strict_regulatory = true;
-+			break;
-+		case HWSIM_REGTEST_STRICT_FOLLOW:
-+		case HWSIM_REGTEST_STRICT_AND_DRIVER_REG:
-+			if (i == 0)
-+				hw->wiphy->strict_regulatory = true;
-+			break;
-+		case HWSIM_REGTEST_ALL:
-+			if (i == 0) {
-+				hw->wiphy->custom_regulatory = true;
-+				wiphy_apply_custom_regulatory(hw->wiphy,
-+					&hwsim_world_regdom_custom_01);
-+			} else if (i == 1) {
-+				hw->wiphy->custom_regulatory = true;
-+				wiphy_apply_custom_regulatory(hw->wiphy,
-+					&hwsim_world_regdom_custom_02);
-+			} else if (i == 4)
-+				hw->wiphy->strict_regulatory = true;
-+			break;
-+		default:
-+			break;
-+		}
-+
- 		err = ieee80211_register_hw(hw);
- 		if (err < 0) {
- 			printk(KERN_DEBUG "mac80211_hwsim: "
-@@ -878,11 +1042,51 @@ static int __init init_mac80211_hwsim(void)
- 			goto failed_hw;
- 		}
- 
--		/*
--		 * We have no EEPROM but we know ACME Inc. only sells
--		 * these in Finland.
--		 */
--		regulatory_hint(hw->wiphy, "FI");
-+		/* Work to be done after to ieee80211_register_hw() */
-+		switch (regtest) {
-+		case HWSIM_REGTEST_WORLD_ROAM:
-+		case HWSIM_REGTEST_DISABLED:
-+			break;
-+		case HWSIM_REGTEST_DRIVER_REG_FOLLOW:
-+			if (!i)
-+				regulatory_hint(hw->wiphy, hwsim_alpha2s[0]);
-+			break;
-+		case HWSIM_REGTEST_DRIVER_REG_ALL:
-+		case HWSIM_REGTEST_STRICT_ALL:
-+			regulatory_hint(hw->wiphy, hwsim_alpha2s[0]);
-+			break;
-+		case HWSIM_REGTEST_DIFF_COUNTRY:
-+			if (i < ARRAY_SIZE(hwsim_alpha2s))
-+				regulatory_hint(hw->wiphy, hwsim_alpha2s[i]);
-+			break;
-+		case HWSIM_REGTEST_CUSTOM_WORLD:
-+		case HWSIM_REGTEST_CUSTOM_WORLD_2:
-+			/*
-+			 * Nothing to be done for custom world regulatory
-+			 * domains after to ieee80211_register_hw
-+			 */
-+			break;
-+		case HWSIM_REGTEST_STRICT_FOLLOW:
-+			if (i == 0)
-+				regulatory_hint(hw->wiphy, hwsim_alpha2s[0]);
-+			break;
-+		case HWSIM_REGTEST_STRICT_AND_DRIVER_REG:
-+			if (i == 0)
-+				regulatory_hint(hw->wiphy, hwsim_alpha2s[0]);
-+			else if (i == 1)
-+				regulatory_hint(hw->wiphy, hwsim_alpha2s[1]);
-+			break;
-+		case HWSIM_REGTEST_ALL:
-+			if (i == 2)
-+				regulatory_hint(hw->wiphy, hwsim_alpha2s[0]);
-+			else if (i == 3)
-+				regulatory_hint(hw->wiphy, hwsim_alpha2s[1]);
-+			else if (i == 4)
-+				regulatory_hint(hw->wiphy, hwsim_alpha2s[2]);
-+			break;
-+		default:
-+			break;
-+		}
- 
- 		printk(KERN_DEBUG "%s: hwaddr %pM registered\n",
- 		       wiphy_name(hw->wiphy),
--- 
-1.6.1.2.253.ga34a
+On Sun, 2009-03-08 at 16:17 +0200, Jouni Malinen wrote:
+> On Sun, Mar 08, 2009 at 01:28:07PM +0100, Johannes Berg wrote:
+> > On Thu, 2009-03-05 at 17:23 +0200, Jouni Malinen wrote:
+> >=20
+> > > @@ -99,10 +99,13 @@ static u16 classify80211(struct ieee8021
+> > >  	/* in case we are a client verify acm is not set for this ac */
+> > >  	while (unlikely(local->wmm_acm & BIT(skb->priority))) {
+> > >  		if (wme_downgrade_ac(skb)) {
+> > > -			/* The old code would drop the packet in this
+> > > -			 * case.
+> > > +			/*
+> > > +			 * This should not really happen. The AP has marked all
+> > > +			 * lower ACs to require admission control which is not
+> > > +			 * a reasonable configuration. Allow the frame to be
+> > > +			 * transmitted using AC_BK as a workaround.
+> > >  			 */
+> > > -			return 0;
+> > > +			break;
+> >=20
+> > It seems to me that return 0 here was incorrect, or wme_downgrade_ac
+> > needs changes?
+>=20
+> Yes, this return 0 was incorrect and that's why I'm fixing it to not
+> return 0 in this patch.. ;-)=20
+
+Sorry, I meant correct. Why is it not correct? wme_downgrade_ac doesn't
+modify the skb when it returns an error.
+
+> In theory, the correct behavior would be to
+> drop the frame if the AP is using mandatory admission control for all
+> ACs, but in practice, it is probably better not to break the connection
+> completely if the AP is misconfigured. The behavior after this patch is
+> to downgrade the AC until one is found without ACM and if no such AC
+> exists, use the lowest priority (AC_BK).
+
+True. I'm just questioning that this really is what's happening with
+this patch :)
+
+johannes
+
+--=-dZVHGO8QscFzvRUqXBZ0
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJs9VbAAoJEKVg1VMiehFY6nkQAK0JswuivrH3kqsxcgZrJ6/c
+P48TYCO0IdiSZ5pfydt134iyVlORe2bJQRRJzVEJdORYz4l/gWZt/wTGlAZitf9/
+4AVgpXVktpqF9f/GAhsbrB5rY4X3+bH419XFn+cXHpzMbnQHk41vqM9gvvGLY8eZ
+M9Wu2LmpEitJJ4KV+LeUVxkYRAkmhepchzgiHX9xxw3l1WvXbUqL1ZSoG0MBfDsz
+ibhvgIw1vAewwGBgqh303BGZ8ou3gphHWi356uuZOVu6xoIH+kG/IZvRXhJsBDJo
+GcEF2YnXIO688c8Q54eLGMpDtj65dgqRM9bkHmRcqJ+G3UBTqRJM6CqOMUyRtesk
+dVEwhZS8+AmuYfH9QIKyV/JBVu+1HrPl6+ZgCaj6rg8ysZzuWK0bySM5Fu6JNNjw
+51ZuZBvuyIGwz3g1d0DJCvrJRWiV6LV0DuRB76gSqOG/JPBQOlk3UL2A0IdNvCi+
+IxiLg1rPOtdCDwqoK2IDpvDThGJwba47H2NEEB4qBFq8pwOgabcLRNqhF77w9Bc1
+jFNyZrOFxOZgK6agfdNXVWaIBn/QinJV+mOvDvoE45vJV6r5jZch67LjYaNBnz/l
+xPUtbGceZ7qLf3/0gC5xpc5YvWUW40KcmRC2+8pXuxMP0WSSBxzOtNvoxkGGkO/Y
+jmEDD41+ZhZvZuHyljXY
+=gHjc
+-----END PGP SIGNATURE-----
+
+--=-dZVHGO8QscFzvRUqXBZ0--
 
