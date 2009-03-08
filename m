@@ -1,41 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:51774
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868AbZCDW6M (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:3581 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbZCHFnG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 17:58:12 -0500
-Message-ID: <49AF077D.2020408@erley.org> (sfid-20090304_235815_519118_FC25E57B)
-Date: Wed, 04 Mar 2009 17:58:05 -0500
-From: pat-lkml <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: Alexey Yudichev <ayudichev@yahoo.co.uk>
-CC: "Christoph .J Thompson" <cjsthompson@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath5k master (AP) mode
-References: <4dd58f490903041329p54ec56ceh1b64ab000027eac5@mail.gmail.com>	 <4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com>	 <20090304232625.cc47eb46.cjsthompson@gmail.com> <4dd58f490903041451x5044b464k47d70b1210b12f11@mail.gmail.com>
-In-Reply-To: <4dd58f490903041451x5044b464k47d70b1210b12f11@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 8 Mar 2009 00:43:06 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/3] ath5k: use a table for LED parameters
+Date: Sun,  8 Mar 2009 00:10:21 -0500
+Message-Id: <1236489022-16199-2-git-send-email-me@bobcopeland.com> (sfid-20090308_064311_240832_2C8220F1)
+In-Reply-To: <1236489022-16199-1-git-send-email-me@bobcopeland.com>
+References: <1236489022-16199-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alexey Yudichev wrote:
->> On Wed, 4 Mar 2009 21:33:21 +0000
->> Alexey Yudichev <ayudichev@yahoo.co.uk> wrote:
->>> Hello,
->>>
->>> I've just joined the list so don't know how to join the same thread so
->>> to indicate that it's the same matter I use the same subject. I am
->>> trying to make my "04:01.0 Ethernet controller: Atheros Communications
->>> Inc. Atheros AR5001X+ Wireless Network Adapter (rev 01)" which is
->>> identified by ath5k as
->>> [   10.356742] ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
->>> [   10.356748] ath5k phy0: RF5112B multiband radio found (0x36)
->> I have the exact same card (AR5001X+) working in master mode with hostapd. What kernel version and hostapd version do you use?
-> 
-> Hi, I use 2.6.27-11-generic (from ubuntu's
-> linux-backports-modules-intrepid-generic), hostapd v0.5.10.
+Put the device id-to-gpio mapping in a table to make it easier to add
+new devices.  The list of supported devices is unchanged.
 
-I don't know if it's intended, or just not implemented, but iwconfig <iface> mode master
-won't work with mac80211 drivers.  Hostapd knows how to set master mode on it's own. 
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Acked-by: Jiri Slaby <jirislaby@gmail.com>
+---
+ drivers/net/wireless/ath5k/led.c |   53 ++++++++++++++++++++------------------
+ 1 files changed, 28 insertions(+), 25 deletions(-)
 
-Pat Erley
+diff --git a/drivers/net/wireless/ath5k/led.c b/drivers/net/wireless/ath5k/led.c
+index 7cef2bb..e365fbd 100644
+--- a/drivers/net/wireless/ath5k/led.c
++++ b/drivers/net/wireless/ath5k/led.c
+@@ -43,6 +43,29 @@
+ #include "ath5k.h"
+ #include "base.h"
+ 
++#define ATH_SDEVICE(subv,subd) \
++	.vendor = PCI_ANY_ID, .device = PCI_ANY_ID, \
++	.subvendor = (subv), .subdevice = (subd)
++
++#define ATH_LED(pin,polarity) .driver_data = (((pin) << 8) | (polarity))
++#define ATH_PIN(data) ((data) >> 8)
++#define ATH_POLARITY(data) ((data) & 0xff)
++
++/* Devices we match on for LED config info (typically laptops) */
++static const struct pci_device_id ath5k_led_devices[] = {
++	/* IBM-specific AR5212 */
++	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
++	/* AR5211 */
++	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5211), ATH_LED(0, 0) },
++	/* HP Compaq nc6xx, nc4000, nx6000 */
++	{ ATH_SDEVICE(PCI_VENDOR_ID_COMPAQ, PCI_ANY_ID), ATH_LED(1, 1) },
++	/* Acer Aspire One A150 (maximlevitsky@gmail.com) */
++	{ ATH_SDEVICE(PCI_VENDOR_ID_FOXCONN, PCI_ANY_ID), ATH_LED(3, 0) },
++	/* E-machines E510 (tuliom@gmail.com) */
++	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, PCI_ANY_ID), ATH_LED(3, 0) },
++	{ }
++};
++
+ void ath5k_led_enable(struct ath5k_softc *sc)
+ {
+ 	if (test_bit(ATH_STAT_LEDSOFT, sc->status)) {
+@@ -114,39 +137,19 @@ void ath5k_unregister_leds(struct ath5k_softc *sc)
+ 	ath5k_unregister_led(&sc->tx_led);
+ }
+ 
+-
+ int ath5k_init_leds(struct ath5k_softc *sc)
+ {
+ 	int ret = 0;
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	struct pci_dev *pdev = sc->pdev;
+ 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
++	const struct pci_device_id *match;
+ 
+-	/*
+-	 * Auto-enable soft led processing for IBM cards and for
+-	 * 5211 minipci cards.
+-	 */
+-	if (pdev->device == PCI_DEVICE_ID_ATHEROS_AR5212_IBM ||
+-	    pdev->device == PCI_DEVICE_ID_ATHEROS_AR5211) {
+-		__set_bit(ATH_STAT_LEDSOFT, sc->status);
+-		sc->led_pin = 0;
+-		sc->led_on = 0;  /* active low */
+-	}
+-	/* Enable softled on PIN1 on HP Compaq nc6xx, nc4000 & nx5000 laptops */
+-	if (pdev->subsystem_vendor == PCI_VENDOR_ID_COMPAQ) {
+-		__set_bit(ATH_STAT_LEDSOFT, sc->status);
+-		sc->led_pin = 1;
+-		sc->led_on = 1;  /* active high */
+-	}
+-	/*
+-	 * Pin 3 on Foxconn chips used in Acer Aspire One (0x105b:e008) and
+-	 * in emachines notebooks with AMBIT subsystem.
+-	 */
+-	if (pdev->subsystem_vendor == PCI_VENDOR_ID_FOXCONN ||
+-	    pdev->subsystem_vendor == PCI_VENDOR_ID_AMBIT) {
++	match = pci_match_id(&ath5k_led_devices[0], pdev);
++	if (match) {
+ 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
+-		sc->led_pin = 3;
+-		sc->led_on = 0;  /* active low */
++		sc->led_pin = ATH_PIN(match->driver_data);
++		sc->led_on = ATH_POLARITY(match->driver_data);
+ 	}
+ 
+ 	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
+-- 
+1.6.0.6
+
+
