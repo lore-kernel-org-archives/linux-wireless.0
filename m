@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:57112 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754543AbZCWS6e (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:37150 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751346AbZCHJ2a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 14:58:34 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so2965184wff.4
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 11:58:32 -0700 (PDT)
+	Sun, 8 Mar 2009 05:28:30 -0400
+Message-ID: <49B38FB7.3000002@gmail.com> (sfid-20090308_102847_182049_F28BE078)
+Date: Sun, 08 Mar 2009 10:28:23 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1237682473-5994-1-git-send-email-tuliom@gmail.com>
-References: <1237682473-5994-1-git-send-email-tuliom@gmail.com>
-Date: Mon, 23 Mar 2009 14:58:32 -0400
-Message-ID: <b6c5339f0903231158n7f51c78cnf895a7ba8010b7a2@mail.gmail.com> (sfid-20090323_195841_898196_3DC5EA73)
-Subject: Re: [PATCH] ath5k: Support LED's on Acer Extensa 5620z
-From: Bob Copeland <me@bobcopeland.com>
-To: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bob Copeland <me@bobcopeland.com>
+CC: Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+References: <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org> <20090308030928.GB14966@hash.localnet>
+In-Reply-To: <20090308030928.GB14966@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 21, 2009 at 8:41 PM, Tulio Magno Quites Machado Filho
-<tuliom@gmail.com> wrote:
-> Add vendor ID for Quanta Microsystems and update the led table with the reported device.
->
-> Reported-by: Scott Barnes <nekoreeve@gmail.com>
->
-> Signed-off-by: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+On 8.3.2009 04:09, Bob Copeland wrote:
+> At this point, I guess the best way forward is to have a special debug
+> patch for when we pass an skb up the stack, when it gets allocated, and
+> what is in the descriptors.
 
-Acked-by: Bob Copeland <me@bobcopeland.com>
+Yes, I have been thinking about some (ring buffer) array which would 
+store address-desc_status pairs (even few megs in a vmalloc area) and 
+pointer (not modulo-ed counter) to this array (index would be modulo-ed, 
+indeed). From poison output we know the address, so we can then instruct 
+ath5k to dump the buffer and see what happens :), what was in the status 
+when we freed the skb.
 
-I have another one to send, for the "Fukato Datacask Jupiter" but I
-couldn't figure out who owns the subvendor ID (0x1a3b).  I guess I'll
-assume it is Fukato unless anyone knows a reliable source for looking
-those up besides Google...
+Maybe some additional info may be needed, as you suggest.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> Jiri, I really think we should implement that better check for the
+> self linked descriptor using the rxdp register.
+
+As I stated a while ago, definitely!
+
+> bf_last is no longer a
+> valid marker for the self-linked descriptor at the end of the loop since
+> we re-add the just-processed descriptor every time through the loop
+> (or am I missing something?)...
+
+Why? bf_last is snapshotted before the loop. And when we see this bf 
+while processing, we stop. In the next round we check if bf->next is 
+done. If yes, we move on.
+
+> If you want I'll cook up a patch for that too.
+
+If you like, feel free to kick it off. Remember to remove bf->flags 
+completely, so that we save another bunch of memory ;).
