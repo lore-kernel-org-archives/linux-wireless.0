@@ -1,62 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45513 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757044AbZCWOPn (ORCPT
+Received: from mail.deathmatch.net ([70.167.247.36]:4695 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752479AbZCHQLD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 10:15:43 -0400
-Date: Mon, 23 Mar 2009 10:14:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] p54: fix SoftLED compile dependencies
-Message-ID: <20090323141449.GD3285@tuxdriver.com> (sfid-20090323_151552_085276_D277AB2A)
-References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <49C293CC.6020009@oracle.com> <200903191955.00718.mb@bu3sch.de> <200903210057.47067.chunkeey@web.de>
+	Sun, 8 Mar 2009 12:11:03 -0400
+Date: Sun, 8 Mar 2009 12:10:51 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090308161051.GA17812@hash.localnet> (sfid-20090308_171114_030134_1A558B89)
+References: <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org> <20090308030928.GB14966@hash.localnet> <49B38FB7.3000002@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200903210057.47067.chunkeey@web.de>
+In-Reply-To: <49B38FB7.3000002@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 21, 2009 at 12:57:46AM +0100, Christian Lamparter wrote:
-> This patch fixes a compile problem when the MAC80211_LEDS
-> triggers are enabled but not LED class itself. 
-> (which is sort of pointless, but anyway...)
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> mb, thank you for the tips!
-> 
-> Randy Dunlap can you please give this patch a try?
-> 
-> John, do you know where the patch form 
-> Geert Uytterhoeven <geert@linux-m68k.org> went?
-> ---
-> diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
-> index 0e344ac..ee1aaca 100644
-> --- a/drivers/net/wireless/p54/Kconfig
-> +++ b/drivers/net/wireless/p54/Kconfig
-> @@ -1,9 +1,10 @@
->  config P54_COMMON
->  	tristate "Softmac Prism54 support"
-> -	depends on MAC80211 && WLAN_80211 && FW_LOADER && EXPERIMENTAL
-> +	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
-> +	select FW_LOADER
->  	---help---
-> -	  This is common code for isl38xx based cards.
-> -	  This module does nothing by itself - the USB/PCI frontends
-> +	  This is common code for isl38xx/stlc45xx based modules.
-> +	  This module does nothing by itself - the USB/PCI/SPI frontends
->  	  also need to be enabled in order to support any devices.
->  
->  	  These devices require softmac firmware which can be found at
+On Sun, Mar 08, 2009 at 10:28:23AM +0100, Jiri Slaby wrote:
+>> bf_last is no longer a
+>> valid marker for the self-linked descriptor at the end of the loop since
+>> we re-add the just-processed descriptor every time through the loop
+>> (or am I missing something?)...
+>
+> Why? bf_last is snapshotted before the loop. And when we see this bf  
+> while processing, we stop. In the next round we check if bf->next is  
+> done. If yes, we move on.
 
-This hunk looks unrelated to the changelog as well...?
+I think it works for the first one but doesn't take into account 
+subsequent self-linked descriptors.  E.g. if we start with buffers:
 
-John
+A->B->C
+
+bf_last is 'C'.  The hardware sees descriptors:
+
+A'->B'->C'(->C')
+
+After one round, the hardware sees:
+
+B'->C'->A'(->A')
+
+Suppose the hardware does A',B',C' before we process any buffer.  So after
+we process A, the hardware moves on to A'.  It finishes a packet, re-reads
+the link and starts overwriting A' again, but for some reason is really
+slow to complete this second packet.  
+
+Now, the tasklet burns through B and C.  On C we do the check if bf->next 
+(i.e. A) is done, and it is because the hardware wrote one packet to it[1].
+However, it's still in the process of writing another frame over A' again.  
+We skip C, send A to __ieee80211_rx, the skb is freed, but the hardware 
+is still writing stuff to it.
+
+In the trace Sitsofe posted, I didn't see any tasklets processing more
+than a couple of packets, though.
+
+[1] Note, the status is cleared when we hand the buffer to hardware, but
+not by the hardware itself when it rewrites the same buffer.  That could
+explain why status is "martian" for overwritten frames.
+
+>> If you want I'll cook up a patch for that too.
+>
+> If you like, feel free to kick it off. Remember to remove bf->flags  
+> completely, so that we save another bunch of memory ;).
+
+Ok, I probably won't get to it until this evening so if you prefer to
+do it, go ahead - otherwise I'll tackle it then.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Bob Copeland %% www.bobcopeland.com
+
