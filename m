@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:38652 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752435AbZCZJBq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 05:01:46 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so529486rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 02:01:44 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:24314 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751078AbZCIEGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Mar 2009 00:06:04 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 08 Mar 2009 21:06:03 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1238057661.4331.16.camel@johannes.local>
-References: <1237891149.4320.73.camel@johannes.local> <1237910398.9082.7.camel@localhost.localdomain>
-	<1237979070.4320.156.camel@johannes.local> <1237995072.18896.9.camel@localhost.localdomain>
-	<1237996137.4320.161.camel@johannes.local> <43e72e890903260100w75896d0fi9121f227cc7ca8dc@mail.gmail.com>
-	<1238055060.4331.1.camel@johannes.local> <43e72e890903260139k29d9e9a0ub418cdfbaef03418@mail.gmail.com>
-	<1238057661.4331.16.camel@johannes.local>
-Date: Thu, 26 Mar 2009 02:01:29 -0700
-Message-ID: <43e72e890903260201x1b1fdf10pf1914127860c259f@mail.gmail.com> (sfid-20090326_100150_191342_97E96F45)
-Subject: Re: wireless powersaving (in NM?)
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Georgy Berdyshev <codingmaster@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>, Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18868.38073.487629.764071@gargle.gargle.HOWL> (sfid-20090309_050613_465066_CBAE1280)
+Date: Mon, 9 Mar 2009 09:32:01 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 3/3] ath9k: Fix bug in reading debugfs file 'rcstat'
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 26, 2009 at 1:54 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-03-26 at 01:39 -0700, Luis R. Rodriguez wrote:
->
->> > We talked about that briefly yesterday -- it's not very easy to
->> > determine this because of the various ways things break:
->> >
->> > =C2=A0* one AP sets the broadcast/multicast bit one beacon too lat=
-e (after
->> > =C2=A0 having already sent the frames)
->> > =C2=A0* one AP doesn't buffer frames at all
->> > =C2=A0* one AP doesn't respond to PS-poll frames
->>
->> It sounds like all 3 things can be tested for.
->
-> Yes, but how complicated does it get, and is it worth it to invest th=
-at
-> much work for these (hopefully few) ancient APs?
+The rate table would not have been chosen before the interface
+has been brought up. Reading 'rcstat' in this case would result
+in an oops, fix this.
 
-Might be a good set of tests to have for the testing GSoC, anyway,
-against AP mode.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/debug.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath9k/debug.c b/drivers/net/wireless/ath9k/debug.c
+index b0ff479..82573ca 100644
+--- a/drivers/net/wireless/ath9k/debug.c
++++ b/drivers/net/wireless/ath9k/debug.c
+@@ -322,6 +322,9 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+ {
+ 	struct ath_softc *sc = file->private_data;
+ 
++	if (sc->cur_rate_table == NULL)
++		return 0;
++
+ 	if (conf_is_ht(&sc->hw->conf))
+ 		return ath_read_file_stat_11n_rc(file, user_buf, count, ppos);
+ 	else
+-- 
+1.6.1
+
