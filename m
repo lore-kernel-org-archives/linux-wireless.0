@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:43999 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761094AbZCSUPn (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49151
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753413AbZCIDCW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 16:15:43 -0400
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Message-Id: <487FC78C-36A2-4353-ACB2-F924B09D231A@ing.unibs.it> (sfid-20090319_211551_107299_CC241A3F)
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-To: Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <200903192110.08437.mb@bu3sch.de>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: [PATCH] b43: Mask PHY TX error interrupt, if not debugging
-Date: Thu, 19 Mar 2009 21:15:40 +0100
-References: <200903191927.21868.mb@bu3sch.de> <200903192013.44903.mb@bu3sch.de> <35D36C55-6CB3-443C-A916-D5771B68DD9A@ing.unibs.it> <200903192110.08437.mb@bu3sch.de>
+	Sun, 8 Mar 2009 23:02:22 -0400
+Date: Sun, 08 Mar 2009 20:02:07 -0700 (PDT)
+Message-Id: <20090308.200207.90768249.davem@davemloft.net> (sfid-20090309_040227_550076_3F720902)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-03-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090306212414.GG3712@tuxdriver.com>
+References: <20090306212414.GG3712@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 6 Mar 2009 16:24:14 -0500
 
-On Mar 19, 2009, at 9:10 PM, Michael Buesch wrote:
+> Here are a few small patches intended for 2.6.29.
+> 
+> Two of them add USB IDs to the Ralink drivers.  Some of those IDs are
+> already in -next, so there will be some minor conflicts.
+> 
+> The one from Roel Kluin avoids checking for <0 on an unsigned variable.
+> It seems like a very low-risk fix to a potentially hard to find
+> problem, so it seems worthwhile to me.
+> 
+> The iwlwifi fix corrects some problems with cleaning-up after
+> initialization errors, avoiding some potential resources leaks.
+> 
+> The p54 patch corrects a crash that was unveiled by applying a patch
+> headed to -next.  The problem was their all along, so it seems work
+> taking now.
 
-> On Thursday 19 March 2009 20:56:52 Francesco Gringoli wrote:
->> I would agree with you, but there is this bizarre issue with PHY
->> errors in monitoring mode that makes me thinking about what we call
->> PHY errors. I would say they are not only due to transmission, they
->> are general PHY errors, could they be? One last test I could try, is
->
-> No the interrupt indicates a PHY TX error.
-> This name is from the broadcom headers, so we can trust that it's  
-> correct.
->
-> As I said, I never saw the error with the proprietary firmware in  
-> monitor mode.
-> If you know a way how to trigger them, please tell me.
-It should be pretty easy, if you can observe these errors in sta mode  
-(for instance with the cool method you told me before), you should see  
-the same errors also in monitor mode, that is what was happening with  
-my two adapters mounted on the same pci raiser (one with four minipci  
-slots, unfortunately broken as when I use it I see PHY errors).
-
-Cheers,
--FG
+Pulled, thanks a lot John.
