@@ -1,158 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-160-52.gdrpmi.dsl-w.verizon.net ([71.115.160.52]:34250
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754316AbZCPWg1 (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:45190 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922AbZCIWQ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 18:36:27 -0400
-Message-ID: <49BED464.2010904@erley.org> (sfid-20090316_233631_951441_68D057DC)
-Date: Mon, 16 Mar 2009 18:36:20 -0400
-From: Pat Erley <pat-lkml@erley.org>
+	Mon, 9 Mar 2009 18:16:57 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Userspace (wpa_supplicant) not notified on interface down with 2.6.29/wireless-testing
+Date: Mon, 9 Mar 2009 18:50:00 -0300
+Cc: "John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: ath9k-devel@lists.ath9k.org,
-	"andrey@cozybit.com >> Andrey Yurovsky" <andrey@cozybit.com>,
-	brian@cozybit.com, javier@cozybit.com, colin@cozybit.com
-Subject: [rfc] Implement ath9k mesh point operation
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903091850.01604.herton@mandriva.com.br> (sfid-20090309_231701_087871_0B5A3600)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables mesh point operation for ath9k.  Tested with b43
-and ath5k as peers. 
+I have the problem when using 2.6.29 and judging by the code the situation
+stays the same with wireless-testing, even after the fix "mac80211: deauth when
+interface is marked down" (the fix doesn't work with kernel 2.6.28 or later, as
+I'll explain).
 
-Signed-off-by: Pat Erley <pat-lkml@erley.org>
----
-Currently, you need to trigger a scan on the mesh point interface to
-enable beaconing.  This is the same behavior the ath5k, rt2500usb and 
-rt61pci drivers exhibit.  Is this a mac80211 design flaw, or something
-in all of these drivers?
+The problem is, with latest kernels wpa_supplicant isn't still notified when
+interface goes down, even after commit "mac80211: deauth when interface is
+marked down" (e327b847 on Linus tree). There isn't a problem with this commit,
+but because of other code changes it doesn't work on latest kernels (but works
+if I apply same/similar change on 2.6.27 for example).
 
-diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
-index 039c781..68e05ed 100644
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -70,7 +70,8 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 	ds = bf->bf_desc;
- 	flags = ATH9K_TXDESC_NOACK;
+The issue is as follows: after commit "mac80211: restructure disassoc/deauth
+flows" in 2.6.28, the call to ieee80211_sta_deauthenticate added by commit
+e327b847 will not work: because we do sta_info_flush(local, sdata); inside
+ieee80211_stop (iface.c), all stations in interface are cleared, so when calling
+ ieee80211_sta_deauthenticate->ieee80211_set_disassoc (mlme.c), inside
+ieee80211_set_disassoc we have this in the beginning:
+
+        sta = sta_info_get(local, ifsta->bssid);
+        if (!sta) {
+
+the !sta check triggers, so the function returns early and
+ieee80211_sta_send_apinfo(sdata, ifsta); later isn't called, so wpa_supplicant
+isn't notified with SIOCGIWAP
+
+One possible fix is moving sta_info_flush, to avoid !sta, and seems good, like
+the following:
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 2acc416..0929581 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -370,25 +370,6 @@ static int ieee80211_stop(struct net_device *dev)
+ 	rcu_read_unlock();
  
--	if (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC &&
-+	if (((sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
-+	     (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) &&
- 	    (ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)) {
- 		ds->ds_link = bf->bf_daddr; /* self-linked */
- 		flags |= ATH9K_TXDESC_VEOL;
-@@ -728,6 +729,7 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
- 			ath_beacon_config_ap(sc, &conf, avp);
- 			break;
- 		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_MESH_POINT:
- 			ath_beacon_config_adhoc(sc, &conf, avp, vif);
- 			break;
- 		case NL80211_IFTYPE_STATION:
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index ea550cc..a69328e 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -1424,6 +1424,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
- 		REG_CLR_BIT(ah, AR_CFG, AR_CFG_AP_ADHOC_INDICATION);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		REG_WRITE(ah, AR_STA_ID1, val | AR_STA_ID1_ADHOC
- 			  | AR_STA_ID1_KSRCH_MODE);
- 		REG_SET_BIT(ah, AR_CFG, AR_CFG_AP_ADHOC_INDICATION);
-@@ -3129,6 +3130,7 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
- 		flags |= AR_TBTT_TIMER_EN;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		REG_SET_BIT(ah, AR_TXCFG,
- 			    AR_TXCFG_ADHOC_BEACON_ATIM_TX_POLICY);
- 		REG_WRITE(ah, AR_NEXT_NDP_TIMER,
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index a2f5af6..0f9f6ca 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1591,7 +1591,8 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_AP) |
- 		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_ADHOC);
-+		BIT(NL80211_IFTYPE_ADHOC) |
-+		BIT(NL80211_IFTYPE_MESH_POINT);
- 
- 	hw->wiphy->reg_notifier = ath9k_reg_notifier;
- 	hw->wiphy->strict_regulatory = true;
-@@ -2199,18 +2200,13 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 		ic_opmode = NL80211_IFTYPE_STATION;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		if (sc->nbcnvifs >= ATH_BCBUF) {
--			ret = -ENOBUFS;
--			goto out;
--		}
--		ic_opmode = NL80211_IFTYPE_ADHOC;
--		break;
- 	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		if (sc->nbcnvifs >= ATH_BCBUF) {
- 			ret = -ENOBUFS;
- 			goto out;
- 		}
--		ic_opmode = NL80211_IFTYPE_AP;
-+		ic_opmode = conf->type;
- 		break;
- 	default:
- 		DPRINTF(sc, ATH_DBG_FATAL,
-@@ -2246,7 +2242,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	 * Note we only do this (at the moment) for station mode.
- 	 */
- 	if ((conf->type == NL80211_IFTYPE_STATION) ||
--	    (conf->type == NL80211_IFTYPE_ADHOC)) {
-+	    (conf->type == NL80211_IFTYPE_ADHOC) ||
-+	    (conf->type == NL80211_IFTYPE_MESH_POINT)) {
- 		if (ath9k_hw_phycounters(sc->sc_ah))
- 			sc->imask |= ATH9K_INT_MIB;
- 		sc->imask |= ATH9K_INT_TSFOOR;
-@@ -2293,8 +2290,9 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	del_timer_sync(&sc->ani.timer);
- 
- 	/* Reclaim beacon resources */
--	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP ||
--	    sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) {
-+	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) {
- 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
- 		ath_beacon_return(sc, avp);
- 	}
-@@ -2427,6 +2425,7 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
- 		switch (vif->type) {
- 		case NL80211_IFTYPE_STATION:
- 		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_MESH_POINT:
- 			/* Set BSSID */
- 			memcpy(sc->curbssid, conf->bssid, ETH_ALEN);
- 			memcpy(avp->bssid, conf->bssid, ETH_ALEN);
-@@ -2450,7 +2449,8 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
+ 	/*
+-	 * Remove all stations associated with this interface.
+-	 *
+-	 * This must be done before calling ops->remove_interface()
+-	 * because otherwise we can later invoke ops->sta_notify()
+-	 * whenever the STAs are removed, and that invalidates driver
+-	 * assumptions about always getting a vif pointer that is valid
+-	 * (because if we remove a STA after ops->remove_interface()
+-	 * the driver will have removed the vif info already!)
+-	 *
+-	 * We could relax this and only unlink the stations from the
+-	 * hash table and list but keep them on a per-sdata list that
+-	 * will be inserted back again when the interface is brought
+-	 * up again, but I don't currently see a use case for that,
+-	 * except with WDS which gets a STA entry created when it is
+-	 * brought up.
+-	 */
+-	sta_info_flush(local, sdata);
+-
+-	/*
+ 	 * Don't count this interface for promisc/allmulti while it
+ 	 * is down. dev_mc_unsync() will invoke set_multicast_list
+ 	 * on the master interface which will sync these down to the
+@@ -539,6 +520,26 @@ static int ieee80211_stop(struct net_device *dev)
+ 		conf.mac_addr = dev->dev_addr;
+ 		/* disable all keys for as long as this netdev is down */
+ 		ieee80211_disable_keys(sdata);
++
++		/*
++		 * Remove all stations associated with this interface.
++		 *
++		 * This must be done before calling ops->remove_interface()
++		 * because otherwise we can later invoke ops->sta_notify()
++		 * whenever the STAs are removed, and that invalidates driver
++		 * assumptions about always getting a vif pointer that is valid
++		 * (because if we remove a STA after ops->remove_interface()
++		 * the driver will have removed the vif info already!)
++		 *
++		 * We could relax this and only unlink the stations from the
++		 * hash table and list but keep them on a per-sdata list that
++		 * will be inserted back again when the interface is brought
++		 * up again, but I don't currently see a use case for that,
++		 * except with WDS which gets a STA entry created when it is
++		 * brought up.
++		 */
++		sta_info_flush(local, sdata);
++
+ 		local->ops->remove_interface(local_to_hw(local), &conf);
  	}
  
- 	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
--	    (vif->type == NL80211_IFTYPE_AP)) {
-+	    (vif->type == NL80211_IFTYPE_AP) ||
-+	    (vif->type == NL80211_IFTYPE_MESH_POINT)) {
- 		if ((conf->changed & IEEE80211_IFCC_BEACON) ||
- 		    (conf->changed & IEEE80211_IFCC_BEACON_ENABLED &&
- 		     conf->enable_beacon)) {
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 8327356..31a6a2a 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1615,6 +1615,7 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 	/* Choose rate table first */
- 
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) ||
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT) ||
- 	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC)) {
- 		rate_table = ath_choose_rate_table(sc, sband->band,
- 						   sta->ht_cap.ht_supported,
+My question is, is the patch above safe? that is, do we need to always
+call sta_info_flush on interface down like currently, or just for the case we
+call remove_interface, like the comment states? if the latter, patch above
+is good, and solves the wpa_supplicant/userspace issue.
+
+--
+[]'s
+Herton.
