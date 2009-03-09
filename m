@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34939 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753738AbZCURNR (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:41013 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751575AbZCIULq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 13:13:17 -0400
-Subject: Re: [RFT] mac80211: allow mode changes while interface is up
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1237654613.5100.312.camel@johannes.local> (sfid-20090321_175715_305704_31B33064)
-References: <1237653563.5100.309.camel@johannes.local>
-	 <200903211745.06974.mb@bu3sch.de>
-	 <1237654613.5100.312.camel@johannes.local>
-	 (sfid-20090321_175715_305704_31B33064)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-WlIjWiHbzEuFZ7dfTMuf"
-Date: Sat, 21 Mar 2009 18:13:13 +0100
-Message-Id: <1237655593.5100.314.camel@johannes.local> (sfid-20090321_181326_550657_4629B5CF)
-Mime-Version: 1.0
+	Mon, 9 Mar 2009 16:11:46 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Kevin Wilson <wkevils@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 9 Mar 2009 13:11:43 -0700
+Subject: RE: Packet aggregation in iwlwifi drivers
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A353F74F532@orsmsx506.amr.corp.intel.com> (sfid-20090309_211149_962841_B474D774)
+References: <55c333c0903090134o4c6c65b7v4bf0674971f9156c@mail.gmail.com>
+In-Reply-To: <55c333c0903090134o4c6c65b7v4bf0674971f9156c@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+You are correct, iwlwifi driver will handle enable the h/w aggregation queue and based on the ampdu_action() and other condition such as sequence# to decide which queue the pkt shall belong to. All the real aggregation works are performed in the firmware.
 
---=-WlIjWiHbzEuFZ7dfTMuf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Wey-Yi Guy
+Intel Corporation
+2111 N.E. 25th Avenue  M/S JF3-308                 
+Hillsboro OR 97124-5961
+USA
+Work Phone: 503-264-6023 (OR)
+Cell Phone: 503-329-8410
+Email: wey-yi.w.guy@intel.com
+ 
 
-On Sat, 2009-03-21 at 17:56 +0100, Johannes Berg wrote:
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Kevin Wilson
+Sent: Monday, March 09, 2009 1:35 AM
+To: linux-wireless@vger.kernel.org
+Subject: Packet aggregation in iwlwifi drivers
 
-> > What about memory allocation failures?
-> > I think we should check for an error and if one occurs take the interfa=
-ce
-> > completely down and return the error to userspace.
->=20
-> Makes sense, need to audit the code though to verify that
-> ieee80211_stop() doesn't puke if you call it twice in a row (since
-> dev_close() will call it again)
+Hello,
+- I have a short question about packet aggregation in iwlwifi drivers which
+support 802.11n:
+Is packet aggregation in these drivers performed by the firmware ?
 
-In fact, it is _not_ safe to do that, the iff_allmultis/promiscs
-counters for example will be wrong. Easily worked around though --
-shortcut the function if you realise it was already called.
+I noticed that the ampdu_action() function is implemented by
+iwl_mac_ampdu_action()
+in these drivers; but as far as I can find, only the operations of
+start/stop tx and rx aggregation
+are implemented in the driver, so I guess that the aggregation of MPDU packets
+(concatenating them into a single block, sending BAR - block
+acknowledge request,
+sending the block containing aggregated MPDUs, and so on) are
+implemented in firmware. Is it so ?
 
-johannes
 
---=-WlIjWiHbzEuFZ7dfTMuf
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJxSAmAAoJEKVg1VMiehFYjMgP/3kc6vwxa7H5t8mC2OBQTDc2
-WosXo268efBcmhu8tZe2mtCWPdEjLtLzT1XRhFY1ouR7askhM4YQlKT9WJKqLfqm
-8bgk7OpfSG0dTIJgATYVV1nF1gpze0ebxIjZyjuMx2wOXg8YaUrS1Okk0AnKNO5m
-F4U+wTLiLnnHQ9/hvvRO/RdYaQYOkvsuxuG9yHnx59Ou/AWRuF2znst3vBB9VhYo
-qxJ3GVcXoLbDTymdWfaoy30CngMoRODThTieH6dg4NnZ36Y+bauOynMQr1pHD+zX
-+FGA7A9G0p/obO3YdApOFBPUgkK+QAEN9Cb09dZY9IxZ+SZs+WkmlnEIaHwZ6T7R
-pMlHQOb7Gm1wFvHZrqxXUg52nmaxnhjPEDnsXiCLiS7Z0s2NtrzA0C7ZEqt6SZOL
-xpf09ikZy/qdj+v2CQ+AcSz0b2MCXTrtsY4VroECAK2LEmK28pohFNLIzOibvgJ6
-R9SsON9ukJh2UCM+MMxUYfNj1UaJIgHKspVVjjHMFKj1ja/ZrFSRfZ0EYwbqvdPF
-zriR9dm4kdzNWBtO7t1p3eWv+Ajasi1BKJYTsKWQi3uumKhiOqshBe0Mmtlk8M/U
-JpkqQhb2I03C/duRnunu68XDxqIAyD4Mo605JCHM8ekY666tscOYS5h4+bHzLyJL
-C7F+eiyuZ5tCxQGh77QC
-=HAMB
------END PGP SIGNATURE-----
-
---=-WlIjWiHbzEuFZ7dfTMuf--
-
+Regards,
+Kevin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
