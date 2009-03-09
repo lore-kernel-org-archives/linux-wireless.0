@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:54662 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751669AbZCVNRG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 09:17:06 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Kernel panic with zd1211rw and today's compat-wireless
-Date: Sun, 22 Mar 2009 14:15:46 +0100
-Cc: "Alexander E. Patrakov" <patrakov@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <20090322174515.22f11d92@home.aephome.ru> <1237726612.19647.2.camel@johannes.local>
-In-Reply-To: <1237726612.19647.2.camel@johannes.local>
+Received: from mx1.asus.com ([210.80.80.146]:28458 "EHLO ms.asus.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751382AbZCICMk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Mar 2009 22:12:40 -0400
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903221415.46630.mb@bu3sch.de> (sfid-20090322_141711_534980_663CA9E1)
+	charset="big5"
+Subject: RE: BCM 4325
+Date: Mon, 9 Mar 2009 10:10:18 +0800
+Message-ID: <79AFEBBEED459E4792B4241994B831F65819F0@TP-EX-20.corpnet.asus> (sfid-20090309_031333_190732_380CE338)
+In-Reply-To: <49B3D62F.4090700@lwfinger.net>
+References: <264AFFC7-5AF2-42A5-8BB8-1DEDB0255CA9@villagepublishing.com.au> <49B3D62F.4090700@lwfinger.net>
+From: <Merck_Hung@asus.com.tw>
+To: <Larry.Finger@lwfinger.net>, <david@villagepublishing.com.au>
+Cc: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 22 March 2009 13:56:52 Johannes Berg wrote:
-> On Sun, 2009-03-22 at 17:45 +0500, Alexander E. Patrakov wrote:
-> 
-> > There are several different panic messages,
-> > the common thing is "Fatal exception in interrupt". Without uvesafb,
-> > they also include "zd_op_tx+0x98/0x1cc [zd1211rw]" as the last line,
-> 
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=3b23889bb2366c1b10f69bcca16cf53426b5e309
+Actually you can found the source code of BCM4325 in Open Source Android Repository.
 
-This looks like something else. I can't see the skb_under_panic message.
+But I haven't yet verify it whether is workable or not.
 
-http://picasaweb.google.com/patrakov/KernelPanic?authkey=Gv1sRgCKn5ne2jqbLYpAE&feat=directlink#5315991155862429026
+URL: http://android.git.kernel.org/?p=platform/system/wlan/broadcom.git;a=summary
 
--- 
-Greetings, Michael.
+
+ -----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Larry Finger
+Sent: Sunday, March 08, 2009 10:29 PM
+To: David Thornton
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: BCM 4325
+
+David Thornton wrote:
+> does anyone have any info (documents, datasheet) on the bcm4325 becuase
+> i would like to make a driver for it (the fm radio side of things)
+
+What exactly is a BCM4325? It is covered by the Broadcom driver that we are
+currently reverse engineering. I guessed that it was a N PHY based on the
+number, but your comment would indicate a different kind of radio.
+
+We have no datasheets for any Broadcom wireless device.
+
+Larry
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
