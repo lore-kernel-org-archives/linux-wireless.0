@@ -1,100 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:51730 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbZCVT5c (ORCPT
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:52015 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752793AbZCIRii (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 15:57:32 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH v4 0/5] mac80211: beacon filtering
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Date: Sun, 22 Mar 2009 21:56:59 +0200
-Message-ID: <20090322195619.26460.48292.stgit@tikku> (sfid-20090322_205736_404068_42654ECD)
+	Mon, 9 Mar 2009 13:38:38 -0400
+Received: by fxm24 with SMTP id 24so1339103fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2009 10:38:35 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Another "scan handling in mac80211" bug
+Date: Mon, 9 Mar 2009 18:38:16 +0100
+Cc: johannes@sipsolutions.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903091838.16365.helmut.schaa@gmail.com> (sfid-20090309_183843_259857_EACCC2C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's my proposal how to implement beacon filtering in mac80211. The
-basic idea is simple, the driver enables filtering whenever mac80211
-enables power save and the driver calls ieee80211_beacon_loss()
-whenever hardware informs about beacon loss.
+Hi,
 
-I have tested this with stlc45xx (with beacon filtering) and iwl3945
-(without beacon filtering) and based on simple tests this seems to
-work. For reference I'll send the stlc45xx patch as a followup.
+I was just unable to scan again after waking up from s2disk. Luckily I
+still had some debug output in mac80211 from my previous patch:
 
-v4:
+[66796.154861] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[66796.164133] ieee80211_sta_work
+[66796.164142] ieee80211_sta_work 2
+[66796.178069] wlan0: direct probe to AP XX:XX:XX:XX:XX:XX try 1
+[66796.375058] cfg80211_wext_siwscan
 
-o remove hw parameter from ieee80211_beacon_loss()
-o don't call the patchset RFC anymore
+Ok, someone (I guess wpa_supplicant) triggered a scan.
 
-v3:
-o rebase to 2.6.29-rc8-wl
-o add cfg80211_hold_bss() and cfg80211_unhold_bss() to avoid loosing
-  the bss struct when beacon filter is enabled
-o fix bug to use !IEEE80211_HW_PS_NULLFUNC_STACK both in
-  ieee80211_scan_ps_enable() and ieee80211_scan_ps_disable(), also
-  improve comments
-o fix the indentation in ieee80211_associated(), not visible in patch
-  anymore:
+[66796.375065] ieee80211_scan
+[66796.375067] ieee80211_scan: request_scan
+[66796.375070] ieee80211_request_scan
+[66796.375073] ieee80211_request_scan queue_work
 
-    mod_timer(&ifmgd->timer, jiffies +
-    -				      IEEE80211_MONITORING_INTERVAL);
-    +			  IEEE80211_MONITORING_INTERVAL);
+The scan is not started immediately due to mode == STA.
 
-o add vif parameter to void ieee80211_beacon_loss()
-o more documentation about filtering, and especially about
-  checksumming
-o document why multicast check is needed in ieee80211_sta_rx_notify()
-o beacon filter is only enabled when power save is enabled, take this
-  into account in ieee80211_associated()
+[66796.375116] ieee80211_sta_work
+[66796.375120] ieee80211_sta_work 2
 
-v2:
-o rebase to 2.6.29-rc7-wl
-o rename ieee80211_rx_trigger() to ieee80211_sta_rx_notify()
-o move check for sta mode in ieee80211_sta_rx_notify() to rx.c
-o move unicast check from rx.c to ieee80211_sta_rx_notify()
-o add comment for setting last_beacon in ieee80211_rx_mgmt_assoc_resp()
-o rename IEEE80211_HW_BEACON_FILTERING to IEEE80211_HW_BEACON_FILTER
-o send probe request from ieee80211_beacon_loss_work()
-o API documentation
-o enable beacon filtering only when power save is enabled
-o disable power save (and hence beacon filtering) while scanning to make 
-  it possible to have reliable scan results even when beacon filtering
-  is enabled
+Good, the sta_work is executed but does not start the scan (I also had
+a debug printk in ieee80211_start_scan).
 
-TODO: 
+Here's the according part of the code:
 
-(none)
+1759   if (ifmgd->state != IEEE80211_STA_MLME_DIRECT_PROBE &&
+1760       ifmgd->state != IEEE80211_STA_MLME_AUTHENTICATE &&
+1761       ifmgd->state != IEEE80211_STA_MLME_ASSOCIATE &&
+1762       test_and_clear_bit(IEEE80211_STA_REQ_SCAN, &ifmgd->request)) {
+1763     /*
+1764      * The call to ieee80211_start_scan can fail but ieee80211_request_scan
+1765      * (which queued ieee80211_sta_work) did not return an error. Thus, call
+1766      * ieee80211_scan_failed here if ieee80211_start_scan fails in order to
+1767      * notify the scan requester.
+1768      */
+1769     if (ieee80211_start_scan(sdata, local->scan_req))
+1770       ieee80211_scan_failed(local);
+1771     return;
+1772   }
 
-For the future:
+Ok, we are currently in state IEEE80211_STA_MLME_DIRECT_PROBE and as such
+do not trigger the scan right away. IEEE80211_STA_REQ_SCAN should still be
+set. Seems still fine to me.
 
-o configuration for beacon filter (beacon misses * beacon interval
-  should be constant?)
-o don't run ieee80211_associated() in data idle period
+[66796.375329] cfg80211_wext_siwscan EBUSY
+[66796.376170] ieee80211_sta_work
+[66796.376174] ieee80211_sta_work 2
+[66796.376179] wlan0: direct probe to AP XX:XX:XX:XX:XX:XX try 2
+[66796.576063] ieee80211_sta_work
+[66796.576072] ieee80211_sta_work 2
+[66796.576079] wlan0: direct probe to AP XX:XX:XX:XX:XX:XX try 3
+[66796.776061] ieee80211_sta_work
+[66796.776069] ieee80211_sta_work 2
+[66796.776076] wlan0: direct probe to AP XX:XX:XX:XX:XX:XX timed out
 
----
+Hmm, the direct probe timed out, thus the state moves to
+IEEE80211_STA_MLME_DISABLED but sta_work will only run again when the
+next association attempt is being made. However, we still have
+IEEE80211_STA_REQ_SCAN set.
 
-Kalle Valo (5):
-      mac80211: add beacon filtering support
-      cfg80211: add feature to hold bss
-      mac80211: disable power save when scanning
-      mac80211: track beacons separately from the rx path activity
-      mac80211: decrease execution of the associated timer
+[66816.374308] cfg80211_wext_siwscan EBUSY
+[66823.901663] cfg80211_wext_siwscan EBUSY
 
+All subsequent scan requests will fail in cfg80211_wext_siwscan as mac80211
+did not notify cfg80211 about the scan result.
 
- Documentation/DocBook/mac80211.tmpl |    6 ++
- include/net/cfg80211.h              |   18 +++++
- include/net/mac80211.h              |   45 ++++++++++-
- net/mac80211/ieee80211_i.h          |    5 +
- net/mac80211/iface.c                |    3 +
- net/mac80211/mlme.c                 |  139 +++++++++++++++++++++++++++--------
- net/mac80211/rx.c                   |    9 ++
- net/mac80211/scan.c                 |   64 ++++++++++++++++
- net/wireless/core.h                 |    2 +
- net/wireless/scan.c                 |   27 +++++++
- 10 files changed, 278 insertions(+), 40 deletions(-)
+I guess it should be sufficient to queue one more sta_work after the MLME
+moves to IEEE80211_STA_MLME_DISABLED state. In case IEEE80211_STA_REQ_SCAN
+is still set the scan will get started and cfg80211 gets notified about the
+result.
 
+Does that seem correct?
+
+Thanks,
+Helmut
