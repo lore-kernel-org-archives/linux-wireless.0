@@ -1,82 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35134 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754324AbZCQUAf (ORCPT
+Received: from fk-out-0910.google.com ([209.85.128.190]:22230 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754253AbZCJMof (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 16:00:35 -0400
-Date: Tue, 17 Mar 2009 15:59:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/7] p54: refractor beacon_update and stop path
-Message-ID: <20090317195939.GH6737@tuxdriver.com> (sfid-20090317_210039_414142_61FCAF7A)
-References: <200903052133.32337.chunkeey@web.de> <200903061638.16207.mb@bu3sch.de>
+	Tue, 10 Mar 2009 08:44:35 -0400
+Received: by fk-out-0910.google.com with SMTP id f33so708866fkf.5
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2009 05:44:32 -0700 (PDT)
+Message-ID: <49B660AE.80502@gmail.com> (sfid-20090310_134439_890358_FFC1424E)
+Date: Tue, 10 Mar 2009 13:44:30 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200903061638.16207.mb@bu3sch.de>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org
+Subject: Re: [PATCH 2/3] ath5k: Convert chip specific calibration data to
+ a generic format
+References: <20090310103344.GC3341@makis>
+In-Reply-To: <20090310103344.GC3341@makis>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 06, 2009 at 04:38:16PM +0100, Michael Buesch wrote:
-> On Thursday 05 March 2009 21:33:32 Christian Lamparter wrote:
-> > According to the LMAC API Section 3.2.2, we don't have to cancel the previous
-> > beacon manually. The firmware will automatically return it to the driver
-> > through the feedback mechanism. 
-> > And while we're at it, we can remove some left over code as well.
-> > 
-> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> > ---
-> > diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> > --- a/drivers/net/wireless/p54/p54common.c	2009-03-05 15:42:57.000000000 +0100
-> > +++ b/drivers/net/wireless/p54/p54common.c	2009-03-05 15:50:10.000000000 +0100
-> > @@ -2015,18 +2015,14 @@ static int p54_beacon_update(struct ieee
-> >  	struct sk_buff *beacon;
-> >  	int ret;
-> >  
-> > -	if (priv->cached_beacon) {
-> > -		p54_tx_cancel(dev, priv->cached_beacon);
-> > -		/* wait for the last beacon the be freed */
-> > -		msleep(10);
-> > -	}
-> > -
-> >  	beacon = ieee80211_beacon_get(dev, vif);
-> >  	if (!beacon)
-> >  		return -ENOMEM;
-> >  	ret = p54_beacon_tim(beacon);
-> >  	if (ret)
-> >  		return ret;
-> > +
-> > +	/* the firmware will automatically cancel old beacons. */ 
-> >  	ret = p54_tx(dev, beacon);
-> >  	if (ret)
-> >  		return ret;
-> > @@ -2072,17 +2068,21 @@ out:
-> >  static void p54_stop(struct ieee80211_hw *dev)
-> >  {
-> >  	struct p54_common *priv = dev->priv;
-> > -	struct sk_buff *skb;
-> >  
-> >  	mutex_lock(&priv->conf_mutex);
-> >  	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
-> > +	p54_setup_mac(dev);
-> >  	cancel_delayed_work_sync(&priv->work);
-> > -	if (priv->cached_beacon)
-> > -		p54_tx_cancel(dev, priv->cached_beacon);
-> > +
-> > +	/*
-> > +	 * p54spi uses mac80211's workqueue to write the frames into
-> > +	 * device's memory. Therefore, we should give the queue a chance
-> > +	 * to complete all outstanding work, before the device is stopped.
-> > +	 */
-> > +	msleep(25);
-> 
-> What about flush_workqueue()?
+On 10.3.2009 11:33, Nick Kossifidis wrote:
+> --- a/drivers/net/wireless/ath5k/eeprom.c
+> +++ b/drivers/net/wireless/ath5k/eeprom.c
+...
+> +static int
+> +ath5k_eeprom_convert_pcal_info_5111(struct ath5k_hw *ah, int mode,
+> +				struct ath5k_chan_pcal_info *chinfo)
+> +{
+> +	struct ath5k_eeprom_info *ee =&ah->ah_capabilities.cap_eeprom;
+> +	struct ath5k_chan_pcal_info_rf5111 *pcinfo;
+> +	struct ath5k_pdgain_info *pd;
+> +	u8 pier, point, idx;
+> +	u8 *pdgain_idx = ee->ee_pdc_to_idx[mode];
+> +
+> +	/* Fill raw data for each calibration pier */
+> +	for (pier = 0; pier<  ee->ee_n_piers[mode]; pier++) {
+> +
+> +		pcinfo =&chinfo[pier].rf5111_info;
+> +
+> +		/* Allocate pd_curves for this cal pier */
+> +		chinfo[pier].pd_curves =
+> +			kzalloc(sizeof(struct ath5k_pdgain_info) *
+> +				AR5K_EEPROM_N_PD_CURVES, GFP_KERNEL);
+...
+> +		/* Allocate pd points for this curve */
+> +		pd->pd_step = kzalloc(sizeof(u8) *
+> +					AR5K_EEPROM_N_PWR_POINTS_5111,
+> +					GFP_KERNEL);
+> +		if (!pd->pd_step)
+> +			return -ENOMEM;
+> +
+> +		pd->pd_pwr = kzalloc(sizeof(s16) *
+> +					AR5K_EEPROM_N_PWR_POINTS_5111,
+> +					GFP_KERNEL);
 
-I agree, we should use an actual API here and not just "wait long
-enough (we hope)"...
+Just a nit, these 3 may be kcalloc. (and in other places too)
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+>   static int
+>   ath5k_eeprom_read_pcal_info_5112(struct ath5k_hw *ah, int mode)
+>   {
+>   	struct ath5k_eeprom_info *ee =&ah->ah_capabilities.cap_eeprom;
+>   	struct ath5k_chan_pcal_info_rf5112 *chan_pcal_info;
+>   	struct ath5k_chan_pcal_info *gen_chan_info;
+> +	u8 *pdgain_idx = ee->ee_pdc_to_idx[mode];
+>   	u32 offset;
+> -	unsigned int i, c;
+> +	u8 i, c;
+>   	u16 val;
+>   	int ret;
+> +	u8 pd_gains = 0;
+> +
+> +	/* Count how many curves we have and
+> +	 * identify them (which one of the 4
+> +	 * available curves we have on each count).
+> +	 * Curves are stored from lower (x0) to
+> +	 * higher (x3) gain */
+> +	memset(pdgain_idx, 0, sizeof(pdgain_idx));
+
+Note, that sizeof(pdgain_idx) == 4 or 8 (pointer size) depending on 
+arch, this is likely not what you want :).
+
+(and the other memsets too)
