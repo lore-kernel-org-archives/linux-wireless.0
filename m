@@ -1,393 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:59239 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753288AbZCKK3L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 06:29:11 -0400
-Subject: Re: [PATCH resend] libertas: support mesh for various firmware
-	versions
-From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <alpine.LFD.0.9999.0903061650500.5753@localhost.localdomain>
-References: <alpine.LFD.0.9999.0903061650500.5753@localhost.localdomain>
-Content-Type: text/plain
-Date: Wed, 11 Mar 2009 06:26:29 -0400
-Message-Id: <1236767189.1004.16.camel@localhost.localdomain> (sfid-20090311_112916_556373_5BB690D7)
-Mime-Version: 1.0
+Received: from perninha.conectiva.com.br ([200.140.247.100]:36590 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754826AbZCJNLO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2009 09:11:14 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Userspace (wpa_supplicant) not notified on interface down with 2.6.29/wireless-testing
+Date: Tue, 10 Mar 2009 10:11:09 -0300
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200903091850.01604.herton@mandriva.com.br> <1236669214.9658.28.camel@johannes.local>
+In-Reply-To: <1236669214.9658.28.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+Message-Id: <200903101011.10750.herton@mandriva.com.br> (sfid-20090310_141134_054846_7B2A2E76)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-03-06 at 17:03 -0800, Bing Zhao wrote:
-> CMD_MESH_CONFIG command ID and a couple of structure members in TxPD,
-> RxPD have been changed in firmware version 10.x.y.z and newer.
-> 
-> Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
->  drivers/net/wireless/libertas/cmd.c     |   26 +++++++++++++++++-
->  drivers/net/wireless/libertas/defs.h    |   21 ++++++++++++++
->  drivers/net/wireless/libertas/dev.h     |    1 +
->  drivers/net/wireless/libertas/host.h    |    3 +-
->  drivers/net/wireless/libertas/hostcmd.h |   28 +++++++++++++++++---
->  drivers/net/wireless/libertas/main.c    |   44 +++++++++++++++++++------------
->  drivers/net/wireless/libertas/rx.c      |   32 ++++++----------------
->  drivers/net/wireless/libertas/tx.c      |    8 ++++-
->  drivers/net/wireless/libertas/types.h   |    2 +
->  9 files changed, 116 insertions(+), 49 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> index 639dd02..44a842f 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -119,6 +119,19 @@ int lbs_update_hw_spec(struct lbs_private *priv)
->  	lbs_deb_cmd("GET_HW_SPEC: hardware interface 0x%x, hardware spec 0x%04x\n",
->  		    cmd.hwifversion, cmd.version);
->  
-> +	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
-> +	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
-> +	/* 5.110.22 have mesh command with 0xa3 command id */
-> +	/* 10.0.0.p0 FW brings in mesh config command with different id */
-> +	/* Check FW version MSB and initialize mesh_fw_ver */
-> +	if (MRVL_FW_MAJOR_REV(priv->fwrelease) == MRVL_FW_V5)
-> +		priv->mesh_fw_ver = MESH_FW_OLD;
-> +	else if ((MRVL_FW_MAJOR_REV(priv->fwrelease) >= MRVL_FW_V10) &&
-> +		(priv->fwcapinfo & MESH_CAPINFO_ENABLE_MASK))
-> +		priv->mesh_fw_ver = MESH_FW_NEW;
-> +	else
-> +		priv->mesh_fw_ver = MESH_NONE;
-> +
->  	/* Clamp region code to 8-bit since FW spec indicates that it should
->  	 * only ever be 8-bit, even though the field size is 16-bit.  Some firmware
->  	 * returns non-zero high 8 bits here.
-> @@ -1036,17 +1049,26 @@ static int __lbs_mesh_config_send(struct lbs_private *priv,
->  				  uint16_t action, uint16_t type)
->  {
->  	int ret;
-> +	__le16 command = CMD_MESH_CONFIG_OLD;
->  
->  	lbs_deb_enter(LBS_DEB_CMD);
->  
-> -	cmd->hdr.command = cpu_to_le16(CMD_MESH_CONFIG);
-> +	/*
-> +	 * Command id is 0xac for v10 FW along with mesh interface
-> +	 * id in bits 14-13-12.
-> +	 */
-> +	if (priv->mesh_fw_ver == MESH_FW_NEW)
-> +		cmd->hdr.command = CMD_MESH_CONFIG |
-> +				   (MESH_IFACE_ID << MESH_IFACE_BIT_OFFSET);
-> +
-> +	cmd->hdr.command = cpu_to_le16(command);
->  	cmd->hdr.size = cpu_to_le16(sizeof(struct cmd_ds_mesh_config));
->  	cmd->hdr.result = 0;
->  
->  	cmd->type = cpu_to_le16(type);
->  	cmd->action = cpu_to_le16(action);
->  
-> -	ret = lbs_cmd_with_response(priv, CMD_MESH_CONFIG, cmd);
-> +	ret = lbs_cmd_with_response(priv, command, cmd);
->  
->  	lbs_deb_leave(LBS_DEB_CMD);
->  	return ret;
-> diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
-> index e8dfde3..48da157 100644
-> --- a/drivers/net/wireless/libertas/defs.h
-> +++ b/drivers/net/wireless/libertas/defs.h
-> @@ -227,6 +227,20 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
->  #define TxPD_CONTROL_WDS_FRAME (1<<17)
->  #define TxPD_MESH_FRAME TxPD_CONTROL_WDS_FRAME
->  
-> +/** Mesh interface ID */
-> +#define MESH_IFACE_ID					0x0001
-> +/** Mesh id should be in bits 14-13-12 */
-> +#define MESH_IFACE_BIT_OFFSET				0x000c
-> +/** Mesh enable bit in FW capability */
-> +#define MESH_CAPINFO_ENABLE_MASK			(1<<16)
-> +
-> +/** FW definition from Marvell v5 */
-> +#define MRVL_FW_V5					(0x05)
-> +/** FW definition from Marvell v10 */
-> +#define MRVL_FW_V10					(0x0a)
-> +/** FW major revision definition */
-> +#define MRVL_FW_MAJOR_REV(x)				((x)>>24)
-> +
->  /** RxPD status */
->  
->  #define MRVDRV_RXPD_STATUS_OK                0x0001
-> @@ -380,6 +394,13 @@ enum KEY_INFO_WPA {
->  	KEY_INFO_WPA_ENABLED = 0x04
->  };
->  
-> +/** mesh_fw_ver */
-> +enum _mesh_fw_ver {
-> +	MESH_NONE = 0, /* MESH is not supported */
-> +	MESH_FW_OLD,   /* MESH is supported in FW V5 */
-> +	MESH_FW_NEW,   /* MESH is supported in FW V10 and newer */
-> +};
-> +
->  /* Default values for fwt commands. */
->  #define FWT_DEFAULT_METRIC 0
->  #define FWT_DEFAULT_DIR 1
-> diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-> index dd682c4..5f3f6b2 100644
-> --- a/drivers/net/wireless/libertas/dev.h
-> +++ b/drivers/net/wireless/libertas/dev.h
-> @@ -101,6 +101,7 @@ struct lbs_mesh_stats {
->  /** Private structure for the MV device */
->  struct lbs_private {
->  	int mesh_open;
-> +	int mesh_fw_ver;
->  	int infra_open;
->  	int mesh_autostart_enabled;
->  
-> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-> index d4457ef..8ff8ac9 100644
-> --- a/drivers/net/wireless/libertas/host.h
-> +++ b/drivers/net/wireless/libertas/host.h
-> @@ -83,7 +83,8 @@
->  #define CMD_FWT_ACCESS				0x0095
->  #define CMD_802_11_MONITOR_MODE			0x0098
->  #define CMD_MESH_ACCESS				0x009b
-> -#define CMD_MESH_CONFIG				0x00a3
-> +#define CMD_MESH_CONFIG_OLD			0x00a3
-> +#define CMD_MESH_CONFIG				0x00ac
->  #define	CMD_SET_BOOT2_VER			0x00a5
->  #define CMD_802_11_BEACON_CTRL			0x00b0
->  
-> diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
-> index a899aeb..828a7c5 100644
-> --- a/drivers/net/wireless/libertas/hostcmd.h
-> +++ b/drivers/net/wireless/libertas/hostcmd.h
-> @@ -13,8 +13,19 @@
->  
->  /* TxPD descriptor */
->  struct txpd {
-> -	/* Current Tx packet status */
-> -	__le32 tx_status;
-> +	/* union to cope up with later FW revisions */
-> +	union {
-> +		/* Current Tx packet status */
-> +		__le32 tx_status;
-> +		struct {
-> +			/* packet type */
-> +			u8 pkt_type;
-> +			/* BSS number */
-> +			u8 bss_num;
+Em Ter=E7a-feira 10 Mar=E7o 2009, =E0s 04:13:34, Johannes Berg escreveu=
+:
+> On Mon, 2009-03-09 at 18:50 -0300, Herton Ronaldo Krzesinski wrote:
+> > I have the problem when using 2.6.29 and judging by the code the si=
+tuation
+> > stays the same with wireless-testing, even after the fix "mac80211:=
+ deauth when
+> > interface is marked down" (the fix doesn't work with kernel 2.6.28 =
+or later, as
+> > I'll explain).
+> >=20
+> > The problem is, with latest kernels wpa_supplicant isn't still noti=
+fied when
+> > interface goes down, even after commit "mac80211: deauth when inter=
+face is
+> > marked down" (e327b847 on Linus tree). There isn't a problem with t=
+his commit,
+> > but because of other code changes it doesn't work on latest kernels=
+ (but works
+> > if I apply same/similar change on 2.6.27 for example).
+> >=20
+> > The issue is as follows: after commit "mac80211: restructure disass=
+oc/deauth
+> > flows" in 2.6.28, the call to ieee80211_sta_deauthenticate added by=
+ commit
+> > e327b847 will not work: because we do sta_info_flush(local, sdata);=
+ inside
+> > ieee80211_stop (iface.c), all stations in interface are cleared, so=
+ when calling
+> >  ieee80211_sta_deauthenticate->ieee80211_set_disassoc (mlme.c), ins=
+ide
+> > ieee80211_set_disassoc we have this in the beginning:
+> >=20
+> >         sta =3D sta_info_get(local, ifsta->bssid);
+> >         if (!sta) {
+> >=20
+> > the !sta check triggers, so the function returns early and
+> > ieee80211_sta_send_apinfo(sdata, ifsta); later isn't called, so wpa=
+_supplicant
+> > isn't notified with SIOCGIWAP
+>=20
+> Interesting problem.
+>=20
+> > One possible fix is moving sta_info_flush, to avoid !sta, and seems=
+ good, like
+> > the following:
+> >=20
+> > diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+> > index 2acc416..0929581 100644
+> > --- a/net/mac80211/iface.c
+> > +++ b/net/mac80211/iface.c
+> > @@ -370,25 +370,6 @@ static int ieee80211_stop(struct net_device *d=
+ev)
+> >  	rcu_read_unlock();
+> > =20
+> >  	/*
+> > -	 * Remove all stations associated with this interface.
+> > -	 *
+> > -	 * This must be done before calling ops->remove_interface()
+> > -	 * because otherwise we can later invoke ops->sta_notify()
+> > -	 * whenever the STAs are removed, and that invalidates driver
+> > -	 * assumptions about always getting a vif pointer that is valid
+> > -	 * (because if we remove a STA after ops->remove_interface()
+> > -	 * the driver will have removed the vif info already!)
+> > -	 *
+> > -	 * We could relax this and only unlink the stations from the
+> > -	 * hash table and list but keep them on a per-sdata list that
+> > -	 * will be inserted back again when the interface is brought
+> > -	 * up again, but I don't currently see a use case for that,
+> > -	 * except with WDS which gets a STA entry created when it is
+> > -	 * brought up.
+> > -	 */
+> > -	sta_info_flush(local, sdata);
+> > -
+> > -	/*
+> >  	 * Don't count this interface for promisc/allmulti while it
+> >  	 * is down. dev_mc_unsync() will invoke set_multicast_list
+> >  	 * on the master interface which will sync these down to the
+> > @@ -539,6 +520,26 @@ static int ieee80211_stop(struct net_device *d=
+ev)
+> >  		conf.mac_addr =3D dev->dev_addr;
+> >  		/* disable all keys for as long as this netdev is down */
+> >  		ieee80211_disable_keys(sdata);
+> > +
+> > +		/*
+> > +		 * Remove all stations associated with this interface.
+> > +		 *
+> > +		 * This must be done before calling ops->remove_interface()
+> > +		 * because otherwise we can later invoke ops->sta_notify()
+> > +		 * whenever the STAs are removed, and that invalidates driver
+> > +		 * assumptions about always getting a vif pointer that is valid
+> > +		 * (because if we remove a STA after ops->remove_interface()
+> > +		 * the driver will have removed the vif info already!)
+> > +		 *
+> > +		 * We could relax this and only unlink the stations from the
+> > +		 * hash table and list but keep them on a per-sdata list that
+> > +		 * will be inserted back again when the interface is brought
+> > +		 * up again, but I don't currently see a use case for that,
+> > +		 * except with WDS which gets a STA entry created when it is
+> > +		 * brought up.
+> > +		 */
+> > +		sta_info_flush(local, sdata);
+> > +
+> >  		local->ops->remove_interface(local_to_hw(local), &conf);
+> >  	}
+> > =20
+> > My question is, is the patch above safe? that is, do we need to alw=
+ays
+> > call sta_info_flush on interface down like currently, or just for t=
+he case we
+> > call remove_interface, like the comment states? if the latter, patc=
+h above
+> > is good, and solves the wpa_supplicant/userspace issue.
+>=20
+> The comment states it must be before remove_interface, not that it
+> doesn't need to be called unless that is called, and this code moving=
+ is
+> incorrect for AP_VLAN devices.
+>=20
+> You could move the disassoc part out of the switch to before this.
 
-Any chance you could give a quick overview of what goes in the pkt_type
-and bss_num fields?
+Ok, here is the new patch, if it's ok please apply (I can resubmit with=
+ patch
+in subject/standalone message if necessary):
 
-> +			/* Reserved */
-> +			__le16 Reserved;
-> +		} stat;
-> +	} u;
->  	/* Tx control */
->  	__le32 tx_control;
->  	__le32 tx_packet_location;
-> @@ -36,8 +47,17 @@ struct txpd {
->  
->  /* RxPD Descriptor */
->  struct rxpd {
-> -	/* Current Rx packet status */
-> -	__le16 status;
-> +	/* union to cope up with later FW revisions */
-> +	union {
-> +		/* Current Rx packet status */
-> +		__le16 status;
-> +		struct {
-> +			/* packet type */
-> +			u8 pkt_type;
-> +			/* BSS number */
-> +			u8 bss_num;
-> +		} stat;
-> +	} u;
->  
->  	/* SNR */
->  	u8 snr;
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index d93553f..f14d341 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -1316,8 +1316,10 @@ int lbs_start_card(struct lbs_private *priv)
->  
->  	lbs_update_channel(priv);
->  
-> -	/* 5.0.16p0 is known to NOT support any mesh */
-> -	if (priv->fwrelease > 0x05001000) {
-> +	/* Check mesh FW version and appropriately send the mesh start
-> +	 * command
-> +	 */
-> +	if (priv->mesh_fw_ver == MESH_FW_OLD) {
->  		/* Enable mesh, if supported, and work out which TLV it uses.
->  		   0x100 + 291 is an unofficial value used in 5.110.20.pXX
->  		   0x100 + 37 is the official value used in 5.110.21.pXX
-> @@ -1331,27 +1333,35 @@ int lbs_start_card(struct lbs_private *priv)
->  		   It's just that 5.110.20.pXX will not have done anything
->  		   useful */
->  
-> -		priv->mesh_tlv = 0x100 + 291;
-> +		priv->mesh_tlv = TLV_TYPE_OLD_MESH_ID;
->  		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
->  				    priv->curbssparams.channel)) {
-> -			priv->mesh_tlv = 0x100 + 37;
-> +			priv->mesh_tlv = TLV_TYPE_MESH_ID;
->  			if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
->  					    priv->curbssparams.channel))
->  				priv->mesh_tlv = 0;
->  		}
-> -		if (priv->mesh_tlv) {
-> -			lbs_add_mesh(priv);
-> -
-> -			if (device_create_file(&dev->dev, &dev_attr_lbs_mesh))
-> -				lbs_pr_err("cannot register lbs_mesh attribute\n");
-> -
-> -			/* While rtap isn't related to mesh, only mesh-enabled
-> -			 * firmware implements the rtap functionality via
-> -			 * CMD_802_11_MONITOR_MODE.
-> -			 */
-> -			if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
-> -				lbs_pr_err("cannot register lbs_rtap attribute\n");
-> -		}
-> +	} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
-> +		/* 10.0.0.pXX new firmwares should succeed with TLV
-> +		 * 0x100+37; Do not invoke command with old TLV.
-> +		 */
-> +		priv->mesh_tlv = TLV_TYPE_MESH_ID;
-> +		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
-> +				    priv->curbssparams.channel))
-> +			priv->mesh_tlv = 0;
-> +	}
-> +	if (priv->mesh_tlv) {
-> +		lbs_add_mesh(priv);
-> +
-> +		if (device_create_file(&dev->dev, &dev_attr_lbs_mesh))
-> +			lbs_pr_err("cannot register lbs_mesh attribute\n");
-> +
-> +		/* While rtap isn't related to mesh, only mesh-enabled
-> +		 * firmware implements the rtap functionality via
-> +		 * CMD_802_11_MONITOR_MODE.
-> +		 */
-> +		if (device_create_file(&dev->dev, &dev_attr_lbs_rtap))
-> +			lbs_pr_err("cannot register lbs_rtap attribute\n");
->  	}
->  
->  	lbs_debugfs_init_one(priv, dev);
-> diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
-> index 079e6aa..ef04b4e 100644
-> --- a/drivers/net/wireless/libertas/rx.c
-> +++ b/drivers/net/wireless/libertas/rx.c
-> @@ -160,8 +160,15 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
->  
->  	p_rx_pkt = (struct rxpackethdr *) skb->data;
->  	p_rx_pd = &p_rx_pkt->rx_pd;
-> -	if (priv->mesh_dev && (p_rx_pd->rx_control & RxPD_MESH_FRAME))
-> -		dev = priv->mesh_dev;
-> +	if (priv->mesh_dev) {
-> +		if (priv->mesh_fw_ver == MESH_FW_OLD) {
-> +			if (p_rx_pd->rx_control & RxPD_MESH_FRAME)
-> +				dev = priv->mesh_dev;
-> +		} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
-> +			if (p_rx_pd->u.stat.bss_num)
+=46rom eb6f79597b9e6af8a3618873a781fd6ebcbd50a0 Mon Sep 17 00:00:00 200=
+1
+=46rom: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Date: Tue, 10 Mar 2009 09:44:17 -0300
+Subject: [PATCH] mac80211: deauth before flushing STA information
 
-This would mean that bss_num == 0 indicates a regular frame.  Is that
-correct?  For mesh frames bss_num will always be > 0?  The old-style
-rx_control flag seems a bit cleaner to me, but whatever works :)
+Even after commit "mac80211: deauth when interface is marked down"
+(e327b847 on Linus tree), userspace still isn't notified when interface
+goes down. There isn't a problem with this commit, but because of other
+code changes it doesn't work on kernels >=3D 2.6.28 (works if same/simi=
+lar
+change applied on 2.6.27 for example).
 
-> +				dev = priv->mesh_dev;
-> +		}
-> +	}
->  
->  	lbs_deb_hex(LBS_DEB_RX, "RX Data: Before chop rxpd", skb->data,
->  		 min_t(unsigned int, skb->len, 100));
-> @@ -173,17 +180,6 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
->  		goto done;
->  	}
->  
-> -	/*
-> -	 * Check rxpd status and update 802.3 stat,
-> -	 */
-> -	if (!(p_rx_pd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK))) {
-> -		lbs_deb_rx("rx err: frame received with bad status\n");
-> -		lbs_pr_alert("rxpd not ok\n");
-> -		priv->stats.rx_errors++;
-> -		ret = 0;
-> -		goto done;
-> -	}
-> -
+The issue is as follows: after commit "mac80211: restructure disassoc/d=
+eauth
+flows" in 2.6.28, the call to ieee80211_sta_deauthenticate added by
+commit e327b847 will not work: because we do sta_info_flush(local, sdat=
+a)
+inside ieee80211_stop (iface.c), all stations in interface are cleared,=
+ so
+when calling ieee80211_sta_deauthenticate->ieee80211_set_disassoc (mlme=
+=2Ec),
+inside ieee80211_set_disassoc we have this in the beginning:
 
-I'd prefer to keep this code; can you protect it with firmware version
-checks for firmware < 5.1?  It looks like those older firmware versions
-use it, but the 5.1 specification marks RxStatus "Reserved".  Since the
-driver still works with cf8385 and sd8385 using firmware 5.0.16 and
-such, I'm not sure we should remove this yet.
+         sta =3D sta_info_get(local, ifsta->bssid);
+         if (!sta) {
 
->  	lbs_deb_rx("rx data: skb->len-sizeof(RxPd) = %d-%zd = %zd\n",
->  	       skb->len, sizeof(struct rxpd), skb->len - sizeof(struct rxpd));
->  
-> @@ -332,14 +328,6 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
->  		goto done;
->  	}
->  
-> -	/*
-> -	 * Check rxpd status and update 802.3 stat,
-> -	 */
-> -	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK))) {
-> -		//lbs_deb_rx("rx err: frame received with bad status\n");
-> -		priv->stats.rx_errors++;
-> -	}
-> -
+The !sta check triggers, thus the function returns early and
+ieee80211_sta_send_apinfo(sdata, ifsta) later isn't called, so
+wpa_supplicant/userspace isn't notified with SIOCGIWAP.
 
-Same here, can you protect this with firmware checks so it only runs for
-firmware < 5.1?
+This commit moves deauthentication to before flushing STA info
+(sta_info_flush), thus the above can't happen and userspace is really
+notified when interface goes down.
 
->  	lbs_deb_rx("rx data: skb->len-sizeof(RxPd) = %d-%zd = %zd\n",
->  	       skb->len, sizeof(struct rxpd), skb->len - sizeof(struct rxpd));
->  
-> @@ -361,8 +349,6 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
->  	/* XXX must check no carryout */
->  	radiotap_hdr.antsignal = prxpd->snr + prxpd->nf;
->  	radiotap_hdr.rx_flags = 0;
-> -	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
-> -		radiotap_hdr.rx_flags |= IEEE80211_RADIOTAP_F_RX_BADFCS;
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+---
+ net/mac80211/iface.c |   16 ++++++++++++----
+ 1 files changed, 12 insertions(+), 4 deletions(-)
 
-And here too...  other than that, looks good.
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 2acc416..f9f27b9 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -370,6 +370,18 @@ static int ieee80211_stop(struct net_device *dev)
+ 	rcu_read_unlock();
+=20
+ 	/*
++	 * Announce that we are leaving the network, in case we are a
++	 * station interface type. This must be done before removing
++	 * all stations associated with sta_info_flush, otherwise STA
++	 * information will be gone and no announce being done.
++	 */
++	if (sdata->vif.type =3D=3D NL80211_IFTYPE_STATION) {
++		if (sdata->u.mgd.state !=3D IEEE80211_STA_MLME_DISABLED)
++			ieee80211_sta_deauthenticate(sdata,
++				WLAN_REASON_DEAUTH_LEAVING);
++	}
++
++	/*
+ 	 * Remove all stations associated with this interface.
+ 	 *
+ 	 * This must be done before calling ops->remove_interface()
+@@ -454,10 +466,6 @@ static int ieee80211_stop(struct net_device *dev)
+ 		netif_addr_unlock_bh(local->mdev);
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+-		/* Announce that we are leaving the network. */
+-		if (sdata->u.mgd.state !=3D IEEE80211_STA_MLME_DISABLED)
+-			ieee80211_sta_deauthenticate(sdata,
+-						WLAN_REASON_DEAUTH_LEAVING);
+ 		memset(sdata->u.mgd.bssid, 0, ETH_ALEN);
+ 		del_timer_sync(&sdata->u.mgd.chswitch_timer);
+ 		del_timer_sync(&sdata->u.mgd.timer);
+--=20
+1.6.2
 
-Thanks!
-Dan
+>=20
+> johannes
+>=20
 
-
->  	//memset(radiotap_hdr.pad, 0x11, IEEE80211_RADIOTAP_HDRLEN - 18);
->  
->  	/* chop the rxpd */
-> diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-> index 68bec31..bc983ed 100644
-> --- a/drivers/net/wireless/libertas/tx.c
-> +++ b/drivers/net/wireless/libertas/tx.c
-> @@ -132,8 +132,12 @@ int lbs_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
->  	txpd->tx_packet_length = cpu_to_le16(pkt_len);
->  	txpd->tx_packet_location = cpu_to_le32(sizeof(struct txpd));
->  
-> -	if (dev == priv->mesh_dev)
-> -		txpd->tx_control |= cpu_to_le32(TxPD_MESH_FRAME);
-> +	if (dev == priv->mesh_dev) {
-> +		if (priv->mesh_fw_ver == MESH_FW_OLD)
-> +			txpd->tx_control |= cpu_to_le32(TxPD_MESH_FRAME);
-> +		else if (priv->mesh_fw_ver == MESH_FW_NEW)
-> +			txpd->u.stat.bss_num = MESH_IFACE_ID;
-> +	}
->  
->  	lbs_deb_hex(LBS_DEB_TX, "txpd", (u8 *) &txpd, sizeof(struct txpd));
->  
-> diff --git a/drivers/net/wireless/libertas/types.h b/drivers/net/wireless/libertas/types.h
-> index fb7a2d1..de03b9c 100644
-> --- a/drivers/net/wireless/libertas/types.h
-> +++ b/drivers/net/wireless/libertas/types.h
-> @@ -94,6 +94,8 @@ struct ieeetypes_assocrsp {
->  #define TLV_TYPE_TSFTIMESTAMP	    (PROPRIETARY_TLV_BASE_ID + 19)
->  #define TLV_TYPE_RSSI_HIGH          (PROPRIETARY_TLV_BASE_ID + 22)
->  #define TLV_TYPE_SNR_HIGH           (PROPRIETARY_TLV_BASE_ID + 23)
-> +#define TLV_TYPE_MESH_ID            (PROPRIETARY_TLV_BASE_ID + 37)
-> +#define TLV_TYPE_OLD_MESH_ID        (PROPRIETARY_TLV_BASE_ID + 291)
->  
->  /** TLV related data structures*/
->  struct mrvlietypesheader {
-
+--
+[]'s
+Herton
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
