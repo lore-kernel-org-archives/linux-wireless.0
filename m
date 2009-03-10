@@ -1,85 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37352 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759332AbZCYLir (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:35875 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754880AbZCJRdb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 07:38:47 -0400
-Subject: Re: [PATCH] mac80211: Fix bug in getting rx status for frames
- pending in reorder buffer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090325111947.GB21025@vasanth-laptop>
-References: <1237978407-5397-1-git-send-email-vasanth@atheros.com>
-	 <1237978973.4320.154.camel@johannes.local>
-	 <20090325111947.GB21025@vasanth-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tSiCpnEdzpM6nD+4qGt9"
-Date: Wed, 25 Mar 2009 12:38:14 +0100
-Message-Id: <1237981094.4320.158.camel@johannes.local> (sfid-20090325_123850_899724_30C9026E)
-Mime-Version: 1.0
+	Tue, 10 Mar 2009 13:33:31 -0400
+Received: by ey-out-2122.google.com with SMTP id 25so429326eya.37
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2009 10:33:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <49B66170.5000103@gmail.com>
+References: <20090310103735.GD3341@makis> <49B66170.5000103@gmail.com>
+Date: Tue, 10 Mar 2009 19:33:28 +0200
+Message-ID: <40f31dec0903101033m42a889feq1a7361289adc4b4d@mail.gmail.com> (sfid-20090310_183335_096561_5CE53A5D)
+Subject: Re: [PATCH 3/3] ath5k: Add tx power calibration support
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/3/10 Jiri Slaby <jirislaby@gmail.com>:
+> On 10.3.2009 11:37, Nick Kossifidis wrote:
+>>
+>> =C2=A0* Add tx power calibration support
+>> =C2=A0* Add a few tx power limits
+>> =C2=A0* Hardcode default power to 12.5dB
+>> =C2=A0* Disable TPC for now
+>
+> ...
+>>
+>> diff --git a/drivers/net/wireless/ath5k/base.c
+>> b/drivers/net/wireless/ath5k/base.c
+>> index f7c424d..d9f483b 100644
+>> --- a/drivers/net/wireless/ath5k/base.c
+>> +++ b/drivers/net/wireless/ath5k/base.c
+>> @@ -521,6 +521,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+IEEE80211_HW_NOISE_DBM;
+>>
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0hw->wiphy->interface_modes =3D
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 BIT(NL80211_IFTYP=
+E_AP)|
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0BIT(NL80211_I=
+=46TYPE_STATION) |
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0BIT(NL80211_I=
+=46TYPE_ADHOC) |
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0BIT(NL80211_I=
+=46TYPE_MESH_POINT);
+>
+> Is this a typo or wrongly amended commit :)?
 
---=-tSiCpnEdzpM6nD+4qGt9
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I wanted to do some basic testing for this on a spectrum analyzer so i
+had to switch it to AP mode and watch the beacons coming out, of
+course i forgot to remove it :P
 
-On Wed, 2009-03-25 at 16:49 +0530, Vasanthakumar Thiagarajan wrote:
-> On Wed, Mar 25, 2009 at 04:32:53PM +0530, Johannes Berg wrote:
-> > On Wed, 2009-03-25 at 16:23 +0530, Vasanthakumar Thiagarajan wrote:
-> > > Currently rx status for frames which are completed from reorder buffe=
-r
-> > > is taken from it's cb area which is wrong, cb is not holding the rx s=
-tatus.
-> > > This results in dropping almost all frames from reorder buffer when s=
-ecurity
-> > > is enabled by doing double decryption (first in hw, second in sw beca=
-use of wrong
-> > > rx status). This patch copies rx status into cb area before the frame=
- is put
-> > > into reorder buffer. After this patch, there is a significant improve=
-ment in
-> > > throughput with ath9k + WPA2(AES).
-> >=20
-> > Interesting. For ieee80211_rx_irqsafe() packets this is already in the
-> > cb area.
->=20
-> right. I will change the commit log.
-
-No worries -- just pointing it out -- this is the reason it worked ok
-with iwlwifi.
-
-> This is while completing reorder buffer on reception of BAR.
-
-ok... this code is a little convoluted, so I didn't see that at first,
-thanks.
-
-johannes
-
---=-tSiCpnEdzpM6nD+4qGt9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJyhejAAoJEKVg1VMiehFYlHQQAKEaF92luHFYD50AFiUCSwT+
-IvdM9mGs+oIUMxBeHaBY4fj2x4dCVKaqq34ISKjvsb3FvLB6zGfYdTWlLKfIM23A
-OC2hMShxoS8qcLDkp4PgUyIOkW4SfhpbgCKCGMQhc1D4AAD+FrJnMMozFw/CV94D
-4FvsUg0ikj0mdDPIqfQQx4AjmrOdUPWV+q3C3rXwCAS5OjlL3zfy7DkZ/zFWs4Z1
-NPpfi3+wJ+puQAG1G7gZyAnTrnzWn03Q8jUczR348PadIuUEJEJ5/wTKVC/zCPuC
-8KYtmUyBkdTmVQz1nIIJ7gadA+iRldZQcon8aFxNrdodE4aaxdCqAppKu6gDL1AC
-wlz/XC85pdW7qKP20+rcYfPtYB9lTXJ2ijpsQlIuuy2JgfXSWyEOXJ6eIbzIEq3o
-lWGGMdUiDXjt22GMTtx8PWi5+sp+eaPHNiVnG2sXTjj/yCfvQXno/2CAS8f55iw/
-t7m6rT0BkA5BJnjeDtKJK7McQqJDluUPkKs0/trGqrJwUetaldC13FXMc/eIy3+R
-tNTY7tF4C3uG5MzLU9CFKrxUzBUDahBfmOmv1hxeNTQBBEPUREmECdtz5fDjuneQ
-9phXyHkqxBUs9LyPv+W2hW1zmjYLmcynF5Y8RRELrZN9MjGMdEPD4uj++AyBMotc
-x14UBEamwKksbrll94jx
-=cvlE
------END PGP SIGNATURE-----
-
---=-tSiCpnEdzpM6nD+4qGt9--
-
+--=20
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
