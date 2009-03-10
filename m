@@ -1,619 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:43242 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759538AbZCTTgV (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.229]:34436 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992AbZCJG4A convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 15:36:21 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC][PATCH 1/5 v5] ar9170: hardware and eeprom header files
-Date: Fri, 20 Mar 2009 20:36:16 +0100
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-References: <200903170409.05550.chunkeey@web.de>
-In-Reply-To: <200903170409.05550.chunkeey@web.de>
+	Tue, 10 Mar 2009 02:56:00 -0400
+Received: by rv-out-0506.google.com with SMTP id g9so2193538rvb.5
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2009 23:55:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903202036.16892.chunkeey@web.de> (sfid-20090320_203625_200284_9B0BC5BD)
+In-Reply-To: <49B60061.9040409@erley.org>
+References: <49B60061.9040409@erley.org>
+Date: Mon, 9 Mar 2009 23:55:58 -0700
+Message-ID: <45e8e6c40903092355w778d95d4sa5a7433ef6692501@mail.gmail.com> (sfid-20090310_075608_002354_C8824EB9)
+Subject: Re: [patch/RFC] ath9k mesh mode
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: pat-lkml <pat-lkml@erley.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>, brian@cozybit.com,
+	javier@cozybit.com, colin@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hardware and interface definitions of the ar9170 driver
----
-diff --git a/drivers/net/wireless/ar9170/eeprom.h b/drivers/net/wireless/ar9170/eeprom.h
-new file mode 100644
-index 0000000..d2c8cc8
---- /dev/null
-+++ b/drivers/net/wireless/ar9170/eeprom.h
-@@ -0,0 +1,179 @@
-+/*
-+ * Atheros AR9170 driver
-+ *
-+ * EEPROM layout
-+ *
-+ * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, see
-+ * http://www.gnu.org/licenses/.
-+ *
-+ * This file incorporates work covered by the following copyright and
-+ * permission notice:
-+ *    Copyright (c) 2007-2008 Atheros Communications, Inc.
-+ *
-+ *    Permission to use, copy, modify, and/or distribute this software for any
-+ *    purpose with or without fee is hereby granted, provided that the above
-+ *    copyright notice and this permission notice appear in all copies.
-+ *
-+ *    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ *    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ *    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ *    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ *    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ *    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef __AR9170_EEPROM_H
-+#define __AR9170_EEPROM_H
-+
-+#define AR5416_MAX_CHAINS		2
-+#define AR5416_MODAL_SPURS		5
-+
-+struct ar9170_eeprom_modal {
-+	__le32	antCtrlChain[AR5416_MAX_CHAINS];
-+	__le32	antCtrlCommon;
-+	s8	antennaGainCh[AR5416_MAX_CHAINS];
-+	u8	switchSettling;
-+	u8	txRxAttenCh[AR5416_MAX_CHAINS];
-+	u8	rxTxMarginCh[AR5416_MAX_CHAINS];
-+	s8	adcDesiredSize;
-+	s8	pgaDesiredSize;
-+	u8	xlnaGainCh[AR5416_MAX_CHAINS];
-+	u8	txEndToXpaOff;
-+	u8	txEndToRxOn;
-+	u8	txFrameToXpaOn;
-+	u8	thresh62;
-+	s8	noiseFloorThreshCh[AR5416_MAX_CHAINS];
-+	u8	xpdGain;
-+	u8	xpd;
-+	s8	iqCalICh[AR5416_MAX_CHAINS];
-+	s8	iqCalQCh[AR5416_MAX_CHAINS];
-+	u8	pdGainOverlap;
-+	u8	ob;
-+	u8	db;
-+	u8	xpaBiasLvl;
-+	u8	pwrDecreaseFor2Chain;
-+	u8	pwrDecreaseFor3Chain;
-+	u8	txFrameToDataStart;
-+	u8	txFrameToPaOn;
-+	u8	ht40PowerIncForPdadc;
-+	u8	bswAtten[AR5416_MAX_CHAINS];
-+	u8	bswMargin[AR5416_MAX_CHAINS];
-+	u8	swSettleHt40;
-+	u8	reserved[22];
-+	struct spur_channel {
-+		__le16 spurChan;
-+		u8	spurRangeLow;
-+		u8	spurRangeHigh;
-+	} __packed spur_channels[AR5416_MODAL_SPURS];
-+} __packed;
-+
-+#define AR5416_NUM_PD_GAINS		4
-+#define AR5416_PD_GAIN_ICEPTS		5
-+
-+struct ar9170_calibration_data_per_freq {
-+	u8	pwr_pdg[AR5416_NUM_PD_GAINS][AR5416_PD_GAIN_ICEPTS];
-+	u8	vpd_pdg[AR5416_NUM_PD_GAINS][AR5416_PD_GAIN_ICEPTS];
-+} __packed;
-+
-+#define AR5416_NUM_5G_CAL_PIERS		8
-+#define AR5416_NUM_2G_CAL_PIERS		4
-+
-+#define AR5416_NUM_5G_TARGET_PWRS	8
-+#define AR5416_NUM_2G_CCK_TARGET_PWRS	3
-+#define AR5416_NUM_2G_OFDM_TARGET_PWRS	4
-+#define AR5416_MAX_NUM_TGT_PWRS		8
-+
-+struct ar9170_calibration_target_power_legacy {
-+	u8	freq;
-+	u8	power[4];
-+} __packed;
-+
-+struct ar9170_calibration_target_power_ht {
-+	u8	freq;
-+	u8	power[8];
-+} __packed;
-+
-+#define AR5416_NUM_CTLS			24
-+
-+struct ar9170_calctl_edges {
-+	u8	channel;
-+#define AR9170_CALCTL_EDGE_FLAGS	0xC0
-+	u8	power_flags;
-+} __packed;
-+
-+#define AR5416_NUM_BAND_EDGES		8
-+
-+struct ar9170_calctl_data {
-+	struct ar9170_calctl_edges
-+		control_edges[AR5416_MAX_CHAINS][AR5416_NUM_BAND_EDGES];
-+} __packed;
-+
-+
-+struct ar9170_eeprom {
-+	__le16	length;
-+	__le16	checksum;
-+	__le16	version;
-+	u8	operating_flags;
-+#define AR9170_OPFLAG_5GHZ 		1
-+#define AR9170_OPFLAG_2GHZ 		2
-+	u8	misc;
-+	__le16	reg_domain[2];
-+	u8	mac_address[6];
-+	u8	rx_mask;
-+	u8	tx_mask;
-+	__le16	rf_silent;
-+	__le16	bluetooth_options;
-+	__le16	device_capabilities;
-+	__le32	build_number;
-+	u8	deviceType;
-+	u8	reserved[33];
-+
-+	u8	customer_data[64];
-+
-+	struct ar9170_eeprom_modal
-+		modal_header[2];
-+
-+	u8	cal_freq_pier_5G[AR5416_NUM_5G_CAL_PIERS];
-+	u8	cal_freq_pier_2G[AR5416_NUM_2G_CAL_PIERS];
-+
-+	struct ar9170_calibration_data_per_freq
-+		cal_pier_data_5G[AR5416_MAX_CHAINS][AR5416_NUM_5G_CAL_PIERS],
-+		cal_pier_data_2G[AR5416_MAX_CHAINS][AR5416_NUM_2G_CAL_PIERS];
-+
-+	/* power calibration data */
-+	struct ar9170_calibration_target_power_legacy
-+		cal_tgt_pwr_5G[AR5416_NUM_5G_TARGET_PWRS];
-+	struct ar9170_calibration_target_power_ht
-+		cal_tgt_pwr_5G_ht20[AR5416_NUM_5G_TARGET_PWRS],
-+		cal_tgt_pwr_5G_ht40[AR5416_NUM_5G_TARGET_PWRS];
-+
-+	struct ar9170_calibration_target_power_legacy
-+		cal_tgt_pwr_2G_cck[AR5416_NUM_2G_CCK_TARGET_PWRS],
-+		cal_tgt_pwr_2G_ofdm[AR5416_NUM_2G_OFDM_TARGET_PWRS];
-+	struct ar9170_calibration_target_power_ht
-+		cal_tgt_pwr_2G_ht20[AR5416_NUM_2G_OFDM_TARGET_PWRS],
-+		cal_tgt_pwr_2G_ht40[AR5416_NUM_2G_OFDM_TARGET_PWRS];
-+
-+	/* conformance testing limits */
-+	u8	ctl_index[AR5416_NUM_CTLS];
-+	struct ar9170_calctl_data
-+		ctl_data[AR5416_NUM_CTLS];
-+
-+	u8	pad;
-+	__le16	subsystem_id;
-+} __packed;
-+
-+#endif /* __AR9170_EEPROM_H */
-diff --git a/drivers/net/wireless/ar9170/hw.h b/drivers/net/wireless/ar9170/hw.h
-new file mode 100644
-index 0000000..1f2df4d
---- /dev/null
-+++ b/drivers/net/wireless/ar9170/hw.h
-@@ -0,0 +1,405 @@
-+/*
-+ * Atheros AR9170 driver
-+ *
-+ * Hardware-specific definitions
-+ *
-+ * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, see
-+ * http://www.gnu.org/licenses/.
-+ *
-+ * This file incorporates work covered by the following copyright and
-+ * permission notice:
-+ *    Copyright (c) 2007-2008 Atheros Communications, Inc.
-+ *
-+ *    Permission to use, copy, modify, and/or distribute this software for any
-+ *    purpose with or without fee is hereby granted, provided that the above
-+ *    copyright notice and this permission notice appear in all copies.
-+ *
-+ *    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ *    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ *    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ *    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ *    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ *    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef __AR9170_HW_H
-+#define __AR9170_HW_H
-+
-+#define AR9170_MAX_CMD_LEN	64
-+
-+enum ar9170_cmd {
-+	AR9170_CMD_RREG		= 0x00,
-+	AR9170_CMD_WREG		= 0x01,
-+	AR9170_CMD_RMEM		= 0x02,
-+	AR9170_CMD_WMEM		= 0x03,
-+	AR9170_CMD_BITAND	= 0x04,
-+	AR9170_CMD_BITOR	= 0x05,
-+	AR9170_CMD_EKEY		= 0x28,
-+	AR9170_CMD_DKEY		= 0x29,
-+	AR9170_CMD_FREQUENCY	= 0x30,
-+	AR9170_CMD_RF_INIT	= 0x31,
-+	AR9170_CMD_SYNTH	= 0x32,
-+	AR9170_CMD_FREQ_START	= 0x33,
-+	AR9170_CMD_ECHO		= 0x80,
-+	AR9170_CMD_TALLY	= 0x81,
-+	AR9170_CMD_TALLY_APD	= 0x82,
-+	AR9170_CMD_CONFIG	= 0x83,
-+	AR9170_CMD_RESET	= 0x90,
-+	AR9170_CMD_DKRESET	= 0x91,
-+	AR9170_CMD_DKTX_STATUS	= 0x92,
-+	AR9170_CMD_FDC		= 0xA0,
-+	AR9170_CMD_WREEPROM	= 0xB0,
-+	AR9170_CMD_WFLASH	= 0xB0,
-+	AR9170_CMD_FLASH_ERASE	= 0xB1,
-+	AR9170_CMD_FLASH_PROG	= 0xB2,
-+	AR9170_CMD_FLASH_CHKSUM	= 0xB3,
-+	AR9170_CMD_FLASH_READ	= 0xB4,
-+	AR9170_CMD_FW_DL_INIT	= 0xB5,
-+	AR9170_CMD_MEM_WREEPROM	= 0xBB,
-+};
-+
-+/* endpoints */
-+#define AR9170_EP_TX				1
-+#define AR9170_EP_RX				2
-+#define AR9170_EP_IRQ				3
-+#define AR9170_EP_CMD				4
-+
-+#define AR9170_EEPROM_START			0x1600
-+
-+#define AR9170_GPIO_REG_BASE			0x1d0100
-+#define AR9170_GPIO_REG_PORT_TYPE		AR9170_GPIO_REG_BASE
-+#define AR9170_GPIO_REG_DATA			(AR9170_GPIO_REG_BASE + 4)
-+#define AR9170_NUM_LEDS				2
-+
-+
-+#define AR9170_USB_REG_BASE			0x1e1000
-+#define AR9170_USB_REG_DMA_CTL			(AR9170_USB_REG_BASE + 0x108)
-+#define		AR9170_DMA_CTL_ENABLE_TO_DEVICE		0x1
-+#define		AR9170_DMA_CTL_ENABLE_FROM_DEVICE	0x2
-+#define		AR9170_DMA_CTL_HIGH_SPEED		0x4
-+#define		AR9170_DMA_CTL_PACKET_MODE		0x8
-+
-+#define AR9170_USB_REG_MAX_AGG_UPLOAD		(AR9170_USB_REG_BASE + 0x110)
-+#define AR9170_USB_REG_UPLOAD_TIME_CTL		(AR9170_USB_REG_BASE + 0x114)
-+
-+
-+
-+#define AR9170_MAC_REG_BASE			0x1c3000
-+
-+#define AR9170_MAC_REG_TSF_L			(AR9170_MAC_REG_BASE + 0x514)
-+#define AR9170_MAC_REG_TSF_H			(AR9170_MAC_REG_BASE + 0x518)
-+
-+#define AR9170_MAC_REG_ATIM_WINDOW		(AR9170_MAC_REG_BASE + 0x51C)
-+#define AR9170_MAC_REG_BCN_PERIOD		(AR9170_MAC_REG_BASE + 0x520)
-+#define AR9170_MAC_REG_PRETBTT			(AR9170_MAC_REG_BASE + 0x524)
-+
-+#define AR9170_MAC_REG_MAC_ADDR_L		(AR9170_MAC_REG_BASE + 0x610)
-+#define AR9170_MAC_REG_MAC_ADDR_H		(AR9170_MAC_REG_BASE + 0x614)
-+#define AR9170_MAC_REG_BSSID_L			(AR9170_MAC_REG_BASE + 0x618)
-+#define AR9170_MAC_REG_BSSID_H			(AR9170_MAC_REG_BASE + 0x61c)
-+
-+#define AR9170_MAC_REG_GROUP_HASH_TBL_L		(AR9170_MAC_REG_BASE + 0x624)
-+#define AR9170_MAC_REG_GROUP_HASH_TBL_H		(AR9170_MAC_REG_BASE + 0x628)
-+
-+#define AR9170_MAC_REG_RX_TIMEOUT		(AR9170_MAC_REG_BASE + 0x62C)
-+
-+#define AR9170_MAC_REG_BASIC_RATE		(AR9170_MAC_REG_BASE + 0x630)
-+#define AR9170_MAC_REG_MANDATORY_RATE		(AR9170_MAC_REG_BASE + 0x634)
-+#define AR9170_MAC_REG_RTS_CTS_RATE		(AR9170_MAC_REG_BASE + 0x638)
-+#define AR9170_MAC_REG_BACKOFF_PROTECT		(AR9170_MAC_REG_BASE + 0x63c)
-+#define AR9170_MAC_REG_RX_THRESHOLD		(AR9170_MAC_REG_BASE + 0x640)
-+#define AR9170_MAC_REG_RX_PE_DELAY		(AR9170_MAC_REG_BASE + 0x64C)
-+
-+#define AR9170_MAC_REG_DYNAMIC_SIFS_ACK		(AR9170_MAC_REG_BASE + 0x658)
-+#define AR9170_MAC_REG_SNIFFER			(AR9170_MAC_REG_BASE + 0x674)
-+#define		AR9170_MAC_REG_SNIFFER_ENABLE_PROMISC	BIT(0)
-+#define		AR9170_MAC_REG_SNIFFER_DEFAULTS		0x02000000
-+#define AR9170_MAC_REG_ENCRYPTION		(AR9170_MAC_REG_BASE + 0x678)
-+#define		AR9170_MAC_REG_ENCRYPTION_RX_SOFTWARE	BIT(3)
-+#define		AR9170_MAC_REG_ENCRYPTION_DEFAULTS	0x70
-+
-+#define AR9170_MAC_REG_MISC_680			(AR9170_MAC_REG_BASE + 0x680)
-+#define AR9170_MAC_REG_TX_UNDERRUN		(AR9170_MAC_REG_BASE + 0x688)
-+
-+#define AR9170_MAC_REG_FRAMETYPE_FILTER		(AR9170_MAC_REG_BASE + 0x68c)
-+#define		AR9170_MAC_REG_FTF_ASSOC_REQ		BIT(0)
-+#define		AR9170_MAC_REG_FTF_ASSOC_RESP		BIT(1)
-+#define		AR9170_MAC_REG_FTF_REASSOC_REQ		BIT(2)
-+#define		AR9170_MAC_REG_FTF_REASSOC_RESP		BIT(3)
-+#define		AR9170_MAC_REG_FTF_PRB_REQ		BIT(4)
-+#define		AR9170_MAC_REG_FTF_PRB_RESP		BIT(5)
-+#define		AR9170_MAC_REG_FTF_BIT6			BIT(6)
-+#define		AR9170_MAC_REG_FTF_BIT7			BIT(7)
-+#define		AR9170_MAC_REG_FTF_BEACON		BIT(8)
-+#define		AR9170_MAC_REG_FTF_ATIM			BIT(9)
-+#define		AR9170_MAC_REG_FTF_DEASSOC		BIT(10)
-+#define		AR9170_MAC_REG_FTF_AUTH			BIT(11)
-+#define		AR9170_MAC_REG_FTF_DEAUTH		BIT(12)
-+#define		AR9170_MAC_REG_FTF_BIT13		BIT(13)
-+#define		AR9170_MAC_REG_FTF_BIT14		BIT(14)
-+#define		AR9170_MAC_REG_FTF_BIT15		BIT(15)
-+#define		AR9170_MAC_REG_FTF_BAR			BIT(24)
-+#define		AR9170_MAC_REG_FTF_BIT25		BIT(25)
-+#define		AR9170_MAC_REG_FTF_PSPOLL		BIT(26)
-+#define		AR9170_MAC_REG_FTF_RTS			BIT(27)
-+#define		AR9170_MAC_REG_FTF_CTS			BIT(28)
-+#define		AR9170_MAC_REG_FTF_ACK			BIT(29)
-+#define		AR9170_MAC_REG_FTF_CFE			BIT(30)
-+#define		AR9170_MAC_REG_FTF_CFE_ACK		BIT(31)
-+#define		AR9170_MAC_REG_FTF_DEFAULTS		0x0500ffff
-+#define		AR9170_MAC_REG_FTF_MONITOR		0xfd00ffff
-+
-+#define AR9170_MAC_REG_RX_TOTAL			(AR9170_MAC_REG_BASE + 0x6A0)
-+#define AR9170_MAC_REG_RX_CRC32			(AR9170_MAC_REG_BASE + 0x6A4)
-+#define AR9170_MAC_REG_RX_CRC16			(AR9170_MAC_REG_BASE + 0x6A8)
-+#define AR9170_MAC_REG_RX_ERR_DECRYPTION_UNI	(AR9170_MAC_REG_BASE + 0x6AC)
-+#define AR9170_MAC_REG_RX_OVERRUN		(AR9170_MAC_REG_BASE + 0x6B0)
-+#define AR9170_MAC_REG_RX_ERR_DECRYPTION_MUL	(AR9170_MAC_REG_BASE + 0x6BC)
-+#define AR9170_MAC_REG_TX_RETRY			(AR9170_MAC_REG_BASE + 0x6CC)
-+#define AR9170_MAC_REG_TX_TOTAL			(AR9170_MAC_REG_BASE + 0x6F4)
-+
-+
-+#define AR9170_MAC_REG_ACK_EXTENSION		(AR9170_MAC_REG_BASE + 0x690)
-+#define AR9170_MAC_REG_EIFS_AND_SIFS		(AR9170_MAC_REG_BASE + 0x698)
-+
-+#define AR9170_MAC_REG_SLOT_TIME		(AR9170_MAC_REG_BASE + 0x6F0)
-+
-+#define AR9170_MAC_REG_POWERMANAGEMENT		(AR9170_MAC_REG_BASE + 0x700)
-+#define		AR9170_MAC_REG_POWERMGT_IBSS		0xe0
-+#define		AR9170_MAC_REG_POWERMGT_AP		0xa1
-+#define		AR9170_MAC_REG_POWERMGT_STA		0x2
-+#define		AR9170_MAC_REG_POWERMGT_AP_WDS		0x3
-+#define		AR9170_MAC_REG_POWERMGT_DEFAULTS	(0xf << 24)
-+
-+#define AR9170_MAC_REG_ROLL_CALL_TBL_L		(AR9170_MAC_REG_BASE + 0x704)
-+#define AR9170_MAC_REG_ROLL_CALL_TBL_H		(AR9170_MAC_REG_BASE + 0x708)
-+
-+#define AR9170_MAC_REG_AC0_CW			(AR9170_MAC_REG_BASE + 0xB00)
-+#define AR9170_MAC_REG_AC1_CW			(AR9170_MAC_REG_BASE + 0xB04)
-+#define AR9170_MAC_REG_AC2_CW			(AR9170_MAC_REG_BASE + 0xB08)
-+#define AR9170_MAC_REG_AC3_CW			(AR9170_MAC_REG_BASE + 0xB0C)
-+#define AR9170_MAC_REG_AC4_CW			(AR9170_MAC_REG_BASE + 0xB10)
-+#define AR9170_MAC_REG_AC1_AC0_AIFS		(AR9170_MAC_REG_BASE + 0xB14)
-+#define AR9170_MAC_REG_AC3_AC2_AIFS		(AR9170_MAC_REG_BASE + 0xB18)
-+
-+#define AR9170_MAC_REG_RETRY_MAX		(AR9170_MAC_REG_BASE + 0xB28)
-+
-+#define AR9170_MAC_REG_FCS_SELECT		(AR9170_MAC_REG_BASE + 0xBB0)
-+#define		AR9170_MAC_FCS_SWFCS		0x1
-+#define		AR9170_MAC_FCS_FIFO_PROT	0x4
-+
-+
-+#define AR9170_MAC_REG_TXOP_NOT_ENOUGH_IND	(AR9170_MAC_REG_BASE + 0xB30)
-+
-+#define AR9170_MAC_REG_AC1_AC0_TXOP		(AR9170_MAC_REG_BASE + 0xB44)
-+#define AR9170_MAC_REG_AC3_AC2_TXOP		(AR9170_MAC_REG_BASE + 0xB48)
-+
-+#define AR9170_MAC_REG_ACK_TABLE		(AR9170_MAC_REG_BASE + 0xC00)
-+#define AR9170_MAC_REG_AMPDU_RX_THRESH		(AR9170_MAC_REG_BASE + 0xC50)
-+
-+#define AR9170_MAC_REG_TXRX_MPI			(AR9170_MAC_REG_BASE + 0xD7C)
-+#define		AR9170_MAC_TXRX_MPI_TX_MPI_MASK	0x0000000f
-+#define		AR9170_MAC_TXRX_MPI_TX_TO_MASK	0x0000fff0
-+#define		AR9170_MAC_TXRX_MPI_RX_MPI_MASK	0x000f0000
-+#define		AR9170_MAC_TXRX_MPI_RX_TO_MASK	0xfff00000
-+
-+#define AR9170_MAC_REG_BCN_ADDR			(AR9170_MAC_REG_BASE + 0xD84)
-+#define AR9170_MAC_REG_BCN_LENGTH		(AR9170_MAC_REG_BASE + 0xD88)
-+#define AR9170_MAC_REG_BCN_PLCP			(AR9170_MAC_REG_BASE + 0xD90)
-+#define AR9170_MAC_REG_BCN_CTRL			(AR9170_MAC_REG_BASE + 0xD94)
-+#define AR9170_MAC_REG_BCN_HT1			(AR9170_MAC_REG_BASE + 0xDA0)
-+#define AR9170_MAC_REG_BCN_HT2			(AR9170_MAC_REG_BASE + 0xDA4)
-+
-+
-+#define AR9170_PWR_REG_BASE			0x1D4000
-+
-+#define AR9170_PWR_REG_CLOCK_SEL		(AR9170_PWR_REG_BASE + 0x008)
-+#define		AR9170_PWR_CLK_AHB_40MHZ	0
-+#define		AR9170_PWR_CLK_AHB_20_22MHZ	1
-+#define		AR9170_PWR_CLK_AHB_40_44MHZ	2
-+#define		AR9170_PWR_CLK_AHB_80_88MHZ	3
-+#define		AR9170_PWR_CLK_DAC_160_INV_DLY	0x70
-+
-+
-+/* put beacon here in memory */
-+#define AR9170_BEACON_BUFFER_ADDRESS		0x117900
-+
-+
-+struct ar9170_tx_control {
-+	__le16 length;
-+	__le16 mac_control;
-+	__le32 phy_control;
-+} __packed;
-+
-+/* these are either-or */
-+#define AR9170_TX_MAC_PROT_RTS			0x0001
-+#define AR9170_TX_MAC_PROT_CTS			0x0002
-+
-+#define AR9170_TX_MAC_NO_ACK			0x0004
-+/* if unset, MAC will only do SIFS space before frame */
-+#define AR9170_TX_MAC_BACKOFF			0x0008
-+#define AR9170_TX_MAC_BURST			0x0010
-+#define AR9170_TX_MAC_AGGR			0x0020
-+
-+/* encryption is a two-bit field */
-+#define AR9170_TX_MAC_ENCR_NONE			0x0000
-+#define AR9170_TX_MAC_ENCR_RC4			0x0040
-+#define AR9170_TX_MAC_ENCR_CENC			0x0080
-+#define AR9170_TX_MAC_ENCR_AES			0x00c0
-+
-+#define AR9170_TX_MAC_MMIC			0x0100
-+#define AR9170_TX_MAC_HW_DURATION		0x0200
-+#define AR9170_TX_MAC_QOS_SHIFT			10
-+#define AR9170_TX_MAC_QOS_MASK			(3 << AR9170_TX_MAC_QOS_SHIFT)
-+#define AR9170_TX_MAC_AGGR_QOS_BIT1		0x0400
-+#define AR9170_TX_MAC_AGGR_QOS_BIT2		0x0800
-+#define AR9170_TX_MAC_DISABLE_TXOP		0x1000
-+#define AR9170_TX_MAC_TXOP_RIFS			0x2000
-+#define AR9170_TX_MAC_IMM_AMPDU			0x4000
-+#define AR9170_TX_MAC_RATE_PROBE		0x8000
-+
-+/* either-or */
-+#define AR9170_TX_PHY_MOD_CCK			0x00000000
-+#define AR9170_TX_PHY_MOD_OFDM			0x00000001
-+#define AR9170_TX_PHY_MOD_HT			0x00000002
-+
-+/* depends on modulation */
-+#define AR9170_TX_PHY_SHORT_PREAMBLE		0x00000004
-+#define AR9170_TX_PHY_GREENFIELD		0x00000004
-+
-+#define AR9170_TX_PHY_BW_SHIFT			3
-+#define AR9170_TX_PHY_BW_MASK			(3 << AR9170_TX_PHY_BW_SHIFT)
-+#define AR9170_TX_PHY_BW_20MHZ			0
-+#define AR9170_TX_PHY_BW_40MHZ			2
-+#define AR9170_TX_PHY_BW_40MHZ_DUP		3
-+
-+#define AR9170_TX_PHY_TX_HEAVY_CLIP_SHIFT	6
-+#define AR9170_TX_PHY_TX_HEAVY_CLIP_MASK	(7 << AR9170_TX_PHY_TX_HEAVY_CLIP_SHIFT)
-+
-+#define AR9170_TX_PHY_TX_PWR_SHIFT		9
-+#define AR9170_TX_PHY_TX_PWR_MASK		(0x3f << AR9170_TX_PHY_TX_PWR_SHIFT)
-+
-+/* not part of the hw-spec */
-+#define AR9170_TX_PHY_QOS_SHIFT			25
-+#define AR9170_TX_PHY_QOS_MASK			(3 << AR9170_TX_PHY_QOS_SHIFT)
-+
-+#define AR9170_TX_PHY_TXCHAIN_SHIFT		15
-+#define AR9170_TX_PHY_TXCHAIN_MASK		(7 << AR9170_TX_PHY_TXCHAIN_SHIFT)
-+#define AR9170_TX_PHY_TXCHAIN_1			1
-+/* use for cck, ofdm 6/9/12/18/24 and HT if capable */
-+#define AR9170_TX_PHY_TXCHAIN_2			5
-+
-+#define AR9170_TX_PHY_MCS_SHIFT			18
-+#define AR9170_TX_PHY_MCS_MASK			(0x7f << AR9170_TX_PHY_MCS_SHIFT)
-+
-+#define AR9170_TX_PHY_SHORT_GI			0x80000000
-+
-+struct ar9170_rx_head {
-+	u8 plcp[12];
-+};
-+
-+struct ar9170_rx_tail {
-+	union {
-+		struct {
-+			u8 rssi_ant0, rssi_ant1, rssi_ant2,
-+			   rssi_ant0x, rssi_ant1x, rssi_ant2x,
-+			   rssi_combined;
-+		};
-+		u8 rssi[7];
-+	};
-+
-+	u8 evm_stream0[6], evm_stream1[6];
-+	u8 phy_err;
-+	u8 SAidx, DAidx;
-+	u8 error;
-+	u8 status;
-+};
-+
-+#define AR9170_ENC_ALG_NONE			0x0
-+#define AR9170_ENC_ALG_WEP64			0x1
-+#define AR9170_ENC_ALG_TKIP			0x2
-+#define AR9170_ENC_ALG_AESCCMP			0x4
-+#define AR9170_ENC_ALG_WEP128			0x5
-+#define AR9170_ENC_ALG_WEP256			0x6
-+#define AR9170_ENC_ALG_CENC			0x7
-+
-+#define AR9170_RX_ENC_SOFTWARE			0x8
-+
-+static inline u8 ar9170_get_decrypt_type(struct ar9170_rx_tail *t)
-+{
-+	return (t->SAidx & 0xc0) >> 4 |
-+	       (t->DAidx & 0xc0) >> 6;
-+}
-+
-+#define AR9170_RX_STATUS_MODULATION_MASK	0x03
-+#define AR9170_RX_STATUS_MODULATION_CCK		0x00
-+#define AR9170_RX_STATUS_MODULATION_OFDM	0x01
-+#define AR9170_RX_STATUS_MODULATION_HT		0x02
-+#define AR9170_RX_STATUS_MODULATION_DUPOFDM	0x03
-+
-+/* depends on modulation */
-+#define AR9170_RX_STATUS_SHORT_PREAMBLE		0x08
-+#define AR9170_RX_STATUS_GREENFIELD		0x08
-+
-+#define AR9170_RX_STATUS_MPDU_MASK		0x30
-+#define AR9170_RX_STATUS_MPDU_SINGLE		0x00
-+#define AR9170_RX_STATUS_MPDU_FIRST		0x10
-+#define AR9170_RX_STATUS_MPDU_MIDDLE		0x20
-+#define AR9170_RX_STATUS_MPDU_LAST		0x30
-+
-+
-+#define AR9170_RX_ERROR_RXTO			0x01
-+#define AR9170_RX_ERROR_OVERRUN			0x02
-+#define AR9170_RX_ERROR_DECRYPT			0x04
-+#define AR9170_RX_ERROR_FCS			0x08
-+#define AR9170_RX_ERROR_WRONG_RA		0x10
-+#define AR9170_RX_ERROR_PLCP			0x20
-+#define AR9170_RX_ERROR_MMIC			0x40
-+
-+struct ar9170_cmd_tx_status {
-+	__le16 unkn;
-+	u8 dst[ETH_ALEN];
-+	__le32 rate;
-+	__le16 status;
-+} __packed;
-+
-+#define AR9170_TX_STATUS_COMPLETE		0x00
-+#define AR9170_TX_STATUS_RETRY			0x01
-+#define AR9170_TX_STATUS_FAILED			0x02
-+
-+struct ar9170_cmd_ba_failed_count {
-+	__le16 failed;
-+	__le16 rate;
-+} __packed;
-+
-+struct ar9170_cmd_response {
-+	u8 flag;
-+	u8 type;
-+
-+	union {
-+		struct ar9170_cmd_tx_status		tx_status;
-+		struct ar9170_cmd_ba_failed_count	ba_fail_cnt;
-+		u8 data[0];
-+	};
-+} __packed;
-+
-+/* mac80211 queue to HW/FW map */
-+static const u8 ar9170_qos_hwmap[4] = { 3, 2, 0, 1 };
-+
-+/* HW/FW queue to mac80211 map */
-+static const u8 ar9170_qos_mac80211map[4] = { 2, 3, 1, 0 };
-+
-+#endif /* __AR9170_HW_H */
- 
+I would also look at the ath5k driver as (last time I looked) it is
+quite similar to ath9k in how mesh beacons would be handled and the RX
+filter configuration code is nearly identical.
+
+On Mon, Mar 9, 2009 at 10:53 PM, pat-lkml <pat-lkml@erley.org> wrote:
+> This patch begins the work to getting mesh mode working with ath9k. =A0=
+I am
+> using the b43 and rt2x00 drivers as templates on how to do this.
+>
+> Unfortunately it doesn't seem to work yet. =A0In attempting to set up=
+ a mesh between
+> an ath9k device and a b43 device, the ath9k device does not seem to b=
+e enabling
+> beaconing. =A0I have a third device in monitor mode that sees the b43=
+ beacons,
+> sees ath9k responding to them (I believe trying to establish a link),=
+ and b43
+> is acknowledging those responses, but no link is established. =A0On t=
+he same ath9k
+> device, I'm not seeing beaconing in ad-hoc mode, which leads me to be=
+lieve that
+> beaconing may be broken right now for my Atheros device. =A0What am I=
+ doing wrong?
+>
+> Atheros HW: Atheros AR9280 MAC/BB Rev:2 AR5133 RF Rev:d0: mem=3D0xf92=
+80000, irq=3D17
+> b43 HW: BCM4306 802.11b/g (rev 5)
+>
+> ---
+> diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wirele=
+ss/ath9k/beacon.c
+> index 039c781..cbd94dd 100644
+> --- a/drivers/net/wireless/ath9k/beacon.c
+> +++ b/drivers/net/wireless/ath9k/beacon.c
+> @@ -70,7 +70,8 @@ static void ath_beacon_setup(struct ath_softc *sc, =
+struct ath_vif *avp,
+> =A0 =A0 =A0 =A0ds =3D bf->bf_desc;
+> =A0 =A0 =A0 =A0flags =3D ATH9K_TXDESC_NOACK;
+>
+> - =A0 =A0 =A0 if (sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_ADHOC &&
+> + =A0 =A0 =A0 if (((sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_ADHOC) ||
+> + =A0 =A0 =A0 =A0 =A0 =A0(sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_MES=
+H_POINT)) &&
+> =A0 =A0 =A0 =A0 =A0 =A0(ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ds->ds_link =3D bf->bf_daddr; /* self-=
+linked */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0flags |=3D ATH9K_TXDESC_VEOL;
+> @@ -727,6 +728,8 @@ void ath_beacon_config(struct ath_softc *sc, stru=
+ct ieee80211_vif *vif)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0case NL80211_IFTYPE_AP:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ath_beacon_config_ap(s=
+c, &conf, avp);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 case NL80211_IFTYPE_MESH_POINT:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Handle mesh beaconin=
+g just like ad-hoc */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0case NL80211_IFTYPE_ADHOC:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ath_beacon_config_adho=
+c(sc, &conf, avp, vif);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/a=
+th9k/hw.c
+> index c10b33b..06376aa 100644
+> --- a/drivers/net/wireless/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath9k/hw.c
+> @@ -1430,6 +1430,8 @@ static void ath9k_hw_set_operating_mode(struct =
+ath_hw *ah, int opmode)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0| AR_STA_ID1_KSRCH=
+_MODE);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0REG_CLR_BIT(ah, AR_CFG, AR_CFG_AP_ADHO=
+C_INDICATION);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> + =A0 =A0 =A0 case NL80211_IFTYPE_MESH_POINT:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Configure HW same as ADHOC */
+> =A0 =A0 =A0 =A0case NL80211_IFTYPE_ADHOC:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0REG_WRITE(ah, AR_STA_ID1, val | AR_STA=
+_ID1_ADHOC
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0| AR_STA_ID1_KSRCH=
+_MODE);
+> @@ -3135,6 +3137,8 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32=
+ next_beacon, u32 beacon_period)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0REG_WRITE(ah, AR_NEXT_SWBA, 0x7ffff);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0flags |=3D AR_TBTT_TIMER_EN;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> + =A0 =A0 =A0 case NL80211_IFTYPE_MESH_POINT:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Should IBSS style beaconing be used =
+for mesh point? */
+> =A0 =A0 =A0 =A0case NL80211_IFTYPE_ADHOC:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0REG_SET_BIT(ah, AR_TXCFG,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0AR_TXCFG_ADHOC=
+_BEACON_ATIM_TX_POLICY);
+> diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless=
+/ath9k/main.c
+> index 5268697..e76e0de 100644
+> --- a/drivers/net/wireless/ath9k/main.c
+> +++ b/drivers/net/wireless/ath9k/main.c
+> @@ -1590,6 +1590,7 @@ void ath_set_hw_capab(struct ath_softc *sc, str=
+uct ieee80211_hw *hw)
+> =A0 =A0 =A0 =A0hw->wiphy->interface_modes =3D
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0BIT(NL80211_IFTYPE_AP) |
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0BIT(NL80211_IFTYPE_STATION) |
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 BIT(NL80211_IFTYPE_MESH_POINT) |
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0BIT(NL80211_IFTYPE_ADHOC);
+>
+> =A0 =A0 =A0 =A0hw->wiphy->reg_notifier =3D ath9k_reg_notifier;
+> @@ -2198,18 +2199,13 @@ static int ath9k_add_interface(struct ieee802=
+11_hw *hw,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ic_opmode =3D NL80211_IFTYPE_STATION;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> =A0 =A0 =A0 =A0case NL80211_IFTYPE_ADHOC:
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (sc->nbcnvifs >=3D ATH_BCBUF) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D -ENOBUFS;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ic_opmode =3D NL80211_IFTYPE_ADHOC;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> =A0 =A0 =A0 =A0case NL80211_IFTYPE_AP:
+> + =A0 =A0 =A0 case NL80211_IFTYPE_MESH_POINT:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (sc->nbcnvifs >=3D ATH_BCBUF) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D -ENOBUFS;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto out;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ic_opmode =3D NL80211_IFTYPE_AP;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ic_opmode =3D conf->type;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> =A0 =A0 =A0 =A0default:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0DPRINTF(sc, ATH_DBG_FATAL,
+> @@ -2242,10 +2238,11 @@ static int ath9k_add_interface(struct ieee802=
+11_hw *hw,
+>
+> =A0 =A0 =A0 =A0/*
+> =A0 =A0 =A0 =A0 * Enable MIB interrupts when there are hardware phy c=
+ounters.
+> - =A0 =A0 =A0 =A0* Note we only do this (at the moment) for station m=
+ode.
+> + =A0 =A0 =A0 =A0* Note we only do this (at the moment) for non AP mo=
+des.
+> =A0 =A0 =A0 =A0 */
+> =A0 =A0 =A0 =A0if ((conf->type =3D=3D NL80211_IFTYPE_STATION) ||
+> - =A0 =A0 =A0 =A0 =A0 (conf->type =3D=3D NL80211_IFTYPE_ADHOC)) {
+> + =A0 =A0 =A0 =A0 =A0 (conf->type =3D=3D NL80211_IFTYPE_ADHOC) ||
+> + =A0 =A0 =A0 =A0 =A0 (conf->type =3D=3D NL80211_IFTYPE_MESH_POINT)) =
+{
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (ath9k_hw_phycounters(sc->sc_ah))
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0sc->imask |=3D ATH9K_I=
+NT_MIB;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0sc->imask |=3D ATH9K_INT_TSFOOR;
+> @@ -2292,8 +2289,9 @@ static void ath9k_remove_interface(struct ieee8=
+0211_hw *hw,
+> =A0 =A0 =A0 =A0del_timer_sync(&sc->ani.timer);
+>
+> =A0 =A0 =A0 =A0/* Reclaim beacon resources */
+> - =A0 =A0 =A0 if (sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_AP ||
+> - =A0 =A0 =A0 =A0 =A0 sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_ADHOC) =
+{
+> + =A0 =A0 =A0 if ((sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_AP) ||
+> + =A0 =A0 =A0 =A0 =A0 (sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_ADHOC)=
+ ||
+> + =A0 =A0 =A0 =A0 =A0 (sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_MESH_P=
+OINT)) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ath9k_hw_stoptxdma(sc->sc_ah, sc->beac=
+on.beaconq);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ath_beacon_return(sc, avp);
+> =A0 =A0 =A0 =A0}
+> @@ -2446,10 +2444,31 @@ static int ath9k_config_interface(struct ieee=
+80211_hw *hw,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0default:
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0break;
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> + =A0 =A0 =A0 } else if ((vif->type =3D=3D NL80211_IFTYPE_MESH_POINT)=
+ && (conf->bssid)) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Both b43 and rt2x00 set the bssid in=
+ the case that one
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* is passed durint interface config,=
+ irregardless of the
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* status of conf->changed */
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Set BSSID */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 memcpy(sc->curbssid, conf->bssid, ETH_A=
+LEN);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 memcpy(avp->bssid, conf->bssid, ETH_ALE=
+N);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sc->curaid =3D 0;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ath9k_hw_write_associd(sc);
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Set aggregation protection mode para=
+meters */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sc->config.ath_aggr_prot =3D 0;
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 DPRINTF(sc, ATH_DBG_CONFIG,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "RX filter 0x%x bssid %=
+pM aid 0x%x\n",
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 rfilt, sc->curbssid, sc=
+->curaid);
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* need to reconfigure the beacon */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sc->sc_flags &=3D ~SC_OP_BEACONS ;
+> =A0 =A0 =A0 =A0}
+>
+> =A0 =A0 =A0 =A0if ((vif->type =3D=3D NL80211_IFTYPE_ADHOC) ||
+> - =A0 =A0 =A0 =A0 =A0 (vif->type =3D=3D NL80211_IFTYPE_AP)) {
+> + =A0 =A0 =A0 =A0 =A0 (vif->type =3D=3D NL80211_IFTYPE_AP) ||
+> + =A0 =A0 =A0 =A0 =A0 (vif->type =3D=3D NL80211_IFTYPE_MESH_POINT)) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if ((conf->changed & IEEE80211_IFCC_BE=
+ACON) ||
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0(conf->changed & IEEE80211_IFC=
+C_BEACON_ENABLED &&
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 conf->enable_beacon)) {
+> @@ -2482,8 +2501,9 @@ static int ath9k_config_interface(struct ieee80=
+211_hw *hw,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 sc->curbssid);
+> =A0 =A0 =A0 =A0}
+>
+> - =A0 =A0 =A0 /* Only legacy IBSS for now */
+> - =A0 =A0 =A0 if (vif->type =3D=3D NL80211_IFTYPE_ADHOC)
+> + =A0 =A0 =A0 /* Only legacy IBSS and Mesh Point for now */
+> + =A0 =A0 =A0 if ((vif->type =3D=3D NL80211_IFTYPE_ADHOC) ||
+> + =A0 =A0 =A0 =A0 =A0 (vif->type =3D=3D NL80211_IFTYPE_MESH_POINT))
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ath_update_chainmask(sc, 0);
+>
+> =A0 =A0 =A0 =A0mutex_unlock(&sc->mutex);
+> diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/a=
+th9k/rc.c
+> index 8327356..61f8334 100644
+> --- a/drivers/net/wireless/ath9k/rc.c
+> +++ b/drivers/net/wireless/ath9k/rc.c
+> @@ -1615,7 +1615,8 @@ static void ath_rate_init(void *priv, struct ie=
+ee80211_supported_band *sband,
+> =A0 =A0 =A0 =A0/* Choose rate table first */
+>
+> =A0 =A0 =A0 =A0if ((sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_STATION) =
+||
+> - =A0 =A0 =A0 =A0 =A0 (sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_ADHOC)=
+) {
+> + =A0 =A0 =A0 =A0 =A0 (sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_ADHOC)=
+ ||
+> + =A0 =A0 =A0 =A0 =A0 (sc->sc_ah->opmode =3D=3D NL80211_IFTYPE_MESH_P=
+OINT)) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0rate_table =3D ath_choose_rate_table(s=
+c, sband->band,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 sta->ht_cap.ht_supported,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 is_cw40);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
