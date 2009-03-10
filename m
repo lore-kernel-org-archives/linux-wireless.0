@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:36546 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755595AbZCGVyo convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:37462 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754532AbZCJRDX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2009 16:54:44 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so630488ywh.1
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Mar 2009 13:54:41 -0800 (PST)
+	Tue, 10 Mar 2009 13:03:23 -0400
+Date: Tue, 10 Mar 2009 19:03:04 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "Stephen Gutknecht (hilltx)" <stephen@hilltx.com>
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 00/15] ath9k: Virtual interfaces and radios
+Message-ID: <20090310170304.GA18634@jm.kir.nu> (sfid-20090310_180327_357164_9E7CF7A6)
+References: <eef88e5b0903100543l22622769u5951003099eef312@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <49B2B9E4.9090006@lwfinger.net>
-References: <960a51b60903070942q31d4d5e2n835f2c642cd19d70@mail.gmail.com>
-	 <49B2B9E4.9090006@lwfinger.net>
-Date: Sat, 7 Mar 2009 16:54:41 -0500
-Message-ID: <960a51b60903071354ked42068w829e233cf3cc7d94@mail.gmail.com> (sfid-20090307_225447_042505_161866DD)
-Subject: Re: Intermittent wlan operation ( b43-phy0 ERROR: PHY transmission
-	error).
-From: Tom Cada <thomas.cada@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <eef88e5b0903100543l22622769u5951003099eef312@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 7, 2009 at 1:16 PM, Larry Finger <Larry.Finger@lwfinger.net=
-> wrote:
-> Tom Cada wrote:
->> I went so far as to download the broadcom-wl-4.150.10.5.3 drivers
->> thinking that a more recent version would have addressed the problem=
-=2E
->> However, I found out I couldn't install them with the error:
->>
->> =C2=A0$ ../../b43-fwcutter-011/b43-fwcutter -w /lib/firmware wl_apst=
-a_mimo.o
->> Sorry, the input file is either wrong or not supported by b43-fwcutt=
-er.
->> This file has an unknown MD5sum b84bc801b9b8f39069c252f533655af8.
->
-> The driver is b43. What fwcutter gets is firmware. AFAIK, the firmwar=
-e for your
-> device that you are using is the same as that of driver 4.150.10.5.3.=
- There is a
-> difference in the firmware for LP and N PHY devices, but as they are =
-not yet
-> supported, it doesn't matter.
->
-> We are aware of those errors, but don't know why they occur, or how t=
-o fix them.
-> Sorry.
->
-> Larry
->
->
+On Tue, Mar 10, 2009 at 05:43:31AM -0700, Stephen Gutknecht (hilltx) wrote:
 
-Oh poo!
+> I agree with Florian Fainelli.  As a user of ath9k I would love to see
+> these patches make it into the driver.  I've not seen technical
+> complaints of your patches.  Time to rebase and get them included?  Or
+> at least some testing reports?
 
-I guess I will have to fire up ndiswrapper.
+They went already in into wireless-testing git tree. I would certainly
+be interested in see test reports if people are doing some experiments
+with the new code. There are still number of areas that can benefit from
+optimizations and combinations that do not probably work yet, so it will
+be useful to know if these show up in a configuration that someone would
+like to use.
 
-Thanks for the reply.  Place me on the list if you would like me to
-test any changes.
-
-Tom.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jouni Malinen                                            PGP id EFC895FA
