@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33233 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753745AbZCKSad (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 14:30:33 -0400
-Date: Wed, 11 Mar 2009 14:19:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Gabor Juhos <juhosg@openwrt.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: Tree for March 6 (ath9k)
-Message-ID: <20090311181935.GD8761@tuxdriver.com> (sfid-20090311_193037_861154_0A260A9F)
-References: <20090306191311.697e7b97.sfr@canb.auug.org.au> <49B17320.8010000@oracle.com> <49B17B12.3050200@openwrt.org> <49B17C4E.3000004@oracle.com> <20090306194045.GE3712@tuxdriver.com> <49B7F2B0.1000702@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <49B7F2B0.1000702@oracle.com>
+Received: from mga11.intel.com ([192.55.52.93]:34429 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755600AbZCJVaN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2009 17:30:13 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/6] iwlwifi: remove un-necessary rs_tl_turn_on_agg() after agg enabled
+Date: Tue, 10 Mar 2009 14:35:09 -0700
+Message-Id: <1236720912-6502-4-git-send-email-reinette.chatre@intel.com> (sfid-20090310_223019_803501_78FFA757)
+In-Reply-To: <1236720912-6502-3-git-send-email-reinette.chatre@intel.com>
+References: <1236720912-6502-1-git-send-email-reinette.chatre@intel.com>
+ <1236720912-6502-2-git-send-email-reinette.chatre@intel.com>
+ <1236720912-6502-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 11, 2009 at 10:19:44AM -0700, Randy Dunlap wrote:
-> John W. Linville wrote:
-> > On Fri, Mar 06, 2009 at 11:41:02AM -0800, Randy Dunlap wrote:
-> >> Gabor Juhos wrote:
-> >>> Randy Dunlap =EDrta:
-> >>>> Stephen Rothwell wrote:
-> >>>>> Hi all,
-> >>>>>
-> >>>>> Linus' release of -rc7 seems to have stirred people up a bit ..=
-=2E
-> >>>>>
-> >>>>> Changes since 20090305:
-> >>>> when CONFIG_RFKILL=3Dn, ath9k/virtual.c causes:
-> >>>>
-> >>>> (.text+0x224e83): undefined reference to `ath_radio_disable'
-> >>>> (.text+0x224e8b): undefined reference to `ath_radio_enable'
-> >>>>
-> >>>>
-> >>> Hi,
-> >>>
-> >>> I have submitted a patch for this already:
-> >>> http://marc.info/?l=3Dlinux-wireless&m=3D123633468314970&w=3D2
-> >>>
-> >>> Should I send it to somewhere else as well?
-> >> It hasn't propagated into the linux-next merging yet...
-> >=20
-> > He just sent it today (or overnight).  I'll get it into wireless-ne=
-xt.
-> >=20
-> > John
-> >=20
-> > P.S.  I'm starting to think that RFKILL should just be mandatory...
->=20
->=20
-> This build error still happens in linux-next-20090311.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-That fix is in wireless-next-2.6 as of yesterday.  I guess it was a
-little too late for yesterday's linux-next build -- sorry!
+After the MLME handshaking complete and tx aggregation started for the
+tid. Do not send unnecessary turn on aggregation request to mac80211.
 
-John
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 9bcebf2..a6f4c74 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -1700,6 +1700,7 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 	u16 high_low;
+ 	s32 sr;
+ 	u8 tid = MAX_TID_COUNT;
++	struct iwl_tid_data *tid_data;
+ 
+ 	IWL_DEBUG_RATE(priv, "rate scale calculate new rate for skb\n");
+ 
+@@ -2035,8 +2036,15 @@ lq_update:
+ 			if ((lq_sta->last_tpt > IWL_AGG_TPT_THREHOLD) &&
+ 			    (lq_sta->tx_agg_tid_en & (1 << tid)) &&
+ 			    (tid != MAX_TID_COUNT)) {
+-				IWL_DEBUG_RATE(priv, "try to aggregate tid %d\n", tid);
+-				rs_tl_turn_on_agg(priv, tid, lq_sta, sta);
++				tid_data =
++				   &priv->stations[lq_sta->lq.sta_id].tid[tid];
++				if (tid_data->agg.state == IWL_AGG_OFF) {
++					IWL_DEBUG_RATE(priv,
++						       "try to aggregate tid %d\n",
++						       tid);
++					rs_tl_turn_on_agg(priv, tid,
++							  lq_sta, sta);
++				}
+ 			}
+ 			lq_sta->action_counter = 0;
+ 			rs_set_stay_in_table(priv, 0, lq_sta);
+-- 
+1.5.6.3
+
