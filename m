@@ -1,111 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:3581 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144AbZCHFnG (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33836 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753206AbZCJCJs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Mar 2009 00:43:06 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 2/3] ath5k: use a table for LED parameters
-Date: Sun,  8 Mar 2009 00:10:21 -0500
-Message-Id: <1236489022-16199-2-git-send-email-me@bobcopeland.com> (sfid-20090308_064311_240832_2C8220F1)
-In-Reply-To: <1236489022-16199-1-git-send-email-me@bobcopeland.com>
-References: <1236489022-16199-1-git-send-email-me@bobcopeland.com>
+	Mon, 9 Mar 2009 22:09:48 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/2] ath9k: make few eeprom and calib items static
+Date: Mon,  9 Mar 2009 22:09:42 -0400
+Message-Id: <1236650982-11520-3-git-send-email-lrodriguez@atheros.com> (sfid-20090310_032927_732124_BDF1957F)
+In-Reply-To: <1236650982-11520-1-git-send-email-lrodriguez@atheros.com>
+References: <1236650982-11520-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Put the device id-to-gpio mapping in a table to make it easier to add
-new devices.  The list of supported devices is unchanged.
+This fixes the sparse complaints:
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-Acked-by: Jiri Slaby <jirislaby@gmail.com>
+drivers/net/wireless/ath9k/eeprom.c:1407:5: warning: symbol
+'ath9k_hw_4k_get_spur_channel' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:1436:19: warning: symbol
+'eep_4k_ops' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2808:5: warning: symbol
+'ath9k_hw_def_get_spur_channel' was not declared. Should it be static?
+drivers/net/wireless/ath9k/eeprom.c:2837:19: warning: symbol
+'eep_def_ops' was not declared. Should it be static?
+  CC [M]  drivers/net/wireless/ath9k/eeprom.o
+  CHECK   drivers/net/wireless/ath9k/mac.c
+  CC [M]  drivers/net/wireless/ath9k/mac.o
+  CHECK   drivers/net/wireless/ath9k/calib.c
+drivers/net/wireless/ath9k/calib.c:883:6: warning: symbol 'ar9285_clc'
+was not declared. Should it be static?
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath5k/led.c |   53 ++++++++++++++++++++------------------
- 1 files changed, 28 insertions(+), 25 deletions(-)
+ drivers/net/wireless/ath9k/calib.c  |    2 +-
+ drivers/net/wireless/ath9k/eeprom.c |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath5k/led.c b/drivers/net/wireless/ath5k/led.c
-index 7cef2bb..e365fbd 100644
---- a/drivers/net/wireless/ath5k/led.c
-+++ b/drivers/net/wireless/ath5k/led.c
-@@ -43,6 +43,29 @@
- #include "ath5k.h"
- #include "base.h"
- 
-+#define ATH_SDEVICE(subv,subd) \
-+	.vendor = PCI_ANY_ID, .device = PCI_ANY_ID, \
-+	.subvendor = (subv), .subdevice = (subd)
-+
-+#define ATH_LED(pin,polarity) .driver_data = (((pin) << 8) | (polarity))
-+#define ATH_PIN(data) ((data) >> 8)
-+#define ATH_POLARITY(data) ((data) & 0xff)
-+
-+/* Devices we match on for LED config info (typically laptops) */
-+static const struct pci_device_id ath5k_led_devices[] = {
-+	/* IBM-specific AR5212 */
-+	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5212_IBM), ATH_LED(0, 0) },
-+	/* AR5211 */
-+	{ PCI_VDEVICE(ATHEROS, PCI_DEVICE_ID_ATHEROS_AR5211), ATH_LED(0, 0) },
-+	/* HP Compaq nc6xx, nc4000, nx6000 */
-+	{ ATH_SDEVICE(PCI_VENDOR_ID_COMPAQ, PCI_ANY_ID), ATH_LED(1, 1) },
-+	/* Acer Aspire One A150 (maximlevitsky@gmail.com) */
-+	{ ATH_SDEVICE(PCI_VENDOR_ID_FOXCONN, PCI_ANY_ID), ATH_LED(3, 0) },
-+	/* E-machines E510 (tuliom@gmail.com) */
-+	{ ATH_SDEVICE(PCI_VENDOR_ID_AMBIT, PCI_ANY_ID), ATH_LED(3, 0) },
-+	{ }
-+};
-+
- void ath5k_led_enable(struct ath5k_softc *sc)
- {
- 	if (test_bit(ATH_STAT_LEDSOFT, sc->status)) {
-@@ -114,39 +137,19 @@ void ath5k_unregister_leds(struct ath5k_softc *sc)
- 	ath5k_unregister_led(&sc->tx_led);
+diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
+index a652e9b..c9446fb 100644
+--- a/drivers/net/wireless/ath9k/calib.c
++++ b/drivers/net/wireless/ath9k/calib.c
+@@ -880,7 +880,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	return true;
  }
  
--
- int ath5k_init_leds(struct ath5k_softc *sc)
+-bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
++static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
  {
- 	int ret = 0;
- 	struct ieee80211_hw *hw = sc->hw;
- 	struct pci_dev *pdev = sc->pdev;
- 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
-+	const struct pci_device_id *match;
+ 	REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
+ 	if (chan->channelFlags & CHANNEL_HT20) {
+diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
+index dd280cb..183c949 100644
+--- a/drivers/net/wireless/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath9k/eeprom.c
+@@ -1404,7 +1404,7 @@ static u8 ath9k_hw_4k_get_num_ant_config(struct ath_hw *ah,
+ 	return 1;
+ }
  
--	/*
--	 * Auto-enable soft led processing for IBM cards and for
--	 * 5211 minipci cards.
--	 */
--	if (pdev->device == PCI_DEVICE_ID_ATHEROS_AR5212_IBM ||
--	    pdev->device == PCI_DEVICE_ID_ATHEROS_AR5211) {
--		__set_bit(ATH_STAT_LEDSOFT, sc->status);
--		sc->led_pin = 0;
--		sc->led_on = 0;  /* active low */
--	}
--	/* Enable softled on PIN1 on HP Compaq nc6xx, nc4000 & nx5000 laptops */
--	if (pdev->subsystem_vendor == PCI_VENDOR_ID_COMPAQ) {
--		__set_bit(ATH_STAT_LEDSOFT, sc->status);
--		sc->led_pin = 1;
--		sc->led_on = 1;  /* active high */
--	}
--	/*
--	 * Pin 3 on Foxconn chips used in Acer Aspire One (0x105b:e008) and
--	 * in emachines notebooks with AMBIT subsystem.
--	 */
--	if (pdev->subsystem_vendor == PCI_VENDOR_ID_FOXCONN ||
--	    pdev->subsystem_vendor == PCI_VENDOR_ID_AMBIT) {
-+	match = pci_match_id(&ath5k_led_devices[0], pdev);
-+	if (match) {
- 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
--		sc->led_pin = 3;
--		sc->led_on = 0;  /* active low */
-+		sc->led_pin = ATH_PIN(match->driver_data);
-+		sc->led_on = ATH_POLARITY(match->driver_data);
- 	}
+-u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
++static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+ {
+ #define EEP_MAP4K_SPURCHAN \
+ 	(ah->eeprom.map4k.modalHeader.spurChans[i].spurChan)
+@@ -1433,7 +1433,7 @@ u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+ #undef EEP_MAP4K_SPURCHAN
+ }
  
- 	if (!test_bit(ATH_STAT_LEDSOFT, sc->status))
+-struct eeprom_ops eep_4k_ops = {
++static struct eeprom_ops eep_4k_ops = {
+ 	.check_eeprom		= ath9k_hw_4k_check_eeprom,
+ 	.get_eeprom		= ath9k_hw_4k_get_eeprom,
+ 	.fill_eeprom		= ath9k_hw_4k_fill_eeprom,
+@@ -2805,7 +2805,7 @@ static u16 ath9k_hw_def_get_eeprom_antenna_cfg(struct ath_hw *ah,
+ 	return pModal->antCtrlCommon & 0xFFFF;
+ }
+ 
+-u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
++static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+ {
+ #define EEP_DEF_SPURCHAN \
+ 	(ah->eeprom.def.modalHeader[is2GHz].spurChans[i].spurChan)
+@@ -2834,7 +2834,7 @@ u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+ #undef EEP_DEF_SPURCHAN
+ }
+ 
+-struct eeprom_ops eep_def_ops = {
++static struct eeprom_ops eep_def_ops = {
+ 	.check_eeprom		= ath9k_hw_def_check_eeprom,
+ 	.get_eeprom		= ath9k_hw_def_get_eeprom,
+ 	.fill_eeprom		= ath9k_hw_def_fill_eeprom,
 -- 
 1.6.0.6
-
 
