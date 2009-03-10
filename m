@@ -1,37 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:32892 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089AbZCWVwX (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43985 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152AbZCJCFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 17:52:23 -0400
-Received: by fxm2 with SMTP id 2so2010027fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2009 14:52:20 -0700 (PDT)
-Date: Mon, 23 Mar 2009 23:08:43 +0100
-From: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville <linville@tuxdriver.com>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath5k: Support LED's on Acer Extensa 5620z
-Message-ID: <20090323220843.GA8075@joutaro.rooms.iriga> (sfid-20090323_225227_296211_6DB87E74)
-References: <1237682473-5994-1-git-send-email-tuliom@gmail.com> <b6c5339f0903231158n7f51c78cnf895a7ba8010b7a2@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b6c5339f0903231158n7f51c78cnf895a7ba8010b7a2@mail.gmail.com>
+	Mon, 9 Mar 2009 22:05:07 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 4/4] cfg80211: send channel max bandwidth to userspace
+Date: Mon,  9 Mar 2009 22:04:59 -0400
+Message-Id: <1236650699-30538-5-git-send-email-lrodriguez@atheros.com> (sfid-20090310_030520_967697_48E1FC05)
+In-Reply-To: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
+References: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 23, 2009 at 02:58:32PM -0400, Bob Copeland wrote:
-> I have another one to send, for the "Fukato Datacask Jupiter" but I
-> couldn't figure out who owns the subvendor ID (0x1a3b).  I guess I'll
-> assume it is Fukato unless anyone knows a reliable source for looking
-> those up besides Google...
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/linux/nl80211.h |    3 +++
+ net/wireless/nl80211.c  |    3 ++-
+ 2 files changed, 5 insertions(+), 1 deletions(-)
 
-This website (http://www.modem-help.co.uk/search.php?id=PCI\VEN_1814%26DEV_0781%26SUBSYS_10591A3B) identifies it as ASUSTek.
-
-Maybe Fukato notebooks are manufactured by ASUSTek.
-Do you have it's MAC address?
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index f6e5637..55565a4 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -639,6 +639,7 @@ enum nl80211_band_attr {
+  *	on this channel in current regulatory domain.
+  * @NL80211_FREQUENCY_ATTR_MAX_TX_POWER: Maximum transmission power in mBm
+  *	(100 * dBm).
++ * @NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH: max bandwidth allowed, given in MHz
+  */
+ enum nl80211_frequency_attr {
+ 	__NL80211_FREQUENCY_ATTR_INVALID,
+@@ -648,6 +649,7 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_NO_IBSS,
+ 	NL80211_FREQUENCY_ATTR_RADAR,
+ 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
++	NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
+ 
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+@@ -655,6 +657,7 @@ enum nl80211_frequency_attr {
+ };
+ 
+ #define NL80211_FREQUENCY_ATTR_MAX_TX_POWER NL80211_FREQUENCY_ATTR_MAX_TX_POWER
++#define NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH
+ 
+ /**
+  * enum nl80211_bitrate_attr - bitrate attributes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 08d4f55..4827020 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -207,9 +207,10 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
+ 			if (chan->flags & IEEE80211_CHAN_RADAR)
+ 				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR);
+-
+ 			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+ 				    DBM_TO_MBM(chan->max_power));
++			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
++				    chan->max_bandwidth);
+ 
+ 			nla_nest_end(msg, nl_freq);
+ 		}
 -- 
-Tulio Magno
+1.6.0.6
 
