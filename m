@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:47851 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750941AbZC3NXt (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:7524 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564AbZCJHCc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 09:23:49 -0400
-Date: Mon, 30 Mar 2009 10:23:44 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rfkill-input madness
-Message-ID: <20090330132344.GA11934@khazad-dum.debian.net> (sfid-20090330_152351_649802_6B0239EC)
-References: <1238159196.4452.1.camel@johannes.local> <20090327143007.GA24288@khazad-dum.debian.net> <1238188237.4452.17.camel@johannes.local> <20090328005214.GA7439@khazad-dum.debian.net> <1238262651.4217.21.camel@johannes.local>
+	Tue, 10 Mar 2009 03:02:32 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so913701fgg.17
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2009 00:02:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1238262651.4217.21.camel@johannes.local>
+In-Reply-To: <1236651030-10331-1-git-send-email-lrodriguez@atheros.com>
+References: <1236651030-10331-1-git-send-email-lrodriguez@atheros.com>
+Date: Tue, 10 Mar 2009 07:02:29 +0000
+Message-ID: <3ace41890903100002m341a15b6mb6a18226dff84212@mail.gmail.com> (sfid-20090310_080235_505715_853B0BA6)
+Subject: Re: [RFC] zd1211rw: remove zd_addr_t typedef for a simple u16
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, dsd@gentoo.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 28 Mar 2009, Johannes Berg wrote:
-> Ok so you want to add "global" states mostly -- that's fine, but not all
-> that useful since userspace cannot really claim globally. I also don't
-> see a point -- if userspace wanted to do global stuff it might just as
-> well do nothing.
+On Tue, Mar 10, 2009 at 2:10 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> The __nocast attribute is used to shut sparse up but we
+> don't need it, lets just use u16 directly.
+>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>
+> Can someone test this for me? The zd1211rw device seems to require
+> a bit more tweaks to work so not sure ifs the patch, it wasn't working
+> with zd1211rw anyway. We will release another update to the vendor driver
+> to help with addition of new device support.
 
-The point of doing global stuff is to do rfkill-input in userspace, the way
-userspace might want to do it.
+Am I reading this correctly - an update to the vendor driver?
 
-Without the global state being exposed, userspace really can't do anything
-properly, and rfkill-input is needed for any semblance of good rfkill input
-event handling.
+I am using a somewhat patched vendor driver (22.0.0.0) as my access
+point, as AP mode in the rw driver isn't in sight yet.
+Am volunteering as a guinea pig if there is an update.
 
-I can't say I strongly want it, since I am happy enough with rfkill-input,
-though.  But the API to userspace _is_ incomplete if the global states and
-global functionality are not exposed.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+v 22.0.0.0 was 2.6.24(2.6.26?) era and I updated it to 2.6.28.x and
+posted the patch to sf zd1211 ml; there is another netdev_priv()
+update for 2.6.29+ which is sitting in my hard disc and will go to my
+rather low-spec AP machine when I next rebuild the kernel...
