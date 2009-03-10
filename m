@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f168.google.com ([209.85.219.168]:46347 "EHLO
-	mail-ew0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116AbZCQVuH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 17:50:07 -0400
-Received: by ewy12 with SMTP id 12so221244ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 14:50:04 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rt2x00 mesh support
-Date: Tue, 17 Mar 2009 22:50:02 +0100
-Cc: Antonio Marques <froz@icix.org>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <1237299098.31814.12.camel@johannes.local> <1237320625.10264.0.camel@johannes.local>
-In-Reply-To: <1237320625.10264.0.camel@johannes.local>
+Received: from mail.atheros.com ([12.36.123.2]:27552 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752191AbZCJD0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Mar 2009 23:26:11 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2009 20:26:10 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200903172250.02427.IvDoorn@gmail.com> (sfid-20090317_225012_366993_60AC7E69)
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18869.56538.642763.326813@gargle.gargle.HOWL> (sfid-20090310_042615_251749_6AFFAA59)
+Date: Tue, 10 Mar 2009 08:52:02 +0530
+To: Luis Rodriguez <lrodriguez@atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ath9k: make few eeprom and calib items static
+In-Reply-To: <1236650982-11520-3-git-send-email-lrodriguez@atheros.com>
+References: <1236650982-11520-1-git-send-email-lrodriguez@atheros.com>
+	<1236650982-11520-3-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 17 March 2009, Johannes Berg wrote:
-> On Tue, 2009-03-17 at 15:11 +0100, Johannes Berg wrote:
+Luis Rodriguez wrote:
+> This fixes the sparse complaints:
 > 
-> > > Thanks for the dumps, the reason why the beaconing isn't working
-> > > is (fortunately) very obvious from the registers point of view.
-> > > The "generate beacons" bit is simply not enabled. However the reason
-> > > why this bit has not been set escapes me. Could you apply the attached
-> > > patch? This will add extra debug messages to the driver to see when the
-> > > beacon generation bit is set.
-> > 
-> > I think mac80211 is probably not requesting it until you scan -- since
-> > once you scan it calls ieee80211_if_config internally and changes that
-> > bit. Some mesh code needs to call ieee80211_if_config() with the beacon
-> > enable change flag.
-> 
-> Actually, it does, in ieee80211_start_mesh(). I have no idea then.
+> drivers/net/wireless/ath9k/eeprom.c:1407:5: warning: symbol
+> 'ath9k_hw_4k_get_spur_channel' was not declared. Should it be static?
+> drivers/net/wireless/ath9k/eeprom.c:1436:19: warning: symbol
+> 'eep_4k_ops' was not declared. Should it be static?
+> drivers/net/wireless/ath9k/eeprom.c:2808:5: warning: symbol
+> 'ath9k_hw_def_get_spur_channel' was not declared. Should it be static?
+> drivers/net/wireless/ath9k/eeprom.c:2837:19: warning: symbol
+> 'eep_def_ops' was not declared. Should it be static?
+>   CC [M]  drivers/net/wireless/ath9k/eeprom.o
+>   CHECK   drivers/net/wireless/ath9k/mac.c
+>   CC [M]  drivers/net/wireless/ath9k/mac.o
+>   CHECK   drivers/net/wireless/ath9k/calib.c
+> drivers/net/wireless/ath9k/calib.c:883:6: warning: symbol 'ar9285_clc'
+> was not declared. Should it be static?
 
-I understood that in normal master mode rt73usb doesn't scan either,
-so my bet is that the bug is in rt2x00. :)
+Commit 93f726a90d1446c9e5a40fe8f88086542b273e7c in net-next-2.6 fixes a couple
+of warnings (in eeprom.c).
 
-Ivo
+Sujith
