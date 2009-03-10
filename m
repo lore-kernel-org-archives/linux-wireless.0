@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:45654 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757569AbZC2Udu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2009 16:33:50 -0400
-Message-ID: <49CFDB1F.7040902@hauke-m.de> (sfid-20090329_223407_944959_40DAED62)
-Date: Sun, 29 Mar 2009 22:33:35 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Bringfried Stecklum <stecklum@tls-tautenburg.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: compile error compat-wireless-2009-03-29
-References: <49CFD043.6020708@tls-tautenburg.de>
-In-Reply-To: <49CFD043.6020708@tls-tautenburg.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:34429 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754631AbZCJVaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2009 17:30:12 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/6] iwlwifi: add valid tx antenna information in rate_scale_table debugfs
+Date: Tue, 10 Mar 2009 14:35:07 -0700
+Message-Id: <1236720912-6502-2-git-send-email-reinette.chatre@intel.com> (sfid-20090310_223019_212814_60173C16)
+In-Reply-To: <1236720912-6502-1-git-send-email-reinette.chatre@intel.com>
+References: <1236720912-6502-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bringfried Stecklum wrote:
-> When trying to compile the latest compat-wireless packagev
-> (2.6.29-20327-g8f2487d) on an Ubuntu 8.10 system running linux kernel
-> 2.6.27-12 I get the following error
->=20
-> /home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211/agg=
--tx.c:
-> In function =E2=80=98ieee80211_agg_splice_packets=E2=80=99:
-> /home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211/agg=
--tx.c:385:
-> error: implicit declaration of function =E2=80=98skb_queue_splice_tai=
-l_init=E2=80=99
-> make[3]: ***
-> [/home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211/ag=
-g-tx.o]
-> Error 1
-> make[2]: ***
-> [/home/stecklum/System/src/compat-wireless-2009-03-29/net/mac80211] E=
-rror 2
-> make[1]: ***
-> [_module_/home/stecklum/System/src/compat-wireless-2009-03-29] Error =
-2
-> make[1]: Leaving directory `/usr/src/linux-headers-2.6.27-12-mygeneri=
-c'
-> make: *** [modules] Error 2
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Hi,
+when display rate_scale_table debugfs information, also display valid tx
+antenna information, this will help user to select correct antenna when
+issue fixed rate debugfs command
 
-This is already know. The patch can be found here:
-http://marc.info/?l=3Dlinux-wireless&m=3D123825765019764
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Acked-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Hauke
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 99da406..039ad57 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2526,7 +2526,9 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	ssize_t ret;
+ 
+ 	struct iwl_lq_sta *lq_sta = file->private_data;
++	struct iwl_priv *priv;
+ 
++	priv = lq_sta->drv;
+ 	buff = kmalloc(1024, GFP_KERNEL);
+ 	if (!buff)
+ 		return -ENOMEM;
+@@ -2537,6 +2539,10 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 			lq_sta->active_legacy_rate);
+ 	desc += sprintf(buff+desc, "fixed rate 0x%X\n",
+ 			lq_sta->dbg_fixed_rate);
++	desc += sprintf(buff+desc, "valid_tx_ant %s%s%s\n",
++	    (priv->hw_params.valid_tx_ant & ANT_A) ? "ANT_A," : "",
++	    (priv->hw_params.valid_tx_ant & ANT_B) ? "ANT_B," : "",
++	    (priv->hw_params.valid_tx_ant & ANT_C) ? "ANT_C" : "");
+ 	desc += sprintf(buff+desc, "general:"
+ 		"flags=0x%X mimo-d=%d s-ant0x%x d-ant=0x%x\n",
+ 		lq_sta->lq.general_params.flags,
+-- 
+1.5.6.3
+
