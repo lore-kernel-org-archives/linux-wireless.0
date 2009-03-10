@@ -1,162 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:50138 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733AbZCQERn (ORCPT
+Received: from static-72-66-92-28.washdc.fios.verizon.net ([72.66.92.28]:4897
+	"EHLO mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254AbZCJBOr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 00:17:43 -0400
-Date: Mon, 16 Mar 2009 23:17:37 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: david@identd.dyndns.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFT/RFC 1/2] b43legacy: Fixes for beacons
-Message-ID: <49bf2461.kW+fFdg/HxheYVDo%Larry.Finger@lwfinger.net> (sfid-20090317_051748_741548_90B79838)
+	Mon, 9 Mar 2009 21:14:47 -0400
+Date: Mon, 9 Mar 2009 20:43:44 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Sitsofe Wheeler <sitsofe@yahoo.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090310004344.GA23466@hash.localnet> (sfid-20090310_021452_343009_CDE77566)
+References: <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org> <20090308030928.GB14966@hash.localnet> <49B38FB7.3000002@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <49B38FB7.3000002@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch ports the beaconing fixes from commit a82d992261f "b43: Beaconing
-fixes" to b43legacy. Basically it prevents the card from triggering the beacon
-IRQ over and over again.
+On Sun, Mar 08, 2009 at 10:28:23AM +0100, Jiri Slaby wrote:
+>> If you want I'll cook up a patch for that too.
+>
+> If you like, feel free to kick it off. Remember to remove bf->flags  
+> completely, so that we save another bunch of memory ;).
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Ok, here's a patch, it survived a few hours of testing with 3 rx buffers.
+Sitsofe, it's worth a try applying this one, even though it probably
+isn't it :)
+
+From: Bob Copeland <me@bobcopeland.com>
+Date: Mon, 9 Mar 2009 11:29:34 -0400
+Subject: [PATCH] ath5k: use rx hw descriptor pointer for self-linked check
+
+This patch simplifies the code used to detect when the
+self-linked DMA buffer is still in use by hardware, by
+checking the hardware's rxdp register instead of looking
+at the software buffer list.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
+ drivers/net/wireless/ath5k/base.c |   24 ++++--------------------
+ drivers/net/wireless/ath5k/base.h |    1 -
+ drivers/net/wireless/ath5k/dma.c  |    2 --
+ 3 files changed, 4 insertions(+), 23 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/b43legacy/b43legacy.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/b43legacy.h
-+++ wireless-testing/drivers/net/wireless/b43legacy/b43legacy.h
-@@ -59,7 +59,8 @@
- #define B43legacy_MMIO_XMITSTAT_1		0x174
- #define B43legacy_MMIO_REV3PLUS_TSF_LOW	0x180 /* core rev >= 3 only */
- #define B43legacy_MMIO_REV3PLUS_TSF_HIGH	0x184 /* core rev >= 3 only */
--
-+#define B43legacy_MMIO_TSF_CFP_REP	0x188
-+#define B43legacy_MMIO_TSF_CFP_START	0x18C
- /* 32-bit DMA */
- #define B43legacy_MMIO_DMA32_BASE0	0x200
- #define B43legacy_MMIO_DMA32_BASE1	0x220
-@@ -614,6 +615,7 @@ struct b43legacy_wl {
- 	struct sk_buff *current_beacon;
- 	bool beacon0_uploaded;
- 	bool beacon1_uploaded;
-+	struct work_struct beacon_update_trigger;
- };
- 
- /* Pointers to the firmware data and meta information about it. */
-Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-testing/drivers/net/wireless/b43legacy/main.c
-@@ -1013,7 +1013,8 @@ static void b43legacy_write_beacon_templ
- 		b43legacywarn(dev->wl, "Did not find a valid TIM IE in the "
- 			      "beacon template packet. AP or IBSS operation "
- 			      "may be broken.\n");
--	}
-+	} else
-+		b43legacydbg(dev->wl, "Updated beacon template\n");
- }
- 
- static void b43legacy_write_probe_resp_plcp(struct b43legacy_wldev *dev,
-@@ -1133,6 +1134,27 @@ static void b43legacy_write_probe_resp_t
- 	kfree(probe_resp_data);
- }
- 
-+static void b43legacy_beacon_update_trigger_work(struct work_struct *work)
-+{
-+	struct b43legacy_wl *wl = container_of(work, struct b43legacy_wl,
-+					 beacon_update_trigger);
-+	struct b43legacy_wldev *dev;
-+
-+	mutex_lock(&wl->mutex);
-+	dev = wl->current_dev;
-+	if (likely(dev && (b43legacy_status(dev) >= B43legacy_STAT_INITIALIZED))) {
-+		/* Force the microcode to trigger the
-+		 * beacon update bottom-half IRQ. */
-+		spin_lock_irq(&wl->irq_lock);
-+		b43legacy_write32(dev, B43legacy_MMIO_MACCMD,
-+			    b43legacy_read32(dev, B43legacy_MMIO_MACCMD)
-+			    | B43legacy_MACCMD_BEACON0_VALID
-+			    | B43legacy_MACCMD_BEACON1_VALID);
-+		spin_unlock_irq(&wl->irq_lock);
-+	}
-+	mutex_unlock(&wl->mutex);
-+}
-+
- /* Asynchronously update the packet templates in template RAM.
-  * Locking: Requires wl->irq_lock to be locked. */
- static void b43legacy_update_templates(struct b43legacy_wl *wl)
-@@ -1156,25 +1178,31 @@ static void b43legacy_update_templates(s
- 	wl->current_beacon = beacon;
- 	wl->beacon0_uploaded = 0;
- 	wl->beacon1_uploaded = 0;
-+	queue_work(wl->hw->workqueue, &wl->beacon_update_trigger);
- }
- 
- static void b43legacy_set_beacon_int(struct b43legacy_wldev *dev,
- 				     u16 beacon_int)
- {
- 	b43legacy_time_lock(dev);
--	if (dev->dev->id.revision >= 3)
--		b43legacy_write32(dev, 0x188, (beacon_int << 16));
--	else {
-+	if (dev->dev->id.revision >= 3) {
-+		b43legacy_write32(dev, B43legacy_MMIO_TSF_CFP_REP,
-+				 (beacon_int << 16));
-+		b43legacy_write32(dev, B43legacy_MMIO_TSF_CFP_START,
-+				 (beacon_int << 10));
-+	} else {
- 		b43legacy_write16(dev, 0x606, (beacon_int >> 6));
- 		b43legacy_write16(dev, 0x610, beacon_int);
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 1d77ee9..a4e385b 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1677,7 +1677,7 @@ ath5k_tasklet_rx(unsigned long data)
+ 	struct sk_buff *skb, *next_skb;
+ 	dma_addr_t next_skb_addr;
+ 	struct ath5k_softc *sc = (void *)data;
+-	struct ath5k_buf *bf, *bf_last;
++	struct ath5k_buf *bf;
+ 	struct ath5k_desc *ds;
+ 	int ret;
+ 	int hdrlen;
+@@ -1688,7 +1688,6 @@ ath5k_tasklet_rx(unsigned long data)
+ 		ATH5K_WARN(sc, "empty rx buf pool\n");
+ 		goto unlock;
  	}
- 	b43legacy_time_unlock(dev);
-+	b43legacydbg(dev->wl, "Set beacon interval to %u\n", beacon_int);
- }
+-	bf_last = list_entry(sc->rxbuf.prev, struct ath5k_buf, list);
+ 	do {
+ 		rxs.flag = 0;
  
- static void handle_irq_beacon(struct b43legacy_wldev *dev)
+@@ -1697,24 +1696,9 @@ ath5k_tasklet_rx(unsigned long data)
+ 		skb = bf->skb;
+ 		ds = bf->desc;
+ 
+-		/*
+-		 * last buffer must not be freed to ensure proper hardware
+-		 * function. When the hardware finishes also a packet next to
+-		 * it, we are sure, it doesn't use it anymore and we can go on.
+-		 */
+-		if (bf_last == bf)
+-			bf->flags |= 1;
+-		if (bf->flags) {
+-			struct ath5k_buf *bf_next = list_entry(bf->list.next,
+-					struct ath5k_buf, list);
+-			ret = sc->ah->ah_proc_rx_desc(sc->ah, bf_next->desc,
+-					&rs);
+-			if (ret)
+-				break;
+-			bf->flags &= ~1;
+-			/* skip the overwritten one (even status is martian) */
+-			goto next;
+-		}
++		/* bail if HW is still using self-linked descriptor */
++		if (ath5k_hw_get_rxdp(sc->ah) == bf->daddr)
++			break;
+ 
+ 		ret = sc->ah->ah_proc_rx_desc(sc->ah, ds, &rs);
+ 		if (unlikely(ret == -EINPROGRESS))
+diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
+index facc60d..ed407cc 100644
+--- a/drivers/net/wireless/ath5k/base.h
++++ b/drivers/net/wireless/ath5k/base.h
+@@ -56,7 +56,6 @@
+ 
+ struct ath5k_buf {
+ 	struct list_head	list;
+-	unsigned int		flags;	/* rx descriptor flags */
+ 	struct ath5k_desc	*desc;	/* virtual addr of desc */
+ 	dma_addr_t		daddr;	/* physical addr of desc */
+ 	struct sk_buff		*skb;	/* skbuff for buf */
+diff --git a/drivers/net/wireless/ath5k/dma.c b/drivers/net/wireless/ath5k/dma.c
+index b65b4fe..941b511 100644
+--- a/drivers/net/wireless/ath5k/dma.c
++++ b/drivers/net/wireless/ath5k/dma.c
+@@ -80,8 +80,6 @@ int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
+  * ath5k_hw_get_rxdp - Get RX Descriptor's address
+  *
+  * @ah: The &struct ath5k_hw
+- *
+- * XXX: Is RXDP read and clear ?
+  */
+ u32 ath5k_hw_get_rxdp(struct ath5k_hw *ah)
  {
- 	struct b43legacy_wl *wl = dev->wl;
- 	u32 cmd;
-+	u32 beacon0_valid, beacon1_valid;
- 
- 	if (!b43legacy_is_mode(wl, NL80211_IFTYPE_AP))
- 		return;
-@@ -1182,7 +1210,11 @@ static void handle_irq_beacon(struct b43
- 	/* This is the bottom half of the asynchronous beacon update. */
- 
- 	cmd = b43legacy_read32(dev, B43legacy_MMIO_MACCMD);
--	if (!(cmd & B43legacy_MACCMD_BEACON0_VALID)) {
-+	beacon0_valid = (cmd & B43legacy_MACCMD_BEACON0_VALID);
-+	beacon1_valid = (cmd & B43legacy_MACCMD_BEACON1_VALID);
-+	cmd &= ~(B43legacy_MACCMD_BEACON0_VALID | B43legacy_MACCMD_BEACON1_VALID);
-+
-+	if (!beacon0_valid) {
- 		if (!wl->beacon0_uploaded) {
- 			b43legacy_write_beacon_template(dev, 0x68,
- 							B43legacy_SHM_SH_BTL0,
-@@ -1193,8 +1225,7 @@ static void handle_irq_beacon(struct b43
- 			wl->beacon0_uploaded = 1;
- 		}
- 		cmd |= B43legacy_MACCMD_BEACON0_VALID;
--	}
--	if (!(cmd & B43legacy_MACCMD_BEACON1_VALID)) {
-+	} else if (!beacon1_valid) {
- 		if (!wl->beacon1_uploaded) {
- 			b43legacy_write_beacon_template(dev, 0x468,
- 							B43legacy_SHM_SH_BTL1,
-@@ -3429,6 +3460,7 @@ static void b43legacy_op_stop(struct iee
- 	struct b43legacy_wldev *dev = wl->current_dev;
- 
- 	b43legacy_rfkill_exit(dev);
-+	cancel_work_sync(&(wl->beacon_update_trigger));
- 
- 	mutex_lock(&wl->mutex);
- 	if (b43legacy_status(dev) >= B43legacy_STAT_STARTED)
-@@ -3760,6 +3792,7 @@ static int b43legacy_wireless_init(struc
- 	spin_lock_init(&wl->leds_lock);
- 	mutex_init(&wl->mutex);
- 	INIT_LIST_HEAD(&wl->devlist);
-+	INIT_WORK(&wl->beacon_update_trigger, b43legacy_beacon_update_trigger_work);
- 
- 	ssb_set_devtypedata(dev, wl);
- 	b43legacyinfo(wl, "Broadcom %04X WLAN found\n", dev->bus->chip_id);
+-- 
+1.6.0.6
+
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
