@@ -1,31 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:46783 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750911AbZC1MgJ (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.175]:14113 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730AbZCJHLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2009 08:36:09 -0400
-Date: Sat, 28 Mar 2009 09:36:02 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [GIT PATCH] rfkill updates
-Message-ID: <20090328123602.GC7439@khazad-dum.debian.net> (sfid-20090328_133613_664184_C6021412)
-References: <1238168651-28891-1-git-send-email-hmh@hmh.eng.br> <1238189590.4452.24.camel@johannes.local>
+	Tue, 10 Mar 2009 03:11:05 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so2439118wfa.4
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2009 00:11:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1238189590.4452.24.camel@johannes.local>
+In-Reply-To: <3ace41890903100002m341a15b6mb6a18226dff84212@mail.gmail.com>
+References: <1236651030-10331-1-git-send-email-lrodriguez@atheros.com>
+	 <3ace41890903100002m341a15b6mb6a18226dff84212@mail.gmail.com>
+Date: Tue, 10 Mar 2009 00:11:03 -0700
+Message-ID: <43e72e890903100011s26e1c6b4m8306289766571cec@mail.gmail.com> (sfid-20090310_081114_980747_BA48524A)
+Subject: Re: [RFC] zd1211rw: remove zd_addr_t typedef for a simple u16
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: linville@tuxdriver.com, dsd@gentoo.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 27 Mar 2009, Johannes Berg wrote:
-> Can we drop all this? I'm rewriting the entire rfkill core to better
-> support hard/soft kills, and all this code pretty much goes away anyway.
+On Tue, Mar 10, 2009 at 12:02 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> On Tue, Mar 10, 2009 at 2:10 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> The __nocast attribute is used to shut sparse up but we
+>> don't need it, lets just use u16 directly.
+>>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>
+>> Can someone test this for me? The zd1211rw device seems to require
+>> a bit more tweaks to work so not sure ifs the patch, it wasn't working
+>> with zd1211rw anyway. We will release another update to the vendor driver
+>> to help with addition of new device support.
+>
+> Am I reading this correctly - an update to the vendor driver?
 
-Sure.
+Yeah thing is that stuff kept on moving forward internally, so no port
+work was done to move it out. Unfortunately we don't have resources to
+do it ourselves so we can hope for community involvement on porting.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+> I am using a somewhat patched vendor driver (22.0.0.0) as my access
+> point, as AP mode in the rw driver isn't in sight yet.
+> Am volunteering as a guinea pig if there is an update.
+
+Great.
+
+> v 22.0.0.0 was 2.6.24(2.6.26?) era and I updated it to 2.6.28.x and
+> posted the patch to sf zd1211 ml; there is another netdev_priv()
+> update for 2.6.29+ which is sitting in my hard disc and will go to my
+> rather low-spec AP machine when I next rebuild the kernel...
+
+Let me see if I get time to dig through the vault.
+
+  Luis
