@@ -1,56 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:58137 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759426AbZCPQ7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 12:59:05 -0400
-Subject: Re: [PATCH] cfg80211: drop wext channel list if too long
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1237019432.5235.61.camel@johannes.local>
-References: <1236882244.25931.5.camel@johannes.local>
-	 <20090313145445.GC5551@tuxdriver.com>
-	 <1236964730.9657.10.camel@localhost.localdomain>
-	 <1237019432.5235.61.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 16 Mar 2009 12:56:51 -0400
-Message-Id: <1237222611.16956.17.camel@localhost.localdomain> (sfid-20090316_175919_378772_B1FE1200)
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:33753 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752146AbZCJCHp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Mar 2009 22:07:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/3] cfg80211: remove REGDOM_SET_BY_INIT
+Date: Mon,  9 Mar 2009 22:07:40 -0400
+Message-Id: <1236650862-17702-2-git-send-email-lrodriguez@atheros.com> (sfid-20090310_032928_299722_916F51BC)
+In-Reply-To: <1236650862-17702-1-git-send-email-lrodriguez@atheros.com>
+References: <1236650862-17702-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-03-14 at 09:30 +0100, Johannes Berg wrote:
-> On Fri, 2009-03-13 at 13:18 -0400, Dan Williams wrote:
-> 
-> > It doesn't look like wpa_supplicant cares about the returned channel
-> > list from SIOCGIWRANGE.
-> > 
-> > NM, however, uses the returned channel list to figure out a free
-> > supported adhoc frequency to use when creating an adhoc network (like
-> > for connection sharing).  If it can't find an intersection between an
-> > internal "safe" frequency list and what the card supports (which it
-> > wouldn't be able to with this patch), it will simply use 2462 or 5180
-> > MHz.
-> > 
-> > Thus, I don't think you'll *break* anything specifically, but this patch
-> > would cause the default frequency for an IBSS created by NM  to move
-> > from channel 1 to channel 11.
-> 
-> In that case, let's just drop the patch, I have no problem with that.
-> 
-> We just couldn't figure out why some channels were missing in iwlist
-> when they were in iw, but that's due to the 32 channel limit. Since most
-> people probably don't use this particular functionality, I guess it
-> doesn't really matter. Eventually NM should just use nl80211, or at
-> least try to, because there it gets more information like "cannot do
-> IBSS on channel XY", something that wext doesn't give you, but mac80211
-> enforces.
+This is not used as we can always just assume the first
+regulatory domain set will _always_ be a static regulatory
+domain. REGDOM_SET_BY_CORE will be the first request from
+cfg80211 for a regdomain and that then populates the first
+regulatory request.
 
-Yup; nl80211 is the way to go here.  Or better yet, make wpa_supplicant
-card capabilities over D-Bus so NM doesn't have to touch the driver
-directly.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |    2 +-
+ drivers/net/wireless/ath9k/regd.c |    1 -
+ include/net/cfg80211.h            |    3 ---
+ net/wireless/reg.c                |    2 --
+ 4 files changed, 1 insertions(+), 7 deletions(-)
 
-Dan
-
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 94ea72a..aefebe7 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1671,7 +1671,7 @@ int ath_attach(u16 devid, struct ath_softc *sc)
+ 	}
+ 	wiphy_apply_custom_regulatory(hw->wiphy, regd);
+ 	ath9k_reg_apply_radar_flags(hw->wiphy);
+-	ath9k_reg_apply_world_flags(hw->wiphy, REGDOM_SET_BY_INIT);
++	ath9k_reg_apply_world_flags(hw->wiphy, REGDOM_SET_BY_DRIVER);
+ 
+ 	INIT_WORK(&sc->chan_work, ath9k_wiphy_chan_work);
+ 	INIT_DELAYED_WORK(&sc->wiphy_work, ath9k_wiphy_work);
+diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
+index 639da97..ff0afc0 100644
+--- a/drivers/net/wireless/ath9k/regd.c
++++ b/drivers/net/wireless/ath9k/regd.c
+@@ -341,7 +341,6 @@ int ath9k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
+ 
+ 	switch (request->initiator) {
+ 	case REGDOM_SET_BY_DRIVER:
+-	case REGDOM_SET_BY_INIT:
+ 	case REGDOM_SET_BY_CORE:
+ 	case REGDOM_SET_BY_USER:
+ 		break;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 75fa556..f195ea4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -350,8 +350,6 @@ struct bss_parameters {
+ 
+ /**
+  * enum reg_set_by - Indicates who is trying to set the regulatory domain
+- * @REGDOM_SET_BY_INIT: regulatory domain was set by initialization. We will be
+- * 	using a static world regulatory domain by default.
+  * @REGDOM_SET_BY_CORE: Core queried CRDA for a dynamic world regulatory domain.
+  * @REGDOM_SET_BY_USER: User asked the wireless core to set the
+  * 	regulatory domain.
+@@ -362,7 +360,6 @@ struct bss_parameters {
+  *	should consider.
+  */
+ enum reg_set_by {
+-	REGDOM_SET_BY_INIT,
+ 	REGDOM_SET_BY_CORE,
+ 	REGDOM_SET_BY_USER,
+ 	REGDOM_SET_BY_DRIVER,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index fa738be..47ff447 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1255,8 +1255,6 @@ static int ignore_request(struct wiphy *wiphy,
+ 		return 0;
+ 
+ 	switch (pending_request->initiator) {
+-	case REGDOM_SET_BY_INIT:
+-		return -EINVAL;
+ 	case REGDOM_SET_BY_CORE:
+ 		return -EINVAL;
+ 	case REGDOM_SET_BY_COUNTRY_IE:
+-- 
+1.6.0.6
 
