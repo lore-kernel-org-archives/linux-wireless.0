@@ -1,111 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41869 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:42110 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756318AbZC3KGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 06:06:35 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:06:34 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18896.39086.910489.260877@gargle.gargle.HOWL> (sfid-20090330_120636_792856_3716958D)
-Date: Mon, 30 Mar 2009 15:32:22 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 16/17] ath9k: Determine number of streams from HT capabilities
+	id S1755606AbZCJVaN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2009 17:30:13 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/6] iwlwifi: HT performance improvement changes
+Date: Tue, 10 Mar 2009 14:35:10 -0700
+Message-Id: <1236720912-6502-5-git-send-email-reinette.chatre@intel.com> (sfid-20090310_223020_956690_677018E8)
+In-Reply-To: <1236720912-6502-4-git-send-email-reinette.chatre@intel.com>
+References: <1236720912-6502-1-git-send-email-reinette.chatre@intel.com>
+ <1236720912-6502-2-git-send-email-reinette.chatre@intel.com>
+ <1236720912-6502-3-git-send-email-reinette.chatre@intel.com>
+ <1236720912-6502-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The number of streams supported by a STA can be determined
-directly from the HT capabilities. Remove the redundant
-variable storing the stream cap.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+During rate scaling, checking for 0 retry count before decrement
+the count by 1, this can avoid the retry count to become 255 (0xff),
+which will cause the rate to drop faster than what we expect during good
+condition (receive 0 retry packet). also change the algorithm to make
+the rate not drop faster than what we like.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath9k/rc.c |   18 ++++++++----------
- drivers/net/wireless/ath9k/rc.h |    2 --
- 2 files changed, 8 insertions(+), 12 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   11 ++++++-----
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h |    2 +-
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 824ccbb..a6933cc 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -524,7 +524,7 @@ static u8 ath_rc_init_validrates(struct ath_rate_priv *ath_rc_priv,
- 	u32 valid;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index a6f4c74..0929f31 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -801,7 +801,10 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
+ 	    !(info->flags & IEEE80211_TX_STAT_AMPDU))
+ 		return;
  
- 	for (i = 0; i < rate_table->rate_cnt; i++) {
--		valid = (ath_rc_priv->single_stream ?
-+		valid = (!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG) ?
- 			 rate_table->info[i].valid_single_stream :
- 			 rate_table->info[i].valid);
- 		if (valid == 1) {
-@@ -557,9 +557,9 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
- 			u32 phy = rate_table->info[j].phy;
--			u32 valid = (ath_rc_priv->single_stream ?
--				rate_table->info[j].valid_single_stream :
--				rate_table->info[j].valid);
-+			u32 valid = (!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG) ?
-+				     rate_table->info[j].valid_single_stream :
-+				     rate_table->info[j].valid);
- 			u8 rate = rateset->rs_rates[i];
- 			u8 dot11rate = rate_table->info[j].dot11rate;
+-	retries = info->status.rates[0].count - 1;
++	if (info->flags & IEEE80211_TX_STAT_AMPDU)
++		retries = 0;
++	else
++		retries = info->status.rates[0].count - 1;
  
-@@ -603,7 +603,7 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
- 			u32 phy = rate_table->info[j].phy;
--			u32 valid = (ath_rc_priv->single_stream ?
-+			u32 valid = (!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG) ?
- 				     rate_table->info[j].valid_single_stream :
- 				     rate_table->info[j].valid);
- 			u8 rate = rateset->rs_rates[i];
-@@ -740,9 +740,10 @@ static u8 ath_rc_ratefind_ht(struct ath_softc *sc,
- 	if (rate > (ath_rc_priv->rate_table_size - 1))
- 		rate = ath_rc_priv->rate_table_size - 1;
- 
--	ASSERT((rate_table->info[rate].valid && !ath_rc_priv->single_stream) ||
-+	ASSERT((rate_table->info[rate].valid &&
-+		(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)) ||
- 	       (rate_table->info[rate].valid_single_stream &&
--		ath_rc_priv->single_stream));
-+		!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)));
- 
- 	return rate;
- }
-@@ -1422,9 +1423,6 @@ static void ath_rc_init(struct ath_softc *sc,
+ 	if (retries > 15)
+ 		retries = 15;
+@@ -1897,7 +1900,7 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 		if (high != IWL_RATE_INVALID && sr >= IWL_RATE_INCREASE_TH)
+ 			scale_action = 1;
+ 		else if (low != IWL_RATE_INVALID)
+-			scale_action = -1;
++			scale_action = 0;
  	}
- 	ath_rc_priv->rc_phy_mode = ath_rc_priv->ht_cap & WLAN_RC_40_FLAG;
  
--	/* Set stream capability */
--	ath_rc_priv->single_stream = (ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG) ? 0 : 1;
--
- 	if (!rateset->rs_nrates) {
- 		/* No working rate, just initialize valid rates */
- 		hi = ath_rc_init_validrates(ath_rc_priv, rate_table,
-diff --git a/drivers/net/wireless/ath9k/rc.h b/drivers/net/wireless/ath9k/rc.h
-index ec72dd2..bdfd205 100644
---- a/drivers/net/wireless/ath9k/rc.h
-+++ b/drivers/net/wireless/ath9k/rc.h
-@@ -157,7 +157,6 @@ struct ath_rateset {
-  * @probe_interval: interval for ratectrl to probe for other rates
-  * @prev_data_rix: rate idx of last data frame
-  * @ht_cap: HT capabilities
-- * @single_stream: When TRUE, only single TX stream possible
-  * @neg_rates: Negotatied rates
-  * @neg_ht_rates: Negotiated HT rates
-  */
-@@ -175,7 +174,6 @@ struct ath_rate_priv {
- 	u8 max_valid_rate;
- 	u8 valid_rate_index[RATE_TABLE_SIZE];
- 	u8 ht_cap;
--	u8 single_stream;
- 	u8 valid_phy_ratecnt[WLAN_RC_PHY_MAX];
- 	u8 valid_phy_rateidx[WLAN_RC_PHY_MAX][RATE_TABLE_SIZE];
- 	u8 rc_phy_mode;
+ 	/* Both adjacent throughputs are measured, but neither one has better
+@@ -1918,9 +1921,7 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 					sr >= IWL_RATE_INCREASE_TH) {
+ 				scale_action = 1;
+ 			} else {
+-				IWL_DEBUG_RATE(priv,
+-				    "decrease rate because of high tpt\n");
+-				scale_action = -1;
++				scale_action = 0;
+ 			}
+ 
+ 		/* Lower adjacent rate's throughput is measured */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+index 345806d..ab59acc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+@@ -231,7 +231,7 @@ enum {
+ #define IWL_RS_GOOD_RATIO		12800	/* 100% */
+ #define IWL_RATE_SCALE_SWITCH		10880	/*  85% */
+ #define IWL_RATE_HIGH_TH		10880	/*  85% */
+-#define IWL_RATE_INCREASE_TH            8960	/*  70% */
++#define IWL_RATE_INCREASE_TH		6400	/*  50% */
+ #define IWL_RATE_DECREASE_TH		1920	/*  15% */
+ 
+ /* possible actions when in legacy mode */
 -- 
-1.6.2.1
+1.5.6.3
 
