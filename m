@@ -1,26 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39621
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753579AbZCVF5f (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33831 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752484AbZCJCJp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 01:57:35 -0400
-Date: Sat, 21 Mar 2009 22:57:22 -0700 (PDT)
-Message-Id: <20090321.225722.114079378.davem@davemloft.net> (sfid-20090322_065739_111724_257B7842)
-To: shemminger@vyatta.com
-Cc: j@w1.fi, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 76/77] hostap: convert to net_device_ops
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090321053718.374135383@vyatta.com>
-References: <20090321053527.316395697@vyatta.com>
-	<20090321053718.374135383@vyatta.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 9 Mar 2009 22:09:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/2] ath9k: cleanups
+Date: Mon,  9 Mar 2009 22:09:40 -0400
+Message-Id: <1236650982-11520-1-git-send-email-lrodriguez@atheros.com> (sfid-20090310_032926_541159_D2FD3AAA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Hemminger <shemminger@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:43 -0700
+Just a couple of ath9k cleanups. One is a candidate for stable.
 
-> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+Luis R. Rodriguez (2):
+  ath9k: downgrade xmit queue full message to xmit debug
+  ath9k: make few eeprom and calib items static
 
-Applied.
+ drivers/net/wireless/ath9k/calib.c  |    2 +-
+ drivers/net/wireless/ath9k/eeprom.c |    8 ++++----
+ drivers/net/wireless/ath9k/xmit.c   |    2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
