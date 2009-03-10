@@ -1,32 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.235]:23738 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272AbZCSAfo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41719 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753096AbZCJHPf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2009 20:35:44 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so270445rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2009 17:35:41 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 18 Mar 2009 17:35:41 -0700
-Message-ID: <43e72e890903181735i423bd822m848decc93201ad81@mail.gmail.com> (sfid-20090319_013547_483579_38B6F7F2)
-Subject: Linux wireless GSoC 2009
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 10 Mar 2009 03:15:35 -0400
+Subject: Re: [PATCH 3/4] mac80211: disallow HT40 if max channel bandwidth
+	is less than 40 MHz
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1236650699-30538-4-git-send-email-lrodriguez@atheros.com>
+References: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
+	 <1236650699-30538-4-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-dIbBKTd7ABrcVPk8mpTh"
+Date: Tue, 10 Mar 2009 08:15:29 +0100
+Message-Id: <1236669329.9658.30.camel@johannes.local> (sfid-20090310_081557_056920_FEDA374C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As reviewed in previous thread we have a GSoC projects for Linux
-wireless for 2009, specifically under the Linux foundation umbrella.
-We now have a decent set of projects. Some of these ideas were thrown
-around adhoc'ishly but now I'd like to start formalizing the stuff, so
-looking for mentors willing to help with the different projects.
-Please feel free to add yourself to the list of mentor for each
-project.
 
-Google will then begin accepting applications from students beginning
-at 19:00 UTC on March 23, 2009.
+--=-dIbBKTd7ABrcVPk8mpTh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://wireless.kernel.org/en/developers/GSoC/2009
+On Mon, 2009-03-09 at 22:04 -0400, Luis R. Rodriguez wrote:
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  net/mac80211/util.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 32610a0..a891d7e 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -796,6 +796,9 @@ int ieee80211_set_freq(struct ieee80211_sub_if_data *=
+sdata, int freqMHz)
+>  	if (!chan || (chan->flags & IEEE80211_CHAN_DISABLED))
+>  		return ret;
+> =20
+> +	if (conf_is_ht40(&local->hw.conf) && chan->max_bandwidth < 40)
+> +		return ret;
+> +
 
-  Luis
+You just made nl80211 check this, why bother adding it here too?
+
+johannes
+
+--=-dIbBKTd7ABrcVPk8mpTh
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJthOOAAoJEKVg1VMiehFY3/MQAKyHOrJ1ow1DZbHBKQMPJvTP
+sClCDfkKaPahZNoo3gA6iccfSIO74wm5wv6nxdntM+rtFJ/rMY6px1/MqUH7e1z1
+xxiwvpEDOdQtWdp/wgKwdKbrdtZ1OXU3eugyZJwe6Xtc5CekGLZ1xiyQuO9BkyUV
+2aTOMKxD5QxEyGMdOctbT3tldDaOZ2dRxST8+7afm041JqvspwUJBpKAGgoCpA+l
+FwrqB7QdLhH24QIxx6e6fvZmIcZcCViKYeCPepTx8wF/kLNAMiEzSBRs2PPMEoBf
+17kla1XTeHtftBVXmkmoYfy4NXYJA3OC5Cw32zxOJZuG2WptUhNo8z1lz74VlNsq
+MMvN2lGT416QX09f0plZO/HRonjwc8COTMRDtGAx9Gd5wEzwERfoeTvJsoLHQZsj
+cAwwkZADJ2tB2TWSwkotnINxxVZPFt9ibRuxWgoU5pFdLZOUKkYLb4EjAglVWRa/
+zPza+o2a+syUfxE31qsQMDG4u/acyrmkb1i9wBbfO7F3lQw/kBVP4cLJ6HfhCxvW
+TQWr85JbX6kU6U0wGEHLbPgBwo5MKm+wuSZHLudbLCrsYIq0Qakg9JEM3rsLKlr2
+BzrmxgkNKbH8tWQ9538onYvQZmE692gOj76xhhKvUJ6b/seZgCgMNoGqvRwA9ekg
+tVDFNAzDiL7fksBUARsq
+=TJHp
+-----END PGP SIGNATURE-----
+
+--=-dIbBKTd7ABrcVPk8mpTh--
+
