@@ -1,115 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([207.115.11.51]:41993 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753751AbZCaSVI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37529 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756117AbZCJRXM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 14:21:08 -0400
-Message-ID: <49D25EE4.6020202@lwfinger.net> (sfid-20090331_202113_226196_31F56FB2)
-Date: Tue, 31 Mar 2009 13:20:20 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC/RFT v2] rfkill: rewrite
-References: <1238349195.24972.5.camel@johannes.local>	 (sfid-20090329_195345_745378_2F2074B3) <1238451390.5970.59.camel@johannes.local>
-In-Reply-To: <1238451390.5970.59.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 10 Mar 2009 13:23:12 -0400
+Subject: Re: [PATCH 00/15] ath9k: Virtual interfaces and radios
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: "Stephen Gutknecht (hilltx)" <stephen@hilltx.com>,
+	linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+In-Reply-To: <20090310170304.GA18634@jm.kir.nu> (sfid-20090310_180327_357164_9E7CF7A6)
+References: <eef88e5b0903100543l22622769u5951003099eef312@mail.gmail.com>
+	 <20090310170304.GA18634@jm.kir.nu> (sfid-20090310_180327_357164_9E7CF7A6)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-SjO3Rsaj7r8gcrjgK6zx"
+Date: Tue, 10 Mar 2009 18:23:07 +0100
+Message-Id: <1236705787.9658.51.camel@johannes.local> (sfid-20090310_182325_024160_413C5283)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> This patch completely rewrites the rfkill core to address
-> the following deficiencies:
 
--- snip --
+--=-SjO3Rsaj7r8gcrjgK6zx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ wireless-testing/net/rfkill/core.c	2009-03-31 00:04:25.000000000 +0200
-> @@ -0,0 +1,752 @@
-> +/*
+On Tue, 2009-03-10 at 19:03 +0200, Jouni Malinen wrote:
 
--- snip --
+> They went already in into wireless-testing git tree. I would certainly
+> be interested in see test reports if people are doing some experiments
+> with the new code. There are still number of areas that can benefit from
+> optimizations and combinations that do not probably work yet, so it will
+> be useful to know if these show up in a configuration that someone would
+> like to use.
 
-> +int __must_check rfkill_register(struct rfkill *rfkill)
-> +{
-> +	static unsigned long rfkill_no = 0;
-> +	struct device *dev = &rfkill->dev;
-> +	int error;
-> +
-> +	BUG_ON(!rfkill);
-> +
-> +	mutex_lock(&rfkill_global_mutex);
-> +
-> +	if (rfkill->registered) {
-> +		error = -EALREADY;
-> +		goto unlock;
-> +	}
-> +
-> +	dev_set_name(dev, "rfkill%lu", rfkill_no);
-> +	rfkill_no++;
-> +
-> +	if (!(rfkill_states_default_locked & BIT(rfkill->type))) {
-> +		/* first of its kind */
-> +		BUILD_BUG_ON(NUM_RFKILL_TYPES >
-> +			sizeof(rfkill_states_default_locked) * 8);
-> +		rfkill_states_default_locked |= BIT(rfkill->type);
-> +		rfkill_global_states[rfkill->type].cur =
-> +			rfkill_global_states[rfkill->type].def;
-> +	}
-> +
-> +	/* XXX: schedule work to set default state */
-> +
-> +	list_add_tail(&rfkill->node, &rfkill_list);
-> +
-> +	error = device_add(dev);
-> +	if (error)
-> +		goto remove;
-> +
-> +	error = rfkill_led_trigger_register(rfkill);
-> +	if (error)
-> +		goto devdel;
-> +
-> +	rfkill->registered = true;
-> +
-> +	if (rfkill->ops->poll_hw_block) {
-> +		INIT_DELAYED_WORK(&rfkill->poll_work, rfkill_poll);
-> +		schedule_delayed_work(&rfkill->poll_work,
-> +			round_jiffies_relative(POLL_INTERVAL));
-> +	}
-> +
-> +	INIT_WORK(&rfkill->uevent_work, rfkill_uevent_work);
-> +
-> +	return 0;
+Speaking of which -- has anyone ever tested WDS with mac80211?
 
-The locking looks funny here. The normal return leaves the rfkill_global_mutex
-locked. Did you mean "goto unlock" instead of "return 0"?
+johannes
 
-> +
-> + devdel:
-> +	device_del(&rfkill->dev);
-> + remove:
-> +	list_del_init(&rfkill->node);
-> + unlock:
-> + 	mutex_unlock(&rfkill_global_mutex);
-> +	return error;
-> +}
+--=-SjO3Rsaj7r8gcrjgK6zx
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-I was alerted to this problem when I was unable to shut down or reboot normally.
-Those problems are fixed with the patch
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-Index: wireless-testing/net/rfkill/core.c
-===================================================================
---- wireless-testing.orig/net/rfkill/core.c
-+++ wireless-testing/net/rfkill/core.c
-@@ -676,7 +676,7 @@ int __must_check rfkill_register(struct
+iQIcBAABAgAGBQJJtqH5AAoJEKVg1VMiehFYrk0P/iu+KP+bADpMupbDDAGkNrN9
+OlJBj/WFxTmM6eLi0wIwDbi1mt4Sj/NzGWDSxdmb9t4RevwHTx4a7rkKJdzH47ww
+QF74iJObtMEdTQNrlQGShzKxKfrKm0hG076sA9SIETvvOUFSEMDcZU2YN4IgtWyM
+70HiImjgpTEYvhZ1mi/HDLQI/Zm3PqvU49eDkoeWbGZ6NJuf1S0CXB/zdVndtKe9
+XVPmtCL4ib/Py9pQQNCxMHQdRfT4MEF9diie0tb2g7vIgmw6J0ei/2ytu5Giytji
+hSHPnVSi+dFm7H4jSH8Tg/ZK43Ovhpd6JuB7oMS3UW1JYP3p1IfQtTzP+MBgImsQ
+qfDGlUfGER4Bu4SxXXZyvVVCFSpidJRALEgI7km/Mgk7SO+KYCVVTFY4vKhTDJoF
+tq29CMrG8mwbhF9zY1H8/JndkxmuFdycmSAz1BBaZQlFs3X/8uJkOr2ZItiwsdqp
+a3x2UeX0sbpC7sBvkSf48FfOa16oCUVYPURqhqh5SYKGj4ti4wP891WGy6ciCsQe
+SlBEs6ZG7Mk46GiJu1oS8RPVGCHPIqCHscvWD6oix3wx+x0V+I0namyDscPw0GRt
++JSfUcJppwipCY9mWoDEcBcz+caFmDnhWyY6ZFuxSqegMUHnLosggEVXBhMx7tY5
+LzbMOKNyN3e+ywVD2aIq
+=FErP
+-----END PGP SIGNATURE-----
 
- 	INIT_WORK(&rfkill->uevent_work, rfkill_uevent_work);
+--=-SjO3Rsaj7r8gcrjgK6zx--
 
--	return 0;
-+	goto unlock;
-
-  devdel:
-        device_del(&rfkill->dev);
-
-
-Larry
