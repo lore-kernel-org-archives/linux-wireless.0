@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:2624 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751478AbZCHDJh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2009 22:09:37 -0500
-Date: Sat, 7 Mar 2009 22:09:28 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090308030928.GB14966@hash.localnet> (sfid-20090308_040942_864845_1779B1B5)
-References: <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org>
+Received: from mail.gmx.net ([213.165.64.20]:38333 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753827AbZCJWob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2009 18:44:31 -0400
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Tue, 10 Mar 2009 23:44:27 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1236669682.9658.34.camel@johannes.local>
+Message-ID: <20090310224427.223760@gmx.net> (sfid-20090310_234434_313074_3AE46274)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090306094249.GA10236@silver.sucs.org>
+References: <20090309234946.99940@gmx.net>	
+ (sfid-20090310_005017_999744_57F45C40)
+ <1236669682.9658.34.camel@johannes.local>
+Subject: Re: [PATCH] mac80211: ieee80211_ibss_commit() cleanup
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 06, 2009 at 09:42:49AM +0000, Sitsofe Wheeler wrote:
-> > parallel with iwlist wlan0 scan (as root, so scans are actually 
-> > performed), in parallel with iperf or ping.  I didn't personally have
-> > luck with that workload, though.
+Hello!
 
-So I looked through this log for a few hours today.  Sorry to say
-that I don't have any answers, but here's a summary of what I saw:
+> And now to explain why this is desired?
 
-- it didn't seem like there were any obvious race conditions at play;
-  that is, I didn't see other ath5k_XXX functions being pre-empted
-  by ath5k_intr, followed by the softirq.
+=46or unification with the STA implementation and besides it fixes a bu=
+g, that ieee80211_sta_find_ibss() is triggered while the interface is d=
+own and do some strange things that it shouldn't do in this interface s=
+tate.
 
-- there were a few errors prior to catching the poison.  I don't think
-  the trace contains enough info to say whether they were phy errors,
-  unsupported jumbo type errors, or whatever.  Anyway there didn't seem
-  to be any obvious causal pattern, nothing like an error on the
-  40th previous buffer or a cascading series of errors.  Of course, 
-  the error could have happened much earlier compared to when the skbuff
-  in the freelist got reused.
+> Are you going to post "commit"
+> patches again that I will reject?
 
-At this point, I guess the best way forward is to have a special debug
-patch for when we pass an skb up the stack, when it gets allocated, and
-what is in the descriptors.
+This has nothing to do with the current patch and should discussed else=
+where.
 
-Jiri, I really think we should implement that better check for the
-self linked descriptor using the rxdp register.  bf_last is no longer a
-valid marker for the self-linked descriptor at the end of the loop since
-we re-add the just-processed descriptor every time through the loop  
-(or am I missing something?)...  If you want I'll cook up a patch for 
-that too.
+Regards
+Alina
 
--- 
-Bob Copeland %% www.bobcopeland.com
-
+--=20
+Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
+en: http://www.gmx.net/de/go/multimessenger01
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
