@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33303 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbZC0EU7 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:33467 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941AbZCJSsT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 00:20:59 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, pabs@debian.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/4] wireless-regdb: BN was missing two 5 GHz bands
-Date: Fri, 27 Mar 2009 00:20:53 -0400
-Message-Id: <1238127656-1226-2-git-send-email-lrodriguez@atheros.com> (sfid-20090327_052116_373625_DD26B6D5)
-In-Reply-To: <1238127656-1226-1-git-send-email-lrodriguez@atheros.com>
-References: <1238127656-1226-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 10 Mar 2009 14:48:19 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so2740963wfa.4
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2009 11:48:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <548cdfc20903100908y6ce7809dw2da12ab8b5cd132b@mail.gmail.com>
+References: <548cdfc20903100908y6ce7809dw2da12ab8b5cd132b@mail.gmail.com>
+Date: Tue, 10 Mar 2009 14:48:16 -0400
+Message-ID: <b6c5339f0903101148o1322a6c0xb6871c6576d01922@mail.gmail.com> (sfid-20090310_194822_268414_DE8D0475)
+Subject: Re: ath5k crashing in device probe
+From: Bob Copeland <me@bobcopeland.com>
+To: Pauli Nieminen <suokkos@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two 5 GHz bands regulatory rules were missing for
-Brunei Darussalam (BN). The document we referred to
-is the:
+On Tue, Mar 10, 2009 at 12:08 PM, Pauli Nieminen <suokkos@gmail.com> wr=
+ote:
+> Hello!
+>
+> Original bug report to ubuntu bugs:
+> https://bugs.launchpad.net/bugs/339496 This is regression from 2 week=
+s
 
-"Spectrum Policy and Planning - Joint Policy
-Issued by the TRA and the MOT   27 June 2006"
+Probably the appropriate thing to do...
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- db.txt |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> [ =A0 18.942981] =A0[<ffffffff8041f2de>] ? __const_udelay+0x4e/0x50
+> [ =A0 18.942989] =A0[<ffffffffa02c750a>] lbm_cw_wiphy_register+0x17a/=
+0x210
+> [lbm_cw_cfg80211]
+> [ =A0 18.942998] =A0[<ffffffffa02f1276>]
+> lbm_cw_ieee80211_register_hw+0xb6/0x440 [lbm_cw_mac80211]
+> [ =A0 18.943019] =A0[<ffffffffa0342995>] ath5k_pci_probe+0x10b5/0x148=
+a [ath5k]
 
-diff --git a/db.txt b/db.txt
-index d3a05ea..77f1754 100644
---- a/db.txt
-+++ b/db.txt
-@@ -82,6 +82,8 @@ country BL:
- 
- country BN:
- 	(2402 - 2482 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 40), (N/A, 20)
-+	(5250 - 5330 @ 40), (N/A, 20), DFS
- 	(5735 - 5835 @ 40), (N/A, 30)
- 
- country BO:
--- 
-1.6.0.6
+lbm_cw_mac80211 is some ubuntu special sauce, I think (I guess lbm =3D=3D
+linux-backport-modules)?  Does this happen with wireless-testing or any
+kernel.org tree?
 
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
