@@ -1,77 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35207 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:41750 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752847AbZCNROk (ORCPT
+	with ESMTP id S1752564AbZCJHQ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 13:14:40 -0400
-Subject: Re: [PATCH] iwlagn: default to MAX_UCODE_BEACON_INTERVAL
-	in	iwl_adjust_beacon_interval
+	Tue, 10 Mar 2009 03:16:29 -0400
+Subject: Re: [PATCH 0/4] wireless: use channel bandwidth
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <49BBE4A0.3060901@nokia.com>
-References: <154E55ADF9629D4E8D13F08BF92ABEB629C9D28B8D@PDSMSX501.ccr.corp.intel.com>
-	 <20090220145223.GA15006@tuxdriver.com> <1235155966.5860.44.camel@rc-desk>
-	 <20090220194306.GA4051@tuxdriver.com> <20090221003013.GA3890@tuxdriver.com>
-	 <20090221003133.GB3890@tuxdriver.com>
-	 <1235443093.4455.77.camel@johannes.local>
-	 <20090225014454.GA3577@tuxdriver.com>
-	 <1237046388.5235.82.camel@johannes.local>  <49BBE4A0.3060901@nokia.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-TyXZoO3e8LyaxiKiNsi9"
-Date: Sat, 14 Mar 2009 18:14:32 +0100
-Message-Id: <1237050872.5235.95.camel@johannes.local> (sfid-20090314_181443_644180_9430A1EC)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
+References: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r4Kfx+NPNQMPeoTmICrs"
+Date: Tue, 10 Mar 2009 08:16:23 +0100
+Message-Id: <1236669384.9658.32.camel@johannes.local> (sfid-20090310_081630_961934_C610E071)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-TyXZoO3e8LyaxiKiNsi9
+--=-r4Kfx+NPNQMPeoTmICrs
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-03-14 at 19:08 +0200, Kalle Valo wrote:
-> Johannes Berg wrote:
-> > Kalle, I suspect that your beacon offload will require something like
-> > holding on to BSS structs too, is that correct?
->=20
-> My current solution is just to disable beacon filtering (and power save)=20
-> whenever we are scanning. That way beacon filtering doesn't interfere=20
-> scanning in anyway.
+On Mon, 2009-03-09 at 22:04 -0400, Luis R. Rodriguez wrote:
+> Few patches which actually make use of the channel bandwidth, lets
+> also send this to userspace as it useful to tell which channels you'll
+> be able to use HT40 or not on as a client.
 
-That makes sense, but disabling beacons means that
-
-	iwlist wlan0 scan last
-
-will not show _any_ BSS while associated, but it should really show the
-BSS we're associated to. This is the problem I was referring to.
+Can you remind me why we have that max_bandwidth at all? It seems we
+would be able to see whether ht40 fits by checking the above/below
+sideband channel for use permission.
 
 johannes
 
---=-TyXZoO3e8LyaxiKiNsi9
+--=-r4Kfx+NPNQMPeoTmICrs
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJu+X1AAoJEKVg1VMiehFYK3sP/1u3kyLI1GneBrkCzEtu85j6
-0MtAjF/fQfa6wYxLrYGh70nWp5f93P3OUw/8V26Pw4XfDouL4hXiOnK7XayMY2m2
-GORjxr1fqtJLDnJVBMJGHOP9fXevYx+793o19MB+xj0YiNRZ6FTxLtxq4o7d/Myd
-BYTXJOqH3X6oIej4oxwQW4GjaHsqeEVTQNRvSL8gsWHAaYvL4zqB/CIEYS87ivHE
-W7xV5u74zY6iJjiBBpvD1Lzuys4c+gQFaVMWzjy3hw8/NO/5GMo0GVjOj1laLqcg
-df4c4YdZEJtjT2DiW25qrIkC0FpGyI1J2WkpZzHrALCQ1kBV985j/+gZGkrxuIQL
-jqpwQl84BMO/tf8IILcSzhhrfKgAx9EmYQcO1z+mxAaOWPH5o0mxZgKsjtEJyt7f
-nnE0vvcFpJ4K+eG+yUf/zbqDRQkHPar87rN1o0oQ6GJxwnYc5SZLMIiZ5nhSnP4Z
-KafV14N5DjRfnltDOSbnsBrHHTGV+hyt/7JWl5BmLjMCacXjFCowxYjukb4z85T6
-S836AWA8L9MNW+yIDSLAAKw6lFbTNoo3/PZHN4fJHfIWQtHUS7+2kwOKb+48PFG8
-CMhO5GICnhmrnRRHUagSutsT/v+paIiBdzhg7k1hQHXVdGzpJwwcXQnCHAPWorZ1
-KlUfAgdcIQE/dajqjgdb
-=ELB0
+iQIcBAABAgAGBQJJthPEAAoJEKVg1VMiehFYLEgP/3btmlNCn+jhilwGnVOlgyEW
+7HtYGmb7UcXobivMG4tQWadgSoCTouJKrKt1ZfbrQMhtWUisqfE4NErXyvqFjylG
+uUgniFFqG3KMx0KnitguMSt3DXvWD1O0T9AV43VeOoKWorST/orRXS9W0eFO8uca
+FeMEhZkkbU+naaZaKjk8sYhn4ZKhYeUyVQ+Z7JF8+VPvII1TVb0zeyVxNU5AqSQV
+SPWKgnh8gIVAjvtG/kcnt/rWA9gvkP+eG0+rXI/vj1pYMz2ytzVgsc8yP3G+qlMT
+LWd2dyYdbJ5IooxKlNmZEh+rRPpH+3zg7HCMfWNB+na3Rehy14TrAy/CAPmW7/ue
+dq1D7n9C1F2EKPEu5UQWiRD7j8Sn6AAxmy6Z/zmEFoM4EUCHuqLOPBlTBqeIvHVC
+3LtG5XP2zhFZTIVhIEOdxIFxs0fwmn7JB3GiJECe41D/VYC3cxvXvgmL3mOWrADR
+m4T6TJaZKJImhtTFdJkG/YDprSO4vpst0QmmTrmXYU+VFz6wTph0LWA7CceOcbir
+DWscmsrcjOJqrhfFILyCii5GZsYm6rJYxa5sbCf2pLPNet9mNtK8T/ESDxDbfDWz
+zGh8aQ92FrbG/vFJKvRrjP7HNhVXJtuNenTDRcnid4QyGOVALxS7+6INN7MNcDXF
+PeR0GI+MnR9vfgGXzHXD
+=qqEp
 -----END PGP SIGNATURE-----
 
---=-TyXZoO3e8LyaxiKiNsi9--
+--=-r4Kfx+NPNQMPeoTmICrs--
 
