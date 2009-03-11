@@ -1,106 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:23437 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:20115 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756712AbZCYMe5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 08:34:57 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 05:34:56 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>
-Subject: [PATCH V3] mac80211: Fix bug in getting rx status for frames pending in reorder buffer
-Date: Wed, 25 Mar 2009 18:00:49 +0530
-Message-ID: <1237984249-7177-1-git-send-email-vasanth@atheros.com> (sfid-20090325_133501_973110_91DC42D7)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751688AbZCKSM7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2009 14:12:59 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/8] iwlwifi driver updates 03/11/2009
+Date: Wed, 11 Mar 2009 11:17:53 -0700
+Message-Id: <1236795481-12757-1-git-send-email-reinette.chatre@intel.com> (sfid-20090311_191304_269754_3B269297)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently rx status for frames which are completed from reorder buffer
-is taken from it's cb area which is not always right, cb is not holding
-the rx status when driver uses mac80211's non-irq rx handler to pass it's
-received frames. This results in dropping almost all frames from reorder 
-buffer when security is enabled by doing double decryption (first in hw, 
-second in sw because of wrong rx status). This patch copies rx status into 
-cb area before the frame is put into reorder buffer. After this patch, 
-there is a significant improvement in throughput with ath9k + WPA2(AES).
+In this series we have a few 3945 patches. They are mostly fixes and one
+patch that continues the 3945 port to use iwlcore. We also include a fix
+when using WEP and some patches providing extra information for users when
+driver encounters a problem.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: stable@kernel.org
----
+[PATCH 1/8] iwl3945: fix sparse error
+[PATCH 2/8] iwl3945: use iwl_led structure
+[PATCH 3/8] iwl3945 : fix rate scaling
+[PATCH 4/8] iwl3945: use iwl_tx_cmd_complete
+[PATCH 5/8] iwl3945: unmap previously mapped memory
+[PATCH 6/8] iwlagn: fix warning when set WEP key
+[PATCH 7/8] iwlwifi: print contents of control register when error occurs
+[PATCH 8/8] iwlwifi: correct log level when error occurs
 
-Adding stable in Cc.
 
- net/mac80211/rx.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
+Thank you
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 64ebe66..5fa7aed 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -29,6 +29,7 @@
- static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 					   struct tid_ampdu_rx *tid_agg_rx,
- 					   struct sk_buff *skb,
-+					   struct ieee80211_rx_status *status,
- 					   u16 mpdu_seq_num,
- 					   int bar_req);
- /*
-@@ -1688,7 +1689,7 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx)
- 		/* manage reordering buffer according to requested */
- 		/* sequence number */
- 		rcu_read_lock();
--		ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, NULL,
-+		ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, NULL, NULL,
- 						 start_seq_num, 1);
- 		rcu_read_unlock();
- 		return RX_DROP_UNUSABLE;
-@@ -2293,6 +2294,7 @@ static inline u16 seq_sub(u16 sq1, u16 sq2)
- static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 					   struct tid_ampdu_rx *tid_agg_rx,
- 					   struct sk_buff *skb,
-+					   struct ieee80211_rx_status *rxstatus,
- 					   u16 mpdu_seq_num,
- 					   int bar_req)
- {
-@@ -2374,6 +2376,8 @@ static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 
- 	/* put the frame in the reordering buffer */
- 	tid_agg_rx->reorder_buf[index] = skb;
-+	memcpy(tid_agg_rx->reorder_buf[index]->cb, rxstatus,
-+	       sizeof(*rxstatus));
- 	tid_agg_rx->stored_mpdu_num++;
- 	/* release the buffer until next missing frame */
- 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn)
-@@ -2399,7 +2403,8 @@ static u8 ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- }
- 
- static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
--				     struct sk_buff *skb)
-+				     struct sk_buff *skb,
-+				     struct ieee80211_rx_status *status)
- {
- 	struct ieee80211_hw *hw = &local->hw;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -2448,7 +2453,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
- 
- 	/* according to mpdu sequence number deal with reordering buffer */
- 	mpdu_seq_num = (sc & IEEE80211_SCTL_SEQ) >> 4;
--	ret = ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb,
-+	ret = ieee80211_sta_manage_reorder_buf(hw, tid_agg_rx, skb, status,
- 						mpdu_seq_num, 0);
-  end_reorder:
- 	return ret;
-@@ -2512,7 +2517,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		return;
- 	}
- 
--	if (!ieee80211_rx_reorder_ampdu(local, skb))
-+	if (!ieee80211_rx_reorder_ampdu(local, skb, status))
- 		__ieee80211_rx_handle_packet(hw, skb, status, rate);
- 
- 	rcu_read_unlock();
--- 
-1.5.5.1
+Reinette
 
