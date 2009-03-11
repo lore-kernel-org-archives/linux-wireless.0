@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:3169 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbZCNTpO (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58546 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753288AbZCKMkB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 15:45:14 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so1109074wfa.4
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 12:45:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090314171438.11126.30330.stgit@tikku>
-References: <20090314171234.11126.21125.stgit@tikku>
-	 <20090314171438.11126.30330.stgit@tikku>
-Date: Sat, 14 Mar 2009 12:45:12 -0700
-Message-ID: <43e72e890903141245k46f4dd4co6a33b45b82e9098a@mail.gmail.com> (sfid-20090314_204520_733846_425C9A1B)
-Subject: Re: [RFC PATCH v2 2/4] mac80211: track beacons separately from the rx
-	path activity
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Mar 2009 08:40:01 -0400
+Subject: Re: [PATCH] mac80211: ieee80211_ibss_commit() cleanup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090310224427.223760@gmx.net> (sfid-20090310_234458_784141_4631D28F)
+References: <20090309234946.99940@gmx.net>
+	 (sfid-20090310_005017_999744_57F45C40) <1236669682.9658.34.camel@johannes.local>
+	 <20090310224427.223760@gmx.net> (sfid-20090310_234458_784141_4631D28F)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wtbtEgn8OYZ10UkPS3N4"
+Date: Wed, 11 Mar 2009 12:53:30 +0100
+Message-Id: <1236772410.20266.7.camel@johannes.local> (sfid-20090311_134028_274588_13D3553D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 14, 2009 at 10:14 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
-> Separate beacon and rx path tracking in preparation for the beacon filtering
-> support. At the same time change ieee80211_associated() to look a bit simpler.
->
-> Probe requests are now sent only after IEEE80211_PROBE_IDLE_TIME, which
-> is now set to 60 seconds.
->
-> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 
-Can this be split into 3 separate patches, to make the one with the
-actual functional changes easier to review. One is the making of
-ieee80211_associated() look easier, the other the rename, and lastly
-the actual functional changes. When reviewing the commit log it would
-then be easier to see what was done.
+--=-wtbtEgn8OYZ10UkPS3N4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Tue, 2009-03-10 at 23:44 +0100, Alina Friedrichsen wrote:
+> Hello!
+>=20
+> > And now to explain why this is desired?
+>=20
+> For unification with the STA implementation=20
+
+FWIW, I don't see that as something that is necessarily desirable, I've
+split them up to allow them to diverge further and in a manageable way.
+
+> and besides it fixes a bug, that ieee80211_sta_find_ibss() is
+> triggered while the interface is down and do some strange things that
+> it shouldn't do in this interface state.
+
+Indeed, good point, that can happen without this patch.
+
+johannes
+
+--=-wtbtEgn8OYZ10UkPS3N4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJt6Y3AAoJEKVg1VMiehFYS3gP/RK6is6LtgrnvIm0Hd7v3xdO
+rW9+0pD0NtNGo/1cI0uXMKkfzIU/EFLCaw6Skr4oJ+i2FaOs0D11YJfOJSljjCX4
+6buSKs0ToaAZGmsadjlkwoOEpHnlRlLqhmFUlCX8zU/Z2aX5GaUWhOy2lvsWipjD
+k8/G2By/jVySNX9Sbt6f3D7e+PiQgC54Ya16LncR4uYmKHOlrDXe+F1P040zPoWs
+75W3CaG9lqQjgcpILGmQsHAaW23wv7KET6VkhL8XmN5YVMsr7+rzZDEgZxiyTkfN
+cFpZknuQOZ58lFE+SSvcf52/LoWl4fW6ujW3oiIuXl4BJrkUS/AE+q6z8KHrZ95B
+HI42pmWLCnnKdHVCTZyXqXeXrxpOZBXyF3mF1N5SdtndXw0amQWutVLF/yAtmieD
+PZSsTv9nrOJjTiVyiE+B0mHjDZ3k33dbfn9NbCtuGL+QFZWlxCkbMX6HF1S1Gcj3
+9+HjOwJ9tO5SX+IQrSv72ln9XYH8ZbKHMUFpPPXtd9XDnH2mL7ahziRFBagmCmIG
+Wh0IvgWjLpX7cN9rGdOWyXbLGs/QXiLkLHv232NGurids16x2wpWLBwBvsgLeTrW
+fBIodzJi7Z21h+8lh8TSaK64X26Sua+rZL2+P8SVevwHWYE1c33nxjC7UoTH1Gul
+AR9N4qW2nMy9VnUqATFM
+=r4ny
+-----END PGP SIGNATURE-----
+
+--=-wtbtEgn8OYZ10UkPS3N4--
+
