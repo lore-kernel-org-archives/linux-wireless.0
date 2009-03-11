@@ -1,258 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:36156 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755528AbZCaD5L (ORCPT
+Received: from mail-bw0-f178.google.com ([209.85.218.178]:33419 "EHLO
+	mail-bw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751541AbZCKIPH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 23:57:11 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] cfg80211: send regulatory beacon hint events to userspace
-Date: Mon, 30 Mar 2009 23:57:06 -0400
-Message-Id: <1238471826-3980-1-git-send-email-lrodriguez@atheros.com> (sfid-20090331_055715_150202_EAA06719)
+	Wed, 11 Mar 2009 04:15:07 -0400
+Received: by bwz26 with SMTP id 26so1826083bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2009 01:15:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1236728344.26432.26.camel@maxim-laptop>
+References: <1236728344.26432.26.camel@maxim-laptop>
+Date: Wed, 11 Mar 2009 09:15:03 +0100
+Message-ID: <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com> (sfid-20090311_091521_818884_EA213322)
+Subject: Re: Thanks for TX power patch
+From: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This informs userspace when a change has occured on a world
-roaming wiphy's channel which has lifted some restrictions
-due to a regulatory beacon hint.
+On Wed, Mar 11, 2009 at 12:39 AM, Maxim Levitsky
+<maximlevitsky@gmail.com> wrote:
+> If I unload/reload the ath5k, it seems to work. but at next suspend t=
+o
+> disk, once =A0system hung, other time it showed many panic, in someth=
+ing
+> related to page allocator (one even was in page_alloc_pages or so)
 
-Because this is now sent to userspace through the regulatory
-multicast group we remove the debug prints we used to use as
-they are no longer necessary.
+I'm getting some Kernel oopses after unloading ath5k with Nick patches.
+But I'm still debugging it to find where is the problem.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/linux/nl80211.h |   23 ++++++++++++-
- net/wireless/nl80211.c  |   87 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    4 ++
- net/wireless/reg.c      |   28 +++++++-------
- 4 files changed, 127 insertions(+), 15 deletions(-)
+Here is the log:
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index cbe8ce3..946be56 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -7,7 +7,7 @@
-  * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
-  * Copyright 2008 Michael Buesch <mb@bu3sch.de>
-- * Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
-+ * Copyright 2008, 2009 Luis R. Rodriguez <lrodriguez@atheros.com>
-  * Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
-  * Copyright 2008 Colin McCabe <colin@cozybit.com>
-  *
-@@ -166,6 +166,25 @@
-  * 	set (%NL80211_ATTR_REG_TYPE), if the type of regulatory domain is
-  * 	%NL80211_REG_TYPE_COUNTRY the alpha2 to which we have moved on
-  * 	to (%NL80211_ATTR_REG_ALPHA2).
-+ * @NL80211_CMD_REG_BEACON_HINT: indicates to userspace that an AP beacon
-+ * 	has been found while world roaming thus enabling active scan or
-+ * 	any mode of operation that initiates TX (beacons) on a channel
-+ * 	where we would not have been able to do either before. As an example
-+ * 	if you are world roaming (regulatory domain set to world or if your
-+ * 	driver is using a custom world roaming regulatory domain) and while
-+ * 	doing a passive scan on the 5 GHz band you find an AP there (if not
-+ * 	on a DFS channel) you will now be able to actively scan for that AP
-+ * 	or use AP mode on your card on that same channel. Note that this will
-+ * 	never be used for channels 1-11 on the 2 GHz band as they are always
-+ * 	enabled world wide. This beacon hint is only sent if your device had
-+ * 	either disabled active scanning or beaconing on a channel. We send to
-+ * 	userspace the wiphy on which we removed a restriction from
-+ * 	(%NL80211_ATTR_WIPHY) and the channel on which this occured
-+ * 	(%NL80211_ATTR_WIPHY_FREQ) before and after the beacon hint was applied.
-+ * 	We send the two channels on a frequency nestered attribute
-+ * 	(%NL80211_BAND_ATTR_FREQS) the first being the channel prior to the
-+ * 	beacon hint processing. We only send these events if something _did_
-+ * 	change to the channel.
-  *
-  * @NL80211_CMD_AUTHENTICATE: authentication request and notification.
-  *	This command is used both as a command (request to authenticate) and
-@@ -254,6 +273,7 @@ enum nl80211_commands {
- 	NL80211_CMD_SCAN_ABORTED,
- 
- 	NL80211_CMD_REG_CHANGE,
-+	NL80211_CMD_REG_BEACON_HINT,
- 
- 	NL80211_CMD_AUTHENTICATE,
- 	NL80211_CMD_ASSOCIATE,
-@@ -278,6 +298,7 @@ enum nl80211_commands {
- #define NL80211_CMD_ASSOCIATE NL80211_CMD_ASSOCIATE
- #define NL80211_CMD_DEAUTHENTICATE NL80211_CMD_DEAUTHENTICATE
- #define NL80211_CMD_DISASSOCIATE NL80211_CMD_DISASSOCIATE
-+#define NL80211_CMD_REG_BEACON_HINT NL80211_CMD_REG_BEACON_HINT
- 
- /**
-  * enum nl80211_attrs - nl80211 netlink attributes
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 353e1a4..0b0552d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3391,6 +3391,93 @@ void nl80211_send_rx_disassoc(struct cfg80211_registered_device *rdev,
- 				NL80211_CMD_DISASSOCIATE);
- }
- 
-+void nl80211_send_beacon_hint_event(struct wiphy *wiphy,
-+				    struct ieee80211_channel *channel_before,
-+				    struct ieee80211_channel *channel_after)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+	enum ieee80211_band band;
-+	struct nlattr *nl_bands, *nl_band, *nl_freqs, *nl_freq;
-+	struct ieee80211_channel *chan;
-+	unsigned int i;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_REG_BEACON_HINT);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	/*
-+	 * Since we are applying the beacon hint to a wiphy we know its
-+	 * wiphy_idx is valid
-+	 */
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, get_wiphy_idx(wiphy));
-+
-+	band = channel_after->band;
-+	if (WARN_ON(!wiphy->bands[band]))
-+		goto nla_put_failure;
-+
-+	/* Unforunately this is needed */
-+	nl_bands = nla_nest_start(msg, NL80211_ATTR_WIPHY_BANDS);
-+	if (!nl_bands)
-+		goto nla_put_failure;
-+	nl_band = nla_nest_start(msg, band);
-+	if (!nl_band)
-+		goto nla_put_failure;
-+
-+	/*
-+	 * Our hack is to piggy back the channel prior to beacon hint
-+	 * and after the beacon hint so userspace can analyze the
-+	 * differences. Right now only no-ibss and passive-scan flags
-+	 * can change as that's the only thing we expect to learn out
-+	 * of a beacon for now. By re-using these attributes we can
-+	 * avoid introducing new structs.
-+	 */
-+	nl_freqs = nla_nest_start(msg, NL80211_BAND_ATTR_FREQS);
-+	if (!nl_freqs)
-+		goto nla_put_failure;
-+
-+	for (i = 0; i <= 1; i++) {
-+		nl_freq = nla_nest_start(msg, i);
-+		if (!nl_freq)
-+			goto nla_put_failure;
-+
-+		chan = (i == 0) ? channel_before : channel_after;
-+
-+		NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_FREQ,
-+			    chan->center_freq);
-+
-+		if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
-+			NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_PASSIVE_SCAN);
-+		if (chan->flags & IEEE80211_CHAN_NO_IBSS)
-+			NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
-+
-+		nla_nest_end(msg, nl_freq);
-+	}
-+
-+	nla_nest_end(msg, nl_freqs);
-+	nla_nest_end(msg, nl_band);
-+	nla_nest_end(msg, nl_bands);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast(msg, 0, nl80211_regulatory_mcgrp.id, GFP_ATOMIC);
-+
-+	return;
-+
-+nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
- /* initialisation/exit functions */
- 
- int nl80211_init(void)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index b77af4a..9496eff 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -23,5 +23,9 @@ extern void nl80211_send_rx_deauth(struct cfg80211_registered_device *rdev,
- extern void nl80211_send_rx_disassoc(struct cfg80211_registered_device *rdev,
- 				     struct net_device *netdev,
- 				     const u8 *buf, size_t len);
-+extern void
-+nl80211_send_beacon_hint_event(struct wiphy *wiphy,
-+			       struct ieee80211_channel *channel_before,
-+			       struct ieee80211_channel *channel_after);
- 
- #endif /* __NET_WIRELESS_NL80211_H */
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6327e16..60ef1e9 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1049,18 +1049,10 @@ static void handle_reg_beacon(struct wiphy *wiphy,
- 			      unsigned int chan_idx,
- 			      struct reg_beacon *reg_beacon)
- {
--#ifdef CONFIG_CFG80211_REG_DEBUG
--#define REG_DEBUG_BEACON_FLAG(desc) \
--	printk(KERN_DEBUG "cfg80211: Enabling " desc " on " \
--		"frequency: %d MHz (Ch %d) on %s\n", \
--		reg_beacon->chan.center_freq, \
--		ieee80211_frequency_to_channel(reg_beacon->chan.center_freq), \
--		wiphy_name(wiphy));
--#else
--#define REG_DEBUG_BEACON_FLAG(desc) do {} while (0)
--#endif
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
-+	bool channel_changed = false;
-+	struct ieee80211_channel chan_before;
- 
- 	assert_cfg80211_lock();
- 
-@@ -1070,18 +1062,26 @@ static void handle_reg_beacon(struct wiphy *wiphy,
- 	if (likely(chan->center_freq != reg_beacon->chan.center_freq))
- 		return;
- 
-+	if (chan->beacon_found)
-+		return;
-+
-+	chan->beacon_found = true;
-+
-+	chan_before.center_freq = chan->center_freq;
-+	chan_before.flags = chan->flags;
-+
- 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
- 		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
--		REG_DEBUG_BEACON_FLAG("active scanning");
-+		channel_changed = true;
- 	}
- 
- 	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
- 		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
--		REG_DEBUG_BEACON_FLAG("beaconing");
-+		channel_changed = true;
- 	}
- 
--	chan->beacon_found = true;
--#undef REG_DEBUG_BEACON_FLAG
-+	if (channel_changed)
-+		nl80211_send_beacon_hint_event(wiphy, &chan_before, chan);
- }
- 
- /*
--- 
-1.6.0.6
+Mar 10 19:51:52 joutaro kernel: [ 2299.030740] ath5k 0000:06:00.0: PCI
+INT A disabled
+Mar 10 19:51:52 joutaro ifdown: Network interface is managed from Netwo=
+rkManager
+Mar 10 19:51:52 joutaro ifdown: NetworkManager cannot be advised to
+take down an interface.
+Mar 10 19:51:52 joutaro ifdown: Set up another interface instead.
+Mar 10 19:51:52 joutaro ifdown:     wmaster0
+Mar 10 19:51:52 joutaro ifdown: Interface not available and no
+configuration found.
+Mar 10 19:51:52 joutaro kernel: [ 2299.266536] BUG: unable to handle
+kernel paging request at 7774d524
+Mar 10 19:51:52 joutaro kernel: [ 2299.266543] IP: [<f81cd0bb>]
+ext3_htree_store_dirent+0x7b/0xe4 [ext3]
+Mar 10 19:51:52 joutaro kernel: [ 2299.266563] *pdpt =3D
+0000000028c13001 *pde =3D 0000000000000000
+Mar 10 19:51:52 joutaro kernel: [ 2299.266568] Oops: 0000 [#1] SMP
+Mar 10 19:51:52 joutaro kernel: [ 2299.266573] last sysfs file:
+/sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/device
+:03/PNP0C0A:00/power_supply/BAT0/charge_full
+Mar 10 19:51:52 joutaro kernel: [ 2299.266578] Modules linked in:
+af_packet ip6t_LOG xt_tcpudp xt_pkttype ipt_LOG xt
+_limit i915 drm i2c_algo_bit snd_pcm_oss snd_mixer_oss coretemp
+binfmt_misc snd_seq snd_seq_device ip6t_REJECT nf_co
+nntrack_ipv6 ip6table_raw xt_NOTRACK ipt_REJECT xt_state iptable_raw
+iptable_filter ip6table_mangle nf_conntrack_net
+bios_ns nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 ip_tables
+ip6table_filter ip6_tables x_tables ipv6 fuse loop d
+m_mod arc4 ecb snd_hda_codec_realtek snd_hda_intel snd_hda_codec
+snd_hwdep mac80211 snd_pcm snd_timer led_class vide
+o snd i2c_i801 rtc_cmos soundcore iTCO_wdt cfg80211 output pcspkr
+intel_agp rtc_core iTCO_vendor_support sr_mod wmi
+i2c_core button agpgart sg battery rtc_lib ac cdrom tg3 libphy
+snd_page_alloc usbhid hid sd_mod crc_t10dif uhci_hcd
+ehci_hcd usbcore edd ext3 mbcache jbd fan ide_pci_generic piix
+ide_core ata_generic ata_piix ahci libata scsi_mod th
+ermal processor thermal_sys hwmon [last unloaded: ath5k]
+Mar 10 19:51:52 joutaro kernel: [ 2299.266660]
+Mar 10 19:51:52 joutaro kernel: [ 2299.266664] Pid: 10482, comm:
+modprobe Not tainted (2.6.29-rc7-wl-pae-tuliom #8)
+eMachines E510
+Mar 10 19:51:52 joutaro kernel: [ 2299.266667] EIP: 0060:[<f81cd0bb>]
+EFLAGS: 00010202 CPU: 0
+Mar 10 19:51:52 joutaro kernel: [ 2299.266681] EIP is at
+ext3_htree_store_dirent+0x7b/0xe4 [ext3]
+Mar 10 19:51:52 joutaro kernel: [ 2299.266684] EAX: 33bd1312 EBX:
+e843620c ECX: 7774d52c EDX: e8436208
+Mar 10 19:51:52 joutaro kernel: [ 2299.266686] ESI: e8436200 EDI:
+e8436210 EBP: e8cbfe5c ESP: e8cbfe4c
+Mar 10 19:51:52 joutaro kernel: [ 2299.266689]  DS: 007b ES: 007b FS:
+00d8 GS: 0033 SS: 0068
+Mar 10 19:51:52 joutaro kernel: [ 2299.266692] Process modprobe (pid:
+10482, ti=3De8cbe000 task=3De9028670 task.ti=3De8cbe
+000)
+Mar 10 19:51:52 joutaro kernel: [ 2299.266694] Stack:
+Mar 10 19:51:52 joutaro kernel: [ 2299.266696]  e91a2a80 f52a50ec
+f5925c88 0000000d e8cbfe88 f81d4b7c f52a50ec 00000
+000
+Mar 10 19:51:52 joutaro kernel: [ 2299.266703]  f585f698 f4d95d40
+f52a5ff8 00000000 f4d95d40 f4d95d40 f585f698 e8cbf
+ee8
+Mar 10 19:51:52 joutaro kernel: [ 2299.266710]  f81d4c15 e8cbfec4
+00000000 00000000 00000000 00000000 f4d95d40 f5c25
+ec0
+Mar 10 19:51:52 joutaro kernel: [ 2299.266717] Call Trace:
+Mar 10 19:51:52 joutaro kernel: [ 2299.266725]  [<f81d4b7c>] ?
+htree_dirblock_to_tree+0xd6/0x118 [ext3]
+Mar 10 19:51:52 joutaro kernel: [ 2299.266744]  [<f81d4c15>] ?
+ext3_htree_fill_tree+0x57/0x19e [ext3]
+Mar 10 19:51:52 joutaro kernel: [ 2299.266759]  [<c01a1e5d>] ?
+nameidata_to_filp+0x2c/0x43
+Mar 10 19:51:52 joutaro kernel: [ 2299.266773]  [<f81ccbff>] ?
+ext3_readdir+0x17a/0x5bb [ext3]
+Mar 10 19:51:52 joutaro kernel: [ 2299.266786]  [<c01ae7f0>] ?
+filldir64+0x0/0xcd
+Mar 10 19:51:52 joutaro kernel: [ 2299.266792]  [<c01a64d0>] ?
+sys_fstat64+0x22/0x28
+Mar 10 19:51:52 joutaro kernel: [ 2299.266803]  [<c01aea8f>] ?
+vfs_readdir+0x63/0x8f
+Mar 10 19:51:52 joutaro kernel: [ 2299.266807]  [<c01ae7f0>] ?
+filldir64+0x0/0xcd
+Mar 10 19:51:52 joutaro kernel: [ 2299.266810]  [<c01aeb1e>] ?
+sys_getdents64+0x63/0xa0
+Mar 10 19:51:52 joutaro kernel: [ 2299.266814]  [<c010405b>] ?
+sysenter_do_call+0x12/0x2f
+Mar 10 19:51:52 joutaro kernel: [ 2299.266819]  [<c013007b>] ?
+do_syslog+0x2fc/0x358
+Mar 10 19:51:52 joutaro kernel: [ 2299.266824] Code: 1c 8a 42 07 88 43
+1d 0f b6 42 06 89 c1 c1 e9 02 f3 a5 89 c1 83
+e1 03 74 02 f3 a4 0f b6 42 06 31 d2 8b 7d f0 c6 44 03 1e 00 eb 3c <8b>
+41 f8 8d 71 f8 39 03 75 13 8b 43 04 3b 46 04
+75 19 8b 46 14
+Mar 10 19:51:52 joutaro kernel: [ 2299.266865] EIP: [<f81cd0bb>]
+ext3_htree_store_dirent+0x7b/0xe4 [ext3] SS:ESP 006
+8:e8cbfe4c
+Mar 10 19:51:52 joutaro kernel: [ 2299.266883] ---[ end trace
+19566f297b710799 ]---
 
+After this the system hang.
+
+This isn't happening with wireless-testing tree in here.
+
+Best regards,
+
+--=20
+Tulio Magno
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
