@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53956 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753070AbZCFRy5 convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42157 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755025AbZCKPPe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 12:54:57 -0500
-Message-ID: <49B1636C.8060505@openwrt.org> (sfid-20090306_185516_335337_4E470475)
-Date: Fri, 06 Mar 2009 18:54:52 +0100
-From: Gabor Juhos <juhosg@openwrt.org>
+	Wed, 11 Mar 2009 11:15:34 -0400
+Date: Wed, 11 Mar 2009 11:11:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: 2.6.29-rc "TKIP: replay detected" regression
+Message-ID: <20090311151102.GC8761@tuxdriver.com> (sfid-20090311_161731_800383_3D3C36AC)
+References: <Pine.LNX.4.64.0903111114510.22922@blonde.anvils>
 MIME-Version: 1.0
-To: Jouni Malinen <jouni.malinen@atheros.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH 0/2] ath9k: fix compile errors
-References: <1236329859-17911-1-git-send-email-juhosg@openwrt.org> <1236335373.16873.1.camel@jm-desktop>
-In-Reply-To: <1236335373.16873.1.camel@jm-desktop>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.64.0903111114510.22922@blonde.anvils>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen =EDrta:
-> On Fri, 2009-03-06 at 00:57 -0800, Gabor Juhos wrote:
->> This set will correct two compilation errors in master-2009-03-04
->> of wireless-testing.
->=20
-> Thanks for fixing these and the no-RFKILL build issue! Looks like I
-> should try to get a build setup for testing ahb.c build myself..
+On Wed, Mar 11, 2009 at 12:07:54PM +0000, Hugh Dickins wrote:
+> Prior to 2.6.29-rc1's 274bfb8dc5ffa16cb073801bebe76ab7f4e2e73d
+> "lib80211: absorb crypto bits from net/ieee80211", the TKIP and CCMP
+> "replay detected" messages were subject to the IEEE80211_DEBUG_DROP()
+> macro, neither I nor my distro had CONFIG_IEEE80211_DEBUG set, I never
+> glimpsed such messages, and ThinkPad T43p ipw2200 wireless worked fine.
+> 
+> -		if (ieee80211_ratelimit_debug(IEEE80211_DL_DROP)) {
+> -			IEEE80211_DEBUG_DROP("TKIP: replay detected: STA=%pM"
+> +		if (net_ratelimit()) {
+> +			printk(KERN_DEBUG "TKIP: replay detected: STA=%pM"
 
-No problem.
+Hugh, this is my mess -- sorry!  I'll follow-up with a patch.
 
-Gabor
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
