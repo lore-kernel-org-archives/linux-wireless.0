@@ -1,47 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:23977 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751200AbZCMKxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 06:53:03 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 03:53:02 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:38978 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753739AbZCKWZ2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2009 18:25:28 -0400
+Message-ID: <49B83A53.2000902@lwfinger.net> (sfid-20090311_232541_801420_183A66A8)
+Date: Wed, 11 Mar 2009 17:25:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18874.14867.311121.242263@gargle.gargle.HOWL> (sfid-20090313_115305_972812_894CAE13)
-Date: Fri, 13 Mar 2009 16:18:51 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: ath9k fragmentation
-In-Reply-To: <1236934984.25931.48.camel@johannes.local>
-References: <1236881434.25931.1.camel@johannes.local>
-	<18873.48952.353253.595670@gargle.gargle.HOWL>
-	<1236934984.25931.48.camel@johannes.local>
+To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 - nice work!
+References: <50533.82.152.175.172.1236798263.squirrel@www.phantomjinx.co.uk>    <49B813E9.8050108@lwfinger.net> <41788.82.152.175.172.1236803718.squirrel@www.phantomjinx.co.uk>
+In-Reply-To: <41788.82.152.175.172.1236803718.squirrel@www.phantomjinx.co.uk>
+Content-Type: multipart/mixed;
+ boundary="------------060503090109030909060408"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> > Removing all crappy code in ath9k dealing with this and leaving everything
-> > to mac80211 would certainly be the better option, but we still have to figure
-> > out how to manage BA windows.
+This is a multi-part message in MIME format.
+--------------060503090109030909060408
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+P.G. Richardson wrote:
+> phy0: Selected rate control algorithm 'pid'
 > 
-> Can you explain a little what is required?
+> which is a first as it has always been 'mistral'. The only difference with
+> compiling last night was I was not running the kernel I compiled against.
+> I used 'make KLIB=/usr/src/{my new kernel} KLIB_BUILD=/usr/src/{my new
+> kernel}' instead.
 > 
+> Just recompiled while running {my new kernel} and mistral correctly
+> selected as rate control algorithm. Once installed, it does correctly auto
+> select rate as expected.
+> 
+> iperf shows Mb performance has dropped though but gets improved by again
+> fixing the rate at 11Mb.
+> 
+> So cheers for the info.
 
-Managing per-TID state to handle Block ACKs, failed sub-frames,
-sub-frame retries and other window management stuff.
-ath9k manages all this internally.
+Minstrel is definitely a better choice than pid.
 
-> For ampdu_action(), I recently saw something, somewhere, saying
-> "mac80211 expects us to fill in the seqno variable" or so, but this is
-> only true if you don't use mac80211's sequence numbers, otherwise it is
-> fine to leave it at the pre-assigned value.
+There is one thing that might make your interface work better. For performance
+reasons, I chose not to pause the mac80211 queues at one point in the driver.
+For my device, it did not make a difference, but it might for you. Please try
+the attached patch.
 
-ampdu_action() requires the driver to set the starting sequence number
-for initiating an ADDBA session, ath9k was filling it incorrectly.
-This was fixed in the patch, "ath9k: Fix bug in TX aggregation".
+Thanks,
 
-Sujith
+Larry
+
+
+--------------060503090109030909060408
+Content-Type: text/plain;
+ name="rtl8187_queue_pause"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="rtl8187_queue_pause"
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -216,6 +216,7 @@ static void rtl8187_tx_cb(struct urb *ur
+ 		 * here, thus queue the skb and finish on a work queue. */
+ 		skb_queue_tail(&priv->b_tx_status.queue, skb);
+ 		queue_delayed_work(hw->workqueue, &priv->work, 0);
++		ieee80211_stop_queues(hw);
+ 	}
+ }
+ 
+@@ -898,6 +899,7 @@ static void rtl8187_work(struct work_str
+ 	}
+ 	retry = tmp;
+ 	mutex_unlock(&priv->conf_mutex);
++	ieee80211_wake_queues(dev);
+ }
+ 
+ static int rtl8187_start(struct ieee80211_hw *dev)
+
+--------------060503090109030909060408--
