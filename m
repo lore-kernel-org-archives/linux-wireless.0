@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f167.google.com ([209.85.217.167]:45577 "EHLO
-	mail-gx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752811AbZCMCEM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 22:04:12 -0400
-Received: by gxk11 with SMTP id 11so2519161gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 19:04:08 -0700 (PDT)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <18873.48952.353253.595670@gargle.gargle.HOWL> (sfid-20090313_030417_433997_48CFB8AB)
-Date: Fri, 13 Mar 2009 07:34:40 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Subject: ath9k fragmentation
-In-Reply-To: <1236881434.25931.1.camel@johannes.local>
-References: <1236881434.25931.1.camel@johannes.local>
+Received: from mga11.intel.com ([192.55.52.93]:20115 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752770AbZCKSNA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2009 14:13:00 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/8] iwl3945: fix sparse error
+Date: Wed, 11 Mar 2009 11:17:54 -0700
+Message-Id: <1236795481-12757-2-git-send-email-reinette.chatre@intel.com> (sfid-20090311_191315_001396_7529E9CD)
+In-Reply-To: <1236795481-12757-1-git-send-email-reinette.chatre@intel.com>
+References: <1236795481-12757-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Just a quick note -- was testing fragmentation and happened to use ath9k
-> as the test station, this failed utterly, it sent increasing sequence
-> numbers and no fragment number.
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Sequence number handling is pretty much borked in ath9k.
-There is a comment in assign_aggr_tid_seqno@xmit.c - and it doesn't make much sense.
-Removing all crappy code in ath9k dealing with this and leaving everything
-to mac80211 would certainly be the better option, but we still have to figure
-out how to manage BA windows.
+error is:
+iwl3945-base.c:545:5: warning: symbol 'iwl3945_set_dynamic_key' was not
+declared. Should it be static?
 
-Sujith
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index e5c6295..7ce32c9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -542,7 +542,7 @@ static int iwl3945_clear_sta_key_info(struct iwl_priv *priv, u8 sta_id)
+ 	return 0;
+ }
+ 
+-int iwl3945_set_dynamic_key(struct iwl_priv *priv,
++static int iwl3945_set_dynamic_key(struct iwl_priv *priv,
+ 			struct ieee80211_key_conf *keyconf, u8 sta_id)
+ {
+ 	int ret = 0;
+-- 
+1.5.6.3
+
