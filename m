@@ -1,63 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-72-66-92-28.washdc.fios.verizon.net ([72.66.92.28]:4949
-	"EHLO mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957AbZCMAa2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 20:30:28 -0400
-Date: Thu, 12 Mar 2009 20:30:08 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	Nick Kossifidis <mick@madwifi-project.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Thanks for TX power patch
-Message-ID: <20090313003008.GA4188@hash.localnet> (sfid-20090313_013031_313826_6BC24FCD)
-References: <1236728344.26432.26.camel@maxim-laptop> <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com> <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:12888 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752155AbZCKXEp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2009 19:04:45 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] cfg80211/nl80211: remove usage of CONFIG_NL80211
+Date: Wed, 11 Mar 2009 16:09:48 -0700
+Message-Id: <1236812988-31827-1-git-send-email-reinette.chatre@intel.com> (sfid-20090312_000450_221596_154D6DA1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 12, 2009 at 10:14:09AM -0400, Bob Copeland wrote:
-> 
-> kfree(pd) looks wrong, because pd_curves is the kzalloc()ed part, not
-> the array elements themselves.  But I tried removing that and freeing
-> the pd_curves array outside of the loop and got more slab debugging
-> poop.  So, I punt for now.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-This seems to fix it for me...
+The scan capability added to cfg80211/nl80211 introduced a
+dependency on nl80211 by cfg80211. We can thus no longer have
+just cfg80211 without nl80211. Specifically, cfg80211_scan_done()
+calls nl80211_send_scan_aborted() or nl80211_send_scan_done().
 
-diff --git a/drivers/net/wireless/ath5k/eeprom.c b/drivers/net/wireless/ath5k/eeprom.c
-index f992b1b..0b062f6 100644
---- a/drivers/net/wireless/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath5k/eeprom.c
-@@ -1559,17 +1559,20 @@ ath5k_eeprom_free_pcal_info(struct ath5k_hw *ah, int mode)
- 	}
+Now we remove the option for user to select nl80211. It will always
+be compiled if user selects cfg80211.
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ net/wireless/Kconfig   |   13 -------------
+ net/wireless/Makefile  |    3 +--
+ net/wireless/nl80211.h |    2 --
+ 3 files changed, 1 insertions(+), 17 deletions(-)
+
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index e28e2b8..8f779a2 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -10,19 +10,6 @@ config CFG80211_REG_DEBUG
  
- 	for (pier = 0; pier < ee->ee_n_piers[mode]; pier++) {
-+		if (!chinfo[pier].pd_curves)
-+			continue;
-+
- 		for (pdg = 0; pdg < ee->ee_pd_gains[mode]; pdg++) {
--			struct ath5k_pdgain_info *pd = &chinfo->pd_curves[pdg];
-+			struct ath5k_pdgain_info *pd =
-+				&chinfo[pier].pd_curves[pdg];
+ 	  If unsure, say N.
  
- 			if (pd != NULL) {
- 				kfree(pd->pd_step);
- 				kfree(pd->pd_pwr);
--				kfree(pd);
- 			}
- 		}
-+		kfree(chinfo[pier].pd_curves);
- 	}
+-config NL80211
+-	bool "nl80211 new netlink interface support"
+-	depends on CFG80211
+-	default y
+-	---help---
+-	  This option turns on the new netlink interface
+-	  (nl80211) support in cfg80211.
 -
- 	return 0;
- }
+-	  If =n, drivers using mac80211 will be configured via
+-	  wireless extension support provided by that subsystem.
+-
+-	  If unsure, say Y.
+-
+ config WIRELESS_OLD_REGULATORY
+ 	bool "Old wireless static regulatory definitions"
+ 	default y
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index dad43c2..c157b4d 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -5,8 +5,7 @@ obj-$(CONFIG_LIB80211_CRYPT_WEP) += lib80211_crypt_wep.o
+ obj-$(CONFIG_LIB80211_CRYPT_CCMP) += lib80211_crypt_ccmp.o
+ obj-$(CONFIG_LIB80211_CRYPT_TKIP) += lib80211_crypt_tkip.o
  
-
+-cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o
++cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
+ cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o
+-cfg80211-$(CONFIG_NL80211) += nl80211.o
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 69787b6..c9ca6c4 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -3,7 +3,6 @@
+ 
+ #include "core.h"
+ 
+-#ifdef CONFIG_NL80211
+ extern int nl80211_init(void);
+ extern void nl80211_exit(void);
+ extern void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
+@@ -31,6 +30,5 @@ static inline void nl80211_send_scan_aborted(
+ 					struct cfg80211_registered_device *rdev,
+ 					struct net_device *netdev)
+ {}
+-#endif /* CONFIG_NL80211 */
+ 
+ #endif /* __NET_WIRELESS_NL80211_H */
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.3
 
