@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:29171 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753260AbZCYMAg convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58559 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753041AbZCKMkX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 08:00:36 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so713883fgg.17
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 05:00:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200903251221.38912.chunkeey@web.de>
-References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
-	 <1237959016-17311-2-git-send-email-jcmvbkbc@gmail.com>
-	 <200903251221.38912.chunkeey@web.de>
-Date: Wed, 25 Mar 2009 15:00:33 +0300
-Message-ID: <73aaf0dd0903250500g51494e04iab9382e23d44f695@mail.gmail.com> (sfid-20090325_130040_156332_A33F41C0)
-Subject: Re: [PATCH 2/2] p54spi: fix p54_upload_firmware
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 11 Mar 2009 08:40:23 -0400
+Subject: configuring while interface is down
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <j@w1.fi>, Samuel Ortiz <samuel@sortiz.org>,
+	Alina Friedrichsen <x-alina@gmx.net>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xyIX3dcjo8CHRm0LD2Hc"
+Date: Wed, 11 Mar 2009 13:36:13 +0100
+Message-Id: <1236774973.20266.13.camel@johannes.local> (sfid-20090311_134043_057679_9B71941D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> checkpatch.pl complains
->
-> WARNING: line over 80 characters
-> #94: FILE: drivers/net/wireless/p54/p54spi.c:269:
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 void *fw =3D kmemdup(pr=
-iv->firmware->data, _fw_len, GFP_KERNEL);
->
-> ERROR: that open brace { should be on the previous line
-> #95: FILE: drivers/net/wireless/p54/p54spi.c:270:
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (fw)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 {
->
-Sorry, I haven't been used to checkpatch.
 
-> what do you think about the attached proposal?
+--=-xyIX3dcjo8CHRm0LD2Hc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It looks generally better. But (fw + offset) wouldn't compile, because
-fw is void*.
+Hi,
 
---=20
-Max
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alina raised an interesting point -- wext allows you to configure an
+interface while it is down, at least by convention. Some parameters for
+cfg80211 we reject while an interface is down, e.g. adding new stations,
+partly for technical reasons and partly because that doesn't make sense
+when the mode of interface isn't fixed.
+
+For cfg80211's assoc/ibss calls, I think we should reject them outright
+when the interface is down, any objections?
+
+johannes
+
+--=-xyIX3dcjo8CHRm0LD2Hc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJt7A6AAoJEKVg1VMiehFYzb4P/1+lP6JQHjEc9iSZPSlWABHH
+zkuGKL+e9c9Iq0NXBRBFVJ9hICHaXd2mW/Uz9H9kVXlO1DoQbb6jhPOH4baJO9Ls
+nop3X+PNTEHy83oM+szHJEBQJwYW3Go14I9JqW7ATudkPlOJZF1NVrrLkvL3mkhY
+rnjrUBsDqSrc9j0c8060MgQUBoXsr+xLVZBDjS2UTNvee3xyLmu9SwEPiKRS4ebS
+wV1GxCJYoAARr4GGi+wX8t01WrkoIOcGt0D7ys1FfIktHfa0ZRz8qQuWngm+NofW
+H19HQ/aVaxV61BiP73kZPuQKekU//2vcRuTCq0Phmn0EFNeLK4j07BlcbUXa5MVg
+cHNUPUg59jDnG53xcEjYMR9c52DBfhCUvZsftbNwjSl+PX82U3uHXiUjP9okMPzR
+wRwIOo3oeSKuuRDiDIsgT5P+Iyr6jlBt1jVLauTeh/LKIfUGeXDC9Ynh+fe0x6Zf
+MEXZffSxDxamK7g4g84RUyua6Rd07ujNjhn+DtOZ4VwInfUhbuFwLKXUlhJT1oTY
+20c+InXvj4qafKg7CA+/5q0KgWMv/yvVMcONrB8P6X9rpi0xEQNSn/Fjj9A9VZKp
+EGVReNC+G3xFDdAUOeKhH1k/ZUeROQCzBNLZ/zrf3GmmNiiVDS2O99qEBLxpWR2v
+38e0aaQjiBWypxqeQa/O
+=SoV7
+-----END PGP SIGNATURE-----
+
+--=-xyIX3dcjo8CHRm0LD2Hc--
+
