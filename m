@@ -1,97 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49082 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567AbZC0VQI (ORCPT
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:64968 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256AbZCKVv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 17:16:08 -0400
-Subject: Re: rfkill get_state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Matthew Garrett <mjg@redhat.com>
-In-Reply-To: <20090327150824.GC24288@khazad-dum.debian.net>
-References: <1238161210.4452.8.camel@johannes.local>
-	 <20090327150824.GC24288@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2tZPAZEqEx9OTCyOa52I"
-Date: Fri, 27 Mar 2009 22:16:03 +0100
-Message-Id: <1238188563.4452.21.camel@johannes.local> (sfid-20090327_221612_076111_5D7A4C63)
-Mime-Version: 1.0
+	Wed, 11 Mar 2009 17:51:27 -0400
+Received: by fxm24 with SMTP id 24so174413fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2009 14:51:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b6c5339f0903101458k1aaf9455x80a0288daf46a4e3@mail.gmail.com>
+References: <4dd58f490903041329p54ec56ceh1b64ab000027eac5@mail.gmail.com>
+	 <4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com>
+	 <20090304232625.cc47eb46.cjsthompson@gmail.com>
+	 <4dd58f490903041451x5044b464k47d70b1210b12f11@mail.gmail.com>
+	 <20090304232527.058017da.cjsthompson@gmail.com>
+	 <4dd58f490903051449h3b2eb96ay5d83d7ea8129370f@mail.gmail.com>
+	 <20090306084527.5a3b6300.cjsthompson@gmail.com>
+	 <4dd58f490903101404m3678728ag13735851e232a8f4@mail.gmail.com>
+	 <20090310223757.a8618b61.cjsthompson@gmail.com>
+	 <b6c5339f0903101458k1aaf9455x80a0288daf46a4e3@mail.gmail.com>
+Date: Wed, 11 Mar 2009 21:51:23 +0000
+Message-ID: <4dd58f490903111451u4107936du6466d134f0c119d3@mail.gmail.com> (sfid-20090311_225131_160792_2091E74D)
+Subject: Re: ath5k master (AP) mode
+From: Alexey Yudichev <ayudichev@yahoo.co.uk>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Christoph .J Thompson" <cjsthompson@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> On Tue, Mar 10, 2009 at 5:37 PM, Christoph .J Thompson
+> <cjsthompson@gmail.com> wrote:
+>> On Tue, 10 Mar 2009 21:04:17 +0000
+>> Alexey Yudichev <ayudichev@yahoo.co.uk> wrote:
+>>> Do you know, if I got this far, can unstable connection and not
+>>> working WPA be related to older kernel?
+>>
+>> I can't be sure. I don't have the unstable connection problem but I didn't
+>> use WPA yet. So maybe the unstable connection problem only happens with WPA.
+>
+> It's possible ath5k has bugs in the crypto for AP mode like the ones fixed
+> in ath9k recently - you can always try the nohwcrypt=1 modparam.
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+>
+nohwcrypt=1 did not help (was I correct to put it as "options ath5k
+nohwcrypt=1" into /etc/modprobe.d/options in my ubuntu?).
 
---=-2tZPAZEqEx9OTCyOa52I
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The problem is not that WPA does not work. It works for my WM6 client
+(who connects with or without WPA from some 2nd or 3rd attempt but
+cannot browse anything anyway even without encryption) but does not
+work for WM5 client (who can browse but only when it connects and it
+only connects with WPA disabled). Not sure which component to blame
+here. Both devices work so nicely with WPA with hardware wireless
+router :)
 
-On Fri, 2009-03-27 at 12:08 -0300, Henrique de Moraes Holschuh wrote:
-
-> > It seems to me it'll only get called=20
-> >  * when you read sysfs
-> >  * on resume
-> >  * on epo
->=20
-> Yes.  It is mostly something that the rfkill core uses to get an up-to-da=
-te
-> state when it knows it needs one, and it is not good for anything else.
-
-Ouch, ok.
-
-> > How do we ever react to a button press then to make a uevent?
->=20
-> rfkill-related uevents exist to signal change in state of the rfkill
-> switches, REGARDLESS of the reason.  So they are NOT related to button
-> presses, except in-so-far that a button press might have changed a rfkill
-> switch state.
-
-STOP WRITING ALL CAPS PLEASE. Look, I know that rfkill is related to the
-button press, if that button affects the hw kill state.
-
-> So, the short answer is: rfkill_force_state().  Call it when the radio
-> rfkill state changed, and the core will generate uevents.
-
-You do realise though that none of the platform drivers actually call
-that, right?
-
-> The core doesn't have any helpers for this, so if you need polling, for
-> example, you do it in your driver and call rfkill_force_state() as needed=
-.
-
-OK -- IMHO the only reasonable thing is to actually add polling if
-get_state is assigned -- anything else is pointless. I also don't see
-how get_state is actually needed, drivers can just use force_state after
-suspend/resume etc.
-
-> Where does the button press enters the picture in your driver?  Knowing
-> that, I can illustrate how it would plug to rfkill core, or to the input
-> device core (I am yet to see a case where it should be plugged to both).
-
-I'm not actually interested in a driver. I need to integrate rfkill into
-mac80211, and for that I need to rewrite it to have a usable API.
-
-johannes
-
---=-2tZPAZEqEx9OTCyOa52I
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJzUIRAAoJEKVg1VMiehFYEiIP+wUC3bGZ/Gpjkt3nSmka9tin
-ailJpErwWHMZCWQ+sHrJY4ucy6J9VI6ijI+dpPK2tbfVv99zrRRMCdOkGrL69IVQ
-ZmDwKBjt+gQ/MOBK8gY1bqrkxKD+X0ibbay5nWXHSC8f/5LdWnEeOiZk79au1XK2
-3AjwaXhkmJUQz5P5CwRfFjwLC+TLmUiLDxZch1ImCfgpSxHQ6rntt1FhoPkkJOHv
-b0kpNoFYysywCqN92MNGIVyTmgQ0pjWurMI2Gnl4JPPJeP4SVOTyKQ9pVPhEbwRC
-9Rq2zZms4W7cYEOruNWPiRi78FhE1HdQsiaLWhf46cp2cZqsx83yaPnH+U6Dmj7D
-uIQCcpenaV/Kc62RzhT16WdOUlBNEkpSjmZ+DqbyxSarXE+PWbVW/VuAOFSSrk9n
-Exe0hTy8Y5k1IwxU5uyOCQFTLw61bixjjvFbohBwOS9o44gKLu3iS3HBc33KV+K1
-pw6BvtgWb0H8CyvG9eGXdo41l8OIDT4B2+e7XB/FGY2M274ZxdFsQYputwWJ62Cl
-kNhoQzqkthYwRgoksmzBGieePP/Xv3JRdmk8nO2USIsFNrjNj7aOagmb+W26vEja
-IP2BfXOr8/lmsulSDi16rRXL+TV9PelOEjGTHJtw2bNGEbaruUE5LxKK5HFJg5hT
-NbcO0s2NeNmpto96bMFJ
-=rNDS
------END PGP SIGNATURE-----
-
---=-2tZPAZEqEx9OTCyOa52I--
-
+I guess I'll just wait for future versions of driver and kernel and
+keep upgrading hoping that it'll start working.
