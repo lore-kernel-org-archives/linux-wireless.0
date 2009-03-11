@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54836 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754181AbZCJIz5 (ORCPT
+Received: from a80-127-65-128.adsl.xs4all.nl ([80.127.65.128]:55111 "EHLO
+	linux.wilsoft.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750728AbZCKU0I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 04:55:57 -0400
-Date: Tue, 10 Mar 2009 10:55:50 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Fix FIF_PROMISC_IN_BSS processing in station mode
-Message-ID: <20090310085550.GA2147@jm.kir.nu> (sfid-20090310_095607_418272_8AF5AFA6)
+	Wed, 11 Mar 2009 16:26:08 -0400
+From: "W. van den Akker" <listsrv@wilsoft.nl>
+To: ath9k-devel@lists.ath9k.org
+Subject: Re: [ath9k-devel] [PATCH 0/4] ath9k: Fix usage on SMP systems with PCI devices
+Date: Wed, 11 Mar 2009 21:25:58 +0100
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+References: <1236650824-9568-1-git-send-email-lrodriguez@atheros.com> <678e6036a51d4d15838f21b4561ec67b.squirrel@www.wilsoft.nl>
+In-Reply-To: <678e6036a51d4d15838f21b4561ec67b.squirrel@www.wilsoft.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903112125.58767.listsrv@wilsoft.nl> (sfid-20090311_212612_368175_6DB90045)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We must not disable ACK sending in this case since it would break
-normal station operations. In addition, clarify the comment about AP
-mode to make more sense.
+On Tuesday 10 March 2009 07:45:29 W. van den Akker wrote:
+> Thanks Luis,
+>
+> I will test it on my system.
+>
+> To be continued...
+>
+> gr,
+> WIllem
+>
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+I tested this one on my system with IPerf. It looks good.
+Until now I didnt get a hang anymore.
+Used IPerf -P 2|4|8 and all went well..
 
----
- drivers/net/wireless/ath9k/recv.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+Tested with the wireless-testing of 10-3 (so not with the inline
+functions mentioned earlier by Luis).
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/recv.c	2009-03-10 10:49:36.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/recv.c	2009-03-10 10:52:19.000000000 +0200
-@@ -385,14 +385,15 @@ u32 ath_calcrxfilter(struct ath_softc *s
- 	if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
- 		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
- 
--	/* Can't set HOSTAP into promiscous mode */
-+	/*
-+	 * Set promiscuous mode when FIF_PROMISC_IN_BSS is enabled for station
-+	 * mode interface or when in monitor mode. AP mode does not need this
-+	 * since it receives all in-BSS frames anyway.
-+	 */
- 	if (((sc->sc_ah->opmode != NL80211_IFTYPE_AP) &&
- 	     (sc->rx.rxfilter & FIF_PROMISC_IN_BSS)) ||
--	    (sc->sc_ah->opmode == NL80211_IFTYPE_MONITOR)) {
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_MONITOR))
- 		rfilt |= ATH9K_RX_FILTER_PROM;
--		/* ??? To prevent from sending ACK */
--		rfilt &= ~ATH9K_RX_FILTER_UCAST;
--	}
- 
- 	if (sc->rx.rxfilter & FIF_CONTROL)
- 		rfilt |= ATH9K_RX_FILTER_CONTROL;
+Looks like we have a winner :)
+
+gr,
+Willem
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
+
