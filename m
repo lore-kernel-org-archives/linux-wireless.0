@@ -1,69 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42137 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022AbZCKRNv (ORCPT
+Received: from vilya.visn.co.uk ([193.254.210.161]:55981 "EHLO
+	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753395AbZCKTEZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 13:13:51 -0400
-Subject: Re: [PATCH v5 1/4] ath9k: implement IO serialization
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20090311160740.GB5669@tesla>
-References: <1236739953-17701-1-git-send-email-lrodriguez@atheros.com>
-	 <1236739953-17701-2-git-send-email-lrodriguez@atheros.com>
-	 <1236762611.9658.87.camel@johannes.local>  <20090311160740.GB5669@tesla>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-WQ+3gp5I0umoUf117NqZ"
-Date: Wed, 11 Mar 2009 18:13:46 +0100
-Message-Id: <1236791626.20266.37.camel@johannes.local> (sfid-20090311_181354_593630_30206087)
-Mime-Version: 1.0
+	Wed, 11 Mar 2009 15:04:25 -0400
+Received: from localhost ([127.0.0.1] helo=www.phantomjinx.co.uk)
+	by vilya.visn.co.uk with esmtpa (Exim 4.69)
+	(envelope-from <p.g.richardson@phantomjinx.co.uk>)
+	id 1LhTj5-0002UI-Ma
+	for linux-wireless@vger.kernel.org; Wed, 11 Mar 2009 19:04:23 +0000
+Message-ID: <50533.82.152.175.172.1236798263.squirrel@www.phantomjinx.co.uk> (sfid-20090311_200439_226007_15F8697E)
+Date: Wed, 11 Mar 2009 19:04:23 -0000 (UTC)
+Subject: rtl8187 - nice work!
+From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-WQ+3gp5I0umoUf117NqZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Installed the compat-wireless-2009-03-10 and the speed has greatly
+improved. Thanks very much.
 
-On Wed, 2009-03-11 at 09:07 -0700, Luis R. Rodriguez wrote:
+I do have some observations that might be a bug or just configuration.
 
-> > This is utterly insane. Just make it _always_ do the spinlock, and get
-> > rid of the hotplug notifier and all that crap.
->=20
-> That is certainly an option as well but we would obviously be incurring
-> the lock on all reads/writes regardless of what bus you use which is
-> not necessary. We'll review this and determine whether its worth it.
+When powering up, the wireless decided on 54M as its bit rate.
+Consequently, tcp was patchy at best - losing packets whilst pinging, s=
+sh
+failing to connect. Setting the rate back to a fixed 11M solves this an=
+d
+gives good speed. Interestingly, performance declines as I up the bit r=
+ate
+from 11 to 18 etc...
 
-Hmm. I really don't understand this at all. Most operations won't be
-single writes and reads, and if you need multiple like a write+read for
-indirect register accesses then I'm sure you need to serialise them
-against each other in some other way too, no?
+Of course, simple specifying the RATE in the ifcfg-wlan0 as 11M sorts t=
+his
+perfectly.
 
-johannes
+Anyway, thanks and regards
 
---=-WQ+3gp5I0umoUf117NqZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+PGR
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--=20
+Laws are partly formed for the sake of good men, in order to instruct t=
+hem
+how they may live on friendly terms with one another, and partly for th=
+e
+sake of those who refuse to be instructed, whose spirit cannot be subdu=
+ed,
+or softened, or hindered from plunging into evil. [The Laws, Plato]
 
-iQIcBAABAgAGBQJJt/FHAAoJEKVg1VMiehFYs3AP/1y2XDbvUG9tOUhvxiqTnBxI
-mRXI9Yz3cCHCXMRVlm7DUSt9i5DrI9g/cze5FakzK8FhFLvxm6T2z/l3yYpo+nNC
-GVJimh2nLvr7xxwU/lXLa8lmY8TQV7k6/uwHJUDfhR6oFV9Tp09+fTcfOmyB5N+V
-OGjqWK/oxjblDmgqh9q+dAAb02ZkYFxAP72BAKKPIuz1gUS7F8UGfpiopYL0cvyZ
-G0WPG6GrMftPmShvM5QEcuX41PKqzO1eqdhy1fprOO2lgan/VhIH763wBtntdLFa
-c1cULOXQ1LPH6J2idQhJJDiGIEcAr7q4ln7OmTEDcVMaNf76hsLBoSaIvAHiVtev
-TDuAnJBc+UPiG7qvTKHQCSHo9IILdmUK2RqSw3x+3vrbN6lSALkzrLVaI/TZkwLV
-l9+FxZLspJd9148OpBx26OYM/oFLPkYyOGQUEv2nLrP9Wu4yRSgjwHSxSb5p6SaG
-QQvnvjZjh4bgXk2FEdUDlsGD/ulcGUnLJ8gMY0LQCn0hb7S5Q0Di5RPcXdz1KN1y
-5i5KnDAst0KhmJfqijZF1hdLhWwDxbOxPkOVWoyFVOfLJP9/64xhrtXVQQR9zk1w
-2BJWVBj59a8oGf9yhmJ8zXBEw8VQR9mI1TNJ/GMaRAcVG+rN5uXFxiTV1qXrMyF+
-EYTqug27J8hZN0yyqSXD
-=gXUK
------END PGP SIGNATURE-----
+You fiend! Never have I encountered such corrupt and foul-minded
+perversity=85 Have you ever considered a career in the church?
+Bishop of Bath and Wells (Blackadder II)
 
---=-WQ+3gp5I0umoUf117NqZ--
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
