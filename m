@@ -1,148 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:65524 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756513AbZCTTad convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:33952 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873AbZCKVib (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 15:30:33 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so103333fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 12:30:30 -0700 (PDT)
+	Wed, 11 Mar 2009 17:38:31 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath9k-devel] [PATCH v5 1/4] ath9k: implement IO serialization
+Date: Wed, 11 Mar 2009 22:38:24 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+References: <1236739953-17701-1-git-send-email-lrodriguez@atheros.com> <1236792616.20266.39.camel@johannes.local> <43e72e890903111408n1af65629s4d3b6f4b1c6fbb44@mail.gmail.com>
+In-Reply-To: <43e72e890903111408n1af65629s4d3b6f4b1c6fbb44@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <49C39A83.5090004@giuppi.com>
-References: <49C12DFA.80308@giuppi.com>
-	 <3ace41890903191439q1c375925md2e4227f79147399@mail.gmail.com>
-	 <49C2D537.6080406@giuppi.com>
-	 <3ace41890903191856s234118c9j2f4de15486cb37a9@mail.gmail.com>
-	 <49C39A83.5090004@giuppi.com>
-Date: Fri, 20 Mar 2009 19:30:30 +0000
-Message-ID: <3ace41890903201230w454117c7p12a673058e0b0869@mail.gmail.com> (sfid-20090320_203036_403666_F7DB048F)
-Subject: Re: rtl8187 bug report
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "Info[at]Giuppi" <info@giuppi.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903112238.24116.chunkeey@web.de> (sfid-20090311_223841_116064_EAD4BD52)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new in-kernel code is rtl8187+rtl8187b together (and I am supposed
-to be familiar with it, for reasons I already explained); Realtek
-offers two separate vendor drivers for 8187(L) and 8187B - the most
-current of the former I can find in my hard disc (from an OEM web
-site) has a release date of 1217.2008,
-whereas for the latter is 0708.2008, and from OEM 0611.2008. One is 3
-months old, and the other 8-9 months old - both are quite recent by
-any standard. The device is usually rebranded (and *not* sold through
-retail), so the driver is distributed through OEM rebranded channels,
-as I already said.
+On Wednesday 11 March 2009 22:08:43 Luis R. Rodriguez wrote:
+> On Wed, Mar 11, 2009 at 10:30 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2009-03-11 at 10:20 -0700, Luis R. Rodriguez wrote:
+> >
+> >> > Hmm. I really don't understand this at all. Most operations won't be
+> >> > single writes and reads, and if you need multiple like a write+read for
+> >> > indirect register accesses then I'm sure you need to serialise them
+> >> > against each other in some other way too, no?
+> >>
+> >> The issue is not serializing against separate routines calling some
+> >> reads or writes, this serialization prevents the PCI hardware FIFO
+> >> queue from getting more than two requests as otherwise the hardware
+> >> poops out. But as you can see this is only an issue with PCI devices,
+> >> not PCI express devices.
+> >
+> > Well yes, but if you ever do multi-read/write operations then you need
+> > to synchronise at a higher level anyway -- hence I don't quite
+> > understand why this is necessary at all.
+> 
+> Agreed as the PCI FIFO issue should be visible on even UP boxes too. I
+> was trying to find out out exactly why in an SMP system this would
+> occur and it seems the only thing that would cause this is two
+> separate threads reading/writing. I did review this but I was unable
+> to find a specific synchronization issue. Technically the most obvious
+> case is where we handle the beacon tasklet on one CPU and then the
+> RX/TX tasklet (this is done in just one tasklet) in another but we
+> don't handle the beaconing tasklet in STA mode and this issue is seen
+> immediately upon association as a STA. I've been unable to locate that
+> source of possible synchronization issue. If you get an idea let me
+> know.
 
-I am not sure what can be done here - the problem you said you have is
-not exactly well-defined, and your specific usage of the driver is not
-something I want to try/experiment myself - so I'll let others think
-about it. As I said, if the injection patch does anything useful for
-you, we can take this further...
+maybe it's down to the simple fact that most mainboard nowadays
+queue up pci writes? what happends when you always read the
+register after it was updated?
 
-On Fri, Mar 20, 2009 at 1:30 PM, Info[at]Giuppi <info@giuppi.com> wrote=
-:
-> Hin-Tak Leung ha scritto:
->>
->> You are somewhat wrong about Realtek's position - I am speaking as o=
-ne
->> of the 3 current maintainers of the new rtl8187 code, by the way, if
->> you didn't know that... - Realtek staff have been quite co-operative=
-,
->> and while the vendor driver is behind and have some other issues, th=
-ey
->> have regular releases through OEM channels. (there is also a chance
->> that the "one guy" you refer to is me - at least 3 people had tried =
-to
->> port the vendor driver forward).
->>
->>
-> I'm talking about rtl8187 B chipset which seems different from the fi=
-rst
-> one rtl8187 L
-> In realtek drivers dowload page I can't see a linux version for rtl81=
-87b
-> so as a normal user I think there's no official support
-> http://www.realtek.com.tw/downloads/downloadsView.aspx?Langid=3D1&PNi=
-d=3D1&PFid=3D1&Level=3D6&Conn=3D5&DownTypeID=3D3&GetDown=3Dfalse&Downlo=
-ads=3Dtrue#RTL8187B
-> About them being co-operative, so that makes a right choise to buy th=
-eir
-> hardware at least!
-> I don't know who you people are, nice to meet you now. I just felt th=
-e
-> need to share a question with you and since I'm inexperienced perhaps=
- I
-> tend to confuse things trying to explain myself.
->>>> On a different issue - I think such adaptation are frown upon and =
-will
->>>> not make it into the standard kernel, due to its nature of typical
->>>> usage in a controversal scenario. Maybe other wireless dev people,
->>>> especially Herton and Larry, can advise.
->>>>
->>> As far as I know there are no adaptations needed. Wanted or not, it
->>> already works in those "controversal scenario".
->>> The rt73usb driver comes from the same compat-wireless package and =
-it
->>> hasn't that problem, for example. The rtl8187 driver itself works
->>> great for networks other than WEP.
->>>
->>> Thanks very much for your reply, I hope some of the devs can take t=
-he
->>> time to check if I'm wrong.
->>>
->>
->> According to http://www.aircrack-ng.org/doku.php?id=3Drtl8187 , two
->> small patches are recommended.
->> vs the vendor driver, which needs one rather big patch:
->> http://www.aircrack-ng.org/doku.php?id=3Dr8187
->>
->> The fragmentation patch applies to both rtl8187 anf rt73usb, but the
->> injection patch is rtl8187-specific. If the latter works better for
->> you and have no detrimental effect on "normal" usage, we can conside=
-r
->> putting it in. (it looks a bit wrong though)
->>
->>
-> Talking about those links, the one I should follow is this one
-> http://www.aircrack-ng.org/doku.php?id=3Dr8187b and the driver downlo=
-ad
-> offered is r8187b-2.6.25-hirte.tar.bz2 since rtl8187 version L seems
-> different from version B. But that's not my point.
->
-> I'm not complaining neither about fragmentation nor any injection pat=
-ch
-> to be in the compat-wireless driver.
-> New drivers seem to natively support monitor mode. I've put the devic=
-e
-> in monitor mode. While in monitor mode, the driver has some issues
-> handling WEP protected networks. Other networks are shown correctly i=
-n
-> monitor mode.
-> If you're asking on which bases I say that, I've anticipated the answ=
-er
-> telling you I've used a - svn updated version of - "=EF=BB=BFraw 802.=
-11 frames
-> packet capturing software" called airodump-ng. It "=EF=BB=BFwrites ou=
-t a text
-> file containing the details of all access points and clients seen".
-> As I can see, beacons - "Number of announcements packets sent by the =
-AP.
-> Each access point sends about ten beacons per second at the lowest ra=
-te
-> (1M), so they can usually be picked up from very far" - from WEP
-> networks aren't detected at all.
-> Parts between " " are from
-> http://www.aircrack-ng.org/doku.php?id=3Dairodump-ng just to let you =
-know
-> what I've read about and I'm referencing to.
-> Maybe this makes my delirium clearer, maybe I miss something and I ca=
-n't
-> understand this is a normal behaviour.
-> Thanks
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Your point about the simplicity of the code by always doing the
+> locking makes sense and its difficult to decide whether or not we want
+> that without doing elaborate tests and analysis. Only reason to
+> consider this carefully is that we will in fact be changing the
+> behavior of each read/write.
+> 
