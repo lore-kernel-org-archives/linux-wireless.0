@@ -1,80 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f208.google.com ([209.85.217.208]:33076 "EHLO
-	mail-gx0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190AbZCUSad convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 14:30:33 -0400
+Received: from host2.marvell.com ([65.219.4.2]:49642 "EHLO maili.marvell.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755051AbZCLCjp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2009 22:39:45 -0400
+Date: Wed, 11 Mar 2009 18:13:28 -0700 (PDT)
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	bzhao@marvell.com
+Subject: Re: [PATCH resend] libertas: support mesh for various firmware
+ versions
+Message-ID: <alpine.LFD.0.9999.0903111802190.6150@localhost.localdomain> (sfid-20090312_033954_691377_40996C98)
 MIME-Version: 1.0
-In-Reply-To: <20090321065006.GF3834@kamineko.org>
-References: <20090321065006.GF3834@kamineko.org>
-Date: Sat, 21 Mar 2009 11:30:29 -0700
-Message-ID: <178fec830903211130x7aa2d266u5f249625c4436fd0@mail.gmail.com> (sfid-20090321_193037_869978_08DEEACB)
-Subject: Re: iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time out after
-	500ms
-From: Abhi Kolekar <kolekar.a@gmail.com>
-To: Mattia Dongili <malattia@linux.it>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	reinette.chatre@intel.com, yi.zhu@intel.com, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Mattia,
-   Do you have 64 bit kernel?
+On Wednesday, March 11, 2009 at 3:26 AM, Dan Williams wrote:
 
-Abhijeet
+>> +		struct {
+>> +			/* packet type */
+>> +			u8 pkt_type;
+>> +			/* BSS number */
+>> +			u8 bss_num;
+>
+> Any chance you could give a quick overview of what goes in the
+> pkt_type and bss_num fields?
 
-On Fri, Mar 20, 2009 at 11:50 PM, Mattia Dongili <malattia@linux.it> wr=
-ote:
-> Hello,
+Hi Dan,
+
+This is to support multiple BSS simultaneously with the same
+firmware at runtime. Each BSS has a unique number (bss_num) and
+may have different type, such as "client", "AP", etc.
+
+The bss_num of mesh interface is defined as a macro
+"MESH_IFACE_ID" in this patch. The pkt_type field is reserved
+for future use.
+
+
+>> +		} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
+>> +			if (p_rx_pd->u.stat.bss_num)
 >
-> I get this error consistently with all the recent kernels:
-> [ =A0338.476057] iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time =
-out after 500ms.
-> [ =A0458.976089] iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time =
-out after 500ms.
-> [ =A0598.885036] iwl3945: Microcode SW error detected. =A0Restarting =
-0x82000008.
-> [ =A0598.885050] iwl3945: Error Reply type 0x00000005 cmd REPLY_TX (0=
-x1C) seq 0x02AC ser 0x0000004E
-> [ =A0601.869319] iwl3945: Can't stop Rx DMA.
-> then the wifi connection becomes useless and I have to re-associate t=
-o
-> the AP or sometimes to unload and reload the module to get my connect=
-ion
-> back.
+> This would mean that bss_num == 0 indicates a regular frame.  Is
+> that correct?  For mesh frames bss_num will always be > 0?  The
+> old-style rx_control flag seems a bit cleaner to me, but whatever
+> works :)
+
+It should be like this, thanks!
++		} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
++			if (p_rx_pd->u.stat.bss_num == MESH_IFACE_ID)
+
+>> -	if (!(p_rx_pd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK))) {
+>> -		lbs_deb_rx("rx err: frame received with bad status\n");
+>> -		lbs_pr_alert("rxpd not ok\n");
+>> -		priv->stats.rx_errors++;
+>> -		ret = 0;
+>> -		goto done;
+>> -	}
+>> -
 >
-> The above is on 2.6.29-rc8 but I get it since 2.6.28 (apologies for n=
-ot
-> reporting it earlier). =A0Both my thinkpad x60s and my vaio sz72b are
-> affected.
-> Reproducing it is very easy, I just need to download even a small fil=
-e.
->
-> After reading some older bug submissions I rebuilt the driver with de=
-bug
-> support and loaded it with debug=3D0x43fff, the log is here:
-> http://kamineko.org/kernel/kern.log
-> The beginning of the log is 2.6.28 with no debug, then you can see a
-> reboot and the module loaded with the debug option on 2.6.29-rc8.
->
-> Is this a known problem? Is there any other information I can provide=
- to
-> help fixing it?
->
-> Thanks
-> --
-> mattia
-> :wq!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I'd prefer to keep this code; can you protect it with firmware version
+> checks for firmware < 5.1?  It looks like those older firmware versions
+> use it, but the 5.1 specification marks RxStatus "Reserved".  Since the
+> driver still works with cf8385 and sd8385 using firmware 5.0.16 and
+> such, I'm not sure we should remove this yet.
+
+The firmware seems always set MRVDRV_RXPD_STATUS_OK bit in status field.
+I'll double check for this with the old firmware v5.0.16.
+
+The patch will be re-sent to address above issues.
+
+Thanks,
+
+Bing
+
