@@ -1,83 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:63266 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069AbZCYCaV convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54047 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785AbZCLHRA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 22:30:21 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so3765433wff.4
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 19:30:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090325010626.GA8528@hash.localnet>
-References: <200903241938.47155.chunkeey@web.de> <200903242133.28405.chunkeey@web.de>
-	<20090324205847.GB29268@tesla> <200903242324.33485.chunkeey@web.de>
-	<20090324223022.M51759@bobcopeland.com> <43e72e890903241613x6e6de1ecp909ee6f4156ba709@mail.gmail.com>
-	<43e72e890903241617i629a4c75of573bb7f77572ade@mail.gmail.com>
-	<43e72e890903241652o70aa8e2bjd40a5ae9a4ebc91a@mail.gmail.com>
-	<20090325010626.GA8528@hash.localnet>
-Date: Tue, 24 Mar 2009 19:30:04 -0700
-Message-ID: <43e72e890903241930g7985f7c7i858a0e94fb8db667@mail.gmail.com> (sfid-20090325_033024_728065_4DF7F94C)
-Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 12 Mar 2009 03:17:00 -0400
+Subject: Re: [PATCH] cfg80211/nl80211: remove usage of CONFIG_NL80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1236812988-31827-1-git-send-email-reinette.chatre@intel.com>
+References: <1236812988-31827-1-git-send-email-reinette.chatre@intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P/TBtC58mSqWrBy1TPx/"
+Date: Thu, 12 Mar 2009 08:16:50 +0100
+Message-Id: <1236842210.4175.8.camel@johannes.local> (sfid-20090312_081705_075618_F8C9FAAE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 24, 2009 at 6:06 PM, Bob Copeland <me@bobcopeland.com> wrot=
-e:
-> On Tue, Mar 24, 2009 at 04:52:09PM -0700, Luis R. Rodriguez wrote:
->> Alright here's a quick concat of all these patches (also one small
->> sparse fix on Christian's last patch). It also now throws ath5k, ath=
-9k
->> and ar9170 into ath/. We can rename the drivers after, was lazy to d=
-o
->> that. Think its easier for review to separate that too.
->>
->> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v3.patc=
-h.txt
->>
->> Bob, where was that switch break error?
->
-> 1st patch:
->
->> + =C2=A0 =C2=A0 switch (band) {
->> + =C2=A0 =C2=A0 case IEEE80211_BAND_2GHZ:
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulatory.r=
-egpair->reg_2ghz_ctl;
->> + =C2=A0 =C2=A0 case IEEE80211_BAND_5GHZ:
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulatory.r=
-egpair->reg_5ghz_ctl;
->> + =C2=A0 =C2=A0 default:
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D NO_CTL;
->> + =C2=A0 =C2=A0 }
->> + =C2=A0 =C2=A0 return ctl;
->> +}
->
-> I think I had it like the following and changed it -- actually with
-> the returns it's probably better...
->
-> switch (band) {
-> case XXX:
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0return ah->...;
-> case YYY:
-> ...
-> }
 
-Alright thanks, I've fixed that here, it also now does not introduce
-any new checkpatch or sparse complaints.
+--=-P/TBtC58mSqWrBy1TPx/
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v4.patch.t=
-xt
+On Wed, 2009-03-11 at 16:09 -0700, Reinette Chatre wrote:
+> From: Reinette Chatre <reinette.chatre@intel.com>
+>=20
+> The scan capability added to cfg80211/nl80211 introduced a
+> dependency on nl80211 by cfg80211. We can thus no longer have
+> just cfg80211 without nl80211. Specifically, cfg80211_scan_done()
+> calls nl80211_send_scan_aborted() or nl80211_send_scan_done().
+>=20
+> Now we remove the option for user to select nl80211. It will always
+> be compiled if user selects cfg80211.
+>=20
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 
-My shiny new wl rebased on 29 kernel is compiling, will let you know
-in the morning how it goes.
+I agree, it's quite pointless to make this configurable, and we keep
+breaking it like in this case.
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --- a/net/wireless/nl80211.h
+> +++ b/net/wireless/nl80211.h
+> @@ -3,7 +3,6 @@
+> =20
+>  #include "core.h"
+> =20
+> -#ifdef CONFIG_NL80211
+>  extern int nl80211_init(void);
+>  extern void nl80211_exit(void);
+>  extern void nl80211_notify_dev_rename(struct cfg80211_registered_device =
+*rdev);
+> @@ -31,6 +30,5 @@ static inline void nl80211_send_scan_aborted(
+>  					struct cfg80211_registered_device *rdev,
+>  					struct net_device *netdev)
+>  {}
+> -#endif /* CONFIG_NL80211 */
+
+This doesn't seem quite right though, there's an #else with inlines in
+the file which we need to remove entirely.
+
+johannes
+
+--=-P/TBtC58mSqWrBy1TPx/
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJuLbfAAoJEKVg1VMiehFYoDcP/28YzrJ1uFCd7/JRLkBFZX7x
+wWZvzr03nkxCYO75yzsjmdq5cSMADcIRZhe+vJmkcGsIXJIzey44zXDuDz/5jo0B
+SLDZqW4b3RfWF28uevF9jh+gvtrLWSCANJ0AzAQbqEx5+4ReY0111O4yGvSSYq1m
+1HfyatnkvH7pQkFgabOgArD9+UyB9Jx/xqipsReuG0mHgBnOhPwOsf7eYNOWbsDR
+j1MWbrCB6q5ntU35ayNCKOqFMA5BCiwDTddkt79JHwyABWuIt8vjvdlP9UxBegJx
+jpubWbWvUHP2Rvg//hFk7saOAOLf+wqjN1fpZNRcSL/u1YaY8PBX3tfHYuq7we/R
+YGgUgVkPOLkXDCWdoSHqAmSyzn2sJCSwRSdue071iBaGJpFIcNTUuAwFdI2qeRzw
+I+HXYzWZ4KsucozxsnsJaUEo01EqJwFACU/igY60h8oO05wdiP+fe/nkTE+5k+yM
+kzfqi+Zc60+G6LvCVvH2xUKzsuRYhS+yPMPLNXnFNKMMDaYmD23gkHNN4c53EOY5
+9V8Nlw2Z3Dq1+c7m8wBzhQ8WpBNhYpMK7fiP4c3GLQ9qWmeggYR+7u4A8fYzZ0iZ
+352yNo4Yg2wfWj2W7aWwmqn+m7hL054rfpUg8zHEFPOaNnDFSt2dXJb89Oha4Yvd
+JOZ8sjrYXPEw1SNFFY1v
+=HYNq
+-----END PGP SIGNATURE-----
+
+--=-P/TBtC58mSqWrBy1TPx/--
+
