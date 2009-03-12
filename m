@@ -1,104 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:51512 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276AbZCYDqL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 23:46:11 -0400
-Received: by an-out-0708.google.com with SMTP id d14so2208264and.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 20:46:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890903242015l449f0835v5602694c735f9b96@mail.gmail.com>
-References: <200903241938.47155.chunkeey@web.de> <200903242324.33485.chunkeey@web.de>
-	<20090324223022.M51759@bobcopeland.com> <43e72e890903241613x6e6de1ecp909ee6f4156ba709@mail.gmail.com>
-	<43e72e890903241617i629a4c75of573bb7f77572ade@mail.gmail.com>
-	<43e72e890903241652o70aa8e2bjd40a5ae9a4ebc91a@mail.gmail.com>
-	<20090325010626.GA8528@hash.localnet> <43e72e890903241930g7985f7c7i858a0e94fb8db667@mail.gmail.com>
-	<43e72e890903241959x51dc9278oc424bfa85cff9e0f@mail.gmail.com>
-	<43e72e890903242015l449f0835v5602694c735f9b96@mail.gmail.com>
-Date: Tue, 24 Mar 2009 20:45:53 -0700
-Message-ID: <43e72e890903242045n520842c3q9392f75651a6b905@mail.gmail.com> (sfid-20090325_044613_187380_AA4D5466)
-Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:46266 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754019AbZCLQPi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2009 12:15:38 -0400
+Subject: [PATCH v2] cfg80211/nl80211: remove usage of CONFIG_NL80211
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1236842210.4175.8.camel@johannes.local>
+References: <1236812988-31827-1-git-send-email-reinette.chatre@intel.com>
+	 <1236842210.4175.8.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 12 Mar 2009 09:20:40 -0700
+Message-Id: <1236874840.13699.2.camel@rc-desk> (sfid-20090312_171542_001254_870BEA0E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 24, 2009 at 8:15 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Tue, Mar 24, 2009 at 7:59 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Tue, Mar 24, 2009 at 7:30 PM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->>> On Tue, Mar 24, 2009 at 6:06 PM, Bob Copeland <me@bobcopeland.com> =
-wrote:
->>>> On Tue, Mar 24, 2009 at 04:52:09PM -0700, Luis R. Rodriguez wrote:
->>>>> Alright here's a quick concat of all these patches (also one smal=
-l
->>>>> sparse fix on Christian's last patch). It also now throws ath5k, =
-ath9k
->>>>> and ar9170 into ath/. We can rename the drivers after, was lazy t=
-o do
->>>>> that. Think its easier for review to separate that too.
->>>>>
->>>>> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v3.p=
-atch.txt
->>>>>
->>>>> Bob, where was that switch break error?
->>>>
->>>> 1st patch:
->>>>
->>>>> + =C2=A0 =C2=A0 switch (band) {
->>>>> + =C2=A0 =C2=A0 case IEEE80211_BAND_2GHZ:
->>>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulator=
-y.regpair->reg_2ghz_ctl;
->>>>> + =C2=A0 =C2=A0 case IEEE80211_BAND_5GHZ:
->>>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulator=
-y.regpair->reg_5ghz_ctl;
->>>>> + =C2=A0 =C2=A0 default:
->>>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D NO_CTL;
->>>>> + =C2=A0 =C2=A0 }
->>>>> + =C2=A0 =C2=A0 return ctl;
->>>>> +}
->>>>
->>>> I think I had it like the following and changed it -- actually wit=
-h
->>>> the returns it's probably better...
->>>>
->>>> switch (band) {
->>>> case XXX:
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0return ah->...;
->>>> case YYY:
->>>> ...
->>>> }
->>>
->>> Alright thanks, I've fixed that here, it also now does not introduc=
-e
->>> any new checkpatch or sparse complaints.
->>>
->>> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v4.pat=
-ch.txt
->>>
->>> My shiny new wl rebased on 29 kernel is compiling, will let you kno=
-w
->>> in the morning how it goes.
->>
->> Ah poo, ath5k_reg_notifier() got lost.
->
-> Fixed..
->
-> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v5.patch=
-=2Etxt
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Nope.. no luck, something got messed up along the way... needs a closer=
- look.
+The scan capability added to cfg80211/nl80211 introduced a
+dependency on nl80211 by cfg80211. We can thus no longer have
+just cfg80211 without nl80211. Specifically, cfg80211_scan_done()
+calls nl80211_send_scan_aborted() or nl80211_send_scan_done().
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Now we remove the option for user to select nl80211. It will always
+be compiled if user selects cfg80211.
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+v2: neglected to notice the #else used in nl80211.h. Remove
+    inlines previously used when compiling without nl80211.
+
+ net/wireless/Kconfig   |   13 -------------
+ net/wireless/Makefile  |    3 +--
+ net/wireless/nl80211.h |   22 ----------------------
+ 3 files changed, 1 insertions(+), 37 deletions(-)
+
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index e28e2b8..8f779a2 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -10,19 +10,6 @@ config CFG80211_REG_DEBUG
+ 
+ 	  If unsure, say N.
+ 
+-config NL80211
+-	bool "nl80211 new netlink interface support"
+-	depends on CFG80211
+-	default y
+-	---help---
+-	  This option turns on the new netlink interface
+-	  (nl80211) support in cfg80211.
+-
+-	  If =n, drivers using mac80211 will be configured via
+-	  wireless extension support provided by that subsystem.
+-
+-	  If unsure, say Y.
+-
+ config WIRELESS_OLD_REGULATORY
+ 	bool "Old wireless static regulatory definitions"
+ 	default y
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index dad43c2..c157b4d 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -5,8 +5,7 @@ obj-$(CONFIG_LIB80211_CRYPT_WEP) += lib80211_crypt_wep.o
+ obj-$(CONFIG_LIB80211_CRYPT_CCMP) += lib80211_crypt_ccmp.o
+ obj-$(CONFIG_LIB80211_CRYPT_TKIP) += lib80211_crypt_tkip.o
+ 
+-cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o
++cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
+ cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o
+-cfg80211-$(CONFIG_NL80211) += nl80211.o
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 69787b6..11a2e70 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -3,7 +3,6 @@
+ 
+ #include "core.h"
+ 
+-#ifdef CONFIG_NL80211
+ extern int nl80211_init(void);
+ extern void nl80211_exit(void);
+ extern void nl80211_notify_dev_rename(struct cfg80211_registered_device *rdev);
+@@ -11,26 +10,5 @@ extern void nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+ 				   struct net_device *netdev);
+ extern void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
+ 				      struct net_device *netdev);
+-#else
+-static inline int nl80211_init(void)
+-{
+-	return 0;
+-}
+-static inline void nl80211_exit(void)
+-{
+-}
+-static inline void nl80211_notify_dev_rename(
+-	struct cfg80211_registered_device *rdev)
+-{
+-}
+-static inline void
+-nl80211_send_scan_done(struct cfg80211_registered_device *rdev,
+-		       struct net_device *netdev)
+-{}
+-static inline void nl80211_send_scan_aborted(
+-					struct cfg80211_registered_device *rdev,
+-					struct net_device *netdev)
+-{}
+-#endif /* CONFIG_NL80211 */
+ 
+ #endif /* __NET_WIRELESS_NL80211_H */
+-- 
+1.5.6.3
+
+
+
