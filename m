@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:46140 "EHLO
-	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752072AbZCGIE0 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:58772 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752694AbZCLWSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2009 03:04:26 -0500
-Date: Sat, 7 Mar 2009 08:04:22 +0000
-From: Sitsofe Wheeler <sitsofe@yahoo.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090307080422.GA29341@silver.sucs.org> (sfid-20090307_090432_826481_4D11A823)
-References: <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org> <20090307044732.GA13663@hash.localnet>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090307044732.GA13663@hash.localnet>
+	Thu, 12 Mar 2009 18:18:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v6 0/3] ath9k: SMP fixes
+Date: Thu, 12 Mar 2009 18:18:48 -0400
+Message-Id: <1236896331-5026-1-git-send-email-lrodriguez@atheros.com> (sfid-20090312_231856_795469_9560EC9E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 06, 2009 at 11:47:32PM -0500, Bob Copeland wrote:
->
-> Well, this is great so far!  It'll take some time to dig through it
-> but it looks useful.
-> 
-> I saw _get_tsf64 in the trace; were you using ad-hoc/ibss mode, or 
-> is that just a weird artifact?
+This v6 removes the hotplug CPU stuff which although it technically
+would be correct is more cruft and highly unlikely. The down side
+is you will get serialization applied even if you only have one
+CPU but who cares, I doubt those nutty SGI guys are toying with
+ath9k in the lab.
 
-Sounds like a werid artifact - I only (intentionally) connect to access
-points.
+Yesterday I started mucking with an alternative approach to
+serialization which worked. I added just 5 udelay()s in key places
+where we had a lot of consecutive IO read/writes issued and that
+resolved the issue at least for STA mode but it didn't do the trick
+for AP mode. Technically it should be possible to groom all hardware
+access routines to do the same but I'm tired of this issue and want
+to a fix merged today not a few weeks from now. Anyway if you are
+curious you can check out that patch replacement approach for
+serialization here:
 
--- 
-Sitsofe | http://sucs.org/~sits/
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-03-12/smp-udelay-fix.patch
+
+Note that AP won't work though so if you have a lot of time in your
+hands and have an SMP box with PCI Atheros 11n and are seeing the hangs
+and want a neat alternative to the current serialization implementation
+try adding udelays like the ones in the patch in places where we do a lot
+of io read/writes. Send me the results :)
+
+The compromise is to keep serialization conditional -- we do not want to
+do it for every read/write regardless of the type of card you have, the
+code overhead is not great and we maintain this anyway. Adding it for all
+cases would just not be optimal.
+
+Luis R. Rodriguez (3):
+  ath9k: implement IO serialization
+  ath9k: AR9280 PCI devices must serialize IO as well
+  ath9k: remove dummy PCI "retry timeout" fix
+
+ drivers/net/wireless/ath9k/ath9k.h |   34 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath9k/hw.c    |   28 +++++++++++++++++++++++++++-
+ drivers/net/wireless/ath9k/hw.h    |    4 ++--
+ drivers/net/wireless/ath9k/main.c  |    1 +
+ drivers/net/wireless/ath9k/pci.c   |   18 ------------------
+ 5 files changed, 64 insertions(+), 21 deletions(-)
+
