@@ -1,44 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:34287 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532AbZCZRPM (ORCPT
+Received: from mtiwmhc13.worldnet.att.net ([204.127.131.117]:33925 "EHLO
+	mtiwmhc13.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751019AbZCLXiJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 13:15:12 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so787960wff.4
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 10:15:10 -0700 (PDT)
+	Thu, 12 Mar 2009 19:38:09 -0400
+Message-ID: <49B99CD6.3090509@lwfinger.net> (sfid-20090313_003817_057136_0B2A0BA5)
+Date: Thu, 12 Mar 2009 18:37:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.00.0903261752470.11410@aurora.sdinet.de>
-References: <b49006ab0903260414xad13bd5y370a47020348c66f@mail.gmail.com>
-	<b49006ab0903260822r35417242qbdc6889543de7072@mail.gmail.com>
-	<alpine.DEB.2.00.0903261752470.11410@aurora.sdinet.de>
-Date: Thu, 26 Mar 2009 10:14:55 -0700
-Message-ID: <43e72e890903261014j7d050d44wf72ab2c25bc8d625@mail.gmail.com> (sfid-20090326_181515_771139_45C9DFC3)
-Subject: Re: Driver Support Linux 2.4.26 zd1211
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Sven-Haegar Koch <haegar@sdinet.de>
-Cc: Paco <eyes2k5@gmail.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8187 - nice work!
+References: <50533.82.152.175.172.1236798263.squirrel@www.phantomjinx.co.uk>    <49B813E9.8050108@lwfinger.net>    <41788.82.152.175.172.1236803718.squirrel@www.phantomjinx.co.uk>    <49B83A53.2000902@lwfinger.net> <38504.82.152.175.172.1236895661.squirrel@www.phantomjinx.co.uk>
+In-Reply-To: <38504.82.152.175.172.1236895661.squirrel@www.phantomjinx.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 26, 2009 at 9:55 AM, Sven-Haegar Koch <haegar@sdinet.de> wrote:
-> On Thu, 26 Mar 2009, Paco wrote:
->
->> Hello everybody, and sorry if I disturb you with something that was
->> fixed before.
->>
->> I'm trying to setup the zd1211 in Linux 2.4.26-ts11 in the board
->> TS-7200. I have some drivers that are working only with networks
->> without encryption. If I try to connect to a network with WEP or WPA
->> encryption, i can not get the access point. I am looking for a new
->> version of drivers to solve this problem.
->
-> I think for 2.4.x: forget it.
->
-> For 2.6.26 it may be possible using compat-wireless-old,
+P.G. Richardson wrote:
+> 
+> Hi Larry,
+> 
+> Applied this patch, this morning. Run with it rest of the day yet seems to
+> make little or no difference so far.
 
-Actually with compat-wireless-old you can go down to 2.6.21 but keep
-in mind that the drivers in there, nor mac80211 has been updated in
-ages.
+That is what I expected, but a test was needed. Thanks for doing that. If I come
+up with something else, I'll let you know.
 
-  Luis
+Larry
+
