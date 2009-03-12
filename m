@@ -1,115 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:51085 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752218AbZCXA0Q (ORCPT
+Received: from vilya.visn.co.uk ([193.254.210.161]:57073 "EHLO
+	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753884AbZCLWHq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 20:26:16 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 5/5] ar9170: update Makefile, Kconfig and MAINTAINERS
-Date: Tue, 24 Mar 2009 01:26:12 +0100
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-References: <200903212311.49348.chunkeey@web.de> <1237818551.6147.15.camel@johannes.local>
-In-Reply-To: <1237818551.6147.15.camel@johannes.local>
+	Thu, 12 Mar 2009 18:07:46 -0400
+Message-ID: <38504.82.152.175.172.1236895661.squirrel@www.phantomjinx.co.uk> (sfid-20090312_230747_939647_98051D9E)
+In-Reply-To: <49B83A53.2000902@lwfinger.net>
+References: <50533.82.152.175.172.1236798263.squirrel@www.phantomjinx.co.uk>
+    <49B813E9.8050108@lwfinger.net>
+    <41788.82.152.175.172.1236803718.squirrel@www.phantomjinx.co.uk>
+    <49B83A53.2000902@lwfinger.net>
+Date: Thu, 12 Mar 2009 22:07:41 -0000 (UTC)
+Subject: Re: rtl8187 - nice work!
+From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200903240126.12692.chunkeey@web.de> (sfid-20090324_012618_809281_AA3303D9)
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 23 March 2009 15:29:11 Johannes Berg wrote:
+> P.G. Richardson wrote:
+>> phy0: Selected rate control algorithm 'pid'
+>>
+>> which is a first as it has always been 'mistral'. The only differenc=
+e
+>> with
+>> compiling last night was I was not running the kernel I compiled
+>> against.
+>> I used 'make KLIB=3D/usr/src/{my new kernel} KLIB_BUILD=3D/usr/src/{=
+my new
+>> kernel}' instead.
+>>
+>> Just recompiled while running {my new kernel} and mistral correctly
+>> selected as rate control algorithm. Once installed, it does correctl=
+y
+>> auto
+>> select rate as expected.
+>>
+>> iperf shows Mb performance has dropped though but gets improved by a=
+gain
+>> fixing the rate at 11Mb.
+>>
+>> So cheers for the info.
 >
-> I think it would make sense to link them into the same module as long as
-> we don't have a second user of the common code. I actually doubt we will
-> see a second user of the common code at all, even if it is in theory
-> possible with the hardware design.
-Shh, there's a secret plan, see ar9170/main.c
+> Minstrel is definitely a better choice than pid.
+>
+> There is one thing that might make your interface work better. For
+> performance
+> reasons, I chose not to pause the mac80211 queues at one point in the
+> driver.
+> For my device, it did not make a difference, but it might for you. Pl=
+ease
+> try
+> the attached patch.
+>
 
-/*
- * BIG FAT TODO:
- *
- * By the looks of things: these devices share a lot of things like
- * EEPROM layout/design and PHY code with other Atheros WIFI products.
- * So this driver/library will eventually become ath9k code... or vice versa ;-)
- */
+Hi Larry,
 
-And the ath5k<->ath9k merge could provide some "helper" function for this
-driver as well... (wishful thinking, but anyway...)
+Applied this patch, this morning. Run with it rest of the day yet seems=
+ to
+make little or no difference so far.
 
-Meanwhile, what about a config option that can be enabled to
-integrate everything into the front-end module (ar9170usb)?
-( However, I don't think this config solution will stand a chance ;-) 
-  and we all come to the same "all-in-one works best" conclusion.  )
----
-diff --git a/drivers/net/wireless/ar9170/Kconfig b/drivers/net/wireless/ar9170/Kconfig
-index f661187..5272940 100644
---- a/drivers/net/wireless/ar9170/Kconfig
-+++ b/drivers/net/wireless/ar9170/Kconfig
-@@ -22,6 +22,16 @@ config AR9170_USB
- 
- 	  If you choose to build a module, it'll be called ar9170usb.
- 
-+config AR9170_INTEGRATE_COMMON
-+	bool "Integrate common code into front-end modules"
-+	depends on AR9170_COMMON
-+	help
-+	  If this option is set, the common code will be
-+	  integrated into the front-end modules instead
-+	  of being linked into a seperate module.
-+
-+	  If unsure, say N.
-+
- config AR9170_LEDS
- 	bool
- 	depends on AR9170_COMMON && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = AR9170_COMMON)
-diff --git a/drivers/net/wireless/ar9170/Makefile b/drivers/net/wireless/ar9170/Makefile
-index 59b174d..868a520 100644
---- a/drivers/net/wireless/ar9170/Makefile
-+++ b/drivers/net/wireless/ar9170/Makefile
-@@ -1,5 +1,15 @@
-+ifdef CONFIG_AR9170_INTEGRATE_COMMON
-+
-+ar9170usb-objs += usb.o main.o cmd.o mac.o phy.o led.o
-+
-+obj-$(CONFIG_AR9170_USB) += ar9170usb.o
-+
-+else
-+
- ar9170common-objs += main.o cmd.o mac.o phy.o led.o
- ar9170usb-objs += usb.o
- 
- obj-$(CONFIG_AR9170_COMMON) += ar9170common.o
- obj-$(CONFIG_AR9170_USB) += ar9170usb.o
-+
-+endif
-diff --git a/drivers/net/wireless/ar9170/main.c b/drivers/net/wireless/ar9170/main.c
-index f8c2357..ec03df6 100644
---- a/drivers/net/wireless/ar9170/main.c
-+++ b/drivers/net/wireless/ar9170/main.c
-@@ -57,8 +57,10 @@ static int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- MODULE_AUTHOR("Johannes Berg <johannes@sipsolutions.net>");
-+#ifndef CONFIG_AR9170_INTEGRATE_COMMON
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Atheros shared code for AR9170 wireless devices");
-+#endif /* CONFIG_AR9170_INTEGRATE_COMMON */
- 
- #define RATE(_bitrate, _hw_rate, _txpidx, _flags) {	\
- 	.bitrate	= (_bitrate),			\
-@@ -1693,6 +1695,7 @@ void ar9170_unregister(struct ar9170 *ar)
- }
- EXPORT_SYMBOL_GPL(ar9170_unregister);
- 
-+#ifndef CONFIG_AR9170_INTEGRATE_COMMON
- static int __init ar9170_init(void)
- {
- 	if (modparam_nohwcrypt)
-@@ -1709,3 +1712,4 @@ static void __exit ar9170_exit(void)
- 
- module_init(ar9170_init);
- module_exit(ar9170_exit);
-+#endif /* CONFIG_AR9170_INTEGRATE_COMMON */
+Cheers
+
+PGR
+
+--=20
+Laws are partly formed for the sake of good men, in order to instruct t=
+hem
+how they may live on friendly terms with one another, and partly for th=
+e
+sake of those who refuse to be instructed, whose spirit cannot be subdu=
+ed,
+or softened, or hindered from plunging into evil. [The Laws, Plato]
+
+You fiend! Never have I encountered such corrupt and foul-minded
+perversity=85 Have you ever considered a career in the church?
+Bishop of Bath and Wells (Blackadder II)
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
