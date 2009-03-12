@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36431 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754771AbZCWTvS (ORCPT
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:64715 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282AbZCLX5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 15:51:18 -0400
-Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-In-Reply-To: <20090323194313.GG3285@tuxdriver.com>
-References: <1236939917.5235.7.camel@johannes.local>
-	 <1236941058.5235.12.camel@johannes.local>
-	 <20090320160308.GB28965@jm.kir.nu>
-	 <1237622383.5100.162.camel@johannes.local>
-	 <20090323194313.GG3285@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-FLvPxTGGcUXM7x3XzFVf"
-Date: Mon, 23 Mar 2009 20:50:53 +0100
-Message-Id: <1237837853.6147.19.camel@johannes.local> (sfid-20090323_205122_191522_71A9617E)
+	Thu, 12 Mar 2009 19:57:31 -0400
+Received: by fxm24 with SMTP id 24so2423747fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 16:57:27 -0700 (PDT)
+Subject: Re: [ipw3945-devel] [PATCH 3/8] iwl3945 : fix rate scaling
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1236897665.3911.8.camel@abhi-desktop>
+References: <1236795481-12757-1-git-send-email-reinette.chatre@intel.com>
+	 <1236795481-12757-2-git-send-email-reinette.chatre@intel.com>
+	 <1236795481-12757-3-git-send-email-reinette.chatre@intel.com>
+	 <1236795481-12757-4-git-send-email-reinette.chatre@intel.com>
+	 <1236821360.9581.78.camel@maxim-laptop>
+	 <1236824994.7177.3.camel@maxim-laptop>  <1236880246.13699.17.camel@rc-desk>
+	 <1236892879.30325.7.camel@maxim-laptop>
+	 <1236897665.3911.8.camel@abhi-desktop>
+Content-Type: text/plain
+Date: Fri, 13 Mar 2009 01:56:58 +0200
+Message-Id: <1236902218.13039.8.camel@maxim-laptop> (sfid-20090313_005734_926052_5FEE3C86)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2009-03-12 at 15:41 -0700, Abhijeet Kolekar wrote:
+> Can you try the attached patch for rate scaling?
 
---=-FLvPxTGGcUXM7x3XzFVf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Just tried it.
+It doesn't make things worse, but nether better.
 
-On Mon, 2009-03-23 at 15:43 -0400, John W. Linville wrote:
+It seems that I can fully control speeds using iwconfig, and when speed
+drop, I see that there.
 
-> > Indeed, this file should depend on CONFIG_PM too I suppose, will fix
-> > that. OTOH, a future patch I have will require _resume to always be
-> > present, so I'm inclined to just always put the code in. I'll come up
-> > with a fix in any case.
->=20
-> I fixed this in wireless-testing.  Feel free to change it as you like it.
+Now speed dropped to 48 Mbits/s raw or 2.9 Mbytes/s real upload.
+But I can reset it to 54Mbits/s, then set speed to auto, then it will be
+3.1 for a while, then drops again.
 
-Yeah, I saw, thanks, good for now. I'll fix it with the hw-recover patch
-I have.
+On the other hand speed is quite stable, it drops once in a while due to
+scanning for few seconds to about 2.2 Mbytes/s, then restores itself
+again.
 
-johannes
+This was more or less the same as without this patch (I also use hw
+scanning now).
 
---=-FLvPxTGGcUXM7x3XzFVf
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Anyway, it is almost perfect. All I need to do it to set speed to
+54Mbits/s manually.
 
-iQIcBAABAgAGBQJJx+gbAAoJEKVg1VMiehFYAX8QAK+pf0fKZxujSNKSpkUjIaBk
-QSkcFr5wHjSbc9I0RaAms440bc0lVRgvspixsM2YIAIg2sh5NTZsHGI9YjK0t02p
-BkX8OkwMaQZaHpSRiDTq1hZ7X/kP5ovwpy281rVGgbDQfEWoz7VrMUDOvv0apGT3
-OpMSGhu643Ssf5+HhvX59m2NZtzV0tgBr1+w7eiN37vjEC3FKPnKzTQBugwLNDAO
-epTEpcfEL/DKZadbaiFxTEZUXdRVxfZ3XSQ91GayjJVum0oSoviYB6P/oljALUyc
-IcmjaTq2TCEucjsnvnOo/J+fF/u3lAj0DQ1VxWTg1IRSjhr5iSCMQ9A6m7dowPwn
-uWxaECu1CuNPzgM3FeK13f+if2M1ioBTOzyg5iKvsPEaKL/SwlsPH15aY0Dmwjxk
-/xd2Iy6aX1SeTJG4X2jx40NfEsOzTT3b5wqd6IxbULHcTKtqtHXhtP3Oc9BSvTFe
-B7bAPeQBKawdEltcj/Cj3ixypD7VWmq/n0ZM8Xh70JWwQg6gVy8f/eEWXI8TKORc
-UhJb6JTp0/xkHxW7X0IGAhdWRwfCmN33Jm9O6K3XqXITxyv1A0gkDRSuqXfpxEvT
-niBLNPgNW7IMheofzI+XiJ1F8+vnUY3EuFGtsn7m2oKsZwLSC8wdiehm264wHadV
-Nuu9wraJ9gxEESIS/RLm
-=wETQ
------END PGP SIGNATURE-----
-
---=-FLvPxTGGcUXM7x3XzFVf--
+Best regards and thanks,
+	Maxim Levitsky
 
