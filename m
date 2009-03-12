@@ -1,46 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:46621 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751600AbZC3N1N (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45980 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753519AbZCLWuG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 09:27:13 -0400
-Date: Mon, 30 Mar 2009 10:27:09 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
-	Matthew Garrett <mjg@redhat.com>
-Subject: Re: [RFC] rfkill: rewrite
-Message-ID: <20090330132709.GB11934@khazad-dum.debian.net> (sfid-20090330_152715_798337_51CC91B2)
-References: <1238349195.24972.5.camel@johannes.local> <200903292016.05470.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200903292016.05470.IvDoorn@gmail.com>
+	Thu, 12 Mar 2009 18:50:06 -0400
+Subject: [PATCH v2] mac80211: remove ieee80211_num_regular_queues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200903122344.04238.mb@bu3sch.de>
+References: <1236852956.4175.19.camel@johannes.local>
+	 <200903122344.04238.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Thu, 12 Mar 2009 23:49:28 +0100
+Message-Id: <1236898168.25931.31.camel@johannes.local> (sfid-20090312_235009_108533_5E01DF4A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 29 Mar 2009, Ivo van Doorn wrote:
-> Just for the record, as long as you (or somebody else) takes over maintainership
-> over rfkill after these changes, I have no objections against the changes. Luckily
-> you already updated the Maintainers entry, so I'm happy. :)
-> 
-> I know rfkill was poorly designed and I simply lacked the time (and perhaps
-> some interest as well) to continue with it. The changes you propose sound
-> reasonable so I hope it will turn rfkill really into something which it was supposed
-> to be from the start.
+This inline is useless and actually makes the code _longer_
+rather than shorter.
 
-Agreed.  I never wanted to do so much work on rfkill, either... I just
-wanted something I could use in thinkpad-acpi, but that proved to be a lot
-of work, as once you start, you want to finish it.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: add parentheses mb requested, though I tend to not put them in this
+    case normally (I guess that means I have memorized this particular C
+    rule)
 
-I will go over the new proposed rfkill to check if it is in a state that is
-comfortable for drivers like thinkpad-acpi to use, and offer comments about
-it.
+ include/net/mac80211.h |    5 -----
+ net/mac80211/mlme.c    |    2 +-
+ net/mac80211/tx.c      |    7 +++----
+ 3 files changed, 4 insertions(+), 10 deletions(-)
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+--- wireless-testing.orig/include/net/mac80211.h	2009-03-12 22:46:49.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-03-12 23:47:58.000000000 +0100
+@@ -1017,11 +1017,6 @@ static inline void SET_IEEE80211_PERM_AD
+ 	memcpy(hw->wiphy->perm_addr, addr, ETH_ALEN);
+ }
+ 
+-static inline int ieee80211_num_regular_queues(struct ieee80211_hw *hw)
+-{
+-	return hw->queues;
+-}
+-
+ static inline struct ieee80211_rate *
+ ieee80211_get_tx_rate(const struct ieee80211_hw *hw,
+ 		      const struct ieee80211_tx_info *c)
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-03-12 22:45:32.000000000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2009-03-12 22:46:49.000000000 +0100
+@@ -1834,7 +1834,7 @@ void ieee80211_sta_setup_sdata(struct ie
+ 	ifmgd->flags |= IEEE80211_STA_CREATE_IBSS |
+ 		IEEE80211_STA_AUTO_BSSID_SEL |
+ 		IEEE80211_STA_AUTO_CHANNEL_SEL;
+-	if (ieee80211_num_regular_queues(&sdata->local->hw) >= 4)
++	if (sdata->local->hw.queues >= 4)
+ 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
+ }
+ 
+--- wireless-testing.orig/net/mac80211/tx.c	2009-03-12 22:45:32.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-03-12 23:48:20.000000000 +0100
+@@ -1664,8 +1664,7 @@ int ieee80211_subif_start_xmit(struct sk
+ 	}
+ 
+ 	/* receiver and we are QoS enabled, use a QoS type frame */
+-	if (sta_flags & WLAN_STA_WME &&
+-	    ieee80211_num_regular_queues(&local->hw) >= 4) {
++	if ((sta_flags & WLAN_STA_WME) && local->hw.queues >= 4) {
+ 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+ 		hdrlen += 2;
+ 	}
+@@ -1800,7 +1799,7 @@ void ieee80211_clear_tx_pending(struct i
+ 	int i, j;
+ 	struct ieee80211_tx_stored_packet *store;
+ 
+-	for (i = 0; i < ieee80211_num_regular_queues(&local->hw); i++) {
++	for (i = 0; i < local->hw.queues; i++) {
+ 		if (!test_bit(i, local->queues_pending))
+ 			continue;
+ 		store = &local->pending_packet[i];
+@@ -1825,7 +1824,7 @@ void ieee80211_tx_pending(unsigned long 
+ 	int i, ret;
+ 
+ 	netif_tx_lock_bh(dev);
+-	for (i = 0; i < ieee80211_num_regular_queues(&local->hw); i++) {
++	for (i = 0; i < local->hw.queues; i++) {
+ 		/* Check that this queue is ok */
+ 		if (__netif_subqueue_stopped(local->mdev, i) &&
+ 		    !test_bit(i, local->queues_pending_run))
+
+
