@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57755 "EHLO mga01.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:14918 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751763AbZCREq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2009 00:46:56 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 10/13] iwl3945: fix checkpatch.pl errors
-Date: Tue, 17 Mar 2009 21:51:50 -0700
-Message-Id: <1237351913-19202-11-git-send-email-reinette.chatre@intel.com> (sfid-20090318_054711_732520_C2DF5A0F)
-In-Reply-To: <1237351913-19202-10-git-send-email-reinette.chatre@intel.com>
-References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-2-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-3-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-4-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-5-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-6-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-7-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-8-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-9-git-send-email-reinette.chatre@intel.com>
- <1237351913-19202-10-git-send-email-reinette.chatre@intel.com>
+	id S1756221AbZCLRpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2009 13:45:42 -0400
+Subject: Re: [ipw3945-devel] [PATCH 3/8] iwl3945 : fix rate scaling
+From: reinette chatre <reinette.chatre@intel.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1236824994.7177.3.camel@maxim-laptop>
+References: <1236795481-12757-1-git-send-email-reinette.chatre@intel.com>
+	 <1236795481-12757-2-git-send-email-reinette.chatre@intel.com>
+	 <1236795481-12757-3-git-send-email-reinette.chatre@intel.com>
+	 <1236795481-12757-4-git-send-email-reinette.chatre@intel.com>
+	 <1236821360.9581.78.camel@maxim-laptop>
+	 <1236824994.7177.3.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Thu, 12 Mar 2009 10:50:46 -0700
+Message-Id: <1236880246.13699.17.camel@rc-desk> (sfid-20090312_184612_487503_D676FF4D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+On Wed, 2009-03-11 at 19:29 -0700, Maxim Levitsky wrote:
+> On Thu, 2009-03-12 at 03:29 +0200, Maxim Levitsky wrote:
+> > On Wed, 2009-03-11 at 11:17 -0700, Reinette Chatre wrote:
+> > > From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> > > 
+> > > Patch fixes the bug 1900 at
+> > > http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1900
+> > > 
+> > > Issues:
+> > > Throughput and success ratio calculations were not done properly.
+> > > Number of retries were exceeding 16.
+> > 
+> > ether.
+> > 
+> > On the other omitting  the 'disable_hw_scan=1' option (which appears to
+> > work once again, since  few days ago it broke s2disk with hung scan) -
+> 
+> Ah , I remember now. The disable_hw_scan=0 breaks (!) 
+> the rfkill support.
 
-Patch fixes two checkpatch.pl errors.
+Could you please provide more details about this issue? We are
+interested in steps to reproduce and logs you may have.
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Thanks
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 50c61ed..d03f553 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -1179,7 +1179,7 @@ int iwl3945_hw_nic_init(struct iwl_priv *priv)
- 	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
- 
- 	rc = priv->cfg->ops->lib->apm_ops.set_pwr_src(priv, IWL_PWR_SRC_VMAIN);
--	if(rc)
-+	if (rc)
- 		return rc;
- 
- 	priv->cfg->ops->lib->apm_ops.config(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index d653ff8..ab6a7d5 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -560,7 +560,7 @@ static int iwl3945_set_dynamic_key(struct iwl_priv *priv,
- 		ret = iwl3945_set_wep_dynamic_key_info(priv, keyconf, sta_id);
- 		break;
- 	default:
--		IWL_ERR(priv,"Unknown alg: %s alg = %d\n", __func__, keyconf->alg);
-+		IWL_ERR(priv, "Unknown alg: %s alg = %d\n", __func__, keyconf->alg);
- 		ret = -EINVAL;
- 	}
- 
--- 
-1.5.6.3
+Reinette
+
 
