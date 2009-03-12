@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24314 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078AbZCIEGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 00:06:04 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 08 Mar 2009 21:06:03 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from gv-out-0910.google.com ([216.239.58.188]:30683 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018AbZCLVcs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2009 17:32:48 -0400
+Received: by gv-out-0910.google.com with SMTP id c6so572945gvd.37
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 14:32:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18868.38073.487629.764071@gargle.gargle.HOWL> (sfid-20090309_050613_465066_CBAE1280)
-Date: Mon, 9 Mar 2009 09:32:01 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 3/3] ath9k: Fix bug in reading debugfs file 'rcstat'
+In-Reply-To: <1236893111.30325.10.camel@maxim-laptop>
+References: <1236728344.26432.26.camel@maxim-laptop>
+	 <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
+	 <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
+	 <1236893111.30325.10.camel@maxim-laptop>
+Date: Thu, 12 Mar 2009 17:32:44 -0400
+Message-ID: <b6c5339f0903121432h26d71d6nd901f12d0c10e7bc@mail.gmail.com> (sfid-20090312_223252_963519_AF1ACE71)
+Subject: Re: [ath5k-devel] Thanks for TX power patch
+From: Bob Copeland <me@bobcopeland.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mick@madwifi-project.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rate table would not have been chosen before the interface
-has been brought up. Reading 'rcstat' in this case would result
-in an oops, fix this.
+On Thu, Mar 12, 2009 at 5:25 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> Just to be clear, I got oopses, and hangs after resume from disk by just
+> using compat-wireless-2009-03-10 _without_ Nick's patches.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/debug.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Interesting, I thought you said that, but I tried the same stuff on
+plain wireless testing and didn't have any problems.
 
-diff --git a/drivers/net/wireless/ath9k/debug.c b/drivers/net/wireless/ath9k/debug.c
-index b0ff479..82573ca 100644
---- a/drivers/net/wireless/ath9k/debug.c
-+++ b/drivers/net/wireless/ath9k/debug.c
-@@ -322,6 +322,9 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
- {
- 	struct ath_softc *sc = file->private_data;
- 
-+	if (sc->cur_rate_table == NULL)
-+		return 0;
-+
- 	if (conf_is_ht(&sc->hw->conf))
- 		return ath_read_file_stat_11n_rc(file, user_buf, count, ppos);
- 	else
+The eeprom stuff was definitely implicated in my 1 sec modprobe + rmmod
+test.
+
 -- 
-1.6.1
-
+Bob Copeland %% www.bobcopeland.com
