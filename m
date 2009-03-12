@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:46217 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756852AbZC0UCr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 16:02:47 -0400
-Received: by ewy9 with SMTP id 9so1211855ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 13:02:44 -0700 (PDT)
-Message-ID: <49CD30D8.9070403@gmail.com> (sfid-20090327_210251_319730_8B2A8AE0)
-Date: Fri, 27 Mar 2009 16:02:32 -0400
-From: Richard Farina <sidhayn@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:16888 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750949AbZCLGdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2009 02:33:11 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2009 23:33:10 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: iw error message enhancement request
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18872.43949.609938.833705@gargle.gargle.HOWL> (sfid-20090312_073315_159443_D751B78E)
+Date: Thu, 12 Mar 2009 11:59:01 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH/REVIEW] ath9k: Fix bug in handling single stream stations
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was just trying to support a user in the irc channel with the 
-following error:
+AP mode currently sets up the dual stream capability
+for all stations. This patch fixes it by checking if the
+associated station supports dual stream MCS rates (8-15).
 
-14:14 < ~incastrix-hl>  Zero_Chaos: receive a strange message after: iw 
-phy phy0 interface add wlan11 type ap
-14:14 < ~incastrix-hl>  Zero_Chaos:  http://wireless.kernel.org/RTFM-AP
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/rc.c |   18 +++++++++---------
+ 1 files changed, 9 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index 8327356..9bc4f72 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -1468,16 +1468,18 @@ static void ath_rc_init(struct ath_softc *sc,
+ 		ath_rc_priv->ht_cap);
+ }
+ 
+-static u8 ath_rc_build_ht_caps(struct ath_softc *sc, bool is_ht, bool is_cw40,
+-			       bool is_sgi40)
++static u8 ath_rc_build_ht_caps(struct ath_softc *sc, struct ieee80211_sta *sta,
++			       bool is_cw40, bool is_sgi40)
+ {
+ 	u8 caps = 0;
+ 
+-	if (is_ht) {
++	if (sta->ht_cap.ht_supported) {
+ 		caps = WLAN_RC_HT_FLAG;
+ 		if (sc->sc_ah->caps.tx_chainmask != 1 &&
+-		    ath9k_hw_getcapability(sc->sc_ah, ATH9K_CAP_DS, 0, NULL))
+-			caps |= WLAN_RC_DS_FLAG;
++		    ath9k_hw_getcapability(sc->sc_ah, ATH9K_CAP_DS, 0, NULL)) {
++			if(sta->ht_cap.mcs.rx_mask[1])
++				caps |= WLAN_RC_DS_FLAG;
++		}
+ 		if (is_cw40)
+ 			caps |= WLAN_RC_40_FLAG;
+ 		if (is_sgi40)
+@@ -1624,8 +1626,7 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 		rate_table = sc->cur_rate_table;
+ 	}
+ 
+-	ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta->ht_cap.ht_supported,
+-						   is_cw40, is_sgi40);
++	ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta, is_cw40, is_sgi40);
+ 	ath_rc_init(sc, priv_sta, sband, sta, rate_table);
+ }
+ 
+@@ -1659,8 +1660,7 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
+ 			rate_table = ath_choose_rate_table(sc, sband->band,
+ 						   sta->ht_cap.ht_supported,
+ 						   oper_cw40);
+-			ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc,
+-						   sta->ht_cap.ht_supported,
++			ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta,
+ 						   oper_cw40, oper_sgi40);
+ 			ath_rc_init(sc, priv_sta, sband, sta, rate_table);
+ 
+-- 
+1.6.2
 
-In case you read that like I did, you read it wrong, let me explain better:
-
-Kid src # iw phy phy0 interface add wlan12 type ap
-See http://wireless.kernel.org/RTFM-AP.
-
-Yes, you read that right, when you try to use iw to create a master/ap 
-mode interface it gives NO ERROR, NO EXPLAINATION, and refers you to a 
-web page (which doesn't even mention this error mind you).  This doesn't 
-make any sense at all.  There are two rational solutions:
-
-1.) Use a meaningful error message such as "Hostapd is required for 
-master mode: please see http://wireless.kernel.org/RTFM-AP"
-
-2.) Remove the option to make a master mode interface from iw 
-completely.  Since iw doesn't have the ability to set master mode this 
-is a completely pointless option.  It's like adding an option to ping 
-like "ping -irssi freeenode.net" which outputs "See http://www.irssi.org".
-
-I favor option 1 because iw is the obvious place where people will be 
-looking to set master mode so having a useful error message there is 
-needed in my opinion.  The likelyhood for someone to try and set master 
-mode from iw IMHO negates the arguement I make in option 2, but I wanted 
-to present both logical options.
-
-Either way, what is in iw right now is aweful.  Not only does it not 
-explain what is going on with that error message, but the website 
-doesn't even mention the problem.  Additionally, presuming that someone 
-has internet when they are running iw isn't a safe assumption at all.  
-Maybe I have no internet and I want to bring up an AP to play a LAN game 
-with friends? Or any number of other reasons to bring up an AP without 
-internet.  Please folks, this is just sloppy.
-
--Rick Farina
