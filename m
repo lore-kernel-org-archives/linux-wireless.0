@@ -1,119 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:54072 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759480AbZC1Twx (ORCPT
+Received: from mail-gx0-f167.google.com ([209.85.217.167]:47649 "EHLO
+	mail-gx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753226AbZCLElO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2009 15:52:53 -0400
-Received: by ey-out-2122.google.com with SMTP id 4so441057eyf.37
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2009 12:52:49 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/4] rt2x00: Don't free register information on suspend
-Date: Sat, 28 Mar 2009 20:51:58 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <200903282051.25112.IvDoorn@gmail.com> <200903282051.41343.IvDoorn@gmail.com>
-In-Reply-To: <200903282051.41343.IvDoorn@gmail.com>
+	Thu, 12 Mar 2009 00:41:14 -0400
+Received: by gxk11 with SMTP id 11so791879gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2009 21:41:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903282051.58660.IvDoorn@gmail.com> (sfid-20090328_205311_671293_47B2B0EB)
+Date: Thu, 12 Mar 2009 00:41:11 -0400
+Message-ID: <14df1c3e0903112141w645c716bu47e2309353527535@mail.gmail.com> (sfid-20090312_054120_864962_18FEF95D)
+Subject: ath9k panic when connecting to 802.11n-enabled AP
+From: Vladimir Senkov <hangup@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After suspend & resume the rt2x00 devices won't wakeup
-anymore due to a broken register information setup.
-The most important problem is the release of the EEPROM
-buffer which is completely cleared and never read again
-after the suspend.
+Hi,
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00pci.c |   18 +-----------------
- drivers/net/wireless/rt2x00/rt2x00usb.c |   18 +-----------------
- 2 files changed, 2 insertions(+), 34 deletions(-)
+I'm new here so I apologize ahead of time if this is a known issue. In
+my defense, I did a quick search on the archives.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index eef2761..01a3c49 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -377,8 +377,6 @@ int rt2x00pci_suspend(struct pci_dev *pci_dev, pm_message_t state)
- 	if (retval)
- 		return retval;
- 
--	rt2x00pci_free_reg(rt2x00dev);
--
- 	pci_save_state(pci_dev);
- 	pci_disable_device(pci_dev);
- 	return pci_set_power_state(pci_dev, pci_choose_state(pci_dev, state));
-@@ -389,7 +387,6 @@ int rt2x00pci_resume(struct pci_dev *pci_dev)
- {
- 	struct ieee80211_hw *hw = pci_get_drvdata(pci_dev);
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
--	int retval;
- 
- 	if (pci_set_power_state(pci_dev, PCI_D0) ||
- 	    pci_enable_device(pci_dev) ||
-@@ -398,20 +395,7 @@ int rt2x00pci_resume(struct pci_dev *pci_dev)
- 		return -EIO;
- 	}
- 
--	retval = rt2x00pci_alloc_reg(rt2x00dev);
--	if (retval)
--		return retval;
--
--	retval = rt2x00lib_resume(rt2x00dev);
--	if (retval)
--		goto exit_free_reg;
--
--	return 0;
--
--exit_free_reg:
--	rt2x00pci_free_reg(rt2x00dev);
--
--	return retval;
-+	return rt2x00lib_resume(rt2x00dev);
- }
- EXPORT_SYMBOL_GPL(rt2x00pci_resume);
- #endif /* CONFIG_PM */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 7d50ca8..5015448 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -702,8 +702,6 @@ int rt2x00usb_suspend(struct usb_interface *usb_intf, pm_message_t state)
- 	if (retval)
- 		return retval;
- 
--	rt2x00usb_free_reg(rt2x00dev);
--
- 	/*
- 	 * Decrease usbdev refcount.
- 	 */
-@@ -717,24 +715,10 @@ int rt2x00usb_resume(struct usb_interface *usb_intf)
- {
- 	struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
--	int retval;
- 
- 	usb_get_dev(interface_to_usbdev(usb_intf));
- 
--	retval = rt2x00usb_alloc_reg(rt2x00dev);
--	if (retval)
--		return retval;
--
--	retval = rt2x00lib_resume(rt2x00dev);
--	if (retval)
--		goto exit_free_reg;
--
--	return 0;
--
--exit_free_reg:
--	rt2x00usb_free_reg(rt2x00dev);
--
--	return retval;
-+	return rt2x00lib_resume(rt2x00dev);
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_resume);
- #endif /* CONFIG_PM */
+My client machine (running wireless-testing kernel updated with git
+today) panics when connecting to a hostapd access point (also running
+ath9k) only when 802.11n is enabled on the access point.
+More specifically, here is the hostapd configuration that causes the
+client to crash:
+ieee80211n=0
+ht_capab=[HT40+][SHORT-GI-40][DSSS_CCK-40]
+
+If I disable 802.11n on the access point everything works ok.
+Interesting enough, access point machine never crashes. At one point
+both access point and client machine ran identical code and client
+would always crash while the access point box would stay up. So
+upgraded client to the latest and greatest and tried a few versions in
+between, this panic has been very consistent. It always panics right
+after 1st attempt to associate.
+
+I was able to narrow down the panic to this assert ath_rc_ratefind_ht() in rc.c:
+        ASSERT((rate_table->info[rate].valid && !ath_rc_priv->single_stream) ||
+               (rate_table->info[rate].valid_single_stream &&
+                ath_rc_priv->single_stream));
+When I ifdef'ed this assert panic went away and everything sort of
+worked (haven't tested it heavily), but the performance dropped to
+about 700Kbps. I usually get 10x when 802.11n is off and there is no
+panic.
+
+Has anyone else seen this?
+I'm not including panic printk's because several routines get inlined
+so panic printout points to the ath_get_rate(), but if you disass that
+at the right offset you'll see the trap instruction and I'm pretty
+sure I am barking up the right assert here :)
+
+Here is the lspci output:
+0c:00.0 Network controller [0280]: Atheros Communications, Inc.
+Unknown device [168c:002a] (rev 01)
+
+This client is a dell E1705 laptop with mini-pcie.
+
 -- 
-1.5.6.1
-
+Regards,
+Vladimir
