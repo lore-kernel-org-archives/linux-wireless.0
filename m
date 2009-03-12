@@ -1,34 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:50070 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756913AbZC3KEU (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53618 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753085AbZCLWGr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 06:04:20 -0400
-Date: Mon, 30 Mar 2009 11:04:14 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org
-Subject: Re: [RFC] rfkill: rewrite
-Message-ID: <20090330100414.GA20461@srcf.ucam.org> (sfid-20090330_120422_684574_D9A1B1C9)
-References: <1238349195.24972.5.camel@johannes.local> <1238406057.24972.23.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1238406057.24972.23.camel@johannes.local>
+	Thu, 12 Mar 2009 18:06:47 -0400
+Subject: [PATCH] mac80211: remove ieee80211_num_regular_queues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Thu, 12 Mar 2009 11:15:56 +0100
+Message-Id: <1236852956.4175.19.camel@johannes.local> (sfid-20090312_230649_854981_F34993F5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 30, 2009 at 11:40:57AM +0200, Johannes Berg wrote:
-> TODO:
-> 
->  * toshiba_acpi.c
->    -> need help, seems to abuse input polldev and report it as both
->       input and rfkill block state? at very least need info about what
->       hw actually does
+This inline is useless and actually makes the code _longer_
+rather than shorter.
 
-I'm looking at reworking some of this today.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |    5 -----
+ net/mac80211/mlme.c    |    2 +-
+ net/mac80211/tx.c      |    7 +++----
+ 3 files changed, 4 insertions(+), 10 deletions(-)
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+--- wireless-testing.orig/include/net/mac80211.h	2009-03-11 17:05:43.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2009-03-12 11:14:58.000000000 +0100
+@@ -1017,11 +1017,6 @@ static inline void SET_IEEE80211_PERM_AD
+ 	memcpy(hw->wiphy->perm_addr, addr, ETH_ALEN);
+ }
+ 
+-static inline int ieee80211_num_regular_queues(struct ieee80211_hw *hw)
+-{
+-	return hw->queues;
+-}
+-
+ static inline struct ieee80211_rate *
+ ieee80211_get_tx_rate(const struct ieee80211_hw *hw,
+ 		      const struct ieee80211_tx_info *c)
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-03-11 13:46:20.000000000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2009-03-12 11:14:58.000000000 +0100
+@@ -1834,7 +1834,7 @@ void ieee80211_sta_setup_sdata(struct ie
+ 	ifmgd->flags |= IEEE80211_STA_CREATE_IBSS |
+ 		IEEE80211_STA_AUTO_BSSID_SEL |
+ 		IEEE80211_STA_AUTO_CHANNEL_SEL;
+-	if (ieee80211_num_regular_queues(&sdata->local->hw) >= 4)
++	if (sdata->local->hw.queues >= 4)
+ 		ifmgd->flags |= IEEE80211_STA_WMM_ENABLED;
+ }
+ 
+--- wireless-testing.orig/net/mac80211/tx.c	2009-03-09 17:09:04.000000000 +0100
++++ wireless-testing/net/mac80211/tx.c	2009-03-12 11:14:58.000000000 +0100
+@@ -1664,8 +1664,7 @@ int ieee80211_subif_start_xmit(struct sk
+ 	}
+ 
+ 	/* receiver and we are QoS enabled, use a QoS type frame */
+-	if (sta_flags & WLAN_STA_WME &&
+-	    ieee80211_num_regular_queues(&local->hw) >= 4) {
++	if (sta_flags & WLAN_STA_WME && local->hw.queues >= 4) {
+ 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+ 		hdrlen += 2;
+ 	}
+@@ -1800,7 +1799,7 @@ void ieee80211_clear_tx_pending(struct i
+ 	int i, j;
+ 	struct ieee80211_tx_stored_packet *store;
+ 
+-	for (i = 0; i < ieee80211_num_regular_queues(&local->hw); i++) {
++	for (i = 0; i < local->hw.queues; i++) {
+ 		if (!test_bit(i, local->queues_pending))
+ 			continue;
+ 		store = &local->pending_packet[i];
+@@ -1825,7 +1824,7 @@ void ieee80211_tx_pending(unsigned long 
+ 	int i, ret;
+ 
+ 	netif_tx_lock_bh(dev);
+-	for (i = 0; i < ieee80211_num_regular_queues(&local->hw); i++) {
++	for (i = 0; i < local->hw.queues; i++) {
+ 		/* Check that this queue is ok */
+ 		if (__netif_subqueue_stopped(local->mdev, i) &&
+ 		    !test_bit(i, local->queues_pending_run))
+
+
