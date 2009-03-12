@@ -1,95 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:40408 "EHLO bifrost.lang.hm"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750944AbZCCHnE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 02:43:04 -0500
-Date: Mon, 2 Mar 2009 23:42:45 -0800 (PST)
-From: david@lang.hm
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-cc: Greg KH <greg@kroah.com>, Jeff Garzik <jeff@garzik.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Elaboration on "Equivalent fix must already exist in Linus'
- tree"
-In-Reply-To: <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>
-Message-ID: <alpine.DEB.1.10.0903022340060.14744@asgard.lang.hm> (sfid-20090303_084308_894112_7CA034A6)
-References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>  <49ACC6B0.409@garzik.org>  <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>  <20090303072637.GB4440@kroah.com> <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>
+Received: from yw-out-2324.google.com ([74.125.46.29]:52842 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753252AbZCLOOM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2009 10:14:12 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so997932ywh.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 07:14:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+In-Reply-To: <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
+References: <1236728344.26432.26.camel@maxim-laptop>
+	 <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
+Date: Thu, 12 Mar 2009 10:14:09 -0400
+Message-ID: <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com> (sfid-20090312_151416_482579_1C9B83FE)
+Subject: Re: Thanks for TX power patch
+From: Bob Copeland <me@bobcopeland.com>
+To: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2 Mar 2009, Luis R. Rodriguez wrote:
-
-> On Mon, Mar 2, 2009 at 11:26 PM, Greg KH <greg@kroah.com> wrote:
->> - Show quoted text -
->> On Mon, Mar 02, 2009 at 10:44:40PM -0800, Luis R. Rodriguez wrote:
->>> On Mon, Mar 2, 2009 at 9:57 PM, Jeff Garzik <jeff@garzik.org> wrote:
->>>> Luis R. Rodriguez wrote:
->>>>>
->>>>> While extending the documentation for submitting Linux wireless bug
->>>>> reports [1] we note the stable series policy on patches -- that of
->>>>> having an equivalent fix already in Linus' tree. I find this
->>>>> documented in Documentation/stable_kernel_rules.txt but I'm curious if
->>>>> there is any other resource which documents this or elaborates on this
->>>>> a bit more. I often tell people about this rule or push _really_ hard
->>>>> on testing "upstream" but some people tend to not understand. I think
->>>>> that elaborating a little on this can help and will hopefully create
->>>>> more awareness around the importance of trees like Stephen's
->>>>> linux-next tree.
->>>>
->>>> Just have people google for GregKH's copious messages, telling people a fix
->>>> needs to be upstream before it goes into -stable.
->>>>
->>>> Typically you make things easy by emailing stable@kernel.org with a commit
->>>> id.
->>>>
->>>> There are only two exceptions:
->>>> * fix is upstream, but needs to be modified for -stable
->>>> * fix is not needed at all in upstream, but -stable still needs it
->>>
->>> This certainly helps, I'm also looking for good arguments to support
->>> the reasoning behind the policy so that not only will people follow
->>> this to help development but _understand_ it and so that they can
->>> themselves promote things like linux-next and realize why its so
->>> important. Mind you -- upstream for us in wireless for example is not
->>> Linus its John's tree so what we promote is not to get the fix first
->>> into Linus' tree but first into John's tree. Which is obvious to
->>> developers but perhaps not to others.
->>
->> Who are these "people" that you are trying to convince?
+On Wed, Mar 11, 2009 at 4:15 AM, Tulio Magno Quites Machado Filho
+<tuliom@gmail.com> wrote:
+> On Wed, Mar 11, 2009 at 12:39 AM, Maxim Levitsky
+> <maximlevitsky@gmail.com> wrote:
+>> If I unload/reload the ath5k, it seems to work. but at next suspend =
+to
+>> disk, once =A0system hung, other time it showed many panic, in somet=
+hing
+>> related to page allocator (one even was in page_alloc_pages or so)
 >
-> OK small silly example is convincing distributions it may be a good
-> idea to carry linux-next kernel packages as options to users to
-> hopefully down the road reduce the delta between what they carry and
-> what is actually upstream.
+> I'm getting some Kernel oopses after unloading ath5k with Nick patche=
+s.
+> But I'm still debugging it to find where is the problem.
 
-linux-next is a testing tree for developers, it changes day to day, 
-doesn't contain all relavent changes, and is definantly _not_ something 
-that distros should be pushing to users.
+Ditto here.. looks like a bug in ath5k_eeprom_free_pcal_info(), which h=
+as:
 
-kernel.org kernels (and _possibly_ rc's) would have value (I'm glad to see 
-Ubuntu making this move), but linux-next is not something that should be 
-pushed out.
+    struct ath5k_pdgain_info *pd =3D &chinfo->pd_curves[pdg];
 
->> If they aren't
->> developers, why would any "others" care about our development
->> proceedures?
->
-> Right -- in this case above "others" could be developers but could
-> also be distribution guys. Essentially I was looking for arguments to
-> push and show why linux-next is the next best thing since sliced bread
-> for all those nasty deltas.
->
-> Which OK -- maybe they can never disappear (?) but hopefully it can at
-> least be reduced in size over time.
->
->> Heck, very few developers even read the Documentation files, I'd never
->> expect an "other" to do that :)
->
-> Heh.. Maybe I expect too much of people and things.
+    if (pd !=3D NULL) {
+        kfree(pd->pd_step);
+        kfree(pd->pd_pwr);
+        kfree(pd);
+    }
 
-I think you are misunderstanding linux-next and how it relates to users 
-and distros.
+kfree(pd) looks wrong, because pd_curves is the kzalloc()ed part, not
+the array elements themselves.  But I tried removing that and freeing
+the pd_curves array outside of the loop and got more slab debugging
+poop.  So, I punt for now.
 
-David Lang
+Also, every alloc of pd_step, and pd_pwr can potentially leak earlier
+allocated memory on ENOMEM.
+
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
