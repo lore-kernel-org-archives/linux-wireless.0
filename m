@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.188]:30683 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbZCLVcs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58275 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850AbZCMIrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 17:32:48 -0400
-Received: by gv-out-0910.google.com with SMTP id c6so572945gvd.37
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 14:32:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1236893111.30325.10.camel@maxim-laptop>
-References: <1236728344.26432.26.camel@maxim-laptop>
-	 <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
-	 <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
-	 <1236893111.30325.10.camel@maxim-laptop>
-Date: Thu, 12 Mar 2009 17:32:44 -0400
-Message-ID: <b6c5339f0903121432h26d71d6nd901f12d0c10e7bc@mail.gmail.com> (sfid-20090312_223252_963519_AF1ACE71)
-Subject: Re: [ath5k-devel] Thanks for TX power patch
-From: Bob Copeland <me@bobcopeland.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mick@madwifi-project.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 Mar 2009 04:47:49 -0400
+Subject: Re: Which APs to disregards from in inputting into the bss list
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <43e72e890903122009h25c7f6d9qcf4365ec32532e31@mail.gmail.com> (sfid-20090313_040956_677410_26120CA8)
+References: <43e72e890903122009h25c7f6d9qcf4365ec32532e31@mail.gmail.com>
+	 (sfid-20090313_040956_677410_26120CA8)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Kg7RlYTSjxKD9laHfJC4"
+Date: Fri, 13 Mar 2009 09:47:14 +0100
+Message-Id: <1236934034.25931.40.camel@johannes.local> (sfid-20090313_094752_124943_26FDF1A2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 12, 2009 at 5:25 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> Just to be clear, I got oopses, and hangs after resume from disk by just
-> using compat-wireless-2009-03-10 _without_ Nick's patches.
 
-Interesting, I thought you said that, but I tried the same stuff on
-plain wireless testing and didn't have any problems.
+--=-Kg7RlYTSjxKD9laHfJC4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The eeprom stuff was definitely implicated in my 1 sec modprobe + rmmod
-test.
+On Thu, 2009-03-12 at 20:09 -0700, Luis R. Rodriguez wrote:
+> Do we want to ignore certain APs if we determine they are bogus?
 
--- 
-Bob Copeland %% www.bobcopeland.com
+I would think that the extra code complexity and potential for bugs
+tilts the scale much in favour of not doing this.
+
+johannes
+
+--=-Kg7RlYTSjxKD9laHfJC4
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJuh2PAAoJEKVg1VMiehFYUkoQALvsGpQhYOfsPvNs29Sh1l/8
+RtcDsOOpR5P97kZen7iITHuTa7uaWf5s2PqqAx1CwQfU30OtF73LoKvT3rFwznYD
+5he6cyZlBfiHQ+Y7zYVLqZnhuWjiBOtU+rp1WYcavT/ZqAIaBryFJU7v/rp5ELra
+sf+Q6rl9NPGDQBBAMbsQlZBlbLErxu9QpuqSzmO95NbMix7PnjXS8JsQmmhc8IO0
+JdKTCea0kx1dvfL45mBPuwZUW5lyQ0mhtQPTNHg2FlND6RxUiT6BAsSS8teIo6QE
+FuAiCbWKNB1eB0qRWHpgY7z1lPxqTl/NV7ZtQs9/vVpThlFZ+XfbO2bZkwtLx8we
+uhmnXz6pEE7GCepFIpWARLRdP2Kc+Ezov6DxouhBSc8zG1l06/r5nP/eP6YKtRNt
+gJ0bSYdttCpjIij0jFAGqWfo/E18yJeBHtDzBZAyFQDA3sf7aQA2oej8aTFtuszF
+KAdkKRJzHtgLU508bkR4lXNSGfN/PosRjfNuSDIUdujeI3WE9IjdyeWpY6eaIUUQ
+C8FK7lDoRMGRmVAIzRDi8iRwqM4MlIuy9xeWhnmLqdWDc6OHBzsq8y6AZTSFYihx
+NXwMl2zqRT75hijN7fDB2W3SVcT1oiqZo7RvuPESS47GghiT1kv6cfdg6RbRBgg0
+H+gB78xAIE9i1VhZn2pM
+=/P9Q
+-----END PGP SIGNATURE-----
+
+--=-Kg7RlYTSjxKD9laHfJC4--
+
