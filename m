@@ -1,60 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46400
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751367AbZB1XvC (ORCPT
+Received: from mail-gx0-f167.google.com ([209.85.217.167]:41790 "EHLO
+	mail-gx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754116AbZCMDbH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Feb 2009 18:51:02 -0500
-Date: Sat, 28 Feb 2009 15:50:43 -0800 (PST)
-Message-Id: <20090228.155043.46469864.davem@davemloft.net> (sfid-20090301_005111_443487_DFA81A2A)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-02-27
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090227204110.GJ3687@tuxdriver.com>
-References: <20090227204110.GJ3687@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 12 Mar 2009 23:31:07 -0400
+Received: by gxk11 with SMTP id 11so2582996gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 20:31:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1236742805.6267.9.camel@rainbow>
+References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
+	 <c4d76b3b0903041147s2138e72bjb39864f87b4cd09e@mail.gmail.com>
+	 <1236211493.6612.90.camel@rc-desk> <1236297052.6153.4.camel@rainbow>
+	 <1236299085.6612.229.camel@rc-desk>
+	 <1236312734.19328.37.camel@rainbow> <1236317982.12430.9.camel@rc-desk>
+	 <1236649234.6685.9.camel@rainbow> <1236661466.15923.53.camel@rc-desk>
+	 <1236742805.6267.9.camel@rainbow>
+Date: Thu, 12 Mar 2009 23:31:04 -0400
+Message-ID: <c4d76b3b0903122031o7baea17ay5704df428ea2fced@mail.gmail.com> (sfid-20090313_043119_027055_6C06990B)
+Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
+From: Jason Andryuk <jandryuk@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Samuel Ortiz <samuel@sortiz.org>, Tomas Winkler <tomasw@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 27 Feb 2009 15:41:10 -0500
+On Tue, Mar 10, 2009 at 11:40 PM, Jason Andryuk <jandryuk@gmail.com> wr=
+ote:
+>> You log below has a new error (similar to what you note in your next
+>> email). "Unsupported interface type 515". This is very strange and
+>> really looks like some corruption as this value is initialized with =
+a
+>> macro during probe. Could you enable mac and info debugging also (ad=
+d
+>> 0x3 to your current debug flags)? This code has also changed a bit s=
+ince
+>> commit bb64785ad94d575fe4f5f9e69f4f6c0b24e9905d.
+>>
+>> You can also put a dump_stack() in iwl3945_connection_init_rx_config=
+ to
+>> see where the call comes from and then trace the value of mode to se=
+e
+>> where it is set to 515 ... it is supposed to be 2
+>> (NL80211_IFTYPE_STATION).
+>
+> See logs below. =A0I ran with debug=3D0x40003. =A0This is on commit
+> "ff5010c3e12f1d0da27a5f871c2e3d5333dfbe2f iwl3945: sync tx queue data
+> structure with iwlagn" with my patches to make it somewhat usable.
+>
+>> I am finding it hard to keep track of things as what works and what =
+does
+>> not work appears to shift. I did install a 64bit system in the hopes=
+ of
+>> reproducing your issue but could not with a basic open connect. How =
+do
+>> you connect to the AP? Please provide details that you think will en=
+able
+>> me to reproduce.
+>
+> The problem is that as I try older commits to find which one introduc=
+ed
+> the original error, I find other problems that need to be solved.
+> Hopefully I have finally tracked down the commit,
+> "ff5010c3e12f1d0da27a5f871c2e3d5333dfbe2f iwl3945: sync tx queue data
+> structure with iwlagn", that introduced the Microcode SW errors.
 
-> Here is an even bigger batch of changes intended for 2.6.30.  They run
-> the usual gamut of wireless driver and mac80211 changes...
-> 
-> I have reverted the genetlink patch from Johannes and another of
-> his that relied upon it.  There is also still that ugly one from me.
-> It is a kluge but it prevents a crash on my Lenovo T400.  I bisected
-> the crash down to "mac80211: use cfg80211s BSS infrastructure",
-> which is already in net-next-2.6.  Still, if it is too ugly then let
-> me know and I'll reformulate without it.
-> 
-> Please let me know if there are problems!
+Looking at ff5010c3e12f1d0da27a5f871c2e3d5333dfbe2f, I found the call
+to iwl_reset_qos corrupts priv->iw_mode.  It is 2 before the call and
+515 after.
 
-Hmmm, here is something mysterious:
+I dumped priv for 32 bytes starting at &priv->last_beacon_time and saw =
+this.
+iwl data: 00000000: 00 0f 00 ff 03 02 00 00 00 0f 00 ff 03 02 00 00
+=2E...............
+iwl data: 00000010: 00 0f 00 ff 03 02 00 00 00 0f 00 ff 03 02 00 00
+=2E...............
 
-davem@sunset:~/src/GIT/net-next-2.6$ git pull git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
- ...
->From git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6
- * branch            master     -> FETCH_HEAD
-fatal: unable to read tree c9ee57c5c20c3b7a2d7784a4172aef8b34c3a844
-davem@sunset:~/src/GIT/net-next-2.6$ git show c9ee57c5c20c3b7a2d7784a4172aef8b34c3a844
-fatal: bad object c9ee57c5c20c3b7a2d7784a4172aef8b34c3a844
-davem@sunset:~/src/GIT/net-next-2.6$ 
+515 =3D 0x0203 =3D 03 02 little endian
 
-Yet, that tree object does exist in my tree on kernel.org:
+We have
 
-[davem@hera net-next-2.6.git]$ git show c9ee57c
-tree c9ee57c
+struct iwl_ac_qos {
+        __le16 cw_min;
+        __le16 cw_max;
+        u8 aifsn;
+        u8 reserved1;
+        __le16 edca_txop;
+} __attribute__ ((packed));
 
-Kconfig
-Makefile
-...
+and
 
-But if I try to pull kernel.org's net-next-2.6.git into my local
-copy I don't get that object, it's clean.
+	priv->qos_data.def_qos_parm.ac[0].cw_min =3D cpu_to_le16(cw_min);
+	priv->qos_data.def_qos_parm.ac[0].cw_max =3D cpu_to_le16(cw_max);
+        priv->qos_data.def_qos_parm.ac[0].aifsn =3D aifs;
+        priv->qos_data.def_qos_parm.ac[0].edca_txop =3D 0;
+        priv->qos_data.def_qos_parm.ac[0].reserved1 =3D 0;
 
-I wonder if I reverted a push and it contaminated your tree?
+and
+	u16 cw_min =3D 15;      // 0x000f
+        u16 cw_max =3D 1023; // 0x03ff
+        u8 aifs =3D 2;                //0x02
 
-I'll try to figure out where that turd came from.
+Which corresponds to the dump and what is showing up in iw_mode.
+
+I don't know why things are going wrong though.
+
+One problem I see is the check of staging_rxon instead of
+staging39_rxon in iwl_reset_qos.
+(priv->staging_rxon.flags & RXON_FLG_SHORT_SLOT_MSK) =3D=3D 0)
+
+Jason
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
