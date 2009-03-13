@@ -1,53 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:54370 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754841AbZCDQB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 11:01:56 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: John W Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix compilation for devices without PCI core
-Date: Wed, 4 Mar 2009 16:41:10 +0100
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Randy Dunlap <randy.dunlap@oracle.com>
+Received: from fg-out-1718.google.com ([72.14.220.154]:9304 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbZCMPCN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2009 11:02:13 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so851198fgg.17
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 08:02:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200903041641.11302.mb@bu3sch.de> (sfid-20090304_170224_123904_F19199BA)
+In-Reply-To: <69e28c910902091056h119b3fa4g460e5e18288c1c3c@mail.gmail.com>
+References: <69e28c910902091056h119b3fa4g460e5e18288c1c3c@mail.gmail.com>
+Date: Fri, 13 Mar 2009 16:02:09 +0100
+Message-ID: <69e28c910903130802t1bd879av50e3d51c075f6e2c@mail.gmail.com> (sfid-20090313_160215_269434_88A181AB)
+Subject: [Resend] Proposal: Add a new flag to the proposed TX flags field to
+	control the sequence number of injected packets
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: radiotap@radiotap.org, Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes compilation, if the PCI core is disabled.
+Currently the TX Flags field is defined as a bitmap containing:
+0x0001 Transmission failed due to excessive retries
+0x0002 Transmission used CTS-to-self protection
+0x0004 Transmission used RTS/CTS handshake
+0x0008 Transmission shall not expect an ACK frame and not retry when
+no ACK is received
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+I'd like to propose the following additional bit:
+0x0010 Transmission has the sequence and fragment numbers pre-set from
+userspace and should not be renumbered
 
----
+This bit is useful for packet injection, where userspace injectors
+might want to control the sequence and fragment numbers of the packets
+it injects. A particular example is aireplay-ng's -5 mode
+(fragmentation attack), where userspace injects pre-made fragments
+one-by-one. The wireless stack usually can't recognize that the
+injected packets are fragments, and instead treats them as complete
+packets, assigning a new sequence number to each fragment, preventing
+the receiving party from correctly reassembling the fragmented packet.
+The userspace does however know that the packets being injected are
+fragments, and such can produce much more correct sequence numbers for
+them. So, userspace can in these cases set TX_FLAGS |=3D3D 0x0010 and p=
+ut
+pre-generated sequence numbers on the packets it injects.
 
-John, I think this is only needed for the next feature release, as the patch
-that broke that was only merged for next, afaik.
+Similar to how 0x0008 works, this bit also should be used when packets
+are being sent, as opposed to when they are being reported as having
+been sent (like the first 3 bits).
 
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-03-04 16:35:07.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2009-03-04 16:36:08.000000000 +0100
-@@ -4176,15 +4176,17 @@ static int b43_wireless_core_init(struct
- 			hf |= B43_HF_4318TSSI;
- 		if (phy->radio_rev < 6)
- 			hf |= B43_HF_VCORECALC;
- 	}
- 	if (sprom->boardflags_lo & B43_BFL_XTAL_NOSLOW)
- 		hf |= B43_HF_DSCRQ; /* Disable slowclock requests from ucode. */
-+#ifdef CONFIG_SSB_DRIVER_PCICORE
- 	if ((bus->bustype == SSB_BUSTYPE_PCI) &&
- 	    (bus->pcicore.dev->id.revision <= 10))
- 		hf |= B43_HF_PCISCW; /* PCI slow clock workaround. */
-+#endif
- 	hf &= ~B43_HF_SKCFPUP;
- 	b43_hf_write(dev, hf);
- 
- 	b43_set_retry_limits(dev, B43_DEFAULT_SHORT_RETRY_LIMIT,
- 			     B43_DEFAULT_LONG_RETRY_LIMIT);
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_SFFBLIM, 3);
+I have posted a reference implementation on the linux-wireless mailing
+list about a month ago, and it is also available here:
+http://trac.aircrack-ng.org/svn/trunk/patches/mac80211_2.6.28-rc8-wl_fr=
+ag+a=3D
+ck_radiotap.patch
+(Note that this patch may not clearly apply to 2.6.29-rc2 or the
+current wireless-testing kernel, as it was made against the
+master-2008-12-17 tag of wireless-testing.)
 
--- 
-Greetings, Michael.
+G=E1bor
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
