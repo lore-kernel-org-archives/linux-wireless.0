@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:46711 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753705AbZCVU3X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 16:29:23 -0400
-Received: by fxm2 with SMTP id 2so1541342fxm.37
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Mar 2009 13:29:20 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 0/5] mac80211: beacon filtering
-References: <20090322195619.26460.48292.stgit@tikku>
-	<1237752930.19647.5.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 22 Mar 2009 22:29:18 +0200
-In-Reply-To: <1237752930.19647.5.camel@johannes.local> (Johannes Berg's message of "Sun\, 22 Mar 2009 21\:15\:30 +0100")
-Message-ID: <87hc1lfgip.fsf@litku.valot.fi> (sfid-20090322_212926_840887_0983C0A4)
+Received: from mail.atheros.com ([12.36.123.2]:54255 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758505AbZCMPAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2009 11:00:39 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 08:00:38 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Populate HT limitation with TKIP/WEP to the handler for SIOCSIWENCODE too
+Date: Fri, 13 Mar 2009 20:26:52 +0530
+Message-ID: <1236956212-28648-1-git-send-email-vasanth@atheros.com> (sfid-20090313_160050_022208_CF3B2FD6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ net/mac80211/wext.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-> On Sun, 2009-03-22 at 21:56 +0200, Kalle Valo wrote:
->> Here's my proposal how to implement beacon filtering in mac80211. The
->> basic idea is simple, the driver enables filtering whenever mac80211
->> enables power save and the driver calls ieee80211_beacon_loss()
->> whenever hardware informs about beacon loss.
->> 
->> I have tested this with stlc45xx (with beacon filtering) and iwl3945
->> (without beacon filtering) and based on simple tests this seems to
->> work. For reference I'll send the stlc45xx patch as a followup.
->
-> I'm getting bored saying this again and again ;) Looks good to me.
-
-Sorry, I _had_ to fix the ieee80211_beacon_loss() interface ;)
-
-Oh yeah, forgot to mention that I did some quick measurements and with
-these patches I was able get 25% system power consumption decrease
-with stlc45xx on Nokia N800 in the wlan idle case (associated to the
-AP, no data traffic, display off). I'll do more measurements later.
-
+diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
+index 935c63e..e55d283 100644
+--- a/net/mac80211/wext.c
++++ b/net/mac80211/wext.c
+@@ -630,7 +630,7 @@ static int ieee80211_ioctl_siwencode(struct net_device *dev,
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int idx, i, alg = ALG_WEP;
+ 	u8 bcaddr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+-	int remove = 0;
++	int remove = 0, ret;
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+@@ -656,11 +656,20 @@ static int ieee80211_ioctl_siwencode(struct net_device *dev,
+ 		return 0;
+ 	}
+ 
+-	return ieee80211_set_encryption(
++	ret = ieee80211_set_encryption(
+ 		sdata, bcaddr,
+ 		idx, alg, remove,
+ 		!sdata->default_key,
+ 		keybuf, erq->length);
++
++	if (!ret) {
++		if (remove)
++			sdata->u.mgd.flags &= ~IEEE80211_STA_TKIP_WEP_USED;
++		else
++			sdata->u.mgd.flags |= IEEE80211_STA_TKIP_WEP_USED;
++	}
++
++	return ret;
+ }
+ 
+ 
 -- 
-Kalle Valo
+1.5.5.1
+
