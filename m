@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43386 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752583AbZCCJyx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 04:54:53 -0500
-Received: from mail.atheros.com ([10.10.20.86])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2009 01:54:52 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from emita2.mittwald.de ([85.199.129.253]:56163 "EHLO
+	emita2.mittwald.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750852AbZCMLKA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2009 07:10:00 -0400
+Received: from mx51.mymxserver.com (unknown [172.16.51.1])
+	by emita2.mittwald.de (Postfix) with ESMTP id 7F28A5FE2F4
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 11:49:19 +0100 (CET)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Which APs to disregards from in inputting into the bss list
+Date: Fri, 13 Mar 2009 11:48:30 +0100
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Dan Williams <dcbw@redhat.com>, Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <43e72e890903122009h25c7f6d9qcf4365ec32532e31@mail.gmail.com>
+In-Reply-To: <43e72e890903122009h25c7f6d9qcf4365ec32532e31@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18860.64890.657290.185346@gargle.gargle.HOWL> (sfid-20090303_105501_481254_A5951670)
-Date: Tue, 3 Mar 2009 15:20:50 +0530
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Handle power modes in isr for power save.
-In-Reply-To: <8e92b4100903030137r4c412ccdu17020c482d6cb1b3@mail.gmail.com>
-References: <20090302145514.GB4660@myhost.users.atheros.com>
-	<18860.6782.4168.588808@gargle.gargle.HOWL>
-	<8e92b4100903030137r4c412ccdu17020c482d6cb1b3@mail.gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903131148.30236.hs4233@mail.mn-solutions.de> (sfid-20090313_121008_268854_AD3AB687)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vivek Natarajan wrote:
-> SC_OP_WAIT_FOR_BEACON is being changed in rx_tasklet and in isr which
-> are mutually exclusive. Even though it might be changed  in these two
-> regions, it won't affect the ps_wake/ps_restore cycle.
-> 
-> IEEE80211_CONF_PS is changed in siwpower() and also in
-> dynamic_ps_work. Even if it is changed while we are executing this
-> ps_restore, there won't be any race condition on ps_wake/ps_restore
-> cycle and it will work fine.
-> 
-> hw_setpower is just a register write function which may not need a protection(?)
-> 
-> And for the protection of ps_wake/ps_restore itself, there is
-> ps_count(atomic) which takes care of properly restoring power save
-> state.
-> 
-> Overall, from my perspective there is no need for any more lock.
+> Do we want to ignore certain APs if we determine they are
+> bogus?
 
-Sorry, I saw sc_flags and just assumed it would be set from process context.
-Thanks for the explanation.
+I don't have problems with discarding bss entries for the work 
+case of association. For sure should the association logic check 
+if it can associate at all.
 
-Sujith
+
+However, if I do "iwlist XXX scan" or the equivalent "iw" 
+command, I don't want that mac80211 silently discards entries. 
+After all, I want to see "what is in the air", e.g. to find out 
+why I cannot connect.
+
+If we would simply delete entries from the list you'd get 
+complaints from users "I cannot see AP xyz, but it must be 
+there, because my laptop with operating system ABC can connect 
+to it".
+
+
+Okay, I could probably run kismet or wireshark to see "what is in 
+the air", but I can imagine a fair number of users that would 
+see this as intimidating.
