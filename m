@@ -1,226 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53696 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758581AbZC3LXl (ORCPT
+Received: from static-72-66-92-28.washdc.fios.verizon.net ([72.66.92.28]:4949
+	"EHLO mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957AbZCMAa2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 07:23:41 -0400
-Subject: [PATCH] mac80211: move ieee80211_enable_ht function to mlme.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 30 Mar 2009 13:23:35 +0200
-Message-Id: <1238412215.24972.40.camel@johannes.local> (sfid-20090330_132344_684611_5EA1866B)
-Mime-Version: 1.0
+	Thu, 12 Mar 2009 20:30:28 -0400
+Date: Thu, 12 Mar 2009 20:30:08 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Tulio Magno Quites Machado Filho <tuliom@gmail.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	Nick Kossifidis <mick@madwifi-project.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Thanks for TX power patch
+Message-ID: <20090313003008.GA4188@hash.localnet> (sfid-20090313_013031_313826_6BC24FCD)
+References: <1236728344.26432.26.camel@maxim-laptop> <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com> <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It really belongs into that file since it is only relevant
-for managed mode. Move 1:1, not even whitespace changes,
-but make it static and remove from header file.
+On Thu, Mar 12, 2009 at 10:14:09AM -0400, Bob Copeland wrote:
+> 
+> kfree(pd) looks wrong, because pd_curves is the kzalloc()ed part, not
+> the array elements themselves.  But I tried removing that and freeing
+> the pd_curves array outside of the loop and got more slab debugging
+> poop.  So, I punt for now.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ht.c          |   83 ---------------------------------------------
- net/mac80211/ieee80211_i.h |    3 -
- net/mac80211/mlme.c        |   83 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 83 insertions(+), 86 deletions(-)
+This seems to fix it for me...
 
---- wireless-testing.orig/net/mac80211/ht.c	2009-03-30 11:43:05.000000000 +0200
-+++ wireless-testing/net/mac80211/ht.c	2009-03-30 11:43:54.000000000 +0200
-@@ -83,89 +83,6 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(s
- 		ht_cap->mcs.rx_mask[32/8] |= 1;
+diff --git a/drivers/net/wireless/ath5k/eeprom.c b/drivers/net/wireless/ath5k/eeprom.c
+index f992b1b..0b062f6 100644
+--- a/drivers/net/wireless/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath5k/eeprom.c
+@@ -1559,17 +1559,20 @@ ath5k_eeprom_free_pcal_info(struct ath5k_hw *ah, int mode)
+ 	}
+ 
+ 	for (pier = 0; pier < ee->ee_n_piers[mode]; pier++) {
++		if (!chinfo[pier].pd_curves)
++			continue;
++
+ 		for (pdg = 0; pdg < ee->ee_pd_gains[mode]; pdg++) {
+-			struct ath5k_pdgain_info *pd = &chinfo->pd_curves[pdg];
++			struct ath5k_pdgain_info *pd =
++				&chinfo[pier].pd_curves[pdg];
+ 
+ 			if (pd != NULL) {
+ 				kfree(pd->pd_step);
+ 				kfree(pd->pd_pwr);
+-				kfree(pd);
+ 			}
+ 		}
++		kfree(chinfo[pier].pd_curves);
+ 	}
+-
+ 	return 0;
  }
  
--/*
-- * ieee80211_enable_ht should be called only after the operating band
-- * has been determined as ht configuration depends on the hw's
-- * HT abilities for a specific band.
-- */
--u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
--			struct ieee80211_ht_info *hti,
--			u16 ap_ht_cap_flags)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband;
--	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--	struct ieee80211_bss_ht_conf ht;
--	struct sta_info *sta;
--	u32 changed = 0;
--	bool enable_ht = true, ht_changed;
--	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
--
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--
--	memset(&ht, 0, sizeof(ht));
--
--	/* HT is not supported */
--	if (!sband->ht_cap.ht_supported)
--		enable_ht = false;
--
--	/* check that channel matches the right operating channel */
--	if (local->hw.conf.channel->center_freq !=
--	    ieee80211_channel_to_frequency(hti->control_chan))
--		enable_ht = false;
--
--	if (enable_ht) {
--		channel_type = NL80211_CHAN_HT20;
--
--		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
--		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
--		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
--			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
--			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--				channel_type = NL80211_CHAN_HT40PLUS;
--				break;
--			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--				channel_type = NL80211_CHAN_HT40MINUS;
--				break;
--			}
--		}
--	}
--
--	ht_changed = conf_is_ht(&local->hw.conf) != enable_ht ||
--		     channel_type != local->hw.conf.channel_type;
--
--	local->oper_channel_type = channel_type;
--
--	if (ht_changed) {
--                /* channel_type change automatically detected */
--		ieee80211_hw_config(local, 0);
--
--		rcu_read_lock();
--
--		sta = sta_info_get(local, ifmgd->bssid);
--		if (sta)
--			rate_control_rate_update(local, sband, sta,
--						 IEEE80211_RC_HT_CHANGED);
--
--		rcu_read_unlock();
--
--        }
--
--	/* disable HT */
--	if (!enable_ht)
--		return 0;
--
--	ht.operation_mode = le16_to_cpu(hti->operation_mode);
--
--	/* if bss configuration changed store the new one */
--	if (memcmp(&sdata->vif.bss_conf.ht, &ht, sizeof(ht))) {
--		changed |= BSS_CHANGED_HT;
--		sdata->vif.bss_conf.ht = ht;
--	}
--
--	return changed;
--}
--
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta)
- {
- 	int i;
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-03-30 11:43:05.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-03-30 11:44:02.000000000 +0200
-@@ -1002,9 +1002,6 @@ int ieee80211_subif_start_xmit(struct sk
- void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
- 				       struct ieee80211_ht_cap *ht_cap_ie,
- 				       struct ieee80211_sta_ht_cap *ht_cap);
--u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
--			struct ieee80211_ht_info *hti,
--			u16 ap_ht_cap_flags);
- void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn);
- void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
- 			  const u8 *da, u16 tid,
---- wireless-testing.orig/net/mac80211/mlme.c	2009-03-30 11:43:05.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-03-30 11:43:54.000000000 +0200
-@@ -81,6 +81,89 @@ static int ieee80211_compatible_rates(st
- 	return count;
- }
- 
-+/*
-+ * ieee80211_enable_ht should be called only after the operating band
-+ * has been determined as ht configuration depends on the hw's
-+ * HT abilities for a specific band.
-+ */
-+static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
-+			       struct ieee80211_ht_info *hti,
-+			       u16 ap_ht_cap_flags)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct ieee80211_bss_ht_conf ht;
-+	struct sta_info *sta;
-+	u32 changed = 0;
-+	bool enable_ht = true, ht_changed;
-+	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-+
-+	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+
-+	memset(&ht, 0, sizeof(ht));
-+
-+	/* HT is not supported */
-+	if (!sband->ht_cap.ht_supported)
-+		enable_ht = false;
-+
-+	/* check that channel matches the right operating channel */
-+	if (local->hw.conf.channel->center_freq !=
-+	    ieee80211_channel_to_frequency(hti->control_chan))
-+		enable_ht = false;
-+
-+	if (enable_ht) {
-+		channel_type = NL80211_CHAN_HT20;
-+
-+		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
-+		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
-+		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
-+			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+				channel_type = NL80211_CHAN_HT40PLUS;
-+				break;
-+			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+				channel_type = NL80211_CHAN_HT40MINUS;
-+				break;
-+			}
-+		}
-+	}
-+
-+	ht_changed = conf_is_ht(&local->hw.conf) != enable_ht ||
-+		     channel_type != local->hw.conf.channel_type;
-+
-+	local->oper_channel_type = channel_type;
-+
-+	if (ht_changed) {
-+                /* channel_type change automatically detected */
-+		ieee80211_hw_config(local, 0);
-+
-+		rcu_read_lock();
-+
-+		sta = sta_info_get(local, ifmgd->bssid);
-+		if (sta)
-+			rate_control_rate_update(local, sband, sta,
-+						 IEEE80211_RC_HT_CHANGED);
-+
-+		rcu_read_unlock();
-+
-+        }
-+
-+	/* disable HT */
-+	if (!enable_ht)
-+		return 0;
-+
-+	ht.operation_mode = le16_to_cpu(hti->operation_mode);
-+
-+	/* if bss configuration changed store the new one */
-+	if (memcmp(&sdata->vif.bss_conf.ht, &ht, sizeof(ht))) {
-+		changed |= BSS_CHANGED_HT;
-+		sdata->vif.bss_conf.ht = ht;
-+	}
-+
-+	return changed;
-+}
-+
- /* frame sending functions */
- 
- static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
 
+-- 
+Bob Copeland %% www.bobcopeland.com
 
