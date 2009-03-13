@@ -1,72 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55591 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:55344 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826AbZC0Ve5 (ORCPT
+	with ESMTP id S1751515AbZCMKUU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 17:34:57 -0400
-Subject: Re: [RFC] rfkill/rfkill-input userspace API
+	Fri, 13 Mar 2009 06:20:20 -0400
+Subject: [PATCH] mac80211: fix warnings in ieee80211_if_config
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br> (sfid-20090327_165815_381528_72AF136C)
-References: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br>
-	 (sfid-20090327_165815_381528_72AF136C)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5tKvnt68W6oKSHYK4YZY"
-Date: Fri, 27 Mar 2009 22:34:49 +0100
-Message-Id: <1238189689.4452.26.camel@johannes.local> (sfid-20090327_223459_594002_44A880DB)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 13 Mar 2009 11:19:45 +0100
+Message-Id: <1236939585.5235.2.camel@johannes.local> (sfid-20090313_112023_202648_DEE8F491)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The last warning can never trigger, and the explicit AP_VLAN
+check is pointless if we move the config_interface check down,
+in practice config_interface is required anyway.
 
---=-5tKvnt68W6oKSHYK4YZY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/main.c |   12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-On Fri, 2009-03-27 at 12:58 -0300, Henrique de Moraes Holschuh wrote:
-> This patch set is being posted for comments and ideas.
->=20
-> It implements a sysfs API for the rfkill core that allows userspace to
-> completely implement the operations that rfkill-input is capable of.
->=20
-> I am not too happy about it, I think it looks ugly.  But I had no
-> better ideas.  Comments and ideas for a better one are welcome.
+--- wireless-testing.orig/net/mac80211/main.c	2009-03-13 10:44:41.000000000 +0100
++++ wireless-testing/net/mac80211/main.c	2009-03-13 10:45:22.000000000 +0100
+@@ -161,12 +161,6 @@ int ieee80211_if_config(struct ieee80211
+ 	if (WARN_ON(!netif_running(sdata->dev)))
+ 		return 0;
+ 
+-	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
+-		return -EINVAL;
+-
+-	if (!local->ops->config_interface)
+-		return 0;
+-
+ 	memset(&conf, 0, sizeof(conf));
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
+@@ -183,6 +177,9 @@ int ieee80211_if_config(struct ieee80211
+ 		return -EINVAL;
+ 	}
+ 
++	if (!local->ops->config_interface)
++		return 0;
++
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_ADHOC:
+@@ -224,9 +221,6 @@ int ieee80211_if_config(struct ieee80211
+ 		}
+ 	}
+ 
+-	if (WARN_ON(!conf.bssid && (changed & IEEE80211_IFCC_BSSID)))
+-		return -EINVAL;
+-
+ 	conf.changed = changed;
+ 
+ 	return local->ops->config_interface(local_to_hw(local),
 
-Can we do it after I rewrite the core to be useful wrt. hard/soft
-blocks? Same comments as in my other email apply. I'm sorry to waste
-your work on it, but on the other hand you clearly didn't ever care
-about it enough to have posted it earlier.
-
-> Note: unless something is done to change the way X.org deals with
-> input devices, rfkill-input is _useless_ in a large number of setups
-> as far as input event handling goes, because it will never get any
-> events after X.org evdev grabs the input device.
-
-Right.
-
-johannes
-
---=-5tKvnt68W6oKSHYK4YZY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJzUZ3AAoJEKVg1VMiehFYUn4QAIo5h2uUEVB62HNsToTkYndh
-a2kgwnpwj4iMhKNMokPcWh9nEkd8HSZ7+3bEUAxXMNiEnY9B1lMws5j7voNHbSs9
-zJKFuDRONN60tsYvnSeg1VBFghpPDHBC/laK7+DXMbfj7X1gTC0asbNbHoTy9zEZ
-Hlq8ePIJ+HyoSjByluAY3A6lq6Hw2PeBOQ1lbM6MoZjCkN+CCah6sATEmd5EuC0D
-jF0kXcTGLK1cVCJzixWi623XKEJQDAet2yFrAq9BY4rI0S/XMZdteVrXCqSiahJd
-kt2NvwH3lM7RqmttNxyjNaQKfq/foXToKb/GxzYsHgHAw8MYrgS9929GzMENmzxf
-BFdsIYEWR40X6BWqs/sRdwdWIp/NG9P0UNd/tmqBmWRKk+HGrWUv1lVKFuX0ynrz
-jROydt+HhuSxT9czdC7otgvB59+TDokQlKFvWyRxlAL7AKQE7244jt5hMa9CxK0W
-qWLR7hc7VgYlLHRPtqEgbz5uoGK63s5cNNKyoP9Aax5heVjqDG4F9v/vHgnvkqBI
-9oOfL+qf4ZjwPH2SLISOen/apm4DWuzQnPP5hOGHmaKvmvP5tM0LgKmkUQjMBpCt
-g8fzSDUW2aOvgDwMYTvIPPDDD5lAOtmtHZlZIM9R2oLk6O/8PISKSC570C1ZECbF
-ykbfDWuAhU0JUOadEuIF
-=4lxV
------END PGP SIGNATURE-----
-
---=-5tKvnt68W6oKSHYK4YZY--
 
