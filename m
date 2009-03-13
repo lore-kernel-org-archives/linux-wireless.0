@@ -1,79 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:58233 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752858AbZCCPVE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 10:21:04 -0500
-Message-ID: <49AD4A9C.2080209@s5r6.in-berlin.de> (sfid-20090303_162109_839530_1AB72F7B)
-Date: Tue, 03 Mar 2009 16:19:56 +0100
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Received: from mail.atheros.com ([12.36.123.2]:63485 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753018AbZCMDaL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2009 23:30:11 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 20:30:10 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: david@lang.hm, Greg KH <greg@kroah.com>,
-	Jeff Garzik <jeff@garzik.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Elaboration on "Equivalent fix must already exist in Linus' tree"
-References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>	 <49ACC6B0.409@garzik.org>	 <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>	 <20090303072637.GB4440@kroah.com>	 <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>	 <alpine.DEB.1.10.0903022340060.14744@asgard.lang.hm> <43e72e890903022357p7594cf98gd7c1061a78f8828a@mail.gmail.com>
-In-Reply-To: <43e72e890903022357p7594cf98gd7c1061a78f8828a@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18873.53837.603530.332324@gargle.gargle.HOWL> (sfid-20090313_043016_483082_AA5866F7)
+Date: Fri, 13 Mar 2009 08:56:05 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
+	<Luis.Rodriguez@Atheros.com>
+Subject: [PATCH 4/7] ath9k: Change return type for set_board_values()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Mon, Mar 2, 2009 at 11:42 PM,  <david@lang.hm> wrote:
->> - Show quoted text -
->> On Mon, 2 Mar 2009, Luis R. Rodriguez wrote:
->>> OK small silly example is convincing distributions it may be a good
->>> idea to carry linux-next kernel packages as options to users to
->>> hopefully down the road reduce the delta between what they carry and
->>> what is actually upstream.
->>
->> linux-next is a testing tree for developers, it changes day to day, doesn't
->> contain all relavent changes, and is definantly _not_ something that distros
->> should be pushing to users.
-> 
-> Why not? Just as people may want to get bleeding edge wireless I don't
-> see why a user may not want to simply get bleeding edge wireless and
-> bleeding edge audio, and video.
+We always return true, checking for 'false' return value
+is bogus anyway, so fix this.
 
-They want wireless to work and audio to not break.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath9k/eeprom.c |    8 ++------
+ drivers/net/wireless/ath9k/eeprom.h |    2 +-
+ drivers/net/wireless/ath9k/hw.c     |    6 +-----
+ 3 files changed, 4 insertions(+), 12 deletions(-)
 
-> The latest RC series helps but lets
-> face it there are also a lot of good stuff queued for the -next
-> releases as well. The way I'm seeing this is if a user has no support
-> for a device on their system it should look something like this:
-> 
-> Distribution kernel -->
->   Distribution next stable kernel release (2.6.27 --> 2.6.28) -->
->     Distribution RC kernel (if one is available) | kernel.org RC kernel -->
->       Development tree kernel for a specific device -->
->         Staging
-> 
-> If the have multiple devices which are not yet supported by the latest
-> RC kernel but on -next then you have little options but I think a
-> concrete one should exist and it does.
-
-Testers for linux-next are certainly welcome, but these testers need to
-understand what the actual topic of linux-next is.
-
-It is an integration-testing tree (for what is anticipated to be part of
-Linus' next merge window).  Integration testing is for the purpose of
-detecting + fixing (or avoiding) problems due to interactions between
-subsystems, or between infrastructure code to peripheral code.
-
-Therefore I agree with David that linux-next is somewhat too special for
-general consumption.
-
-Before integration testing, we test subsystem developments in a more
-targeted fashion in our myriad of subsystem development trees.  (These
-trees host special branches from which linux-next is created almost
-daily in a more or less automated fashion.)
-
-Of course if a distributor wanted to package linux-next, why not.  The
-nature of -next would call for several of such package releases per week
-though.
+diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
+index c3bb196..973b576 100644
+--- a/drivers/net/wireless/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath9k/eeprom.c
+@@ -1232,7 +1232,7 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
+ 		REG_WRITE(ah, AR9285_AN_TOP4, (AR9285_AN_TOP4_DEFAULT | 0x14));
+ }
+ 
+-static bool ath9k_hw_4k_set_board_values(struct ath_hw *ah,
++static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 					 struct ath9k_channel *chan)
+ {
+ 	struct modal_eep_4k_header *pModal;
+@@ -1378,8 +1378,6 @@ static bool ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 				      AR_PHY_SETTLING_SWITCH,
+ 				      pModal->swSettleHt40);
+ 	}
+-
+-	return true;
+ }
+ 
+ static u16 ath9k_hw_4k_get_eeprom_antenna_cfg(struct ath_hw *ah,
+@@ -1718,7 +1716,7 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
+ 	}
+ }
+ 
+-static bool ath9k_hw_def_set_board_values(struct ath_hw *ah,
++static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 					  struct ath9k_channel *chan)
+ {
+ 	struct modal_eep_header *pModal;
+@@ -1884,8 +1882,6 @@ static bool ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 			      AR_PHY_TX_DESIRED_SCALE_CCK,
+ 			      eep->baseEepHeader.desiredScaleCCK);
+ 	}
+-
+-	return true;
+ }
+ 
+ static void ath9k_hw_def_set_addac(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath9k/eeprom.h b/drivers/net/wireless/ath9k/eeprom.h
+index 0a4b22a..8e5b880 100644
+--- a/drivers/net/wireless/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath9k/eeprom.h
+@@ -490,7 +490,7 @@ struct eeprom_ops {
+ 	u8 (*get_num_ant_config)(struct ath_hw *hw, enum ieee80211_band band);
+ 	u16 (*get_eeprom_antenna_cfg)(struct ath_hw *hw,
+ 				      struct ath9k_channel *chan);
+-	bool (*set_board_values)(struct ath_hw *hw, struct ath9k_channel *chan);
++	void (*set_board_values)(struct ath_hw *hw, struct ath9k_channel *chan);
+ 	void (*set_addac)(struct ath_hw *hw, struct ath9k_channel *chan);
+ 	int (*set_txpower)(struct ath_hw *hw, struct ath9k_channel *chan,
+ 			   u16 cfgCtl, u8 twiceAntennaReduction,
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index 00c9e78..7555894 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -2283,11 +2283,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	else
+ 		ath9k_hw_spur_mitigate(ah, chan);
+ 
+-	if (!ah->eep_ops->set_board_values(ah, chan)) {
+-		DPRINTF(ah->ah_sc, ATH_DBG_EEPROM,
+-			"error setting board options\n");
+-		return -EIO;
+-	}
++	ah->eep_ops->set_board_values(ah, chan);
+ 
+ 	ath9k_hw_decrease_chain_power(ah, chan);
+ 
 -- 
-Stefan Richter
--=====-==--= --== ---==
-http://arcgraph.de/sr/
+1.6.2
+
