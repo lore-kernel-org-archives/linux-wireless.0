@@ -1,172 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4.dnainternet.fi ([87.94.96.72]:26031 "EHLO
-	smtp4.dnainternet.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751630AbZCDSJO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 13:09:14 -0500
-Message-ID: <20090304200906.63419u6tdqcub3cw@hayate.sektori.org> (sfid-20090304_190918_527873_E097750A)
-Date: Wed, 04 Mar 2009 20:09:06 +0200
-From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+Received: from mx2.redhat.com ([66.187.237.31]:41351 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757706AbZCMRU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2009 13:20:59 -0400
+Subject: Re: [PATCH] cfg80211: drop wext channel list if too long
+From: Dan Williams <dcbw@redhat.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH] rndis_wlan: convert get/set mode to cfg80211
-References: <1236029064-3836-1-git-send-email-linville@tuxdriver.com>
-	<1236034806-13809-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1236034806-13809-1-git-send-email-linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090313145445.GC5551@tuxdriver.com>
+References: <1236882244.25931.5.camel@johannes.local>
+	 <20090313145445.GC5551@tuxdriver.com>
+Content-Type: text/plain
+Date: Fri, 13 Mar 2009 13:18:50 -0400
+Message-Id: <1236964730.9657.10.camel@localhost.localdomain> (sfid-20090313_182102_446793_E6DB3149)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks ok to me. I very busy with studies atm, so I don't think I have much
-time to test these changes, sorry.
+On Fri, 2009-03-13 at 10:54 -0400, John W. Linville wrote:
+> On Thu, Mar 12, 2009 at 07:24:04PM +0100, Johannes Berg wrote:
+> > wext limits the number of channels it can list to 32, we obey
+> > that limitation but show a partial list which is confusing.
+> > Thus, when going over the limit, drop the list completely to
+> > make the users aware that something is wrong and hopefully
+> > prompt them to use iw instead. We still let iwlist print out
+> > the total number of available channels.
+> > 
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> Will this make wpa_supplicant or Networkmanager barf?
 
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+It doesn't look like wpa_supplicant cares about the returned channel
+list from SIOCGIWRANGE.
 
-Quoting "John W. Linville" <linville@tuxdriver.com>:
+NM, however, uses the returned channel list to figure out a free
+supported adhoc frequency to use when creating an adhoc network (like
+for connection sharing).  If it can't find an intersection between an
+internal "safe" frequency list and what the card supports (which it
+wouldn't be able to with this patch), it will simply use 2462 or 5180
+MHz.
 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> Obviously this depends on "rndis_wlan: initiate cfg80211 conversion"...
->
->  drivers/net/wireless/rndis_wlan.c |   95  
-> +++++++++++++++++--------------------
->  1 files changed, 43 insertions(+), 52 deletions(-)
->
-> diff --git a/drivers/net/wireless/rndis_wlan.c  
-> b/drivers/net/wireless/rndis_wlan.c
-> index ebed802..fa9b9dd 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -406,8 +406,17 @@ struct rndis_wext_private {
->  	u8 command_buffer[COMMAND_BUFFER_SIZE];
->  };
->
-> +/*
-> + * cfg80211 ops
-> + */
-> +int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
-> +				enum nl80211_iftype type, u32 *flags,
-> +				struct vif_params *params);
-> +
-> +struct cfg80211_ops rndis_config_ops = {
-> +	.change_virtual_intf = rndis_change_virtual_intf,
-> +};
->
-> -struct cfg80211_ops rndis_config_ops = { };
->  void *rndis_wiphy_privid = &rndis_wiphy_privid;
->
->  static const int bcm4320_power_output[4] = { 25, 50, 75, 100 };
-> @@ -1125,6 +1134,37 @@ static void set_multicast_list(struct usbnet *usbdev)
->
->
->  /*
-> + * cfg80211 ops
-> + */
-> +int rndis_change_virtual_intf(struct wiphy *wiphy, int ifindex,
-> +				enum nl80211_iftype type, u32 *flags,
-> +				struct vif_params *params)
-> +{
-> +	struct net_device *dev;
-> +	struct usbnet *usbdev;
-> +	int mode;
-> +
-> +	/* we're under RTNL */
-> +	dev = __dev_get_by_index(&init_net, ifindex);
-> +	if (!dev)
-> +		return -ENODEV;
-> +	usbdev = netdev_priv(dev);
-> +
-> +	switch (type) {
-> +	case NL80211_IFTYPE_ADHOC:
-> +		mode = ndis_80211_infra_adhoc;
-> +		break;
-> +	case NL80211_IFTYPE_STATION:
-> +		mode = ndis_80211_infra_infra;
-> +		break;
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +
-> +	return set_infra_mode(usbdev, mode);
-> +}
-> +
-> +/*
->   * wireless extension handlers
->   */
->
-> @@ -1450,55 +1490,6 @@ static int rndis_iw_get_auth(struct net_device *dev,
->  }
->
->
-> -static int rndis_iw_get_mode(struct net_device *dev,
-> -				struct iw_request_info *info,
-> -				union iwreq_data *wrqu, char *extra)
-> -{
-> -	struct usbnet *usbdev = netdev_priv(dev);
-> -	struct rndis_wext_private *priv = get_rndis_wext_priv(usbdev);
-> -
-> -	switch (priv->infra_mode) {
-> -	case ndis_80211_infra_adhoc:
-> -		wrqu->mode = IW_MODE_ADHOC;
-> -		break;
-> -	case ndis_80211_infra_infra:
-> -		wrqu->mode = IW_MODE_INFRA;
-> -		break;
-> -	/*case ndis_80211_infra_auto_unknown:*/
-> -	default:
-> -		wrqu->mode = IW_MODE_AUTO;
-> -		break;
-> -	}
-> -	devdbg(usbdev, "SIOCGIWMODE: %08x", wrqu->mode);
-> -	return 0;
-> -}
-> -
-> -
-> -static int rndis_iw_set_mode(struct net_device *dev,
-> -    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
-> -{
-> -	struct usbnet *usbdev = netdev_priv(dev);
-> -	int mode;
-> -
-> -	devdbg(usbdev, "SIOCSIWMODE: %08x", wrqu->mode);
-> -
-> -	switch (wrqu->mode) {
-> -	case IW_MODE_ADHOC:
-> -		mode = ndis_80211_infra_adhoc;
-> -		break;
-> -	case IW_MODE_INFRA:
-> -		mode = ndis_80211_infra_infra;
-> -		break;
-> -	/*case IW_MODE_AUTO:*/
-> -	default:
-> -		mode = ndis_80211_infra_auto_unknown;
-> -		break;
-> -	}
-> -
-> -	return set_infra_mode(usbdev, mode);
-> -}
-> -
-> -
->  static int rndis_iw_set_encode(struct net_device *dev,
->      struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
->  {
-> @@ -2196,8 +2187,8 @@ static const iw_handler rndis_iw_handler[] =
->  	IW_IOCTL(SIOCGIWNAME)      = (iw_handler) cfg80211_wext_giwname,
->  	IW_IOCTL(SIOCSIWFREQ)      = rndis_iw_set_freq,
->  	IW_IOCTL(SIOCGIWFREQ)      = rndis_iw_get_freq,
-> -	IW_IOCTL(SIOCSIWMODE)      = rndis_iw_set_mode,
-> -	IW_IOCTL(SIOCGIWMODE)      = rndis_iw_get_mode,
-> +	IW_IOCTL(SIOCSIWMODE)      = (iw_handler) cfg80211_wext_siwmode,
-> +	IW_IOCTL(SIOCGIWMODE)      = (iw_handler) cfg80211_wext_giwmode,
->  	IW_IOCTL(SIOCGIWRANGE)     = rndis_iw_get_range,
->  	IW_IOCTL(SIOCSIWAP)        = rndis_iw_set_bssid,
->  	IW_IOCTL(SIOCGIWAP)        = rndis_iw_get_bssid,
-> --
-> 1.6.0.6
->
->
->
+Thus, I don't think you'll *break* anything specifically, but this patch
+would cause the default frequency for an IBSS created by NM  to move
+from channel 1 to channel 11.
+
+Dan
 
 
