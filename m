@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:16306 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752770AbZCKSNB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 14:13:01 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/8] iwl3945: unmap previously mapped memory
-Date: Wed, 11 Mar 2009 11:17:58 -0700
-Message-Id: <1236795481-12757-6-git-send-email-reinette.chatre@intel.com> (sfid-20090311_191314_835703_B990B59A)
-In-Reply-To: <1236795481-12757-5-git-send-email-reinette.chatre@intel.com>
-References: <1236795481-12757-1-git-send-email-reinette.chatre@intel.com>
- <1236795481-12757-2-git-send-email-reinette.chatre@intel.com>
- <1236795481-12757-3-git-send-email-reinette.chatre@intel.com>
- <1236795481-12757-4-git-send-email-reinette.chatre@intel.com>
- <1236795481-12757-5-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f177.google.com ([209.85.219.177]:56897 "EHLO
+	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785AbZCMS3F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2009 14:29:05 -0400
+Received: by ewy25 with SMTP id 25so2666777ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 11:29:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b6c5339f0903131123h4cb6379k472166ff81b9c5f2@mail.gmail.com>
+References: <1236728344.26432.26.camel@maxim-laptop>
+	 <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
+	 <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
+	 <1236893111.30325.10.camel@maxim-laptop>
+	 <b6c5339f0903121432h26d71d6nd901f12d0c10e7bc@mail.gmail.com>
+	 <b6c5339f0903121433r7bbf2dd8l484d15446241dccd@mail.gmail.com>
+	 <1236895489.17849.3.camel@maxim-laptop>
+	 <1236940708.4708.14.camel@maxim-laptop>
+	 <b6c5339f0903131123h4cb6379k472166ff81b9c5f2@mail.gmail.com>
+Date: Fri, 13 Mar 2009 20:29:01 +0200
+Message-ID: <40f31dec0903131129m47002de1g792b427be524995b@mail.gmail.com> (sfid-20090313_192908_644379_021ADF60)
+Subject: Re: [ath5k-devel] Thanks for TX power patch
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mick@madwifi-project.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+2009/3/13 Bob Copeland <me@bobcopeland.com>:
+> On Fri, Mar 13, 2009 at 6:38 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+>>
+>> Just compiled and installed latest wireless-testing with Nick's patches,
+>> and your patch.
+>>
+>> System is rock solid, module reload/s2disk/s2ram/long transfers work
+>> just fine.
+>
+> Great, thanks for the test!
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
 
-During preparation of TX we create DMA mapping to TX command as part of
-preparing the TFD. This mapping needs to be cleared at the time TFD is
-freed.
+Cool, nice catch Bob ;-)
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+I'll resubmit the patches on the weekend and address this bug and
+Jiri's comments...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 9e6f9ec..ba7e720 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -741,7 +741,8 @@ int iwl3945_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv,
- void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- {
- 	struct iwl3945_tfd *tfd_tmp = (struct iwl3945_tfd *)txq->tfds;
--	struct iwl3945_tfd *tfd = &tfd_tmp[txq->q.read_ptr];
-+	int index = txq->q.read_ptr;
-+	struct iwl3945_tfd *tfd = &tfd_tmp[index];
- 	struct pci_dev *dev = priv->pci_dev;
- 	int i;
- 	int counter;
-@@ -759,6 +760,13 @@ void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- 		return;
- 	}
- 
-+	/* Unmap tx_cmd */
-+	if (counter)
-+		pci_unmap_single(dev,
-+				pci_unmap_addr(&txq->cmd[index]->meta, mapping),
-+				pci_unmap_len(&txq->cmd[index]->meta, len),
-+				PCI_DMA_TODEVICE);
-+
- 	/* unmap chunks if any */
- 
- 	for (i = 1; i < counter; i++) {
+
 -- 
-1.5.6.3
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
