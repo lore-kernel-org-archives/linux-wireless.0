@@ -1,86 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42577 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753382AbZCFPMT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 10:12:19 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2009 07:12:18 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH] ath9k: Set IEEE80211_TX_CTL_RATE_CTRL_PROBE in rate control for probe rates
-Date: Fri, 6 Mar 2009 20:38:37 +0530
-Message-ID: <1236352117-18466-2-git-send-email-vasanth@atheros.com> (sfid-20090306_161221_600264_7323DA07)
-In-Reply-To: <1236352117-18466-1-git-send-email-vasanth@atheros.com>
-References: <1236352117-18466-1-git-send-email-vasanth@atheros.com>
+Received: from mail-gx0-f167.google.com ([209.85.217.167]:45577 "EHLO
+	mail-gx0-f167.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752811AbZCMCEM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2009 22:04:12 -0400
+Received: by gxk11 with SMTP id 11so2519161gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 19:04:08 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18873.48952.353253.595670@gargle.gargle.HOWL> (sfid-20090313_030417_433997_48CFB8AB)
+Date: Fri, 13 Mar 2009 07:34:40 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Subject: ath9k fragmentation
+In-Reply-To: <1236881434.25931.1.camel@johannes.local>
+References: <1236881434.25931.1.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath9k/rc.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+Johannes Berg wrote:
+> Just a quick note -- was testing fragmentation and happened to use ath9k
+> as the test station, this failed utterly, it sent increasing sequence
+> numbers and no fragment number.
 
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 8327356..a35b525 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -750,7 +750,8 @@ static u8 ath_rc_ratefind_ht(struct ath_softc *sc,
- static void ath_rc_rate_set_series(struct ath_rate_table *rate_table,
- 				   struct ieee80211_tx_rate *rate,
- 				   struct ieee80211_tx_rate_control *txrc,
--				   u8 tries, u8 rix, int rtsctsenable)
-+				   u8 tries, u8 rix, int rtsctsenable,
-+				   bool is_probe)
- {
- 	rate->count = tries;
- 	rate->idx = rix;
-@@ -765,6 +766,8 @@ static void ath_rc_rate_set_series(struct ath_rate_table *rate_table,
- 		rate->flags |= IEEE80211_TX_RC_SHORT_GI;
- 	if (WLAN_RC_PHY_HT(rate_table->info[rix].phy))
- 		rate->flags |= IEEE80211_TX_RC_MCS;
-+	if (is_probe)
-+		rate->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- }
- 
- static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
-@@ -854,7 +857,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		/* set one try for probe rates. For the
- 		 * probes don't enable rts */
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
--				       1, nrix, 0);
-+				       1, nrix, 0, is_probe);
- 
- 		try_per_rate = (ATH_11N_TXMAXTRY/4);
- 		/* Get the next tried/allowed rate. No RTS for the next series
-@@ -863,12 +866,12 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
- 					  rate_table, nrix, 1, 0);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
--				       try_per_rate, nrix, 0);
-+				       try_per_rate, nrix, 0, is_probe);
- 	} else {
- 		try_per_rate = (ATH_11N_TXMAXTRY/4);
- 		/* Set the choosen rate. No RTS for first series entry. */
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
--				       try_per_rate, nrix, 0);
-+				       try_per_rate, nrix, 0, is_probe);
- 	}
- 
- 	/* Fill in the other rates for multirate retry */
-@@ -884,7 +887,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 					  rate_table, nrix, 1, min_rate);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
--				       try_num, nrix, 1);
-+				       try_num, nrix, 1, is_probe);
- 	}
- 
- 	/*
--- 
-1.5.5.1
+Sequence number handling is pretty much borked in ath9k.
+There is a comment in assign_aggr_tid_seqno@xmit.c - and it doesn't make much sense.
+Removing all crappy code in ath9k dealing with this and leaving everything
+to mac80211 would certainly be the better option, but we still have to figure
+out how to manage BA windows.
 
+Sujith
