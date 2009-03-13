@@ -1,63 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35824 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755347AbZC3Uyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 16:54:54 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V2] b43legacy: Do not select HW_RANDOM
-Date: Mon, 30 Mar 2009 22:53:25 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <49d0e498.VVNw6/FIi1OemoLq%Larry.Finger@lwfinger.net>
-In-Reply-To: <49d0e498.VVNw6/FIi1OemoLq%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200903302253.25710.mb@bu3sch.de> (sfid-20090330_225457_207376_3FB10097)
+Received: from xc.sipsolutions.net ([83.246.72.84]:60256 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752897AbZCMKtd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2009 06:49:33 -0400
+Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <1236941058.5235.12.camel@johannes.local> (sfid-20090313_114453_238290_13C307AD)
+References: <1236939917.5235.7.camel@johannes.local>
+	 (sfid-20090313_112555_620577_8A85228F)  <1236941058.5235.12.camel@johannes.local>
+	 (sfid-20090313_114453_238290_13C307AD)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HXg8PLCNUXkWTAKoMjst"
+Date: Fri, 13 Mar 2009 11:48:59 +0100
+Message-Id: <1236941339.5235.14.camel@johannes.local> (sfid-20090313_114936_050438_5FF0B5AA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 March 2009 17:26:16 Larry Finger wrote:
-> Auto-depend on HW_RANDOM, rather than "select"ing it.
-> This way the user has the choice to enable or disable HWRNG support.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+--=-HXg8PLCNUXkWTAKoMjst
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2009-03-13 at 11:44 +0100, Johannes Berg wrote:
+> When mac80211 resumes, it currently doesn't reconfigure the interfaces
+> entirely and also doesn't reconfigure BSS information -- fix this.
+>=20
+> Also, to be able to test this, add a debugfs file that just calls
+> the suspend/resume code to see what happens when we go through that,
+> without needing the time-consuming suspend/resume cycle.
+>=20
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 > ---
-> 
-> John, please queue for 2.6.31.
-> 
-> 
-> 
-> Index: wireless-testing/drivers/net/wireless/b43legacy/Kconfig
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43legacy/Kconfig
-> +++ wireless-testing/drivers/net/wireless/b43legacy/Kconfig
-> @@ -3,7 +3,6 @@ config B43LEGACY
->  	depends on SSB_POSSIBLE && MAC80211 && WLAN_80211 && HAS_DMA
->  	select SSB
->  	select FW_LOADER
-> -	select HW_RANDOM
->  	---help---
->  	  b43legacy is a driver for 802.11b devices from Broadcom (BCM4301 and
->  	  BCM4303) and early model 802.11g chips (BCM4306 Ver. 2) used in the
-> @@ -51,6 +50,13 @@ config B43LEGACY_RFKILL
->  	depends on B43LEGACY && (RFKILL = y || RFKILL = B43LEGACY) && RFKILL_INPUT && (INPUT_POLLDEV = y || INPUT_POLLDEV = B43LEGACY)
->  	default y
->  
-> +# This config option automatically enables b43 HW-RNG support,
-> +# if the HW-RNG core is enabled.
-> +config B43legacy_HWRNG
-> +	bool
-> +	depends on B43legacy && (HW_RANDOM = y || HW_RANDOM = B43legacy)
+> v2: rebased on top of "stop queues across suspend/resume"
+>=20
+> zd1211rw currently doesn't survive this properly, I'm not sure why,
+> but it keeps saying
+> 	zd1211rw 1-1:1.0: error ioread32(CR_REG1): -11
+>=20
+> Please test with other hardware, we need to figure out whether or
+> not something is missing in mac80211.
 
-It seems like the symbol is B43LEGACY (uppercase).
-Can you also change the new symbol to B43LEGACY_HWRNG, just for consistency with
-all other symbols?
+ath9k survives ping -f without even blinking.
 
-> +	default y
-> +
+johannes
 
+--=-HXg8PLCNUXkWTAKoMjst
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
--- 
-Greetings, Michael.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJujoZAAoJEKVg1VMiehFY7xwP/RFTUdruej1qd5hrlAV3KXGc
+R7eJwzyA1w+c5avW+LD6BdWDfJ9wU+Rthc1mGfa3SUXDb+WEmysJLLVxGlLWq0Ij
+cCWmY3NSvv+5nqK2Ujj1bem1MWj5wNaDJEuTkonHqueDjVccUwxpLzfEFduGkSF2
+ue5VSGcgU/RcxCWISiN+wxns1KCAD6mX5IcBm2YwepQEBld/L+SPsVdxuMfLznN7
+fVO65RhrwZHTbj9I1dnW2CxqcWuU/5cJYFh44X9e1JUsShNbDoKshANArdvOhs/G
+SVagiliU/JGOHMwkKWz7OT1xdtcQ9xy1qVsHeRlj+z+sM1ejCkYD5BKPPQZv4G+g
+XPCivuDi18VIGDBs7pdKw1CFT2JkqKu5826yOCzr4gSCX6A2qoTdH8Cnq3P61IPb
+SWa1PGhmdit/ypBCBhHuvnKvE6qIJXjqj2S9mnS4m6hpCZSQYupr4yKakU2IYa/E
+6xgRgROYyX5aX+yZlPRRsz3vk8y4gIg/aPqda7i38xsFgOe79YgOKyThZzZ59xRt
+f661Xyby/TALvcYWmnklHATM9qryQZ8zbg3nHca50f+iG8I/XBkx3GjOxHJeZ6k5
+d6+EXATMfc7TwEwlevBsbBjtIlepHkpMfOYny32rJf3e0aU8JnkaMrNY+Xe0Ams6
+C0mk4xgqHcWmP5wr47o+
+=79xS
+-----END PGP SIGNATURE-----
+
+--=-HXg8PLCNUXkWTAKoMjst--
+
