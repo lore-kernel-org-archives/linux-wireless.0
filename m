@@ -1,105 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:57443 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755996AbZCYCKJ (ORCPT
+Received: from mail-gx0-f165.google.com ([209.85.217.165]:56119 "EHLO
+	mail-gx0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759001AbZCMV3M convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 22:10:09 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] p54: add beacon filtering support
-Date: Wed, 25 Mar 2009 03:12:49 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>
+	Fri, 13 Mar 2009 17:29:12 -0400
+Received: by gxk9 with SMTP id 9so411451gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 14:29:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200903250312.49624.chunkeey@web.de> (sfid-20090325_031020_307226_B0B42381)
+In-Reply-To: <1236896331-5026-1-git-send-email-lrodriguez@atheros.com>
+References: <1236896331-5026-1-git-send-email-lrodriguez@atheros.com>
+Date: Fri, 13 Mar 2009 14:29:08 -0700
+Message-ID: <43e72e890903131429h560dd786j74dd93a9e80fac12@mail.gmail.com> (sfid-20090313_222915_811550_E7A0EEA5)
+Subject: Re: [ath9k-devel] [PATCH v6 0/3] ath9k: SMP fixes
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: "stable@kernel.org" <stable@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds beacon filtering support to p54.
+On Thu, Mar 12, 2009 at 3:18 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> This v6 removes the hotplug CPU stuff which although it technically
+> would be correct is more cruft and highly unlikely. The down side
+> is you will get serialization applied even if you only have one
+> CPU but who cares, I doubt those nutty SGI guys are toying with
+> ath9k in the lab.
+>
+> Yesterday I started mucking with an alternative approach to
+> serialization which worked. I added just 5 udelay()s in key places
+> where we had a lot of consecutive IO read/writes issued and that
+> resolved the issue at least for STA mode but it didn't do the trick
+> for AP mode. Technically it should be possible to groom all hardware
+> access routines to do the same but I'm tired of this issue and want
+> to a fix merged today not a few weeks from now. Anyway if you are
+> curious you can check out that patch replacement approach for
+> serialization here:
+>
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/20=
+09-03-12/smp-udelay-fix.patch
+>
+> Note that AP won't work though so if you have a lot of time in your
+> hands and have an SMP box with PCI Atheros 11n and are seeing the han=
+gs
+> and want a neat alternative to the current serialization implementati=
+on
+> try adding udelays like the ones in the patch in places where we do a=
+ lot
+> of io read/writes. Send me the results :)
+>
+> The compromise is to keep serialization conditional -- we do not want=
+ to
+> do it for every read/write regardless of the type of card you have, t=
+he
+> code overhead is not great and we maintain this anyway. Adding it for=
+ all
+> cases would just not be optimal.
+>
+> Luis R. Rodriguez (3):
+> =C2=A0ath9k: implement IO serialization
+> =C2=A0ath9k: AR9280 PCI devices must serialize IO as well
+> =C2=A0ath9k: remove dummy PCI "retry timeout" fix
+>
+> =C2=A0drivers/net/wireless/ath9k/ath9k.h | =C2=A0 34 ++++++++++++++++=
+++++++++++++++++++
+> =C2=A0drivers/net/wireless/ath9k/hw.c =C2=A0 =C2=A0| =C2=A0 28 ++++++=
++++++++++++++++++++++-
+> =C2=A0drivers/net/wireless/ath9k/hw.h =C2=A0 =C2=A0| =C2=A0 =C2=A04 +=
++--
+> =C2=A0drivers/net/wireless/ath9k/main.c =C2=A0| =C2=A0 =C2=A01 +
+> =C2=A0drivers/net/wireless/ath9k/pci.c =C2=A0 | =C2=A0 18 -----------=
+-------
+> =C2=A05 files changed, 64 insertions(+), 21 deletions(-)
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
-index 0954044..53d3ed8 100644
---- a/drivers/net/wireless/p54/p54.h
-+++ b/drivers/net/wireless/p54/p54.h
-@@ -134,6 +134,7 @@ struct p54_led_dev {
- 
- struct p54_common {
- 	struct ieee80211_hw *hw;
-+	struct ieee80211_vif *vif;
- 	void (*tx)(struct ieee80211_hw *dev, struct sk_buff *skb);
- 	int (*open)(struct ieee80211_hw *dev);
- 	void (*stop)(struct ieee80211_hw *dev);
-diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-index 3766d33..b6ebd48 100644
---- a/drivers/net/wireless/p54/p54common.c
-+++ b/drivers/net/wireless/p54/p54common.c
-@@ -1044,6 +1044,7 @@ static void p54_rx_stats(struct ieee80211_hw *dev, struct sk_buff *skb)
- 
- static void p54_rx_trap(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
-+	struct p54_common *priv = dev->priv;
- 	struct p54_hdr *hdr = (struct p54_hdr *) skb->data;
- 	struct p54_trap *trap = (struct p54_trap *) hdr->data;
- 	u16 event = le16_to_cpu(trap->event);
-@@ -1057,6 +1058,8 @@ static void p54_rx_trap(struct ieee80211_hw *dev, struct sk_buff *skb)
- 			wiphy_name(dev->wiphy), freq);
- 		break;
- 	case P54_TRAP_NO_BEACON:
-+		if (priv->vif)
-+			ieee80211_beacon_loss(priv->vif);
- 		break;
- 	case P54_TRAP_SCAN:
- 		break;
-@@ -1939,7 +1942,8 @@ static int p54_set_ps(struct ieee80211_hw *dev)
- 	int i;
- 
- 	if (dev->conf.flags & IEEE80211_CONF_PS)
--		mode = P54_PSM | P54_PSM_DTIM | P54_PSM_MCBC;
-+		mode = P54_PSM | P54_PSM_BEACON_TIMEOUT | P54_PSM_DTIM |
-+		       P54_PSM_CHECKSUM | P54_PSM_MCBC;
- 	else
- 		mode = P54_PSM_CAM;
- 
-@@ -1957,9 +1961,10 @@ static int p54_set_ps(struct ieee80211_hw *dev)
- 		psm->intervals[i].periods = cpu_to_le16(1);
- 	}
- 
--	psm->beacon_rssi_skip_max = 60;
-+	psm->beacon_rssi_skip_max = 200;
- 	psm->rssi_delta_threshold = 0;
--	psm->nr = 0;
-+	psm->nr = 10;
-+	psm->exclude[0] = 0;
- 
- 	priv->tx(dev, skb);
- 
-@@ -2114,6 +2119,8 @@ static int p54_add_interface(struct ieee80211_hw *dev,
- 		return -EOPNOTSUPP;
- 	}
- 
-+	priv->vif = conf->vif;
-+
- 	switch (conf->type) {
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
-@@ -2138,6 +2145,7 @@ static void p54_remove_interface(struct ieee80211_hw *dev,
- 	struct p54_common *priv = dev->priv;
- 
- 	mutex_lock(&priv->conf_mutex);
-+	priv->vif = NULL;
- 	if (priv->cached_beacon)
- 		p54_tx_cancel(dev, priv->cached_beacon);
- 	priv->mode = NL80211_IFTYPE_MONITOR;
-@@ -2592,7 +2600,8 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
- 		     IEEE80211_HW_SUPPORTS_PS |
- 		     IEEE80211_HW_PS_NULLFUNC_STACK |
- 		     IEEE80211_HW_SIGNAL_DBM |
--		     IEEE80211_HW_NOISE_DBM;
-+		     IEEE80211_HW_NOISE_DBM |
-+		     IEEE80211_HW_BEACON_FILTER;
- 
- 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				      BIT(NL80211_IFTYPE_ADHOC) |
+John, Greg,
+
+these patches require a port down to the other stable kernels, I've
+taken the time to port only the necessary patches (the first two) to
+fix the SMP hang on each stable kernel and test them accordingly:
+
+* 2.6.27
+* 2.6.28
+* 2.6.29
+
+Once merged into wireless-testing the following patches can be used to
+push into Linus' tree:
+
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009=
+-03-12/serialization-v6/for-2.6.29/
+
+Once merged into stable these can be used to merge into 2.6.27 and 2.6.=
+28:
+
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009=
+-03-12/serialization-v6/for-2.6.27/
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009=
+-03-12/serialization-v6/for-2.6.28/
+
+Just replace:
+
+This is a port of commit SHA1 <BLEH>
+
+With the respective SHA1.
+
+I can also simply resend the ports for 27 and 28 once merged into
+Linus' tree. Whatever makes it easier for you.
+
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
