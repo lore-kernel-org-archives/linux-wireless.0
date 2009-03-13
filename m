@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([204.127.217.105]:37133 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751338AbZCXPRD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60955 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636AbZCMK5W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 11:17:03 -0400
-Message-ID: <49C8F93F.4030704@lwfinger.net> (sfid-20090324_161707_908496_0F72D9C4)
-Date: Tue, 24 Mar 2009 10:16:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>,
-	networkmanager-list <networkmanager-list@gnome.org>
-Subject: Permissions problem in Dbus/NetworkManager
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 Mar 2009 06:57:22 -0400
+Subject: Re: ath9k fragmentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <18874.14867.311121.242263@gargle.gargle.HOWL>
+References: <1236881434.25931.1.camel@johannes.local>
+	 <18873.48952.353253.595670@gargle.gargle.HOWL>
+	 <1236934984.25931.48.camel@johannes.local>
+	 <18874.14867.311121.242263@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LaruY9HQid9eD0eMsaM2"
+Date: Fri, 13 Mar 2009 11:56:47 +0100
+Message-Id: <1236941807.5235.24.camel@johannes.local> (sfid-20090313_115725_571371_CA3E790F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recently openSUSE issued an update for 11.1 to correct the Dbus security
-problems descriBed in CVE-2009-0578. After this was done, I could no longer
-connect using wifi encryption.
 
-The NetworkManager log shows the following:
+--=-LaruY9HQid9eD0eMsaM2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Mar 17 16:06:01 larrylap NetworkManager: <info>  Activation (wlan2/wireless):
-access point 'lwfdjf_rad' has security, but secrets are required.
-Mar 17 16:06:01 larrylap NetworkManager: <info>  (wlan2): device state change:
-5 -> 6
-Mar 17 16:06:01 larrylap NetworkManager: <info>  Activation (wlan2) Stage 2 of
-5 (Device Configure) complete.
-Mar 17 16:06:01 larrylap NetworkManager: <WARN>  get_secrets_cb(): Couldn't get
-connection secrets: A security policy in place prevents this sender from sending
-this message to this recipient, see message bus configuration file (rejected
-message had interface "org.freedesktop.NetworkManagerSettings.Connection.Secrets"
-member "GetSecrets" error name "(unset)" destination
-"org.freedesktop.NetworkManagerUserSettings").
+On Fri, 2009-03-13 at 16:18 +0530, Sujith wrote:
 
-The problem seemed to be random. One reporter had two x86 systems that appeared
-to be identical - one worked and one did not.
+> Managing per-TID state to handle Block ACKs, failed sub-frames,
+> sub-frame retries and other window management stuff.
+> ath9k manages all this internally.
 
-After going through the usual checks to make sure the contents of
-/etc/dbus-1/system.d were correct, one of the openSUSE people discovered that
-/var/run/dbus/at_console contained both a directory for the unprivileged user,
-and an extra empty directory for root. As soon as the directory for root was
-deleted, everything worked as expected. Testing was done with the following command:
+Ok. I'd have to look into it to understand what we could do there.
 
-dbus-send --system --print-reply \
---dest=org.freedesktop.NetworkManagerUserSettings \
-/org/freedesktop/NetworkManagerSettings/Connection/0 \
-org.freedesktop.NetworkManagerSettings.Connection.Secrets.GetSecrets
+> > For ampdu_action(), I recently saw something, somewhere, saying
+> > "mac80211 expects us to fill in the seqno variable" or so, but this is
+> > only true if you don't use mac80211's sequence numbers, otherwise it is
+> > fine to leave it at the pre-assigned value.
+>=20
+> ampdu_action() requires the driver to set the starting sequence number
+> for initiating an ADDBA session, ath9k was filling it incorrectly.
+> This was fixed in the patch, "ath9k: Fix bug in TX aggregation".
 
-This command returned an error when called as an unprivileged user, and the
-expected result when used as root. Before the extraneous directory was deleted,
-all users failed.
+Yes, but it only requires it to do that if the driver assigns sequence
+numbers, if it relies on mac80211 then it doesn't need to touch the
+value :)
 
-This problem was covered in the openSUSE Bugzilla #486267. I posted it here for
-those openSUSE users that might not be perusing the bug list, and just in case
-users of another distro might be affected.
+johannes
 
-Larry
+--=-LaruY9HQid9eD0eMsaM2
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJujvtAAoJEKVg1VMiehFYst4P+gPUk/cm4oVHKetofF/0VWpW
+yU1RpU2J9R80LndMosp5zj2vTxPDYRQJFn/DDTHB5ZiVRjOFmSoqZGKi63fnRSVJ
+NzXJexJS2KzCOaHD7GI4rrvHna1AAHNYvvan1td6Y2+epftpfseuPV7exB5w6lGk
+D7+cDoPwk+Q3V8LMQoZCPOyjWvpY38hZt5IQpgc0UIX9Vzv9jjH/3mXBGavVbARf
+oG6H9pJ0DFi8gQnkDGzITWFOfxowLuSrMPsqBAVd6F+G+fdeBiq8hgFX2tG1Z8L0
+oXiYl3fOvqStEtR1VMoQMNxPAX5AAukPaGp6C+yvLguUEZo5l8eQPRXPKezFpO3l
+ih63seQFiD4vXpdB4VW23nosUlVaSvvtjMrmHNfJAOEU0729075XflcxlBN2CtV7
+RXlKs2klKqrzt7ddKHJJlOvYH1DgLuB4itqTWNriLXj4ZCybaILDedXwZsmCamGA
+C9UIdNCEFSXytRbWuP24MWRYBgSOLpMPZ5SU5jaYvnaOQwvc/CXI3aYrX3U3CVEH
+Udz9w6c6ZpCeUoMNAebyeO5pq4UzGvGMBnqmIbqeBX1rvno3OLhnfVEADaQiDgGE
+2xIdXh9Va8y+6GMSgyRIVRczW9D+uIW5qjRVDK/7L8/jXCIL2vgvTBkDH1imDssp
+Ew5JCUU7g0QMROth1ByO
+=kkt2
+-----END PGP SIGNATURE-----
+
+--=-LaruY9HQid9eD0eMsaM2--
 
