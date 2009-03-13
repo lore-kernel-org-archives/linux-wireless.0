@@ -1,58 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:3765 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759907AbZCXOru convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49836 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952AbZCMKZw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 10:47:50 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Dan Williams <dcbw@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-Date: Tue, 24 Mar 2009 07:47:46 -0700
-Subject: RE: wireless powersaving (in NM?)
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A3546DA95D4@orsmsx506.amr.corp.intel.com> (sfid-20090324_154810_059379_6445E561)
-References: <1237891149.4320.73.camel@johannes.local>
-	 (sfid-20090324_133306_274219_3B7517AB)
- <1237902786.4320.92.camel@johannes.local>
-In-Reply-To: <1237902786.4320.92.camel@johannes.local>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 13 Mar 2009 06:25:52 -0400
+Subject: [PATCH] mac80211: resume properly, add suspend/resume test
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Content-Type: text/plain
+Date: Fri, 13 Mar 2009 11:25:17 +0100
+Message-Id: <1236939917.5235.7.camel@johannes.local> (sfid-20090313_112555_620577_8A85228F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+When mac80211 resumes, it currently doesn't reconfigure the interfaces
+entirely and also doesn't reconfigure BSS information -- fix this.
 
-Especially for Netbook and Handle devices with newer processor. Putting system into lower C-state and having longer battery life is very important. I think letting driver making the default choice based on the power source is the right way to go, but always can be overwritten by upper layer (mac80211 or NM?).
+Also, to be able to test this, add a debugfs file that just calls
+the suspend/resume code to see what happens when we go through that,
+without needing the time-consuming suspend/resume cycle.
 
-I do not think we need to expose all the power levels to user space; those should be internal decision (mac80211 or driver). User space can make the choice of turn power saving mode on/off and leave the detail decision to the lower layer which has better knowledge of how to balance the power and performance.  
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+zd1211rw currently doesn't survive this properly, I'm not sure why,
+but it keeps saying
+	zd1211rw 1-1:1.0: error ioread32(CR_REG1): -11
 
+Please test with other hardware, we need to figure out whether or
+not something is missing in mac80211.
 
-Wey-Yi Guy
-Intel Corporation
-2111 N.E. 25th Avenue  M/S JF3-308                 
-Hillsboro OR 97124-5961
-USA
-Work Phone: 503-264-6023 (OR)
-Cell Phone: 503-329-8410
-Email: wey-yi.w.guy@intel.com
+ net/mac80211/debugfs.c     |   24 ++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/pm.c          |   29 +++++++++++++++++++++++++++++
+ 3 files changed, 54 insertions(+)
+
+--- wireless-testing.orig/net/mac80211/pm.c	2009-03-13 10:44:34.000000000 +0100
++++ wireless-testing/net/mac80211/pm.c	2009-03-13 11:09:29.000000000 +0100
+@@ -113,5 +113,34 @@ int __ieee80211_resume(struct ieee80211_
+ 	ieee80211_configure_filter(local);
+ 	netif_addr_unlock_bh(local->mdev);
  
++	/* Finally also reconfigure all the BSS information */
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		u32 changed = ~0;
++		if (!netif_running(sdata->dev))
++			continue;
++		switch (sdata->vif.type) {
++		case NL80211_IFTYPE_STATION:
++			/* disable beacon change bits */
++			changed &= ~IEEE80211_IFCC_BEACON;
++			/* fall through */
++		case NL80211_IFTYPE_ADHOC:
++		case NL80211_IFTYPE_AP:
++		case NL80211_IFTYPE_MESH_POINT:
++			WARN_ON(ieee80211_if_config(sdata, changed));
++			ieee80211_bss_info_change_notify(sdata, ~0);
++			break;
++		case NL80211_IFTYPE_WDS:
++			break;
++		case NL80211_IFTYPE_AP_VLAN:
++		case NL80211_IFTYPE_MONITOR:
++			/* ignore virtual */
++			break;
++		case NL80211_IFTYPE_UNSPECIFIED:
++		case __NL80211_IFTYPE_AFTER_LAST:
++			WARN_ON(1);
++			break;
++		}
++	}
++
+ 	return 0;
+ }
+--- wireless-testing.orig/net/mac80211/debugfs.c	2009-03-13 10:52:51.000000000 +0100
++++ wireless-testing/net/mac80211/debugfs.c	2009-03-13 11:24:09.000000000 +0100
+@@ -40,6 +40,10 @@ static const struct file_operations name
+ 	local->debugfs.name = debugfs_create_file(#name, 0400, phyd,	\
+ 						  local, &name## _ops);
+ 
++#define DEBUGFS_ADD_MODE(name, mode)					\
++	local->debugfs.name = debugfs_create_file(#name, mode, phyd,	\
++						  local, &name## _ops);
++
+ #define DEBUGFS_DEL(name)						\
+ 	debugfs_remove(local->debugfs.name);				\
+ 	local->debugfs.name = NULL;
+@@ -113,6 +117,24 @@ static const struct file_operations tsf_
+ 	.open = mac80211_open_file_generic
+ };
+ 
++static ssize_t reset_write(struct file *file, const char __user *user_buf,
++			   size_t count, loff_t *ppos)
++{
++	struct ieee80211_local *local = file->private_data;
++
++	rtnl_lock();
++	__ieee80211_suspend(&local->hw);
++	__ieee80211_resume(&local->hw);
++	rtnl_unlock();
++
++	return count;
++}
++
++static const struct file_operations reset_ops = {
++	.write = reset_write,
++	.open = mac80211_open_file_generic,
++};
++
+ /* statistics stuff */
+ 
+ #define DEBUGFS_STATS_FILE(name, buflen, fmt, value...)			\
+@@ -254,6 +276,7 @@ void debugfs_hw_add(struct ieee80211_loc
+ 	DEBUGFS_ADD(total_ps_buffered);
+ 	DEBUGFS_ADD(wep_iv);
+ 	DEBUGFS_ADD(tsf);
++	DEBUGFS_ADD_MODE(reset, 0200);
+ 
+ 	statsd = debugfs_create_dir("statistics", phyd);
+ 	local->debugfs.statistics = statsd;
+@@ -308,6 +331,7 @@ void debugfs_hw_del(struct ieee80211_loc
+ 	DEBUGFS_DEL(total_ps_buffered);
+ 	DEBUGFS_DEL(wep_iv);
+ 	DEBUGFS_DEL(tsf);
++	DEBUGFS_DEL(reset);
+ 
+ 	DEBUGFS_STATS_DEL(transmitted_fragment_count);
+ 	DEBUGFS_STATS_DEL(multicast_transmitted_frame_count);
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-03-13 10:55:52.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-03-13 10:55:57.000000000 +0100
+@@ -777,6 +777,7 @@ struct ieee80211_local {
+ 		struct dentry *total_ps_buffered;
+ 		struct dentry *wep_iv;
+ 		struct dentry *tsf;
++		struct dentry *reset;
+ 		struct dentry *statistics;
+ 		struct local_debugfsdentries_statsdentries {
+ 			struct dentry *transmitted_fragment_count;
 
------Original Message-----
-From: Johannes Berg [mailto:johannes@sipsolutions.net] 
-Sent: Tuesday, March 24, 2009 6:53 AM
-To: Dan Williams
-Cc: Guy, Wey-Yi W; linux-wireless; Kalle Valo; Matthew Garrett; Marcel Holtmann
-Subject: Re: wireless powersaving (in NM?)
 
-
-> Therefore, I think the "power saving level" needs to be determined by
-> pm_qos.
-
-Cf. http://www.lesswatts.org/projects/power-qos/ too, which is the old
-description of pm_qos, see Documentation/power/pm_qos_interface.txt too
-of course.
-
-johannes
