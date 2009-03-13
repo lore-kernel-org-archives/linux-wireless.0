@@ -1,123 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47138 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943AbZCaIQp (ORCPT
+Received: from jabberwock.vm.bytemark.co.uk ([80.68.92.224]:57099 "EHLO
+	jabberwock.vm.bytemark.co.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759789AbZCMWPl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 04:16:45 -0400
-Subject: Re: [PATCH] cfg80211: send regulatory beacon hint events to
- userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890903310110l49b8a6b8hfe42202d5da0304@mail.gmail.com> (sfid-20090331_101045_449530_E3541CBE)
-References: <1238471826-3980-1-git-send-email-lrodriguez@atheros.com>
-	 <1238485738.5970.64.camel@johannes.local>
-	 <43e72e890903310110l49b8a6b8hfe42202d5da0304@mail.gmail.com>
-	 (sfid-20090331_101045_449530_E3541CBE)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3BBJyj9389Pmp8v/16hc"
-Date: Tue, 31 Mar 2009 10:16:05 +0200
-Message-Id: <1238487365.5970.78.camel@johannes.local> (sfid-20090331_101650_565668_8AE77AC7)
-Mime-Version: 1.0
+	Fri, 13 Mar 2009 18:15:41 -0400
+Message-ID: <49BAD5A8.4040406@f2s.com> (sfid-20090313_231546_866584_3B0EE51B)
+Date: Fri, 13 Mar 2009 21:52:40 +0000
+From: Max Bowsher <maxb@f2s.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH] compat-2.6: Fix admin-update.sh creating spurious include/linux/unaligned/unaligned/
+ directory
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigDCDF0A3BC156BB2F71050DDF"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-3BBJyj9389Pmp8v/16hc
-Content-Type: text/plain
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigDCDF0A3BC156BB2F71050DDF
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-03-31 at 01:10 -0700, Luis R. Rodriguez wrote:
+Hi,
 
-> >> +     /* Unforunately this is needed */
-> >> +     nl_bands =3D nla_nest_start(msg, NL80211_ATTR_WIPHY_BANDS);
-> >> +     if (!nl_bands)
-> >> +             goto nla_put_failure;
-> >> +     nl_band =3D nla_nest_start(msg, band);
-> >> +     if (!nl_band)
-> >> +             goto nla_put_failure;
-> >> +
-> >> +     /*
-> >> +      * Our hack is to piggy back the channel prior to beacon hint
-> >> +      * and after the beacon hint so userspace can analyze the
-> >> +      * differences. Right now only no-ibss and passive-scan flags
-> >> +      * can change as that's the only thing we expect to learn out
-> >> +      * of a beacon for now. By re-using these attributes we can
-> >> +      * avoid introducing new structs.
-> >> +      */
-> >> +     nl_freqs =3D nla_nest_start(msg, NL80211_BAND_ATTR_FREQS);
-> >> +     if (!nl_freqs)
-> >> +             goto nla_put_failure;
-> >> +
-> >> +     for (i =3D 0; i <=3D 1; i++) {
-> >> +             nl_freq =3D nla_nest_start(msg, i);
-> >> +             if (!nl_freq)
-> >> +                     goto nla_put_failure;
-> >> +
-> >> +             chan =3D (i =3D=3D 0) ? channel_before : channel_after;
-> >> +
-> >> +             NLA_PUT_U32(mNo, that's not exclusive...sg, NL80211_FREQ=
-UENCY_ATTR_FREQ,
-> >> +                         chan->center_freq);
-> >> +
-> >> +             if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
-> >> +                     NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_PASSIVE=
-_SCAN);
-> >> +             if (chan->flags & IEEE80211_CHAN_NO_IBSS)
-> >> +                     NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS=
-);
-> >> +
-> >> +             nla_nest_end(msg, nl_freq);
-> >> +     }
-> >
-> > I don't think I like this -- it's confusing to userspace code that want=
-s
-> > to use a unified message parser.
->=20
-> I know the feeling, more on this below.
->=20
-> > Do we really need that before/after thing anyway? I think if we really
-> > need this then we should add new attributes.
->=20
-> Well we can definitely add new attributes, but remember we still have
-> to pass the center of freq. The cleanest solution is to define an
-> attribute with a center-freq, if-passive-lifted, if-beaconing-enabled
-> flags. But that ends up adding all that for something we already have
-> attributes for. I chose to use what we have.
+I noticed that if compat-wireless-2.6's admin-update.sh is run twice in
+a row without cleaning, it erroneously copies the
+include/linux/unaligned/* files into an
+include/linux/unaligned/unaligned/ directory.
 
-No, we don't have to do that. All we'd need to do is add a new attribute
-NL80211_ATTR_FREQ_CHANGE, which we document to
- 1) contain an array
- 2) in that array, contain nesting
- 3) in that nesting contain NL80211_FREQUENCY_ATTR
+Patch below making trivial changes to the script to avoid this.
 
-That means you'd only need to remove the bands nesting and replace the
-BAND_ATTR_FREQS nesting by ATTR_FREQ_CHANGE nesting. Only one new
-attribute needed in total, and you can keep almost all the code too. The
-array nesting is a little ugly, but that's not a big concern.
+Thanks,
+Max.
 
-johanes
+If admin-update.sh was run twice without an admin-clean.sh, a spurious
+additional /unaligned/ path component was created.
+---
+ scripts/admin-update.sh |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
---=-3BBJyj9389Pmp8v/16hc
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 8eeef89..b40a5d6 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -67,6 +67,7 @@ DRIVER_FILES=3D"$DRIVER_FILES mac80211_hwsim.c"
+ DRIVER_FILES=3D"$DRIVER_FILES at76c50x-usb.c at76c50x-usb.h"
+
+ mkdir -p include/linux/ include/net/ include/linux/usb \
++	include/linux/unaligned \
+ 	net/mac80211/ net/wireless/ \
+ 	drivers/ssb/ \
+ 	drivers/net/usb/ \
+@@ -139,7 +140,7 @@ cp $GIT_TREE/$DIR/Makefile $DIR
+
+ DIR=3D"include/linux/unaligned"
+ echo "Copying $GIT_TREE/$DIR/*"
+-cp -a $GIT_TREE/$DIR $DIR
++cp $GIT_TREE/$DIR/* $DIR
+
+
+ # Compat stuff
+--=20
+1.6.0.4
+
+
+
+--------------enigDCDF0A3BC156BB2F71050DDF
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-iQIcBAABAgAGBQJJ0dFCAAoJEKVg1VMiehFYHU0QAJvooPqWiKSr8m0lymdffYXn
-/ZACUc0bkRqUFed78xoFIHCSpeEyFYw9vCwiLQiAAhOqDHN/9CLO62BeWljx9HxS
-lAXOI6kY7LG/uDOY7NNsPa/pB4Hm2CD/wzkj3bBJ9NeS3SF3hOEMG8w1rDQ5Ue6b
-eEfY6v9SE3U52PlhVI4IxTRAP2AuWICidTzqzHG7gy2DFqGdc4tjS3Ccrpzox/q/
-W+OFxdv0De0xAeH4UM58x2fKODERQPAYyoDTNiiBe0NW5xu9TWoLyZmGRAfE+CGV
-jM64J/Z74xVAtlprHhwQFqgTyd+Dr032Wb5kqEH2N585gefgD7TxIlaZ+4e3qI0n
-y1uHTlxujt0DY28xt6leUtD5gv8AQBbB3JQbAnSH1fHzgPc0kFyqBKbicYcG54yg
-cBTlQHoPcWdmKRY3l1H2cJ4/1dhnQ1cgNITebtr2C1vfgCcZRCCF5ERUw8ADLOd1
-IRArUldx8g8PqBMXbsC9xWxUP3gpc4FNinilMvtpJL9Mw5a9iJPYCl9a54X5esS4
-fe37OOzZI9euld8adnvjvkycuc1696gVpM6JwLKF4WFZM3bUy1ZriIAUXcmlyQDt
-HU0P6igG62G+6YkG9oKk7fPkSWTVqjwWUUMeAndO3P7CcTME/VT3xKO4saPQdT6S
-LAXhS7xIOkuWzoZHE32D
-=RU8j
+iEYEARECAAYFAkm61a8ACgkQfFNSmcDyxYD7bQCfWiAWc/T9y9hdh420ojCijECL
+GW8AoNaYK+jFOQtDDM3Z0uaMr81Q4/si
+=2868
 -----END PGP SIGNATURE-----
 
---=-3BBJyj9389Pmp8v/16hc--
-
+--------------enigDCDF0A3BC156BB2F71050DDF--
