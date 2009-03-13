@@ -1,133 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:37076 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144AbZCVA1P (ORCPT
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:56202 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339AbZCMKog (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 20:27:15 -0400
-Received: by fxm2 with SMTP id 2so1337150fxm.37
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Mar 2009 17:27:12 -0700 (PDT)
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: [PATCH] Marvell CF8381
-Date: Sun, 22 Mar 2009 01:27:21 +0100
-Cc: hs4233@mail.mn-solutions.de
-MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_pXYxJkOHNM+nfA1"
-Message-Id: <200903220127.21836.marek.vasut@gmail.com> (sfid-20090322_012719_657905_493252C6)
+	Fri, 13 Mar 2009 06:44:36 -0400
+Received: by fxm24 with SMTP id 24so2589272fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 03:44:33 -0700 (PDT)
+Subject: Re: [ath5k-devel] Thanks for TX power patch
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mick@madwifi-project.org>
+In-Reply-To: <1236895489.17849.3.camel@maxim-laptop>
+References: <1236728344.26432.26.camel@maxim-laptop>
+	 <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
+	 <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
+	 <1236893111.30325.10.camel@maxim-laptop>
+	 <b6c5339f0903121432h26d71d6nd901f12d0c10e7bc@mail.gmail.com>
+	 <b6c5339f0903121433r7bbf2dd8l484d15446241dccd@mail.gmail.com>
+	 <1236895489.17849.3.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Fri, 13 Mar 2009 12:38:28 +0200
+Message-Id: <1236940708.4708.14.camel@maxim-laptop> (sfid-20090313_114438_559441_0DD4EA18)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_pXYxJkOHNM+nfA1
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Fri, 2009-03-13 at 00:04 +0200, Maxim Levitsky wrote:
+> On Thu, 2009-03-12 at 17:33 -0400, Bob Copeland wrote:
+> > On Thu, Mar 12, 2009 at 5:32 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> > > On Thu, Mar 12, 2009 at 5:25 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> > >> Just to be clear, I got oopses, and hangs after resume from disk by just
+> > >> using compat-wireless-2009-03-10 _without_ Nick's patches.
+> > >
+> > > Interesting, I thought you said that, but I tried the same stuff on
+> > > plain wireless testing and didn't have any problems.
+> > 
+> > Oh, and you said compat-wireless -- can you try wireless-testing just
+> > to make sure it's not some structure definition build conflict with
+> > compat-wireless?
+> > 
+> 
+> Will do, soon.
+> 
+> Best regards,
+> 	Maxim Levitsky
+> 
 
-Hi,
-I've finally got this card working ...
-See the patches below.
+Just compiled and installed latest wireless-testing with Nick's patches,
+and your patch.
 
---Boundary-00=_pXYxJkOHNM+nfA1
-Content-Type: text/x-diff;
-  charset="iso 8859-15";
-  name="0002-Add-support-for-CF8381-WiFi-card.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="0002-Add-support-for-CF8381-WiFi-card.patch"
+System is rock solid, module reload/s2disk/s2ram/long transfers work
+just fine.
 
-=46rom 31724e385f974b334b3a77949ab8aca1cad97e6e Mon Sep 17 00:00:00 2001
-=46rom: Marek Vasut <marek.vasut@gmail.com>
-Date: Sat, 21 Mar 2009 20:53:25 +0100
-Subject: [PATCH 2/2] Add support for CF8381 WiFi card
+(I tested against my laptop, and got 1.5 Mbytes/s in both directions.
+which is maximum speed possible - yes I know that everything goes
+through AP...)
 
-Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
-=2D--
- drivers/net/wireless/libertas/if_cs.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/l=
-ibertas/if_cs.c
-index 3f02e6a..6d00d82 100644
-=2D-- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -273,7 +273,14 @@ static int if_cs_poll_while_fw_download(struct if_cs_c=
-ard *card, uint addr, u8 r
-  */
- #define IF_CS_PRODUCT_ID		0x0000001C
- #define IF_CS_CF8385_B1_REV		0x12
-+#define	IF_CS_CF8381_B3_REV		0x04
-=20
-+/*
-+ * Used to detect other cards than CF8385 since their revisions of silicon
-+ * doesn't match those from CF8385, eg. CF8381 B3 works with this driver.
-+ */
-+#define	CF8381_MANFID		0x02db
-+#define	CF8381_CARDID		0x6064
-=20
- /********************************************************************/
- /* I/O and interrupt handling                                       */
-@@ -859,7 +866,9 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
- 	       p_dev->io.BasePort1 + p_dev->io.NumPorts1 - 1);
-=20
- 	/* Check if we have a current silicon */
-=2D	if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
-+	if (!(p_dev->manf_id =3D=3D CF8381_MANFID &&
-+		p_dev->card_id =3D=3D CF8381_CARDID) &&
-+		(if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV)) {
- 		lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
- 		ret =3D -ENODEV;
- 		goto out2;
-@@ -950,6 +959,7 @@ static void if_cs_detach(struct pcmcia_device *p_dev)
- /********************************************************************/
-=20
- static struct pcmcia_device_id if_cs_ids[] =3D {
-+	PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
- 	PCMCIA_DEVICE_MANF_CARD(0x02df, 0x8103),
- 	PCMCIA_DEVICE_NULL,
- };
-=2D-=20
-1.6.2
+Now my both wifi device are supported almost perfectly:
+still small issues with rate control on iwl3945, and
+not that great led on ath5k - both issues are pure software issues, and
+when I have time I will look at improving led algorithm.
 
 
---Boundary-00=_pXYxJkOHNM+nfA1
-Content-Type: text/x-diff;
-  charset="iso 8859-15";
-  name="0001-Correct-return-value-of-firmware-loading-functions-h.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="0001-Correct-return-value-of-firmware-loading-functions-h.patch"
+Big thanks,
+	Best regards,
+		Maxim Levitsky
 
-=46rom f87515bca27571370323292f07526820823b0553 Mon Sep 17 00:00:00 2001
-=46rom: Marek Vasut <marek.vasut@gmail.com>
-Date: Sat, 21 Mar 2009 19:20:30 +0100
-Subject: [PATCH 1/2] Correct return value of firmware loading functions han=
-dling bug
-
-Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
-=2D--
- drivers/net/wireless/libertas/if_cs.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/l=
-ibertas/if_cs.c
-index 842a08d..3f02e6a 100644
-=2D-- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -867,9 +867,9 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
-=20
- 	/* Load the firmware early, before calling into libertas.ko */
- 	ret =3D if_cs_prog_helper(card);
-=2D	if (ret =3D=3D 0)
-+	if (ret >=3D 0)
- 		ret =3D if_cs_prog_real(card);
-=2D	if (ret)
-+	if (ret < 0)
- 		goto out2;
-=20
- 	/* Make this card known to the libertas driver */
-=2D-=20
-1.6.2
-
-
---Boundary-00=_pXYxJkOHNM+nfA1--
