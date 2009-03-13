@@ -1,113 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43796 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752193AbZC0WWz (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:39387 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757070AbZCMSXD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 18:22:55 -0400
-Date: Fri, 27 Mar 2009 18:22:51 -0400
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/8] mac80211: rework the pending packets code
-Message-ID: <20090327222251.GB5543@bombadil.infradead.org> (sfid-20090327_232258_613577_2A9F9BAE)
-References: <20090323162834.154525349@sipsolutions.net> <20090323163052.298348347@sipsolutions.net>
+	Fri, 13 Mar 2009 14:23:03 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so574133wfa.4
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 11:23:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090323163052.298348347@sipsolutions.net>
+In-Reply-To: <1236940708.4708.14.camel@maxim-laptop>
+References: <1236728344.26432.26.camel@maxim-laptop>
+	 <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
+	 <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
+	 <1236893111.30325.10.camel@maxim-laptop>
+	 <b6c5339f0903121432h26d71d6nd901f12d0c10e7bc@mail.gmail.com>
+	 <b6c5339f0903121433r7bbf2dd8l484d15446241dccd@mail.gmail.com>
+	 <1236895489.17849.3.camel@maxim-laptop>
+	 <1236940708.4708.14.camel@maxim-laptop>
+Date: Fri, 13 Mar 2009 14:23:01 -0400
+Message-ID: <b6c5339f0903131123h4cb6379k472166ff81b9c5f2@mail.gmail.com> (sfid-20090313_192309_342142_E6F5C273)
+Subject: Re: [ath5k-devel] Thanks for TX power patch
+From: Bob Copeland <me@bobcopeland.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mick@madwifi-project.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 23, 2009 at 05:28:37PM +0100, Johannes Berg wrote:
-> The pending packets code is quite incomprehensible, uses memory barriers
-> nobody really understands, etc. This patch reworks it entirely, using
-> the queue spinlock, proper stop bits and the skb queues themselves to
-> indicate whether packets are pending or not (rather than a separate
-> variable like before).
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Fri, Mar 13, 2009 at 6:38 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+>
+> Just compiled and installed latest wireless-testing with Nick's patches,
+> and your patch.
+>
+> System is rock solid, module reload/s2disk/s2ram/long transfers work
+> just fine.
 
-<-- snip -->
+Great, thanks for the test!
 
->  /*
-> @@ -1830,40 +1829,57 @@ void ieee80211_tx_pending(unsigned long 
->  {
->  	struct ieee80211_local *local = (struct ieee80211_local *)data;
->  	struct net_device *dev = local->mdev;
-> -	struct ieee80211_tx_stored_packet *store;
->  	struct ieee80211_hdr *hdr;
-> +	unsigned long flags;
->  	struct ieee80211_tx_data tx;
->  	int i, ret;
-> +	bool next;
->  
->  	rcu_read_lock();
->  	netif_tx_lock_bh(dev);
-> +
->  	for (i = 0; i < local->hw.queues; i++) {
-> -		/* Check that this queue is ok */
-> -		if (__netif_subqueue_stopped(local->mdev, i) &&
-> -		    !test_bit(i, local->queues_pending_run))
-> -			continue;
-> +		/*
-> +		 * If queue is stopped by something other than due to pending
-> +		 * frames, or we have no pending frames, proceed to next queue.
-> +		 */
-> +		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-> +		next = false;
-> +		if (local->queue_stop_reasons[i] !=
-> +			BIT(IEEE80211_QUEUE_STOP_REASON_PENDING) ||
-> +		    skb_queue_empty(&local->pending[i]))
-> +			next = true;
-> +		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
->  
-> -		if (!test_bit(i, local->queues_pending)) {
-> -			clear_bit(i, local->queues_pending_run);
-> -			ieee80211_wake_queue(&local->hw, i);
-> +		if (next)
->  			continue;
-> -		}
->  
-> -		clear_bit(i, local->queues_pending_run);
-> +		/*
-> +		 * start the queue now to allow processing our packets,
-> +		 * we're under the tx lock here anyway so nothing will
-> +		 * happen as a result of this
-> +		 */
->  		netif_start_subqueue(local->mdev, i);
->  
-> -		store = &local->pending_packet[i];
-> -		tx.flags = 0;
-> -		tx.skb = store->skb;
-> -		hdr = (struct ieee80211_hdr *)tx.skb->data;
-> -		tx.sta = sta_info_get(local, hdr->addr1);
-> -		ret = __ieee80211_tx(local, &tx);
-> -		store->skb = tx.skb;
-> -		if (!ret) {
-> -			clear_bit(i, local->queues_pending);
-> -			ieee80211_wake_queue(&local->hw, i);
-> +		while (!skb_queue_empty(&local->pending[i])) {
-> +			tx.flags = 0;
-> +			tx.skb = skb_dequeue(&local->pending[i]);
-> +			hdr = (struct ieee80211_hdr *)tx.skb->data;
-> +			tx.sta = sta_info_get(local, hdr->addr1);
-> +
-> +			ret = __ieee80211_tx(local, &tx);
-> +			if (ret != IEEE80211_TX_OK) {
-> +				skb_queue_head(&local->pending[i], tx.skb);
-> +				break;
-> +			}
->  		}
-
-So this is good functional change, might be worth mentioning in the
-commit log, that is, we now requeue onto the pending queue the skb
-when the driver's tx() didn't return NETDEV_TX_OK or when __ieee80211_tx()
-returns IEEE80211_TX_PENDING (which happens when the queue is stopped).
-Maybe even better as a seperate patch. Before this we were just dropping
-the skbs in the pending queue under those same conditions.
-
-Other than that:
-
-Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-
-  Luis
+-- 
+Bob Copeland %% www.bobcopeland.com
