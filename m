@@ -1,114 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from suva.vyatta.com ([76.74.103.44]:36702 "EHLO suva.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760692AbZCUFsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 01:48:23 -0400
-Message-Id: <20090321053717.440414565@vyatta.com> (sfid-20090321_065121_959299_F6DEEBC1)
-References: <20090321053527.316395697@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:31 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: David Miller <davem@davemloft.net>, pe1rxq@amsat.org
-Cc: netdev@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 64/77] zd1201: convert to internal net_device_stats
+Received: from yx-out-2324.google.com ([74.125.44.28]:22224 "EHLO
+	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbZCMSvX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2009 14:51:23 -0400
+Received: by yx-out-2324.google.com with SMTP id 8so383389yxm.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 11:51:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1236941908.5235.27.camel@johannes.local>
+References: <1236939917.5235.7.camel@johannes.local>
+	 <1236941058.5235.12.camel@johannes.local>
+	 <1236941339.5235.14.camel@johannes.local>
+	 <1236941908.5235.27.camel@johannes.local>
+Date: Fri, 13 Mar 2009 14:51:20 -0400
+Message-ID: <b6c5339f0903131151m2dc43fbo52ace9d9070096c@mail.gmail.com> (sfid-20090313_195129_820956_2D983446)
+Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
+From: Bob Copeland <bcopeland@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+On Fri, Mar 13, 2009 at 6:58 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>> ath9k survives ping -f without even blinking.
+>
+> Actually, not quite:
+>
+> [ =A0289.753866]
+> [ =A0289.753869] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> [ =A0289.754164] [ INFO: inconsistent lock state ]
+> [ =A0289.754372] 2.6.29-rc7-wl-17155-g2f7ab92-dirty #29
+> [ =A0289.754598] ---------------------------------
+> [ =A0289.754805] inconsistent {in-softirq-W} -> {softirq-on-W} usage.
 
---- a/drivers/net/wireless/zd1201.c	2009-03-20 21:45:40.866964137 -0700
-+++ b/drivers/net/wireless/zd1201.c	2009-03-20 22:26:00.356902321 -0700
-@@ -328,8 +328,8 @@ static void zd1201_usbrx(struct urb *urb
- 			memcpy(skb_put(skb, 2), &data[datalen-24], 2);
- 			memcpy(skb_put(skb, len), data, len);
- 			skb->protocol = eth_type_trans(skb, zd->dev);
--			zd->stats.rx_packets++;
--			zd->stats.rx_bytes += skb->len;
-+			zd->dev->stats.rx_packets++;
-+			zd->dev->stats.rx_bytes += skb->len;
- 			netif_rx(skb);
- 			goto resubmit;
- 		}
-@@ -384,8 +384,8 @@ static void zd1201_usbrx(struct urb *urb
- 			memcpy(skb_put(skb, len), data+8, len);
- 		}
- 		skb->protocol = eth_type_trans(skb, zd->dev);
--		zd->stats.rx_packets++;
--		zd->stats.rx_bytes += skb->len;
-+		zd->dev->stats.rx_packets++;
-+		zd->dev->stats.rx_bytes += skb->len;
- 		netif_rx(skb);
- 	}
- resubmit:
-@@ -787,7 +787,7 @@ static int zd1201_hard_start_xmit(struct
- 	struct urb *urb = zd->tx_urb;
- 
- 	if (!zd->mac_enabled || zd->monitor) {
--		zd->stats.tx_dropped++;
-+		dev->stats.tx_dropped++;
- 		kfree_skb(skb);
- 		return 0;
- 	}
-@@ -817,12 +817,12 @@ static int zd1201_hard_start_xmit(struct
- 
- 	err = usb_submit_urb(zd->tx_urb, GFP_ATOMIC);
- 	if (err) {
--		zd->stats.tx_errors++;
-+		dev->stats.tx_errors++;
- 		netif_start_queue(dev);
- 		return err;
- 	}
--	zd->stats.tx_packets++;
--	zd->stats.tx_bytes += skb->len;
-+	dev->stats.tx_packets++;
-+	dev->stats.tx_bytes += skb->len;
- 	dev->trans_start = jiffies;
- 	kfree_skb(skb);
- 
-@@ -838,7 +838,7 @@ static void zd1201_tx_timeout(struct net
- 	dev_warn(&zd->usb->dev, "%s: TX timeout, shooting down urb\n",
- 	    dev->name);
- 	usb_unlink_urb(zd->tx_urb);
--	zd->stats.tx_errors++;
-+	dev->stats.tx_errors++;
- 	/* Restart the timeout to quiet the watchdog: */
- 	dev->trans_start = jiffies;
- }
-@@ -861,13 +861,6 @@ static int zd1201_set_mac_address(struct
- 	return zd1201_mac_reset(zd);
- }
- 
--static struct net_device_stats *zd1201_get_stats(struct net_device *dev)
--{
--	struct zd1201 *zd = netdev_priv(dev);
--
--	return &zd->stats;
--}
--
- static struct iw_statistics *zd1201_get_wireless_stats(struct net_device *dev)
- {
- 	struct zd1201 *zd = netdev_priv(dev);
-@@ -1778,9 +1771,7 @@ static int zd1201_probe(struct usb_inter
- 
- 	dev->open = zd1201_net_open;
- 	dev->stop = zd1201_net_stop;
--	dev->get_stats = zd1201_get_stats;
--	dev->wireless_handlers =
--	    (struct iw_handler_def *)&zd1201_iw_handlers;
-+	dev->wireless_handlers = &zd1201_iw_handlers;
- 	dev->hard_start_xmit = zd1201_hard_start_xmit;
- 	dev->watchdog_timeo = ZD1201_TX_TIMEOUT;
- 	dev->tx_timeout = zd1201_tx_timeout;
---- a/drivers/net/wireless/zd1201.h	2009-03-20 21:45:40.859963944 -0700
-+++ b/drivers/net/wireless/zd1201.h	2009-03-20 22:26:00.356902321 -0700
-@@ -26,7 +26,6 @@ struct zd1201 {
- 	struct usb_device	*usb;
- 	int			removed;
- 	struct net_device	*dev;
--	struct net_device_stats stats;
- 	struct iw_statistics	iwstats;
- 
- 	int			endp_in;
+[softirq-on-W stack looks like:
 
--- 
+  sta_notify
+    ath_node_detach
+      ath_tx_node_cleanup
+        spin_lock()
 
+vs the ath9k_tx_tasklet]
+
+> Looks like we need to disable BHs for the sta functions or something?
+>
+> johannes
+
+Yup... or pm can take sta_lock with spin_lock_irqsave() like the other
+callers of sta_notify.
+
+=46eel free to add my Acked-by on both the PM patches.  I'd been using
+CONFIG_PM_DEBUG to simulate suspend/resume but since you have to
+do 'devices' anyway to get the desired effect, the debug file here
+is nicer.
+
+--=20
+Bob Copeland %% www.bobcopeland.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
