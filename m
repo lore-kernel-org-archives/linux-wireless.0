@@ -1,77 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44083 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:37845 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752199AbZCaIDf (ORCPT
+	with ESMTP id S1752353AbZCMKoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 04:03:35 -0400
-Subject: Re: [RFC/RFT v2] rfkill: rewrite
+	Fri, 13 Mar 2009 06:44:12 -0400
+Subject: [PATCH] mac80211: stop queues across suspend/resume
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
-	Matthew Garrett <mjg@redhat.com>
-In-Reply-To: <49D153C2.7010706@lwfinger.net>
-References: <1238349195.24972.5.camel@johannes.local>
-	 (sfid-20090329_195345_745378_2F2074B3) <1238451390.5970.59.camel@johannes.local>
-	 <49D153C2.7010706@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0p8JF1Ai5opo44lZr0n0"
-Date: Tue, 31 Mar 2009 10:02:57 +0200
-Message-Id: <1238486577.5970.70.camel@johannes.local> (sfid-20090331_100348_648902_122ACD64)
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 13 Mar 2009 11:43:36 +0100
+Message-Id: <1236941016.5235.10.camel@johannes.local> (sfid-20090313_114414_606928_A13727F9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Even though userland probably cannot submit packets, there might
+still be some coming, and that's no good when the driver doesn't
+expect them. Stop the queues across suspend/resume.
 
---=-0p8JF1Ai5opo44lZr0n0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/pm.c          |    6 ++++++
+ 2 files changed, 7 insertions(+)
 
-On Mon, 2009-03-30 at 18:20 -0500, Larry Finger wrote:
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-03-13 11:40:31.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-03-13 11:40:41.000000000 +0100
+@@ -598,6 +598,7 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_PS,
+ 	IEEE80211_QUEUE_STOP_REASON_CSA,
+ 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
++	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
+ };
+ 
+ struct ieee80211_master_priv {
+--- wireless-testing.orig/net/mac80211/pm.c	2009-03-13 11:40:12.000000000 +0100
++++ wireless-testing/net/mac80211/pm.c	2009-03-13 11:40:56.000000000 +0100
+@@ -11,6 +11,9 @@ int __ieee80211_suspend(struct ieee80211
+ 	struct ieee80211_if_init_conf conf;
+ 	struct sta_info *sta;
+ 
++	ieee80211_stop_queues_by_reason(hw,
++			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
++
+ 	flush_workqueue(local->hw.workqueue);
+ 
+ 	/* disable keys */
+@@ -113,5 +116,8 @@ int __ieee80211_resume(struct ieee80211_
+ 	ieee80211_configure_filter(local);
+ 	netif_addr_unlock_bh(local->mdev);
+ 
++	ieee80211_wake_queues_by_reason(hw,
++			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
++
+ 	return 0;
+ }
 
-> Initial testing shows at least two problems with b43legacy (and probably =
-b43 as
-> well):
-
-Thanks for testing!
-
-> (1) On bootup with my radio switch OFF, the driver ignored that switch an=
-d
-> associated with my AP. Only when the switch was turned on and off again d=
-id the
-> driver log the expected "switch off" message".
-
-I think that's expected because I'm missing some code to set the default
-state when a driver registers.
-
-> (2) The radio LED is on no matter the state of the switch.
-
-That's strange. I'll take a look.
-
-johannes
-
---=-0p8JF1Ai5opo44lZr0n0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ0c4uAAoJEKVg1VMiehFYIjgP+gL5tMrg1pn0H3/AtwKo0Mzg
-MQH/5dYfYUA6gIZDDIkrPU1bHvtdYcnQ3QtM2tU+uWtDCG1dHsz1nSYML0s8RbXA
-nEdyI9q5EBxKG1BjBcpykZac5wom80V3FqixVDIjj5BDRJVEdJB1RyCtG8sEyDOs
-ODL8BYTyAlIN7zfJbpO3YiribvbuFtQYPnFg+D6GbYWZosY18ryvcsQGo/u2UbXa
-I2SwlXgHDfRnDKqbaGnyIgVeIxxdpqBWCaBIYzeP94PzPijou7TesO0qUhbV5viH
-LsiDA6cSbKHvgwH68uqgaBP2qSn53wIcBKVHyWwE4D6dHvKmhqRxTs3npsdjK5Ln
-CpE+mX8zvIr+YeVSyFrUtv1+RIoovbhP7vzChxuej62wWLok+3Hbqw3d8RaY6XDg
-SFD4/uqUc7pz4XG44epUp6id4/+rahVKdNymCTbbnDcsXVsRMRsCmaDhT4+dccpU
-Izdnq0HtkUAdNmHOFAvCKEihmkpSjPs747vA2O0HYbOWBPmtChV5VivmRyOE6nm7
-poYT6X4BAhlnM1rq+OxwNhk9t1SQ107oG+uweEZKVB5IoAnWtqVxeNqstyPp0E8g
-wJIqBXJSMLbaS4+JQ40jyLG7ApFyY1dNzePVLsNC3zLYlK7lY8RikJ8OGPxPzxzg
-cabpYw12LK+wNed9rTD/
-=0Td7
------END PGP SIGNATURE-----
-
---=-0p8JF1Ai5opo44lZr0n0--
 
