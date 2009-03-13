@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:49959 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752968AbZC3VwZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 17:52:25 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Subject: Re: [PATCH] b43: Refresh RX poison on buffer recycling
-Date: Mon, 30 Mar 2009 23:50:58 +0200
-Cc: linville@tuxdriver.com, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-References: <200903280041.25265.mb@bu3sch.de> <C0D59D9C-FC8A-4C79-B777-AF2F166D9711@ing.unibs.it>
-In-Reply-To: <C0D59D9C-FC8A-4C79-B777-AF2F166D9711@ing.unibs.it>
-MIME-Version: 1.0
-Message-Id: <200903302350.58971.mb@bu3sch.de> (sfid-20090330_235229_254590_34DEA1F1)
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from xc.sipsolutions.net ([83.246.72.84]:56152 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754222AbZCMJXY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2009 05:23:24 -0400
+Subject: Re: ath9k fragmentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <m.sujith@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <18873.48952.353253.595670@gargle.gargle.HOWL> (sfid-20090313_030441_815758_BD575074)
+References: <1236881434.25931.1.camel@johannes.local>
+	 <18873.48952.353253.595670@gargle.gargle.HOWL>
+	 (sfid-20090313_030441_815758_BD575074)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-h5olX98KcOCZCabDnQTr"
+Date: Fri, 13 Mar 2009 10:03:04 +0100
+Message-Id: <1236934984.25931.48.camel@johannes.local> (sfid-20090313_102342_831503_5C1321CE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 March 2009 23:35:34 Francesco Gringoli wrote:
-> I have one more question: the hardware seems to allow frames that are  
-> longer than 2352 bytes. If we monitor the firmware during receiving we  
-> get up to 0x1005 bytes long frames. When such frames arrives, the  
-> kernel drops them as the "The data did not fit into one descriptor  
-> buffer and is split over multiple buffers." I tried to increase  
-> B43_DMA0_RX_BUFFERSIZE up to 0x1006 but I get problems with dma and  
-> the driver keeps restarting the hardware forever. What is wrong with  
-> increasing this value above IEEE80211_MAX_FRAME_LEN?
 
-Well... First thing is that I think the hardware wasn't ever
-tested with frames >IEEE80211_MAX_FRAME_LEN. So there might be silicon bugs.
+--=-h5olX98KcOCZCabDnQTr
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-The maximum number of bytes one descriptor can carry is 8191 bytes (not including
-RX headers and padding. That's 30 bytes).
+On Fri, 2009-03-13 at 07:34 +0530, Sujith wrote:
 
-Third thing is that the buffer must not cross a page boundary. So that is
-4096 bytes on most machines. So in practice the 4096 bytes boundary (minus 30 bytes
-for headers/padding) is upper bound for B43_DMA0_RX_BUFFERSIZE.
+> Sequence number handling is pretty much borked in ath9k.
+> There is a comment in assign_aggr_tid_seqno@xmit.c - and it doesn't make =
+much sense.
 
--- 
-Greetings, Michael.
+Indeed, that doesn't seem to reflect the code at all.
+
+> Removing all crappy code in ath9k dealing with this and leaving everythin=
+g
+> to mac80211 would certainly be the better option, but we still have to fi=
+gure
+> out how to manage BA windows.
+
+Can you explain a little what is required?
+
+For ampdu_action(), I recently saw something, somewhere, saying
+"mac80211 expects us to fill in the seqno variable" or so, but this is
+only true if you don't use mac80211's sequence numbers, otherwise it is
+fine to leave it at the pre-assigned value.
+
+johannes
+
+--=-h5olX98KcOCZCabDnQTr
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJuiFEAAoJEKVg1VMiehFY7HAP/0RrVxKJeNLLyHkT21JABjYt
+DEWMMwDSCuAzI0IifOUaoG9seS5c1ZG4m8CupharzGltrsNjQ3qLq4lRuRPN2Spu
+eKk6HfXnvelLTbk2wHD0hSYwyzYYh8Mwxp5uRJ6NooC31IiKLa15ThaP6tdA+wGT
+OXaCGRHpe/stofxrCWMmnimNFY/vV7fROV7+7xdD/VzEmrOGw27GkNSd5n9C5grj
+z9LIPAgKu/QvWML75fXe2pUPUuFsmKyWqTSWnq/aBKCGKkEtFUXgF2Kc+eesl84h
+8nGD0+Y8EKWOGtbKnHUirC9zO6NeWZxjd5l8Qc9hvpyPogoef2ur20bpQyMsJcTL
+0s0OwUtZ8BhkXn/eHVpEM4Fg9mCWOQ2TCsmdOKpE0qOCgWuUK00gjolS8tMSGJ85
+Imj/K+oqjKd+dbKZa5nxUJZv6KRsbB1ORj1ej8YT2RcnZG5YTD8JvkdHGcGwOVoW
+HBFYL5ySXcrLcSRk4+sPosL4I9hZQjvTOkYzOyY8pCCXu8itcc31dWWlrU1AcnLg
+BBPEIucJSNnZLmyS32gEzx7Ky5OUBcWy8g5ZhWQepVlH5xxEvK2uhfKaPqTjELxS
+2r8ED1u9QEfnY+121Kd0T4o9M0NCA4Qeb28Lryd/h9DzF9hvU3N2DnUI89BXVGld
+p4CoEJeVugfseJ5P8/W/
+=Lj2P
+-----END PGP SIGNATURE-----
+
+--=-h5olX98KcOCZCabDnQTr--
+
