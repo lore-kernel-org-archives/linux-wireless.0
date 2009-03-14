@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from suva.vyatta.com ([76.74.103.44]:36707 "EHLO suva.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760320AbZCUFsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 01:48:24 -0400
-Message-Id: <20090321053717.682860987@vyatta.com> (sfid-20090321_065120_534694_F852C1AD)
-References: <20090321053527.316395697@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:34 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: David Miller <davem@davemloft.net>, mcgrof@gmail.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 67/77] prism54: convert to net_device_ops
+Received: from xc.sipsolutions.net ([83.246.72.84]:57816 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850AbZCNRSG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2009 13:18:06 -0400
+Subject: Re: [RFC PATCH v2 1/4] mac80211: decrease execution of the
+	associated timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <20090314171431.11126.51242.stgit@tikku>
+References: <20090314171234.11126.21125.stgit@tikku>
+	 <20090314171431.11126.51242.stgit@tikku>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-c7qfXS6nXrZnAsh4l0uv"
+Date: Sat, 14 Mar 2009 18:18:04 +0100
+Message-Id: <1237051084.5235.97.camel@johannes.local> (sfid-20090314_181810_563016_370179DE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also, make ethtool_ops const as it should be, and get rid
-of useless cast.
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+--=-c7qfXS6nXrZnAsh4l0uv
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Sat, 2009-03-14 at 19:14 +0200, Kalle Valo wrote:
 
---- a/drivers/net/wireless/prism54/islpci_dev.c	2009-03-20 21:45:40.782964097 -0700
-+++ b/drivers/net/wireless/prism54/islpci_dev.c	2009-03-20 22:26:05.140779360 -0700
-@@ -804,10 +804,23 @@ static void islpci_ethtool_get_drvinfo(s
- 	strcpy(info->version, DRV_VERSION);
- }
- 
--static struct ethtool_ops islpci_ethtool_ops = {
-+static const struct ethtool_ops islpci_ethtool_ops = {
- 	.get_drvinfo = islpci_ethtool_get_drvinfo,
- };
- 
-+static const struct net_device_ops islpci_netdev_ops = {
-+	.ndo_open 		= islpci_open,
-+	.ndo_stop		= islpci_close,
-+	.ndo_get_stats		= islpci_statistics,
-+	.ndo_do_ioctl		= prism54_ioctl,
-+	.ndo_start_xmit		= islpci_eth_transmit,
-+	.ndo_tx_timeout		= islpci_eth_tx_timeout,
-+	.ndo_set_mac_address 	= prism54_set_mac_address,
-+	.ndo_change_mtu		= eth_change_mtu,
-+	.ndo_set_mac_address 	= eth_mac_addr,
-+	.ndo_validate_addr	= eth_validate_addr,
-+};
-+
- struct net_device *
- islpci_setup(struct pci_dev *pdev)
- {
-@@ -827,25 +840,16 @@ islpci_setup(struct pci_dev *pdev)
- 	ndev->irq = pdev->irq;
- 
- 	/* initialize the function pointers */
--	ndev->open = &islpci_open;
--	ndev->stop = &islpci_close;
--	ndev->get_stats = &islpci_statistics;
--	ndev->do_ioctl = &prism54_ioctl;
--	ndev->wireless_handlers =
--	    (struct iw_handler_def *) &prism54_handler_def;
-+	ndev->netdev_ops = &islpci_netdev_ops;
-+	ndev->wireless_handlers = &prism54_handler_def;
- 	ndev->ethtool_ops = &islpci_ethtool_ops;
- 
--	ndev->hard_start_xmit = &islpci_eth_transmit;
- 	/* ndev->set_multicast_list = &islpci_set_multicast_list; */
- 	ndev->addr_len = ETH_ALEN;
--	ndev->set_mac_address = &prism54_set_mac_address;
- 	/* Get a non-zero dummy MAC address for nameif. Jean II */
- 	memcpy(ndev->dev_addr, dummy_mac, 6);
- 
--#ifdef HAVE_TX_TIMEOUT
- 	ndev->watchdog_timeo = ISLPCI_TX_TIMEOUT;
--	ndev->tx_timeout = &islpci_eth_tx_timeout;
--#endif
- 
- 	/* allocate a private device structure to the network device  */
- 	priv = netdev_priv(ndev);
+> +void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+> +			     struct ieee80211_hdr *hdr)
+> +{
+> +	/* timer triggers only when there is no unicast traffic */
+> +	if (!is_multicast_ether_addr(hdr->addr1))
+> +		mod_timer(&sdata->u.mgd.timer,
+> +			  jiffies + IEEE80211_MONITORING_INTERVAL);
+> +}
 
--- 
+Do we really need the multicast check? The frame will be coming from the
+AP in managed mode in both cases, so why regard the data path as idle
+when we're receiving multicast traffic?
+
+johannes
+
+--=-c7qfXS6nXrZnAsh4l0uv
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJu+bJAAoJEKVg1VMiehFYljgP/2nifddlUEMs9DOzt686T8Pe
+t0cjGS7YfzC6yyHjoADCN6C2noFBp3FRYljJJplER8TNJ2dxi4mGZSlqal0ZHH8a
+wX3MOgZv+4acvtuRWPbsTWn8eAYyc5yotPY5osNF7SkREyBOnmRCJG17zOSeyFbP
+SlVL2A7yVi+YkJ1xVABAxct+FGsX5J00EPvjJOBgIVSrviG95G9A35+nfS/jL3/q
+e+dHY9hmIxBx3N3wtDDnzd3UcT3OP7GeOEs7PhzlbN1M/u7U3GQ4gCO+9ntrV3Ry
+7mCWdT7/mfRhLxdD9CMMxwHtRwdyZ2/DbDxUHSEixmCcOWJsUnD7G+cNzcMrxWgi
+GrSLcuWmrrnOaMj+6BQlsm05koZRENXdXtzB44IEORt4ml4KNjGc5ujJxrT1L6dC
+ak9/DIXsqr/O6Jj2pf8rvnq0AJJVzJD3Sysx8Nru6FlkUHa9VeKplAaLEMi7IRQ8
+19sVja5sLCadEeAELbJItY6AFH2afoucyeoJ8Cp1aPplCVLs7P7siRA3VNLLE9BQ
+stit6hrXbNKjUdpuyyBTxuPwYg0aVKgR1OrqtoOnR8LgS22e7EKp+KUXi26efksf
+7nzcquLjDcOdCBVMNtoOUi4Y4drxePeqqaE3zDadVTbnCb2F9LRJuCUh9QVugvo/
+OuIeuxWKb2EdlDRTk2+8
+=P1iR
+-----END PGP SIGNATURE-----
+
+--=-c7qfXS6nXrZnAsh4l0uv--
 
