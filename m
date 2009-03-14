@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54008 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752556AbZCHORX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Mar 2009 10:17:23 -0400
-Date: Sun, 8 Mar 2009 16:17:03 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix WMM ACM parsing and AC downgrade
-	operation
-Message-ID: <20090308141703.GA10782@jm.kir.nu> (sfid-20090308_151732_168574_74BD8C83)
-References: <20090305152346.GA30029@jm.kir.nu> <1236515287.4205.11.camel@johannes.local>
+Received: from mail.atheros.com ([12.36.123.2]:13271 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751339AbZCNOd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2009 10:33:28 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 07:33:27 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Keep LED on in idle state after association
+Date: Sat, 14 Mar 2009 19:59:41 +0530
+Message-ID: <1237040981-4391-1-git-send-email-vasanth@atheros.com> (sfid-20090314_153331_979990_502BA7CE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1236515287.4205.11.camel@johannes.local>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 08, 2009 at 01:28:07PM +0100, Johannes Berg wrote:
-> On Thu, 2009-03-05 at 17:23 +0200, Jouni Malinen wrote:
-> 
-> > @@ -99,10 +99,13 @@ static u16 classify80211(struct ieee8021
-> >  	/* in case we are a client verify acm is not set for this ac */
-> >  	while (unlikely(local->wmm_acm & BIT(skb->priority))) {
-> >  		if (wme_downgrade_ac(skb)) {
-> > -			/* The old code would drop the packet in this
-> > -			 * case.
-> > +			/*
-> > +			 * This should not really happen. The AP has marked all
-> > +			 * lower ACs to require admission control which is not
-> > +			 * a reasonable configuration. Allow the frame to be
-> > +			 * transmitted using AC_BK as a workaround.
-> >  			 */
-> > -			return 0;
-> > +			break;
-> 
-> It seems to me that return 0 here was incorrect, or wme_downgrade_ac
-> needs changes?
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath9k/main.c |   19 +++++++++++++------
+ 1 files changed, 13 insertions(+), 6 deletions(-)
 
-Yes, this return 0 was incorrect and that's why I'm fixing it to not
-return 0 in this patch.. ;-) In theory, the correct behavior would be to
-drop the frame if the AP is using mandatory admission control for all
-ACs, but in practice, it is probably better not to break the connection
-completely if the AP is misconfigured. The behavior after this patch is
-to downgrade the AC until one is found without ACM and if no such AC
-exists, use the lowest priority (AC_BK).
-
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index 8db75f6..b14c4d9 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -940,18 +940,25 @@ static void ath_led_blink_work(struct work_struct *work)
+ 
+ 	if (!(sc->sc_flags & SC_OP_LED_ASSOCIATED))
+ 		return;
+-	ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN,
+-			  (sc->sc_flags & SC_OP_LED_ON) ? 1 : 0);
++
++	if ((sc->led_on_duration == ATH_LED_ON_DURATION_IDLE) ||
++	    (sc->led_off_duration == ATH_LED_OFF_DURATION_IDLE))
++		ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN, 0);
++	else
++		ath9k_hw_set_gpio(sc->sc_ah, ATH_LED_PIN,
++				  (sc->sc_flags & SC_OP_LED_ON) ? 1 : 0);
+ 
+ 	queue_delayed_work(sc->hw->workqueue, &sc->ath_led_blink_work,
+ 			   (sc->sc_flags & SC_OP_LED_ON) ?
+ 			   msecs_to_jiffies(sc->led_off_duration) :
+ 			   msecs_to_jiffies(sc->led_on_duration));
+ 
+-	sc->led_on_duration =
+-			max((ATH_LED_ON_DURATION_IDLE - sc->led_on_cnt), 25);
+-	sc->led_off_duration =
+-			max((ATH_LED_OFF_DURATION_IDLE - sc->led_off_cnt), 10);
++	sc->led_on_duration = sc->led_on_cnt ?
++			max((ATH_LED_ON_DURATION_IDLE - sc->led_on_cnt), 25) :
++			ATH_LED_ON_DURATION_IDLE;
++	sc->led_off_duration = sc->led_off_cnt ?
++			max((ATH_LED_OFF_DURATION_IDLE - sc->led_off_cnt), 10) :
++			ATH_LED_OFF_DURATION_IDLE;
+ 	sc->led_on_cnt = sc->led_off_cnt = 0;
+ 	if (sc->sc_flags & SC_OP_LED_ON)
+ 		sc->sc_flags &= ~SC_OP_LED_ON;
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.5.1
+
