@@ -1,41 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:60930 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753181AbZCCJuI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45383 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752696AbZCNIal (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 04:50:08 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] ath9k: fix AR_TXCFG_DMASZ_MASK value
-Date: Tue,  3 Mar 2009 10:49:59 +0100
-Message-Id: <1236073799-27668-1-git-send-email-juhosg@openwrt.org> (sfid-20090303_105013_125433_9D19EADA)
+	Sat, 14 Mar 2009 04:30:41 -0400
+Subject: Re: [PATCH] cfg80211: drop wext channel list if too long
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1236964730.9657.10.camel@localhost.localdomain>
+References: <1236882244.25931.5.camel@johannes.local>
+	 <20090313145445.GC5551@tuxdriver.com>
+	 <1236964730.9657.10.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-seSVlPB7KV7LZeoYM91J"
+Date: Sat, 14 Mar 2009 09:30:32 +0100
+Message-Id: <1237019432.5235.61.camel@johannes.local> (sfid-20090314_093058_502968_0AE38739)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current bitmask is invalid, because the tx dma size is a 3 bit wide
-value.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath9k/reg.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+--=-seSVlPB7KV7LZeoYM91J
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
-index 8d85106..91442da 100644
---- a/drivers/net/wireless/ath9k/reg.h
-+++ b/drivers/net/wireless/ath9k/reg.h
-@@ -67,7 +67,7 @@
- #define AR_DMASIZE_512B      0x00000007
- 
- #define AR_TXCFG             0x0030
--#define AR_TXCFG_DMASZ_MASK  0x00000003
-+#define AR_TXCFG_DMASZ_MASK  0x00000007
- #define AR_TXCFG_DMASZ_4B    0
- #define AR_TXCFG_DMASZ_8B    1
- #define AR_TXCFG_DMASZ_16B   2
--- 
-1.5.3.2
+On Fri, 2009-03-13 at 13:18 -0400, Dan Williams wrote:
+
+> It doesn't look like wpa_supplicant cares about the returned channel
+> list from SIOCGIWRANGE.
+>=20
+> NM, however, uses the returned channel list to figure out a free
+> supported adhoc frequency to use when creating an adhoc network (like
+> for connection sharing).  If it can't find an intersection between an
+> internal "safe" frequency list and what the card supports (which it
+> wouldn't be able to with this patch), it will simply use 2462 or 5180
+> MHz.
+>=20
+> Thus, I don't think you'll *break* anything specifically, but this patch
+> would cause the default frequency for an IBSS created by NM  to move
+> from channel 1 to channel 11.
+
+In that case, let's just drop the patch, I have no problem with that.
+
+We just couldn't figure out why some channels were missing in iwlist
+when they were in iw, but that's due to the 32 channel limit. Since most
+people probably don't use this particular functionality, I guess it
+doesn't really matter. Eventually NM should just use nl80211, or at
+least try to, because there it gets more information like "cannot do
+IBSS on channel XY", something that wext doesn't give you, but mac80211
+enforces.
+
+johannes
+
+--=-seSVlPB7KV7LZeoYM91J
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJu2slAAoJEKVg1VMiehFYeFcP/0/Z1q6DxJPauKl2fqkW17ip
+WFZGES5rHvnbt7VQkXU4ikv81IRIDaKchiWbZjcild4AC/54qNoI1w6cYDd3fjIB
+DR07bpR8Lb2H91LMOW/rnsCtdRKhfS4b+JXUlEnv+G8soPspSKo757JcoA8L2Fnh
+RoKwQ0YbcNfby6D8IBNvxi1okqpuBlydYw6O/5D4xIu4D9xYVzsxXRx9E64EIOT6
+w6FVSjScUu0OFTBGBaEdUKqspbgJtmbRO7qJgK9r7hjm2OZQXJOCLD6Tp6M+RUvs
+BxZG7F7w36PvBuEcQBbFyf0yjwV0aaFLI6mIs7lu9lPRytguqO0winkdvuOBhyjT
+mOlyiMZapLhx+zj6zg6UC3zNYkFwtNJpw4dvZ+RiNnWVHdTjcKdKjQ6D2ayMXQ9r
+WGO+DGERDmeRTKpHgdqax0E09JSpA0ZjgwAciIXP3A+NJbpwmkDGwxtfXPd0GfFI
+bxjEycZMFTVRg5vvMZFQzCw0iYgn+zuUNzZXR10WeXwkCZbpHcGHdhXHa01hDn2S
+QTjPz9OkBXkV9+VFUVheLyCroC6PYkWBc9TJ2h3e1wurMQsTmWTjFEHQlo7M01BY
+WZgZpqWckUdpXZ68sCY69k7PoNAvv4XH8VRCJ8ymVGy7xoJfkZpLKm3ZgBGQeb5a
+N2LOtnKqZAtmx4PLwu0A
+=AAXl
+-----END PGP SIGNATURE-----
+
+--=-seSVlPB7KV7LZeoYM91J--
 
