@@ -1,57 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from suva.vyatta.com ([76.74.103.44]:43185 "EHLO suva.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755576AbZC0B14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 21:27:56 -0400
-Message-Id: <20090327011255.831891273@linux-foundation.org> (sfid-20090327_022802_644103_65C26BCF)
-Date: Thu, 26 Mar 2009 18:11:26 -0700
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-To: David Miller <davem@davemloft.net>, linville@tuxdriver.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [patch 12/30] wireless: convert arlan to net_device_ops
-References: <20090327011114.169107105@linux-foundation.org>
+Received: from xc.sipsolutions.net ([83.246.72.84]:56656 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752402AbZCNRZE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2009 13:25:04 -0400
+Subject: Re: [RFC PATCH v2 3/4] mac80211: disable power save when scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <20090314171445.11126.97668.stgit@tikku>
+References: <20090314171234.11126.21125.stgit@tikku>
+	 <20090314171445.11126.97668.stgit@tikku>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-OAY8pGZtGO9QP92kgcc1"
+Date: Sat, 14 Mar 2009 18:25:02 +0100
+Message-Id: <1237051502.5235.102.camel@johannes.local> (sfid-20090314_182508_766083_95B30FFE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
+--=-OAY8pGZtGO9QP92kgcc1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- a/drivers/net/wireless/arlan-main.c	2009-03-21 12:37:00.000000000 -0700
-+++ b/drivers/net/wireless/arlan-main.c	2009-03-26 15:46:23.278349900 -0700
-@@ -1030,7 +1030,17 @@ static int arlan_mac_addr(struct net_dev
- 	return 0;
- }
- 
--
-+static const struct net_device_ops arlan_netdev_ops = {
-+	.ndo_open		= arlan_open,
-+	.ndo_stop		= arlan_close,
-+	.ndo_start_xmit		= arlan_tx,
-+	.ndo_get_stats		= arlan_statistics,
-+	.ndo_set_multicast_list = arlan_set_multicast,
-+	.ndo_change_mtu		= arlan_change_mtu,
-+	.ndo_set_mac_address	= arlan_mac_addr,
-+	.ndo_tx_timeout		= arlan_tx_timeout,
-+	.ndo_validate_addr	= eth_validate_addr,
-+};
- 
- static int __init arlan_setup_device(struct net_device *dev, int num)
- {
-@@ -1042,14 +1052,7 @@ static int __init arlan_setup_device(str
- 	ap->conf = (struct arlan_shmem *)(ap+1);
- 
- 	dev->tx_queue_len = tx_queue_len;
--	dev->open = arlan_open;
--	dev->stop = arlan_close;
--	dev->hard_start_xmit = arlan_tx;
--	dev->get_stats = arlan_statistics;
--	dev->set_multicast_list = arlan_set_multicast;
--	dev->change_mtu = arlan_change_mtu;
--	dev->set_mac_address = arlan_mac_addr;
--	dev->tx_timeout = arlan_tx_timeout;
-+	dev->netdev_ops = &arlan_netdev_ops;
- 	dev->watchdog_timeo = 3*HZ;
- 	
- 	ap->irq_test_done = 0;
+On Sat, 2009-03-14 at 19:14 +0200, Kalle Valo wrote:
 
+> +	if (!ps || (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
+> +		/*
+> +		 * with IEEE80211_HW_PS_NULLFUNC_STACK and power save
+> +		 * enabled the firmware sent a null frame when power save
+> +		 * was disabled, so we need to send a new null frame
+> +		 */
+> +		ieee80211_send_nullfunc(local, sdata, 1);
+> +}
+
+Now I'm confused a little. I thought with PS_NULLFUNC_STACK the firmware
+_didn't_ send such frames.
+
+johannes
+
+--=-OAY8pGZtGO9QP92kgcc1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJu+hsAAoJEKVg1VMiehFYKB4P/3pI7dlR/XQqyGyda2OJv5k/
+n1DyrZ//DrCZLfTpuZ0eLcJVe72IlF/KMhbIVHzugcfXw8LSWYzXP4DTJZoi+EOf
+mO8M3wWeZXP9LpdL63/yQ/Pu+OO+WmaOEooNCWHf04R6cepVxxvOHVZRVqXdaekC
+cXDw+hKfq1Pr9AhGFbqvXuAElwIIRQmJ/i6j0cNjQcaKLGU+SGTLkwu/8OUd66rI
+02UBdTBb4Xb+m/M8PBuRI9zN2Sae6FdHJK+ABgwckuEOpTnvpb8h2bDC8f0ONbrL
+hQSXSf33Q20Gs/cLwah9Ch0EnIwMWd7cN5YdICUob1w7HVAd6ZWhVlYkKxpI94aY
+Z6i7zHZSLG1qX9dNXAczn7TM2zyXDGN/WjyoKcPX2y5MN7IlwH9mHnEYnUnuOtbg
+Z8hjQybSWv1uX6MAK9wIo8D9rMDJoq9jlfqduBgfAkMspan6MUn4COOMSkguO679
+OjnfPde81WU+eF/VChyMcxmuK2j3OkJiE2PxQqB1SydHUzEGh7ZFIodR4ADe9ag0
+hSy4LaCJ2Ko/lYCLj1E7LwaMkpd1Wt6fK96cPZ1E+9FgTyBGMpIAfptMNhnLO8mv
+Fc5aybuFqP4CtoCOf+Czd94WzTYs3cT4IXOZ/9sioHnSsz64gPUxeSplWj8GzEPI
+1UU+31LgwqN7b2QW8135
+=i25h
+-----END PGP SIGNATURE-----
+
+--=-OAY8pGZtGO9QP92kgcc1--
 
