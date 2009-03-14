@@ -1,35 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:43482 "EHLO
-	vavatch.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751686AbZC1MxG (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:56124 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752834AbZCNTdM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2009 08:53:06 -0400
-Date: Sat, 28 Mar 2009 12:53:01 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [RFC] rfkill/rfkill-input userspace API
-Message-ID: <20090328125301.GA26537@srcf.ucam.org> (sfid-20090328_135313_459747_B4686F68)
-References: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br> <20090327221147.GA499@srcf.ucam.org> <20090328123645.GD7439@khazad-dum.debian.net> <20090328124719.GF7439@khazad-dum.debian.net>
+	Sat, 14 Mar 2009 15:33:12 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so1105729wfa.4
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 12:33:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090328124719.GF7439@khazad-dum.debian.net>
+In-Reply-To: <49BBFB78.6070708@nokia.com>
+References: <20090314171234.11126.21125.stgit@tikku>
+	 <20090314171431.11126.51242.stgit@tikku>
+	 <1237051084.5235.97.camel@johannes.local> <49BBFB78.6070708@nokia.com>
+Date: Sat, 14 Mar 2009 12:33:10 -0700
+Message-ID: <43e72e890903141233i506328fbwc927d3d3ec06bdc9@mail.gmail.com> (sfid-20090314_203317_862323_C78C4C67)
+Subject: Re: [RFC PATCH v2 1/4] mac80211: decrease execution of the associated
+	timer
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 28, 2009 at 09:47:19AM -0300, Henrique de Moraes Holschuh wrote:
-> Hi Matthew!
-> > Eh? What is that ioctl in the git version doing there, then?  Did I
-> > get the code from the wrong branch or something?
-> 
-> Ok, more on this: the ioctl _is_ needed for privacy reasons, it wasn't
-> added there just for the kick of it AFAIK.  Instead of just breaking
-> things the other way, can we configure evdev to sometimes do the grab,
-> and sometimes not, depending on a config option for that particular
-> device? 
+On Sat, Mar 14, 2009 at 11:46 AM, Kalle Valo <kalle.valo@nokia.com> wro=
+te:
+> Johannes Berg wrote:
+>>
+>> On Sat, 2009-03-14 at 19:14 +0200, Kalle Valo wrote:
+>>
+>>> +void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ieee80211_hdr *hdr)
+>>> +{
+>>> + =C2=A0 =C2=A0 =C2=A0 /* timer triggers only when there is no unic=
+ast traffic */
+>>> + =C2=A0 =C2=A0 =C2=A0 if (!is_multicast_ether_addr(hdr->addr1))
+>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 mod_timer(&sdata=
+->u.mgd.timer,
+>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 jiffies + IEEE80211_MONITORING_INTERVAL);
+>>> +}
+>>
+>> Do we really need the multicast check? The frame will be coming from=
+ the
+>> AP in managed mode in both cases, so why regard the data path as idl=
+e
+>> when we're receiving multicast traffic?
+>
+> It seems that I had a good vacation because I can't remember anymore =
+why I
+> added the check :D Too bad that even the comment I wrote was next to
+> useless.
+>
+> I'll remove the multicast check because I don't see the point for it.=
+ And if
+> in case I finally recall the reason I'll definitely add a better comm=
+ent.
+>
+> Thanks for all the review!
 
-No it's not. The event devices are only readable by root, and root can 
-get your keypresses anyway.
+If that's the case better just remove a whole routine just for that.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
