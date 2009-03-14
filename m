@@ -1,75 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40036 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869AbZCSSp3 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.173]:12163 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756542AbZCNUSQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 14:45:29 -0400
-Subject: Re: [PATCH 1/4] mac80211: Fix a typo in assoc vs. reassoc check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090319114756.833749085@atheros.com>
-References: <20090319113918.555693846@atheros.com>
-	 <20090319114756.833749085@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gnHbNETAklK7PaI8L552"
-Date: Thu, 19 Mar 2009 19:45:23 +0100
-Message-Id: <1237488323.5100.101.camel@johannes.local> (sfid-20090319_194532_599101_A7E4E73C)
-Mime-Version: 1.0
+	Sat, 14 Mar 2009 16:18:16 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so1118181wfa.4
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 13:18:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090314171452.11126.11618.stgit@tikku>
+References: <20090314171234.11126.21125.stgit@tikku>
+	 <20090314171452.11126.11618.stgit@tikku>
+Date: Sat, 14 Mar 2009 13:18:14 -0700
+Message-ID: <43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com> (sfid-20090314_211822_897542_1D431D30)
+Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-gnHbNETAklK7PaI8L552
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2009-03-19 at 13:39 +0200, Jouni Malinen wrote:
-> plain text document attachment (mac80211-mlme-typo.patch)
-> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
+On Sat, Mar 14, 2009 at 10:14 AM, Kalle Valo <kalle.valo@nokia.com> wro=
+te:
+> Add IEEE80211_HW_BEACON_FILTERING flag so that driver inform that it =
+supports
+> beacon filtering. Drivers need to call the new function
+> ieee80211_beacon_loss() to notify about beacon loss.
+>
+> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 > ---
->  net/mac80211/mlme.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> --- uml.orig/net/mac80211/mlme.c	2009-03-19 00:18:40.000000000 +0200
-> +++ uml/net/mac80211/mlme.c	2009-03-19 00:18:57.000000000 +0200
-> @@ -103,7 +103,7 @@ static void ieee80211_send_assoc(struct=20
->  	u32 rates =3D 0;
->  	size_t e_ies_len;
-> =20
-> -	if (ifmgd->flags & IEEE80211_IBSS_PREV_BSSID_SET) {
-> +	if (ifmgd->flags & IEEE80211_STA_PREV_BSSID_SET) {
->  		e_ies =3D sdata->u.mgd.ie_reassocreq;
->  		e_ies_len =3D sdata->u.mgd.ie_reassocreq_len;
->  	} else {
->=20
-> --=20
->=20
+>
+> =C2=A0include/net/mac80211.h =C2=A0 =C2=A0 | =C2=A0 18 ++++++++++++++=
+++++
+> =C2=A0net/mac80211/ieee80211_i.h | =C2=A0 =C2=A02 ++
+> =C2=A0net/mac80211/iface.c =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=A03 +++
+> =C2=A0net/mac80211/mlme.c =C2=A0 =C2=A0 =C2=A0 =C2=A0| =C2=A0 39 ++++=
+++++++++++++++++++++++++++++++++++-
+> =C2=A04 files changed, 61 insertions(+), 1 deletions(-)
+>
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 9ef131d..1262b83 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -888,6 +888,13 @@ enum ieee80211_tkip_key_type {
+> =C2=A0*
+> =C2=A0* @IEEE80211_HW_MFP_CAPABLE:
+> =C2=A0* =C2=A0 =C2=A0 Hardware supports management frame protection (=
+MFP, IEEE 802.11w).
+> + *
+> + * @IEEE80211_HW_BEACON_FILTER: Hardware can drop similar beacon fra=
+mes to
+> + * =C2=A0 =C2=A0 avoid waking up cpu. Enabling this flag disables th=
+e beacon check
+> + * =C2=A0 =C2=A0 in mac80211 when in power save mode and the hardwar=
+e must have an
+> + * =C2=A0 =C2=A0 event to notify that beacons are lost. Use ieee8021=
+1_beacon_loss()
+> + * =C2=A0 =C2=A0 to notify the event to the stack. The filtering mus=
+t be enabled
+> + * =C2=A0 =C2=A0 only when IEEE80211_CONF_PS is set.
+> =C2=A0*/
 
---=-gnHbNETAklK7PaI8L552
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Lets add to the documentation a little detail explaining how beacon fil=
+tering
+is expected to work, and elaborate on what we expect from the driver, i=
+f
+anything all.
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+I'd like to review this just once more.
 
-iQIcBAABAgAGBQJJwpLBAAoJEKVg1VMiehFY1DAP/3WfrgMHAgr3xrPJGyTLgj3n
-HTl+6368pnyk7BIMlxgEVXqGXFbqTGWFF35jdS50maoAPXXfOS08RIdGHzuaHcjP
-cueDPDBoDWwZR+A1vZlUqRPSNUbC/8G1npqoWFW+FndCueKj1/6sxr97SjCJDQGf
-KvEMCGMnAHvQFbcgeKg0e0YGNZ9V/8Rnsn1MdspxQQWnUCDK9qEBVXmQHfwbQsxb
-ei7lf9FCYOZRsOm75+NpEMq+dFOjXdnYwpH/ABhy3yvscBID7tVxMdx0MjF7I0Na
-VbCVmzbdgFMHyxRgJdG2fZeI5/r8KqoWSqulSn4iLFzS8P2gOfqlD/8mW5DIWn1C
-Ckjjau9sz1IAOB09vBJQ6OAGbLJteobOoBv+vx4VEZnpYOmBqevKvPzO6g1lzseh
-ykN/ykzM20ScMNi2tOR86S4OnmD7RgsAUKCsGkyVfASp2pULP5+OlImGTxTOE2RK
-efi+Lc6se9c4VRScfZu4K2CDIT0OXYOeTWRZIS0hdJfZSlLiH8/QSSB3zlm9iuCI
-0UYz0S5emCxMgCWDHLiDfxf/mTWDQ5LUNr6ImPvYImoX35U2SyXd9TBbfCDoddJ+
-RjuBuh9qZumlgLPp+DET6cMi748W8f6LANXM5VsPAItzkS9FGdjxIR6NE4dxYodY
-ssLsFfHmrjMcsfA0TN89
-=dAeC
------END PGP SIGNATURE-----
+Last we reviewed this it seemed we were set on only allowing this for
+hardware which supports beacon filtering with support for checksumming
+of the beacons. Reason checksumming is important is for considerations
+of DFS with the channel switch announcements, HT with with channel widt=
+h
+changes. In fact I'm curious why checksumming would be required for 2.4=
+ GHz
+single band devices. Kalle, do you happen to know?
 
---=-gnHbNETAklK7PaI8L552--
+Considering that power saving features are important I think its worth
+to revisit
+this position in detail.
 
+An alternative to this above position is that if the devices do not
+support checksumming
+of the beacons to let the driver figure when this should be enabled
+dynamically. For example
+if devices do not support checksumming but are single 2.4 GHz band
+non-HT capable
+devices we should let drivers enable this feature.
+
+Other devices which do not support checksumming should only enable this=
+ only
+when associating to an AP on non-DFS channels and when not using HT.
+
+In practice this would mean allowing both ath5k and ath9k to take advan=
+tage
+of this feature.
+
+Technically we could move the conditional logic check when this should
+be enabled
+to mac80211 as well. When we reviewed this it was seen as unnecessary
+complexity,
+I actually don't see it as too complex and think the the advantage is
+worth to consider.
+
+Thoughts?
+
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
