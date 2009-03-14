@@ -1,27 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43763
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754055AbZCVFxy (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:51979 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753974AbZCNRFO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 01:53:54 -0400
-Date: Sat, 21 Mar 2009 22:53:41 -0700 (PDT)
-Message-Id: <20090321.225341.71018920.davem@davemloft.net> (sfid-20090322_065357_552514_36F52FA5)
-To: shemminger@vyatta.com
-Cc: j@w1.fi, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 66/77] mac80211_hwsim: convert to internal
- net_device_stats
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090321053717.601771143@vyatta.com>
-References: <20090321053527.316395697@vyatta.com>
-	<20090321053717.601771143@vyatta.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 14 Mar 2009 13:05:14 -0400
+Message-ID: <49BBE3B6.8000005@nokia.com> (sfid-20090314_180519_557640_A0049C3E)
+Date: Sat, 14 Mar 2009 19:04:54 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
+References: <20090314144405.670.16447.stgit@tikku>	 <1237043931.5235.67.camel@johannes.local>  <49BBCE18.4090606@nokia.com>	 <1237046839.5235.86.camel@johannes.local>	 (sfid-20090314_170734_362051_D492D2DA) <1237046957.5235.88.camel@johannes.local>
+In-Reply-To: <1237046957.5235.88.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Hemminger <shemminger@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:33 -0700
+Johannes Berg wrote:
+> On Sat, 2009-03-14 at 17:07 +0100, Johannes Berg wrote:
+>> On Sat, 2009-03-14 at 17:32 +0200, Kalle Valo wrote:
+>>> Perhaps. I chose this path only because it was simple to implement :) 
+>>> I'll take a look at the scan code in more detail and fix it there.
+>> You're kinda right too, we want to disable the queues first, then set
+>> sw_scanning/notify the driver, and then send the nullfunc, I think. So
+>> it's either this patch, or iterating the interface list twice.
+> 
+> Similarly for the beacon disable part, that _needs_ to be done after
+> sw_scanning=true otherwise it won't actually work...
+> 
+> I think I prefer your patch over that complexity, but would like to have
+> a good comment explaining it
 
-> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+Ok. I'll add a comment in v2.
 
-Applied.
+> and possibly one in
+> scan.c:ieee80211_start_scan that points to that code.
+
+Yeah, that's definitely needed. I was first really confused why the null 
+frame got lost.
+
+Kalle
