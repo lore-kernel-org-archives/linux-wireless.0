@@ -1,94 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:62703 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752367AbZCMTGX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 15:06:23 -0400
-Received: by fxm24 with SMTP id 24so2759661fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 12:06:20 -0700 (PDT)
-Subject: Re: [ath5k-devel] Thanks for TX power patch
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mick@madwifi-project.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-In-Reply-To: <b6c5339f0903131123h4cb6379k472166ff81b9c5f2@mail.gmail.com>
-References: <1236728344.26432.26.camel@maxim-laptop>
-	 <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
-	 <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
-	 <1236893111.30325.10.camel@maxim-laptop>
-	 <b6c5339f0903121432h26d71d6nd901f12d0c10e7bc@mail.gmail.com>
-	 <b6c5339f0903121433r7bbf2dd8l484d15446241dccd@mail.gmail.com>
-	 <1236895489.17849.3.camel@maxim-laptop>
-	 <1236940708.4708.14.camel@maxim-laptop>
-	 <b6c5339f0903131123h4cb6379k472166ff81b9c5f2@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 13 Mar 2009 21:06:15 +0200
-Message-Id: <1236971175.9102.14.camel@localhost> (sfid-20090313_200626_936840_A3B27051)
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:36275 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751197AbZCNQTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2009 12:19:15 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
+Date: Sat, 14 Mar 2009 17:18:04 +0100
+Cc: Kalle Valo <kalle.valo@nokia.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20090314144405.670.16447.stgit@tikku> <1237046839.5235.86.camel@johannes.local> <1237047169.5235.92.camel@johannes.local>
+In-Reply-To: <1237047169.5235.92.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903141718.05717.mb@bu3sch.de> (sfid-20090314_171921_173989_644EFC03)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-03-13 at 14:23 -0400, Bob Copeland wrote:
-> On Fri, Mar 13, 2009 at 6:38 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> >
-> > Just compiled and installed latest wireless-testing with Nick's patches,
-> > and your patch.
-> >
-> > System is rock solid, module reload/s2disk/s2ram/long transfers work
-> > just fine.
+On Saturday 14 March 2009 17:12:49 Johannes Berg wrote:
+> On Sat, 2009-03-14 at 17:07 +0100, Johannes Berg wrote:
+> > On Sat, 2009-03-14 at 17:32 +0200, Kalle Valo wrote:
+> > > Johannes Berg wrote:
+> > > > On Sat, 2009-03-14 at 16:44 +0200, Kalle Valo wrote:
+> > > >> ieee80211_tx_h_check_assoc() was dropping everything else than probe
+> > > >> requests during software scan. So the null frame with the power save
+> > > >> bit was dropped and AP never received it. This meant that AP never
+> > > >> buffered any frames for the station during software scan.
+> > > >>
+> > > >> Fix this by allowing to transmit both probe request and null frames
+> > > >> during software scan. Tested with stlc45xx.
+> > > > 
+> > > > Would it make sense to reorder the scan code instead?
+> > > 
+> > > Perhaps. I chose this path only because it was simple to implement :) 
+> > > I'll take a look at the scan code in more detail and fix it there.
+> > 
+> > You're kinda right too, we want to disable the queues first, then set
+> > sw_scanning/notify the driver, and then send the nullfunc, I think. So
+> > it's either this patch, or iterating the interface list twice.
 > 
-> Great, thanks for the test!
+> Related to this, shouldn't the driver notification:
 > 
+>         if (local->ops->sw_scan_start)
+>                 local->ops->sw_scan_start(local_to_hw(local));
+> 
+> be moved to _after_ we stop the subif queues, disable beacons and send
+> the nullfunc? The sw_scan_complete is done before we re-enable
+> everything, so it seems logical that the start should be after we
+> disable it all.
 
-Just few random notes:
+For b43 it doesn't matter.
 
-
-
-I noticed that sometimes NM couldn't scan after  s2ram on aspire one.
-
-On the other hand doing iwlist scan, doesn't say device is busy, but
-also hangs. Nothing interesting in the logs.
-Module reload helps.
-
-
-The above with updated wpa_supplicant there (latest -git) NM is from
-ubuntu PPA archive yet, not sure if happens with stable one.
-
-I also applied two patches from Helmut Schaa, maybe it was the cause.
-
-
-
-I also noticed on both my notebooks, that wpa supplicant (stable too)
-fails to do first scan, and retries after 10 seconds.
-I changed this to 1 sec on my main notebook, and 2 seconds on ath5k.
-
-
-
-
-I also happy to say that I don't see anymore reset hangs. Maybe tx power
-patches fixed that?
-
-
-
-Also it seems that scan results show correct power levels for APs near
-me, including mine (they usually were very different from these I got
-from iwlwifi - now more or less they are the same)
-
-
-
-My AP is -51dBm ~ -45 dBm 
-
-
-
->From now on, during two/three weeks I will try not to use my computers
-I have very big exams very soon. So I might not read email.
-
-But then I will be free for some long time to help with anything I can.
-
-
-Best regards and thanks again,
-	Maxim Levitsky
-
+-- 
+Greetings, Michael.
