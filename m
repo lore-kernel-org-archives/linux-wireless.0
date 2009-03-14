@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:52872 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753569AbZCXSDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 14:03:53 -0400
-Subject: Re: New firmware available for Intel PRO/Wireless 2200BG and
- 2915ABG
-From: reinette chatre <reinette.chatre@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
+Received: from smtp.nokia.com ([192.100.105.134]:52548 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751964AbZCNRdv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2009 13:33:51 -0400
+Message-ID: <49BBEA60.6070702@nokia.com> (sfid-20090314_183352_573096_BC691F09)
+Date: Sat, 14 Mar 2009 19:33:20 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	reinette chatre <reinette.chatre@intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <200903241855.06916.helmut.schaa@gmail.com>
-References: <1237916524.455.18.camel@rc-desk>
-	 <200903241855.06916.helmut.schaa@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 24 Mar 2009 11:09:18 -0700
-Message-Id: <1237918158.455.26.camel@rc-desk> (sfid-20090324_190357_638316_6E4B03D3)
-Mime-Version: 1.0
+Subject: Re: [PATCH] iwlagn: default to MAX_UCODE_BEACON_INTERVAL	in	iwl_adjust_beacon_interval
+References: <154E55ADF9629D4E8D13F08BF92ABEB629C9D28B8D@PDSMSX501.ccr.corp.intel.com>	 <20090220145223.GA15006@tuxdriver.com> <1235155966.5860.44.camel@rc-desk>	 <20090220194306.GA4051@tuxdriver.com> <20090221003013.GA3890@tuxdriver.com>	 <20090221003133.GB3890@tuxdriver.com>	 <1235443093.4455.77.camel@johannes.local>	 <20090225014454.GA3577@tuxdriver.com>	 <1237046388.5235.82.camel@johannes.local>  <49BBE4A0.3060901@nokia.com> <1237050872.5235.95.camel@johannes.local>
+In-Reply-To: <1237050872.5235.95.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Helmut,
+Johannes Berg wrote:
+> On Sat, 2009-03-14 at 19:08 +0200, Kalle Valo wrote:
+>> Johannes Berg wrote:
+>>> Kalle, I suspect that your beacon offload will require something like
+>>> holding on to BSS structs too, is that correct?
+>> My current solution is just to disable beacon filtering (and power save) 
+>> whenever we are scanning. That way beacon filtering doesn't interfere 
+>> scanning in anyway.
+> 
+> That makes sense, but disabling beacons means that
+> 
+> 	iwlist wlan0 scan last
+> 
+> will not show _any_ BSS while associated, but it should really show the
+> BSS we're associated to. This is the problem I was referring to.
 
-On Tue, 2009-03-24 at 10:55 -0700, Helmut Schaa wrote:
-> Am Dienstag, 24. M=C3=A4rz 2009 schrieb reinette chatre:
-> > A new version (3.1) of firmware for Intel=C2=AE PRO/Wireless 2200BG=
- and
-> > 2915ABG Drivers is now available for download from
-> > http://ipw2200.sourceforge.net/firmware.php.
->=20
-> I couldn't find a changelog for the new firmware. Could you point me =
-to
-> a changelog or provide a short summary of what changed since 3.0?
+Oh man, I wasn't even aware of this feature. So yes, my patches 
+definitely need a way to hold bss structs. I need to study the 
+implementation more before I can comment.
 
-I am sorry, we were unable to obtain this information.
+(Dropping the ipw3945 list from CC, it bugs me about not being subscribed.)
 
-Reinette
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Kalle
