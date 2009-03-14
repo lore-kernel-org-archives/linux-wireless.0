@@ -1,39 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:48767 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754141AbZCQK3Y (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56719 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbZCNImz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 06:29:24 -0400
-Received: by ey-out-2122.google.com with SMTP id 25so892351eya.37
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 03:29:21 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [rt2x00] Update MAINTAINERS entry: new mailinglist
-Date: Tue, 17 Mar 2009 11:29:19 +0100
-Cc: linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net,
-	users@rt2x00.serialmonkey.com
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903171129.19603.IvDoorn@gmail.com> (sfid-20090317_112927_686764_E43E3ED9)
+	Sat, 14 Mar 2009 04:42:55 -0400
+Subject: [PATCH] mac80211: acquire sta_lock for station suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bob Copeland <bcopeland@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sat, 14 Mar 2009 09:42:49 +0100
+Message-Id: <1237020169.5235.66.camel@johannes.local> (sfid-20090314_094259_843037_AD6CAB8A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rt2400-devel mailinglist will be replaced by
-the new mailinglist rt2x00-users.
+To avoid concurrent manipulations of the sta list (which shouldn't
+be possible at this point, but anyway) we need to hold the sta_lock
+around iterating the list.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+At the same time, we do not need to iterate the list at all if
+the driver doesn't want to be notified.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1c2ca1d..53b43f1 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3593,7 +3593,7 @@ S:	Maintained
- RALINK RT2X00 WIRELESS LAN DRIVER
- P:	rt2x00 project
- L:	linux-wireless@vger.kernel.org
--L:	rt2400-devel@lists.sourceforge.net
-+L:	users@rt2x00.serialmonkey.com
- W:	http://rt2x00.serialmonkey.com/
- S:	Maintained
- T:	git kernel.org:/pub/scm/linux/kernel/git/ivd/rt2x00.git
+ net/mac80211/pm.c |   18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/pm.c	2009-03-14 09:35:01.000000000 +0100
++++ wireless-testing/net/mac80211/pm.c	2009-03-14 09:40:12.000000000 +0100
+@@ -10,6 +10,7 @@ int __ieee80211_suspend(struct ieee80211
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_if_init_conf conf;
+ 	struct sta_info *sta;
++	unsigned long flags;
+ 
+ 	ieee80211_stop_queues_by_reason(hw,
+ 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+@@ -21,9 +22,9 @@ int __ieee80211_suspend(struct ieee80211
+ 		ieee80211_disable_keys(sdata);
+ 
+ 	/* remove STAs */
+-	list_for_each_entry(sta, &local->sta_list, list) {
+-
+-		if (local->ops->sta_notify) {
++	if (local->ops->sta_notify) {
++		spin_lock_irqsave(&local->sta_lock, flags);
++		list_for_each_entry(sta, &local->sta_list, list) {
+ 			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 				sdata = container_of(sdata->bss,
+ 					     struct ieee80211_sub_if_data,
+@@ -32,11 +33,11 @@ int __ieee80211_suspend(struct ieee80211
+ 			local->ops->sta_notify(hw, &sdata->vif,
+ 				STA_NOTIFY_REMOVE, &sta->sta);
+ 		}
++		spin_unlock_irqrestore(&local->sta_lock, flags);
+ 	}
+ 
+ 	/* remove all interfaces */
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-
+ 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+ 		    netif_running(sdata->dev)) {
+@@ -64,6 +65,7 @@ int __ieee80211_resume(struct ieee80211_
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_if_init_conf conf;
+ 	struct sta_info *sta;
++	unsigned long flags;
+ 	int res;
+ 
+ 	/* restart hardware */
+@@ -75,7 +77,6 @@ int __ieee80211_resume(struct ieee80211_
+ 
+ 	/* add interfaces */
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-
+ 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+ 		    netif_running(sdata->dev)) {
+@@ -87,9 +88,9 @@ int __ieee80211_resume(struct ieee80211_
+ 	}
+ 
+ 	/* add STAs back */
+-	list_for_each_entry(sta, &local->sta_list, list) {
+-
+-		if (local->ops->sta_notify) {
++	if (local->ops->sta_notify) {
++		spin_lock_irqsave(&local->sta_lock, flags);
++		list_for_each_entry(sta, &local->sta_list, list) {
+ 			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 				sdata = container_of(sdata->bss,
+ 					     struct ieee80211_sub_if_data,
+@@ -98,6 +99,7 @@ int __ieee80211_resume(struct ieee80211_
+ 			local->ops->sta_notify(hw, &sdata->vif,
+ 				STA_NOTIFY_ADD, &sta->sta);
+ 		}
++		spin_unlock_irqrestore(&local->sta_lock, flags);
+ 	}
+ 
+ 	/* add back keys */
+
+
