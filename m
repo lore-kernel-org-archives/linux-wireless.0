@@ -1,65 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37719 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57931 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752893AbZCVM44 (ORCPT
+	with ESMTP id S1752729AbZCNRVS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 08:56:56 -0400
-Subject: Re: Kernel panic with zd1211rw and today's compat-wireless
+	Sat, 14 Mar 2009 13:21:18 -0400
+Subject: Re: [RFC PATCH v2 2/4] mac80211: track beacons separately from the
+	rx path activity
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Alexander E. Patrakov" <patrakov@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090322174515.22f11d92@home.aephome.ru> (sfid-20090322_134524_211033_029824A8)
-References: <20090322174515.22f11d92@home.aephome.ru>
-	 (sfid-20090322_134524_211033_029824A8)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fpaXU1HOYDUMS54VGwC2"
-Date: Sun, 22 Mar 2009 13:56:52 +0100
-Message-Id: <1237726612.19647.2.camel@johannes.local> (sfid-20090322_135658_672253_E9575196)
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <20090314171438.11126.30330.stgit@tikku>
+References: <20090314171234.11126.21125.stgit@tikku>
+	 <20090314171438.11126.30330.stgit@tikku>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-431/ymkip4UYd8dJ0Nyw"
+Date: Sat, 14 Mar 2009 18:21:16 +0100
+Message-Id: <1237051276.5235.99.camel@johannes.local> (sfid-20090314_182121_466342_F28C415E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-fpaXU1HOYDUMS54VGwC2
+--=-431/ymkip4UYd8dJ0Nyw
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2009-03-22 at 17:45 +0500, Alexander E. Patrakov wrote:
+On Sat, 2009-03-14 at 19:14 +0200, Kalle Valo wrote:
+> Separate beacon and rx path tracking in preparation for the beacon filter=
+ing
+> support. At the same time change ieee80211_associated() to look a bit sim=
+pler.
+>=20
+> Probe requests are now sent only after IEEE80211_PROBE_IDLE_TIME, which
+> is now set to 60 seconds.
 
-> There are several different panic messages,
-> the common thing is "Fatal exception in interrupt". Without uvesafb,
-> they also include "zd_op_tx+0x98/0x1cc [zd1211rw]" as the last line,
+Looks good.
 
-http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-testing.git;a=
-=3Dcommitdiff;h=3D3b23889bb2366c1b10f69bcca16cf53426b5e309
+>  	else
+>  		mod_timer(&ifmgd->timer, jiffies +
+> -				      IEEE80211_MONITORING_INTERVAL);
+> +			  IEEE80211_MONITORING_INTERVAL);
 
-> but with uvesafb, this sometimes changes to
-> "rate_control_get_rate+0xb7/0xc3 [mac80211]".
-
-That I don't know about.
+That seems to be indented a little oddly though :)
 
 johannes
 
---=-fpaXU1HOYDUMS54VGwC2
-Content-Type: application/pgp-signature; name="signature.asc"
+--=-431/ymkip4UYd8dJ0Nyw
+Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJxjWRAAoJEKVg1VMiehFYz9EP/juJYjNrR1pFXjAkKUvw0kU+
-wZkvVwrSdc/jW6gPd3D8mzFpFEomBZtAfqlBeiq7dV1KvtbA+BE2SX7LrHmmZ0uZ
-L7rWOkAbMrnO2UxFzdFETEqUtg/BniQWnvIackP7xJVsq7qrmtEpYDv/w7kaQOFr
-KvvVcX0jYLvi3ZZIAU7dOX+yUnDAUPhyJYp0k7sSWnzIZL3mIXwCxB/A1WZs2UUK
-ODirak+CCrp+pHz1rfjglNVgTOOEy5M53y19hXJqaWv9FN2gklsX/GxvdlGrNRto
-MUrxdAEdeFw4fY3pE17Olnn2zL5jNLE/rRzqPpj5PHnhvJIZ+YNRLpYj57/ErTSq
-47IU4r4iJISD9y3E2t4vbXqDJUYXpJnniW/gjPrvwwSWdiAq+sbjPctFi8+vU7sh
-anO9ogXAyE731NQPQ4kNFn5Ojx/E8CGLVTg17KB5OVnlmQ1sDcolO+7MHaSQcq6j
-8GWN61rl5PR23n5qReMZQSQb4ttFKrPApa3O8qiRsmybUqv4USMDDWNiCOhTwq2O
-raHpfRBnoMp1Ea1RhENcFAQyqJI9oZzoSvWQ2IcVXaKLZ2Kys0n+mhlazTEMF/x7
-7fTnUde+hDFN+5aQdywljyFprc0qCPmloudF0sj7yCYj987ozqLfJ7xF9Ck7Cnk5
-v/U5YHhqL3hu0xPjddQz
-=KlJV
+iQIcBAABAgAGBQJJu+eIAAoJEKVg1VMiehFYQa0QAK436R/BUq+JtY3O2/exVi9X
+s7lvnVIdBsn3gU4rqAF3ed/O5zJsolkvimwgjkc6wXrWXf53qYnCHv3/5N6MH+QP
+SFUgxLXYNWNrcEue3b0GOyuQjiind8hPVU96fQnU0EjEDgZ11O1VVl44qxtYS2xp
+G2AlrCSjY7McIqZV8VzQhEWTJMTZp+onZ8nNUCxj2ALbMgRezjLK3ceE3IMr7WEt
+jn08AVhPmxlVzrUVZDboarDX9mReHLmlIxcEVspZKFaxAK5q1eNzM4gV3ZYs4jNj
+E6aLeEvsdg63ZMJ97+OJ25mft5eVyB4u7dhl4vH1+pt/o0PpGkuaTETJBh632O8i
+/YJc5bgBlWOLSSpAaS6PAhDGuvmVoeIiMpQR87d4oehetqCEF7SQy/I5hLyyW2tQ
+RVg6zKjkaV5+Muj+tmCCxfNksQLvQ0jnPYEoS4leld8USH/eCw9a/y8pJhNmkdMc
+43KUn45wWHK29p9fUVbJCIK36wGI5rFm//9Jcf1JjuvyUFo8WWLN4NDtoMZ+tHxh
+DHWKVRjqE/kAIUSTMHO99BNIQwtGPW/J+pUR668J96PGtm2vDjbJCFnpLCYAikeL
+kOnHy3XA0f51KfPXDIJFK6u9GnsK8JY0ah6nfW1pBsXUfGHK78YLB95jSiWdVP6e
+Oq9mhjNumCLqm7D8jc4b
+=GUkd
 -----END PGP SIGNATURE-----
 
---=-fpaXU1HOYDUMS54VGwC2--
+--=-431/ymkip4UYd8dJ0Nyw--
 
