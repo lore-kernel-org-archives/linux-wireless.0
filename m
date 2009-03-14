@@ -1,85 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.30]:50399 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751180AbZCYUZu convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:52208 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753507AbZCNRPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 16:25:50 -0400
-Received: by yx-out-2324.google.com with SMTP id 31so205026yxl.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 13:25:47 -0700 (PDT)
+	Sat, 14 Mar 2009 13:15:10 -0400
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [RFC PATCH v2 3/4] mac80211: disable power save when scanning
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sat, 14 Mar 2009 19:14:45 +0200
+Message-ID: <20090314171445.11126.97668.stgit@tikku> (sfid-20090314_181513_322965_8718F241)
+In-Reply-To: <20090314171234.11126.21125.stgit@tikku>
+References: <20090314171234.11126.21125.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <e13a36b30903251203v7c53fb20g64bf61e4e433377@mail.gmail.com>
-References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
-	<200903260337.37783.kel@otaku42.de> <43e72e890903251041r657a5217q9af7b5eb34f2f824@mail.gmail.com>
-	<200903260442.36251.kel@otaku42.de> <e13a36b30903251203v7c53fb20g64bf61e4e433377@mail.gmail.com>
-Date: Wed, 25 Mar 2009 13:25:32 -0700
-Message-ID: <43e72e890903251325k7b435c18v988f9206eb784831@mail.gmail.com> (sfid-20090325_212553_930250_AC84BF28)
-Subject: Re: [renamed] Debian crda?
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: debian-devel@lists.debian.org
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 25, 2009 at 12:03 PM, Paul Wise <pabs@debian.org> wrote:
-> On Thu, Mar 26, 2009 at 3:42 AM, Kel Modderman <kel@otaku42.de> wrote=
-:
->
->> The DFSG seems to suggest that the source code to the regulatory dat=
-abase
->> should be modifiable and the derived work distributed under the same=
- license.
->
-> It is my understanding that:
->
-> Debian probably won't need to build the regdb from source most of the
-> time so we can just ship the upstream regulatory.bin file most of the
-> time.
+When software scanning we need to disable power save so that all possible
+probe responses and beacons are received. For hardware scanning assume that
+hardware will take care of that and document that assumption.
 
-Yes, that is the case.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-The user who would modify these rules for example would be people
-doing experiments, research, or maintaining their own db for some sort
-of custom hardware with specifically licensed regulatory information.
+ include/net/mac80211.h |   12 ++++++-----
+ net/mac80211/scan.c    |   54 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 59 insertions(+), 7 deletions(-)
 
-> When we do, just adding a second public key to the CRDA =C2=A0pubkeys=
- dir
-> and using the corresponding private key (from outside the package)
-> during the build process of wireless-regdb would be just fine.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 12a52ef..9ef131d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1318,11 +1318,13 @@ enum ieee80211_ampdu_mlme_action {
+  *
+  * @hw_scan: Ask the hardware to service the scan request, no need to start
+  *	the scan state machine in stack. The scan must honour the channel
+- *	configuration done by the regulatory agent in the wiphy's registered
+- *	bands. When the scan finishes, ieee80211_scan_completed() must be
+- *	called; note that it also must be called when the scan cannot finish
+- *	because the hardware is turned off! Anything else is a bug!
+- *	Returns a negative error code which will be seen in userspace.
++ *	configuration done by the regulatory agent in the wiphy's
++ *	registered bands. The hardware (or the driver) needs to make sure
++ *	that power save is disabled. When the scan finishes,
++ *	ieee80211_scan_completed() must be called; note that it also must
++ *	be called when the scan cannot finish because the hardware is
++ *	turned off! Anything else is a bug! Returns a negative error code
++ *	which will be seen in userspace.
+  *
+  * @sw_scan_start: Notifier function that is called just before a software scan
+  *	is started. Can be NULL, if the driver doesn't need this notification.
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 0e81e16..dec7d5a 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -202,6 +202,56 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
+ 	return RX_QUEUED;
+ }
+ 
++/*
++ * inform AP that we will go to sleep so that it will buffer the frames
++ * while we scan
++ */
++static void ieee80211_scan_ps_enable(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	bool ps = false;
++
++	/* FIXME: what to do when local->pspolling is true? */
++
++	del_timer_sync(&local->dynamic_ps_timer);
++	cancel_work_sync(&local->dynamic_ps_enable_work);
++
++	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
++		ps = true;
++		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	}
++
++	if (!ps || (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
++		/*
++		 * with IEEE80211_HW_PS_NULLFUNC_STACK and power save
++		 * enabled the firmware sent a null frame when power save
++		 * was disabled, so we need to send a new null frame
++		 */
++		ieee80211_send_nullfunc(local, sdata, 1);
++}
++
++/* inform AP that we are awake again, unless power save is enabled */
++static void ieee80211_scan_ps_disable(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++
++	if (!local->powersave)
++		ieee80211_send_nullfunc(local, sdata, 0);
++	else {
++		/*
++		 * In IEEE80211_HW_PS_NULLFUNC_STACK case firmware will
++		 * send a null frame with powersave bit set again even
++		 * though the AP already knows that we are sleeping. This
++		 * could be avoided by sending a null frame with power save
++		 * bit disabled before enabling the power save but it
++		 * doesn't gain anything.
++		 */
++		local->hw.conf.flags |= IEEE80211_CONF_PS;
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	}
++}
++
+ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -256,7 +306,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 		/* Tell AP we're back */
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 			if (sdata->u.mgd.flags & IEEE80211_STA_ASSOCIATED) {
+-				ieee80211_send_nullfunc(local, sdata, 0);
++				ieee80211_scan_ps_disable(sdata);
+ 				netif_tx_wake_all_queues(sdata->dev);
+ 			}
+ 		} else
+@@ -416,7 +466,7 @@ int ieee80211_start_scan(struct ieee80211_sub_if_data *scan_sdata,
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 			if (sdata->u.mgd.flags & IEEE80211_STA_ASSOCIATED) {
+ 				netif_tx_stop_all_queues(sdata->dev);
+-				ieee80211_send_nullfunc(local, sdata, 1);
++				ieee80211_scan_ps_enable(sdata);
+ 			}
+ 		} else
+ 			netif_tx_stop_all_queues(sdata->dev);
 
-Yes, this is the case.
-
-> This
-> would mean the maintainer of crda would also have to be the
-> wireless-regdb maintainer.
-
-Actually technically it could be a different person. I maintain crda
-upstream and John maintains wireless-regdb upstream, for example. I
-just need John's pubkey file which is non-binary. CRDA just reads the
-regulatory.bin which wireless-regdb provides.
-
-> I assume the wireless-regdb is
-> architecture-independent so this would work because the buildds do no=
-t
-> build such packages.
-
-This is correct.
-
-You do need a regulatory.bin installed first though so that if crda is
-built with the RSA digital signature check part of its build process
-is to ensure the signature checks out against the currently installed
-regulatory.bin file on your system. But that's just because a sanity
-check is part of the default target on the Makefile.
-
-> It is possible for users to add more public keys to the CRDA =C2=A0pu=
-bkeys
-> dir and build their own wireless-regdb using their own private key.
-
-Affirmative.
-
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
