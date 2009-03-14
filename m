@@ -1,27 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43775
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754094AbZCVFyP (ORCPT
+Received: from mail-ew0-f177.google.com ([209.85.219.177]:35196 "EHLO
+	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755141AbZCNTdd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 01:54:15 -0400
-Date: Sat, 21 Mar 2009 22:54:03 -0700 (PDT)
-Message-Id: <20090321.225403.139437186.davem@davemloft.net> (sfid-20090322_065420_821188_D1BE075C)
-To: shemminger@vyatta.com
-Cc: dcbw@redhat.com, netdev@vger.kernel.org,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 69/77] libertas: convert to internal net_device_stats
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090321053717.836980109@vyatta.com>
-References: <20090321053527.316395697@vyatta.com>
-	<20090321053717.836980109@vyatta.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 14 Mar 2009 15:33:33 -0400
+Received: by ewy25 with SMTP id 25so2974572ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 12:33:30 -0700 (PDT)
+Message-ID: <49BC0688.2020902@gmail.com> (sfid-20090314_203334_844388_23966C68)
+Date: Sat, 14 Mar 2009 20:33:28 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: realtek 802.11n driver ?
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Hemminger <shemminger@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:36 -0700
+hi,
 
-> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-Applied.
+Is there a driver for RTL819? 802.11n ( http://www.realtek.com.tw/products/productsView.aspx?Langid=1&PNid=21&PFid=41&Level=5&Conn=4 ) ?
+
+-thanks-
+
+
+regards,
+-- 
+Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea, Prestige, ...
