@@ -1,46 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37055 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755830AbZCWTpl (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35589 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421AbZCNQJW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 15:45:41 -0400
-Date: Mon, 23 Mar 2009 15:43:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
-Message-ID: <20090323194313.GG3285@tuxdriver.com> (sfid-20090323_204543_993636_108528F1)
-References: <1236939917.5235.7.camel@johannes.local> <1236941058.5235.12.camel@johannes.local> <20090320160308.GB28965@jm.kir.nu> <1237622383.5100.162.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1237622383.5100.162.camel@johannes.local>
+	Sat, 14 Mar 2009 12:09:22 -0400
+Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1237046839.5235.86.camel@johannes.local> (sfid-20090314_170734_362051_D492D2DA)
+References: <20090314144405.670.16447.stgit@tikku>
+	 <1237043931.5235.67.camel@johannes.local>  <49BBCE18.4090606@nokia.com>
+	 <1237046839.5235.86.camel@johannes.local>
+	 (sfid-20090314_170734_362051_D492D2DA)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Wnja/f9oqk1VehQnb+Ri"
+Date: Sat, 14 Mar 2009 17:09:17 +0100
+Message-Id: <1237046957.5235.88.camel@johannes.local> (sfid-20090314_170924_135699_F3F76A37)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 21, 2009 at 08:59:43AM +0100, Johannes Berg wrote:
-> On Fri, 2009-03-20 at 18:03 +0200, Jouni Malinen wrote:
-> > On Fri, Mar 13, 2009 at 11:44:18AM +0100, Johannes Berg wrote:
-> > 
-> > > --- wireless-testing.orig/net/mac80211/debugfs.c	2009-03-13 11:36:57.000000000 +0100
-> > > +++ wireless-testing/net/mac80211/debugfs.c	2009-03-13 11:41:53.000000000 +0100
-> > > +static ssize_t reset_write(struct file *file, const char __user *user_buf,
-> > > +			   size_t count, loff_t *ppos)
-> > 
-> > > +	__ieee80211_suspend(&local->hw);
-> > > +	__ieee80211_resume(&local->hw);
-> > 
-> > This seems to have broken build if CONFIG_PM is not defined: pm.c, with
-> > these functions, is not included.
-> 
-> Indeed, this file should depend on CONFIG_PM too I suppose, will fix
-> that. OTOH, a future patch I have will require _resume to always be
-> present, so I'm inclined to just always put the code in. I'll come up
-> with a fix in any case.
 
-I fixed this in wireless-testing.  Feel free to change it as you like it.
+--=-Wnja/f9oqk1VehQnb+Ri
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On Sat, 2009-03-14 at 17:07 +0100, Johannes Berg wrote:
+> On Sat, 2009-03-14 at 17:32 +0200, Kalle Valo wrote:
+> > Johannes Berg wrote:
+> > > On Sat, 2009-03-14 at 16:44 +0200, Kalle Valo wrote:
+> > >> ieee80211_tx_h_check_assoc() was dropping everything else than probe
+> > >> requests during software scan. So the null frame with the power save
+> > >> bit was dropped and AP never received it. This meant that AP never
+> > >> buffered any frames for the station during software scan.
+> > >>
+> > >> Fix this by allowing to transmit both probe request and null frames
+> > >> during software scan. Tested with stlc45xx.
+> > >=20
+> > > Would it make sense to reorder the scan code instead?
+> >=20
+> > Perhaps. I chose this path only because it was simple to implement :)=20
+> > I'll take a look at the scan code in more detail and fix it there.
+>=20
+> You're kinda right too, we want to disable the queues first, then set
+> sw_scanning/notify the driver, and then send the nullfunc, I think. So
+> it's either this patch, or iterating the interface list twice.
+
+Similarly for the beacon disable part, that _needs_ to be done after
+sw_scanning=3Dtrue otherwise it won't actually work...
+
+I think I prefer your patch over that complexity, but would like to have
+a good comment explaining it, and possibly one in
+scan.c:ieee80211_start_scan that points to that code.
+
+johannes
+
+--=-Wnja/f9oqk1VehQnb+Ri
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJu9aqAAoJEKVg1VMiehFYy00P/Aq6lsQMNwgssoXXulh16sJl
+i2UjoO4nnZbSlMSOR7mpTagHlUE1Vj+hHu/TkoNupO5ZNeCY0Fcp4BAlWh7tn+ey
+AaQKm6szTSbsaf1ThsOjII1mKjVoM0bJRG+LWueeKUlUaiaoU7TdP0khLH6bxkt/
+XJ1HBc/ePAGeKqktfoR8A4TXs7gaV3A20H29ARPuVW9nWQyLVLR6ss5nIKrpcsaQ
+7wUeVbt3JAh/POpm6an25UaEG0ys/u0llYAxMrGUMy2XKg9IMqENtJ7ElsXJP8Nj
+qGDK+0S2H7BbyRikE9j0vYKIzvzb7FxRVGDF5wBOhp7lEM9SgnOXxSs8EjinvoxH
+HO88ReFuEwhRzrezU9c3JoDH2mc9Q8a3cu6cN8FksZ3JCLVAkBjeFf3S08Ns018T
+dZIKRQz7xO3Mdrytx/jSotlkoA9Kou9uEphXWbjIziwB3aauWXMM+5ZUe3xuR/HR
+Tjm/kEZLrnhLKiVrvAZRqdczUMWFxJAZ3jXOgR4jcIaQQdC0yvl4WhH3WG2xhZkt
+DVtk9A9X3kGmOUay5fRfYXeKW9I8+p22pGENVKhWK2/zh4asyEpDG1sNIBnSvhRJ
+sji79evNog/+ZnjZNw63kKSicNbuKAwrulZezNtcxcEpsbCifJnKprcx6ueCi7Ns
+VDf5h1ZVsTnhAqVwfffq
+=VyAZ
+-----END PGP SIGNATURE-----
+
+--=-Wnja/f9oqk1VehQnb+Ri--
+
