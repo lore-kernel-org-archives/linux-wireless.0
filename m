@@ -1,86 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45310 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753085AbZCNR2s (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:49397 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754859AbZCNPdQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 13:28:48 -0400
-Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <20090314171452.11126.11618.stgit@tikku>
-References: <20090314171234.11126.21125.stgit@tikku>
-	 <20090314171452.11126.11618.stgit@tikku>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-HIAr1HSexknwvGnEtE3z"
-Date: Sat, 14 Mar 2009 18:28:45 +0100
-Message-Id: <1237051725.5235.104.camel@johannes.local> (sfid-20090314_182850_441107_0D8A9012)
-Mime-Version: 1.0
+	Sat, 14 Mar 2009 11:33:16 -0400
+Message-ID: <49BBCE18.4090606@nokia.com> (sfid-20090314_163320_627684_A72A886B)
+Date: Sat, 14 Mar 2009 17:32:40 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
+References: <20090314144405.670.16447.stgit@tikku> <1237043931.5235.67.camel@johannes.local>
+In-Reply-To: <1237043931.5235.67.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> On Sat, 2009-03-14 at 16:44 +0200, Kalle Valo wrote:
+>> ieee80211_tx_h_check_assoc() was dropping everything else than probe
+>> requests during software scan. So the null frame with the power save
+>> bit was dropped and AP never received it. This meant that AP never
+>> buffered any frames for the station during software scan.
+>>
+>> Fix this by allowing to transmit both probe request and null frames
+>> during software scan. Tested with stlc45xx.
+> 
+> Would it make sense to reorder the scan code instead?
 
---=-HIAr1HSexknwvGnEtE3z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Perhaps. I chose this path only because it was simple to implement :) 
+I'll take a look at the scan code in more detail and fix it there.
 
-On Sat, 2009-03-14 at 19:14 +0200, Kalle Valo wrote:
-
-> +/**
-> + * ieee80211_beacon_loss - inform that hardware does not receive beacons
-> + *
-> + * @hw: pointer as obtained from ieee80211_alloc_hw()
-> + *
-> + * When beacon filtering is enabled with IEEE80211_HW_BEACON_FILTERING a=
-nd
-> + * IEEE80211_CONF_PS is set, the driver needs to inform whenever the
-> + * hardware is not receiving beacons with this function.
-> + */
-> +void ieee80211_beacon_loss(struct ieee80211_hw *hw);
-
-
-> +void ieee80211_beacon_loss(struct ieee80211_hw *hw)
-> +{
-> +	struct ieee80211_local *local =3D hw_to_local(hw);
-> +	struct ieee80211_sub_if_data *sdata;
-> +
-> +	rcu_read_lock();
-> +	list_for_each_entry(sdata, &local->interfaces, list) {
-> +		if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
-> +			continue;
-> +
-> +		queue_work(local->hw.workqueue,
-> +			   &sdata->u.mgd.beacon_loss_work);
-> +	}
-> +	rcu_read_unlock();
-> +}
-> +EXPORT_SYMBOL(ieee80211_beacon_loss);
-
-Shouldn't the driver just pass the relevant vif pointer?
-
-johannes
-
---=-HIAr1HSexknwvGnEtE3z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJu+lKAAoJEKVg1VMiehFYR58P/0E1RVWvZng/9O2w6G2e1e9l
-Uu2HiJzLYRNjj0dJBKnTpjx2Q6yQl718glVce2A6zRpblfQXJkWdemVM9ih4pXPK
-A+MKcgoeWRu47JFfTJ67CdTcjnFXeyMiqrQlI+OXAlrpePDkd7eeTDTcYsWXgTnZ
-vh99axltnwZNvEaAAgsl/6vwVj5wFV8pCfaJpMB2mq6Wo+uUjyizHVLPgTOx6WZV
-6VPvUdqZ/bUA0jH3aKlx6MFVxgBYNFTFhQsQoA6tkeyOiAbW1jc7tseaucq9WuFX
-a+REJl1z9svMg3v8kNPmNrIhYcO8oWP8jTGB2WMHoRvE/Yivy2HByzDo08xHbdcy
-s3vBvRbqD57TbOXQV6Pw6/x03/OQUj4omHNP61OBVsGk+/nJqA+ZMFJhi38oBvAc
-Uuk5TsqOOYXU5dQaGWNjxBjoFSwDu5jTP+/qb+vwSQkrsz/YGq5s0K3TkPbkF/p9
-IswB8FAplWQdaL0oIQqdpU/U/vFvpkoNMHpG4Y+1we/9D/LuzK7oTU9h+O/9x094
-VUwsrs5XuFX00Vu2FZ3h7IUWv2Nb0U+GXJs+U1JpQTWfBrNLeGJnlMv/KDOBSgF/
-IpiITrX0r7naqOZ6UiBssYYkVqqdOYNyCzi9gcW/zpYOyGgQlXUP0joEb/4++QM7
-fTKFca1y7isVv34gSl4Q
-=ML4o
------END PGP SIGNATURE-----
-
---=-HIAr1HSexknwvGnEtE3z--
+Kalle
 
