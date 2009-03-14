@@ -1,79 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33696 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755771AbZC0VKx (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:40010 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752552AbZCNRPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 17:10:53 -0400
-Subject: Re: [PATCH] rfkill-input: remove unused code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090327143608.GB24288@khazad-dum.debian.net> (sfid-20090327_153635_512916_55398CA9)
-References: <1238159804.4452.4.camel@johannes.local>
-	 <20090327143608.GB24288@khazad-dum.debian.net>
-	 (sfid-20090327_153635_512916_55398CA9)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/FgvBbVEXxuyj2L+9yIm"
-Date: Fri, 27 Mar 2009 16:11:52 +0100
-Message-Id: <1238166712.4452.11.camel@johannes.local> (sfid-20090327_221100_026294_389029D4)
-Mime-Version: 1.0
+	Sat, 14 Mar 2009 13:15:39 -0400
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [RFC PATCH v2 1/4] mac80211: decrease execution of the associated
+	timer
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sat, 14 Mar 2009 19:14:31 +0200
+Message-ID: <20090314171431.11126.51242.stgit@tikku> (sfid-20090314_181540_659075_9CF54104)
+In-Reply-To: <20090314171234.11126.21125.stgit@tikku>
+References: <20090314171234.11126.21125.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently the timer is triggering every two seconds
+(IEEE80211_MONITORING_INTERVAL). Decrease the timer to only trigger when
+nothing is received to avoid waking up CPU.
 
---=-/FgvBbVEXxuyj2L+9yIm
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Now there's a functional change that probe requests are sent only when the
+data path is idle, earlier they were sent also while there was activity
+on the data path.
 
-On Fri, 2009-03-27 at 11:36 -0300, Henrique de Moraes Holschuh wrote:
-> On Fri, 27 Mar 2009, Johannes Berg wrote:
-> > There's a lot of rfkill-input code that cannot ever be
-> > compiled and is useless until somebody needs and tests
-> > it -- therefore remove it.
->=20
-> Just so that you guys know, that code *is* tested :-)
+This is also preparation for beacon filtering support. Thanks to Johannes
+Berg for the idea.
 
-At some point :)
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-> I'd suggest that the code removal be done leaving a comment in place, lik=
-e this:
->=20
-> /* Currently, code to implement EV_SW SW_WLAN/WWAN/BLUETOOTH/etc is not
->  * in place since it was unused and was therefore removed.  Please look
->  * at past history to check how it was supposed to be done, if you need
->  * to implement handling for EV_SW.
->  */
->=20
-> Because that codepath is _not_ the most obvious thing in the world to
-> reimplement without hitting a pitfall, so people better look how it was d=
-one
-> once in time...
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/mlme.c        |    8 ++++++++
+ net/mac80211/rx.c          |    3 +++
+ 3 files changed, 13 insertions(+), 0 deletions(-)
 
-Works for me. Do we expect it to be needed though?
-
-johannes
-
---=-/FgvBbVEXxuyj2L+9yIm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJzOy1AAoJEKVg1VMiehFYiNYQAKqOOyk5WPBshM1XfdUehBEE
-TIB1twRPon4xKG7dZNYlczb0cckvRnmgURDs47fiCTWeI6V7ggYSLOKxwRNA0KpB
-APzf09UMuN4Xq4sNXHdWS6ZZxG0AW5LTRqQw3yzORIYTY37svdes7BjlfilNILOi
-MIvKw/mZn15lUMOZhPBNZTe0mODMmXYhSuyMDBzwJqeoT4Zd3AwpmcOeZhDwCA0D
-6sa76Dw9wKolnW0WeadXjfCG5HYce5IObZTWwGAjKl0KF+xBwsfCjImWDc7vLJlZ
-vzT9Vvfl33rlAqzhRLQ5d0ctqLfNbNX1q8FV08rN8Fd0u9zuWfk85i9JgaABrmdG
-OJV/ikJrTz8u45OKGm9t+ZhPb5vgCc2wuhWABm7QiO21hT/NzInGhqsSQpjDsMq7
-Ec42/t11UJr78FnmoxaERBCPSs6rOO7eiiu8DdjhXJ33AcnjLn8JlObrq5vf2ZdO
-eHCQDBpsHStlWxhf0U0nitA8XFPd+p/jRVlCN7Uqa8ddPnEBOwvXrKyzUx8qnNHt
-aru/01OnAPKZthSGb5Bk79utscrPeQl2ZTfsji4/iTpYFbKEmlzr3UKv/PJAAqN2
-PORHndP8SwwFlick5068+3DxjvBhIgsg4AUO1keNptttlO74gjcEeZBSZ2nuXUps
-h8kfdQAwBlwMRf04AGXj
-=VYeG
------END PGP SIGNATURE-----
-
---=-/FgvBbVEXxuyj2L+9yIm--
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ecbc8e0..74c4e13 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1080,6 +1080,8 @@ void ieee80211_dynamic_ps_timer(unsigned long data);
+ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 			     struct ieee80211_sub_if_data *sdata,
+ 			     int powersave);
++void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
++			     struct ieee80211_hdr *hdr);
+ 
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+ 				     enum queue_stop_reason reason);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 391445c..397a2e7 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -911,6 +911,14 @@ static void ieee80211_associate(struct ieee80211_sub_if_data *sdata)
+ 	mod_timer(&ifmgd->timer, jiffies + IEEE80211_ASSOC_TIMEOUT);
+ }
+ 
++void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
++			     struct ieee80211_hdr *hdr)
++{
++	/* timer triggers only when there is no unicast traffic */
++	if (!is_multicast_ether_addr(hdr->addr1))
++		mod_timer(&sdata->u.mgd.timer,
++			  jiffies + IEEE80211_MONITORING_INTERVAL);
++}
+ 
+ static void ieee80211_associated(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 66f7ecf..25982c0 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -855,6 +855,9 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 		return RX_CONTINUE;
+ 
++	if (rx->sdata->vif.type == NL80211_IFTYPE_STATION)
++		ieee80211_sta_rx_notify(rx->sdata, hdr);
++
+ 	sta->rx_fragments++;
+ 	sta->rx_bytes += rx->skb->len;
+ 	sta->last_signal = rx->status->signal;
 
