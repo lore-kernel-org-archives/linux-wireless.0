@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f165.google.com ([209.85.217.165]:35123 "EHLO
-	mail-gx0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753296AbZCPQS1 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f177.google.com ([209.85.219.177]:52468 "EHLO
+	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525AbZCNSQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 12:18:27 -0400
-Received: by gxk9 with SMTP id 9so1943521gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 09:18:25 -0700 (PDT)
+	Sat, 14 Mar 2009 14:16:34 -0400
+Received: by ewy25 with SMTP id 25so2958569ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 11:16:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20090316155152.276920@gmx.net>
-References: <ee588a540903160324s59c83547jc7d2148642e00af4@mail.gmail.com>
-	 <20090316155152.276920@gmx.net>
-Date: Mon, 16 Mar 2009 09:18:24 -0700
-Message-ID: <43e72e890903160918p75c8ee5cja0ff4a308d24c407@mail.gmail.com> (sfid-20090316_171829_816951_C60CE9EF)
-Subject: Re: well working usb wlan stick
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Alina Friedrichsen <x-alina@gmx.net>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	feldmann_markus@gmx.de, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <63d38a500903141114m17d9123ey7d934cd05496c1c5@mail.gmail.com>
+References: <4999F3A6.7020208@gmail.com> <4999F427.4060008@lwfinger.net>
+	 <3ace41890902161603o447ae321obb536586dcafad69@mail.gmail.com>
+	 <499A00D7.1080000@lwfinger.net>
+	 <63d38a500902170149q275bcb87r9ada40439a013dc7@mail.gmail.com>
+	 <499AE03C.9050008@lwfinger.net>
+	 <63d38a500903141114m17d9123ey7d934cd05496c1c5@mail.gmail.com>
+Date: Sat, 14 Mar 2009 19:16:31 +0100
+Message-ID: <63d38a500903141116h3f998e6cl163e1d8c4f9e711d@mail.gmail.com> (sfid-20090314_191637_653032_6227408D)
+Subject: Re: rtl8187 not handling my usb card
+From: =?ISO-8859-2?Q?Viktor_Ilija=B9i=E6?= <viktor.ilijasic@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2009 at 8:51 AM, Alina Friedrichsen <x-alina@gmx.net> w=
-rote:
-> Hi!
->
->> only buy ZyDAS/Atheros(zd1211rw driver), =C2=A0Realtek(rtl8187 drive=
-r) or
->> Ralink(rt73usb driver) devices.
->
-> As far I have tested, the ar9170 driver works okay for G too, only Dr=
-aft-N is not supported at the moment.
+Hi, all.
 
-11n does work but currently only in the the otus driver, which is also
-open but it just doesn't use mac80211. ar9170 is the driver which will
-eventually get merged.
+I received a new card, after the old one died, and I'm happy to report
+that the card works properly under Linux with my patched version of
+the driver (the patch was only to add the USB ID). I see that the
+patch was already submitted to the kernel while my card was being
+replaced.
 
-http://wireless.kernel.org/en/users/Drivers/ar9170
-http://wireless.kernel.org/en/users/Drivers/otus
+Thanks all for your work and help.
 
-  Luis
+
+Viktor
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Don't let people drive you crazy when you know it's in walking distance.
