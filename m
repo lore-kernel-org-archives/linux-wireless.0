@@ -1,107 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:50685 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757659AbZCTTYD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45333 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755036AbZCNTzq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 15:24:03 -0400
-Message-Id: <20090320192353.233644676@atheros.com> (sfid-20090320_202413_971511_1D3CD9E8)
-References: <20090320192115.448175935@atheros.com>
-Date: Fri, 20 Mar 2009 21:21:17 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 2/4] nl80211: Add more through validation of MLME command parameters
+	Sat, 14 Mar 2009 15:55:46 -0400
+Subject: Re: [RFC PATCH v2 2/4] mac80211: track beacons separately from the
+	rx  path activity
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Kalle Valo <kalle.valo@nokia.com>, linux-wireless@vger.kernel.org,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <43e72e890903141245k46f4dd4co6a33b45b82e9098a@mail.gmail.com> (sfid-20090314_204515_016243_BB069A61)
+References: <20090314171234.11126.21125.stgit@tikku>
+	 <20090314171438.11126.30330.stgit@tikku>
+	 <43e72e890903141245k46f4dd4co6a33b45b82e9098a@mail.gmail.com>
+	 (sfid-20090314_204515_016243_BB069A61)
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-5SvAjwiuyuVKxA0jQ6Cg"
+Date: Sat, 14 Mar 2009 20:55:42 +0100
+Message-Id: <1237060542.5235.109.camel@johannes.local> (sfid-20090314_205549_397134_B8FDE6C8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check that the used authentication type and reason code are valid here
-so that drivers/mac80211 do not need to care about this. In addition,
-remove the unnecessary validation of SSID attribute length which is
-taken care of by netlink policy.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+--=-5SvAjwiuyuVKxA0jQ6Cg
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- net/wireless/nl80211.c |   32 ++++++++++++++++++++++++++------
- 1 file changed, 26 insertions(+), 6 deletions(-)
+On Sat, 2009-03-14 at 12:45 -0700, Luis R. Rodriguez wrote:
+> On Sat, Mar 14, 2009 at 10:14 AM, Kalle Valo <kalle.valo@nokia.com> wrote=
+:
+> > Separate beacon and rx path tracking in preparation for the beacon filt=
+ering
+> > support. At the same time change ieee80211_associated() to look a bit s=
+impler.
+> >
+> > Probe requests are now sent only after IEEE80211_PROBE_IDLE_TIME, which
+> > is now set to 60 seconds.
+> >
+> > Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+>=20
+> Can this be split into 3 separate patches, to make the one with the
+> actual functional changes easier to review. One is the making of
+> ieee80211_associated() look easier, the other the rename, and lastly
+> the actual functional changes. When reviewing the commit log it would
+> then be easier to see what was done.
 
---- uml.orig/net/wireless/nl80211.c	2009-03-20 18:03:53.000000000 +0200
-+++ uml/net/wireless/nl80211.c	2009-03-20 18:03:57.000000000 +0200
-@@ -2614,6 +2614,14 @@ static int nl80211_dump_scan(struct sk_b
- 	return err;
- }
- 
-+static bool nl80211_valid_auth_type(enum nl80211_auth_type auth_type)
-+{
-+	return auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM ||
-+		auth_type == NL80211_AUTHTYPE_SHARED_KEY ||
-+		auth_type == NL80211_AUTHTYPE_FT ||
-+		auth_type == NL80211_AUTHTYPE_NETWORK_EAP;
-+}
-+
- static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *drv;
-@@ -2666,6 +2674,10 @@ static int nl80211_authenticate(struct s
- 	if (info->attrs[NL80211_ATTR_AUTH_TYPE]) {
- 		req.auth_type =
- 			nla_get_u32(info->attrs[NL80211_ATTR_AUTH_TYPE]);
-+		if (!nl80211_valid_auth_type(req.auth_type)) {
-+			err = -EINVAL;
-+			goto out;
-+		}
- 	}
- 
- 	err = drv->ops->auth(&drv->wiphy, dev, &req);
-@@ -2718,10 +2730,6 @@ static int nl80211_associate(struct sk_b
- 		}
- 	}
- 
--	if (nla_len(info->attrs[NL80211_ATTR_SSID]) > IEEE80211_MAX_SSID_LEN) {
--		err = -EINVAL;
--		goto out;
--	}
- 	req.ssid = nla_data(info->attrs[NL80211_ATTR_SSID]);
- 	req.ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
- 
-@@ -2769,9 +2777,15 @@ static int nl80211_deauthenticate(struct
- 
- 	req.peer_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	if (info->attrs[NL80211_ATTR_REASON_CODE])
-+	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
- 		req.reason_code =
- 			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
-+		if (req.reason_code == 0) {
-+			/* Reason Code 0 is reserved */
-+			err = -EINVAL;
-+			goto out;
-+		}
-+	}
- 
- 	if (info->attrs[NL80211_ATTR_IE]) {
- 		req.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
-@@ -2817,9 +2831,15 @@ static int nl80211_disassociate(struct s
- 
- 	req.peer_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	if (info->attrs[NL80211_ATTR_REASON_CODE])
-+	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
- 		req.reason_code =
- 			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
-+		if (req.reason_code == 0) {
-+			/* Reason Code 0 is reserved */
-+			err = -EINVAL;
-+			goto out;
-+		}
-+	}
- 
- 	if (info->attrs[NL80211_ATTR_IE]) {
- 		req.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
+Disagree, the rename is part of the functional change, it's not just a
+plain rename.
 
--- 
+johannes
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--=-5SvAjwiuyuVKxA0jQ6Cg
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJvAu7AAoJEKVg1VMiehFYaRoP/1cGKsLlQKVVBeGypl8NvyFg
+ht/r5AHdP1DPEoiUuhzNVnDqBOoOjHCm1VePTs2Gt+gk5sgWM40dOSfN4a8s+pAs
+CRqfjonOEAxH+bUHwlikxBL/dKRbyBiucEU73QNwt+4QqJkMB3eltHyeH9enwQQo
+c0QKghb8qRCzRiiVm10sKr3NkI/EqTXHBSFg6ciyk3z5HdeR4qNaD+uwRQoStfrK
+Y6uz0PtHGtqF5kvEKSQDWdeLpPeXDA5rZwTo2DjK7kmJh4qhonLK+F5a1E83ytVy
+U5DmZlPM7WqAiWEJy5q1U5B3AHc7wq9bVkiC9A0qRQB0ZVFUzrM3GpcdL6uc8r6g
+7Soa219pPIYdR8+tofWJMj0CaWzluLB/LDFWntxh48RN3SkSOOm5tTkI6oANsDfq
++kUrYh5SN9nbj52dh6NQPZNjVD7ovDi3123KMaO25C+EIMEZl/GWrS0firKikwGu
+W545/C4xJsZ7WIdmaMQl358w/lV3d6gz201Q9OQvp6EMPzmrxlRUEvva7bKsfzbq
+F59FSimJPUrK2EBQmv+fQ1VKNQZClGQRbmbGj2TupFY48Sx7je/6iypxOCln0I/Z
+B6x+SPnR8b+ZlWMRAh2d6Q7OKLYS+7Xlh2Nd1mtEjYnbfqVFvaak8jQZHuG6+2TP
+gddUyQXyWe2LW43IPiOp
+=KB4o
+-----END PGP SIGNATURE-----
+
+--=-5SvAjwiuyuVKxA0jQ6Cg--
+
