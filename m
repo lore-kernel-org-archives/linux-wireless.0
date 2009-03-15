@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:57140 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753002AbZC3JA4 (ORCPT
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:49069 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761100AbZCOUcX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 05:00:56 -0400
-Date: Mon, 30 Mar 2009 14:29:52 +0530
-From: Dhaval Giani <dhaval@linux.vnet.ibm.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Dhaval Giani <dhaval.lists@thegianis.in>,
-	linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] ath5k: fix hw rate index condition
-Message-ID: <20090330085952.GB3837@linux.vnet.ibm.com> (sfid-20090330_110100_417709_76305544)
-Reply-To: Dhaval Giani <dhaval@linux.vnet.ibm.com>
-References: <1231336282-22283-1-git-send-email-jirislaby@gmail.com> <1231338965-796-1-git-send-email-jirislaby@gmail.com> <20090107152208.GB4207@linux.vnet.ibm.com> <4964CAAA.3040801@gmail.com> <25891f3e0902012357n21e7bc2fmc59fb2a842631651@mail.gmail.com> <20090215134702.GA10180@hash.localnet> <49A9C3D7.8060706@gmail.com>
+	Sun, 15 Mar 2009 16:32:23 -0400
+Received: by fxm24 with SMTP id 24so3260559fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 13:32:20 -0700 (PDT)
+Message-ID: <49BD65D2.1040608@gmail.com> (sfid-20090315_213229_416020_2F9335EE)
+Date: Sun, 15 Mar 2009 21:32:18 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49A9C3D7.8060706@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org
+Subject: Re: [PATCH 2/3] ath5k: Convert chip specific calibration data to
+ a generic format
+References: <20090315201704.GB5246@makis>
+In-Reply-To: <20090315201704.GB5246@makis>
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 01, 2009 at 12:08:07AM +0100, Jiri Slaby wrote:
-> On 15.2.2009 14:47, Bob Copeland wrote:
->> On Mon, Feb 02, 2009 at 01:27:39PM +0530, Dhaval Giani wrote:
->>> So I finally managed to hit this on 2.6.29-rc3. It is hard to
->>> reproduce, so I hope so much information is enough to give you a good
->>> guess. This time it hit while trying to connect to an open network at
->>> the airport.
->>
->>> WARNING: at net/mac80211/rx.c:2236 __ieee80211_rx+0x96/0x571 [mac80211]()
->>> Hardware name: 2007CS3
->>> RATE=255, BAND=8
->>
->> band is supposed to be sc->curband?  8 is way wrong.
->
-> If you look into the patch which outputs this (backtrace in this  
-> thread), sband->n_bitrates is 8. I have no idea what I have been smoking  
-> the day I wrote it, but BAND= for sure isn't the right name for that  
-> thing. Sorry for the confusion.
->
->> rate could be 255
->> if, for some reason, the hardware rate wasn't in the rate table.
->
-> So, we have a fix for this, right? I mean the u8->s8 sc->rate_idx  
-> conversion or alike...
+On 15.3.2009 21:17, Nick Kossifidis wrote:
+> +ath5k_get_pcdac_intercepts(struct ath5k_hw *ah, u8 min, u8 max, u8 *vp)
+> +{
+> +	const static u16 intercepts3[] =
+> +		{ 0, 5, 10, 20, 30, 50, 70, 85, 90, 95, 100 };
+> +	const static u16 intercepts3_2[] =
+> +		{ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
 
-Where is the fix? Is it merged in? I still see this happen on 2.6.29
+Just for future, C99 section 6.11.5 says:
+Storage-class specifiers
+  The placement of a storage-class specifier other than at the
+  beginning of the declaration specifiers in a declaration is
+  an obsolescent feature.
 
-thanks,
--- 
-regards,
-Dhaval
+It means we should use 'static const' instead of 'const static'.
+
+Otherwise it looks good, thanks.
