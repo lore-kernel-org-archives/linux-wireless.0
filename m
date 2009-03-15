@@ -1,74 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21572 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754024AbZCERtg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 12:49:36 -0500
-Subject: Re: Please apply to stable: cfg80211: add support for custom
- firmware regulatory solutions
-From: reinette chatre <reinette.chatre@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "stable@kernel.org" <stable@kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Tim Gardner <tim.gardner@canonical.com>
-In-Reply-To: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com>
-References: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 05 Mar 2009 09:54:28 -0800
-Message-Id: <1236275668.6612.134.camel@rc-desk> (sfid-20090305_184942_799938_88197D44)
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.105.134]:20046 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbZCOHWx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2009 03:22:53 -0400
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
+References: <20090314171234.11126.21125.stgit@tikku>
+	<20090314171452.11126.11618.stgit@tikku>
+	<43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sun, 15 Mar 2009 09:22:38 +0200
+In-Reply-To: <43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com> (ext Luis R. Rodriguez's message of "Sat\, 14 Mar 2009 21\:18\:14 +0100")
+Message-ID: <87r60z1c8x.fsf@nokia.com> (sfid-20090315_082320_267807_7BB45258)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-03-04 at 13:35 -0800, Luis R. Rodriguez wrote:
-> Forgot to Cc: stable@kernel.org for this patch during its submission,
-> this is needed on 2.6.28 as otherwise there is an issue for Intel
-> cards which get their channels 5 GHz disabled if OLD_REG is set to no
-> (this is not the default) or the channels 12-14 are disabled if
-> OLD_REG is set to yes (default) set to no and the ieee80211_module
-> parameter is not used. The later issue is resolved by userspace as
-> well but we cannot yet expect 2.6.28 kernels to have enough userspace
-> interfaces to set the regulatory domain just yet. This is why OLD_REG
-> is still set to default with 2.6.28.
-> 
-> 14b9815af3f4fe0e171ee0c4325c31d2a2c1570b
-> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Date:   Wed Nov 12 14:22:03 2008 -0800
-> 
->    cfg80211: add support for custom firmware regulatory solutions
-> 
->    This adds API to cfg80211 to allow wireless drivers to inform
->    us if their firmware can handle regulatory considerations *and*
->    they cannot map these regulatory domains to an ISO / IEC 3166
->    alpha2. In these cases we skip the first regulatory hint instead
->    of expecting the driver to build their own regulatory structure,
->    providing us with an alpha2, or using the reg_notifier().
-> 
->    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->    Acked-by: Zhu Yi <yi.zhu@intel.com>
->    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
 
-Could you please also add commit
-ea4a82dceec7b5782b1259079c8de508d0afe33a? This is the commit that
-enables the Intel cards to take advantage of the parameter introduced in
-previous commit.
+> Last we reviewed this it seemed we were set on only allowing this for
+> hardware which supports beacon filtering with support for checksumming
+> of the beacons. Reason checksumming is important is for considerations
+> of DFS with the channel switch announcements, HT with with channel width
+> changes. In fact I'm curious why checksumming would be required for 2.4 GHz
+> single band devices. Kalle, do you happen to know?
 
-commit ea4a82dceec7b5782b1259079c8de508d0afe33a
-Author: Luis R. Rodriguez <lrodriguez@atheros.com>
-Date:   Wed Nov 12 14:22:04 2008 -0800
+In my opinion also 2.4 GHz band needs checksum support. At least ERP
+protection changes come to my mind, but maybe there are also others.
 
-    iwlwifi: enable custom fw regulatory solution
-    
-    This enables the custom firmware regulatory solution option
-    on iwlwifi drivers. These devices are uncapable of mapping their
-    EEPROM regulatory domain to a specific ISO / IEC alpha2.
-    Although the new 11n devices (>= iwl 5000) have only
-    3 regultaory SKUs -- MOW, ABG (no N) and BG -- the older
-    devices (3945 and 4965) have a more complex SKU arrangement
-    and therefore its not practical to move this to the driver.
-    
-    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-    Acked-by: Zhu Yi <yi.zhu@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> Considering that power saving features are important I think its
+> worth to revisit this position in detail.
+>
+> An alternative to this above position is that if the devices do not
+> support checksumming of the beacons to let the driver figure when
+> this should be enabled dynamically. For example if devices do not
+> support checksumming but are single 2.4 GHz band non-HT capable
+> devices we should let drivers enable this feature.
+>
+> Other devices which do not support checksumming should only enable this only
+> when associating to an AP on non-DFS channels and when not using HT.
 
+I'm not fully convinced about this.
 
+> In practice this would mean allowing both ath5k and ath9k to take advantage
+> of this feature.
+
+Do you mean that they have beacon filter support but do not do any
+checksumming in hardware?
+
+Other option is that the hardware which does not support checksumming
+would just pass beacons periodically to the stack, for example every 5
+seconds. Even though beacon filter is enabled in mac80211 it does not
+prevent hardware from sending beacons. This is not the most optimal
+solution, but there's not much choices if the hardware doesn't support
+checksumming.
+
+> Technically we could move the conditional logic check when this
+> should be enabled to mac80211 as well. When we reviewed this it was
+> seen as unnecessary complexity, I actually don't see it as too
+> complex and think the the advantage is worth to consider.
+>
+> Thoughts?
+
+I think this is future stuff, I would like to get the basic (and the
+simplest) implementation to the tree first and then we can start
+improving and extending it.
+
+-- 
+Kalle Valo
