@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41750 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752564AbZCJHQ3 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:19333 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752646AbZCOGwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 03:16:29 -0400
-Subject: Re: [PATCH 0/4] wireless: use channel bandwidth
-From: Johannes Berg <johannes@sipsolutions.net>
+	Sun, 15 Mar 2009 02:52:51 -0400
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
-References: <1236650699-30538-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-r4Kfx+NPNQMPeoTmICrs"
-Date: Tue, 10 Mar 2009 08:16:23 +0100
-Message-Id: <1236669384.9658.32.camel@johannes.local> (sfid-20090310_081630_961934_C610E071)
-Mime-Version: 1.0
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: [RFC PATCH v2 2/4] mac80211: track beacons separately from the rx 	path activity
+References: <20090314171234.11126.21125.stgit@tikku>
+	<20090314171438.11126.30330.stgit@tikku>
+	<43e72e890903141245k46f4dd4co6a33b45b82e9098a@mail.gmail.com>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Sun, 15 Mar 2009 08:52:15 +0200
+In-Reply-To: <43e72e890903141245k46f4dd4co6a33b45b82e9098a@mail.gmail.com> (ext Luis R. Rodriguez's message of "Sat\, 14 Mar 2009 20\:45\:12 +0100")
+Message-ID: <87vdqb1dnk.fsf@nokia.com> (sfid-20090315_075253_604516_E1124EDE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
 
---=-r4Kfx+NPNQMPeoTmICrs
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Sat, Mar 14, 2009 at 10:14 AM, Kalle Valo <kalle.valo@nokia.com> wrote:
+>> Separate beacon and rx path tracking in preparation for the beacon filtering
+>> support. At the same time change ieee80211_associated() to look a bit simpler.
+>>
+>> Probe requests are now sent only after IEEE80211_PROBE_IDLE_TIME, which
+>> is now set to 60 seconds.
+>>
+>> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+>
+> Can this be split into 3 separate patches, to make the one with the
+> actual functional changes easier to review. One is the making of
+> ieee80211_associated() look easier, the other the rename, and lastly
+> the actual functional changes. When reviewing the commit log it would
+> then be easier to see what was done.
 
-On Mon, 2009-03-09 at 22:04 -0400, Luis R. Rodriguez wrote:
-> Few patches which actually make use of the channel bandwidth, lets
-> also send this to userspace as it useful to tell which channels you'll
-> be able to use HT40 or not on as a client.
+Is it really worth the trouble? The patch is relatively small so
+spotting the changes shouldn't be that difficult.
 
-Can you remind me why we have that max_bandwidth at all? It seems we
-would be able to see whether ht40 fits by checking the above/below
-sideband channel for use permission.
-
-johannes
-
---=-r4Kfx+NPNQMPeoTmICrs
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJthPEAAoJEKVg1VMiehFYLEgP/3btmlNCn+jhilwGnVOlgyEW
-7HtYGmb7UcXobivMG4tQWadgSoCTouJKrKt1ZfbrQMhtWUisqfE4NErXyvqFjylG
-uUgniFFqG3KMx0KnitguMSt3DXvWD1O0T9AV43VeOoKWorST/orRXS9W0eFO8uca
-FeMEhZkkbU+naaZaKjk8sYhn4ZKhYeUyVQ+Z7JF8+VPvII1TVb0zeyVxNU5AqSQV
-SPWKgnh8gIVAjvtG/kcnt/rWA9gvkP+eG0+rXI/vj1pYMz2ytzVgsc8yP3G+qlMT
-LWd2dyYdbJ5IooxKlNmZEh+rRPpH+3zg7HCMfWNB+na3Rehy14TrAy/CAPmW7/ue
-dq1D7n9C1F2EKPEu5UQWiRD7j8Sn6AAxmy6Z/zmEFoM4EUCHuqLOPBlTBqeIvHVC
-3LtG5XP2zhFZTIVhIEOdxIFxs0fwmn7JB3GiJECe41D/VYC3cxvXvgmL3mOWrADR
-m4T6TJaZKJImhtTFdJkG/YDprSO4vpst0QmmTrmXYU+VFz6wTph0LWA7CceOcbir
-DWscmsrcjOJqrhfFILyCii5GZsYm6rJYxa5sbCf2pLPNet9mNtK8T/ESDxDbfDWz
-zGh8aQ92FrbG/vFJKvRrjP7HNhVXJtuNenTDRcnid4QyGOVALxS7+6INN7MNcDXF
-PeR0GI+MnR9vfgGXzHXD
-=qqEp
------END PGP SIGNATURE-----
-
---=-r4Kfx+NPNQMPeoTmICrs--
-
+-- 
+Kalle Valo
