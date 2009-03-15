@@ -1,36 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([70.167.247.36]:4045 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502AbZCGEro (ORCPT
+Received: from mail-bw0-f175.google.com ([209.85.218.175]:43114 "EHLO
+	mail-bw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239AbZCOUrG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 23:47:44 -0500
-Date: Fri, 6 Mar 2009 23:47:32 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090307044732.GA13663@hash.localnet> (sfid-20090307_054754_224093_85437146)
-References: <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org>
+	Sun, 15 Mar 2009 16:47:06 -0400
+Received: by bwz23 with SMTP id 23so736167bwz.37
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 13:47:01 -0700 (PDT)
+Message-ID: <49BD6943.7060609@gmail.com> (sfid-20090315_214709_103185_0F39221A)
+Date: Sun, 15 Mar 2009 21:46:59 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090306094249.GA10236@silver.sucs.org>
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org
+Subject: Re: [PATCH 2/3] ath5k: Convert chip specific calibration data to
+ a  generic format
+References: <20090315201704.GB5246@makis> <49BD65D2.1040608@gmail.com> <40f31dec0903151344x5a7ddfacwd5c267a7609ff9f5@mail.gmail.com>
+In-Reply-To: <40f31dec0903151344x5a7ddfacwd5c267a7609ff9f5@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 06, 2009 at 09:42:49AM +0000, Sitsofe Wheeler wrote:
-> Unfortunately I can't quite provide you what you were asking for... 
+On 15.3.2009 21:44, Nick Kossifidis wrote:
+>> Otherwise it looks good, thanks.
+>
+> Do you want me to resend or is it ok by you ?
 
-Well, this is great so far!  It'll take some time to dig through it
-but it looks useful.
-
-I saw _get_tsf64 in the trace; were you using ad-hoc/ibss mode, or 
-is that just a weird artifact?
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Oh, do not resend because of this, indeed.
