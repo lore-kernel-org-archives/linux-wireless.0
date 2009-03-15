@@ -1,27 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39612
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752206AbZCVF5T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 01:57:19 -0400
-Date: Sat, 21 Mar 2009 22:57:06 -0700 (PDT)
-Message-Id: <20090321.225706.04249586.davem@davemloft.net> (sfid-20090322_065724_322012_69AFA57C)
-To: shemminger@vyatta.com
-Cc: jkosina@suse.cz, dstreba@suse.cz, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 74/77] ipw2200: convert to net_device_ops
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090321053718.224939952@vyatta.com>
-References: <20090321053527.316395697@vyatta.com>
-	<20090321053718.224939952@vyatta.com>
+Received: from main.gmane.org ([80.91.229.2]:49798 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751511AbZCOTW3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2009 15:22:29 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1Livul-0008Op-Bm
+	for linux-wireless@vger.kernel.org; Sun, 15 Mar 2009 19:22:27 +0000
+Received: from 77-21-164-144-dynip.superkabel.de ([77.21.164.144])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 19:22:27 +0000
+Received: from feldmann_markus by 77-21-164-144-dynip.superkabel.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 19:22:27 +0000
+To: linux-wireless@vger.kernel.org
+From: feldmaus <feldmann_markus@gmx.de>
+Subject: well working usb wlan stick
+Date: Sun, 15 Mar 2009 20:22:15 +0100
+Message-ID: <gpjkh8$puk$1@ger.gmane.org> (sfid-20090315_202243_027086_67D472C1)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Hemminger <shemminger@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:41 -0700
+Hi All,
 
-> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+i am searching for a well supported usb wlan stick
+which works with open source driver and supports wpa2.
 
-Applied.
+Any hints ?
+
+Regards Markus
+
