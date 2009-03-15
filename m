@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:34039 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758570AbZCSRcS (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:39030 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754830AbZCOUM4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 13:32:18 -0400
-Date: Thu, 19 Mar 2009 12:42:57 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: VT6656 driver source now GPL
-Message-ID: <20090319164256.GA25237@storm.local.network> (sfid-20090319_183230_495296_56EA2F75)
+	Sun, 15 Mar 2009 16:12:56 -0400
+Message-ID: <49BD611F.9010100@nokia.com> (sfid-20090315_211258_442417_3C3D2954)
+Date: Sun, 15 Mar 2009 22:12:15 +0200
+From: Kalle Valo <kalle.valo@nokia.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
+References: <20090314144405.670.16447.stgit@tikku>	 <1237043931.5235.67.camel@johannes.local>  <49BBCE18.4090606@nokia.com>	 <1237046839.5235.86.camel@johannes.local>	 (sfid-20090314_170734_362051_D492D2DA) <1237046957.5235.88.camel@johannes.local>
+In-Reply-To: <1237046957.5235.88.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> On Sat, 2009-03-14 at 17:07 +0100, Johannes Berg wrote:
+>> On Sat, 2009-03-14 at 17:32 +0200, Kalle Valo wrote:
+>>
+>>> Perhaps. I chose this path only because it was simple to implement :) 
+>>> I'll take a look at the scan code in more detail and fix it there.
+>> You're kinda right too, we want to disable the queues first, then set
+>> sw_scanning/notify the driver, and then send the nullfunc, I think. So
+>> it's either this patch, or iterating the interface list twice.
+> 
+> Similarly for the beacon disable part, that _needs_ to be done after
+> sw_scanning=true otherwise it won't actually work...
+> 
+> I think I prefer your patch over that complexity, but would like to have
+> a good comment explaining it, and possibly one in
+> scan.c:ieee80211_start_scan that points to that code.
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I just sent v2. If you have time, please take a look and comment.
 
-Hi,
-
-VIA has released a new version of the VT6656 driver source, and it now has a
-proper license!
-
-  http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
-
-As you may recall, the previous version lacked a license altogether, making=
- it
-unfit for distribution.
-
-I'd really like to see this driver integrated into the kernel.  Does anyone=
- care
-to comment regarding feasibility?
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFJwnYQRO4fQQdv5AwRAtTJAJ0ZvPi1RSqM0nyFQzg88PkgA4mX/wCgvAs7
-lK2vRsBIeTnptvkcMQ5o9pg=
-=e892
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
+Kalle
