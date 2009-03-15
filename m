@@ -1,49 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21300 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757412AbZCZRIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 13:08:43 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
-Date: Thu, 26 Mar 2009 10:14:09 -0700
-Message-Id: <1238087650-26993-3-git-send-email-reinette.chatre@intel.com> (sfid-20090326_180848_474402_415390F1)
-In-Reply-To: <1238087650-26993-2-git-send-email-reinette.chatre@intel.com>
-References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com>
- <1238087650-26993-2-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f177.google.com ([209.85.219.177]:40716 "EHLO
+	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750903AbZCODIN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2009 23:08:13 -0400
+Received: by ewy25 with SMTP id 25so3048141ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 20:08:09 -0700 (PDT)
+Message-ID: <49BC7117.1010107@gmail.com> (sfid-20090315_040816_903718_DB772129)
+Date: Sun, 15 Mar 2009 04:08:07 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ids missing in ath5k ?
+References: <49BC0DBE.90209@gmail.com> <49BC6C21.6020807@gmail.com>
+In-Reply-To: <49BC6C21.6020807@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Xose Vazquez Perez wrote:
 
-Remove STATUS_ALIVE checking when HW RF KILL disabled, the bit get
-clear in __iwl_down() function; the additional checking will fail and
-cause RF can not be turn back on.
+> another one is  { 0x168c, 0xff1a, PCI_ANY_ID, PCI_ANY_ID }, included by openwrt:
+> (make atheros wifi cards used on arcaydian 4519 ifxmips based boards work)
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+and also AR5513: 0x168c,0x0020 
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index e1b5472..7560d6f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2056,8 +2056,7 @@ void iwl_bg_rf_kill(struct work_struct *work)
- 		IWL_DEBUG_RF_KILL(priv,
- 			  "HW and/or SW RF Kill no longer active, restarting "
- 			  "device\n");
--		if (!test_bit(STATUS_EXIT_PENDING, &priv->status) &&
--		    test_bit(STATUS_ALIVE, &priv->status))
-+		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
- 			queue_work(priv->workqueue, &priv->restart);
- 	} else {
- 		/* make sure mac80211 stop sending Tx frame */
 -- 
-1.5.6.3
-
+Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea, Prestige, ...
