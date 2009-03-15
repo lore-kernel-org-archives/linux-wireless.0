@@ -1,54 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:17483 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060AbZCYJBq (ORCPT
+Received: from mail-bw0-f175.google.com ([209.85.218.175]:65518 "EHLO
+	mail-bw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750921AbZCOLvI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 05:01:46 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so814262fga.17
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 02:01:43 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 0/5] mac80211: beacon filtering
-References: <20090322195619.26460.48292.stgit@tikku>
-	<1237900276.4320.86.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 25 Mar 2009 11:01:41 +0200
-In-Reply-To: <1237900276.4320.86.camel@johannes.local> (Johannes Berg's message of "Tue\, 24 Mar 2009 14\:11\:16 +0100")
-Message-ID: <87iqly0ydm.fsf@litku.valot.fi> (sfid-20090325_100149_523927_5AA01110)
+	Sun, 15 Mar 2009 07:51:08 -0400
+Received: by bwz23 with SMTP id 23so623558bwz.37
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 04:51:05 -0700 (PDT)
+Message-ID: <49BCEBF0.8010006@gmail.com> (sfid-20090315_125450_840162_E002ECAB)
+Date: Sun, 15 Mar 2009 12:52:16 +0100
+From: Hinkocevar <hinkocevar@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: linux-wireless@vger.kernel.org
+Subject: bcm4311 gentoo problems
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hi,
 
-> On Sun, 2009-03-22 at 21:56 +0200, Kalle Valo wrote:
->> Here's my proposal how to implement beacon filtering in mac80211. The
->> basic idea is simple, the driver enables filtering whenever mac80211
->> enables power save and the driver calls ieee80211_beacon_loss()
->> whenever hardware informs about beacon loss.
->> 
->> I have tested this with stlc45xx (with beacon filtering) and iwl3945
->> (without beacon filtering) and based on simple tests this seems to
->> work. For reference I'll send the stlc45xx patch as a followup.
->
-> Something I've been wondering about now is how to populate the exclude
-> list (which would probably be smarter as an include list, but anyway).
+I have a dell inspiron 6400 with built-in wifi card from broadcom - BCM4311:
 
-Yeah, an include list would be a lot better.
+# lspci
+0b:00.0 Network controller: Broadcom Corporation BCM4311 802.11b/g WLAN 
+(rev 01)
 
-> This actually affects the entire stack, take for example the BSS load
-> element, which could potentially change frequently. Unless
-> wpa_supplicant would want to use it for roaming, we could ignore it.
->
-> However, how do we know which elements the various pieces of the stack
-> need?
+# lspci -vn
 
-I think we can just start with a fixed list and start improving that.
-Or did you think of creating the list dynamically?
+0b:00.0 0280: 14e4:4311 (rev 01)
+	Subsystem: 1028:0007
+	Flags: bus master, fast devsel, latency 0, IRQ 16
+	Memory at efdfc000 (32-bit, non-prefetchable) [size=16K]
+	Capabilities: [40] Power Management version 2
+	Capabilities: [58] Message Signalled Interrupts: Mask- 64bit- Count=1/1 
+Enable-
+	Capabilities: [d0] Express Legacy Endpoint, MSI 00
+	Capabilities: [100] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
+MalfTLP- ECRC- UnsupReq- ACSVoil-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- 
+MalfTLP- ECRC- UnsupReq- ACSVoil-
+		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ 
+MalfTLP+ ECRC- UnsupReq- ACSVoil-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Capabilities: [13c] Virtual Channel <?>
+	Kernel driver in use: b43-pci-bridge
 
--- 
-Kalle Valo
+
+Runnig gentoo kernel version 2.6.27-gentoo-r8 does not correctly work 
+with the wifi card. I can see the is detected and registered in the 
+system as wlan0 interface, but it does not get associated!
+The same goes for latest GIT wireless tree. (I followed the instructions 
+on http://linuxwireless.org/en/users/Drivers/b43.)
+
+
+dellboi wireless-2.6 # modprobe b43
+dellboi wireless-2.6 # ifconfig wlan0 down
+dellboi wireless-2.6 # iwconfig wlan0 mode managed channel 10
+dellboi wireless-2.6 # iwconfig wlan0 essid Prospero632_0a_55_89
+dellboi wireless-2.6 # ifconfig wlan0 up
+dellboi wireless-2.6 # iwconfig
+lo        no wireless extensions.
+
+eth0      no wireless extensions.
+
+wmaster0  no wireless extensions.
+
+wlan0     IEEE 802.11bg  ESSID:"Prospero632_0a_55_89"
+           Mode:Managed  Frequency:2.457 GHz  Access Point: 
+Not-Associated
+           Tx-Power=off
+           Retry min limit:7   RTS thr:off   Fragment thr=2352 B
+           Encryption key:off
+           Power Management:off
+           Link Quality:0  Signal level:0  Noise level:0
+           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+dellboi wireless-2.6 # dhcpcd wlan0
+wlan0: dhcpcd 4.0.7 starting
+wlan0: waiting for carrier
+	wlan0: timed out
+
+
+I can confirm, that ESSID and the AP in question is indeed working, as 
+it does on another notebook in the same room.
+
+Here is some more info:
+Mar 15 12:04:40 dellboi dhcpcd[6755]: wlan0: dhcpcd 4.0.7 starting
+Mar 15 12:04:40 dellboi [  472.204089] b43-phy0: Loading firmware 
+version 410.2160 (2007-05-26 15:32:10)
+Mar 15 12:04:40 dellboi [  472.264103] b43-phy0 debug: Chip initialized
+Mar 15 12:04:40 dellboi [  472.264266] b43-phy0 debug: 32-bit DMA 
+initialized
+Mar 15 12:04:40 dellboi [  472.284973] b43-phy0 debug: Wireless 
+interface started
+Mar 15 12:04:40 dellboi [  472.292458] b43-phy0 debug: Adding Interface 
+type 2
+Mar 15 12:04:40 dellboi dhcpcd[6755]: wlan0: waiting for carrier
+Mar 15 12:04:44 dellboi dhcpcd[6755]: wlan0: timed out
+Mar 15 12:04:56 dellboi [  487.853048] b43-phy0 debug: Removing 
+Interface type 2
+Mar 15 12:04:56 dellboi [  487.865409] b43-phy0 debug: Wireless 
+interface stopped
+Mar 15 12:04:56 dellboi [  487.865951] b43-phy0 debug: DMA-32 rx_ring: 
+Used slots 0/64, Failed frames 0/0 = 0.0%, Average tries 0.00
+Mar 15 12:04:56 dellboi [  487.866008] b43-phy0 debug: DMA-32 
+tx_ring_AC_BK: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 
+0.00
+Mar 15 12:04:56 dellboi [  487.873073] b43-phy0 debug: DMA-32 
+tx_ring_AC_BE: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 
+0.00
+Mar 15 12:04:56 dellboi [  487.881048] b43-phy0 debug: DMA-32 
+tx_ring_AC_VI: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 
+0.00
+Mar 15 12:04:56 dellboi [  487.889082] b43-phy0 debug: DMA-32 
+tx_ring_AC_VO: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 
+0.00
+Mar 15 12:04:56 dellboi [  487.897047] b43-phy0 debug: DMA-32 
+tx_ring_mcast: Used slots 0/128, Failed frames 0/0 = 0.0%, Average tries 
+0.00
+Mar 15 12:05:36 dellboi [  528.757101] cfg80211: Using static regulatory 
+domain info
+Mar 15 12:05:36 dellboi [  528.757104] cfg80211: Regulatory domain: US
+Mar 15 12:05:36 dellboi [  528.757106] 	(start_freq - end_freq @ 
+bandwidth), (max_antenna_gain, max_eirp)
+Mar 15 12:05:36 dellboi [  528.757109] 	(2402000 KHz - 2472000 KHz @ 
+40000 KHz), (600 mBi, 2700 mBm)
+Mar 15 12:05:36 dellboi [  528.757112] 	(5170000 KHz - 5190000 KHz @ 
+40000 KHz), (600 mBi, 2300 mBm)
+Mar 15 12:05:36 dellboi [  528.757115] 	(5190000 KHz - 5210000 KHz @ 
+40000 KHz), (600 mBi, 2300 mBm)
+Mar 15 12:05:36 dellboi [  528.757117] 	(5210000 KHz - 5230000 KHz @ 
+40000 KHz), (600 mBi, 2300 mBm)
+Mar 15 12:05:36 dellboi [  528.757120] 	(5230000 KHz - 5330000 KHz @ 
+40000 KHz), (600 mBi, 2300 mBm)
+Mar 15 12:05:36 dellboi [  528.757122] 	(5735000 KHz - 5835000 KHz @ 
+40000 KHz), (600 mBi, 3000 mBm)
+Mar 15 12:05:36 dellboi [  528.757125] cfg80211: Calling CRDA for 
+country: US
+Mar 15 12:05:37 dellboi [  528.783251] b43-phy0: Broadcom 4311 WLAN found
+Mar 15 12:05:37 dellboi [  528.825058] b43-phy0 debug: Found PHY: Analog 
+4, Type 2, Revision 8
+Mar 15 12:05:37 dellboi [  528.825086] b43-phy0 debug: Found Radio: 
+Manuf 0x17F, Version 0x2050, Revision 2
+Mar 15 12:05:37 dellboi [  528.848302] wmaster0 (b43): not using 
+net_device_ops yet
+Mar 15 12:05:37 dellboi [  528.848388] phy0: Selected rate control 
+algorithm 'minstrel'
+Mar 15 12:05:37 dellboi [  528.848405] wlan0 (b43): not using 
+net_device_ops yet
+Mar 15 12:05:37 dellboi [  528.848487] Broadcom 43xx driver loaded [ 
+Features: P, Firmware-ID: FW13 ]
+Mar 15 12:05:54 dellboi [  545.973084] b43 ssb0:0: firmware: requesting 
+b43/ucode5.fw
+Mar 15 12:05:54 dellboi [  545.976387] b43 ssb0:0: firmware: requesting 
+b43/pcm5.fw
+Mar 15 12:05:54 dellboi [  545.980187] b43 ssb0:0: firmware: requesting 
+b43/b0g0initvals5.fw
+Mar 15 12:05:54 dellboi [  545.983994] b43 ssb0:0: firmware: requesting 
+b43/b0g0bsinitvals5.fw
+Mar 15 12:05:54 dellboi [  546.100095] b43-phy0: Loading firmware 
+version 410.2160 (2007-05-26 15:32:10)
+Mar 15 12:05:54 dellboi [  546.172118] b43-phy0 debug: Chip initialized
+Mar 15 12:05:54 dellboi [  546.172291] b43-phy0 debug: 32-bit DMA 
+initialized
+Mar 15 12:05:54 dellboi [  546.192982] b43-phy0 debug: Wireless 
+interface started
+Mar 15 12:05:54 dellboi [  546.204492] b43-phy0 debug: Adding Interface 
+type 2
+Mar 15 12:05:54 dellboi [  546.236068] b43-phy0: Radio turned on by software
+
+Any comments?
+
+
+Thank you,
+
+--
+Regards,
+Hinko
+
