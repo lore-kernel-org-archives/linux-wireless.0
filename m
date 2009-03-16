@@ -1,121 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:34165 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753836AbZC3VPT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34703 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755599AbZCPSMN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 17:15:19 -0400
-Date: Mon, 30 Mar 2009 18:15:13 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Inaky Perez-Gonzalez <inaky@linux.intel.com>,
-	Dirk Opfer <Dirk@Opfer-Online.de>, toshiba_acpi@memebeam.org,
-	Matthew Garrett <mjg@redhat.com>
-Subject: Re: [RFC] rfkill: rewrite
-Message-ID: <20090330211513.GF23749@khazad-dum.debian.net> (sfid-20090330_231525_000688_0BA3685E)
-References: <1238349195.24972.5.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1238349195.24972.5.camel@johannes.local>
+	Mon, 16 Mar 2009 14:12:13 -0400
+Subject: Re: well working usb wlan stick
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: feldmann_markus@gmx.de, linux-wireless@vger.kernel.org,
+	xose.vazquez@gmail.com
+In-Reply-To: <20090316180310.206110@gmx.net> (sfid-20090316_190345_621295_FF004B4B)
+References: <ee588a540903160324s59c83547jc7d2148642e00af4@mail.gmail.com>
+	 <20090316155152.276920@gmx.net>
+	 <ee588a540903160948u6b5c758ay5addec857b3cf913@mail.gmail.com>
+	 <20090316173301.92330@gmx.net>
+	 (sfid-20090316_183309_683489_8745B162) <1237225374.18086.1.camel@johannes.local>
+	 <20090316180310.206110@gmx.net> (sfid-20090316_190345_621295_FF004B4B)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yNqX336V2s8by9ibKrTG"
+Date: Mon, 16 Mar 2009 19:12:06 +0100
+Message-Id: <1237227126.18086.3.camel@johannes.local> (sfid-20090316_191234_437070_1DF64553)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So, far, it looks quite good.  A few initial comments that I want to get out
-ASAP (I am bound to have many more after I take a first try at convert
-thinkpad-acpi to the new API).
 
-On Sun, 29 Mar 2009, Johannes Berg wrote:
-> + * struct rfkill_ops - rfkill driver methods
-> + *
-> + * @poll_hw_block: poll the rfkill hardware block state (return true
-> + *	for blocked) -- only assign this method when you cannot
-> + *	do without polling
-> + * @query_state: query the rfkill hardware block state (return true
-> + *	for blocked) -- assign this method if software events might
-> + *	cause hardware state changes
-> + * @set_block: turn the transmitter on (blocked == false) or off
-> + *	(blocked == true) -- this is called only while the transmitter
-> + *	is not hard-blocked. This must be assigned.
-> + */
-> +struct rfkill_ops {
-> +#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
-> +	bool (*poll_hw_block)(void *data);
-> +	bool (*query_state)(void *data);
-> +	void (*set_block)(void *data, bool blocked);
->  #endif
+--=-yNqX336V2s8by9ibKrTG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Missing error handling on set_block...  could you change that to:
+On Mon, 2009-03-16 at 19:03 +0100, Alina Friedrichsen wrote:
+> Hello Johannes!
+>=20
+> > Me too, were you ever able to capture it? It scrolls off my screen :(
+>=20
+> Try "vga=3D9" as kernel command line option. On i386 and amd64 you
+> should get a bigger text resolution with it.
 
-int (*set_block)(void *data, bool blocked)
+I already use vga=3D0x361 :)
 
-with the usual kernel error semathics (0 = no error,  < 0 = specific
-error)?   And of course, do the error handling on the core?
+johannes
 
-I don't know about wireless network drivers, but platform drivers want
-to be able to return errors, they _do_ happen when you are doing ACPI
-dances:  EBUSY, EIO, ENOMEM...
+--=-yNqX336V2s8by9ibKrTG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-If something in userspace wants to block a transmitter, it better get
-an error back if the transmitter could not be blocked.  The opposite
-(unblock) is less critical in the safety sense, but no less critical
-in the usability sense, so it wants proper error feedback as well.
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-> +/**
-> + * rfkill_register - Register a rfkill structure.
-> + * @rfkill: rfkill structure to be registered
-> + *
-> + * This function should be called by the network driver when the rfkill
+iQIcBAABAgAGBQJJvpZ0AAoJEKVg1VMiehFYZUQP/2tJGu1xxHsXl36Oj4FvKqQt
+gzDN9PllJ50pkIqdcv3/mjr2Xron7nhsG2LpAaDAQ2YzzjFEI3aIz/lmTA4lfIzK
+S24D94xLddyuIsTbKBdhuziyKKrtNhUP02DA/jW3WU40qXFlYQt3ih/RfLzjjasF
+S9OuxSZnJqkOt4/IHw48LWSao45JMAllVI5XD1tw7S4cyRA6CufPh2ldu9exeaAM
+5rpEUjeiUZLu97bXr2wJ+9gNGRJKo1FKfCmyFS7k27RnyFPB1aNP9lvwtY4z2VdC
+mutXZMJ75SbEtgJXoxacvDxri8ay2Nyfj644nBS3vYsAsaB7whm3pywu28jLOe8/
+Ceq249ZZCxD4EZOMtJ+jcXhmqXkScb0Z0O8M4xEv/wp9OZzhjOjkwgOqaN0yWIQy
+wANLFohro1a5UX98L9as6p19C2Z6ppWRs6FF9j6f57s6Vf6V+5DHS1kn3RgRV0NC
+DtnsZMWwaglRX0CMOg4+IZSEzZoBb06UtzRtwP42WziykWsLIjKZIoTS5Ed9Ts21
+tdySiKdCI32fyC87TJrzJYeEqa0tnT8qbUq1wR/viEJuWXFNNX2bPV3hTDbPbAor
+/Mzbhbl/fcGJWoNizF++fMANfgHqJvYkr+PKA8pGKI103RTwy0LRRvTDB9x927xR
+euMjh5/4shpo8xvZ5eLm
+=Qpey
+-----END PGP SIGNATURE-----
 
-minor nit: s/network/rfkill controller/
+--=-yNqX336V2s8by9ibKrTG--
 
-> -Important terms for the rfkill subsystem:
-> -
-> -In order to avoid confusion, we avoid the term "switch" in rfkill when it is
-> -referring to an electronic control circuit that enables or disables a
-> -transmitter.  We reserve it for the physical device a human manipulates
-> -(which is an input device, by the way):
-> -
-> -rfkill switch:
-> -
-> -	A physical device a human manipulates.  Its state can be perceived by
-> -	the kernel either directly (through a GPIO pin, ACPI GPE) or by its
-> -	effect on a rfkill line of a wireless device.
-> -
-> -rfkill controller:
-> -
-> -	A hardware circuit that controls the state of a rfkill line, which a
-> -	kernel driver can interact with *to modify* that state (i.e. it has
-> -	either write-only or read/write access).
-> -
-> -rfkill line:
-> -
-> -	An input channel (hardware or software) of a wireless device, which
-> -	causes a wireless transmitter to stop emitting energy (BLOCK) when it
-> -	is active.  Point of view is extremely important here: rfkill lines are
-> -	always seen from the PoV of a wireless device (and its driver).
-> -
-> -soft rfkill line/software rfkill line:
-> -
-> -	A rfkill line the wireless device driver can directly change the state
-> -	of.  Related to rfkill_state RFKILL_STATE_SOFT_BLOCKED.
-> -
-> -hard rfkill line/hardware rfkill line:
-> -
-> -	A rfkill line that works fully in hardware or firmware, and that cannot
-> -	be overridden by the kernel driver.  The hardware device or the
-> -	firmware just exports its status to the driver, but it is read-only.
-> -	Related to rfkill_state RFKILL_STATE_HARD_BLOCKED.
-
-Are you sure you want to do away with the above definitions?
-
-The use of 'rfkill switch' for fundamentally different things caused a
-lot of confusion in the past.  That's why I had to come up with
-'rfkill controller', and 'rfkill line'.   Maybe you can do away with
-the 'rfkill line' now, but controller/switch is something that is
-helpful to avoid getting input devices and non input devices mixed up.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
