@@ -1,56 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:3753 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964AbZCSJpX convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59332 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752941AbZCPKx1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 05:45:23 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so484420rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 02:45:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1237455413.5100.55.camel@johannes.local>
-References: <1237442241-29803-1-git-send-email-lrodriguez@atheros.com>
-	 <43e72e890903182310o58cf15f9yeeba8c86c45627d7@mail.gmail.com>
-	 <1237454341.5100.52.camel@johannes.local>
-	 <43e72e890903190225q22a0e46ap1c3f7fa5f1463d9e@mail.gmail.com>
-	 <1237455413.5100.55.camel@johannes.local>
-Date: Thu, 19 Mar 2009 02:45:21 -0700
-Message-ID: <43e72e890903190245r68003a45q2ce05e0ddeabc033@mail.gmail.com> (sfid-20090319_104526_554185_1672D85A)
-Subject: Re: [PATCH] iw: add support to print HT40-/+ on channels
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 16 Mar 2009 06:53:27 -0400
+Subject: Re: [PATCH v2] mac80211: Tear down aggregation sessions for
+ suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"me@bobcopeland.com" <me@bobcopeland.com>
+In-Reply-To: <18878.11082.119745.2048@gargle.gargle.HOWL>
+References: <18878.8417.960342.116534@gargle.gargle.HOWL>
+	 <1237198307.27769.8.camel@johannes.local>
+	 <18878.11082.119745.2048@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-s0DVjkfo/3NInabvVUIK"
+Date: Mon, 16 Mar 2009 11:53:22 +0100
+Message-Id: <1237200802.27769.17.camel@johannes.local> (sfid-20090316_115346_363963_CE7DD83B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 19, 2009 at 2:36 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-03-19 at 02:25 -0700, Luis R. Rodriguez wrote:
->
->> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 * 2432 MHz [5] (27.0 dBm / 20 MHz)
->> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 * 2437 MHz [6] (27.0 dBm / 20 MHz)
->> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 * 2442 MHz [7] (27.0 dBm / 20 MHz)
->
->> > Eh, that doesn't look right. What's with 2432-2443 MHz?
->>
->> It means you get HT40-/+ allowed. Do we want to show if we have it a=
-llowed?
->
-> What's with the /20mhz though?
 
-Right, so that would mean you're clear regulatory wise to use the
-entire 20 MHz for that channel. At a later time perhaps a custom
-target bandwidth might be desired, then the regulatory bandwidth check
-could be reduced. I'm not sure how we'll do this yet but if we keep
-the bandwidth this lets us keep the max per channel and then easily
-determine which smaller target bandwidths would be allowed.
+--=-s0DVjkfo/3NInabvVUIK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Mon, 2009-03-16 at 16:04 +0530, Sujith wrote:
+> Johannes Berg wrote:
+> > On Mon, 2009-03-16 at 15:20 +0530, Sujith wrote:
+> > > When the driver has been notified with a STA_REMOVE, it tears down
+> > > the internal ADDBA state. On resume, trying to initiate aggregation w=
+ould
+> > > fail because mac80211 has not cleared the operational state for that =
+<TID,STA>.
+> > > This can be fixed by tearing down the existing sessions on a suspend.
+> > >=20
+> > > Also, the driver can initiate a new BA session when suspend is in pro=
+gress.
+> > > This is fixed by marking the station as being in suspend state and
+> > > denying ADDBA requests for such STAs.
+> > >=20
+> > > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> >=20
+> > Looks good to me, thanks. Should we really set a per-station flag
+> > though? It seems a "local->suspended" would be sufficient and much
+> > cheaper?
+>=20
+> I did consider it, but then was unsure of the locking required.
+> If that can be clarified, I will change this to be a ieee80211_local vari=
+able.
+
+Good catch, that does seem a little complicated. This way is good
+anyway, so let's stick to it, at least for now.
+
+johannes
+
+--=-s0DVjkfo/3NInabvVUIK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJvi+gAAoJEKVg1VMiehFY80YP/0Qh7bCJmW8+wg6sjPvkGQyZ
+q942UHBN3E3gt3NvOX1/nRe5dLqxa+12eEz/RArsMtAfxz4xBgM1EjONb+Vc0TWL
+flGNBZcJxNLwT+Fa3Mrtc1HIw/wi+ovPhjCzUR1vj4OFuWOtc6reExYd749i/xxF
+a3IKeeE7OVsBIlqUQx3HGUn1Ink10BvcXXqCLvEU7cLiWkCApMBGz8RPSMIKuLxb
+3Y4cQqPWeYnut4F1jxtFBSPmg2u+KU3AQve1X98JqJAoqEwPwzBKwluyAdjOar3l
+sRWPt1i5Z8ZoThouADOslb0/eii/uMo/2QY+DI2ssgcsQ6noCPRAJExIMC9xO8qm
+7ZJyvc0clHGs+j0MBs84IxOPby4whPc4dqNd2PrcxR77/4hwjT2DFa64/6RKYbZY
+rYsfV5u7+6ar2i5eYLRbQrfbn0R7BZzsSr3Q1WBrUdWrpxTFi2mQbMmC3pWnEMyP
+0u86143cn+/LHdzIBCOnEnrQxkF+iM0bJPVHA0BaLMQxaHZnbEBQJAw5fMkyam+l
+PGZz8GFkvv3WVlsYBojkE1kRUKON4DtPv/F9qPVj6gj4USvCF11g7lpmkO3+BTRz
+qc+OQRqp9rYgOm4zbriLd3JtQCVqCnuaEw7UguyrUao/K6Y28SBgNTYdiX9+iMh5
+qNlQ66K7VTBjmm2RPO+E
+=4AaV
+-----END PGP SIGNATURE-----
+
+--=-s0DVjkfo/3NInabvVUIK--
+
