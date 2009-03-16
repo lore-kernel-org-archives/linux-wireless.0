@@ -1,82 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.169]:23864 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751685AbZCRRf3 convert rfc822-to-8bit (ORCPT
+Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:33910 "EHLO
+	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756702AbZCPKO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2009 13:35:29 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so166522wff.4
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2009 10:35:27 -0700 (PDT)
+	Mon, 16 Mar 2009 06:14:27 -0400
+Date: Mon, 16 Mar 2009 11:04:47 +0100
+From: Andreas Mohr <andi@lisas.de>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Andreas Mohr <andi@lisas.de>, linville@tuxdriver.com,
+	maximlevitsky@gmail.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH 1/2] ath5k: support LEDs on Acer Aspire One netbook
+Message-ID: <20090316100447.GA13819@rhlx01.hs-esslingen.de> (sfid-20090316_111434_456961_07BF0A63)
+References: <1230840105-30960-1-git-send-email-me@bobcopeland.com> <20090111131015.GA31037@rhlx01.hs-esslingen.de> <20090111144227.GB13109@hash.localnet>
 MIME-Version: 1.0
-In-Reply-To: <20090318144204.GC3527@tuxdriver.com>
-References: <20090318033600.4d17be51@beast3>
-	 <20090318144204.GC3527@tuxdriver.com>
-Date: Wed, 18 Mar 2009 10:35:26 -0700
-Message-ID: <43e72e890903181035j5dd19ec0o76db02d8e543fef3@mail.gmail.com> (sfid-20090318_183533_192572_4428AC42)
-Subject: Re: GSoC project proposals
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Mircea Gherzan <mgherzan@gmail.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090111144227.GB13109@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 18, 2009 at 7:42 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Mar 18, 2009 at 03:36:00AM +0200, Mircea Gherzan wrote:
->
->> I'm a CS student (undergrad) wanting to do a wireless-related projec=
-t
->> for the Google Summer of Code.
->>
->> As advised by Johannes Berg, I am posting on here in order to know t=
-he
->> mentors and to get a better understanding of the requierements.
->>
->> From the publised list, I am most interested in the roaming project.
->> Please, can anyone tell me who will be mentoring it, so I cand get i=
-n
->> touch with him/her?
->
-> I think Luis Rodriguez penned the descriptions of those projects,
-> so he might be the best person to ask about them. =C2=A0In any case,
-> I would be happy to mentor such a project if you so desire.
+Hi,
 
-This is what we have, through some brainstorming on IRC and a few
-e-mails with a few people.
+On Sun, Jan 11, 2009 at 09:42:27AM -0500, Bob Copeland wrote:
+> > My LED is dead again on 2.6.29-rc1 (reason: doesn't contain this patch).
+> 
+> It's in wireless-testing, it just hasn't made it through the pipeline yet.
 
-https://www.linuxfoundation.org/en/Google_Summer_of_Code_2009#802.11_Wi=
-reless
+Just installed -rc8; would be truly sad to see this really small
+but important patch (several million machines) not included in .29 proper...
+(or would it later get merged via .29 -stable? Then I'm fine with it...)
 
-The application deadline was last Friday, March 13, 2009 so I suppose
-that went in as-is. I volunteered a few people but if there are others
-willing to help mentor some of these projects please just go right
-ahead and add your name to the list or let me know and I'll add you.
+Thanks,
 
-So there are three GSoC project ideas listed there:
-
-* Add AP support to Network Manager
-* Improve wireless roaming
-* Integrate GeoClue to help with regulatory compliance
-
-The last one is the one which I hope to be able to mentor the most on
-but will also obviously need some help from Dan. That one is also
-being reviewed in conjunction with a similar project idea for GNOME
-GSoC:
-
-http://live.gnome.org/SummerOfCode2009/Ideas
-
-Seems GeoClue is welcomed for many reasons onto the desktop.
-
-Whether or not these GSoC projects get picked up by Google I still
-think its worth to put this out there and see if people are will pick
-some of this work up.
-
-OK so as for the question about roaming -- I'm up to help mentor it.
-Anyone else?
-
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Andreas Mohr
