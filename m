@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:13058 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751533AbZCOCrE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 22:47:04 -0400
-Received: by ey-out-2122.google.com with SMTP id 25so786813eya.37
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 19:47:02 -0700 (PDT)
-Message-ID: <49BC6C21.6020807@gmail.com> (sfid-20090315_034717_232279_CEDCCC6C)
-Date: Sun, 15 Mar 2009 03:46:57 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:24428 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751112AbZCPE5r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2009 00:57:47 -0400
+Received: from mail.atheros.com ([10.10.20.86])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 21:57:46 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ids missing in ath5k ?
-References: <49BC0DBE.90209@gmail.com>
-In-Reply-To: <49BC0DBE.90209@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18877.56125.181203.703218@gargle.gargle.HOWL> (sfid-20090316_055750_515539_05E8AF65)
+Date: Mon, 16 Mar 2009 10:23:17 +0530
+To: Bob Copeland <me@bobcopeland.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<Jouni.Malinen@Atheros.com>
+Subject: Re: [PATCH] mac80211: Tear down aggregation sessions for suspend/resume
+In-Reply-To: <b6c5339f0903151828m4e5b3d2dg5ae03bbed5538bd4@mail.gmail.com>
+References: <18876.41851.397740.847705@gargle.gargle.HOWL>
+	<1237140134.24621.0.camel@johannes.local>
+	<b6c5339f0903151828m4e5b3d2dg5ae03bbed5538bd4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xose Vazquez Perez wrote:
-
-> why these ids are not supported in ath5k ? 
+Bob Copeland wrote:
+> On Sun, Mar 15, 2009 at 2:02 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sun, 2009-03-15 at 12:13 +0530, Sujith wrote:
+> >> When the driver has been notified with a STA_REMOVE, it tears down
+> >> the internal ADDBA state. On resume, trying to initiate aggregation would
+> >> fail because mac80211 has not cleared the operational state for that <TID,STA>.
+> >> This can be fixed by tearing down the existing sessions on a suspend.
+> >
+> > Agreed, but Bob said there were some deadlocks with this?
 > 
->        { 0x168c, 0x101a, PCI_ANY_ID, PCI_ANY_ID }, /* some Griffin-Lite */
->        { 0x168c, 0x9013, PCI_ANY_ID, PCI_ANY_ID }, /* sonicwall */
-> 
-> 
-> They are included in madwifi driver! Are there more of them missing ?
+> I think the deadlock went away, not sure what fixed it but I guess
+> the HT rework.  I tested it a couple of weeks ago on ath5k and Luis
+> did on ath9k so I say let's go ahead and apply the patch... in the
+> meantime I'll try again on ath5k just to be sure.
 
-another one is  { 0x168c, 0xff1a, PCI_ANY_ID, PCI_ANY_ID }, included by openwrt:
-(make atheros wifi cards used on arcaydian 4519 ifxmips based boards work)
+There is a window for a race. Something like this:
 
--thanks-
+>From mac80211:
 
-regards,
--- 
-Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea, Prestige, ...
+__ieee80211_suspend()
+     tear_down_BA_sessions(TX, RX)
+          ampdu_action(STOP)
+               remove_vifs()
+
+At this point, the driver executes its remove_interface routine.
+While we are doing this, a TX completion interrupt could be raised,
+(HW hasn't been stopped yet) and nothing stops the driver from calling
+ieee80211_start_tx_ba_session().
+
+So the question is: should mac80211 deny ADDBA requests in this case ?
+
+Sujith
