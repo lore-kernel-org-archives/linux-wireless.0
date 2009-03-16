@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:54417
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754945AbZCCXD5 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48692 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751956AbZCPIu5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 18:03:57 -0500
-Message-ID: <49ADB758.7090305@erley.org> (sfid-20090304_000412_063926_85264CAF)
-Date: Tue, 03 Mar 2009 18:03:52 -0500
-From: pat-lkml <pat-lkml@erley.org>
+	Mon, 16 Mar 2009 04:50:57 -0400
+Date: Mon, 16 Mar 2009 10:50:36 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
+Message-ID: <20090316085036.GA29705@jm.kir.nu> (sfid-20090316_095102_202208_B6A187A4)
+References: <20090314171234.11126.21125.stgit@tikku> <20090314171452.11126.11618.stgit@tikku> <43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com> <87r60z1c8x.fsf@nokia.com>
 MIME-Version: 1.0
-To: David Ellingsworth <david@identd.dyndns.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Cardbus wireless cards
-References: <1233666319.3957.1.camel@johannes.local>	 <30353c3d0903030627g5c5323f8l88e551a8b43a066a@mail.gmail.com>	 <1896462f4248df441aea8ebf3dd57f91@127.0.0.1> <30353c3d0903030859m30d3b107o9221ab9650c8a85b@mail.gmail.com>
-In-Reply-To: <30353c3d0903030859m30d3b107o9221ab9650c8a85b@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87r60z1c8x.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Ellingsworth wrote:
-> On Tue, Mar 3, 2009 at 11:29 AM,  <pat-lkml@erley.org> wrote:
->> On Tue, 3 Mar 2009 09:27:38 -0500, David Ellingsworth
->> <david@identd.dyndns.org> wrote:
->>> On Tue, Feb 3, 2009 at 8:05 AM, Johannes Berg <johannes@sipsolutions.net>
->>> wrote:
->>>> Hi,
->>>>
->>>> Some of you know that I got a new laptop, and it doesn't have a cardbus
->>>> slot any more. I still have my powerbook, and it's still working fine,
->>>> but I'm not using it any more, it hasn't even booted in a month. I could
->>>> test on my powerbook, but given my regular time budget it seems unlikely
->>>> that I ever will.
->>>>
->>>> Hence, I'm offering my collection of cardbus/pcmcia wireless test cards
->>>> to anyone I can afford shipping to.
->>>>
->>>> * Broadcom PCMCIA (not cardbus, in cardbus slot adapter)
->>>>  requires external single antenna (u.fl, have one if I can find it)
->>>> * Airgo-based Belkin F5D8010 ("true MIMO")
->>>> * rt61pci (Conceptronic)
->>>> * Broadcom 11n (4321)
->>>> * acx111 based card (D-Link AirPlus XTreme G+)
->>>>
->>>> I also have a Broadcom 11g (4306 I think, might be 4318) PCI card
->>>> somewhere that I will most likely never again have a use for.
->>>>
->>>> johannes
->>>>
->>> I'm interested in the PCI card if it's still available.
->>>
->>> Regards,
->>>
->>> David Ellingsworth
->> This card found it's way to me, I do believe.  I've almost completed all
->> the testing I had planned on using it for.  I'd be fine with parting with
->> it after I complete my testing.
->>
->> Pat Erley
->>
-> 
-> That's alright.. you can keep it. I'm sure you'll do a lot more
-> testing on it then I'll ever get a chance to. I'll look for one
-> elsewhere.
-> 
-> Regards,
-> 
-> David Ellingsworth
+On Sun, Mar 15, 2009 at 09:22:38AM +0200, Kalle Valo wrote:
 
-Aside from periodic AP/Mesh testing, and helping users out now and then, it's
-just providing extra heat in my room.  If you are working on anything that it
-would benefit (open ended offer, don't have to take advantage of it now), I'll
-gladly send it your way.  I'm amassing a huge stockpile of wireless devices, 
-so 1 more or less isn't going to kill me.
+> In my opinion also 2.4 GHz band needs checksum support. At least ERP
+> protection changes come to my mind, but maybe there are also others.
 
-Pat Erley
+Johannes mentioned Quiet IE as one such example. WMM can also change its
+parameters dynamically. Both of these need to be detected from Beacon
+frames. In addition, Channel Switch Announcement can be used to move the
+BSS to another channel, even on 2.4 GHz band.
 
+> Other option is that the hardware which does not support checksumming
+> would just pass beacons periodically to the stack, for example every 5
+> seconds. Even though beacon filter is enabled in mac80211 it does not
+> prevent hardware from sending beacons. This is not the most optimal
+> solution, but there's not much choices if the hardware doesn't support
+> checksumming.
+
+While it would be possible to do that, it does not really solve many of
+the use cases where Beacon contents can change and the STA is required
+to take some action. For example, Channel Switch Announcement IEs would
+likely be missed if a Beacon frames is passed through that infrequently.
+I would assume the driver could enable this even if the hardware does
+not use checksumming to detect Beacon changes, but this may severely
+limit functionality in number of cases, so I'm not sure I would
+recommend this to be done in general.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
