@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:55282 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755473AbZCPQvj (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42412 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421AbZCPRm6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 12:51:39 -0400
-Received: by qw-out-2122.google.com with SMTP id 5so2650649qwi.37
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 09:51:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <49BE8FD2020000A20006952F@emea5-mh.id5.novell.com>
-References: <49BE7253.8020001@lwfinger.net> <20090316160247.GA13489@jm.kir.nu>
-	 <43e72e890903160915tbefcf16w2892606e857ded72@mail.gmail.com>
-	 <49BE8FD2020000A20006952F@emea5-mh.id5.novell.com>
-Date: Mon, 16 Mar 2009 09:51:36 -0700
-Message-ID: <43e72e890903160951o2ec7e7f8ve883e6122687a366@mail.gmail.com> (sfid-20090316_175143_535825_4A0CB2C9)
-Subject: Re: Is the linuxwireless.org web site OK?
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Alejandro Bonilla <abonilla@novell.com>
-Cc: Jouni Malinen <j@w1.fi>, Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 16 Mar 2009 13:42:58 -0400
+Subject: Re: well working usb wlan stick
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless@vger.kernel.org, feldmann_markus@gmx.de
+In-Reply-To: <20090316173301.92330@gmx.net> (sfid-20090316_183309_683489_8745B162)
+References: <ee588a540903160324s59c83547jc7d2148642e00af4@mail.gmail.com>
+	 <20090316155152.276920@gmx.net>
+	 <ee588a540903160948u6b5c758ay5addec857b3cf913@mail.gmail.com>
+	 <20090316173301.92330@gmx.net> (sfid-20090316_183309_683489_8745B162)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HGrreOg5gcLUKkaEhAus"
+Date: Mon, 16 Mar 2009 18:42:54 +0100
+Message-Id: <1237225374.18086.1.camel@johannes.local> (sfid-20090316_184301_047996_E0D99665)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2009 at 9:43 AM, Alejandro Bonilla <abonilla@novell.com> wrote:
->>>> On 3/16/2009 at 05:15 PM, in message
-> <43e72e890903160915tbefcf16w2892606e857ded72@mail.gmail.com>, "Luis R.
-> Rodriguez" <mcgrof@gmail.com> wrote:
->> On Mon, Mar 16, 2009 at 9:02 AM, Jouni Malinen <j@w1.fi> wrote:
->> > On Mon, Mar 16, 2009 at 10:37:55AM -0500, Larry Finger wrote:
->> >> If you browse to linuxwireless.org, do you get the correct page? I don't,
->> but
->> >> did yesterday.
->> >>
->> >> My ISP has been having some problems with hackers getting at their name
->> servers
->> >> and that may be the source of my trouble. On the other hand, the web site
->> may
->> >> have been hacked.
->> >
->> > I would assume the web site itself was not hacked, but someone just
->> > forgot to renew the domain.. Based on the whois data, I would assume the
->> > expiration date was yesterday and after that, someone/something just
->> > changed the domain to point somewhere else..
->>
->> Please update your bookmarks to use wireless.kernel.org. Alejandro
->> Bonilla is the owner of linuxwireless.org and was reluctant to give it
->> to us so just in case we started prefering to use wireless.kernel.org
->> which we do have more control over.
->>
->> Hopefully once he gets this he'll update it though.
->
-> I'm reluctant to help anyone that expects people owe them anything. The fact that I gave linuxwireless.org for use is a Gift as I normally pay the Domain Price. This only makes you a really bad admin for not knowing when it expires.
 
-Sorry, and thanks for the prompt response.
+--=-HGrreOg5gcLUKkaEhAus
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> I will surely Update the subscription, let me know if you want to keep using the Site.
+On Mon, 2009-03-16 at 18:33 +0100, Alina Friedrichsen wrote:
+> with zd1211rw I get a kernel panic when I remove the stick while the
+> network is running.
 
-Yes we do, please update it accordingly.
+Me too, were you ever able to capture it? It scrolls off my screen :(
 
-  Luis
+johannes
+
+--=-HGrreOg5gcLUKkaEhAus
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJvo+bAAoJEKVg1VMiehFYGpUP/2aoXVvRiy9TZENstLR9VQdq
+hDaGU3kI0L7UT0CKQGsMfgX7trxdk+qKVuCcTcidCJ0bswLW8bVFzl09ri8Y8OVd
+8Dj4ZtWwgesFTblZ74o7B0SJL809KA38BhjR7pBF3zidDSG+/nCcy7KU9wC0gYKD
+4gAFySW/ine5VGLkoMvfyxZXN9Oq9y8/3PgKrS1eSAdFavCEkOKtkeCjIWG1MS71
+dF4Pa6e01WaU3Yr9AIVlP4O86P92jsxEyFR1YXE0w8L7sSqjMyCXbYJ+eekLJ4SC
+mfnTu1Bl6fiBv8V4iOzy0Vp4aG7ySlFvTAQfmH+QQZYr7kXO3FPLOVKVHLynFM31
+23ybbMgJIccmJH1LRikdIExEBYN9AIRkw2vjstp+fSeGoIQFHzFp86ZdVFra8qmU
++qVBBDZPhXiM1MRuyxDrEY1BsPiLkrSrQ25qSN6MYoC3yW7Ey7zHnaYqAz3Vs2ad
+skIOlW7JGpJRylaeMO46zUO/9ixxgbBaRK/7sQAplsqxVXjJndrjb8LZwYLrLc4a
+ObSXU+Uf7FGqECZ8uCstmJd4dN+u9mTH1ZwChATDdmZ2jQi+s/BCjjFfwwh8GnUH
+nErtNNxW2X7TObcm2D+3zCuFwTYcQbiOY8nfAMfRsJZyGczNim+INWHKve1+UMuv
+cCy8Uqq3u0nAan5L1aTh
+=1uw+
+-----END PGP SIGNATURE-----
+
+--=-HGrreOg5gcLUKkaEhAus--
+
