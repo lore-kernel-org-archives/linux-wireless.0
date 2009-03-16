@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36275 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751197AbZCNQTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 12:19:15 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: don't drop null frames during software scan
-Date: Sat, 14 Mar 2009 17:18:04 +0100
-Cc: Kalle Valo <kalle.valo@nokia.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <20090314144405.670.16447.stgit@tikku> <1237046839.5235.86.camel@johannes.local> <1237047169.5235.92.camel@johannes.local>
-In-Reply-To: <1237047169.5235.92.camel@johannes.local>
+Received: from qw-out-2122.google.com ([74.125.92.27]:48212 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170AbZCPQP7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2009 12:15:59 -0400
+Received: by qw-out-2122.google.com with SMTP id 5so2632659qwi.37
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 09:15:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903141718.05717.mb@bu3sch.de> (sfid-20090314_171921_173989_644EFC03)
+In-Reply-To: <20090316160247.GA13489@jm.kir.nu>
+References: <49BE7253.8020001@lwfinger.net> <20090316160247.GA13489@jm.kir.nu>
+Date: Mon, 16 Mar 2009 09:15:56 -0700
+Message-ID: <43e72e890903160915tbefcf16w2892606e857ded72@mail.gmail.com> (sfid-20090316_171602_998323_0FD380DF)
+Subject: Re: Is the linuxwireless.org web site OK?
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Jouni Malinen <j@w1.fi>,
+	"Bonilla, Alejandro" <bonilla@linuxwireless.org>,
+	"Bonilla, Alejandro" <abonilla@novell.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 14 March 2009 17:12:49 Johannes Berg wrote:
-> On Sat, 2009-03-14 at 17:07 +0100, Johannes Berg wrote:
-> > On Sat, 2009-03-14 at 17:32 +0200, Kalle Valo wrote:
-> > > Johannes Berg wrote:
-> > > > On Sat, 2009-03-14 at 16:44 +0200, Kalle Valo wrote:
-> > > >> ieee80211_tx_h_check_assoc() was dropping everything else than probe
-> > > >> requests during software scan. So the null frame with the power save
-> > > >> bit was dropped and AP never received it. This meant that AP never
-> > > >> buffered any frames for the station during software scan.
-> > > >>
-> > > >> Fix this by allowing to transmit both probe request and null frames
-> > > >> during software scan. Tested with stlc45xx.
-> > > > 
-> > > > Would it make sense to reorder the scan code instead?
-> > > 
-> > > Perhaps. I chose this path only because it was simple to implement :) 
-> > > I'll take a look at the scan code in more detail and fix it there.
-> > 
-> > You're kinda right too, we want to disable the queues first, then set
-> > sw_scanning/notify the driver, and then send the nullfunc, I think. So
-> > it's either this patch, or iterating the interface list twice.
-> 
-> Related to this, shouldn't the driver notification:
-> 
->         if (local->ops->sw_scan_start)
->                 local->ops->sw_scan_start(local_to_hw(local));
-> 
-> be moved to _after_ we stop the subif queues, disable beacons and send
-> the nullfunc? The sw_scan_complete is done before we re-enable
-> everything, so it seems logical that the start should be after we
-> disable it all.
+On Mon, Mar 16, 2009 at 9:02 AM, Jouni Malinen <j@w1.fi> wrote:
+> On Mon, Mar 16, 2009 at 10:37:55AM -0500, Larry Finger wrote:
+>> If you browse to linuxwireless.org, do you get the correct page? I don't, but
+>> did yesterday.
+>>
+>> My ISP has been having some problems with hackers getting at their name servers
+>> and that may be the source of my trouble. On the other hand, the web site may
+>> have been hacked.
+>
+> I would assume the web site itself was not hacked, but someone just
+> forgot to renew the domain.. Based on the whois data, I would assume the
+> expiration date was yesterday and after that, someone/something just
+> changed the domain to point somewhere else..
 
-For b43 it doesn't matter.
+Please update your bookmarks to use wireless.kernel.org. Alejandro
+Bonilla is the owner of linuxwireless.org and was reluctant to give it
+to us so just in case we started prefering to use wireless.kernel.org
+which we do have more control over.
 
--- 
-Greetings, Michael.
+Hopefully once he gets this he'll update it though.
+
+  Luis
