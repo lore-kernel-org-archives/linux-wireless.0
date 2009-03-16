@@ -1,76 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60955 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636AbZCMK5W (ORCPT
+Received: from pool-71-115-160-52.gdrpmi.dsl-w.verizon.net ([71.115.160.52]:56483
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbZCPXDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 06:57:22 -0400
-Subject: Re: ath9k fragmentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <18874.14867.311121.242263@gargle.gargle.HOWL>
-References: <1236881434.25931.1.camel@johannes.local>
-	 <18873.48952.353253.595670@gargle.gargle.HOWL>
-	 <1236934984.25931.48.camel@johannes.local>
-	 <18874.14867.311121.242263@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-LaruY9HQid9eD0eMsaM2"
-Date: Fri, 13 Mar 2009 11:56:47 +0100
-Message-Id: <1236941807.5235.24.camel@johannes.local> (sfid-20090313_115725_571371_CA3E790F)
-Mime-Version: 1.0
+	Mon, 16 Mar 2009 19:03:32 -0400
+Message-ID: <49BEDABB.9090909@erley.org> (sfid-20090317_000334_970186_3E7572ED)
+Date: Mon, 16 Mar 2009 19:03:23 -0400
+From: Pat Erley <pat-lkml@erley.org>
+MIME-Version: 1.0
+To: Andrey Yurovsky <andrey@cozybit.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [rfc] Implement ath9k mesh point operation
+References: <49BED464.2010904@erley.org> <45e8e6c40903161557u18133705q9e0c036c8f5367b1@mail.gmail.com>
+In-Reply-To: <45e8e6c40903161557u18133705q9e0c036c8f5367b1@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Andrey Yurovsky wrote:
+> Hi Pat,
+> 
+> On Mon, Mar 16, 2009 at 3:36 PM, Pat Erley <pat-lkml@erley.org> wrote:
+>> Currently, you need to trigger a scan on the mesh point interface to
+>> enable beaconing.  This is the same behavior the ath5k, rt2500usb and
+>> rt61pci drivers exhibit.  Is this a mac80211 design flaw, or something
+>> in all of these drivers?
+> 
+> Are you really seeing this behavior on ath5k?  I have never seen that
+> happen, if it's new then it's a regression.  rt2x00 does have this
+> problem at this time.
+> 
+>   -Andrey
 
---=-LaruY9HQid9eD0eMsaM2
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yep, here's my lspci output and relevant dmesg messages when I load ath5k:
 
-On Fri, 2009-03-13 at 16:18 +0530, Sujith wrote:
+Atheros Communications Inc. AR5212/AR5213 Multiprotocol MAC/baseband processor (rev 01)
 
-> Managing per-TID state to handle Block ACKs, failed sub-frames,
-> sub-frame retries and other window management stuff.
-> ath9k manages all this internally.
+ath5k 0000:02:0a.0: PCI INT A -> Link[APC3] -> GSI 18 (level, low) -> IRQ 18
+ath5k 0000:02:0a.0: registered as 'phy5'
+phy5: Selected rate control algorithm 'minstrel'
+ath5k phy5: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+ath5k phy5: RF5112B multiband radio found (0x36)
+udev: renamed network interface wlan1 to wlan3
 
-Ok. I'd have to look into it to understand what we could do there.
+(yes, phy5, I have a ton of wireless stuff plugged into this dev system)
 
-> > For ampdu_action(), I recently saw something, somewhere, saying
-> > "mac80211 expects us to fill in the seqno variable" or so, but this is
-> > only true if you don't use mac80211's sequence numbers, otherwise it is
-> > fine to leave it at the pre-assigned value.
->=20
-> ampdu_action() requires the driver to set the starting sequence number
-> for initiating an ADDBA session, ath9k was filling it incorrectly.
-> This was fixed in the patch, "ath9k: Fix bug in TX aggregation".
+and here's the procedure I use:
 
-Yes, but it only requires it to do that if the driver assigns sequence
-numbers, if it relies on mac80211 then it doesn't need to touch the
-value :)
+iw dev wlan3 del
+iw phy phy5 interface add mp0 type mp mesh_id FooBarMesh
+ifconfig mp0 10.0.0.5 netmask 255.255.255.0 up
+(tshark on rtl8187 shows no beaconing)
+iw dev mp0 scan trigger
+(tshark on rtl8187 now shows beaconing)
 
-johannes
+Out of all the devices I have, only b43 seems to beacon before a scan.  Is
+there a chance I need to wait like 45 seconds for beaconing to start on ath5k
+like how ibss mode tries to find a peer already broadcasting before it enables
+beacons?
 
---=-LaruY9HQid9eD0eMsaM2
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJujvtAAoJEKVg1VMiehFYst4P+gPUk/cm4oVHKetofF/0VWpW
-yU1RpU2J9R80LndMosp5zj2vTxPDYRQJFn/DDTHB5ZiVRjOFmSoqZGKi63fnRSVJ
-NzXJexJS2KzCOaHD7GI4rrvHna1AAHNYvvan1td6Y2+epftpfseuPV7exB5w6lGk
-D7+cDoPwk+Q3V8LMQoZCPOyjWvpY38hZt5IQpgc0UIX9Vzv9jjH/3mXBGavVbARf
-oG6H9pJ0DFi8gQnkDGzITWFOfxowLuSrMPsqBAVd6F+G+fdeBiq8hgFX2tG1Z8L0
-oXiYl3fOvqStEtR1VMoQMNxPAX5AAukPaGp6C+yvLguUEZo5l8eQPRXPKezFpO3l
-ih63seQFiD4vXpdB4VW23nosUlVaSvvtjMrmHNfJAOEU0729075XflcxlBN2CtV7
-RXlKs2klKqrzt7ddKHJJlOvYH1DgLuB4itqTWNriLXj4ZCybaILDedXwZsmCamGA
-C9UIdNCEFSXytRbWuP24MWRYBgSOLpMPZ5SU5jaYvnaOQwvc/CXI3aYrX3U3CVEH
-Udz9w6c6ZpCeUoMNAebyeO5pq4UzGvGMBnqmIbqeBX1rvno3OLhnfVEADaQiDgGE
-2xIdXh9Va8y+6GMSgyRIVRczW9D+uIW5qjRVDK/7L8/jXCIL2vgvTBkDH1imDssp
-Ew5JCUU7g0QMROth1ByO
-=kkt2
------END PGP SIGNATURE-----
-
---=-LaruY9HQid9eD0eMsaM2--
-
+Pat Erley
