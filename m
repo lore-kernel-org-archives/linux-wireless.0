@@ -1,108 +1,1243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbZCHMwz (ORCPT
+Received: from mail-bw0-f175.google.com ([209.85.218.175]:56336 "EHLO
+	mail-bw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759AbZCPTNN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Mar 2009 08:52:55 -0400
-Subject: Re: [PATCH] mac80211: Update IBSS beacon timestamp properly
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni.Malinen@Atheros.com
-In-Reply-To: <18860.46550.551064.448896@gargle.gargle.HOWL>
-References: <18860.46550.551064.448896@gargle.gargle.HOWL>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-UFO2/F6kuwI5ZaK3a+Xk"
-Date: Sun, 08 Mar 2009 13:52:50 +0100
-Message-Id: <1236516770.4205.17.camel@johannes.local> (sfid-20090308_135403_905459_EA79BC75)
-Mime-Version: 1.0
+	Mon, 16 Mar 2009 15:13:13 -0400
+Received: by bwz23 with SMTP id 23so1091191bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 12:13:08 -0700 (PDT)
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Message-Id: <A1AF7AF9-047F-41A1-829F-94F58821DB09@icix.org> (sfid-20090316_201319_103869_6E426BB4)
+From: Antonio Marques <froz@icix.org>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <200903161558.01070.IvDoorn@gmail.com>
+Content-Type: multipart/mixed; boundary=Apple-Mail-7--921941667
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: rt2x00 mesh support
+Date: Mon, 16 Mar 2009 19:12:59 +0000
+References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <200903151445.01344.IvDoorn@gmail.com> <F3209A42-65EA-4F71-8443-67E2F8CAFA3F@icix.org> <200903161558.01070.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-UFO2/F6kuwI5ZaK3a+Xk
-Content-Type: text/plain
+--Apple-Mail-7--921941667
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	format=flowed;
+	delsp=yes
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2009-03-03 at 10:15 +0530, Sujith wrote:
-> In IBSS mode, the beacon timestamp has to be filled with the
-> BSS's timestamp when joining, and set to zero when creating
-> a new BSS.
+On Mar 16, 2009, at 14:58 , Ivo van Doorn wrote:
+> On Monday 16 March 2009, Ant=F3nio Marques wrote:
+>>
+>> As requested, I have attached the output of the script run before and
+>> after
+>> running 'iwlist mesh scan'. Unfortunately there seems to be no =20
+>> change in
+>> the output. I have also included the queue statistics as these do
+>> change from
+>> one state to the next. Any further pointers to help debug this? I'll
+>> gladly test
+>> any patches that try to address this issue.
+>
+> The dumps aren't correct, I had forgotten to update the script on =20
+> the website
+> after some API for the rt2x00 debugfs interface changes recently.
+> Attached is the correct patch.
+>
+> Ivo
+> <rt2x00_regdump.sh>
 
-I don't quite understand why, do we read it out again at any point?
+Fixed, new dumps are attached.
 
-johannes
+Antonio Marques
 
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> ---
->  net/mac80211/ibss.c |    8 +++++---
->  1 files changed, 5 insertions(+), 3 deletions(-)
->=20
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index a96ce9d..f4becc1 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -64,7 +64,7 @@ static int __ieee80211_sta_join_ibss(struct ieee80211_s=
-ub_if_data *sdata,
->  				     const int freq,
->  				     const size_t supp_rates_len,
->  				     const u8 *supp_rates,
-> -				     const u16 capability)
-> +				     const u16 capability, u64 tsf)
->  {
->  	struct ieee80211_if_ibss *ifibss =3D &sdata->u.ibss;
->  	struct ieee80211_local *local =3D sdata->local;
-> @@ -127,6 +127,7 @@ static int __ieee80211_sta_join_ibss(struct ieee80211=
-_sub_if_data *sdata,
->  	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
->  	mgmt->u.beacon.beacon_int =3D
->  		cpu_to_le16(local->hw.conf.beacon_int);
-> +	mgmt->u.beacon.timestamp =3D cpu_to_le64(tsf);
->  	mgmt->u.beacon.capab_info =3D cpu_to_le16(capability);
-> =20
->  	pos =3D skb_put(skb, 2 + ifibss->ssid_len);
-> @@ -199,7 +200,8 @@ static int ieee80211_sta_join_ibss(struct ieee80211_s=
-ub_if_data *sdata,
->  					 bss->cbss.beacon_interval,
->  					 bss->cbss.channel->center_freq,
->  					 bss->supp_rates_len, bss->supp_rates,
-> -					 bss->cbss.capability);
-> +					 bss->cbss.capability,
-> +					 bss->cbss.tsf);
->  }
-> =20
->  static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
-> @@ -502,7 +504,7 @@ static int ieee80211_sta_create_ibss(struct ieee80211=
-_sub_if_data *sdata)
->  					 bssid, local->hw.conf.beacon_int,
->  					 local->hw.conf.channel->center_freq,
->  					 sband->n_bitrates, supp_rates,
-> -					 capability);
-> +					 capability, 0);
->  }
-> =20
->  static int ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
 
---=-UFO2/F6kuwI5ZaK3a+Xk
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+--Apple-Mail-7--921941667
+Content-Disposition: attachment;
+	filename=before-iwlist.txt
+Content-Type: text/plain;
+	x-unix-mode=0644;
+	name="before-iwlist.txt"
+Content-Transfer-Encoding: 7bit
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+kernel: 2.6.29-rc7-wl
+driver:	rt73usb
+version:	2.3.0
+compiled:	Mar 16 2009 11:53:37
+dev_flags: 0x0000625f
+rt chip:	1300
+rf chip:	0002
+revision:	0002573a
 
-iQIcBAABAgAGBQJJs7+fAAoJEKVg1VMiehFYj7MP/A3mGrzGJgkmY4Om5uKiIgu0
-dt/BSKHvGznwy6n7hHeP6YKEf9OifHS52NX38ms9YgsM40K51Ep8tgJTqnm2SNOh
-UPAhX1/uQR97I/non/fGJoNWogrB6x4nt4MO1UYXMl7sQJTlaVGXadxoJPI/IZyQ
-n/RHuxdxCHhhm62nRW7Pjzm3z4xHzRCcoycNRM6H0cR5G38Cwn7AXL66Dt87K6rB
-xzzVxO5mbLcjH3I5oxGa202MwuATeHcUXitcRi2BSYUH0PCWIwT3dwJA8CFkKdjQ
-t3+wzsvrpjo0FtNp4b4QLd3dgzw4AwRAP3OgYmcGbi4uVkoJIf9v+tnpsm4521qp
-eKtvyWOD3QToHEDvJemRJytT64FzoX4/sv8jGLXsZ25Frk9qZU6U5/SkcmMoFX+M
-aHMBAgt53uhM3KNzDSxp+Vfxp+ou8JBeYnDAtMil24QjyiZjg6TMNqPt326nG8sY
-ChYNYCB1OYYwQewKpSxbGll/hdm54VoLnF8xJoS24fW7jVIjo4EqXGJfXG7wDZOE
-csuktV2Zpc6wgJyKX0U2J3r5f9zTU9yaF6UsdsOYTpQuPgXenj9bWBbSb4CUB6jj
-5qli13lsoqwj0mJ52K0CRR0du51FECFqdhMoLJLjJezKfvRdlsZHoCBxz7iqh13a
-x9HrBFRD4QQj6VAdViwE
-=bAKN
------END PGP SIGNATURE-----
+register	base	words	wordsize
+csr	12288	300	4
+eeprom	0	128	2
+bbp	0	128	1
+rf	4	4	4
 
---=-UFO2/F6kuwI5ZaK3a+Xk--
+csr
+0 :0x0002573a
+1 :0x00000004
+2 :0x648c1e00
+3 :0x00ff3687
+4 :0x00000000
+5 :0x00030000
+6 :0x00000fff
+7 :0x00000000
+8 :0x016c000a
+9 :0x0000a314
+10 :0x00000718
+11 :0x00000000
+12 :0x00000009
+13 :0x00007f9f
+14 :0x00431e46
+15 :0x00000000
+16 :0x024eb032
+17 :0x9eaa9eaf
+18 :0x8a8b8c8d
+19 :0x00858687
+20 :0x740a0732
+21 :0x33060000
+22 :0x0a143870
+23 :0x2e31353b
+24 :0x2a2a2a2c
+25 :0x00000640
+26 :0x00001008
+27 :0x0000c78f
+28 :0x00000000
+29 :0x00000000
+30 :0x00000000
+31 :0x0000000f
+32 :0x00010000
+33 :0x000023b0
+34 :0x82188200
+35 :0x0000ff00
+36 :0x140d9a0b
+37 :0x00040a06
+38 :0x00080606
+39 :0x00000408
+40 :0x00000000
+41 :0x00000000
+42 :0x00000000
+43 :0x00000000
+44 :0x00000000
+45 :0x00000000
+46 :0x00000000
+47 :0x00000000
+48 :0x00010035
+49 :0x029c004e
+50 :0x00000000
+51 :0x00000000
+52 :0x00000000
+53 :0x00000000
+54 :0x00000000
+55 :0x00000000
+56 :0x00000000
+57 :0x00000000
+58 :0x03000000
+59 :0x00000000
+60 :0x00000000
+61 :0x00000000
+62 :0x00000000
+63 :0x00000000
+64 :0xa04e1400
+65 :0xa04e1400
+66 :0xa04e1400
+67 :0xa04e1400
+68 :0xa04e1400
+69 :0xa04e1400
+70 :0xa04e1400
+71 :0xa04e1400
+72 :0xa04e1400
+73 :0x00000000
+74 :0xa04e1400
+75 :0xa04e1400
+76 :0xa04e1400
+77 :0xa04e1400
+78 :0xa04e1400
+79 :0xa04e1400
+80 :0xa04e1400
+81 :0xa04e1400
+82 :0xa04e1400
+83 :0xa04e1400
+84 :0x67209839
+85 :0xa04e1400
+86 :0xa04e1400
+87 :0xa04e1400
+88 :0xa04e1400
+89 :0xa04e1400
+90 :0xa04e1400
+91 :0xa04e1400
+92 :0xa04e1400
+93 :0xbec4f4dd
+94 :0xa04e1400
+95 :0xa04e1400
+96 :0xa04e1400
+97 :0xa04e1400
+98 :0xa04e1400
+99 :0xa04e1400
+100 :0xa04e1400
+101 :0xa04e1400
+102 :0xa04e1400
+103 :0xa04e1400
+104 :0xa04e1400
+105 :0xa04e1400
+106 :0xa04e1400
+107 :0xa04e1400
+108 :0xa04e1400
+109 :0xa04e1400
+110 :0xa04e1400
+111 :0xa04e1400
+112 :0xa04e1400
+113 :0xa04e1400
+114 :0xa04e1400
+115 :0xa04e1400
+116 :0xa04e1400
+117 :0xa04e1400
+118 :0xa04e1400
+119 :0xa04e1400
+120 :0xa04e1400
+121 :0xa04e1400
+122 :0xa04e1400
+123 :0xa04e1400
+124 :0xa04e1400
+125 :0xa04e1400
+126 :0xa04e1400
+127 :0xa04e1400
+128 :0xa04e1400
+129 :0xa04e1400
+130 :0xa04e1400
+131 :0xa04e1400
+132 :0xa04e1400
+133 :0xa04e1400
+134 :0xa04e1400
+135 :0xa04e1400
+136 :0x6481ed6f
+137 :0x00b79ca8
+138 :0xa04e1400
+139 :0xa04e1400
+140 :0xa04e1400
+141 :0xa04e1400
+142 :0xa04e1400
+143 :0xa04e1400
+144 :0xa04e1400
+145 :0xa04e1400
+146 :0xa04e1400
+147 :0xa04e1400
+148 :0xa04e1400
+149 :0xa04e1400
+150 :0xa04e1400
+151 :0xa04e1400
+152 :0xa04e1400
+153 :0xa04e1400
+154 :0xa04e1400
+155 :0x668b8900
+156 :0xa04e1400
+157 :0xa04e1400
+158 :0xa04e1400
+159 :0xa04e1400
+160 :0xa04e1400
+161 :0xa04e1400
+162 :0xa04e1400
+163 :0xa04e1400
+164 :0xa04e1400
+165 :0xa04e1400
+166 :0xa04e1400
+167 :0xa04e1400
+168 :0xa04e1400
+169 :0xa04e1400
+170 :0xa04e1400
+171 :0xa04e1400
+172 :0xa04e1400
+173 :0xa04e1400
+174 :0xa04e1400
+175 :0xa04e1400
+176 :0xa04e1400
+177 :0xa04e1400
+178 :0xa04e1400
+179 :0xa04e1400
+180 :0xa04e1400
+181 :0xa04e1400
+182 :0xa04e1400
+183 :0xa04e1400
+184 :0xa04e1400
+185 :0x9f291434
+186 :0xa04e1400
+187 :0xa04e1400
+188 :0xa04e1400
+189 :0xa04e1400
+190 :0xa04e1400
+191 :0xa04e1400
+192 :0xa04e1400
+193 :0xa04e1400
+194 :0xa04e1400
+195 :0xa04e1400
+196 :0xa04e1400
+197 :0xa04e1400
+198 :0xa04e1400
+199 :0xa04e1400
+200 :0xa04e1400
+201 :0xa04e1400
+202 :0xa04e1400
+203 :0xa04e1400
+204 :0xa04e1400
+205 :0xa04e1400
+206 :0xa04e1400
+207 :0x00000000
+208 :0xa04e1400
+209 :0xa04e1400
+210 :0xa04e1400
+211 :0xa04e1400
+212 :0xa04e1400
+213 :0xa04e1400
+214 :0xa04e1400
+215 :0xa04e1400
+216 :0xa04e1400
+217 :0xa04e1400
+218 :0xa04e1400
+219 :0xa04e1400
+220 :0xa04e1400
+221 :0xa04e1400
+222 :0xa04e1400
+223 :0xa04e1400
+224 :0xa04e1400
+225 :0x80ab97b1
+226 :0xa04e1400
+227 :0xa04e1400
+228 :0xa04e1400
+229 :0xa04e1400
+230 :0xa04e1400
+231 :0xa04e1400
+232 :0xa04e1400
+233 :0xa04e1400
+234 :0xa04e1400
+235 :0xa04e1400
+236 :0xa04e1400
+237 :0xa04e1400
+238 :0xa04e1400
+239 :0xa04e1400
+240 :0xa04e1400
+241 :0xa04e1400
+242 :0x3b7c611b
+243 :0xa04e1400
+244 :0xa04e1400
+245 :0xa04e1400
+246 :0xa04e1400
+247 :0xa04e1400
+248 :0xa04e1400
+249 :0xa04e1400
+250 :0xa04e1400
+251 :0xa04e1400
+252 :0xa04e1400
+253 :0xa04e1400
+254 :0xa04e1400
+255 :0xa04e1400
+256 :0xa04e1400
+257 :0xa04e1400
+258 :0xa04e1400
+259 :0xa04e1400
+260 :0xa04e1400
+261 :0xa04e1400
+262 :0xa04e1400
+263 :0xa04e1400
+264 :0xa04e1400
+265 :0xa04e1400
+266 :0xa04e1400
+267 :0xa04e1400
+268 :0xa04e1400
+269 :0xa04e1400
+270 :0xa04e1400
+271 :0xa04e1400
+272 :0xa04e1400
+273 :0xa04e1400
+274 :0xa04e1400
+275 :0xa04e1400
+276 :0xa04e1400
+277 :0xa04e1400
+278 :0xa04e1400
+279 :0xa04e1400
+280 :0xa04e1400
+281 :0xa04e1400
+282 :0xa04e1400
+283 :0xa04e1400
+284 :0xa04e1400
+285 :0xa04e1400
+286 :0xa04e1400
+287 :0xa04e1400
+288 :0xa04e1400
+289 :0xa04e1400
+290 :0xa04e1400
+291 :0xa04e1400
+292 :0xa04e1400
+293 :0xc9a5296b
+294 :0xa04e1400
+295 :0xa04e1400
+296 :0xa04e1400
+297 :0xa04e1400
+298 :0xa04e1400
+299 :0xa04e1400
 
+eeprom
+0 :0x2573
+1 :0x0103
+2 :0x1e00
+3 :0x648c
+4 :0x3687
+5 :0xffff
+6 :0xffff
+7 :0xffff
+8 :0xffff
+9 :0xffff
+10 :0xffff
+11 :0xffff
+12 :0xffff
+13 :0xffff
+14 :0xffff
+15 :0xffff
+16 :0x1056
+17 :0xffef
+18 :0x0100
+19 :0xffff
+20 :0xffff
+21 :0xffff
+22 :0xffff
+23 :0xffff
+24 :0xffff
+25 :0xffff
+26 :0xffff
+27 :0xffff
+28 :0xffff
+29 :0xffff
+30 :0xffff
+31 :0xffff
+32 :0xffff
+33 :0xffff
+34 :0xffff
+35 :0x0909
+36 :0x0909
+37 :0x0909
+38 :0x0909
+39 :0x0909
+40 :0x0909
+41 :0x0808
+42 :0xffff
+43 :0xffff
+44 :0xffff
+45 :0xffff
+46 :0xffff
+47 :0xff19
+48 :0xe000
+49 :0xffff
+50 :0xffff
+51 :0xffff
+52 :0xffff
+53 :0xffff
+54 :0xffff
+55 :0xffff
+56 :0xffff
+57 :0xffff
+58 :0xffff
+59 :0xffff
+60 :0xffff
+61 :0xffff
+62 :0xffff
+63 :0xffff
+64 :0xffff
+65 :0xffff
+66 :0xffff
+67 :0xffff
+68 :0xffff
+69 :0xffff
+70 :0xffff
+71 :0xffff
+72 :0xffff
+73 :0xffff
+74 :0xffff
+75 :0xffff
+76 :0xffff
+77 :0xff00
+78 :0x0000
+79 :0xff81
+80 :0xffff
+81 :0xffff
+82 :0xffff
+83 :0xffff
+84 :0xffff
+85 :0xffff
+86 :0xffff
+87 :0xffff
+88 :0xffff
+89 :0xffff
+90 :0xffff
+91 :0xffff
+92 :0xffff
+93 :0xffff
+94 :0xffff
+95 :0xffff
+96 :0xffff
+97 :0xffff
+98 :0xffff
+99 :0xffff
+100 :0xffff
+101 :0xffff
+102 :0xffff
+103 :0xffff
+104 :0xffff
+105 :0xffff
+106 :0xffff
+107 :0xffff
+108 :0xffff
+109 :0xffff
+110 :0xffff
+111 :0xffff
+112 :0xffff
+113 :0xffff
+114 :0xffff
+115 :0xffff
+116 :0xffff
+117 :0xffff
+118 :0xffff
+119 :0xffff
+120 :0xffff
+121 :0xffff
+122 :0xffff
+123 :0xffff
+124 :0xffff
+125 :0xffff
+126 :0x0508
+127 :0x000a
+
+bbp
+0 :0x16
+1 :0x00
+2 :0x00
+3 :0x81
+4 :0x11
+5 :0x0b
+6 :0x10
+7 :0x00
+8 :0x00
+9 :0x00
+10 :0x00
+11 :0x04
+12 :0x03
+13 :0x40
+14 :0x18
+15 :0x30
+16 :0x2c
+17 :0x20
+18 :0x06
+19 :0x00
+20 :0x1e
+21 :0xc8
+22 :0x38
+23 :0x06
+24 :0xfe
+25 :0x0a
+26 :0x0d
+27 :0x27
+28 :0x06
+29 :0x00
+30 :0x68
+31 :0x2b
+32 :0x0b
+33 :0x55
+34 :0x12
+35 :0x50
+36 :0x11
+37 :0x07
+38 :0x00
+39 :0xf8
+40 :0x0f
+41 :0x60
+42 :0x0b
+43 :0x3c
+44 :0x7e
+45 :0x07
+46 :0xb1
+47 :0x0a
+48 :0x04
+49 :0x04
+50 :0x10
+51 :0x00
+52 :0x00
+53 :0x10
+54 :0x18
+55 :0x00
+56 :0x10
+57 :0x08
+58 :0x02
+59 :0x01
+60 :0x10
+61 :0x04
+62 :0x04
+63 :0x00
+64 :0x01
+65 :0x03
+66 :0x00
+67 :0x00
+68 :0x00
+69 :0x00
+70 :0x26
+71 :0x00
+72 :0x00
+73 :0x00
+74 :0xff
+75 :0xfe
+76 :0x40
+77 :0x03
+78 :0x00
+79 :0x00
+80 :0x05
+81 :0x14
+82 :0x50
+83 :0xc0
+84 :0x10
+85 :0x00
+86 :0xfe
+87 :0x40
+88 :0xfe
+89 :0x40
+90 :0x0f
+91 :0x08
+92 :0x00
+93 :0x00
+94 :0x06
+95 :0x08
+96 :0x48
+97 :0x48
+98 :0x48
+99 :0x00
+100 :0x20
+101 :0x06
+102 :0x16
+103 :0x00
+104 :0x2c
+105 :0x20
+106 :0x90
+107 :0x04
+108 :0x04
+109 :0x00
+110 :0x00
+111 :0x00
+112 :0x00
+113 :0x00
+114 :0x00
+115 :0x00
+116 :0x00
+117 :0x00
+118 :0x00
+119 :0x00
+120 :0x00
+121 :0x00
+122 :0x00
+123 :0x00
+124 :0x00
+125 :0x00
+126 :0x00
+127 :0x00
+
+rf
+0 :0x00002c0c
+1 :0x00000796
+2 :0x00069251
+3 :0x000d9a0b
+
+
+
+--Apple-Mail-7--921941667
+Content-Disposition: attachment;
+	filename=after-iwlist.txt
+Content-Type: text/plain;
+	x-unix-mode=0644;
+	name="after-iwlist.txt"
+Content-Transfer-Encoding: 7bit
+
+kernel: 2.6.29-rc7-wl
+driver:	rt73usb
+version:	2.3.0
+compiled:	Mar 16 2009 11:53:37
+dev_flags: 0x0000625f
+rt chip:	1300
+rf chip:	0002
+revision:	0002573a
+
+register	base	words	wordsize
+csr	12288	300	4
+eeprom	0	128	2
+bbp	0	128	1
+rf	4	4	4
+
+csr
+0 :0x0002573a
+1 :0x00000004
+2 :0x648c1e00
+3 :0x00ff3687
+4 :0x00000000
+5 :0x00030000
+6 :0x00000fff
+7 :0x00000000
+8 :0x016c000a
+9 :0x0000a314
+10 :0x00000718
+11 :0x00000000
+12 :0x00000009
+13 :0x00007f9f
+14 :0x00431e46
+15 :0x00000000
+16 :0x024eb032
+17 :0x9eaa9eaf
+18 :0x8a8b8c8d
+19 :0x00858687
+20 :0x740a0732
+21 :0x33060000
+22 :0x0a143870
+23 :0x2e31353b
+24 :0x2a2a2a2c
+25 :0x001d0640
+26 :0x00001008
+27 :0x0000c78f
+28 :0x004ee19c
+29 :0x00000000
+30 :0x00000640
+31 :0x0000000f
+32 :0x00010000
+33 :0x000023b0
+34 :0x82188200
+35 :0x00001181
+36 :0x140d9a0b
+37 :0x00040a06
+38 :0x00080606
+39 :0x00000408
+40 :0x00000000
+41 :0x00000000
+42 :0x00000000
+43 :0x00000000
+44 :0x00000000
+45 :0x00000000
+46 :0x00000000
+47 :0x00000000
+48 :0x00030011
+49 :0x00b9000d
+50 :0x00000000
+51 :0x00000033
+52 :0x0000000b
+53 :0x00000000
+54 :0x00000000
+55 :0x00000000
+56 :0x00000000
+57 :0x00000000
+58 :0x03000000
+59 :0x00000000
+60 :0x00000000
+61 :0x00000000
+62 :0x00000000
+63 :0x00000000
+64 :0xa04e1400
+65 :0xa04e1400
+66 :0xa04e1400
+67 :0xa04e1400
+68 :0xa04e1400
+69 :0xa04e1400
+70 :0xa04e1400
+71 :0xa04e1400
+72 :0xa04e1400
+73 :0xa04e1400
+74 :0xa04e1400
+75 :0xa04e1400
+76 :0xa04e1400
+77 :0xa04e1400
+78 :0xa04e1400
+79 :0xa04e1400
+80 :0xa04e1400
+81 :0xa04e1400
+82 :0xa04e1400
+83 :0xa04e1400
+84 :0xa04e1400
+85 :0xa04e1400
+86 :0xa04e1400
+87 :0x00008b7b
+88 :0xa04e1400
+89 :0xa04e1400
+90 :0xa04e1400
+91 :0xa04e1400
+92 :0xa04e1400
+93 :0xa04e1400
+94 :0xa04e1400
+95 :0xa04e1400
+96 :0xa04e1400
+97 :0xa04e1400
+98 :0xa04e1400
+99 :0xa04e1400
+100 :0xa04e1400
+101 :0xa04e1400
+102 :0xa04e1400
+103 :0xa04e1400
+104 :0xa04e1400
+105 :0xa04e1400
+106 :0xa04e1400
+107 :0xa04e1400
+108 :0xa04e1400
+109 :0xa04e1400
+110 :0xa04e1400
+111 :0xa04e1400
+112 :0xa04e1400
+113 :0xa04e1400
+114 :0xa04e1400
+115 :0xa04e1400
+116 :0xa04e1400
+117 :0xa04e1400
+118 :0xa04e1400
+119 :0xa04e1400
+120 :0xa04e1400
+121 :0xa04e1400
+122 :0xa04e1400
+123 :0xa04e1400
+124 :0xa04e1400
+125 :0xa04e1400
+126 :0xa04e1400
+127 :0xa04e1400
+128 :0xa04e1400
+129 :0xa04e1400
+130 :0xa04e1400
+131 :0xa04e1400
+132 :0xa04e1400
+133 :0xa04e1400
+134 :0xa04e1400
+135 :0xa04e1400
+136 :0xd1eb308b
+137 :0xa04e1400
+138 :0xa04e1400
+139 :0xa04e1400
+140 :0xa04e1400
+141 :0xa04e1400
+142 :0xa04e1400
+143 :0xa04e1400
+144 :0xa04e1400
+145 :0xa04e1400
+146 :0xa04e1400
+147 :0xa04e1400
+148 :0xa04e1400
+149 :0xa04e1400
+150 :0xa04e1400
+151 :0xa04e1400
+152 :0xa04e1400
+153 :0xa04e1400
+154 :0xa04e1400
+155 :0xa04e1400
+156 :0xa04e1400
+157 :0xa04e1400
+158 :0xa04e1400
+159 :0xa04e1400
+160 :0xa04e1400
+161 :0xa04e1400
+162 :0xa04e1400
+163 :0xa04e1400
+164 :0xa04e1400
+165 :0xa04e1400
+166 :0xa04e1400
+167 :0xa04e1400
+168 :0xa04e1400
+169 :0xa04e1400
+170 :0xa04e1400
+171 :0xa04e1400
+172 :0xa04e1400
+173 :0xa04e1400
+174 :0xa04e1400
+175 :0xa04e1400
+176 :0xa04e1400
+177 :0xa04e1400
+178 :0xa04e1400
+179 :0xa04e1400
+180 :0xa04e1400
+181 :0xa04e1400
+182 :0xa04e1400
+183 :0xa04e1400
+184 :0xa04e1400
+185 :0x794e1400
+186 :0xa04e1400
+187 :0xa04e1400
+188 :0xa04e1400
+189 :0xa04e1400
+190 :0xa04e1400
+191 :0xa04e1400
+192 :0xa04e1400
+193 :0xa04e1400
+194 :0xa04e1400
+195 :0xa04e1400
+196 :0xa04e1400
+197 :0xa04e1400
+198 :0xa04e1400
+199 :0xa04e1400
+200 :0xa04e1400
+201 :0xa04e1400
+202 :0xa04e1400
+203 :0xa04e1400
+204 :0xa04e1400
+205 :0xa04e1400
+206 :0xa04e1400
+207 :0xa04e1400
+208 :0xa04e1400
+209 :0xa04e1400
+210 :0xa04e1400
+211 :0xa04e1400
+212 :0xa04e1400
+213 :0xa04e1400
+214 :0xa04e1400
+215 :0xa04e1400
+216 :0xa04e1400
+217 :0xa04e1400
+218 :0xa04e1400
+219 :0xa04e1400
+220 :0xa04e1400
+221 :0xa04e1400
+222 :0xa04e1400
+223 :0x117aadb4
+224 :0xa04e1400
+225 :0xa04e1400
+226 :0xa04e1400
+227 :0xa04e1400
+228 :0xa04e1400
+229 :0xa04e1400
+230 :0xa04e1400
+231 :0xa04e1400
+232 :0xa04e1400
+233 :0xa04e1400
+234 :0xa04e1400
+235 :0xa04e1400
+236 :0xa04e1400
+237 :0xa04e1400
+238 :0xa04e1400
+239 :0xa04e1400
+240 :0xa04e1400
+241 :0xa04e1400
+242 :0xa04e1400
+243 :0xa04e1400
+244 :0xa04e1400
+245 :0xa04e1400
+246 :0xa04e1400
+247 :0xa04e1400
+248 :0xa04e1400
+249 :0xa04e1400
+250 :0xa04e1400
+251 :0xa04e1400
+252 :0xa04e1400
+253 :0xa04e1400
+254 :0xa04e1400
+255 :0xa04e1400
+256 :0xa04e1400
+257 :0xa04e1400
+258 :0xa04e1400
+259 :0xa04e1400
+260 :0xa04e1400
+261 :0xa04e1400
+262 :0xa04e1400
+263 :0xa04e1400
+264 :0xa04e1400
+265 :0xa04e1400
+266 :0xa04e1400
+267 :0xa04e1400
+268 :0xa04e1400
+269 :0xa04e1400
+270 :0xa04e1400
+271 :0xa04e1400
+272 :0x1c338900
+273 :0xa04e1400
+274 :0xa04e1400
+275 :0xa04e1400
+276 :0xa04e1400
+277 :0xa04e1400
+278 :0xa04e1400
+279 :0x991d217f
+280 :0x62664946
+281 :0xa04e1400
+282 :0xa04e1400
+283 :0xa04e1400
+284 :0xa04e1400
+285 :0xa04e1400
+286 :0xa04e1400
+287 :0xa04e1400
+288 :0xa04e1400
+289 :0xa04e1400
+290 :0xa04e1400
+291 :0xa04e1400
+292 :0xa04e1400
+293 :0xa04e1400
+294 :0xa04e1400
+295 :0xa04e1400
+296 :0xa04e1400
+297 :0xa04e1400
+298 :0xa04e1400
+299 :0xa04e1400
+
+eeprom
+0 :0x2573
+1 :0x0103
+2 :0x1e00
+3 :0x648c
+4 :0x3687
+5 :0xffff
+6 :0xffff
+7 :0xffff
+8 :0xffff
+9 :0xffff
+10 :0xffff
+11 :0xffff
+12 :0xffff
+13 :0xffff
+14 :0xffff
+15 :0xffff
+16 :0x1056
+17 :0xffef
+18 :0x0100
+19 :0xffff
+20 :0xffff
+21 :0xffff
+22 :0xffff
+23 :0xffff
+24 :0xffff
+25 :0xffff
+26 :0xffff
+27 :0xffff
+28 :0xffff
+29 :0xffff
+30 :0xffff
+31 :0xffff
+32 :0xffff
+33 :0xffff
+34 :0xffff
+35 :0x0909
+36 :0x0909
+37 :0x0909
+38 :0x0909
+39 :0x0909
+40 :0x0909
+41 :0x0808
+42 :0xffff
+43 :0xffff
+44 :0xffff
+45 :0xffff
+46 :0xffff
+47 :0xff19
+48 :0xe000
+49 :0xffff
+50 :0xffff
+51 :0xffff
+52 :0xffff
+53 :0xffff
+54 :0xffff
+55 :0xffff
+56 :0xffff
+57 :0xffff
+58 :0xffff
+59 :0xffff
+60 :0xffff
+61 :0xffff
+62 :0xffff
+63 :0xffff
+64 :0xffff
+65 :0xffff
+66 :0xffff
+67 :0xffff
+68 :0xffff
+69 :0xffff
+70 :0xffff
+71 :0xffff
+72 :0xffff
+73 :0xffff
+74 :0xffff
+75 :0xffff
+76 :0xffff
+77 :0xff00
+78 :0x0000
+79 :0xff81
+80 :0xffff
+81 :0xffff
+82 :0xffff
+83 :0xffff
+84 :0xffff
+85 :0xffff
+86 :0xffff
+87 :0xffff
+88 :0xffff
+89 :0xffff
+90 :0xffff
+91 :0xffff
+92 :0xffff
+93 :0xffff
+94 :0xffff
+95 :0xffff
+96 :0xffff
+97 :0xffff
+98 :0xffff
+99 :0xffff
+100 :0xffff
+101 :0xffff
+102 :0xffff
+103 :0xffff
+104 :0xffff
+105 :0xffff
+106 :0xffff
+107 :0xffff
+108 :0xffff
+109 :0xffff
+110 :0xffff
+111 :0xffff
+112 :0xffff
+113 :0xffff
+114 :0xffff
+115 :0xffff
+116 :0xffff
+117 :0xffff
+118 :0xffff
+119 :0xffff
+120 :0xffff
+121 :0xffff
+122 :0xffff
+123 :0xffff
+124 :0xffff
+125 :0xffff
+126 :0x0508
+127 :0x000a
+
+bbp
+0 :0x16
+1 :0x60
+2 :0x00
+3 :0x81
+4 :0x11
+5 :0x0b
+6 :0x10
+7 :0x00
+8 :0x00
+9 :0x00
+10 :0x00
+11 :0x04
+12 :0x02
+13 :0xa8
+14 :0x18
+15 :0x30
+16 :0x2c
+17 :0x20
+18 :0x06
+19 :0x00
+20 :0x1e
+21 :0xc8
+22 :0x38
+23 :0x06
+24 :0xfe
+25 :0x0a
+26 :0x0d
+27 :0x27
+28 :0x06
+29 :0x00
+30 :0x68
+31 :0x2b
+32 :0x0b
+33 :0x55
+34 :0x12
+35 :0x50
+36 :0x11
+37 :0x07
+38 :0x00
+39 :0xf8
+40 :0x0f
+41 :0x60
+42 :0x03
+43 :0x74
+44 :0x77
+45 :0x97
+46 :0x36
+47 :0x06
+48 :0x5f
+49 :0x92
+50 :0x38
+51 :0x00
+52 :0x00
+53 :0x10
+54 :0x18
+55 :0x00
+56 :0x10
+57 :0x08
+58 :0x01
+59 :0x01
+60 :0x10
+61 :0x04
+62 :0x04
+63 :0x00
+64 :0x01
+65 :0x03
+66 :0x00
+67 :0x00
+68 :0x00
+69 :0x00
+70 :0x26
+71 :0x00
+72 :0x00
+73 :0x00
+74 :0xff
+75 :0xfe
+76 :0x40
+77 :0x03
+78 :0x00
+79 :0x00
+80 :0x05
+81 :0x14
+82 :0x50
+83 :0xc0
+84 :0x10
+85 :0x7e
+86 :0xfe
+87 :0x40
+88 :0xfe
+89 :0x40
+90 :0x0f
+91 :0x08
+92 :0x00
+93 :0x00
+94 :0x06
+95 :0x08
+96 :0x48
+97 :0x48
+98 :0x48
+99 :0x00
+100 :0x20
+101 :0x06
+102 :0x16
+103 :0x00
+104 :0x2c
+105 :0x20
+106 :0x90
+107 :0x04
+108 :0x04
+109 :0x00
+110 :0x00
+111 :0x00
+112 :0x00
+113 :0x00
+114 :0x00
+115 :0x00
+116 :0x00
+117 :0x00
+118 :0x00
+119 :0x00
+120 :0x00
+121 :0x00
+122 :0x00
+123 :0x00
+124 :0x00
+125 :0x00
+126 :0x00
+127 :0x00
+
+rf
+0 :0x00002c0c
+1 :0x00000796
+2 :0x00069251
+3 :0x000d9a0b
+
+
+
+--Apple-Mail-7--921941667--
