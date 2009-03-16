@@ -1,101 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:1776 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755208AbZCEXMg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 18:12:36 -0500
-Message-ID: <49B056FA.2020605@canonical.com> (sfid-20090306_001251_373427_46A2F70E)
-Date: Thu, 05 Mar 2009 15:49:30 -0700
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: reinette chatre <reinette.chatre@intel.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Please apply to stable: cfg80211: add support for custom firmware
- 	regulatory solutions
-References: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com>	 <1236275668.6612.134.camel@rc-desk> <43e72e890903051124t42ce5c7blfd741da4a2b4fa79@mail.gmail.com>
-In-Reply-To: <43e72e890903051124t42ce5c7blfd741da4a2b4fa79@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from nf-out-0910.google.com ([64.233.182.186]:43038 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752073AbZCPN3Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2009 09:29:24 -0400
+Received: by nf-out-0910.google.com with SMTP id d21so962388nfb.21
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 06:29:21 -0700 (PDT)
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Message-Id: <AF751E60-0D2E-400D-8650-032CCC1F90D9@icix.org> (sfid-20090316_142927_848559_7014CE18)
+From: Antonio Marques <froz@icix.org>
+To: Pat Erley <pat-lkml@erley.org>
+In-Reply-To: <49BDB24D.3030508@erley.org>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: rt2x00 mesh support
+Date: Mon, 16 Mar 2009 13:29:16 +0000
+References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <467E98EC-F5B1-4D79-914E-35E021125E37@icix.org> <594B4EB2-FE87-4756-B016-C83083EF415B@icix.org> <200903151445.01344.IvDoorn@gmail.com> <49BDB24D.3030508@erley.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Thu, Mar 5, 2009 at 9:54 AM, reinette chatre
-> <reinette.chatre@intel.com> wrote:
->> On Wed, 2009-03-04 at 13:35 -0800, Luis R. Rodriguez wrote:
->>> Forgot to Cc: stable@kernel.org for this patch during its submission,
->>> this is needed on 2.6.28 as otherwise there is an issue for Intel
->>> cards which get their channels 5 GHz disabled if OLD_REG is set to no
->>> (this is not the default) or the channels 12-14 are disabled if
->>> OLD_REG is set to yes (default) set to no and the ieee80211_module
->>> parameter is not used. The later issue is resolved by userspace as
->>> well but we cannot yet expect 2.6.28 kernels to have enough userspace
->>> interfaces to set the regulatory domain just yet. This is why OLD_REG
->>> is still set to default with 2.6.28.
->>>
->>> 14b9815af3f4fe0e171ee0c4325c31d2a2c1570b
->>> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
->>> Date:   Wed Nov 12 14:22:03 2008 -0800
->>>
->>>    cfg80211: add support for custom firmware regulatory solutions
->>>
->>>    This adds API to cfg80211 to allow wireless drivers to inform
->>>    us if their firmware can handle regulatory considerations *and*
->>>    they cannot map these regulatory domains to an ISO / IEC 3166
->>>    alpha2. In these cases we skip the first regulatory hint instead
->>>    of expecting the driver to build their own regulatory structure,
->>>    providing us with an alpha2, or using the reg_notifier().
->>>
->>>    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->>>    Acked-by: Zhu Yi <yi.zhu@intel.com>
->>>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> Could you please also add commit
->> ea4a82dceec7b5782b1259079c8de508d0afe33a? This is the commit that
->> enables the Intel cards to take advantage of the parameter introduced in
->> previous commit.
->>
->> commit ea4a82dceec7b5782b1259079c8de508d0afe33a
->> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
->> Date:   Wed Nov 12 14:22:04 2008 -0800
->>
->>    iwlwifi: enable custom fw regulatory solution
->>
->>    This enables the custom firmware regulatory solution option
->>    on iwlwifi drivers. These devices are uncapable of mapping their
->>    EEPROM regulatory domain to a specific ISO / IEC alpha2.
->>    Although the new 11n devices (>= iwl 5000) have only
->>    3 regultaory SKUs -- MOW, ABG (no N) and BG -- the older
->>    devices (3945 and 4965) have a more complex SKU arrangement
->>    and therefore its not practical to move this to the driver.
->>
->>    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->>    Acked-by: Zhu Yi <yi.zhu@intel.com>
->>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> Doh yes that would be required or it would make this pointless.
-> 
->   Luis
-> 
+On Mar 16, 2009, at 01:58 , Pat Erley wrote:
+> I get identical behavior with the patch I'm about to RFC for ath9k  
+> to enable
+> mesh mode.  I just want to test that it works with my b43, rt61pci,  
+> and
+> rt2x00usb devices.  Of the 4, ONLY b43 enables beaconing for mesh  
+> mode on
+> interface up.  I suspect my ath5k one will exhibit similar  
+> behavior.  I've
+> reviewed the b43 code about 100 times during the writing of my patch  
+> for ath9k
+> and I can't spot what it's doing that's so different.
+>
+> Pat
 
-Looks like it requires a preparatory commit:
+I have also tested with ath5k which behaves correctly on interface up by
+enabling beaconing. You might want to look at it too.
 
-commit f3b407fba52e1b86ca286ee7c218a4fb00bd29e0
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Tue Oct 21 09:57:41 2008 +0200
-
-    wireless: remove cfg80211_reg_mutex
-
-    This mutex is wrong, we use cfg80211_drv_mutex (which should
-    possibly be renamed to just cfg80211_mutex) everywhere except
-    in one place, fix that and get rid of the extra mutex.
-
-    Also get rid of a spurious regulatory_requests list definition.
-
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-
--- 
-Tim Gardner tim.gardner@canonical.com
+Antonio Marques
