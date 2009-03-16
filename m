@@ -1,105 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56719 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122AbZCNImz (ORCPT
+Received: from mail-gx0-f165.google.com ([209.85.217.165]:35123 "EHLO
+	mail-gx0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753296AbZCPQS1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 04:42:55 -0400
-Subject: [PATCH] mac80211: acquire sta_lock for station suspend/resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bob Copeland <bcopeland@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 14 Mar 2009 09:42:49 +0100
-Message-Id: <1237020169.5235.66.camel@johannes.local> (sfid-20090314_094259_843037_AD6CAB8A)
-Mime-Version: 1.0
+	Mon, 16 Mar 2009 12:18:27 -0400
+Received: by gxk9 with SMTP id 9so1943521gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 09:18:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090316155152.276920@gmx.net>
+References: <ee588a540903160324s59c83547jc7d2148642e00af4@mail.gmail.com>
+	 <20090316155152.276920@gmx.net>
+Date: Mon, 16 Mar 2009 09:18:24 -0700
+Message-ID: <43e72e890903160918p75c8ee5cja0ff4a308d24c407@mail.gmail.com> (sfid-20090316_171829_816951_C60CE9EF)
+Subject: Re: well working usb wlan stick
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Alina Friedrichsen <x-alina@gmx.net>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	feldmann_markus@gmx.de, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To avoid concurrent manipulations of the sta list (which shouldn't
-be possible at this point, but anyway) we need to hold the sta_lock
-around iterating the list.
+On Mon, Mar 16, 2009 at 8:51 AM, Alina Friedrichsen <x-alina@gmx.net> w=
+rote:
+> Hi!
+>
+>> only buy ZyDAS/Atheros(zd1211rw driver), =C2=A0Realtek(rtl8187 drive=
+r) or
+>> Ralink(rt73usb driver) devices.
+>
+> As far I have tested, the ar9170 driver works okay for G too, only Dr=
+aft-N is not supported at the moment.
 
-At the same time, we do not need to iterate the list at all if
-the driver doesn't want to be notified.
+11n does work but currently only in the the otus driver, which is also
+open but it just doesn't use mac80211. ar9170 is the driver which will
+eventually get merged.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/pm.c |   18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+http://wireless.kernel.org/en/users/Drivers/ar9170
+http://wireless.kernel.org/en/users/Drivers/otus
 
---- wireless-testing.orig/net/mac80211/pm.c	2009-03-14 09:35:01.000000000 +0100
-+++ wireless-testing/net/mac80211/pm.c	2009-03-14 09:40:12.000000000 +0100
-@@ -10,6 +10,7 @@ int __ieee80211_suspend(struct ieee80211
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_if_init_conf conf;
- 	struct sta_info *sta;
-+	unsigned long flags;
- 
- 	ieee80211_stop_queues_by_reason(hw,
- 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
-@@ -21,9 +22,9 @@ int __ieee80211_suspend(struct ieee80211
- 		ieee80211_disable_keys(sdata);
- 
- 	/* remove STAs */
--	list_for_each_entry(sta, &local->sta_list, list) {
--
--		if (local->ops->sta_notify) {
-+	if (local->ops->sta_notify) {
-+		spin_lock_irqsave(&local->sta_lock, flags);
-+		list_for_each_entry(sta, &local->sta_list, list) {
- 			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 				sdata = container_of(sdata->bss,
- 					     struct ieee80211_sub_if_data,
-@@ -32,11 +33,11 @@ int __ieee80211_suspend(struct ieee80211
- 			local->ops->sta_notify(hw, &sdata->vif,
- 				STA_NOTIFY_REMOVE, &sta->sta);
- 		}
-+		spin_unlock_irqrestore(&local->sta_lock, flags);
- 	}
- 
- 	/* remove all interfaces */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--
- 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
- 		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
- 		    netif_running(sdata->dev)) {
-@@ -64,6 +65,7 @@ int __ieee80211_resume(struct ieee80211_
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_if_init_conf conf;
- 	struct sta_info *sta;
-+	unsigned long flags;
- 	int res;
- 
- 	/* restart hardware */
-@@ -75,7 +77,6 @@ int __ieee80211_resume(struct ieee80211_
- 
- 	/* add interfaces */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--
- 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
- 		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
- 		    netif_running(sdata->dev)) {
-@@ -87,9 +88,9 @@ int __ieee80211_resume(struct ieee80211_
- 	}
- 
- 	/* add STAs back */
--	list_for_each_entry(sta, &local->sta_list, list) {
--
--		if (local->ops->sta_notify) {
-+	if (local->ops->sta_notify) {
-+		spin_lock_irqsave(&local->sta_lock, flags);
-+		list_for_each_entry(sta, &local->sta_list, list) {
- 			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 				sdata = container_of(sdata->bss,
- 					     struct ieee80211_sub_if_data,
-@@ -98,6 +99,7 @@ int __ieee80211_resume(struct ieee80211_
- 			local->ops->sta_notify(hw, &sdata->vif,
- 				STA_NOTIFY_ADD, &sta->sta);
- 		}
-+		spin_unlock_irqrestore(&local->sta_lock, flags);
- 	}
- 
- 	/* add back keys */
-
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
