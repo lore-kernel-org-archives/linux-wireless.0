@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ajax.nicta.com.au ([221.199.217.11]:38060 "EHLO
-	ajax.nicta.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758885AbZCWS0K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 14:26:10 -0400
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Subrata Modak <subrata@linux.vnet.ibm.com>,
-	Qasim Javed <qasimj@gmail.com>,
-	Till Kamppeter <till.kamppeter@gmail.com>
-Message-Id: <39216BC3-63F5-4039-878C-3D874D596EB7@nicta.com.au> (sfid-20090323_192614_842047_6EBDE4A3)
-From: Max Ott <Max.Ott@nicta.com.au>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <43e72e890903201843x23351982xe71851a634a1b13c@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Date: Tue, 24 Mar 2009 05:11:43 +1100
-References: <20090320213920.GC8120@tesla> <43e72e890903201843x23351982xe71851a634a1b13c@mail.gmail.com>
-Subject: Re: Google Summer of Code 2009 -- Linux wireless testing project
+Received: from mail.gmx.net ([213.165.64.20]:52469 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753727AbZCPWIi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2009 18:08:38 -0400
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Date: Mon, 16 Mar 2009 23:08:35 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <20090316194733.GA23062@jm.kir.nu>
+Message-ID: <20090316220835.206100@gmx.net> (sfid-20090316_230842_157757_B8EB75C1)
+MIME-Version: 1.0
+References: <20090316194733.GA23062@jm.kir.nu>
+Subject: Re: [PATCH] zd1211rw: Do not panic on device eject when associated
+To: Jouni Malinen <j@w1.fi>, linville@tuxdriver.com,
+	kune@deine-taler.de, dsd@gentoo.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes it is, but please use
+Hello Jouni,
 
-http://omf.mytestbed.net
+Thanks! :)
 
-as the 'www' will change into something else.
+Regards
+Alina
 
-Cheers,
-
--max
-
-On 21/03/2009, at 12:43 PM, Luis R. Rodriguez wrote:
-
-> On Fri, Mar 20, 2009 at 2:39 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->
->> To start becoming familiar with the Orbit testbed and using OMF you  
->> can
->> read their tutorials [8]. I think OMF is completely open source, Maxx
->> correct me if I'm wrong.
->
-> Yay, OMF is open source:
->
-> http://www.mytestbed.net/
->
->  Luis
-
+--=20
+Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
+hluss f=FCr nur 17,95 Euro/mtl.!* http://dsl.gmx.de/?ac=3DOM.AD.PD003K1=
+1308T4569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
