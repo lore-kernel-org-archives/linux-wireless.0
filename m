@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:46032 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799AbZCVMpS (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:58036 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758578AbZCPM0W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 08:45:18 -0400
-Received: by fxm2 with SMTP id 2so1437218fxm.37
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Mar 2009 05:45:15 -0700 (PDT)
-Date: Sun, 22 Mar 2009 17:45:15 +0500
-From: "Alexander E. Patrakov" <patrakov@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Kernel panic with zd1211rw and today's compat-wireless
-Message-ID: <20090322174515.22f11d92@home.aephome.ru> (sfid-20090322_134524_211033_029824A8)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 16 Mar 2009 08:26:22 -0400
+To: Jouni Malinen <j@w1.fi>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
+References: <20090314171234.11126.21125.stgit@tikku>
+	<20090314171452.11126.11618.stgit@tikku>
+	<43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com>
+	<87r60z1c8x.fsf@nokia.com> <20090316085036.GA29705@jm.kir.nu>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 16 Mar 2009 14:25:00 +0200
+In-Reply-To: <20090316085036.GA29705@jm.kir.nu> (ext Jouni Malinen's message of "Mon\, 16 Mar 2009 09\:50\:36 +0100")
+Message-ID: <8763i9ven7.fsf@nokia.com> (sfid-20090316_132639_434469_5864226D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+Jouni Malinen <j@w1.fi> writes:
 
-Today I tried to use wpa_supplicant version 0.6.8 with -Dnl80211
-switch, in order to confirm that setting the country code in the
-configuration file works. My zd1211rw-based card works for a short
-time, and then I get a kernel panic. Sometimes the bug can be reproduced
-with just a few seconds of flood ping, and sometimes the card survives
-100 MB of data transfer. The problem didn't exist with the stock driver
-included in linux-2.6.28.
+>> Other option is that the hardware which does not support checksumming
+>> would just pass beacons periodically to the stack, for example every 5
+>> seconds. Even though beacon filter is enabled in mac80211 it does not
+>> prevent hardware from sending beacons. This is not the most optimal
+>> solution, but there's not much choices if the hardware doesn't support
+>> checksumming.
+>
+> While it would be possible to do that, it does not really solve many of
+> the use cases where Beacon contents can change and the STA is required
+> to take some action. For example, Channel Switch Announcement IEs would
+> likely be missed if a Beacon frames is passed through that infrequently.
+> I would assume the driver could enable this even if the hardware does
+> not use checksumming to detect Beacon changes, but this may severely
+> limit functionality in number of cases, so I'm not sure I would
+> recommend this to be done in general.
 
-There are several different panic messages,
-the common thing is "Fatal exception in interrupt". Without uvesafb,
-they also include "zd_op_tx+0x98/0x1cc [zd1211rw]" as the last line,
-but with uvesafb, this sometimes changes to
-"rate_control_get_rate+0xb7/0xc3 [mac80211]". Sometimes the kernel
-becomes tainted with G and W flags (what do they mean?), but there were
-two untainted cases.
-
-The card is in ad-hoc mode, if that matters, and the rate control
-algorithm is minstrel. WEP is used, because WPA+ad-hoc doesn't work
-with this card (should it?).
-
-Screen photos from all cases of panic are available at the following
-URL:
-
-http://picasaweb.google.com/patrakov/KernelPanic?authkey=Gv1sRgCKn5ne2jqbLYpAE&feat=directlink
+Yes, definitely not recommended. I would classify it to "the ugly
+hack" category.
 
 -- 
-Alexander E. Patrakov
+Kalle Valo
