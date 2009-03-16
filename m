@@ -1,56 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:37150 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346AbZCHJ2a (ORCPT
+Received: from mk-filter-2-a-1.mail.uk.tiscali.com ([212.74.100.53]:53716 "EHLO
+	mk-filter-2-a-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755123AbZCPRdP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Mar 2009 05:28:30 -0400
-Message-ID: <49B38FB7.3000002@gmail.com> (sfid-20090308_102847_182049_F28BE078)
-Date: Sun, 08 Mar 2009 10:28:23 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-References: <40f31dec0902231508l512af5b7w68cfcc0bdf3cfa87@mail.gmail.com> <20090224135817.GB6019@hash.localnet> <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org> <20090308030928.GB14966@hash.localnet>
-In-Reply-To: <20090308030928.GB14966@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 16 Mar 2009 13:33:15 -0400
+Subject: Oops and other problems in cfg80211
+From: Quentin Armitage <Quentin@Armitage.org.uk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Mon, 16 Mar 2009 17:23:04 +0000
+Message-Id: <1237224184.5027.600.camel@samson.armitage.org.uk> (sfid-20090316_183316_808159_596461D1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8.3.2009 04:09, Bob Copeland wrote:
-> At this point, I guess the best way forward is to have a special debug
-> patch for when we pass an skb up the stack, when it gets allocated, and
-> what is in the descriptors.
+If cfg80211 is compiled with CONFIG_WIRELESS_OLD_REGULATORY defined, if
+insmod is loaded with "insmod cfg80211 ieee80211_regdom=EU" then the
+execution of insmod mac80211, executing insmod ath5k causes an oops.
+This is caused by wiphy_update_regulatory being called when last_request
+== NULL, and the call of reg_is_world_roaming (via reg_process_beacons)
+causes the oops at last_request->initiator != REGDOM_SET_BY_COUNTRY_IE.
 
-Yes, I have been thinking about some (ring buffer) array which would 
-store address-desc_status pairs (even few megs in a vmalloc area) and 
-pointer (not modulo-ed counter) to this array (index would be modulo-ed, 
-indeed). From poison output we know the address, so we can then instruct 
-ath5k to dump the buffer and see what happens :), what was in the status 
-when we freed the skb.
+If reg_is_world_roaming is modified to check for last_request not being
+NULL, e.g.
+if (last_request && last_request->initiator != REGDOM_SET_BY_COUNTRY_IE
+&&
+then I also get an oops in reg_device_remove where last_request is
+referenced and there is only a subsequent check for it being NULL.
 
-Maybe some additional info may be needed, as you suggest.
+Even if the above two are fixed, it will not associate with the access
+point, and `iwlist wlan0 channels` produces a rather confused list. It
+appears that, despite the comment, in regulatory_init it is necessary to
+call regulatory_hint_core even for the pseudo country EU.
 
-> Jiri, I really think we should implement that better check for the
-> self linked descriptor using the rxdp register.
+Patch1 below covers the points above, although I am not sure how useful
+the BUG_ON (!last_request) in reg_is_world_roaming is.
 
-As I stated a while ago, definitely!
+Having modified the above, I then found that the regulatory domain was
+not being updated from the Country IE sent by the access point. It
+appears that the code following the comment "so we optimize an early
+check ..." in regulatory_hint_11d is a little over optimized, since if
+the following if statement is true, every path through that block ends
+in "goto out;". Patch 2 below allows the Country IE to be processed
+(note it also needs an extra check around a WARN_ON, and so the
+preceeding comment to that needs considering).
 
-> bf_last is no longer a
-> valid marker for the self-linked descriptor at the end of the loop since
-> we re-add the just-processed descriptor every time through the loop
-> (or am I missing something?)...
+Quentin Armitage
 
-Why? bf_last is snapshotted before the loop. And when we see this bf 
-while processing, we stop. In the next round we check if bf->next is 
-done. If yes, we move on.
+=========  Patch 1 ================================================
+--- a/net/wireless/reg.c	2009-03-13 05:14:06.000000000 +0000
++++ b/net/wireless/reg.c	2009-03-16 16:57:03.000000000 +0000
+@@ -1128,6 +1128,8 @@ static bool reg_is_world_roaming(struct 
+ 	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
+ 	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
+ 		return true;
++
++	BUG_ON (!last_request) ;
+ 	if (last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+ 	    wiphy->custom_regulatory)
+ 		return true;
+@@ -2105,7 +2107,8 @@ void reg_device_remove(struct wiphy *wip
+ 
+ 	assert_cfg80211_lock();
+ 
+-	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
++	if ( last_request )
++		request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+ 
+ 	kfree(wiphy->regd);
+ 	if (!last_request || !request_wiphy)
+@@ -2135,11 +2138,11 @@ int regulatory_init(void)
+ 	/*
+ 	 * The old code still requests for a new regdomain and if
+ 	 * you have CRDA you get it updated, otherwise you get
+-	 * stuck with the static values. We ignore "EU" code as
+-	 * that is not a valid ISO / IEC 3166 alpha2
++	 * stuck with the static values. We process "EU" code even though
++	 * that is not a valid ISO / IEC 3166 alpha2, since otherwise the
++	 * channels don't get set properly, and last_request is not set.
+ 	 */
+-	if (ieee80211_regdom[0] != 'E' || ieee80211_regdom[1] != 'U')
+-		err = regulatory_hint_core(ieee80211_regdom);
++	err = regulatory_hint_core(ieee80211_regdom);
+ #else
+ 	cfg80211_regdomain = cfg80211_world_regdom;
+ 
+===============================================================
 
-> If you want I'll cook up a patch for that too.
+============= Patch 2 =======================================
+--- a/net/wireless/reg.c	2009-03-16 16:55:11.000000000 +0000
++++ b/net/wireless/reg.c	2009-03-16 16:57:57.000000000 +0000
+@@ -1692,7 +1692,8 @@ void regulatory_hint_11d(struct wiphy *w
+ 			 * to another country, and then gets IEs from an
+ 			 * AP with different settings
+ 			 */
+-			goto out;
++			if (likely(last_request->initiator ==
+NL80211_REGDOM_SET_BY_COUNTRY_IE))
++				goto out;
+ 		} else {
+ 			/*
+ 			 * Ignore IEs coming in on two separate wiphys with
+@@ -1721,8 +1722,11 @@ void regulatory_hint_11d(struct wiphy *w
+ 	 * If we hit this before we add this support we want to be informed of
+ 	 * it as it would indicate a mistake in the current design
+ 	 */
+-	if (WARN_ON(reg_same_country_ie_hint(wiphy, checksum)))
+-		goto free_rd_out;
++	if (likely(last_request->initiator ==
+NL80211_REGDOM_SET_BY_COUNTRY_IE))
++	{
++		if (WARN_ON(reg_same_country_ie_hint(wiphy, checksum)))
++			goto free_rd_out;
++	}
+ 
+ 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
+ 	if (!request)
+=============================================================
 
-If you like, feel free to kick it off. Remember to remove bf->flags 
-completely, so that we save another bunch of memory ;).
