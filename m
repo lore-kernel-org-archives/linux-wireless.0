@@ -1,35 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:39859 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbZCNRJ1 (ORCPT
+Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:40581 "EHLO
+	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752580AbZCPPiB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 13:09:27 -0400
-Message-ID: <49BBE4A0.3060901@nokia.com> (sfid-20090314_180930_320559_508095FE)
-Date: Sat, 14 Mar 2009 19:08:48 +0200
-From: Kalle Valo <kalle.valo@nokia.com>
+	Mon, 16 Mar 2009 11:38:01 -0400
+Message-ID: <49BE7253.8020001@lwfinger.net> (sfid-20090316_163805_409800_DF4C8BB8)
+Date: Mon, 16 Mar 2009 10:37:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlagn: default to MAX_UCODE_BEACON_INTERVAL in	iwl_adjust_beacon_interval
-References: <154E55ADF9629D4E8D13F08BF92ABEB629C9D28B8D@PDSMSX501.ccr.corp.intel.com>	 <20090220145223.GA15006@tuxdriver.com> <1235155966.5860.44.camel@rc-desk>	 <20090220194306.GA4051@tuxdriver.com> <20090221003013.GA3890@tuxdriver.com>	 <20090221003133.GB3890@tuxdriver.com>	 <1235443093.4455.77.camel@johannes.local>	 <20090225014454.GA3577@tuxdriver.com> <1237046388.5235.82.camel@johannes.local>
-In-Reply-To: <1237046388.5235.82.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: Is the linuxwireless.org web site OK?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Kalle, I suspect that your beacon offload will require something like
-> holding on to BSS structs too, is that correct?
+If you browse to linuxwireless.org, do you get the correct page? I don't, but
+did yesterday.
 
-My current solution is just to disable beacon filtering (and power save) 
-whenever we are scanning. That way beacon filtering doesn't interfere 
-scanning in anyway.
+My ISP has been having some problems with hackers getting at their name servers
+and that may be the source of my trouble. On the other hand, the web site may
+have been hacked.
 
-I'm about to send v2 of my beacon filtering patches next.
-
-Kalle
-
+Larry
