@@ -1,146 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:51728 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752417AbZCWXDc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 19:03:32 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: stable@kernel.org
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/2] ath9k: implement IO serialization
-Date: Mon, 23 Mar 2009 19:03:29 -0400
-Message-Id: <1237849410-17314-1-git-send-email-lrodriguez@atheros.com> (sfid-20090324_000337_170722_B604B623)
+Received: from mx2.redhat.com ([66.187.237.31]:58137 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759426AbZCPQ7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2009 12:59:05 -0400
+Subject: Re: [PATCH] cfg80211: drop wext channel list if too long
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1237019432.5235.61.camel@johannes.local>
+References: <1236882244.25931.5.camel@johannes.local>
+	 <20090313145445.GC5551@tuxdriver.com>
+	 <1236964730.9657.10.camel@localhost.localdomain>
+	 <1237019432.5235.61.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 16 Mar 2009 12:56:51 -0400
+Message-Id: <1237222611.16956.17.camel@localhost.localdomain> (sfid-20090316_175919_378772_B1FE1200)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a port of:
-commit SHA1 6158425be398936af1fd04451f78ffad01529cb0
-for 2.6.27
+On Sat, 2009-03-14 at 09:30 +0100, Johannes Berg wrote:
+> On Fri, 2009-03-13 at 13:18 -0400, Dan Williams wrote:
+> 
+> > It doesn't look like wpa_supplicant cares about the returned channel
+> > list from SIOCGIWRANGE.
+> > 
+> > NM, however, uses the returned channel list to figure out a free
+> > supported adhoc frequency to use when creating an adhoc network (like
+> > for connection sharing).  If it can't find an intersection between an
+> > internal "safe" frequency list and what the card supports (which it
+> > wouldn't be able to with this patch), it will simply use 2462 or 5180
+> > MHz.
+> > 
+> > Thus, I don't think you'll *break* anything specifically, but this patch
+> > would cause the default frequency for an IBSS created by NM  to move
+> > from channel 1 to channel 11.
+> 
+> In that case, let's just drop the patch, I have no problem with that.
+> 
+> We just couldn't figure out why some channels were missing in iwlist
+> when they were in iw, but that's due to the 32 channel limit. Since most
+> people probably don't use this particular functionality, I guess it
+> doesn't really matter. Eventually NM should just use nl80211, or at
+> least try to, because there it gets more information like "cannot do
+> IBSS on channel XY", something that wext doesn't give you, but mac80211
+> enforces.
 
-All 802.11n PCI devices (Cardbus, PCI, mini-PCI) require
-serialization of IO when on non-uniprocessor systems. PCI
-express devices not not require this.
+Yup; nl80211 is the way to go here.  Or better yet, make wpa_supplicant
+card capabilities over D-Bus so NM doesn't have to touch the driver
+directly.
 
-This should fix our only last standing open ath9k kernel.org
-bugzilla bug report:
+Dan
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12110
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/ath9k.h |    4 ++--
- drivers/net/wireless/ath9k/core.c  |    1 +
- drivers/net/wireless/ath9k/core.h  |   33 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath9k/hw.c    |   19 +++++++++++++++++++
- 4 files changed, 55 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index d1b0fba..8ccf374 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -591,8 +591,8 @@ struct ath9k_country_entry {
- 	u8 iso[3];
- };
- 
--#define REG_WRITE(_ah, _reg, _val) iowrite32(_val, _ah->ah_sh + _reg)
--#define REG_READ(_ah, _reg) ioread32(_ah->ah_sh + _reg)
-+#define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
-+#define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
- 
- #define SM(_v, _f)  (((_v) << _f##_S) & _f)
- #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
-diff --git a/drivers/net/wireless/ath9k/core.c b/drivers/net/wireless/ath9k/core.c
-index 87e37bc..e50ba6d 100644
---- a/drivers/net/wireless/ath9k/core.c
-+++ b/drivers/net/wireless/ath9k/core.c
-@@ -1120,6 +1120,7 @@ int ath_init(u16 devid, struct ath_softc *sc)
- 	sc->sc_cachelsz = csz << 2;	/* convert to bytes */
- 
- 	spin_lock_init(&sc->sc_resetlock);
-+	spin_lock_init(&sc->sc_serial_rw);
- 
- 	ah = ath9k_hw_attach(devid, sc, sc->mem, &status);
- 	if (ah == NULL) {
-diff --git a/drivers/net/wireless/ath9k/core.h b/drivers/net/wireless/ath9k/core.h
-index 88f4cc3..51ef315 100644
---- a/drivers/net/wireless/ath9k/core.h
-+++ b/drivers/net/wireless/ath9k/core.h
-@@ -1022,6 +1022,7 @@ struct ath_softc {
- 	spinlock_t sc_rxbuflock;
- 	spinlock_t sc_txbuflock;
- 	spinlock_t sc_resetlock;
-+	spinlock_t sc_serial_rw;
- 	spinlock_t node_lock;
- };
- 
-@@ -1069,4 +1070,36 @@ void ath_skb_unmap_single(struct ath_softc *sc,
- void ath_mcast_merge(struct ath_softc *sc, u32 mfilt[2]);
- enum ath9k_ht_macmode ath_cwm_macmode(struct ath_softc *sc);
- 
-+/*
-+ * Read and write, they both share the same lock. We do this to serialize
-+ * reads and writes on Atheros 802.11n PCI devices only. This is required
-+ * as the FIFO on these devices can only accept sanely 2 requests. After
-+ * that the device goes bananas. Serializing the reads/writes prevents this
-+ * from happening.
-+ */
-+
-+static inline void ath9k_iowrite32(struct ath_hal *ah, u32 reg_offset, u32 val)
-+{
-+	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
-+		iowrite32(val, ah->ah_sc->mem + reg_offset);
-+		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
-+	} else
-+		iowrite32(val, ah->ah_sc->mem + reg_offset);
-+}
-+
-+static inline unsigned int ath9k_ioread32(struct ath_hal *ah, u32 reg_offset)
-+{
-+	u32 val;
-+	if (ah->ah_config.serialize_regmode == SER_REG_MODE_ON) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
-+		val = ioread32(ah->ah_sc->mem + reg_offset);
-+		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
-+	} else
-+		val = ioread32(ah->ah_sc->mem + reg_offset);
-+	return val;
-+}
-+
- #endif /* CORE_H */
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index 69120b5..4a35266 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -369,6 +369,25 @@ static void ath9k_hw_set_defaults(struct ath_hal *ah)
- 	}
- 
- 	ah->ah_config.intr_mitigation = 0;
-+
-+	/*
-+	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
-+	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
-+	 * This means we use it for all AR5416 devices, and the few
-+	 * minor PCI AR9280 devices out there.
-+	 *
-+	 * Serialization is required because these devices do not handle
-+	 * well the case of two concurrent reads/writes due to the latency
-+	 * involved. During one read/write another read/write can be issued
-+	 * on another CPU while the previous read/write may still be working
-+	 * on our hardware, if we hit this case the hardware poops in a loop.
-+	 * We prevent this by serializing reads and writes.
-+	 *
-+	 * This issue is not present on PCI-Express devices or pre-AR5416
-+	 * devices (legacy, 802.11abg).
-+	 */
-+       if (num_possible_cpus() > 1)
-+               ah->ah_config.serialize_regmode = SER_REG_MODE_AUTO;
- }
- 
- static inline void ath9k_hw_override_ini(struct ath_hal *ah,
--- 
-1.5.6.4
 
