@@ -1,143 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:41398 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751420AbZCYLRi (ORCPT
+Received: from mail-fx0-f176.google.com ([209.85.220.176]:58070 "EHLO
+	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752783AbZCPPd0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 07:17:38 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: [PATCH 2/2] p54spi: fix p54_upload_firmware
-Date: Wed, 25 Mar 2009 12:21:38 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <> <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com> <1237959016-17311-2-git-send-email-jcmvbkbc@gmail.com>
-In-Reply-To: <1237959016-17311-2-git-send-email-jcmvbkbc@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200903251221.38912.chunkeey@web.de> (sfid-20090325_121747_901837_6719F57C)
+	Mon, 16 Mar 2009 11:33:26 -0400
+Received: by fxm24 with SMTP id 24so3535753fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 08:33:23 -0700 (PDT)
+Subject: Re: [PATCH 1/2] ath5k: support LEDs on Acer Aspire One netbook
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Andreas Mohr <andi@lisas.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <20090316134156.GB8437@rhlx01.hs-esslingen.de>
+References: <1230840105-30960-1-git-send-email-me@bobcopeland.com>
+	 <20090111131015.GA31037@rhlx01.hs-esslingen.de>
+	 <20090111144227.GB13109@hash.localnet>
+	 <20090316100447.GA13819@rhlx01.hs-esslingen.de>
+	 <1237198577.27769.9.camel@johannes.local>
+	 <20090316104433.GA24968@rhlx01.hs-esslingen.de>
+	 <1237206117.15040.7.camel@localhost>
+	 <20090316134156.GB8437@rhlx01.hs-esslingen.de>
+Content-Type: text/plain
+Date: Mon, 16 Mar 2009 17:33:19 +0200
+Message-Id: <1237217599.2572.16.camel@maxim-laptop> (sfid-20090316_163329_524569_BC6F689E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 25 March 2009 06:30:16 Max Filippov wrote:
->  Instead of firmware itself p54_upload_firmware was sending to the device content of struct firmware
->  and the following random garbage. Notice '&' before priv->firmware->data at p54spi_spi_write.
->  But simple removing of '&' sign triggered BUG_ON at dma_cache_maint. Thus kmemdup - kfree workaround.
+On Mon, 2009-03-16 at 14:41 +0100, Andreas Mohr wrote:
+> Hi,
 > 
-> Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
-> ---
->  drivers/net/wireless/p54/p54spi.c |   11 +++++++++--
->  1 files changed, 9 insertions(+), 2 deletions(-)
+> On Mon, Mar 16, 2009 at 02:21:57PM +0200, Maxim Levitsky wrote:
+> > On the other hand think about my main notebook, acer 5720.
+> > There suspend to ram doesn't work, and no this isn't due to GFX driver,
+> > or anything like that. It just that BIOS doesn't pass control to linux
+> > on resume. It doesn't like something in hardware....
+> > This would I call a NOTHING...
 > 
-> diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-> index d13268f..4ef57c5 100644
-> --- a/drivers/net/wireless/p54/p54spi.c
-> +++ b/drivers/net/wireless/p54/p54spi.c
-> @@ -265,8 +265,15 @@ static int p54spi_upload_firmware(struct ieee80211_hw *dev)
->  		p54spi_write32(priv, SPI_ADRS_DMA_WRITE_BASE,
->  			       cpu_to_le32(fw_addr));
->  
-> -		p54spi_spi_write(priv, SPI_ADRS_DMA_DATA,
-> -				 &priv->firmware->data, _fw_len);
-> +		{
-> +			void *fw = kmemdup(priv->firmware->data, _fw_len, GFP_KERNEL);
-> +			if (fw)
-> +			{
-> +				p54spi_spi_write(priv, SPI_ADRS_DMA_DATA,
-> +						 fw, _fw_len);
-> +				kfree(fw);
-> +			}
-> +		}
->  
->  		fw_len -= _fw_len;
->  		fw_addr += _fw_len;
----
-checkpatch.pl complains
+> Hmm. So the resume vector itself doesn't even get invoked?
+Exactly.
 
-WARNING: line over 80 characters
-#94: FILE: drivers/net/wireless/p54/p54spi.c:269:
-+                       void *fw = kmemdup(priv->firmware->data, _fw_len, GFP_KERNEL);
 
-ERROR: that open brace { should be on the previous line
-#95: FILE: drivers/net/wireless/p54/p54spi.c:270:
-+                       if (fw)
-+                       {
+> AFAIR there's some debugging options at the asm entry point,
+> but I'm sure you (and several other people) have already looked at this...
+I did my own.. I put there code to write to RTC alarm, and when it hangs
+alarm doesn't update.
 
-what do you think about the attached proposal?
+RTC alarm registers are usually preserved during boots and even during
+full power cycle.
+This is the case here.
 
-Regards,
-	Chr
----
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index d13268f..7d32a2f 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -228,8 +228,15 @@ static int p54spi_request_eeprom(struct ieee80211_hw *dev)
- static int p54spi_upload_firmware(struct ieee80211_hw *dev)
- {
- 	struct p54s_priv *priv = dev->priv;
--	unsigned long fw_len, fw_addr;
--	long _fw_len;
-+	unsigned long fw_len, _fw_len;
-+	unsigned int offset = 0;
-+	int err = 0;
-+	void *fw;
-+
-+	fw_len = priv->firmware->size;
-+	fw = kmemdup(priv->firmware->data, fw_len, GFP_KERNEL);
-+	if (!fw)
-+		return -ENOMEM;
- 
- 	/* stop the device */
- 	p54spi_write16(priv, SPI_ADRS_DEV_CTRL_STAT, cpu_to_le16(
-@@ -244,9 +251,6 @@ static int p54spi_upload_firmware(struct ieee80211_hw *dev)
- 
- 	msleep(TARGET_BOOT_SLEEP);
- 
--	fw_addr = ISL38XX_DEV_FIRMWARE_ADDR;
--	fw_len = priv->firmware->size;
--
- 	while (fw_len > 0) {
- 		_fw_len = min_t(long, fw_len, SPI_MAX_PACKET_SIZE);
- 
-@@ -257,23 +261,20 @@ static int p54spi_upload_firmware(struct ieee80211_hw *dev)
- 				    cpu_to_le32(HOST_ALLOWED)) == 0) {
- 			dev_err(&priv->spi->dev, "fw_upload not allowed "
- 				"to DMA write.");
--			return -EAGAIN;
-+			err = -EAGAIN;
-+			goto out;
- 		}
- 
- 		p54spi_write16(priv, SPI_ADRS_DMA_WRITE_LEN,
- 			       cpu_to_le16(_fw_len));
--		p54spi_write32(priv, SPI_ADRS_DMA_WRITE_BASE,
--			       cpu_to_le32(fw_addr));
-+		p54spi_write32(priv, SPI_ADRS_DMA_WRITE_BASE, cpu_to_le32(
-+				ISL38XX_DEV_FIRMWARE_ADDR + offset));
- 
- 		p54spi_spi_write(priv, SPI_ADRS_DMA_DATA,
--				 &priv->firmware->data, _fw_len);
-+				 (fw + offset), _fw_len);
- 
- 		fw_len -= _fw_len;
--		fw_addr += _fw_len;
--
--		/* FIXME: I think this doesn't work if firmware is large,
--		 * this loop goes to second round. fw->data is not
--		 * increased at all! */
-+		offset += _fw_len;
- 	}
- 
- 	BUG_ON(fw_len != 0);
-@@ -292,7 +293,10 @@ static int p54spi_upload_firmware(struct ieee80211_hw *dev)
- 	p54spi_write16(priv, SPI_ADRS_DEV_CTRL_STAT, cpu_to_le16(
- 		       SPI_CTRL_STAT_HOST_OVERRIDE | SPI_CTRL_STAT_RAM_BOOT));
- 	msleep(TARGET_BOOT_SLEEP);
--	return 0;
-+
-+out:
-+	kfree(fw);
-+	return err;
- }
- 
- static void p54spi_power_off(struct p54s_priv *priv)
+
+
+> Plus booting into a minimal setup (init=/bin/sh) with almost no drivers
+> loaded at all (thus no fumbled hardware) didn't manage to make resume
+> work either I guess?
+Exactly, I tried this and very many other debug approaches, but none
+help.
+
+Despite the fact that my system has nvidia which I blamed for this bug,
+it appears that I am not alone and many acer systems around 5720 are
+affected, and don't have an nvidia device.
+
+
+> 
+> > I recommend to to install (if you didn't do that yet) the
+> > compat-wireless package, or even better compile wireless-testing.
+> 
+> Thanks, forgot to install this for the newly installed Jaunty's 2.6.28.
+
+> 
+> > You could also patch in latest patches that fix TX power for ath5k, or
+> > wait few days till they are in wireless-testings (maybe they are there
+> > already...)
+> 
+> I'll wait until I know how well ath5k works on -rc8.
+Here wireless-testing + Nick's pathches work great.
+
+
+The reason internal microphone doesn't work is that many programs
+attempt to record mono from it, but alsa-lib has some bug that make this
+work as was described before (works only when there is large difference
+between left and right channel)
+
+
+When I have time I'll fix that, it shouldn't be hard with help of source
+and debugger.
+
+
+(But internal mic is such low quality device, that it hardly worth all
+the trouble  - it has same quality in windows, and only way to hear
+anything is to yell at it, or bear that horrible noise that appears once
+you increase gain level all the way up)
+
+
+Speaking of the led, I don't understand why you want that patch to be
+applied at all. yes it makes the led work, but did you notice how well
+it works? It blinks very fast, it often inverts the blinking, so it
+constantly on and goes  of when there is activety, or stops blinking at
+all. I was told that this is due to low quality code in mac80222 that
+controls the leds. Other drivers work around that by using this code
+only as a suggestion, and implementing their own ad-hoc timers and
+statistics to power the led. Again I will see what I can do there to
+improve it. 
+
+Currently I disable the led all together because of that.
+
+
+Best regards,
+	Maxim Levitsky
+
+
+> 
+> Thanks,
+> 
+> Andreas Mohr
+
