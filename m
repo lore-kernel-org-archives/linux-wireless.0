@@ -1,96 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037AbZCNIeG (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:3995 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197AbZCPB2l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 04:34:06 -0400
-Subject: [PATCH] nl80211: export supported commands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 14 Mar 2009 09:34:01 +0100
-Message-Id: <1237019641.5235.63.camel@johannes.local> (sfid-20090314_093412_071498_1FE60D96)
-Mime-Version: 1.0
+	Sun, 15 Mar 2009 21:28:41 -0400
+Received: by wf-out-1314.google.com with SMTP id 28so1615429wfa.4
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 18:28:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1237140134.24621.0.camel@johannes.local>
+References: <18876.41851.397740.847705@gargle.gargle.HOWL>
+	 <1237140134.24621.0.camel@johannes.local>
+Date: Sun, 15 Mar 2009 21:28:39 -0400
+Message-ID: <b6c5339f0903151828m4e5b3d2dg5ae03bbed5538bd4@mail.gmail.com> (sfid-20090316_022847_734390_49093696)
+Subject: Re: [PATCH] mac80211: Tear down aggregation sessions for
+	suspend/resume
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sujith <Sujith.Manoharan@atheros.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes nl80211 export the supported commands (command groups)
-per wiphy so userspace has an idea what it can do -- this will be
-required reading for userspace when we introduce auth/assoc /or/
-connect for older hardware that cannot separate auth and assoc.
+On Sun, Mar 15, 2009 at 2:02 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2009-03-15 at 12:13 +0530, Sujith wrote:
+>> When the driver has been notified with a STA_REMOVE, it tears down
+>> the internal ADDBA state. On resume, trying to initiate aggregation would
+>> fail because mac80211 has not cleared the operational state for that <TID,STA>.
+>> This can be fixed by tearing down the existing sessions on a suspend.
+>
+> Agreed, but Bob said there were some deadlocks with this?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/linux/nl80211.h |    6 ++++++
- net/wireless/nl80211.c  |   27 +++++++++++++++++++++++++++
- 2 files changed, 33 insertions(+)
+I think the deadlock went away, not sure what fixed it but I guess
+the HT rework.  I tested it a couple of weeks ago on ath5k and Luis
+did on ath9k so I say let's go ahead and apply the patch... in the
+meantime I'll try again on ath5k just to be sure.
 
---- wireless-testing.orig/include/linux/nl80211.h	2009-03-11 14:43:50.000000000 +0100
-+++ wireless-testing/include/linux/nl80211.h	2009-03-11 19:27:53.000000000 +0100
-@@ -349,6 +349,10 @@ enum nl80211_commands {
-  * @NL80211_ATTR_REG_TYPE: indicates the type of the regulatory domain currently
-  * 	set. This can be one of the nl80211_reg_type (%NL80211_REGDOM_TYPE_*)
-  *
-+ * @NL80211_ATTR_SUPPORTED_COMMANDS: wiphy attribute that specifies
-+ *	an array of command numbers (i.e. a mapping index to command number)
-+ *	that the driver for the given wiphy supports.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -426,6 +430,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_REG_INITIATOR,
- 	NL80211_ATTR_REG_TYPE,
- 
-+	NL80211_ATTR_SUPPORTED_COMMANDS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
---- wireless-testing.orig/net/wireless/nl80211.c	2009-03-11 14:43:50.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.c	2009-03-11 19:27:53.000000000 +0100
-@@ -131,6 +131,7 @@ static int nl80211_send_wiphy(struct sk_
- 	struct nlattr *nl_freqs, *nl_freq;
- 	struct nlattr *nl_rates, *nl_rate;
- 	struct nlattr *nl_modes;
-+	struct nlattr *nl_cmds;
- 	enum ieee80211_band band;
- 	struct ieee80211_channel *chan;
- 	struct ieee80211_rate *rate;
-@@ -242,6 +243,32 @@ static int nl80211_send_wiphy(struct sk_
- 	}
- 	nla_nest_end(msg, nl_bands);
- 
-+	nl_cmds = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_COMMANDS);
-+	if (!nl_cmds)
-+		goto nla_put_failure;
-+
-+	i = 0;
-+#define CMD(op, n)						\
-+	 do {							\
-+		if (dev->ops->op) {				\
-+			i++;					\
-+			NLA_PUT_U32(msg, i, NL80211_CMD_ ## n);	\
-+		}						\
-+	} while (0)
-+
-+	CMD(add_virtual_intf, NEW_INTERFACE);
-+	CMD(change_virtual_intf, SET_INTERFACE);
-+	CMD(add_key, NEW_KEY);
-+	CMD(add_beacon, NEW_BEACON);
-+	CMD(add_station, NEW_STATION);
-+	CMD(add_mpath, NEW_MPATH);
-+	CMD(set_mesh_params, SET_MESH_PARAMS);
-+	CMD(change_bss, SET_BSS);
-+	CMD(set_mgmt_extra_ie, SET_MGMT_EXTRA_IE);
-+
-+#undef CMD
-+	nla_nest_end(msg, nl_cmds);
-+
- 	return genlmsg_end(msg, hdr);
- 
-  nla_put_failure:
-
-
+-- 
+Bob Copeland %% www.bobcopeland.com
