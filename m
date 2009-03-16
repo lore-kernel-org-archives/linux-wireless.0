@@ -1,66 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757493AbZCQV1e (ORCPT
+Received: from pool-71-115-160-52.gdrpmi.dsl-w.verizon.net ([71.115.160.52]:34250
+	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754316AbZCPWg1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 17:27:34 -0400
-Subject: Re: Possible circular locking problem
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, Jouni Malinen <j@w1.fi>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090317170530.GE6737@tuxdriver.com>
-References: <49BFCCC5.9080500@lwfinger.net>
-	 <20090317170530.GE6737@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yaDBkv9ZGcGdxEYko2TZ"
-Date: Tue, 17 Mar 2009 22:25:14 +0100
-Message-Id: <1237325114.10264.1.camel@johannes.local> (sfid-20090317_222758_787537_0663211E)
-Mime-Version: 1.0
+	Mon, 16 Mar 2009 18:36:27 -0400
+Message-ID: <49BED464.2010904@erley.org> (sfid-20090316_233631_951441_68D057DC)
+Date: Mon, 16 Mar 2009 18:36:20 -0400
+From: Pat Erley <pat-lkml@erley.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: ath9k-devel@lists.ath9k.org,
+	"andrey@cozybit.com >> Andrey Yurovsky" <andrey@cozybit.com>,
+	brian@cozybit.com, javier@cozybit.com, colin@cozybit.com
+Subject: [rfc] Implement ath9k mesh point operation
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch enables mesh point operation for ath9k.  Tested with b43
+and ath5k as peers. 
 
---=-yaDBkv9ZGcGdxEYko2TZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Pat Erley <pat-lkml@erley.org>
+---
+Currently, you need to trigger a scan on the mesh point interface to
+enable beaconing.  This is the same behavior the ath5k, rt2500usb and 
+rt61pci drivers exhibit.  Is this a mac80211 design flaw, or something
+in all of these drivers?
 
-On Tue, 2009-03-17 at 13:05 -0400, John W. Linville wrote:
-> On Tue, Mar 17, 2009 at 11:16:05AM -0500, Larry Finger wrote:
-> > While testing usage of b43legacy as an AP, I got the following in my lo=
-gs. My
-> > kernel is the latest wireless-testing that was pulled about 2 hours ago=
- -
-> > hostapd is 0.6.8.
->=20
-> I think Johannes may have already posted a patch that addresses the
-> cfg80211 vs. rtnl locking (or I could be wrong).  I'll try to get
-> another round of patches merged sometime today.
-
-Yes, the patch should be up-to-date too.
-
-johannes
-
---=-yaDBkv9ZGcGdxEYko2TZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJwBU4AAoJEKVg1VMiehFYVAwP/1gBLP8ddoiFKtZBB+nGJ8Dh
-cBmlOETLrVVDRvDkRapUwYqkHzdXzg8uWJRQU6Soh7F8U66BCIQnAhwaWGOI3Jru
-bbt2s2/Q4UOp8Ibebuc2gewIN9x+tnuH/sL6kafbtkA7+HxIh2yj6uCk9WgtZVrT
-UVgwqUSCuGzquXCVF9nZ9wAb3B4s36FeeXKH2pqDMEoc42mA4r6DK6DwsJcqKQJc
-pk9z6+yaJwAY0fZi0bDn0ZmYW4XbfX0sA4i8exgLcFi7R1bKLBlA48t5MZr7QSQt
-UggIUYqvH4a3IMHBqSfoGyTh6/8KuYQsXLQJHu+9TF7VMXq5yAtV0ihBPFAlX8A8
-Gv6Dp1QqaPNub9y+XhZnkb3LCc1+iyGGyBbrpELto1Jbqnh4gbu9CZ2AizAFSlAD
-UANoFgQCEYIx+PEgsK/2Ke4NDlSVOr1gX4Pv6ukZB5mIHsJfmgtWnAVpXLo6vhU8
-27zSzNZhg5xYs4lZaYn7mdiC2uCCZrcIF7mi1Ygp3JzBitP2EchdksF0X0+Emd8w
-PJsUGKN/9yWH+5q6Wlph/Bm9g9xbOawKib+9Y1SnhnsKb6cjBtIqeWdGbhIaL3Ik
-kQINbP9f9Ezb6UD5/U54un8qcMw4/XMUdjG2eC1r77eMo4kZk5B2Sih4w1v4PcKU
-oeqjbkyF1AkSfisYMAYJ
-=UZiq
------END PGP SIGNATURE-----
-
---=-yaDBkv9ZGcGdxEYko2TZ--
-
+diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
+index 039c781..68e05ed 100644
+--- a/drivers/net/wireless/ath9k/beacon.c
++++ b/drivers/net/wireless/ath9k/beacon.c
+@@ -70,7 +70,8 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 	ds = bf->bf_desc;
+ 	flags = ATH9K_TXDESC_NOACK;
+ 
+-	if (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC &&
++	if (((sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
++	     (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) &&
+ 	    (ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)) {
+ 		ds->ds_link = bf->bf_daddr; /* self-linked */
+ 		flags |= ATH9K_TXDESC_VEOL;
+@@ -728,6 +729,7 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 			ath_beacon_config_ap(sc, &conf, avp);
+ 			break;
+ 		case NL80211_IFTYPE_ADHOC:
++		case NL80211_IFTYPE_MESH_POINT:
+ 			ath_beacon_config_adhoc(sc, &conf, avp, vif);
+ 			break;
+ 		case NL80211_IFTYPE_STATION:
+diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
+index ea550cc..a69328e 100644
+--- a/drivers/net/wireless/ath9k/hw.c
++++ b/drivers/net/wireless/ath9k/hw.c
+@@ -1424,6 +1424,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
+ 		REG_CLR_BIT(ah, AR_CFG, AR_CFG_AP_ADHOC_INDICATION);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_MESH_POINT:
+ 		REG_WRITE(ah, AR_STA_ID1, val | AR_STA_ID1_ADHOC
+ 			  | AR_STA_ID1_KSRCH_MODE);
+ 		REG_SET_BIT(ah, AR_CFG, AR_CFG_AP_ADHOC_INDICATION);
+@@ -3129,6 +3130,7 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
+ 		flags |= AR_TBTT_TIMER_EN;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_MESH_POINT:
+ 		REG_SET_BIT(ah, AR_TXCFG,
+ 			    AR_TXCFG_ADHOC_BEACON_ATIM_TX_POLICY);
+ 		REG_WRITE(ah, AR_NEXT_NDP_TIMER,
+diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
+index a2f5af6..0f9f6ca 100644
+--- a/drivers/net/wireless/ath9k/main.c
++++ b/drivers/net/wireless/ath9k/main.c
+@@ -1591,7 +1591,8 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_ADHOC);
++		BIT(NL80211_IFTYPE_ADHOC) |
++		BIT(NL80211_IFTYPE_MESH_POINT);
+ 
+ 	hw->wiphy->reg_notifier = ath9k_reg_notifier;
+ 	hw->wiphy->strict_regulatory = true;
+@@ -2199,18 +2200,13 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 		ic_opmode = NL80211_IFTYPE_STATION;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-		if (sc->nbcnvifs >= ATH_BCBUF) {
+-			ret = -ENOBUFS;
+-			goto out;
+-		}
+-		ic_opmode = NL80211_IFTYPE_ADHOC;
+-		break;
+ 	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_MESH_POINT:
+ 		if (sc->nbcnvifs >= ATH_BCBUF) {
+ 			ret = -ENOBUFS;
+ 			goto out;
+ 		}
+-		ic_opmode = NL80211_IFTYPE_AP;
++		ic_opmode = conf->type;
+ 		break;
+ 	default:
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+@@ -2246,7 +2242,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	 * Note we only do this (at the moment) for station mode.
+ 	 */
+ 	if ((conf->type == NL80211_IFTYPE_STATION) ||
+-	    (conf->type == NL80211_IFTYPE_ADHOC)) {
++	    (conf->type == NL80211_IFTYPE_ADHOC) ||
++	    (conf->type == NL80211_IFTYPE_MESH_POINT)) {
+ 		if (ath9k_hw_phycounters(sc->sc_ah))
+ 			sc->imask |= ATH9K_INT_MIB;
+ 		sc->imask |= ATH9K_INT_TSFOOR;
+@@ -2293,8 +2290,9 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ 	del_timer_sync(&sc->ani.timer);
+ 
+ 	/* Reclaim beacon resources */
+-	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP ||
+-	    sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) {
++	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
++	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
++	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) {
+ 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
+ 		ath_beacon_return(sc, avp);
+ 	}
+@@ -2427,6 +2425,7 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
+ 		switch (vif->type) {
+ 		case NL80211_IFTYPE_STATION:
+ 		case NL80211_IFTYPE_ADHOC:
++		case NL80211_IFTYPE_MESH_POINT:
+ 			/* Set BSSID */
+ 			memcpy(sc->curbssid, conf->bssid, ETH_ALEN);
+ 			memcpy(avp->bssid, conf->bssid, ETH_ALEN);
+@@ -2450,7 +2449,8 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
+-	    (vif->type == NL80211_IFTYPE_AP)) {
++	    (vif->type == NL80211_IFTYPE_AP) ||
++	    (vif->type == NL80211_IFTYPE_MESH_POINT)) {
+ 		if ((conf->changed & IEEE80211_IFCC_BEACON) ||
+ 		    (conf->changed & IEEE80211_IFCC_BEACON_ENABLED &&
+ 		     conf->enable_beacon)) {
+diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
+index 8327356..31a6a2a 100644
+--- a/drivers/net/wireless/ath9k/rc.c
++++ b/drivers/net/wireless/ath9k/rc.c
+@@ -1615,6 +1615,7 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 	/* Choose rate table first */
+ 
+ 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) ||
++	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT) ||
+ 	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC)) {
+ 		rate_table = ath_choose_rate_table(sc, sband->band,
+ 						   sta->ht_cap.ht_supported,
