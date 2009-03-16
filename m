@@ -1,191 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:16356 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751239AbZCSBxA (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:27207 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760762AbZCPMgZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2009 21:53:00 -0400
-Received: by yx-out-2324.google.com with SMTP id 31so341102yxl.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2009 18:52:58 -0700 (PDT)
-Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
-From: Jason Andryuk <jandryuk@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Samuel Ortiz <samuel@sortiz.org>, Tomas Winkler <tomasw@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1237254243.13077.33.camel@rainbow>
-References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
-	 <1236211493.6612.90.camel@rc-desk> <1236297052.6153.4.camel@rainbow>
-	 <1236299085.6612.229.camel@rc-desk> <1236312734.19328.37.camel@rainbow>
-	 <1236317982.12430.9.camel@rc-desk> <1236649234.6685.9.camel@rainbow>
-	 <1236661466.15923.53.camel@rc-desk> <1236742805.6267.9.camel@rainbow>
-	 <c4d76b3b0903122031o7baea17ay5704df428ea2fced@mail.gmail.com>
-	 <c4d76b3b0903160510i5afc6cd6t856b63383a275fca@mail.gmail.com>
-	 <1237254243.13077.33.camel@rainbow>
-Content-Type: text/plain
-Date: Wed, 18 Mar 2009 21:52:48 -0400
-Message-Id: <1237427568.6943.13.camel@rainbow> (sfid-20090319_025308_669540_0CFDF43B)
-Mime-Version: 1.0
+	Mon, 16 Mar 2009 08:36:25 -0400
+To: Jouni Malinen <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: don't drop null frames during software	scan
+References: <20090315200738.17370.29374.stgit@tikku>
+	<20090316085741.GA29986@jm.kir.nu>
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Mon, 16 Mar 2009 14:35:30 +0200
+In-Reply-To: <20090316085741.GA29986@jm.kir.nu> (ext Jouni Malinen's message of "Mon\, 16 Mar 2009 09\:57\:41 +0100")
+Message-ID: <871vsxve5p.fsf@nokia.com> (sfid-20090316_133629_128179_580995A6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-03-16 at 21:44 -0400, Jason Andryuk wrote:
-> I believe there may be some incorrect use of the DMA API.
-> 
-> My tree is as follows:
-> git checkout -f ff5010c3e12f1d0da27a5f871c2e3d5333dfbe2f
-> git cherry-pick -x fadd267e5f9c2319ad62edad30f7af07b6b368ef
-> patch -p1 < iwl3945-rb_stts_and_BUG_to_WARN.patch (attached)
-> plus patch from below.
+Jouni Malinen <j@w1.fi> writes:
 
-Slightly updated patch attached.  len value for SCAN command is
-corrected and attach_len saves the correct len value.
+> On Sun, Mar 15, 2009 at 10:07:39PM +0200, Kalle Valo wrote:
+>> ieee80211_tx_h_check_assoc() was dropping everything else than probe
+>> requests during software scan. So the null frame with the power save
+>> bit was dropped and AP never received it. This meant that AP never
+>> buffered any frames for the station during software scan.
+>> 
+>> Fix this by allowing to transmit both probe request and null frames
+>> during software scan. Tested with stlc45xx.
+>
+> I would assume the nullfunc frames are sent only just before the scan
+> and just after the scan, not really "during" the scan. Or am I missing
+> something here?
 
-Still does not work.  No Microcode SW errors though.
+No, you are not missing anything. I just considered the start of scan
+happening in the beginning of function ieee80211_start_scan() (which
+sends the nullfunc frame) and that's why I chose the word "during".
 
-Another potential problem with the SWIOTLB is that pci_unmap_addr_set
-writes to out_cmd->meta.  Memory which the driver no longer owns.  This
-will probably be a problem when unmapping pages as the address will not
-necessarily be present.
+>> --- a/net/mac80211/tx.c
+>> +++ b/net/mac80211/tx.c
+>> @@ -193,7 +193,14 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+>>  		return TX_CONTINUE;
+>>  
+>>  	if (unlikely(tx->local->sw_scanning) &&
+>> -	    !ieee80211_is_probe_req(hdr->frame_control))
+>> +	    !ieee80211_is_probe_req(hdr->frame_control) &&
+>> +	    !ieee80211_is_nullfunc(hdr->frame_control))
+>> +		/*
+>> +		 * When software scanning only null frames (to notify the
+>> +		 * sleep state to the AP) and probe requests (for the
+>> +		 * active scan) are allowed, everything else should be
+>> +		 * dropped.
+>> +		 */
+>>  		return TX_DROP;
+>
+> While this is probably the easiest way of fixing the issue you are
+> seeing, the more correct operation would be to allow nullfunc frames
+> only at the beginning and end of the scan operation, not during it,
+> i.e., there is no point allowing those frames to go out when we are not
+> on our operational channel. I would hope we do not currently send those
+> frames at such time,
 
-I wonder if it is a problem now as pci_map_single is repeatedly called
-on the same memory.  The return value is not checked.
+Actually I was thinking of adding a WARN_ONCE just to catch that but I
+decided to abandon the idea because all the blame I would get from the
+warnings :)
 
-The driver doesn't show any calls to iwl3945_rx_reply_tx, either
-successful or invalid.  Does that mean the hardware is not updating the
-queue pointers?
+> so this should not matter much, but the comment could be made more
+> clear about the different needs for nullfunc frames (please also
+> s/null frames/nullfunc frames/) and probe request frames. The former
+> are sent only on the operational channel in the beginning and end of
+> scan while the latter are sent on the channels to be scanned during
+> an active scan.
 
-Have any of the Intel folks make any progress on this?
+Should the description be in ieee80211_start_scan() in scan.c? I think
+it would make more sense to have it there instead of tx.c. I can then
+add a reference to the comment above.
 
-Jason
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3b39aef..11c5f4d 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -510,16 +510,9 @@ static int iwl3945_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	if (out_cmd->meta.flags & CMD_SIZE_HUGE)
- 		out_cmd->hdr.sequence |= SEQ_HUGE_FRAME;
- 
--	len = (idx == TFD_CMD_SLOTS) ?
--			IWL_MAX_SCAN_SIZE : sizeof(struct iwl_cmd);
--
--	phys_addr = pci_map_single(priv->pci_dev, out_cmd,
--					len, PCI_DMA_TODEVICE);
--	pci_unmap_addr_set(&out_cmd->meta, mapping, phys_addr);
--	pci_unmap_len_set(&out_cmd->meta, len, len);
--	phys_addr += offsetof(struct iwl_cmd, hdr);
--
--	iwl3945_hw_txq_attach_buf_to_tfd(priv, tfd, phys_addr, fix_size);
-+	len = sizeof(struct iwl_cmd);
-+	if (idx == TFD_CMD_SLOTS)
-+		len += IWL_MAX_SCAN_SIZE;
- 
- 	pad = U32_PAD(cmd->len);
- 	tfd->control_flags |= cpu_to_le32(TFD_CTL_PAD_SET(pad));
-@@ -532,6 +525,13 @@ static int iwl3945_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 
- 	txq->need_update = 1;
- 
-+	phys_addr = pci_map_single(priv->pci_dev, out_cmd,
-+					len, PCI_DMA_TODEVICE);
-+	pci_unmap_addr_set(&out_cmd->meta, mapping, phys_addr);
-+	pci_unmap_len_set(&out_cmd->meta, len, len);
-+	phys_addr += offsetof(struct iwl_cmd, hdr);
-+
-+	iwl3945_hw_txq_attach_buf_to_tfd(priv, tfd, phys_addr, fix_size);
- 	/* Increment and update queue's write index */
- 	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
- 	ret = iwl3945_tx_queue_update_write_ptr(priv, txq);
-@@ -2263,7 +2263,7 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	dma_addr_t phys_addr;
- 	dma_addr_t txcmd_phys;
- 	int txq_id = skb_get_queue_mapping(skb);
--	u16 len, idx, len_org, hdr_len;
-+	u16 len, idx, len_org, hdr_len, attach_len;
- 	u8 id;
- 	u8 unicast;
- 	u8 sta_id;
-@@ -2390,42 +2390,11 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	else
- 		len_org = 0;
- 
--	/* Physical address of this Tx command's header (not MAC header!),
--	 * within command buffer array. */
--	txcmd_phys = pci_map_single(priv->pci_dev,
--				    out_cmd, sizeof(struct iwl_cmd),
--				    PCI_DMA_TODEVICE);
--	pci_unmap_addr_set(&out_cmd->meta, mapping, txcmd_phys);
--	pci_unmap_len_set(&out_cmd->meta, len, sizeof(struct iwl_cmd));
--	/* Add buffer containing Tx command and MAC(!) header to TFD's
--	 * first entry */
--	txcmd_phys += offsetof(struct iwl_cmd, hdr);
--
--	/* Add buffer containing Tx command and MAC(!) header to TFD's
--	 * first entry */
--	iwl3945_hw_txq_attach_buf_to_tfd(priv, tfd, txcmd_phys, len);
-+	attach_len = len;
- 
- 	if (info->control.hw_key)
- 		iwl3945_build_tx_cmd_hwcrypto(priv, info, out_cmd, skb, 0);
- 
--	/* Set up TFD's 2nd entry to point directly to remainder of skb,
--	 * if any (802.11 null frames have no payload). */
--	len = skb->len - hdr_len;
--	if (len) {
--		phys_addr = pci_map_single(priv->pci_dev, skb->data + hdr_len,
--					   len, PCI_DMA_TODEVICE);
--		iwl3945_hw_txq_attach_buf_to_tfd(priv, tfd, phys_addr, len);
--	}
--
--	if (!len)
--		/* If there is no payload, then we use only one Tx buffer */
--		tfd->control_flags = cpu_to_le32(TFD_CTL_COUNT_SET(1));
--	else
--		/* Else use 2 buffers.
--		 * Tell 3945 about any padding after MAC header */
--		tfd->control_flags = cpu_to_le32(TFD_CTL_COUNT_SET(2) |
--			TFD_CTL_PAD_SET(U32_PAD(len)));
--
- 	/* Total # bytes to be transmitted */
- 	len = (u16)skb->len;
- 	tx->len = cpu_to_le16(len);
-@@ -2453,6 +2422,39 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	iwl_print_hex_dump(priv, IWL_DL_TX, (u8 *)tx->hdr,
- 			   ieee80211_hdrlen(fc));
- 
-+	/* Set up TFD's 2nd entry to point directly to remainder of skb,
-+	 * if any (802.11 null frames have no payload). */
-+	len = skb->len - hdr_len;
-+	if (!len)
-+		/* If there is no payload, then we use only one Tx buffer */
-+		tfd->control_flags = cpu_to_le32(TFD_CTL_COUNT_SET(1));
-+	else
-+		/* Else use 2 buffers.
-+		 * Tell 3945 about any padding after MAC header */
-+		tfd->control_flags = cpu_to_le32(TFD_CTL_COUNT_SET(2) |
-+			TFD_CTL_PAD_SET(U32_PAD(len)));
-+
-+	/* Physical address of this Tx command's header (not MAC header!),
-+	 * within command buffer array. */
-+	txcmd_phys = pci_map_single(priv->pci_dev,
-+				    out_cmd, sizeof(struct iwl_cmd),
-+				    PCI_DMA_TODEVICE);
-+	pci_unmap_addr_set(&out_cmd->meta, mapping, txcmd_phys);
-+	pci_unmap_len_set(&out_cmd->meta, len, sizeof(struct iwl_cmd));
-+	/* Add buffer containing Tx command and MAC(!) header to TFD's
-+	 * first entry */
-+	txcmd_phys += offsetof(struct iwl_cmd, hdr);
-+
-+	/* Add buffer containing Tx command and MAC(!) header to TFD's
-+	 * first entry */
-+	iwl3945_hw_txq_attach_buf_to_tfd(priv, tfd, txcmd_phys, attach_len);
-+
-+	if (len) {
-+		phys_addr = pci_map_single(priv->pci_dev, skb->data + hdr_len,
-+					   len, PCI_DMA_TODEVICE);
-+		iwl3945_hw_txq_attach_buf_to_tfd(priv, tfd, phys_addr, len);
-+	}
-+
- 	/* Tell device the write index *just past* this latest filled TFD */
- 	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
- 	rc = iwl3945_tx_queue_update_write_ptr(priv, txq);
-
+-- 
+Kalle Valo
