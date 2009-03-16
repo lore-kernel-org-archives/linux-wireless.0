@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:41889 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752598AbZCWMNV (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.171]:15092 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751290AbZCPTSO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 08:13:21 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: [PATCH] Marvell CF8381
-Date: Mon, 23 Mar 2009 13:13:10 +0100
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-References: <200903220127.21836.marek.vasut@gmail.com>
-In-Reply-To: <200903220127.21836.marek.vasut@gmail.com>
+	Mon, 16 Mar 2009 15:18:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200903231313.10699.hs4233@mail.mn-solutions.de> (sfid-20090323_131330_382266_61BCDDEA)
+In-Reply-To: <43e72e890903161215u343cbb19v6d6cbf36794e252a@mail.gmail.com>
+References: <43e72e890903161215u343cbb19v6d6cbf36794e252a@mail.gmail.com>
+Date: Mon, 16 Mar 2009 12:18:12 -0700
+Message-ID: <43e72e890903161218o6896e58bqadc7e80f6a975bc0@mail.gmail.com> (sfid-20090316_201816_996059_14F9C4FF)
+Subject: Re: AMD Quad core - PCI-DMA: Out of IOMMU space on > 4 GB RAM
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: wireless <linux-wireless@vger.kernel.org>, joerg.roedel@amd.com
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	iommu@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marek !
+On Mon, Mar 16, 2009 at 12:15 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> I've run into "PCI-DMA: Out of IOMMU space" messages after loading and
+> unloading a module 30 times. The interesting thing is this only
+> happens if I have > 4 GB of memory. The box this occurs has AMD Phenom
+> quad core CPU so I take it a harware IOMMU is being used. Below are
+> example relevant messages with > 4 GB and then < 4 GB of memory. The
+> driver I tested this with was ath9k. It could be an issue perhaps with
+> ath9k but I am unable to find an issue in our probe/removal.
+>
+> Could this be an issue with the AMD IOMMU used? Or is it more likely a
+> driver issue?
 
-Great.
+I forgot to mention I'm using l Linus 2.6.29-rc8 with some
+serialization patches applied for ath9k (which are unrelated to
+DMA/IOMMU/probe) [1].
 
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2009-03-12/serialization-v6/for-2.6.29/
 
-Some nitpicks:
-
-1. you attached the patches, not inline
-2. There's no signed-off
-3. You didn't submit one mail per patch
-
-All of this makes review harder. If you adhere a bit to
-Documentation/SubmittingPatches you'd get the fame all by
-yourself :-)
-
-
-Some more rants:
-
-
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -273,7 +273,14 @@ static int if_cs_poll_while_fw_download(struct if_cs_card *card, uint addr, u8 r
-  */
- #define IF_CS_PRODUCT_ID               0x0000001C
- #define IF_CS_CF8385_B1_REV            0x12
-+#define        IF_CS_CF8381_B3_REV             0x04
-
-Here's a tab, not a space. Maybe you run scripts/checkpatch.pl on it as well?
-
-
-
-
--       if (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV) {
-+       if (!(p_dev->manf_id == CF8381_MANFID &&
-+               p_dev->card_id == CF8381_CARDID) &&
-+               (if_cs_read8(card, IF_CS_PRODUCT_ID) < IF_CS_CF8385_B1_REV)) {
-
-I think change then breaks the existing logic for 8385 cards.
-code broke then the 8385 case. Therefore a NAK for now.
-
-
-
-
-Kindly repost both patches again, with signed-off and fixes, thanks!
+  Luis
