@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.173]:38137 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276AbZCQBNg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47692 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754494AbZCPVjm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 21:13:36 -0400
-MIME-Version: 1.0
-In-Reply-To: <20090317093445G.fujita.tomonori@lab.ntt.co.jp>
-References: <43e72e890903161215u343cbb19v6d6cbf36794e252a@mail.gmail.com>
-	 <20090317093445G.fujita.tomonori@lab.ntt.co.jp>
-Date: Mon, 16 Mar 2009 18:13:34 -0700
-Message-ID: <43e72e890903161813q1e069891jb7c669a539e3ff7f@mail.gmail.com> (sfid-20090317_021346_152070_82F3023C)
-Subject: Re: AMD Quad core - PCI-DMA: Out of IOMMU space on > 4 GB RAM
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-wireless@vger.kernel.org, joerg.roedel@amd.com,
-	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 16 Mar 2009 17:39:42 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.69)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1LjKX5-0005Pk-03
+	for linux-wireless@vger.kernel.org; Mon, 16 Mar 2009 22:39:39 +0100
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] wireless-regdb: master-2009-03-09
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1LjKX5-0005Pk-03@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Mon, 16 Mar 2009 22:39:39 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2009 at 5:35 PM, FUJITA Tomonori
-<fujita.tomonori@lab.ntt.co.jp> wrote:
-> On Mon, 16 Mar 2009 12:15:37 -0700
-> "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
->
->> I've run into "PCI-DMA: Out of IOMMU space" messages after loading and
->> unloading a module 30 times. The interesting thing is this only
->> happens if I have > 4 GB of memory. The box this occurs has AMD Phenom
->> quad core CPU so I take it a harware IOMMU is being used. Below are
->> example relevant messages with > 4 GB and then < 4 GB of memory. The
->> driver I tested this with was ath9k. It could be an issue perhaps with
->> ath9k but I am unable to find an issue in our probe/removal.
->>
->> Could this be an issue with the AMD IOMMU used? Or is it more likely a
->> driver issue?
->
-> ath9k wants DMA_32BIT_MASK, right? If so, GART IOMMU does nothing on a
-> system with < 4GB memory since ath9k can access to all the memory
-> addresses directly. With >4GB memory, GART needs to remap an address
-> higher than 4GB because ath9k wants DMA_32BIT_MASK.
->
-> From a quick look, ath9k doesn't call pci_unmap_single for rx
-> buffers. Though I might be wrong because I don't know anything about
-> the driver.
 
-You seem to be right actually, we were calling pci_unmap_single() for
-rx buffers on the RX tasklet but never for the simple case of removing
-the module. Will test it out in a bit.
+A new release of wireless-regdb (master-2009-03-09) is avilable at:
 
- Luis
+http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.03.09.tar.bz2
+
+SHA1 sum: f823eeb0c637fee9c705fc7112b33fc9eb55fa4a
+
+
+For your convenience the individual regulatory.bin file can be downloaded from:
+
+http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2009.03.09-regulatory.bin
+
+SHA1 sum 806e601639894ce7ee01272ad0cdb4473abf7cff
+
+Here is the short log of the changes included in this 
+release:
+
+John W. Linville -  wireless-regdb: update regulatory.bin based on preceding changes.
+John W. Linville -  Remove unnecessary specification of owner and group information in install commands.  This is troublesome for non-root build environments.
+John W. Linville -  Implement simple changes to dbparse.py as suggested by Julian Calaby <julian.calaby@gmail.com> in email to linux-wireless on 6 March 2009.
+Luis R. Rodriguez -  wireless-regdb: sanity checks on freq range
+Luis R. Rodriguez -  wireless-regdb: enable passive scanning for world regdomain on other channels
+Daniel Mierswa -  CDRA_PATH typo, also let user override CRDA_PATH
+
+This is an automatigically generated message, please only reply to the linux-wireless mailing list.
