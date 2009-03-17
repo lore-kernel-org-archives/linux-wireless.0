@@ -1,49 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:3088 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335AbZCDVgA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35981 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733AbZCQOMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2009 16:36:00 -0500
-Received: by rv-out-0506.google.com with SMTP id g37so3505394rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2009 13:35:57 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 4 Mar 2009 13:35:57 -0800
-Message-ID: <43e72e890903041335n47a70186u4a7aeb304f8b6979@mail.gmail.com> (sfid-20090304_223604_236420_D308D965)
-Subject: Please apply to stable: cfg80211: add support for custom firmware
-	regulatory solutions
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: "stable@kernel.org" <stable@kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Tim Gardner <tim.gardner@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 17 Mar 2009 10:12:21 -0400
+Subject: Re: rt2x00 mesh support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Antonio Marques <froz@icix.org>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200903171031.41302.IvDoorn@gmail.com> (sfid-20090317_103150_606981_0D5CC206)
+References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org>
+	 <200903161558.01070.IvDoorn@gmail.com>
+	 <A1AF7AF9-047F-41A1-829F-94F58821DB09@icix.org>
+	 <200903171031.41302.IvDoorn@gmail.com>
+	 (sfid-20090317_103150_606981_0D5CC206)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Y6+C3NKTRiDNtKoSKDoC"
+Date: Tue, 17 Mar 2009 15:11:38 +0100
+Message-Id: <1237299098.31814.12.camel@johannes.local> (sfid-20090317_151227_274610_073D96BB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Forgot to Cc: stable@kernel.org for this patch during its submission,
-this is needed on 2.6.28 as otherwise there is an issue for Intel
-cards which get their channels 5 GHz disabled if OLD_REG is set to no
-(this is not the default) or the channels 12-14 are disabled if
-OLD_REG is set to yes (default) set to no and the ieee80211_module
-parameter is not used. The later issue is resolved by userspace as
-well but we cannot yet expect 2.6.28 kernels to have enough userspace
-interfaces to set the regulatory domain just yet. This is why OLD_REG
-is still set to default with 2.6.28.
 
-14b9815af3f4fe0e171ee0c4325c31d2a2c1570b
-Author: Luis R. Rodriguez <lrodriguez@atheros.com>
-Date:   Wed Nov 12 14:22:03 2008 -0800
+--=-Y6+C3NKTRiDNtKoSKDoC
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-   cfg80211: add support for custom firmware regulatory solutions
+On Tue, 2009-03-17 at 10:31 +0100, Ivo van Doorn wrote:
+> On Monday 16 March 2009, Antonio Marques wrote:
+> > On Mar 16, 2009, at 14:58 , Ivo van Doorn wrote:
+> > > On Monday 16 March 2009, Ant=C3=B3nio Marques wrote:
+> > >>
+> > >> As requested, I have attached the output of the script run before an=
+d
+> > >> after
+> > >> running 'iwlist mesh scan'. Unfortunately there seems to be no =20
+> > >> change in
+> > >> the output. I have also included the queue statistics as these do
+> > >> change from
+> > >> one state to the next. Any further pointers to help debug this? I'll
+> > >> gladly test
+> > >> any patches that try to address this issue.
+> > >
+> > > The dumps aren't correct, I had forgotten to update the script on =20
+> > > the website
+> > > after some API for the rt2x00 debugfs interface changes recently.
+> > > Attached is the correct patch.
+> > >
+> > > Ivo
+> > > <rt2x00_regdump.sh>
+> >=20
+> > Fixed, new dumps are attached.
+>=20
+> Thanks for the dumps, the reason why the beaconing isn't working
+> is (fortunately) very obvious from the registers point of view.
+> The "generate beacons" bit is simply not enabled. However the reason
+> why this bit has not been set escapes me. Could you apply the attached
+> patch? This will add extra debug messages to the driver to see when the
+> beacon generation bit is set.
 
-   This adds API to cfg80211 to allow wireless drivers to inform
-   us if their firmware can handle regulatory considerations *and*
-   they cannot map these regulatory domains to an ISO / IEC 3166
-   alpha2. In these cases we skip the first regulatory hint instead
-   of expecting the driver to build their own regulatory structure,
-   providing us with an alpha2, or using the reg_notifier().
+I think mac80211 is probably not requesting it until you scan -- since
+once you scan it calls ieee80211_if_config internally and changes that
+bit. Some mesh code needs to call ieee80211_if_config() with the beacon
+enable change flag.
 
-   Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-   Acked-by: Zhu Yi <yi.zhu@intel.com>
-   Signed-off-by: John W. Linville <linville@tuxdriver.com>
+johannes
+
+--=-Y6+C3NKTRiDNtKoSKDoC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJv6+YAAoJEKVg1VMiehFY7O8QAMCtmX3GDmpVCxiqzOa+GewO
+TplyyH1iEKAt4YARWj7qaYMh0UsPh5kSUxWrGuN1cm0AaY2LoYHo5rieGb1P/pN/
+31/4XplGX/2JZ9qT/cxfIf7jcsEirxJKJs23eq671rHlQdjOa/aAgDUCpMzeg9PH
+75TmVq3hPgopFeGAKtINO5ef0U/cgLWmx9JDenKqdlnLcyxWH+zAvyem+mz4P6EV
++Bdx1I+69qwVorgK08dPj1TZx2LLe64WHGxJ/oA7kAxuxoQ0UmEr94X5GJfp3pHQ
+swHy3HF672jACPTtczIVeyQ5/ajkq0FVTJPMw7KqAiepoWJ9Y7KRjQUURF3leXDs
+mbT724ILD+ODG94yl48OxSR0Wb349feb8znddwE4+5XbXiNPjHH3UroP5uBBAAdX
+O3dp1kJSEGsYnUPLernRbNamelzYyxQHPL7yfSd6bGb3GI7BhBR2yPHy3+bU5xwF
+R6xJIMVDdw8FNQHH3BzYffbXmyXgWpL3KiYXf129beuoivKRwRT7T0pgCH6kIrVh
+Xie90BDckWBO08hAM1QrsR+KqpHRa5gqqafdvj1xtGGEhweWav+7svPJYXyoDAJQ
+05fwAMp8PDtKl6S/qHqm0D2SGdP5zuunF67GJrhITW8UTE+E8f6IdIU7YAPeyPr7
+827b9H9pyy96/uhMJQfF
+=fGzB
+-----END PGP SIGNATURE-----
+
+--=-Y6+C3NKTRiDNtKoSKDoC--
+
