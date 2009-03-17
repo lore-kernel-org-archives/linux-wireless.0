@@ -1,480 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:50681 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753815AbZCTTYA (ORCPT
+Received: from e34.co.us.ibm.com ([32.97.110.152]:54147 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752003AbZCQGzu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 15:24:00 -0400
-Message-Id: <20090320192348.433430144@atheros.com> (sfid-20090320_202413_270074_44F7A8FB)
-References: <20090320192115.448175935@atheros.com>
-Date: Fri, 20 Mar 2009 21:21:16 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 1/4] nl80211: Remove NL80211_CMD_SET_MGMT_EXTRA_IE
+	Tue, 17 Mar 2009 02:55:50 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e34.co.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2H6rgTJ029389
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 00:53:42 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2H6tiHa167276
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 00:55:44 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2H6thi2031313
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 00:55:43 -0600
+Subject: Re: [LTP] Support of WIFI and W-LAN test cases in LTP
+From: Subrata Modak <subrata@linux.vnet.ibm.com>
+Reply-To: subrata@linux.vnet.ibm.com
+To: rahul Baliyan <rahul.lpt@gmail.com>
+Cc: ltp-list@lists.sf.net, Luis Carlos Cobo <luisca@cozybit.com>,
+	Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+In-Reply-To: <1236962876.7439.3.camel@subratamodak.linux.ibm.com>
+References: <9a14a0630903130632s36a7f059hd093d30e97f894eb@mail.gmail.com>
+	 <1236962876.7439.3.camel@subratamodak.linux.ibm.com>
+Content-Type: text/plain
+Date: Tue, 17 Mar 2009 12:25:37 +0530
+Message-Id: <1237272937.5622.11.camel@subratamodak.linux.ibm.com> (sfid-20090317_075606_507703_D689B6A1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functionality that NL80211_CMD_SET_MGMT_EXTRA_IE provided can now
-be achieved with cleaner design by adding IE(s) into
-NL80211_CMD_TRIGGER_SCAN, NL80211_CMD_AUTHENTICATE,
-NL80211_CMD_ASSOCIATE, NL80211_CMD_DEAUTHENTICATE, and
-NL80211_CMD_DISASSOCIATE.
+Hi Rahul,
 
-Since this is a very recently added command and there are no known (or
-known planned) applications using NL80211_CMD_SET_MGMT_EXTRA_IE and
-taken into account how much extra complexity it adds to the IE
-processing we have now (and need to add in the future to fix IE order
-in couple of frames), it looks like the best option is to just remove
-the implementation of this command for now. The enum values themselves
-are left to avoid changing the nl80211 command or attribute numbers.
+On Fri, 2009-03-13 at 22:17 +0530, Subrata Modak wrote:
+> Hi,
+> 
+> On Fri, 2009-03-13 at 19:02 +0530, rahul Baliyan wrote:
+> > Hi,
+> > 
+> > Pl.  confirm if LTP contains the test cases of W-LAN and WI-FI.
+> 
+> Nope. We do not have till now. However, we initiated some discussion
+> some 6 months back in the same mailing list regarding Wireless Mesh
+> Netwoking tests. Please follow the following thread:
+> 
+> http://marc.info/?t=121969812900007&r=1&w=2&n=4,
+> 
+> There are some tests already avilable. We need somebody to volunteer to
+> bring them to some shape so that they can be automated and then
+> integrated inside LTP. Would you be ready to do that ?
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Would you like to take up my proposal ?
 
----
- include/linux/nl80211.h    |    8 +++-
- include/net/cfg80211.h     |   26 -------------
- net/mac80211/cfg.c         |   86 ---------------------------------------------
- net/mac80211/ieee80211_i.h |   15 -------
- net/mac80211/iface.c       |    7 ---
- net/mac80211/mlme.c        |   36 +-----------------
- net/mac80211/util.c        |   29 ++-------------
- net/wireless/nl80211.c     |   47 ------------------------
- 8 files changed, 14 insertions(+), 240 deletions(-)
+Regards--
+Subrata
 
---- uml.orig/include/linux/nl80211.h	2009-03-20 17:24:12.000000000 +0200
-+++ uml/include/linux/nl80211.h	2009-03-20 18:03:53.000000000 +0200
-@@ -142,6 +142,12 @@
-  *	%NL80211_ATTR_IE. If the command succeeds, the requested data will be
-  *	added to all specified management frames generated by
-  *	kernel/firmware/driver.
-+ *	Note: This command has been removed and it is only reserved at this
-+ *	point to avoid re-using existing command number. The functionality this
-+ *	command was planned for has been provided with cleaner design with the
-+ *	option to specify additional IEs in NL80211_CMD_TRIGGER_SCAN,
-+ *	NL80211_CMD_AUTHENTICATE, NL80211_CMD_ASSOCIATE,
-+ *	NL80211_CMD_DEAUTHENTICATE, and NL80211_CMD_DISASSOCIATE.
-  *
-  * @NL80211_CMD_GET_SCAN: get scan results
-  * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
-@@ -238,7 +244,7 @@ enum nl80211_commands {
- 	NL80211_CMD_GET_MESH_PARAMS,
- 	NL80211_CMD_SET_MESH_PARAMS,
- 
--	NL80211_CMD_SET_MGMT_EXTRA_IE,
-+	NL80211_CMD_SET_MGMT_EXTRA_IE /* reserved; not used */,
- 
- 	NL80211_CMD_GET_REG,
- 
---- uml.orig/include/net/cfg80211.h	2009-03-20 17:21:50.000000000 +0200
-+++ uml/include/net/cfg80211.h	2009-03-20 18:03:53.000000000 +0200
-@@ -471,26 +471,6 @@ struct ieee80211_txq_params {
- 	u8 aifs;
- };
- 
--/**
-- * struct mgmt_extra_ie_params - Extra management frame IE parameters
-- *
-- * Used to add extra IE(s) into management frames. If the driver cannot add the
-- * requested data into all management frames of the specified subtype that are
-- * generated in kernel or firmware/hardware, it must reject the configuration
-- * call. The IE data buffer is added to the end of the specified management
-- * frame body after all other IEs. This addition is not applied to frames that
-- * are injected through a monitor interface.
-- *
-- * @subtype: Management frame subtype
-- * @ies: IE data buffer or %NULL to remove previous data
-- * @ies_len: Length of @ies in octets
-- */
--struct mgmt_extra_ie_params {
--	u8 subtype;
--	u8 *ies;
--	int ies_len;
--};
--
- /* from net/wireless.h */
- struct wiphy;
- 
-@@ -743,8 +723,6 @@ struct cfg80211_disassoc_request {
-  *
-  * @set_channel: Set channel
-  *
-- * @set_mgmt_extra_ie: Set extra IE data for management frames
-- *
-  * @scan: Request to do a scan. If returning zero, the scan request is given
-  *	the driver, and will be valid until passed to cfg80211_scan_done().
-  *	For scan results, call cfg80211_inform_bss(); you can call this outside
-@@ -828,10 +806,6 @@ struct cfg80211_ops {
- 			       struct ieee80211_channel *chan,
- 			       enum nl80211_channel_type channel_type);
- 
--	int	(*set_mgmt_extra_ie)(struct wiphy *wiphy,
--				     struct net_device *dev,
--				     struct mgmt_extra_ie_params *params);
--
- 	int	(*scan)(struct wiphy *wiphy, struct net_device *dev,
- 			struct cfg80211_scan_request *request);
- 
---- uml.orig/net/mac80211/cfg.c	2009-03-20 17:21:50.000000000 +0200
-+++ uml/net/mac80211/cfg.c	2009-03-20 18:03:53.000000000 +0200
-@@ -1181,91 +1181,6 @@ static int ieee80211_set_channel(struct 
- 	return ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
- }
- 
--static int set_mgmt_extra_ie_sta(struct ieee80211_sub_if_data *sdata,
--				 u8 subtype, u8 *ies, size_t ies_len)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--
--	switch (subtype) {
--	case IEEE80211_STYPE_PROBE_REQ >> 4:
--		if (local->ops->hw_scan)
--			break;
--		kfree(ifmgd->ie_probereq);
--		ifmgd->ie_probereq = ies;
--		ifmgd->ie_probereq_len = ies_len;
--		return 0;
--	case IEEE80211_STYPE_PROBE_RESP >> 4:
--		kfree(ifmgd->ie_proberesp);
--		ifmgd->ie_proberesp = ies;
--		ifmgd->ie_proberesp_len = ies_len;
--		return 0;
--	case IEEE80211_STYPE_AUTH >> 4:
--		kfree(ifmgd->ie_auth);
--		ifmgd->ie_auth = ies;
--		ifmgd->ie_auth_len = ies_len;
--		return 0;
--	case IEEE80211_STYPE_ASSOC_REQ >> 4:
--		kfree(ifmgd->ie_assocreq);
--		ifmgd->ie_assocreq = ies;
--		ifmgd->ie_assocreq_len = ies_len;
--		return 0;
--	case IEEE80211_STYPE_REASSOC_REQ >> 4:
--		kfree(ifmgd->ie_reassocreq);
--		ifmgd->ie_reassocreq = ies;
--		ifmgd->ie_reassocreq_len = ies_len;
--		return 0;
--	case IEEE80211_STYPE_DEAUTH >> 4:
--		kfree(ifmgd->ie_deauth);
--		ifmgd->ie_deauth = ies;
--		ifmgd->ie_deauth_len = ies_len;
--		return 0;
--	case IEEE80211_STYPE_DISASSOC >> 4:
--		kfree(ifmgd->ie_disassoc);
--		ifmgd->ie_disassoc = ies;
--		ifmgd->ie_disassoc_len = ies_len;
--		return 0;
--	}
--
--	return -EOPNOTSUPP;
--}
--
--static int ieee80211_set_mgmt_extra_ie(struct wiphy *wiphy,
--				       struct net_device *dev,
--				       struct mgmt_extra_ie_params *params)
--{
--	struct ieee80211_sub_if_data *sdata;
--	u8 *ies;
--	size_t ies_len;
--	int ret = -EOPNOTSUPP;
--
--	if (params->ies) {
--		ies = kmemdup(params->ies, params->ies_len, GFP_KERNEL);
--		if (ies == NULL)
--			return -ENOMEM;
--		ies_len = params->ies_len;
--	} else {
--		ies = NULL;
--		ies_len = 0;
--	}
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
--	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_STATION:
--		ret = set_mgmt_extra_ie_sta(sdata, params->subtype,
--					    ies, ies_len);
--		break;
--	default:
--		ret = -EOPNOTSUPP;
--		break;
--	}
--
--	if (ret)
--		kfree(ies);
--	return ret;
--}
--
- #ifdef CONFIG_PM
- static int ieee80211_suspend(struct wiphy *wiphy)
- {
-@@ -1465,7 +1380,6 @@ struct cfg80211_ops mac80211_config_ops 
- 	.change_bss = ieee80211_change_bss,
- 	.set_txq_params = ieee80211_set_txq_params,
- 	.set_channel = ieee80211_set_channel,
--	.set_mgmt_extra_ie = ieee80211_set_mgmt_extra_ie,
- 	.suspend = ieee80211_suspend,
- 	.resume = ieee80211_resume,
- 	.scan = ieee80211_scan,
---- uml.orig/net/mac80211/ieee80211_i.h	2009-03-20 17:24:12.000000000 +0200
-+++ uml/net/mac80211/ieee80211_i.h	2009-03-20 18:03:53.000000000 +0200
-@@ -323,21 +323,6 @@ struct ieee80211_if_managed {
- 	int wmm_last_param_set;
- 
- 	/* Extra IE data for management frames */
--	u8 *ie_probereq;
--	size_t ie_probereq_len;
--	u8 *ie_proberesp;
--	size_t ie_proberesp_len;
--	u8 *ie_auth;
--	size_t ie_auth_len;
--	u8 *ie_assocreq;
--	size_t ie_assocreq_len;
--	u8 *ie_reassocreq;
--	size_t ie_reassocreq_len;
--	u8 *ie_deauth;
--	size_t ie_deauth_len;
--	u8 *ie_disassoc;
--	size_t ie_disassoc_len;
--
- 	u8 *sme_auth_ie;
- 	size_t sme_auth_ie_len;
- };
---- uml.orig/net/mac80211/iface.c	2009-03-20 17:24:12.000000000 +0200
-+++ uml/net/mac80211/iface.c	2009-03-20 18:03:53.000000000 +0200
-@@ -653,13 +653,6 @@ static void ieee80211_teardown_sdata(str
- 		kfree(sdata->u.mgd.extra_ie);
- 		kfree(sdata->u.mgd.assocreq_ies);
- 		kfree(sdata->u.mgd.assocresp_ies);
--		kfree(sdata->u.mgd.ie_probereq);
--		kfree(sdata->u.mgd.ie_proberesp);
--		kfree(sdata->u.mgd.ie_auth);
--		kfree(sdata->u.mgd.ie_assocreq);
--		kfree(sdata->u.mgd.ie_reassocreq);
--		kfree(sdata->u.mgd.ie_deauth);
--		kfree(sdata->u.mgd.ie_disassoc);
- 		kfree(sdata->u.mgd.sme_auth_ie);
- 		break;
- 	case NL80211_IFTYPE_WDS:
---- uml.orig/net/mac80211/mlme.c	2009-03-20 17:24:12.000000000 +0200
-+++ uml/net/mac80211/mlme.c	2009-03-20 18:03:53.000000000 +0200
-@@ -82,38 +82,23 @@ static int ieee80211_compatible_rates(st
- 
- /* frame sending functions */
- 
--static void add_extra_ies(struct sk_buff *skb, u8 *ies, size_t ies_len)
--{
--	if (ies)
--		memcpy(skb_put(skb, ies_len), ies, ies_len);
--}
--
- static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
--	u8 *pos, *ies, *ht_ie, *e_ies;
-+	u8 *pos, *ies, *ht_ie;
- 	int i, len, count, rates_len, supp_rates_len;
- 	u16 capab;
- 	struct ieee80211_bss *bss;
- 	int wmm = 0;
- 	struct ieee80211_supported_band *sband;
- 	u32 rates = 0;
--	size_t e_ies_len;
--
--	if (ifmgd->flags & IEEE80211_STA_PREV_BSSID_SET) {
--		e_ies = sdata->u.mgd.ie_reassocreq;
--		e_ies_len = sdata->u.mgd.ie_reassocreq_len;
--	} else {
--		e_ies = sdata->u.mgd.ie_assocreq;
--		e_ies_len = sdata->u.mgd.ie_assocreq_len;
--	}
- 
- 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
- 			    sizeof(*mgmt) + 200 + ifmgd->extra_ie_len +
--			    ifmgd->ssid_len + e_ies_len);
-+			    ifmgd->ssid_len);
- 	if (!skb) {
- 		printk(KERN_DEBUG "%s: failed to allocate buffer for assoc "
- 		       "frame\n", sdata->dev->name);
-@@ -304,8 +289,6 @@ static void ieee80211_send_assoc(struct 
- 		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
- 	}
- 
--	add_extra_ies(skb, e_ies, e_ies_len);
--
- 	kfree(ifmgd->assocreq_ies);
- 	ifmgd->assocreq_ies_len = (skb->data + skb->len) - ies;
- 	ifmgd->assocreq_ies = kmalloc(ifmgd->assocreq_ies_len, GFP_KERNEL);
-@@ -323,19 +306,8 @@ static void ieee80211_send_deauth_disass
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
--	u8 *ies;
--	size_t ies_len;
- 
--	if (stype == IEEE80211_STYPE_DEAUTH) {
--		ies = sdata->u.mgd.ie_deauth;
--		ies_len = sdata->u.mgd.ie_deauth_len;
--	} else {
--		ies = sdata->u.mgd.ie_disassoc;
--		ies_len = sdata->u.mgd.ie_disassoc_len;
--	}
--
--	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt) +
--			    ies_len);
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt));
- 	if (!skb) {
- 		printk(KERN_DEBUG "%s: failed to allocate buffer for "
- 		       "deauth/disassoc frame\n", sdata->dev->name);
-@@ -353,8 +325,6 @@ static void ieee80211_send_deauth_disass
- 	/* u.deauth.reason_code == u.disassoc.reason_code */
- 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
- 
--	add_extra_ies(skb, ies, ies_len);
--
- 	ieee80211_tx_skb(sdata, skb, ifmgd->flags & IEEE80211_STA_MFP_ENABLED);
- }
- 
---- uml.orig/net/mac80211/util.c	2009-03-20 17:21:50.000000000 +0200
-+++ uml/net/mac80211/util.c	2009-03-20 18:03:53.000000000 +0200
-@@ -846,16 +846,9 @@ void ieee80211_send_auth(struct ieee8021
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
--	const u8 *ie_auth = NULL;
--	int ie_auth_len = 0;
--
--	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--		ie_auth_len = sdata->u.mgd.ie_auth_len;
--		ie_auth = sdata->u.mgd.ie_auth;
--	}
- 
- 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
--			    sizeof(*mgmt) + 6 + extra_len + ie_auth_len);
-+			    sizeof(*mgmt) + 6 + extra_len);
- 	if (!skb) {
- 		printk(KERN_DEBUG "%s: failed to allocate buffer for auth "
- 		       "frame\n", sdata->dev->name);
-@@ -877,8 +870,6 @@ void ieee80211_send_auth(struct ieee8021
- 	mgmt->u.auth.status_code = cpu_to_le16(0);
- 	if (extra)
- 		memcpy(skb_put(skb, extra_len), extra, extra_len);
--	if (ie_auth)
--		memcpy(skb_put(skb, ie_auth_len), ie_auth, ie_auth_len);
- 
- 	ieee80211_tx_skb(sdata, skb, encrypt);
- }
-@@ -891,20 +882,11 @@ void ieee80211_send_probe_req(struct iee
- 	struct ieee80211_supported_band *sband;
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
--	u8 *pos, *supp_rates, *esupp_rates = NULL, *extra_preq_ie = NULL;
--	int i, extra_preq_ie_len = 0;
--
--	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_STATION:
--		extra_preq_ie_len = sdata->u.mgd.ie_probereq_len;
--		extra_preq_ie = sdata->u.mgd.ie_probereq;
--		break;
--	default:
--		break;
--	}
-+	u8 *pos, *supp_rates, *esupp_rates = NULL;
-+	int i;
- 
- 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt) + 200 +
--			    ie_len + extra_preq_ie_len);
-+			    ie_len);
- 	if (!skb) {
- 		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
- 		       "request\n", sdata->dev->name);
-@@ -953,9 +935,6 @@ void ieee80211_send_probe_req(struct iee
- 
- 	if (ie)
- 		memcpy(skb_put(skb, ie_len), ie, ie_len);
--	if (extra_preq_ie)
--		memcpy(skb_put(skb, extra_preq_ie_len), extra_preq_ie,
--		       extra_preq_ie_len);
- 
- 	ieee80211_tx_skb(sdata, skb, 0);
- }
---- uml.orig/net/wireless/nl80211.c	2009-03-20 18:03:40.000000000 +0200
-+++ uml/net/wireless/nl80211.c	2009-03-20 18:03:53.000000000 +0200
-@@ -269,7 +269,6 @@ static int nl80211_send_wiphy(struct sk_
- 	CMD(add_mpath, NEW_MPATH);
- 	CMD(set_mesh_params, SET_MESH_PARAMS);
- 	CMD(change_bss, SET_BSS);
--	CMD(set_mgmt_extra_ie, SET_MGMT_EXTRA_IE);
- 	CMD(auth, AUTHENTICATE);
- 	CMD(assoc, ASSOCIATE);
- 	CMD(deauth, DEAUTHENTICATE);
-@@ -2355,46 +2354,6 @@ static int nl80211_set_reg(struct sk_buf
- 	return -EINVAL;
- }
- 
--static int nl80211_set_mgmt_extra_ie(struct sk_buff *skb,
--				     struct genl_info *info)
--{
--	struct cfg80211_registered_device *drv;
--	int err;
--	struct net_device *dev;
--	struct mgmt_extra_ie_params params;
--
--	memset(&params, 0, sizeof(params));
--
--	if (!info->attrs[NL80211_ATTR_MGMT_SUBTYPE])
--		return -EINVAL;
--	params.subtype = nla_get_u8(info->attrs[NL80211_ATTR_MGMT_SUBTYPE]);
--	if (params.subtype > 15)
--		return -EINVAL; /* FC Subtype field is 4 bits (0..15) */
--
--	if (info->attrs[NL80211_ATTR_IE]) {
--		params.ies = nla_data(info->attrs[NL80211_ATTR_IE]);
--		params.ies_len = nla_len(info->attrs[NL80211_ATTR_IE]);
--	}
--
--	rtnl_lock();
--
--	err = get_drv_dev_by_info_ifindex(info->attrs, &drv, &dev);
--	if (err)
--		goto out_rtnl;
--
--	if (drv->ops->set_mgmt_extra_ie)
--		err = drv->ops->set_mgmt_extra_ie(&drv->wiphy, dev, &params);
--	else
--		err = -EOPNOTSUPP;
--
--	cfg80211_put_dev(drv);
--	dev_put(dev);
-- out_rtnl:
--	rtnl_unlock();
--
--	return err;
--}
--
- static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *drv;
-@@ -3044,12 +3003,6 @@ static struct genl_ops nl80211_ops[] = {
- 		.flags = GENL_ADMIN_PERM,
- 	},
- 	{
--		.cmd = NL80211_CMD_SET_MGMT_EXTRA_IE,
--		.doit = nl80211_set_mgmt_extra_ie,
--		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
--	},
--	{
- 		.cmd = NL80211_CMD_TRIGGER_SCAN,
- 		.doit = nl80211_trigger_scan,
- 		.policy = nl80211_policy,
+> 
+> Regards--
+> Subrata
+> 
+> > 
+> > if so, please share the location in LTP package.
+> > 
+> > 
+> > Regards,
+> > Rahul
+> > ------------------------------------------------------------------------------
+> > Apps built with the Adobe(R) Flex(R) framework and Flex Builder(TM) are
+> > powering Web 2.0 with engaging, cross-platform capabilities. Quickly and
+> > easily build your RIAs with Flex Builder, the Eclipse(TM)based development
+> > software that enables intelligent coding and step-through debugging.
+> > Download the free 60 day trial. http://p.sf.net/sfu/www-adobe-com
+> > _______________________________________________ Ltp-list mailing list Ltp-list@lists.sourceforge.net https://lists.sourceforge.net/lists/listinfo/ltp-list
+> 
+> 
+> ------------------------------------------------------------------------------
+> Apps built with the Adobe(R) Flex(R) framework and Flex Builder(TM) are
+> powering Web 2.0 with engaging, cross-platform capabilities. Quickly and
+> easily build your RIAs with Flex Builder, the Eclipse(TM)based development
+> software that enables intelligent coding and step-through debugging.
+> Download the free 60 day trial. http://p.sf.net/sfu/www-adobe-com
+> _______________________________________________
+> Ltp-list mailing list
+> Ltp-list@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ltp-list
 
--- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
