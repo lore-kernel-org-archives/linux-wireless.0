@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57988 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43102 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753888AbZCZINX (ORCPT
+	with ESMTP id S1753620AbZCQV1A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 04:13:23 -0400
-Subject: Re: p54spi - mesh mode summary
+	Tue, 17 Mar 2009 17:27:00 -0400
+Subject: Re: rt2x00 mesh support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200903260922.48489.jcmvbkbc@gmail.com> (sfid-20090326_073111_119238_390C7128)
-References: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
-	 <200903251442.58712.chunkeey@web.de> <200903251534.29549.chunkeey@web.de>
-	 <200903260922.48489.jcmvbkbc@gmail.com>
-	 (sfid-20090326_073111_119238_390C7128)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-s+RfOfn1Kli4Z5Ko4reS"
-Date: Thu, 26 Mar 2009 09:12:47 +0100
-Message-Id: <1238055167.4331.3.camel@johannes.local> (sfid-20090326_091327_686389_4179F11E)
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Antonio Marques <froz@icix.org>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1237299098.31814.12.camel@johannes.local> (sfid-20090317_151227_274610_073D96BB)
+References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org>
+	 <200903161558.01070.IvDoorn@gmail.com>
+	 <A1AF7AF9-047F-41A1-829F-94F58821DB09@icix.org>
+	 <200903171031.41302.IvDoorn@gmail.com>
+	 (sfid-20090317_103150_606981_0D5CC206)  <1237299098.31814.12.camel@johannes.local>
+	 (sfid-20090317_151227_274610_073D96BB)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-IHLaqMEfNR8K3c3asOzN"
+Date: Tue, 17 Mar 2009 21:10:25 +0100
+Message-Id: <1237320625.10264.0.camel@johannes.local> (sfid-20090317_222704_505703_3098D605)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-s+RfOfn1Kli4Z5Ko4reS
+--=-IHLaqMEfNR8K3c3asOzN
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-03-26 at 09:22 +0300, Max Filippov wrote:
+On Tue, 2009-03-17 at 15:11 +0100, Johannes Berg wrote:
 
-> 3) Beaconing works, but not the way it should: like MPs don't hear each o=
-ther. Timestamps never get in sync
-> and both MPs issue beacon during 0.1s beacon interval.
+> > Thanks for the dumps, the reason why the beaconing isn't working
+> > is (fortunately) very obvious from the registers point of view.
+> > The "generate beacons" bit is simply not enabled. However the reason
+> > why this bit has not been set escapes me. Could you apply the attached
+> > patch? This will add extra debug messages to the driver to see when the
+> > beacon generation bit is set.
+>=20
+> I think mac80211 is probably not requesting it until you scan -- since
+> once you scan it calls ieee80211_if_config internally and changes that
+> bit. Some mesh code needs to call ieee80211_if_config() with the beacon
+> enable change flag.
 
-That's perfectly fine for mesh. You're thinking of IBSS.
-
-> 4) Pings don't go, because MPs don't answer ARP requests sent to it. Have=
-n't tested for the root cause yet.
-
-Maybe some multicast issue?
-
-> Are there other sources of information regarding LMAC interaction except
-> http://wireless.kernel.org/en/developers/Documentation/specs?action=3DAtt=
-achFile&do=3Dget&target=3DSTSW45x0C_LMAC_API_ED1P4.pdf ?
-
-No; well, the header file.
-
-> Who should be contacted with questions about firmware behavior?
-
-I don't think we have any contact.
+Actually, it does, in ieee80211_start_mesh(). I have no idea then.
 
 johannes
 
---=-s+RfOfn1Kli4Z5Ko4reS
+--=-IHLaqMEfNR8K3c3asOzN
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJyzj9AAoJEKVg1VMiehFYXHsP/34LsCczNYhhLc/ZBaE8LyCv
-ZGR09B92kOyUVCM6dOgB0MQ4iVaw9fd+Nc9H5LYiOVRBIl7mnaod+HGcwoOI16va
-mbsxezkoW8GEQ1x50gqW7vYNw+Ku1X94S1542eOefivOSaO9ZTqVsIUTHnC4Vl8z
-eq61c6zwv6HjG8jdwTEsJnwyn0nHcknmV/n86NWdkbgzAwSq4dFXsaRb+BhKjdrR
-uUuQUG9TyzaEkeDFUnAPU2FFaRq702GOCcQu3U7XIGUlVGoZQ8XD8iZahCIjL6ch
-7udX87mbp1pGrnJAaYJgF2ZLFs3stobRVDz40G9cpuBExrDSpNORHt8p6NkSAdRw
-arHdE5H0ffAmo+VnDBjO3Zf3+gHDBnoA+o57jvj3NPLMgfyGf1/h8epufh29uPrq
-GuWrD4kkBjOGsPtTf+QlC6iO+2R2SzYbEP274Y7unnCa73bLE+GU/yBjULFrI0BR
-rZ0sj2vRO5mbPD2xOwvixERCfoAcEr0oQwh4AY/5V26NZ1A0jasJ14M6JgbRQRT2
-Zdjxu4RLd8e/qUylWaPWMtUb6Tf5UkChgiIVziFfZHtkbpP7uikiRHZcKjyhyqxi
-iUXsVN/1kQBhUk2GE0MELjNFXnzajxS0Srcuddbw7FLSUYU7JEcCbWx+0Z5nbTQi
-NXuLv/3q5VTnCi4vAIFD
-=SDZm
+iQIcBAABAgAGBQJJwAOuAAoJEKVg1VMiehFYa+UP/2RVyA48LtuR8zhCMkPHi9qY
+hcVqTx5E+OyJ3EUHx33I7oZfWM+S5/XCFcYUVu+n2OLQ5imQLaaVHXUVwNLNgYC1
+/HTQFMJbOdrpFDOytWw/w1CD6cTLX/njxI0ZGrvN9QcLaMddzFJ09uAs+8Ci0IHg
+e+xN5LnRhuca4JdA3Bp99hN6Gzd0P3ZXnC8i5SeXHQCp4PgNMdovieluiuYgQ8bY
+3O0YB7TfV3iHGOaBdjTw5uhr3C9JB/1J/zihDDowS743MbviTvTEF9/cOXsjJa9f
+TZ5JCrmjmFYjmBF16pwPIOqGlzXEE6DZRMAe9MpF4nm4AkljtClH5WvrPKkqzOHK
+1oM+cySies+Ii/4IcCKvS79ci9AcNjk89FLTiQ1w2HQvxsdaqjGPD04foau05/Aj
+19gmVgk9nhBiW5ny3AuMryLq5D2I3jhZzMv8VvDFciC1NV10PxrGHTnnljajjMi+
+O2a6hu9NtebVfU4dppM2z4mUkO7wbGErQVUB1G2uTTHnNHaAjR9S7hcRYgRaywqA
+wbea/MtG/yLCVqVcu9itYRWVBVHcuZ4cCiE5UP+0EreeTPeLMXOwwvrIKwgLXS5G
+Pq/z1e29Jh7Y23cfIFa60oF+NGLNVPh1HeE2aIxEyhlnwPyWcvoVAefk19V0Z24/
+YhUPLTwNBOUZKUm4nVfH
+=HlfF
 -----END PGP SIGNATURE-----
 
---=-s+RfOfn1Kli4Z5Ko4reS--
+--=-IHLaqMEfNR8K3c3asOzN--
 
