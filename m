@@ -1,67 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47875 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756074AbZCSVlA (ORCPT
+Received: from mail-ew0-f177.google.com ([209.85.219.177]:43355 "EHLO
+	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759635AbZCQJbq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 17:41:00 -0400
-Subject: Re: [PATCH v2 0/6] Use the regulatory bandwidth and export HT40
- stuff
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890903191328j15a53a5au1f0162e53daa2a14@mail.gmail.com> (sfid-20090319_212811_997093_6381103D)
-References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
-	 <1237491647.5100.114.camel@johannes.local>
-	 <43e72e890903191328j15a53a5au1f0162e53daa2a14@mail.gmail.com>
-	 (sfid-20090319_212811_997093_6381103D)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LmCYXqY/F5vjpihpa9U9"
-Date: Thu, 19 Mar 2009 22:40:52 +0100
-Message-Id: <1237498852.5100.121.camel@johannes.local> (sfid-20090319_224103_000512_E1C35634)
-Mime-Version: 1.0
+	Tue, 17 Mar 2009 05:31:46 -0400
+Received: by ewy25 with SMTP id 25so3784043ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 02:31:43 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Antonio Marques <froz@icix.org>
+Subject: Re: rt2x00 mesh support
+Date: Tue, 17 Mar 2009 10:31:41 +0100
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <200903161558.01070.IvDoorn@gmail.com> <A1AF7AF9-047F-41A1-829F-94F58821DB09@icix.org>
+In-Reply-To: <A1AF7AF9-047F-41A1-829F-94F58821DB09@icix.org>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_932vJJ/whiwIZ1+"
+Message-Id: <200903171031.41302.IvDoorn@gmail.com> (sfid-20090317_103150_606981_0D5CC206)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-LmCYXqY/F5vjpihpa9U9
-Content-Type: text/plain
+--Boundary-00=_932vJJ/whiwIZ1+
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Thu, 2009-03-19 at 13:28 -0700, Luis R. Rodriguez wrote:
-> On Thu, Mar 19, 2009 at 12:40 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > John,
+On Monday 16 March 2009, Antonio Marques wrote:
+> On Mar 16, 2009, at 14:58 , Ivo van Doorn wrote:
+> > On Monday 16 March 2009, Ant=F3nio Marques wrote:
+> >>
+> >> As requested, I have attached the output of the script run before and
+> >> after
+> >> running 'iwlist mesh scan'. Unfortunately there seems to be no =20
+> >> change in
+> >> the output. I have also included the queue statistics as these do
+> >> change from
+> >> one state to the next. Any further pointers to help debug this? I'll
+> >> gladly test
+> >> any patches that try to address this issue.
 > >
-> > please back out this series, I'm not sure I agree with the concept and
-> > I'm sure there are potential bugs that can make it segfault.
+> > The dumps aren't correct, I had forgotten to update the script on =20
+> > the website
+> > after some API for the rt2x00 debugfs interface changes recently.
+> > Attached is the correct patch.
+> >
+> > Ivo
+> > <rt2x00_regdump.sh>
 >=20
-> Can you be more elaborate?
+> Fixed, new dumps are attached.
 
-reg_process_ht_flags_channel doesn't initialise channel_before and
-channel_after.
+Thanks for the dumps, the reason why the beaconing isn't working
+is (fortunately) very obvious from the registers point of view.
+The "generate beacons" bit is simply not enabled. However the reason
+why this bit has not been set escapes me. Could you apply the attached
+patch? This will add extra debug messages to the driver to see when the
+beacon generation bit is set.
 
-johannes
+Thanks,
 
---=-LmCYXqY/F5vjpihpa9U9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Ivo
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--Boundary-00=_932vJJ/whiwIZ1+
+Content-Type: text/x-diff;
+  charset="iso-8859-15";
+  name="rt73usb.beacon.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="rt73usb.beacon.diff"
 
-iQIcBAABAgAGBQJJwrviAAoJEKVg1VMiehFYH48P/jh9ldmRvqW/oGQvN4EDBH2l
-vVhqBqWpQCL4Or11+xkvLFnlXFdNpHYz/h1xlENbP3jxZ7B8YddHOZkUu02F71Xe
-Jgj2NDZL6iTqTgh+MePLqp6MD7FOZ9a4UXUnUCgV7iIf3MHzo2qWCW7sjt9qFNZM
-AtXaZI8lxdPFmymsVrEE/I5aiwUZ8x7X3wPX/JYBvK3r0o8mrV9ol+FdhIZpphwF
-skxaSKnN59OwFQwLo4WaKD2weiu2WDnpkVk5Te019+FT3p8+MRk6VGG2jiad/MIp
-auaBGmkXvR9SE4ElP6UOr+/k2w4/Ewr1np1nCNZT8egyuvvbhHB24rua2R6PE6XP
-6ATS8pnQvdH9zneCV52LpaGpdTJsooFIY5xoaBkyMwkHhXNA3QNXndn6goSdBihY
-vxKRJvHYdadFHH4n4bymG6cRQEhwnJX9oWtH1E1JGXW1zf9wmoQR3v+wivkxtZXY
-Tu2Ik78jyeDtY9c7a1zSZF7pdA/T8YRhJUhspSOXnz+4dxpgYrg7YV0LlZ+KgbfU
-PqfkBXJ77sZNbOEeq325QA0Q4UIhRACyigoNF/1+Elb6hDI7n59CzjlD6oe/+eLA
-lbHSzT7T6cm1d2Ff5I22CX5wMvCxxOp/gvbZUd/WrSK7ys5x0a93E1GuwsY/Z6kD
-5qpVnZtXBlPNRsZKbnPv
-=EBsT
------END PGP SIGNATURE-----
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 24fdfdf..0824e15 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -519,6 +519,7 @@ static void rt73usb_config_intf(struct rt2x00_dev *rt2x00dev,
+ {
+ 	unsigned int beacon_base;
+ 	u32 reg;
++	u32 reg2;
+ 
+ 	if (flags & CONFIG_UPDATE_TYPE) {
+ 		/*
+@@ -538,6 +539,8 @@ static void rt73usb_config_intf(struct rt2x00_dev *rt2x00dev,
+ 		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_SYNC, conf->sync);
+ 		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
+ 		rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
++		rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg2);
++		ERROR(rt2x00dev, "TXRX_CSR9 WRITE: 0x%.08x, READ: 0x%.08x\n", reg, reg2);
+ 	}
+ 
+ 	if (flags & CONFIG_UPDATE_MAC) {
+@@ -838,6 +841,7 @@ static void rt73usb_config_duration(struct rt2x00_dev *rt2x00dev,
+ 				    struct rt2x00lib_conf *libconf)
+ {
+ 	u32 reg;
++	u32 reg2;
+ 
+ 	rt2x00usb_register_read(rt2x00dev, TXRX_CSR0, &reg);
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_TSF_OFFSET, IEEE80211_HEADER);
+@@ -851,6 +855,8 @@ static void rt73usb_config_duration(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_INTERVAL,
+ 			   libconf->conf->beacon_int * 16);
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
++	rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg2);
++	ERROR(rt2x00dev, "TXRX_CSR9 WRITE: 0x%.08x, READ: 0x%.08x\n", reg, reg2);
+ }
+ 
+ static void rt73usb_config_ps(struct rt2x00_dev *rt2x00dev,
+@@ -1139,6 +1145,7 @@ static int rt73usb_load_firmware(struct rt2x00_dev *rt2x00dev,
+ static int rt73usb_init_registers(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u32 reg;
++	u32 reg2;
+ 
+ 	rt2x00usb_register_read(rt2x00dev, TXRX_CSR0, &reg);
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_AUTO_TX_SEQ, 1);
+@@ -1205,6 +1212,8 @@ static int rt73usb_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
+ 	rt2x00_set_field32(&reg, TXRX_CSR9_TIMESTAMP_COMPENSATE, 0);
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
++	rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg2);
++	ERROR(rt2x00dev, "TXRX_CSR9 WRITE: 0x%.08x, READ: 0x%.08x\n", reg, reg2);
+ 
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR15, 0x0000000f);
+ 
+@@ -1375,12 +1384,16 @@ static int rt73usb_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 
+ static void rt73usb_disable_radio(struct rt2x00_dev *rt2x00dev)
+ {
++	u32 reg2;
++
+ 	rt2x00usb_register_write(rt2x00dev, MAC_CSR10, 0x00001818);
+ 
+ 	/*
+ 	 * Disable synchronisation.
+ 	 */
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, 0);
++	rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg2);
++	ERROR(rt2x00dev, "TXRX_CSR9 WRITE: 0x%.08x, READ: 0x%.08x\n", 0, reg2);
+ 
+ 	rt2x00usb_disable_radio(rt2x00dev);
+ }
+@@ -1532,6 +1545,7 @@ static void rt73usb_write_beacon(struct queue_entry *entry)
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	unsigned int beacon_base;
+ 	u32 reg;
++	u32 reg2;
+ 
+ 	/*
+ 	 * Add the descriptor in front of the skb.
+@@ -1549,6 +1563,8 @@ static void rt73usb_write_beacon(struct queue_entry *entry)
+ 	rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 0);
+ 	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 0);
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
++	rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg2);
++	ERROR(rt2x00dev, "TXRX_CSR9 WRITE: 0x%.08x, READ: 0x%.08x\n", reg, reg2);
+ 
+ 	/*
+ 	 * Write entire beacon with descriptor to register.
+@@ -1584,6 +1600,7 @@ static void rt73usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
+ 				  const enum data_queue_qid queue)
+ {
+ 	u32 reg;
++	u32 reg2;
+ 
+ 	if (queue != QID_BEACON) {
+ 		rt2x00usb_kick_tx_queue(rt2x00dev, queue);
+@@ -1602,7 +1619,10 @@ static void rt73usb_kick_tx_queue(struct rt2x00_dev *rt2x00dev,
+ 		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
+ 		rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_GEN, 1);
+ 		rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
+-	}
++		rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg2);
++		ERROR(rt2x00dev, "TXRX_CSR9 WRITE: 0x%.08x, READ: 0x%.08x\n", reg, reg2);
++	} else
++		ERROR(rt2x00dev, "TXRX_CSR9 WRITE: Beacon generation already enabled\n");
+ }
+ 
+ /*
 
---=-LmCYXqY/F5vjpihpa9U9--
-
+--Boundary-00=_932vJJ/whiwIZ1+--
