@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:63486 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753284AbZCMDaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2009 23:30:12 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2009 20:30:11 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18873.53839.291542.204720@gargle.gargle.HOWL> (sfid-20090313_043018_897337_A59A2138)
-Date: Fri, 13 Mar 2009 08:56:07 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 5/7] ath9k: Fix bug in 4K EEPROM size calculation
+Received: from xc.sipsolutions.net ([83.246.72.84]:47051 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751855AbZCQVyV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2009 17:54:21 -0400
+Subject: Re: rt2x00 mesh support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Antonio Marques <froz@icix.org>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200903172250.02427.IvDoorn@gmail.com> (sfid-20090317_225035_254669_EA0D1A94)
+References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org>
+	 <1237299098.31814.12.camel@johannes.local>
+	 <1237320625.10264.0.camel@johannes.local>
+	 <200903172250.02427.IvDoorn@gmail.com>
+	 (sfid-20090317_225035_254669_EA0D1A94)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-eC6XWazTsKXW4pIm9Dd8"
+Date: Tue, 17 Mar 2009 22:53:44 +0100
+Message-Id: <1237326824.10264.3.camel@johannes.local> (sfid-20090317_225423_425159_7E1D22A2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should be checking with the 4K header and not the non-4K
-header size.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/eeprom.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+--=-eC6XWazTsKXW4pIm9Dd8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
-index 973b576..d7b9cf4 100644
---- a/drivers/net/wireless/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath9k/eeprom.c
-@@ -416,7 +416,7 @@ static int ath9k_hw_4k_check_eeprom(struct ath_hw *ah)
- 	else
- 		el = ah->eeprom.map4k.baseEepHeader.length;
- 
--	if (el > sizeof(struct ar5416_eeprom_def))
-+	if (el > sizeof(struct ar5416_eeprom_4k))
- 		el = sizeof(struct ar5416_eeprom_4k) / sizeof(u16);
- 	else
- 		el = el / sizeof(u16);
--- 
-1.6.2
+On Tue, 2009-03-17 at 22:50 +0100, Ivo van Doorn wrote:
+
+> >=20
+> > Actually, it does, in ieee80211_start_mesh(). I have no idea then.
+>=20
+> I understood that in normal master mode rt73usb doesn't scan either,
+> so my bet is that the bug is in rt2x00. :)
+
+But the bug seems to hit almost all other drivers too, which confuses
+me. I'd double-check that the _start_mesh() call actually goes through
+and a beacon is available at that point...
+
+johannes
+
+--=-eC6XWazTsKXW4pIm9Dd8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJwBvlAAoJEKVg1VMiehFYnzoQALsKg+n8iL63sCGVvOdcSlVC
+ozkqhbtCV2wU/gSbIeKlxpJABkGBepVn33xjm8jJPebRKSwO8Ww8q5UP430dgNaW
+48DNaVDfYtbFoilMyPX5iVhuOzNSYoxr9f/RVwFcEL+0lEPrU3XURJqpQZ0FNzOX
+ZWVuJGtMQdRQIE8t9IQofOGVAoWfxLlnpS38nxOhwh/UZkF3imMGCHYPVe/9060Y
+/S5/AtmCYTxn2+bkMEEkIJDwx/BQB3N5f0D+Jxhzpm6c0sr1qHq55shSkT5/+Bee
+gL6QUfYAbBfwXnpqtvMsahZHR69zlTRtFcF1K6dpqqnJKi4v9KxN+VksYpmZB36L
+ijFINQg8t7cMhunVG502A0OcNWQl5aaWzeJ1Xs78LB5JuWsxTrEo9wDh40uRPzrg
+vq0M+hW2ylUwVmYPb/+kpbXll+cXSg0tq0TpYg5hfUbKQsAYJNa72myZTcQHcdLM
+HuEJeqQ8lP14iK4ofgw7s8zVAF09ml1/tE3+LW829ZkuPvF5o4Nko+orBCnzoIaJ
+vKTdI5zmUp9M+2UozDVcGBn3q+7GsxxIN54THK48Q2AZGfeUEy7+GSBLG0DcZUVu
+nKRbTSbTiobcpel+NvFSn+vNx7MMKofD5Zd2wjkp9IPkMbbEW1Y6JFTaveKxpBbI
+VrllAz3kQ3qR2D3p3tDm
+=ZqVp
+-----END PGP SIGNATURE-----
+
+--=-eC6XWazTsKXW4pIm9Dd8--
 
