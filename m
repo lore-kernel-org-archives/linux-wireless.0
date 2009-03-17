@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:37740 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752281AbZC0P6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 11:58:09 -0400
-Subject: Re: [PATCH 2/3] iwlwifi: remove STATUS_ALIVE checking from rf_kill
-From: reinette chatre <reinette.chatre@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <200903270718.18593.helmut.schaa@gmail.com>
-References: <1238087650-26993-1-git-send-email-reinette.chatre@intel.com>
-	 <1238087650-26993-2-git-send-email-reinette.chatre@intel.com>
-	 <1238087650-26993-3-git-send-email-reinette.chatre@intel.com>
-	 <200903270718.18593.helmut.schaa@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 27 Mar 2009 09:03:38 -0700
-Message-Id: <1238169818.25568.8.camel@rc-desk> (sfid-20090327_165812_350478_1AD31026)
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([72.66.92.28]:2151 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750973AbZCQDHV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2009 23:07:21 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>, stable@kernel.org
+Subject: [PATCH 1/2] ath5k: disable MIB interrupts
+Date: Mon, 16 Mar 2009 22:34:02 -0400
+Message-Id: <1237257243-18660-1-git-send-email-me@bobcopeland.com> (sfid-20090317_040722_604624_5586CD67)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-03-26 at 23:18 -0700, Helmut Schaa wrote:
-> Hi again,
->=20
-> Am Donnerstag, 26. M=C3=A4rz 2009 schrieb Reinette Chatre:
-> > Remove STATUS_ALIVE checking when HW RF KILL disabled, the bit get
-> > clear in __iwl_down() function; the additional checking will fail a=
-nd
-> > cause RF can not be turn back on.
->=20
-> Maybe just checking for is_open instead of STATUS_ALIVE will fix the =
-issue
-> too? I only had a quick look but it looks possible. AFAICS is_open in=
-dicates
-> if the interface was taken up by mac80211. So if the interface is up =
-but
-> STATUS_ALIVE is not set we want to restart the adapter after unkillin=
-g but
-> if the interface is still down (is_open=3D=3D0) we do not want to res=
-tart the
-> adapter. Furthermore, is_open is also set in case the interface was t=
-aken
-> up but wireless was rfkilled.
+The MIB interrupt fires whenever counters overflow; however without
+support for automatic noise immunity, we can sometimes get an interrupt
+storm.  The get_stats() callback reads the counters anyway so we can
+disable the interrupt for now until ANI is implemented.  This fixes
+the issue reported in http://bugzilla.kernel.org/show_bug.cgi?id=12647.
 
-Very good idea ... I'm looking into this.
+Changes-licensed-under: 3-Clause-BSD
 
-Reinette
+Cc: stable@kernel.org
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index cad3ccf..8eec155 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -2305,7 +2305,7 @@ ath5k_init(struct ath5k_softc *sc)
+ 	sc->curband = &sc->sbands[sc->curchan->band];
+ 	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
+ 		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
+-		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
++		AR5K_INT_FATAL | AR5K_INT_GLOBAL;
+ 	ret = ath5k_reset(sc, false, false);
+ 	if (ret)
+ 		goto done;
+-- 
+1.6.0.6
+
+
