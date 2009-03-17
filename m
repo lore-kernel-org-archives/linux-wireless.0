@@ -1,83 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jenny.ondioline.org ([66.220.1.122]:58941 "EHLO
-	jenny.ondioline.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752862AbZC2GUp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54689 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755393AbZCQHrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2009 02:20:45 -0400
-From: Paul Collins <paul@burly.ondioline.org>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: soft lockup apparently in ath5k_hw_update_mib_counters (or ioread32?) with 2.6.29
-Date: Sun, 29 Mar 2009 19:20:41 +1300
-Message-ID: <87tz5ckfye.fsf@burly.wgtn.ondioline.org> (sfid-20090329_082048_648529_41001B95)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 17 Mar 2009 03:47:08 -0400
+Subject: Re: [PATCH v3] mac80211: Tear down aggregation sessions for
+ suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	me@bobcopeland.com
+In-Reply-To: <18879.5862.135522.858638@gargle.gargle.HOWL>
+References: <18879.5862.135522.858638@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TXHEhr9PDmos0or39kKK"
+Date: Tue, 17 Mar 2009 08:46:59 +0100
+Message-Id: <1237276019.18086.7.camel@johannes.local> (sfid-20090317_084712_286449_B64B21D2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After about two days of uptime with 2.6.29 I got this:
 
-BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
-Modules linked in: ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_tcpudp iptable_filter ip_tables x_tables vfat fat usb_storage sch_sfq i915 drm i2c_algo_bit cfbcopyarea cfbimgblt cfbfillrect btusb rfcomm hidp l2cap bluetooth tun cpufreq_stats rpcsec_gss_krb5 nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc fuse cbc aes_x86_64 aes_generic xts gf128mul dm_crypt dm_mod fbcon font bitblit softcursor fb kvm_intel kvm acpi_cpufreq firewire_sbp2 loop snd_hda_intel snd_pcm arc4 snd_seq_midi snd_rawmidi ecb snd_seq_midi_event snd_seq snd_timer ath5k snd_seq_device snd mac80211 soundcore firewire_ohci firewire_core thermal snd_page_alloc cfg80211 i2c_i801 crc_itu_t button processor evdev
-CPU 0:
-Modules linked in: ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_tcpudp iptable_filter ip_tables x_tables vfat fat usb_storage sch_sfq i915 drm i2c_algo_bit cfbcopyarea cfbimgblt cfbfillrect btusb rfcomm hidp l2cap bluetooth tun cpufreq_stats rpcsec_gss_krb5 nfsd exportfs nfs lockd nfs_acl auth_rpcgss sunrpc fuse cbc aes_x86_64 aes_generic xts gf128mul dm_crypt dm_mod fbcon font bitblit softcursor fb kvm_intel kvm acpi_cpufreq firewire_sbp2 loop snd_hda_intel snd_pcm arc4 snd_seq_midi snd_rawmidi ecb snd_seq_midi_event snd_seq snd_timer ath5k snd_seq_device snd mac80211 soundcore firewire_ohci firewire_core thermal snd_page_alloc cfg80211 i2c_i801 crc_itu_t button processor evdev
-Pid: 0, comm: swapper Not tainted 2.6.29-00003-g0be8685 #163 Macmini2,1
-RIP: 0010:[<ffffffff803950f0>]  [<ffffffff803950f0>] ioread32+0xf/0x32
-RSP: 0018:ffffffff807dfc30  EFLAGS: 00000296
-RAX: 0000000000000000 RBX: ffffffff807dfc30 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: ffff88007cb51a68 RDI: ffffc200109e8094
-RBP: ffffffff8020d033 R08: ffffffff8070a600 R09: 0000000000000064
-R10: ffffffff807dfd60 R11: ffff88007cb51980 R12: ffffffff807dfbb0
-R13: ffff88007c916000 R14: 000000000076b647 R15: ffffffff8051966c
-FS:  0000000000000000(0000) GS:ffffffff807e8000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-CR2: 00007feefddbb0d0 CR3: 000000007a74e000 CR4: 00000000000026e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Call Trace:
- <IRQ>  [<ffffffffa009a884>] ? ath5k_hw_update_mib_counters+0xd9/0x15a [ath5k]
- [<ffffffffa00a0707>] ? ath5k_intr+0x24c/0x2bd [ath5k]
- [<ffffffff8021dcfb>] ? lapic_timer_broadcast+0x18/0x1a
- [<ffffffff8025f22c>] ? tick_handle_oneshot_broadcast+0xf3/0x101
- [<ffffffff80278e07>] ? handle_IRQ_event+0x33/0x6a
- [<ffffffff8027a248>] ? handle_fasteoi_irq+0x9b/0xe0
- [<ffffffff8027a1a3>] ? handle_edge_irq+0x126/0x130
- [<ffffffff80519565>] ? __irqentry_text_start+0x75/0xe9
- [<ffffffff8020cdd3>] ? ret_from_intr+0x0/0x29
- [<ffffffff804a6b19>] ? neigh_timer_handler+0x0/0x31b
- [<ffffffff8024a038>] ? round_jiffies_common+0x28/0x5a
- [<ffffffff804a593e>] ? neigh_periodic_timer+0x146/0x191
- [<ffffffff8024a0b5>] ? round_jiffies+0x18/0x1a
- [<ffffffff804a5955>] ? neigh_periodic_timer+0x15d/0x191
- [<ffffffff804a57f8>] ? neigh_periodic_timer+0x0/0x191
- [<ffffffff8024a4e7>] ? run_timer_softirq+0x19c/0x21d
- [<ffffffff8024679a>] ? __do_softirq+0x8f/0x159
- [<ffffffff8020d65c>] ? call_softirq+0x1c/0x28
- [<ffffffff8020e6f1>] ? do_softirq+0x49/0x94
- [<ffffffff8024647c>] ? irq_exit+0x44/0x7e
- [<ffffffff805195b8>] ? __irqentry_text_start+0xc8/0xe9
- [<ffffffff8020cdd3>] ? ret_from_intr+0x0/0x29
- <EOI>  [<ffffffff80260174>] ? tick_nohz_restart_sched_tick+0x140/0x149
- [<ffffffff80260146>] ? tick_nohz_restart_sched_tick+0x112/0x149
- [<ffffffff8020b2d0>] ? cpu_idle+0x98/0x9f
- [<ffffffff80501157>] ? rest_init+0x6b/0x6d
+--=-TXHEhr9PDmos0or39kKK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Hardware:
+On Tue, 2009-03-17 at 08:50 +0530, Sujith wrote:
+> When the driver has been notified with a STA_REMOVE, it tears down
+> the internal ADDBA state. On resume, trying to initiate aggregation would
+> fail because mac80211 has not cleared the operational state for that <TID=
+,STA>.
+> This can be fixed by tearing down the existing sessions on a suspend.
+>=20
+> Also, the driver can initiate a new BA session when suspend is in progres=
+s.
+> This is fixed by marking the station as being in suspend state and
+> denying ADDBA requests for such STAs.
+>=20
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+> v2:
+> ---
+> * Deny ADDBA requests if suspend is in progress.
+>=20
+> v3:
+> ---
+> * Use RCU protection when shutting down BA sessions for STAs.
 
-        ath5k phy0: Atheros AR5414 chip found (MAC: 0xa3, PHY: 0x61)
+Thanks for your patience :)
 
-02:00.0 Ethernet controller [0200]: Atheros Communications Inc. AR242x 802.11abg Wireless PCI Express Adapter [168c:001c] (rev 01)
-	Subsystem: Apple Computer Inc. Device [106b:0086]
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 256 bytes
-	Interrupt: pin A routed to IRQ 17
-	Region 0: Memory at 90100000 (64-bit, non-prefetchable) [size=64K]
-	Capabilities: <access denied>
-	Kernel driver in use: ath5k
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
--- 
-Paul Collins
-Wellington, New Zealand
+>  net/mac80211/agg-rx.c   |    8 ++++++++
+>  net/mac80211/agg-tx.c   |    9 +++++++++
+>  net/mac80211/pm.c       |   25 +++++++++++++++++++++++++
+>  net/mac80211/sta_info.h |    3 +++
+>  4 files changed, 45 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+> index a95affc..07656d8 100644
+> --- a/net/mac80211/agg-rx.c
+> +++ b/net/mac80211/agg-rx.c
+> @@ -197,6 +197,14 @@ void ieee80211_process_addba_request(struct ieee8021=
+1_local *local,
+> =20
+>  	status =3D WLAN_STATUS_REQUEST_DECLINED;
+> =20
+> +	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
+> +#ifdef CONFIG_MAC80211_HT_DEBUG
+> +		printk(KERN_DEBUG "Suspend in progress. "
+> +		       "Denying ADDBA request\n");
+> +#endif
+> +		goto end_no_lock;
+> +	}
+> +
+>  	/* sanity check for incoming parameters:
+>  	 * check if configuration can support the BA policy
+>  	 * and if buffer size does not exceeds max value */
+> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+> index 1df116d..e5776ef 100644
+> --- a/net/mac80211/agg-tx.c
+> +++ b/net/mac80211/agg-tx.c
+> @@ -257,6 +257,15 @@ int ieee80211_start_tx_ba_session(struct ieee80211_h=
+w *hw, u8 *ra, u16 tid)
+>  		goto unlock;
+>  	}
+> =20
+> +	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
+> +#ifdef CONFIG_MAC80211_HT_DEBUG
+> +		printk(KERN_DEBUG "Suspend in progress. "
+> +		       "Denying BA session request\n");
+> +#endif
+> +		ret =3D -EINVAL;
+> +		goto unlock;
+> +	}
+> +
+>  	spin_lock_bh(&sta->lock);
+> =20
+>  	sdata =3D sta->sdata;
+> diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+> index f845601..0273023 100644
+> --- a/net/mac80211/pm.c
+> +++ b/net/mac80211/pm.c
+> @@ -21,6 +21,19 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
+>  	list_for_each_entry(sdata, &local->interfaces, list)
+>  		ieee80211_disable_keys(sdata);
+> =20
+> +	/* Tear down aggregation sessions */
+> +
+> +	rcu_read_lock();
+> +
+> +	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
+> +		list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> +			set_sta_flags(sta, WLAN_STA_SUSPEND);
+> +			ieee80211_sta_tear_down_BA_sessions(sta);
+> +		}
+> +	}
+> +
+> +	rcu_read_unlock();
+> +
+>  	/* remove STAs */
+>  	if (local->ops->sta_notify) {
+>  		spin_lock_irqsave(&local->sta_lock, flags);
+> @@ -102,6 +115,18 @@ int __ieee80211_resume(struct ieee80211_hw *hw)
+>  		spin_unlock_irqrestore(&local->sta_lock, flags);
+>  	}
+> =20
+> +	/* Clear Suspend state so that ADDBA requests can be processed */
+> +
+> +	rcu_read_lock();
+> +
+> +	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
+> +		list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> +			clear_sta_flags(sta, WLAN_STA_SUSPEND);
+> +		}
+> +	}
+> +
+> +	rcu_read_unlock();
+> +
+>  	/* add back keys */
+>  	list_for_each_entry(sdata, &local->interfaces, list)
+>  		if (netif_running(sdata->dev))
+> diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+> index 1f45573..5b223b2 100644
+> --- a/net/mac80211/sta_info.h
+> +++ b/net/mac80211/sta_info.h
+> @@ -35,6 +35,8 @@
+>   *	IEEE80211_TX_CTL_CLEAR_PS_FILT control flag) when the next
+>   *	frame to this station is transmitted.
+>   * @WLAN_STA_MFP: Management frame protection is used with this STA.
+> + * @WLAN_STA_SUSPEND: Set/cleared during a suspend/resume cycle.
+> + *	Used to deny ADDBA requests (both TX and RX).
+>   */
+>  enum ieee80211_sta_info_flags {
+>  	WLAN_STA_AUTH		=3D 1<<0,
+> @@ -48,6 +50,7 @@ enum ieee80211_sta_info_flags {
+>  	WLAN_STA_PSPOLL		=3D 1<<8,
+>  	WLAN_STA_CLEAR_PS_FILT	=3D 1<<9,
+>  	WLAN_STA_MFP		=3D 1<<10,
+> +	WLAN_STA_SUSPEND	=3D 1<<11
+>  };
+> =20
+>  #define STA_TID_NUM 16
 
-Dag vijandelijk luchtschip de huismeester is dood
+--=-TXHEhr9PDmos0or39kKK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJv1VxAAoJEKVg1VMiehFYu18P/jNmJWiUsOPZO9QEL7HBMhf8
+t/LNhjzZYQ9JXyfOrdR2YAEMF/6ea3XIDCF0OpPMOdcelc5mOLz9nhzE2Qh9LQVt
+hA4mi+R4J4NtL6LL3C88Bl68HjuAXsCo/sFXMGtDwbs8GkQs8/lRLfE0svRp83FJ
+GqSfuxbFDClDzd9VSQj3gpW8gcV3dp72hucoJfyaaRmVuYBDfqlC7l5pwtFYkedX
+apBs4JZ1G13UlTBBB1BkXYjZ+yDRRdoZN2BHN+u7jEwtJyvjeouzvQQBKYUzGFhK
+Q6zs7T4gyu/RB0+S2PcRkvYGh3/vx9ItVAbooMwO+6zNmVrjPAFX7CTRavQtJFx3
+lxqbEh0e1dgW3XO/xUvUxQiRwStSzvSf1bB09SkfhrDN/g8cPZiDACsCqVBFyL8c
+KFXcuYjOA+ipE67HIVj/oDKad8+hccxt+PpZAl1hr3SoUdFDFxf/8uaoyHZ96BYO
+7e+42tDVz4uQZCMbY7rvOYhk2VtOzah17JMzDLll3a1syWOSHVQ2MaJI84P8iEP8
+e3BowAGEF0RDG2FygJqnmMF5Ysa3ZvFiXslMCCj8qmlupcjIe/Fu3la1RFiCe77Q
+XF7QlRJ9UqSzVa/Nro75HhmsOyatJlBYr2R7XTgFWNHNqKMLP3Iy+yixhX3Vd+Q/
+FNZdCRkkdsTzUkXatUMG
+=00G1
+-----END PGP SIGNATURE-----
+
+--=-TXHEhr9PDmos0or39kKK--
+
