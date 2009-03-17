@@ -1,87 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.29]:53870 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbZCCQ7O convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 11:59:14 -0500
-Received: by yw-out-2324.google.com with SMTP id 5so1873642ywh.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2009 08:59:12 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:55717 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753476AbZCQXhM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2009 19:37:12 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 16:37:11 -0700
+Date: Tue, 17 Mar 2009 15:36:32 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: Bob Copeland <me@bobcopeland.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Quan <David.Quan@Atheros.com>
+Subject: Re: ids missing in ath5k ?
+Message-ID: <20090317223632.GN6061@tesla> (sfid-20090318_003716_698448_E95122CB)
+References: <49BC0DBE.90209@gmail.com> <49BC6C21.6020807@gmail.com> <49BC7117.1010107@gmail.com> <b6c5339f0903171418h6534a5a8w1ef8354f9571657a@mail.gmail.com> <20090317213639.GF6061@tesla>
 MIME-Version: 1.0
-In-Reply-To: <1896462f4248df441aea8ebf3dd57f91@127.0.0.1>
-References: <1233666319.3957.1.camel@johannes.local>
-	 <30353c3d0903030627g5c5323f8l88e551a8b43a066a@mail.gmail.com>
-	 <1896462f4248df441aea8ebf3dd57f91@127.0.0.1>
-Date: Tue, 3 Mar 2009 11:59:03 -0500
-Message-ID: <30353c3d0903030859m30d3b107o9221ab9650c8a85b@mail.gmail.com> (sfid-20090303_175920_084525_90CAEDAE)
-Subject: Re: Cardbus wireless cards
-From: David Ellingsworth <david@identd.dyndns.org>
-To: pat-lkml@erley.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090317213639.GF6061@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 3, 2009 at 11:29 AM,  <pat-lkml@erley.org> wrote:
-> On Tue, 3 Mar 2009 09:27:38 -0500, David Ellingsworth
-> <david@identd.dyndns.org> wrote:
->> On Tue, Feb 3, 2009 at 8:05 AM, Johannes Berg <johannes@sipsolutions=
-=2Enet>
->> wrote:
->>> Hi,
->>>
->>> Some of you know that I got a new laptop, and it doesn't have a car=
-dbus
->>> slot any more. I still have my powerbook, and it's still working fi=
-ne,
->>> but I'm not using it any more, it hasn't even booted in a month. I =
-could
->>> test on my powerbook, but given my regular time budget it seems unl=
-ikely
->>> that I ever will.
->>>
->>> Hence, I'm offering my collection of cardbus/pcmcia wireless test c=
-ards
->>> to anyone I can afford shipping to.
->>>
->>> * Broadcom PCMCIA (not cardbus, in cardbus slot adapter)
->>> =A0requires external single antenna (u.fl, have one if I can find i=
-t)
->>> * Airgo-based Belkin F5D8010 ("true MIMO")
->>> * rt61pci (Conceptronic)
->>> * Broadcom 11n (4321)
->>> * acx111 based card (D-Link AirPlus XTreme G+)
->>>
->>> I also have a Broadcom 11g (4306 I think, might be 4318) PCI card
->>> somewhere that I will most likely never again have a use for.
->>>
->>> johannes
->>>
->>
->> I'm interested in the PCI card if it's still available.
->>
->> Regards,
->>
->> David Ellingsworth
->
-> This card found it's way to me, I do believe. =A0I've almost complete=
-d all
-> the testing I had planned on using it for. =A0I'd be fine with partin=
-g with
-> it after I complete my testing.
->
-> Pat Erley
->
+On Tue, Mar 17, 2009 at 02:36:39PM -0700, Luis Rodriguez wrote:
+> On Tue, Mar 17, 2009 at 02:18:45PM -0700, Bob Copeland wrote:
+> > On Sat, Mar 14, 2009 at 11:08 PM, Xose Vazquez Perez
+> > <xose.vazquez@gmail.com> wrote:
+> >
+> > > [missing ids: 0x168c: { 0xff1a, 0x0020, 0x101a, 0x9013 } ]
+> >
+> > Luis, do you know anything about these devices?  Are all of these
+> > 802.11abg or are any .11h (I didn't see ath9k claiming any of
+> > them either).
+> >
+> > Should be easy to add support, but would be nice to know if the
+> > hardware exists and will work.
+> 
+> ACK on FF1A -- 802.11abg, NACK on the others, we don't at least have
+> them in our own windows driver INF file.
 
-That's alright.. you can keep it. I'm sure you'll do a lot more
-testing on it then I'll ever get a chance to. I'll look for one
-elsewhere.
+Actually so any 0xFF1x device ID where x is any value would
+be the ID if the card has issues reading our EEPROM and in that
+case you can expect the card to simply not be operational, so feel
+free to add it but be sure to inform the user the card is having
+issues reading the EEPROM and simply disable the device.
 
-Regards,
-
-David Ellingsworth
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
