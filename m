@@ -1,27 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57619
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755086AbZC0HvO (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:49810 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755907AbZCQDKh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 03:51:14 -0400
-Date: Fri, 27 Mar 2009 00:51:02 -0700 (PDT)
-Message-Id: <20090327.005102.25050306.davem@davemloft.net> (sfid-20090327_085120_150889_514D91E7)
-To: shemminger@linux-foundation.org
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [patch 12/30] wireless: convert arlan to net_device_ops
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090327011255.831891273@linux-foundation.org>
-References: <20090327011114.169107105@linux-foundation.org>
-	<20090327011255.831891273@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 16 Mar 2009 23:10:37 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC][PATCH 5/5] ar9170: update Makefile, Kconfig and MAINTAINERS
+Date: Tue, 17 Mar 2009 04:10:35 +0100
+MIME-Version: 1.0
+Cc: mcgrof@gmail.com, Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903170410.35771.chunkeey@web.de> (sfid-20090317_041039_676901_CDB66033)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Hemminger <shemminger@linux-foundation.org>
-Date: Thu, 26 Mar 2009 18:11:26 -0700
-
-> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
-
-Applied.
+update Makefile, Kconfig and MAINTAINERS files
+---
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 1c2ca1d..b4f3699 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -765,6 +765,14 @@ L:	linux-wireless@vger.kernel.org
+ L:	ath9k-devel@lists.ath9k.org
+ S:	Supported
+ 
++ATHEROS AR9170 WIRELESS DRIVER
++P:	Christian Lamparter
++M:	chunkeey@web.de
++L:	linux-wireless@vger.kernel.org
++W:	http://wireless.kernel.org/en/users/Drivers/ar9170
++S:	Maintained
++F:	drivers/net/wireless/ar9170/
++
+ ATI_REMOTE2 DRIVER
+ P:	Ville Syrjala
+ M:	syrjala@sci.fi
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 612fffe..8a08235 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -485,6 +485,7 @@ config MWL8K
+ source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/ath5k/Kconfig"
+ source "drivers/net/wireless/ath9k/Kconfig"
++source "drivers/net/wireless/ar9170/Kconfig"
+ source "drivers/net/wireless/ipw2x00/Kconfig"
+ source "drivers/net/wireless/iwlwifi/Kconfig"
+ source "drivers/net/wireless/hostap/Kconfig"
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index d780487..5e7c9ac 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -57,5 +57,6 @@ obj-$(CONFIG_P54_COMMON)	+= p54/
+ 
+ obj-$(CONFIG_ATH5K)	+= ath5k/
+ obj-$(CONFIG_ATH9K)	+= ath9k/
++obj-$(CONFIG_AR9170_COMMON)	+= ar9170/
+ 
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
+diff --git a/drivers/net/wireless/ar9170/Kconfig b/drivers/net/wireless/ar9170/Kconfig
+new file mode 100644
+index 0000000..bc77741
+--- /dev/null
++++ b/drivers/net/wireless/ar9170/Kconfig
+@@ -0,0 +1,23 @@
++config AR9170_COMMON
++	tristate "Atheros AR9170 support"
++	depends on WLAN_80211 && MAC80211 && FW_LOADER && EXPERIMENTAL
++	help
++	  This is common code for AR9170 based devices.
++	  This module does nothing by itself - the USB/(SPI) frontends
++	  also need to be enabled in order to support any devices.
++
++	  These devices require firmware which can be found in the offical
++	  driver wiki at:
++	  http://wireless.kernel.org/en/users/Drivers/ar9170
++
++	  Say Y if you have the hardware, or M to build a module called
++	  ar9170common.
++
++config AR9170_USB
++	tristate "Atheros AR9170 USB support"
++	depends on AR9170_COMMON && USB
++	help
++	  This is a mac80211-based driver for the Atheros "otus" 802.11n
++	  (2.4 and 5 GHz) USB devices.
++
++	  If you choose to build a module, it'll be called ar9170usb.
+diff --git a/drivers/net/wireless/ar9170/Makefile b/drivers/net/wireless/ar9170/Makefile
+new file mode 100644
+index 0000000..4af4217
+--- /dev/null
++++ b/drivers/net/wireless/ar9170/Makefile
+@@ -0,0 +1,6 @@
++ar9170common-objs += main.o cmd.o mac.o phy.o led.o
++ar9170usb-objs += usb.o
++
++obj-$(CONFIG_AR9170_COMMON) += ar9170common.o
++obj-$(CONFIG_AR9170_USB) += ar9170usb.o
++
