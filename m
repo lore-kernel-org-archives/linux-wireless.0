@@ -1,37 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:42287 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753399AbZCPPv7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 11:51:59 -0400
-Content-Type: text/plain; charset=iso-8859-1
-Date: Mon, 16 Mar 2009 16:51:52 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <ee588a540903160324s59c83547jc7d2148642e00af4@mail.gmail.com>
-Message-ID: <20090316155152.276920@gmx.net> (sfid-20090316_165201_550432_14B5F5CF)
+Received: from mail.atheros.com ([12.36.123.2]:37324 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368AbZCQDYX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2009 23:24:23 -0400
+Received: from mail.atheros.com ([10.10.20.86])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 20:24:22 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-References: <ee588a540903160324s59c83547jc7d2148642e00af4@mail.gmail.com>
-Subject: Re: well working usb wlan stick
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	feldmann_markus@gmx.de, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <18879.5862.135522.858638@gargle.gargle.HOWL> (sfid-20090317_042426_627871_CDE9F27A)
+Date: Tue, 17 Mar 2009 08:50:06 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<me@bobcopeland.com>
+Subject: [PATCH v3] mac80211: Tear down aggregation sessions for suspend/resume
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+When the driver has been notified with a STA_REMOVE, it tears down
+the internal ADDBA state. On resume, trying to initiate aggregation would
+fail because mac80211 has not cleared the operational state for that <TID,STA>.
+This can be fixed by tearing down the existing sessions on a suspend.
 
-> only buy ZyDAS/Atheros(zd1211rw driver),  Realtek(rtl8187 driver) or
-> Ralink(rt73usb driver) devices.
+Also, the driver can initiate a new BA session when suspend is in progress.
+This is fixed by marking the station as being in suspend state and
+denying ADDBA requests for such STAs.
 
-As far I have tested, the ar9170 driver works okay for G too, only Draf=
-t-N is not supported at the moment.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+v2:
+---
+* Deny ADDBA requests if suspend is in progress.
 
-Regards
-Alina
+v3:
+---
+* Use RCU protection when shutting down BA sessions for STAs.
 
---=20
-Psssst! Schon vom neuen GMX MultiMessenger geh=F6rt? Der kann`s mit all=
-en: http://www.gmx.net/de/go/multimessenger01
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ net/mac80211/agg-rx.c   |    8 ++++++++
+ net/mac80211/agg-tx.c   |    9 +++++++++
+ net/mac80211/pm.c       |   25 +++++++++++++++++++++++++
+ net/mac80211/sta_info.h |    3 +++
+ 4 files changed, 45 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index a95affc..07656d8 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -197,6 +197,14 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 
+ 	status = WLAN_STATUS_REQUEST_DECLINED;
+ 
++	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
++#ifdef CONFIG_MAC80211_HT_DEBUG
++		printk(KERN_DEBUG "Suspend in progress. "
++		       "Denying ADDBA request\n");
++#endif
++		goto end_no_lock;
++	}
++
+ 	/* sanity check for incoming parameters:
+ 	 * check if configuration can support the BA policy
+ 	 * and if buffer size does not exceeds max value */
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 1df116d..e5776ef 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -257,6 +257,15 @@ int ieee80211_start_tx_ba_session(struct ieee80211_hw *hw, u8 *ra, u16 tid)
+ 		goto unlock;
+ 	}
+ 
++	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
++#ifdef CONFIG_MAC80211_HT_DEBUG
++		printk(KERN_DEBUG "Suspend in progress. "
++		       "Denying BA session request\n");
++#endif
++		ret = -EINVAL;
++		goto unlock;
++	}
++
+ 	spin_lock_bh(&sta->lock);
+ 
+ 	sdata = sta->sdata;
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index f845601..0273023 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -21,6 +21,19 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
+ 	list_for_each_entry(sdata, &local->interfaces, list)
+ 		ieee80211_disable_keys(sdata);
+ 
++	/* Tear down aggregation sessions */
++
++	rcu_read_lock();
++
++	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
++		list_for_each_entry_rcu(sta, &local->sta_list, list) {
++			set_sta_flags(sta, WLAN_STA_SUSPEND);
++			ieee80211_sta_tear_down_BA_sessions(sta);
++		}
++	}
++
++	rcu_read_unlock();
++
+ 	/* remove STAs */
+ 	if (local->ops->sta_notify) {
+ 		spin_lock_irqsave(&local->sta_lock, flags);
+@@ -102,6 +115,18 @@ int __ieee80211_resume(struct ieee80211_hw *hw)
+ 		spin_unlock_irqrestore(&local->sta_lock, flags);
+ 	}
+ 
++	/* Clear Suspend state so that ADDBA requests can be processed */
++
++	rcu_read_lock();
++
++	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
++		list_for_each_entry_rcu(sta, &local->sta_list, list) {
++			clear_sta_flags(sta, WLAN_STA_SUSPEND);
++		}
++	}
++
++	rcu_read_unlock();
++
+ 	/* add back keys */
+ 	list_for_each_entry(sdata, &local->interfaces, list)
+ 		if (netif_running(sdata->dev))
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 1f45573..5b223b2 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -35,6 +35,8 @@
+  *	IEEE80211_TX_CTL_CLEAR_PS_FILT control flag) when the next
+  *	frame to this station is transmitted.
+  * @WLAN_STA_MFP: Management frame protection is used with this STA.
++ * @WLAN_STA_SUSPEND: Set/cleared during a suspend/resume cycle.
++ *	Used to deny ADDBA requests (both TX and RX).
+  */
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH		= 1<<0,
+@@ -48,6 +50,7 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_PSPOLL		= 1<<8,
+ 	WLAN_STA_CLEAR_PS_FILT	= 1<<9,
+ 	WLAN_STA_MFP		= 1<<10,
++	WLAN_STA_SUSPEND	= 1<<11
+ };
+ 
+ #define STA_TID_NUM 16
+-- 
+1.6.2
+
