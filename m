@@ -1,32 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:59564 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754712AbZCSU2L (ORCPT
+Received: from mail-ew0-f168.google.com ([209.85.219.168]:44502 "EHLO
+	mail-ew0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752682AbZCQW0V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 16:28:11 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so731868rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 13:28:10 -0700 (PDT)
+	Tue, 17 Mar 2009 18:26:21 -0400
+Received: by ewy12 with SMTP id 12so230776ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 15:26:18 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1237491647.5100.114.camel@johannes.local>
-References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
-	 <1237491647.5100.114.camel@johannes.local>
-Date: Thu, 19 Mar 2009 13:28:10 -0700
-Message-ID: <43e72e890903191328j15a53a5au1f0162e53daa2a14@mail.gmail.com> (sfid-20090319_212816_870438_C29E7A52)
-Subject: Re: [PATCH v2 0/6] Use the regulatory bandwidth and export HT40 stuff
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Tue, 17 Mar 2009 18:26:18 -0400
+Message-ID: <86201b3f0903171526l62258146q3f9fb15166813484@mail.gmail.com> (sfid-20090317_232642_234193_B4888F7A)
+Subject: Support for country information
+From: Charles Gordon <digigordo@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 19, 2009 at 12:40 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> John,
->
-> please back out this series, I'm not sure I agree with the concept and
-> I'm sure there are potential bugs that can make it segfault.
+I'm writing a wireless driver that will use mac80211.  I am developing
+with a 2.6.28-00106 version kernel.  I took a look at the files in
+net/mac80211 and I don't see any code that looks at the country
+element in beacons and probe responses.  Am I missing something?  Does
+mac80211 handle country specific settings and regulatory domains?  If
+so, could you please tell me where I can find that code?  I need to
+figure out how to support 802.11j.  If country specific information is
+not supported at present, do you have a plan for when it will be?
 
-Can you be more elaborate?
+Also, does mac80211 handle 802.11a action messages like the ones to
+change channels?
 
-  Luis
+Thanks for you help.
