@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36963 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756014AbZCZRwE (ORCPT
+Received: from mail-ew0-f168.google.com ([209.85.219.168]:52602 "EHLO
+	mail-ew0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628AbZCQXBM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 13:52:04 -0400
-Subject: [PATCH v2] mac80211: include HT capabilities in probe request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1238088685.4331.72.camel@johannes.local> (sfid-20090326_183202_056572_CFB0861F)
-References: <1238088685.4331.72.camel@johannes.local>
-	 (sfid-20090326_183202_056572_CFB0861F)
-Content-Type: text/plain
-Date: Thu, 26 Mar 2009 18:51:27 +0100
-Message-Id: <1238089887.4331.78.camel@johannes.local> (sfid-20090326_185209_182164_232771CD)
-Mime-Version: 1.0
+	Tue, 17 Mar 2009 19:01:12 -0400
+Received: by ewy12 with SMTP id 12so239110ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 16:01:09 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rt2x00 mesh support
+Date: Wed, 18 Mar 2009 00:01:07 +0100
+Cc: Antonio Marques <froz@icix.org>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <200903172304.12595.IvDoorn@gmail.com> <1237329348.5100.8.camel@johannes.local>
+In-Reply-To: <1237329348.5100.8.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200903180001.07723.IvDoorn@gmail.com> (sfid-20090318_000115_127582_CA85009E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Include the HT capabilities in the probe request frame.
+On Tuesday 17 March 2009, Johannes Berg wrote:
+> On Tue, 2009-03-17 at 23:04 +0100, Ivo van Doorn wrote:
+> 
+> > I think I found something interesting in the log from Antonio which does
+> > suggest a mac80211 bug:
+> > 
+> > 
+> > > [108565.280398] phy3 -> rt73usb_config_intf: Error - TXRX_CSR9 WRITE:  0x000d0000, READ: 0x000d0000
+> > > [108565.385291] phy3 -> rt73usb_write_beacon: Error - TXRX_CSR9 WRITE: 0x00040000, READ: 0x00040000
+> > > [108565.492687] phy3 -> rt73usb_kick_tx_queue: Error - TXRX_CSR9  WRITE: 0x001d0000, READ: 0x001d0000
+> > 
+> > These 3 commands mean that mac80211 has send the beacon data.
+> > 
+> > > [108565.603206] phy3 -> rt73usb_init_registers: Error - TXRX_CSR9  WRITE: 0x00000000, READ: 0x00000000
+> > 
+> > This command means that mac80211 uses the start() callback function. This triggers rt2x00 to initialize
+> > the registers which resets the beacon generation.
+> 
+> Strange, that doesn't seem right. If you look at net/mac80211/iface.c,
+> you'll see it call ->start(), then ->add_interface(), and later
+> ieee80211_start_mesh(), which calls _if_config() and sets
+> beacon/beacon_enabled.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: fix the HT IE
+ok, I gone through the rt2x00 code a couple of times now to see how this bug can be triggered by rt2x00,
+But the only other scenario I could find, is when the open() callback for the netdevice structure doesn't end
+with a call to the config() callback function. But as far as I see it that is happening correctly.
 
- net/mac80211/ieee80211_i.h |    3 ++-
- net/mac80211/util.c        |   16 ++++++++++++++++
- 2 files changed, 18 insertions(+), 1 deletion(-)
-
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-03-26 18:21:59.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-03-26 18:28:44.000000000 +0100
-@@ -53,7 +53,8 @@ struct ieee80211_local;
- 
- /* cfg80211 only supports 32 rates */
- #define MAC80211_PREQ_IE_LEN	( 2 + 32 /* SSID */\
--				+ 4 + 32 /* (ext) supp rates */)
-+				+ 4 + 32 /* (ext) supp rates */\
-+				+ sizeof(struct ieee80211_ht_cap))
- 
- /*
-  * Time after which we ignore scan results and no longer report/use
---- wireless-testing.orig/net/mac80211/util.c	2009-03-26 18:21:59.000000000 +0100
-+++ wireless-testing/net/mac80211/util.c	2009-03-26 18:46:22.000000000 +0100
-@@ -862,6 +862,22 @@ int ieee80211_build_preq_ies(struct ieee
- 		*pos++ = rate->bitrate / 5;
- 	}
- 
-+	if (sband->ht_cap.ht_supported) {
-+		__le16 tmp = cpu_to_le16(sband->ht_cap.cap);
-+
-+		*pos++ = WLAN_EID_HT_CAPABILITY;
-+		*pos++ = sizeof(struct ieee80211_ht_cap);
-+		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
-+		memcpy(pos, &tmp, sizeof(u16));
-+		pos += sizeof(u16);
-+		/* TODO: needs a define here for << 2 */
-+		*pos++ = sband->ht_cap.ampdu_factor |
-+			 (sband->ht_cap.ampdu_density << 2);
-+		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
-+		pos += sizeof(sband->ht_cap.mcs);
-+		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
-+	}
-+
- 	/* if adding more here, adjust MAC80211_PREQ_IE_LEN */
- 
- 	if (ie) {
-
-
+Ivo
