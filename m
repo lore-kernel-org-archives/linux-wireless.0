@@ -1,105 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37548 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754778AbZCaKbt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 06:31:49 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: [PATCH] b43: Do radio lock assertion in software
-Date: Tue, 31 Mar 2009 12:27:32 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Received: from fmailhost01.isp.att.net ([207.115.11.51]:38296 "EHLO
+	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752465AbZCQQQx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2009 12:16:53 -0400
+Message-ID: <49BFCCC5.9080500@lwfinger.net> (sfid-20090317_171658_112665_EE683184)
+Date: Tue, 17 Mar 2009 11:16:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200903311227.32684.mb@bu3sch.de> (sfid-20090331_123154_572855_DDC497F7)
+To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Possible circular locking problem
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The assertion of the lock-bit in the hardware register is unreliable,
-because there are devices with quirks that will randomly set the bit.
+While testing usage of b43legacy as an AP, I got the following in my logs. My
+kernel is the latest wireless-testing that was pulled about 2 hours ago -
+hostapd is 0.6.8.
 
-Do the assertion in software, only.
+Larry
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+=======================================================
+[ INFO: possible circular locking dependency detected ]
+2.6.29-rc8-wl #89
+-------------------------------------------------------
+hostapd/6686 is trying to acquire lock:
+ (rtnl_mutex){--..}, at: [<ffffffff803e45b8>] rtnl_lock+0x12/0x14
 
----
+but task is already holding lock:
+ (&drv->mtx){--..}, at: [<ffffffffa01e2a60>]
+cfg80211_get_dev_from_info+0x101/0x115 [cfg80211]
 
-John, please queue this bugfix.
+which lock already depends on the new lock.
 
 
-Index: wireless-testing/drivers/net/wireless/b43/phy_common.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_common.c	2009-03-31 12:03:22.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/phy_common.c	2009-03-31 12:08:00.000000000 +0200
-@@ -131,12 +131,16 @@ void b43_radio_lock(struct b43_wldev *de
- {
- 	u32 macctl;
- 
-+#if B43_DEBUG
-+	B43_WARN_ON(dev->phy.radio_locked);
-+	dev->phy.radio_locked = 1;
-+#endif
-+
- 	macctl = b43_read32(dev, B43_MMIO_MACCTL);
--	B43_WARN_ON(macctl & B43_MACCTL_RADIOLOCK);
- 	macctl |= B43_MACCTL_RADIOLOCK;
- 	b43_write32(dev, B43_MMIO_MACCTL, macctl);
--	/* Commit the write and wait for the device
--	 * to exit any radio register access. */
-+	/* Commit the write and wait for the firmware
-+	 * to finish any radio register access. */
- 	b43_read32(dev, B43_MMIO_MACCTL);
- 	udelay(10);
- }
-@@ -145,11 +149,15 @@ void b43_radio_unlock(struct b43_wldev *
- {
- 	u32 macctl;
- 
-+#if B43_DEBUG
-+	B43_WARN_ON(!dev->phy.radio_locked);
-+	dev->phy.radio_locked = 0;
-+#endif
-+
- 	/* Commit any write */
- 	b43_read16(dev, B43_MMIO_PHY_VER);
- 	/* unlock */
- 	macctl = b43_read32(dev, B43_MMIO_MACCTL);
--	B43_WARN_ON(!(macctl & B43_MACCTL_RADIOLOCK));
- 	macctl &= ~B43_MACCTL_RADIOLOCK;
- 	b43_write32(dev, B43_MMIO_MACCTL, macctl);
- }
-Index: wireless-testing/drivers/net/wireless/b43/phy_common.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_common.h	2009-03-31 12:02:58.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/phy_common.h	2009-03-31 12:05:54.000000000 +0200
-@@ -245,8 +245,10 @@ struct b43_phy {
- 	atomic_t txerr_cnt;
- 
- #ifdef CONFIG_B43_DEBUG
--	/* PHY registers locked by b43_phy_lock()? */
-+	/* PHY registers locked (w.r.t. firmware) */
- 	bool phy_locked;
-+	/* Radio registers locked (w.r.t. firmware) */
-+	bool radio_locked;
- #endif /* B43_DEBUG */
- };
- 
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-03-31 12:12:53.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2009-03-31 12:14:45.000000000 +0200
-@@ -3980,6 +3980,11 @@ static void setup_struct_phy_for_init(st
- 	phy->next_txpwr_check_time = jiffies;
- 	/* PHY TX errors counter. */
- 	atomic_set(&phy->txerr_cnt, B43_PHY_TX_BADNESS_LIMIT);
-+
-+#if B43_DEBUG
-+	phy->phy_locked = 0;
-+	phy->radio_locked = 0;
-+#endif
- }
- 
- static void setup_struct_wldev_for_init(struct b43_wldev *dev)
+the existing dependency chain (in reverse order) is:
 
--- 
-Greetings, Michael.
+-> #2 (&drv->mtx){--..}:
+       [<ffffffff8025ed1f>] __lock_acquire+0x12b4/0x161e
+       [<ffffffff8025f0de>] lock_acquire+0x55/0x71
+       [<ffffffff804490d2>] mutex_lock_nested+0x111/0x2ae
+       [<ffffffffa01e293a>] cfg80211_get_dev_from_ifindex+0x65/0x8a [cfg80211]
+       [<ffffffffa01e4ef5>] cfg80211_wext_giwscan+0x40/0xe8a [cfg80211]
+       [<ffffffff804382bd>] ioctl_standard_iw_point+0x16d/0x1fc
+       [<ffffffff804383e1>] ioctl_standard_call+0x95/0xb4
+       [<ffffffff8043852b>] wext_ioctl_dispatch+0x9a/0x172
+       [<ffffffff804386ee>] wext_handle_ioctl+0x39/0x6f
+       [<ffffffff803dd0a8>] dev_ioctl+0x611/0x63a
+       [<ffffffff803cc9df>] sock_ioctl+0x20e/0x21d
+       [<ffffffff802bc050>] vfs_ioctl+0x2a/0x78
+       [<ffffffff802bc509>] do_vfs_ioctl+0x46b/0x4ab
+       [<ffffffff802bc58b>] sys_ioctl+0x42/0x65
+       [<ffffffff8020c0db>] system_call_fastpath+0x16/0x1b
+       [<ffffffffffffffff>] 0xffffffffffffffff
+
+-> #1 (cfg80211_mutex){--..}:
+       [<ffffffff8025ed1f>] __lock_acquire+0x12b4/0x161e
+       [<ffffffff8025f0de>] lock_acquire+0x55/0x71
+       [<ffffffff804490d2>] mutex_lock_nested+0x111/0x2ae
+       [<ffffffffa01e28ec>] cfg80211_get_dev_from_ifindex+0x17/0x8a [cfg80211]
+       [<ffffffffa01e4ef5>] cfg80211_wext_giwscan+0x40/0xe8a [cfg80211]
+       [<ffffffff804382bd>] ioctl_standard_iw_point+0x16d/0x1fc
+       [<ffffffff804383e1>] ioctl_standard_call+0x95/0xb4
+       [<ffffffff8043852b>] wext_ioctl_dispatch+0x9a/0x172
+       [<ffffffff804386ee>] wext_handle_ioctl+0x39/0x6f
+       [<ffffffff803dd0a8>] dev_ioctl+0x611/0x63a
+       [<ffffffff803cc9df>] sock_ioctl+0x20e/0x21d
+       [<ffffffff802bc050>] vfs_ioctl+0x2a/0x78
+       [<ffffffff802bc509>] do_vfs_ioctl+0x46b/0x4ab
+       [<ffffffff802bc58b>] sys_ioctl+0x42/0x65
+       [<ffffffff8020c0db>] system_call_fastpath+0x16/0x1b
+       [<ffffffffffffffff>] 0xffffffffffffffff
+
+-> #0 (rtnl_mutex){--..}:
+       [<ffffffff8025e9ee>] __lock_acquire+0xf83/0x161e
+       [<ffffffff8025f0de>] lock_acquire+0x55/0x71
+       [<ffffffff804490d2>] mutex_lock_nested+0x111/0x2ae
+       [<ffffffff803e45b8>] rtnl_lock+0x12/0x14
+       [<ffffffffa01eac78>] nl80211_new_interface+0xb8/0x18d [cfg80211]
+       [<ffffffff803ef5be>] genl_rcv_msg+0x19a/0x1bb
+       [<ffffffff803ee7a2>] netlink_rcv_skb+0x3e/0x90
+       [<ffffffff803ef414>] genl_rcv+0x29/0x39
+       [<ffffffff803ee282>] netlink_unicast+0x1fe/0x274
+       [<ffffffff803ee575>] netlink_sendmsg+0x27d/0x290
+       [<ffffffff803cd17d>] sock_sendmsg+0xdf/0xf8
+       [<ffffffff803cd368>] sys_sendmsg+0x1d2/0x23c
+       [<ffffffff8020c0db>] system_call_fastpath+0x16/0x1b
+       [<ffffffffffffffff>] 0xffffffffffffffff
+
+other info that might help us debug this:
+
+2 locks held by hostapd/6686:
+ #0:  (genl_mutex){--..}, at: [<ffffffff803ef405>] genl_rcv+0x1a/0x39
+ #1:  (&drv->mtx){--..}, at: [<ffffffffa01e2a60>]
+cfg80211_get_dev_from_info+0x101/0x115 [cfg80211]
+
+stack backtrace:
+Pid: 6686, comm: hostapd Not tainted 2.6.29-rc8-wl #89
+Call Trace:
+ [<ffffffff8025d685>] print_circular_bug_tail+0xc5/0xd0
+ [<ffffffff8025e9ee>] __lock_acquire+0xf83/0x161e
+ [<ffffffffa01e2a60>] ? cfg80211_get_dev_from_info+0x101/0x115 [cfg80211]
+ [<ffffffff8025f0de>] lock_acquire+0x55/0x71
+ [<ffffffff803e45b8>] ? rtnl_lock+0x12/0x14
+ [<ffffffff804490d2>] mutex_lock_nested+0x111/0x2ae
+ [<ffffffff803e45b8>] ? rtnl_lock+0x12/0x14
+ [<ffffffff803e45b8>] ? rtnl_lock+0x12/0x14
+ [<ffffffff803e45b8>] rtnl_lock+0x12/0x14
+ [<ffffffffa01eac78>] nl80211_new_interface+0xb8/0x18d [cfg80211]
+ [<ffffffff803eeb6b>] ? validate_nla+0x96/0x141
+ [<ffffffff803ef5be>] genl_rcv_msg+0x19a/0x1bb
+ [<ffffffff803ef424>] ? genl_rcv_msg+0x0/0x1bb
+ [<ffffffff803ee7a2>] netlink_rcv_skb+0x3e/0x90
+ [<ffffffff803ef414>] genl_rcv+0x29/0x39
+ [<ffffffff803ee180>] ? netlink_unicast+0xfc/0x274
+ [<ffffffff803ee282>] netlink_unicast+0x1fe/0x274
+ [<ffffffff803d4310>] ? __alloc_skb+0x6f/0x131
+ [<ffffffff803ee575>] netlink_sendmsg+0x27d/0x290
+ [<ffffffff803cd17d>] sock_sendmsg+0xdf/0xf8
+ [<ffffffff8024f1c4>] ? autoremove_wake_function+0x0/0x38
+ [<ffffffff8044acf0>] ? _spin_unlock_irqrestore+0x3f/0x47
+ [<ffffffff803cdb68>] ? move_addr_to_kernel+0x40/0x49
+ [<ffffffff803d5502>] ? verify_iovec+0x4f/0x91
+ [<ffffffff803cd368>] sys_sendmsg+0x1d2/0x23c
+ [<ffffffff802be90d>] ? __d_free+0x55/0x59
+ [<ffffffff802be943>] ? d_free+0x32/0x4c
+ [<ffffffff802c5577>] ? mntput_no_expire+0x2a/0x13d
+ [<ffffffff802b1012>] ? __fput+0x19c/0x1a9
+ [<ffffffff8025d14b>] ? trace_hardirqs_on_caller+0x114/0x138
+ [<ffffffff8044a8cc>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+ [<ffffffff8032ac62>] ? __up_read+0x1c/0x9a
+ [<ffffffff8020c0db>] system_call_fastpath+0x16/0x1b
