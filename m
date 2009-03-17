@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35896 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759643AbZCYQcf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 12:32:35 -0400
-Date: Wed, 25 Mar 2009 18:32:25 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: Optional IEs into scan request
-Message-ID: <20090325163225.GA28509@jm.kir.nu> (sfid-20090325_173249_908415_C1606549)
-References: <20090213105306.GA18754@jm.kir.nu> <1234522804.4219.13.camel@johannes.local> <20090213111523.GA22438@jm.kir.nu> <1ba2fa240902150509i5df08adcg214901548d3cd538@mail.gmail.com> <20090215154408.GA6845@jm.kir.nu> <1ba2fa240902151240v3bbe2885l4ef4d90e5d78b0a7@mail.gmail.com> <1ba2fa240903250838qab8acb1v3abffe06c5384d13@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1ba2fa240903250838qab8acb1v3abffe06c5384d13@mail.gmail.com>
+Received: from sh.osrg.net ([192.16.179.4]:60762 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753129AbZCQAgh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2009 20:36:37 -0400
+Date: Tue, 17 Mar 2009 09:35:45 +0900
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, joerg.roedel@amd.com,
+	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: Re: AMD Quad core - PCI-DMA: Out of IOMMU space on > 4 GB RAM
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <43e72e890903161215u343cbb19v6d6cbf36794e252a@mail.gmail.com>
+References: <43e72e890903161215u343cbb19v6d6cbf36794e252a@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Message-Id: <20090317093445G.fujita.tomonori@lab.ntt.co.jp> (sfid-20090317_013641_335274_3F1A16BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 25, 2009 at 05:38:11PM +0200, Tomas Winkler wrote:
+On Mon, 16 Mar 2009 12:15:37 -0700
+"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
 
-> After reading the WPS spec again and specifically the section 10.3
-> that talks about PBC, it looks like for PBC you will need to have the
-> WPS IE in the Probe request for it to function correctly. So it
-> doesn't look optional to mee
+> I've run into "PCI-DMA: Out of IOMMU space" messages after loading and
+> unloading a module 30 times. The interesting thing is this only
+> happens if I have > 4 GB of memory. The box this occurs has AMD Phenom
+> quad core CPU so I take it a harware IOMMU is being used. Below are
+> example relevant messages with > 4 GB and then < 4 GB of memory. The
+> driver I tested this with was ath9k. It could be an issue perhaps with
+> ath9k but I am unable to find an issue in our probe/removal.
 > 
-> The WPS IE in the Probe Request will indicate that the device is in
-> PBC mode. The WPS IE is also used for Registrars to see if multiple
-> requests were received within the PBC Monitor time.
+> Could this be an issue with the AMD IOMMU used? Or is it more likely a
+> driver issue?
 
-It is not ideal to work without including the WPS IE in Probe Request,
-but the Registrar should be able to do similar detection for session
-overlap using M1. If you want something better, all you need to do is to
-move from using WEXT to nl80211.. ;-)
+ath9k wants DMA_32BIT_MASK, right? If so, GART IOMMU does nothing on a
+system with < 4GB memory since ath9k can access to all the memory
+addresses directly. With >4GB memory, GART needs to remap an address
+higher than 4GB because ath9k wants DMA_32BIT_MASK.
 
-The spec is somewhat unclear on this, but there are couple of places
-which indicate that the WPS IE may not always be included in Probe
-Request (e.g., APs must not reject WPS based on missing WPS IE in Probe
-Request).
+>From a quick look, ath9k doesn't call pci_unmap_single for rx
+buffers. Though I might be wrong because I don't know anything about
+the driver.
 
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] ath9k: fix dma mapping leak of rx buffer
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/net/wireless/ath9k/recv.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath9k/recv.c b/drivers/net/wireless/ath9k/recv.c
+index 462e08c..cd2a1f6 100644
+--- a/drivers/net/wireless/ath9k/recv.c
++++ b/drivers/net/wireless/ath9k/recv.c
+@@ -322,8 +322,11 @@ void ath_rx_cleanup(struct ath_softc *sc)
+ 
+ 	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
+ 		skb = bf->bf_mpdu;
+-		if (skb)
++		if (skb) {
++			pci_unmap_single(sc->pdev, bf->bf_buf_addr,
++					 sc->rx.bufsize, PCI_DMA_FROMDEVICE);
+ 			dev_kfree_skb(skb);
++		}
+ 	}
+ 
+ 	if (sc->rx.rxdma.dd_desc_len != 0)
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.0.6
+
+
