@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34129 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754032AbZCSFyp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 01:54:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 5/6] cfg80211: send channel max bandwidth to userspace
-Date: Thu, 19 Mar 2009 01:54:39 -0400
-Message-Id: <1237442080-27509-6-git-send-email-lrodriguez@atheros.com> (sfid-20090319_065450_037485_AFB03527)
-In-Reply-To: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
-References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
+Received: from chilli.pcug.org.au ([203.10.76.44]:41736 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751541AbZCQCAS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2009 22:00:18 -0400
+Date: Tue, 17 Mar 2009 13:00:09 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-03-16
+Message-Id: <20090317130009.19e2dbd8.sfr@canb.auug.org.au> (sfid-20090317_030023_586939_E6EC9B5D)
+In-Reply-To: <20090316231423.GA3633@tuxdriver.com>
+References: <20090316231423.GA3633@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Tue__17_Mar_2009_13_00_09_+1100_U0KhvqZyqHeRo.Xk"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/linux/nl80211.h |    3 +++
- net/wireless/nl80211.c  |    3 ++-
- 2 files changed, 5 insertions(+), 1 deletions(-)
+--Signature=_Tue__17_Mar_2009_13_00_09_+1100_U0KhvqZyqHeRo.Xk
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 3700d92..3924fe4 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -670,6 +670,7 @@ enum nl80211_band_attr {
-  *	on this channel in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_MAX_TX_POWER: Maximum transmission power in mBm
-  *	(100 * dBm).
-+ * @NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH: max bandwidth allowed, given in MHz
-  */
- enum nl80211_frequency_attr {
- 	__NL80211_FREQUENCY_ATTR_INVALID,
-@@ -679,6 +680,7 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_NO_IBSS,
- 	NL80211_FREQUENCY_ATTR_RADAR,
- 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-+	NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-@@ -686,6 +688,7 @@ enum nl80211_frequency_attr {
- };
- 
- #define NL80211_FREQUENCY_ATTR_MAX_TX_POWER NL80211_FREQUENCY_ATTR_MAX_TX_POWER
-+#define NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH
- 
- /**
-  * enum nl80211_bitrate_attr - bitrate attributes
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e03c9a2..e2727ee 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -208,9 +208,10 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
- 			if (chan->flags & IEEE80211_CHAN_RADAR)
- 				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR);
--
- 			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
- 				    DBM_TO_MBM(chan->max_power));
-+			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
-+				    chan->max_bandwidth);
- 
- 			nla_nest_end(msg, nl_freq);
- 		}
--- 
-1.6.0.6
+Hi John,
 
+On Mon, 16 Mar 2009 19:14:24 -0400 "John W. Linville" <linville@tuxdriver.c=
+om> wrote:
+>
+> The first one from Luis fixes bug 12110 at bugzilla.kernel.org.  I know
+> he has worked on it for a long time and I've had several desperate users
+> asking for it, so it must be good. :-)  Unfortunately, it causes some
+> nasty merge errors with what is in net-next-2.6 and wireless-next-2.6.
+> I created a merge-test branch in wireless-next-2.6, and the merge commit
+> log goes into more detail about resolving the issue.  In short, you
+> probably want to diff drivers/net/ath9k against the merge-test branch...
+
+I resolved the conflicts as you suggested (hopefully).
+
+Thanks.
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Tue__17_Mar_2009_13_00_09_+1100_U0KhvqZyqHeRo.Xk
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkm/BCkACgkQjjKRsyhoI8zztQCguqAeGRTxChEEKS/Og6ton0p9
+PXAAn3pPDQq4NR6HwqN6PMedITNEmWBT
+=T7zP
+-----END PGP SIGNATURE-----
+
+--Signature=_Tue__17_Mar_2009_13_00_09_+1100_U0KhvqZyqHeRo.Xk--
