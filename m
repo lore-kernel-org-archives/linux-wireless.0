@@ -1,131 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-72-66-92-28.washdc.fios.verizon.net ([72.66.92.28]:4897
-	"EHLO mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254AbZCJBOr (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34070
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754589AbZCQVkD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 21:14:47 -0400
-Date: Mon, 9 Mar 2009 20:43:44 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Sitsofe Wheeler <sitsofe@yahoo.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
-Message-ID: <20090310004344.GA23466@hash.localnet> (sfid-20090310_021452_343009_CDE77566)
-References: <49A46AD4.3060007@gmail.com> <20090225140139.GA18694@silver.sucs.org> <20090226135938.GA12182@hash.localnet> <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org> <20090308030928.GB14966@hash.localnet> <49B38FB7.3000002@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49B38FB7.3000002@gmail.com>
+	Tue, 17 Mar 2009 17:40:03 -0400
+Date: Tue, 17 Mar 2009 14:39:49 -0700 (PDT)
+Message-Id: <20090317.143949.250643299.davem@davemloft.net> (sfid-20090317_224008_214099_5E281D51)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sfr@canb.auug.org.au
+Subject: Re: pull request: wireless-2.6 2009-03-16
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090316231423.GA3633@tuxdriver.com>
+References: <20090316231423.GA3633@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 08, 2009 at 10:28:23AM +0100, Jiri Slaby wrote:
->> If you want I'll cook up a patch for that too.
->
-> If you like, feel free to kick it off. Remember to remove bf->flags  
-> completely, so that we save another bunch of memory ;).
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 16 Mar 2009 19:14:24 -0400
 
-Ok, here's a patch, it survived a few hours of testing with 3 rx buffers.
-Sitsofe, it's worth a try applying this one, even though it probably
-isn't it :)
+> Here is a group of patches intended for 2.6.29.  The one from me is
+> minor, but it cuts-down on log SPAM for ipw2100, ipw2200, and hostap
+> users.  The two from Jouni fix some panics he observed himself.
+> 
+> The first one from Luis fixes bug 12110 at bugzilla.kernel.org.  I know
+> he has worked on it for a long time and I've had several desperate users
+> asking for it, so it must be good. :-)  Unfortunately, it causes some
+> nasty merge errors with what is in net-next-2.6 and wireless-next-2.6.
+> I created a merge-test branch in wireless-next-2.6, and the merge commit
+> log goes into more detail about resolving the issue.  In short, you
+> probably want to diff drivers/net/ath9k against the merge-test branch...
+> 
+> Please let me know if there are problems!
 
-From: Bob Copeland <me@bobcopeland.com>
-Date: Mon, 9 Mar 2009 11:29:34 -0400
-Subject: [PATCH] ath5k: use rx hw descriptor pointer for self-linked check
+Pulled, thanks John.
 
-This patch simplifies the code used to detect when the
-self-linked DMA buffer is still in use by hardware, by
-checking the hardware's rxdp register instead of looking
-at the software buffer list.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath5k/base.c |   24 ++++--------------------
- drivers/net/wireless/ath5k/base.h |    1 -
- drivers/net/wireless/ath5k/dma.c  |    2 --
- 3 files changed, 4 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
-index 1d77ee9..a4e385b 100644
---- a/drivers/net/wireless/ath5k/base.c
-+++ b/drivers/net/wireless/ath5k/base.c
-@@ -1677,7 +1677,7 @@ ath5k_tasklet_rx(unsigned long data)
- 	struct sk_buff *skb, *next_skb;
- 	dma_addr_t next_skb_addr;
- 	struct ath5k_softc *sc = (void *)data;
--	struct ath5k_buf *bf, *bf_last;
-+	struct ath5k_buf *bf;
- 	struct ath5k_desc *ds;
- 	int ret;
- 	int hdrlen;
-@@ -1688,7 +1688,6 @@ ath5k_tasklet_rx(unsigned long data)
- 		ATH5K_WARN(sc, "empty rx buf pool\n");
- 		goto unlock;
- 	}
--	bf_last = list_entry(sc->rxbuf.prev, struct ath5k_buf, list);
- 	do {
- 		rxs.flag = 0;
- 
-@@ -1697,24 +1696,9 @@ ath5k_tasklet_rx(unsigned long data)
- 		skb = bf->skb;
- 		ds = bf->desc;
- 
--		/*
--		 * last buffer must not be freed to ensure proper hardware
--		 * function. When the hardware finishes also a packet next to
--		 * it, we are sure, it doesn't use it anymore and we can go on.
--		 */
--		if (bf_last == bf)
--			bf->flags |= 1;
--		if (bf->flags) {
--			struct ath5k_buf *bf_next = list_entry(bf->list.next,
--					struct ath5k_buf, list);
--			ret = sc->ah->ah_proc_rx_desc(sc->ah, bf_next->desc,
--					&rs);
--			if (ret)
--				break;
--			bf->flags &= ~1;
--			/* skip the overwritten one (even status is martian) */
--			goto next;
--		}
-+		/* bail if HW is still using self-linked descriptor */
-+		if (ath5k_hw_get_rxdp(sc->ah) == bf->daddr)
-+			break;
- 
- 		ret = sc->ah->ah_proc_rx_desc(sc->ah, ds, &rs);
- 		if (unlikely(ret == -EINPROGRESS))
-diff --git a/drivers/net/wireless/ath5k/base.h b/drivers/net/wireless/ath5k/base.h
-index facc60d..ed407cc 100644
---- a/drivers/net/wireless/ath5k/base.h
-+++ b/drivers/net/wireless/ath5k/base.h
-@@ -56,7 +56,6 @@
- 
- struct ath5k_buf {
- 	struct list_head	list;
--	unsigned int		flags;	/* rx descriptor flags */
- 	struct ath5k_desc	*desc;	/* virtual addr of desc */
- 	dma_addr_t		daddr;	/* physical addr of desc */
- 	struct sk_buff		*skb;	/* skbuff for buf */
-diff --git a/drivers/net/wireless/ath5k/dma.c b/drivers/net/wireless/ath5k/dma.c
-index b65b4fe..941b511 100644
---- a/drivers/net/wireless/ath5k/dma.c
-+++ b/drivers/net/wireless/ath5k/dma.c
-@@ -80,8 +80,6 @@ int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
-  * ath5k_hw_get_rxdp - Get RX Descriptor's address
-  *
-  * @ah: The &struct ath5k_hw
-- *
-- * XXX: Is RXDP read and clear ?
-  */
- u32 ath5k_hw_get_rxdp(struct ath5k_hw *ah)
- {
--- 
-1.6.0.6
-
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Wish me luck with the net-next-2.6 merge :-)
