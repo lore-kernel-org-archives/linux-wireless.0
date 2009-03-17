@@ -1,80 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:38379 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757043AbZC0VbW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 17:31:22 -0400
-Subject: RE: [ipw3945-devel] New firmware available for Intel PRO/Wireless
-	2200BG and 2915ABG
-From: Dan Williams <dcbw@redhat.com>
-To: "Cahill, Ben M" <ben.m.cahill@intel.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <02B3067C068D0549A8CCFCB17D4D318B2E76C1D5@orsmsx502.amr.corp.intel.com>
-References: <1237916524.455.18.camel@rc-desk>
-	 <200903241855.06916.helmut.schaa@gmail.com>
-	 <1237918158.455.26.camel@rc-desk>
-	 <200903271637.42048.helmut.schaa@gmail.com>
-	 <02B3067C068D0549A8CCFCB17D4D318B2E76C1D5@orsmsx502.amr.corp.intel.com>
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 27 Mar 2009 17:29:02 -0400
-Message-Id: <1238189342.16870.12.camel@localhost.localdomain> (sfid-20090327_223138_286423_5ABEF8E8)
+Received: from xc.sipsolutions.net ([83.246.72.84]:41617 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750946AbZCQXbS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2009 19:31:18 -0400
+Subject: Re: [PATCH] zd1211rw: Do not panic on device eject when associated
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090316194733.GA23062@jm.kir.nu> (sfid-20090316_204748_435020_3BB72D18)
+References: <20090316194733.GA23062@jm.kir.nu>
+	 (sfid-20090316_204748_435020_3BB72D18)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-blAnJyhUVZTeerbsRyTb"
+Date: Wed, 18 Mar 2009 00:30:42 +0100
+Message-Id: <1237332642.5100.10.camel@johannes.local> (sfid-20090318_003121_260116_9554FC53)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-03-27 at 11:55 -0700, Cahill, Ben M wrote:
+
+--=-blAnJyhUVZTeerbsRyTb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2009-03-16 at 21:47 +0200, Jouni Malinen wrote:
+> zd_op_tx() must not return an arbitrary error value since that can
+> leave mac80211 trying to retransmit the frame and with the extra data
+> pushed into the beginning of the skb on every attempt, this will end up
+> causing a kernel panic (skb_under_panic from skb_push call). This can
+> happen, e.g., when ejecting the device when associated.
 >=20
-> >-----Original Message-----
-> >From: Helmut Schaa [mailto:helmut.schaa@googlemail.com]=20
-> >Sent: Friday, March 27, 2009 11:38 AM
-> >To: Chatre, Reinette
-> >Cc: ipw2100-devel@lists.sourceforge.net;=20
-> >linux-wireless@vger.kernel.org; ipw3945-devel@lists.sourceforge.net
-> >Subject: Re: [ipw3945-devel] New firmware available for Intel=20
-> >PRO/Wireless 2200BG and 2915ABG
-> >
-> >Am Dienstag, 24. M=C3=A4rz 2009 schrieb reinette chatre:
-> >> Hi Helmut,
-> >>=20
-> >> On Tue, 2009-03-24 at 10:55 -0700, Helmut Schaa wrote:
-> >> > Am Dienstag, 24. M=C3=A4rz 2009 schrieb reinette chatre:
-> >> > > A new version (3.1) of firmware for Intel=C2=AE PRO/Wireless=20
-> >2200BG and
-> >> > > 2915ABG Drivers is now available for download from
-> >> > > http://ipw2200.sourceforge.net/firmware.php.
-> >> >=20
-> >> > I couldn't find a changelog for the new firmware. Could=20
-> >you point me to
-> >> > a changelog or provide a short summary of what changed since 3.0=
-?
-> >>=20
-> >> I am sorry, we were unable to obtain this information.
-> >
-> >Would be interesting if any firmware crashes got fixed with=20
-> >that release (and
-> >in which situations these happened). Nevertheless, good to see=20
-> >that Intel
-> >still pushes updates for older hardware :)
+> Signed-off-by: Jouni Malinen <j@w1.fi>
+
+Should be for the various stable versions too. All of them, most likely.
+
+johannes
+
+> ---
+>  drivers/net/wireless/zd1211rw/zd_mac.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
 >=20
-> Reports from the field are welcome.
+> --- wireless-testing.orig/drivers/net/wireless/zd1211rw/zd_mac.c	2009-02-=
+28 00:24:24.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/zd1211rw/zd_mac.c	2009-03-16 21=
+:44:07.000000000 +0200
+> @@ -575,13 +575,17 @@ static int zd_op_tx(struct ieee80211_hw=20
+> =20
+>  	r =3D fill_ctrlset(mac, skb);
+>  	if (r)
+> -		return r;
+> +		goto fail;
+> =20
+>  	info->rate_driver_data[0] =3D hw;
+> =20
+>  	r =3D zd_usb_tx(&mac->chip.usb, skb);
+>  	if (r)
+> -		return r;
+> +		goto fail;
+> +	return 0;
+> +
+> +fail:
+> +	dev_kfree_skb(skb);
+>  	return 0;
+>  }
+> =20
+>=20
 
-Seems to have fixed the passive scan duration issue I used to get a few
-times every day, but haven't seen since updating.  Helmut fixed the
-driver [1], but I'm not running that patch yet.  Need to run for a bit
-longer though to be more sure of this.
+--=-blAnJyhUVZTeerbsRyTb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Dan
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-[1] [PATCHv2] ipw2200: fix scanning while associated
+iQIcBAABAgAGBQJJwDKfAAoJEKVg1VMiehFYm38P/1koptT2CZPHu9NhFFJOLWhd
+bHGdyxXctgpHfqe2bT78SRBUAwxAlUHwRYdlEz0D3ytHoLYWanbE+79VCd1t0DDv
+RANm2jEAXRaFh+OZHjfDARlVKRhUJ1uviwJNpiZab4ZLc0SqXFbZRxHDHf0plYdD
+YTsixwJDOGztPfQuXvvlAAB9FPzs8N7d4c8Xjvd6Y2TacIZtBxesjp39svg+hpQz
+c/x0JvudeX/oh4nNyj43IhUR777hInQN94jAs3vndO2+YDKLon7XnbqvvoqF2ve+
+jBB+25gC+fY3IdRQLuIzEh698+qrVPSEmjH/q5QX+XaFIfHDq7l0hZgjPPHg3Jn0
+hcWv/FStZHVW0PuOKyjka8AAP4EJ5tNWz27Vuw416H3JyjwvzGfCSZM3EPaGkC33
+25lQ+ud1cjMn8Tjzk2pq3cebi8quOCqIhfeW2CnKZVseGWtGfEkLKeHawv7w7Dvo
+w+TphonZLbMORpZFdDDyRsM5PqUb5WP2YINvKQrWcwVfMgMJFjc/XYz2muacfviJ
+7vfJF6GIz+K/zUTFDcSDigToj9bPIYN1IhKFWTMH7PWOMD8kC77A/lbDq2yZwqDl
+q7svFIvw9wF4+BhLc7zclN4tUZhYuLCxthx1Ifs32j81avSoJsg/YC99kTehQzuk
+3Uli4DTevCl+Q8mOeo/Q
+=4CNQ
+-----END PGP SIGNATURE-----
 
+--=-blAnJyhUVZTeerbsRyTb--
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
