@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f176.google.com ([209.85.220.176]:56202 "EHLO
-	mail-fx0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbZCMKog (ORCPT
+Received: from ti-out-0910.google.com ([209.85.142.187]:49559 "EHLO
+	ti-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733AbZCQOVx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 06:44:36 -0400
-Received: by fxm24 with SMTP id 24so2589272fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 03:44:33 -0700 (PDT)
-Subject: Re: [ath5k-devel] Thanks for TX power patch
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mick@madwifi-project.org>
-In-Reply-To: <1236895489.17849.3.camel@maxim-laptop>
-References: <1236728344.26432.26.camel@maxim-laptop>
-	 <d94c510d0903110115s620c7851g391fcf00e644a113@mail.gmail.com>
-	 <b6c5339f0903120714rda8ec3ev2c2fbfaaf0b21351@mail.gmail.com>
-	 <1236893111.30325.10.camel@maxim-laptop>
-	 <b6c5339f0903121432h26d71d6nd901f12d0c10e7bc@mail.gmail.com>
-	 <b6c5339f0903121433r7bbf2dd8l484d15446241dccd@mail.gmail.com>
-	 <1236895489.17849.3.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Fri, 13 Mar 2009 12:38:28 +0200
-Message-Id: <1236940708.4708.14.camel@maxim-laptop> (sfid-20090313_114438_559441_0DD4EA18)
-Mime-Version: 1.0
+	Tue, 17 Mar 2009 10:21:53 -0400
+Received: by ti-out-0910.google.com with SMTP id i7so14366tid.23
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 07:21:50 -0700 (PDT)
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <18879.45652.949317.628987@gargle.gargle.HOWL> (sfid-20090317_152156_440611_7CB6B7BB)
+Date: Tue, 17 Mar 2009 19:53:16 +0530
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Luis.Rodriguez@Atheros.com
+Subject: Re: Missing commits in wireless-testing
+In-Reply-To: <20090317141308.GD3549@tuxdriver.com>
+References: <18879.15297.344575.231076@gargle.gargle.HOWL>
+	<20090317130228.GA3549@tuxdriver.com>
+	<18879.42683.919616.530584@gargle.gargle.HOWL>
+	<20090317141308.GD3549@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-03-13 at 00:04 +0200, Maxim Levitsky wrote:
-> On Thu, 2009-03-12 at 17:33 -0400, Bob Copeland wrote:
-> > On Thu, Mar 12, 2009 at 5:32 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> > > On Thu, Mar 12, 2009 at 5:25 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> > >> Just to be clear, I got oopses, and hangs after resume from disk by just
-> > >> using compat-wireless-2009-03-10 _without_ Nick's patches.
-> > >
-> > > Interesting, I thought you said that, but I tried the same stuff on
-> > > plain wireless testing and didn't have any problems.
+John W. Linville wrote:
+> > The serialization patches from Luis:
 > > 
-> > Oh, and you said compat-wireless -- can you try wireless-testing just
-> > to make sure it's not some structure definition build conflict with
-> > compat-wireless?
+> > ath9k: implement IO serialization
+> > ath9k: AR9280 PCI devices must serialize IO as well
+> > ath9k: remove dummy PCI "retry timeout" fix
 > > 
+> > The code changes are present in wireless-testing, but the git SHA1 IDs
+> > seem to be absent.
 > 
-> Will do, soon.
-> 
-> Best regards,
-> 	Maxim Levitsky
-> 
+> Not sure which IDs you are seeking, but they should all still be there.
 
-Just compiled and installed latest wireless-testing with Nick's patches,
-and your patch.
+Ah, sorry, they are present indeed.
+The chronology confused me, sorry for the noise. :)
 
-System is rock solid, module reload/s2disk/s2ram/long transfers work
-just fine.
-
-(I tested against my laptop, and got 1.5 Mbytes/s in both directions.
-which is maximum speed possible - yes I know that everything goes
-through AP...)
-
-Now my both wifi device are supported almost perfectly:
-still small issues with rate control on iwl3945, and
-not that great led on ath5k - both issues are pure software issues, and
-when I have time I will look at improving led algorithm.
-
-
-Big thanks,
-	Best regards,
-		Maxim Levitsky
-
+Sujith
