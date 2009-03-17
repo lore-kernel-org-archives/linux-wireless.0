@@ -1,28 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39616
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753193AbZCVF53 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44840 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821AbZCQOPf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2009 01:57:29 -0400
-Date: Sat, 21 Mar 2009 22:57:16 -0700 (PDT)
-Message-Id: <20090321.225716.119285539.davem@davemloft.net> (sfid-20090322_065732_897959_636B4274)
-To: shemminger@vyatta.com
-Cc: j@w1.fi, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 75/77] hostap: convert to internal net_device_stats
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090321053718.302886142@vyatta.com>
-References: <20090321053527.316395697@vyatta.com>
-	<20090321053718.302886142@vyatta.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 17 Mar 2009 10:15:35 -0400
+Date: Tue, 17 Mar 2009 10:13:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Luis.Rodriguez@Atheros.com
+Subject: Re: Missing commits in wireless-testing
+Message-ID: <20090317141308.GD3549@tuxdriver.com> (sfid-20090317_151538_301527_51D30077)
+References: <18879.15297.344575.231076@gargle.gargle.HOWL> <20090317130228.GA3549@tuxdriver.com> <18879.42683.919616.530584@gargle.gargle.HOWL>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <18879.42683.919616.530584@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stephen Hemminger <shemminger@vyatta.com>
-Date: Fri, 20 Mar 2009 22:36:42 -0700
-
-> Use pre-existing net_device_stats in network_device struct.
+On Tue, Mar 17, 2009 at 07:03:47PM +0530, Sujith wrote:
+> John W. Linville wrote:
+> > I just went through a (very painful) pseudo-rebase to 2.6.29-rc8
+> > last night.  I'm fairly confident that what is there now matches what
+> > was there before.
+> > 
+> > What commit do you think is missing?  What is it's subject line?
 > 
-> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+> The serialization patches from Luis:
+> 
+> ath9k: implement IO serialization
+> ath9k: AR9280 PCI devices must serialize IO as well
+> ath9k: remove dummy PCI "retry timeout" fix
+> 
+> The code changes are present in wireless-testing, but the git SHA1 IDs
+> seem to be absent.
 
-Applied.
+Not sure which IDs you are seeking, but they should all still be there.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
