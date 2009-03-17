@@ -1,37 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yw-out-2324.google.com ([74.125.46.30]:3504 "EHLO
-	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757198AbZCYU2E (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38098 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752893AbZCQWcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 16:28:04 -0400
-Received: by yw-out-2324.google.com with SMTP id 5so205849ywb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 13:28:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890903251325k7b435c18v988f9206eb784831@mail.gmail.com>
-References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com>
-	<200903260337.37783.kel@otaku42.de> <43e72e890903251041r657a5217q9af7b5eb34f2f824@mail.gmail.com>
-	<200903260442.36251.kel@otaku42.de> <e13a36b30903251203v7c53fb20g64bf61e4e433377@mail.gmail.com>
-	<43e72e890903251325k7b435c18v988f9206eb784831@mail.gmail.com>
-Date: Wed, 25 Mar 2009 13:27:46 -0700
-Message-ID: <43e72e890903251327w18e4b8a1nd7bd125b4c6329a5@mail.gmail.com> (sfid-20090325_212820_038179_079869E8)
-Subject: Re: [renamed] Debian crda?
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: debian-devel@lists.debian.org
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 17 Mar 2009 18:32:36 -0400
+Subject: Re: Support for country information
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Charles Gordon <digigordo@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <86201b3f0903171526l62258146q3f9fb15166813484@mail.gmail.com> (sfid-20090317_232642_234193_B4888F7A)
+References: <86201b3f0903171526l62258146q3f9fb15166813484@mail.gmail.com>
+	 (sfid-20090317_232642_234193_B4888F7A)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MZAPy8ElUCy0yEcmXOrG"
+Date: Tue, 17 Mar 2009 23:32:05 +0100
+Message-Id: <1237329125.5100.7.camel@johannes.local> (sfid-20090317_233239_261281_4DADC50D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 25, 2009 at 1:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
-> Actually technically it could be a different person. I maintain crda
-> upstream and John maintains wireless-regdb upstream, for example. I
-> just need John's pubkey file which is non-binary. CRDA just reads the
-> regulatory.bin which wireless-regdb provides.
+--=-MZAPy8ElUCy0yEcmXOrG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Let me be a little bit more clear on this last sentence. By provides I
-mean that John generated his pubkey using it and then e-mailed it to
-me. I then just merged it as part of CRDA so that by default CRDA
-trusts the regulatory.bin files he puts out.
+On Tue, 2009-03-17 at 18:26 -0400, Charles Gordon wrote:
+> I'm writing a wireless driver that will use mac80211.  I am developing
+> with a 2.6.28-00106 version kernel.
 
-  Luis
+First of all, let me say that this is a mistake. The API is
+ever-evolving, and you want to develop against wireless-testing.
+
+> I took a look at the files in
+> net/mac80211 and I don't see any code that looks at the country
+> element in beacons and probe responses.  Am I missing something?  Does
+> mac80211 handle country specific settings and regulatory domains?  If
+> so, could you please tell me where I can find that code?  I need to
+> figure out how to support 802.11j.  If country specific information is
+> not supported at present, do you have a plan for when it will be?
+
+It is handled in cfg80211, in net/wireless/, in recent wireless-testing
+trees.
+
+> Also, does mac80211 handle 802.11a action messages like the ones to
+> change channels?
+
+Yes, CSA is supported afaik, also only recently. See my first
+sentence :)
+
+johannes
+
+--=-MZAPy8ElUCy0yEcmXOrG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJwCTiAAoJEKVg1VMiehFY1IIP/0xq4zoL8KWwKpow71U4SYMj
+ITfPoTBXUMWAhe/8oAodHqmsiLabW2qELvtNLiwIRlNiWP/9rZ0XSQsXBYvx+fId
+hy1oUqG3Vomsef7FJxMp9uyVQdmoTeTKpD16qfavN4HAMaQOSy6LXDB6ebJy/Lt0
+uv+n36s3CAjbPMB8HI4lLezUaUvUWr5sFypQ1sfh8E7SKjOOJsjra0Y6+VfxoKt1
+eMg1b/9Hs/J7LAPWjBwLt7ZUjJXDzTPB1Tz3WW9y8CAuhrg1Y8hmZ4neTjk8eHtL
+qILBHs5jSLjGndkUUKaFg3tg7RbFSOTcJSvURHYS22n4cvKxR8df2JTmdE1S7SfO
+X47MYhPRlWzYTp1zl5zLQTVjpnp23yXzOF2+CSqMj9o5sKGBHNM8ucAxYp4dquqU
+3JJAGvcNm4AI2IJG1JoNl9N/b1sB/X6CWh4iKSt6VhRI2eDmTmqpCM3bRGs1Tyxh
+aTH2ao1KRz/zYYDCPXSYuRiMyQToxAz9XzwOWjS8+gYlbyczNJPte/C0G7ZW4ahL
+OhP1iHFEuhv7SMwpequvPxXTP5pbsNdnsFoOt25ENv65DbURa6GeNA31sKuimiXY
+cYt8bgAwQ2SkYSTG4qOmtcXdKcbK3nsITjwevRBQ6YoHVcIFurvEN8V4UnS9ATX/
+fisUXxqDNTRaB7jCLElh
+=RjaY
+-----END PGP SIGNATURE-----
+
+--=-MZAPy8ElUCy0yEcmXOrG--
+
