@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56437 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369AbZC0Nkp (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2117 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752850AbZCQDEv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 09:40:45 -0400
-Subject: rfkill get_state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Matthew Garrett <mjg@redhat.com>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GPCCFoLx0Ddx1aYuzeB6"
-Date: Fri, 27 Mar 2009 14:40:10 +0100
-Message-Id: <1238161210.4452.8.camel@johannes.local> (sfid-20090327_144049_089494_74C98225)
-Mime-Version: 1.0
+	Mon, 16 Mar 2009 23:04:51 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/2] ath5k: remove dummy PCI "retry timeout" fix
+Date: Mon, 16 Mar 2009 22:34:03 -0400
+Message-Id: <1237257243-18660-2-git-send-email-me@bobcopeland.com> (sfid-20090317_040454_856801_6A596DF4)
+In-Reply-To: <1237257243-18660-1-git-send-email-me@bobcopeland.com>
+References: <1237257243-18660-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Remove the PCI retry timeout code, for all the same reasons that
+Luis Rodriguez removed it for ath9k (wireless-testing commit
+3149fde1bf083d32d5190cdc7f2bf8d0035966b1).
 
---=-GPCCFoLx0Ddx1aYuzeB6
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Changes-licensed-under: 3-Clause-BSD
 
-When you implement get_state but don't do force_state, how does
-get_state ever get called?
+Cc: Luis Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath5k/base.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-It seems to me it'll only get called=20
- * when you read sysfs
- * on resume
- * on epo
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index 8eec155..ef9825f 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -685,13 +685,6 @@ ath5k_pci_resume(struct pci_dev *pdev)
+ 	if (err)
+ 		return err;
+ 
+-	/*
+-	 * Suspend/Resume resets the PCI configuration space, so we have to
+-	 * re-disable the RETRY_TIMEOUT register (0x41) to keep
+-	 * PCI Tx retries from interfering with C3 CPU state
+-	 */
+-	pci_write_config_byte(pdev, 0x41, 0);
+-
+ 	err = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
+ 	if (err) {
+ 		ATH5K_ERR(sc, "request_irq failed\n");
+-- 
+1.6.0.6
 
-How do we ever react to a button press then to make a uevent?
-
-johannes
-
---=-GPCCFoLx0Ddx1aYuzeB6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJzNc4AAoJEKVg1VMiehFYu4MQAKXTMSpl5hEpT1MLn2nifY5k
-qCylOtQ9LKYBYa/GiVI3CMhVgFLfbwvMKTejsRNKACkQlX3PPgAScd42LYpbhCqQ
-BRSlB8VoO9I3teFwKSN2MnLAw76Kn+OI6NzjtS30OjpErSwp+CX1cy4+aSv4tIwp
-GzIvLul5I6Zrd3gv03gkpluovzhqvJiS0ohc0hVDqTomFi2EiP3rUOi7pfjzj00h
-RPNCBMERl0NAulZOyS1UdcNwU9OrY4bljcEUWIM3tT45ritaRDFkYMCuRue0vmn8
-6vSpMgAKpEocJMo28deFlBspUfFVuE62mo7YioFD7e+P6aCVRqXN8arZAbhCU4hQ
-AHsTigcHLmh79bMgk/dPDfazHbHadMktNnEGZwwt7CaabdZDjuCjluKZp2l1ZsPv
-MTBMnO4oJLH7WuHw9wkRC3clEusBIR9FnJQ71YVylCBz26rSdM4L3T/3Riu+5rDB
-hG0NZLn5oaiPzC++NXvfmp0EhATCMxFCFmDM0WlmsYNgJCytadxEBzoV9WSMDavS
-HFf7iHTHlXNBVjmiQor2CoG4p3H5YNvlbpEa0j/eZh0kFRpqGD1a/NJD4BD6vlVV
-kJRb57pR4vyxG5zA7YuvP8lBpJ04jYooBsNRDa8s0bbnchRrszcsVQvRL0Xw/nLT
-1HWF47r76aTV3brlIR28
-=Nzlz
------END PGP SIGNATURE-----
-
---=-GPCCFoLx0Ddx1aYuzeB6--
 
