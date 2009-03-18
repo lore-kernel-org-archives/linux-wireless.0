@@ -1,68 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793AbZCILjc (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2084 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754362AbZCRAGz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 07:39:32 -0400
-Subject: Re: BCM 4325
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Merck_Hung@asus.com.tw, Larry.Finger@lwfinger.net,
-	david@villagepublishing.com.au, linux-wireless@vger.kernel.org
-In-Reply-To: <200903091146.22267.mb@bu3sch.de> (sfid-20090309_114728_679573_91C30EEE)
-References: <264AFFC7-5AF2-42A5-8BB8-1DEDB0255CA9@villagepublishing.com.au>
-	 <49B3D62F.4090700@lwfinger.net>
-	 <79AFEBBEED459E4792B4241994B831F65819F0@TP-EX-20.corpnet.asus>
-	 <200903091146.22267.mb@bu3sch.de> (sfid-20090309_114728_679573_91C30EEE)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-EZke4iQ+aeqELmoPWz9z"
-Date: Mon, 09 Mar 2009 12:39:19 +0100
-Message-Id: <1236598759.4205.80.camel@johannes.local> (sfid-20090309_123935_638383_DBC69B9B)
-Mime-Version: 1.0
+	Tue, 17 Mar 2009 20:06:55 -0400
+Date: Tue, 17 Mar 2009 20:06:50 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Quan <David.Quan@Atheros.com>
+Subject: Re: ids missing in ath5k ?
+Message-ID: <20090318000650.GD18141@hash.localnet> (sfid-20090318_010711_860034_5CDBE920)
+References: <49BC0DBE.90209@gmail.com> <49BC6C21.6020807@gmail.com> <49BC7117.1010107@gmail.com> <b6c5339f0903171418h6534a5a8w1ef8354f9571657a@mail.gmail.com> <20090317213639.GF6061@tesla> <20090317223632.GN6061@tesla>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090317223632.GN6061@tesla>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 17, 2009 at 03:36:32PM -0700, Luis R. Rodriguez wrote:
+> > ACK on FF1A -- 802.11abg, NACK on the others, we don't at least have
+> > them in our own windows driver INF file.
+> 
+> Actually so any 0xFF1x device ID where x is any value would
+> be the ID if the card has issues reading our EEPROM and in that
+> case you can expect the card to simply not be operational, so feel
+> free to add it but be sure to inform the user the card is having
+> issues reading the EEPROM and simply disable the device.
 
---=-EZke4iQ+aeqELmoPWz9z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+In light of that, I'm inclined to just leave it alone then unless 
+someone appears with such IDs.
 
-On Mon, 2009-03-09 at 11:46 +0100, Michael Buesch wrote:
-> On Monday 09 March 2009 03:10:18 Merck_Hung@asus.com.tw wrote:
-> > Actually you can found the source code of BCM4325 in Open Source Androi=
-d Repository.
-> >=20
-> > But I haven't yet verify it whether is workable or not.
-> >=20
-> > URL: http://android.git.kernel.org/?p=3Dplatform/system/wlan/broadcom.g=
-it;a=3Dsummary
->=20
-> This is a driver for SDIO devices.
-
-And they're fullmac RNDIS too. Weird things happen.
-
-johannes
-
---=-EZke4iQ+aeqELmoPWz9z
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJtP/kAAoJEKVg1VMiehFYXWMQAIIVAu6a87BY/hPbxeaerzXG
-ouGPJy3XOUf7RRsOIUR9l6H0AkLA8vBV90v+/zJ58jZQ0DBb9X97NLn9HMzoQqnI
-6nL1oSIVGest3Qp39vcCSC9z/pS7OTinypl9ayhuEXB0FJbmGPS03rP4f/8H7c03
-S14D2vzAz1BjW/yzHj74r0vNiP4CkL/5eWiMvLPbShQymKSCjfqiT7HJrQtBAKKj
-kROKOqTQdRk41xSSaWcKuUAmeUjvORRR7t4QivsW9AHPDrVavCxWtnkYG1p0zk2K
-RHKubMQhiKe6D25m1zTMjoBVXQ/0GB75QIJFV53jq+fhLzBH8LBpWS0KObvHlVxl
-RDCBg9QpoRFmZRuz6FBXi5qcVT5utGfl8sz5E6GB746AqNavfd9IqusBW14+05Ty
-DtfKakgzYdKT3rWtQCOAMLEBf+z152UfrWF6REj174X+tu4tI0M2wVFfOLlyiecw
-fb3EkC0mODVX/Ythvqbubsk1f30DCn+1QY1zuSQdcJXopXeqPz0ut/DwG5o5PWqZ
-nuMk3josQx6JHRB9Haxg3JyaqkxYWlZD0aCAqWX6Yzd1oqRf/N7w7hBwEqWs+KPn
-oYaBft1CL3U68wF61AB5LXf8dyMCF5EMYBMXGwyQOimgZvHmmA+L0obAL2FCZ19Y
-XdLrCRkKq3yJyXnAy913
-=b7gm
------END PGP SIGNATURE-----
-
---=-EZke4iQ+aeqELmoPWz9z--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
