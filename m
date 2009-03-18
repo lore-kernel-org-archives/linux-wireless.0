@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f160.google.com ([209.85.217.160]:58823 "EHLO
-	mail-gx0-f160.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757474AbZC2NP1 convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59698 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752821AbZCRIp0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2009 09:15:27 -0400
+	Wed, 18 Mar 2009 04:45:26 -0400
+Date: Wed, 18 Mar 2009 10:43:34 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Samuel Ortiz <samuel@sortiz.org>
+Subject: Re: [RFC] nl80211: Add MLME primitives to support external SME
+Message-ID: <20090318084334.GA10374@jm.kir.nu> (sfid-20090318_094531_178367_DDAE1B29)
+References: <20090303144038.GA8435@jm.kir.nu> <1236625410.9658.17.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <49CF4161.6080401@msgid.tls.msk.ru>
-References: <87tz5ckfye.fsf@burly.wgtn.ondioline.org>
-	 <49CF316D.6040903@gmail.com> <87prg0k8kd.fsf@burly.wgtn.ondioline.org>
-	 <49CF4161.6080401@msgid.tls.msk.ru>
-Date: Sun, 29 Mar 2009 09:15:24 -0400
-Message-ID: <b6c5339f0903290615p5d7d7041nd5e5b5a584ef9bae@mail.gmail.com> (sfid-20090329_151557_163508_C8984AC7)
-Subject: Re: soft lockup apparently in ath5k_hw_update_mib_counters (or
-	ioread32?) with 2.6.29
-From: Bob Copeland <bcopeland@gmail.com>
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Paul Collins <paul@burly.ondioline.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1236625410.9658.17.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 29, 2009 at 5:37 AM, Michael Tokarev <mjt@tls.msk.ru> wrote=
-:
-> Paul Collins wrote:
->>
->> Jiri Slaby <jirislaby@gmail.com> writes:
->>
->>> On 03/29/2009 08:20 AM, Paul Collins wrote:
->>>>
->>>> After about two days of uptime with 2.6.29 I got this:
->>>>
->>>> BUG: soft lockup - CPU#0 stuck for 61s! [swapper:0]
->>> Huh. I see no reason for this to happen. I suppose this is a regres=
-sion,
->>> which kernel worked?
->>
->> I had a previous instance of the problem with v2.6.29-rc8 after abou=
-t
->> six days of uptime. =A0The kernel before that was 2.6.29-rc7ish, ran=
- OK
->> for a couple of days. =A0But since I don't know how to reproduce it
->> reliably it's hard to say which kernel is truly good.
+On Mon, Mar 09, 2009 at 08:03:30PM +0100, Johannes Berg wrote:
+> On Tue, 2009-03-03 at 16:40 +0200, Jouni Malinen wrote:
 
-I think it's just an interrupt storm because we don't reset MIB
-interrupts properly (I think not all devices are read-and-clear).  I
-already have a patch in wireless-testing to turn off MIB interrupts unt=
-il
-ANI is working and I CCed stable on it.
+> > + * enum nl80211_auth_type - AuthenticationType
+> > + * @NL80211_AUTHTYPE_AUTO: Automatic selection (try Open System, Shared Key,
+> > + *	Network EAP and accept first one that goes through)
 
-http://marc.info/?l=3Dlinux-wireless&m=3D123725924404147&w=3D2
+> Do we really need or even want "auto"? Or is that for a future
+> "connect()" method that replaces auth/assoc for some hardware designs?
 
---=20
-Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We do not really need it since the same functionality can be implemented
+in user space after these patches (i.e., try again if AP denies
+authentication with status code indicating unaccepted auth alg). I added
+this mainly because we already have support for this in mac80211, but it
+would be fine to drop this, too. Both connect() and some firmware
+designs that could allow separate auth/assoc may also have use for the
+auto setting, but even in those cases, it would probably not be
+required.
+
+> > +static int ieee80211_assoc(struct wiphy *wiphy, struct net_device *dev,
+> > +			   struct cfg80211_assoc_request *req)
+
+> This function or cfg80211 should eventually reject any calls that don't
+> refer to a BSS we have already authenticated with, otherwise weird
+> things might happen, I think?
+
+Sounds reasonable. MLME-ASSOCIATE.confirm even has a ResultCode for this
+(REFUSED_NOT_AUTHENTICATED). The AP would reply to Association Request
+with Deauthentication, so it is probably cleaner to reject this
+internally regardless of whether it actually causes problems or not in
+kernel.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
