@@ -1,117 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58967 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:57755 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753953AbZCFATx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 19:19:53 -0500
-Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
-From: reinette chatre <reinette.chatre@intel.com>
-To: Jason Andryuk <jandryuk@gmail.com>
-Cc: Samuel Ortiz <samuel@sortiz.org>, Tomas Winkler <tomasw@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1236297052.6153.4.camel@rainbow>
-References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
-	 <c4d76b3b0901261913s23427b19tbbe34ee7b4261068@mail.gmail.com>
-	 <c4d76b3b0901261935n1846b675w72cfa7308d198080@mail.gmail.com>
-	 <20090127162437.GA3596@sortiz.org>
-	 <c4d76b3b0901271531q19578871idbc59b5a23ac868e@mail.gmail.com>
-	 <1ba2fa240901272312j270eedb5x33534a9703d26e06@mail.gmail.com>
-	 <20090128113751.GA3197@sortiz.org>
-	 <c4d76b3b0903011937p6538adbfpc0dab859a6742394@mail.gmail.com>
-	 <1236141120.12734.2.camel@rainbow> <1236194370.6612.73.camel@rc-desk>
-	 <c4d76b3b0903041147s2138e72bjb39864f87b4cd09e@mail.gmail.com>
-	 <1236211493.6612.90.camel@rc-desk>  <1236297052.6153.4.camel@rainbow>
-Content-Type: text/plain
-Date: Thu, 05 Mar 2009 16:24:45 -0800
-Message-Id: <1236299085.6612.229.camel@rc-desk> (sfid-20090306_012001_149300_DF370BA4)
-Mime-Version: 1.0
+	id S1751763AbZCREq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2009 00:46:56 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/13] iwl3945: fix checkpatch.pl errors
+Date: Tue, 17 Mar 2009 21:51:50 -0700
+Message-Id: <1237351913-19202-11-git-send-email-reinette.chatre@intel.com> (sfid-20090318_054711_732520_C2DF5A0F)
+In-Reply-To: <1237351913-19202-10-git-send-email-reinette.chatre@intel.com>
+References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-2-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-3-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-4-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-5-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-6-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-7-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-8-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-9-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-10-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-03-05 at 15:50 -0800, Jason Andryuk wrote:
-> On Wed, 2009-03-04 at 16:04 -0800, reinette chatre wrote:
-> > On Wed, 2009-03-04 at 11:47 -0800, Jason Andryuk wrote:
-> > > On Wed, Mar 4, 2009 at 2:19 PM, reinette chatre
-> > > <reinette.chatre@intel.com> wrote:
-> > > > On Tue, 2009-03-03 at 20:32 -0800, Jason Andryuk wrote:
-> > > >> On Sun, Mar 1, 2009 at 10:37 PM, Jason Andryuk <jandryuk@gmail.com> wrote:
-> > > >> > I tested c2a0aa3cb733452e749727680e380dca6cc10a68 "iwl3945: use
-> > > >> > iwl_rb_status" with the additional patches to initialize rb_stts
-> > > >> > (copied from iwl_rx_queue_alloc) and to convert the BUG_ON to a
-> > > >> > WARN_ON.
-> > > >> >
-> > > >> > The driver runs without segfaulting.  So far the WARN_ON has not been
-> > > >> > triggered, but the driver fails to finish authentication with the AP.
-> > > >> > I receive "wlan0: authentication with AP 00:30:bd:c0:90:24 timed out"
-> > > >>
-> > > >> Ok, I started poking around with manually checking interesting commits instead of git bisect.
-> > > >>
-> > > >> 55b3e21... iwl3945: use iwl-io.h and delete iwl-3945-io.h with BUG->WARN patch works.
-> > > >>
-> > > >> bb64785... iwlwifi: use iwl_cmd instead of iwl3945_cmd
-> > > >> fails to authenticate to the AP.  It generates a Microcode SW Error attached below.
-> > > >>
-> > > >> The previous revision:
-> > > >> a0dedce... iwlwifi: replace IWL_ERROR with IWL_ERR
-> > > >> Authenticates to the AP and works just fine.
-> > > >>
-> > > >> I keep looking over commitdiff bb64785... but I cannot see what is causing problems.  I even tried modifying iwl3945_cmd in various ways from a0dedce... but those attempts kept working.
-> > > >>
-> > > >> During testing, I saw a lot of UNKNOWN 0x1b
-> > > >> [ 8892.625374] ieee80211 phy0: I iwl3945_rx_handle r = 162, i = 160, UNKNOWN, 0x1b
-> > > >> Currently in the logs for commit a0dedce... it shows up as REPLY_3945_RX.
-> > > >>
-> > > >> Any ideas?
-> > > >
-> > > > Thank you very much for this digging.
-> > > >
-> > > > Are you running on 64bit?
-> > >
-> > > Yes, 64bit.
-> >
-> > could you please try this patch on top of latest wireless-testing?
-> >
-> > Thanks
-> >
-> > Reinette
-> >
-> >
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> > index 0a75053..00b25a8 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> > @@ -743,6 +743,7 @@ void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
-> >       struct iwl3945_tfd *tfd_tmp = (struct iwl3945_tfd *)txq->tfds;
-> >       struct iwl3945_tfd *tfd = &tfd_tmp[txq->q.read_ptr];
-> >       struct pci_dev *dev = priv->pci_dev;
-> > +     int index = txq->q.read_ptr;
-> >       int i;
-> >       int counter;
-> >
-> > @@ -759,6 +760,13 @@ void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
-> >               return;
-> >       }
-> >
-> > +     /* Unmap tx_cmd */
-> > +     if (counter)
-> > +             pci_unmap_single(dev,
-> > +                             pci_unmap_addr(&txq->cmd[index]->meta, mapping),
-> > +                             pci_unmap_len(&txq->cmd[index]->meta, len),
-> > +                             PCI_DMA_TODEVICE);
-> > +
-> >       /* unmap chunks if any */
-> >
-> >       for (i = 1; i < counter; i++) {
-> 
-> Reinette,
-> 
-> I applied the patch, but iwl3945 did not authenticate with my AP
-> 
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-oh no.
+Patch fixes two checkpatch.pl errors.
 
-I will install a 64bit system here to try and reproduce this ...
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Reinette
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 50c61ed..d03f553 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1179,7 +1179,7 @@ int iwl3945_hw_nic_init(struct iwl_priv *priv)
+ 	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
+ 
+ 	rc = priv->cfg->ops->lib->apm_ops.set_pwr_src(priv, IWL_PWR_SRC_VMAIN);
+-	if(rc)
++	if (rc)
+ 		return rc;
+ 
+ 	priv->cfg->ops->lib->apm_ops.config(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index d653ff8..ab6a7d5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -560,7 +560,7 @@ static int iwl3945_set_dynamic_key(struct iwl_priv *priv,
+ 		ret = iwl3945_set_wep_dynamic_key_info(priv, keyconf, sta_id);
+ 		break;
+ 	default:
+-		IWL_ERR(priv,"Unknown alg: %s alg = %d\n", __func__, keyconf->alg);
++		IWL_ERR(priv, "Unknown alg: %s alg = %d\n", __func__, keyconf->alg);
+ 		ret = -EINVAL;
+ 	}
+ 
+-- 
+1.5.6.3
 
