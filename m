@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34070
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754589AbZCQVkD (ORCPT
+Received: from mail-bw0-f169.google.com ([209.85.218.169]:44788 "EHLO
+	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755073AbZCRLu3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 17:40:03 -0400
-Date: Tue, 17 Mar 2009 14:39:49 -0700 (PDT)
-Message-Id: <20090317.143949.250643299.davem@davemloft.net> (sfid-20090317_224008_214099_5E281D51)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sfr@canb.auug.org.au
-Subject: Re: pull request: wireless-2.6 2009-03-16
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090316231423.GA3633@tuxdriver.com>
-References: <20090316231423.GA3633@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 18 Mar 2009 07:50:29 -0400
+Received: by bwz17 with SMTP id 17so9568bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2009 04:50:26 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] mac80211: don't drop null frames during software scan
+References: <20090318092507.17198.83588.stgit@tikku>
+	<1237368810.5100.15.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 18 Mar 2009 13:50:23 +0200
+In-Reply-To: <1237368810.5100.15.camel@johannes.local> (Johannes Berg's message of "Wed\, 18 Mar 2009 10\:33\:30 +0100")
+Message-ID: <87bprzm4n4.fsf@litku.valot.fi> (sfid-20090318_125142_224887_0EE953B8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 16 Mar 2009 19:14:24 -0400
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> Here is a group of patches intended for 2.6.29.  The one from me is
-> minor, but it cuts-down on log SPAM for ipw2100, ipw2200, and hostap
-> users.  The two from Jouni fix some panics he observed himself.
-> 
-> The first one from Luis fixes bug 12110 at bugzilla.kernel.org.  I know
-> he has worked on it for a long time and I've had several desperate users
-> asking for it, so it must be good. :-)  Unfortunately, it causes some
-> nasty merge errors with what is in net-next-2.6 and wireless-next-2.6.
-> I created a merge-test branch in wireless-next-2.6, and the merge commit
-> log goes into more detail about resolving the issue.  In short, you
-> probably want to diff drivers/net/ath9k against the merge-test branch...
-> 
-> Please let me know if there are problems!
+> On Wed, 2009-03-18 at 11:25 +0200, Kalle Valo wrote:
+>
+>> +		/*
+>> +		 * When software scanning only nullfunc frames (to notify
+>> +		 * the sleep state to the AP) and probe requests (for the
+>> +		 * active scan) are allowed, everything else should be
+>> +		 * dropped. See ieee80211_start_scan() for more.
+>> +		 */
+>>  		return TX_DROP;
+>
+> That makes it sounds "too correct" to drop frames it seems. Should we
+> say something like
+>
+> 	... and probe requests (...) are allowed, all other frames
+> 	should not be sent and we should not get here, but if we do
+> 	nonetheless,drop them to avoid sending them off-channel.
+>
+> Or even add this link:
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/30089
 
-Pulled, thanks John.
+Ok, I'll improve it.
 
-Wish me luck with the net-next-2.6 merge :-)
+> (you also forgot to s/null/nullfunc/ in the subject :) )
+
+Heh, I'll fix that.
+
+v4 coming up.
+
+-- 
+Kalle Valo
