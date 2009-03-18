@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:8086 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756989AbZCNUET (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38466 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754697AbZCROph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 16:04:19 -0400
-Received: by nf-out-0910.google.com with SMTP id d21so858221nfb.21
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 13:04:17 -0700 (PDT)
-Message-ID: <49BC0DBE.90209@gmail.com> (sfid-20090314_210441_865219_A75732D9)
-Date: Sat, 14 Mar 2009 21:04:14 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Wed, 18 Mar 2009 10:45:37 -0400
+Date: Wed, 18 Mar 2009 10:42:04 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mircea Gherzan <mgherzan@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: GSoC project proposals
+Message-ID: <20090318144204.GC3527@tuxdriver.com> (sfid-20090318_154541_253731_DC777783)
+References: <20090318033600.4d17be51@beast3>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ids missing in ath5k ?
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090318033600.4d17be51@beast3>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+On Wed, Mar 18, 2009 at 03:36:00AM +0200, Mircea Gherzan wrote:
 
-why these ids are not supported in ath5k ? 
+> I'm a CS student (undergrad) wanting to do a wireless-related project
+> for the Google Summer of Code. 
+> 
+> As advised by Johannes Berg, I am posting on here in order to know the
+> mentors and to get a better understanding of the requierements.
+> 
+> From the publised list, I am most interested in the roaming project.
+> Please, can anyone tell me who will be mentoring it, so I cand get in
+> touch with him/her?
 
-       { 0x168c, 0x101a, PCI_ANY_ID, PCI_ANY_ID }, /* some Griffin-Lite */
-       { 0x168c, 0x9013, PCI_ANY_ID, PCI_ANY_ID }, /* sonicwall */
+I think Luis Rodriguez penned the descriptions of those projects,
+so he might be the best person to ask about them.  In any case,
+I would be happy to mentor such a project if you so desire.
 
-
-They are included in madwifi driver! Are there more of them missing ?
-
-
--thanks-
-
-
-regards,
+John
 -- 
-Polycommander, Erkowit, Urquiola, Andros Patria, Cason, Aegean Sea, Prestige, ...
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
