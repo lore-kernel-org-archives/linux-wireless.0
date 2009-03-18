@@ -1,44 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:62210 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759490AbZC1Twx (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53704 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751109AbZCRJeL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2009 15:52:53 -0400
-Received: by ey-out-2122.google.com with SMTP id 4so441059eyf.37
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2009 12:52:50 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/4] rt2x00: Add rt73usb USB IDs
-Date: Sat, 28 Mar 2009 20:52:14 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <200903282051.25112.IvDoorn@gmail.com> <200903282051.41343.IvDoorn@gmail.com> <200903282051.58660.IvDoorn@gmail.com>
-In-Reply-To: <200903282051.58660.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903282052.15095.IvDoorn@gmail.com> (sfid-20090328_205312_446141_03C78489)
+	Wed, 18 Mar 2009 05:34:11 -0400
+Subject: Re: [PATCH v3] mac80211: don't drop null frames during software
+ scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <20090318092507.17198.83588.stgit@tikku>
+References: <20090318092507.17198.83588.stgit@tikku>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6rX9WzbGH4datXFVZU0R"
+Date: Wed, 18 Mar 2009 10:33:30 +0100
+Message-Id: <1237368810.5100.15.camel@johannes.local> (sfid-20090318_103414_377657_707E5AC0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt73usb.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+--=-6rX9WzbGH4datXFVZU0R
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 420fff4..853b2b2 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2369,6 +2369,8 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	/* Buffalo */
- 	{ USB_DEVICE(0x0411, 0x00d8), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x0411, 0x00f4), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x0411, 0x0116), USB_DEVICE_DATA(&rt73usb_ops) },
-+	{ USB_DEVICE(0x0411, 0x0119), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* CNet */
- 	{ USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x1371, 0x9032), USB_DEVICE_DATA(&rt73usb_ops) },
--- 
-1.5.6.1
+On Wed, 2009-03-18 at 11:25 +0200, Kalle Valo wrote:
+
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 457238a..525d261 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -193,7 +193,14 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data =
+*tx)
+>  		return TX_CONTINUE;
+> =20
+>  	if (unlikely(tx->local->sw_scanning) &&
+> -	    !ieee80211_is_probe_req(hdr->frame_control))
+> +	    !ieee80211_is_probe_req(hdr->frame_control) &&
+> +	    !ieee80211_is_nullfunc(hdr->frame_control))
+> +		/*
+> +		 * When software scanning only nullfunc frames (to notify
+> +		 * the sleep state to the AP) and probe requests (for the
+> +		 * active scan) are allowed, everything else should be
+> +		 * dropped. See ieee80211_start_scan() for more.
+> +		 */
+>  		return TX_DROP;
+
+That makes it sounds "too correct" to drop frames it seems. Should we
+say something like
+
+	... and probe requests (...) are allowed, all other frames
+	should not be sent and we should not get here, but if we do
+	nonetheless,drop them to avoid sending them off-channel.
+
+Or even add this link:
+http://article.gmane.org/gmane.linux.kernel.wireless.general/30089
+
+(you also forgot to s/null/nullfunc/ in the subject :) )
+
+johannes
+
+--=-6rX9WzbGH4datXFVZU0R
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJwL/nAAoJEKVg1VMiehFYjjoQAIfb19XUiIDc0mnpnt2iatF2
+4YCyK26mEpzfgG9QgTqzfnWnsj7eik0dvFu21hK91kd4muJ0WkNtpaa7C/cH3CxP
+DNqEXczKXKW14FN6n6IwkemhUz7xz08EKtde1otUrIQSy+lYALhYrdApt+qKQs1/
+1w879gLouH6GiQejuGBn7+0R8Ebcl0fYUUNVs5WgnlHy2IZl+E/mq45oXBQ8eQ3x
+gerohJuG84a2Lqz+VHwGJlDUD7eiC6kAKTVlr/oR/HrIi3Jr1+iscjL7EdV1RwrC
+EHq5SVs5jJIWwS64w802pHK/XDnq+yFgDWSWnrgDP9OwjILt9VsPRMmfyfbqpl+6
+u9l/sQ7IPpt3vJELq/BmNrykcACx3jYoHSNp+c+XHUuOsLoTnPjlE3cVzvbAyTel
+4F2SIb+PjxYXM8GSR6PlM/Tf3dXia3kRhWRLT/4/P7SMcG8SCLSsuCJADJYpGe1e
+OsFNvWaynTNWVAHWaCmGD80N7bmIcL/xbF2gVi9wz3kZ6m1Uj7EXAubUzHTq9jQY
+7fjAykdmi55SlF5zwm7ZX9/rkUf2I86s4K9nnqy7AM9TWcFwWQUDtib28TC4RS4H
+rYdzRaFW8RPHPTIb76D0XU83e8ILvrP+L6LH3XJpHEXVp3NmzH4iX42183dJA2Z/
+Qk8yD9vbbxYG3OBVQh/G
+=aq+p
+-----END PGP SIGNATURE-----
+
+--=-6rX9WzbGH4datXFVZU0R--
 
