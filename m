@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48431 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019AbZCaSce (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:58216 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751685AbZCRAHm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 14:32:34 -0400
-Subject: Re: [RFC/RFT v2] rfkill: rewrite
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <49D25EE4.6020202@lwfinger.net>
-References: <1238349195.24972.5.camel@johannes.local>
-	 (sfid-20090329_195345_745378_2F2074B3) <1238451390.5970.59.camel@johannes.local>
-	 <49D25EE4.6020202@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dUKLQme3aL7kQQ/nTetr"
-Date: Tue, 31 Mar 2009 20:32:01 +0200
-Message-Id: <1238524321.5970.115.camel@johannes.local> (sfid-20090331_203236_835539_4648256B)
-Mime-Version: 1.0
+	Tue, 17 Mar 2009 20:07:42 -0400
+Received: by yw-out-2324.google.com with SMTP id 3so250484ywj.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 17:07:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1237329125.5100.7.camel@johannes.local>
+References: <86201b3f0903171526l62258146q3f9fb15166813484@mail.gmail.com>
+	 <1237329125.5100.7.camel@johannes.local>
+Date: Tue, 17 Mar 2009 17:07:40 -0700
+Message-ID: <43e72e890903171707o3365f243y68e080ece6afabaa@mail.gmail.com> (sfid-20090318_010744_551516_40365037)
+Subject: Re: Support for country information
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Charles Gordon <digigordo@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Mar 17, 2009 at 3:32 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2009-03-17 at 18:26 -0400, Charles Gordon wrote:
+>> I'm writing a wireless driver that will use mac80211. =C2=A0I am dev=
+eloping
+>> with a 2.6.28-00106 version kernel.
+>
+> First of all, let me say that this is a mistake. The API is
+> ever-evolving, and you want to develop against wireless-testing.
 
---=-dUKLQme3aL7kQQ/nTetr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'll add that if you are stuck on 2.6.28, then at least work off of
+wireless-testing and consider compiling the modules on the systems
+that are stuck on older kernels using compat-wireless [1]. This would
+allow you to work using wireless-testing and get your 2.6.28 systems a
+shiny new wireless system.
 
-On Tue, 2009-03-31 at 13:20 -0500, Larry Finger wrote:
+[1] http://wireless.kernel.org/en/users/Download
 
-> I was alerted to this problem when I was unable to shut down or reboot no=
-rmally.
-> Those problems are fixed with the patch
-
-Indeed, thanks. There's another, similar, bug in another function --
-I've updated the patch on my website. I'm going to implement the
-"initial state" thing now and then resend.
-
-johannes
-
---=-dUKLQme3aL7kQQ/nTetr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJ0mGfAAoJEKVg1VMiehFYReEP+wTknAAvqMcmwJS6zZKF5+LA
-fXHgkAmp7Jd0HD5ROQsmW5CIXWpTRyMRA+B2qxXxiZyg8LJrjE5RwdkUroLY5gfa
-PU3t32RXF/7ldLDB4VTdrMJF0ftvnY//yjMDqpQ4nR98eZhS7cUO9Ra+jIGHGhA6
-vh9vg0B5QuhzMlgVQtGXOJSR2G1lVyN2uAv4AqCFfellzRh4Ajtm5KbBK2Ex+6jk
-jwxfyz8lLC8xEZ6Kc9dkZVIwasmSWnJNz5wI+b9QNG8I9E/ZbjEDXcVwraz9swaj
-jVcD7hCDtBMKx7RQiYpVfmNUQajiy25JNBga3QD6UoPn/YyBTdWmcoBgoYE5rNad
-IFmhw5FIuX5vhrXtjZ8/rvRD+5FlxlVC7DhNKEA3ICCy5NWjiKd58ulcKG6TBc8/
-6vLHYGmCBZMFMb48uq8RKLvVB5AdZeKuPketv51FyO0U/vm2NoaPNHO6WiuHjSyg
-LIZS6hJvbRlMSMTk5V/n3BGbGQhB7luZWwz4N07uRZxg1wpzAhFKUt5JsTwRhn3u
-Dbd9N2OdpLM8w7uqUN9ALWqHNmWEpVd39OphQpCnKI/fKObGl0UJMu9X57d9yz0S
-SdVQA38jbQa3BRc4/m2fuDu9tNabNsFD44pCbQWARMAQtfmRaRjjSLmhcUZdvoEX
-gJc6VupOUD5ryvVuc7hG
-=Dhkt
------END PGP SIGNATURE-----
-
---=-dUKLQme3aL7kQQ/nTetr--
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
