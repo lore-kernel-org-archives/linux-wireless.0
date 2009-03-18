@@ -1,80 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:39702 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754250AbZCETyE (ORCPT
+Received: from yw-out-2324.google.com ([74.125.46.28]:33214 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733AbZCRRfx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 14:54:04 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
+	Wed, 18 Mar 2009 13:35:53 -0400
+Received: by yw-out-2324.google.com with SMTP id 5so153476ywb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2009 10:35:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890903181035j5dd19ec0o76db02d8e543fef3@mail.gmail.com>
+References: <20090318033600.4d17be51@beast3>
+	 <20090318144204.GC3527@tuxdriver.com>
+	 <43e72e890903181035j5dd19ec0o76db02d8e543fef3@mail.gmail.com>
+Date: Wed, 18 Mar 2009 10:35:50 -0700
+Message-ID: <43e72e890903181035w6c3bd9co6c6cceb920c032c4@mail.gmail.com> (sfid-20090318_183606_229819_64EAAC2A)
+Subject: Re: GSoC project proposals
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Imre Kaloz <kaloz@openwrt.org>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/3] ath9k: move ar9100 version checking macros into a more appropriate place
-Date: Thu,  5 Mar 2009 20:53:56 +0100
-Message-Id: <1236282837-6612-3-git-send-email-juhosg@openwrt.org> (sfid-20090305_205410_663436_7CAECEC2)
-In-Reply-To: <1236282837-6612-1-git-send-email-juhosg@openwrt.org>
-References: <1236282837-6612-1-git-send-email-juhosg@openwrt.org>
+Cc: Mircea Gherzan <mgherzan@gmail.com>,
+	linux-wireless@vger.kernel.org, k roy <kroykroy@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All other version checking macros are in a common location within the
-reg.h file. The AR_SREV_9100_OR_LATER macro is wrong currently, but will
-be fixed with the next patch.
+On Wed, Mar 18, 2009 at 10:35 AM, Luis R. Rodriguez <mcgrof@gmail.com> =
+wrote:
+> On Wed, Mar 18, 2009 at 7:42 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> On Wed, Mar 18, 2009 at 03:36:00AM +0200, Mircea Gherzan wrote:
+>>
+>>> I'm a CS student (undergrad) wanting to do a wireless-related proje=
+ct
+>>> for the Google Summer of Code.
+>>>
+>>> As advised by Johannes Berg, I am posting on here in order to know =
+the
+>>> mentors and to get a better understanding of the requierements.
+>>>
+>>> From the publised list, I am most interested in the roaming project=
+=2E
+>>> Please, can anyone tell me who will be mentoring it, so I cand get =
+in
+>>> touch with him/her?
+>>
+>> I think Luis Rodriguez penned the descriptions of those projects,
+>> so he might be the best person to ask about them. =C2=A0In any case,
+>> I would be happy to mentor such a project if you so desire.
+>
+> This is what we have, through some brainstorming on IRC and a few
+> e-mails with a few people.
+>
+> https://www.linuxfoundation.org/en/Google_Summer_of_Code_2009#802.11_=
+Wireless
+>
+> The application deadline was last Friday, March 13, 2009 so I suppose
+> that went in as-is. I volunteered a few people but if there are other=
+s
+> willing to help mentor some of these projects please just go right
+> ahead and add your name to the list or let me know and I'll add you.
+>
+> So there are three GSoC project ideas listed there:
+>
+> * Add AP support to Network Manager
+> * Improve wireless roaming
+> * Integrate GeoClue to help with regulatory compliance
+>
+> The last one is the one which I hope to be able to mentor the most on
+> but will also obviously need some help from Dan. That one is also
+> being reviewed in conjunction with a similar project idea for GNOME
+> GSoC:
+>
+> http://live.gnome.org/SummerOfCode2009/Ideas
+>
+> Seems GeoClue is welcomed for many reasons onto the desktop.
+>
+> Whether or not these GSoC projects get picked up by Google I still
+> think its worth to put this out there and see if people are will pick
+> some of this work up.
+>
+> OK so as for the question about roaming -- I'm up to help mentor it.
+> Anyone else?
 
-Changes-licensed-under: ISC
+=46orgot to add Kroy, which seemed interested in the GeoClue stuff.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
----
- drivers/net/wireless/ath9k/reg.h |   13 ++++++-------
- 1 files changed, 6 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath9k/reg.h b/drivers/net/wireless/ath9k/reg.h
-index fcddef5..2512e9b 100644
---- a/drivers/net/wireless/ath9k/reg.h
-+++ b/drivers/net/wireless/ath9k/reg.h
-@@ -158,10 +158,6 @@
- #define AR_CST_TIMEOUT_LIMIT      0xFFFF0000
- #define AR_CST_TIMEOUT_LIMIT_S    16
- 
--#define AR_SREV_VERSION_9100                  0x014
--
--#define AR_SREV_9100(ah) ((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
--
- #define AR_ISR               0x0080
- #define AR_ISR_RXOK          0x00000001
- #define AR_ISR_RXDESC        0x00000002
-@@ -730,6 +726,7 @@
- #define AR_SREV_REVISION_5416_10               0
- #define AR_SREV_REVISION_5416_20               1
- #define AR_SREV_REVISION_5416_22               2
-+#define AR_SREV_VERSION_9100                  0x14
- #define AR_SREV_VERSION_9160        	      0x40
- #define AR_SREV_REVISION_9160_10    	      0
- #define AR_SREV_REVISION_9160_11    	      1
-@@ -742,9 +739,6 @@
- #define AR_SREV_REVISION_9285_11              1
- #define AR_SREV_REVISION_9285_12              2
- 
--#define AR_SREV_9100_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_5416_PCIE))
--
- #define AR_SREV_5416(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
- 	 ((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE))
-@@ -757,6 +751,11 @@
- 	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_22)) || \
- 	 ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
- 
-+#define AR_SREV_9100(ah) \
-+	((ah->hw_version.macVersion) == AR_SREV_VERSION_9100)
-+#define AR_SREV_9100_OR_LATER(_ah) \
-+	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_5416_PCIE))
-+
- #define AR_SREV_9160(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9160))
- #define AR_SREV_9160_10_OR_LATER(_ah) \
--- 
-1.5.3.2
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
