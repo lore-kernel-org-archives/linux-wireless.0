@@ -1,123 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.225]:63410 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751904AbZCaISu convert rfc822-to-8bit (ORCPT
+Received: from ch-smtp02.sth.basefarm.net ([80.76.149.213]:44515 "EHLO
+	ch-smtp02.sth.basefarm.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751037AbZCROy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2009 04:18:50 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so2902726rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2009 01:18:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1238487365.5970.78.camel@johannes.local>
-References: <1238471826-3980-1-git-send-email-lrodriguez@atheros.com>
-	<1238485738.5970.64.camel@johannes.local> <43e72e890903310110l49b8a6b8hfe42202d5da0304@mail.gmail.com>
-	<1238487365.5970.78.camel@johannes.local>
-Date: Tue, 31 Mar 2009 01:18:32 -0700
-Message-ID: <43e72e890903310118k6131fb90gd334fad47cb297ec@mail.gmail.com> (sfid-20090331_101854_011454_B1697754)
-Subject: Re: [PATCH] cfg80211: send regulatory beacon hint events to userspace
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 18 Mar 2009 10:54:57 -0400
+cc: Adam Baker <linux@baker-net.org.uk>,
+	Anders Eriksson <aeriksson@fastmail.fm>,
+	linux-wireless@vger.kernel.org, rt2400-devel@lists.sourceforge.net
+Subject: Re: [Rt2400-devel] No ProbeResp == dead interface?
+Mime-Version: 1.0
+from: aeriksson2@fastmail.fm
+Content-Type: text/plain; charset=us-ascii
+Date: Wed, 18 Mar 2009 15:45:54 +0100
+Message-Id: <20090318144555.239CC2C40F9@tippex.mynet.homeunix.org> (sfid-20090318_155500_981213_0286A2B4)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 31, 2009 at 1:16 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2009-03-31 at 01:10 -0700, Luis R. Rodriguez wrote:
->
->> >> + =C2=A0 =C2=A0 /* Unforunately this is needed */
->> >> + =C2=A0 =C2=A0 nl_bands =3D nla_nest_start(msg, NL80211_ATTR_WIP=
-HY_BANDS);
->> >> + =C2=A0 =C2=A0 if (!nl_bands)
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto nla_put_failure;
->> >> + =C2=A0 =C2=A0 nl_band =3D nla_nest_start(msg, band);
->> >> + =C2=A0 =C2=A0 if (!nl_band)
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto nla_put_failure;
->> >> +
->> >> + =C2=A0 =C2=A0 /*
->> >> + =C2=A0 =C2=A0 =C2=A0* Our hack is to piggy back the channel pri=
-or to beacon hint
->> >> + =C2=A0 =C2=A0 =C2=A0* and after the beacon hint so userspace ca=
-n analyze the
->> >> + =C2=A0 =C2=A0 =C2=A0* differences. Right now only no-ibss and p=
-assive-scan flags
->> >> + =C2=A0 =C2=A0 =C2=A0* can change as that's the only thing we ex=
-pect to learn out
->> >> + =C2=A0 =C2=A0 =C2=A0* of a beacon for now. By re-using these at=
-tributes we can
->> >> + =C2=A0 =C2=A0 =C2=A0* avoid introducing new structs.
->> >> + =C2=A0 =C2=A0 =C2=A0*/
->> >> + =C2=A0 =C2=A0 nl_freqs =3D nla_nest_start(msg, NL80211_BAND_ATT=
-R_FREQS);
->> >> + =C2=A0 =C2=A0 if (!nl_freqs)
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto nla_put_failure;
->> >> +
->> >> + =C2=A0 =C2=A0 for (i =3D 0; i <=3D 1; i++) {
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 nl_freq =3D nla_nest_=
-start(msg, i);
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (!nl_freq)
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 goto nla_put_failure;
->> >> +
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 chan =3D (i =3D=3D 0)=
- ? channel_before : channel_after;
->> >> +
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 NLA_PUT_U32(mNo, that=
-'s not exclusive...sg, NL80211_FREQUENCY_ATTR_FREQ,
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 chan->center_freq);
->> >> +
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (chan->flags & IEE=
-E80211_CHAN_PASSIVE_SCAN)
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_PASSIVE_SCAN);
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (chan->flags & IEE=
-E80211_CHAN_NO_IBSS)
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
->> >> +
->> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 nla_nest_end(msg, nl_=
-freq);
->> >> + =C2=A0 =C2=A0 }
->> >
->> > I don't think I like this -- it's confusing to userspace code that=
- wants
->> > to use a unified message parser.
->>
->> I know the feeling, more on this below.
->>
->> > Do we really need that before/after thing anyway? I think if we re=
-ally
->> > need this then we should add new attributes.
->>
->> Well we can definitely add new attributes, but remember we still hav=
-e
->> to pass the center of freq. The cleanest solution is to define an
->> attribute with a center-freq, if-passive-lifted, if-beaconing-enable=
-d
->> flags. But that ends up adding all that for something we already hav=
-e
->> attributes for. I chose to use what we have.
->
-> No, we don't have to do that. All we'd need to do is add a new attrib=
-ute
-> NL80211_ATTR_FREQ_CHANGE, which we document to
-> =C2=A01) contain an array
-> =C2=A02) in that array, contain nesting
-> =C2=A03) in that nesting contain NL80211_FREQUENCY_ATTR
->
-> That means you'd only need to remove the bands nesting and replace th=
-e
-> BAND_ATTR_FREQS nesting by ATTR_FREQ_CHANGE nesting. Only one new
-> attribute needed in total, and you can keep almost all the code too. =
-The
-> array nesting is a little ugly, but that's not a big concern.
 
-Sounds good, thanks.
+Here's another trace of what happens due to lost ProbeResp. The "count" for 
+queue 0 stops to increase after that, fwiw. rmmod/modprobe doesn't help. A 
+reboot is necessary.
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Anything else I can provide to help debug this?
+
+/Anders
+
+
+
+
+
+Mar 18 14:53:01 tippex cron[19345]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 14:53:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 14:53:01 tippex wlan_queue: 14   0       24      23740   4       0       0
+Mar 18 14:53:01 tippex wlan_queue: 0    14023   24      0       7       7       0
+Mar 18 14:53:01 tippex wlan_queue: 1    5229165 24      0       21      21      0
+Mar 18 14:53:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 14:53:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 14:54:01 tippex cron[19351]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 14:54:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 14:54:01 tippex wlan_queue: 14   0       24      28180   4       0       0
+Mar 18 14:54:01 tippex wlan_queue: 0    14024   24      0       8       8       0
+Mar 18 14:54:01 tippex wlan_queue: 1    5230333 24      0       13      13      0
+Mar 18 14:54:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 14:54:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 14:55:01 tippex cron[19356]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 14:55:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 14:55:01 tippex wlan_queue: 14   0       24      32780   20      0       0
+Mar 18 14:55:01 tippex wlan_queue: 0    14025   24      0       9       9       0
+Mar 18 14:55:01 tippex wlan_queue: 1    5231500 24      0       4       4       0
+Mar 18 14:55:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 14:55:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 14:56:01 tippex cron[19360]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 14:56:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 14:56:01 tippex wlan_queue: 14   0       24      37455   15      0       0
+Mar 18 14:56:01 tippex wlan_queue: 0    14026   24      0       10      10      0
+Mar 18 14:56:01 tippex wlan_queue: 1    5232999 24      0       15      15      0
+Mar 18 14:56:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 14:56:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 14:57:01 tippex cron[19365]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 14:57:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 14:57:01 tippex wlan_queue: 14   0       24      41898   18      0       0
+Mar 18 14:57:01 tippex wlan_queue: 0    14027   24      0       11      11      0
+Mar 18 14:57:01 tippex wlan_queue: 1    5234682 24      0       18      18      0
+Mar 18 14:57:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 14:57:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 14:58:01 tippex cron[19371]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 14:58:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 14:58:01 tippex wlan_queue: 14   0       24      46364   20      0       0
+Mar 18 14:58:01 tippex wlan_queue: 0    14028   24      0       12      12      0
+Mar 18 14:58:01 tippex wlan_queue: 1    5236348 24      0       4       4       0
+Mar 18 14:58:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 14:58:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 14:58:44 tippex wlan0: No ProbeResp from current AP 00:18:39:c0:5f:50 - assume out of range
+
+Mar 18 14:59:01 tippex cron[19390]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 14:59:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 14:59:01 tippex wlan_queue: 14   0       24      49402   10      0       0
+Mar 18 14:59:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 14:59:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 14:59:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 14:59:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:00:02 tippex cron[19401]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:00:02 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:00:02 tippex wlan_queue: 14   0       24      50011   19      0       0
+Mar 18 15:00:02 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:00:02 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:00:02 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:00:02 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:01:01 tippex cron[19414]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:01:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:01:01 tippex wlan_queue: 14   0       24      50586   18      0       0
+Mar 18 15:01:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:01:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:01:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:01:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:02:01 tippex cron[19419]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:02:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:02:01 tippex wlan_queue: 14   0       24      51143   23      0       0
+Mar 18 15:02:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:02:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:02:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:02:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:03:01 tippex cron[19424]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:03:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:03:01 tippex wlan_queue: 14   0       24      51687   15      0       0
+Mar 18 15:03:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:03:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:03:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:03:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:04:01 tippex cron[19429]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:04:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:04:01 tippex wlan_queue: 14   0       24      52259   11      0       0
+Mar 18 15:04:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:04:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:04:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:04:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:05:01 tippex cron[19435]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:05:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:05:01 tippex wlan_queue: 14   0       24      52849   1       0       0
+Mar 18 15:05:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:05:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:05:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:05:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:06:01 tippex cron[19439]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:06:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:06:01 tippex wlan_queue: 14   0       24      53464   16      0       0
+Mar 18 15:06:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:06:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:06:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:06:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:07:01 tippex cron[19444]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:07:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:07:01 tippex wlan_queue: 14   0       24      54067   19      0       0
+Mar 18 15:07:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:07:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:07:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:07:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:08:01 tippex cron[19450]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:08:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:08:01 tippex wlan_queue: 14   0       24      54684   12      0       0
+Mar 18 15:08:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:08:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:08:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:08:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:09:01 tippex cron[19455]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:09:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:09:01 tippex wlan_queue: 14   0       24      55321   1       0       0
+Mar 18 15:09:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:09:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:09:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:09:01 tippex wlan_queue: 17   0       8       0       0       0       0
+Mar 18 15:10:01 tippex cron[19465]: (root) CMD (cat  /debugfs/ieee80211/phy0/rt2500pci/queue/queue  | logger -t wlan_queue)
+Mar 18 15:10:01 tippex wlan_queue: qid  count   limit   length  index   done    crypto
+Mar 18 15:10:01 tippex wlan_queue: 14   0       24      55979   11      0       0
+Mar 18 15:10:01 tippex wlan_queue: 0    14030   24      0       14      14      0
+Mar 18 15:10:01 tippex wlan_queue: 1    5237206 24      0       22      22      0
+Mar 18 15:10:01 tippex wlan_queue: 16   0       1       0       0       0       0
+Mar 18 15:10:01 tippex wlan_queue: 17   0       8       0       0       0       0
+
+
