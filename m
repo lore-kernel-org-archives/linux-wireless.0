@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33042 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753333AbZCYSPp (ORCPT
+Received: from mail-ew0-f176.google.com ([209.85.219.176]:33557 "EHLO
+	mail-ew0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752672AbZCRRlK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 14:15:45 -0400
-Date: Wed, 25 Mar 2009 14:12:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kel Modderman <kel@otaku42.de>
-Cc: debian-devel@lists.debian.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [renamed] Debian crda?
-Message-ID: <20090325181232.GA6882@tuxdriver.com> (sfid-20090325_191548_486884_52D69417)
-References: <43e72e890903250009hbe7bcfal546dddf731820b8e@mail.gmail.com> <e13a36b30903250039h55c8a01cg9dada9256bc8b1ae@mail.gmail.com> <200903260345.30678.kel@otaku42.de>
+	Wed, 18 Mar 2009 13:41:10 -0400
+Received: by ewy24 with SMTP id 24so139625ewy.13
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2009 10:41:07 -0700 (PDT)
+Message-ID: <49C12DFA.80308@giuppi.com> (sfid-20090318_184113_567224_DC41B555)
+Date: Wed, 18 Mar 2009 18:23:06 +0100
+From: "Info[at]Giuppi" <info@giuppi.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200903260345.30678.kel@otaku42.de>
+To: linux-wireless@vger.kernel.org
+Subject: rtl8187 bug report
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 26, 2009 at 03:45:30AM +1000, Kel Modderman wrote:
-> On Wednesday 25 March 2009 17:39:03 Paul Wise wrote:
-> > On Wed, Mar 25, 2009 at 4:09 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > 
-> > > Last time I poked them it seemed it was not easy to figure out how to
-> > > deal with, if at all, the optional but recommended RSA signature stuff
-> > > [1] with the DFSG.
-> > >
-> > > [1] http://wireless.kernel.org/en/developers/Regulatory#RSADigitalSignature
-> > 
-> > What is the percieved DFSG/RSA conflict? I can't detect any based on
-> > that section of the page.
-> 
-> Hi Paul,
-> 
-> By default the upstream wireless-regdb tarball contains and installs a
-> pre-built wireless regulatory information binary signed by John Linville's
-> openssl snakeoil. It is my understanding that in Debian we would prefer to
-> build the binary from its source code. That presents a problem because CRDA
-> expects to see John Linville's openssl stuff. One way to work around this
-> is to munge CRDA and regdb together, generate our own openssl stuff and build
-> CRDA and wireless-redb at the same time. Another way to go is to do away with
-> the openssl stuff during build altogether, but Luis doesn't like that, and the
-> build system's need patching to support it last time I checked.
+I have a rtl8187B usb dongle, works pretty well with new driver rtl8187.
+Thanks for the great job you're doing.
 
-You could also patch-in support for your own signing key, provided
-that would comply with whatever policies Debian has about signing keys.
+The problem comes when I try to handle my WEP protected network in
+monitor mode.
+It becomes really slow in finding/showing the network and when it
+appears in the list, no activity
+is detected. I mean beacons or data remains at 0 in the airodump-ng
+screen (from latest svn aircrack-ng suite)
 
-Hth...
+Everything works fine in managed mode and the network is easily detected
+and i can connect too.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I also have a rt73usb device and this one works as expected.
+
+I'm currently using ubuntu-backport modules but I've also tryed the
+compat-wireless package dated 17 march
+kernel version 2.6.27-13-generic
+
