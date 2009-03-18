@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:40984 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753510AbZCJK1M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 06:27:12 -0400
-Date: Tue, 10 Mar 2009 12:27:30 +0200
-From: Nick Kossifidis <mick@madwifi-project.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Cc: jirislaby@gmail.com, mcgrof@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Subject: [PATCH 0/3] ath5k: Tx Power support
-Message-ID: <20090310102730.GA3341@makis> (sfid-20090310_112716_185088_237A633C)
+Received: from yw-out-2324.google.com ([74.125.46.28]:17669 "EHLO
+	yw-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755747AbZCRB3E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2009 21:29:04 -0400
+Received: by yw-out-2324.google.com with SMTP id 3so285346ywj.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 18:29:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <646765f40903171824t7854e0d4wc2c3de9752ad6370@mail.gmail.com>
+References: <af5afd160903171817v6a6ec50al6e933985628e7674@mail.gmail.com>
+	 <646765f40903171824t7854e0d4wc2c3de9752ad6370@mail.gmail.com>
+Date: Wed, 18 Mar 2009 12:29:01 +1100
+Message-ID: <af5afd160903171829j45e194bbu22082ee83ffab3c9@mail.gmail.com> (sfid-20090318_022909_581842_F7B161D6)
+Subject: Re: compile error.
+From: Dennis Kavadas <ipguy@kavadas.org>
+To: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These 3 pathces add support for Tx power baseband calibration and some
-basic Tx power limits. Initialy i thought that without these settings hw
-transmited on the lowest possible power, it turns out that hw transmits
-all the way up and that's why we have corrupted spectral mask and can't get 
-more than 18Mb rates on some cards. With these patches we calibrate the
-baseband so that it doesn't transmit above the power calibrated on EEPROM and 
-it transmits the same power on all channels (pre amplifiers etc have different
-behaviour on different frequencies so we have to pass a calibration curve on
-hw for each channel by using infos found on EEPROM). We then further limit
-that power for each rate (because OFDM rates need some special handling +
-when we are on g mode CCK rates have different peak to average ratio and also
-need special handling) so that we can have the maximum power supported by
-hardware. Then we should apply regultory limits (i already tried to handle
-some CTL tests, we need some more work on that) so that we can have the maximum
-tx power supported by the driver and the last thing is to limit based on user
-selection (if user asks for a tx power below that max).
+...but I downloaded compat-wireless-old, quoting from the website "You
+can download compat-wireless-old for kernels <= 2.6.26 here"
 
-Note that this code is not a port of HAL's source but i tried to rewrite most of
-this stuff, i wanted to better understand what's going on and i also wanted to
-have a much cleaner code that makes sense (there are lots of things that don't
-make sense on HAL's source and without propper documentation it took me some
-time to figure out what's going on + EEPROM docs were misleading). On RF2413+
-output is the same with MadWiFi (i started with Felix's work with a few cleanups),
-on RF5111/RF5112 output differs in some cases (check out the curves on
-http://www.kernel.org/pub/linux/kernel/people/mickflemm/txp_curves/ so that you
-can compare). I believe that my approach is better (it's certainly cleaner) but
-time will show. Also note that these curves should be monotonicaly increasing, as
-you can see HAL produces some anomalies on the curves (later i found out that HAL
-actually "hardcodes" CCK-OFDM power difference on the channel power table (that
-has nothing to do with rates) !!! I believe a better approach for chips that don't
-support auto tx power adjustment (they lack a register) is to have a power offset
-that can be used by the driver when we try out a CCK rate (this offset is 0 on cards
-that support auto tx power adjustment).
 
-Also note that i hardcoded a power limit of 12.5dB until we are done with regulatory
-stuff, it's still not low enough to cover all cases but it'll help us on debuging and
-keep users happy.
 
-For now TPC is not supported but there's work in progress...
-
-P.S. I usualy put lots of comments on my code, if some of these are obvious feel free
-to clean them up.
+On Wed, Mar 18, 2009 at 12:24 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> On Wed, Mar 18, 2009 at 12:17, Dennis Kavadas <ipguy@kavadas.org> wrote:
+>> hi all
+>>
+>> i'm currently running a CentOS5 server with kernel version 2.6.18-92.1.22.el5
+> [snip]
+>> error: #error Compat-wireless requirement: Linux >= 2,6,21
+>
+> Your kernel is too old, as it says here, you need a version greater or
+> equal to 2.6.21.
+>
+> Thanks,
+>
+> --
+>
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> .Plan: http://sites.google.com/site/juliancalaby/
+>
