@@ -1,103 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:31652 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753791AbZCYUWp (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:15659 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbZCRBce (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 16:22:45 -0400
-Received: by fk-out-0910.google.com with SMTP id 18so99118fkq.5
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2009 13:22:42 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"Guy\, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: wireless powersaving (in NM?)
-References: <1237891149.4320.73.camel@johannes.local>
-	<87ab7bqa21.fsf@litku.valot.fi>
-	<1237978630.4320.150.camel@johannes.local>
-	<87ab791isj.fsf@litku.valot.fi>
-	<1238011579.4320.169.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 25 Mar 2009 22:22:39 +0200
-In-Reply-To: <1238011579.4320.169.camel@johannes.local> (Johannes Berg's message of "Wed\, 25 Mar 2009 21\:06\:19 +0100")
-Message-ID: <87wsadz71s.fsf@litku.valot.fi> (sfid-20090325_212303_321083_C150A645)
+	Tue, 17 Mar 2009 21:32:34 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so319732wff.4
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 18:32:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <af5afd160903171829j45e194bbu22082ee83ffab3c9@mail.gmail.com>
+References: <af5afd160903171817v6a6ec50al6e933985628e7674@mail.gmail.com>
+	 <646765f40903171824t7854e0d4wc2c3de9752ad6370@mail.gmail.com>
+	 <af5afd160903171829j45e194bbu22082ee83ffab3c9@mail.gmail.com>
+Date: Wed, 18 Mar 2009 12:32:32 +1100
+Message-ID: <646765f40903171832i2ad3debbre4cd1630ed681d23@mail.gmail.com> (sfid-20090318_023237_380350_B8FD14F0)
+Subject: Re: compile error.
+From: Julian Calaby <julian.calaby@gmail.com>
+To: Dennis Kavadas <ipguy@kavadas.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Wed, Mar 18, 2009 at 12:29, Dennis Kavadas <ipguy@kavadas.org> wrote:
+> ...but I downloaded compat-wireless-old, quoting from the website "You
+> can download compat-wireless-old for kernels <= 2.6.26 here"
 
-> On Wed, 2009-03-25 at 21:53 +0200, Kalle Valo wrote:
->
->> > I'm just worried that we'll require a whole bunch of different
->> > interfaces. Yes, in theory there isn't much to control, but iwlwifi
->> > firmware for example can, as far as I interpret the code, dynamically
->> > vary the listen interval.
->> 
->> You mean the wakeup interval? For me, listen interval means the
->> maximum time AP is willing to buffer frames for a STA.
->
-> No, I mean the listen interval in the assoc request frame.
+Read this: http://wireless.kernel.org/en/users/Download#Requirements
 
-It only tells the AP maximum time it should buffer the frames for use.
-We can set it 10 but still wake every second beacon. So listen
-interval has merely informative value.
+It clearly states that you need "A kernel >= 2.6.21 (limited support
+for 2.6.21)"
 
->> I assume you mean sleep_interval here:
->> 
->> #define IWL_POWER_VEC_SIZE 5
->> 
->> struct iwl_powertable_cmd {
->> 	__le16 flags;
->> 	u8 keep_alive_seconds;		/* 3945 reserved */
->> 	u8 debug_flags;			/* 3945 reserved */
->> 	__le32 rx_data_timeout;
->> 	__le32 tx_data_timeout;
->> 	__le32 sleep_interval[IWL_POWER_VEC_SIZE];
->> 	__le32 keep_alive_beacons;
->> } __attribute__ ((packed));
->> 
->> So there's an array sleep/wakeup interval, which firmware most
->> probably rotates periodically. 
->
-> I don't actually know what the sleep interval here is...
-
-I think it determines how often the firmware will wakeup for beacons.
-At least stlc45xx had something similar.
-
->> I think stlc45xx/p54 even had something
->> similar. But honestly, I don't know if this kind of trickery is
->> useful. Why not directly go to the longest wakeup interval
->> immediately?
->
-> But listen interval * beacon interval determines latency.
-
-Yeah. I just wouldn't use the listen interval, because it's
-a bit misleading. I have used the term wakeup interval here.
-
->> My view is that the decision to change wakeup interval should be done
->> in host, preferably userspace. Userspace has the best knowledge, it
->> should make the decision as well.
->
-> What's the wakeup interval?
-
-That's my own invention, again :) It's the interval how often firmware
-wakes up for beacons, and unit is beacon interval. For example, if
-wakeup interval is three and beacon interval 100 msec, the firmware
-would wakeup for beacons every 300 ms.
-
->> > Some of the decisions might also depend on the hardware, I could
->> > imagine, the point where turning off power saving is required might be
->> > different depending on hardware due to wakeup time maybe?
->> 
->> Yes, there might be some differences.
->
-> How would we capture these?
-
-I was thinking that it's the responsibility of the driver's author to
-map these to the hardware.
+Thanks,
 
 -- 
-Kalle Valo
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
