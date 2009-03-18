@@ -1,180 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34134 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755117AbZCSFyq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 01:54:46 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+Received: from mga01.intel.com ([192.55.52.88]:57755 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750782AbZCREqz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2009 00:46:55 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 2/6] wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
-Date: Thu, 19 Mar 2009 01:54:36 -0400
-Message-Id: <1237442080-27509-3-git-send-email-lrodriguez@atheros.com> (sfid-20090319_065453_326200_94E48DFF)
-In-Reply-To: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
-References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Mohamed Abbas <mohamed.abbas@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/13] iwlcore: Fix scan problem, resource busy
+Date: Tue, 17 Mar 2009 21:51:46 -0700
+Message-Id: <1237351913-19202-7-git-send-email-reinette.chatre@intel.com> (sfid-20090318_054708_018702_A5ED521D)
+In-Reply-To: <1237351913-19202-6-git-send-email-reinette.chatre@intel.com>
+References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-2-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-3-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-4-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-5-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-6-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is more consistent with our nl80211 stuff.
+From: Mohamed Abbas <mohamed.abbas@intel.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+when mac80211 issues scan request to lower driver, it always expect
+a scan_complete notification from the driver, this driver make sure
+we call scan_completed on all exit path in iwl_mac_hw_scan.
+
+Signed-off-by: Mohamed Abbas <mohamed.abbas@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c   |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 ++++----
- include/net/wireless.h                    |   12 ++++++------
- net/mac80211/mlme.c                       |    4 ++--
- net/wireless/reg.c                        |   16 ++++++++--------
- 5 files changed, 22 insertions(+), 22 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 085e9cf..0871efe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -591,10 +591,10 @@ static u8 iwl_is_channel_extension(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 23644cf..f557f38 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -462,8 +462,9 @@ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
+ 	spin_lock_irqsave(&priv->lock, flags);
  
- 	if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE)
- 		return !(ch_info->fat_extension_channel &
--					IEEE80211_CHAN_NO_FAT_ABOVE);
-+					IEEE80211_CHAN_NO_HT40PLUS);
- 	else if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW)
- 		return !(ch_info->fat_extension_channel &
--					IEEE80211_CHAN_NO_FAT_BELOW);
-+					IEEE80211_CHAN_NO_HT40MINUS);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 75517d0..9d73f19 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -481,8 +481,8 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 			/* First write that fat is not enabled, and then enable
- 			 * one by one */
- 			ch_info->fat_extension_channel =
--				(IEEE80211_CHAN_NO_FAT_ABOVE |
--				 IEEE80211_CHAN_NO_FAT_BELOW);
-+				(IEEE80211_CHAN_NO_HT40PLUS |
-+				 IEEE80211_CHAN_NO_HT40MINUS);
- 
- 			if (!(is_channel_valid(ch_info))) {
- 				IWL_DEBUG_INFO(priv, "Ch. %d Flags %x [%sGHz] - "
-@@ -561,7 +561,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 				fat_extension_chan = 0;
- 			else
- 				fat_extension_chan =
--					IEEE80211_CHAN_NO_FAT_BELOW;
-+					IEEE80211_CHAN_NO_HT40MINUS;
- 
- 			/* Set up driver's info for lower half */
- 			iwl_set_fat_chan_info(priv, ieeeband,
-@@ -573,7 +573,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 			iwl_set_fat_chan_info(priv, ieeeband,
- 						(eeprom_ch_index[ch] + 4),
- 						&(eeprom_ch_info[ch]),
--						IEEE80211_CHAN_NO_FAT_ABOVE);
-+						IEEE80211_CHAN_NO_HT40PLUS);
- 		}
+ 	if (!iwl_is_ready_rf(priv)) {
+-		ret = -EIO;
++		ret = 0;
+ 		IWL_DEBUG_MAC80211(priv, "leave - not ready or exit pending\n");
++		queue_work(priv->workqueue, &priv->scan_completed);
+ 		goto out_unlock;
  	}
  
-diff --git a/include/net/wireless.h b/include/net/wireless.h
-index e3077e1..0331d26 100644
---- a/include/net/wireless.h
-+++ b/include/net/wireless.h
-@@ -40,21 +40,21 @@ enum ieee80211_band {
-  *	on this channel.
-  * @IEEE80211_CHAN_NO_IBSS: IBSS is not allowed on this channel.
-  * @IEEE80211_CHAN_RADAR: Radar detection is required on this channel.
-- * @IEEE80211_CHAN_NO_FAT_ABOVE: extension channel above this channel
-+ * @IEEE80211_CHAN_NO_HT40PLUS: extension channel above this channel
-  * 	is not permitted.
-- * @IEEE80211_CHAN_NO_FAT_BELOW: extension channel below this channel
-+ * @IEEE80211_CHAN_NO_HT40MINUS: extension channel below this channel
-  * 	is not permitted.
-  * @IEEE80211_CHAN_NO_HT40: indicates no HT40 is allowed at all,
-- * 	when this is set %IEEE80211_CHAN_NO_FAT_ABOVE and
-- * 	%IEEE80211_CHAN_NO_FAT_BELOW will also be set.
-+ * 	when this is set %IEEE80211_CHAN_NO_HT40PLUS and
-+ * 	%IEEE80211_CHAN_NO_HT40MINUS will also be set.
-  */
- enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_DISABLED		= 1<<0,
- 	IEEE80211_CHAN_PASSIVE_SCAN	= 1<<1,
- 	IEEE80211_CHAN_NO_IBSS		= 1<<2,
- 	IEEE80211_CHAN_RADAR		= 1<<3,
--	IEEE80211_CHAN_NO_FAT_ABOVE	= 1<<4,
--	IEEE80211_CHAN_NO_FAT_BELOW	= 1<<5,
-+	IEEE80211_CHAN_NO_HT40PLUS	= 1<<4,
-+	IEEE80211_CHAN_NO_HT40MINUS	= 1<<5,
- 	IEEE80211_CHAN_NO_HT40		= 1<<6,
- };
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index a558796..9543eea 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -278,13 +278,13 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 
- 		switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
- 		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--			if (flags & IEEE80211_CHAN_NO_FAT_ABOVE) {
-+			if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
- 				cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 				cap &= ~IEEE80211_HT_CAP_SGI_40;
- 			}
- 			break;
- 		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--			if (flags & IEEE80211_CHAN_NO_FAT_BELOW) {
-+			if (flags & IEEE80211_CHAN_NO_HT40MINUS) {
- 				cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 				cap &= ~IEEE80211_HT_CAP_SGI_40;
- 			}
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 29646b6..b4c002f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1178,8 +1178,8 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
- 
- 	if (channel->flags &
- 	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_HT40)) {
--		channel->flags |= IEEE80211_CHAN_NO_FAT_ABOVE |
--				  IEEE80211_CHAN_NO_FAT_BELOW;
-+		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS |
-+				  IEEE80211_CHAN_NO_HT40MINUS;
- 		return;
- 	}
- 
-@@ -1202,15 +1202,15 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
- 	 */
- 	if (!channel_before || (channel_before->flags &
- 	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_HT40)))
--		channel->flags |= IEEE80211_CHAN_NO_FAT_BELOW;
-+		channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
- 	else
--		channel->flags &= ~IEEE80211_CHAN_NO_FAT_BELOW;
-+		channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
- 
- 	if (!channel_after || (channel_after->flags &
- 	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_HT40)))
--		channel->flags |= IEEE80211_CHAN_NO_FAT_ABOVE;
-+		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
- 	else
--		channel->flags &= ~IEEE80211_CHAN_NO_FAT_ABOVE;
-+		channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
- }
- 
- static void reg_process_ht_flags_band(struct wiphy *wiphy,
-@@ -1292,8 +1292,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
- 
- 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
- 		bw_flags = IEEE80211_CHAN_NO_HT40 |
--			   IEEE80211_CHAN_NO_FAT_BELOW |
--			   IEEE80211_CHAN_NO_FAT_ABOVE;
-+			   IEEE80211_CHAN_NO_HT40MINUS |
-+			   IEEE80211_CHAN_NO_HT40PLUS;
- 
- 	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
- 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
 -- 
-1.6.0.6
+1.5.6.3
 
