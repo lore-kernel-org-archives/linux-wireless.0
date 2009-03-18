@@ -1,76 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host2.marvell.com ([65.219.4.2]:49642 "EHLO maili.marvell.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755051AbZCLCjp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 22:39:45 -0400
-Date: Wed, 11 Mar 2009 18:13:28 -0700 (PDT)
-From: Bing Zhao <bzhao@marvell.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	bzhao@marvell.com
-Subject: Re: [PATCH resend] libertas: support mesh for various firmware
- versions
-Message-ID: <alpine.LFD.0.9999.0903111802190.6150@localhost.localdomain> (sfid-20090312_033954_691377_40996C98)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from xc.sipsolutions.net ([83.246.72.84]:36240 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751869AbZCRUEu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2009 16:04:50 -0400
+Subject: Re:
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Thornton <david@villagepublishing.com.au>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <254CF60C-B61D-434B-BE34-0A1FDDDA6F4B@villagepublishing.com.au> (sfid-20090318_210350_597088_061DA824)
+References: <254CF60C-B61D-434B-BE34-0A1FDDDA6F4B@villagepublishing.com.au>
+	 (sfid-20090318_210350_597088_061DA824)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SRbX7O9sRmuMi1zv4F7T"
+Date: Wed, 18 Mar 2009 21:04:17 +0100
+Message-Id: <1237406657.5100.47.camel@johannes.local> (sfid-20090318_210452_536409_93C1BA21)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, March 11, 2009 at 3:26 AM, Dan Williams wrote:
 
->> +		struct {
->> +			/* packet type */
->> +			u8 pkt_type;
->> +			/* BSS number */
->> +			u8 bss_num;
->
-> Any chance you could give a quick overview of what goes in the
-> pkt_type and bss_num fields?
+--=-SRbX7O9sRmuMi1zv4F7T
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Hi Dan,
+On Thu, 2009-03-19 at 07:03 +1100, David Thornton wrote:
+> unsubscribe linux-wireless
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-This is to support multiple BSS simultaneously with the same
-firmware at runtime. Each BSS has a unique number (bss_num) and
-may have different type, such as "client", "AP", etc.
+Try reading more closely.
 
-The bss_num of mesh interface is defined as a macro
-"MESH_IFACE_ID" in this patch. The pkt_type field is reserved
-for future use.
+johannes
 
+--=-SRbX7O9sRmuMi1zv4F7T
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
->> +		} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
->> +			if (p_rx_pd->u.stat.bss_num)
->
-> This would mean that bss_num == 0 indicates a regular frame.  Is
-> that correct?  For mesh frames bss_num will always be > 0?  The
-> old-style rx_control flag seems a bit cleaner to me, but whatever
-> works :)
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
 
-It should be like this, thanks!
-+		} else if (priv->mesh_fw_ver == MESH_FW_NEW) {
-+			if (p_rx_pd->u.stat.bss_num == MESH_IFACE_ID)
+iQIcBAABAgAGBQJJwVO/AAoJEKVg1VMiehFYLZgP/3S5bsGEATjX8/tdb34O60GA
+Gqtb1BtayXX2+keI0ZRZOUA2DQj+3d1EztYajx71vHYcMhtujrsQ3dBUGjUVZ1Fz
+0Prbm2BlDvD5h7pcFZHaOyr48b23SBuF76v+FirzbnW1baFgKVu4clP+6QTFhtZ5
+PB5FtGQ8o9opp6Wwkn183BY+6zAmWoj2reld6TYRsZaNG9AqInu6y5P1hPYPhcmg
+d0CnoV2/bxuYISKJXFXWAtUwruU5E3R/XqpysvidbSvhbjbLkc/UE8Bg61lj/bJO
+jrz3Is6bnS2D7Sdd1nOjVH6xguavBQ7gENT4PAZckA4ESNp/JPfP1qJoQ3aQKy+C
+5xEBID/9b0B6bNkX9COrYkjTfs9JcJRiK07MOSSxeG3OImkiv5NjeCUwBZbGrODF
+xih252Sv/rIMFkPM4CuE3qpgSQzvcamefoe4FhgLQnYtJyY7xgxOu5MEOTXWKRJr
+uM64kF3gwzIAgUIapP2LsJUED2xRkVaxQjopdQxbefu5vf22wsWfFESiNEkx7P5x
+1D26twUNC2K5RVc46PturwF8iMEX045G+Moe5H8Ympd84euMLUndQUPTDqgeNO3j
+bubY/XN1lXyp8Q5QldfyFKjeXTzF23zGRvGA8viNZel/Z+QuU568QbyiJ04Ua/4C
+s7n9sRKj2S6X8i9HacSr
+=o2Pw
+-----END PGP SIGNATURE-----
 
->> -	if (!(p_rx_pd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK))) {
->> -		lbs_deb_rx("rx err: frame received with bad status\n");
->> -		lbs_pr_alert("rxpd not ok\n");
->> -		priv->stats.rx_errors++;
->> -		ret = 0;
->> -		goto done;
->> -	}
->> -
->
-> I'd prefer to keep this code; can you protect it with firmware version
-> checks for firmware < 5.1?  It looks like those older firmware versions
-> use it, but the 5.1 specification marks RxStatus "Reserved".  Since the
-> driver still works with cf8385 and sd8385 using firmware 5.0.16 and
-> such, I'm not sure we should remove this yet.
-
-The firmware seems always set MRVDRV_RXPD_STATUS_OK bit in status field.
-I'll double check for this with the old firmware v5.0.16.
-
-The patch will be re-sent to address above issues.
-
-Thanks,
-
-Bing
+--=-SRbX7O9sRmuMi1zv4F7T--
 
