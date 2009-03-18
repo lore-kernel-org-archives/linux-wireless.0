@@ -1,199 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43401 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753961AbZCaCai (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 22:30:38 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga01.intel.com ([192.55.52.88]:48966 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751708AbZCREq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2009 00:46:56 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/9] atheros: start merge of ath5k/ath9k/ar9170
-Date: Mon, 30 Mar 2009 22:30:26 -0400
-Message-Id: <1238466635-23280-1-git-send-email-lrodriguez@atheros.com> (sfid-20090331_043043_299072_6B3809B4)
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/13] iwl3945: set TFD_QUEUE_MAX to correct value
+Date: Tue, 17 Mar 2009 21:51:48 -0700
+Message-Id: <1237351913-19202-9-git-send-email-reinette.chatre@intel.com> (sfid-20090318_054710_299058_FF9EE3F1)
+In-Reply-To: <1237351913-19202-8-git-send-email-reinette.chatre@intel.com>
+References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-2-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-3-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-4-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-5-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-6-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-7-git-send-email-reinette.chatre@intel.com>
+ <1237351913-19202-8-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series starts work to start sharing code between atheros
-wireless drivers. We start off with the sharing of the atheros
-regulatory work.
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-This patch series applies on top of Sujiths' latest series
-and Bob's channel fixes for ath5k, "reduce exported channel list".
+Total number of queues is 8 but only 7 of them are TX queues.
+4 AC(Data) queue ,1 CMD and 2 HCCA. The HCCA queues are not used.
+max_txq_num is set to maximum usable TX queues.
 
-I've done testing with ath9k, and ath5k. I believe Bob has tested
-ath5k more, and Chris himself sent the ar9170 patch, this just
-brings it all together.
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c    |    9 ++++++---
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-The last few patches are space cleanups and a sparse fix.
-
-We can now extend the common ath.ko module as we see fit when we
-find common elements.
-
-Much thanks to Bob and Chris for their work on this.
-
-You can find Sujith's series + bob's patchs + this series in
-one file here:
-
-http://bombadil.infradead.org/~mcgrof/patches/ath/super-unholy-unibomb.patch.txt
-
-Bob Copeland (5):
-  ath9k: separate ath9k specific code from ath9k_regd_get_ctl()
-  ath9k: pass regd structure directly to regulatory functions
-  atheros: introduce ath module containing common ath5k/ath9k/ar9170
-    code
-  ath: move more setup code into ath_regd_init
-  ath5k: use regulatory infrastructure
-
-Christian Lamparter (1):
-  Make ar9170 use common ath reg code
-
-Luis R. Rodriguez (3):
-  atheros: put atheros wireless drivers into ath/
-  ath: space cleanup
-  ath5k: sparse fix ath5k_led_on needs to be static
-
- drivers/net/wireless/Kconfig                      |    4 +-
- drivers/net/wireless/Makefile                     |    4 +-
- drivers/net/wireless/ath/Kconfig                  |    8 +
- drivers/net/wireless/ath/Makefile                 |    7 +
- drivers/net/wireless/{ => ath}/ar9170/Kconfig     |    1 +
- drivers/net/wireless/{ => ath}/ar9170/Makefile    |    0
- drivers/net/wireless/{ => ath}/ar9170/ar9170.h    |    3 +
- drivers/net/wireless/{ => ath}/ar9170/cmd.c       |    0
- drivers/net/wireless/{ => ath}/ar9170/cmd.h       |    0
- drivers/net/wireless/{ => ath}/ar9170/eeprom.h    |    0
- drivers/net/wireless/{ => ath}/ar9170/hw.h        |    0
- drivers/net/wireless/{ => ath}/ar9170/led.c       |    0
- drivers/net/wireless/{ => ath}/ar9170/mac.c       |    0
- drivers/net/wireless/{ => ath}/ar9170/main.c      |   18 ++
- drivers/net/wireless/{ => ath}/ar9170/phy.c       |    0
- drivers/net/wireless/{ => ath}/ar9170/usb.c       |    0
- drivers/net/wireless/{ => ath}/ar9170/usb.h       |    0
- drivers/net/wireless/{ => ath}/ath5k/Kconfig      |    1 +
- drivers/net/wireless/{ => ath}/ath5k/Makefile     |    0
- drivers/net/wireless/{ => ath}/ath5k/ath5k.h      |    5 +-
- drivers/net/wireless/{ => ath}/ath5k/attach.c     |    0
- drivers/net/wireless/{ => ath}/ath5k/base.c       |   20 ++
- drivers/net/wireless/{ => ath}/ath5k/base.h       |    0
- drivers/net/wireless/{ => ath}/ath5k/caps.c       |    0
- drivers/net/wireless/{ => ath}/ath5k/debug.c      |    0
- drivers/net/wireless/{ => ath}/ath5k/debug.h      |    0
- drivers/net/wireless/{ => ath}/ath5k/desc.c       |    0
- drivers/net/wireless/{ => ath}/ath5k/desc.h       |    0
- drivers/net/wireless/{ => ath}/ath5k/dma.c        |    0
- drivers/net/wireless/{ => ath}/ath5k/eeprom.c     |    0
- drivers/net/wireless/{ => ath}/ath5k/eeprom.h     |    0
- drivers/net/wireless/{ => ath}/ath5k/gpio.c       |    0
- drivers/net/wireless/{ => ath}/ath5k/initvals.c   |    0
- drivers/net/wireless/{ => ath}/ath5k/led.c        |    2 +-
- drivers/net/wireless/{ => ath}/ath5k/pcu.c        |    0
- drivers/net/wireless/{ => ath}/ath5k/phy.c        |    0
- drivers/net/wireless/{ => ath}/ath5k/qcu.c        |    0
- drivers/net/wireless/{ => ath}/ath5k/reg.h        |    0
- drivers/net/wireless/{ => ath}/ath5k/reset.c      |    0
- drivers/net/wireless/{ => ath}/ath5k/rfbuffer.h   |    0
- drivers/net/wireless/{ => ath}/ath5k/rfgain.h     |    0
- drivers/net/wireless/{ => ath}/ath9k/Kconfig      |    1 +
- drivers/net/wireless/{ => ath}/ath9k/Makefile     |    1 -
- drivers/net/wireless/{ => ath}/ath9k/ahb.c        |    0
- drivers/net/wireless/{ => ath}/ath9k/ani.c        |    0
- drivers/net/wireless/{ => ath}/ath9k/ani.h        |    0
- drivers/net/wireless/{ => ath}/ath9k/ath9k.h      |    0
- drivers/net/wireless/{ => ath}/ath9k/beacon.c     |    0
- drivers/net/wireless/{ => ath}/ath9k/calib.c      |    0
- drivers/net/wireless/{ => ath}/ath9k/calib.h      |    0
- drivers/net/wireless/{ => ath}/ath9k/debug.c      |    0
- drivers/net/wireless/{ => ath}/ath9k/debug.h      |    0
- drivers/net/wireless/{ => ath}/ath9k/eeprom.c     |    0
- drivers/net/wireless/{ => ath}/ath9k/eeprom.h     |    2 +
- drivers/net/wireless/{ => ath}/ath9k/hw.c         |   21 ++-
- drivers/net/wireless/{ => ath}/ath9k/hw.h         |    5 +-
- drivers/net/wireless/{ => ath}/ath9k/initvals.h   |    0
- drivers/net/wireless/{ => ath}/ath9k/mac.c        |    0
- drivers/net/wireless/{ => ath}/ath9k/mac.h        |    0
- drivers/net/wireless/{ => ath}/ath9k/main.c       |   42 ++--
- drivers/net/wireless/{ => ath}/ath9k/pci.c        |    0
- drivers/net/wireless/{ => ath}/ath9k/phy.c        |    0
- drivers/net/wireless/{ => ath}/ath9k/phy.h        |    0
- drivers/net/wireless/{ => ath}/ath9k/rc.c         |    0
- drivers/net/wireless/{ => ath}/ath9k/rc.h         |    0
- drivers/net/wireless/{ => ath}/ath9k/recv.c       |    0
- drivers/net/wireless/{ => ath}/ath9k/reg.h        |    0
- drivers/net/wireless/{ => ath}/ath9k/virtual.c    |    0
- drivers/net/wireless/{ => ath}/ath9k/xmit.c       |    0
- drivers/net/wireless/{ath9k => ath}/regd.c        |  242 ++++++++++++---------
- drivers/net/wireless/{ath9k => ath}/regd.h        |   41 +++-
- drivers/net/wireless/{ath9k => ath}/regd_common.h |    0
- 72 files changed, 274 insertions(+), 154 deletions(-)
- create mode 100644 drivers/net/wireless/ath/Kconfig
- create mode 100644 drivers/net/wireless/ath/Makefile
- rename drivers/net/wireless/{ => ath}/ar9170/Kconfig (96%)
- rename drivers/net/wireless/{ => ath}/ar9170/Makefile (100%)
- rename drivers/net/wireless/{ => ath}/ar9170/ar9170.h (99%)
- rename drivers/net/wireless/{ => ath}/ar9170/cmd.c (100%)
- rename drivers/net/wireless/{ => ath}/ar9170/cmd.h (100%)
- rename drivers/net/wireless/{ => ath}/ar9170/eeprom.h (100%)
- rename drivers/net/wireless/{ => ath}/ar9170/hw.h (100%)
- rename drivers/net/wireless/{ => ath}/ar9170/led.c (100%)
- rename drivers/net/wireless/{ => ath}/ar9170/mac.c (100%)
- rename drivers/net/wireless/{ => ath}/ar9170/main.c (98%)
- rename drivers/net/wireless/{ => ath}/ar9170/phy.c (100%)
- rename drivers/net/wireless/{ => ath}/ar9170/usb.c (100%)
- rename drivers/net/wireless/{ => ath}/ar9170/usb.h (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/Kconfig (98%)
- rename drivers/net/wireless/{ => ath}/ath5k/Makefile (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/ath5k.h (99%)
- rename drivers/net/wireless/{ => ath}/ath5k/attach.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/base.c (99%)
- rename drivers/net/wireless/{ => ath}/ath5k/base.h (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/caps.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/debug.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/debug.h (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/desc.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/desc.h (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/dma.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/eeprom.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/eeprom.h (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/gpio.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/initvals.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/led.c (99%)
- rename drivers/net/wireless/{ => ath}/ath5k/pcu.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/phy.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/qcu.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/reg.h (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/reset.c (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/rfbuffer.h (100%)
- rename drivers/net/wireless/{ => ath}/ath5k/rfgain.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/Kconfig (97%)
- rename drivers/net/wireless/{ => ath}/ath9k/Makefile (96%)
- rename drivers/net/wireless/{ => ath}/ath9k/ahb.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/ani.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/ani.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/ath9k.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/beacon.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/calib.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/calib.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/debug.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/debug.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/eeprom.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/eeprom.h (99%)
- rename drivers/net/wireless/{ => ath}/ath9k/hw.c (99%)
- rename drivers/net/wireless/{ => ath}/ath9k/hw.h (99%)
- rename drivers/net/wireless/{ => ath}/ath9k/initvals.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/mac.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/mac.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/main.c (98%)
- rename drivers/net/wireless/{ => ath}/ath9k/pci.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/phy.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/phy.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/rc.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/rc.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/recv.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/reg.h (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/virtual.c (100%)
- rename drivers/net/wireless/{ => ath}/ath9k/xmit.c (100%)
- rename drivers/net/wireless/{ath9k => ath}/regd.c (65%)
- rename drivers/net/wireless/{ath9k => ath}/regd.h (85%)
- rename drivers/net/wireless/{ath9k => ath}/regd_common.h (100%)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+index 205603d..73f93a0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-hw.h
+@@ -233,7 +233,7 @@ struct iwl3945_eeprom {
+ #define PCI_CFG_REV_ID_BIT_RTP                      (0x80)	/* bit 7    */
+ 
+ #define TFD_QUEUE_MIN           0
+-#define TFD_QUEUE_MAX           6
++#define TFD_QUEUE_MAX           5	/* 4 DATA + 1 CMD */
+ 
+ #define IWL_NUM_SCAN_RATES         (2)
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index ba7e720..99bb48e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1046,7 +1046,7 @@ static int iwl3945_txq_ctx_reset(struct iwl_priv *priv)
+ 		goto error;
+ 
+ 	/* Tx queue(s) */
+-	for (txq_id = 0; txq_id < TFD_QUEUE_MAX; txq_id++) {
++	for (txq_id = 0; txq_id <= priv->hw_params.max_txq_num; txq_id++) {
+ 		slots_num = (txq_id == IWL_CMD_QUEUE_NUM) ?
+ 				TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
+ 		rc = iwl_tx_queue_init(priv, &priv->txq[txq_id], slots_num,
+@@ -1239,7 +1239,7 @@ void iwl3945_hw_txq_ctx_free(struct iwl_priv *priv)
+ 	int txq_id;
+ 
+ 	/* Tx queues */
+-	for (txq_id = 0; txq_id < TFD_QUEUE_MAX; txq_id++)
++	for (txq_id = 0; txq_id <= priv->hw_params.max_txq_num; txq_id++)
+ 		iwl_tx_queue_free(priv, txq_id);
+ }
+ 
+@@ -1259,7 +1259,7 @@ void iwl3945_hw_txq_ctx_stop(struct iwl_priv *priv)
+ 	iwl_write_prph(priv, ALM_SCD_MODE_REG, 0);
+ 
+ 	/* reset TFD queues */
+-	for (txq_id = 0; txq_id < TFD_QUEUE_MAX; txq_id++) {
++	for (txq_id = 0; txq_id <= priv->hw_params.max_txq_num; txq_id++) {
+ 		iwl_write_direct32(priv, FH39_TCSR_CONFIG(txq_id), 0x0);
+ 		iwl_poll_direct_bit(priv, FH39_TSSR_TX_STATUS,
+ 				FH39_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(txq_id),
+@@ -2488,6 +2488,9 @@ int iwl3945_hw_set_hw_params(struct iwl_priv *priv)
+ 		return -ENOMEM;
+ 	}
+ 
++	/* Assign number of Usable TX queues */
++	priv->hw_params.max_txq_num = TFD_QUEUE_MAX;
++
+ 	priv->hw_params.tfd_size = sizeof(struct iwl3945_tfd);
+ 	priv->hw_params.rx_buf_size = IWL_RX_BUF_SIZE_3K;
+ 	priv->hw_params.max_pkt_size = 2342;
+-- 
+1.5.6.3
 
