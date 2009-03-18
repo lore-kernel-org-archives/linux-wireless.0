@@ -1,268 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:32671 "EHLO mga14.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:63092 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755202AbZCFVsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 16:48:04 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/2] iwlwifi: correct device name for 1000 series
-Date: Fri,  6 Mar 2009 13:52:55 -0800
-Message-Id: <1236376375-27927-3-git-send-email-reinette.chatre@intel.com> (sfid-20090306_224809_655547_C3D9E194)
-In-Reply-To: <1236376375-27927-2-git-send-email-reinette.chatre@intel.com>
-References: <1236376375-27927-1-git-send-email-reinette.chatre@intel.com>
- <1236376375-27927-2-git-send-email-reinette.chatre@intel.com>
+	id S1751652AbZCRO4D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2009 10:56:03 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2009 07:56:02 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Fix rate control update for aggregated frames
+Date: Wed, 18 Mar 2009 20:22:00 +0530
+Message-ID: <1237387920-10000-1-git-send-email-vasanth@atheros.com> (sfid-20090318_155605_702682_37FE764D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@linux.intel.com>
+We will miss rate control update if first A-MPDU of an
+aggregation is not Block Acked as we always tell if the
+rate control needs to updated through update_rc of first
+A-MPDU. This patch does rate control update for the first
+A-MPDU which notifies it's tx status (which is not
+necessarily the first A-MPDU of an aggregation) to mac80211.
 
-device name was changed from 100 to 1000
-
-Signed-off-by: Jay Sternberg <jay.e.sternberg@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/Kconfig    |    2 +-
- drivers/net/wireless/iwlwifi/Makefile   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-100.c  |   73 -------------------------------
- drivers/net/wireless/iwlwifi/iwl-1000.c |   73 +++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    6 +-
- drivers/net/wireless/iwlwifi/iwl-csr.h  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    2 +-
- 7 files changed, 80 insertions(+), 80 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-100.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-1000.c
+ drivers/net/wireless/ath9k/xmit.c |   26 ++++++++++++++++++--------
+ 1 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index 6cc5a54..a894deb 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -87,7 +87,7 @@ config IWL4965
- 	  This option enables support for Intel Wireless WiFi Link 4965AGN
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 8968abe..f287719 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -64,6 +64,10 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 			     struct list_head *head);
+ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf);
++static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
++			      int txok);
++static void ath_tx_rc_status(struct ath_buf *bf, struct ath_desc *ds,
++			     int nbad, int txok);
  
- config IWL5000
--	bool "Intel Wireless WiFi 5000AGN; Intel WiFi Link 100, 6000, and 6050 Series"
-+	bool "Intel Wireless WiFi 5000AGN; Intel WiFi Link 1000, 6000, and 6050 Series"
- 	depends on IWLAGN
- 	---help---
- 	  This option enables support for Intel Wireless WiFi Link 5000AGN Family
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index 48af523..d5f8009 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -13,7 +13,7 @@ iwlagn-objs		:= iwl-agn.o iwl-agn-rs.o
- iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
- iwlagn-$(CONFIG_IWL5000) += iwl-5000.o
- iwlagn-$(CONFIG_IWL5000) += iwl-6000.o
--iwlagn-$(CONFIG_IWL5000) += iwl-100.o
-+iwlagn-$(CONFIG_IWL5000) += iwl-1000.o
+ /*********************/
+ /* Aggregation logic */
+@@ -274,9 +278,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	struct ath_buf *bf_next, *bf_last = bf->bf_lastbf;
+ 	struct ath_desc *ds = bf_last->bf_desc;
+ 	struct list_head bf_head, bf_pending;
+-	u16 seq_st = 0;
++	u16 seq_st = 0, acked_cnt = 0, txfail_cnt = 0;
+ 	u32 ba[WME_BA_BMP_SIZE >> 5];
+-	int isaggr, txfail, txpending, sendbar = 0, needreset = 0;
++	int isaggr, txfail, txpending, sendbar = 0, needreset = 0, nbad = 0;
++	bool rc_update = true;
  
- obj-$(CONFIG_IWL3945)	+= iwl3945.o
- iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
-diff --git a/drivers/net/wireless/iwlwifi/iwl-100.c b/drivers/net/wireless/iwlwifi/iwl-100.c
-deleted file mode 100644
-index 11d206a..0000000
---- a/drivers/net/wireless/iwlwifi/iwl-100.c
-+++ /dev/null
-@@ -1,73 +0,0 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2008-2009 Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-- *
-- *****************************************************************************/
--
--#include <linux/kernel.h>
--#include <linux/module.h>
--#include <linux/init.h>
--#include <linux/pci.h>
--#include <linux/dma-mapping.h>
--#include <linux/delay.h>
--#include <linux/skbuff.h>
--#include <linux/netdevice.h>
--#include <linux/wireless.h>
--#include <net/mac80211.h>
--#include <linux/etherdevice.h>
--#include <asm/unaligned.h>
--
--#include "iwl-eeprom.h"
--#include "iwl-dev.h"
--#include "iwl-core.h"
--#include "iwl-io.h"
--#include "iwl-sta.h"
--#include "iwl-helpers.h"
--#include "iwl-5000-hw.h"
--
--/* Highest firmware API version supported */
--#define IWL100_UCODE_API_MAX 2
--
--/* Lowest firmware API version supported */
--#define IWL100_UCODE_API_MIN 1
--
--#define IWL100_FW_PRE "iwlwifi-100-"
--#define _IWL100_MODULE_FIRMWARE(api) IWL100_FW_PRE #api ".ucode"
--#define IWL100_MODULE_FIRMWARE(api) _IWL100_MODULE_FIRMWARE(api)
--
--struct iwl_cfg iwl100_bgn_cfg = {
--	.name = "100 Series BGN",
--	.fw_name_pre = IWL100_FW_PRE,
--	.ucode_api_max = IWL100_UCODE_API_MAX,
--	.ucode_api_min = IWL100_UCODE_API_MIN,
--	.sku = IWL_SKU_G|IWL_SKU_N,
--	.ops = &iwl5000_ops,
--	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
--	.mod_params = &iwl50_mod_params,
--	.valid_tx_ant = ANT_A,
--	.valid_rx_ant = ANT_AB,
--	.need_pll_cfg = true,
--};
--
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-new file mode 100644
-index 0000000..7da52f1
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -0,0 +1,73 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2008-2009 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ *****************************************************************************/
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/pci.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/delay.h>
-+#include <linux/skbuff.h>
-+#include <linux/netdevice.h>
-+#include <linux/wireless.h>
-+#include <net/mac80211.h>
-+#include <linux/etherdevice.h>
-+#include <asm/unaligned.h>
-+
-+#include "iwl-eeprom.h"
-+#include "iwl-dev.h"
-+#include "iwl-core.h"
-+#include "iwl-io.h"
-+#include "iwl-sta.h"
-+#include "iwl-helpers.h"
-+#include "iwl-5000-hw.h"
-+
-+/* Highest firmware API version supported */
-+#define IWL1000_UCODE_API_MAX 2
-+
-+/* Lowest firmware API version supported */
-+#define IWL1000_UCODE_API_MIN 1
-+
-+#define IWL1000_FW_PRE "iwlwifi-1000-"
-+#define _IWL1000_MODULE_FIRMWARE(api) IWL1000_FW_PRE #api ".ucode"
-+#define IWL1000_MODULE_FIRMWARE(api) _IWL1000_MODULE_FIRMWARE(api)
-+
-+struct iwl_cfg iwl1000_bgn_cfg = {
-+	.name = "1000 Series BGN",
-+	.fw_name_pre = IWL1000_FW_PRE,
-+	.ucode_api_max = IWL1000_UCODE_API_MAX,
-+	.ucode_api_min = IWL1000_UCODE_API_MIN,
-+	.sku = IWL_SKU_G|IWL_SKU_N,
-+	.ops = &iwl5000_ops,
-+	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
-+	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.mod_params = &iwl50_mod_params,
-+	.valid_tx_ant = ANT_A,
-+	.valid_rx_ant = ANT_AB,
-+	.need_pll_cfg = true,
-+};
-+
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 7902d22..da98886 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3643,9 +3643,9 @@ static struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x0087, PCI_ANY_ID, iwl6050_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0088, PCI_ANY_ID, iwl6050_3agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0089, PCI_ANY_ID, iwl6050_2agn_cfg)},
--/* 100 Series WiFi */
--	{IWL_PCI_DEVICE(0x0083, PCI_ANY_ID, iwl100_bgn_cfg)},
--	{IWL_PCI_DEVICE(0x0084, PCI_ANY_ID, iwl100_bgn_cfg)},
-+/* 1000 Series WiFi */
-+	{IWL_PCI_DEVICE(0x0083, PCI_ANY_ID, iwl1000_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0084, PCI_ANY_ID, iwl1000_bgn_cfg)},
- #endif /* CONFIG_IWL5000 */
+ 	skb = (struct sk_buff *)bf->bf_mpdu;
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -316,6 +321,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	INIT_LIST_HEAD(&bf_pending);
+ 	INIT_LIST_HEAD(&bf_head);
  
- 	{0}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 5028c78..2f12424 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -211,7 +211,7 @@
- #define CSR_HW_REV_TYPE_5350           (0x0000030)
- #define CSR_HW_REV_TYPE_5100           (0x0000050)
- #define CSR_HW_REV_TYPE_5150           (0x0000040)
--#define CSR_HW_REV_TYPE_100            (0x0000060)
-+#define CSR_HW_REV_TYPE_1000           (0x0000060)
- #define CSR_HW_REV_TYPE_6x00           (0x0000070)
- #define CSR_HW_REV_TYPE_6x50           (0x0000080)
- #define CSR_HW_REV_TYPE_NONE           (0x00000F0)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index b3e23ab..2176494 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -62,7 +62,7 @@ extern struct iwl_cfg iwl6000_2agn_cfg;
- extern struct iwl_cfg iwl6000_3agn_cfg;
- extern struct iwl_cfg iwl6050_2agn_cfg;
- extern struct iwl_cfg iwl6050_3agn_cfg;
--extern struct iwl_cfg iwl100_bgn_cfg;
-+extern struct iwl_cfg iwl1000_bgn_cfg;
++	nbad = ath_tx_num_badfrms(sc, bf, txok);
+ 	while (bf) {
+ 		txfail = txpending = 0;
+ 		bf_next = bf->bf_next;
+@@ -323,8 +329,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		if (ATH_BA_ISSET(ba, ATH_BA_INDEX(seq_st, bf->bf_seqno))) {
+ 			/* transmit completion, subframe is
+ 			 * acked by block ack */
++			acked_cnt++;
+ 		} else if (!isaggr && txok) {
+ 			/* transmit completion */
++			acked_cnt++;
+ 		} else {
+ 			if (!(tid->state & AGGR_CLEANUP) &&
+ 			    ds->ds_txstat.ts_flags != ATH9K_TX_SW_ABORTED) {
+@@ -335,6 +343,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 					bf->bf_state.bf_type |= BUF_XRETRY;
+ 					txfail = 1;
+ 					sendbar = 1;
++					txfail_cnt++;
+ 				}
+ 			} else {
+ 				/*
+@@ -361,6 +370,11 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			ath_tx_update_baw(sc, tid, bf->bf_seqno);
+ 			spin_unlock_bh(&txq->axq_lock);
  
- /* shared structures from iwl-5000.c */
- extern struct iwl_mod_params iwl50_mod_params;
++			if (rc_update)
++				if (acked_cnt == 1 || txfail_cnt == 1) {
++					ath_tx_rc_status(bf, ds, nbad, txok);
++					rc_update = false;
++				}
+ 			ath_tx_complete_buf(sc, bf, &bf_head, !txfail, sendbar);
+ 		} else {
+ 			/* retry the un-acked ones */
+@@ -1901,7 +1915,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 	struct ath_buf *bf, *lastbf, *bf_held = NULL;
+ 	struct list_head bf_head;
+ 	struct ath_desc *ds;
+-	int txok, nbad = 0;
++	int txok;
+ 	int status;
+ 
+ 	DPRINTF(sc, ATH_DBG_QUEUE, "tx queue %d (%x), link %p\n",
+@@ -1995,13 +2009,9 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 			bf->bf_retries = ds->ds_txstat.ts_longretry;
+ 			if (ds->ds_txstat.ts_status & ATH9K_TXERR_XRETRY)
+ 				bf->bf_state.bf_type |= BUF_XRETRY;
+-			nbad = 0;
+-		} else {
+-			nbad = ath_tx_num_badfrms(sc, bf, txok);
++			ath_tx_rc_status(bf, ds, 0, txok);
+ 		}
+ 
+-		ath_tx_rc_status(bf, ds, nbad, txok);
+-
+ 		if (bf_isampdu(bf))
+ 			ath_tx_complete_aggr(sc, txq, bf, &bf_head, txok);
+ 		else
 -- 
-1.5.6.3
+1.5.5.1
 
