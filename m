@@ -1,177 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45082 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601AbZCXIfw (ORCPT
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:39951 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760815AbZCSV4B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 04:35:52 -0400
-Subject: [PATCH] cfg80211: fix locking in nl80211_set_wiphy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 24 Mar 2009 09:35:46 +0100
-Message-Id: <1237883746.4320.0.camel@johannes.local> (sfid-20090324_093555_946774_B8648E1A)
-Mime-Version: 1.0
+	Thu, 19 Mar 2009 17:56:01 -0400
+Received: by ewy9 with SMTP id 9so550747ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 14:55:57 -0700 (PDT)
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Message-Id: <67857DA5-1808-4477-A13F-5E0C3551CBD7@icix.org> (sfid-20090319_225620_059356_AB223B8B)
+From: Antonio Marques <froz@icix.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1237383373.5100.24.camel@johannes.local>
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Subject: Re: rt2x00 mesh support
+Date: Thu, 19 Mar 2009 21:55:54 +0000
+References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <200903181348.51609.IvDoorn@gmail.com> <1237381972.5100.21.camel@johannes.local> <200903181431.43048.IvDoorn@gmail.com> (sfid-20090318_143216_017913_36914372) <1237383373.5100.24.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis reports that there's a circular locking dependency;
-this is because cfg80211_dev_rename() will acquire the
-cfg80211_mutex while the device mutex is held, while
-this normally is done the other way around. The solution
-is to open-code the device-getting in nl80211_set_wiphy
-and require holding the mutex around cfg80211_dev_rename
-rather than acquiring it within.
+On Mar 18, 2009, at 13:36 , Johannes Berg wrote:
+> On Wed, 2009-03-18 at 14:31 +0100, Ivo van Doorn wrote:
+>
+>>> ->config() coming after it makes no sense either but we haven't even
+>>> tried to avoid that so far... In fact, it is perfectly legal for
+>>> ->config() to be called after ->config_interface() when, for  
+>>> example,
+>>> you change the channel. Not that I disagree -- we should be  
+>>> setting the
+>>> beacon interval before enabling beaconing...
+>>
+>> True, the problem however is that when enabling the radio it is  
+>> possible/likely
+>> that a lot of settings will be lost. For rt2x00 we must reset  
+>> almost all registers
+>> to make sure everything is set correctly again.
+>
+> Yeah, that makes sense... I just don't know how to handle it.
+>
+>>> What exactly is the problem here? The fact that we don't enable the
+>>> radio until after having configured beaconing? I'm not sure how to  
+>>> solve
+>>> this, to be honest.
+>>
+>> Neither do I, perhaps we should make sure that a call to config()  
+>> when
+>> the enabled_radio field has changed should trigger additional  
+>> reconfigurations
+>> as well. But I don't really like such a solution.. :(
+>
+> We could do that, but there's no limit to what that would be, up to
+> requiring basically a call to __ieee80211_resume() (from pm.c)...
+>
+>> Perhaps should check if a beacon was provided while the radio was  
+>> off,
+>> and either request a new beacon or upload the previously provided  
+>> beacon when
+>> the radio is being enabled.
+>
+> I'm thinking that will be necessary, imagine we integrate rfkill in
+> mac80211 like we should, and set radio_enabled = false while being an
+> IBSS member?
+>
+> OTOH, this problem hitting a number of drivers suggests we should  
+> find a
+> generic fix.
+>
+> johannes
 
-Also fix a bug -- rtnl locking is expected by drivers so
-we need to provide it.
+Thank you Johannes and Ivo for helping to narrow down this problem.  
+Would
+storing the beacon configuration in the driver before clearing the  
+registers and then
+reloading it be an adequate short-term solution for fixing this issue  
+on rt2x00? Some
+other drivers (b43, ath5k) seem to overcome this shortcoming in the  
+way the function
+calls are ordered. Although a generic fix would be great, fixing this  
+on rt2x00 would
+greatly increase the number of devices supporting mesh point mode.
 
-Reported-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/core.c    |   30 ++++++++++--------------------
- net/wireless/core.h    |    3 +++
- net/wireless/nl80211.c |   28 ++++++++++++++++++++--------
- 3 files changed, 33 insertions(+), 28 deletions(-)
-
---- wireless-testing.orig/net/wireless/nl80211.c	2009-03-24 09:20:35.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.c	2009-03-24 09:34:50.000000000 +0100
-@@ -366,16 +366,26 @@ static int nl80211_set_wiphy(struct sk_b
- 	int result = 0, rem_txq_params = 0;
- 	struct nlattr *nl_txq_params;
- 
--	rdev = cfg80211_get_dev_from_info(info);
--	if (IS_ERR(rdev))
--		return PTR_ERR(rdev);
-+	rtnl_lock();
-+
-+	mutex_lock(&cfg80211_mutex);
-+
-+	rdev = __cfg80211_drv_from_info(info);
-+	if (IS_ERR(rdev)) {
-+		result = PTR_ERR(rdev);
-+		goto unlock;
-+	}
- 
--	if (info->attrs[NL80211_ATTR_WIPHY_NAME]) {
-+	mutex_lock(&rdev->mtx);
-+
-+	if (info->attrs[NL80211_ATTR_WIPHY_NAME])
- 		result = cfg80211_dev_rename(
- 			rdev, nla_data(info->attrs[NL80211_ATTR_WIPHY_NAME]));
--		if (result)
--			goto bad_res;
--	}
-+
-+	mutex_unlock(&cfg80211_mutex);
-+
-+	if (result)
-+		goto bad_res;
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS]) {
- 		struct ieee80211_txq_params txq_params;
-@@ -471,7 +481,9 @@ static int nl80211_set_wiphy(struct sk_b
- 
- 
-  bad_res:
--	cfg80211_put_dev(rdev);
-+	mutex_unlock(&rdev->mtx);
-+ unlock:
-+	rtnl_unlock();
- 	return result;
- }
- 
---- wireless-testing.orig/net/wireless/core.c	2009-03-24 09:20:34.000000000 +0100
-+++ wireless-testing/net/wireless/core.c	2009-03-24 09:20:53.000000000 +0100
-@@ -87,7 +87,7 @@ struct wiphy *wiphy_idx_to_wiphy(int wip
- }
- 
- /* requires cfg80211_mutex to be held! */
--static struct cfg80211_registered_device *
-+struct cfg80211_registered_device *
- __cfg80211_drv_from_info(struct genl_info *info)
- {
- 	int ifindex;
-@@ -176,13 +176,14 @@ void cfg80211_put_dev(struct cfg80211_re
- 	mutex_unlock(&drv->mtx);
- }
- 
-+/* requires cfg80211_mutex to be held */
- int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 			char *newname)
- {
- 	struct cfg80211_registered_device *drv;
- 	int wiphy_idx, taken = -1, result, digits;
- 
--	mutex_lock(&cfg80211_mutex);
-+	assert_cfg80211_lock();
- 
- 	/* prohibit calling the thing phy%d when %d is not its number */
- 	sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken);
-@@ -195,30 +196,23 @@ int cfg80211_dev_rename(struct cfg80211_
- 		 * deny the name if it is phy<idx> where <idx> is printed
- 		 * without leading zeroes. taken == strlen(newname) here
- 		 */
--		result = -EINVAL;
- 		if (taken == strlen(PHY_NAME) + digits)
--			goto out_unlock;
-+			return -EINVAL;
- 	}
- 
- 
- 	/* Ignore nop renames */
--	result = 0;
- 	if (strcmp(newname, dev_name(&rdev->wiphy.dev)) == 0)
--		goto out_unlock;
-+		return 0;
- 
- 	/* Ensure another device does not already have this name. */
--	list_for_each_entry(drv, &cfg80211_drv_list, list) {
--		result = -EINVAL;
-+	list_for_each_entry(drv, &cfg80211_drv_list, list)
- 		if (strcmp(newname, dev_name(&drv->wiphy.dev)) == 0)
--			goto out_unlock;
--	}
-+			return -EINVAL;
- 
--	/* this will only check for collisions in sysfs
--	 * which is not even always compiled in.
--	 */
- 	result = device_rename(&rdev->wiphy.dev, newname);
- 	if (result)
--		goto out_unlock;
-+		return result;
- 
- 	if (rdev->wiphy.debugfsdir &&
- 	    !debugfs_rename(rdev->wiphy.debugfsdir->d_parent,
-@@ -228,13 +222,9 @@ int cfg80211_dev_rename(struct cfg80211_
- 		printk(KERN_ERR "cfg80211: failed to rename debugfs dir to %s!\n",
- 		       newname);
- 
--	result = 0;
--out_unlock:
--	mutex_unlock(&cfg80211_mutex);
--	if (result == 0)
--		nl80211_notify_dev_rename(rdev);
-+	nl80211_notify_dev_rename(rdev);
- 
--	return result;
-+	return 0;
- }
- 
- /* exported functions */
---- wireless-testing.orig/net/wireless/core.h	2009-03-24 09:20:34.000000000 +0100
-+++ wireless-testing/net/wireless/core.h	2009-03-24 09:20:53.000000000 +0100
-@@ -99,6 +99,9 @@ struct cfg80211_internal_bss {
- struct cfg80211_registered_device *cfg80211_drv_by_wiphy_idx(int wiphy_idx);
- int get_wiphy_idx(struct wiphy *wiphy);
- 
-+struct cfg80211_registered_device *
-+__cfg80211_drv_from_info(struct genl_info *info);
-+
- /*
-  * This function returns a pointer to the driver
-  * that the genl_info item that is passed refers to.
+Antonio Marques
 
 
