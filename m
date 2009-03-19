@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:2721 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753269AbZC3RkH (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1080 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757237AbZCSAqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 13:40:07 -0400
-From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+	Wed, 18 Mar 2009 20:46:35 -0400
+Date: Wed, 18 Mar 2009 20:44:12 -0400
+From: Bob Copeland <me@bobcopeland.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] rfkill: rewrite
-Date: Mon, 30 Mar 2009 10:39:51 -0700
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Dirk Opfer <Dirk@opfer-online.de>, toshiba_acpi@memebeam.org,
-	Matthew Garrett <mjg@redhat.com>
-References: <1238349195.24972.5.camel@johannes.local> <1238406057.24972.23.camel@johannes.local>
-In-Reply-To: <1238406057.24972.23.camel@johannes.local>
+Cc: Sujith <Sujith.Manoharan@atheros.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] mac80211: Tear down aggregation sessions for
+	suspend/resume
+Message-ID: <20090319004412.GF18141@hash.localnet> (sfid-20090319_014645_913994_32B0A347)
+References: <18879.5862.135522.858638@gargle.gargle.HOWL> <1237276019.18086.7.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903301039.52153.inaky@linux.intel.com> (sfid-20090330_194011_616611_A0EEDB75)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1237276019.18086.7.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 30 March 2009, Johannes Berg wrote:
->
->  * wimax
->    -> need help, seems to report rfkill states to input device?
->       don't understand
+On Tue, Mar 17, 2009 at 08:46:59AM +0100, Johannes Berg wrote:
+> On Tue, 2009-03-17 at 08:50 +0530, Sujith wrote:
+> > This can be fixed by tearing down the existing sessions on a suspend.
+> > 
+> > v3:
+> > ---
+> > * Use RCU protection when shutting down BA sessions for STAs.
+> 
+> Thanks for your patience :)
+> 
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Not really. 
-
-What it does is if the device exposes a hw rfkill key, export that 
-key as an input device, as well as using it to report the state
-change. 
-
-So there are three main entry points:
-
-wimax_report_rfkill_hw() -- device driver report to stack
-  
-   device reports a change in the hw rfkill key; switch the radio to
-   whichever state AND report a key event through the input layer
-
-wimax_report_rfkill_sw() -- device driver report to stack
-
-   device reports a change in the sw rfkill state; this is needed for
-   cases where the radio is shared amongst different technologies (wifi
-   and wimax, for example, in the case of the 5150). When you turn on
-   Wifi, WiMAX switches off (and vice versa).
-
-   As well, if from SW you flip it off, this gets called back but does
-   nothing as the state is updated already.
-
-wimax_rfkill / wimax_rfkill_toggle_radio -- user interface
-
-   The user wants to flip the SW switch on/off
+FWIW, I finally tested this formulation and it works fine on my hardware,
+so I think the deadlock is long buried.
 
 -- 
-Inaky
+Bob Copeland %% www.bobcopeland.com
+
