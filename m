@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58643 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756733AbZCYBVM (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49802 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751840AbZCSLsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 21:21:12 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+	Thu, 19 Mar 2009 07:48:13 -0400
+Message-Id: <20090319114800.533740586@atheros.com> (sfid-20090319_124818_544863_6AF2B998)
+References: <20090319113918.555693846@atheros.com>
+Date: Thu, 19 Mar 2009 13:39:20 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH] cfg80211: fix NULL pointer deference in reg_device_remove()
-Date: Tue, 24 Mar 2009 21:21:08 -0400
-Message-Id: <1237944068-3682-2-git-send-email-lrodriguez@atheros.com> (sfid-20090325_022118_865117_2D496177)
-In-Reply-To: <1237944068-3682-1-git-send-email-lrodriguez@atheros.com>
-References: <1237944068-3682-1-git-send-email-lrodriguez@atheros.com>
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 2/4] mac80211: Fix reassociation by not clearing previous BSSID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We won't ever get here as regulatory_hint_core() can only fail
-on -ENOMEM and in that case we don't initialize cfg80211 but this is
-technically correct code.
+We must not clear the previous BSSID when roaming to another AP within
+the same ESS for reassociation to be used properly. It is fine to
+clear this when the SSID changes, so let's move the code into
+ieee80211_sta_set_ssid().
 
-This is actually good for stable, where we don't check for -ENOMEM
-failure on __regulatory_hint()'s failure.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Cc: stable@kernel.org
-Reported-by: Quentin Armitage <Quentin@armitage.org.uk>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/wireless/reg.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ net/mac80211/mlme.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6327e16..6c1993d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2095,11 +2095,12 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- /* Caller must hold cfg80211_mutex */
- void reg_device_remove(struct wiphy *wiphy)
+--- uml.orig/net/mac80211/mlme.c	2009-03-19 00:20:04.000000000 +0200
++++ uml/net/mac80211/mlme.c	2009-03-19 00:20:52.000000000 +0200
+@@ -1888,8 +1888,6 @@ int ieee80211_sta_commit(struct ieee8021
  {
--	struct wiphy *request_wiphy;
-+	struct wiphy *request_wiphy = NULL;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
  
- 	assert_cfg80211_lock();
+-	ifmgd->flags &= ~IEEE80211_STA_PREV_BSSID_SET;
+-
+ 	if (ifmgd->ssid_len)
+ 		ifmgd->flags |= IEEE80211_STA_SSID_SET;
+ 	else
+@@ -1908,6 +1906,10 @@ int ieee80211_sta_set_ssid(struct ieee80
+ 	ifmgd = &sdata->u.mgd;
  
--	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
-+	if (last_request)
-+		request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
- 
- 	kfree(wiphy->regd);
- 	if (!last_request || !request_wiphy)
--- 
-1.6.0.6
+ 	if (ifmgd->ssid_len != len || memcmp(ifmgd->ssid, ssid, len) != 0) {
++		/*
++		 * Do not use reassociation if SSID is changed (different ESS).
++		 */
++		ifmgd->flags &= ~IEEE80211_STA_PREV_BSSID_SET;
+ 		memset(ifmgd->ssid, 0, sizeof(ifmgd->ssid));
+ 		memcpy(ifmgd->ssid, ssid, len);
+ 		ifmgd->ssid_len = len;
 
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
