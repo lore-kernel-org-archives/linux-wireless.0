@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.170]:59024 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755844AbZC3JiQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60856 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752273AbZCSTAl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 05:38:16 -0400
-Received: by wf-out-1314.google.com with SMTP id 29so2494237wff.4
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 02:38:15 -0700 (PDT)
+	Thu, 19 Mar 2009 15:00:41 -0400
+Date: Thu, 19 Mar 2009 14:46:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Mohamed Abbas <mohamed.abbas@intel.com>
+Subject: Re: [PATCH 06/13] iwlcore: Fix scan problem, resource busy
+Message-ID: <20090319184616.GC3587@tuxdriver.com> (sfid-20090319_200042_952884_B1C5C139)
+References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com> <1237351913-19202-6-git-send-email-reinette.chatre@intel.com> <1237351913-19202-7-git-send-email-reinette.chatre@intel.com> <200903191712.01325.helmut.schaa@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <2da21fe50903271208m1c369c88lba8399416dace43a@mail.gmail.com>
-References: <2da21fe50903270727m7b7007ctaa846aea61902436@mail.gmail.com>
-	 <87ljqr58oa.fsf@litku.valot.fi>
-	 <2da21fe50903271208m1c369c88lba8399416dace43a@mail.gmail.com>
-Date: Mon, 30 Mar 2009 15:08:15 +0530
-Message-ID: <8e92b4100903300238p4b0cbd3fh754a3dddbf904fa7@mail.gmail.com> (sfid-20090330_113819_546844_7051C606)
-Subject: Re: ath9k and power management
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Davide Pesavento <davidepesa@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>, mcgrof@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <200903191712.01325.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 28, 2009 at 12:38 AM, Davide Pesavento <davidepesa@gmail.com> wrote:
+On Thu, Mar 19, 2009 at 05:12:00PM +0100, Helmut Schaa wrote:
+> Hi,
+>=20
+> Am Mittwoch, 18. M=E4rz 2009 schrieb Reinette Chatre:
+> > From: Mohamed Abbas <mohamed.abbas@intel.com>
+> >=20
+> > when mac80211 issues scan request to lower driver, it always expect
+> > a scan_complete notification from the driver, this driver make sure
+> > we call scan_completed on all exit path in iwl_mac_hw_scan.
+>=20
+> It should suffice to return an error in iwl_mac_hw_scan (as done with=
+out
+> this patch). The problem was mac80211 not calling cfg80211 in case of=
+ a
+> failure. [1] should fix that. Hence, this workaround in iwlwifi shoul=
+d
+> not be needed.
+>=20
+> Helmut
+>=20
+> [1] http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-tes=
+ting.git;a=3Dcommit;h=3Da3fa954ddc4509721a691dd685c3d102cba0b58e
 
->>> I'm running a 2.6.29-wl kernel, using ath9k and wpa_supplicant 0.6.9
->>> (with -Dnl80211).
->>> Enabling power management when connected (i.e. 'iwconfig wlan0 power
->>> on'), causes the currently established connection to break and the
->>> machine is no longer able to reconnect to the AP.
+I think Helmut is right.  I'm dropping patch 6/13.
 
-Patch has been sent to wireless-testing. Please report if the issue
-still exists after
-applying the patch.
-The commit log of the patch is
-
-ath9k: No need to abort Rx path when autosleep is enabled.
-				
-For chipsets supporting autosleep feature, there is no need to abort
-Rx engine since they are capable of automatically going back to sleep
-after receiving a packet.
-
-
-Thanks a lot for reporting the issue
-Vivek.
+John
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
