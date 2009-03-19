@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:53026 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496AbZCSQMP convert rfc822-to-8bit (ORCPT
+Received: from mail3.webfaction.com ([70.85.44.146]:34039 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758678AbZCSRcT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 12:12:15 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so72826fga.17
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 09:12:11 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Subject: Re: [PATCH 06/13] iwlcore: Fix scan problem, resource busy
-Date: Thu, 19 Mar 2009 17:12:00 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-References: <1237351913-19202-1-git-send-email-reinette.chatre@intel.com> <1237351913-19202-6-git-send-email-reinette.chatre@intel.com> <1237351913-19202-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1237351913-19202-7-git-send-email-reinette.chatre@intel.com>
+	Thu, 19 Mar 2009 13:32:19 -0400
+Date: Thu, 19 Mar 2009 12:46:08 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: VT6656 driver source now GPL
+Message-ID: <20090319164608.GB25237@storm.local.network> (sfid-20090319_183232_158385_A1D7AF16)
+References: <20090319164256.GA25237@storm.local.network>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200903191712.01325.helmut.schaa@gmail.com> (sfid-20090319_171219_801232_78F018CA)
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="TakKZr9L6Hm6aLOc"
+In-Reply-To: <20090319164256.GA25237@storm.local.network>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+
+--TakKZr9L6Hm6aLOc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
 Hi,
 
-Am Mittwoch, 18. M=E4rz 2009 schrieb Reinette Chatre:
-> From: Mohamed Abbas <mohamed.abbas@intel.com>
+On Thu, Mar 19, 2009 at 12:42:56PM -0400, Forest Bond wrote:
+> VIA has released a new version of the VT6656 driver source, and it now ha=
+s a
+> proper license!
 >=20
-> when mac80211 issues scan request to lower driver, it always expect
-> a scan_complete notification from the driver, this driver make sure
-> we call scan_completed on all exit path in iwl_mac_hw_scan.
+>   http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
 
-It should suffice to return an error in iwl_mac_hw_scan (as done withou=
-t
-this patch). The problem was mac80211 not calling cfg80211 in case of a
-failure. [1] should fix that. Hence, this workaround in iwlwifi should
-not be needed.
+The good news doesn't end there.  VIA has released a GPL-licensed version o=
+f the
+VT6655 driver as well:
 
-Helmut
+  http://www.viaarena.com/Driver/vt6655_linux_src_v1.19.12_x86.zip
 
-[1] http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-testi=
-ng.git;a=3Dcommit;h=3Da3fa954ddc4509721a691dd685c3d102cba0b58e
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--TakKZr9L6Hm6aLOc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFJwnbQRO4fQQdv5AwRAgpHAJwK7ke2P8gzX8WiQhkTEvtsxZhk2wCdHn1E
+c5ngtb0XYv5f2y7Vxj1RgcE=
+=gS96
+-----END PGP SIGNATURE-----
+
+--TakKZr9L6Hm6aLOc--
