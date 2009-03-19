@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([207.115.11.55]:34988 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753266AbZCYDV3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 23:21:29 -0400
-Message-ID: <49C9A309.1090003@lwfinger.net> (sfid-20090325_042132_818830_6FC1B6A3)
-Date: Tue, 24 Mar 2009 22:20:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from bu3sch.de ([62.75.166.246]:36104 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754181AbZCSRvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2009 13:51:46 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: linux-next: Tree for March 19 (wireless/p54)
+Date: Thu, 19 Mar 2009 18:50:17 +0100
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <49C280BE.8090106@oracle.com>
+In-Reply-To: <49C280BE.8090106@oracle.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org
-Subject: Re: [PATCH] p54: replace MAC80211_LEDS with P54_LEDS in p54.h
-References: <200903250311.45352.chunkeey@web.de>
-In-Reply-To: <200903250311.45352.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200903191850.17825.mb@bu3sch.de> (sfid-20090319_185150_362687_BE7F5920)
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> I'm very sorry, as this change belongs to the other patch:
-> "[PATCH] p54: fix SoftLED compile dependencies".
-> however I must have somehow lost "git add" for that file.
+On Thursday 19 March 2009 18:28:30 Randy Dunlap wrote:
+> Stephen Rothwell wrote:
+> > Hi all,
+> > 
+> > Changes since 20090318:
 > 
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
+> 
+> ERROR: "led_classdev_register" [drivers/net/wireless/p54/p54common.ko] undefined!
+> ERROR: "led_classdev_unregister" [drivers/net/wireless/p54/p54common.ko] undefined!
+> 
+> One possible option (fix) is to have CONFIG_MAC80211_LEDS also select
+> LEDS_CLASS (that would build the missing functions).
 
-This works here.
+Does p54 select CONFIG_MAC80211_LEDS? If that's the case, I think it should
+probably do it the other way around. p54 should build its LED code if CONFIG_MAC80211_LEDS
+is available. Otherwise it should not.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+This way you don't enter the SELECT dependency hell and still have automagic configuration.
+
+Take a look at b43 for an example.
+
+-- 
+Greetings, Michael.
