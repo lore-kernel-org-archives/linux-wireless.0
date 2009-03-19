@@ -1,71 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f165.google.com ([209.85.219.165]:36028 "EHLO
-	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752083AbZC2XLI convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:34130 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753716AbZCSFyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2009 19:11:08 -0400
-Received: by ewy9 with SMTP id 9so1839116ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Mar 2009 16:11:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090327214727.28989.90735.stgit@mj.roinet.com>
-References: <20090327214727.28989.90735.stgit@mj.roinet.com>
-Date: Mon, 30 Mar 2009 02:11:04 +0300
-Message-ID: <40f31dec0903291611g3c783032qd84881148de6b4bb@mail.gmail.com> (sfid-20090330_011119_634049_0F62A85E)
-Subject: Re: [PATCH] ath5k: fix scanning in AR2424
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
+	Thu, 19 Mar 2009 01:54:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 0/6] Use the regulatory bandwidth and export HT40 stuff
+Date: Thu, 19 Mar 2009 01:54:34 -0400
+Message-Id: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com> (sfid-20090319_065450_760231_096A1FC6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/3/27 Pavel Roskin <proski@gnu.org>:
-> AR5K_PHY_PLL_40MHZ_5413 should not be ORed with AR5K_PHY_MODE_RAD_RF5=
-112
-> for 5 GHz channels.
->
-> The incorrect PLL value breaks scanning in the countries where 5 GHz
-> channels are allowed.
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> ---
->
-> =C2=A0drivers/net/wireless/ath5k/reset.c | =C2=A0 =C2=A02 +-
-> =C2=A01 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath5k/reset.c b/drivers/net/wireles=
-s/ath5k/reset.c
-> index 7a17d31..faede82 100644
-> --- a/drivers/net/wireless/ath5k/reset.c
-> +++ b/drivers/net/wireless/ath5k/reset.c
-> @@ -359,7 +359,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int =
-flags, bool initial)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0mode |=3D AR5K_PHY_MODE_FREQ_5GHZ;
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0if (ah->ah_radio =3D=3D AR5K_RF5413)
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 clock |=3D AR5K_PHY_PLL_40MHZ_5413;
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 clock =3D AR5K_PHY_PLL_40MHZ_5413;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0else
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0clock |=3D AR5K_PHY_PLL_40MHZ=
-;
->
+This took a little more consideration than I thought. This is a redesign
+of the bandwidth regulatory stuff, it also keeps in mind preferences in
+the future to use alternative bandwidths like 10 MHz and 5 MHz for things
+like 802.11p.
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Ultimately you'll now get proper interpretation of the regulatory
+bandwidth supported, we'll export the bandwidth allowed per channel,
+and we'll also export the channel HT40-/+ capabilities -- if they are
+allowed or not.
 
+This should also help considerably with testing regulatory settings.
+And for users planning to use HT40 it'll give you a direct guide which
+channels to pick on your AP.
 
---=20
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This second series completely abandons our old strategy to use the channel
+bandwidth to determine whether or not we support HT40, instead we use it for
+to determine the supported actual bandwidth _per_channel_, not per channel
+set (the pair of channels on an HT40 configuration).
+
+Luis R. Rodriguez (6):
+  cfg80211: Process regulatory max bandwidth checks for HT40
+  wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
+  mac80211: check if HT40+/- is allowed before sending assoc
+  cfg80211: check allowed channel type upon userspace requests
+  cfg80211: send channel max bandwidth to userspace
+  cfg80211: send to userspace if HT40-/+ is allowed on each channel
+
+ drivers/net/wireless/ath9k/regd.c         |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c   |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 +-
+ include/linux/nl80211.h                   |   18 +++
+ include/net/wireless.h                    |   23 +++--
+ net/mac80211/ht.c                         |   11 ++-
+ net/mac80211/mlme.c                       |    4 +-
+ net/wireless/nl80211.c                    |   27 ++++-
+ net/wireless/reg.c                        |  194 ++++++++++++++++++++++------
+ 9 files changed, 234 insertions(+), 65 deletions(-)
+
