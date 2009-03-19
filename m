@@ -1,78 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3.webfaction.com ([70.85.44.146]:53095 "EHLO
-	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752737AbZCSQsg (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:58641 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751735AbZCSG0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 12:48:36 -0400
-Date: Thu, 19 Mar 2009 12:48:02 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: VT6656 driver source now GPL
-Message-ID: <20090319164802.GC25237@storm.local.network> (sfid-20090319_174839_276800_CF0F4D58)
-References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="raC6veAxrt5nqIoY"
-In-Reply-To: <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com>
+	Thu, 19 Mar 2009 02:26:11 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 3/6] mac80211: check if HT40+/- is allowed before sending assoc
+Date: Thu, 19 Mar 2009 02:26:08 -0400
+Message-Id: <1237443968-25452-1-git-send-email-lrodriguez@atheros.com> (sfid-20090319_072614_443719_472F06E4)
+To: johannes@sipsolutions.net, linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We weren't checking this at all.
 
---raC6veAxrt5nqIoY
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-On Thu, Mar 19, 2009 at 09:45:19AM -0700, Luis R. Rodriguez wrote:
-> On Thu, Mar 19, 2009 at 9:42 AM, Forest Bond <forest@alittletooquiet.net>=
- wrote:
-> > Hi,
-> >
-> > VIA has released a new version of the VT6656 driver source, and it now =
-has a
-> > proper license!
-> >
-> > =A0http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
-> >
-> > As you may recall, the previous version lacked a license altogether, ma=
-king it
-> > unfit for distribution.
-> >
-> > I'd really like to see this driver integrated into the kernel. =A0Does =
-anyone care
-> > to comment regarding feasibility?
->=20
-> Indeed good news, what is the latest kernel it compiles for? If it
-> compiles on Linus' tree it can be stashed into staging while it gets
-> properly ported.
+Sujith caught that we were not using !(flag & BAD_THING).
+The other patches should apply cleanly on top so just
+resending this one.
 
-I've not compiled it myself, yet.
+ net/mac80211/ht.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-However, according to a report here, it compiles with Ubuntu 9.04 (2.6.28.1=
-1):
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 4e3c72f..4cfc19a 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -114,6 +114,9 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 	    ieee80211_channel_to_frequency(hti->control_chan))
+ 		enable_ht = false;
+ 
++	if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40)
++		enable_ht = false;
++
+ 	if (enable_ht) {
+ 		channel_type = NL80211_CHAN_HT20;
+ 
+@@ -122,10 +125,14 @@ u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
+ 			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+ 			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+-				channel_type = NL80211_CHAN_HT40PLUS;
++				if (!(local->hw.conf.channel->flags &
++				    IEEE80211_CHAN_NO_HT40PLUS))
++					channel_type = NL80211_CHAN_HT40PLUS;
+ 				break;
+ 			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+-				channel_type = NL80211_CHAN_HT40MINUS;
++				if (!(local->hw.conf.channel->flags &
++				    IEEE80211_CHAN_NO_HT40MINUS))
++					channel_type = NL80211_CHAN_HT40MINUS;
+ 				break;
+ 			}
+ 		}
+-- 
+1.5.6.4
 
-  https://bugs.launchpad.net/ubuntu/+source/linux-source-2.6.22/+bug/162671
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.pytagsfs.org
-
---raC6veAxrt5nqIoY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFJwndCRO4fQQdv5AwRArbcAJ0UIlChBV+jPKuvNIEDou7ecfjgqwCg0+/r
-ToUhT+VxpVxlEnLP2l5j7jY=
-=vK6A
------END PGP SIGNATURE-----
-
---raC6veAxrt5nqIoY--
