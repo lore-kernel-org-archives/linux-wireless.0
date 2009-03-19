@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtiwmhc12.worldnet.att.net ([204.127.131.116]:40528 "EHLO
-	mtiwmhc12.worldnet.att.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750779AbZCKTlg (ORCPT
+Received: from mail-ew0-f165.google.com ([209.85.219.165]:51279 "EHLO
+	mail-ew0-f165.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756492AbZCSX3B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 15:41:36 -0400
-Message-ID: <49B813E9.8050108@lwfinger.net> (sfid-20090311_204143_512517_BE5C44E9)
-Date: Wed, 11 Mar 2009 14:41:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 19 Mar 2009 19:29:01 -0400
+Received: by ewy9 with SMTP id 9so570590ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 16:28:58 -0700 (PDT)
+Message-ID: <49C2D537.6080406@giuppi.com> (sfid-20090320_002905_361437_A0137045)
+Date: Fri, 20 Mar 2009 00:28:55 +0100
+From: "Info[at]Giuppi" <info@giuppi.com>
 MIME-Version: 1.0
-To: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
 CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8187 - nice work!
-References: <50533.82.152.175.172.1236798263.squirrel@www.phantomjinx.co.uk>
-In-Reply-To: <50533.82.152.175.172.1236798263.squirrel@www.phantomjinx.co.uk>
+Subject: Re: rtl8187 bug report
+References: <49C12DFA.80308@giuppi.com> <3ace41890903191439q1c375925md2e4227f79147399@mail.gmail.com>
+In-Reply-To: <3ace41890903191439q1c375925md2e4227f79147399@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-P.G. Richardson wrote:
-> Hi,
-> 
-> Installed the compat-wireless-2009-03-10 and the speed has greatly
-> improved. Thanks very much.
-> 
-> I do have some observations that might be a bug or just configuration.
-> 
-> When powering up, the wireless decided on 54M as its bit rate.
-> Consequently, tcp was patchy at best - losing packets whilst pinging, ssh
-> failing to connect. Setting the rate back to a fixed 11M solves this and
-> gives good speed. Interestingly, performance declines as I up the bit rate
-> from 11 to 18 etc...
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+ 
+Hin-Tak Leung ha scritto:
+>
+> I am not familiar with aircrack-ng, but I believe it can be used with
+> a modified version of the vendor rtl8187 driver, (and the aircrack-ng
+> people hosts a modified version of the vendor driver on their web
+> site). I have not actually looked at their modification so I have no
+> idea what modification is required for aircrack-ng to work well, but I
+> believe *some* adaptation is required?
+RTL8187B has no official linux support by the vendor. The driver
+you're referencing to has been adapted by one guy and "works" for old
+kernel versions only.
+I'm very happy with this new rtl8187. The problem in not related to
+the aircrack-ng software. I'm just saying I think there's something
+wrong with WEP networks in monitor mode. Using a tool from the suite
+to scan local wireless networks I've found out that strange behaviour
+only with WEPs.
+>
+> On a different issue - I think such adaptation are frown upon and will
+> not make it into the standard kernel, due to its nature of typical
+> usage in a controversal scenario. Maybe other wireless dev people,
+> especially Herton and Larry, can advise.
+As far as I know there are no adaptations needed. Wanted or not, it
+already works in those "controversal scenario".
+The rt73usb driver comes from the same compat-wireless package and it
+hasn't that problem, for example. The rtl8187 driver itself works
+great for networks other than WEP.
 
-It is probably a bug. My Netgear WG111V2 with an RTL8187L chip is perfectly
-happy running at 48 or 54 Mb/s with a transmit throughput of 21-23 Mb/s - close
-to the maximum for an 802.11g network. There are, however, other reports like
-yours where the OFDM rates (6, 9, 18, 24, 36, 48, and 54 Mb/s) don't work very
-well. It seems that not all 8187's are the same.
+Thanks very much for your reply, I hope some of the devs can take the
+time to check if I'm wrong.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+ 
+iEYEARECAAYFAknC1S8ACgkQzDOyiWU13FC8AgCdG2mv/xMPGIg13YsM9o3V5ZeT
+e4AAn16SMsX081bPc4eK9RdddMZ3Nu01
+=vAo1
+-----END PGP SIGNATURE-----
 
-What rate-setting algorithm are you using? Use 'dmesg | grep rate' to see that.
-I would have expected it to have settled into 11 Mb/s. Perhaps the auto retry
-hasn't really been turned off.
-
-Larry
