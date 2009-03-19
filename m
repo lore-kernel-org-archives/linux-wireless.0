@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ms13.Sony.CO.JP ([211.125.136.230]:55561 "EHLO ms13.sony.co.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755761AbZC0IuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 04:50:20 -0400
-Received: from ms5.sony.co.jp (ms5.Sony.CO.JP [211.125.136.201])
- by ms13.sony.co.jp (R8/Sony) with ESMTP id n2R8234D011478
- for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2009 17:02:03 +0900 (JST)
-Message-Id: <200903270800.n2R804mS007321@imail.sm.sony.co.jp> (sfid-20090327_095038_744626_9382F8EE)
-Date: Fri, 27 Mar 2009 17:00:17 +0900
-From: Masakazu Mokuno <mokuno@sm.sony.co.jp>
-To: <linville@tuxdriver.com>
-Subject: [PATCH] ps3: gelic: Added error path
-Cc: linux-wireless@vger.kernel.org,
-	Geoff Levand <geoffrey.levand@am.sony.com>
+Received: from wf-out-1314.google.com ([209.85.200.171]:56537 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752585AbZCSQpV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2009 12:45:21 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so731858wff.4
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 09:45:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <20090319164256.GA25237@storm.local.network>
+References: <20090319164256.GA25237@storm.local.network>
+Date: Thu, 19 Mar 2009 09:45:19 -0700
+Message-ID: <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com> (sfid-20090319_174525_758049_9605CBCD)
+Subject: Re: VT6656 driver source now GPL
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the bug that the driver tries to continue to
-connect(associate) to AP even if gelic_wl_do_{wpa,wep}_setup() fails,
+On Thu, Mar 19, 2009 at 9:42 AM, Forest Bond <forest@alittletooquiet.ne=
+t> wrote:
+> Hi,
+>
+> VIA has released a new version of the VT6656 driver source, and it no=
+w has a
+> proper license!
+>
+> =C2=A0http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zi=
+p
+>
+> As you may recall, the previous version lacked a license altogether, =
+making it
+> unfit for distribution.
+>
+> I'd really like to see this driver integrated into the kernel. =C2=A0=
+Does anyone care
+> to comment regarding feasibility?
 
-CC: Geoff Levand <geoffrey.levand@am.sony.com>
-Signed-off-by: Masakazu Mokuno <mokuno@sm.sony.co.jp>
----
- drivers/net/ps3_gelic_wireless.c |    3 +++
- 1 file changed, 3 insertions(+)
+Indeed good news, what is the latest kernel it compiles for? If it
+compiles on Linus' tree it can be stashed into staging while it gets
+properly ported.
 
---- a/drivers/net/ps3_gelic_wireless.c
-+++ b/drivers/net/ps3_gelic_wireless.c
-@@ -2101,6 +2101,9 @@ static int gelic_wl_associate_bss(struct
- 	if (ret) {
- 		pr_debug("%s: WEP/WPA setup failed %d\n", __func__,
- 			 ret);
-+		ret = -EPERM;
-+		gelic_wl_send_iwap_event(wl, NULL);
-+		goto out;
- 	}
- 
- 	/* start association */
-
--- 
-Masakazu Mokuno
-
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
