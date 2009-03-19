@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:43197 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752543AbZCUM14 (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.233]:3753 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752964AbZCSJpX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 08:27:56 -0400
-To: Christian Lamparter <chunkeey@web.de>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] p54: fix SoftLED compile dependencies
-References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au>
-	<200903210057.47067.chunkeey@web.de> <87eiwre61a.fsf@litku.valot.fi>
-	<200903211322.01654.chunkeey@web.de>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 21 Mar 2009 14:27:49 +0200
-In-Reply-To: <200903211322.01654.chunkeey@web.de> (Christian Lamparter's message of "Sat\, 21 Mar 2009 13\:22\:01 +0100")
-Message-ID: <873ad7dpru.fsf@litku.valot.fi> (sfid-20090321_132805_359810_53180787)
+	Thu, 19 Mar 2009 05:45:23 -0400
+Received: by rv-out-0506.google.com with SMTP id f9so484420rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 02:45:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1237455413.5100.55.camel@johannes.local>
+References: <1237442241-29803-1-git-send-email-lrodriguez@atheros.com>
+	 <43e72e890903182310o58cf15f9yeeba8c86c45627d7@mail.gmail.com>
+	 <1237454341.5100.52.camel@johannes.local>
+	 <43e72e890903190225q22a0e46ap1c3f7fa5f1463d9e@mail.gmail.com>
+	 <1237455413.5100.55.camel@johannes.local>
+Date: Thu, 19 Mar 2009 02:45:21 -0700
+Message-ID: <43e72e890903190245r68003a45q2ce05e0ddeabc033@mail.gmail.com> (sfid-20090319_104526_554185_1672D85A)
+Subject: Re: [PATCH] iw: add support to print HT40-/+ on channels
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@web.de> writes:
+On Thu, Mar 19, 2009 at 2:36 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2009-03-19 at 02:25 -0700, Luis R. Rodriguez wrote:
+>
+>> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 * 2432 MHz [5] (27.0 dBm / 20 MHz)
+>> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 * 2437 MHz [6] (27.0 dBm / 20 MHz)
+>> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 * 2442 MHz [7] (27.0 dBm / 20 MHz)
+>
+>> > Eh, that doesn't look right. What's with 2432-2443 MHz?
+>>
+>> It means you get HT40-/+ allowed. Do we want to show if we have it a=
+llowed?
+>
+> What's with the /20mhz though?
 
->> > -	  Inventel UR054G
->> > -	  Spinnaker DUT
->> 
->> This change wasn't mentioned in the commit log. Did this get included
->> by accident?
->> 
-> heh true... should I add them back?
+Right, so that would mean you're clear regulatory wise to use the
+entire 20 MHz for that channel. At a later time perhaps a custom
+target bandwidth might be desired, then the regulatory bandwidth check
+could be reduced. I'm not sure how we'll do this yet but if we keep
+the bandwidth this lets us keep the max per channel and then easily
+determine which smaller target bandwidths would be allowed.
 
-I don't know, I just wanted to point this out in case you missed it :)
-
-> after all this list hasn't changed in years and we have a much nicer
-> one on http://www.prism54.org/ (
-> http://wireless.kernel.org/en/users/Drivers/p54/devices )
-
-In my opinion wireless.kernel.org is better place for the list.
-
--- 
-Kalle Valo
+  Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
