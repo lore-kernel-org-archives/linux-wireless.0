@@ -1,41 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f177.google.com ([209.85.219.177]:52468 "EHLO
-	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525AbZCNSQe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2009 14:16:34 -0400
-Received: by ewy25 with SMTP id 25so2958569ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2009 11:16:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <63d38a500903141114m17d9123ey7d934cd05496c1c5@mail.gmail.com>
-References: <4999F3A6.7020208@gmail.com> <4999F427.4060008@lwfinger.net>
-	 <3ace41890902161603o447ae321obb536586dcafad69@mail.gmail.com>
-	 <499A00D7.1080000@lwfinger.net>
-	 <63d38a500902170149q275bcb87r9ada40439a013dc7@mail.gmail.com>
-	 <499AE03C.9050008@lwfinger.net>
-	 <63d38a500903141114m17d9123ey7d934cd05496c1c5@mail.gmail.com>
-Date: Sat, 14 Mar 2009 19:16:31 +0100
-Message-ID: <63d38a500903141116h3f998e6cl163e1d8c4f9e711d@mail.gmail.com> (sfid-20090314_191637_653032_6227408D)
-Subject: Re: rtl8187 not handling my usb card
-From: =?ISO-8859-2?Q?Viktor_Ilija=B9i=E6?= <viktor.ilijasic@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:51947 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755500AbZCSHAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2009 03:00:45 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e1.ny.us.ibm.com (8.13.1/8.13.1) with ESMTP id n2J6w4Af030607
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 02:58:04 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v9.2) with ESMTP id n2J70hoY178668
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 03:00:43 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n2J70g4F020357
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 03:00:43 -0400
+Subject: Re: [LTP] Support of WIFI and W-LAN test cases in LTP
+From: Subrata Modak <subrata@linux.vnet.ibm.com>
+Reply-To: subrata@linux.vnet.ibm.com
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: rahul Baliyan <rahul.lpt@gmail.com>, ltp-list@lists.sf.net,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+In-Reply-To: <43e72e890903181242i1be5818et8afd1157cff8af83@mail.gmail.com>
+References: <9a14a0630903130632s36a7f059hd093d30e97f894eb@mail.gmail.com>
+	 <1236962876.7439.3.camel@subratamodak.linux.ibm.com>
+	 <1237272937.5622.11.camel@subratamodak.linux.ibm.com>
+	 <43e72e890903181242i1be5818et8afd1157cff8af83@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 19 Mar 2009 12:30:38 +0530
+Message-Id: <1237446038.5260.9.camel@subratamodak.linux.ibm.com> (sfid-20090319_080048_662894_A7DBB9E6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, all.
+On Wed, 2009-03-18 at 12:42 -0700, Luis R. Rodriguez wrote:
+> On Mon, Mar 16, 2009 at 11:55 PM, Subrata Modak
+> <subrata@linux.vnet.ibm.com> wrote:
+> > Hi Rahul,
+> >
+> > On Fri, 2009-03-13 at 22:17 +0530, Subrata Modak wrote:
+> >> Hi,
+> >>
+> >> On Fri, 2009-03-13 at 19:02 +0530, rahul Baliyan wrote:
+> >> > Hi,
+> >> >
+> >> > Pl.  confirm if LTP contains the test cases of W-LAN and WI-FI.
+> >>
+> >> Nope. We do not have till now. However, we initiated some discussion
+> >> some 6 months back in the same mailing list regarding Wireless Mesh
+> >> Netwoking tests. Please follow the following thread:
+> >>
+> >> http://marc.info/?t=121969812900007&r=1&w=2&n=4,
+> >>
+> >> There are some tests already avilable. We need somebody to volunteer to
+> >> bring them to some shape so that they can be automated and then
+> >> integrated inside LTP. Would you be ready to do that ?
+> >
+> > Would you like to take up my proposal ?
+> 
+> BTW I've stashed a Linux wireless testing entry in the Linux
+> Foundation GSoC, hopefully that can be merged back into LTP.
+> 
+> https://www.linuxfoundation.org/en/Google_Summer_of_Code_2009#Automation_of_testing_using_mac80211_hwsim_and_Orbit
 
-I received a new card, after the old one died, and I'm happy to report
-that the card works properly under Linux with my patched version of
-the driver (the patch was only to add the USB ID). I see that the
-patch was already submitted to the kernel while my card was being
-replaced.
+Thanks. That would be really great. Send me the automation test patch
+when it is ready with some results, etc.
 
-Thanks all for your work and help.
+Regards--
+Subrata
 
+> 
+>   Luis
 
-Viktor
-
---
-Don't let people drive you crazy when you know it's in walking distance.
