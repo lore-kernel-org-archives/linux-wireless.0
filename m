@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58559 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753041AbZCKMkX (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:34129 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754032AbZCSFyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2009 08:40:23 -0400
-Subject: configuring while interface is down
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>, Samuel Ortiz <samuel@sortiz.org>,
-	Alina Friedrichsen <x-alina@gmx.net>
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-xyIX3dcjo8CHRm0LD2Hc"
-Date: Wed, 11 Mar 2009 13:36:13 +0100
-Message-Id: <1236774973.20266.13.camel@johannes.local> (sfid-20090311_134043_057679_9B71941D)
-Mime-Version: 1.0
+	Thu, 19 Mar 2009 01:54:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 5/6] cfg80211: send channel max bandwidth to userspace
+Date: Thu, 19 Mar 2009 01:54:39 -0400
+Message-Id: <1237442080-27509-6-git-send-email-lrodriguez@atheros.com> (sfid-20090319_065450_037485_AFB03527)
+In-Reply-To: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
+References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/linux/nl80211.h |    3 +++
+ net/wireless/nl80211.c  |    3 ++-
+ 2 files changed, 5 insertions(+), 1 deletions(-)
 
---=-xyIX3dcjo8CHRm0LD2Hc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-Hi,
-
-Alina raised an interesting point -- wext allows you to configure an
-interface while it is down, at least by convention. Some parameters for
-cfg80211 we reject while an interface is down, e.g. adding new stations,
-partly for technical reasons and partly because that doesn't make sense
-when the mode of interface isn't fixed.
-
-For cfg80211's assoc/ibss calls, I think we should reject them outright
-when the interface is down, any objections?
-
-johannes
-
---=-xyIX3dcjo8CHRm0LD2Hc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJt7A6AAoJEKVg1VMiehFYzb4P/1+lP6JQHjEc9iSZPSlWABHH
-zkuGKL+e9c9Iq0NXBRBFVJ9hICHaXd2mW/Uz9H9kVXlO1DoQbb6jhPOH4baJO9Ls
-nop3X+PNTEHy83oM+szHJEBQJwYW3Go14I9JqW7ATudkPlOJZF1NVrrLkvL3mkhY
-rnjrUBsDqSrc9j0c8060MgQUBoXsr+xLVZBDjS2UTNvee3xyLmu9SwEPiKRS4ebS
-wV1GxCJYoAARr4GGi+wX8t01WrkoIOcGt0D7ys1FfIktHfa0ZRz8qQuWngm+NofW
-H19HQ/aVaxV61BiP73kZPuQKekU//2vcRuTCq0Phmn0EFNeLK4j07BlcbUXa5MVg
-cHNUPUg59jDnG53xcEjYMR9c52DBfhCUvZsftbNwjSl+PX82U3uHXiUjP9okMPzR
-wRwIOo3oeSKuuRDiDIsgT5P+Iyr6jlBt1jVLauTeh/LKIfUGeXDC9Ynh+fe0x6Zf
-MEXZffSxDxamK7g4g84RUyua6Rd07ujNjhn+DtOZ4VwInfUhbuFwLKXUlhJT1oTY
-20c+InXvj4qafKg7CA+/5q0KgWMv/yvVMcONrB8P6X9rpi0xEQNSn/Fjj9A9VZKp
-EGVReNC+G3xFDdAUOeKhH1k/ZUeROQCzBNLZ/zrf3GmmNiiVDS2O99qEBLxpWR2v
-38e0aaQjiBWypxqeQa/O
-=SoV7
------END PGP SIGNATURE-----
-
---=-xyIX3dcjo8CHRm0LD2Hc--
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 3700d92..3924fe4 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -670,6 +670,7 @@ enum nl80211_band_attr {
+  *	on this channel in current regulatory domain.
+  * @NL80211_FREQUENCY_ATTR_MAX_TX_POWER: Maximum transmission power in mBm
+  *	(100 * dBm).
++ * @NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH: max bandwidth allowed, given in MHz
+  */
+ enum nl80211_frequency_attr {
+ 	__NL80211_FREQUENCY_ATTR_INVALID,
+@@ -679,6 +680,7 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_NO_IBSS,
+ 	NL80211_FREQUENCY_ATTR_RADAR,
+ 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
++	NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
+ 
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+@@ -686,6 +688,7 @@ enum nl80211_frequency_attr {
+ };
+ 
+ #define NL80211_FREQUENCY_ATTR_MAX_TX_POWER NL80211_FREQUENCY_ATTR_MAX_TX_POWER
++#define NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH
+ 
+ /**
+  * enum nl80211_bitrate_attr - bitrate attributes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e03c9a2..e2727ee 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -208,9 +208,10 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
+ 			if (chan->flags & IEEE80211_CHAN_RADAR)
+ 				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR);
+-
+ 			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+ 				    DBM_TO_MBM(chan->max_power));
++			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
++				    chan->max_bandwidth);
+ 
+ 			nla_nest_end(msg, nl_freq);
+ 		}
+-- 
+1.6.0.6
 
