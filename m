@@ -1,44 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39772 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753231AbZCPSvJ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:51244 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbZCSF5W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 14:51:09 -0400
-Date: Mon, 16 Mar 2009 20:50:37 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: don't drop null frames during software
-	scan
-Message-ID: <20090316185037.GA20327@jm.kir.nu> (sfid-20090316_195115_290775_5B87F6E3)
-References: <20090315200738.17370.29374.stgit@tikku> <20090316085741.GA29986@jm.kir.nu> <871vsxve5p.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <871vsxve5p.fsf@nokia.com>
+	Thu, 19 Mar 2009 01:57:22 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] iw: add support to print HT40-/+ on channels
+Date: Thu, 19 Mar 2009 01:57:21 -0400
+Message-Id: <1237442241-29803-1-git-send-email-lrodriguez@atheros.com> (sfid-20090319_065724_503610_39D0E7A8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2009 at 02:35:30PM +0200, Kalle Valo wrote:
+You don't have to guess now if your channels support HT40-/+ now.
+This also helps with regulatory testing.
 
-> > so this should not matter much, but the comment could be made more
-> > clear about the different needs for nullfunc frames (please also
-> > s/null frames/nullfunc frames/) and probe request frames. The former
-> > are sent only on the operational channel in the beginning and end of
-> > scan while the latter are sent on the channels to be scanned during
-> > an active scan.
-> 
-> Should the description be in ieee80211_start_scan() in scan.c? I think
-> it would make more sense to have it there instead of tx.c. I can then
-> add a reference to the comment above.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ info.c    |   13 +++++++++++++
+ nl80211.h |   21 +++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
-Either way works for me as long as there is something giving me enough
-information (or pointer to that) next to the place that allows nullfunc
-frames go through. Anyway, Johannes is correct about the proper longer
-term fix being better mechanism to stop the queue so that we don't get
-into this code in the first place and in that sense, this patch is more
-of a workaround for the time being.
-
+diff --git a/info.c b/info.c
+index f704131..14c88a3 100644
+--- a/info.c
++++ b/info.c
+@@ -55,6 +55,9 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_FREQUENCY_ATTR_RADAR] = { .type = NLA_FLAG },
+ 		[NL80211_FREQUENCY_ATTR_MAX_TX_POWER] = { .type = NLA_U32 },
+ 		[NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH] = { .type = NLA_U32 },
++		[NL80211_FREQUENCY_ATTR_NO_HT40] = { .type = NLA_FLAG },
++		[NL80211_FREQUENCY_ATTR_NO_HT40MINUS] = { .type = NLA_FLAG },
++		[NL80211_FREQUENCY_ATTR_NO_HT40PLUS] = { .type = NLA_FLAG },
+ 	};
+ 
+ 	struct nlattr *tb_rate[NL80211_BITRATE_ATTR_MAX + 1];
+@@ -70,6 +73,7 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 	int bandidx = 1;
+ 	int rem_band, rem_freq, rem_rate, rem_mode;
+ 	int open;
++	bool ht_supported_by_dev = false;
+ 
+ 	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+ 		  genlmsg_attrlen(gnlh, 0), NULL);
+@@ -90,6 +94,7 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ #ifdef NL80211_BAND_ATTR_HT_CAPA
+ 		if (tb_band[NL80211_BAND_ATTR_HT_CAPA]) {
+ 			unsigned short cap = nla_get_u16(tb_band[NL80211_BAND_ATTR_HT_CAPA]);
++			ht_supported_by_dev = true;
+ #define PCOM(fmt, args...) do { printf("\t\t\t* " fmt "\n", ##args); } while (0)
+ #define PBCOM(bit, args...) if (cap & (bit)) PCOM(args)
+ 			printf("\t\tHT capabilities: 0x%.4x\n", cap);
+@@ -231,6 +236,14 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 				print_flag("no IBSS", &open);
+ 			if (tb_freq[NL80211_FREQUENCY_ATTR_RADAR])
+ 				print_flag("radar detection", &open);
++			if (ht_supported_by_dev) {
++				if (tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40])
++					print_flag("HT40 disallowed", &open);
++				else if (tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40MINUS])
++					print_flag("HT40- disallowed", &open);
++				else if (tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40PLUS])
++					print_flag("HT40+ disallowed", &open);
++			}
+  next:
+ 			if (open)
+ 				printf(")");
+diff --git a/nl80211.h b/nl80211.h
+index 9118460..f00ebff 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -349,6 +349,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_REG_TYPE: indicates the type of the regulatory domain currently
+  * 	set. This can be one of the nl80211_reg_type (%NL80211_REGDOM_TYPE_*)
+  *
++ * @NL80211_ATTR_SUPPORTED_COMMANDS: wiphy attribute that specifies
++ *	an array of command numbers (i.e. a mapping index to command number)
++ *	that the driver for the given wiphy supports.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -426,6 +430,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_REG_INITIATOR,
+ 	NL80211_ATTR_REG_TYPE,
+ 
++	NL80211_ATTR_SUPPORTED_COMMANDS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -665,6 +671,15 @@ enum nl80211_band_attr {
+  * @NL80211_FREQUENCY_ATTR_MAX_TX_POWER: Maximum transmission power in mBm
+  *	(100 * dBm).
+  * @NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH: max bandwidth allowed, given in MHz
++ * @NL80211_FREQUENCY_ATTR_NOHT40: HT40 operation is not permitted on
++ * 	this channel, this is would indicate the regulatory domain did
++ * 	not allow for HT40 operation.
++ * @NL80211_FREQUENCY_ATTR_NO_HT40MINUS: HT40- operation is not permitted on
++ * 	this channel. This could be due to regulatory domain restrictions or
++ * 	when the channel is on a band edge, towards the beginning.
++ * @NL80211_FREQUENCY_ATTR_NO_HT40PLUS: HT40+ operation is not permitted on
++ * 	this channel. This could be due to regulatory domain restrictions or
++ * 	when the channel is on a band edge, towards the end.
+  */
+ enum nl80211_frequency_attr {
+ 	__NL80211_FREQUENCY_ATTR_INVALID,
+@@ -675,6 +690,9 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_RADAR,
+ 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+ 	NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
++	NL80211_FREQUENCY_ATTR_NO_HT40,
++	NL80211_FREQUENCY_ATTR_NO_HT40MINUS,
++	NL80211_FREQUENCY_ATTR_NO_HT40PLUS,
+ 
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+@@ -683,6 +701,9 @@ enum nl80211_frequency_attr {
+ 
+ #define NL80211_FREQUENCY_ATTR_MAX_TX_POWER NL80211_FREQUENCY_ATTR_MAX_TX_POWER
+ #define NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH
++#define NL80211_FREQUENCY_ATTR_NO_HT40 NL80211_FREQUENCY_ATTR_NO_HT40
++#define NL80211_FREQUENCY_ATTR_NO_HT40MINUS NL80211_FREQUENCY_ATTR_NO_HT40MINUS
++#define NL80211_FREQUENCY_ATTR_NO_HT40PLUS NL80211_FREQUENCY_ATTR_NO_HT40PLUS
+ 
+ /**
+  * enum nl80211_bitrate_attr - bitrate attributes
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.0.6
+
