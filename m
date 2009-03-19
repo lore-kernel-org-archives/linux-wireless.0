@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1314 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753448AbZCXWLa (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49803 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751854AbZCSLsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 18:11:30 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@web.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
-Date: Tue, 24 Mar 2009 17:09:12 -0500
-Message-Id: <20090324220558.M48235@bobcopeland.com> (sfid-20090324_231134_724252_197E2AE3)
-In-Reply-To: <20090324205847.GB29268@tesla>
-References: <200903241938.47155.chunkeey@web.de> <b6c5339f0903241303y58aca745rfad05ed8ddb93e70@mail.gmail.com> <43e72e890903241310m1c09a55ex4c47aebdb483896e@mail.gmail.com> <200903242133.28405.chunkeey@web.de> <20090324205847.GB29268@tesla>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+	Thu, 19 Mar 2009 07:48:13 -0400
+Message-Id: <20090319114756.833749085@atheros.com> (sfid-20090319_124817_815763_EC2E1FF5)
+References: <20090319113918.555693846@atheros.com>
+Date: Thu, 19 Mar 2009 13:39:19 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 1/4] mac80211: Fix a typo in assoc vs. reassoc check
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 24 Mar 2009 13:58:47 -0700, Luis R. Rodriguez wrote
-> > > > pick up where Luis left off on the weekend.
-> > Done! Patch attached, please add to the tree ;)
-> 
-> Nice....... so it seems all we need now is ath5k figured out and properly
-> tested.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-BTW there's a dumb bug in my first patch, missing 'break' in the switch
-statements.  Oops.  But ath5k wasn't using any of that since it didn't
-do the CTL stuff yet.  
+---
+ net/mac80211/mlme.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'll go ahead and rebase the stuff and repost it later in the week,
-as long as you guys can test ath9k/ar9170 then I can do the debugging
-for 5k..
+--- uml.orig/net/mac80211/mlme.c	2009-03-19 00:18:40.000000000 +0200
++++ uml/net/mac80211/mlme.c	2009-03-19 00:18:57.000000000 +0200
+@@ -103,7 +103,7 @@ static void ieee80211_send_assoc(struct 
+ 	u32 rates = 0;
+ 	size_t e_ies_len;
+ 
+-	if (ifmgd->flags & IEEE80211_IBSS_PREV_BSSID_SET) {
++	if (ifmgd->flags & IEEE80211_STA_PREV_BSSID_SET) {
+ 		e_ies = sdata->u.mgd.ie_reassocreq;
+ 		e_ies_len = sdata->u.mgd.ie_reassocreq_len;
+ 	} else {
 
 -- 
-Bob Copeland %% www.bobcopeland.com
 
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
