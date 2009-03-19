@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:61442 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbZCYFiJ (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:64649 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633AbZCSJZU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 01:38:09 -0400
-Received: by mu-out-0910.google.com with SMTP id g7so1066397muf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 22:38:05 -0700 (PDT)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@web.de>,
-	Max Filippov <jcmvbkbc@gmail.com>
-Subject: [PATCH 2/2] p54spi: fix p54_upload_firmware
-Date: Wed, 25 Mar 2009 08:30:16 +0300
-Message-Id: <1237959016-17311-2-git-send-email-jcmvbkbc@gmail.com> (sfid-20090325_063817_048282_7C0E9678)
-In-Reply-To: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
-References: <>
- <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
+	Thu, 19 Mar 2009 05:25:20 -0400
+Received: by wf-out-1314.google.com with SMTP id 29so557908wff.4
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2009 02:25:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1237454341.5100.52.camel@johannes.local>
+References: <1237442241-29803-1-git-send-email-lrodriguez@atheros.com>
+	 <43e72e890903182310o58cf15f9yeeba8c86c45627d7@mail.gmail.com>
+	 <1237454341.5100.52.camel@johannes.local>
+Date: Thu, 19 Mar 2009 02:25:18 -0700
+Message-ID: <43e72e890903190225q22a0e46ap1c3f7fa5f1463d9e@mail.gmail.com> (sfid-20090319_102524_922816_C88376CC)
+Subject: Re: [PATCH] iw: add support to print HT40-/+ on channels
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- Instead of firmware itself p54_upload_firmware was sending to the device content of struct firmware
- and the following random garbage. Notice '&' before priv->firmware->data at p54spi_spi_write.
- But simple removing of '&' sign triggered BUG_ON at dma_cache_maint. Thus kmemdup - kfree workaround.
-
-Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
----
- drivers/net/wireless/p54/p54spi.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index d13268f..4ef57c5 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -265,8 +265,15 @@ static int p54spi_upload_firmware(struct ieee80211_hw *dev)
- 		p54spi_write32(priv, SPI_ADRS_DMA_WRITE_BASE,
- 			       cpu_to_le32(fw_addr));
- 
--		p54spi_spi_write(priv, SPI_ADRS_DMA_DATA,
--				 &priv->firmware->data, _fw_len);
-+		{
-+			void *fw = kmemdup(priv->firmware->data, _fw_len, GFP_KERNEL);
-+			if (fw)
-+			{
-+				p54spi_spi_write(priv, SPI_ADRS_DMA_DATA,
-+						 fw, _fw_len);
-+				kfree(fw);
-+			}
-+		}
- 
- 		fw_len -= _fw_len;
- 		fw_addr += _fw_len;
--- 
-1.5.4.3
-
+T24gVGh1LCBNYXIgMTksIDIwMDkgYXQgMjoxOSBBTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4KPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgRnJl
+cXVlbmNpZXM6Cj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjQxMiBN
+SHogWzFdICgyNy4wIGRCbSAvIDIwIE1IeikgKEhUNDAtIGRpc2FsbG93ZWQpCj4+IMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjQxNyBNSHogWzJdICgyNy4wIGRCbSAvIDIw
+IE1IeikgKEhUNDAtIGRpc2FsbG93ZWQpCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgICogMjQyMiBNSHogWzNdICgyNy4wIGRCbSAvIDIwIE1IeikgKEhUNDAtIGRpc2FsbG93
+ZWQpCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjQyNyBNSHogWzRd
+ICgyNy4wIGRCbSAvIDIwIE1IeikgKEhUNDAtIGRpc2FsbG93ZWQpCj4+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjQzMiBNSHogWzVdICgyNy4wIGRCbSAvIDIwIE1IeikK
+Pj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgKiAyNDM3IE1IeiBbNl0gKDI3
+LjAgZEJtIC8gMjAgTUh6KQo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAq
+IDI0NDIgTUh6IFs3XSAoMjcuMCBkQm0gLyAyMCBNSHopCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgICogMjQ0NyBNSHogWzhdICgyNy4wIGRCbSAvIDIwIE1IeikgKEhUNDAr
+IGRpc2FsbG93ZWQpCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjQ1
+MiBNSHogWzldICgyNy4wIGRCbSAvIDIwIE1IeikgKEhUNDArIGRpc2FsbG93ZWQpCj4+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICogMjQ1NyBNSHogWzEwXSAoMjcuMCBkQm0g
+LyAyMCBNSHopIChIVDQwKyBkaXNhbGxvd2VkKQo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCAqIDI0NjIgTUh6IFsxMV0gKDI3LjAgZEJtIC8gMjAgTUh6KSAoSFQ0MCsgZGlz
+YWxsb3dlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgKiAyNDY3IE1I
+eiBbMTJdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+KiAyNDcyIE1IeiBbMTNdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgKiAyNDg0IE1IeiBbMTRdIChkaXNhYmxlZCkKPgo+IEVoLCB0aGF0IGRvZXNuJ3Qg
+bG9vayByaWdodC4gV2hhdCdzIHdpdGggMjQzMi0yNDQzIE1Iej8KCkl0IG1lYW5zIHlvdSBnZXQg
+SFQ0MC0vKyBhbGxvd2VkLiBEbyB3ZSB3YW50IHRvIHNob3cgaWYgd2UgaGF2ZSBpdCBhbGxvd2Vk
+PwoKICBMdWlzCg==
