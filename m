@@ -1,130 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:55677 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753729AbZCXRvW convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:34134 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755117AbZCSFyq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 13:51:22 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so591976fgg.17
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 10:51:19 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: TJ <ubuntu@tjworld.net>
-Subject: Re: iwl3945: Don't queue rfkill_poll work when module is exiting
-Date: Tue, 24 Mar 2009 18:51:11 +0100
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org
-References: <1237909459.5365.16.camel@hephaestion>
-In-Reply-To: <1237909459.5365.16.camel@hephaestion>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Message-Id: <200903241851.11949.helmut.schaa@gmail.com> (sfid-20090324_185126_285363_7F36121F)
+	Thu, 19 Mar 2009 01:54:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 2/6] wireless: rename IEEE80211_CHAN_NO_FAT_* to HT40-/+
+Date: Thu, 19 Mar 2009 01:54:36 -0400
+Message-Id: <1237442080-27509-3-git-send-email-lrodriguez@atheros.com> (sfid-20090319_065453_326200_94E48DFF)
+In-Reply-To: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
+References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 24. M=E4rz 2009 schrieb TJ:
-> Tim Gardner suggested I forward this as a possible stable-release
-> update. I found the problem in our current Ubuntu Jaunty tree - iwlwi=
-fi
-> version 1.2.26k. What follows is a copy of the patch for Jaunty
-> (2.6.28).
+This is more consistent with our nl80211 stuff.
 
-The patch that introduced the rfkill polling did not hit mainline yet. =
-It
-should pop up in 2.6.30, hence this patch is not needed for any stable
-series.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c   |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    8 ++++----
+ include/net/wireless.h                    |   12 ++++++------
+ net/mac80211/mlme.c                       |    4 ++--
+ net/wireless/reg.c                        |   16 ++++++++--------
+ 5 files changed, 22 insertions(+), 22 deletions(-)
 
-I wasn't able to reproduce the issue by unloading iwl3945 here. Any hin=
-ts
-on how to reproduce this issue?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 085e9cf..0871efe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -591,10 +591,10 @@ static u8 iwl_is_channel_extension(struct iwl_priv *priv,
+ 
+ 	if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_ABOVE)
+ 		return !(ch_info->fat_extension_channel &
+-					IEEE80211_CHAN_NO_FAT_ABOVE);
++					IEEE80211_CHAN_NO_HT40PLUS);
+ 	else if (extension_chan_offset == IEEE80211_HT_PARAM_CHA_SEC_BELOW)
+ 		return !(ch_info->fat_extension_channel &
+-					IEEE80211_CHAN_NO_FAT_BELOW);
++					IEEE80211_CHAN_NO_HT40MINUS);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 75517d0..9d73f19 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -481,8 +481,8 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 			/* First write that fat is not enabled, and then enable
+ 			 * one by one */
+ 			ch_info->fat_extension_channel =
+-				(IEEE80211_CHAN_NO_FAT_ABOVE |
+-				 IEEE80211_CHAN_NO_FAT_BELOW);
++				(IEEE80211_CHAN_NO_HT40PLUS |
++				 IEEE80211_CHAN_NO_HT40MINUS);
+ 
+ 			if (!(is_channel_valid(ch_info))) {
+ 				IWL_DEBUG_INFO(priv, "Ch. %d Flags %x [%sGHz] - "
+@@ -561,7 +561,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 				fat_extension_chan = 0;
+ 			else
+ 				fat_extension_chan =
+-					IEEE80211_CHAN_NO_FAT_BELOW;
++					IEEE80211_CHAN_NO_HT40MINUS;
+ 
+ 			/* Set up driver's info for lower half */
+ 			iwl_set_fat_chan_info(priv, ieeeband,
+@@ -573,7 +573,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 			iwl_set_fat_chan_info(priv, ieeeband,
+ 						(eeprom_ch_index[ch] + 4),
+ 						&(eeprom_ch_info[ch]),
+-						IEEE80211_CHAN_NO_FAT_ABOVE);
++						IEEE80211_CHAN_NO_HT40PLUS);
+ 		}
+ 	}
+ 
+diff --git a/include/net/wireless.h b/include/net/wireless.h
+index e3077e1..0331d26 100644
+--- a/include/net/wireless.h
++++ b/include/net/wireless.h
+@@ -40,21 +40,21 @@ enum ieee80211_band {
+  *	on this channel.
+  * @IEEE80211_CHAN_NO_IBSS: IBSS is not allowed on this channel.
+  * @IEEE80211_CHAN_RADAR: Radar detection is required on this channel.
+- * @IEEE80211_CHAN_NO_FAT_ABOVE: extension channel above this channel
++ * @IEEE80211_CHAN_NO_HT40PLUS: extension channel above this channel
+  * 	is not permitted.
+- * @IEEE80211_CHAN_NO_FAT_BELOW: extension channel below this channel
++ * @IEEE80211_CHAN_NO_HT40MINUS: extension channel below this channel
+  * 	is not permitted.
+  * @IEEE80211_CHAN_NO_HT40: indicates no HT40 is allowed at all,
+- * 	when this is set %IEEE80211_CHAN_NO_FAT_ABOVE and
+- * 	%IEEE80211_CHAN_NO_FAT_BELOW will also be set.
++ * 	when this is set %IEEE80211_CHAN_NO_HT40PLUS and
++ * 	%IEEE80211_CHAN_NO_HT40MINUS will also be set.
+  */
+ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_DISABLED		= 1<<0,
+ 	IEEE80211_CHAN_PASSIVE_SCAN	= 1<<1,
+ 	IEEE80211_CHAN_NO_IBSS		= 1<<2,
+ 	IEEE80211_CHAN_RADAR		= 1<<3,
+-	IEEE80211_CHAN_NO_FAT_ABOVE	= 1<<4,
+-	IEEE80211_CHAN_NO_FAT_BELOW	= 1<<5,
++	IEEE80211_CHAN_NO_HT40PLUS	= 1<<4,
++	IEEE80211_CHAN_NO_HT40MINUS	= 1<<5,
+ 	IEEE80211_CHAN_NO_HT40		= 1<<6,
+ };
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a558796..9543eea 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -278,13 +278,13 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 
+ 		switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+ 		case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+-			if (flags & IEEE80211_CHAN_NO_FAT_ABOVE) {
++			if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
+ 				cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 				cap &= ~IEEE80211_HT_CAP_SGI_40;
+ 			}
+ 			break;
+ 		case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+-			if (flags & IEEE80211_CHAN_NO_FAT_BELOW) {
++			if (flags & IEEE80211_CHAN_NO_HT40MINUS) {
+ 				cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 				cap &= ~IEEE80211_HT_CAP_SGI_40;
+ 			}
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 29646b6..b4c002f 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1178,8 +1178,8 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ 
+ 	if (channel->flags &
+ 	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_HT40)) {
+-		channel->flags |= IEEE80211_CHAN_NO_FAT_ABOVE |
+-				  IEEE80211_CHAN_NO_FAT_BELOW;
++		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS |
++				  IEEE80211_CHAN_NO_HT40MINUS;
+ 		return;
+ 	}
+ 
+@@ -1202,15 +1202,15 @@ static void reg_process_ht_flags_channel(struct wiphy *wiphy,
+ 	 */
+ 	if (!channel_before || (channel_before->flags &
+ 	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_HT40)))
+-		channel->flags |= IEEE80211_CHAN_NO_FAT_BELOW;
++		channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
+ 	else
+-		channel->flags &= ~IEEE80211_CHAN_NO_FAT_BELOW;
++		channel->flags &= ~IEEE80211_CHAN_NO_HT40MINUS;
+ 
+ 	if (!channel_after || (channel_after->flags &
+ 	    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_HT40)))
+-		channel->flags |= IEEE80211_CHAN_NO_FAT_ABOVE;
++		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
+ 	else
+-		channel->flags &= ~IEEE80211_CHAN_NO_FAT_ABOVE;
++		channel->flags &= ~IEEE80211_CHAN_NO_HT40PLUS;
+ }
+ 
+ static void reg_process_ht_flags_band(struct wiphy *wiphy,
+@@ -1292,8 +1292,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 
+ 	if (freq_range->max_bandwidth_khz < MHZ_TO_KHZ(40))
+ 		bw_flags = IEEE80211_CHAN_NO_HT40 |
+-			   IEEE80211_CHAN_NO_FAT_BELOW |
+-			   IEEE80211_CHAN_NO_FAT_ABOVE;
++			   IEEE80211_CHAN_NO_HT40MINUS |
++			   IEEE80211_CHAN_NO_HT40PLUS;
+ 
+ 	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
+ 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
+-- 
+1.6.0.6
 
-Thanks,
-Helmut
-
-> ----------
-> Bug: #345710
->=20
-> When the wireless interface is active and the iwl3945 module is unloa=
-ded the
-> call to ieee80211_unregister_hw() would call iwl3945_mac_stop() which=
- would
-> restart the delayed workqueue for rfkill_poll. That workqueue had alr=
-eady been
-> cancelled so when the next work item was run (2 seconds later) the sy=
-stem would
-> suffer a hard lock-up because the module had been unloaded by then.
->=20
-> This patch implements STATUS_EXIT_PENDING checks in places where the =
-rfkill_poll
-> work is scheduled, and moves the final workqueue cancellation to occu=
-r after the
-> call to ieee80211_unregister_hw().
->=20
-> Bug discovered, experienced and fix tested on my PC.
->=20
-> Signed-off-by: TJ <ubuntu@tjworld.net>
-> ---
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 +++++++++++++---
->  1 files changed, 13 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/ne=
-t/wireless/iwlwifi/iwl3945-base.c
-> index bb92db2..acaf038 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -6062,7 +6062,9 @@ static void iwl3945_rfkill_poll(struct work_str=
-uct *data)
->  	if (test_bit(STATUS_RF_KILL_HW, &status) !=3D test_bit(STATUS_RF_KI=
-LL_HW, &priv->status))
->  	   queue_work(priv->workqueue, &priv->rf_kill);
-> =20
-> -	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
-> +	/* only queue if module isn't exiting */
-> +	if (! test_bit(STATUS_EXIT_PENDING, &priv->status))
-> +		queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
->  						   round_jiffies_relative(2 * HZ));
-> =20
->  }
-> @@ -6588,7 +6590,10 @@ static void iwl3945_mac_stop(struct ieee80211_=
-hw *hw)
->  	flush_workqueue(priv->workqueue);
-> =20
->  	/* start polling the killswitch state again */
-> -	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
-> +
-> +	/* only queue if module isn't exiting */
-> +	if (! test_bit(STATUS_EXIT_PENDING, &priv->status))
-> +		queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
->  						   round_jiffies_relative(2 * HZ));
-> =20
->  	IWL_DEBUG_MAC80211("leave\n");
-> @@ -8166,7 +8171,6 @@ static void __devexit iwl3945_pci_remove(struct=
- pci_dev *pdev)
->  	sysfs_remove_group(&pdev->dev.kobj, &iwl3945_attribute_group);
-> =20
->  	iwl3945_rfkill_unregister(priv);
-> -	cancel_delayed_work(&priv->rfkill_poll);
->  	iwl3945_dealloc_ucode_pci(priv);
-> =20
->  	if (priv->rxq.bd)
-> @@ -8182,6 +8186,12 @@ static void __devexit iwl3945_pci_remove(struc=
-t pci_dev *pdev)
->  	/*netif_stop_queue(dev); */
->  	flush_workqueue(priv->workqueue);
-> =20
-> +	/* ieee80211_unregister_hw calls iwl3945_mac_stop which used to res=
-tart the rfkill
-> +	   polling. Although that now checks STATUS_EXIT_PENDING do cancel =
-and wait for any
-> +	   pending work to complete */
-> +	cancel_delayed_work(&priv->rfkill_poll);
-> +	cancel_work_sync(&priv->rfkill_poll);
-> +
->  	/* ieee80211_unregister_hw calls iwl3945_mac_stop, which flushes
->  	 * priv->workqueue... so we can't take down the workqueue
->  	 * until now... */
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
