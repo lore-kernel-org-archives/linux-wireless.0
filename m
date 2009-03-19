@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:34336 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753326AbZC0Op1 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:34131 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753747AbZCSFyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 10:45:27 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: [PATCH] p54spi: compensate firmware alignment bug in p54spi_rx
-Date: Fri, 27 Mar 2009 15:45:02 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <> <1238129453-7478-1-git-send-email-jcmvbkbc@gmail.com>
-In-Reply-To: <1238129453-7478-1-git-send-email-jcmvbkbc@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200903271545.02837.chunkeey@web.de> (sfid-20090327_154530_792135_F9536D0B)
+	Thu, 19 Mar 2009 01:54:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 6/6] cfg80211: send to userspace if HT40-/+ is allowed on each channel
+Date: Thu, 19 Mar 2009 01:54:40 -0400
+Message-Id: <1237442080-27509-7-git-send-email-lrodriguez@atheros.com> (sfid-20090319_065451_460707_CA66AF1E)
+In-Reply-To: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
+References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 March 2009 05:50:53 Max Filippov wrote:
-> Firmware may insert up to 4 padding bytes after the lmac header,
-> but it does not amend the size of SPI data transfer.
-> Such packets has correct data size in header, thus referencing
-> past the end of allocated skb. Put extra 4 bytes to the end of the
-> received skb to compensate for this case.
-> 
-> Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
-Acked-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/linux/nl80211.h |   15 +++++++++++++++
+ net/wireless/nl80211.c  |    6 ++++++
+ 2 files changed, 21 insertions(+), 0 deletions(-)
 
-> ---
->  drivers/net/wireless/p54/p54spi.c |   10 +++++++++-
->  1 files changed, 9 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-> index 5e8011c..35ea0dd 100644
-> --- a/drivers/net/wireless/p54/p54spi.c
-> +++ b/drivers/net/wireless/p54/p54spi.c
-> @@ -381,7 +381,12 @@ static int p54spi_rx(struct p54s_priv *priv)
->  		return 0;
->  	}
->  
-> -	skb = dev_alloc_skb(len);
-> +
-> +	/* Firmware may insert up to 4 padding bytes after the lmac header,
-> +	 * but it does not amend the size of SPI data transfer.
-> +	 * Such packets has correct data size in header, thus referencing
-> +	 * past the end of allocated skb. Reserve extra 4 bytes for this case */
-> +	skb = dev_alloc_skb(len + 4);
->  	if (!skb) {
->  		dev_err(&priv->spi->dev, "could not alloc skb");
->  		return 0;
-> @@ -389,6 +394,9 @@ static int p54spi_rx(struct p54s_priv *priv)
->  
->  	p54spi_spi_read(priv, SPI_ADRS_DMA_DATA, skb_put(skb, len), len);
->  	p54spi_sleep(priv);
-> +	/* Put additional bytes to compensate for the possible
-> +	 * alignment-caused truncation */
-> +	skb_put(skb, 4);
->  
->  	if (p54_rx(priv->hw, skb) == 0)
->  		dev_kfree_skb(skb);
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 3924fe4..f00ebff 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -671,6 +671,15 @@ enum nl80211_band_attr {
+  * @NL80211_FREQUENCY_ATTR_MAX_TX_POWER: Maximum transmission power in mBm
+  *	(100 * dBm).
+  * @NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH: max bandwidth allowed, given in MHz
++ * @NL80211_FREQUENCY_ATTR_NOHT40: HT40 operation is not permitted on
++ * 	this channel, this is would indicate the regulatory domain did
++ * 	not allow for HT40 operation.
++ * @NL80211_FREQUENCY_ATTR_NO_HT40MINUS: HT40- operation is not permitted on
++ * 	this channel. This could be due to regulatory domain restrictions or
++ * 	when the channel is on a band edge, towards the beginning.
++ * @NL80211_FREQUENCY_ATTR_NO_HT40PLUS: HT40+ operation is not permitted on
++ * 	this channel. This could be due to regulatory domain restrictions or
++ * 	when the channel is on a band edge, towards the end.
+  */
+ enum nl80211_frequency_attr {
+ 	__NL80211_FREQUENCY_ATTR_INVALID,
+@@ -681,6 +690,9 @@ enum nl80211_frequency_attr {
+ 	NL80211_FREQUENCY_ATTR_RADAR,
+ 	NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+ 	NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
++	NL80211_FREQUENCY_ATTR_NO_HT40,
++	NL80211_FREQUENCY_ATTR_NO_HT40MINUS,
++	NL80211_FREQUENCY_ATTR_NO_HT40PLUS,
+ 
+ 	/* keep last */
+ 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
+@@ -689,6 +701,9 @@ enum nl80211_frequency_attr {
+ 
+ #define NL80211_FREQUENCY_ATTR_MAX_TX_POWER NL80211_FREQUENCY_ATTR_MAX_TX_POWER
+ #define NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH
++#define NL80211_FREQUENCY_ATTR_NO_HT40 NL80211_FREQUENCY_ATTR_NO_HT40
++#define NL80211_FREQUENCY_ATTR_NO_HT40MINUS NL80211_FREQUENCY_ATTR_NO_HT40MINUS
++#define NL80211_FREQUENCY_ATTR_NO_HT40PLUS NL80211_FREQUENCY_ATTR_NO_HT40PLUS
+ 
+ /**
+  * enum nl80211_bitrate_attr - bitrate attributes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e2727ee..108e1ee 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -208,6 +208,12 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_IBSS);
+ 			if (chan->flags & IEEE80211_CHAN_RADAR)
+ 				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_RADAR);
++			if (chan->flags & IEEE80211_CHAN_NO_HT40)
++				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_HT40);
++			if (chan->flags & IEEE80211_CHAN_NO_HT40MINUS)
++				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_HT40MINUS);
++			if (chan->flags & IEEE80211_CHAN_NO_HT40PLUS)
++				NLA_PUT_FLAG(msg, NL80211_FREQUENCY_ATTR_NO_HT40PLUS);
+ 			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
+ 				    DBM_TO_MBM(chan->max_power));
+ 			NLA_PUT_U32(msg, NL80211_FREQUENCY_ATTR_MAX_BANDWIDTH,
+-- 
+1.6.0.6
 
