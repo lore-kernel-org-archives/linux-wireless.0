@@ -1,40 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:43325 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752937AbZCUTMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 15:12:12 -0400
-Cc: otus-devel@lists.madwifi-project.org, greg@kroah.com,
-	linville@tuxdriver.com, johannes@sipsolutions.net
-Content-Type: text/plain; charset=iso-8859-1
-Date: Sat, 21 Mar 2009 20:12:08 +0100
-From: "Alina Friedrichsen" <x-alina@gmx.net>
-In-Reply-To: <200903202036.09255.chunkeey@web.de>
-Message-ID: <20090321191208.102660@gmx.net> (sfid-20090321_201215_959265_40892E4B)
-MIME-Version: 1.0
-References: <200903170408.12626.chunkeey@web.de>
- <200903202036.09255.chunkeey@web.de>
-Subject: Re: [RFC][RFT][PATCH 0/5 v5] ar9170: ar9170 driver (aka mac80211's
- otus)
-To: Christian Lamparter <chunkeey@web.de>,
+Received: from xc.sipsolutions.net ([83.246.72.84]:40036 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750869AbZCSSp3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2009 14:45:29 -0400
+Subject: Re: [PATCH 1/4] mac80211: Fix a typo in assoc vs. reassoc check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
+In-Reply-To: <20090319114756.833749085@atheros.com>
+References: <20090319113918.555693846@atheros.com>
+	 <20090319114756.833749085@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gnHbNETAklK7PaI8L552"
+Date: Thu, 19 Mar 2009 19:45:23 +0100
+Message-Id: <1237488323.5100.101.camel@johannes.local> (sfid-20090319_194532_599101_A7E4E73C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Christian,
 
-I have now tested your new code with wireless-testing as the complete k=
-ernel. It doesn't work and freezes the complete network subsystem. Othe=
-r USB sicks like zd1211rw works fine.
+--=-gnHbNETAklK7PaI8L552
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Regards
-Alina
+On Thu, 2009-03-19 at 13:39 +0200, Jouni Malinen wrote:
+> plain text document attachment (mac80211-mlme-typo.patch)
+> Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
---=20
-Aufgepasst: Sind Ihre Daten beim Online-Banking auch optimal gesch=FCtz=
-t?
-Jetzt absichern: https://homebanking.gmx.net/?mc=3Dmail@footer.hb
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/mac80211/mlme.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> --- uml.orig/net/mac80211/mlme.c	2009-03-19 00:18:40.000000000 +0200
+> +++ uml/net/mac80211/mlme.c	2009-03-19 00:18:57.000000000 +0200
+> @@ -103,7 +103,7 @@ static void ieee80211_send_assoc(struct=20
+>  	u32 rates =3D 0;
+>  	size_t e_ies_len;
+> =20
+> -	if (ifmgd->flags & IEEE80211_IBSS_PREV_BSSID_SET) {
+> +	if (ifmgd->flags & IEEE80211_STA_PREV_BSSID_SET) {
+>  		e_ies =3D sdata->u.mgd.ie_reassocreq;
+>  		e_ies_len =3D sdata->u.mgd.ie_reassocreq_len;
+>  	} else {
+>=20
+> --=20
+>=20
+
+--=-gnHbNETAklK7PaI8L552
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJwpLBAAoJEKVg1VMiehFY1DAP/3WfrgMHAgr3xrPJGyTLgj3n
+HTl+6368pnyk7BIMlxgEVXqGXFbqTGWFF35jdS50maoAPXXfOS08RIdGHzuaHcjP
+cueDPDBoDWwZR+A1vZlUqRPSNUbC/8G1npqoWFW+FndCueKj1/6sxr97SjCJDQGf
+KvEMCGMnAHvQFbcgeKg0e0YGNZ9V/8Rnsn1MdspxQQWnUCDK9qEBVXmQHfwbQsxb
+ei7lf9FCYOZRsOm75+NpEMq+dFOjXdnYwpH/ABhy3yvscBID7tVxMdx0MjF7I0Na
+VbCVmzbdgFMHyxRgJdG2fZeI5/r8KqoWSqulSn4iLFzS8P2gOfqlD/8mW5DIWn1C
+Ckjjau9sz1IAOB09vBJQ6OAGbLJteobOoBv+vx4VEZnpYOmBqevKvPzO6g1lzseh
+ykN/ykzM20ScMNi2tOR86S4OnmD7RgsAUKCsGkyVfASp2pULP5+OlImGTxTOE2RK
+efi+Lc6se9c4VRScfZu4K2CDIT0OXYOeTWRZIS0hdJfZSlLiH8/QSSB3zlm9iuCI
+0UYz0S5emCxMgCWDHLiDfxf/mTWDQ5LUNr6ImPvYImoX35U2SyXd9TBbfCDoddJ+
+RjuBuh9qZumlgLPp+DET6cMi748W8f6LANXM5VsPAItzkS9FGdjxIR6NE4dxYodY
+ssLsFfHmrjMcsfA0TN89
+=dAeC
+-----END PGP SIGNATURE-----
+
+--=-gnHbNETAklK7PaI8L552--
+
