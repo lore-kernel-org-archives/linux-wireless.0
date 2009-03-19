@@ -1,97 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33836 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753206AbZCJCJs (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43620 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753355AbZCSJTh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 22:09:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/2] ath9k: make few eeprom and calib items static
-Date: Mon,  9 Mar 2009 22:09:42 -0400
-Message-Id: <1236650982-11520-3-git-send-email-lrodriguez@atheros.com> (sfid-20090310_032927_732124_BDF1957F)
-In-Reply-To: <1236650982-11520-1-git-send-email-lrodriguez@atheros.com>
-References: <1236650982-11520-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 19 Mar 2009 05:19:37 -0400
+Subject: Re: [PATCH] iw: add support to print HT40-/+ on channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890903182310o58cf15f9yeeba8c86c45627d7@mail.gmail.com> (sfid-20090319_071033_987418_7147E5F7)
+References: <1237442241-29803-1-git-send-email-lrodriguez@atheros.com>
+	 <43e72e890903182310o58cf15f9yeeba8c86c45627d7@mail.gmail.com>
+	 (sfid-20090319_071033_987418_7147E5F7)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-s8LaZGRWe2Ev2RIIoG/3"
+Date: Thu, 19 Mar 2009 10:19:01 +0100
+Message-Id: <1237454341.5100.52.camel@johannes.local> (sfid-20090319_101941_803916_D4594804)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the sparse complaints:
 
-drivers/net/wireless/ath9k/eeprom.c:1407:5: warning: symbol
-'ath9k_hw_4k_get_spur_channel' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:1436:19: warning: symbol
-'eep_4k_ops' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2808:5: warning: symbol
-'ath9k_hw_def_get_spur_channel' was not declared. Should it be static?
-drivers/net/wireless/ath9k/eeprom.c:2837:19: warning: symbol
-'eep_def_ops' was not declared. Should it be static?
-  CC [M]  drivers/net/wireless/ath9k/eeprom.o
-  CHECK   drivers/net/wireless/ath9k/mac.c
-  CC [M]  drivers/net/wireless/ath9k/mac.o
-  CHECK   drivers/net/wireless/ath9k/calib.c
-drivers/net/wireless/ath9k/calib.c:883:6: warning: symbol 'ar9285_clc'
-was not declared. Should it be static?
+--=-s8LaZGRWe2Ev2RIIoG/3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/calib.c  |    2 +-
- drivers/net/wireless/ath9k/eeprom.c |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath9k/calib.c b/drivers/net/wireless/ath9k/calib.c
-index a652e9b..c9446fb 100644
---- a/drivers/net/wireless/ath9k/calib.c
-+++ b/drivers/net/wireless/ath9k/calib.c
-@@ -880,7 +880,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 	return true;
- }
- 
--bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
-+static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
- {
- 	REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
- 	if (chan->channelFlags & CHANNEL_HT20) {
-diff --git a/drivers/net/wireless/ath9k/eeprom.c b/drivers/net/wireless/ath9k/eeprom.c
-index dd280cb..183c949 100644
---- a/drivers/net/wireless/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath9k/eeprom.c
-@@ -1404,7 +1404,7 @@ static u8 ath9k_hw_4k_get_num_ant_config(struct ath_hw *ah,
- 	return 1;
- }
- 
--u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
-+static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- {
- #define EEP_MAP4K_SPURCHAN \
- 	(ah->eeprom.map4k.modalHeader.spurChans[i].spurChan)
-@@ -1433,7 +1433,7 @@ u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- #undef EEP_MAP4K_SPURCHAN
- }
- 
--struct eeprom_ops eep_4k_ops = {
-+static struct eeprom_ops eep_4k_ops = {
- 	.check_eeprom		= ath9k_hw_4k_check_eeprom,
- 	.get_eeprom		= ath9k_hw_4k_get_eeprom,
- 	.fill_eeprom		= ath9k_hw_4k_fill_eeprom,
-@@ -2805,7 +2805,7 @@ static u16 ath9k_hw_def_get_eeprom_antenna_cfg(struct ath_hw *ah,
- 	return pModal->antCtrlCommon & 0xFFFF;
- }
- 
--u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
-+static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- {
- #define EEP_DEF_SPURCHAN \
- 	(ah->eeprom.def.modalHeader[is2GHz].spurChans[i].spurChan)
-@@ -2834,7 +2834,7 @@ u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- #undef EEP_DEF_SPURCHAN
- }
- 
--struct eeprom_ops eep_def_ops = {
-+static struct eeprom_ops eep_def_ops = {
- 	.check_eeprom		= ath9k_hw_def_check_eeprom,
- 	.get_eeprom		= ath9k_hw_def_get_eeprom,
- 	.fill_eeprom		= ath9k_hw_def_fill_eeprom,
--- 
-1.6.0.6
+>                 Frequencies:
+>                         * 2412 MHz [1] (27.0 dBm / 20 MHz) (HT40- disallo=
+wed)
+>                         * 2417 MHz [2] (27.0 dBm / 20 MHz) (HT40- disallo=
+wed)
+>                         * 2422 MHz [3] (27.0 dBm / 20 MHz) (HT40- disallo=
+wed)
+>                         * 2427 MHz [4] (27.0 dBm / 20 MHz) (HT40- disallo=
+wed)
+>                         * 2432 MHz [5] (27.0 dBm / 20 MHz)
+>                         * 2437 MHz [6] (27.0 dBm / 20 MHz)
+>                         * 2442 MHz [7] (27.0 dBm / 20 MHz)
+>                         * 2447 MHz [8] (27.0 dBm / 20 MHz) (HT40+ disallo=
+wed)
+>                         * 2452 MHz [9] (27.0 dBm / 20 MHz) (HT40+ disallo=
+wed)
+>                         * 2457 MHz [10] (27.0 dBm / 20 MHz) (HT40+ disall=
+owed)
+>                         * 2462 MHz [11] (27.0 dBm / 20 MHz) (HT40+ disall=
+owed)
+>                         * 2467 MHz [12] (disabled)
+>                         * 2472 MHz [13] (disabled)
+>                         * 2484 MHz [14] (disabled)
+
+Eh, that doesn't look right. What's with 2432-2443 MHz?
+
+johannes
+
+--=-s8LaZGRWe2Ev2RIIoG/3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJwg3+AAoJEKVg1VMiehFYIhkP/j+cAIp2AnnMbLpVoxY1DJ4a
+dw/m6CgZzYgpb7eWd9trTEFb68N3vDn/OSt9nmGrougaljAwgZLCmW0jsJqz44ZB
+zMRqd4342HIpw7QitX0Bcb/s5DWLt/47wJY9063M5ZGVHk8JaECAAQwWk036X5gE
+rOX3vev6y1SBzUCbMDGrGzwLVKeb3jBpaj+q3iU4IppA1ebgNVDhPCEGP6BwAzmU
+zrga9+gjj+OT9jUd/CbD3zH8+IrWGRWvcivI8BrLc1Y1AZE3L2ZPDnu+x3g7SZUn
+nz7ePNGfzEJ8IzHUtSv5VxCwaEHIIMKUbm+tYeKAa0MJJ4/rm/grHuL6HY13+u+1
+UfG6qX604wDVQX7QqbeHUlO8uAP6M7D0FIMnLqsA30ACOWj9/RFvmr1OM16ejlgC
+EcD+vxEe7Hn1Qj8A/tn5wDvuoifYIBeQo7sIC/VuObYTnXqBco9P8i+IkQz+JPG5
+wyjt3C5X21unwOlQKtliSYJzPHxBPEzHVaxElAEYcjkNl9FVZ0vb70ndwrGWCwZ3
+W69NSoAiHS5G99lC9yOItJIBUM9/ks8H7wKY8B3iCw2oQzomEgcUIvHNbYPlH2oR
+Z5IG6Vs0bmMI09PVXQS1MLan+buUpjynbRTV6bSQPyixAipDfq4mm2n7FuQwyaf6
++XRA5JS3usA6Y2Wp0l34
+=M4hL
+-----END PGP SIGNATURE-----
+
+--=-s8LaZGRWe2Ev2RIIoG/3--
 
