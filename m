@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49802 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751840AbZCSLsN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2009 07:48:13 -0400
-Message-Id: <20090319114800.533740586@atheros.com> (sfid-20090319_124818_544863_6AF2B998)
-References: <20090319113918.555693846@atheros.com>
-Date: Thu, 19 Mar 2009 13:39:20 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 2/4] mac80211: Fix reassociation by not clearing previous BSSID
+Received: from bu3sch.de ([62.75.166.246]:53802 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750933AbZCSS4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2009 14:56:44 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: linux-next: Tree for March 19 (wireless/p54)
+Date: Thu, 19 Mar 2009 19:55:00 +0100
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <200903191850.17825.mb@bu3sch.de> <49C293CC.6020009@oracle.com>
+In-Reply-To: <49C293CC.6020009@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903191955.00718.mb@bu3sch.de> (sfid-20090319_195647_938265_FE74A6AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We must not clear the previous BSSID when roaming to another AP within
-the same ESS for reassociation to be used properly. It is fine to
-clear this when the SSID changes, so let's move the code into
-ieee80211_sta_set_ssid().
+On Thursday 19 March 2009 19:49:48 Randy Dunlap wrote:
+> Michael Buesch wrote:
+> > On Thursday 19 March 2009 18:28:30 Randy Dunlap wrote:
+> >> Stephen Rothwell wrote:
+> >>> Hi all,
+> >>>
+> >>> Changes since 20090318:
+> >>
+> >> ERROR: "led_classdev_register" [drivers/net/wireless/p54/p54common.ko] undefined!
+> >> ERROR: "led_classdev_unregister" [drivers/net/wireless/p54/p54common.ko] undefined!
+> >>
+> >> One possible option (fix) is to have CONFIG_MAC80211_LEDS also select
+> >> LEDS_CLASS (that would build the missing functions).
+> > 
+> > Does p54 select CONFIG_MAC80211_LEDS? If that's the case, I think it should
+> 
+>   No, it doesn't.  p54common.c just has a large block of code that is
+> surrounded by
+> #ifdef CONFIG_MAC80211_LEDS
+> ...
+> #endif
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+Yeah. I do think that it'd be wrong for mac80211 to select LEDS_CLASS.
+mac80211 implements the triggers and the lowlevel drivers implement the LED class device.
+So mac80211 does not depend on LEDS_CLASS at all.
 
----
- net/mac80211/mlme.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+So p54 should probably introduce an automagic config option like b43 does, or it should do
+something (ugly) like this:
 
---- uml.orig/net/mac80211/mlme.c	2009-03-19 00:20:04.000000000 +0200
-+++ uml/net/mac80211/mlme.c	2009-03-19 00:20:52.000000000 +0200
-@@ -1888,8 +1888,6 @@ int ieee80211_sta_commit(struct ieee8021
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
--	ifmgd->flags &= ~IEEE80211_STA_PREV_BSSID_SET;
--
- 	if (ifmgd->ssid_len)
- 		ifmgd->flags |= IEEE80211_STA_SSID_SET;
- 	else
-@@ -1908,6 +1906,10 @@ int ieee80211_sta_set_ssid(struct ieee80
- 	ifmgd = &sdata->u.mgd;
- 
- 	if (ifmgd->ssid_len != len || memcmp(ifmgd->ssid, ssid, len) != 0) {
-+		/*
-+		 * Do not use reassociation if SSID is changed (different ESS).
-+		 */
-+		ifmgd->flags &= ~IEEE80211_STA_PREV_BSSID_SET;
- 		memset(ifmgd->ssid, 0, sizeof(ifmgd->ssid));
- 		memcpy(ifmgd->ssid, ssid, len);
- 		ifmgd->ssid_len = len;
-
+#if defined(CONFIG_MAC80211_LEDS) && (defined(CONFIG_LEDS_CLASS) || defined(CONFIG_LEDS_CLASS_MODULE))
+...
+#endif
 -- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings, Michael.
