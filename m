@@ -1,58 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.172]:56769 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753292AbZCOT1E (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:50532 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755432AbZCUAJo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2009 15:27:04 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so1500980wfa.4
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2009 12:27:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1237139955.24381.2.camel@johannes.local>
-References: <20090314171234.11126.21125.stgit@tikku>
-	 <20090314171452.11126.11618.stgit@tikku>
-	 <43e72e890903141318n25fa5f4bi7903eee2ef216040@mail.gmail.com>
-	 <87r60z1c8x.fsf@nokia.com> <1237139955.24381.2.camel@johannes.local>
-Date: Sun, 15 Mar 2009 12:27:02 -0700
-Message-ID: <43e72e890903151227q2b1cc5a8vd5dcc0e102fa7350@mail.gmail.com> (sfid-20090315_202709_545878_0C8EFECA)
-Subject: Re: [RFC PATCH v2 4/4] mac80211: add beacon filtering support
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kalle.valo@nokia.com>,
+	Fri, 20 Mar 2009 20:09:44 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH] p54: fix SoftLED compile dependencies
+Date: Sat, 21 Mar 2009 00:57:46 +0100
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <49C293CC.6020009@oracle.com> <200903191955.00718.mb@bu3sch.de>
+In-Reply-To: <200903191955.00718.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200903210057.47067.chunkeey@web.de> (sfid-20090321_010958_004369_3120D1FA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 15, 2009 at 10:59 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2009-03-15 at 09:22 +0200, Kalle Valo wrote:
->> "Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
->>
->> > Last we reviewed this it seemed we were set on only allowing this for
->> > hardware which supports beacon filtering with support for checksumming
->> > of the beacons. Reason checksumming is important is for considerations
->> > of DFS with the channel switch announcements, HT with with channel width
->> > changes. In fact I'm curious why checksumming would be required for 2.4 GHz
->> > single band devices. Kalle, do you happen to know?
->>
->> In my opinion also 2.4 GHz band needs checksum support. At least ERP
->> protection changes come to my mind, but maybe there are also others.
->
-> Also, the virtual hardware support Jouni is working on might use quiet
-> elements, and these would have to be detected by the stations. We really
-> want beacon change detection somewhere.
->
->> I think this is future stuff, I would like to get the basic (and the
->> simplest) implementation to the tree first and then we can start
->> improving and extending it.
->
-> Agreed, anything that is more complex than this basic stuff which
-> requires proper beacon change watching by the firmware is too much for
-> the first cut here -- we're having enough trouble as-is, for example
-> with the BSS struct stuff.
+This patch fixes a compile problem when the MAC80211_LEDS
+triggers are enabled but not LED class itself. 
+(which is sort of pointless, but anyway...)
 
-Understood, can we just add some text to the doc then elaborating what
-is expected of the hardware for now.
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+mb, thank you for the tips!
 
-  Luis
+Randy Dunlap can you please give this patch a try?
+
+John, do you know where the patch form 
+Geert Uytterhoeven <geert@linux-m68k.org> went?
+---
+diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
+index 0e344ac..ee1aaca 100644
+--- a/drivers/net/wireless/p54/Kconfig
++++ b/drivers/net/wireless/p54/Kconfig
+@@ -1,9 +1,10 @@
+ config P54_COMMON
+ 	tristate "Softmac Prism54 support"
+-	depends on MAC80211 && WLAN_80211 && FW_LOADER && EXPERIMENTAL
++	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
++	select FW_LOADER
+ 	---help---
+-	  This is common code for isl38xx based cards.
+-	  This module does nothing by itself - the USB/PCI frontends
++	  This is common code for isl38xx/stlc45xx based modules.
++	  This module does nothing by itself - the USB/PCI/SPI frontends
+ 	  also need to be enabled in order to support any devices.
+ 
+ 	  These devices require softmac firmware which can be found at
+@@ -17,31 +18,6 @@ config P54_USB
+ 	select CRC32
+ 	---help---
+ 	  This driver is for USB isl38xx based wireless cards.
+-	  These are USB based adapters found in devices such as:
+-
+-	  3COM 3CRWE254G72
+-	  SMC 2862W-G
+-	  Accton 802.11g WN4501 USB
+-	  Siemens Gigaset USB
+-	  Netgear WG121
+-	  Netgear WG111
+-	  Medion 40900, Roper Europe
+-	  Shuttle PN15, Airvast WM168g, IOGear GWU513
+-	  Linksys WUSB54G
+-	  Linksys WUSB54G Portable
+-	  DLink DWL-G120 Spinnaker
+-	  DLink DWL-G122
+-	  Belkin F5D7050 ver 1000
+-	  Cohiba Proto board
+-	  SMC 2862W-G version 2
+-	  U.S. Robotics U5 802.11g Adapter
+-	  FUJITSU E-5400 USB D1700
+-	  Sagem XG703A
+-	  DLink DWL-G120 Cohiba
+-	  Spinnaker Proto board
+-	  Linksys WUSB54AG
+-	  Inventel UR054G
+-	  Spinnaker DUT
+ 
+ 	  These devices require softmac firmware which can be found at
+ 	  http://prism54.org/
+@@ -71,3 +47,8 @@ config P54_SPI
+ 	  Nokia's N800/N810 Portable Internet Tablet.
+ 
+ 	  If you choose to build a module, it'll be called p54spi.
++
++config P54_LEDS
++	bool
++	depends on P54_COMMON && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = P54_COMMON)
++	default y
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index 0a98983..0c1b057 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -21,9 +21,9 @@
+ #include <linux/etherdevice.h>
+ 
+ #include <net/mac80211.h>
+-#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ #include <linux/leds.h>
+-#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ 
+ #include "p54.h"
+ #include "p54common.h"
+@@ -2420,7 +2420,7 @@ static int p54_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ static void p54_led_brightness_set(struct led_classdev *led_dev,
+ 				   enum led_brightness brightness)
+ {
+@@ -2508,7 +2508,7 @@ static void p54_unregister_leds(struct ieee80211_hw *dev)
+ 	if (priv->assoc_led.registered)
+ 		led_classdev_unregister(&priv->assoc_led.led_dev);
+ }
+-#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ 
+ static const struct ieee80211_ops p54_ops = {
+ 	.tx			= p54_tx,
+@@ -2592,11 +2592,11 @@ int p54_register_common(struct ieee80211_hw *dev, struct device *pdev)
+ 		return err;
+ 	}
+ 
+-	#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ 	err = p54_init_leds(dev);
+ 	if (err)
+ 		return err;
+-	#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ 
+ 	dev_info(pdev, "is registered as '%s'\n", wiphy_name(dev->wiphy));
+ 	return 0;
+@@ -2610,9 +2610,9 @@ void p54_free_common(struct ieee80211_hw *dev)
+ 	kfree(priv->output_limit);
+ 	kfree(priv->curve_data);
+ 
+-	#ifdef CONFIG_MAC80211_LEDS
++#ifdef CONFIG_P54_LEDS
+ 	p54_unregister_leds(dev);
+-	#endif /* CONFIG_MAC80211_LEDS */
++#endif /* CONFIG_P54_LEDS */
+ }
+ EXPORT_SYMBOL_GPL(p54_free_common);
+ 
