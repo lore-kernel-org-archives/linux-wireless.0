@@ -1,52 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f168.google.com ([209.85.219.168]:52602 "EHLO
-	mail-ew0-f168.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751628AbZCQXBM (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:50685 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757659AbZCTTYD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2009 19:01:12 -0400
-Received: by ewy12 with SMTP id 12so239110ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2009 16:01:09 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rt2x00 mesh support
-Date: Wed, 18 Mar 2009 00:01:07 +0100
-Cc: Antonio Marques <froz@icix.org>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <200903172304.12595.IvDoorn@gmail.com> <1237329348.5100.8.camel@johannes.local>
-In-Reply-To: <1237329348.5100.8.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200903180001.07723.IvDoorn@gmail.com> (sfid-20090318_000115_127582_CA85009E)
+	Fri, 20 Mar 2009 15:24:03 -0400
+Message-Id: <20090320192353.233644676@atheros.com> (sfid-20090320_202413_971511_1D3CD9E8)
+References: <20090320192115.448175935@atheros.com>
+Date: Fri, 20 Mar 2009 21:21:17 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH 2/4] nl80211: Add more through validation of MLME command parameters
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 17 March 2009, Johannes Berg wrote:
-> On Tue, 2009-03-17 at 23:04 +0100, Ivo van Doorn wrote:
-> 
-> > I think I found something interesting in the log from Antonio which does
-> > suggest a mac80211 bug:
-> > 
-> > 
-> > > [108565.280398] phy3 -> rt73usb_config_intf: Error - TXRX_CSR9 WRITE:  0x000d0000, READ: 0x000d0000
-> > > [108565.385291] phy3 -> rt73usb_write_beacon: Error - TXRX_CSR9 WRITE: 0x00040000, READ: 0x00040000
-> > > [108565.492687] phy3 -> rt73usb_kick_tx_queue: Error - TXRX_CSR9  WRITE: 0x001d0000, READ: 0x001d0000
-> > 
-> > These 3 commands mean that mac80211 has send the beacon data.
-> > 
-> > > [108565.603206] phy3 -> rt73usb_init_registers: Error - TXRX_CSR9  WRITE: 0x00000000, READ: 0x00000000
-> > 
-> > This command means that mac80211 uses the start() callback function. This triggers rt2x00 to initialize
-> > the registers which resets the beacon generation.
-> 
-> Strange, that doesn't seem right. If you look at net/mac80211/iface.c,
-> you'll see it call ->start(), then ->add_interface(), and later
-> ieee80211_start_mesh(), which calls _if_config() and sets
-> beacon/beacon_enabled.
+Check that the used authentication type and reason code are valid here
+so that drivers/mac80211 do not need to care about this. In addition,
+remove the unnecessary validation of SSID attribute length which is
+taken care of by netlink policy.
 
-ok, I gone through the rt2x00 code a couple of times now to see how this bug can be triggered by rt2x00,
-But the only other scenario I could find, is when the open() callback for the netdevice structure doesn't end
-with a call to the config() callback function. But as far as I see it that is happening correctly.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Ivo
+---
+ net/wireless/nl80211.c |   32 ++++++++++++++++++++++++++------
+ 1 file changed, 26 insertions(+), 6 deletions(-)
+
+--- uml.orig/net/wireless/nl80211.c	2009-03-20 18:03:53.000000000 +0200
++++ uml/net/wireless/nl80211.c	2009-03-20 18:03:57.000000000 +0200
+@@ -2614,6 +2614,14 @@ static int nl80211_dump_scan(struct sk_b
+ 	return err;
+ }
+ 
++static bool nl80211_valid_auth_type(enum nl80211_auth_type auth_type)
++{
++	return auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM ||
++		auth_type == NL80211_AUTHTYPE_SHARED_KEY ||
++		auth_type == NL80211_AUTHTYPE_FT ||
++		auth_type == NL80211_AUTHTYPE_NETWORK_EAP;
++}
++
+ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *drv;
+@@ -2666,6 +2674,10 @@ static int nl80211_authenticate(struct s
+ 	if (info->attrs[NL80211_ATTR_AUTH_TYPE]) {
+ 		req.auth_type =
+ 			nla_get_u32(info->attrs[NL80211_ATTR_AUTH_TYPE]);
++		if (!nl80211_valid_auth_type(req.auth_type)) {
++			err = -EINVAL;
++			goto out;
++		}
+ 	}
+ 
+ 	err = drv->ops->auth(&drv->wiphy, dev, &req);
+@@ -2718,10 +2730,6 @@ static int nl80211_associate(struct sk_b
+ 		}
+ 	}
+ 
+-	if (nla_len(info->attrs[NL80211_ATTR_SSID]) > IEEE80211_MAX_SSID_LEN) {
+-		err = -EINVAL;
+-		goto out;
+-	}
+ 	req.ssid = nla_data(info->attrs[NL80211_ATTR_SSID]);
+ 	req.ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
+ 
+@@ -2769,9 +2777,15 @@ static int nl80211_deauthenticate(struct
+ 
+ 	req.peer_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+ 
+-	if (info->attrs[NL80211_ATTR_REASON_CODE])
++	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
+ 		req.reason_code =
+ 			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
++		if (req.reason_code == 0) {
++			/* Reason Code 0 is reserved */
++			err = -EINVAL;
++			goto out;
++		}
++	}
+ 
+ 	if (info->attrs[NL80211_ATTR_IE]) {
+ 		req.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
+@@ -2817,9 +2831,15 @@ static int nl80211_disassociate(struct s
+ 
+ 	req.peer_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+ 
+-	if (info->attrs[NL80211_ATTR_REASON_CODE])
++	if (info->attrs[NL80211_ATTR_REASON_CODE]) {
+ 		req.reason_code =
+ 			nla_get_u16(info->attrs[NL80211_ATTR_REASON_CODE]);
++		if (req.reason_code == 0) {
++			/* Reason Code 0 is reserved */
++			err = -EINVAL;
++			goto out;
++		}
++	}
+ 
+ 	if (info->attrs[NL80211_ATTR_IE]) {
+ 		req.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
+
+-- 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
