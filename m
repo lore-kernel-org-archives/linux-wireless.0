@@ -1,44 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:44395 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752888AbZCYKwX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50040 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752079AbZCTUaj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2009 06:52:23 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: [PATCH 1/2] p54spi: mask value read from SPI_ADRS_DMA_WRITE_CTRL in p54spi_wait_bit
-Date: Wed, 25 Mar 2009 11:55:55 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <> <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
-In-Reply-To: <1237959016-17311-1-git-send-email-jcmvbkbc@gmail.com>
+	Fri, 20 Mar 2009 16:30:39 -0400
+Date: Fri, 20 Mar 2009 16:29:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-03-20
+Message-ID: <20090320202934.GA3263@tuxdriver.com> (sfid-20090320_213042_816109_C277403B)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200903251155.55608.chunkeey@web.de> (sfid-20090325_115227_201310_D45A14DD)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 25 March 2009 06:30:15 Max Filippov wrote:
->  Mask value read from SPI_ADRS_DMA_WRITE_CTRL in p54spi_wait_bit.
->  Without this, 'fw_upload not allowed to DMA write' is observed at both N800 and N810.
-> 
-> Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
+Dave,
 
-Acked-by: Christian Lamparter <chunkeey@web.de>
-> ---
->  drivers/net/wireless/p54/p54spi.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-> index 2b222aa..d13268f 100644
-> --- a/drivers/net/wireless/p54/p54spi.c
-> +++ b/drivers/net/wireless/p54/p54spi.c
-> @@ -171,7 +171,7 @@ static int p54spi_wait_bit(struct p54s_priv *priv, u16 reg, __le32 bits)
->  
->  	for (i = 0; i < 2000; i++) {
->  		p54spi_spi_read(priv, reg, &buffer, sizeof(buffer));
-> -		if (buffer == bits)
-> +		if ((buffer & bits) == bits)
->  			return 1;
->  
->  		msleep(1);
+One last(?) straggler for 2.6.29 -- avoid a NULL function pointer
+dereference when processing certain nl80211 messages...
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
+---
+
+Individual patch is available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit 170ebf85160dd128e1c4206cc197cce7d1424705:
+  Tilman Schmidt (1):
+        bas_gigaset: correctly allocate USB interrupt transfer buffer
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Jouni Malinen (1):
+      nl80211: Check that function pointer != NULL before using it
+
+ net/wireless/nl80211.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1e728ff..31b807a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1908,6 +1908,11 @@ static int nl80211_get_mesh_params(struct sk_buff *skb,
+ 	if (err)
+ 		return err;
+ 
++	if (!drv->ops->get_mesh_params) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
+ 	/* Get the mesh params */
+ 	rtnl_lock();
+ 	err = drv->ops->get_mesh_params(&drv->wiphy, dev, &cur_params);
+@@ -2017,6 +2022,11 @@ static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
+ 	if (err)
+ 		return err;
+ 
++	if (!drv->ops->set_mesh_params) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
+ 	/* This makes sure that there aren't more than 32 mesh config
+ 	 * parameters (otherwise our bitfield scheme would not work.) */
+ 	BUILD_BUG_ON(NL80211_MESHCONF_ATTR_MAX > 32);
+@@ -2061,6 +2071,7 @@ static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
+ 	err = drv->ops->set_mesh_params(&drv->wiphy, dev, &cfg, mask);
+ 	rtnl_unlock();
+ 
++ out:
+ 	/* cleanup */
+ 	cfg80211_put_dev(drv);
+ 	dev_put(dev);
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
