@@ -1,111 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f177.google.com ([209.85.219.177]:54875 "EHLO
-	mail-ew0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbZCPNWe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2009 09:22:34 -0400
-Received: by ewy25 with SMTP id 25so3461985ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2009 06:22:31 -0700 (PDT)
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org
-Message-Id: <F3209A42-65EA-4F71-8443-67E2F8CAFA3F@icix.org> (sfid-20090316_142238_046397_F85254B8)
-From: =?ISO-8859-1?Q?Ant=F3nio_Marques?= <froz@icix.org>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <200903151445.01344.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Subject: Re: rt2x00 mesh support
-Date: Mon, 16 Mar 2009 13:22:27 +0000
-References: <E8FC0565-5438-4AB5-A004-CD31DD9C1AA3@icix.org> <467E98EC-F5B1-4D79-914E-35E021125E37@icix.org> <594B4EB2-FE87-4756-B016-C83083EF415B@icix.org> <200903151445.01344.IvDoorn@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:51226 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754815AbZCTKBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2009 06:01:53 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 03:01:52 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 2/2] ath9k: Nuke struct ath_xmit_status
+Date: Fri, 20 Mar 2009 15:27:50 +0530
+Message-ID: <1237543070-25471-2-git-send-email-vasanth@atheros.com> (sfid-20090320_110154_775560_06473ABC)
+In-Reply-To: <1237543070-25471-1-git-send-email-vasanth@atheros.com>
+References: <1237543070-25471-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mar 15, 2009, at 13:45 , Ivo van Doorn wrote:
-> On Sunday 15 March 2009, Antonio Marques wrote:
->> Upon further investigation, beaconing does not work after configuring
->> an interface in mesh point mode but running 'iwlist mesh scan'
->> triggers something in the driver that enables beaconing.
->> After executing this command beacons are generated and correctly
->> received at other nodes.
->
-> Thats odd, but very interesting :)
-> Could you enable debugfs and CONFIG_RT2X00_LIB_DEBUGFS and
-> use the script from http://kernel.org/pub/linux/kernel/people/ivd/tools/rt2x00_regdump.sh
-> to create a register dump before running 'iwlist mesh scan' and  
-> afterwards.
-> (So basically when beaconing is broken and when it is working).
->
-> Thanks,
->
-> Ivo
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath9k/ath9k.h |    4 ----
+ drivers/net/wireless/ath9k/xmit.c  |   25 ++++++++-----------------
+ 2 files changed, 8 insertions(+), 21 deletions(-)
 
-
-As requested, I have attached the output of the script run before and  
-after
-running 'iwlist mesh scan'. Unfortunately there seems to be no change in
-the output. I have also included the queue statistics as these do  
-change from
-one state to the next. Any further pointers to help debug this? I'll  
-gladly test
-any patches that try to address this issue.
-
-Antonio Marques
-
-
-Before running 'iwlist mesh scan':
-
-kernel: 2.6.29-rc7-wl
-driver:	rt73usb
-version:	2.3.0
-compiled:	Mar 16 2009 11:53:37
-dev_flags: 0x0000625f
-rt chip:	1300
-rf chip:	0002
-revision:	0002573a
-
-register	base	words	wordsize
-csr	12288	300	4
-eeprom	0	128	2
-bbp	0	128	1
-rf	4	4	4
-
-
-Queues:
-
-qid	count	limit	length	index	done	crypto
-14	0	24	1	1	0	0
-0	0	24	0	0	0	0
-1	0	24	0	0	0	0
-2	6	24	0	6	6	0
-3	0	24	0	0	0	0
-16	0	4	0	0	0	0
-
-
-After running 'iwlist mesh scan':
-
-kernel: 2.6.29-rc7-wl
-driver:	rt73usb
-version:	2.3.0
-compiled:	Mar 16 2009 11:53:37
-dev_flags: 0x0000625f
-rt chip:	1300
-rf chip:	0002
-revision:	0002573a
-
-register	base	words	wordsize
-csr	12288	300	4
-eeprom	0	128	2
-bbp	0	128	1
-rf	4	4	4
-
-Queues:
-
-qid	count	limit	length	index	done	crypto
-14	0	24	8	8	0	0
-0	11	24	0	11	11	0
-1	0	24	0	0	0	0
-2	6	24	0	6	6	0
-3	0	24	0	0	0	0
-16	0	4	0	0	0	0
-
+diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
+index ffaebc1..10cd96a 100644
+--- a/drivers/net/wireless/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath9k/ath9k.h
+@@ -295,13 +295,9 @@ struct ath_tx_control {
+ 	enum ath9k_internal_frame_type frame_type;
+ };
+ 
+-struct ath_xmit_status {
+-	int retries;
+-	int flags;
+ #define ATH_TX_ERROR        0x01
+ #define ATH_TX_XRETRY       0x02
+ #define ATH_TX_BAR          0x04
+-};
+ 
+ /* All RSSI values are noise floor adjusted */
+ struct ath_tx_stat {
+diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
+index 21e90bc..689bdbf 100644
+--- a/drivers/net/wireless/ath9k/xmit.c
++++ b/drivers/net/wireless/ath9k/xmit.c
+@@ -1750,7 +1750,7 @@ exit:
+ /*****************/
+ 
+ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+-			    struct ath_xmit_status *tx_status)
++			    int tx_flags)
+ {
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+@@ -1771,12 +1771,10 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 		tx_info->rate_driver_data[0] = NULL;
+ 	}
+ 
+-	if (tx_status->flags & ATH_TX_BAR) {
++	if (tx_flags & ATH_TX_BAR)
+ 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
+-		tx_status->flags &= ~ATH_TX_BAR;
+-	}
+ 
+-	if (!(tx_status->flags & (ATH_TX_ERROR | ATH_TX_XRETRY))) {
++	if (!(tx_flags & (ATH_TX_ERROR | ATH_TX_XRETRY))) {
+ 		/* Frame was ACKed */
+ 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
+ 	}
+@@ -1803,29 +1801,22 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 				int txok, int sendbar)
+ {
+ 	struct sk_buff *skb = bf->bf_mpdu;
+-	struct ath_xmit_status tx_status;
+ 	unsigned long flags;
++	int tx_flags = 0;
+ 
+-	/*
+-	 * Set retry information.
+-	 * NB: Don't use the information in the descriptor, because the frame
+-	 * could be software retried.
+-	 */
+-	tx_status.retries = bf->bf_retries;
+-	tx_status.flags = 0;
+ 
+ 	if (sendbar)
+-		tx_status.flags = ATH_TX_BAR;
++		tx_flags = ATH_TX_BAR;
+ 
+ 	if (!txok) {
+-		tx_status.flags |= ATH_TX_ERROR;
++		tx_flags |= ATH_TX_ERROR;
+ 
+ 		if (bf_isxretried(bf))
+-			tx_status.flags |= ATH_TX_XRETRY;
++			tx_flags |= ATH_TX_XRETRY;
+ 	}
+ 
+ 	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
+-	ath_tx_complete(sc, skb, &tx_status);
++	ath_tx_complete(sc, skb, tx_flags);
+ 
+ 	/*
+ 	 * Return the list of ath_buf of this mpdu to free queue
+-- 
+1.5.5.1
 
