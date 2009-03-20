@@ -1,53 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:27319 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752888AbZCFDtE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 22:49:04 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2009 19:49:03 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless-regdb: enable passive scanning for world regdomain on other channels
-Date: Thu, 5 Mar 2009 19:48:18 -0800
-Message-ID: <1236311299-30407-1-git-send-email-lrodriguez@atheros.com> (sfid-20090306_044910_500818_55DAEF8F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:33919 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614AbZCTKpY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2009 06:45:24 -0400
+Subject: Re: [PATCH v2 4/6] cfg80211: check allowed channel type upon
+ userspace requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1237442080-27509-5-git-send-email-lrodriguez@atheros.com>
+References: <1237442080-27509-1-git-send-email-lrodriguez@atheros.com>
+	 <1237442080-27509-5-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ucKfFMFeZaX0pQXTLI0A"
+Date: Fri, 20 Mar 2009 11:45:18 +0100
+Message-Id: <1237545918.5100.146.camel@johannes.local> (sfid-20090320_114526_978276_2FC3F4C6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We allow passive scanning on other standard IEEE-802.11 channels.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+--=-ucKfFMFeZaX0pQXTLI0A
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John I just put the 2 GHz stuff and 5 GHz stuff into one. I also
-realized we had to separate channel 14 separately as it requires
-no OFDM.
+On Thu, 2009-03-19 at 01:54 -0400, Luis R. Rodriguez wrote:
+> Thanks to nl80211 userspace can be verify specific upon device
+> configuration. Before processing the request for the new HT40
+> channel types (HT40- or HT40+) we need to ensure we can use them
+> regulatory-wise. This wasn't required with wireless extensions as
+> specifying the channel type wasn't not available and configuration
+> was done towards the end implicitly upon association or reception
+> of beacons from the AP. For the new nl80211 we have to check this
+> when configuring the interfaces explicitly.
+>=20
 
- db.txt         |   11 +++++++++++
- 1 file changed, 11 insertions(+), 0 deletions(-)
+> +		if (channel_type =3D=3D NL80211_CHAN_HT40MINUS &&
+> +		    (chan->flags & IEEE80211_CHAN_NO_HT40MINUS))
+> +			goto bad_res;
+> +		else if (channel_type =3D=3D NL80211_CHAN_HT40PLUS &&
+> +			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS))
+> +			goto bad_res;
+> +
+> +		/*
+> +		 * At this point we know if that if HT40 was requested
+> +		 * we are allowed to use it and the extension channel
+> +		 * exists.
+> +		 */
+> +
+>  		if (channel_type =3D=3D NL80211_CHAN_HT40MINUS)
+>  			sec_freq =3D freq - 20;
+>  		else if (channel_type =3D=3D NL80211_CHAN_HT40PLUS)
 
-diff --git a/db.txt b/db.txt
-index 89a9d52..d3a05ea 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1,5 +1,16 @@
-+# This is the word regulatory domain
- country 00:
- 	(2402 - 2472 @ 40), (3, 20)
-+        # Channel 12 - 14. No HT40 channel fits here
-+        (2457 - 2482 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
-+        # Channel 14. Only JP enables this and for 802.11b only
-+        (2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
-+        # Channel 36 - 48
-+        (5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-+        # NB: 5260 MHz - 5700 MHz requies DFS
-+        # Channel 149 - 165
-+        (5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-+
- 
- country AE:
- 	(2402 - 2482 @ 40), (N/A, 20)
+These checks are _already_ there. That's what I mean with duplicate
+information ;)
+
+I'm working on a replacement, and it's looking nice so far.
+
+johannes
+
+--=-ucKfFMFeZaX0pQXTLI0A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJw3O7AAoJEKVg1VMiehFYiVgQAJ77tiW8RocOjBe0SM0wbiQI
+LX/p3Hsauw9Zbz9IVVFROx2BBV5NsToKgfjhHqgF+58SvyHzLfnhAT57KUWTgJfB
+zT3L/SjCuutTxcSjBTkC6+G1Cp+vw6DzVm5zqCIyrWqnaQRCWsqb+5bS8KSS6j1H
+xKIbNtOeWSto9b8dcKl3natdeMat8E1+3aatYxZDRuwuh0/FOAQ8KICFSp8gvRZ3
+jyskhpXvOtHP8xhtJ+1aMkMx65QMiDR6FoVzdMETxS61V5jaKDpycYZYXPTIpvqu
+k08zNNcJo/upbEX+lh4uclmLKKt+mrQ2RgjJLEChoCC+9dpEQpJ6wJJHpEkKTz0F
+9rup/klZA21WHtxwFgMguqM0qmWSOiE9SqTdB+347Uv8aB+rZoG8pd4tpeLrAgEN
+rSpEewq8JKK+7WQU3h+bHYQZtY9KtVIr83jIl9E63XjVNfALtNisq+gO3Xxmxedt
+o2pWCI3Ea7fazT97YzTuqsUpJ4bFToKf5EghFGfuh9MdU0a2CHokq/DE6bz/Yklk
++so3rjoTIGshBFDkYOPrglv0xTxJ+qT+AV9xnCxo6s2X+snujQKk9no1caH4gsDj
+xR56HrmnKv3wdy2QEs4YRHaCbBb6+PxQ/udqFQdfrUL1tJlSSZuKO0eVxMM8Nx9N
+bXb4wVdDPs/n5OzERZRr
+=TdtG
+-----END PGP SIGNATURE-----
+
+--=-ucKfFMFeZaX0pQXTLI0A--
+
