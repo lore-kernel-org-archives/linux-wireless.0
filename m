@@ -1,155 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-160-52.gdrpmi.dsl-w.verizon.net ([71.115.160.52]:45992
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150AbZCUDAM (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3049 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752052AbZCTNOq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 23:00:12 -0400
-Message-ID: <49C4582F.9010808@erley.org> (sfid-20090321_040018_956733_15A133A1)
-Date: Fri, 20 Mar 2009 22:59:59 -0400
-From: Pat Erley <pat-lkml@erley.org>
+	Fri, 20 Mar 2009 09:14:46 -0400
+Date: Fri, 20 Mar 2009 09:14:37 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Sitsofe Wheeler <sitsofe@yahoo.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090320131437.GA30120@hash.localnet> (sfid-20090320_141449_346509_56A9CBE1)
+References: <20090226170338.GA1745@silver.sucs.org> <20090303041222.GA1238@hash.localnet> <20090303200352.GA8343@silver.sucs.org> <20090304120759.GA6519@hash.localnet> <20090306094249.GA10236@silver.sucs.org> <20090308030928.GB14966@hash.localnet> <49B38FB7.3000002@gmail.com> <20090310004344.GA23466@hash.localnet> <20090312061047.GA13401@silver.sucs.org> <20090313095213.GA14250@silver.sucs.org>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Andrey Yurovsky <andrey@cozybit.com>, ath9k-devel@lists.ath9k.org
-Subject: [PATCH] Add mesh point functionality to ath9k
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090313095213.GA14250@silver.sucs.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables mesh point operation for ath9k.  Tested with b43,
-ath9k, rt2500usb, and ath5k as peers.
+On Fri, Mar 13, 2009 at 09:52:13AM +0000, Sitsofe Wheeler wrote:
+> The dmesg and trace can be found on
+> http://sucs.org/~sits/test/eeepc-debug/20090313/ .
 
-Signed-off-by: Pat Erley <pat-lkml@erley.org>
----
-No comments on the RFC, so I'm submitting it for consideration for 
-inclusion.  Thanks to Oxford TEC for providing hardware that was 
-used in the development and testing of this patch.
+Looks like the skb was reused right after it was freed by the mac80211
+workqueue so that seems inline with the idea that the list is getting
+corrupted somehow.  On top of the last patch, would you mind running 
+this overnight?  It'll dump a lot of debug info, I'm really only 
+interested in the last 5 invocations of ath5k_debug_printrxbuffs or so
+before the poison.  During a scan you'll see lots of rx_start/rx_stop.
 
-diff --git a/drivers/net/wireless/ath9k/beacon.c b/drivers/net/wireless/ath9k/beacon.c
-index e5b0071..ec99573 100644
---- a/drivers/net/wireless/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath9k/beacon.c
-@@ -70,7 +70,8 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 	ds = bf->bf_desc;
- 	flags = ATH9K_TXDESC_NOACK;
+Hmm, I can think of another scenario that could break: if the hw updated
+rxdp before DMA completes, then we should check next packet's status too
+in case 'current' packet's status is clobbered.
+
+Someone suggested dumping the self links and deal with RXEOL, maybe a 
+good idea :)
+
+diff --git a/drivers/net/wireless/ath5k/base.c b/drivers/net/wireless/ath5k/base.c
+index a4e385b..e21705c 100644
+--- a/drivers/net/wireless/ath5k/base.c
++++ b/drivers/net/wireless/ath5k/base.c
+@@ -1143,8 +1143,10 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
  
--	if (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC &&
-+	if (((sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
-+	     (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) &&
- 	    (ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)) {
- 		ds->ds_link = bf->bf_daddr; /* self-linked */
- 		flags |= ATH9K_TXDESC_VEOL;
-@@ -728,6 +729,7 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
- 			ath_beacon_config_ap(sc, &conf, avp);
- 			break;
- 		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_MESH_POINT:
- 			ath_beacon_config_adhoc(sc, &conf, avp, vif);
- 			break;
- 		case NL80211_IFTYPE_STATION:
-diff --git a/drivers/net/wireless/ath9k/hw.c b/drivers/net/wireless/ath9k/hw.c
-index e6ac8e5..9818945 100644
---- a/drivers/net/wireless/ath9k/hw.c
-+++ b/drivers/net/wireless/ath9k/hw.c
-@@ -1454,6 +1454,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
- 		REG_CLR_BIT(ah, AR_CFG, AR_CFG_AP_ADHOC_INDICATION);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		REG_WRITE(ah, AR_STA_ID1, val | AR_STA_ID1_ADHOC
- 			  | AR_STA_ID1_KSRCH_MODE);
- 		REG_SET_BIT(ah, AR_CFG, AR_CFG_AP_ADHOC_INDICATION);
-@@ -3155,6 +3156,7 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
- 		flags |= AR_TBTT_TIMER_EN;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		REG_SET_BIT(ah, AR_TXCFG,
- 			    AR_TXCFG_ADHOC_BEACON_ATIM_TX_POLICY);
- 		REG_WRITE(ah, AR_NEXT_NDP_TIMER,
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index 4c29cef..c13e4e5 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1599,7 +1599,8 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_AP) |
- 		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_ADHOC);
-+		BIT(NL80211_IFTYPE_ADHOC) |
-+		BIT(NL80211_IFTYPE_MESH_POINT);
- 
- 	hw->wiphy->reg_notifier = ath9k_reg_notifier;
- 	hw->wiphy->strict_regulatory = true;
-@@ -2207,18 +2208,13 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 		ic_opmode = NL80211_IFTYPE_STATION;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		if (sc->nbcnvifs >= ATH_BCBUF) {
--			ret = -ENOBUFS;
--			goto out;
--		}
--		ic_opmode = NL80211_IFTYPE_ADHOC;
--		break;
- 	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		if (sc->nbcnvifs >= ATH_BCBUF) {
- 			ret = -ENOBUFS;
- 			goto out;
- 		}
--		ic_opmode = NL80211_IFTYPE_AP;
-+		ic_opmode = conf->type;
- 		break;
- 	default:
- 		DPRINTF(sc, ATH_DBG_FATAL,
-@@ -2254,7 +2250,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	 * Note we only do this (at the moment) for station mode.
- 	 */
- 	if ((conf->type == NL80211_IFTYPE_STATION) ||
--	    (conf->type == NL80211_IFTYPE_ADHOC)) {
-+	    (conf->type == NL80211_IFTYPE_ADHOC) ||
-+	    (conf->type == NL80211_IFTYPE_MESH_POINT)) {
- 		if (ath9k_hw_phycounters(sc->sc_ah))
- 			sc->imask |= ATH9K_INT_MIB;
- 		sc->imask |= ATH9K_INT_TSFOOR;
-@@ -2301,8 +2298,9 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	del_timer_sync(&sc->ani.timer);
- 
- 	/* Reclaim beacon resources */
--	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP ||
--	    sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) {
-+	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) {
- 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
- 		ath_beacon_return(sc, avp);
- 	}
-@@ -2435,6 +2433,7 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
- 		switch (vif->type) {
- 		case NL80211_IFTYPE_STATION:
- 		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_MESH_POINT:
- 			/* Set BSSID */
- 			memcpy(sc->curbssid, conf->bssid, ETH_ALEN);
- 			memcpy(avp->bssid, conf->bssid, ETH_ALEN);
-@@ -2458,7 +2457,8 @@ static int ath9k_config_interface(struct ieee80211_hw *hw,
+ 	if (!skb) {
+ 		skb = ath5k_rx_skb_alloc(sc, &bf->skbaddr);
+-		if (!skb)
++		if (!skb) {
++			printk(KERN_DEBUG "ath5k: error exit from rxbuf_setup\n");
+ 			return -ENOMEM;
++		}
+ 		bf->skb = skb;
  	}
  
- 	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
--	    (vif->type == NL80211_IFTYPE_AP)) {
-+	    (vif->type == NL80211_IFTYPE_AP) ||
-+	    (vif->type == NL80211_IFTYPE_MESH_POINT)) {
- 		if ((conf->changed & IEEE80211_IFCC_BEACON) ||
- 		    (conf->changed & IEEE80211_IFCC_BEACON_ENABLED &&
- 		     conf->enable_beacon)) {
-diff --git a/drivers/net/wireless/ath9k/rc.c b/drivers/net/wireless/ath9k/rc.c
-index 6c2fd39..824ccbb 100644
---- a/drivers/net/wireless/ath9k/rc.c
-+++ b/drivers/net/wireless/ath9k/rc.c
-@@ -1619,6 +1619,7 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 	/* Choose rate table first */
+@@ -1561,6 +1563,8 @@ ath5k_rx_start(struct ath5k_softc *sc)
+ 	ath5k_mode_setup(sc);		/* set filters, etc. */
+ 	ath5k_hw_start_rx_pcu(ah);	/* re-enable PCU/DMA engine */
  
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) ||
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT) ||
- 	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC)) {
- 		rate_table = ath_choose_rate_table(sc, sband->band,
- 						   sta->ht_cap.ht_supported,
++        printk(KERN_DEBUG "ath5k: rx_start\n");
++
+ 	return 0;
+ err:
+ 	return ret;
+@@ -1578,8 +1582,7 @@ ath5k_rx_stop(struct ath5k_softc *sc)
+ 	ath5k_hw_set_rx_filter(ah, 0);	/* clear recv filter */
+ 	ath5k_hw_stop_rx_dma(ah);	/* disable DMA engine */
+ 
+-	ath5k_debug_printrxbuffs(sc, ah);
+-
++        printk(KERN_DEBUG "ath5k: rx_stop\n");
+ 	sc->rxlink = NULL;		/* just in case */
+ }
+ 
+@@ -1682,6 +1685,7 @@ ath5k_tasklet_rx(unsigned long data)
+ 	int ret;
+ 	int hdrlen;
+ 	int padsize;
++	static int foo=0;
+ 
+ 	spin_lock(&sc->rxbuflock);
+ 	if (list_empty(&sc->rxbuf)) {
+@@ -1689,6 +1693,10 @@ ath5k_tasklet_rx(unsigned long data)
+ 		goto unlock;
+ 	}
+ 	do {
++		/* dump list state every 8 pkts */
++		if (!(foo++ & 7))
++			ath5k_debug_printrxbuffs(sc, sc->ah);
++
+ 		rxs.flag = 0;
+ 
+ 		bf = list_first_entry(&sc->rxbuf, struct ath5k_buf, list);
+@@ -2308,6 +2316,8 @@ ath5k_stop_locked(struct ath5k_softc *sc)
+ 	} else
+ 		sc->rxlink = NULL;
+ 
++        printk(KERN_DEBUG "ath5k: rx_stop_locked\n");
++
+ 	return 0;
+ }
+ 
+@@ -2430,6 +2440,8 @@ ath5k_intr(int irq, void *dev_id)
+ 				*     least on older hardware revs.
+ 				*/
+ 				sc->rxlink = NULL;
++                                printk(KERN_DEBUG "ath5k: RXEOL\n");
++
+ 			}
+ 			if (status & AR5K_INT_TXURN) {
+ 				/* bump tx trigger level */
+diff --git a/drivers/net/wireless/ath5k/debug.c b/drivers/net/wireless/ath5k/debug.c
+index ccaeb5c..c544da5 100644
+--- a/drivers/net/wireless/ath5k/debug.c
++++ b/drivers/net/wireless/ath5k/debug.c
+@@ -505,7 +505,8 @@ ath5k_debug_printrxbuf(struct ath5k_buf *bf, int done,
+ 	struct ath5k_desc *ds = bf->desc;
+ 	struct ath5k_hw_all_rx_desc *rd = &ds->ud.ds_rx;
+ 
+-	printk(KERN_DEBUG "R (%p %llx) %08x %08x %08x %08x %08x %08x %c\n",
++	printk(KERN_DEBUG "R %p (%p %llx) %08x %08x %08x %08x %08x %08x %c\n",
++                bf, 
+ 		ds, (unsigned long long)bf->daddr,
+ 		ds->ds_link, ds->ds_data,
+ 		rd->rx_ctl.rx_control_0, rd->rx_ctl.rx_control_1,
+@@ -518,23 +519,18 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
+ {
+ 	struct ath5k_desc *ds;
+ 	struct ath5k_buf *bf;
+-	struct ath5k_rx_status rs = {};
++	struct ath5k_rx_status rs;
+ 	int status;
+ 
+-	if (likely(!(sc->debug.level & ATH5K_DEBUG_RESET)))
+-		return;
+-
+ 	printk(KERN_DEBUG "rx queue %x, link %p\n",
+ 		ath5k_hw_get_rxdp(ah), sc->rxlink);
+ 
+-	spin_lock_bh(&sc->rxbuflock);
+ 	list_for_each_entry(bf, &sc->rxbuf, list) {
+ 		ds = bf->desc;
++                memset(&rs, 0, sizeof(struct ath5k_rx_status));
+ 		status = ah->ah_proc_rx_desc(ah, ds, &rs);
+-		if (!status)
+-			ath5k_debug_printrxbuf(bf, status == 0, &rs);
++		ath5k_debug_printrxbuf(bf, status == 0, &rs);
+ 	}
+-	spin_unlock_bh(&sc->rxbuflock);
+ }
+ 
+ void
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
