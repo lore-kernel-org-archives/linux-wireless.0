@@ -1,543 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33772 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630AbZCJCHs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2009 22:07:48 -0400
+Received: from mail.atheros.com ([12.36.123.2]:11406 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753487AbZCTWkA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2009 18:40:00 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 15:39:59 -0700
+Date: Fri, 20 Mar 2009 14:39:20 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/3] cfg80211: move enum reg_set_by to nl80211.h
-Date: Mon,  9 Mar 2009 22:07:41 -0400
-Message-Id: <1236650862-17702-3-git-send-email-lrodriguez@atheros.com> (sfid-20090310_032926_966365_E5E61821)
-In-Reply-To: <1236650862-17702-1-git-send-email-lrodriguez@atheros.com>
-References: <1236650862-17702-1-git-send-email-lrodriguez@atheros.com>
+To: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Max Ott <Max.Ott@nicta.com.au>,
+	Subrata Modak <subrata@linux.vnet.ibm.com>,
+	Qasim Javed <qasimj@gmail.com>,
+	Till Kamppeter <till.kamppeter@gmail.com>
+Subject: Google Summer of Code 2009 -- Linux wireless testing project
+Message-ID: <20090320213920.GC8120@tesla> (sfid-20090320_234016_471479_E5EA1A32)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We do this so we can later inform userspace who set the
-regulatory domain and provide details of the request.
+This is a list of information to help those students looking into the
+Linux wireless GSoC 2009 "Automation of testing using mac80211_hwsim and Orbit"
+project [0], part of the Linux Foundation set of GSoC projects:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath9k/main.c |    2 +-
- drivers/net/wireless/ath9k/regd.c |   31 ++++++++------
- drivers/net/wireless/ath9k/regd.h |    3 +-
- include/linux/nl80211.h           |   19 +++++++++
- include/net/cfg80211.h            |   24 +---------
- net/wireless/core.c               |    2 +-
- net/wireless/core.h               |    3 +-
- net/wireless/reg.c                |   82 ++++++++++++++++++++-----------------
- 8 files changed, 90 insertions(+), 76 deletions(-)
+https://www.linuxfoundation.org/en/Google_Summer_of_Code_2009
 
-diff --git a/drivers/net/wireless/ath9k/main.c b/drivers/net/wireless/ath9k/main.c
-index aefebe7..7844f18 100644
---- a/drivers/net/wireless/ath9k/main.c
-+++ b/drivers/net/wireless/ath9k/main.c
-@@ -1671,7 +1671,7 @@ int ath_attach(u16 devid, struct ath_softc *sc)
- 	}
- 	wiphy_apply_custom_regulatory(hw->wiphy, regd);
- 	ath9k_reg_apply_radar_flags(hw->wiphy);
--	ath9k_reg_apply_world_flags(hw->wiphy, REGDOM_SET_BY_DRIVER);
-+	ath9k_reg_apply_world_flags(hw->wiphy, NL80211_REGDOM_SET_BY_DRIVER);
- 
- 	INIT_WORK(&sc->chan_work, ath9k_wiphy_chan_work);
- 	INIT_DELAYED_WORK(&sc->wiphy_work, ath9k_wiphy_work);
-diff --git a/drivers/net/wireless/ath9k/regd.c b/drivers/net/wireless/ath9k/regd.c
-index ff0afc0..b8f9b6d 100644
---- a/drivers/net/wireless/ath9k/regd.c
-+++ b/drivers/net/wireless/ath9k/regd.c
-@@ -168,8 +168,9 @@ static bool ath9k_is_radar_freq(u16 center_freq)
-  *   received a beacon on a channel we can enable active scan and
-  *   adhoc (or beaconing).
-  */
--static void ath9k_reg_apply_beaconing_flags(struct wiphy *wiphy,
--					     enum reg_set_by setby)
-+static void ath9k_reg_apply_beaconing_flags(
-+	struct wiphy *wiphy,
-+	enum nl80211_reg_initiator initiator)
- {
- 	enum ieee80211_band band;
- 	struct ieee80211_supported_band *sband;
-@@ -194,7 +195,7 @@ static void ath9k_reg_apply_beaconing_flags(struct wiphy *wiphy,
- 			    (ch->flags & IEEE80211_CHAN_RADAR))
- 				continue;
- 
--			if (setby == REGDOM_SET_BY_COUNTRY_IE) {
-+			if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) {
- 				r = freq_reg_info(wiphy, ch->center_freq,
- 					&bandwidth, &reg_rule);
- 				if (r)
-@@ -226,8 +227,9 @@ static void ath9k_reg_apply_beaconing_flags(struct wiphy *wiphy,
- }
- 
- /* Allows active scan scan on Ch 12 and 13 */
--static void ath9k_reg_apply_active_scan_flags(struct wiphy *wiphy,
--					      enum reg_set_by setby)
-+static void ath9k_reg_apply_active_scan_flags(
-+	struct wiphy *wiphy,
-+	enum nl80211_reg_initiator initiator)
- {
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *ch;
-@@ -241,7 +243,7 @@ static void ath9k_reg_apply_active_scan_flags(struct wiphy *wiphy,
- 	 * If no country IE has been received always enable active scan
- 	 * on these channels. This is only done for specific regulatory SKUs
- 	 */
--	if (setby != REGDOM_SET_BY_COUNTRY_IE) {
-+	if (initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
- 		ch = &sband->channels[11]; /* CH 12 */
- 		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
- 			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
-@@ -308,7 +310,8 @@ void ath9k_reg_apply_radar_flags(struct wiphy *wiphy)
- 	}
- }
- 
--void ath9k_reg_apply_world_flags(struct wiphy *wiphy, enum reg_set_by setby)
-+void ath9k_reg_apply_world_flags(struct wiphy *wiphy,
-+				 enum nl80211_reg_initiator initiator)
- {
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct ath_wiphy *aphy = hw->priv;
-@@ -320,11 +323,11 @@ void ath9k_reg_apply_world_flags(struct wiphy *wiphy, enum reg_set_by setby)
- 	case 0x63:
- 	case 0x66:
- 	case 0x67:
--		ath9k_reg_apply_beaconing_flags(wiphy, setby);
-+		ath9k_reg_apply_beaconing_flags(wiphy, initiator);
- 		break;
- 	case 0x68:
--		ath9k_reg_apply_beaconing_flags(wiphy, setby);
--		ath9k_reg_apply_active_scan_flags(wiphy, setby);
-+		ath9k_reg_apply_beaconing_flags(wiphy, initiator);
-+		ath9k_reg_apply_active_scan_flags(wiphy, initiator);
- 		break;
- 	}
- 	return;
-@@ -340,11 +343,11 @@ int ath9k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
- 	ath9k_reg_apply_radar_flags(wiphy);
- 
- 	switch (request->initiator) {
--	case REGDOM_SET_BY_DRIVER:
--	case REGDOM_SET_BY_CORE:
--	case REGDOM_SET_BY_USER:
-+	case NL80211_REGDOM_SET_BY_DRIVER:
-+	case NL80211_REGDOM_SET_BY_CORE:
-+	case NL80211_REGDOM_SET_BY_USER:
- 		break;
--	case REGDOM_SET_BY_COUNTRY_IE:
-+	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 		if (ath9k_is_world_regd(sc->sc_ah))
- 			ath9k_reg_apply_world_flags(wiphy, request->initiator);
- 		break;
-diff --git a/drivers/net/wireless/ath9k/regd.h b/drivers/net/wireless/ath9k/regd.h
-index d48160d..8f885f3 100644
---- a/drivers/net/wireless/ath9k/regd.h
-+++ b/drivers/net/wireless/ath9k/regd.h
-@@ -236,7 +236,8 @@ enum CountryCode {
- bool ath9k_is_world_regd(struct ath_hw *ah);
- const struct ieee80211_regdomain *ath9k_world_regdomain(struct ath_hw *ah);
- const struct ieee80211_regdomain *ath9k_default_world_regdomain(void);
--void ath9k_reg_apply_world_flags(struct wiphy *wiphy, enum reg_set_by setby);
-+void ath9k_reg_apply_world_flags(struct wiphy *wiphy,
-+				 enum nl80211_reg_initiator initiator);
- void ath9k_reg_apply_radar_flags(struct wiphy *wiphy);
- int ath9k_regd_init(struct ath_hw *ah);
- bool ath9k_regd_is_eeprom_valid(struct ath_hw *ah);
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 55565a4..98343c9 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -676,6 +676,25 @@ enum nl80211_bitrate_attr {
- };
- 
- /**
-+ * enum nl80211_initiator - Indicates the initiator of a reg domain request
-+ * @NL80211_REGDOM_SET_BY_CORE: Core queried CRDA for a dynamic world
-+ * 	regulatory domain.
-+ * @NL80211_REGDOM_SET_BY_USER: User asked the wireless core to set the
-+ * 	regulatory domain.
-+ * @NL80211_REGDOM_SET_BY_DRIVER: a wireless drivers has hinted to the
-+ * 	wireless core it thinks its knows the regulatory domain we should be in.
-+ * @NL80211_REGDOM_SET_BY_COUNTRY_IE: the wireless core has received an
-+ * 	802.11 country information element with regulatory information it
-+ * 	thinks we should consider.
-+ */
-+enum nl80211_reg_initiator {
-+	NL80211_REGDOM_SET_BY_CORE,
-+	NL80211_REGDOM_SET_BY_USER,
-+	NL80211_REGDOM_SET_BY_DRIVER,
-+	NL80211_REGDOM_SET_BY_COUNTRY_IE,
-+};
-+
-+/**
-  * enum nl80211_reg_rule_attr - regulatory rule attributes
-  * @NL80211_ATTR_REG_RULE_FLAGS: a set of flags which specify additional
-  * 	considerations for a given frequency range. These are the
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f195ea4..50f3fd9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -349,27 +349,9 @@ struct bss_parameters {
- };
- 
- /**
-- * enum reg_set_by - Indicates who is trying to set the regulatory domain
-- * @REGDOM_SET_BY_CORE: Core queried CRDA for a dynamic world regulatory domain.
-- * @REGDOM_SET_BY_USER: User asked the wireless core to set the
-- * 	regulatory domain.
-- * @REGDOM_SET_BY_DRIVER: a wireless drivers has hinted to the wireless core
-- *	it thinks its knows the regulatory domain we should be in.
-- * @REGDOM_SET_BY_COUNTRY_IE: the wireless core has received an 802.11 country
-- *	information element with regulatory information it thinks we
-- *	should consider.
-- */
--enum reg_set_by {
--	REGDOM_SET_BY_CORE,
--	REGDOM_SET_BY_USER,
--	REGDOM_SET_BY_DRIVER,
--	REGDOM_SET_BY_COUNTRY_IE,
--};
--
--/**
-  * enum environment_cap - Environment parsed from country IE
-  * @ENVIRON_ANY: indicates country IE applies to both indoor and
-- * 	outdoor operation.
-+ *	outdoor operation.
-  * @ENVIRON_INDOOR: indicates country IE applies only to indoor operation
-  * @ENVIRON_OUTDOOR: indicates country IE applies only to outdoor operation
-  */
-@@ -388,7 +370,7 @@ enum environment_cap {
-  * 	and potentially inform users of which devices specifically
-  * 	cased the conflicts.
-  * @initiator: indicates who sent this request, could be any of
-- * 	of those set in reg_set_by, %REGDOM_SET_BY_*
-+ * 	of those set in nl80211_reg_initiator (%NL80211_REGDOM_SET_BY_*)
-  * @alpha2: the ISO / IEC 3166 alpha2 country code of the requested
-  * 	regulatory domain. We have a few special codes:
-  * 	00 - World regulatory domain
-@@ -405,7 +387,7 @@ enum environment_cap {
-  */
- struct regulatory_request {
- 	int wiphy_idx;
--	enum reg_set_by initiator;
-+	enum nl80211_reg_initiator initiator;
- 	char alpha2[2];
- 	bool intersect;
- 	u32 country_ie_checksum;
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index dd7f222..c939f5e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -350,7 +350,7 @@ int wiphy_register(struct wiphy *wiphy)
- 	mutex_lock(&cfg80211_mutex);
- 
- 	/* set up regulatory info */
--	wiphy_update_regulatory(wiphy, REGDOM_SET_BY_CORE);
-+	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
- 
- 	res = device_add(&drv->wiphy.dev);
- 	if (res)
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index f6c53f5..6acd483 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -136,7 +136,8 @@ extern int cfg80211_dev_rename(struct cfg80211_registered_device *drv,
- 			       char *newname);
- 
- void ieee80211_set_bitrate_flags(struct wiphy *wiphy);
--void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby);
-+void wiphy_update_regulatory(struct wiphy *wiphy,
-+			     enum nl80211_reg_initiator setby);
- 
- void cfg80211_bss_expire(struct cfg80211_registered_device *dev);
- void cfg80211_bss_age(struct cfg80211_registered_device *dev,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 47ff447..68fde6d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -857,8 +857,8 @@ static int freq_reg_info_regd(struct wiphy *wiphy,
- 	 * Follow the driver's regulatory domain, if present, unless a country
- 	 * IE has been processed or a user wants to help complaince further
- 	 */
--	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
--	    last_request->initiator != REGDOM_SET_BY_USER &&
-+	if (last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	    last_request->initiator != NL80211_REGDOM_SET_BY_USER &&
- 	    wiphy->regd)
- 		regd = wiphy->regd;
- 
-@@ -943,7 +943,8 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 		 * http://tinyurl.com/11d-clarification
- 		 */
- 		if (r == -ERANGE &&
--		    last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
-+		    last_request->initiator ==
-+		    NL80211_REGDOM_SET_BY_COUNTRY_IE) {
- #ifdef CONFIG_CFG80211_REG_DEBUG
- 			printk(KERN_DEBUG "cfg80211: Leaving channel %d MHz "
- 				"intact on %s - no rule found in band on "
-@@ -956,7 +957,8 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 		 * for the band so we respect its band definitions
- 		 */
- #ifdef CONFIG_CFG80211_REG_DEBUG
--			if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
-+			if (last_request->initiator ==
-+			    NL80211_REGDOM_SET_BY_COUNTRY_IE)
- 				printk(KERN_DEBUG "cfg80211: Disabling "
- 					"channel %d MHz on %s due to "
- 					"Country IE\n",
-@@ -970,7 +972,7 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 
- 	power_rule = &reg_rule->power_rule;
- 
--	if (last_request->initiator == REGDOM_SET_BY_DRIVER &&
-+	if (last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 	    request_wiphy && request_wiphy == wiphy &&
- 	    request_wiphy->strict_regulatory) {
- 		/*
-@@ -1011,11 +1013,12 @@ static void handle_band(struct wiphy *wiphy, enum ieee80211_band band)
- 		handle_channel(wiphy, band, i);
- }
- 
--static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
-+static bool ignore_reg_update(struct wiphy *wiphy,
-+			      enum nl80211_reg_initiator initiator)
- {
- 	if (!last_request)
- 		return true;
--	if (setby == REGDOM_SET_BY_CORE &&
-+	if (initiator == NL80211_REGDOM_SET_BY_CORE &&
- 		  wiphy->custom_regulatory)
- 		return true;
- 	/*
-@@ -1028,12 +1031,12 @@ static bool ignore_reg_update(struct wiphy *wiphy, enum reg_set_by setby)
- 	return false;
- }
- 
--static void update_all_wiphy_regulatory(enum reg_set_by setby)
-+static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
- {
- 	struct cfg80211_registered_device *drv;
- 
- 	list_for_each_entry(drv, &cfg80211_drv_list, list)
--		wiphy_update_regulatory(&drv->wiphy, setby);
-+		wiphy_update_regulatory(&drv->wiphy, initiator);
- }
- 
- static void handle_reg_beacon(struct wiphy *wiphy,
-@@ -1124,7 +1127,7 @@ static bool reg_is_world_roaming(struct wiphy *wiphy)
- 	if (is_world_regdom(cfg80211_regdomain->alpha2) ||
- 	    (wiphy->regd && is_world_regdom(wiphy->regd->alpha2)))
- 		return true;
--	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE &&
-+	if (last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
- 	    wiphy->custom_regulatory)
- 		return true;
- 	return false;
-@@ -1138,11 +1141,12 @@ static void reg_process_beacons(struct wiphy *wiphy)
- 	wiphy_update_beacon_reg(wiphy);
- }
- 
--void wiphy_update_regulatory(struct wiphy *wiphy, enum reg_set_by setby)
-+void wiphy_update_regulatory(struct wiphy *wiphy,
-+			     enum nl80211_reg_initiator initiator)
- {
- 	enum ieee80211_band band;
- 
--	if (ignore_reg_update(wiphy, setby))
-+	if (ignore_reg_update(wiphy, initiator))
- 		goto out;
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (wiphy->bands[band])
-@@ -1255,15 +1259,16 @@ static int ignore_request(struct wiphy *wiphy,
- 		return 0;
- 
- 	switch (pending_request->initiator) {
--	case REGDOM_SET_BY_CORE:
-+	case NL80211_REGDOM_SET_BY_CORE:
- 		return -EINVAL;
--	case REGDOM_SET_BY_COUNTRY_IE:
-+	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 
- 		last_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
- 
- 		if (unlikely(!is_an_alpha2(pending_request->alpha2)))
- 			return -EINVAL;
--		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
-+		if (last_request->initiator ==
-+		    NL80211_REGDOM_SET_BY_COUNTRY_IE) {
- 			if (last_wiphy != wiphy) {
- 				/*
- 				 * Two cards with two APs claiming different
-@@ -1284,8 +1289,8 @@ static int ignore_request(struct wiphy *wiphy,
- 			return -EALREADY;
- 		}
- 		return REG_INTERSECT;
--	case REGDOM_SET_BY_DRIVER:
--		if (last_request->initiator == REGDOM_SET_BY_CORE) {
-+	case NL80211_REGDOM_SET_BY_DRIVER:
-+		if (last_request->initiator == NL80211_REGDOM_SET_BY_CORE) {
- 			if (is_old_static_regdom(cfg80211_regdomain))
- 				return 0;
- 			if (regdom_changes(pending_request->alpha2))
-@@ -1298,28 +1303,28 @@ static int ignore_request(struct wiphy *wiphy,
- 		 * back in or if you add a new device for which the previously
- 		 * loaded card also agrees on the regulatory domain.
- 		 */
--		if (last_request->initiator == REGDOM_SET_BY_DRIVER &&
-+		if (last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 		    !regdom_changes(pending_request->alpha2))
- 			return -EALREADY;
- 
- 		return REG_INTERSECT;
--	case REGDOM_SET_BY_USER:
--		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE)
-+	case NL80211_REGDOM_SET_BY_USER:
-+		if (last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
- 			return REG_INTERSECT;
- 		/*
- 		 * If the user knows better the user should set the regdom
- 		 * to their country before the IE is picked up
- 		 */
--		if (last_request->initiator == REGDOM_SET_BY_USER &&
-+		if (last_request->initiator == NL80211_REGDOM_SET_BY_USER &&
- 			  last_request->intersect)
- 			return -EOPNOTSUPP;
- 		/*
- 		 * Process user requests only after previous user/driver/core
- 		 * requests have been processed
- 		 */
--		if (last_request->initiator == REGDOM_SET_BY_CORE ||
--		    last_request->initiator == REGDOM_SET_BY_DRIVER ||
--		    last_request->initiator == REGDOM_SET_BY_USER) {
-+		if (last_request->initiator == NL80211_REGDOM_SET_BY_CORE ||
-+		    last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
-+		    last_request->initiator == NL80211_REGDOM_SET_BY_USER) {
- 			if (regdom_changes(last_request->alpha2))
- 				return -EAGAIN;
- 		}
-@@ -1359,7 +1364,8 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 	r = ignore_request(wiphy, pending_request);
- 
- 	if (r == REG_INTERSECT) {
--		if (pending_request->initiator == REGDOM_SET_BY_DRIVER) {
-+		if (pending_request->initiator ==
-+		    NL80211_REGDOM_SET_BY_DRIVER) {
- 			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
- 			if (r) {
- 				kfree(pending_request);
-@@ -1374,7 +1380,8 @@ static int __regulatory_hint(struct wiphy *wiphy,
- 		 * wiphy
- 		 */
- 		if (r == -EALREADY &&
--		    pending_request->initiator == REGDOM_SET_BY_DRIVER) {
-+		    pending_request->initiator ==
-+		    NL80211_REGDOM_SET_BY_DRIVER) {
- 			r = reg_copy_regd(&wiphy->regd, cfg80211_regdomain);
- 			if (r) {
- 				kfree(pending_request);
-@@ -1425,7 +1432,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	if (wiphy_idx_valid(reg_request->wiphy_idx))
- 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
- 
--	if (reg_request->initiator == REGDOM_SET_BY_DRIVER &&
-+	if (reg_request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 	    !wiphy) {
- 		kfree(reg_request);
- 		goto out;
-@@ -1439,7 +1446,7 @@ out:
- 	mutex_unlock(&cfg80211_mutex);
- }
- 
--/* Processes regulatory hints, this is all the REGDOM_SET_BY_* */
-+/* Processes regulatory hints, this is all the NL80211_REGDOM_SET_BY_* */
- static void reg_process_pending_hints(void)
- 	{
- 	struct regulatory_request *reg_request;
-@@ -1523,7 +1530,7 @@ static int regulatory_hint_core(const char *alpha2)
- 
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
--	request->initiator = REGDOM_SET_BY_CORE;
-+	request->initiator = NL80211_REGDOM_SET_BY_CORE;
- 
- 	queue_regulatory_request(request);
- 
-@@ -1544,7 +1551,7 @@ int regulatory_hint_user(const char *alpha2)
- 	request->wiphy_idx = WIPHY_IDX_STALE;
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
--	request->initiator = REGDOM_SET_BY_USER,
-+	request->initiator = NL80211_REGDOM_SET_BY_USER,
- 
- 	queue_regulatory_request(request);
- 
-@@ -1570,7 +1577,7 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- 
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
--	request->initiator = REGDOM_SET_BY_DRIVER;
-+	request->initiator = NL80211_REGDOM_SET_BY_DRIVER;
- 
- 	queue_regulatory_request(request);
- 
-@@ -1719,7 +1726,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	request->wiphy_idx = get_wiphy_idx(wiphy);
- 	request->alpha2[0] = rd->alpha2[0];
- 	request->alpha2[1] = rd->alpha2[1];
--	request->initiator = REGDOM_SET_BY_COUNTRY_IE;
-+	request->initiator = NL80211_REGDOM_SET_BY_COUNTRY_IE;
- 	request->country_ie_checksum = checksum;
- 	request->country_ie_env = env;
- 
-@@ -1827,7 +1834,8 @@ static void print_regdomain(const struct ieee80211_regdomain *rd)
- 
- 	if (is_intersected_alpha2(rd->alpha2)) {
- 
--		if (last_request->initiator == REGDOM_SET_BY_COUNTRY_IE) {
-+		if (last_request->initiator ==
-+		    NL80211_REGDOM_SET_BY_COUNTRY_IE) {
- 			struct cfg80211_registered_device *drv;
- 			drv = cfg80211_drv_by_wiphy_idx(
- 				last_request->wiphy_idx);
-@@ -1919,7 +1927,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	 * rd is non static (it means CRDA was present and was used last)
- 	 * and the pending request came in from a country IE
- 	 */
--	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE) {
-+	if (last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
- 		/*
- 		 * If someone else asked us to change the rd lets only bother
- 		 * checking if the alpha2 changes if CRDA was already called
-@@ -1951,7 +1959,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 	if (!last_request->intersect) {
- 		int r;
- 
--		if (last_request->initiator != REGDOM_SET_BY_DRIVER) {
-+		if (last_request->initiator != NL80211_REGDOM_SET_BY_DRIVER) {
- 			reset_regdomains();
- 			cfg80211_regdomain = rd;
- 			return 0;
-@@ -1975,7 +1983,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 
- 	/* Intersection requires a bit more work */
- 
--	if (last_request->initiator != REGDOM_SET_BY_COUNTRY_IE) {
-+	if (last_request->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
- 
- 		intersected_rd = regdom_intersect(rd, cfg80211_regdomain);
- 		if (!intersected_rd)
-@@ -1986,7 +1994,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		 * However if a driver requested this specific regulatory
- 		 * domain we keep it for its private use
- 		 */
--		if (last_request->initiator == REGDOM_SET_BY_DRIVER)
-+		if (last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER)
- 			request_wiphy->regd = rd;
- 		else
- 			kfree(rd);
--- 
-1.6.0.6
+In anyone has ideas to further help this project please just feel free to
+chime in. I'm adding other potential mentors to the project, Maxx Ott
+which might be signing up as a mentor for Orbit-related stuff and
+Subrata Modak which seems to be familiar with the Linux testing project
+(LTP).
 
+I'll also recommend to subscribe to the wiki page for the test project
+so you can get e-mails on changes to the wiki page.
+
+Students can start by becoming familiar with iw [1] and using wpa_supplicant with
+the nl80211 driver. We eventually want to not depend on wireless extensions so
+the new cutting edge tests will all be based on the new nl80211 stuff which
+both iw and wpa_supplicant can use. iw is strictly nl80211 based. Of course
+we should still have things to test wireless-extensions but soon it may be
+possible to live completely without them for new cfg80211 based drivers.
+
+Then you can look at starting to quickly create an AP with the different
+encryption options, and use a STA to associate to that AP quickly and easily
+as well.
+
+I have some old scripts which did this which you may feel free to
+use/modify/disregard. There's one for AP [2] and one for STA [3].
+Jouni also has some stuff for this and you can check it out via his
+git gree:
+
+git://w1.fi/srv/git/hostap.git
+
+In there check out the hostap/mac80211_hwsim/tests/ directory.
+
+A starting point would be to extend this with simple scripts which let
+you test mac80211_hwsim to do certain individual taks one at a time. For
+example gettings association completed and transfering some amount of data
+using the different encryptions algorithms available would test the software
+encryption with mac80211. That would be a good first easy step to become
+familiar with what we want to accomplish with the project.
+
+The idea is to build a list of tests which we can automate and run to
+test against the wireless-testing tree completely in software. Once
+these tests are in place we then use them to also test against individual
+drivers using real hardware. Since its not expected that students will have
+all the wireless hardware available we can leverage the kindness of folks
+at Orbit [4] and use sandboxes [5] there during a reservation to test
+the different hardware present there. Fortunately the list of cards available
+in the Sandboxes [6] is pretty decent and can grow. Go read the Orbit
+developer's section [7]. This is the hardware present so far:
+
+  * Atheros AR5002X Mini PCI 802.11a/b/g
+    (AR5212 MAC Baseband Processor + AR5112 Dual-band Radio-on-a-Chip)
+  * Intel PRO/Wireless 2915ABG Network Connection Mini PCI 802.11a/b/g
+  * GNURadio - USB (we won't be testing this)
+  * zd1211 - USB 802.11g
+  * RTL8185 - PCI 802.11bg
+  * ISL3890 - Mini PCI 802.11bg (prism54)
+  * Marvell Libertas 8388 802.11 USB 
+
+We may also have Intel 5000 11n, and I think we have some 11n Atheros stuff too
+and if not I'll be sure to mail them out ASAP. Surely this will depend on
+coordination with the Orbit folks and we cannot simply expect everything to
+be there but its a starting point.
+
+Once we have a set of scripts we are happy with for mac80211_hwsim we
+can save an image for re-use at Orbit with these scripts and that image
+can be installed during a reserved time-slot for testing. Its advised
+the automation of testing to make use of Orbit's own automation
+infrastructure called OMF. These are used at Orbit for research purposes
+but just as they are used for research purposes it can also be used to
+automate tests. Some scripts may need to be ported to use OMF.
+
+To start becoming familiar with the Orbit testbed and using OMF you can
+read their tutorials [8]. I think OMF is completely open source, Maxx
+correct me if I'm wrong. If so then we can always end up contributing to
+it to enhance it should that be possible and needed.
+
+So the end goal is to have a nice list of tests which we can run on
+for mac80211, the driver infrastructure (through mac80211_hwsim) and
+also for each driver either through Orbit or manually so users can run
+them at home or so that the Linux Testing Project [9] can use. In the
+end it would be nice to have a page online which we can go to and see
+some results of tests for each driver and also for mac80211 internals.
+
+If anyone has other idease or documentation that may be usable for the
+students please chime in.
+
+  Luis
+
+[0] http://wireless.kernel.org/en/developers/GSoC/2009/Automation_of_testing
+[1] http://wireless.kernel.org/en/users/Documentation/iw
+[2] http://www.winlab.rutgers.edu/~mcgrof/qa/create-ap.sh.txt
+[3] http://www.winlab.rutgers.edu/~mcgrof/qa/create-client.sh.txt
+[4] http://www.orbit-lab.org/
+[5] http://www.orbit-lab.org/wiki/SandBoxes
+[6] http://www.orbit-lab.org/wiki/SandboxMap
+[7] http://www.orbit-lab.org/wiki/Documentation/Developers
+[8] http://www.orbit-lab.org/wiki/Tutorial
+[9] http://ltp.sourceforge.net/
