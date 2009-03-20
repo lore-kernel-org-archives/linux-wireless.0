@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:17238 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756266AbZC3TIL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 15:08:11 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so387183fgg.17
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 12:08:08 -0700 (PDT)
+Received: from kroah.org ([198.145.64.141]:56759 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751880AbZCTUgb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2009 16:36:31 -0400
+Date: Fri, 20 Mar 2009 13:13:26 -0700
+From: Greg KH <greg@kroah.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	otus-devel@lists.madwifi-project.org
+Subject: Re: [RFC][RFT][PATCH 0/5 v5] ar9170: ar9170 driver (aka mac80211's
+	otus)
+Message-ID: <20090320201326.GA30639@kroah.com> (sfid-20090320_213634_971538_999D3AA7)
+References: <200903170408.12626.chunkeey@web.de> <200903202036.09255.chunkeey@web.de>
 MIME-Version: 1.0
-In-Reply-To: <49D0BD2B.9090102@promwad.com>
-References: <49D0BD2B.9090102@promwad.com>
-Date: Mon, 30 Mar 2009 20:08:08 +0100
-Message-ID: <3ace41890903301208r5feda139w50a1eb7f6b717873@mail.gmail.com> (sfid-20090330_210815_673989_E0D12428)
-Subject: Re: rtl8187 diversity
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: ivan.kuten@promwad.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200903202036.09255.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 30, 2009 at 1:38 PM, Ivan Kuten <ivan.kuten@promwad.com> wr=
-ote:
-> Hello!
->
-> Anybody is working on adding antenna diversity feature to rtl8187 dri=
-ver?
+On Fri, Mar 20, 2009 at 08:36:08PM +0100, Christian Lamparter wrote:
+> Based on the number of mails I got, this driver should be ready for inclusion.
+> So, this is probably the last RFC and the official patches will follow on
+> sunday (only if no one finds a bug that needs to be fixed ASAP.)
 
-Which of rtl8187 comes with multiple antenna, etc which would benefit
-from this feature?
+Wonderful!
 
->
-> Regards,
-> Ivan
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
-ess" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When the driver goes into the "real" portion of drivers/net please let
+me know and I'll drop the otus driver from the drivers/staging/
+location.
+
+thanks,
+
+greg k-h
