@@ -1,29 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39757
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751367AbZB1XiE (ORCPT
+Received: from SMTP.ANDREW.CMU.EDU ([128.2.10.159]:43978 "EHLO
+	smtp.andrew.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbZCTRZY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Feb 2009 18:38:04 -0500
-Date: Sat, 28 Feb 2009 15:37:44 -0800 (PST)
-Message-Id: <20090228.153744.127205747.davem@davemloft.net> (sfid-20090301_003809_160277_A21E53B7)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-02-27
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090227194806.GH3687@tuxdriver.com>
-References: <20090227194806.GH3687@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 20 Mar 2009 13:25:24 -0400
+Received: from [128.2.158.14] (QUEENOFLIGHT.RES.CMU.EDU [128.2.158.14])
+	(user=jwatzman mech=GSSAPI (0 bits))
+	by smtp.andrew.cmu.edu (8.14.3/8.13.8) with ESMTP id n2KHChKe028691
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 13:12:43 -0400
+Message-ID: <49C3CE8B.6070702@andrew.cmu.edu> (sfid-20090320_182529_496964_B7BFE94A)
+Date: Fri, 20 Mar 2009 13:12:43 -0400
+From: Josh Watzman <jwatzman@andrew.cmu.edu>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] compat.diff update for master-2009-03-19
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 27 Feb 2009 14:48:06 -0500
+A trivial fix to allow compat-wireless to apply against current wireless-testing.
 
-> Here is one more fix inteded for 2.6.29.  It fixes a crash for the OLPC
-> guys...
-> 
-> Please let me know if there are problems!
+Signed-off-by: Josh Watzman <jwatzman@andrew.cmu.edu>
+---
+ compat/compat.diff |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Pulled, thanks a lot John.
+diff --git a/compat/compat.diff b/compat/compat.diff
+index e723fc8..44a9029 100644
+--- a/compat/compat.diff
++++ b/compat/compat.diff
+@@ -18,8 +18,8 @@
+  obj-$(CONFIG_LIB80211_CRYPT_CCMP) += lib80211_crypt_ccmp.o
+  obj-$(CONFIG_LIB80211_CRYPT_TKIP) += lib80211_crypt_tkip.o
+  
+--cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
+-+cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o compat.o
++-cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o mlme.o
+++cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o mlme.o compat.o
+  cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o
+  
+  ccflags-y += -D__CHECK_ENDIAN__
+-- 
+1.6.2.1
+
