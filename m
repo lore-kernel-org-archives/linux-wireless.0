@@ -1,137 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vilya.visn.co.uk ([193.254.210.161]:45442 "EHLO
-	vilya.visn.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756158AbZCARst (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:32781 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756220AbZCTP5t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2009 12:48:49 -0500
-Received: from localhost ([127.0.0.1] helo=www.phantomjinx.co.uk)
-	by vilya.visn.co.uk with esmtpa (Exim 4.69)
-	(envelope-from <p.g.richardson@phantomjinx.co.uk>)
-	id 1LdpmR-00058y-9S
-	for linux-wireless@vger.kernel.org; Sun, 01 Mar 2009 17:48:47 +0000
-Message-ID: <60836.82.152.175.172.1235929727.squirrel@www.phantomjinx.co.uk> (sfid-20090301_184853_854118_7AE391DC)
-In-Reply-To: <499F4763.70106@lwfinger.net>
-References: <35879.82.152.175.172.1234904444.squirrel@www.phantomjinx.co.uk>
-    <499B27A4.30708@lwfinger.net>
-    <42781.82.152.175.172.1234911183.squirrel@www.phantomjinx.co.uk>
-    <499B4526.1030705@lwfinger.net>
-    <44177.82.152.175.172.1235088928.squirrel@www.phantomjinx.co.uk>
-    <499E1826.8040903@lwfinger.net>
-    <56183.82.152.175.172.1235173364.squirrel@www.phantomjinx.co.uk>
-    <499F4763.70106@lwfinger.net>
-Date: Sun, 1 Mar 2009 17:48:47 -0000 (UTC)
-Subject: rtl8187 performance diagnostics (was: rtl8187 cannot fix rate)
-From: "P.G. Richardson" <p.g.richardson@phantomjinx.co.uk>
-To: linux-wireless@vger.kernel.org
+	Fri, 20 Mar 2009 11:57:49 -0400
+Date: Fri, 20 Mar 2009 17:57:36 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] nl80211: Check that function pointer != NULL before using
+	it
+Message-ID: <20090320155736.GA28965@jm.kir.nu> (sfid-20090320_165804_582508_4C1266B7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'm not an expert in reading these tables, but the success rates abov=
-e 11
-> Mb/s
-> are very low, which seems to indicate that 11 Mb/s is a reasonable ra=
-te
-> for your
-> device. There is, however, a possibility that the code is not reporti=
-ng
-> the
-> retry count correctly. I know from your initial post that 54M doesn't
-> work, but
-> can you get any throughput at 24, 36, or 48M? There is also the
-> possibility that
-> your hardware is broken for OFDM encoding. That scheme is used for 6,=
- 9,
-> and all
-> rates 18M and above.
->
-> Larry
+NL80211_CMD_GET_MESH_PARAMS and NL80211_CMD_SET_MESH_PARAMS handlers
+did not verify whether a function pointer is NULL (not supported by
+the driver) before trying to call the function. The former nl80211
+command is available for unprivileged users, too, so this can
+potentially allow normal users to kill networking (or worse..) if
+mac80211 is built without CONFIG_MAC80211_MESH=y.
 
-=46urther playing around with my rtl8187b card. I have installed window=
-s
-onto my laptop too for performance comparisons. Just how crude or accur=
-ate
-such comparisons are I dont know so if anyone has any experience then d=
-o
-shout.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-After installing windows, I did the following:
+---
+ net/wireless/nl80211.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-1) ping -n 10000 [server]
-Result: Ping replies were good from throughout the house. Only 1 packet
-lost out of about 600.
-
-2) Observation of wireless connection
-Result: From the little diagnostics there are on windows, it reckons it
-connected at 54g (completely false as windows might just say that anywa=
-y).
-Walking around the house, the signal bars only ever went down to 3 out =
-of
-5.
-
-3) iperf -c [server]
-Result: From 3 different locations in the house, the performance is
-reported at 5.5 - 6Mbits/sec.
+The bug was introduced by 93da9cc17c5ae8a751886fd4732db89ad5e9bdb9 and
+the fix should be applied to 2.6.29, too. The patch seems to apply
+with some fuzz into linux-2.6.git even though the locking rework in
+wireless-testing is not there. The end result looks correct, but I
+have only tested this with wireless-testing. If I checked correctly,
+this commit was not included in 2.6.28.
 
 
-Rebooted back into Mandriva 2009 using the compat-wireless snapshot fro=
-m
-the 24/2/2009.
+--- uml.orig/net/wireless/nl80211.c	2009-03-20 17:37:56.000000000 +0200
++++ uml/net/wireless/nl80211.c	2009-03-20 17:38:58.000000000 +0200
+@@ -2039,6 +2039,11 @@ static int nl80211_get_mesh_params(struc
+ 	if (err)
+ 		goto out_rtnl;
+ 
++	if (!drv->ops->get_mesh_params) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
+ 	/* Get the mesh params */
+ 	err = drv->ops->get_mesh_params(&drv->wiphy, dev, &cur_params);
+ 	if (err)
+@@ -2151,6 +2156,11 @@ static int nl80211_set_mesh_params(struc
+ 	if (err)
+ 		goto out_rtnl;
+ 
++	if (!drv->ops->set_mesh_params) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
+ 	/* This makes sure that there aren't more than 32 mesh config
+ 	 * parameters (otherwise our bitfield scheme would not work.) */
+ 	BUILD_BUG_ON(NL80211_MESHCONF_ATTR_MAX > 32);
+@@ -2193,6 +2203,7 @@ static int nl80211_set_mesh_params(struc
+ 	/* Apply changes */
+ 	err = drv->ops->set_mesh_params(&drv->wiphy, dev, &cfg, mask);
+ 
++ out:
+ 	/* cleanup */
+ 	cfg80211_put_dev(drv);
+ 	dev_put(dev);
 
-1) ping [server]
-Result: Ping is brittle. Movements around the house can ensure a packet=
- is
-lost with minimal effort. Locations away from the router but within ran=
-ge,
-that could be pinged from under Windows, resulted in lost packets and e=
-ven
-"Destination unreachables". Slight turnings of the laptop either left o=
-r
-right when placed on a table impact ping connectivity.
-
-2) Observation of wireless connection
-Result: running iwconfig and looking at the signal strength indicates a
-range of 28-100. The locations where 28 occurs rarely get a decent ping
-test.
-
-3) iperf -c [server]
-Result: From 3 different locations in the house, the performance is
-reported at 3 - 4Mbits/sec.
-
-So my rather crude conclusions at the moment is the rtl8187 under mandr=
-iva
-performs at a slower rate than under windows. More interestingly, it se=
-ems
-that its receiver is not performing as well either, meaning the signal
-coverage area for my laptop is much smaller.
-
-Is there anything I can do to help improve this situation? These result=
-s
-seems to rule out hardware in favour of being driver related. Are there
-other tests I could perform to determine where the fragility lies?
-
-Any thoughts, let me know.
-
-Regards
-
-PGR
-
---=20
-Laws are partly formed for the sake of good men, in order to instruct t=
-hem
-how they may live on friendly terms with one another, and partly for th=
-e
-sake of those who refuse to be instructed, whose spirit cannot be subdu=
-ed,
-or softened, or hindered from plunging into evil. [The Laws, Plato]
-
-You fiend! Never have I encountered such corrupt and foul-minded
-perversity=85 Have you ever considered a career in the church?
-Bishop of Bath and Wells (Blackadder II)
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jouni Malinen                                            PGP id EFC895FA
