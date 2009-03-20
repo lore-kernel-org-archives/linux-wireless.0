@@ -1,45 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:58264 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756150AbZCCP2y (ORCPT
+Received: from mail3.webfaction.com ([70.85.44.146]:44734 "EHLO
+	mail3.webfaction.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754718AbZCTNKq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 10:28:54 -0500
-Message-ID: <49AD4C74.1060704@s5r6.in-berlin.de> (sfid-20090303_162857_491904_0A0D237E)
-Date: Tue, 03 Mar 2009 16:27:48 +0100
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-MIME-Version: 1.0
+	Fri, 20 Mar 2009 09:10:46 -0400
+Date: Fri, 20 Mar 2009 09:10:15 -0400
+From: Forest Bond <forest@alittletooquiet.net>
 To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Greg KH <greg@kroah.com>, Jeff Garzik <jeff@garzik.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Elaboration on "Equivalent fix must already exist in Linus' tree"
-References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>	 <49ACC6B0.409@garzik.org>	 <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>	 <20090303072637.GB4440@kroah.com> <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>
-In-Reply-To: <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Subject: Re: VT6656 driver source now GPL
+Message-ID: <20090320131014.GG25237@storm.local.network> (sfid-20090320_141051_059427_E5E8C1EA)
+References: <20090319164256.GA25237@storm.local.network> <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9Iq5ULCa7nGtWwZS"
+In-Reply-To: <43e72e890903190945m4d8920f5y69f5847b688b0aa1@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Mon, Mar 2, 2009 at 11:26 PM, Greg KH <greg@kroah.com> wrote:
->> Who are these "people" that you are trying to convince?
-> 
-> OK small silly example is convincing distributions it may be a good
-> idea to carry linux-next kernel packages as options to users to
-> hopefully down the road reduce the delta between what they carry and
-> what is actually upstream.
 
-Distros would do their users a bigger favour if they didn't just dump a
-random new driver into their kernel package, but if they instead (or in
-addition) support the process to get new drivers into the mainline.
+--9Iq5ULCa7nGtWwZS
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-It's a favour to their users because maintenance in mainline generally
-means better quality.  (Less drivers which break suspend/resume etc. pp.).
+Hi Luis,
 
-It's also a favour to themselves because the maintenance of their kernel
-as a whole will cost less if it is a stabilized derivative of the
-mainline instead of an unstable (and merely potential) predecessor of
-the mainline.
--- 
-Stefan Richter
--=====-==--= --== ---==
-http://arcgraph.de/sr/
+On Thu, Mar 19, 2009 at 09:45:19AM -0700, Luis R. Rodriguez wrote:
+> On Thu, Mar 19, 2009 at 9:42 AM, Forest Bond <forest@alittletooquiet.net>=
+ wrote:
+> > Hi,
+> >
+> > VIA has released a new version of the VT6656 driver source, and it now =
+has a
+> > proper license!
+> >
+> > =A0http://www.viaarena.com/Driver/VT6656_Linux_src_v1.19_12_x86.zip
+> >
+> > As you may recall, the previous version lacked a license altogether, ma=
+king it
+> > unfit for distribution.
+> >
+> > I'd really like to see this driver integrated into the kernel. =A0Does =
+anyone care
+> > to comment regarding feasibility?
+>=20
+> Indeed good news, what is the latest kernel it compiles for? If it
+> compiles on Linus' tree it can be stashed into staging while it gets
+> properly ported.
+
+Just so I know who to pester*, will you be driving this?  Do you have inter=
+est
+in also pulling in the VT6655 driver?
+
+* I won't pester that much. ;)
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.pytagsfs.org
+
+--9Iq5ULCa7nGtWwZS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFJw5W2RO4fQQdv5AwRAlmHAKCq9s1CpfZe/uBWVnuaOXuV+upAmQCggV7w
+q4gqdrJfu0irjNBnGv8Y/wM=
+=qQCe
+-----END PGP SIGNATURE-----
+
+--9Iq5ULCa7nGtWwZS--
