@@ -1,76 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45511 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757127AbZCWOPn (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:50680 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753061AbZCTTYA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 10:15:43 -0400
-Date: Mon, 23 Mar 2009 10:13:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: Kalle Valo <kalle.valo@iki.fi>, Michael Buesch <mb@bu3sch.de>,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] p54: fix SoftLED compile dependencies
-Message-ID: <20090323141320.GC3285@tuxdriver.com> (sfid-20090323_151554_558618_71773C79)
-References: <20090319221024.5e2ad6e5.sfr@canb.auug.org.au> <200903210057.47067.chunkeey@web.de> <87eiwre61a.fsf@litku.valot.fi> <200903211322.01654.chunkeey@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200903211322.01654.chunkeey@web.de>
+	Fri, 20 Mar 2009 15:24:00 -0400
+Message-Id: <20090320192115.448175935@atheros.com> (sfid-20090320_202412_340028_DBDECEA4)
+Date: Fri, 20 Mar 2009 21:21:15 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/4] nl80211: Cleanup cfg80211/mac80211 attribute validation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 21, 2009 at 01:22:01PM +0100, Christian Lamparter wrote:
-> On Saturday 21 March 2009 07:36:33 Kalle Valo wrote:
-> > Christian Lamparter <chunkeey@web.de> writes:
-> > 
-> > > This patch fixes a compile problem when the MAC80211_LEDS
-> > > triggers are enabled but not LED class itself. 
-> > > (which is sort of pointless, but anyway...)
-> > 
-> > [...]
-> > 
-> > > @@ -17,31 +18,6 @@ config P54_USB
-> > >  	select CRC32
-> > >  	---help---
-> > >  	  This driver is for USB isl38xx based wireless cards.
-> > > -	  These are USB based adapters found in devices such as:
-> > > -
-> > > -	  3COM 3CRWE254G72
-> > > -	  SMC 2862W-G
-> > > -	  Accton 802.11g WN4501 USB
-> > > -	  Siemens Gigaset USB
-> > > -	  Netgear WG121
-> > > -	  Netgear WG111
-> > > -	  Medion 40900, Roper Europe
-> > > -	  Shuttle PN15, Airvast WM168g, IOGear GWU513
-> > > -	  Linksys WUSB54G
-> > > -	  Linksys WUSB54G Portable
-> > > -	  DLink DWL-G120 Spinnaker
-> > > -	  DLink DWL-G122
-> > > -	  Belkin F5D7050 ver 1000
-> > > -	  Cohiba Proto board
-> > > -	  SMC 2862W-G version 2
-> > > -	  U.S. Robotics U5 802.11g Adapter
-> > > -	  FUJITSU E-5400 USB D1700
-> > > -	  Sagem XG703A
-> > > -	  DLink DWL-G120 Cohiba
-> > > -	  Spinnaker Proto board
-> > > -	  Linksys WUSB54AG
-> > > -	  Inventel UR054G
-> > > -	  Spinnaker DUT
-> > 
-> > This change wasn't mentioned in the commit log. Did this get included
-> > by accident?
-> > 
-> heh true... should I add them back? after all this list hasn't changed in years
-> and we have a much nicer one on http://www.prism54.org/
-> ( http://wireless.kernel.org/en/users/Drivers/p54/devices )
+This patch set moves some of the attribute validation from mac80211 into
+cfg80211 so that it can be shared with non-mac80211 drivers, too. In
+addition, this removes an unused command and adds some extra validation
+for MLME attributes.
 
-Getting rid of them is fine, but it should probably be done in a different patch.
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jouni Malinen                                            PGP id EFC895FA
