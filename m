@@ -1,131 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35470 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754578AbZCCRZe (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58795 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750703AbZCTKlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 12:25:34 -0500
-Message-Id: <20090303172527.793025391@atheros.com> (sfid-20090303_182544_436438_581A56A3)
-References: <20090303172325.437810138@atheros.com>
-Date: Tue, 03 Mar 2009 19:23:37 +0200
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Subject: [PATCH 12/15] ath9k: Add workaround to recover from failed channel changes
+	Fri, 20 Mar 2009 06:41:42 -0400
+Subject: Re: [RFC PATCH v2 1/4] mac80211: decrease execution of the
+ associated timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <87vdq4lbtq.fsf@litku.valot.fi> (sfid-20090320_113755_292367_61DD61D9)
+References: <20090314171234.11126.21125.stgit@tikku>
+	 <20090314171431.11126.51242.stgit@tikku>
+	 <1237051084.5235.97.camel@johannes.local> <49BBFB78.6070708@nokia.com>
+	 <87zlfglfa2.fsf@litku.valot.fi> <1237542166.5100.137.camel@johannes.local>
+	 <87vdq4lbtq.fsf@litku.valot.fi> (sfid-20090320_113755_292367_61DD61D9)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oWTwSA2IB98CrbD7RPB2"
+Date: Fri, 20 Mar 2009 11:41:38 +0100
+Message-Id: <1237545698.5100.145.camel@johannes.local> (sfid-20090320_114145_748428_E654F12C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It looks like channel change may fail in some cases and end up leaving
-the hardware in state where it cannot transmit any frames. Add a
-workaround to recover from this state if we detect that wiphy
-selection is failing due to wiphys not leaving PAUSING state.
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+--=-oWTwSA2IB98CrbD7RPB2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- drivers/net/wireless/ath9k/ath9k.h   |    4 +++
- drivers/net/wireless/ath9k/main.c    |    4 +--
- drivers/net/wireless/ath9k/virtual.c |   37 +++++++++++++++++++++++++++++++++++
- 3 files changed, 43 insertions(+), 2 deletions(-)
+On Fri, 2009-03-20 at 12:37 +0200, Kalle Valo wrote:
 
---- wireless-testing.orig/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:31:50.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/ath9k.h	2009-03-03 18:32:06.000000000 +0200
-@@ -567,6 +567,8 @@ struct ath_softc {
- 	int chan_is_ht;
- 	struct ath_wiphy *next_wiphy;
- 	struct work_struct chan_work;
-+	int wiphy_select_failures;
-+	unsigned long wiphy_select_first_fail;
- 
- 	struct tasklet_struct intr_tq;
- 	struct tasklet_struct bcon_tasklet;
-@@ -665,6 +667,8 @@ void ath9k_update_ichannel(struct ath_so
- void ath_update_chainmask(struct ath_softc *sc, int is_ht);
- int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 		    struct ath9k_channel *hchan);
-+void ath_radio_enable(struct ath_softc *sc);
-+void ath_radio_disable(struct ath_softc *sc);
- 
- #ifdef CONFIG_PCI
- int ath_pci_init(void);
---- wireless-testing.orig/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:31:50.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/virtual.c	2009-03-03 18:32:06.000000000 +0200
-@@ -432,6 +432,18 @@ int ath9k_wiphy_unpause(struct ath_wiphy
- 	return ret;
- }
- 
-+static void __ath9k_wiphy_mark_all_paused(struct ath_softc *sc)
-+{
-+	int i;
-+	if (sc->pri_wiphy->state != ATH_WIPHY_INACTIVE)
-+		sc->pri_wiphy->state = ATH_WIPHY_PAUSED;
-+	for (i = 0; i < sc->num_sec_wiphy; i++) {
-+		if (sc->sec_wiphy[i] &&
-+		    sc->sec_wiphy[i]->state != ATH_WIPHY_INACTIVE)
-+			sc->sec_wiphy[i]->state = ATH_WIPHY_PAUSED;
-+	}
-+}
-+
- /* caller must hold wiphy_lock */
- static void __ath9k_wiphy_pause_all(struct ath_softc *sc)
- {
-@@ -452,9 +464,34 @@ int ath9k_wiphy_select(struct ath_wiphy 
- 
- 	spin_lock_bh(&sc->wiphy_lock);
- 	if (__ath9k_wiphy_pausing(sc)) {
-+		if (sc->wiphy_select_failures == 0)
-+			sc->wiphy_select_first_fail = jiffies;
-+		sc->wiphy_select_failures++;
-+		if (time_after(jiffies, sc->wiphy_select_first_fail + HZ / 2))
-+		{
-+			printk(KERN_DEBUG "ath9k: Previous wiphy select timed "
-+			       "out; disable/enable hw to recover\n");
-+			__ath9k_wiphy_mark_all_paused(sc);
-+			/*
-+			 * TODO: this workaround to fix hardware is unlikely to
-+			 * be specific to virtual wiphy changes. It can happen
-+			 * on normal channel change, too, and as such, this
-+			 * should really be made more generic. For example,
-+			 * tricker radio disable/enable on GTT interrupt burst
-+			 * (say, 10 GTT interrupts received without any TX
-+			 * frame being completed)
-+			 */
-+			spin_unlock_bh(&sc->wiphy_lock);
-+			ath_radio_disable(sc);
-+			ath_radio_enable(sc);
-+			queue_work(aphy->sc->hw->workqueue,
-+				   &aphy->sc->chan_work);
-+			return -EBUSY; /* previous select still in progress */
-+		}
- 		spin_unlock_bh(&sc->wiphy_lock);
- 		return -EBUSY; /* previous select still in progress */
- 	}
-+	sc->wiphy_select_failures = 0;
- 
- 	/* Store the new channel */
- 	sc->chan_idx = aphy->chan_idx;
---- wireless-testing.orig/drivers/net/wireless/ath9k/main.c	2009-03-03 18:32:00.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath9k/main.c	2009-03-03 18:32:06.000000000 +0200
-@@ -1088,7 +1088,7 @@ fail:
- /*	Rfkill	   */
- /*******************/
- 
--static void ath_radio_enable(struct ath_softc *sc)
-+void ath_radio_enable(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ieee80211_channel *channel = sc->hw->conf.channel;
-@@ -1129,7 +1129,7 @@ static void ath_radio_enable(struct ath_
- 	ath9k_ps_restore(sc);
- }
- 
--static void ath_radio_disable(struct ath_softc *sc)
-+void ath_radio_disable(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ieee80211_channel *channel = sc->hw->conf.channel;
+> The original (or current) implementation sends probe requests even
+> when beacons are received or there is unicast traffic going on. My
+> patches change this so that the probe request is only sent when there
+> is data idle period (ie. no unicast traffic).
 
--- 
+Ok.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> Like we discussed earlier, I think the most optimal solution would be
+> to send nullfunc frames during data idle periods just to check that the
+> connection is working bothways.
+>=20
+> What should AP do if it receives a nullfunc frame from a station which
+> is not associated? Send a deauth frame back to the station? It would
+> be nice to check the association state also during the data idle
+> period. Sometimes I have noticed that AP might deauthenticate the
+> station without station noticing it. It would be just perfect if
+> nullfunc frame would do the assocition also during data idle periods.
+
+Yes, I think nullfunc, being data, counts as class 3, and as such the AP
+will deauth the station.
+
+> Sorry, I did that only for the period when there is data transmission.
+> To get rid of unncessary wakeups altogether I need to do something
+> more advanced, like using two timers or something. I haven't thought
+> that yet.
+
+Ok, guess I got lost in all the timers.
+
+johannes
+
+--=-oWTwSA2IB98CrbD7RPB2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJw3LgAAoJEKVg1VMiehFYfQEP/jbZqK1ocmoOhzctZQxobnhx
+JVyxhwspGjWQquvy6aUs7jgpZcOXz/SqGi7dDEthfyj/ewyvdhlHC4MM/9VvRDw9
+WKq7YArN8dnuzFQ4MdJrZUSUqnQq6AgKNivqRKkFHsYhWoIYW0r4QHto3S3Lf1i4
+UAIUW7h3NqTQ8CTD12JaWxn1pBbw8GRe43Z5tmc8aPtmZgRn5cM5fjPzO08yPcOc
+hzPurJmzgWkYz7dH+UjLZsNjFCMBCdpCuuXlzGnS5jjFs1v+FYFMv6qConAL7NXP
+8RJS1LtxMP2dK1ME01sU0mhplaz7lT/T+l2YBpe25BfD/MTHd6BEYsdmn+xIysZX
+Nq1dBhP4ZnYcwWHt+cPv33tGkh09DQKrtuRGTrpavNPhTRXFQuse+RmShnTVzeat
+bc7ip/L7ZhICksjfinBkCCHKKSUIZPj6QS1fnr4otuhnhqEsfnczMjSTrZXyIWEq
+tDvKjo8+yibAqDuEhZLLgafGX70P20bnbPDOF3/YVZw5A+nEBL7oH09AHvuklQD3
++r2/u1bTLXeP9I3cw2fciza9o7bRLI8qQeRE7L//x9XYFd42+wOGgWKYSwqX7fwy
+BlyyLygkfxcnuhAJg6Z5u/BXiT7dNzScb11SQ0mfYUUFlwlaPpOxbir0mLnLdeGB
+gG2i7bnOPXN9vhQat48L
+=5f6m
+-----END PGP SIGNATURE-----
+
+--=-oWTwSA2IB98CrbD7RPB2--
+
