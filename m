@@ -1,87 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.233]:13130 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754080AbZCYC7g convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:54495 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750831AbZCTKtC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 22:59:36 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so2604010rvb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 19:59:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890903241930g7985f7c7i858a0e94fb8db667@mail.gmail.com>
-References: <200903241938.47155.chunkeey@web.de> <200903242133.28405.chunkeey@web.de>
-	<20090324205847.GB29268@tesla> <200903242324.33485.chunkeey@web.de>
-	<20090324223022.M51759@bobcopeland.com> <43e72e890903241613x6e6de1ecp909ee6f4156ba709@mail.gmail.com>
-	<43e72e890903241617i629a4c75of573bb7f77572ade@mail.gmail.com>
-	<43e72e890903241652o70aa8e2bjd40a5ae9a4ebc91a@mail.gmail.com>
-	<20090325010626.GA8528@hash.localnet> <43e72e890903241930g7985f7c7i858a0e94fb8db667@mail.gmail.com>
-Date: Tue, 24 Mar 2009 19:59:19 -0700
-Message-ID: <43e72e890903241959x51dc9278oc424bfa85cff9e0f@mail.gmail.com> (sfid-20090325_035938_948017_B9C07CA0)
-Subject: Re: [RFC] ath9k's regulatory domain code changes (for ar9170)
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Christian Lamparter <chunkeey@web.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 20 Mar 2009 06:49:02 -0400
+Subject: Re: [PATCH v4 3/6] mac80211: check if HT40+/- is allowed before
+ sending assoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1237444886-24530-1-git-send-email-lrodriguez@atheros.com>
+References: <1237444886-24530-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AZpcvHBoX8O4KlSgYzhO"
+Date: Fri, 20 Mar 2009 11:48:56 +0100
+Message-Id: <1237546136.5100.147.camel@johannes.local> (sfid-20090320_114905_466974_7C7C1B9C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 24, 2009 at 7:30 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Tue, Mar 24, 2009 at 6:06 PM, Bob Copeland <me@bobcopeland.com> wr=
-ote:
->> On Tue, Mar 24, 2009 at 04:52:09PM -0700, Luis R. Rodriguez wrote:
->>> Alright here's a quick concat of all these patches (also one small
->>> sparse fix on Christian's last patch). It also now throws ath5k, at=
-h9k
->>> and ar9170 into ath/. We can rename the drivers after, was lazy to =
-do
->>> that. Think its easier for review to separate that too.
->>>
->>> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v3.pat=
-ch.txt
->>>
->>> Bob, where was that switch break error?
->>
->> 1st patch:
->>
->>> + =C2=A0 =C2=A0 switch (band) {
->>> + =C2=A0 =C2=A0 case IEEE80211_BAND_2GHZ:
->>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulatory.=
-regpair->reg_2ghz_ctl;
->>> + =C2=A0 =C2=A0 case IEEE80211_BAND_5GHZ:
->>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D ah->regulatory.=
-regpair->reg_5ghz_ctl;
->>> + =C2=A0 =C2=A0 default:
->>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ctl =3D NO_CTL;
->>> + =C2=A0 =C2=A0 }
->>> + =C2=A0 =C2=A0 return ctl;
->>> +}
->>
->> I think I had it like the following and changed it -- actually with
->> the returns it's probably better...
->>
->> switch (band) {
->> case XXX:
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0return ah->...;
->> case YYY:
->> ...
->> }
->
-> Alright thanks, I've fixed that here, it also now does not introduce
-> any new checkpatch or sparse complaints.
->
-> http://bombadil.infradead.org/~mcgrof/patches/ath/ath-common-v4.patch=
-=2Etxt
->
-> My shiny new wl rebased on 29 kernel is compiling, will let you know
-> in the morning how it goes.
 
-Ah poo, ath5k_reg_notifier() got lost.
+--=-AZpcvHBoX8O4KlSgYzhO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, 2009-03-19 at 02:41 -0400, Luis R. Rodriguez wrote:
+> We weren't checking this at all.
+
+The question is whether we really want that. In other places, we trust
+the AP, why not here as well?
+
+johannes
+
+--=-AZpcvHBoX8O4KlSgYzhO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJw3SQAAoJEKVg1VMiehFY8GcP/1PDpIuk50mmlYCctbdhIFI1
+y0OTNSDnjo/pxPjJYxOyTu8R5ILWAUavYBN4xxbtCreqNTSdZinnKcjhZaJFmz0B
+hgXIKyBtV3frDb1sEklurvMbn56W3v5r0nEvkN7jLwc8bAOS73QncStaRXlkbdsn
+45d2ZRqkAjzXgXa+UFbqjem4maHJ/tE4tf/AI3hW0HB4UNV/C/Y/Fwnnz7juolw/
+waxdngh8BnPLZJJLSAt2jP8qAi3/vv89egwTuWmtReTKvOsznkdfw+RqscTHIgAB
+CUzPpV0Qf60YKl2aHhc8Ydtmc9u9PJPnfX9EUf7HLNDchaV6VDn1w3YkbmSRYuEq
+C8MRsT3UZYKgL54knDf3fRv5nF1MCaG0pB9S5sDBtg+ej5OtIa1CRboh0v2pkCfs
+6FyfDsGLzu2C5/1+enbtRQxNwf0LEcYbvE7hzYkgGZsAsJPGgUKOrfLAIeimSaCZ
+gujK2NE1G8FHn644x7rFviN02UgBZIohkQ+cL2rPuLMnzBONLy4A9n4RtAfwXFer
+Ummpa4CkCKDSBolOtvFMooaoQrPC45yDerkYUaFit6JeQWJi63hmktmuV0EdiuRg
++5H+sXmQYHwXZkvR0WD4p4W9J0koFqPE5/VcmN+OaAUnuewAwDjxGgXGwkKXd5kH
+lh8XUoGzWu4L4rlMDWus
+=yNYE
+-----END PGP SIGNATURE-----
+
+--=-AZpcvHBoX8O4KlSgYzhO--
+
