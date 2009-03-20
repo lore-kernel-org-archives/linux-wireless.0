@@ -1,57 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39496 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756899AbZCZRkL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 13:40:11 -0400
-Subject: Re: [PATCH] mac80211: include HT capabilities in probe request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1238088685.4331.72.camel@johannes.local> (sfid-20090326_183202_056572_CFB0861F)
-References: <1238088685.4331.72.camel@johannes.local>
-	 (sfid-20090326_183202_056572_CFB0861F)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HjxKoeT3hbQEF6D4WYUM"
-Date: Thu, 26 Mar 2009 18:39:37 +0100
-Message-Id: <1238089177.4331.76.camel@johannes.local> (sfid-20090326_184016_128478_BCC90755)
+Received: from mga09.intel.com ([134.134.136.24]:20685 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752910AbZCTUrw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2009 16:47:52 -0400
+Subject: Re: kernel BUG at drivers/net/wireless/iwlwifi/iwl3945-base.c:3127!
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Tomas Winkler <tomasw@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <c4d76b3b0903191822l5494f268h395acc4a14608239@mail.gmail.com>
+References: <760481.57662.qm@web57614.mail.re1.yahoo.com>
+	 <1236312734.19328.37.camel@rainbow> <1236317982.12430.9.camel@rc-desk>
+	 <1236649234.6685.9.camel@rainbow> <1236661466.15923.53.camel@rc-desk>
+	 <1236742805.6267.9.camel@rainbow>
+	 <c4d76b3b0903122031o7baea17ay5704df428ea2fced@mail.gmail.com>
+	 <c4d76b3b0903160510i5afc6cd6t856b63383a275fca@mail.gmail.com>
+	 <1237254243.13077.33.camel@rainbow> <1237427568.6943.13.camel@rainbow>
+	 <c4d76b3b0903191822l5494f268h395acc4a14608239@mail.gmail.com>
+Content-Type: multipart/mixed; boundary="=-Cw+ZmpUu3KQcECgrmlp4"
+Date: Fri, 20 Mar 2009 13:39:24 -0700
+Message-Id: <1237581564.21165.5.camel@abhi-desktop> (sfid-20090320_214755_793627_547B6895)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-HjxKoeT3hbQEF6D4WYUM
+--=-Cw+ZmpUu3KQcECgrmlp4
 Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
-On Thu, 2009-03-26 at 18:31 +0100, Johannes Berg wrote:
-> Include the HT capabilities in the probe request frame.
+Can you try this patch?
 
-this patch is broken.
+Thanks
+Abhijeet
 
-johannes
+On Thu, 2009-03-19 at 18:22 -0700, Jason Andryuk wrote:
 
---=-HjxKoeT3hbQEF6D4WYUM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> There is a bug related to the use of DMA.  Using wireless-testing
+> 2.6.29-rc7 from ~3/15, and booting with "iommu=off mem=2G" gives me a
+> working iwl3945.  I also confirmed
+> 78bb4a96d0d4ab2860df5f0fdfde58cd7a3ad642 "iwl3945: use iwl3945_tx_cmd
+> instead of iwl_tx_cmd" plus previously posted "rb_stts and BUG to
+> WARN" patch as working when iommu is disabled.
+> 
+> So swiotlb exposes iwl3945 dma breakage.
+> 
+> From 78bb4a96d0d4ab2860df5f0fdfde58cd7a3ad642 "iwl3945: use
+> iwl3945_tx_cmd instead of iwl_tx_cmd" the most obvious problem is the
+> change to pci_map_single from pci_alloc_consistent.
+> 
+> As previously noted, problems brought along by that include the
+> modification of data to be DMAed after the _map_single call.  The lack
+> of associated un-mapping of memory may also be a problem.
+> 
+> For testing, swiotlb use can be forced with "swiotlb=force" which
+> should reproduce the error.
+> 
+> Jason
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
+--=-Cw+ZmpUu3KQcECgrmlp4
+Content-Disposition: attachment; filename=0001-iwl3945-fix-alignment-for-x64.patch
+Content-Type: application/mbox; name=0001-iwl3945-fix-alignment-for-x64.patch
+Content-Transfer-Encoding: 7bit
 
-iQIcBAABAgAGBQJJy73XAAoJEKVg1VMiehFYKW8QAKQ+eSefehQd5AF1P3VxwbVa
-4LiDkEnpK2yYk80gnWszJmi1LN+vblkylZUzky0p2t9oqTzIt370p6DRbew4+T3V
-VxI0whPaCJzIAILh8K7JtoRyPuOZnanxSD8dcXCxr1DfoyqvmZwS6uHy16fCBumf
-+NZHOqjI8te37m178QU6ptEgGgDXeMljHy5TnNxqiy3B3KjPbjqK5hOHFTKzMk7p
-Fmb6zfuMBx8L+k4fBWa9dm38dv0iLZClgAMJF36XAqgcoXDzQUJ827vO0hjnRIsn
-SihZPEXZ00XKBpnr5Q5KxN6U2QL91HSmaSRBcfyt4Y556T6qoz/BWIFZZUOzDPjL
-dTff40wkPpm0HxvE8eDbj5tpnnvAMm13Jof2RDPgdUGYr9txGKPFUPPDMJi+b6/Y
-VwqraAmC3s75n8WWiWZHy05k2w8MBJETR+Cx1F5VX6kTqCSGFskwFZtDY9qITBQX
-qT5tJRyrMUVnLqoWsd+cti8G+DuRau3LFFzi/dRQg79LhKOW4hZ0AwrUi1XATTZs
-q/qTZWYeko7uLEAj2kkD2Qfrcs9eOSQiw1kMLe9vPHX/KvKSEOExEp3ax6yUJUdU
-5AOfe8jt/hVey2N9yeCHuA/mG8AhznVueGAlCnNYdL2O6kRuACRhmNCLTRgwJEQR
-agIzM6kBjdOsUer9QmDl
-=8hmz
------END PGP SIGNATURE-----
+>From 03290380a01698e5991d68f340920eb2bde0a807 Mon Sep 17 00:00:00 2001
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Date: Fri, 20 Mar 2009 13:37:28 -0700
+Subject: [PATCH] iwl3945: fix alignment for x64
 
---=-HjxKoeT3hbQEF6D4WYUM--
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   20 +++++++++++---------
+ 1 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 279d10c..eb991d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1580,7 +1580,7 @@ static int iwl3945_rx_queue_restock(struct iwl_priv *priv)
+ 		list_del(element);
+ 
+ 		/* Point to Rx buffer via next RBD in circular buffer */
+-		rxq->bd[rxq->write] = iwl3945_dma_addr2rbd_ptr(priv, rxb->real_dma_addr);
++		rxq->bd[rxq->write] = iwl3945_dma_addr2rbd_ptr(priv, rxb->aligned_dma_addr);
+ 		rxq->queue[rxq->write] = rxb;
+ 		rxq->write = (rxq->write + 1) & RX_QUEUE_MASK;
+ 		rxq->free_count--;
+@@ -1628,7 +1628,7 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv)
+ 
+ 		/* Alloc a new receive buffer */
+ 		rxb->skb =
+-		    alloc_skb(priv->hw_params.rx_buf_size,
++		    alloc_skb(priv->hw_params.rx_buf_size + 256,
+ 				__GFP_NOWARN | GFP_ATOMIC);
+ 		if (!rxb->skb) {
+ 			if (net_ratelimit())
+@@ -1645,16 +1645,16 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv)
+ 		 * headroom of the physical head should be enough for the
+ 		 * radiotap head that iwl3945 supported. See iwl3945_rt.
+ 		 */
+-		skb_reserve(rxb->skb, 4);
+-
+ 		priv->alloc_rxb_skb++;
+ 		list_del(element);
+ 
+ 		/* Get physical address of RB/SKB */
+ 		rxb->real_dma_addr = pci_map_single(priv->pci_dev,
+ 						rxb->skb->data,
+-						priv->hw_params.rx_buf_size,
++						priv->hw_params.rx_buf_size + 256,
+ 						PCI_DMA_FROMDEVICE);
++		rxb->aligned_dma_addr = ALIGN(rxb->real_dma_addr, 256);
++		skb_reserve(rxb->skb, rxb->aligned_dma_addr - rxb->real_dma_addr);
+ 		list_add_tail(&rxb->list, &rxq->rx_free);
+ 		rxq->free_count++;
+ 	}
+@@ -1802,9 +1802,11 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
+ 
+ 		rxq->queue[i] = NULL;
+ 
+-		pci_dma_sync_single_for_cpu(priv->pci_dev, rxb->real_dma_addr,
+-					    priv->hw_params.rx_buf_size,
+-					    PCI_DMA_FROMDEVICE);
++		dma_sync_single_range_for_cpu(
++				&priv->pci_dev->dev, rxb->real_dma_addr,
++				rxb->aligned_dma_addr - rxb->real_dma_addr,
++				priv->hw_params.rx_buf_size,
++				PCI_DMA_FROMDEVICE);
+ 		pkt = (struct iwl_rx_packet *)rxb->skb->data;
+ 
+ 		/* Reclaim a command buffer only if this packet is a response
+@@ -1853,7 +1855,7 @@ static void iwl3945_rx_handle(struct iwl_priv *priv)
+ 		}
+ 
+ 		pci_unmap_single(priv->pci_dev, rxb->real_dma_addr,
+-				priv->hw_params.rx_buf_size,
++				priv->hw_params.rx_buf_size + 256,
+ 				PCI_DMA_FROMDEVICE);
+ 		spin_lock_irqsave(&rxq->lock, flags);
+ 		list_add_tail(&rxb->list, &priv->rxq.rx_used);
+-- 
+1.5.4.3
+
+
+--=-Cw+ZmpUu3KQcECgrmlp4--
 
