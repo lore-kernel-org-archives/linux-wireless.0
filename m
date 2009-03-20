@@ -1,155 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53561 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:57854 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752915AbZCUQIq (ORCPT
+	with ESMTP id S1752571AbZCTJmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2009 12:08:46 -0400
-Subject: [PATCH] mac80211: remove mixed-cell and userspace MLME code
+	Fri, 20 Mar 2009 05:42:52 -0400
+Subject: Re: [RFC PATCH v2 1/4] mac80211: decrease execution of the
+ associated timer
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 21 Mar 2009 17:08:43 +0100
-Message-Id: <1237651723.5100.274.camel@johannes.local> (sfid-20090321_170853_633687_91700A9E)
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <87zlfglfa2.fsf@litku.valot.fi> (sfid-20090320_102318_775065_E8F12DE1)
+References: <20090314171234.11126.21125.stgit@tikku>
+	 <20090314171431.11126.51242.stgit@tikku>
+	 <1237051084.5235.97.camel@johannes.local> <49BBFB78.6070708@nokia.com>
+	 <87zlfglfa2.fsf@litku.valot.fi> (sfid-20090320_102318_775065_E8F12DE1)
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uIULExfBoPLQntE8cChU"
+Date: Fri, 20 Mar 2009 10:42:46 +0100
+Message-Id: <1237542166.5100.137.camel@johannes.local> (sfid-20090320_104257_948360_2401C72D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Neither can currently be set from userspace, so there's no
-regression potential, and neither will be supported from
-userspace since the new userspace APIs allow the SME, which
-is in userspace, to control all we need.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ieee80211_i.h |    9 ++++-----
- net/mac80211/iface.c       |    3 +--
- net/mac80211/mlme.c        |    3 +--
- net/mac80211/rx.c          |   13 ++++---------
- net/mac80211/wext.c        |   17 +----------------
- 5 files changed, 11 insertions(+), 34 deletions(-)
+--=-uIULExfBoPLQntE8cChU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-03-21 17:06:18.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-03-21 17:06:34.000000000 +0100
-@@ -247,8 +247,9 @@ struct mesh_preq_queue {
- #define IEEE80211_STA_ASSOCIATED	BIT(4)
- #define IEEE80211_STA_PROBEREQ_POLL	BIT(5)
- #define IEEE80211_STA_CREATE_IBSS	BIT(6)
--#define IEEE80211_STA_MIXED_CELL	BIT(7)
-+/* hole at 7, please re-use */
- #define IEEE80211_STA_WMM_ENABLED	BIT(8)
-+/* hole at 9, please re-use */
- #define IEEE80211_STA_AUTO_SSID_SEL	BIT(10)
- #define IEEE80211_STA_AUTO_BSSID_SEL	BIT(11)
- #define IEEE80211_STA_AUTO_CHANNEL_SEL	BIT(12)
-@@ -411,7 +412,6 @@ struct ieee80211_if_mesh {
-  *
-  * @IEEE80211_SDATA_ALLMULTI: interface wants all multicast packets
-  * @IEEE80211_SDATA_PROMISC: interface is promisc
-- * @IEEE80211_SDATA_USERSPACE_MLME: userspace MLME is active
-  * @IEEE80211_SDATA_OPERATING_GMODE: operating in G-only mode
-  * @IEEE80211_SDATA_DONT_BRIDGE_PACKETS: bridge packets between
-  *	associated stations and deliver multicast frames both
-@@ -420,9 +420,8 @@ struct ieee80211_if_mesh {
- enum ieee80211_sub_if_data_flags {
- 	IEEE80211_SDATA_ALLMULTI		= BIT(0),
- 	IEEE80211_SDATA_PROMISC			= BIT(1),
--	IEEE80211_SDATA_USERSPACE_MLME		= BIT(2),
--	IEEE80211_SDATA_OPERATING_GMODE		= BIT(3),
--	IEEE80211_SDATA_DONT_BRIDGE_PACKETS	= BIT(4),
-+	IEEE80211_SDATA_OPERATING_GMODE		= BIT(2),
-+	IEEE80211_SDATA_DONT_BRIDGE_PACKETS	= BIT(3),
- };
- 
- struct ieee80211_sub_if_data {
---- wireless-testing.orig/net/mac80211/iface.c	2009-03-21 17:06:11.000000000 +0100
-+++ wireless-testing/net/mac80211/iface.c	2009-03-21 17:06:34.000000000 +0100
-@@ -261,8 +261,7 @@ static int ieee80211_open(struct net_dev
- 		ieee80211_bss_info_change_notify(sdata, changed);
- 		ieee80211_enable_keys(sdata);
- 
--		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
--		    !(sdata->flags & IEEE80211_SDATA_USERSPACE_MLME))
-+		if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 			netif_carrier_off(dev);
- 		else
- 			netif_carrier_on(dev);
---- wireless-testing.orig/net/mac80211/mlme.c	2009-03-21 17:06:13.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2009-03-21 17:06:34.000000000 +0100
-@@ -849,8 +849,7 @@ static int ieee80211_privacy_mismatch(st
- 	int wep_privacy;
- 	int privacy_invoked;
- 
--	if (!ifmgd || (ifmgd->flags & (IEEE80211_STA_MIXED_CELL |
--				       IEEE80211_STA_EXT_SME)))
-+	if (!ifmgd || (ifmgd->flags & IEEE80211_STA_EXT_SME))
- 		return 0;
- 
- 	bss = ieee80211_rx_bss_get(local, ifmgd->bssid,
---- wireless-testing.orig/net/mac80211/rx.c	2009-03-21 17:06:11.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-03-21 17:06:34.000000000 +0100
-@@ -1877,18 +1877,13 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		return ieee80211_mesh_rx_mgmt(sdata, rx->skb, rx->status);
- 
--	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
--	    sdata->vif.type != NL80211_IFTYPE_ADHOC)
--		return RX_DROP_MONITOR;
-+	if (sdata->vif.type != NL80211_IFTYPE_ADHOC)
-+		return ieee80211_ibss_rx_mgmt(sdata, rx->skb, rx->status);
- 
--
--	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--		if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME)
--			return RX_DROP_MONITOR;
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		return ieee80211_sta_rx_mgmt(sdata, rx->skb, rx->status);
--	}
- 
--	return ieee80211_ibss_rx_mgmt(sdata, rx->skb, rx->status);
-+	return RX_DROP_MONITOR;
- }
- 
- static void ieee80211_rx_michael_mic_report(struct net_device *dev,
---- wireless-testing.orig/net/mac80211/wext.c	2009-03-21 17:06:11.000000000 +0100
-+++ wireless-testing/net/mac80211/wext.c	2009-03-21 17:06:34.000000000 +0100
-@@ -129,9 +129,6 @@ static int ieee80211_ioctl_siwgenie(stru
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME)
--		return -EOPNOTSUPP;
--
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 		int ret = ieee80211_sta_set_extra_ie(sdata, extra, data->length);
- 		if (ret)
-@@ -208,14 +205,6 @@ static int ieee80211_ioctl_siwessid(stru
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--		if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME) {
--			if (len > IEEE80211_MAX_SSID_LEN)
--				return -EINVAL;
--			memcpy(sdata->u.mgd.ssid, ssid, len);
--			sdata->u.mgd.ssid_len = len;
--			return 0;
--		}
--
- 		if (data->flags)
- 			sdata->u.mgd.flags &= ~IEEE80211_STA_AUTO_SSID_SEL;
- 		else
-@@ -274,11 +263,7 @@ static int ieee80211_ioctl_siwap(struct 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 		int ret;
--		if (sdata->flags & IEEE80211_SDATA_USERSPACE_MLME) {
--			memcpy(sdata->u.mgd.bssid, (u8 *) &ap_addr->sa_data,
--			       ETH_ALEN);
--			return 0;
--		}
-+
- 		if (is_zero_ether_addr((u8 *) &ap_addr->sa_data))
- 			sdata->u.mgd.flags |= IEEE80211_STA_AUTO_BSSID_SEL |
- 				IEEE80211_STA_AUTO_CHANNEL_SEL;
+On Fri, 2009-03-20 at 11:22 +0200, Kalle Valo wrote:
 
+> >>> +void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+> >>> +			     struct ieee80211_hdr *hdr)
+> >>> +{
+> >>> +	/* timer triggers only when there is no unicast traffic */
+> >>> +	if (!is_multicast_ether_addr(hdr->addr1))
+> >>> +		mod_timer(&sdata->u.mgd.timer,
+> >>> +			  jiffies + IEEE80211_MONITORING_INTERVAL);
+> >>> +}
+> >>
+> >> Do we really need the multicast check? The frame will be coming from t=
+he
+> >> AP in managed mode in both cases, so why regard the data path as idle
+> >> when we're receiving multicast traffic?
+> >
+> > It seems that I had a good vacation because I can't remember anymore
+> > why I added the check :D Too bad that even the comment I wrote was
+> > next to useless.
+> >
+> > I'll remove the multicast check because I don't see the point for it.
+> > And if in case I finally recall the reason I'll definitely add a
+> > better comment.
+>=20
+> Now I remember what this test was about. In ieee80211_associated()
+> there are two tests: probe request check after an data idle period
+> (currently 60 secs) and beacon loss check for drivers not supporting
+> filtering (2 secs).
+>=20
+> The former test has been originally (even before my beacon filter
+> patches) implemented so that the probe request is sent even though we
+> are receiving beacons. mod_timer() is called only for unicast traffic
+> so that the probe request test will trigger when we are still
+> receiving beacons.
+
+Why would we not want to change that? I don't see a reason to send a
+probe request when we're still receiving beacons. It was meant to be
+used when beacons got lost _during_ a data idle period to verify that
+the AP is still there, afaict.
+
+> I'll add a proper comment explaining all this.
+>=20
+> Also currently ieee80211_associated() is called every two seconds, we
+> need to fix this in future to avoid waking up cpu needlessly. I don't
+> want to make too intrusive changes right now.
+
+I thought you already did that too :)
+
+johannes
+
+--=-uIULExfBoPLQntE8cChU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJw2UTAAoJEKVg1VMiehFYVd0P/A0tobALU48SdpCu7VE22dYo
+Vw73+TWMi2YrAby3N1VMmHUKPjyxRvHNYfXxDp4FAFxBvx7IPsQ0VDd8Xx7WuVQm
+4OIX/6Qa2vaRrLYsblAmNMKlJCxNiDEruFEGsVx2PQbbOwdS07OAPXPaP9y/mbyO
+HqJpxm6q4Qy5y/JhKXpdHEm7tWOaqh0Imw8jXp4ArV6B4jMhkFfuEm7wDQZrlFwo
+q1v6AXEhr05qX6G0028kDP4naVV0f/D1d58MmFSdWnnc+yQev9x3Il+Pa2aMWlqX
+IVNUL9SlS95ydYqgfCRcVqPbJ3r13pVVap3sCApZjbBkT4tpMEWxNlCW83cr6yK2
+ccrYHABo7QfLn0RB80Zo/Qt2SpC5g6vbTRwPyyVq0kVQ8FJhopqSefAs4snka+ek
+mR7yiqhNbvFGUPvYMHbnY1ATCABAA8WiZ4qTo+D/vAxgdaJsVhNfZwyjjiHHev6P
+NIAHMuexOytNGVH6tnl0XT9M7q15RQw+GF+bloabtp6G1WZqaWRs+JJaKwtVZV1o
+p7SQTati8rNFZIvdd5aqmW3ovn6a2cxO3AcqsqTwhHqawLgkMkWszgHyb6tDtyG+
+gg4rsrC+PM1vFR3CMG2pOxK9yfO1bzMvOllCePB2bhABjIlnFEJHNzUmr0CjOMmr
+Q50mCtlsslKEQP5JH3Ai
+=5xNI
+-----END PGP SIGNATURE-----
+
+--=-uIULExfBoPLQntE8cChU--
 
