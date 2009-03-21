@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59603 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757558AbZCWQcg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 12:32:36 -0400
-Message-Id: <20090323163053.073748867@sipsolutions.net> (sfid-20090323_173238_689679_6195D70E)
-References: <20090323162834.154525349@sipsolutions.net>
-Date: Mon, 23 Mar 2009 17:28:40 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/8] mac80211: add skb length sanity checking
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:48707 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1759590AbZCUPWb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 11:22:31 -0400
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com, greg@kroah.com,
+	otus-devel@lists.madwifi-project.org,
+	linux-wireless@vger.kernel.org, chunkeey@web.de
+Content-Type: text/plain; charset=iso-8859-1
+Date: Sat, 21 Mar 2009 16:22:28 +0100
+From: "Alina Friedrichsen" <x-alina@gmx.net>
+In-Reply-To: <1237648159.5100.218.camel@johannes.local>
+Message-ID: <20090321152228.102650@gmx.net> (sfid-20090321_162247_162065_8CFE0292)
+MIME-Version: 1.0
+References: <200903170408.12626.chunkeey@web.de>	
+ <200903202036.09255.chunkeey@web.de> <20090320200736.261050@gmx.net>	
+ <200903202159.41613.chunkeey@web.de> <20090320230448.261020@gmx.net>	
+ <20090321145933.102650@gmx.net> (sfid-20090321_160004_602859_A9B03B14)
+ <1237648159.5100.218.camel@johannes.local>
+Subject: Re: [RFC][RFT][PATCH 0/5 v5] ar9170: ar9170 driver (aka mac80211's
+ otus)
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We just found a bug in zd1211rw where it would reject
-packets in the ->tx() method but leave them modified,
-which would cause retransmit attempts with completely
-bogus skbs, eventually leading to a panic due to not
-having enough headroom in those.
+Hello Johannes!
 
-This patch adds a sanity check to mac80211 to catch
-such driver mistakes; in this case we warn and drop
-the skb.
+> > your new code is not compatible with compat-wireless. The function
+> > usb_poison_anchored_urbs() is missing in the 2.6.27 kernel.
+>=20
+> That's something compat has to fix then -- we don't impose any backwa=
+rd
+> compatibility rules for the kernel code.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/tx.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ACK, I only want advert on this.
 
---- wireless-testing.orig/net/mac80211/tx.c	2009-03-23 14:03:46.000000000 +0100
-+++ wireless-testing/net/mac80211/tx.c	2009-03-23 14:03:47.000000000 +0100
-@@ -1089,7 +1089,7 @@ static int __ieee80211_tx(struct ieee802
- {
- 	struct sk_buff *skb = *skbp, *next;
- 	struct ieee80211_tx_info *info;
--	int ret;
-+	int ret, len;
- 	bool fragm = false;
- 
- 	local->mdev->trans_start = jiffies;
-@@ -1125,7 +1125,12 @@ static int __ieee80211_tx(struct ieee802
- 		}
- 
- 		next = skb->next;
-+		len = skb->len;
- 		ret = local->ops->tx(local_to_hw(local), skb);
-+		if (WARN_ON(ret != NETDEV_TX_OK && skb->len != len)) {
-+			dev_kfree_skb(skb);
-+			ret = NETDEV_TX_OK;
-+		}
- 		if (ret != NETDEV_TX_OK)
- 			return IEEE80211_TX_AGAIN;
- 		*skbp = skb = next;
+Regards
+Alina
 
--- 
-
+--=20
+Aufgepasst: Sind Ihre Daten beim Online-Banking auch optimal gesch=FCtz=
+t?
+Jetzt absichern: https://homebanking.gmx.net/?mc=3Dmail@footer.hb
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
