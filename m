@@ -1,51 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:34039 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286AbZCCSO1 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53530 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752483AbZCUQID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 13:14:27 -0500
-Message-ID: <49AD7361.308@s5r6.in-berlin.de> (sfid-20090303_191430_777197_8E3C3257)
-Date: Tue, 03 Mar 2009 19:13:53 +0100
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Greg KH <greg@kroah.com>, Jeff Garzik <jeff@garzik.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Theodore Tso <tytso@mit.edu>
-Subject: Re: Elaboration on "Equivalent fix must already exist in Linus' tree"
-References: <43e72e890903022143k83890afr6673753f52c5ff8@mail.gmail.com>	 <49ACC6B0.409@garzik.org>	 <43e72e890903022244j2b2f4276lf6e318f3dad3df@mail.gmail.com>	 <20090303072637.GB4440@kroah.com>	 <43e72e890903022337k5281a790j8641f93cce3f9c70@mail.gmail.com>	 <49AD4C74.1060704@s5r6.in-berlin.de> <43e72e890903030923v27c47f5anc184c0e8085bc5c1@mail.gmail.com>
-In-Reply-To: <43e72e890903030923v27c47f5anc184c0e8085bc5c1@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 21 Mar 2009 12:08:03 -0400
+Subject: [PATCH] cfg80211: accept no-op interface mode changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sat, 21 Mar 2009 17:07:59 +0100
+Message-Id: <1237651679.5100.272.camel@johannes.local> (sfid-20090321_170813_190951_412C7F28)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Tue, Mar 3, 2009 at 7:27 AM, Stefan Richter
-> <stefanr@s5r6.in-berlin.de> wrote:
->> Luis R. Rodriguez wrote:
->>> OK small silly example is convincing distributions it may be a good
->>> idea to carry linux-next kernel packages as options to users to
->>> hopefully down the road reduce the delta between what they carry and
->>> what is actually upstream.
->> Distros would do their users a bigger favour if [...]
-> 
-> I don't think I was very clear in what I meant about "carrying
-> linux-next kernel packages as an option". What I meant was carrying it
-> just as an option for those users who want to test bleeding edge
-> without compiling their own linux-next, _not_ to merge linux-next
-> things into their own default kernel release and shove it down users
-> throats.
+When somebody tries to set the interface mode to the existing
+mode, don't ask the driver but silently accept the setting.
 
-Sorry, I meant "bigger favour" relative to carrying an own delta of
-considerable size.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/nl80211.c     |   28 +++++++++++++++++++++-------
+ net/wireless/wext-compat.c |   11 +++++++++--
+ 2 files changed, 30 insertions(+), 9 deletions(-)
 
-Packaging linux-next would be fine if the workload isn't a problem for
-the packager.  As pointed out elsewhere, there are caveats with
-linux-next (e.g. a functionality which was in it yesterday could be gone
-today because of a merge issue), but that's the nature of bleeding edge
-of course.
--- 
-Stefan Richter
--=====-==--= --== ---==
-http://arcgraph.de/sr/
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-03-21 17:06:12.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.c	2009-03-21 17:06:19.000000000 +0100
+@@ -607,6 +607,7 @@ static int nl80211_set_interface(struct 
+ 	enum nl80211_iftype type;
+ 	struct net_device *dev;
+ 	u32 _flags, *flags = NULL;
++	bool change = false;
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
+@@ -620,11 +621,17 @@ static int nl80211_set_interface(struct 
+ 	type = dev->ieee80211_ptr->iftype;
+ 	dev_put(dev);
+ 
+-	err = -EINVAL;
+ 	if (info->attrs[NL80211_ATTR_IFTYPE]) {
+-		type = nla_get_u32(info->attrs[NL80211_ATTR_IFTYPE]);
+-		if (type > NL80211_IFTYPE_MAX)
++		enum nl80211_iftype ntype;
++
++		ntype = nla_get_u32(info->attrs[NL80211_ATTR_IFTYPE]);
++		if (type != ntype)
++			change = true;
++		type = ntype;
++		if (type > NL80211_IFTYPE_MAX) {
++			err = -EINVAL;
+ 			goto unlock;
++		}
+ 	}
+ 
+ 	if (!drv->ops->change_virtual_intf ||
+@@ -640,6 +647,7 @@ static int nl80211_set_interface(struct 
+ 		}
+ 		params.mesh_id = nla_data(info->attrs[NL80211_ATTR_MESH_ID]);
+ 		params.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
++		change = true;
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_MNTR_FLAGS]) {
+@@ -649,12 +657,18 @@ static int nl80211_set_interface(struct 
+ 		}
+ 		err = parse_monitor_flags(info->attrs[NL80211_ATTR_MNTR_FLAGS],
+ 					  &_flags);
+-		if (!err)
+-			flags = &_flags;
++		if (err)
++			goto unlock;
++
++		flags = &_flags;
++		change = true;
+ 	}
+ 
+-	err = drv->ops->change_virtual_intf(&drv->wiphy, ifindex,
+-					    type, flags, &params);
++	if (change)
++		err = drv->ops->change_virtual_intf(&drv->wiphy, ifindex,
++						    type, flags, &params);
++	else
++		err = 0;
+ 
+ 	dev = __dev_get_by_index(&init_net, ifindex);
+ 	WARN_ON(!dev || (!err && dev->ieee80211_ptr->iftype != type));
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-03-21 17:06:11.000000000 +0100
++++ wireless-testing/net/wireless/wext-compat.c	2009-03-21 17:06:19.000000000 +0100
+@@ -66,6 +66,7 @@ int cfg80211_wext_siwmode(struct net_dev
+ 	struct cfg80211_registered_device *rdev;
+ 	struct vif_params vifparams;
+ 	enum nl80211_iftype type;
++	int ret;
+ 
+ 	if (!wdev)
+ 		return -EOPNOTSUPP;
+@@ -96,10 +97,16 @@ int cfg80211_wext_siwmode(struct net_dev
+ 		return -EINVAL;
+ 	}
+ 
++	if (type == wdev->iftype)
++		return 0;
++
+ 	memset(&vifparams, 0, sizeof(vifparams));
+ 
+-	return rdev->ops->change_virtual_intf(wdev->wiphy, dev->ifindex, type,
+-					      NULL, &vifparams);
++	ret = rdev->ops->change_virtual_intf(wdev->wiphy, dev->ifindex, type,
++					     NULL, &vifparams);
++	WARN_ON(!ret && wdev->iftype != type);
++
++	return ret;
+ }
+ EXPORT_SYMBOL(cfg80211_wext_siwmode);
+ 
+
+
