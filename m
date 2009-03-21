@@ -1,112 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:51226 "EHLO mail.atheros.com"
+Received: from suva.vyatta.com ([76.74.103.44]:36738 "EHLO suva.vyatta.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754815AbZCTKBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 06:01:53 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2009 03:01:52 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 2/2] ath9k: Nuke struct ath_xmit_status
-Date: Fri, 20 Mar 2009 15:27:50 +0530
-Message-ID: <1237543070-25471-2-git-send-email-vasanth@atheros.com> (sfid-20090320_110154_775560_06473ABC)
-In-Reply-To: <1237543070-25471-1-git-send-email-vasanth@atheros.com>
-References: <1237543070-25471-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1761153AbZCUFsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:48:30 -0400
+Message-Id: <20090321053718.145743314@vyatta.com> (sfid-20090321_065214_332983_12D44F95)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:40 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>, jkosina@suse.cz,
+	dstreba@suse.cz
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 73/77] ipw2100: convert to net_device_ops
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath9k/ath9k.h |    4 ----
- drivers/net/wireless/ath9k/xmit.c  |   25 ++++++++-----------------
- 2 files changed, 8 insertions(+), 21 deletions(-)
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index ffaebc1..10cd96a 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -295,13 +295,9 @@ struct ath_tx_control {
- 	enum ath9k_internal_frame_type frame_type;
- };
+
+---
+ drivers/net/wireless/ipw2x00/ipw2100.c       |   17 ++++++++++++-----
+ drivers/net/wireless/ipw2x00/libipw_module.c |    2 ++
+ 2 files changed, 14 insertions(+), 5 deletions(-)
+
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c	2009-03-20 21:18:36.962783530 -0700
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c	2009-03-20 21:24:40.533652141 -0700
+@@ -6008,6 +6008,17 @@ static void ipw2100_rf_kill(struct work_
  
--struct ath_xmit_status {
--	int retries;
--	int flags;
- #define ATH_TX_ERROR        0x01
- #define ATH_TX_XRETRY       0x02
- #define ATH_TX_BAR          0x04
--};
+ static void ipw2100_irq_tasklet(struct ipw2100_priv *priv);
  
- /* All RSSI values are noise floor adjusted */
- struct ath_tx_stat {
-diff --git a/drivers/net/wireless/ath9k/xmit.c b/drivers/net/wireless/ath9k/xmit.c
-index 21e90bc..689bdbf 100644
---- a/drivers/net/wireless/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath9k/xmit.c
-@@ -1750,7 +1750,7 @@ exit:
- /*****************/
++static const struct net_device_ops ipw2100_netdev_ops = {
++	.ndo_open		= ipw2100_open,
++	.ndo_stop		= ipw2100_close,
++	.ndo_start_xmit		= ieee80211_xmit,
++	.ndo_change_mtu		= ieee80211_change_mtu,
++	.ndo_init		= ipw2100_net_init,
++	.ndo_tx_timeout		= ipw2100_tx_timeout,
++	.ndo_set_mac_address	= ipw2100_set_address,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
+ /* Look into using netdev destructor to shutdown ieee80211? */
  
- static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
--			    struct ath_xmit_status *tx_status)
-+			    int tx_flags)
- {
- 	struct ieee80211_hw *hw = sc->hw;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-@@ -1771,12 +1771,10 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 		tx_info->rate_driver_data[0] = NULL;
- 	}
+ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
+@@ -6032,15 +6043,11 @@ static struct net_device *ipw2100_alloc_
+ 	priv->ieee->perfect_rssi = -20;
+ 	priv->ieee->worst_rssi = -85;
  
--	if (tx_status->flags & ATH_TX_BAR) {
-+	if (tx_flags & ATH_TX_BAR)
- 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
--		tx_status->flags &= ~ATH_TX_BAR;
--	}
+-	dev->open = ipw2100_open;
+-	dev->stop = ipw2100_close;
+-	dev->init = ipw2100_net_init;
++	dev->netdev_ops = &ipw2100_netdev_ops;
+ 	dev->ethtool_ops = &ipw2100_ethtool_ops;
+-	dev->tx_timeout = ipw2100_tx_timeout;
+ 	dev->wireless_handlers = &ipw2100_wx_handler_def;
+ 	priv->wireless_data.ieee80211 = priv->ieee;
+ 	dev->wireless_data = &priv->wireless_data;
+-	dev->set_mac_address = ipw2100_set_address;
+ 	dev->watchdog_timeo = 3 * HZ;
+ 	dev->irq = 0;
  
--	if (!(tx_status->flags & (ATH_TX_ERROR | ATH_TX_XRETRY))) {
-+	if (!(tx_flags & (ATH_TX_ERROR | ATH_TX_XRETRY))) {
- 		/* Frame was ACKed */
- 		tx_info->flags |= IEEE80211_TX_STAT_ACK;
- 	}
-@@ -1803,29 +1801,22 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 				int txok, int sendbar)
- {
- 	struct sk_buff *skb = bf->bf_mpdu;
--	struct ath_xmit_status tx_status;
- 	unsigned long flags;
-+	int tx_flags = 0;
- 
--	/*
--	 * Set retry information.
--	 * NB: Don't use the information in the descriptor, because the frame
--	 * could be software retried.
--	 */
--	tx_status.retries = bf->bf_retries;
--	tx_status.flags = 0;
- 
- 	if (sendbar)
--		tx_status.flags = ATH_TX_BAR;
-+		tx_flags = ATH_TX_BAR;
- 
- 	if (!txok) {
--		tx_status.flags |= ATH_TX_ERROR;
-+		tx_flags |= ATH_TX_ERROR;
- 
- 		if (bf_isxretried(bf))
--			tx_status.flags |= ATH_TX_XRETRY;
-+			tx_flags |= ATH_TX_XRETRY;
- 	}
- 
- 	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
--	ath_tx_complete(sc, skb, &tx_status);
-+	ath_tx_complete(sc, skb, tx_flags);
- 
- 	/*
- 	 * Return the list of ath_buf of this mpdu to free queue
+
 -- 
-1.5.5.1
 
