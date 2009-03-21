@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25182 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:53849 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758160AbZC3KCw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 06:02:52 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 03:02:51 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1753150AbZCULVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 07:21:42 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC][PATCH 4/5] ar9170: USB frontend driver
+Date: Sat, 21 Mar 2009 12:20:29 +0100
+Cc: Christian Lamparter <chunkeey@web.de>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+References: <200903170410.20261.chunkeey@web.de> <200903202058.34420.mb@bu3sch.de> <1237633835.5100.173.camel@johannes.local>
+In-Reply-To: <1237633835.5100.173.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <18896.38865.389816.198652@gargle.gargle.HOWL> (sfid-20090330_120256_024926_9509E458)
-Date: Mon, 30 Mar 2009 15:28:41 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Jouni.Malinen@Atheros.com>,
-	<Luis.Rodriguez@Atheros.com>
-Subject: [PATCH 09/17] ath9k: Remove unused structures
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200903211220.29991.mb@bu3sch.de> (sfid-20090321_122201_685111_53B0597A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct aggr_rifs_param and ath_tx_stat are not used anywhere.
+On Saturday 21 March 2009 12:10:35 Johannes Berg wrote:
+> On Fri, 2009-03-20 at 20:58 +0100, Michael Buesch wrote:
+> > On Friday 20 March 2009 20:36:42 Christian Lamparter wrote:
+> > > USB frontend driver code for Atheros AR9170.
+> > 
+> > It seems lots of patches didn't make it through the list. :(
+> > 
+> > > +#if 0
+> > > +#include <linux/mutex.h>
+> > > +#define mutex_lock(m) do { mutex_lock(m); __acquire(m); } while (0)
+> > > +#define mutex_unlock(m) do { mutex_unlock(m); __release(m); } while (0)
+> > > +#endif
+> > > +
+> > > +#endif /* __USB_H */
+> > 
+> > Whoops, debugging code? :)
+> 
+> sparse, for some reason mutex operations aren't annotated... Probably
+> because Ingo wrote the code...
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath9k/ath9k.h |   20 --------------------
- 1 files changed, 0 insertions(+), 20 deletions(-)
+Well I think it would currently generate lots of errors, because we have
+code like this in the kernel:
 
-diff --git a/drivers/net/wireless/ath9k/ath9k.h b/drivers/net/wireless/ath9k/ath9k.h
-index dae0f95..bdd5c6b 100644
---- a/drivers/net/wireless/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath9k/ath9k.h
-@@ -298,26 +298,6 @@ struct ath_tx_control {
- #define ATH_TX_XRETRY       0x02
- #define ATH_TX_BAR          0x04
- 
--/* All RSSI values are noise floor adjusted */
--struct ath_tx_stat {
--	int rssi;
--	int rssictl[ATH_MAX_ANTENNA];
--	int rssiextn[ATH_MAX_ANTENNA];
--	int rateieee;
--	int rateKbps;
--	int ratecode;
--	int flags;
--	u32 airtime;	/* time on air per final tx rate */
--};
--
--struct aggr_rifs_param {
--	int param_max_frames;
--	int param_max_len;
--	int param_rl;
--	int param_al;
--	struct ath_rc_series *param_rcs;
--};
--
- struct ath_node {
- 	struct ath_softc *an_sc;
- 	struct ath_atx_tid tid[WME_NUM_TID];
+if (x)
+	mutex_lock();
+...
+if (x)
+	mutex_unlock();
+
 -- 
-1.6.2.1
-
+Greetings, Michael.
