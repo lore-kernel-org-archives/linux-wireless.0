@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:53161 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751227AbZCFIT4 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60385 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754006AbZCUDxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2009 03:19:56 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so497320fgg.17
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2009 00:19:53 -0800 (PST)
-Date: Fri, 6 Mar 2009 08:45:27 +0100
-From: "Christoph J. Thompson" <cjsthompson@gmail.com>
-To: Alexey Yudichev <ayudichev@yahoo.co.uk>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath5k master (AP) mode
-Message-Id: <20090306084527.5a3b6300.cjsthompson@gmail.com> (sfid-20090306_092000_332530_A22BCA1D)
-In-Reply-To: <4dd58f490903051449h3b2eb96ay5d83d7ea8129370f@mail.gmail.com>
-References: <4dd58f490903041329p54ec56ceh1b64ab000027eac5@mail.gmail.com>
-	<4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com>
-	<20090304232625.cc47eb46.cjsthompson@gmail.com>
-	<4dd58f490903041451x5044b464k47d70b1210b12f11@mail.gmail.com>
-	<20090304232527.058017da.cjsthompson@gmail.com>
-	<4dd58f490903051449h3b2eb96ay5d83d7ea8129370f@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 20 Mar 2009 23:53:12 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Quentin@armitage.org.uk,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
+Subject: [PATCH 2/5] cfg80211: fix incorrect assumption on last_request for 11d
+Date: Fri, 20 Mar 2009 23:53:05 -0400
+Message-Id: <1237607588-6316-3-git-send-email-lrodriguez@atheros.com> (sfid-20090321_045325_125679_2AAAAF92)
+In-Reply-To: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
+References: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 5 Mar 2009 22:49:16 +0000
-Alexey Yudichev <ayudichev@yahoo.co.uk> wrote:
-> Thanks Christoph, looks like ubuntu is currently at 2.6.28 and I do
-> not want to attempt installing non-ubuntu-patched kernel. Also, what
-> is the driver option value in your hostapd config? Is it nl80211? And
-> last question, do you know anything about that "another" patch for pre
-> 2.6.29 kernels?
+The incorrect assumption is the last regulatory request
+(last_request) is always a country IE when processing
+country IEs. Although this is true 99% of the time the
+first time this happens this could not be true.
 
-Hi,
+This fixes an oops in the branch check for the last_request
+when accessing drv_last_ie. The access was done under the
+assumption the struct won't be null.
 
-Yes, the driver option value is nl80211. This is the patch you are looking for I think:
+Note to stable: to port to 29 replace as follows, only 29 has
+country IE code:
 
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/030-allow-ap-vlan-modes.patch
+s|NL80211_REGDOM_SET_BY_COUNTRY_IE|REGDOM_SET_BY_COUNTRY_IE
 
+Cc: stable@kernel.org
+Reported-by: Quentin Armitage <Quentin@armitage.org.uk>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ead9dcc..9afc916 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1601,6 +1601,10 @@ static bool reg_same_country_ie_hint(struct wiphy *wiphy,
+ 
+ 	assert_cfg80211_lock();
+ 
++	if (unlikely(last_request->initiator !=
++	    NL80211_REGDOM_SET_BY_COUNTRY_IE))
++		return false;
++
+ 	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+ 
+ 	if (!request_wiphy)
+@@ -1663,7 +1667,9 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	 * we optimize an early check to exit out early if we don't have to
+ 	 * do anything
+ 	 */
+-	if (likely(wiphy_idx_valid(last_request->wiphy_idx))) {
++	if (likely(last_request->initiator ==
++	    NL80211_REGDOM_SET_BY_COUNTRY_IE &&
++	    wiphy_idx_valid(last_request->wiphy_idx))) {
+ 		struct cfg80211_registered_device *drv_last_ie;
+ 
+ 		drv_last_ie =
 -- 
-Christoph J. Thompson <cjsthompson@gmail.com>
+1.6.0.6
+
