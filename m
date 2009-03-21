@@ -1,102 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33577 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754876AbZCWO3Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 10:29:16 -0400
-Subject: Re: [PATCH 5/5] ar9170: update Makefile, Kconfig and MAINTAINERS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <200903212311.49348.chunkeey@web.de> (sfid-20090321_231155_795243_87D9F561)
-References: <200903212311.49348.chunkeey@web.de>
-	 (sfid-20090321_231155_795243_87D9F561)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7VCzLTvXnQTGulA9vH+1"
-Date: Mon, 23 Mar 2009 15:29:11 +0100
-Message-Id: <1237818551.6147.15.camel@johannes.local> (sfid-20090323_152933_819941_BB0291E1)
-Mime-Version: 1.0
+Received: from suva.vyatta.com ([76.74.103.44]:36680 "EHLO suva.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761067AbZCUFsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:48:21 -0400
+Message-Id: <20090321053717.048069302@vyatta.com> (sfid-20090321_065220_083946_9B1736C3)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:26 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 59/77] airo: convert to net_device_ops
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
---=-7VCzLTvXnQTGulA9vH+1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+--- a/drivers/net/wireless/airo.c	2009-03-20 22:14:19.396839469 -0700
++++ b/drivers/net/wireless/airo.c	2009-03-20 22:25:53.106714188 -0700
+@@ -2646,17 +2646,21 @@ static const struct header_ops airo_head
+ 	.parse = wll_header_parse,
+ };
+ 
++static const struct net_device_ops airo11_netdev_ops = {
++	.ndo_open 		= airo_open,
++	.ndo_stop 		= airo_close,
++	.ndo_start_xmit 	= airo_start_xmit11,
++	.ndo_get_stats 		= airo_get_stats,
++	.ndo_set_mac_address	= airo_set_mac_address,
++	.ndo_do_ioctl		= airo_ioctl,
++	.ndo_change_mtu		= airo_change_mtu,
++};
++
+ static void wifi_setup(struct net_device *dev)
+ {
++	dev->netdev_ops = &airo11_netdev_ops;
+ 	dev->header_ops = &airo_header_ops;
+-	dev->hard_start_xmit = &airo_start_xmit11;
+-	dev->get_stats = &airo_get_stats;
+-	dev->set_mac_address = &airo_set_mac_address;
+-	dev->do_ioctl = &airo_ioctl;
+ 	dev->wireless_handlers = &airo_handler_def;
+-	dev->change_mtu = &airo_change_mtu;
+-	dev->open = &airo_open;
+-	dev->stop = &airo_close;
+ 
+ 	dev->type               = ARPHRD_IEEE80211;
+ 	dev->hard_header_len    = ETH_HLEN;
+@@ -2739,6 +2743,33 @@ static void airo_networks_initialize(str
+ 			      &ai->network_free_list);
+ }
+ 
++static const struct net_device_ops airo_netdev_ops = {
++	.ndo_open		= airo_open,
++	.ndo_stop		= airo_close,
++	.ndo_start_xmit		= airo_start_xmit,
++	.ndo_get_stats		= airo_get_stats,
++	.ndo_set_multicast_list	= airo_set_multicast_list,
++	.ndo_set_mac_address	= airo_set_mac_address,
++	.ndo_do_ioctl		= airo_ioctl,
++	.ndo_change_mtu		= airo_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
++static const struct net_device_ops mpi_netdev_ops = {
++	.ndo_open		= airo_open,
++	.ndo_stop		= airo_close,
++	.ndo_start_xmit		= mpi_start_xmit,
++	.ndo_get_stats		= airo_get_stats,
++	.ndo_set_multicast_list	= airo_set_multicast_list,
++	.ndo_set_mac_address	= airo_set_mac_address,
++	.ndo_do_ioctl		= airo_ioctl,
++	.ndo_change_mtu		= airo_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
++
+ static struct net_device *_init_airo_card( unsigned short irq, int port,
+ 					   int is_pcmcia, struct pci_dev *pci,
+ 					   struct device *dmdev )
+@@ -2776,22 +2807,16 @@ static struct net_device *_init_airo_car
+ 		goto err_out_free;
+ 	airo_networks_initialize (ai);
+ 
++	skb_queue_head_init (&ai->txq);
++
+ 	/* The Airo-specific entries in the device structure. */
+-	if (test_bit(FLAG_MPI,&ai->flags)) {
+-		skb_queue_head_init (&ai->txq);
+-		dev->hard_start_xmit = &mpi_start_xmit;
+-	} else
+-		dev->hard_start_xmit = &airo_start_xmit;
+-	dev->get_stats = &airo_get_stats;
+-	dev->set_multicast_list = &airo_set_multicast_list;
+-	dev->set_mac_address = &airo_set_mac_address;
+-	dev->do_ioctl = &airo_ioctl;
++	if (test_bit(FLAG_MPI,&ai->flags))
++		dev->netdev_ops = &mpi_netdev_ops;
++	else
++		dev->netdev_ops = &airo_netdev_ops;
+ 	dev->wireless_handlers = &airo_handler_def;
+ 	ai->wireless_data.spy_data = &ai->spy_data;
+ 	dev->wireless_data = &ai->wireless_data;
+-	dev->change_mtu = &airo_change_mtu;
+-	dev->open = &airo_open;
+-	dev->stop = &airo_close;
+ 	dev->irq = irq;
+ 	dev->base_addr = port;
+ 
 
-On Sat, 2009-03-21 at 23:11 +0100, Christian Lamparter wrote:
-
-> +config AR9170_COMMON
-> +	tristate "Atheros AR9170 support"
-> +	depends on WLAN_80211 && MAC80211 && EXPERIMENTAL
-> +	help
-> +	  This is common code for AR9170 based devices.
-> +	  This module does nothing by itself - the USB/(SPI) frontends
-> +	  also need to be enabled in order to support any devices.
-> +
-> +	  Say Y if you have the hardware, or M to build a module called
-> +	  ar9170common.
-> +
-> +config AR9170_USB
-> +	tristate "Atheros AR9170 USB support"
-> +	depends on AR9170_COMMON && USB
-> +	select FW_LOADER
-> +	help
-> +	  This is a driver for the Atheros "otus" 802.11n USB devices.
-> +
-> +	  These devices require additional firmware (2 files).
-> +	  For now, these files can be downloaded from here:
-> +	  http://wireless.kernel.org/en/users/Drivers/ar9170
-> +
-> +	  If you choose to build a module, it'll be called ar9170usb.
-> +
-> +config AR9170_LEDS
-> +	bool
-> +	depends on AR9170_COMMON && MAC80211_LEDS && (LEDS_CLASS =3D y || LEDS_=
-CLASS =3D AR9170_COMMON)
-> +	default y
-> diff --git a/drivers/net/wireless/ar9170/Makefile b/drivers/net/wireless/=
-ar9170/Makefile
-> new file mode 100644
-> index 0000000..3f0e468
-> --- /dev/null
-> +++ b/drivers/net/wireless/ar9170/Makefile
-> @@ -0,0 +1,5 @@
-> +ar9170common-objs +=3D main.o cmd.o mac.o phy.o led.o
-> +ar9170usb-objs +=3D usb.o
-> +
-> +obj-$(CONFIG_AR9170_COMMON) +=3D ar9170common.o
-> +obj-$(CONFIG_AR9170_USB) +=3D ar9170usb.o
-
-I think it would make sense to link them into the same module as long as
-we don't have a second user of the common code. I actually doubt we will
-see a second user of the common code at all, even if it is in theory
-possible with the hardware design.
-
-johannes
-
---=-7VCzLTvXnQTGulA9vH+1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJx5y0AAoJEKVg1VMiehFYwskQAIeiC4YGY+f9hn20QkZm2fH5
-Um4MvgFhhn8ngZwKVj92wXvHfLKTbBJAoirl+HFotQ6WtXg1JUZgaFxRFc/uA/ft
-6I3AhDPjOVOzQgMnNXIWWi+kR7YxSEoHq86eGKs32EZZW4xKwozLXqb2EEq3zf9i
-CX8vdBDWthkGN9DDj2ZStZg7cKwbnI5RwUI5awrOxuStAZX1mnMPHdzHHKQwgowF
-BXhYg3ykRfoAnmKwOm9znbCpaUR0ZPpMnVlfB4sMTT5yya7cZgwbPhHb8VMBwty1
-ooHB7gn8Hf5DKglRrv+m2Fwu9ZhCOeuDHMxiFrKZ+ew2LtQblNmEo5USNM+V+U3e
-jIDE8wGjpuQArieSIRU5mEN3D9oxFDqHQKuHtjv7i7rZUTDyqCrSfwdj3x+5VYY6
-nZfOA/FxYu11LLWX2H90HGIjtWNL1cwFHAGEuv2GXZOaXBRVcO3edpxpFwj3vGLG
-yJDCHxrlCA9as73mVtdK0vgWsuK5NwKVvmMX7g3L36yfx8TojuuC6UtrcSetjeEP
-piuOv/Or9SucYkeFGATzYfrKZmqY34N+okLE/K9qvCjP9ycyY5jNeoH5vxbWIX0D
-aA+WiTG50rxPl2+rpPHngOOtXOnVXw4R/cAAQPa94BXk0DvXGIu7EkceaPXNWjUF
-l8oD1zonGSdaXlB3Wtnq
-=mbmM
------END PGP SIGNATURE-----
-
---=-7VCzLTvXnQTGulA9vH+1--
+-- 
 
