@@ -1,73 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:35056
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875AbZCCQ3d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2009 11:29:33 -0500
-MIME-Version: 1.0
-Date: Tue, 03 Mar 2009 11:29:30 -0500
-From: <pat-lkml@erley.org>
-To: David Ellingsworth <david@identd.dyndns.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Cardbus wireless cards
-In-Reply-To: <30353c3d0903030627g5c5323f8l88e551a8b43a066a@mail.gmail.com>
-References: <1233666319.3957.1.camel@johannes.local> <30353c3d0903030627g5c5323f8l88e551a8b43a066a@mail.gmail.com>
-Message-ID: <1896462f4248df441aea8ebf3dd57f91@127.0.0.1> (sfid-20090303_172936_803750_FBF3CE5A)
-Content-Type: text/plain; charset=UTF-8
+Received: from suva.vyatta.com ([76.74.103.44]:36701 "EHLO suva.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760779AbZCUFsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:48:22 -0400
+Message-Id: <20090321053717.601771143@vyatta.com> (sfid-20090321_065122_704364_56BF32DB)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:33 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>, j@w1.fi
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 66/77] mac80211_hwsim: convert to internal net_device_stats
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 3 Mar 2009 09:27:38 -0500, David Ellingsworth
-<david@identd.dyndns.org> wrote:
-> On Tue, Feb 3, 2009 at 8:05 AM, Johannes Berg <johannes@sipsolutions.=
-net>
-> wrote:
->> Hi,
->>
->> Some of you know that I got a new laptop, and it doesn't have a card=
-bus
->> slot any more. I still have my powerbook, and it's still working fin=
-e,
->> but I'm not using it any more, it hasn't even booted in a month. I c=
-ould
->> test on my powerbook, but given my regular time budget it seems unli=
-kely
->> that I ever will.
->>
->> Hence, I'm offering my collection of cardbus/pcmcia wireless test ca=
-rds
->> to anyone I can afford shipping to.
->>
->> * Broadcom PCMCIA (not cardbus, in cardbus slot adapter)
->> =C2=A0requires external single antenna (u.fl, have one if I can find=
- it)
->> * Airgo-based Belkin F5D8010 ("true MIMO")
->> * rt61pci (Conceptronic)
->> * Broadcom 11n (4321)
->> * acx111 based card (D-Link AirPlus XTreme G+)
->>
->> I also have a Broadcom 11g (4306 I think, might be 4318) PCI card
->> somewhere that I will most likely never again have a use for.
->>
->> johannes
->>
->=20
-> I'm interested in the PCI card if it's still available.
->=20
-> Regards,
->=20
-> David Ellingsworth
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-This card found it's way to me, I do believe.  I've almost completed al=
-l
-the testing I had planned on using it for.  I'd be fine with parting wi=
-th
-it after I complete my testing.
 
-Pat Erley
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- a/drivers/net/wireless/mac80211_hwsim.c	2009-03-20 21:45:40.802964051 -0700
++++ b/drivers/net/wireless/mac80211_hwsim.c	2009-03-20 22:26:02.959027480 -0700
+@@ -739,10 +739,16 @@ static struct device_driver mac80211_hws
+ 	.name = "mac80211_hwsim"
+ };
+ 
++static const struct net_device_ops hwsim_netdev_ops = {
++	.ndo_start_xmit 	= hwsim_mon_xmit,
++	.ndo_change_mtu		= eth_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++	.ndo_validate_addr	= eth_validate_addr,
++};
+ 
+ static void hwsim_mon_setup(struct net_device *dev)
+ {
+-	dev->hard_start_xmit = hwsim_mon_xmit;
++	dev->netdev_ops = &hwsim_netdev_ops;
+ 	dev->destructor = free_netdev;
+ 	ether_setup(dev);
+ 	dev->tx_queue_len = 0;
+
+-- 
+
