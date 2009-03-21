@@ -1,54 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.171]:24636 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755498AbZCWRJq (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50749 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754564AbZCUOj0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2009 13:09:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <43e72e890903161813q1e069891jb7c669a539e3ff7f@mail.gmail.com>
-References: <43e72e890903161215u343cbb19v6d6cbf36794e252a@mail.gmail.com>
-	<20090317093445G.fujita.tomonori@lab.ntt.co.jp> <43e72e890903161813q1e069891jb7c669a539e3ff7f@mail.gmail.com>
-Date: Mon, 23 Mar 2009 10:09:28 -0700
-Message-ID: <43e72e890903231009m6416f07brafe3088eae63abc5@mail.gmail.com> (sfid-20090323_180948_180331_9AEEC76D)
-Subject: Re: AMD Quad core - PCI-DMA: Out of IOMMU space on > 4 GB RAM
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-wireless@vger.kernel.org, joerg.roedel@amd.com,
-	linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+	Sat, 21 Mar 2009 10:39:26 -0400
+Subject: Japan regulations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uDbDZsSNEsEd8nsrj4EJ"
+Date: Sat, 21 Mar 2009 15:39:23 +0100
+Message-Id: <1237646363.5100.209.camel@johannes.local> (sfid-20090321_153929_909353_98F35CDA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2009 at 6:13 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Mar 16, 2009 at 5:35 PM, FUJITA Tomonori
-> <fujita.tomonori@lab.ntt.co.jp> wrote:
->> On Mon, 16 Mar 2009 12:15:37 -0700
->> "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
->>
->>> I've run into "PCI-DMA: Out of IOMMU space" messages after loading and
->>> unloading a module 30 times. The interesting thing is this only
->>> happens if I have > 4 GB of memory. The box this occurs has AMD Phenom
->>> quad core CPU so I take it a harware IOMMU is being used. Below are
->>> example relevant messages with > 4 GB and then < 4 GB of memory. The
->>> driver I tested this with was ath9k. It could be an issue perhaps with
->>> ath9k but I am unable to find an issue in our probe/removal.
->>>
->>> Could this be an issue with the AMD IOMMU used? Or is it more likely a
->>> driver issue?
->>
->> ath9k wants DMA_32BIT_MASK, right? If so, GART IOMMU does nothing on a
->> system with < 4GB memory since ath9k can access to all the memory
->> addresses directly. With >4GB memory, GART needs to remap an address
->> higher than 4GB because ath9k wants DMA_32BIT_MASK.
->>
->> From a quick look, ath9k doesn't call pci_unmap_single for rx
->> buffers. Though I might be wrong because I don't know anything about
->> the driver.
->
-> You seem to be right actually, we were calling pci_unmap_single() for
-> rx buffers on the RX tasklet but never for the simple case of removing
-> the module. Will test it out in a bit.
 
-That was it, thanks.. will propagate the patch.
+--=-uDbDZsSNEsEd8nsrj4EJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+The regulatory info for JP looks very odd
+(http://wireless.kernel.org/en/developers/Regulatory/Database?alpha2=3DJP):
+
+country JP:
+        (2402.000 - 2472.000 @ 40.000), (N/A, 20.00)
+        (2457.000 - 2482.000 @ 20.000), (N/A, 20.00)
+        (2474.000 - 2494.000 @ 20.000), (N/A, 20.00), NO-OFDM
+
+        (4910.000 - 4930.000 @ 10.000), (N/A, 23.00)
+        (4910.000 - 4990.000 @ 40.000), (N/A, 23.00)
+
+        (4930.000 - 4950.000 @ 10.000), (N/A, 23.00)
+
+        (5030.000 - 5045.000 @ 10.000), (N/A, 23.00)
+        (5030.000 - 5090.000 @ 40.000), (N/A, 23.00)
+        (5050.000 - 5060.000 @ 10.000), (N/A, 23.00)
+
+        (5170.000 - 5250.000 @ 40.000), (N/A, 20.00)
+
+        (5250.000 - 5330.000 @ 40.000), (N/A, 20.00), DFS
+
+        (5490.000 - 5710.000 @ 40.000), (N/A, 23.00), DFS
+
+multiple of the ranges (blocked) overlap, especially the 4910 MHz part
+is strange, seems like that first rule should be killed. Also, how
+should the 2.4GHz part be interpreted?
+
+Currently we are not interpreting overlapping ranges properly at all --
+we really need to fix a set of interpretation rules.
+
+johannes
+
+--=-uDbDZsSNEsEd8nsrj4EJ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJxPwYAAoJEKVg1VMiehFYFawQAJw53yjOxi9SE6Q+EQswBfzx
+GKvkmMUWNqzDb2cheHVcFAz4BGFIzCRlEGr0sdtLsZC3HLMkqZnhU7Lua3bIRUVo
+ub9CHiodmfFlqGfWOpY+4GKuYHYt4JOus+iSYosE0JUiuiZMq2QZGmV38xgoet4M
+Tn8ikikuWj19H1PdRKnV5ES9WgKoKC3I+QgKc8qoSs0AisYKSXWenVmQJJe9ZxdH
+Kp91pjktERtmBeqk9aXH8cbfUBr0KVHyNShjhUbW2V0+5IlskoLQ6sGtRlPIT1BW
+qVKcwvUk7tU/jbnZikbK1MvJM3wnSnaFh3ATedM/JqUiY2fYzgaHq0ZhxA1yq1+Q
+RsWEH61KKMDyPMhYN6kFsYB0fy5Huxy9Jrt5KEJPbo1yOQJ+E9PsV5MV8UCab9R3
+5Nei6uDYUnZCpiGRjUevAIZagdqECno0H2A2kh/XiJYbp6ZGO2g8KvCIMfah9565
+UIGJpBh0HpxQKqulClcbSy4SRR+EcgJkepulMg9t6Mlq+nIpFdkg1EoC9vM0uab6
+dlOIdwf5dTSjkUJ58T5uO+im9y5q+XmJGfvKSzwVVZ55LErbmYQKjtyCK06U0F5f
+aIMEMMB4kKwl+TpaIQVZ/Y23HAYCert8mbaNRKQ95o5f7aDypUvd2YCz+BdqC5zr
+8JaGgegeJQ5K0U57H9uI
+=glV6
+-----END PGP SIGNATURE-----
+
+--=-uDbDZsSNEsEd8nsrj4EJ--
+
