@@ -1,56 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f169.google.com ([209.85.218.169]:37539 "EHLO
-	mail-bw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754995AbZCXPD3 (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:38559 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399AbZCUWLw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 11:03:29 -0400
-Received: by bwz17 with SMTP id 17so2261188bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 08:03:26 -0700 (PDT)
-To: "Guy\, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: wireless powersaving (in NM?)
-References: <1237891149.4320.73.camel@johannes.local>
-	<1237902786.4320.92.camel@johannes.local>
-	<E9954878DD1FB34FAE5187FB88C58A3546DA95D4@orsmsx506.amr.corp.intel.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 24 Mar 2009 17:03:24 +0200
-In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A3546DA95D4@orsmsx506.amr.corp.intel.com> (Wey-Yi W. Guy's message of "Tue\, 24 Mar 2009 07\:47\:46 -0700")
-Message-ID: <8763hzq7yb.fsf@litku.valot.fi> (sfid-20090324_160333_006399_247E410F)
+	Sat, 21 Mar 2009 18:11:52 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/5] ar9170: update Makefile, Kconfig and MAINTAINERS
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Sat, 21 Mar 2009 23:11:49 +0100
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200903212311.49348.chunkeey@web.de> (sfid-20090321_231155_795243_87D9F561)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com> writes:
+This patch update all necessary Makefile and Kconfig files.
 
-> Hi Johannes,
+Now you can then enable ar9170 in the kernel configuration under:
+Device Drivers --->
+	[*] Network device support ---> 
+		Wireless LAN --->
+			[*] Wireless LAN (IEEE 802.11)
+			<M>   Atheros AR9170 support
+			<M>     Atheros AR9170 USB support 
 
-Hello,
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+John,
 
-> Especially for Netbook and Handle devices with newer processor.
-> Putting system into lower C-state and having longer battery life is
-> very important. I think letting driver making the default choice based
-> on the power source is the right way to go, but always can be
-> overwritten by upper layer (mac80211 or NM?).
+This is the last patch of this series. As far as I can _test_,
+this driver is ready for wireless-testing. I hope you agree, with me.
+I'll look into Alina's issue, once I've received more information.
 
-You mean that the driver knows if the AC is connected or not?
-Definitely not, the AC connection logic is a policy decision and needs
-to be in userspace. It should not be in kernel, it would just
-complicate the implementation.
-
-> I do not think we need to expose all the power levels to user space;
-> those should be internal decision (mac80211 or driver). User space can
-> make the choice of turn power saving mode on/off and leave the detail
-> decision to the lower layer which has better knowledge of how to
-> balance the power and performance.
-
-mac80211 or the driver doesn't have all the needed knowledge. For
-example, how to enable more aggressive power save when the display is
-off? The driver certainly doesn't (and shouldn't) know that.
-
--- 
-Kalle Valo
+Regards,
+	Chr
+---
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 1ba59d8..f0b1c45 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -765,6 +765,14 @@ L:	linux-wireless@vger.kernel.org
+ L:	ath9k-devel@lists.ath9k.org
+ S:	Supported
+ 
++ATHEROS AR9170 WIRELESS DRIVER
++P:	Christian Lamparter
++M:	chunkeey@web.de
++L:	linux-wireless@vger.kernel.org
++W:	http://wireless.kernel.org/en/users/Drivers/ar9170
++S:	Maintained
++F:	drivers/net/wireless/ar9170/
++
+ ATI_REMOTE2 DRIVER
+ P:	Ville Syrjala
+ M:	syrjala@sci.fi
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 612fffe..8a08235 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -485,6 +485,7 @@ config MWL8K
+ source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/ath5k/Kconfig"
+ source "drivers/net/wireless/ath9k/Kconfig"
++source "drivers/net/wireless/ar9170/Kconfig"
+ source "drivers/net/wireless/ipw2x00/Kconfig"
+ source "drivers/net/wireless/iwlwifi/Kconfig"
+ source "drivers/net/wireless/hostap/Kconfig"
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index d780487..5e7c9ac 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -57,5 +57,6 @@ obj-$(CONFIG_P54_COMMON)	+= p54/
+ 
+ obj-$(CONFIG_ATH5K)	+= ath5k/
+ obj-$(CONFIG_ATH9K)	+= ath9k/
++obj-$(CONFIG_AR9170_COMMON)	+= ar9170/
+ 
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
+diff --git a/drivers/net/wireless/ar9170/Kconfig b/drivers/net/wireless/ar9170/Kconfig
+new file mode 100644
+index 0000000..f661187
+--- /dev/null
++++ b/drivers/net/wireless/ar9170/Kconfig
+@@ -0,0 +1,28 @@
++config AR9170_COMMON
++	tristate "Atheros AR9170 support"
++	depends on WLAN_80211 && MAC80211 && EXPERIMENTAL
++	help
++	  This is common code for AR9170 based devices.
++	  This module does nothing by itself - the USB/(SPI) frontends
++	  also need to be enabled in order to support any devices.
++
++	  Say Y if you have the hardware, or M to build a module called
++	  ar9170common.
++
++config AR9170_USB
++	tristate "Atheros AR9170 USB support"
++	depends on AR9170_COMMON && USB
++	select FW_LOADER
++	help
++	  This is a driver for the Atheros "otus" 802.11n USB devices.
++
++	  These devices require additional firmware (2 files).
++	  For now, these files can be downloaded from here:
++	  http://wireless.kernel.org/en/users/Drivers/ar9170
++
++	  If you choose to build a module, it'll be called ar9170usb.
++
++config AR9170_LEDS
++	bool
++	depends on AR9170_COMMON && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = AR9170_COMMON)
++	default y
+diff --git a/drivers/net/wireless/ar9170/Makefile b/drivers/net/wireless/ar9170/Makefile
+new file mode 100644
+index 0000000..3f0e468
+--- /dev/null
++++ b/drivers/net/wireless/ar9170/Makefile
+@@ -0,0 +1,5 @@
++ar9170common-objs += main.o cmd.o mac.o phy.o led.o
++ar9170usb-objs += usb.o
++
++obj-$(CONFIG_AR9170_COMMON) += ar9170common.o
++obj-$(CONFIG_AR9170_USB) += ar9170usb.o
