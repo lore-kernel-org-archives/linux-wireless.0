@@ -1,90 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:39966 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757758AbZCZIkX convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60383 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752461AbZCUDxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 04:40:23 -0400
-Received: by rv-out-0506.google.com with SMTP id f9so520186rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2009 01:40:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87iqlw4rx7.fsf@litku.valot.fi>
-References: <1237891149.4320.73.camel@johannes.local> <1237910398.9082.7.camel@localhost.localdomain>
-	<1237979070.4320.156.camel@johannes.local> <1237995072.18896.9.camel@localhost.localdomain>
-	<1237996137.4320.161.camel@johannes.local> <43e72e890903260100w75896d0fi9121f227cc7ca8dc@mail.gmail.com>
-	<87iqlw4rx7.fsf@litku.valot.fi>
-Date: Thu, 26 Mar 2009 01:40:04 -0700
-Message-ID: <43e72e890903260140i751ca59dg7ec9c8d870da0006@mail.gmail.com> (sfid-20090326_094044_222514_0FB50AFA)
-Subject: Re: wireless powersaving (in NM?)
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Dan Williams <dcbw@redhat.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>, Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 20 Mar 2009 23:53:12 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Quentin@armitage.org.uk,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 4/5] cfg80211: remove code about country IE support with OLD_REG
+Date: Fri, 20 Mar 2009 23:53:07 -0400
+Message-Id: <1237607588-6316-5-git-send-email-lrodriguez@atheros.com> (sfid-20090321_045325_222292_7783BC35)
+In-Reply-To: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
+References: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 26, 2009 at 1:19 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
->
->> On Wed, Mar 25, 2009 at 8:48 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> On Wed, 2009-03-25 at 11:31 -0400, Dan Williams wrote:
->>>
->>>> Yeah, sounds OK. =C2=A0Just to be clear, problems with this code w=
-ill appear
->>>> on a *per-AP* basis, not a per-card basis, right? =C2=A0ie there a=
-re some
->>>> stupid APs that won't work with it, but it won't be the case that =
-a
->>>> chipset will be broken for all APs, right?
->>>
->>> Right. If a particular chipset doesn't properly supported PS then w=
-e
->>> shouldn't actually support it at all -- but we cannot know if the A=
-P is
->>> broken.
->>
->> How about leaving it to the supplicant to guess if the AP is borked =
-or not.
->
-> Very difficult and not worth the trouble IMHO.
->
->> Kalle, what would happen with these broken APs?
->
-> Usually there's packet loss and for the user it shows as data
-> connections not working reliably.
->
->> If we can determine this through some heuristics then we can label
->> such BSSes as borked in the supplicant and then the user won't have =
-to
->> worry about this. This would only be dealt with each BSS once at mos=
-t
->> as we would have saved the AP's power save borkedness after our firs=
-t
->> determination of this.
->>
->> If one wants to do manual debugging you can simple add the flag
->> through the supplicant for the bss. Just don't see the need to confu=
-se
->> a user with an option if we can get away with figuring it out if
->> possible.
->
-> If the ui option to disable power is disliked, just hide it somewhere=
-=2E
-> For example, a gconf flag which can be enabled with a command line
-> tool.
+We had left in code to allow interested developers to add
+support for parsing country IEs when OLD_REG was enabled.
+This never happened and since we're going to remove OLD_REG
+lets just remove these comments and code for it.
 
-Oh I don't care for it, I just don't think its a good idea to be
-adding more knobs and agree with the general sentiment to always focus
-on saving power.
+This code path was never being entered so this has no
+functional change.
 
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   39 +++++++++++----------------------------
+ 1 files changed, 11 insertions(+), 28 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ac048a1..6327e16 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1420,16 +1420,6 @@ new_request:
+ 		return r;
+ 	}
+ 
+-	/*
+-	 * Note: When CONFIG_WIRELESS_OLD_REGULATORY is enabled
+-	 * AND if CRDA is NOT present nothing will happen, if someone
+-	 * wants to bother with 11d with OLD_REG you can add a timer.
+-	 * If after x amount of time nothing happens you can call:
+-	 *
+-	 * return set_regdom(country_ie_regdomain);
+-	 *
+-	 * to intersect with the static rd
+-	 */
+ 	return call_crda(last_request->alpha2);
+ }
+ 
+@@ -2033,28 +2023,21 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	 */
+ 
+ 	BUG_ON(!country_ie_regdomain);
++	BUG_ON(rd == country_ie_regdomain);
+ 
+-	if (rd != country_ie_regdomain) {
+-		/*
+-		 * Intersect what CRDA returned and our what we
+-		 * had built from the Country IE received
+-		 */
++	/*
++	 * Intersect what CRDA returned and our what we
++	 * had built from the Country IE received
++	 */
+ 
+-		intersected_rd = regdom_intersect(rd, country_ie_regdomain);
++	intersected_rd = regdom_intersect(rd, country_ie_regdomain);
+ 
+-		reg_country_ie_process_debug(rd, country_ie_regdomain,
+-			intersected_rd);
++	reg_country_ie_process_debug(rd,
++				     country_ie_regdomain,
++				     intersected_rd);
+ 
+-		kfree(country_ie_regdomain);
+-		country_ie_regdomain = NULL;
+-	} else {
+-		/*
+-		 * This would happen when CRDA was not present and
+-		 * OLD_REGULATORY was enabled. We intersect our Country
+-		 * IE rd and what was set on cfg80211 originally
+-		 */
+-		intersected_rd = regdom_intersect(rd, cfg80211_regdomain);
+-	}
++	kfree(country_ie_regdomain);
++	country_ie_regdomain = NULL;
+ 
+ 	if (!intersected_rd)
+ 		return -EINVAL;
+-- 
+1.6.0.6
+
