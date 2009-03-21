@@ -1,51 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:33467 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbZCJSsT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2009 14:48:19 -0400
-Received: by wf-out-1314.google.com with SMTP id 28so2740963wfa.4
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2009 11:48:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <548cdfc20903100908y6ce7809dw2da12ab8b5cd132b@mail.gmail.com>
-References: <548cdfc20903100908y6ce7809dw2da12ab8b5cd132b@mail.gmail.com>
-Date: Tue, 10 Mar 2009 14:48:16 -0400
-Message-ID: <b6c5339f0903101148o1322a6c0xb6871c6576d01922@mail.gmail.com> (sfid-20090310_194822_268414_DE8D0475)
-Subject: Re: ath5k crashing in device probe
-From: Bob Copeland <me@bobcopeland.com>
-To: Pauli Nieminen <suokkos@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from suva.vyatta.com ([76.74.103.44]:36733 "EHLO suva.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753651AbZCUFs1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:48:27 -0400
+Message-Id: <20090321053718.374135383@vyatta.com> (sfid-20090321_065119_786980_30064F6E)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:43 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>, j@w1.fi
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 76/77] hostap: convert to net_device_ops
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 10, 2009 at 12:08 PM, Pauli Nieminen <suokkos@gmail.com> wr=
-ote:
-> Hello!
->
-> Original bug report to ubuntu bugs:
-> https://bugs.launchpad.net/bugs/339496 This is regression from 2 week=
-s
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-Probably the appropriate thing to do...
+---
+ drivers/net/wireless/hostap/hostap_hw.c   |    1 
+ drivers/net/wireless/hostap/hostap_main.c |   69 ++++++++++++++++++++++--------
+ 2 files changed, 52 insertions(+), 18 deletions(-)
 
-> [ =A0 18.942981] =A0[<ffffffff8041f2de>] ? __const_udelay+0x4e/0x50
-> [ =A0 18.942989] =A0[<ffffffffa02c750a>] lbm_cw_wiphy_register+0x17a/=
-0x210
-> [lbm_cw_cfg80211]
-> [ =A0 18.942998] =A0[<ffffffffa02f1276>]
-> lbm_cw_ieee80211_register_hw+0xb6/0x440 [lbm_cw_mac80211]
-> [ =A0 18.943019] =A0[<ffffffffa0342995>] ath5k_pci_probe+0x10b5/0x148=
-a [ath5k]
+--- a/drivers/net/wireless/hostap/hostap_main.c	2009-03-20 22:31:48.333901386 -0700
++++ b/drivers/net/wireless/hostap/hostap_main.c	2009-03-20 22:31:48.342902082 -0700
+@@ -815,6 +815,46 @@ const struct header_ops hostap_80211_ops
+ };
+ EXPORT_SYMBOL(hostap_80211_ops);
+ 
++
++static const struct net_device_ops hostap_netdev_ops = {
++	.ndo_start_xmit		= hostap_data_start_xmit,
++
++	.ndo_open		= prism2_open,
++	.ndo_stop		= prism2_close,
++	.ndo_do_ioctl		= hostap_ioctl,
++	.ndo_set_mac_address	= prism2_set_mac_address,
++	.ndo_set_multicast_list = hostap_set_multicast_list,
++	.ndo_change_mtu 	= prism2_change_mtu,
++	.ndo_tx_timeout 	= prism2_tx_timeout,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
++static const struct net_device_ops hostap_mgmt_netdev_ops = {
++	.ndo_start_xmit		= hostap_mgmt_start_xmit,
++
++	.ndo_open		= prism2_open,
++	.ndo_stop		= prism2_close,
++	.ndo_do_ioctl		= hostap_ioctl,
++	.ndo_set_mac_address	= prism2_set_mac_address,
++	.ndo_set_multicast_list = hostap_set_multicast_list,
++	.ndo_change_mtu 	= prism2_change_mtu,
++	.ndo_tx_timeout 	= prism2_tx_timeout,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
++static const struct net_device_ops hostap_master_ops = {
++	.ndo_start_xmit 	= hostap_master_start_xmit,
++
++	.ndo_open		= prism2_open,
++	.ndo_stop		= prism2_close,
++	.ndo_do_ioctl		= hostap_ioctl,
++	.ndo_set_mac_address	= prism2_set_mac_address,
++	.ndo_set_multicast_list = hostap_set_multicast_list,
++	.ndo_change_mtu 	= prism2_change_mtu,
++	.ndo_tx_timeout 	= prism2_tx_timeout,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
+ void hostap_setup_dev(struct net_device *dev, local_info_t *local,
+ 		      int type)
+ {
+@@ -830,30 +870,25 @@ void hostap_setup_dev(struct net_device 
+ 		iface->wireless_data.spy_data = &iface->spy_data;
+ 		dev->wireless_data = &iface->wireless_data;
+ 	}
+-	dev->wireless_handlers =
+-		(struct iw_handler_def *) &hostap_iw_handler_def;
+-	dev->do_ioctl = hostap_ioctl;
+-	dev->open = prism2_open;
+-	dev->stop = prism2_close;
+-	dev->set_mac_address = prism2_set_mac_address;
+-	dev->set_multicast_list = hostap_set_multicast_list;
+-	dev->change_mtu = prism2_change_mtu;
+-	dev->tx_timeout = prism2_tx_timeout;
++	dev->wireless_handlers = &hostap_iw_handler_def;
+ 	dev->watchdog_timeo = TX_TIMEOUT;
+ 
+-	if (type == HOSTAP_INTERFACE_AP) {
+-		dev->hard_start_xmit = hostap_mgmt_start_xmit;
++	switch(type) {
++	case HOSTAP_INTERFACE_AP:
++		dev->netdev_ops = &hostap_mgmt_netdev_ops;
+ 		dev->type = ARPHRD_IEEE80211;
+ 		dev->header_ops = &hostap_80211_ops;
+-	} else {
+-		dev->hard_start_xmit = hostap_data_start_xmit;
++		break;
++	case HOSTAP_INTERFACE_MASTER:
++		dev->tx_queue_len = 0;	/* use main radio device queue */
++		dev->netdev_ops = &hostap_master_ops;
++		break;
++	default:
++		dev->netdev_ops = &hostap_netdev_ops;
+ 	}
+ 
+ 	dev->mtu = local->mtu;
+-	if (type != HOSTAP_INTERFACE_MASTER) {
+-		/* use main radio device queue */
+-		dev->tx_queue_len = 0;
+-	}
++
+ 
+ 	SET_ETHTOOL_OPS(dev, &prism2_ethtool_ops);
+ 
+--- a/drivers/net/wireless/hostap/hostap_hw.c	2009-03-20 22:31:48.333901386 -0700
++++ b/drivers/net/wireless/hostap/hostap_hw.c	2009-03-20 22:31:48.343901481 -0700
+@@ -3222,7 +3222,6 @@ while (0)
+ 
+ 	hostap_setup_dev(dev, local, HOSTAP_INTERFACE_MASTER);
+ 
+-	dev->hard_start_xmit = hostap_master_start_xmit;
+ 	dev->type = ARPHRD_IEEE80211;
+ 	dev->header_ops = &hostap_80211_ops;
+ 
 
-lbm_cw_mac80211 is some ubuntu special sauce, I think (I guess lbm =3D=3D
-linux-backport-modules)?  Does this happen with wireless-testing or any
-kernel.org tree?
+-- 
 
---=20
-Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
