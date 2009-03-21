@@ -1,35 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yx-out-2324.google.com ([74.125.44.28]:60161 "EHLO
-	yx-out-2324.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752884AbZCUBnK (ORCPT
+Received: from mail-gx0-f208.google.com ([209.85.217.208]:33076 "EHLO
+	mail-gx0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752190AbZCUSad convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2009 21:43:10 -0400
+	Sat, 21 Mar 2009 14:30:33 -0400
 MIME-Version: 1.0
-In-Reply-To: <20090320213920.GC8120@tesla>
-References: <20090320213920.GC8120@tesla>
-Date: Fri, 20 Mar 2009 18:43:07 -0700
-Message-ID: <43e72e890903201843x23351982xe71851a634a1b13c@mail.gmail.com> (sfid-20090321_024339_421451_2474AB8E)
-Subject: Re: Google Summer of Code 2009 -- Linux wireless testing project
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Max Ott <Max.Ott@nicta.com.au>,
-	Subrata Modak <subrata@linux.vnet.ibm.com>,
-	Qasim Javed <qasimj@gmail.com>,
-	Till Kamppeter <till.kamppeter@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20090321065006.GF3834@kamineko.org>
+References: <20090321065006.GF3834@kamineko.org>
+Date: Sat, 21 Mar 2009 11:30:29 -0700
+Message-ID: <178fec830903211130x7aa2d266u5f249625c4436fd0@mail.gmail.com> (sfid-20090321_193037_869978_08DEEACB)
+Subject: Re: iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time out after
+	500ms
+From: Abhi Kolekar <kolekar.a@gmail.com>
+To: Mattia Dongili <malattia@linux.it>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	reinette.chatre@intel.com, yi.zhu@intel.com, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 20, 2009 at 2:39 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
+Hello Mattia,
+   Do you have 64 bit kernel?
 
-> To start becoming familiar with the Orbit testbed and using OMF you can
-> read their tutorials [8]. I think OMF is completely open source, Maxx
-> correct me if I'm wrong.
+Abhijeet
 
-Yay, OMF is open source:
-
-http://www.mytestbed.net/
-
-  Luis
+On Fri, Mar 20, 2009 at 11:50 PM, Mattia Dongili <malattia@linux.it> wr=
+ote:
+> Hello,
+>
+> I get this error consistently with all the recent kernels:
+> [ =A0338.476057] iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time =
+out after 500ms.
+> [ =A0458.976089] iwl3945: Error sending REPLY_TX_PWR_TABLE_CMD: time =
+out after 500ms.
+> [ =A0598.885036] iwl3945: Microcode SW error detected. =A0Restarting =
+0x82000008.
+> [ =A0598.885050] iwl3945: Error Reply type 0x00000005 cmd REPLY_TX (0=
+x1C) seq 0x02AC ser 0x0000004E
+> [ =A0601.869319] iwl3945: Can't stop Rx DMA.
+> then the wifi connection becomes useless and I have to re-associate t=
+o
+> the AP or sometimes to unload and reload the module to get my connect=
+ion
+> back.
+>
+> The above is on 2.6.29-rc8 but I get it since 2.6.28 (apologies for n=
+ot
+> reporting it earlier). =A0Both my thinkpad x60s and my vaio sz72b are
+> affected.
+> Reproducing it is very easy, I just need to download even a small fil=
+e.
+>
+> After reading some older bug submissions I rebuilt the driver with de=
+bug
+> support and loaded it with debug=3D0x43fff, the log is here:
+> http://kamineko.org/kernel/kern.log
+> The beginning of the log is 2.6.28 with no debug, then you can see a
+> reboot and the module loaded with the debug option on 2.6.29-rc8.
+>
+> Is this a known problem? Is there any other information I can provide=
+ to
+> help fixing it?
+>
+> Thanks
+> --
+> mattia
+> :wq!
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wirel=
+ess" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
