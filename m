@@ -1,73 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50320 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:59696 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647AbZCMMPp (ORCPT
+	with ESMTP id S1751426AbZCUQ5A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 08:15:45 -0400
-Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
+	Sat, 21 Mar 2009 12:57:00 -0400
+Subject: Re: [RFT] mac80211: allow mode changes while interface is up
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-In-Reply-To: <200903131310.44757.helmut.schaa@gmail.com> (sfid-20090313_131127_797518_A5C6CFBB)
-References: <1236939917.5235.7.camel@johannes.local>
-	 <1236941339.5235.14.camel@johannes.local>
-	 <1236941444.5235.16.camel@johannes.local>
-	 <200903131310.44757.helmut.schaa@gmail.com>
-	 (sfid-20090313_131127_797518_A5C6CFBB)
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-x5Lr0z2YenZLiw8rJEwr"
-Date: Fri, 13 Mar 2009 13:15:09 +0100
-Message-Id: <1236946509.5235.37.camel@johannes.local> (sfid-20090313_131548_491767_27AA84D5)
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200903211745.06974.mb@bu3sch.de>
+References: <1237653563.5100.309.camel@johannes.local>
+	 <200903211745.06974.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Rq6JlRGKMGRrnphBxSNr"
+Date: Sat, 21 Mar 2009 17:56:53 +0100
+Message-Id: <1237654613.5100.312.camel@johannes.local> (sfid-20090321_175715_305704_31B33064)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-x5Lr0z2YenZLiw8rJEwr
+--=-Rq6JlRGKMGRrnphBxSNr
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-03-13 at 13:10 +0100, Helmut Schaa wrote:
+On Sat, 2009-03-21 at 17:45 +0100, Michael Buesch wrote:
 
-> > So does iwlwifi.
+> > -	return 0;
+> > +	if (running) {
+> > +		ret =3D ieee80211_open(sdata->dev);
+> > +		if (ret) {
+> > +			/*
+> > +			 * ieee80211_open could fail, for example if the user
+> > +			 * wants to have an interface combination now that we
+> > +			 * do not support -- in that case roll back. This has
+> > +			 * to succeed unless we have a driver/mac80211 bug,
+> > +			 * since the interface was there before!
 >=20
-> Mine does not. I got:
->=20
-> mac80211-phy2: failed to set key (0, XX:XX:XX:XX:XX:XX) to hardware (-22)
->=20
-> iwconfig still shows signal strength etc. but no packets are transmitted
-> anymore.
+> What about memory allocation failures?
+> I think we should check for an error and if one occurs take the interface
+> completely down and return the error to userspace.
 
-Ah, I had an open AP.
+Makes sense, need to audit the code though to verify that
+ieee80211_stop() doesn't puke if you call it twice in a row (since
+dev_close() will call it again)
 
-This is due to iwlwifi still not being fixed to use the sta_notify
-callback rather than the rate control algorithm to add stations to the
-internal map.
+It's only proof-of-concept code -- like I said, I have no interest in
+it.
 
 johannes
 
---=-x5Lr0z2YenZLiw8rJEwr
-Content-Type: application/pgp-signature; name=signature.asc
+--=-Rq6JlRGKMGRrnphBxSNr
+Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Comment: Johannes Berg (powerbook)
 
-iQIcBAABAgAGBQJJuk5KAAoJEKVg1VMiehFYGVgP+gPKrS9CEXdxDSZXRyWji06j
-vpEtSOQOkDy7/ylOhQgwHe0X2wz5k+5DLzXz6f1gnq8amoM46XECG8YFMvSRUO5j
-93cHCF/j1jzQzkbB82F2O/c8WglWY6LxEPsnb/G8Dzs9iRN8DxOZRC43SG1uCian
-YGdvK7k1KTOUFwNIOV0n25a1nXIFn/QKx1L/J8S/ViY3+B+Zilwhu8/QZA8Pd/e+
-nUzq/fTGsEUxOuiFfiMPGfTDy0lADyjIMCp43/Zl9WG7tfF4dLsHGvaeVENkLZxq
-qvHF5mu3UrbBMab2WAPmFiQacxg8dhhF41Z0WeOhFZhrGWq2+F/9eo1Kqb0Re4K5
-R5hJYw6AkpKK0sXXa+YNPRrFGRhC4KcVnsD/aEvKHunkwVH2ymQrZe+evTHmSGVh
-SAHjnOyJIOs6K1W+oSSVKUk79Km4VtLh0yLQACN3h2Ax/K3wDosczeoZhN3Y3qpa
-BY+NJh4q1ZTDM9HeNdiK21Tb0ZTusozeMRMLrUl5xXdNayXcjhnQZmgsNCARtnO4
-Gtzp1wrlVHgt51oodZJ9gExB/CyliMpctzz3I1/VCy8YqalBAUfIZwlXfrnKY/6Y
-TzRgpc5N+8xSa4VS7SdzgCHG6BGJIuPGl0DJanLdeGC31eIZf34FQ4wU0w7M1NlJ
-Q04uPffAc2cBJA0nMBu4
-=uDwT
+iQIcBAABAgAGBQJJxRxSAAoJEKVg1VMiehFYMuUQAL56ZlJEWsapTjaIjY8zmsY/
+7N9CXRRFW8sBFBf5BcH2m88JvYgzTBR404IgUWys11SAH2imwKMQ37pDWT+6U4EC
+xoRB+HRNgRMNqsqKdVCqK3sVW9sPTzvswDA2KE8HTN0LZ0BOxsx2IBzpcVGboX4U
+3uD4HnS/AWpS0JmaSpHlpnM5YIt6JyXfBZmb6ODd+/54rAVsNvRUvhVBkw/2wYXr
+cBaWGWsygVjAsQRV7A9TCV6DeC3jti8lXN+OV56NaiP7B9I2+Km74s1g3J9cOwQY
+44NP0aP2+ZD3LHnYuFgPobGTWJTJ40wwEIoyMlqp5wTsR4ZCiPbFerdYL2A8lecD
+efHwUcE0KwOPrpQTjgwuFovvxZNlvc23Gg9hnkQr8vcsgTcBlLxohSdNld1Gywfe
+zuU0jKeUtAZfHmQKm9ExbBhMf9YvPkQq/LkDNCCOcn7x6uJsFYK4OUT1prGkTd5Q
+sKQlwPrO0/IisRD1r9zE1x57PkZ3krglKGLw4CWjN1yA09yYNHdolIroPfPnNkts
+mo2WBL8AQp4Epxd7DcWi5pKIlEN3NT724nFo4NaEdBnJ/pAc9uBYHmPIMCE26Rr/
+KldkWbzGeLvsbtgAqxs74yz9NCseMmkfr5HTALENxgq1aXpmczdyXlOV7maTUyxS
+eKbTc8kzd58aCPY7Mc5S
+=bYeN
 -----END PGP SIGNATURE-----
 
---=-x5Lr0z2YenZLiw8rJEwr--
+--=-Rq6JlRGKMGRrnphBxSNr--
 
