@@ -1,46 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:50286 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755682AbZC3ULw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2009 16:11:52 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1LoNpk-0004gV-I3
-	for linux-wireless@vger.kernel.org; Mon, 30 Mar 2009 20:11:48 +0000
-Received: from port-87-193-186-180.static.qsc.de ([87.193.186.180])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 20:11:48 +0000
-Received: from thomas by port-87-193-186-180.static.qsc.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2009 20:11:48 +0000
-To: linux-wireless@vger.kernel.org
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
-Date: Mon, 30 Mar 2009 22:11:38 +0200
-Message-ID: <gqr91q$lbo$1@ger.gmane.org> (sfid-20090330_221157_131472_6A9F708A)
-References: <1238113267.29544.14.camel@blob>
+Received: from xc.sipsolutions.net ([83.246.72.84]:40129 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126AbZCUH7v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 03:59:51 -0400
+Subject: Re: [PATCH v2] mac80211: resume properly, add suspend/resume test
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <20090320160308.GB28965@jm.kir.nu>
+References: <1236939917.5235.7.camel@johannes.local>
+	 <1236941058.5235.12.camel@johannes.local>
+	 <20090320160308.GB28965@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-b2shg3bMJVdKzzXH9VVI"
+Date: Sat, 21 Mar 2009 08:59:43 +0100
+Message-Id: <1237622383.5100.162.camel@johannes.local> (sfid-20090321_090041_607407_0925679B)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-In-Reply-To: <1238113267.29544.14.camel@blob>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bernhard Seibold schrieb:
-> --- a/db.txt	2009-03-25 19:38:22.838975857 +0100
-> +++ b/db.txt	2009-03-25 19:39:37.722248019 +0100
-> @@ -165,8 +165,8 @@
->  country DE:
->  	# entries 279004 and 280006
->  	(2400 - 2483.5 @ 40), (N/A, 100 mW)
-> -	# entries 303005 and 304002
-> -	(5150 - 5255 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
-> +	# entries 303005, 304002 and 305002
-> +	(5150 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
->  	# entries 308002 and 309001
->  	(5470 - 5650 @ 40), (N/A, 1000 mW), DFS
->  
-> 
 
-What about 5650-5725? Shouldn't that be added as well? At least my 
-university runs an AP at 5.7GHz.
+--=-b2shg3bMJVdKzzXH9VVI
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2009-03-20 at 18:03 +0200, Jouni Malinen wrote:
+> On Fri, Mar 13, 2009 at 11:44:18AM +0100, Johannes Berg wrote:
+>=20
+> > --- wireless-testing.orig/net/mac80211/debugfs.c	2009-03-13 11:36:57.00=
+0000000 +0100
+> > +++ wireless-testing/net/mac80211/debugfs.c	2009-03-13 11:41:53.0000000=
+00 +0100
+> > +static ssize_t reset_write(struct file *file, const char __user *user_=
+buf,
+> > +			   size_t count, loff_t *ppos)
+>=20
+> > +	__ieee80211_suspend(&local->hw);
+> > +	__ieee80211_resume(&local->hw);
+>=20
+> This seems to have broken build if CONFIG_PM is not defined: pm.c, with
+> these functions, is not included.
+
+Indeed, this file should depend on CONFIG_PM too I suppose, will fix
+that. OTOH, a future patch I have will require _resume to always be
+present, so I'm inclined to just always put the code in. I'll come up
+with a fix in any case.
+
+johannes
+
+--=-b2shg3bMJVdKzzXH9VVI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJxJ5bAAoJEKVg1VMiehFYZNcP/1YAgg4M9DFBEZTrmnU4y071
+C4HcwRjC5rwTn+nXPtyfWMX3VfraJCg8Cskn2gwzh5exPqmCiOr7svHlx2QwByx1
+GOAKDT8YgwwGAu5qHO9yzXWNQTKdZ+6OezBQ9Aj0sSQhAp2akB8IIzJvQ41Ce4NF
+oneQliWY2FWdYCAD2rVJwOwuieypBKxmHHCS8Qyeqek3hshk38qtZfrLT+5XP04p
+lIufvw4Qbe+ffja9xCBOq5AhgSrZEtHZxJhatczZCI5N2QA+Jpy68LyTKbPCXNdT
+014GvulBP8vR17PRJpEjVH80GqKMp3mYN8ieQWTwOM3aPYIcqbwluamcSxyESfPP
+YEf2DCD5K6TTQJVcLfzaketAPMozxzZPspvU6G/x/B6OHQ/ktCH2z+z1OBweQrAb
+HEwTwAxCT2P2rHNEDfVgCOJskw2tUNIqkTrdifXoXFQdVwcYcmPiquOfrMYTwtMb
+7dEg//DtZNT30TerckMmV/cKvf5zCp390AD5wgwBvpU1NmmWg3PRy/tdP/5neSrA
+cFUBDnxEKPD3DGzHZYMFWgfw9AodpZ8rD0n0Rd6ITnxxc7mFXT+k6qJxm20tNoq6
+7OaMzE0+yAh8KvVcOXJcEkHHik3cmjnwrMYoCPqK1yJ0vcerRdQA+3KK9wiCH5M7
+4nsF1/Hph58g4wBohpnu
+=0czU
+-----END PGP SIGNATURE-----
+
+--=-b2shg3bMJVdKzzXH9VVI--
 
