@@ -1,74 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f158.google.com ([209.85.220.158]:52423 "EHLO
-	mail-fx0-f158.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754518AbZCXLFS convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51807 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753089AbZCUMqj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2009 07:05:18 -0400
-Received: by fxm2 with SMTP id 2so2211230fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2009 04:05:15 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Subject: Re: Google Summer of Code 2009 -- Linux wireless roaming project
-Date: Tue, 24 Mar 2009 12:05:05 +0100
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Mircea Gherzan <mgherzan@gmail.com>
-References: <20090320215705.GE8120@tesla> <200903241115.29868.helmut.schaa@gmail.com> <200903241136.03991.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200903241136.03991.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <200903241205.06417.helmut.schaa@gmail.com> (sfid-20090324_120522_864702_943066E9)
+	Sat, 21 Mar 2009 08:46:39 -0400
+Subject: Re: [RFC PATCH v3 5/5] mac80211: add beacon filtering support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	"Luis R.Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <20090321120930.11613.15570.stgit@tikku>
+References: <20090321120558.11613.56299.stgit@tikku>
+	 <20090321120930.11613.15570.stgit@tikku>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-m/QlDTbtoFutU+9eJVNc"
+Date: Sat, 21 Mar 2009 13:46:32 +0100
+Message-Id: <1237639592.5100.182.camel@johannes.local> (sfid-20090321_134710_825766_1897078D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 24. M=C3=A4rz 2009 schrieb Holger Schurig:
-> > Hmm, quick example: AP1 - STA - AP2
-> >
-> > We cannot consider the signal strength as constant as it
-> > varies over time even when neither the STA nor the AP are
-> > moving. Assume a threshold value of t=3D40. Furthermore, the
-> > signal strength of AP1 and AP2 might alter between 35-50 which
-> > means we have an average signal strength of 42,5 > t.
-> > Nevertheless that would result in ping-pongs between AP1 and
-> > AP2 because the signal might drop below t on both APs, while
-> > it would be better to stick to one AP as the signal is already
-> > quite bad (but still good enough to do some communication).
->=20
-> Yeah, but if the client is moving, you have to live with that,=20
-> more or less.
->=20
-> And if the client is not moving (and roaming is a loadable kernel=20
-> module), then simply don't load it :-)
 
-Ah, ok. I was more referring to an ordinary laptop user who sits at his
-desk and once in a while starts moving (for example to a conference roo=
-m).
-While he sits at his desk the optimal solution shouldn't trigger a scan=
- as
-the chance that a better AP pops up is relatively low. Once he starts
-moving scanning is desired.
+--=-m/QlDTbtoFutU+9eJVNc
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> My ad-hoc approach that I already implemented (for non-mac80211)=20
-> shows a quite number of scannings. But that is ok for my=20
-> use-case (e.g. telnet connection via WLAN). "Connection lost" is=20
-> way worse than one scanning/reassociation too much, especially=20
-> if the scanning/association is done intelligently.
->=20
-> So for now I wouldn't optimize here, but make non-sucking roaming=20
-> possible in the first place. We can build upon this anyway.
+On Sat, 2009-03-21 at 14:09 +0200, Kalle Valo wrote:
 
-=46ine with me. But too aggressive scanning might lead to unstable or
-intermittent connections, especially when WPA-EAP without PMKSA-caching
-is used where roaming from one AP to another can take up to several
-seconds ;)
+> +/**
+> + * ieee80211_beacon_loss - inform hardware does not receive beacons
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @vif: &struct ieee80211_vif pointer from &struct ieee80211_if_init_co=
+nf.
+> + *
+> + * When beacon filtering is enabled with IEEE80211_HW_BEACON_FILTERING a=
+nd
+> + * IEEE80211_CONF_PS is set, the driver needs to inform whenever the
+> + * hardware is not receiving beacons with this function.
+> + */
+> +void ieee80211_beacon_loss(struct ieee80211_hw *hw,
+> +			   struct ieee80211_vif *vif);
 
-And additionally if the connection is idle, repeated scanning will
-increase the power consumption which is not desired on battery driven
-devices.
+Strictly speaking there's no need to pass both since the mac80211 sdata
+can be obtained from vif and that has a pointer to local, but it doesn't
+really matter.
 
-Helmut
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
+
+--=-m/QlDTbtoFutU+9eJVNc
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Comment: Johannes Berg (powerbook)
+
+iQIcBAABAgAGBQJJxOGlAAoJEKVg1VMiehFYjbAP/1nYEUNnw9xnlaEt8YSbSnRD
+MgpnbNpTfKJJJ3VGb6D8katosH7yxSp6NsBeJ+XVxBVZkLTRlbTFNqTeoX1Rdf6L
+gPzNJVA07FrlSNd3EGJiK361zrhlV/FuhOFTru9U0WkN8ZcGl1nMawuA20uiiNMS
+v3VOyutf4E0WnSGinw8Q3uy3Ur924Fo5+mcZls5Lp5u7OanHTBG624XDnm8ou+Hw
+wRkNjlykL5Pxizj1N4cZA1bc3OdVgvvuPX/vmYLaCfuQfSGFKxRM3ObiDPqTlrJr
+EHfQn0OTPZth417NtT1FQO/GcrhZVh1o9K258U1MBnXx/bfrMACP6kmPwKFSlqdB
+xMqwH/5OkbKL7DpfL0rFZfG44qk6MIC0yfNmWagcow7Xel8yhsXX5H9BqrtGTcZ5
+3F/lf7o8Y5XllpF814kPJINL3WSX2m1mEfbFv093zy+bi04uXmn/Ln7lUeCzg3BG
+NyECU0qz97ECBn5ulFuH1UZWarLUXHwRZYDqReSGbKpdFZe68pE48j6LEGLxyzLr
+d0vDke/ZHkFC1o+oo2Lx218tvAyS3iO7J119upfKO/iu3wD2wsNwm2V/LKC3rQBM
+k4vX3ER5t7fw8wY7BSFMVxD4HS+j88F1/WV9/cFmdwcxaua4Nie2WSRCMSvtuyy+
+bVYKNOyxBiI+QyJe8nk0
+=qIex
+-----END PGP SIGNATURE-----
+
+--=-m/QlDTbtoFutU+9eJVNc--
+
