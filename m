@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54255 "EHLO mail.atheros.com"
+Received: from suva.vyatta.com ([76.74.103.44]:36707 "EHLO suva.vyatta.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758505AbZCMPAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 11:00:39 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2009 08:00:38 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Populate HT limitation with TKIP/WEP to the handler for SIOCSIWENCODE too
-Date: Fri, 13 Mar 2009 20:26:52 +0530
-Message-ID: <1236956212-28648-1-git-send-email-vasanth@atheros.com> (sfid-20090313_160050_022208_CF3B2FD6)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1760320AbZCUFsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:48:24 -0400
+Message-Id: <20090321053717.682860987@vyatta.com> (sfid-20090321_065120_534694_F852C1AD)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:34 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>, mcgrof@gmail.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 67/77] prism54: convert to net_device_ops
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- net/mac80211/wext.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+Also, make ethtool_ops const as it should be, and get rid
+of useless cast.
 
-diff --git a/net/mac80211/wext.c b/net/mac80211/wext.c
-index 935c63e..e55d283 100644
---- a/net/mac80211/wext.c
-+++ b/net/mac80211/wext.c
-@@ -630,7 +630,7 @@ static int ieee80211_ioctl_siwencode(struct net_device *dev,
- 	struct ieee80211_sub_if_data *sdata;
- 	int idx, i, alg = ALG_WEP;
- 	u8 bcaddr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
--	int remove = 0;
-+	int remove = 0, ret;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-@@ -656,11 +656,20 @@ static int ieee80211_ioctl_siwencode(struct net_device *dev,
- 		return 0;
- 	}
- 
--	return ieee80211_set_encryption(
-+	ret = ieee80211_set_encryption(
- 		sdata, bcaddr,
- 		idx, alg, remove,
- 		!sdata->default_key,
- 		keybuf, erq->length);
-+
-+	if (!ret) {
-+		if (remove)
-+			sdata->u.mgd.flags &= ~IEEE80211_STA_TKIP_WEP_USED;
-+		else
-+			sdata->u.mgd.flags |= IEEE80211_STA_TKIP_WEP_USED;
-+	}
-+
-+	return ret;
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+
+
+--- a/drivers/net/wireless/prism54/islpci_dev.c	2009-03-20 21:45:40.782964097 -0700
++++ b/drivers/net/wireless/prism54/islpci_dev.c	2009-03-20 22:26:05.140779360 -0700
+@@ -804,10 +804,23 @@ static void islpci_ethtool_get_drvinfo(s
+ 	strcpy(info->version, DRV_VERSION);
  }
  
+-static struct ethtool_ops islpci_ethtool_ops = {
++static const struct ethtool_ops islpci_ethtool_ops = {
+ 	.get_drvinfo = islpci_ethtool_get_drvinfo,
+ };
  
++static const struct net_device_ops islpci_netdev_ops = {
++	.ndo_open 		= islpci_open,
++	.ndo_stop		= islpci_close,
++	.ndo_get_stats		= islpci_statistics,
++	.ndo_do_ioctl		= prism54_ioctl,
++	.ndo_start_xmit		= islpci_eth_transmit,
++	.ndo_tx_timeout		= islpci_eth_tx_timeout,
++	.ndo_set_mac_address 	= prism54_set_mac_address,
++	.ndo_change_mtu		= eth_change_mtu,
++	.ndo_set_mac_address 	= eth_mac_addr,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
+ struct net_device *
+ islpci_setup(struct pci_dev *pdev)
+ {
+@@ -827,25 +840,16 @@ islpci_setup(struct pci_dev *pdev)
+ 	ndev->irq = pdev->irq;
+ 
+ 	/* initialize the function pointers */
+-	ndev->open = &islpci_open;
+-	ndev->stop = &islpci_close;
+-	ndev->get_stats = &islpci_statistics;
+-	ndev->do_ioctl = &prism54_ioctl;
+-	ndev->wireless_handlers =
+-	    (struct iw_handler_def *) &prism54_handler_def;
++	ndev->netdev_ops = &islpci_netdev_ops;
++	ndev->wireless_handlers = &prism54_handler_def;
+ 	ndev->ethtool_ops = &islpci_ethtool_ops;
+ 
+-	ndev->hard_start_xmit = &islpci_eth_transmit;
+ 	/* ndev->set_multicast_list = &islpci_set_multicast_list; */
+ 	ndev->addr_len = ETH_ALEN;
+-	ndev->set_mac_address = &prism54_set_mac_address;
+ 	/* Get a non-zero dummy MAC address for nameif. Jean II */
+ 	memcpy(ndev->dev_addr, dummy_mac, 6);
+ 
+-#ifdef HAVE_TX_TIMEOUT
+ 	ndev->watchdog_timeo = ISLPCI_TX_TIMEOUT;
+-	ndev->tx_timeout = &islpci_eth_tx_timeout;
+-#endif
+ 
+ 	/* allocate a private device structure to the network device  */
+ 	priv = netdev_priv(ndev);
+
 -- 
-1.5.5.1
 
