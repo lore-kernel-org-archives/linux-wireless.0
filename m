@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:39048 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754205AbZC0P6L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2009 11:58:11 -0400
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: [RFC] rfkill/rfkill-input userspace API
-Date: Fri, 27 Mar 2009 12:58:01 -0300
-Message-Id: <1238169485-29298-1-git-send-email-hmh@hmh.eng.br> (sfid-20090327_165815_381528_72AF136C)
+Received: from suva.vyatta.com ([76.74.103.44]:50129 "EHLO suva.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762084AbZCUFwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:52:30 -0400
+Message-Id: <20090321053716.965014826@vyatta.com> (sfid-20090321_065346_628214_B1AAFDDF)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:25 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>, jt@hpl.hp.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 58/77] wavelan: convert to net_device_ops
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set is being posted for comments and ideas.
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-It implements a sysfs API for the rfkill core that allows userspace to
-completely implement the operations that rfkill-input is capable of.
-
-I am not too happy about it, I think it looks ugly.  But I had no
-better ideas.  Comments and ideas for a better one are welcome.
-
-Note: unless something is done to change the way X.org deals with
-input devices, rfkill-input is _useless_ in a large number of setups
-as far as input event handling goes, because it will never get any
-events after X.org evdev grabs the input device.
-
-This patch set applies on top of the rfkill update patchset I just
-posted, which is, in turn, based on current wireless-testing master.
-
-Henrique de Moraes Holschuh (4):
-      rfkill: prepare to export global states to userspace
-      rfkill: expose global switches through sysfs
-      rfkill: expose global state to sysfs
-      rfkill: export events for global state changes
+--- a/drivers/net/wireless/wavelan_cs.c	2009-03-20 22:16:50.602027068 -0700
++++ b/drivers/net/wireless/wavelan_cs.c	2009-03-20 22:25:51.618651474 -0700
+@@ -4436,6 +4436,19 @@ wavelan_close(struct net_device *	dev)
+   return 0;
+ }
+ 
++static const struct net_device_ops wavelan_netdev_ops = {
++	.ndo_open 		= wavelan_open,
++	.ndo_stop		= wavelan_close,
++	.ndo_start_xmit		= wavelan_packet_xmit,
++	.ndo_set_multicast_list = wavelan_set_multicast_list,
++#ifdef SET_MAC_ADDRESS
++	.ndo_set_mac_address	= wavelan_set_mac_address,
++#endif
++	.ndo_tx_timeout		= wavelan_watchdog,
++	.ndo_change_mtu		= eth_change_mtu,
++	.ndo_validate_addr	= eth_validate_addr,
++};
++
+ /*------------------------------------------------------------------*/
+ /*
+  * wavelan_attach() creates an "instance" of the driver, allocating
+@@ -4496,16 +4509,7 @@ wavelan_probe(struct pcmcia_device *p_de
+   lp->dev = dev;
+ 
+   /* wavelan NET3 callbacks */
+-  dev->open = &wavelan_open;
+-  dev->stop = &wavelan_close;
+-  dev->hard_start_xmit = &wavelan_packet_xmit;
+-  dev->set_multicast_list = &wavelan_set_multicast_list;
+-#ifdef SET_MAC_ADDRESS
+-  dev->set_mac_address = &wavelan_set_mac_address;
+-#endif	/* SET_MAC_ADDRESS */
+-
+-  /* Set the watchdog timer */
+-  dev->tx_timeout	= &wavelan_watchdog;
++  dev->netdev_ops = &wavelan_netdev_ops;
+   dev->watchdog_timeo	= WATCHDOG_JIFFIES;
+   SET_ETHTOOL_OPS(dev, &ops);
+ 
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
 
