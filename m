@@ -1,62 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-156-71.gdrpmi.dsl-w.verizon.net ([71.115.156.71]:45417
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752649AbZCETJJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 14:09:09 -0500
-MIME-Version: 1.0
-Date: Thu, 05 Mar 2009 14:09:06 -0500
-From: <pat-lkml@erley.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Alexey Yudichev <ayudichev@yahoo.co.uk>,
-	"Christoph .J Thompson" <cjsthompson@gmail.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: ath5k master (AP) mode
-In-Reply-To: <1236253402.31456.8.camel@localhost>
-References: <4dd58f490903041329p54ec56ceh1b64ab000027eac5@mail.gmail.com> <4dd58f490903041333y4e2abe8r72204232ec4a65ac@mail.gmail.com> <20090304232625.cc47eb46.cjsthompson@gmail.com> <4dd58f490903041451x5044b464k47d70b1210b12f11@mail.gmail.com> <49AF077D.2020408@erley.org> <1236253402.31456.8.camel@localhost>
-Message-ID: <041a41424b1a9851b471a7a3b794dc47@127.0.0.1> (sfid-20090305_200912_681199_4B335845)
-Content-Type: text/plain; charset="UTF-8"
+Received: from suva.vyatta.com ([76.74.103.44]:50130 "EHLO suva.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762082AbZCUFwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:52:30 -0400
+Message-Id: <20090321053716.884788530@vyatta.com> (sfid-20090321_065344_500224_3A73160E)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:24 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>, jt@hpl.hp.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 57/77] wavelan: convert to internal net_device_stats
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 05 Mar 2009 06:43:22 -0500, Dan Williams <dcbw@redhat.com> wrote:
-> On Wed, 2009-03-04 at 17:58 -0500, pat-lkml wrote:
->> Alexey Yudichev wrote:
->> >> On Wed, 4 Mar 2009 21:33:21 +0000
->> >> Alexey Yudichev <ayudichev@yahoo.co.uk> wrote:
->> >>> Hello,
->> >>>
->> >>> I've just joined the list so don't know how to join the same thread
->> >>> so
->> >>> to indicate that it's the same matter I use the same subject. I am
->> >>> trying to make my "04:01.0 Ethernet controller: Atheros
->> >>> Communications
->> >>> Inc. Atheros AR5001X+ Wireless Network Adapter (rev 01)" which is
->> >>> identified by ath5k as
->> >>> [   10.356742] ath5k phy0: Atheros AR5213A chip found (MAC: 0x59,
->> >>> PHY: 0x43)
->> >>> [   10.356748] ath5k phy0: RF5112B multiband radio found (0x36)
->> >> I have the exact same card (AR5001X+) working in master mode with
->> >> hostapd. What kernel version and hostapd version do you use?
->> > 
->> > Hi, I use 2.6.27-11-generic (from ubuntu's
->> > linux-backports-modules-intrepid-generic), hostapd v0.5.10.
->> 
->> I don't know if it's intended, or just not implemented, but iwconfig
->> <iface> mode master
->> won't work with mac80211 drivers.  Hostapd knows how to set master mode
->> on it's own.
-> 
-> Hostapd needs to be used for master mode in *any* case.  So yes, its
-> intended that you need hostapd for master mode with mac80211 drivers.
-> Just switching the card to master mode simply won't work, because
-> there's oh-so-much-more setup required in addition to that, which
-> hostapd knows how to do.
-> 
-> Dan
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-Thanks for confirming this.  It was what I understood to be the case, 
-and what experimentation had shown, but I was not sure if it was by 
-design, or just not implemented yet.
 
-Pat Erley
+--- a/drivers/net/wireless/wavelan_cs.c	2009-03-20 16:59:43.049838921 -0700
++++ b/drivers/net/wireless/wavelan_cs.c	2009-03-20 17:03:26.637026504 -0700
+@@ -1352,21 +1352,6 @@ wv_init_info(struct net_device *	dev)
+  * or wireless extensions
+  */
+ 
+-/*------------------------------------------------------------------*/
+-/*
+- * Get the current ethernet statistics. This may be called with the
+- * card open or closed.
+- * Used when the user read /proc/net/dev
+- */
+-static en_stats	*
+-wavelan_get_stats(struct net_device *	dev)
+-{
+-#ifdef DEBUG_IOCTL_TRACE
+-  printk(KERN_DEBUG "%s: <>wavelan_get_stats()\n", dev->name);
+-#endif
+-
+-  return(&((net_local *)netdev_priv(dev))->stats);
+-}
+ 
+ /*------------------------------------------------------------------*/
+ /*
+@@ -2817,7 +2802,7 @@ wv_packet_read(struct net_device *		dev,
+       printk(KERN_INFO "%s: wv_packet_read(): could not alloc_skb(%d, GFP_ATOMIC)\n",
+ 	     dev->name, sksize);
+ #endif
+-      lp->stats.rx_dropped++;
++      dev->stats.rx_dropped++;
+       /*
+        * Not only do we want to return here, but we also need to drop the
+        * packet on the floor to clear the interrupt.
+@@ -2877,8 +2862,8 @@ wv_packet_read(struct net_device *		dev,
+   netif_rx(skb);
+ 
+   /* Keep stats up to date */
+-  lp->stats.rx_packets++;
+-  lp->stats.rx_bytes += sksize;
++  dev->stats.rx_packets++;
++  dev->stats.rx_bytes += sksize;
+ 
+ #ifdef DEBUG_RX_TRACE
+   printk(KERN_DEBUG "%s: <-wv_packet_read()\n", dev->name);
+@@ -2980,13 +2965,13 @@ wv_packet_rcv(struct net_device *	dev)
+       /* Check status */
+       if((status & RX_RCV_OK) != RX_RCV_OK)
+ 	{
+-	  lp->stats.rx_errors++;
++	  dev->stats.rx_errors++;
+ 	  if(status & RX_NO_SFD)
+-	    lp->stats.rx_frame_errors++;
++	    dev->stats.rx_frame_errors++;
+ 	  if(status & RX_CRC_ERR)
+-	    lp->stats.rx_crc_errors++;
++	    dev->stats.rx_crc_errors++;
+ 	  if(status & RX_OVRRUN)
+-	    lp->stats.rx_over_errors++;
++	    dev->stats.rx_over_errors++;
+ 
+ #ifdef DEBUG_RX_FAIL
+ 	  printk(KERN_DEBUG "%s: wv_packet_rcv(): packet not received ok, status = 0x%x\n",
+@@ -3073,7 +3058,7 @@ wv_packet_write(struct net_device *	dev,
+   dev->trans_start = jiffies;
+ 
+   /* Keep stats up to date */
+-  lp->stats.tx_bytes += length;
++  dev->stats.tx_bytes += length;
+ 
+   spin_unlock_irqrestore(&lp->spinlock, flags);
+ 
+@@ -4106,7 +4091,7 @@ wavelan_interrupt(int		irq,
+ 	      printk(KERN_INFO "%s: wv_interrupt(): receive buffer overflow\n",
+ 		     dev->name);
+ #endif
+-	      lp->stats.rx_over_errors++;
++	      dev->stats.rx_over_errors++;
+ 	      lp->overrunning = 1;
+       	    }
+ 
+@@ -4155,7 +4140,7 @@ wavelan_interrupt(int		irq,
+ 	  /* Check for possible errors */
+ 	  if((tx_status & TX_OK) != TX_OK)
+ 	    {
+-	      lp->stats.tx_errors++;
++	      dev->stats.tx_errors++;
+ 
+ 	      if(tx_status & TX_FRTL)
+ 		{
+@@ -4170,14 +4155,14 @@ wavelan_interrupt(int		irq,
+ 		  printk(KERN_DEBUG "%s: wv_interrupt(): DMA underrun\n",
+ 			 dev->name);
+ #endif
+-		  lp->stats.tx_aborted_errors++;
++		  dev->stats.tx_aborted_errors++;
+ 		}
+ 	      if(tx_status & TX_LOST_CTS)
+ 		{
+ #ifdef DEBUG_TX_FAIL
+ 		  printk(KERN_DEBUG "%s: wv_interrupt(): no CTS\n", dev->name);
+ #endif
+-		  lp->stats.tx_carrier_errors++;
++		  dev->stats.tx_carrier_errors++;
+ 		}
+ 	      if(tx_status & TX_LOST_CRS)
+ 		{
+@@ -4185,14 +4170,14 @@ wavelan_interrupt(int		irq,
+ 		  printk(KERN_DEBUG "%s: wv_interrupt(): no carrier\n",
+ 			 dev->name);
+ #endif
+-		  lp->stats.tx_carrier_errors++;
++		  dev->stats.tx_carrier_errors++;
+ 		}
+ 	      if(tx_status & TX_HRT_BEAT)
+ 		{
+ #ifdef DEBUG_TX_FAIL
+ 		  printk(KERN_DEBUG "%s: wv_interrupt(): heart beat\n", dev->name);
+ #endif
+-		  lp->stats.tx_heartbeat_errors++;
++		  dev->stats.tx_heartbeat_errors++;
+ 		}
+ 	      if(tx_status & TX_DEFER)
+ 		{
+@@ -4216,14 +4201,14 @@ wavelan_interrupt(int		irq,
+ #endif
+ 		      if(!(tx_status & TX_NCOL_MASK))
+ 			{
+-			  lp->stats.collisions += 0x10;
++			  dev->stats.collisions += 0x10;
+ 			}
+ 		    }
+ 		}
+ 	    }	/* if(!(tx_status & TX_OK)) */
+ 
+-	  lp->stats.collisions += (tx_status & TX_NCOL_MASK);
+-	  lp->stats.tx_packets++;
++	  dev->stats.collisions += (tx_status & TX_NCOL_MASK);
++	  dev->stats.tx_packets++;
+ 
+ 	  netif_wake_queue(dev);
+ 	  outb(CR0_INT_ACK | OP0_NOP, LCCR(base));	/* Acknowledge the interrupt */
+@@ -4514,7 +4499,6 @@ wavelan_probe(struct pcmcia_device *p_de
+   dev->open = &wavelan_open;
+   dev->stop = &wavelan_close;
+   dev->hard_start_xmit = &wavelan_packet_xmit;
+-  dev->get_stats = &wavelan_get_stats;
+   dev->set_multicast_list = &wavelan_set_multicast_list;
+ #ifdef SET_MAC_ADDRESS
+   dev->set_mac_address = &wavelan_set_mac_address;
+--- a/drivers/net/wireless/wavelan_cs.p.h	2009-03-20 17:02:30.295089835 -0700
++++ b/drivers/net/wireless/wavelan_cs.p.h	2009-03-20 17:03:17.387027572 -0700
+@@ -576,7 +576,6 @@ struct wavepoint_table
+ /****************************** TYPES ******************************/
+ 
+ /* Shortcuts */
+-typedef struct net_device_stats	en_stats;
+ typedef struct iw_statistics	iw_stats;
+ typedef struct iw_quality	iw_qual;
+ typedef struct iw_freq		iw_freq;
+@@ -592,8 +591,6 @@ typedef u_char		mac_addr[WAVELAN_ADDR_SI
+  * For each network interface, Linux keep data in two structure. "device"
+  * keep the generic data (same format for everybody) and "net_local" keep
+  * the additional specific data.
+- * Note that some of this specific data is in fact generic (en_stats, for
+- * example).
+  */
+ struct net_local
+ {
+@@ -601,7 +598,6 @@ struct net_local
+   struct net_device *	dev;		/* Reverse link... */
+   spinlock_t	spinlock;	/* Serialize access to the hardware (SMP) */
+   struct pcmcia_device *	link;		/* pcmcia structure */
+-  en_stats	stats;		/* Ethernet interface statistics */
+   int		nresets;	/* Number of hw resets */
+   u_char	configured;	/* If it is configured */
+   u_char	reconfig_82593;	/* Need to reconfigure the controller */
+@@ -694,8 +690,6 @@ static void
+ static void
+ 	wv_init_info(struct net_device *);	/* display startup info */
+ /* ------------------- IOCTL, STATS & RECONFIG ------------------- */
+-static en_stats	*
+-	wavelan_get_stats(struct net_device *);	/* Give stats /proc/net/dev */
+ static iw_stats *
+ 	wavelan_get_wireless_stats(struct net_device *);
+ /* ----------------------- PACKET RECEPTION ----------------------- */
+
+-- 
+
