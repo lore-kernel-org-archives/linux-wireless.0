@@ -1,71 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.226]:16420 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752980AbZCAOhB convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60382 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753884AbZCUDxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2009 09:37:01 -0500
-MIME-Version: 1.0
-In-Reply-To: <1235884043.9224.12.camel@mj>
-References: <1235688271-22346-1-git-send-email-jirislaby@gmail.com>
-	 <20090226230338.M86894@bobcopeland.com> <49A7236E.2020807@gmail.com>
-	 <b6c5339f0902261528i7b581125k29927c3c5ac4fe4c@mail.gmail.com>
-	 <49A726A7.6090809@gmail.com> <20090227022704.GA29850@hash.localnet>
-	 <1235884043.9224.12.camel@mj>
-Date: Sun, 1 Mar 2009 09:36:59 -0500
-Message-ID: <b6c5339f0903010636o15afa42en4e1b1eb81c2c06e2@mail.gmail.com> (sfid-20090301_153711_167739_7F17C9A3)
-Subject: Re: [ath5k-devel] [PATCH 1/1] ath5k: fix hw rate index condition
-From: Bob Copeland <me@bobcopeland.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 20 Mar 2009 23:53:12 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Quentin@armitage.org.uk,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/5] cfg80211: few reg fixes and removes OLD_REG
+Date: Fri, 20 Mar 2009 23:53:03 -0400
+Message-Id: <1237607588-6316-1-git-send-email-lrodriguez@atheros.com> (sfid-20090321_045316_436771_A4A5D92C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 1, 2009 at 12:07 AM, Pavel Roskin <proski@gnu.org> wrote:
-> On Thu, 2009-02-26 at 21:27 -0500, Bob Copeland wrote:
->
->> Actually, I remembered in the dark recesses of my moldering brain
->> that someone had a lost patch for this a while ago, so I searched
->> the archives. =A0Pavel, ok to add your s-o-b?
->
-> Since my patch was dropped and the new patch was implemented without =
-my
-> participation, it makes no sense to put my s-o-b on the code I didn't
-> write (even though I wrote something similar before).
+First two are bug fixes candidates for stable, the rest removes OLD_REG.
 
-Ok, I just wanted to be sure to maintain proper credit, the "From" shou=
-ld
-suffice.  I did rewrite the patch but it actually had an identical diff=
-=2E
-=46WIW, the thread didn't give a clue why it didn't make it upstream, j=
-ust
-missed I guess (http://marc.info/?l=3Dlinux-wireless&m=3D12248000251962=
-7&w=3D2,
-ultimately that problem was fixed by correctly setting the rs_more flag=
-).
+Luis R. Rodriguez (5):
+  cfg80211: force last_request to be set for OLD_REG if regdom is EU
+  cfg80211: fix incorrect assumption on last_request for 11d
+  cfg80211: make regdom module parameter available oustide of OLD_REG
+  cfg80211: remove code about country IE support with OLD_REG
+  cfg80211: remove CONFIG_WIRELESS_OLD_REGULATORY
 
-Anyway, the patch, while IMO correct, will still result in mac80211
-warning in ieee80211_rx with -1 just as 255 will; it just fixes the
-subsequent out of bound read.  If we want to tell mac80211 a real rate,
-I think we should change it to s8 then hw_to_driver_rix should do
-something like:
+ Documentation/feature-removal-schedule.txt |   34 +++--
+ net/wireless/Kconfig                       |   33 -----
+ net/wireless/nl80211.c                     |    6 -
+ net/wireless/reg.c                         |  187 ++++------------------------
+ 4 files changed, 46 insertions(+), 214 deletions(-)
 
-idx =3D array[x][y];
-if (WARN_ON(idx < 0))
-   idx =3D 0;
-
-return idx;
-
-Then we get the warning in the driver and we also return a real rate up
-the stack.  I'll prep a patch for this unless there are any objections.
-
---=20
-Bob Copeland %% www.bobcopeland.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
