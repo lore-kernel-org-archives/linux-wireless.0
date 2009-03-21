@@ -1,118 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47436 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:34465 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019AbZCMLww (ORCPT
+	with ESMTP id S1759759AbZCUQj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2009 07:52:52 -0400
-Subject: [PATCH] wireless: radiotap updates
+	Sat, 21 Mar 2009 12:39:27 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Ll4EF-0004MJ-MW
+	for linux-wireless@vger.kernel.org; Sat, 21 Mar 2009 17:39:24 +0100
+Subject: [RFT] mac80211: allow mode changes while interface is up
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Fri, 13 Mar 2009 12:52:10 +0100
-Message-Id: <1236945130.5235.35.camel@johannes.local> (sfid-20090313_125256_268432_1CA91841)
+Date: Sat, 21 Mar 2009 17:39:23 +0100
+Message-Id: <1237653563.5100.309.camel@johannes.local> (sfid-20090321_173939_639387_E07A8200)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Radiotap was updated to include a "bad PLCP" flag and standardise
-the "bad FCS" flag in the "flags" rather than "RX flags" field,
-this patch updates Linux to that standard.
+It might be nicer sometimes to allow mode changes while the
+interface is up, e.g. from managed to ibss mode, so that IP
+configuration is retained. This patch changes mac80211 to
+support that, it effectively internally behaves as though
+you had actually done a down/change/up cycle.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/libertas/radiotap.h |   10 ----------
- drivers/net/wireless/libertas/rx.c       |   12 ++----------
- include/net/ieee80211_radiotap.h         |    4 +++-
- net/mac80211/rx.c                        |    7 ++++---
- 4 files changed, 9 insertions(+), 24 deletions(-)
+COMPLETELY UNTESTED. If anyone needs this functionality
+please test and adopt this patch -- I have no interest in
+pushing it into the kernel.
 
---- wireless-testing.orig/drivers/net/wireless/libertas/radiotap.h	2009-02-11 18:00:53.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/radiotap.h	2009-03-13 12:49:09.000000000 +0100
-@@ -33,22 +33,12 @@ struct rx_radiotap_hdr {
- 	struct ieee80211_radiotap_header hdr;
- 	u8 flags;
- 	u8 rate;
--	u16 chan_freq;
--	u16 chan_flags;
--	u8 antenna;
- 	u8 antsignal;
--	u16 rx_flags;
--#if 0
--	u8 pad[IEEE80211_RADIOTAP_HDRLEN - 18];
--#endif
- } __attribute__ ((packed));
+ net/mac80211/iface.c |   36 +++++++++++++++++++++++++-----------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/iface.c	2009-03-21 17:20:23.000000000 +0100
++++ wireless-testing/net/mac80211/iface.c	2009-03-21 17:26:59.000000000 +0100
+@@ -749,24 +749,22 @@ static void ieee80211_setup_sdata(struct
+ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+ 			     enum nl80211_iftype type)
+ {
+-	ASSERT_RTNL();
++	int ret = 0;
++	bool running = false;
++	enum nl80211_iftype oldtype;
  
- #define RX_RADIOTAP_PRESENT (			\
- 	(1 << IEEE80211_RADIOTAP_FLAGS) |	\
- 	(1 << IEEE80211_RADIOTAP_RATE) |	\
--	(1 << IEEE80211_RADIOTAP_CHANNEL) |	\
--	(1 << IEEE80211_RADIOTAP_ANTENNA) |	\
- 	(1 << IEEE80211_RADIOTAP_DB_ANTSIGNAL) |\
--	(1 << IEEE80211_RADIOTAP_RX_FLAGS) |	\
- 	0)
+-	if (type == sdata->vif.type)
+-		return 0;
++	ASSERT_RTNL();
  
---- wireless-testing.orig/include/net/ieee80211_radiotap.h	2009-02-11 18:00:53.000000000 +0100
-+++ wireless-testing/include/net/ieee80211_radiotap.h	2009-03-13 12:49:09.000000000 +0100
-@@ -230,8 +230,10 @@ enum ieee80211_radiotap_type {
- 						 * 802.11 header and payload
- 						 * (to 32-bit boundary)
- 						 */
-+#define IEEE80211_RADIOTAP_F_BADFCS	0x40	/* bad FCS */
+ 	/* Setting ad-hoc mode on non-IBSS channel is not supported. */
+ 	if (sdata->local->oper_channel->flags & IEEE80211_CHAN_NO_IBSS &&
+ 	    type == NL80211_IFTYPE_ADHOC)
+ 		return -EOPNOTSUPP;
+ 
+-	/*
+-	 * We could, here, on changes between IBSS/STA/MESH modes,
+-	 * invoke an MLME function instead that disassociates etc.
+-	 * and goes into the requested mode.
+-	 */
++	oldtype = sdata->vif.type;
++	running = netif_running(sdata->dev);
+ 
+-	if (netif_running(sdata->dev))
+-		return -EBUSY;
++	if (running)
++		ieee80211_stop(sdata->dev);
+ 
+ 	/* Purge and reset type-dependent state. */
+ 	ieee80211_teardown_sdata(sdata->dev);
+@@ -778,7 +776,23 @@ int ieee80211_if_change_type(struct ieee
+ 			sdata->local->hw.conf.channel->band);
+ 	sdata->drop_unencrypted = 0;
+ 
+-	return 0;
++	if (running) {
++		ret = ieee80211_open(sdata->dev);
++		if (ret) {
++			/*
++			 * ieee80211_open could fail, for example if the user
++			 * wants to have an interface combination now that we
++			 * do not support -- in that case roll back. This has
++			 * to succeed unless we have a driver/mac80211 bug,
++			 * since the interface was there before!
++			 */
++			ieee80211_teardown_sdata(sdata->dev);
++			ieee80211_setup_sdata(sdata, oldtype);
++			WARN_ON(ieee80211_open(sdata->dev));
++		}
++	}
 +
- /* For IEEE80211_RADIOTAP_RX_FLAGS */
--#define IEEE80211_RADIOTAP_F_RX_BADFCS	0x0001	/* frame failed crc check */
-+#define IEEE80211_RADIOTAP_F_RX_BADPLCP	0x0002	/* frame has bad PLCP */
- 
- /* For IEEE80211_RADIOTAP_TX_FLAGS */
- #define IEEE80211_RADIOTAP_F_TX_FAIL	0x0001	/* failed due to excessive
---- wireless-testing.orig/drivers/net/wireless/libertas/rx.c	2009-02-11 18:00:53.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/libertas/rx.c	2009-03-13 12:49:09.000000000 +0100
-@@ -351,19 +351,11 @@ static int process_rxed_802_11_packet(st
- 	radiotap_hdr.hdr.it_pad = 0;
- 	radiotap_hdr.hdr.it_len = cpu_to_le16 (sizeof(struct rx_radiotap_hdr));
- 	radiotap_hdr.hdr.it_present = cpu_to_le32 (RX_RADIOTAP_PRESENT);
--	/* unknown values */
--	radiotap_hdr.flags = 0;
--	radiotap_hdr.chan_freq = 0;
--	radiotap_hdr.chan_flags = 0;
--	radiotap_hdr.antenna = 0;
--	/* known values */
-+	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
-+		radiotap_hdr.flags |= IEEE80211_RADIOTAP_F_BADFCS;
- 	radiotap_hdr.rate = convert_mv_rate_to_radiotap(prxpd->rx_rate);
- 	/* XXX must check no carryout */
- 	radiotap_hdr.antsignal = prxpd->snr + prxpd->nf;
--	radiotap_hdr.rx_flags = 0;
--	if (!(prxpd->status & cpu_to_le16(MRVDRV_RXPD_STATUS_OK)))
--		radiotap_hdr.rx_flags |= IEEE80211_RADIOTAP_F_RX_BADFCS;
--	//memset(radiotap_hdr.pad, 0x11, IEEE80211_RADIOTAP_HDRLEN - 18);
- 
- 	/* chop the rxpd */
- 	skb_pull(skb, sizeof(struct rxpd));
---- wireless-testing.orig/net/mac80211/rx.c	2009-02-17 22:07:37.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2009-03-13 12:49:09.000000000 +0100
-@@ -142,6 +142,8 @@ ieee80211_add_rx_radiotap_header(struct 
- 	/* IEEE80211_RADIOTAP_FLAGS */
- 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
- 		*pos |= IEEE80211_RADIOTAP_F_FCS;
-+	if (status->flag & (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
-+		*pos |= IEEE80211_RADIOTAP_F_BADFCS;
- 	if (status->flag & RX_FLAG_SHORTPRE)
- 		*pos |= IEEE80211_RADIOTAP_F_SHORTPRE;
- 	pos++;
-@@ -204,9 +206,8 @@ ieee80211_add_rx_radiotap_header(struct 
- 	/* ensure 2 byte alignment for the 2 byte field as required */
- 	if ((pos - (unsigned char *)rthdr) & 1)
- 		pos++;
--	/* FIXME: when radiotap gets a 'bad PLCP' flag use it here */
--	if (status->flag & (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
--		*(__le16 *)pos |= cpu_to_le16(IEEE80211_RADIOTAP_F_RX_BADFCS);
-+	if (status->flag & RX_FLAG_FAILED_PLCP_CRC)
-+		*(__le16 *)pos |= cpu_to_le16(IEEE80211_RADIOTAP_F_RX_BADPLCP);
- 	pos += 2;
++	return ret;
  }
  
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 
 
