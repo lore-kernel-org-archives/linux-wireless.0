@@ -1,76 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:58163 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753955AbZCEUde (ORCPT
+Received: from smtp-out25.alice.it ([85.33.2.25]:4901 "EHLO
+	smtp-out25.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbZCUVEq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2009 15:33:34 -0500
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/7] p54: refractor beacon_update and stop path
-Date: Thu, 5 Mar 2009 21:33:32 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>
+	Sat, 21 Mar 2009 17:04:46 -0400
+Message-ID: <49C55670.6010705@jumpy.it> (sfid-20090321_220449_966663_F7B44124)
+Date: Sat, 21 Mar 2009 22:04:48 +0100
+From: ciccio <aspcicc@jumpy.it>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200903052133.32337.chunkeey@web.de> (sfid-20090305_213336_920648_DED02D6B)
+To: linux-wireless@vger.kernel.org
+Subject: bug notify
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the LMAC API Section 3.2.2, we don't have to cancel the previous
-beacon manually. The firmware will automatically return it to the driver
-through the feedback mechanism. 
-And while we're at it, we can remove some left over code as well.
+computer acer 5737z that uses atheros AR928X wireless adapter
+PCLinuxos 2009.1 installed that uses kernel 2.6.26.8
+I have downloaded compat-wireless-old and i obtain errore during make:
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff -Nurp a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
---- a/drivers/net/wireless/p54/p54common.c	2009-03-05 15:42:57.000000000 +0100
-+++ b/drivers/net/wireless/p54/p54common.c	2009-03-05 15:50:10.000000000 +0100
-@@ -2015,18 +2015,14 @@ static int p54_beacon_update(struct ieee
- 	struct sk_buff *beacon;
- 	int ret;
- 
--	if (priv->cached_beacon) {
--		p54_tx_cancel(dev, priv->cached_beacon);
--		/* wait for the last beacon the be freed */
--		msleep(10);
--	}
--
- 	beacon = ieee80211_beacon_get(dev, vif);
- 	if (!beacon)
- 		return -ENOMEM;
- 	ret = p54_beacon_tim(beacon);
- 	if (ret)
- 		return ret;
-+
-+	/* the firmware will automatically cancel old beacons. */ 
- 	ret = p54_tx(dev, beacon);
- 	if (ret)
- 		return ret;
-@@ -2072,17 +2068,21 @@ out:
- static void p54_stop(struct ieee80211_hw *dev)
- {
- 	struct p54_common *priv = dev->priv;
--	struct sk_buff *skb;
- 
- 	mutex_lock(&priv->conf_mutex);
- 	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
-+	p54_setup_mac(dev);
- 	cancel_delayed_work_sync(&priv->work);
--	if (priv->cached_beacon)
--		p54_tx_cancel(dev, priv->cached_beacon);
-+
-+	/*
-+	 * p54spi uses mac80211's workqueue to write the frames into
-+	 * device's memory. Therefore, we should give the queue a chance
-+	 * to complete all outstanding work, before the device is stopped.
-+	 */
-+	msleep(25);
- 
- 	priv->stop(dev);
--	while ((skb = skb_dequeue(&priv->tx_queue)))
--		kfree_skb(skb);
-+	skb_queue_purge(&priv->tx_queue);
- 	priv->cached_beacon = NULL;
- 	priv->tsf_high32 = priv->tsf_low32 = 0;
- 	mutex_unlock(&priv->conf_mutex);
+***ERROR: CONFIG_MAC(="!!_QOS is somehow enabled in your kernel, how did 
+that happen.....................
+...........
+
+Goodbye
+
+I have installed old kernel 2.6.24 and make goes good but at the end of 
+make install i receive an error in depmod but ath9.ko is compiled and 
+installed and works.
+
+Now i want to try sidux that uses kernel 2.6.28
+
+Goodbye
