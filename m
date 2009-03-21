@@ -1,82 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44673 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752504AbZCZILj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2009 04:11:39 -0400
-Subject: Re: wireless powersaving (in NM?)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Matthew Garrett <mjg@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <43e72e890903260100w75896d0fi9121f227cc7ca8dc@mail.gmail.com> (sfid-20090326_090603_527463_A3630685)
-References: <1237891149.4320.73.camel@johannes.local>
-	 <1237910398.9082.7.camel@localhost.localdomain>
-	 <1237979070.4320.156.camel@johannes.local>
-	 <1237995072.18896.9.camel@localhost.localdomain>
-	 <1237996137.4320.161.camel@johannes.local>
-	 <43e72e890903260100w75896d0fi9121f227cc7ca8dc@mail.gmail.com>
-	 (sfid-20090326_090603_527463_A3630685)
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-RkK1WTad94jK2mtl7t/O"
-Date: Thu, 26 Mar 2009 09:11:00 +0100
-Message-Id: <1238055060.4331.1.camel@johannes.local> (sfid-20090326_091143_315952_8D3CF004)
-Mime-Version: 1.0
+Received: from suva.vyatta.com ([76.74.103.44]:36737 "EHLO suva.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761157AbZCUFsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2009 01:48:30 -0400
+Message-Id: <20090321053718.065171867@vyatta.com> (sfid-20090321_064955_557680_C142AFC5)
+References: <20090321053527.316395697@vyatta.com>
+Date: Fri, 20 Mar 2009 22:36:39 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: David Miller <davem@davemloft.net>, jkosina@suse.cz,
+	dstreba@suse.cz
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 72/77] ipw2x00: convert infrastructure for use by net_device_ops
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Expose routines so drivers can hook. Only set ptrs in netdev
+if using old compat code.
 
---=-RkK1WTad94jK2mtl7t/O
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-On Thu, 2009-03-26 at 01:00 -0700, Luis R. Rodriguez wrote:
+---
+ drivers/net/wireless/ipw2x00/ieee80211.h     |    1 +
+ drivers/net/wireless/ipw2x00/libipw_module.c |    5 ++++-
+ drivers/net/wireless/ipw2x00/libipw_tx.c     |    1 +
+ 3 files changed, 6 insertions(+), 1 deletion(-)
 
-> > Right. If a particular chipset doesn't properly supported PS then we
-> > shouldn't actually support it at all -- but we cannot know if the AP is
-> > broken.
->=20
-> How about leaving it to the supplicant to guess if the AP is borked or no=
-t.
->=20
-> Kalle, what would happen with these broken APs?
+--- a/drivers/net/wireless/ipw2x00/libipw_module.c	2009-03-20 21:39:32.901088992 -0700
++++ b/drivers/net/wireless/ipw2x00/libipw_module.c	2009-03-20 21:39:34.508964994 -0700
+@@ -131,13 +131,14 @@ static void ieee80211_networks_initializ
+ 			      &ieee->network_free_list);
+ }
+ 
+-static int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
++int ieee80211_change_mtu(struct net_device *dev, int new_mtu)
+ {
+ 	if ((new_mtu < 68) || (new_mtu > IEEE80211_DATA_LEN))
+ 		return -EINVAL;
+ 	dev->mtu = new_mtu;
+ 	return 0;
+ }
++EXPORT_SYMBOL(ieee80211_change_mtu);
+ 
+ struct net_device *alloc_ieee80211(int sizeof_priv)
+ {
+@@ -153,8 +154,10 @@ struct net_device *alloc_ieee80211(int s
+ 		goto failed;
+ 	}
+ 	ieee = netdev_priv(dev);
++#ifdef CONFIG_COMPAT_NET_DEV_OPS
+ 	dev->hard_start_xmit = ieee80211_xmit;
+ 	dev->change_mtu = ieee80211_change_mtu;
++#endif
+ 
+ 	ieee->dev = dev;
+ 
+--- a/drivers/net/wireless/ipw2x00/ieee80211.h	2009-03-20 21:39:32.900089558 -0700
++++ b/drivers/net/wireless/ipw2x00/ieee80211.h	2009-03-20 21:39:34.509964918 -0700
+@@ -1016,6 +1016,7 @@ static inline int ieee80211_is_cck_rate(
+ /* ieee80211.c */
+ extern void free_ieee80211(struct net_device *dev);
+ extern struct net_device *alloc_ieee80211(int sizeof_priv);
++extern int ieee80211_change_mtu(struct net_device *dev, int new_mtu);
+ 
+ extern void ieee80211_networks_age(struct ieee80211_device *ieee,
+ 				   unsigned long age_secs);
+--- a/drivers/net/wireless/ipw2x00/libipw_tx.c	2009-03-20 21:39:59.063966304 -0700
++++ b/drivers/net/wireless/ipw2x00/libipw_tx.c	2009-03-20 21:40:37.667839502 -0700
+@@ -541,5 +541,6 @@ int ieee80211_xmit(struct sk_buff *skb, 
+ 	dev->stats.tx_errors++;
+ 	return 1;
+ }
++EXPORT_SYMBOL(ieee80211_xmit);
+ 
+ EXPORT_SYMBOL(ieee80211_txb_free);
 
-We talked about that briefly yesterday -- it's not very easy to
-determine this because of the various ways things break:
-
- * one AP sets the broadcast/multicast bit one beacon too late (after
-   having already sent the frames)
- * one AP doesn't buffer frames at all
- * one AP doesn't respond to PS-poll frames
-
-etc.
-
-johannes
-
---=-RkK1WTad94jK2mtl7t/O
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Comment: Johannes Berg (powerbook)
-
-iQIcBAABAgAGBQJJyziRAAoJEKVg1VMiehFYMyAQAIZPj71u9uF4ifpEK8si7Ffz
-yVwNObjr/L5vfRG1w4VD6bGjzh3spQ5GttPUfhasvE4tG5JcuD0eQsyAGTdWzani
-5Ajxw+I0HyUdRFJr9D2tRl6oAOEwxUPqresqD+p6yzDbTTRWPwBA1I8PSgyz02yh
-dlaDDrJ+lpbFpuwWOQNqZ07QwBt+E3KFS2HAxhMW+vJ7r+lwAQKw6ye5CLX2bDPW
-blXOQo0hjSQZ0bLbdju6axx19g/7ijf2hgAzOKEy0T6hNnXvGVU2YaevErYfkAum
-NO5SzQddAdT+Z3aXTA+FAFk5PYfrdx1kZ4ziB56zCGvUya6kl9iHccqas6T5xIW4
-UQ4Qko1JwyB1X0QtAuClPhDsZElxvxjbTKZ55un17osLfTnobVtqPcBdfi16TjaK
-i2cAyH8s8scUVowaMd7f0aiX9WbtKnwk9O1Xa9+96XCLW+SPt+3jjI8I8hpmAQXD
-zquSrOaZG3f6lZGfZzoYLpEmMSNBFhejoT9vI0zHWohk7NJ/fzlDbWcIWWo+fUtG
-7SjALJKDqHm6023Dx0rbozeXn2XXCO0v3q9+B6i6Yoc00TRejh7CAugRoSOs6U1g
-e4vm/wUCy61bQ9qAChY/HG/STsbMUuqs4g6qaR3CU2PT+EQgfFJIK8adCrPF6FZj
-akISYDBlZCpMk0lONLjJ
-=xfYL
------END PGP SIGNATURE-----
-
---=-RkK1WTad94jK2mtl7t/O--
+-- 
 
